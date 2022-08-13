@@ -12,7 +12,7 @@ static void BM_StringCreationGlobber(benchmark::State& state) {
 	benchmark::DoNotOptimize(empty_string);
   }
 }
-BENCHMARK(BM_StringCreationGlobber);
+BENCHMARK(BM_StringCreationGlobber); // NOLINT
 
 
 static void BM_StringCopy(benchmark::State& state) {
@@ -22,6 +22,6 @@ static void BM_StringCopy(benchmark::State& state) {
 	benchmark::DoNotOptimize(copy);
   }
 }
-BENCHMARK(BM_StringCopy);
+BENCHMARK(BM_StringCopy); // NOLINT
 
-BENCHMARK_MAIN();
+BENCHMARK_MAIN(); // NOLINT
