@@ -1,4 +1,7 @@
 
+//#define _DISABLE_VECTOR_ANNOTATION
+//#define _DISABLE_STRING_ANNOTATION
+
 #include <iostream>
 
 #include <benchmark/benchmark.h>
