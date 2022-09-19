@@ -13,15 +13,6 @@ project(simulation_srp CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-
-#if (MSVC)
-#else()
-#	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-#	set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
-#endif()
-
 if (MSVC)
 	# add_compile_options(/DEBUG /Zi /fsanitize=address)
 else()
@@ -48,6 +39,8 @@ set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 add_subdirectory(external/benchmark)
 
+find_package(Boost REQUIRED COMPONENTS)
+
 ###################################################
 
 set(CMAKE_CXX_CLANG_TIDY
@@ -62,12 +55,13 @@ add_executable(${MAIN_TARGET}
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
 	benchmark::benchmark
+	Boost::boost
 )
 # warning flags
 if (MSVC)
-    target_compile_options(${MAIN_TARGET} PRIVATE /W4 /permissive-)
+    target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive-)
 else()
-    target_compile_options(${MAIN_TARGET} PRIVATE -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
+    target_compile_options(${MAIN_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
 endif()
 
 # strict-aliasing
