@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
+	add_compile_options(/EHsc)
 	# add_compile_options(/DEBUG /Zi /fsanitize=address)
 else()
 	# add_compile_options(-std=c++20)
@@ -43,23 +44,24 @@ find_package(Boost REQUIRED COMPONENTS)
 
 ###################################################
 
-set(CMAKE_CXX_CLANG_TIDY
-	clang-tidy;
-	-header-filter=${CMAKE_CURRENT_SOURCE_DIR}/src;
-	-checks=clang-analyzer-*,performance-*,portability-*,concurrency-*,cppcoreguidelines-*,modernize-*;
-)
+# set(CMAKE_CXX_CLANG_TIDY
+# 	clang-tidy;
+# 	-header-filter=${CMAKE_CURRENT_SOURCE_DIR}/src;
+# 	-checks=clang-analyzer-*,performance-*,portability-*,concurrency-*,cppcoreguidelines-*,modernize-*;
+# )
 
 set(MAIN_TARGET "simulation_srp")
 add_executable(${MAIN_TARGET} 
 	src/main.cpp
-)
+    src/simulation.h
+ "src/simulation.cpp" "src/algorithms.h")
 target_link_libraries(${MAIN_TARGET} PRIVATE 
 	benchmark::benchmark
 	Boost::boost
 )
 # warning flags
 if (MSVC)
-    target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive-)
+    target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
 else()
     target_compile_options(${MAIN_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
 endif()

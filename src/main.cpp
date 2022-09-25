@@ -110,7 +110,7 @@ BENCHMARK(BM_ArrayFillStd); // NOLINT
 
 static void BM_GraphEmpty(benchmark::State& state) {
 	for ([[maybe_unused]] auto _ : state) {
-		auto res = benchmark_graph<CircuitGraph>();
+		auto res = logicsim::benchmark_graph<logicsim::CircuitGraph>();
 
 		benchmark::DoNotOptimize(res);
 		benchmark::ClobberMemory();
