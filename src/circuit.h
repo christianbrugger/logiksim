@@ -17,20 +17,33 @@ namespace logicsim {
 
 	using element_size_t = int32_t;
 	using connection_size_t = int8_t;
+	using connection_index_t = int32_t;
 
 	constexpr element_size_t null_element = -1;
 	constexpr connection_size_t null_connection = -1;
 
 
+
+	template <typename Output, typename Vector>
+	Output& get_connectivity(Vector& vector, connection_index_t vec_index, connection_size_t count, connection_size_t con_index) {
+		if (con_index < 0 || con_index >= count) {
+			throw std::exception("Index is invalid.");
+		}
+		return vector.at(vec_index + con_index);
+	}
+
 	class CircuitGraph {
 	private:
 		struct Element {
 			ElementType type;
-			int input_index;
-			int output_index;
+
+			connection_index_t input_index;
+			connection_index_t output_index;
+
 			connection_size_t input_count;
 			connection_size_t output_count;
 		};
+
 		struct Connectivity {
 			element_size_t element = null_element;
 			connection_size_t index = null_connection;
@@ -49,18 +62,20 @@ namespace logicsim {
 			return elements_.at(element);
 		}
 
-		Connectivity& get_output_node(const Element& element_node, connection_size_t output) {
-			if (output < 0 || output >= element_node.output_count) {
-				throw std::exception("Output index is invalid.");
-			}
-			return outputs_.at(element_node.output_index + output);
+		Connectivity& get_output_con(const Element& element_node, connection_size_t output) {
+			return get_connectivity<Connectivity>(outputs_, element_node.output_index, element_node.output_count, output);
 		}
 
-		Connectivity& get_input_node(const Element& element_node, connection_size_t input) {
-			if (input < 0 || input >= element_node.input_count) {
-				throw std::exception("Output index is invalid.");
-			}
-			return inputs_.at(element_node.input_index + input);
+		const Connectivity& get_output_con(const Element& element_node, connection_size_t output) const {
+			return get_connectivity<const Connectivity>(outputs_, element_node.output_index, element_node.output_count, output);
+		}
+
+		Connectivity& get_input_con(const Element& element_node, connection_size_t input) {
+			return get_connectivity<Connectivity>(inputs_, element_node.input_index, element_node.input_count, input);
+		}
+
+		const Connectivity& get_input_con(const Element& element_node, connection_size_t input) const {
+			return get_connectivity<const Connectivity>(inputs_, element_node.input_index, element_node.input_count, input);
 		}
 
 	public:
@@ -78,9 +93,17 @@ namespace logicsim {
 			return element;
 		}
 
-		element_size_t element_count()
+		element_size_t element_count() const noexcept
 		{
 			return static_cast<element_size_t>(elements_.size());
+		}
+
+		auto total_inputs() const noexcept {
+			return inputs_.size();
+		}
+
+		auto total_outputs() const noexcept {
+			return inputs_.size();
 		}
 
 		void connect_output(
@@ -89,14 +112,14 @@ namespace logicsim {
 			element_size_t to_element = null_element,
 			connection_size_t to_input = null_connection)
 		{
-			Connectivity& from_conn = get_output_node(get_element_node(from_element), from_output);
-			Connectivity& to_conn = get_input_node(get_element_node(to_element), to_input);
+			Connectivity& from_con = get_output_con(get_element_node(from_element), from_output);
+			Connectivity& to_con = get_input_con(get_element_node(to_element), to_input);
 
-			from_conn.element = to_element;
-			from_conn.index = to_input;
+			from_con.element = to_element;
+			from_con.index = to_input;
 
-			to_conn.element = from_element;
-			to_conn.index = from_output;
+			to_con.element = from_element;
+			to_con.index = from_output;
 		}
 
 		ElementType get_type(
@@ -107,26 +130,24 @@ namespace logicsim {
 
 		element_size_t get_connected_element(
 			element_size_t element,
-			connection_size_t output)
+			connection_size_t output) const
 		{
-			return get_output_node(get_element_node(element), output).element;
+			return get_output_con(get_element_node(element), output).element;
 		}
 
 		connection_size_t get_connected_input(
 			element_size_t element,
-			connection_size_t output)
+			connection_size_t output) const
 		{
-			return get_output_node(get_element_node(element), output).index;
+			return get_output_con(get_element_node(element), output).index;
 		}
 
-		connection_size_t get_input_count(
-			[[maybe_unused]] element_size_t element)
+		connection_size_t get_input_count(element_size_t element) const
 		{
 			return get_element_node(element).input_count;
 		}
 
-		connection_size_t get_output_count(
-			element_size_t element)
+		connection_size_t get_output_count(element_size_t element) const
 		{
 			return get_element_node(element).output_count;
 		}

@@ -17,7 +17,7 @@ namespace logicsim {
         { while_func(v) } -> std::convertible_to<bool>;
     }
 
-    void queue_apply_while(T &queue, ApplyFunc apply_func, WhileFunc while_func) {
+    void pop_while(T &queue, ApplyFunc apply_func, WhileFunc while_func) {
         while (!queue.empty()) {
             const auto &top = queue.top();
             if (!while_func(top)) {
