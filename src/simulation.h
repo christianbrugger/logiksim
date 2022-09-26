@@ -12,6 +12,8 @@
 #include <format>
 #include <ranges>
 #include <iostream>
+#include <format>
+#include <cmath>
 
 
 namespace logicsim {
@@ -38,7 +40,21 @@ namespace logicsim {
 
         std::string format() const;
     };
+}
 
+template <>
+struct std::formatter<logicsim::SimulationEvent> {
+    constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const logicsim::SimulationEvent& obj, std::format_context& ctx) {
+        return std::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+
+namespace logicsim {
 
     using event_group_t = boost::container::small_vector<SimulationEvent, 1>;
 
@@ -50,16 +66,13 @@ namespace logicsim {
         }
 
         void set_time(time_t time) {
-            if (time < time_) {
-                throw std::exception(std::format(
-                    "Cannot set time to {}s, new time would be in the past. Current time is {}s.",
-                    time, time_).c_str());
-            }
-            if (time > next_event_time()) {
-                throw std::exception(std::format(
-                    "Cannot set time to {}s, new time would be too far into the future. Next event is at {}s.",
-                    time, next_event_time()).c_str());
-            }
+            if (!std::isfinite(time))
+                throw_exception("New time needs to be finite.");
+            if (time < time_)
+                throw_exception("Cannot set new time to the past.");
+            if (time > next_event_time())
+                throw_exception("New time would be greater than next event.");
+
             time_ = time;
         }
 
@@ -72,10 +85,11 @@ namespace logicsim {
         }
 
         void submit_event(SimulationEvent &&event) {
-            if (event.time <= time_) {
-                std::string msg = std::format("Cannot submit int the past or present event at {}s {}", time_, event.format());
-                throw std::exception(msg.c_str());
-            }
+            if (event.time <= time_)
+                throw_exception("Event time needs to be in the future.");
+            if (!std::isfinite(event.time))
+                throw_exception("Event time needs to be finite.");
+
             events_.push(std::move(event));
         }
 
@@ -89,17 +103,14 @@ namespace logicsim {
                 [&group](const SimulationEvent& event) { return group.size() == 0 || group.front() == event; }
             );
             if (group.size() > 0) {
-                time_ = group.front().time;
+                set_time(group.front().time);
             }
             return group;
         }
     private:
-        time_t time_;
+        time_t time_{ 0 };
         std::priority_queue<SimulationEvent, std::vector<SimulationEvent>, std::greater<>> events_;
     };
-
-    bool is_valid(const event_group_t& group);
-
 
     using logic_vector_t = boost::container::vector<bool>;
 
@@ -111,16 +122,19 @@ namespace logicsim {
         SimulationState()
         {
         }
-
+        
         SimulationState(SimulationState&& state, const CircuitGraph graph) :
-            input_values{ std::move(state.input_values) }
+            input_values{ std::move(state.input_values) },
+            queue { std::move(state.queue) }
         {
             input_values.resize(graph.total_inputs());
         }
     };
 
 
-    SimulationState advance_simulation(time_t time_delta, SimulationState&& old_state, const CircuitGraph& graph);
+    SimulationState advance_simulation(SimulationState old_state, const CircuitGraph& graph, time_t time_delta = 0, bool print_events = false);
+
+    int benchmark_simulation(const int n_elements = 100);
 }
 
 #endif

@@ -54,7 +54,7 @@ set(MAIN_TARGET "simulation_srp")
 add_executable(${MAIN_TARGET} 
 	src/main.cpp
     src/simulation.h
- "src/simulation.cpp" "src/algorithms.h")
+ "src/simulation.cpp" "src/algorithms.h" "src/algorithm.cpp")
 target_link_libraries(${MAIN_TARGET} PRIVATE 
 	benchmark::benchmark
 	Boost::boost

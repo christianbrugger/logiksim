@@ -119,4 +119,15 @@ static void BM_GraphEmpty(benchmark::State& state) {
 }
 BENCHMARK(BM_GraphEmpty); // NOLINT
 
+static void BM_Simulation(benchmark::State& state) {
+	for ([[maybe_unused]] auto _ : state) {
+		auto res = logicsim::benchmark_simulation();
+
+		benchmark::DoNotOptimize(res);
+		benchmark::ClobberMemory();
+	}
+}
+BENCHMARK(BM_Simulation); // NOLINT
+
+
 BENCHMARK_MAIN(); // NOLINT

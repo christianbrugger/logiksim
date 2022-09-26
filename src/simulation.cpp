@@ -51,14 +51,31 @@ namespace logicsim {
     }
 
 
+    void validate(const event_group_t& events, const ElementInputConfig config) {
+        if (events.size() == 0)
+            return;
 
+        const auto& head = events.front();
+        const auto tail = std::views::drop(events, 1);
 
-    bool is_valid(const event_group_t& group) {
-        if (group.size() == 0)
-            return true;
+        if (head.element == null_element)
+            throw_exception("Event element cannot be null.");
 
-        // std::ranges::all_of(group, [&group](const auto& val) { return val.element == std::begin(group)->element; });
-        return false;
+        if (!(head.time < std::numeric_limits<time_t>::infinity()))
+            throw_exception("Event time cannot be infinite.");
+
+        if (tail.size() > 0) {
+            if (!std::ranges::all_of(tail, [head](const auto& event) { return event.time == head.time;  }))
+                throw_exception("All events in the group need to have the same time.");
+
+            if (!std::ranges::all_of(tail, [head](const auto& event) { return event.element == head.element;  }))
+                throw_exception("All events in the group need to have the same time.");
+        }
+
+        std::ranges::for_each(events, [count = config.input_count](const auto& event) {
+            if (event.input < 0 || event.input >= count)
+                throw_exception("Event input is out of range.");
+            });
     }
 
 
@@ -98,7 +115,7 @@ namespace logicsim {
 
     void apply_events(logic_vector_t& input_values, const event_group_t& group) {
         std::ranges::for_each(group, [&input_values](const SimulationEvent& event) {
-            input_values[event.input] = event.value; });
+            input_values.at(event.input) = event.value; });
     }
 
     con_index_small_vector_t get_changed_outputs(const logic_small_vector_t& old_outputs, const logic_small_vector_t& new_outputs) {
@@ -125,12 +142,17 @@ namespace logicsim {
         }
     }
 
-    void process_event_group(SimulationState& state, const event_group_t& events, const CircuitGraph& graph) {
+    void process_event_group(SimulationState& state, const event_group_t& events, const CircuitGraph& graph, bool print_events = false) {
         if (events.size() == 0)
             return;
 
+        if (print_events) {
+            std::cout << std::format("events: {}\n", events);
+        }
+
         const auto element{ events.front().element };
         const auto element_config{ graph.get_input_config(element) };
+        validate(events, element_config);
 
         // update inputs
         const auto old_inputs = copy_inputs(state.input_values, element_config);
@@ -147,17 +169,17 @@ namespace logicsim {
     }
     
 
-    SimulationState advance_simulation(time_t time_delta, SimulationState&& old_state, const CircuitGraph& graph) {
-        if (time_delta < 0)
-            throw std::exception("time_delta needs to be zero or positive.");
-        SimulationState state(std::move(old_state), graph);
+    SimulationState advance_simulation(SimulationState old_state, const CircuitGraph& graph, time_t time_delta, bool print_events) {
+        if (time_delta < 0) [[unlikely]]
+            throw_exception("time_delta needs to be zero or positive.");
+        SimulationState state{ std::move(old_state), graph };
 
         const double end_time = (time_delta == 0) ?
             std::numeric_limits<time_t>::infinity() :
             state.queue.time() + time_delta;
 
         while (!state.queue.empty() && state.queue.next_event_time() < end_time) {
-            process_event_group(state, state.queue.get_event_group(), graph);
+            process_event_group(state, state.queue.get_event_group(), graph, print_events);
         }
 
         if (time_delta > 0) {
@@ -166,5 +188,21 @@ namespace logicsim {
         return state;
     }
 
+
+    int benchmark_simulation(const int n_elements) {
+
+        CircuitGraph graph;
+
+        auto elem0 = graph.create_element(ElementType::or_element, 2, 1);
+        graph.connect_output(elem0, 0, elem0, 0);
+
+        SimulationState state;
+        state.queue.submit_event({ 0.1, elem0, 1, true });
+        state.queue.submit_event({ 0.5, elem0, 1, false });
+
+        auto new_state = advance_simulation(state, graph, 0, false);
+
+        return new_state.input_values.front() + n_elements;
+    }
 }
 

@@ -7,7 +7,7 @@
 
 namespace logicsim {
 
-	enum class ElementType {
+	enum class ElementType : uint8_t {
 		wire,
 		inverter_element,
 		and_element,
@@ -17,8 +17,8 @@ namespace logicsim {
 
 
 	using element_size_t = int32_t;
-	using connection_size_t = int8_t;
 	using connection_index_t = int32_t;
+	using connection_size_t = int8_t;
 
 	constexpr element_size_t null_element = -1;
 	constexpr connection_size_t null_connection = -1;
@@ -35,21 +35,21 @@ namespace logicsim {
 
 
 	struct ElementInputConfig {
-		ElementType type;
 		connection_index_t input_index;
 		connection_size_t input_count;
+		ElementType type;
 	};
 
 	class CircuitGraph {
 	private:
 		struct Element {
-			ElementType type;
-
 			connection_index_t input_index;
 			connection_index_t output_index;
 
 			connection_size_t input_count;
 			connection_size_t output_count;
+
+			ElementType type;
 		};
 
 		struct Connectivity {
@@ -94,7 +94,7 @@ namespace logicsim {
 		{
 			element_size_t element = static_cast<element_size_t>(elements_.size());
 
-			elements_.push_back({ type, static_cast<int>(inputs_.size()), static_cast<int>(outputs_.size()), input_count, output_count });
+			elements_.push_back({ static_cast<int>(inputs_.size()), static_cast<int>(outputs_.size()), input_count, output_count, type });
 			inputs_.resize(inputs_.size() + input_count);
 			outputs_.resize(outputs_.size() + output_count);
 
@@ -163,7 +163,7 @@ namespace logicsim {
 		ElementInputConfig get_input_config(element_size_t element) const
 		{
 			const auto node = get_element_node(element);
-			return ElementInputConfig{ node.type, node.input_index, node.input_count };
+			return ElementInputConfig{ node.input_index, node.input_count, node.type};
 		}
 	};
 
