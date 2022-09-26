@@ -9,9 +9,10 @@ namespace logicsim {
 
 	enum class ElementType {
 		wire,
-		xor_element,
+		inverter_element,
 		and_element,
-		or_element
+		or_element,
+		xor_element
 	};
 
 
@@ -31,6 +32,13 @@ namespace logicsim {
 		}
 		return vector.at(vec_index + con_index);
 	}
+
+
+	struct ElementInputConfig {
+		ElementType type;
+		connection_index_t input_index;
+		connection_size_t input_count;
+	};
 
 	class CircuitGraph {
 	private:
@@ -150,6 +158,12 @@ namespace logicsim {
 		connection_size_t get_output_count(element_size_t element) const
 		{
 			return get_element_node(element).output_count;
+		}
+
+		ElementInputConfig get_input_config(element_size_t element) const
+		{
+			const auto node = get_element_node(element);
+			return ElementInputConfig{ node.type, node.input_index, node.input_count };
 		}
 	};
 

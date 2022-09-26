@@ -110,7 +110,6 @@ BENCHMARK(BM_ArrayFillStd); // NOLINT
 */
 
 static void BM_GraphEmpty(benchmark::State& state) {
-	logicsim::test_sv();
 	for ([[maybe_unused]] auto _ : state) {
 		auto res = logicsim::benchmark_graph<logicsim::CircuitGraph>();
 

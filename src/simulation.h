@@ -25,7 +25,7 @@ namespace logicsim {
         // event_id_t event_id;
         time_t time;
         element_size_t element;
-        connection_size_t output;
+        connection_size_t input;
         bool value;
 
         bool operator==(const SimulationEvent& other) const;
@@ -39,6 +39,8 @@ namespace logicsim {
         std::string format() const;
     };
 
+
+    using event_group_t = boost::container::small_vector<SimulationEvent, 1>;
 
     class SimulationQueue {
     public:
@@ -69,15 +71,13 @@ namespace logicsim {
             return events_.empty();
         }
 
-        void add_event(SimulationEvent &&event) {
+        void submit_event(SimulationEvent &&event) {
             if (event.time <= time_) {
                 std::string msg = std::format("Cannot submit int the past or present event at {}s {}", time_, event.format());
                 throw std::exception(msg.c_str());
             }
             events_.push(std::move(event));
         }
-
-        using event_group_t = boost::container::small_vector<SimulationEvent, 1>;
 
         /* Return next events with the same time and element. */
         event_group_t get_event_group()
@@ -98,13 +98,14 @@ namespace logicsim {
         std::priority_queue<SimulationEvent, std::vector<SimulationEvent>, std::greater<>> events_;
     };
 
+    bool is_valid(const event_group_t& group);
+
 
     using logic_vector_t = boost::container::vector<bool>;
 
 
     struct SimulationState {
         logic_vector_t input_values;
-        logic_vector_t output_values;
         SimulationQueue queue;
 
         SimulationState()
@@ -112,17 +113,13 @@ namespace logicsim {
         }
 
         SimulationState(SimulationState&& state, const CircuitGraph graph) :
-            input_values(std::move(state.input_values)),
-            output_values(std::move(state.output_values))
+            input_values{ std::move(state.input_values) }
         {
             input_values.resize(graph.total_inputs());
-            output_values.resize(graph.total_outputs());
         }
     };
 
 
-    void process_event(SimulationState& state, [[maybe_unused]] SimulationQueue::event_group_t&& group, const CircuitGraph& graph);
-    void test_sv();
     SimulationState advance_simulation(time_t time_delta, SimulationState&& old_state, const CircuitGraph& graph);
 }
 
