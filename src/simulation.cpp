@@ -154,6 +154,12 @@ namespace logicsim {
         const auto element_config{ graph.get_input_config(element) };
         validate(events, element_config);
 
+        // optimize input placeholders
+        if (element_config.type == ElementType::input_placeholder) {
+            apply_events(state.input_values, events);
+            return;
+        }
+
         // update inputs
         const auto old_inputs = copy_inputs(state.input_values, element_config);
         apply_events(state.input_values, events);
@@ -188,21 +194,51 @@ namespace logicsim {
         return state;
     }
 
+    logic_vector_t collect_output_values(const logic_vector_t& input_values, const CircuitGraph& graph) {
+        logic_vector_t output_values(graph.total_outputs());
+
+        // TODO refactor loops
+        for (element_size_t element : graph.elements()) {
+            for (auto output_i : graph.outputs(element)) {  // TODO: connection_size_t
+                connection_size_t output = static_cast<connection_size_t>(output_i);
+
+                auto output_con = graph.get_output_connectivty(element, output);
+                if (output_con.element != null_element && output_con.index != null_connection) {
+                    output_values.at(graph.get_output_index(element, output)) = 
+                        input_values.at(graph.get_input_index(output_con.element, output_con.index));
+                }
+            }
+        }
+
+        return output_values;
+    }
 
     int benchmark_simulation(const int n_elements) {
-
         CircuitGraph graph;
 
-        auto elem0 = graph.create_element(ElementType::or_element, 2, 1);
-        graph.connect_output(elem0, 0, elem0, 0);
+        [[maybe_unused]] auto elem0 = graph.create_element(ElementType::or_element, 2, 1);
+        //graph.connect_output(elem0, 0, elem0, 0);
+        
 
         SimulationState state;
-        state.queue.submit_event({ 0.1, elem0, 1, true });
-        state.queue.submit_event({ 0.5, elem0, 1, false });
+        //state.queue.submit_event({ 0.1, elem0, 1, true });
+        //state.queue.submit_event({ 0.1, elem0, 1, true });
+        //state.queue.submit_event({ 0.5, elem0, 1, false });
 
-        auto new_state = advance_simulation(state, graph, 0, false);
+        auto sim_graph = create_placeholders(graph);
+        auto new_state = advance_simulation(state, sim_graph, 0, true);
+        auto output_values = collect_output_values(new_state.input_values, sim_graph);
 
-        return new_state.input_values.front() + n_elements;
+        for (bool input : new_state.input_values) {
+            std::cout << std::format("input_values = {}\n", input);
+        }
+        for (bool output : output_values) {
+            std::cout << std::format("output_values = {}\n", output);
+        }
+        // std::cout << std::format("input_values = {}", std::vector<bool>(std::begin(new_state.input_values), std::end(new_state.input_values)));
+        // std::cout << std::format("output_values = {}", std::vector<bool>(std::begin(output_values), std::end(output_values)));
+
+        return new_state.input_values.front() + output_values.front() + n_elements;
     }
 }
 

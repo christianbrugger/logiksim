@@ -52,18 +52,26 @@ find_package(Boost REQUIRED COMPONENTS)
 
 set(MAIN_TARGET "simulation_srp")
 add_executable(${MAIN_TARGET} 
-	src/main.cpp
-    src/simulation.h
- "src/simulation.cpp" "src/algorithms.h" "src/algorithm.cpp")
+    src/main.cpp
+    src/circuit.h src/circuit.cpp
+    src/simulation.h src/simulation.cpp 
+    src/algorithms.h src/algorithm.cpp
+)
+
 target_link_libraries(${MAIN_TARGET} PRIVATE 
-	benchmark::benchmark
-	Boost::boost
+    benchmark::benchmark
+    Boost::boost
 )
 # warning flags
 if (MSVC)
     target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
 else()
     target_compile_options(${MAIN_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
+endif()
+
+# profiling
+if (MSVC)
+#	target_link_options(${MAIN_TARGET} PRIVATE /PROFILE)
 endif()
 
 # strict-aliasing

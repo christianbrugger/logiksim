@@ -4,10 +4,13 @@
 #include <ranges>
 #include <cstdint>
 #include <vector>
+#include <iostream>
+
 
 namespace logicsim {
 
 	enum class ElementType : uint8_t {
+		input_placeholder,
 		wire,
 		inverter_element,
 		and_element,
@@ -40,6 +43,11 @@ namespace logicsim {
 		ElementType type;
 	};
 
+		struct Connectivity {
+			element_size_t element = null_element;
+			connection_size_t index = null_connection;
+		};
+
 	class CircuitGraph {
 	private:
 		struct Element {
@@ -50,11 +58,6 @@ namespace logicsim {
 			connection_size_t output_count;
 
 			ElementType type;
-		};
-
-		struct Connectivity {
-			element_size_t element = null_element;
-			connection_size_t index = null_connection;
 		};
 
 		std::vector<Element> elements_;
@@ -101,6 +104,18 @@ namespace logicsim {
 			return element;
 		}
 
+		auto elements() const {
+			return std::views::iota(0, element_count());
+		}
+
+		auto inputs(element_size_t element) const {
+			return std::views::iota(0, get_input_count(element));
+		}
+
+		auto outputs(element_size_t element) const {
+			return std::views::iota(0, get_output_count(element));
+		}
+
 		element_size_t element_count() const noexcept
 		{
 			return static_cast<element_size_t>(elements_.size());
@@ -111,7 +126,7 @@ namespace logicsim {
 		}
 
 		auto total_outputs() const noexcept {
-			return inputs_.size();
+			return outputs_.size();
 		}
 
 		void connect_output(
@@ -160,12 +175,39 @@ namespace logicsim {
 			return get_element_node(element).output_count;
 		}
 
+		connection_index_t get_input_index(element_size_t element) const {
+			return get_element_node(element).input_index;
+		}
+
+		connection_index_t get_input_index(element_size_t element, connection_size_t input) const {
+			return get_input_index(element) + input;
+		}
+
+		connection_index_t get_output_index(element_size_t element) const {
+			return get_element_node(element).output_index;
+		}
+
+		connection_index_t get_output_index(element_size_t element, connection_size_t output) const {
+			return get_output_index(element) + output;
+		}
+
 		ElementInputConfig get_input_config(element_size_t element) const
 		{
 			const auto node = get_element_node(element);
 			return ElementInputConfig{ node.input_index, node.input_count, node.type};
 		}
+
+
+		Connectivity get_output_connectivty(element_size_t element, connection_size_t output) const {
+			return get_output_con(get_element_node(element), output);
+		}
+
+		Connectivity get_input_connectivity(element_size_t element, connection_size_t input) const {
+			return get_input_con(get_element_node(element), input);
+		}
 	};
+
+	CircuitGraph create_placeholders(CircuitGraph graph);
 
 
 	template <class T>

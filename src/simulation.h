@@ -93,7 +93,7 @@ namespace logicsim {
             events_.push(std::move(event));
         }
 
-        /* Return next events with the same time and element. */
+        /* Return next events for the same time and element. */
         event_group_t get_event_group()
         {
             event_group_t group;
@@ -133,6 +133,8 @@ namespace logicsim {
 
 
     SimulationState advance_simulation(SimulationState old_state, const CircuitGraph& graph, time_t time_delta = 0, bool print_events = false);
+
+    logic_vector_t collect_output_values(const logic_vector_t& input_values, const CircuitGraph& graph);
 
     int benchmark_simulation(const int n_elements = 100);
 }
