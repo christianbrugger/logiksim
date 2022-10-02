@@ -51,7 +51,7 @@ namespace logicsim {
     }
 
 
-    void validate(const event_group_t& events, const ElementInputConfig config) {
+    void validate(const event_group_t& events) {
         if (events.size() == 0)
             return;
 
@@ -61,8 +61,8 @@ namespace logicsim {
         if (head.element == null_element)
             throw_exception("Event element cannot be null.");
 
-        if (!(head.time < std::numeric_limits<time_t>::infinity()))
-            throw_exception("Event time cannot be infinite.");
+        if (!std::isfinite(head.time))
+            throw_exception("Event time needs to be finite.");
 
         if (tail.size() > 0) {
             if (!std::ranges::all_of(tail, [head](const auto& event) { return event.time == head.time;  }))
@@ -70,12 +70,11 @@ namespace logicsim {
 
             if (!std::ranges::all_of(tail, [head](const auto& event) { return event.element == head.element;  }))
                 throw_exception("All events in the group need to have the same time.");
+
+            if (has_duplicates_quadratic(std::ranges::views::transform(events, [](const auto& event){ return event.input; })))
+                throw_exception("Cannot have two events for the same input at the same time.");
         }
 
-        std::ranges::for_each(events, [count = config.input_count](const auto& event) {
-            if (event.input < 0 || event.input >= count)
-                throw_exception("Event input is out of range.");
-            });
     }
 
 
@@ -103,8 +102,10 @@ namespace logicsim {
         case ElementType::xor_element:
             return { std::ranges::count_if(input, std::identity{}) == 1 };
 
+        default:
+            return {};
+
         }
-        return {};
     }
 
 
@@ -113,9 +114,16 @@ namespace logicsim {
         return { std::cbegin(view), std::cend(view) };
     }
 
-    void apply_events(logic_vector_t& input_values, const event_group_t& group) {
-        std::ranges::for_each(group, [&input_values](const SimulationEvent& event) {
-            input_values.at(event.input) = event.value; });
+    void set_input(logic_vector_t& input_values, const ElementInputConfig& config, connection_size_t input, bool value) {
+        if (input < 0 || input >= config.input_count)
+            throw_exception("Event input is out of range.");
+        input_values.at(static_cast<logic_vector_t::size_type>(config.input_index) + input) = value;
+    }
+
+    void apply_events(logic_vector_t& input_values, const ElementInputConfig& config, const event_group_t& group) {
+        std::ranges::for_each(group, [&input_values, &config](const SimulationEvent& event) {
+            set_input(input_values, config, event.input, event.value);
+        });
     }
 
     con_index_small_vector_t get_changed_outputs(const logic_small_vector_t& old_outputs, const logic_small_vector_t& new_outputs) {
@@ -145,6 +153,7 @@ namespace logicsim {
     void process_event_group(SimulationState& state, const event_group_t& events, const CircuitGraph& graph, bool print_events = false) {
         if (events.size() == 0)
             return;
+        validate(events);
 
         if (print_events) {
             std::cout << std::format("events: {}\n", events);
@@ -152,17 +161,16 @@ namespace logicsim {
 
         const auto element{ events.front().element };
         const auto element_config{ graph.get_input_config(element) };
-        validate(events, element_config);
 
-        // optimize input placeholders
+        // short-circuit input placeholders
         if (element_config.type == ElementType::input_placeholder) {
-            apply_events(state.input_values, events);
+            apply_events(state.input_values, element_config, events);
             return;
         }
 
         // update inputs
         const auto old_inputs = copy_inputs(state.input_values, element_config);
-        apply_events(state.input_values, events);
+        apply_events(state.input_values, element_config, events);
         const auto new_inputs = copy_inputs(state.input_values, element_config);
 
         // find changing outputs
@@ -217,13 +225,13 @@ namespace logicsim {
         CircuitGraph graph;
 
         [[maybe_unused]] auto elem0 = graph.create_element(ElementType::or_element, 2, 1);
-        //graph.connect_output(elem0, 0, elem0, 0);
+        graph.connect_output(elem0, 0, elem0, 0);
         
 
         SimulationState state;
-        //state.queue.submit_event({ 0.1, elem0, 1, true });
-        //state.queue.submit_event({ 0.1, elem0, 1, true });
-        //state.queue.submit_event({ 0.5, elem0, 1, false });
+        state.queue.submit_event({ 0.1, elem0, 0, true });
+        state.queue.submit_event({ 0.1, elem0, 0, true });
+        state.queue.submit_event({ 0.5, elem0, 1, false });
 
         auto sim_graph = create_placeholders(graph);
         auto new_state = advance_simulation(state, sim_graph, 0, true);
