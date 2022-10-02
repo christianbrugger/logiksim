@@ -45,6 +45,9 @@ set(CMAKE_AUTOMOC TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 
+
+add_subdirectory(external/blend2d)
+
 ###################################################
 
 # set(CMAKE_CXX_CLANG_TIDY
@@ -110,6 +113,7 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
     Boost::boost
     Qt6::Widgets
     Qt6::OpenGLWidgets
+    Blend2D::Blend2D
 )
 if (MSVC)
     target_compile_options(${MAIN_GUI_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)

@@ -1,5 +1,4 @@
 .vs
-external/
 
 build_msvc/
 build_clang_cl/
