@@ -38,7 +38,7 @@ namespace logicsim {
         }
     }
 
-    // good for small ranges, scales with O(n²)
+    // good for small ranges, scales with O(n^2)
     bool has_duplicates_quadratic(const std::ranges::input_range auto&& range) {
         if (std::size(range) <= 1)
             return false;

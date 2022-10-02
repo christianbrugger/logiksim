@@ -17,7 +17,6 @@ if (MSVC)
 	add_compile_options(/EHsc)
 	# add_compile_options(/DEBUG /Zi /fsanitize=address)
 else()
-	# add_compile_options(-std=c++20)
 endif()
 
 
@@ -41,6 +40,10 @@ set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 add_subdirectory(external/benchmark)
 
 find_package(Boost REQUIRED COMPONENTS)
+
+set(CMAKE_AUTOMOC TRUE)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 
 ###################################################
 
@@ -90,6 +93,28 @@ if (MSVC)
     target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
 else()
     target_compile_options(${MAIN_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
+endif()
+
+
+# MAIN GUI
+
+set(MAIN_GUI_TARGET "simulation_srp_gui")
+add_executable(${MAIN_GUI_TARGET} 
+    src/main_gui.cpp
+    src/circuit.h src/circuit.cpp
+    src/simulation.h src/simulation.cpp 
+    src/algorithms.h src/algorithm.cpp
+)
+target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
+    benchmark::benchmark
+    Boost::boost
+    Qt6::Widgets
+    Qt6::OpenGLWidgets
+)
+if (MSVC)
+    target_compile_options(${MAIN_GUI_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
+else()
+    target_compile_options(${MAIN_GUI_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
 endif()
 
 

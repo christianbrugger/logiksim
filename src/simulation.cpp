@@ -230,7 +230,7 @@ namespace logicsim {
 
         SimulationState state;
         state.queue.submit_event({ 0.1, elem0, 0, true });
-        state.queue.submit_event({ 0.1, elem0, 0, true });
+        // state.queue.submit_event({ 0.1, elem0, 0, true });
         state.queue.submit_event({ 0.5, elem0, 1, false });
 
         auto sim_graph = create_placeholders(graph);
