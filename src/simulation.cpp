@@ -82,7 +82,7 @@ namespace logicsim {
     using con_index_small_vector_t = boost::container::small_vector<connection_size_t, 8>;
 
 
-    logic_small_vector_t get_logic_output(const logic_small_vector_t& input, const ElementType type) {
+    logic_small_vector_t calculate_outputs(const logic_small_vector_t& input, const ElementType type) {
         if (input.size() == 0)
             return {};
 
@@ -174,8 +174,8 @@ namespace logicsim {
         const auto new_inputs = copy_inputs(state.input_values, element_config);
 
         // find changing outputs
-        const auto old_outputs = get_logic_output(old_inputs, element_config.type);
-        const auto new_outputs = get_logic_output(new_inputs, element_config.type);
+        const auto old_outputs = calculate_outputs(old_inputs, element_config.type);
+        const auto new_outputs = calculate_outputs(new_inputs, element_config.type);
         const auto changes = get_changed_outputs(old_outputs, new_outputs);
 
         // submit events

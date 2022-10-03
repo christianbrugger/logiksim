@@ -1,3 +1,5 @@
+#ifndef LOGIKSIM_RENDER_WIDGET_H
+#define LOGIKSIM_RENDER_WIDGET_H
 
 #include <QWidget>
 #include <QFrame>
@@ -5,6 +7,10 @@
 #include <QPainter>
 
 #include <blend2d.h>
+
+#include "circuit.h"
+#include "simulation.h"
+#include "render_scene.h"
 
 
 namespace logicsim {
@@ -75,26 +81,53 @@ namespace logicsim {
             }
             init();
         }
+
         void paintEvent([[maybe_unused]] QPaintEvent* event) override {
             if (last_pixel_ratio_ != devicePixelRatioF()) {
                 last_pixel_ratio_ = devicePixelRatioF();
                 init();
             }
-
             if (!this->isVisible()) {
                 return;
             }
+
+            CircuitGraph graph;
+
+            const auto elem0 = graph.create_element(ElementType::or_element, 2, 1);
+            const auto line0 = graph.create_element(ElementType::wire, 1, 1);
+            graph.connect_output(elem0, 0, line0, 0);
+            graph.connect_output(line0, 0, elem0, 1);
+
+
+            SimulationState state;
+            state.queue.submit_event({ 0.1, elem0, 0, true });
+            state.queue.submit_event({ 0.5, elem0, 0, false });
+
+            auto sim_graph = create_placeholders(graph);
+            auto new_state = advance_simulation(state, sim_graph, 0, true);
+
+            SimulationResult simulation{ 
+                new_state.input_values, 
+                collect_output_values(new_state.input_values, sim_graph)
+            };
+
+            attribute_vector_t attributes = {
+                {{}, {5, 3}, 0},
+                {{{10, 10}, {12, 12}}, {5, 3}, 0}
+            };
+
             // int w = qt_image.width();
             // int h = qt_image.height();
 
             bl_ctx.begin(bl_image, bl_info);
-            renderFrame(bl_ctx);
+            //renderFrame(bl_ctx);
+            render_scene(bl_ctx, graph, simulation, attributes);
             bl_ctx.end();
 
             QPainter painter(this);
             painter.drawImage(QPoint(0, 0), qt_image);
         }
-
+        
         void renderFrame(BLContext& ctx) {
             ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
             ctx.fillAll();
@@ -117,15 +150,16 @@ namespace logicsim {
         }
 
     private:
-        qreal last_pixel_ratio_;
+        qreal last_pixel_ratio_ {-1};
 
-        QImage qt_image;
-        BLImage bl_image;
+        QImage qt_image {};
+        BLImage bl_image {};
 
-        constexpr static int n_threads_ = 0;
-        BLContextCreateInfo bl_info;
-        BLContext bl_ctx;
+        constexpr static int n_threads_ {0};
+        BLContextCreateInfo bl_info {};
+        BLContext bl_ctx {};
     };
 
 }
 
+#endif

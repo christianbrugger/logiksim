@@ -52,6 +52,9 @@ find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 set(BLEND2D_STATIC TRUE)
 add_subdirectory(external/blend2d)
 
+# range-v3
+add_subdirectory(external/range-v3)
+
 ###################################################
 
 # set(CMAKE_CXX_CLANG_TIDY
@@ -110,12 +113,15 @@ add_executable(${MAIN_GUI_TARGET}
     src/circuit.h src/circuit.cpp
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
- "src/render_widget.h" "src/render_widget.cpp")
+    src/render_widget.h src/render_widget.cpp 
+    src/render_scene.h src/render_scene.cpp
+)
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
     Boost::boost
     Qt6::Widgets
     Qt6::OpenGLWidgets
     Blend2D::Blend2D
+    range-v3::range-v3
 )
 if (MSVC)
     target_compile_options(${MAIN_GUI_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
