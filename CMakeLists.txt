@@ -34,18 +34,22 @@ endif()
 # 	GIT_TAG v1.6.2)
 # FetchContent_MakeAvailable(googlebenchmark)
 
+# Google Benchmark
 # set(BENCHMARK_ENABLE_LTO ON)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 add_subdirectory(external/benchmark)
 
+# Boost
 find_package(Boost REQUIRED COMPONENTS)
 
+# Qt 6
 set(CMAKE_AUTOMOC TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 
-
+# Blend2D
+set(BLEND2D_STATIC TRUE)
 add_subdirectory(external/blend2d)
 
 ###################################################
@@ -89,7 +93,6 @@ add_executable(${MAIN_TARGET}
     src/algorithms.h src/algorithm.cpp
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
-    benchmark::benchmark
     Boost::boost
 )
 if (MSVC)
@@ -107,9 +110,8 @@ add_executable(${MAIN_GUI_TARGET}
     src/circuit.h src/circuit.cpp
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
-)
+ "src/render_widget.h" "src/render_widget.cpp")
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    benchmark::benchmark
     Boost::boost
     Qt6::Widgets
     Qt6::OpenGLWidgets

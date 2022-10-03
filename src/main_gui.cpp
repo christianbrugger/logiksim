@@ -1,8 +1,10 @@
 
 
+
 #include <QApplication>
-#include <QFrame>
 #include <QtOpenGLWidgets/QOpenGLWidget>
+
+#include "render_widget.h"
 
 
 /* Needs to be called before create QApplication. */
@@ -18,7 +20,7 @@ int main(int argc, char* argv[])
     disable_opengl_vsync();
     QApplication app(argc, argv);
 
-    QFrame frame;
+    logicsim::WidgetRenderer frame;
     frame.show();
 
     return QApplication::exec();
