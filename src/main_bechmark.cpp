@@ -7,6 +7,8 @@
 #include <array>
 #include <memory>
 #include <numeric>
+#include <random>
+#include <functional>
 
 #include <benchmark/benchmark.h>
 
@@ -109,6 +111,7 @@ static void BM_ArrayFillStd(benchmark::State& state) {
 BENCHMARK(BM_ArrayFillStd); // NOLINT
 */
 
+/*
 static void BM_GraphEmpty(benchmark::State& state) {
 	for ([[maybe_unused]] auto _ : state) {
 		auto res = logicsim::benchmark_graph<logicsim::CircuitGraph>();
@@ -128,6 +131,93 @@ static void BM_Simulation(benchmark::State& state) {
 	}
 }
 BENCHMARK(BM_Simulation); // NOLINT
+*/
+
+
+logicsim::CircuitGraph generate_graph(const int count) {
+	using namespace logicsim;
+
+	std::default_random_engine engine;
+	std::uniform_int_distribution<int> distribution(0, 1);
+	auto dice = std::bind(distribution, engine);
+
+	CircuitGraph graph{};
+	for (int i = 0; i < count; ++i) {
+		graph.create_element(dice() ? ElementType::wire : ElementType::inverter_element,
+			dice() + 1, dice() + 1);
+	}
+	return graph;
+}
+
+
+static void BM_Loop_Manually(benchmark::State& state) {
+	for ([[maybe_unused]] auto _ : state) {
+		using namespace logicsim;
+
+		CircuitGraph graph = generate_graph(1'000);
+
+		benchmark::DoNotOptimize(graph);
+		benchmark::ClobberMemory();
+	}
+}
+BENCHMARK(BM_Loop_Manually); // NOLINT
+
+
+static void BM_Loop_Manually_2(benchmark::State& state) {
+	for ([[maybe_unused]] auto _ : state) {
+		using namespace logicsim;
+
+		CircuitGraph graph = generate_graph(1'000);
+
+		benchmark::ClobberMemory();
+
+		int sum = 0;
+
+		for (int i = 0; i < 1000; ++i) {
+			for (auto element : graph.elements()) {
+				auto type = graph.get_type(element);
+				sum += type == ElementType::wire ? 1 : 2;
+				sum += graph.get_input_count(element);
+				sum += graph.get_output_count(element);
+			}
+			benchmark::ClobberMemory();
+		}
+
+		benchmark::DoNotOptimize(sum);
+	}
+}
+BENCHMARK(BM_Loop_Manually_2); // NOLINT
+
+
+static void BM_Loop_Manually_3(benchmark::State& state) {
+	for ([[maybe_unused]] auto _ : state) {
+		using namespace logicsim;
+
+		CircuitGraph graph = generate_graph(1'000);
+
+		benchmark::ClobberMemory();
+
+		int sum = 0;
+
+		for (int i = 0; i < 1000; ++i) {
+			for (auto element : graph.elements()) {
+				auto obj = CircuitElement(graph, element);
+
+				auto type = obj.get_type();
+				sum += type == ElementType::wire ? 1 : 2;
+				sum += obj.get_input_count();
+				sum += obj.get_output_count();
+			}
+			benchmark::ClobberMemory();
+		}
+
+		benchmark::DoNotOptimize(sum);
+	}
+}
+BENCHMARK(BM_Loop_Manually_3); // NOLINT
+
+
+
 
 
 BENCHMARK_MAIN(); // NOLINT

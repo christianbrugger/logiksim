@@ -139,7 +139,7 @@ namespace logicsim {
 
     constexpr time_t STANDARD_DELAY = 0.1;
 
-    void create_event(SimulationQueue& queue, const CircuitGraph& graph, element_size_t element, connection_size_t output, const logic_small_vector_t& output_values) {
+    void create_event(SimulationQueue& queue, const CircuitGraph& graph, element_id_t element, connection_size_t output, const logic_small_vector_t& output_values) {
         const time_t time = queue.time() + STANDARD_DELAY;
         const auto con_element = graph.get_connected_element(element, output);
         if (con_element != null_element) {
@@ -206,7 +206,7 @@ namespace logicsim {
         logic_vector_t output_values(graph.total_outputs());
 
         // TODO refactor loops
-        for (element_size_t element : graph.elements()) {
+        for (element_id_t element : graph.elements()) {
             for (auto output_i : graph.outputs(element)) {  // TODO: connection_size_t
                 connection_size_t output = static_cast<connection_size_t>(output_i);
 

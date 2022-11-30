@@ -26,7 +26,7 @@ namespace logicsim {
     {
         // event_id_t event_id;
         time_t time;
-        element_size_t element;
+        element_id_t element;
         connection_size_t input;
         bool value;
 

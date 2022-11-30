@@ -72,6 +72,7 @@ set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET} 
     src/main_bechmark.cpp
     src/circuit.h src/circuit.cpp
+    src/circuit2.h src/circuit2.cpp
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
 )
@@ -92,6 +93,7 @@ set(MAIN_TARGET "simulation_srp")
 add_executable(${MAIN_TARGET} 
     src/main.cpp
     src/circuit.h src/circuit.cpp
+    src/circuit2.h src/circuit2.cpp
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
 )
@@ -111,6 +113,7 @@ set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET} 
     src/main_gui.cpp
     src/circuit.h src/circuit.cpp
+    src/circuit2.h src/circuit2.cpp
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/render_widget.h src/render_widget.cpp 
