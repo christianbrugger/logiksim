@@ -123,11 +123,11 @@ namespace logicsim2 {
 				return first_output_id() + output;
 			}
 
-			InputConnection input(connection_size_t input) {
+			[[ nodiscard ]] InputConnection input(connection_size_t input) {
 				return InputConnection{ circuit_, element_id_, input, input_id(input) };
 			}
 
-			OutputConnection output(connection_size_t output) {
+			[[ nodiscard ]] OutputConnection output(connection_size_t output) {
 				return OutputConnection{ circuit_, element_id_, output, output_id(output) };
 			}
 
@@ -181,11 +181,11 @@ namespace logicsim2 {
 				return circuit_;
 			}
 
-			element_id_t element_id() const {
+			element_id_t element_id() const noexcept {
 				return element_id_;
 			}
 
-			connection_size_t input_index() const {
+			connection_size_t input_index() const noexcept {
 				return input_index_;
 			}
 
@@ -201,11 +201,16 @@ namespace logicsim2 {
 				return connection_data_().element_id;
 			}
 
-			bool has_connected_element() const {
+			[[ nodiscard ]] bool has_connected_element() const {
 				return connected_element_id() != null_element;
 			}
 
-			Element connected_element() {
+			/**
+			 * Returns connected element object.
+			 *
+			 * @throws if connection doesn't exists. Call has_connected_element to check for this.
+			 */
+			[[ nodiscard ]] Element connected_element() {
 				return Element{ circuit_, connected_element_id() };
 			}
 
@@ -213,18 +218,25 @@ namespace logicsim2 {
 				return connection_data_().index;
 			}
 
-			OutputConnection connected_output() {
+			/**
+			 * Returns connected output object.
+			 *
+			 * @throws if connection doesn't exists. Call has_connected_element to check for this.
+			 */
+			[[ nodiscard ]] OutputConnection connected_output() {
 				return connected_element().output(connected_output_index());
 			}
 
 			void connect(OutputConnection output) {
 				clear_connection();
 
+				// get data before we modify anything
+				auto& destination_connection_data = circuit_->output_data_store_.at(output.output_id());
 				auto& connection_data = connection_data_();
+
 				connection_data.element_id = output.element_id();
 				connection_data.index = output.output_index();
 
-				auto& destination_connection_data = circuit_->output_data_store_.at(output.output_id());
 				destination_connection_data.element_id = element_id();
 				destination_connection_data.index = input_index();
 			}
@@ -235,6 +247,7 @@ namespace logicsim2 {
 				if (connection_data.element_id != null_element) {
 					auto& destination_connection_data = circuit_->output_data_store_.at(
 						circuit_->element(connection_data.index).output_id(connection_data.index));
+
 					destination_connection_data.element_id = null_element;
 					destination_connection_data.index = null_connection;
 
@@ -284,11 +297,11 @@ namespace logicsim2 {
 				return circuit_;
 			}
 
-			element_id_t element_id() const {
+			element_id_t element_id() const noexcept {
 				return element_id_;
 			}
 
-			connection_size_t output_index() const {
+			connection_size_t output_index() const noexcept {
 				return output_index_;
 			}
 
@@ -304,11 +317,16 @@ namespace logicsim2 {
 				return connection_data_().element_id;
 			}
 
-			bool has_connected_element() const {
+			[[nodiscard]] bool has_connected_element() const {
 				return connected_element_id() != null_element;
 			}
 
-			Element connected_element() {
+			/**
+			 * Returns connected element object.
+			 *
+			 * @throws if connection doesn't exists. Call has_connected_element to check for this.
+			 */
+			[[nodiscard]] Element connected_element() {
 				return Element{ circuit_, connected_element_id() };
 			}
 
@@ -316,18 +334,25 @@ namespace logicsim2 {
 				return connection_data_().index;
 			}
 
-			InputConnection connected_input() {
+			/**
+			 * Returns connected input object.
+			 * 
+			 * @throws if connection doesn't exists. Call has_connected_element to check for this.
+			 */
+			[[nodiscard]] InputConnection connected_input() {
 				return connected_element().input(connected_input_index());
 			}
 
 			void connect(InputConnection input) {
 				clear_connection();
 
+				// get data before we modify anything
 				auto& connection_data = connection_data_();
+				auto& destination_connection_data = circuit_->input_data_store_.at(input.input_id());
+
 				connection_data.element_id = input.element_id();
 				connection_data.index = input.input_index();
 
-				auto& destination_connection_data = circuit_->input_data_store_.at(input.input_id());
 				destination_connection_data.element_id = element_id();
 				destination_connection_data.index = output_index();
 			}
@@ -383,6 +408,28 @@ namespace logicsim2 {
 			connection_size_t output_count
 		)
 		{
+			if (input_count < 0) {
+				logicsim::throw_exception("Input count needs to be positive.");
+			}
+			if (output_count < 0) {
+				logicsim::throw_exception("Output count needs to be positive.");
+			}
+
+			const auto new_input_size = input_data_store_.size() + input_count;
+			const auto new_output_size = input_data_store_.size() + input_count;
+
+			// make sure we can represent all ids
+			if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) {
+				logicsim::throw_exception("Reached maximum number of elements.");
+			}
+			if (new_input_size >= std::numeric_limits<connection_id_t>::max()) {
+				logicsim::throw_exception("Reached maximum number of inputs.");
+			}
+			if (new_output_size >= std::numeric_limits<connection_id_t>::max()) {
+				logicsim::throw_exception("Reached maximum number of outputs.");
+			}
+			// TODO create custom exception, as we want to handle theses ones.
+
 			element_data_store_.push_back({
 				static_cast<connection_id_t>(input_data_store_.size()),
 				static_cast<connection_id_t>(output_data_store_.size()),
@@ -390,8 +437,8 @@ namespace logicsim2 {
 				output_count, 
 				type
 			});
-			input_data_store_.resize(input_data_store_.size() + input_count);
-			output_data_store_.resize(output_data_store_.size() + output_count);
+			input_data_store_.resize(new_input_size);
+			output_data_store_.resize(new_output_size);
 
 			element_id_t element_id = static_cast<element_id_t>(element_data_store_.size() - 1);
 			return element(element_id);
