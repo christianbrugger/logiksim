@@ -13,6 +13,7 @@
 #include <benchmark/benchmark.h>
 
 #include "circuit.h"
+#include "circuit2.h"
 #include "simulation.h"
 
 
@@ -133,7 +134,7 @@ static void BM_Simulation(benchmark::State& state) {
 BENCHMARK(BM_Simulation); // NOLINT
 */
 
-
+/* 
 logicsim::CircuitGraph generate_graph(const int count) {
 	using namespace logicsim;
 
@@ -144,7 +145,9 @@ logicsim::CircuitGraph generate_graph(const int count) {
 	CircuitGraph graph{};
 	for (int i = 0; i < count; ++i) {
 		graph.create_element(dice() ? ElementType::wire : ElementType::inverter_element,
-			dice() + 1, dice() + 1);
+			static_cast<connection_size_t>(dice() + 1), 
+			static_cast<connection_size_t>(dice() + 1)
+		);
 	}
 	return graph;
 }
@@ -173,7 +176,7 @@ static void BM_Loop_Manually_2(benchmark::State& state) {
 
 		int sum = 0;
 
-		for (int i = 0; i < 1000; ++i) {
+		for (int i = 0; i < 10; ++i) {
 			for (auto element : graph.elements()) {
 				auto type = graph.get_type(element);
 				sum += type == ElementType::wire ? 1 : 2;
@@ -199,7 +202,7 @@ static void BM_Loop_Manually_3(benchmark::State& state) {
 
 		int sum = 0;
 
-		for (int i = 0; i < 1000; ++i) {
+		for (int i = 0; i < 10; ++i) {
 			for (auto element : graph.elements()) {
 				auto obj = CircuitElement(graph, element);
 
@@ -215,6 +218,30 @@ static void BM_Loop_Manually_3(benchmark::State& state) {
 	}
 }
 BENCHMARK(BM_Loop_Manually_3); // NOLINT
+*/
+
+
+static void BM_Benchmark_Graph_v1(benchmark::State& state) {
+	for ([[maybe_unused]] auto _ : state) {
+		auto circuit = logicsim::benchmark_graph<logicsim::CircuitGraph>(5000);
+
+		benchmark::DoNotOptimize(circuit);
+		benchmark::ClobberMemory();
+	}
+}
+BENCHMARK(BM_Benchmark_Graph_v1); // NOLINT
+
+
+static void BM_Benchmark_Graph_v2(benchmark::State& state) {
+	for ([[maybe_unused]] auto _ : state) {
+		auto circuit = logicsim2::benchmark_circuit(5000);
+
+		benchmark::DoNotOptimize(circuit);
+		benchmark::ClobberMemory();
+	}
+}
+BENCHMARK(BM_Benchmark_Graph_v2); // NOLINT
+
 
 
 

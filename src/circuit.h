@@ -289,7 +289,7 @@ namespace logicsim {
 
 
 	template <class T>
-	int benchmark_graph(const int n_elements = 100) {
+	T benchmark_graph(const int n_elements = 100) {
 
 		T graph{};
 
@@ -309,7 +309,7 @@ namespace logicsim {
 			elem0 = elem1;
 		}
 
-		return 1;
+		return graph;
 	}
 }
 

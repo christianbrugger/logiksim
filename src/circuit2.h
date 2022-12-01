@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_CIRCUIT_H
-#define LOGIKSIM_CIRCUIT_H
+#ifndef LOGIKSIM_CIRCUIT_2_H
+#define LOGIKSIM_CIRCUIT_2_H
 
 #include <ranges>
 #include <cstdint>
@@ -24,15 +24,15 @@ namespace logicsim2 {
 	using element_id_t = int32_t;
 	using connection_id_t = int32_t;
 	using connection_size_t = int8_t;
-
+	
 	constexpr element_id_t null_element = -1;
 	constexpr connection_size_t null_connection = -1;
 
 
-	class CircuitGraph {
+	class Circuit {
 
 	private:
-		struct ConnectivityData {
+		struct ConnectionData {
 			element_id_t element_id = null_element;
 			connection_size_t index = null_connection;
 		};
@@ -48,89 +48,192 @@ namespace logicsim2 {
 		};
 
 		std::vector<ElementData> elements_;
-		std::vector<ConnectivityData> outputs_;
-		std::vector<ConnectivityData> inputs_;
+		std::vector<ConnectionData> outputs_;
+		std::vector<ConnectionData> inputs_;
 
 	public:
 		class Element;
 
 
-		class InputConnectivity {
+		class InputConnection {
 		private:
 			friend Element;
-			InputConnectivity(CircuitGraph& graph, element_id_t element_id, connection_id_t input_id) :
-				graph_(graph),
+			InputConnection(Circuit *circuit, element_id_t element_id, connection_size_t input_index, connection_id_t input_id) :
+				circuit_(circuit),
 				element_id_(element_id),
+				input_index_(input_index),
 				input_id_(input_id)
 			{
+				if (circuit == nullptr) {
+					logicsim::throw_exception("Circuit cannot be nullptr.");
+				}
 			}
 		public:
 			element_id_t element_id() const {
-				return graph_.inputs_.at(input_id_).element_id;
+				return element_id_;
 			}
 
-			bool has_element() const {
-				return element_id() != null_element;
+			connection_size_t index() const {
+				return input_index_;
 			}
 
-			Element element() {
-				return Element{ graph_, element_id() };
+			connection_id_t id() const {
+				return input_id_;
 			}
 
-			connection_size_t output_index() const {
-				return graph_.inputs_.at(input_id_).index;
+			element_id_t connected_element_id() const {
+				return connection_data_().element_id;
+			}
+
+			bool has_connected_element() const {
+				return connected_element_id() != null_element;
+			}
+
+			Element connected_element() {
+				return Element{ circuit_, connected_element_id() };
+			}
+
+			connection_size_t connected_output_index() const {
+				return connection_data_().index;
+			}
+
+			void connect(InputConnection& output) {
+				clear_connection();
+
+				auto& connection_data = connection_data_();
+				connection_data.element_id = output.element_id();
+				connection_data.index = output.index();
+
+				auto& destination_connection_data = circuit_->outputs_.at(output.id());
+				destination_connection_data.element_id = element_id();
+				destination_connection_data.index = index();
+			}
+
+			void clear_connection() {
+				auto& connection_data = connection_data_();
+
+				if (connection_data.element_id != null_element) {
+					auto& destination_connection_data = circuit_->outputs_.at(
+						circuit_->element(connection_data.index).output_id(connection_data.index));
+					destination_connection_data.element_id = null_element;
+					destination_connection_data.index = null_connection;
+
+					connection_data.element_id = null_element;
+					connection_data.index = null_connection;
+				}
 			}
 
 		private:
-			CircuitGraph& graph_;
+			ConnectionData& connection_data_() {
+				return circuit_->inputs_.at(input_id_);
+			}
+
+			const ConnectionData& connection_data_() const {
+				return circuit_->inputs_.at(input_id_);
+			}
+
+			Circuit *circuit_;
 			element_id_t element_id_;
+			connection_size_t input_index_;
 			connection_id_t input_id_;
 		};
 
 
-		class OutputConnectivity {
+		class OutputConnection {
 		private:
 			friend Element;
-			OutputConnectivity(CircuitGraph& graph, element_id_t element_id, connection_id_t output_id) :
-				graph_(graph),
+			OutputConnection(Circuit *circuit, element_id_t element_id, connection_size_t output_index, connection_id_t output_id) :
+				circuit_(circuit),
 				element_id_(element_id),
+				output_index_(output_index),
 				output_id_(output_id)
 			{
+				if (circuit == nullptr) {
+					logicsim::throw_exception("Circuit cannot be nullptr.");
+				}
 			}
 		public:
 			element_id_t element_id() const {
-				return graph_.outputs_.at(output_id_).element_id;
+				return element_id_;
 			}
 
-			bool has_element() const {
-				return element_id() != null_element;
+			connection_size_t index() const {
+				return output_index_;
 			}
 
-			Element element() {
-				return Element{ graph_, element_id() };
+			connection_id_t id() const {
+				return output_id_;
 			}
 
-			connection_size_t input_index() const {
-				return graph_.outputs_.at(output_id_).index;
+			element_id_t connected_element_id() const {
+				return connection_data_().element_id;
 			}
-			
+
+			bool has_connected_element() const {
+				return connected_element_id() != null_element;
+			}
+
+			Element connected_element() {
+				return Element{ circuit_, connected_element_id() };
+			}
+
+			connection_size_t connected_input_index() const {
+				return connection_data_().index;
+			}
+
+			void connect(const InputConnection &input) {
+				clear_connection();
+
+				auto& connection_data = connection_data_();
+				connection_data.element_id = input.element_id();
+				connection_data.index = input.index();
+
+				auto& destination_connection_data = circuit_->inputs_.at(input.id());
+				destination_connection_data.element_id = element_id();
+				destination_connection_data.index = index();
+			}
+
+			void clear_connection() {
+				auto &connection_data = connection_data_();
+				
+				if (connection_data.element_id != null_element) {
+					auto& destination_connection_data = circuit_->inputs_.at(
+						circuit_->element(connection_data.index).input_id(connection_data.index));
+					destination_connection_data.element_id = null_element;
+					destination_connection_data.index = null_connection;
+
+					connection_data.element_id = null_element;
+					connection_data.index = null_connection;
+				}
+			}
 
 		private:
+			ConnectionData& connection_data_() {
+				return circuit_->outputs_.at(output_id_);
+			}
 
-			CircuitGraph& graph_;
+			const ConnectionData& connection_data_() const {
+				return circuit_->outputs_.at(output_id_);
+			}
+
+			Circuit *circuit_;
 			element_id_t element_id_;
+			connection_size_t output_index_;
 			connection_id_t output_id_;
 		};
 
 
 		class Element {
 		private:
-			friend CircuitGraph;
-			Element(CircuitGraph& graph, element_id_t element_id) :
-				graph_(graph),
+			friend Circuit;
+			Element(Circuit *circuit, element_id_t element_id) :
+				circuit_(circuit),
 				element_id_(element_id)
 			{
-				if (element_id < 0 || element_id >= graph.element_count()) {
+				if (circuit == nullptr) {
+					logicsim::throw_exception("Circuit cannot be nullptr.");
+				}
+				if (element_id < 0 || element_id >= circuit->element_count()) {
 					logicsim::throw_exception("Element id is invalid");
 				}
 			}
@@ -178,46 +281,29 @@ namespace logicsim2 {
 				return first_output_id() + output;
 			}
 
-			InputConnectivity input(connection_size_t input) {
-				return InputConnectivity{graph_, element_id_, input_id(input)};
+			InputConnection input(connection_size_t input) {
+				return InputConnection { circuit_, element_id_, input, input_id(input) };
 			}
 
-			OutputConnectivity output(connection_size_t output) {
-				return OutputConnectivity{ graph_, element_id_, output_id(output) };
+			OutputConnection output(connection_size_t output) {
+				return OutputConnection { circuit_, element_id_, output, output_id(output) };
 			}
-
-			/*
-			void connect_output(
-				element_id_t from_element,
-				connection_size_t from_output,
-				element_id_t to_element = null_element,
-				connection_size_t to_input = null_connection)
-			{
-				ConnectivityData& from_con = get_output_con(element_data_(from_element), from_output);
-				ConnectivityData& to_con = get_input_con(element_data_(to_element), to_input);
-
-				from_con.element = to_element;
-				from_con.index = to_input;
-
-				to_con.element = from_element;
-				to_con.index = from_output;
-			}
-			*/
 
 		private:
 			ElementData& element_data_() {
-				return graph_.elements_.at(element_id_);
+				return circuit_->elements_.at(element_id_);
 			}
 
 			const ElementData& element_data_() const
 			{
-				return graph_.elements_.at(element_id_);
+				return circuit_->elements_.at(element_id_);
 			}
 
-
-			CircuitGraph& graph_;
+			Circuit *circuit_;
 			element_id_t element_id_;
 		};
+
+		// -----------------
 
 		element_id_t element_count() const noexcept
 		{
@@ -225,7 +311,7 @@ namespace logicsim2 {
 		}
 
 		Element element(element_id_t element_id) {
-			return Element{ *this, element_id };
+			return Element{ this, element_id };
 		}
 
 		Element create_element(
@@ -233,7 +319,13 @@ namespace logicsim2 {
 			connection_size_t input_count,
 			connection_size_t output_count)
 		{
-			elements_.push_back({ static_cast<int>(inputs_.size()), static_cast<int>(outputs_.size()), input_count, output_count, type });
+			elements_.push_back({
+				static_cast<connection_id_t>(inputs_.size()), 
+				static_cast<connection_id_t>(outputs_.size()), 
+				input_count, 
+				output_count, 
+				type
+			});
 			inputs_.resize(inputs_.size() + input_count);
 			outputs_.resize(outputs_.size() + output_count);
 
@@ -252,7 +344,7 @@ namespace logicsim2 {
 	};
 
 
-
+	Circuit benchmark_circuit(const int n_elements = 100);
 
 }
 
