@@ -19,7 +19,7 @@ namespace logicsim {
 			[&graph, element](connection_size_t output) { create_placeholder(graph, element, output); });
 	}
 
-	CircuitGraph create_placeholders(CircuitGraph graph) {
+	CircuitGraph &create_placeholders(CircuitGraph &graph) {
 		std::ranges::for_each(graph.elements(),
 			[&graph](element_id_t element) { create_placeholders(graph, element); });
 		return graph;

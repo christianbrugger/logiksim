@@ -223,10 +223,13 @@ BENCHMARK(BM_Loop_Manually_3); // NOLINT
 
 static void BM_Benchmark_Graph_v1(benchmark::State& state) {
 	for ([[maybe_unused]] auto _ : state) {
-		auto circuit = logicsim::benchmark_graph<logicsim::CircuitGraph>(5000);
+		auto circuit = logicsim::benchmark_graph<logicsim::CircuitGraph>(10'000);
+
+		benchmark::ClobberMemory();
+
+		logicsim::create_placeholders(circuit);
 
 		benchmark::DoNotOptimize(circuit);
-		benchmark::ClobberMemory();
 	}
 }
 BENCHMARK(BM_Benchmark_Graph_v1); // NOLINT
@@ -234,10 +237,13 @@ BENCHMARK(BM_Benchmark_Graph_v1); // NOLINT
 
 static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 	for ([[maybe_unused]] auto _ : state) {
-		auto circuit = logicsim2::benchmark_circuit(5000);
+		auto circuit = logicsim2::benchmark_circuit(10'000);
+
+		benchmark::ClobberMemory();
+
+		logicsim2::create_placeholders(circuit);
 
 		benchmark::DoNotOptimize(circuit);
-		benchmark::ClobberMemory();
 	}
 }
 BENCHMARK(BM_Benchmark_Graph_v2); // NOLINT

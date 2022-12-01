@@ -29,7 +29,6 @@ namespace logicsim {
 	constexpr connection_size_t null_connection = -1;
 
 
-
 	template <typename Output, typename Vector>
 	Output& get_connectivity(Vector& vector, connection_index_t vec_index, connection_size_t count, connection_size_t con_index) {
 		if (con_index < 0 || con_index >= count) {
@@ -215,7 +214,9 @@ namespace logicsim {
 		}
 	};
 
-	CircuitGraph create_placeholders(CircuitGraph graph);
+	// CircuitGraph create_placeholders(CircuitGraph graph);
+
+	CircuitGraph& create_placeholders(CircuitGraph& graph);
 
 
 	class CircuitElement {
