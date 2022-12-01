@@ -13,8 +13,7 @@
 #include <benchmark/benchmark.h>
 
 #include "circuit.h"
-#include "circuit2.h"
-#include "simulation.h"
+// #include "simulation.h"
 
 
 /*
@@ -220,30 +219,121 @@ static void BM_Loop_Manually_3(benchmark::State& state) {
 BENCHMARK(BM_Loop_Manually_3); // NOLINT
 */
 
+template <typename T>
+class Base {
+public:
+	void test();
 
-static void BM_Benchmark_Graph_v1(benchmark::State& state) {
-	for ([[maybe_unused]] auto _ : state) {
-		auto circuit = logicsim::benchmark_graph<logicsim::CircuitGraph>(10'000);
+	template <bool Const>
+	class Test;
 
-		benchmark::ClobberMemory();
+private:
+	T* t;
+};
 
-		logicsim::create_placeholders(circuit);
+template <typename T>
+void Base<T>::test() {
 
-		benchmark::DoNotOptimize(circuit);
+};
+
+template <typename T>
+template <bool Const>
+class Base<T>::Test {
+
+};
+
+
+class Tree {
+public:
+	class Leaf;
+
+	class Branch {
+	public:
+		Branch(Tree* tree, int branch_id)
+			: tree_(tree), branch_id_(branch_id) {};
+
+		Leaf leaf(int leaf_id) {
+			return Leaf{ tree_, branch_id_, leaf_id };
+		}
+
+		float thickness() {
+			return tree_->branch_thickness_[branch_id_];
+		}
+
+	private:
+		Tree* tree_;
+		int branch_id_;
+	};
+
+	class Leaf {
+	public:
+		Leaf(Tree* tree, int branch_id, int leaf_id)
+			: tree_(tree), branch_id_(branch_id), leaf_id_(leaf_id) {};
+
+		Branch branch() {
+			return Branch{ tree_, branch_id_ };
+		}
+
+		float color() {
+			return tree_->leaf_color_[branch_id_][leaf_id_];
+		}
+	private:
+		Tree* tree_;
+		int branch_id_;
+		int leaf_id_;
+	};
+
+	Branch branch(int branch_id) {
+		return Branch{ this, branch_id };
 	}
+
+	Branch branch(int branch_id) const {
+		return Branch{ this, branch_id };
+	}
+private:
+	std::vector<float> branch_thickness_{ 0.5 };
+	std::vector<std::vector<float>> leaf_color_{ {0.2, 0.4} };
+};
+
+
+void demo() {
+	Tree tree;
+	Tree::Branch branch = tree.branch(0);
+	Tree::Leaf leaf = branch.leaf(1);
+
+	std::cout << "Branch Thickness " << branch.thickness() << '\n';
+	std::cout << "Leaf Color " << leaf.color() << '\n';
+	std::cout << "Branch Thickness " << leaf.branch().thickness() << '\n';
 }
-BENCHMARK(BM_Benchmark_Graph_v1); // NOLINT
+
+void demo_const() {
+	const Tree tree;
+	Tree::Branch branch = tree.branch(0);
+	Tree::Leaf leaf = branch.leaf(1);
+
+	std::cout << "Branch Thickness " << branch.thickness() << '\n';
+	std::cout << "Leaf Color " << leaf.color() << '\n';
+	std::cout << "Branch Thickness " << leaf.branch().thickness() << '\n';
+}
 
 
 static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 	for ([[maybe_unused]] auto _ : state) {
-		auto circuit = logicsim2::benchmark_circuit(10'000);
+		using namespace logicsim;
+
+		auto circuit = benchmark_circuit(10'000);
 
 		benchmark::ClobberMemory();
 
-		logicsim2::create_placeholders(circuit);
+		create_placeholders(circuit);
 
 		benchmark::DoNotOptimize(circuit);
+
+		const Circuit circuit2 = circuit;
+
+		// Base<int>::Test<true> abc;
+
+		demo();
 	}
 }
 BENCHMARK(BM_Benchmark_Graph_v2); // NOLINT

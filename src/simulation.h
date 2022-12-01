@@ -26,8 +26,8 @@ namespace logicsim {
     {
         // event_id_t event_id;
         time_t time;
-        element_id_t element;
-        connection_size_t input;
+        element_id_t element_id;   // TODO rename to element_id
+        connection_size_t input_index;
         bool value;
 
         bool operator==(const SimulationEvent& other) const;
@@ -93,7 +93,7 @@ namespace logicsim {
             events_.push(std::move(event));
         }
 
-        /* Return next events for the same time and element. */
+        /* Return next events for the same time and element_id. */
         event_group_t get_event_group()
         {
             event_group_t group;
@@ -123,17 +123,17 @@ namespace logicsim {
         {
         }
         
-        SimulationState(SimulationState&& state, const CircuitGraph graph) :
+        SimulationState(SimulationState&& state, connection_id_t total_inputs) :
             input_values{ std::move(state.input_values) },
             queue { std::move(state.queue) }
         {
-            input_values.resize(graph.total_inputs());
+            input_values.resize(total_inputs);
         }
     };
 
-    SimulationState advance_simulation(SimulationState old_state, const CircuitGraph& graph, time_t time_delta = 0, bool print_events = false);
+    SimulationState advance_simulation(SimulationState old_state, const Circuit& circuit, time_t time_delta = 0, bool print_events = false);
 
-    logic_vector_t collect_output_values(const logic_vector_t& input_values, const CircuitGraph& graph);
+    logic_vector_t collect_output_values(const logic_vector_t& input_values, const Circuit& circuit);
 
     int benchmark_simulation(const int n_elements = 100);
 

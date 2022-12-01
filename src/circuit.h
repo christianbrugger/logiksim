@@ -22,44 +22,19 @@ namespace logicsim {
 
 
 	using element_id_t = int32_t;
-	using connection_index_t = int32_t;
+	using connection_id_t = int32_t;
 	using connection_size_t = int8_t;
-
+	
 	constexpr element_id_t null_element = -1;
 	constexpr connection_size_t null_connection = -1;
 
 
-	template <typename Output, typename Vector>
-	Output& get_connectivity(Vector& vector, connection_index_t vec_index, connection_size_t count, connection_size_t con_index) {
-		if (con_index < 0 || con_index >= count) {
-			throw_exception("Index is invalid");
-		}
-		return vector.at(vec_index + con_index);
-	}
+	class Circuit {
 
-
-	struct ElementInputConfig {
-		connection_index_t input_index;
-		connection_size_t input_count;
-		ElementType type;
-	};
-
-	struct Connectivity {
-		element_id_t element = null_element;
-		connection_size_t index = null_connection;
-	};
-
-
-	class CircuitElement;
-
-	class CircuitGraph {
-	friend CircuitElement;
-	
 	private:
-
-		struct Element {
-			connection_index_t input_index;
-			connection_index_t output_index;
+		struct ElementData {
+			connection_id_t first_input_id;
+			connection_id_t first_output_id;
 
 			connection_size_t input_count;
 			connection_size_t output_count;
@@ -67,251 +42,484 @@ namespace logicsim {
 			ElementType type;
 		};
 
-		std::vector<Element> elements_;
-		std::vector<Connectivity> outputs_;
-		std::vector<Connectivity> inputs_;
+		struct ConnectionData {
+			element_id_t element_id{ null_element };
+			connection_size_t index{ null_connection };
+		};
 
-		Element& get_element_node(element_id_t element) {
-			return elements_.at(element);
-		}
-
-		const Element& get_element_node(element_id_t element) const
-		{
-			return elements_.at(element);
-		}
-
-		Connectivity& get_output_con(const Element& element_node, connection_size_t output) {
-			return get_connectivity<Connectivity>(outputs_, element_node.output_index, element_node.output_count, output);
-		}
-
-		const Connectivity& get_output_con(const Element& element_node, connection_size_t output) const {
-			return get_connectivity<const Connectivity>(outputs_, element_node.output_index, element_node.output_count, output);
-		}
-
-		Connectivity& get_input_con(const Element& element_node, connection_size_t input) {
-			return get_connectivity<Connectivity>(inputs_, element_node.input_index, element_node.input_count, input);
-		}
-
-		const Connectivity& get_input_con(const Element& element_node, connection_size_t input) const {
-			return get_connectivity<const Connectivity>(inputs_, element_node.input_index, element_node.input_count, input);
-		}
+		std::vector<ElementData> element_data_store_;
+		std::vector<ConnectionData> output_data_store_;
+		std::vector<ConnectionData> input_data_store_;
 
 	public:
-		element_id_t create_element(
-			ElementType type,
-			connection_size_t input_count,
-			connection_size_t output_count)
-		{
-			element_id_t element = static_cast<element_id_t>(elements_.size());
+		// Element
+		class Element;
+		class InputConnection;
+		class OutputConnection;
 
-			elements_.push_back({ static_cast<int>(inputs_.size()), static_cast<int>(outputs_.size()), input_count, output_count, type });
-			inputs_.resize(inputs_.size() + input_count);
-			outputs_.resize(outputs_.size() + output_count);
 
-			return element;
-		}
+		class Element {
+		private:
+			friend Circuit;
 
-		auto elements() const {
-			return std::views::iota(0, element_count());
-		}
+			Element(Circuit* circuit, element_id_t element_id) :
+				circuit_(circuit),
+				element_id_(element_id)
+			{
+				if (circuit == nullptr) {
+					throw_exception("Circuit cannot be nullptr.");
+				}
+				if (element_id < 0 || element_id >= circuit->element_count()) {
+					throw_exception("Element id is invalid");
+				}
+			}
 
-		auto inputs(element_id_t element) const {
-			return std::views::iota(0, get_input_count(element));
-		}
+		public:
+			bool operator==(Element other) noexcept
+			{
+				return circuit_ == other.circuit_ &&
+					element_id_ == other.element_id_;
+			}
 
-		auto outputs(element_id_t element) const {
-			return std::views::iota(0, get_output_count(element));
-		}
+			Circuit* circuit() noexcept 
+			{
+				return circuit_;
+			}
+
+			element_id_t element_id() noexcept 
+			{
+				return element_id_;
+			}
+
+			ElementType type() const
+			{
+				return element_data_().type;
+			}
+
+			connection_size_t input_count() const 
+			{
+				return element_data_().input_count;
+			}
+
+			connection_size_t output_count() const 
+			{
+				return element_data_().output_count;
+			}
+
+			connection_id_t first_input_id() const 
+			{
+				return element_data_().first_input_id;
+			}
+
+			connection_id_t input_id(connection_size_t input_index) const 
+			{
+				if (input_index < 0 || input_index >= input_count()) {
+					throw_exception("Index is invalid");
+				}
+				return first_input_id() + input_index;
+			}
+
+			connection_id_t first_output_id() const 
+			{
+				return element_data_().first_output_id;
+			}
+
+			connection_id_t output_id(connection_size_t output_index) const 
+			{
+				if (output_index < 0 || output_index >= output_count()) {
+					throw_exception("Index is invalid");
+				}
+				return first_output_id() + output_index;
+			}
+
+			[[ nodiscard ]] auto input(connection_size_t input) 
+			{
+				return InputConnection{ circuit_, element_id_, input, input_id(input) };
+			}
+
+			[[ nodiscard ]] auto input(connection_size_t input) const
+			{
+				return InputConnection{ circuit_, element_id_, input, input_id(input) };
+			}
+
+			[[ nodiscard ]] auto output(connection_size_t output)
+			{
+				return OutputConnection{ circuit_, element_id_, output, output_id(output) };
+			}
+
+			[[ nodiscard ]] auto output(connection_size_t output) const
+			{
+				return OutputConnection{ circuit_, element_id_, output, output_id(output) };
+			}
+
+			auto inputs() 
+			{
+				return std::views::iota(0, input_count()) | std::views::transform(
+					[this](int i) { return input(static_cast<connection_size_t>(i)); });
+			}
+
+			auto outputs() 
+			{
+				return std::views::iota(0, output_count()) | std::views::transform(
+					[this](int i) { return output(static_cast<connection_size_t>(i)); });
+			}
+
+		private:
+			ElementData& element_data_() 
+			{
+				return circuit_->element_data_store_.at(element_id_);
+			}
+
+			const ElementData& element_data_() const
+			{
+				return circuit_->element_data_store_.at(element_id_);
+			}
+
+			Circuit* circuit_;
+			element_id_t element_id_;
+		};
+
+
+		class InputConnection {
+		private:
+			friend Element;
+
+			InputConnection(Circuit *circuit, element_id_t element_id, connection_size_t input_index, connection_id_t input_id) :
+				circuit_(circuit),
+				element_id_(element_id),
+				input_index_(input_index),
+				input_id_(input_id)
+			{
+				if (circuit == nullptr) {
+					throw_exception("Circuit cannot be nullptr.");
+				}
+			}
+		public:
+			bool operator==(InputConnection other) noexcept 
+			{
+				return circuit_ == other.circuit_ &&
+					element_id_ == other.element_id_ &&
+					input_index_ == other.input_index_ &&
+					input_index_ == other.input_index_;
+			}
+
+			Circuit* circuit() noexcept
+			{
+				return circuit_;
+			}
+
+			element_id_t element_id() const noexcept 
+			{
+				return element_id_;
+			}
+
+			connection_size_t input_index() const noexcept 
+			{
+				return input_index_;
+			}
+
+			connection_id_t input_id() const noexcept 
+			{
+				return input_id_;
+			}
+
+			Element element() 
+			{
+				return Element{ circuit_, element_id_ };
+			}
+
+			[[ nodiscard ]] bool has_connected_element() const 
+			{
+				return connected_element_id() != null_element;
+			}
+
+			element_id_t connected_element_id() const 
+			{
+				return connection_data_().element_id;
+			}
+
+			connection_size_t connected_output_index() const 
+			{
+				return connection_data_().index;
+			}
+
+			/**
+			 * Returns connected element object.
+			 *
+			 * @throws if connection doesn't exists. Call has_connected_element to check for this.
+			 */
+			[[ nodiscard ]] Element connected_element() 
+			{
+				return Element{ circuit_, connected_element_id() };
+			}
+
+			/**
+			 * Returns connected output object.
+			 *
+			 * @throws if connection doesn't exists. Call has_connected_element to check for this.
+			 */
+			[[ nodiscard ]] OutputConnection connected_output() 
+			{
+				return connected_element().output(connected_output_index());
+			}
+
+			void connect(OutputConnection output) 
+			{
+				clear_connection();
+
+				// get data before we modify anything
+				auto& destination_connection_data = circuit_->output_data_store_.at(output.output_id());
+				auto& connection_data = connection_data_();
+
+				connection_data.element_id = output.element_id();
+				connection_data.index = output.output_index();
+
+				destination_connection_data.element_id = element_id();
+				destination_connection_data.index = input_index();
+			}
+
+			void clear_connection() 
+			{
+				auto& connection_data = connection_data_();
+
+				if (connection_data.element_id != null_element) {
+					auto& destination_connection_data = circuit_->output_data_store_.at(
+						circuit_->element(connection_data.index).output_id(connection_data.index));
+
+					destination_connection_data.element_id = null_element;
+					destination_connection_data.index = null_connection;
+
+					connection_data.element_id = null_element;
+					connection_data.index = null_connection;
+				}
+			}
+
+		private:
+			ConnectionData& connection_data_() 
+			{
+				return circuit_->input_data_store_.at(input_id_);
+			}
+
+			const ConnectionData& connection_data_() const 
+			{
+				return circuit_->input_data_store_.at(input_id_);
+			}
+
+			Circuit *circuit_;
+			element_id_t element_id_;
+			connection_size_t input_index_;
+			connection_id_t input_id_;
+		};
+
+
+		class OutputConnection {
+		private:
+			friend Element;
+
+			OutputConnection(
+				Circuit* circuit, 
+				element_id_t element_id, 
+				connection_size_t output_index, 
+				connection_id_t output_id
+			) :
+				circuit_(circuit),
+				element_id_(element_id),
+				output_index_(output_index),
+				output_id_(output_id)
+			{
+				if (circuit == nullptr) {
+					throw_exception("Circuit cannot be nullptr.");
+				}
+			}
+		public:
+			bool operator==(OutputConnection other) noexcept 
+			{
+				return circuit_ == other.circuit_ &&
+					element_id_ == other.element_id_ &&
+					output_index_ == other.output_index_ &&
+					output_id_ == other.output_id_;
+			}
+
+			Circuit* circuit() noexcept
+			{
+				return circuit_;
+			}
+
+			element_id_t element_id() const noexcept 
+			{
+				return element_id_;
+			}
+
+			connection_size_t output_index() const noexcept 
+			{
+				return output_index_;
+			}
+
+			connection_id_t output_id() const noexcept 
+			{
+				return output_id_;
+			}
+
+			Element element() {
+				return Element{ circuit_, element_id_ };
+			}
+
+			[[nodiscard]] bool has_connected_element() const 
+			{
+				return connected_element_id() != null_element;
+			}
+
+			element_id_t connected_element_id() const 
+			{
+				return connection_data_().element_id;
+			}
+
+			connection_size_t connected_input_index() const 
+			{
+				return connection_data_().index;
+			}
+
+			/**
+			 * Returns connected element object.
+			 *
+			 * @throws if connection doesn't exists. Call has_connected_element to check for this.
+			 */
+			[[nodiscard]] Element connected_element() {
+				return Element{ circuit_, connected_element_id() };
+			}
+
+			/**
+			 * Returns connected input object.
+			 * 
+			 * @throws if connection doesn't exists. Call has_connected_element to check for this.
+			 */
+			[[nodiscard]] InputConnection connected_input() {
+				return connected_element().input(connected_input_index());
+			}
+
+			void connect(InputConnection input) {
+				clear_connection();
+
+				// get data before we modify anything
+				auto& connection_data = connection_data_();
+				auto& destination_connection_data = circuit_->input_data_store_.at(input.input_id());
+
+				connection_data.element_id = input.element_id();
+				connection_data.index = input.input_index();
+
+				destination_connection_data.element_id = element_id();
+				destination_connection_data.index = output_index();
+			}
+
+			void clear_connection() {
+				auto &connection_data = connection_data_();
+				
+				if (connection_data.element_id != null_element) {
+					auto& destination_connection_data = circuit_->input_data_store_.at(
+						circuit_->element(connection_data.index).input_id(connection_data.index));
+					destination_connection_data.element_id = null_element;
+					destination_connection_data.index = null_connection;
+
+					connection_data.element_id = null_element;
+					connection_data.index = null_connection;
+				}
+			}
+
+		private:
+			ConnectionData& connection_data_() {
+				return circuit_->output_data_store_.at(output_id_);
+			}
+
+			const ConnectionData& connection_data_() const {
+				return circuit_->output_data_store_.at(output_id_);
+			}
+
+			Circuit *circuit_;
+			element_id_t element_id_;
+			connection_size_t output_index_;
+			connection_id_t output_id_;
+		};
+
+		// -----------------
 
 		element_id_t element_count() const noexcept
 		{
-			return static_cast<element_id_t>(elements_.size());
+			return static_cast<element_id_t>(element_data_store_.size());
 		}
 
-		auto total_inputs() const noexcept {
-			return inputs_.size();
-		}
-
-		auto total_outputs() const noexcept {
-			return outputs_.size();
-		}
-
-		void connect_output(
-			element_id_t from_element,
-			connection_size_t from_output,
-			element_id_t to_element = null_element,
-			connection_size_t to_input = null_connection)
+		[[ nodiscard ]] Element element(element_id_t element_id)
 		{
-			Connectivity& from_con = get_output_con(get_element_node(from_element), from_output);
-			Connectivity& to_con = get_input_con(get_element_node(to_element), to_input);
-
-			from_con.element = to_element;
-			from_con.index = to_input;
-
-			to_con.element = from_element;
-			to_con.index = from_output;
+			return Element{ this, element_id };
 		}
 
-		ElementType get_type(
-			element_id_t element) const
+		auto elements() 
 		{
-			return get_element_node(element).type;
+			return std::views::iota(0, element_count()) | std::views::transform(
+				[this](int i) { return this->element(static_cast<element_id_t>(i)); });
 		}
 
-		element_id_t get_connected_element(
-			element_id_t element,
-			connection_size_t output) const
+		Element create_element(
+			ElementType type,
+			connection_size_t input_count,
+			connection_size_t output_count
+		)
 		{
-			return get_output_con(get_element_node(element), output).element;
-		}
-
-		connection_size_t get_connected_input(
-			element_id_t element,
-			connection_size_t output) const
-		{
-			return get_output_con(get_element_node(element), output).index;
-		}
-
-		connection_size_t get_input_count(element_id_t element) const
-		{
-			return get_element_node(element).input_count;
-		}
-
-		connection_size_t get_output_count(element_id_t element) const
-		{
-			return get_element_node(element).output_count;
-		}
-
-		connection_index_t get_input_index(element_id_t element) const {
-			return get_element_node(element).input_index;
-		}
-
-		connection_index_t get_input_index(element_id_t element, connection_size_t input) const {
-			return get_input_index(element) + input;
-		}
-
-		connection_index_t get_output_index(element_id_t element) const {
-			return get_element_node(element).output_index;
-		}
-
-		connection_index_t get_output_index(element_id_t element, connection_size_t output) const {
-			return get_output_index(element) + output;
-		}
-
-		ElementInputConfig get_input_config(element_id_t element) const
-		{
-			const auto node = get_element_node(element);
-			return ElementInputConfig{ node.input_index, node.input_count, node.type};
-		}
-
-
-		Connectivity get_output_connectivty(element_id_t element, connection_size_t output) const {
-			return get_output_con(get_element_node(element), output);
-		}
-
-		Connectivity get_input_connectivity(element_id_t element, connection_size_t input) const {
-			return get_input_con(get_element_node(element), input);
-		}
-	};
-
-	// CircuitGraph create_placeholders(CircuitGraph graph);
-
-	CircuitGraph& create_placeholders(CircuitGraph& graph);
-
-
-	class CircuitElement {
-	public:
-		CircuitElement(CircuitGraph& graph, element_id_t element_id) :
-			graph(graph), 
-			element_id(element_id)
-		{
-		}
-
-		element_id_t get_element_id() {
-			return element_id;
-		}
-
-		ElementType get_type() const
-		{
-			return graph.get_element_node(element_id).type;
-		}
-
-		connection_size_t get_input_count() const
-		{
-			return graph.get_element_node(element_id).input_count;
-		}
-
-		connection_size_t get_output_count() const
-		{
-			return graph.get_element_node(element_id).output_count;
-		}
-
-		connection_index_t get_input_index() const {
-			return graph.get_element_node(element_id).input_index;
-		}
-
-		connection_index_t get_input_index(connection_size_t input) const {
-			if (input < 0 || input >= get_input_count()) {
-				throw_exception("Index is invalid");
+			if (input_count < 0) {
+				throw_exception("Input count needs to be positive.");
 			}
-			return get_input_index() + input;
-		}
-
-		connection_index_t get_output_index() const {
-			return graph.get_element_node(element_id).output_index;
-		}
-
-		connection_index_t get_output_index(connection_size_t output) const {
-			if (output < 0 || output >= get_output_count()) {
-				throw_exception("Index is invalid");
+			if (output_count < 0) {
+				throw_exception("Output count needs to be positive.");
 			}
-			return get_output_index() + output;
+
+			const auto new_input_size = input_data_store_.size() + input_count;
+			const auto new_output_size = input_data_store_.size() + input_count;
+
+			// make sure we can represent all ids
+			if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) {
+				throw_exception("Reached maximum number of elements.");
+			}
+			if (new_input_size >= std::numeric_limits<connection_id_t>::max()) {
+				throw_exception("Reached maximum number of inputs.");
+			}
+			if (new_output_size >= std::numeric_limits<connection_id_t>::max()) {
+				throw_exception("Reached maximum number of outputs.");
+			}
+			// TODO create custom exception, as we want to handle theses ones.
+
+			element_data_store_.push_back({
+				static_cast<connection_id_t>(input_data_store_.size()),
+				static_cast<connection_id_t>(output_data_store_.size()),
+				input_count, 
+				output_count, 
+				type
+			});
+			input_data_store_.resize(new_input_size);
+			output_data_store_.resize(new_output_size);
+
+			element_id_t element_id = static_cast<element_id_t>(element_data_store_.size() - 1);
+			return element(element_id);
 		}
 
+		auto total_input_count() const noexcept 
+		{
+			return input_data_store_.size();
+		}
+
+		auto total_output_count() const noexcept 
+		{
+			return output_data_store_.size();
+		}
+
+		void validate(bool require_all_outputs_connected = false);
 
 	private:
-		CircuitGraph& graph;
-		element_id_t element_id;
+		static void validate_connection_data_(Circuit::ConnectionData connection_data);
 	};
 
-	class InputConnectivity {
-	public:
-		InputConnectivity(CircuitElement& element, CircuitGraph &graph) : 
-			graph(graph),
-			element(element)
-		{
-		}
+	void create_placeholders(Circuit &circuit);
 
-	private:
-		CircuitGraph& graph;
-		CircuitElement &element;
-	};
+	Circuit benchmark_circuit(const int n_elements = 100);
 
-
-
-	template <class T>
-	T benchmark_graph(const int n_elements = 100) {
-
-		T graph{};
-
-		auto elem0 = graph.create_element(ElementType::and_element, 2, 2);
-
-		for ([[maybe_unused]] auto _ : std::ranges::iota_view(1, n_elements)) {
-			const auto wire0 = graph.create_element(ElementType::wire, 1, 1);
-			const auto wire1 = graph.create_element(ElementType::wire, 1, 1);
-			const auto elem1 = graph.create_element(ElementType::and_element, 2, 2);
-
-			graph.connect_output(elem0, 0, wire0, 0);
-			graph.connect_output(elem0, 1, wire1, 0);
-
-			graph.connect_output(wire0, 0, elem1, 0);
-			graph.connect_output(wire1, 0, elem1, 1);
-
-			elem0 = elem1;
-		}
-
-		return graph;
-	}
 }
 
 #endif
