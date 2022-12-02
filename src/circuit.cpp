@@ -36,8 +36,8 @@ namespace logicsim {
 			throw_exception("Output count needs to be positive.");
 		}
 
-		const auto new_input_size = input_data_store_.size() + input_count;
-		const auto new_output_size = output_data_store_.size() + output_count;
+		const auto new_input_size { input_data_store_.size() + input_count };
+		const auto new_output_size { output_data_store_.size() + output_count };
 
 		// make sure we can represent all ids
 		if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) {
@@ -61,7 +61,7 @@ namespace logicsim {
 		input_data_store_.resize(new_input_size);
 		output_data_store_.resize(new_output_size);
 
-		element_id_t element_id = static_cast<element_id_t>(element_data_store_.size() - 1);
+		element_id_t element_id { static_cast<element_id_t>(element_data_store_.size() - 1) };
 		return element(element_id);
 	}
 
@@ -87,7 +87,7 @@ namespace logicsim {
 
 	void validate_input_consistent(const Circuit::ConstInputConnection input) {
 		if (input.has_connected_element()) {
-			auto back_reference = input.connected_output().connected_input();
+			auto back_reference { input.connected_output().connected_input() };
 			if (back_reference != input) {
 				throw_exception("Back reference doesn't match.");
 			}
@@ -96,7 +96,7 @@ namespace logicsim {
 
 	void validate_output_consistent(const Circuit::ConstOutputConnection output) {
 		if (output.has_connected_element()) {
-			auto back_reference = output.connected_input().connected_output();
+			auto back_reference { output.connected_input().connected_output() };
 			if (back_reference != output) {
 				throw_exception("Back reference doesn't match.");
 			}
@@ -125,9 +125,9 @@ namespace logicsim {
 
 	void Circuit::validate(bool require_all_outputs_connected)  const 
 	{
-		auto all_one = [](auto vector) {
+		auto all_one { [](auto vector) {
 			return ranges::all_of(vector, [](auto item) {return item == 1; });
-		};
+		} };
 
 		//  every output_data entry is referenced once
 		std::vector<int> input_reference_count(total_input_count(), 0);
@@ -171,8 +171,7 @@ namespace logicsim {
 
 	void create_placeholder(Circuit::OutputConnection output) {
 		if (!output.has_connected_element()) {
-			auto placeholder = output.circuit()->create_element(
-				ElementType::input_placeholder, 1, 0);
+			auto placeholder { output.circuit()->create_element(ElementType::input_placeholder, 1, 0) };
 			output.connect(placeholder.input(0));
 		}
 	}
@@ -192,12 +191,12 @@ namespace logicsim {
 
 		Circuit circuit {};
 
-		auto elem0 = circuit.create_element(ElementType::and_element, 2, 2);
+		auto elem0 { circuit.create_element(ElementType::and_element, 2, 2) };
 
 		for ([[maybe_unused]] auto _ : ranges::iota_view(1, n_elements)) {
-			auto wire0 = circuit.create_element(ElementType::wire, 1, 1);
-			auto wire1 = circuit.create_element(ElementType::wire, 1, 1);
-			auto elem1 = circuit.create_element(ElementType::and_element, 2, 2);
+			auto wire0 { circuit.create_element(ElementType::wire, 1, 1) };
+			auto wire1 { circuit.create_element(ElementType::wire, 1, 1) };
+			auto elem1 { circuit.create_element(ElementType::and_element, 2, 2) };
 
 			elem0.output(0).connect(wire0.input(0));
 			elem0.output(1).connect(wire1.input(0));

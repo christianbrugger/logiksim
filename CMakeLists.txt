@@ -72,7 +72,7 @@ set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET} 
     src/main_bechmark.cpp
     src/circuit.h src/circuit.cpp
-    # src/simulation.h src/simulation.cpp 
+    src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
 )

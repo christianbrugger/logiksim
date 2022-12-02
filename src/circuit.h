@@ -440,10 +440,10 @@ namespace logicsim {
 	{
 		static_assert(!Const, "Cannot clear connection for const circuit.");
 
-		auto& connection_data = connection_data_();
+		auto& connection_data { connection_data_() };
 		if (connection_data.element_id != null_element) {
-			auto& destination_connection_data = circuit_->output_data_store_.at(
-				circuit_->element(connection_data.index).output_id(connection_data.index));
+			auto& destination_connection_data { circuit_->output_data_store_.at(
+				circuit_->element(connection_data.index).output_id(connection_data.index)) };
 
 			destination_connection_data.element_id = null_element;
 			destination_connection_data.index = null_connection;
@@ -461,8 +461,8 @@ namespace logicsim {
 		clear_connection();
 
 		// get data before we modify anything, for exception safety
-		auto& destination_connection_data = circuit_->output_data_store_.at(output.output_id());
-		auto& connection_data = connection_data_();
+		auto& destination_connection_data { circuit_->output_data_store_.at(output.output_id()) };
+		auto& connection_data { connection_data_() };
 
 		connection_data.element_id = output.element_id();
 		connection_data.index = output.output_index();
@@ -573,7 +573,7 @@ namespace logicsim {
 	void Circuit::OutputConnectionTemplate<Const>::clear_connection() const {
 		static_assert(!Const, "Cannot clear connection for const circuit.");
 
-		auto& connection_data = connection_data_();
+		auto& connection_data { connection_data_() };
 		if (connection_data.element_id != null_element) {
 			auto& destination_connection_data = circuit_->input_data_store_.at(
 				circuit_->element(connection_data.index).input_id(connection_data.index));
@@ -593,8 +593,8 @@ namespace logicsim {
 		clear_connection();
 
 		// get data before we modify anything, for exception safety
-		auto& connection_data = connection_data_();
-		auto& destination_connection_data = circuit_->input_data_store_.at(input.input_id());
+		auto& connection_data { connection_data_() };
+		auto& destination_connection_data { circuit_->input_data_store_.at(input.input_id()) };
 
 		connection_data.element_id = input.element_id();
 		connection_data.index = input.input_index();

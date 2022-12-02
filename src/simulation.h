@@ -1,11 +1,14 @@
 #ifndef LOGIKSIM_SIMULATION_H
 #define LOGIKSIM_SIMULATION_H
 
-#include "algorithms.h"
 #include "circuit.h"
+#include "exceptions.h"
+#include "algorithms.h"
 
 #include <boost/container/small_vector.hpp>
 #include <boost/container/vector.hpp>
+
+#include <range/v3/all.hpp>
 
 #include <queue>
 #include <string>
