@@ -8,7 +8,11 @@
 #include <iostream>
 #include <functional>
 
-#include <range/v3/all.hpp>
+#include <range/v3/core.hpp>
+#include <range/v3/view/iota.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/algorithm/all_of.hpp>
 
 
 namespace logicsim {

@@ -4,9 +4,12 @@
 #include <boost/range.hpp>
 #include <boost/range/combine.hpp>
 #include <boost/range/adaptors.hpp>
+
+#include <range/v3/core.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/algorithm/for_each.hpp>
 #include <range/v3/iterator/operations.hpp>
 
-#include <ranges>
 #include <iostream>
 
 
@@ -19,7 +22,7 @@ namespace logicsim {
 
 
 	void draw_wire_element(BLContext& ctx, const DrawAttributes& attributes,
-		const std::ranges::input_range auto input_values)
+		const ranges::input_range auto input_values)
 	{
 		constexpr static double s = 20;
 		ctx.setStrokeWidth(2);
@@ -34,8 +37,8 @@ namespace logicsim {
 	}
 
 	void draw_standard_element(BLContext& ctx, ElementType type, const DrawAttributes& attributes,
-		const std::ranges::input_range auto input_values,
-		const std::ranges::input_range auto output_values)
+		const ranges::input_range auto input_values,
+		const ranges::input_range auto output_values)
 	{
 		constexpr static double s = 20;
 		ctx.setStrokeWidth(2);
@@ -78,8 +81,8 @@ namespace logicsim {
 
 
 	void draw_element(BLContext& ctx, ElementType type, const DrawAttributes& attributes,
-		const std::ranges::input_range auto input_values,
-		const std::ranges::input_range auto output_values)
+		const ranges::input_range auto input_values,
+		const ranges::input_range auto output_values)
 	{
 		switch (type) {
 		case ElementType::wire:
@@ -104,14 +107,14 @@ namespace logicsim {
 	{
 		render_background(ctx);
 
-		std::ranges::for_each(graph.elements(), [&](auto element) {
+		ranges::for_each(graph.elements(), [&](auto element) {
 			draw_element(
 				ctx,
 				graph.get_type(element),
 				attributes.at(element),
-				std::ranges::views::transform(graph.inputs(element),
+				ranges::views::transform(graph.inputs(element),
 					[&](auto input) { return simulation.input_values.at(input); }),
-				std::ranges::views::transform(graph.outputs(element),
+				ranges::views::transform(graph.outputs(element),
 					[&](auto input) { return simulation.output_values.at(input); })
 			);
 		});

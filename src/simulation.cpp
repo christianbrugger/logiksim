@@ -5,7 +5,6 @@
 #include <boost/range/adaptors.hpp>
 
 #include <format>
-#include <ranges>
 #include <algorithm>
 #include <functional>
 
@@ -56,7 +55,7 @@ namespace logicsim {
             return;
 
         const auto& head { events.front() };
-        const auto tail { std::views::drop(events, 1) };
+        const auto tail { ranges::views::drop(events, 1) };  // TODO use tail
 
         if (head.element_id == null_element)
             throw_exception("Event element cannot be null.");
@@ -65,13 +64,13 @@ namespace logicsim {
             throw_exception("Event time needs to be finite.");
 
         if (tail.size() > 0) {
-            if (!std::ranges::all_of(tail, [head](const auto& event) { return event.time == head.time;  }))
+            if (!ranges::all_of(tail, [head](const auto& event) { return event.time == head.time;  }))
                 throw_exception("All events in the group need to have the same time.");
 
-            if (!std::ranges::all_of(tail, [head](const auto& event) { return event.element_id == head.element_id;  }))
+            if (!ranges::all_of(tail, [head](const auto& event) { return event.element_id == head.element_id;  }))
                 throw_exception("All events in the group need to have the same time.");
 
-            if (has_duplicates_quadratic(std::ranges::views::transform(events, [](const auto& event){ return event.input_index; })))
+            if (has_duplicates_quadratic(ranges::views::transform(events, [](const auto& event){ return event.input_index; })))
                 throw_exception("Cannot have two events for the same input at the same time.");
         }
 
@@ -94,13 +93,13 @@ namespace logicsim {
             return { !input.at(0) };
 
         case ElementType::and_element:
-            return { std::ranges::all_of(input, std::identity{}) };
+            return { ranges::all_of(input, std::identity{}) };
 
         case ElementType::or_element:
-            return { std::ranges::any_of(input, std::identity{}) };
+            return { ranges::any_of(input, std::identity{}) };
 
         case ElementType::xor_element:
-            return { std::ranges::count_if(input, std::identity{}) == 1 };
+            return { ranges::count_if(input, std::identity{}) == 1 };
 
         default:
             return {};
@@ -110,7 +109,8 @@ namespace logicsim {
 
 
     logic_small_vector_t copy_inputs(const logic_vector_t &input_values, const Circuit::ConstElement element) {
-        const auto view { input_values | std::views::drop(element.first_input_id()) | std::views::take(element.input_count()) };
+        // TODO use to vector
+        const auto view { input_values | ranges::views::drop(element.first_input_id()) | ranges::views::take(element.input_count()) };
         return { std::cbegin(view), std::cend(view) };
     }
 
@@ -119,7 +119,7 @@ namespace logicsim {
     }
 
     void apply_events(logic_vector_t& input_values, const Circuit::ConstElement element, const event_group_t& group) {
-        std::ranges::for_each(group, [&input_values, element](const SimulationEvent& event) {
+        ranges::for_each(group, [&input_values, element](const SimulationEvent& event) {
             set_input(input_values, element, event.input_index, event.value);
         });
     }
@@ -178,7 +178,7 @@ namespace logicsim {
         const auto changes { get_changed_outputs(old_outputs, new_outputs) };
 
         // submit events
-        std::ranges::for_each(changes, [&, element](auto output_index) { 
+        ranges::for_each(changes, [&, element](auto output_index) { 
             create_event(state.queue, element.output(output_index), new_outputs); 
         });
     }

@@ -3,9 +3,10 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include <range/v3/core.hpp>
+
 #include <concepts>
 #include <format>
-#include <ranges>
 #include <iostream>
 #include <format>
 
@@ -37,7 +38,7 @@ namespace logicsim {
     }
 
     // good for small ranges, scales with O(n^2)
-    bool has_duplicates_quadratic(const std::ranges::input_range auto&& range) {
+    bool has_duplicates_quadratic(const ranges::input_range auto&& range) {
         if (std::size(range) <= 1)
             return false;
 
