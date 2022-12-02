@@ -31,22 +31,30 @@ namespace logicsim {
 
 
 	class Circuit {
-	private:
 		struct ElementData;
 		struct ConnectionData;
+
 	public:
-		class Element;
+		template<bool Const>
+		class ElementTemplate;
 		class InputConnection;
 		class OutputConnection;
 
-		element_id_t element_count() const noexcept;
-		[[ nodiscard ]] Element element(element_id_t element_id);
-		inline auto elements(); // TODO find a way to add const
-		Element create_element(ElementType type, 
-			connection_size_t input_count, connection_size_t output_count);
+		using Element = ElementTemplate<false>;
+		using ConstElement = ElementTemplate<true>;
 
+	public:
+		element_id_t element_count() const noexcept;
 		connection_id_t total_input_count() const noexcept;
 		connection_id_t total_output_count() const noexcept;
+
+		[[ nodiscard ]] Element element(element_id_t element_id);
+		[[ nodiscard ]] ConstElement element(element_id_t element_id) const;
+		inline auto elements();
+		inline auto elements() const;
+
+		Element create_element(ElementType type, 
+			connection_size_t input_count, connection_size_t output_count);
 
 		
 		void validate(bool require_all_outputs_connected = false); // TODO find a way to add const
@@ -77,17 +85,20 @@ namespace logicsim {
 	};
 
 
-	class Circuit::Element {
-	private:
-		friend Circuit;
-		explicit Element(Circuit* circuit, element_id_t element_id);
-	public:
-		bool operator==(Element other) const noexcept;
+	template<bool Const>
+	class Circuit::ElementTemplate {
+		using CircuitType = std::conditional_t<Const, Circuit const, Circuit>;
+		using ElementDataType = std::conditional_t<Const, ElementData const, ElementData>;
 
-		Circuit* circuit() const noexcept;
+		friend Circuit;
+		explicit ElementTemplate(CircuitType* circuit, element_id_t element_id);
+	public:
+		bool operator==(ElementTemplate other) const noexcept;
+
+		CircuitType* circuit() const noexcept;
 		element_id_t element_id() const noexcept;
 
-		ElementType type() const;
+		ElementType element_type() const;
 		connection_size_t input_count() const;
 		connection_size_t output_count() const;
 		connection_id_t first_input_id() const;
@@ -98,13 +109,13 @@ namespace logicsim {
 		[[ nodiscard ]] InputConnection input(connection_size_t input) const;
 		[[ nodiscard ]] OutputConnection output(connection_size_t output) const;
 
-		inline auto inputs() const;  // TODO remove inline
-		inline auto outputs() const; // TODO remove inline
+		auto inputs() const;
+		auto outputs() const;
 
 	private:
-		ElementData& element_data_() const;
+		ElementDataType& element_data_() const;
 
-		Circuit* circuit_;
+		CircuitType* circuit_;
 		element_id_t element_id_;
 	};
 
@@ -127,18 +138,19 @@ namespace logicsim {
 		element_id_t connected_element_id() const;
 		connection_size_t connected_output_index() const;
 
-		/**
-		 * Returns connected element object.
-		 *
-		 * @throws if connection doesn't exists. Call has_connected_element to check for this.
-		 */
+		
+		///
+		// Returns connected element object.
+		//
+		// @throws if connection doesn't exists. Call has_connected_element to check for this.
+		//
 		[[ nodiscard ]] Element connected_element() const;
 
-		/**
-		 * Returns connected output object.
-		 *
-		 * @throws if connection doesn't exists. Call has_connected_element to check for this.
-		 */
+		///
+		// Returns connected output object.
+		//
+		// @throws if connection doesn't exists. Call has_connected_element to check for this.
+		//
 		[[ nodiscard ]] OutputConnection connected_output() const;
 
 		void connect(OutputConnection output) const;
@@ -196,24 +208,59 @@ namespace logicsim {
 		connection_id_t output_id_;
 	};
 
+
+
+	void create_placeholders(Circuit& circuit);
+
+	Circuit benchmark_circuit(const int n_elements = 100);
+
+	//
+	// Circuit
+	//
+
 	auto Circuit::elements() {
 		return std::views::iota(0, element_count()) | std::views::transform(
 			[this](int i) { return this->element(static_cast<element_id_t>(i)); });
 	}
-	
-	auto Circuit::Element::inputs() const {
+
+	auto Circuit::elements() const {
+		return std::views::iota(0, element_count()) | std::views::transform(
+			[this](int i) { return this->element(static_cast<element_id_t>(i)); });
+	}
+
+
+	//
+	// Circuit::Element
+	//
+
+	//template<bool Const>
+	template<>
+	inline Circuit::InputConnection Circuit::ElementTemplate<false>::input(connection_size_t input) const
+	{
+		return Circuit::InputConnection{ circuit_, element_id_, input, input_id(input) };
+	}
+
+	//template<bool Const>
+	template<>
+	inline Circuit::OutputConnection Circuit::ElementTemplate<false>::output(connection_size_t output) const
+	{
+		return Circuit::OutputConnection{ circuit_, element_id_, output, output_id(output) };
+	}
+
+	// template<bool Const>
+	template<>
+	inline auto Circuit::ElementTemplate<false>::inputs() const {
 		return std::views::iota(0, input_count()) | std::views::transform(
 			[this](int i) { return input(static_cast<connection_size_t>(i)); });
 	}
 
-	auto Circuit::Element::outputs() const {
+	// template<bool Const>
+	template<>
+	inline auto Circuit::ElementTemplate<false>::outputs() const {
 		return std::views::iota(0, output_count()) | std::views::transform(
 			[this](int i) { return output(static_cast<connection_size_t>(i)); });
 	}
-	
 
-	void create_placeholders(Circuit &circuit);
-	Circuit benchmark_circuit(const int n_elements = 100);
 
 }
 

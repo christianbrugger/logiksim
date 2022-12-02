@@ -7,31 +7,168 @@
 
 namespace logicsim {
 
-	/*
+	//
+	// Circuit
+	//
 
-	auto Circuit::elements() {
+	element_id_t Circuit::element_count() const noexcept
 	{
-		return std::views::iota(0, element_count()) | std::views::transform(
-			[this](int i) { return this->element(static_cast<element_id_t>(i)); });
+		return static_cast<element_id_t>(element_data_store_.size());
 	}
 
-	auto Circuit::Element::inputs() const {
-		return std::views::iota(0, input_count()) | std::views::transform(
-			[this](int i) { return input(static_cast<connection_size_t>(i)); });
+	Circuit::Element Circuit::element(element_id_t element_id)
+	{
+		return Element{ this, element_id };
 	}
 
-	auto Circuit::Element::outputs() const {
-		return std::views::iota(0, output_count()) | std::views::transform(
-			[this](int i) { return output(static_cast<connection_size_t>(i)); });
+	Circuit::ConstElement Circuit::element(element_id_t element_id) const
+	{
+		return ConstElement{ this, element_id };
 	}
-	*/
+
+	Circuit::Element Circuit::create_element(ElementType type, 
+		connection_size_t input_count, connection_size_t output_count)
+	{
+		if (input_count < 0) {
+			throw_exception("Input count needs to be positive.");
+		}
+		if (output_count < 0) {
+			throw_exception("Output count needs to be positive.");
+		}
+
+		const auto new_input_size = input_data_store_.size() + input_count;
+		const auto new_output_size = input_data_store_.size() + input_count;
+
+		// make sure we can represent all ids
+		if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) {
+			throw_exception("Reached maximum number of elements.");
+		}
+		if (new_input_size >= std::numeric_limits<connection_id_t>::max()) {
+			throw_exception("Reached maximum number of inputs.");
+		}
+		if (new_output_size >= std::numeric_limits<connection_id_t>::max()) {
+			throw_exception("Reached maximum number of outputs.");
+		}
+		// TODO create custom exception, as we want to handle theses ones.
+
+		element_data_store_.push_back({
+			static_cast<connection_id_t>(input_data_store_.size()),
+			static_cast<connection_id_t>(output_data_store_.size()),
+			input_count,
+			output_count,
+			type
+			});
+		input_data_store_.resize(new_input_size);
+		output_data_store_.resize(new_output_size);
+
+		element_id_t element_id = static_cast<element_id_t>(element_data_store_.size() - 1);
+		return element(element_id);
+	}
+
+	connection_id_t Circuit::total_input_count() const noexcept
+	{
+		return static_cast<connection_id_t>(input_data_store_.size());
+	}
+
+	connection_id_t Circuit::total_output_count() const noexcept
+	{
+		return static_cast<connection_id_t>(output_data_store_.size());
+	}
+
+	void validate_output_connected(const Circuit::OutputConnection output) {
+		if (!output.has_connected_element()) {
+			throw_exception("Element has unconnected output.");
+		}
+	}
+
+	void validate_outputs_connected(const Circuit::Element element) {
+		std::ranges::for_each(element.outputs(), validate_output_connected);
+	}
+
+	void validate_input_consistent(const Circuit::InputConnection input) {
+		if (input.has_connected_element()) {
+			auto back_reference = input.connected_output().connected_input();
+			if (back_reference != input) {
+				throw_exception("Back reference doesn't match.");
+			}
+		}
+	}
+
+	void validate_output_consistent(const Circuit::OutputConnection output) {
+		if (output.has_connected_element()) {
+			auto back_reference = output.connected_input().connected_output();
+			if (back_reference != output) {
+				throw_exception("Back reference doesn't match.");
+			}
+		}
+	}
+
+	void validate_element_connections_consistent(const Circuit::Element element) {
+		std::ranges::for_each(element.inputs(), validate_input_consistent);
+		std::ranges::for_each(element.outputs(), validate_output_consistent);
+	}
+
+	void Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data) {
+		if (connection_data.element_id != null_element &&
+			connection_data.index == null_connection)
+		{
+			throw_exception("Connection to an element cannot have null_connection.");
+		}
+
+		if (connection_data.element_id == null_element &&
+			connection_data.index != null_connection)
+		{
+			throw_exception("Connection with null_element requires null_connection.");
+		}
+	}
+
+	void Circuit::validate(bool require_all_outputs_connected) {
+		auto all_one = [](auto vector) {
+			return std::ranges::all_of(vector, [](auto item) {return item == 1; });
+		};
+
+		//  every output_data entry is referenced once
+		std::vector<int> input_reference_count(total_input_count(), 0);
+		for (auto element : elements()) {
+			for (auto input : element.inputs()) {
+				input_reference_count.at(input.input_id()) += 1;
+			}
+		}
+		if (!all_one(input_reference_count)) {
+			throw_exception("Input data is inconsistent");
+		}
+
+		//  every output_data entry is referenced once
+		std::vector<int> output_reference_count(total_output_count(), 0);
+		for (auto element : elements()) {
+			for (auto output : element.outputs()) {
+				output_reference_count.at(output.output_id()) += 1;
+			}
+		}
+		if (!all_one(output_reference_count)) {
+			throw_exception("Input data is inconsistent");
+		}
+
+		// connection data valid
+		std::ranges::for_each(input_data_store_, Circuit::validate_connection_data_);
+		std::ranges::for_each(output_data_store_, Circuit::validate_connection_data_);
+
+		// back references consistent
+		std::ranges::for_each(elements(), validate_element_connections_consistent);
+
+		// all outputs connected
+		if (require_all_outputs_connected) {
+			std::ranges::for_each(elements(), validate_outputs_connected);
+		}
+	}
 
 
 	//
 	// Circuit::Element
 	//
 
-	Circuit::Element::Element(Circuit* circuit, element_id_t element_id) :
+	template<bool Const>
+	Circuit::ElementTemplate<Const>::ElementTemplate(CircuitType* circuit, element_id_t element_id) :
 		circuit_(circuit),
 		element_id_(element_id)
 	{
@@ -43,43 +180,51 @@ namespace logicsim {
 		}
 	}
 
-	bool Circuit::Element::operator==(Circuit::Element other) const noexcept
+	template<bool Const>
+	bool Circuit::ElementTemplate<Const>::operator==(Circuit::ElementTemplate<Const> other) const noexcept
 	{
 		return circuit_ == other.circuit_ &&
 			element_id_ == other.element_id_;
 	}
 
-	Circuit* Circuit::Element::circuit() const noexcept
+	template<bool Const>
+	auto Circuit::ElementTemplate<Const>::circuit() const noexcept -> CircuitType*
 	{
 		return circuit_;
 	}
 
-	element_id_t Circuit::Element::element_id() const noexcept
+	template<bool Const>
+	element_id_t Circuit::ElementTemplate<Const>::element_id() const noexcept
 	{
 		return element_id_;
 	}
 
-	ElementType Circuit::Element::type() const
+	template<bool Const>
+	ElementType Circuit::ElementTemplate<Const>::element_type() const
 	{
 		return element_data_().type;
 	}
 
-	connection_size_t Circuit::Element::input_count() const
+	template<bool Const>
+	connection_size_t Circuit::ElementTemplate<Const>::input_count() const
 	{
 		return element_data_().input_count;
 	}
 
-	connection_size_t Circuit::Element::output_count() const
+	template<bool Const>
+	connection_size_t Circuit::ElementTemplate<Const>::output_count() const
 	{
 		return element_data_().output_count;
 	}
 
-	connection_id_t Circuit::Element::first_input_id() const
+	template<bool Const>
+	connection_id_t Circuit::ElementTemplate<Const>::first_input_id() const
 	{
 		return element_data_().first_input_id;
 	}
 
-	connection_id_t Circuit::Element::input_id(connection_size_t input_index) const
+	template<bool Const>
+	connection_id_t Circuit::ElementTemplate<Const>::input_id(connection_size_t input_index) const
 	{
 		if (input_index < 0 || input_index >= input_count()) {
 			throw_exception("Index is invalid");
@@ -87,12 +232,14 @@ namespace logicsim {
 		return first_input_id() + input_index;
 	}
 
-	connection_id_t Circuit::Element::first_output_id() const
+	template<bool Const>
+	connection_id_t Circuit::ElementTemplate<Const>::first_output_id() const
 	{
 		return element_data_().first_output_id;
 	}
 
-	connection_id_t Circuit::Element::output_id(connection_size_t output_index) const
+	template<bool Const>
+	connection_id_t Circuit::ElementTemplate<Const>::output_id(connection_size_t output_index) const
 	{
 		if (output_index < 0 || output_index >= output_count()) {
 			throw_exception("Index is invalid");
@@ -100,35 +247,15 @@ namespace logicsim {
 		return first_output_id() + output_index;
 	}
 
-	Circuit::InputConnection Circuit::Element::input(connection_size_t input) const
-	{
-		return Circuit::InputConnection{ circuit_, element_id_, input, input_id(input) };
-	}
-	Circuit::OutputConnection Circuit::Element::output(connection_size_t output) const
-	{
-		return Circuit::OutputConnection{ circuit_, element_id_, output, output_id(output) };
-	}
 
-	//	auto Circuit::inputs()
-	//	{
-	//		return std::views::iota(0, input_count()) | std::views::transform(
-	//			[this](int i) { return input(static_cast<connection_size_t>(i)); });
-	//	}
-
-	//	auto Circuit::outputs()
-	//	{
-	//		return std::views::iota(0, output_count()) | std::views::transform(
-	//			[this](int i) { return output(static_cast<connection_size_t>(i)); });
-	//	}
-
-	Circuit::ElementData& Circuit::Element::element_data_() const
+	template<bool Const>
+	auto Circuit::ElementTemplate<Const>::element_data_() const -> ElementDataType&
 	{
 		return circuit_->element_data_store_.at(element_id_);
 	}
 
-
-
-
+	template class Circuit::ElementTemplate<true>;
+	template class Circuit::ElementTemplate<false>;
 
 	//
 	// Circuit::InputConnection
@@ -350,176 +477,8 @@ namespace logicsim {
 
 
 	//
-	// Circuit
+	// Free Functions
 	//
-
-	element_id_t Circuit::element_count() const noexcept
-	{
-		return static_cast<element_id_t>(element_data_store_.size());
-	}
-
-
-	Circuit::Element Circuit::element(element_id_t element_id)
-	{
-		return Circuit::Element{ this, element_id };
-	}
-
-	//	auto Circuit::elements()
-	//	{
-	//		return std::views::iota(0, element_count()) | std::views::transform(
-	//			[this](int i) { return this->element(static_cast<element_id_t>(i)); });
-	//	}
-
-	Circuit::Element Circuit::create_element(
-		ElementType type,
-		connection_size_t input_count,
-		connection_size_t output_count
-	)
-	{
-		if (input_count < 0) {
-			throw_exception("Input count needs to be positive.");
-		}
-		if (output_count < 0) {
-			throw_exception("Output count needs to be positive.");
-		}
-
-		const auto new_input_size = input_data_store_.size() + input_count;
-		const auto new_output_size = input_data_store_.size() + input_count;
-
-		// make sure we can represent all ids
-		if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) {
-			throw_exception("Reached maximum number of elements.");
-		}
-		if (new_input_size >= std::numeric_limits<connection_id_t>::max()) {
-			throw_exception("Reached maximum number of inputs.");
-		}
-		if (new_output_size >= std::numeric_limits<connection_id_t>::max()) {
-			throw_exception("Reached maximum number of outputs.");
-		}
-		// TODO create custom exception, as we want to handle theses ones.
-
-		element_data_store_.push_back({
-			static_cast<connection_id_t>(input_data_store_.size()),
-			static_cast<connection_id_t>(output_data_store_.size()),
-			input_count,
-			output_count,
-			type
-			});
-		input_data_store_.resize(new_input_size);
-		output_data_store_.resize(new_output_size);
-
-		element_id_t element_id = static_cast<element_id_t>(element_data_store_.size() - 1);
-		return element(element_id);
-	}
-
-	connection_id_t Circuit::total_input_count() const noexcept
-	{
-		return static_cast<connection_id_t>(input_data_store_.size());
-	}
-
-	connection_id_t Circuit::total_output_count() const noexcept
-	{
-		return static_cast<connection_id_t>(output_data_store_.size());
-	}
-
-
-
-
-
-
-
-
-
-	//
-	// Validation
-	//
-
-	void validate_output_connected(const Circuit::OutputConnection output) {
-		if (!output.has_connected_element()) {
-			throw_exception("Element has unconnected output.");
-		}
-	}
-
-	void validate_outputs_connected(const Circuit::Element element) {
-		std::ranges::for_each(element.outputs(), validate_output_connected);
-	}
-
-	void validate_input_consistent(const Circuit::InputConnection input) {
-		if (input.has_connected_element()) {
-			auto back_reference = input.connected_output().connected_input();
-			if (back_reference != input) {
-				throw_exception("Back reference doesn't match.");
-			}
-		}
-	}
-
-	void validate_output_consistent(const Circuit::OutputConnection output) {
-		if (output.has_connected_element()) {
-			auto back_reference = output.connected_input().connected_output();
-			if (back_reference != output) {
-				throw_exception("Back reference doesn't match.");
-			}
-		}
-	}
-
-	void validate_element_connections_consistent(const Circuit::Element element) {
-		std::ranges::for_each(element.inputs(), validate_input_consistent);
-		std::ranges::for_each(element.outputs(), validate_output_consistent);
-	}
-
-	void Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data) {
-		if (connection_data.element_id != null_element &&
-			connection_data.index == null_connection)
-		{
-			throw_exception("Connection to an element cannot have null_connection.");
-		}
-
-		if (connection_data.element_id == null_element &&
-			connection_data.index != null_connection)
-		{
-			throw_exception("Connection with null_element requires null_connection.");
-		}
-	}
-
-	void Circuit::validate(bool require_all_outputs_connected) {
-		auto all_one = [](auto vector) {
-			return std::ranges::all_of(vector, [](auto item) {return item == 1; });
-		};
-
-		//  every output_data entry is referenced once
-		std::vector<int> input_reference_count(total_input_count(), 0);
-		for (auto element : elements()) {
-			for (auto input : element.inputs()) {
-				input_reference_count.at(input.input_id()) += 1;
-			}
-		}
-		if (!all_one(input_reference_count)) {
-			throw_exception("Input data is inconsistent");
-		}
-
-		//  every output_data entry is referenced once
-		std::vector<int> output_reference_count(total_output_count(), 0);
-		for (auto element : elements()) {
-			for (auto output : element.outputs()) {
-				output_reference_count.at(output.output_id()) += 1;
-			}
-		}
-		if (!all_one(output_reference_count)) {
-			throw_exception("Input data is inconsistent");
-		}
-
-		// connection data valid
-		std::ranges::for_each(input_data_store_, Circuit::validate_connection_data_);
-		std::ranges::for_each(output_data_store_, Circuit::validate_connection_data_);
-
-		// back references consistent
-		std::ranges::for_each(elements(), validate_element_connections_consistent);
-
-		// all outputs connected
-		if (require_all_outputs_connected) {
-			std::ranges::for_each(elements(), validate_outputs_connected);
-		}
-	}
 
 
 	void create_placeholder(Circuit::OutputConnection output) {
