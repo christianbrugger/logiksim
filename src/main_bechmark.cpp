@@ -270,7 +270,7 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 		
 		using namespace logicsim;
 
-		auto circuit = benchmark_circuit(10'000);
+		auto circuit = benchmark_circuit(1);
 
 		benchmark::ClobberMemory();
 
@@ -280,17 +280,8 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 
 		benchmark::DoNotOptimize(circuit);
 
-		const Circuit circuit2 = circuit;
-		Circuit::ConstElement element = circuit2.element(0);
-
-		element.element_id();
-		element.element_type();
-		// auto input = element.input(0);
-		// input.circuit();
-
-		// Base<int>::Test<true> abc;
-		
 		demo();
+		demo_const();
 	}
 }
 BENCHMARK(BM_Benchmark_Graph_v2); // NOLINT

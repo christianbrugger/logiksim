@@ -3,9 +3,11 @@
 
 #include <ranges>
 #include <algorithm>
+#include <format>
 
 
 namespace logicsim {
+
 
 	//
 	// Circuit
@@ -37,7 +39,7 @@ namespace logicsim {
 		}
 
 		const auto new_input_size = input_data_store_.size() + input_count;
-		const auto new_output_size = input_data_store_.size() + input_count;
+		const auto new_output_size = output_data_store_.size() + output_count;
 
 		// make sure we can represent all ids
 		if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) {
@@ -148,7 +150,7 @@ namespace logicsim {
 			}
 		}
 		if (!all_one(output_reference_count)) {
-			throw_exception("Input data is inconsistent");
+			throw_exception("Output data is inconsistent");
 		}
 
 		// connection data valid
@@ -259,10 +261,10 @@ namespace logicsim {
 	template class Circuit::ElementTemplate<true>;
 	template class Circuit::ElementTemplate<false>;
 
+
 	//
 	// Circuit::InputConnection
 	//
-
 
 	template<bool Const>
 	Circuit::InputConnectionTemplate<Const>::InputConnectionTemplate(CircuitType* circuit,
@@ -338,8 +340,7 @@ namespace logicsim {
 	template<bool Const>
 	auto Circuit::InputConnectionTemplate<Const>::connected_element() const -> ElementTemplate<Const>
 	{
-		// TODO remove ElementTemplate<Const> and try with explicit
-		return ElementTemplate<Const>{ circuit_, connected_element_id() };
+		return ElementTemplate<Const> { circuit_, connected_element_id() };
 	}
 
 	template<bool Const>
@@ -392,10 +393,10 @@ namespace logicsim {
 	template class Circuit::InputConnectionTemplate<true>;
 	template class Circuit::InputConnectionTemplate<false>;
 
+
 	//
 	// Circuit::OutputConnection
 	//
-
 
 	template<bool Const>
 	Circuit::OutputConnectionTemplate<Const>::OutputConnectionTemplate(

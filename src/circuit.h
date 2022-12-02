@@ -246,13 +246,13 @@ namespace logicsim {
 	template<bool Const>
 	inline auto Circuit::ElementTemplate<Const>::inputs() const {
 		return std::views::iota(0, input_count()) | std::views::transform(
-			[this](int i) { return input(static_cast<connection_size_t>(i)); });
+			[this](int i) { return this->input(static_cast<connection_size_t>(i)); });
 	}
 
 	template<bool Const>
 	inline auto Circuit::ElementTemplate<Const>::outputs() const {
 		return std::views::iota(0, output_count()) | std::views::transform(
-			[this](int i) { return output(static_cast<connection_size_t>(i)); });
+			[this](int i) { return this->output(static_cast<connection_size_t>(i)); });
 	}
 
 
