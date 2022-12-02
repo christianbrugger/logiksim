@@ -249,7 +249,7 @@ void demo_const() {
 	circuit_init.create_element(ElementType::wire, 1, 1);
 	circuit_init.create_element(ElementType::wire, 1, 1);
 
-	const Circuit circuit { circuit_init };
+	const Circuit &circuit { circuit_init };
 
 	Circuit::ConstElement element0 { circuit.element(0) };
 	Circuit::ConstElement element1 { circuit.element(0) };
@@ -260,8 +260,12 @@ void demo_const() {
 	Circuit::ConstInputConnection input = element0.input(0);
 	input.has_connected_element();
 
+	// element0.input(0).connect(element1.output(0));
+	circuit_init.element(0).input(0).connect(element1.output(0));
+
 	circuit_init.validate();
 	circuit.validate();
+
 }
 
 
