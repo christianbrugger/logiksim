@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 #include <iostream>
+#include <functional>
 
 #include "algorithms.h"
 
@@ -40,7 +41,7 @@ namespace logicsim {
 
 		element_id_t element_count() const noexcept;
 		[[ nodiscard ]] Element element(element_id_t element_id);
-		auto elements(); // TODO find a way to add const
+		inline auto elements(); // TODO find a way to add const
 		Element create_element(ElementType type, 
 			connection_size_t input_count, connection_size_t output_count);
 
@@ -79,7 +80,7 @@ namespace logicsim {
 	class Circuit::Element {
 	private:
 		friend Circuit;
-		Element(Circuit* circuit, element_id_t element_id);
+		explicit Element(Circuit* circuit, element_id_t element_id);
 	public:
 		bool operator==(Element other) const noexcept;
 
@@ -97,8 +98,8 @@ namespace logicsim {
 		[[ nodiscard ]] InputConnection input(connection_size_t input) const;
 		[[ nodiscard ]] OutputConnection output(connection_size_t output) const;
 
-		auto inputs() const;
-		auto outputs() const;
+		inline auto inputs() const;  // TODO remove inline
+		inline auto outputs() const; // TODO remove inline
 
 	private:
 		ElementData& element_data_() const;
@@ -111,7 +112,7 @@ namespace logicsim {
 	class Circuit::InputConnection {
 	private:
 		friend Element;
-		InputConnection(Circuit* circuit, element_id_t element_id, 
+		explicit InputConnection(Circuit* circuit, element_id_t element_id,
 			connection_size_t input_index, connection_id_t input_id);
 	public:
 		bool operator==(InputConnection other) const noexcept;
@@ -154,7 +155,7 @@ namespace logicsim {
 	class Circuit::OutputConnection {
 	private:
 		friend Element;
-		OutputConnection(Circuit* circuit, element_id_t element_id, 
+		explicit OutputConnection(Circuit* circuit, element_id_t element_id,
 			connection_size_t output_index, connection_id_t output_id
 		);
 	public:
@@ -194,7 +195,6 @@ namespace logicsim {
 		connection_size_t output_index_;
 		connection_id_t output_id_;
 	};
-
 
 	auto Circuit::elements() {
 		return std::views::iota(0, element_count()) | std::views::transform(

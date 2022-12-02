@@ -9,6 +9,8 @@
 #include <numeric>
 #include <random>
 #include <functional>
+#include <ranges>
+#include <algorithm>
 
 #include <benchmark/benchmark.h>
 
@@ -219,107 +221,9 @@ static void BM_Loop_Manually_3(benchmark::State& state) {
 BENCHMARK(BM_Loop_Manually_3); // NOLINT
 */
 
-template <typename T>
-class Base {
-public:
-	void test();
-
-	template <bool Const>
-	class Test;
-
-private:
-	T* t;
-};
-
-template <typename T>
-void Base<T>::test() {
-
-};
-
-template <typename T>
-template <bool Const>
-class Base<T>::Test {
-
-};
-
-
-class Tree {
-public:
-	class Leaf;
-
-	class Branch {
-	public:
-		Branch(Tree* tree, int branch_id)
-			: tree_(tree), branch_id_(branch_id) {};
-
-		Leaf leaf(int leaf_id) {
-			return Leaf{ tree_, branch_id_, leaf_id };
-		}
-
-		float thickness() {
-			return tree_->branch_thickness_[branch_id_];
-		}
-
-	private:
-		Tree* tree_;
-		int branch_id_;
-	};
-
-	class Leaf {
-	public:
-		Leaf(Tree* tree, int branch_id, int leaf_id)
-			: tree_(tree), branch_id_(branch_id), leaf_id_(leaf_id) {};
-
-		Branch branch() {
-			return Branch{ tree_, branch_id_ };
-		}
-
-		float color() {
-			return tree_->leaf_color_[branch_id_][leaf_id_];
-		}
-	private:
-		Tree* tree_;
-		int branch_id_;
-		int leaf_id_;
-	};
-
-	Branch branch(int branch_id) {
-		return Branch{ this, branch_id };
-	}
-
-//	Branch branch(int branch_id) const {
-//		return Branch{ this, branch_id };
-//	}
-private:
-	std::vector<float> branch_thickness_{ 0.5 };
-	std::vector<std::vector<float>> leaf_color_{ {0.2, 0.4} };
-};
-
-
-void demo() {
-	Tree tree;
-	Tree::Branch branch = tree.branch(0);
-	Tree::Leaf leaf = branch.leaf(1);
-
-	std::cout << "Branch Thickness " << branch.thickness() << '\n';
-	std::cout << "Leaf Color " << leaf.color() << '\n';
-	std::cout << "Branch Thickness " << leaf.branch().thickness() << '\n';
-}
-
-/*
-void demo_const() {
-	const Tree tree;
-	Tree::Branch branch = tree.branch(0);
-	Tree::Leaf leaf = branch.leaf(1);
-
-	std::cout << "Branch Thickness " << branch.thickness() << '\n';
-	std::cout << "Leaf Color " << leaf.color() << '\n';
-	std::cout << "Branch Thickness " << leaf.branch().thickness() << '\n';
-}
-*/
-
 static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 	for ([[maybe_unused]] auto _ : state) {
+		
 		using namespace logicsim;
 
 		auto circuit = benchmark_circuit(10'000);
@@ -333,8 +237,7 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 		const Circuit circuit2 = circuit;
 
 		// Base<int>::Test<true> abc;
-
-		demo();
+		
 	}
 }
 BENCHMARK(BM_Benchmark_Graph_v2); // NOLINT
