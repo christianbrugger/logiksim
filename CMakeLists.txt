@@ -74,10 +74,12 @@ add_executable(${MAIN_BENCHMARK_TARGET}
     src/circuit.h src/circuit.cpp
     # src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
+    src/exceptions.h src/exceptions.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
     benchmark::benchmark
     Boost::boost
+    range-v3::range-v3
 )
 if (MSVC)
     target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)

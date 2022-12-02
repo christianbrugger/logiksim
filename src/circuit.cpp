@@ -1,8 +1,6 @@
 
 #include "circuit.h"
 
-#include <ranges>
-#include <algorithm>
 #include <format>
 
 
@@ -84,7 +82,7 @@ namespace logicsim {
 	}
 
 	void validate_outputs_connected(const Circuit::ConstElement element) {
-		std::ranges::for_each(element.outputs(), validate_output_connected);
+		ranges::for_each(element.outputs(), validate_output_connected);
 	}
 
 	void validate_input_consistent(const Circuit::ConstInputConnection input) {
@@ -106,8 +104,8 @@ namespace logicsim {
 	}
 
 	void validate_element_connections_consistent(const Circuit::ConstElement element) {
-		std::ranges::for_each(element.inputs(), validate_input_consistent);
-		std::ranges::for_each(element.outputs(), validate_output_consistent);
+		ranges::for_each(element.inputs(), validate_input_consistent);
+		ranges::for_each(element.outputs(), validate_output_consistent);
 	}
 
 	void Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data)
@@ -128,7 +126,7 @@ namespace logicsim {
 	void Circuit::validate(bool require_all_outputs_connected)  const 
 	{
 		auto all_one = [](auto vector) {
-			return std::ranges::all_of(vector, [](auto item) {return item == 1; });
+			return ranges::all_of(vector, [](auto item) {return item == 1; });
 		};
 
 		//  every output_data entry is referenced once
@@ -154,15 +152,15 @@ namespace logicsim {
 		}
 
 		// connection data valid
-		std::ranges::for_each(input_data_store_, Circuit::validate_connection_data_);
-		std::ranges::for_each(output_data_store_, Circuit::validate_connection_data_);
+		ranges::for_each(input_data_store_, Circuit::validate_connection_data_);
+		ranges::for_each(output_data_store_, Circuit::validate_connection_data_);
 
 		// back references consistent
-		std::ranges::for_each(elements(), validate_element_connections_consistent);
+		ranges::for_each(elements(), validate_element_connections_consistent);
 
 		// all outputs connected
 		if (require_all_outputs_connected) {
-			std::ranges::for_each(elements(), validate_outputs_connected);
+			ranges::for_each(elements(), validate_outputs_connected);
 		}
 	}
 
@@ -180,11 +178,11 @@ namespace logicsim {
 	}
 
 	void create_element_placeholders(Circuit::Element element) {
-		std::ranges::for_each(element.outputs(), create_placeholder);
+		ranges::for_each(element.outputs(), create_placeholder);
 	}
 
 	void create_placeholders(Circuit& circuit) {
-		std::ranges::for_each(circuit.elements(), create_element_placeholders);
+		ranges::for_each(circuit.elements(), create_element_placeholders);
 	}
 
 
@@ -196,7 +194,7 @@ namespace logicsim {
 
 		auto elem0 = circuit.create_element(ElementType::and_element, 2, 2);
 
-		for ([[maybe_unused]] auto _ : std::ranges::iota_view(1, n_elements)) {
+		for ([[maybe_unused]] auto _ : ranges::iota_view(1, n_elements)) {
 			auto wire0 = circuit.create_element(ElementType::wire, 1, 1);
 			auto wire1 = circuit.create_element(ElementType::wire, 1, 1);
 			auto elem1 = circuit.create_element(ElementType::and_element, 2, 2);

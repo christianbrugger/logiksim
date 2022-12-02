@@ -1,13 +1,14 @@
 #ifndef LOGIKSIM_CIRCUIT_H
 #define LOGIKSIM_CIRCUIT_H
 
-#include <ranges>
+#include "exceptions.h"
+
 #include <cstdint>
 #include <vector>
 #include <iostream>
 #include <functional>
 
-#include "algorithms.h"
+#include <range/v3/all.hpp>
 
 
 namespace logicsim {
@@ -221,12 +222,12 @@ namespace logicsim {
 	// auto return methods need to be defined in the header, so the type can be deduced
 
 	auto Circuit::elements() {
-		return std::views::iota(0, element_count()) | std::views::transform(
+		return ranges::views::iota(0, element_count()) | ranges::views::transform(
 			[this](int i) { return this->element(static_cast<element_id_t>(i)); });
 	}
 
 	auto Circuit::elements() const {
-		return std::views::iota(0, element_count()) | std::views::transform(
+		return ranges::views::iota(0, element_count()) | ranges::views::transform(
 			[this](int i) { return this->element(static_cast<element_id_t>(i)); });
 	}
 
@@ -329,13 +330,13 @@ namespace logicsim {
 
 	template<bool Const>
 	inline auto Circuit::ElementTemplate<Const>::inputs() const {
-		return std::views::iota(0, input_count()) | std::views::transform(
+		return ranges::views::iota(0, input_count()) | ranges::views::transform(
 			[this](int i) { return this->input(static_cast<connection_size_t>(i)); });
 	}
 
 	template<bool Const>
 	inline auto Circuit::ElementTemplate<Const>::outputs() const {
-		return std::views::iota(0, output_count()) | std::views::transform(
+		return ranges::views::iota(0, output_count()) | ranges::views::transform(
 			[this](int i) { return this->output(static_cast<connection_size_t>(i)); });
 	}
 

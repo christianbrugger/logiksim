@@ -2,6 +2,10 @@
 //#define _DISABLE_VECTOR_ANNOTATION
 //#define _DISABLE_STRING_ANNOTATION
 
+
+#include "circuit.h"
+// #include "simulation.h"
+
 #include <iostream>
 #include <vector>
 #include <array>
@@ -9,13 +13,9 @@
 #include <numeric>
 #include <random>
 #include <functional>
-#include <ranges>
-#include <algorithm>
 
 #include <benchmark/benchmark.h>
 
-#include "circuit.h"
-// #include "simulation.h"
 
 
 /*

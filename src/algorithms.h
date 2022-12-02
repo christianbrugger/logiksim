@@ -12,8 +12,6 @@
 
 namespace logicsim {
 
-    [[noreturn]] void throw_exception(const char* msg);
-
 
     template <class T, typename ApplyFunc, typename WhileFunc>
     requires requires (T q, ApplyFunc apply_func, WhileFunc while_func, const typename T::value_type& v) {
