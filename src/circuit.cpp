@@ -7,8 +7,24 @@
 
 namespace logicsim {
 
+	/*
 
+	auto Circuit::elements() {
+	{
+		return std::views::iota(0, element_count()) | std::views::transform(
+			[this](int i) { return this->element(static_cast<element_id_t>(i)); });
+	}
 
+	auto Circuit::Element::inputs() const {
+		return std::views::iota(0, input_count()) | std::views::transform(
+			[this](int i) { return input(static_cast<connection_size_t>(i)); });
+	}
+
+	auto Circuit::Element::outputs() const {
+		return std::views::iota(0, output_count()) | std::views::transform(
+			[this](int i) { return output(static_cast<connection_size_t>(i)); });
+	}
+	*/
 
 
 	//
