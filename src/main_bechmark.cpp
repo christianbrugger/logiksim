@@ -259,6 +259,9 @@ void demo_const() {
 
 	Circuit::ConstInputConnection input = element0.input(0);
 	input.has_connected_element();
+
+	circuit_init.validate();
+	circuit.validate();
 }
 
 
@@ -271,7 +274,9 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 
 		benchmark::ClobberMemory();
 
+		circuit.validate();
 		create_placeholders(circuit);
+		circuit.validate(true);
 
 		benchmark::DoNotOptimize(circuit);
 

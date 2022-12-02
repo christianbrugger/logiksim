@@ -25,7 +25,7 @@ namespace logicsim {
 	using element_id_t = int32_t;
 	using connection_id_t = int32_t;
 	using connection_size_t = int8_t;
-	
+
 	constexpr element_id_t null_element = -1;
 	constexpr connection_size_t null_connection = -1;
 
@@ -59,11 +59,11 @@ namespace logicsim {
 		inline auto elements();
 		inline auto elements() const;
 
-		Element create_element(ElementType type, 
+		Element create_element(ElementType type,
 			connection_size_t input_count, connection_size_t output_count);
 
-		
-		void validate(bool require_all_outputs_connected = false); // TODO find a way to add const
+
+		void validate(bool require_all_outputs_connected = false) const;
 
 	private:
 		static void validate_connection_data_(Circuit::ConnectionData connection_data);
@@ -86,8 +86,8 @@ namespace logicsim {
 
 
 	struct Circuit::ConnectionData {
-		element_id_t element_id{ null_element };
-		connection_size_t index{ null_connection };
+		element_id_t element_id { null_element };
+		connection_size_t index { null_connection };
 	};
 
 
@@ -147,19 +147,10 @@ namespace logicsim {
 		element_id_t connected_element_id() const;
 		connection_size_t connected_output_index() const;
 
-		
-		///
-		// Returns connected element object.
-		//
-		// @throws if connection doesn't exists. Call has_connected_element to check for this.
-		//
-		[[ nodiscard ]] ElementTemplate<Const> connected_element() const;
 
-		///
-		// Returns connected output object.
-		//
-		// @throws if connection doesn't exists. Call has_connected_element to check for this.
-		//
+		/// @throws if connection doesn't exists. Call has_connected_element to check for this.
+		[[ nodiscard ]] ElementTemplate<Const> connected_element() const;
+		/// @throws if connection doesn't exists. Call has_connected_element to check for this.
 		[[ nodiscard ]] OutputConnectionTemplate<Const> connected_output() const;
 
 		void connect(OutputConnection output) const;
@@ -196,22 +187,13 @@ namespace logicsim {
 		element_id_t connected_element_id() const;
 		connection_size_t connected_input_index() const;
 
-		/**
-		 * Returns connected element object.
-		 *
-		 * @throws if connection doesn't exists. Call has_connected_element to check for this.
-		 */
+		/// @throws if connection doesn't exists. Call has_connected_element to check for this.
 		[[nodiscard]] ElementTemplate<Const> connected_element() const;
-		/**
-		 * Returns connected input object.
-		 *
-		 * @throws if connection doesn't exists. Call has_connected_element to check for this.
-		 */
+		/// @throws if connection doesn't exists. Call has_connected_element to check for this.
 		[[nodiscard]] InputConnectionTemplate<Const> connected_input() const;
 
 		void connect(InputConnection input) const;
 		void clear_connection() const;
-
 	private:
 		ConnectionDataType& connection_data_() const;
 
@@ -231,6 +213,8 @@ namespace logicsim {
 	// Circuit
 	//
 
+	// auto return methods need to be defined in the header, so the type can be deduced
+
 	auto Circuit::elements() {
 		return std::views::iota(0, element_count()) | std::views::transform(
 			[this](int i) { return this->element(static_cast<element_id_t>(i)); });
@@ -244,6 +228,8 @@ namespace logicsim {
 	//
 	// Circuit::Element
 	//
+
+	// auto return methods need to be defined in the header, so the type can be deduced
 
 	template<bool Const>
 	auto Circuit::ElementTemplate<Const>::input(connection_size_t input) const -> InputConnectionTemplate<Const>

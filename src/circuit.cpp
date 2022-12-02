@@ -16,18 +16,18 @@ namespace logicsim {
 		return static_cast<element_id_t>(element_data_store_.size());
 	}
 
-	Circuit::Element Circuit::element(element_id_t element_id)
+	auto Circuit::element(element_id_t element_id) -> Element
 	{
-		return Element{ this, element_id };
+		return Element { this, element_id };
 	}
 
-	Circuit::ConstElement Circuit::element(element_id_t element_id) const
+	auto Circuit::element(element_id_t element_id) const -> ConstElement
 	{
-		return ConstElement{ this, element_id };
+		return ConstElement { this, element_id };
 	}
 
-	Circuit::Element Circuit::create_element(ElementType type, 
-		connection_size_t input_count, connection_size_t output_count)
+	auto Circuit::create_element(ElementType type,
+		connection_size_t input_count, connection_size_t output_count) -> Element
 	{
 		if (input_count < 0) {
 			throw_exception("Input count needs to be positive.");
@@ -75,17 +75,17 @@ namespace logicsim {
 		return static_cast<connection_id_t>(output_data_store_.size());
 	}
 
-	void validate_output_connected(const Circuit::OutputConnection output) {
+	void validate_output_connected(const Circuit::ConstOutputConnection output) {
 		if (!output.has_connected_element()) {
 			throw_exception("Element has unconnected output.");
 		}
 	}
 
-	void validate_outputs_connected(const Circuit::Element element) {
+	void validate_outputs_connected(const Circuit::ConstElement element) {
 		std::ranges::for_each(element.outputs(), validate_output_connected);
 	}
 
-	void validate_input_consistent(const Circuit::InputConnection input) {
+	void validate_input_consistent(const Circuit::ConstInputConnection input) {
 		if (input.has_connected_element()) {
 			auto back_reference = input.connected_output().connected_input();
 			if (back_reference != input) {
@@ -94,7 +94,7 @@ namespace logicsim {
 		}
 	}
 
-	void validate_output_consistent(const Circuit::OutputConnection output) {
+	void validate_output_consistent(const Circuit::ConstOutputConnection output) {
 		if (output.has_connected_element()) {
 			auto back_reference = output.connected_input().connected_output();
 			if (back_reference != output) {
@@ -103,12 +103,13 @@ namespace logicsim {
 		}
 	}
 
-	void validate_element_connections_consistent(const Circuit::Element element) {
+	void validate_element_connections_consistent(const Circuit::ConstElement element) {
 		std::ranges::for_each(element.inputs(), validate_input_consistent);
 		std::ranges::for_each(element.outputs(), validate_output_consistent);
 	}
 
-	void Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data) {
+	void Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data)
+	{
 		if (connection_data.element_id != null_element &&
 			connection_data.index == null_connection)
 		{
@@ -122,7 +123,8 @@ namespace logicsim {
 		}
 	}
 
-	void Circuit::validate(bool require_all_outputs_connected) {
+	void Circuit::validate(bool require_all_outputs_connected)  const 
+	{
 		auto all_one = [](auto vector) {
 			return std::ranges::all_of(vector, [](auto item) {return item == 1; });
 		};
@@ -263,7 +265,7 @@ namespace logicsim {
 
 
 	template<bool Const>
-	Circuit::InputConnectionTemplate<Const>::InputConnectionTemplate(CircuitType* circuit, 
+	Circuit::InputConnectionTemplate<Const>::InputConnectionTemplate(CircuitType* circuit,
 		element_id_t element_id, connection_size_t input_index, connection_id_t input_id
 	) :
 		circuit_(circuit),
@@ -497,7 +499,7 @@ namespace logicsim {
 	}
 
 	template<>
-	void Circuit::OutputConnectionTemplate<false>::connect(InputConnection input) const 
+	void Circuit::OutputConnectionTemplate<false>::connect(InputConnection input) const
 	{
 		clear_connection();
 
@@ -513,7 +515,7 @@ namespace logicsim {
 	}
 
 	template<bool Const>
-	auto Circuit::OutputConnectionTemplate<Const>::connection_data_() const -> ConnectionDataType& 
+	auto Circuit::OutputConnectionTemplate<Const>::connection_data_() const -> ConnectionDataType&
 	{
 		return circuit_->output_data_store_.at(output_id_);
 	}
@@ -538,16 +540,16 @@ namespace logicsim {
 		std::ranges::for_each(element.outputs(), create_placeholder);
 	}
 
-	void create_placeholders(Circuit &circuit) {
+	void create_placeholders(Circuit& circuit) {
 		std::ranges::for_each(circuit.elements(), create_element_placeholders);
 	}
-	
+
 
 
 
 	Circuit benchmark_circuit(const int n_elements) {
 
-		Circuit circuit{};
+		Circuit circuit {};
 
 		auto elem0 = circuit.create_element(ElementType::and_element, 2, 2);
 
