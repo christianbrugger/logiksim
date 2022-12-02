@@ -141,7 +141,7 @@ namespace logicsim {
 
     logic_vector_t collect_output_values(const logic_vector_t& input_values, const Circuit& circuit);
 
-    int benchmark_simulation(const int n_elements = 100);
+    int benchmark_simulation(const int n_elements = 100, bool print = false);
 
 }
 

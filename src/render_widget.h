@@ -91,24 +91,24 @@ namespace logicsim {
                 return;
             }
 
-            CircuitGraph graph;
+            Circuit circuit;
 
-            const auto elem0 = graph.create_element(ElementType::or_element, 2, 1);
-            const auto line0 = graph.create_element(ElementType::wire, 1, 1);
-            graph.connect_output(elem0, 0, line0, 0);
-            graph.connect_output(line0, 0, elem0, 1);
+            const auto elem0 = circuit.create_element(ElementType::or_element, 2, 1);
+            const auto line0 = circuit.create_element(ElementType::wire, 1, 1);
+            elem0.output(0).connect(line0.input(0));
+            line0.output(0).connect(elem0.input(1));
 
 
             SimulationState state;
-            state.queue.submit_event({ 0.1, elem0, 0, true });
-            state.queue.submit_event({ 0.5, elem0, 0, false });
+            state.queue.submit_event({ 0.1, elem0.element_id(), 0, true});
+            state.queue.submit_event({ 0.5, elem0.element_id(), 0, false});
 
-            auto sim_graph = create_placeholders(graph);
-            auto new_state = advance_simulation(state, sim_graph, 0, true);
+            create_placeholders(circuit);
+            auto new_state = advance_simulation(state, circuit, 0, true);
 
             SimulationResult simulation{ 
                 new_state.input_values, 
-                collect_output_values(new_state.input_values, sim_graph)
+                collect_output_values(new_state.input_values, circuit)
             };
 
             attribute_vector_t attributes = {
@@ -121,7 +121,7 @@ namespace logicsim {
 
             bl_ctx.begin(bl_image, bl_info);
             //renderFrame(bl_ctx);
-            render_scene(bl_ctx, graph, simulation, attributes);
+            render_scene(bl_ctx, circuit, simulation, attributes);
             bl_ctx.end();
 
             QPainter painter(this);

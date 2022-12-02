@@ -216,7 +216,7 @@ namespace logicsim {
         return output_values;
     }
 
-    int benchmark_simulation(const int n_elements) {
+    int benchmark_simulation(const int n_elements, bool print) {
         Circuit circuit;
 
         const auto elem0 { circuit.create_element(ElementType::or_element, 2, 1) };
@@ -229,18 +229,19 @@ namespace logicsim {
         state.queue.submit_event({ 0.5, elem0.element_id(), 1, false });
 
         create_placeholders(circuit);
-        auto print_events { false };
-        auto new_state { advance_simulation(state, circuit, 0, print_events) };
+        auto new_state { advance_simulation(state, circuit, 0, print) };
         auto output_values { collect_output_values(new_state.input_values, circuit) };
 
-        //for (bool input : new_state.input_values) {
-        //    std::cout << std::format("input_values = {}\n", input);
-        //}
-        //for (bool output : output_values) {
-        //    std::cout << std::format("output_values = {}\n", output);
-        //}
-        // std::cout << std::format("input_values = {}", std::vector<bool>(std::begin(new_state.input_values), std::end(new_state.input_values)));
-        // std::cout << std::format("output_values = {}", std::vector<bool>(std::begin(output_values), std::end(output_values)));
+        if (print) {
+            for (bool input : new_state.input_values) {
+                std::cout << std::format("input_values = {}\n", input);
+            }
+            for (bool output : output_values) {
+                std::cout << std::format("output_values = {}\n", output);
+            }
+            // std::cout << std::format("input_values = {}", std::vector<bool>(std::begin(new_state.input_values), std::end(new_state.input_values)));
+            // std::cout << std::format("output_values = {}", std::vector<bool>(std::begin(output_values), std::end(output_values)));
+        }
 
         return new_state.input_values.front() + output_values.front() + n_elements;
     }

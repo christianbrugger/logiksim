@@ -20,7 +20,7 @@ namespace logicsim {
     using point2d_t = std::array<double, 2>;
     using line_tree_t = boost::container::small_vector<point2d_t, 2>;
 
-    /* Draw attributes for one element in the graph. */
+    /* Draw attributes for one element in the circuit. */
     struct DrawAttributes {
         line_tree_t line_tree;
         point2d_t position;
@@ -32,7 +32,7 @@ namespace logicsim {
 
 	void render_scene(
         BLContext& ctx, 
-        const CircuitGraph& graph, 
+        const Circuit& circuit, 
         const SimulationResult& simulation, 
         const attribute_vector_t &attributes
     );

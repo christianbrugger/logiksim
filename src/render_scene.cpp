@@ -47,12 +47,12 @@ namespace logicsim {
 		// draw rect
 		double x = attributes.position[0] * s;
 		double y = attributes.position[1] * s;
-		int height = std::max(std::size(input_values), std::size(output_values));
+		int height = std::max(2, 2);  //ranges::size(input_values), ranges::size(output_values));  TODO
 		BLPath path;
 		path.addRect(x, y + -0.5 * s, 2 * s, height * s);
 
 		// draw inputs & outputs
-		int input_offset = (height - std::size(input_values)) / 2;
+		int input_offset = (height - 1) / 2;  // ranges::size(input_values)) / 2;  TODO
 		for (int i = 0;  const auto value : input_values) {
 			double y_pin = y + (input_offset + i) * s;
 			uint32_t color = value ? 0xFFFF0000u : 0xFF000000u;
@@ -61,7 +61,7 @@ namespace logicsim {
 			++i;
 		}
 
-		int output_offset = (height - std::size(output_values)) / 2;
+		int output_offset = (height - 2) / 2;  // ranges::size(output_values)) / 2;  TODO
 		for (int i = 0; const auto value : output_values) {
 			double y_pin = y + (output_offset + i) * s;
 			uint32_t color = value ? 0xFFFF0000u : 0xFF000000u;
@@ -100,22 +100,22 @@ namespace logicsim {
 
 	void render_scene(
 		BLContext& ctx, 
-		const CircuitGraph& graph, 
+		const Circuit& circuit, 
 		const SimulationResult& simulation, 
 		const attribute_vector_t& attributes
 	)
 	{
 		render_background(ctx);
 
-		ranges::for_each(graph.elements(), [&](auto element) {
+		ranges::for_each(circuit.elements(), [&](auto element) {
 			draw_element(
 				ctx,
-				graph.get_type(element),
-				attributes.at(element),
-				ranges::views::transform(graph.inputs(element),
-					[&](auto input) { return simulation.input_values.at(input); }),
-				ranges::views::transform(graph.outputs(element),
-					[&](auto input) { return simulation.output_values.at(input); })
+				element.element_type(),
+				attributes.at(element.element_id()),
+				ranges::views::transform(element.inputs(),
+					[&](auto input) { return simulation.input_values.at(input.input_id()); }),
+				ranges::views::transform(element.outputs(),
+					[&](auto output) { return simulation.output_values.at(output.output_id()); })
 			);
 		});
 

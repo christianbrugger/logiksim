@@ -9,7 +9,7 @@
 auto main() -> int {
     try
     {
-        logicsim::benchmark_simulation();
+        logicsim::benchmark_simulation(100, true);
     }
     catch (const std::exception& exc)
     {

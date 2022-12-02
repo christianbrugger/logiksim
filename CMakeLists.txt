@@ -90,15 +90,17 @@ endif()
 
 # MAIN
 
-set(MAIN_TARGET "simulation_srp")
+set(MAIN_TARGET "simulation_srp_main")
 add_executable(${MAIN_TARGET} 
     src/main.cpp
     src/circuit.h src/circuit.cpp
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
+    src/exceptions.h src/exceptions.cpp
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
     Boost::boost
+    range-v3::range-v3
 )
 if (MSVC)
     target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
@@ -115,6 +117,7 @@ add_executable(${MAIN_GUI_TARGET}
     src/circuit.h src/circuit.cpp
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
+    src/exceptions.h src/exceptions.cpp
     src/render_widget.h src/render_widget.cpp 
     src/render_scene.h src/render_scene.cpp
 )
