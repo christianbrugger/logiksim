@@ -287,9 +287,9 @@ public:
 		return Branch{ this, branch_id };
 	}
 
-	Branch branch(int branch_id) const {
-		return Branch{ this, branch_id };
-	}
+//	Branch branch(int branch_id) const {
+//		return Branch{ this, branch_id };
+//	}
 private:
 	std::vector<float> branch_thickness_{ 0.5 };
 	std::vector<std::vector<float>> leaf_color_{ {0.2, 0.4} };
@@ -306,6 +306,7 @@ void demo() {
 	std::cout << "Branch Thickness " << leaf.branch().thickness() << '\n';
 }
 
+/*
 void demo_const() {
 	const Tree tree;
 	Tree::Branch branch = tree.branch(0);
@@ -315,7 +316,7 @@ void demo_const() {
 	std::cout << "Leaf Color " << leaf.color() << '\n';
 	std::cout << "Branch Thickness " << leaf.branch().thickness() << '\n';
 }
-
+*/
 
 static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 	for ([[maybe_unused]] auto _ : state) {
