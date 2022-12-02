@@ -221,6 +221,47 @@ static void BM_Loop_Manually_3(benchmark::State& state) {
 BENCHMARK(BM_Loop_Manually_3); // NOLINT
 */
 
+
+void demo() {
+	using namespace logicsim;
+
+	Circuit circuit;
+
+	circuit.create_element(ElementType::wire, 1, 1);
+	circuit.create_element(ElementType::wire, 1, 1);
+
+	Circuit::Element element0 { circuit.element(0) };
+	Circuit::Element element1 { circuit.element(0) };
+
+	element0.first_input_id();
+	element1.first_output_id();
+
+	element0.input(0).connect(element1.output(0));
+
+	Circuit::InputConnection input = element0.input(0);
+	input.has_connected_element();
+}
+
+void demo_const() {
+	using namespace logicsim;
+
+	Circuit circuit_init;
+	circuit_init.create_element(ElementType::wire, 1, 1);
+	circuit_init.create_element(ElementType::wire, 1, 1);
+
+	const Circuit circuit { circuit_init };
+
+	Circuit::ConstElement element0 { circuit.element(0) };
+	Circuit::ConstElement element1 { circuit.element(0) };
+
+	element0.first_input_id();
+	element1.first_output_id();
+
+	Circuit::ConstInputConnection input = element0.input(0);
+	input.has_connected_element();
+}
+
+
 static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 	for ([[maybe_unused]] auto _ : state) {
 		
@@ -244,6 +285,7 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 
 		// Base<int>::Test<true> abc;
 		
+		demo();
 	}
 }
 BENCHMARK(BM_Benchmark_Graph_v2); // NOLINT

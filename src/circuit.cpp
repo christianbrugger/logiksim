@@ -181,7 +181,7 @@ namespace logicsim {
 	}
 
 	template<bool Const>
-	bool Circuit::ElementTemplate<Const>::operator==(Circuit::ElementTemplate<Const> other) const noexcept
+	bool Circuit::ElementTemplate<Const>::operator==(ElementTemplate<Const> other) const noexcept
 	{
 		return circuit_ == other.circuit_ &&
 			element_id_ == other.element_id_;
@@ -261,7 +261,11 @@ namespace logicsim {
 	// Circuit::InputConnection
 	//
 
-	Circuit::InputConnection::InputConnection(Circuit* circuit, element_id_t element_id, connection_size_t input_index, connection_id_t input_id) :
+
+	template<bool Const>
+	Circuit::InputConnectionTemplate<Const>::InputConnectionTemplate(CircuitType* circuit, 
+		element_id_t element_id, connection_size_t input_index, connection_id_t input_id
+	) :
 		circuit_(circuit),
 		element_id_(element_id),
 		input_index_(input_index),
@@ -272,7 +276,8 @@ namespace logicsim {
 		}
 	}
 
-	bool Circuit::InputConnection::operator==(InputConnection other) const noexcept
+	template<bool Const>
+	bool Circuit::InputConnectionTemplate<Const>::operator==(InputConnectionTemplate<Const> other) const noexcept
 	{
 		return circuit_ == other.circuit_ &&
 			element_id_ == other.element_id_ &&
@@ -280,72 +285,70 @@ namespace logicsim {
 			input_index_ == other.input_index_;
 	}
 
-	Circuit* Circuit::InputConnection::circuit() const noexcept
+	template<bool Const>
+	auto Circuit::InputConnectionTemplate<Const>::circuit() const noexcept -> CircuitType*
 	{
 		return circuit_;
 	}
 
-	element_id_t Circuit::InputConnection::element_id() const noexcept
+	template<bool Const>
+	element_id_t Circuit::InputConnectionTemplate<Const>::element_id() const noexcept
 	{
 		return element_id_;
 	}
 
-	connection_size_t Circuit::InputConnection::input_index() const noexcept
+	template<bool Const>
+	connection_size_t Circuit::InputConnectionTemplate<Const>::input_index() const noexcept
 	{
 		return input_index_;
 	}
 
-	connection_id_t Circuit::InputConnection::input_id() const noexcept
+	template<bool Const>
+	connection_id_t Circuit::InputConnectionTemplate<Const>::input_id() const noexcept
 	{
 		return input_id_;
 	}
 
-	Circuit::Element Circuit::InputConnection::element() const
+	template<bool Const>
+	auto Circuit::InputConnectionTemplate<Const>::element() const -> ElementTemplate<Const>
 	{
-		return Element{ circuit_, element_id_ };
+		return ElementTemplate<Const>{ circuit_, element_id_ };
 	}
 
-	bool Circuit::InputConnection::has_connected_element() const
+	template<bool Const>
+	bool Circuit::InputConnectionTemplate<Const>::has_connected_element() const
 	{
 		return connected_element_id() != null_element;
 	}
 
-	element_id_t Circuit::InputConnection::connected_element_id() const
+	template<bool Const>
+	element_id_t Circuit::InputConnectionTemplate<Const>::connected_element_id() const
 	{
 		return connection_data_().element_id;
 	}
 
-	connection_size_t Circuit::InputConnection::connected_output_index() const
+	template<bool Const>
+	connection_size_t Circuit::InputConnectionTemplate<Const>::connected_output_index() const
 	{
 		return connection_data_().index;
 	}
 
-	Circuit::Element Circuit::InputConnection::connected_element() const
+	template<bool Const>
+	auto Circuit::InputConnectionTemplate<Const>::connected_element() const -> ElementTemplate<Const>
 	{
-		return Circuit::Element{ circuit_, connected_element_id() };
+		// TODO remove ElementTemplate<Const> and try with explicit
+		return ElementTemplate<Const>{ circuit_, connected_element_id() };
 	}
 
-	Circuit::OutputConnection Circuit::InputConnection::connected_output() const
+	template<bool Const>
+	auto Circuit::InputConnectionTemplate<Const>::connected_output() const -> OutputConnectionTemplate<Const>
 	{
 		return connected_element().output(connected_output_index());
 	}
 
-	void Circuit::InputConnection::connect(Circuit::OutputConnection output) const
-	{
-		clear_connection();
-
-		// get data before we modify anything
-		auto& destination_connection_data = circuit_->output_data_store_.at(output.output_id());
-		auto& connection_data = connection_data_();
-
-		connection_data.element_id = output.element_id();
-		connection_data.index = output.output_index();
-
-		destination_connection_data.element_id = element_id();
-		destination_connection_data.index = input_index();
-	}
-
-	void Circuit::InputConnection::clear_connection() const
+	// TODO experiment with static assert
+	template<>
+	void Circuit::InputConnectionTemplate<false>::clear_connection() const
 	{
 		auto& connection_data = connection_data_();
 
@@ -361,19 +364,40 @@ namespace logicsim {
 		}
 	}
 
-	Circuit::ConnectionData& Circuit::InputConnection::connection_data_() const
+	// TODO experiment with static assert
+	template<>
+	void Circuit::InputConnectionTemplate<false>::connect(OutputConnection output) const
+	{
+		clear_connection();
+
+		// get data before we modify anything
+		auto& destination_connection_data = circuit_->output_data_store_.at(output.output_id());
+		auto& connection_data = connection_data_();
+
+		connection_data.element_id = output.element_id();
+		connection_data.index = output.output_index();
+
+		destination_connection_data.element_id = element_id();
+		destination_connection_data.index = input_index();
+	}
+
+	template<bool Const>
+	auto Circuit::InputConnectionTemplate<Const>::connection_data_() const -> ConnectionDataType&
 	{
 		return circuit_->input_data_store_.at(input_id_);
 	}
 
+	template class Circuit::InputConnectionTemplate<true>;
+	template class Circuit::InputConnectionTemplate<false>;
 
 	//
 	// Circuit::OutputConnection
 	//
 
 
-	Circuit::OutputConnection::OutputConnection(
-		Circuit* circuit,
+	template<bool Const>
+	Circuit::OutputConnectionTemplate<Const>::OutputConnectionTemplate(
+		CircuitType* circuit,
 		element_id_t element_id,
 		connection_size_t output_index,
 		connection_id_t output_id
@@ -388,7 +412,8 @@ namespace logicsim {
 		}
 	}
 
-	bool Circuit::OutputConnection::operator==(Circuit::OutputConnection other) const noexcept
+	template<bool Const>
+	bool Circuit::OutputConnectionTemplate<Const>::operator==(Circuit::OutputConnectionTemplate<Const> other) const noexcept
 	{
 		return circuit_ == other.circuit_ &&
 			element_id_ == other.element_id_ &&
@@ -396,68 +421,68 @@ namespace logicsim {
 			output_id_ == other.output_id_;
 	}
 
-	Circuit* Circuit::OutputConnection::circuit() const noexcept
+	template<bool Const>
+	auto Circuit::OutputConnectionTemplate<Const>::circuit() const noexcept -> CircuitType*
 	{
 		return circuit_;
 	}
 
-	element_id_t Circuit::OutputConnection::element_id() const noexcept
+	template<bool Const>
+	element_id_t Circuit::OutputConnectionTemplate<Const>::element_id() const noexcept
 	{
 		return element_id_;
 	}
 
-	connection_size_t Circuit::OutputConnection::output_index() const noexcept
+	template<bool Const>
+	connection_size_t Circuit::OutputConnectionTemplate<Const>::output_index() const noexcept
 	{
 		return output_index_;
 	}
 
-	connection_id_t Circuit::OutputConnection::output_id() const noexcept
+	template<bool Const>
+	connection_id_t Circuit::OutputConnectionTemplate<Const>::output_id() const noexcept
 	{
 		return output_id_;
 	}
 
-	Circuit::Element Circuit::OutputConnection::element() const {
-		return Circuit::Element{ circuit_, element_id_ };
+	template<bool Const>
+	auto Circuit::OutputConnectionTemplate<Const>::element() const -> ElementTemplate<Const>
+	{
+		return Circuit::ElementTemplate<Const>{ circuit_, element_id_ };
 	}
 
-	bool Circuit::OutputConnection::has_connected_element() const
+	template<bool Const>
+	bool Circuit::OutputConnectionTemplate<Const>::has_connected_element() const
 	{
 		return connected_element_id() != null_element;
 	}
 
-	element_id_t Circuit::OutputConnection::connected_element_id() const
+	template<bool Const>
+	element_id_t Circuit::OutputConnectionTemplate<Const>::connected_element_id() const
 	{
 		return connection_data_().element_id;
 	}
 
-	connection_size_t Circuit::OutputConnection::connected_input_index() const
+	template<bool Const>
+	connection_size_t Circuit::OutputConnectionTemplate<Const>::connected_input_index() const
 	{
 		return connection_data_().index;
 	}
 
-	Circuit::Element Circuit::OutputConnection::connected_element() const {
-		return Circuit::Element{ circuit_, connected_element_id() };
+	template<bool Const>
+	auto Circuit::OutputConnectionTemplate<Const>::connected_element() const -> ElementTemplate<Const>
+	{
+		return ElementTemplate<Const>{ circuit_, connected_element_id() };
 	}
 
-	Circuit::InputConnection Circuit::OutputConnection::connected_input() const {
+	template<bool Const>
+	auto Circuit::OutputConnectionTemplate<Const>::connected_input() const -> InputConnectionTemplate<Const>
+	{
 		return connected_element().input(connected_input_index());
 	}
 
-	void Circuit::OutputConnection::connect(Circuit::InputConnection input) const {
-		clear_connection();
-
-		// get data before we modify anything
-		auto& connection_data = connection_data_();
-		auto& destination_connection_data = circuit_->input_data_store_.at(input.input_id());
-
-		connection_data.element_id = input.element_id();
-		connection_data.index = input.input_index();
-
-		destination_connection_data.element_id = element_id();
-		destination_connection_data.index = output_index();
-	}
-
-	void Circuit::OutputConnection::clear_connection() const {
+	template<>
+	void Circuit::OutputConnectionTemplate<false>::clear_connection() const {
 		auto& connection_data = connection_data_();
 
 		if (connection_data.element_id != null_element) {
@@ -471,10 +496,30 @@ namespace logicsim {
 		}
 	}
 
-	Circuit::ConnectionData& Circuit::OutputConnection::connection_data_() const {
+	template<>
+	void Circuit::OutputConnectionTemplate<false>::connect(InputConnection input) const 
+	{
+		clear_connection();
+
+		// get data before we modify anything
+		auto& connection_data = connection_data_();
+		auto& destination_connection_data = circuit_->input_data_store_.at(input.input_id());
+
+		connection_data.element_id = input.element_id();
+		connection_data.index = input.input_index();
+
+		destination_connection_data.element_id = element_id();
+		destination_connection_data.index = output_index();
+	}
+
+	template<bool Const>
+	auto Circuit::OutputConnectionTemplate<Const>::connection_data_() const -> ConnectionDataType& 
+	{
 		return circuit_->output_data_store_.at(output_id_);
 	}
 
+	template class Circuit::OutputConnectionTemplate<true>;
+	template class Circuit::OutputConnectionTemplate<false>;
 
 	//
 	// Free Functions
