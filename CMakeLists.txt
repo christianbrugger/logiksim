@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
+include(CMakePrintHelpers)
+cmake_print_variables(CMAKE_C_COMPILER )
+cmake_print_variables(CMAKE_CXX_COMPILER )
+
 cmake_policy(PUSH)
 
 if(POLICY CMP0092)
@@ -15,6 +19,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
 	add_compile_options(/EHsc)
+    # required by range-v3, only allow standard conform behaviour
+	# add_compile_options(/permissive-)
 	# add_compile_options(/DEBUG /Zi /fsanitize=address)
 else()
 endif()
@@ -39,6 +45,13 @@ endif()
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 add_subdirectory(external/benchmark)
+
+# Google Test
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+# set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+enable_testing()
+add_subdirectory(external/googletest)
+include(GoogleTest)
 
 # Boost
 find_package(Boost REQUIRED COMPONENTS)
@@ -65,7 +78,6 @@ add_subdirectory(external/range-v3)
 
 
 
-
 # MAIN BENCHMARK
 
 set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
@@ -84,7 +96,8 @@ target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE
 if (MSVC)
     target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
 else()
-    target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
+    # -Wfloat-equal
+    target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
 endif()
 
 
@@ -105,7 +118,7 @@ target_link_libraries(${MAIN_TARGET} PRIVATE
 if (MSVC)
     target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
 else()
-    target_compile_options(${MAIN_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
+    target_compile_options(${MAIN_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
 endif()
 
 
@@ -131,10 +144,32 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
 if (MSVC)
     target_compile_options(${MAIN_GUI_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
 else()
-    target_compile_options(${MAIN_GUI_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wfloat-equal -Wstrict-aliasing)
+    target_compile_options(${MAIN_GUI_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
 endif()
 
 
+# Google Test
+
+
+set(MAIN_TEST_TARGET "simulation_srp_test")
+add_executable(${MAIN_TEST_TARGET} 
+    src/circuit.h src/circuit.cpp
+    src/simulation.h src/simulation.cpp 
+    src/algorithms.h src/algorithm.cpp
+    src/exceptions.h src/exceptions.cpp
+
+    test/circuit.cpp
+    test/simulation.cpp
+)
+target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
+    Boost::boost
+    range-v3::range-v3
+
+    gtest
+    gtest_main
+)
+gtest_discover_tests(${MAIN_TEST_TARGET})
+# add_test(NAME example_test COMMAND example)
 
 
 
