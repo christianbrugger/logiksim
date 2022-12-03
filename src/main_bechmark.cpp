@@ -271,7 +271,7 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 		benchmark::ClobberMemory();
 
 		circuit.validate();
-		create_placeholders(circuit);
+		create_output_placeholders(circuit);
 		circuit.validate(true);
 
 		benchmark::DoNotOptimize(circuit);

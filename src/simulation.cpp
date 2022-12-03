@@ -162,7 +162,7 @@ namespace logicsim {
         const auto element { circuit.element(events.front().element_id) };
 
         // short-circuit input placeholders
-        if (element.element_type() == ElementType::input_placeholder) {
+        if (element.element_type() == ElementType::placeholder) {
             apply_events(state.input_values, element, events);
             return;
         }
@@ -228,7 +228,7 @@ namespace logicsim {
         // state.queue.submit_event({ 0.1, elem0, 0, true });
         state.queue.submit_event({ 0.5, elem0.element_id(), 1, false });
 
-        create_placeholders(circuit);
+        create_output_placeholders(circuit);
         auto new_state { advance_simulation(state, circuit, 0, print) };
         auto output_values { collect_output_values(new_state.input_values, circuit) };
 

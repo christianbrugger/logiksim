@@ -96,6 +96,9 @@ namespace logicsim {
 
 	void validate_output_consistent(const Circuit::ConstOutputConnection output) {
 		if (output.has_connected_element()) {
+			if (!output.connected_input().has_connected_element()) {
+				throw_exception("Back reference is missing.");
+			}
 			auto back_reference { output.connected_input().connected_output() };
 			if (back_reference != output) {
 				throw_exception("Back reference doesn't match.");
@@ -171,7 +174,7 @@ namespace logicsim {
 
 	void create_placeholder(Circuit::OutputConnection output) {
 		if (!output.has_connected_element()) {
-			auto placeholder { output.circuit()->create_element(ElementType::input_placeholder, 1, 0) };
+			auto placeholder { output.circuit()->create_element(ElementType::placeholder, 1, 0) };
 			output.connect(placeholder.input(0));
 		}
 	}
@@ -180,7 +183,7 @@ namespace logicsim {
 		ranges::for_each(element.outputs(), create_placeholder);
 	}
 
-	void create_placeholders(Circuit& circuit) {
+	void create_output_placeholders(Circuit& circuit) {
 		ranges::for_each(circuit.elements(), create_element_placeholders);
 	}
 

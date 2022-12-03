@@ -18,7 +18,7 @@
 namespace logicsim {
 
 	enum class ElementType : uint8_t {
-		input_placeholder,
+		placeholder,  // has no logic
 		wire,
 		inverter_element,
 		and_element,
@@ -141,6 +141,7 @@ namespace logicsim {
 		explicit InputConnectionTemplate(CircuitType* circuit, element_id_t element_id,
 			connection_size_t input_index, connection_id_t input_id);
 	public:
+		friend InputConnectionTemplate<!Const>;
 		template<bool ConstOther>
 		bool operator==(InputConnectionTemplate<ConstOther> other) const noexcept;
 
@@ -183,6 +184,7 @@ namespace logicsim {
 			connection_size_t output_index, connection_id_t output_id
 		);
 	public:
+		friend OutputConnectionTemplate<!Const>;
 		template<bool ConstOther>
 		bool operator==(OutputConnectionTemplate<ConstOther> other) const noexcept;
 
@@ -215,7 +217,7 @@ namespace logicsim {
 
 
 
-	void create_placeholders(Circuit& circuit);
+	void create_output_placeholders(Circuit& circuit);
 
 	Circuit benchmark_circuit(const int n_elements = 100);
 
@@ -447,7 +449,7 @@ namespace logicsim {
 		auto& connection_data { connection_data_() };
 		if (connection_data.element_id != null_element) {
 			auto& destination_connection_data { circuit_->output_data_store_.at(
-				circuit_->element(connection_data.index).output_id(connection_data.index)) };
+				circuit_->element(connection_data.element_id).output_id(connection_data.index)) };
 
 			destination_connection_data.element_id = null_element;
 			destination_connection_data.index = null_connection;
@@ -580,7 +582,8 @@ namespace logicsim {
 		auto& connection_data { connection_data_() };
 		if (connection_data.element_id != null_element) {
 			auto& destination_connection_data = circuit_->input_data_store_.at(
-				circuit_->element(connection_data.index).input_id(connection_data.index));
+				circuit_->element(connection_data.element_id).input_id(connection_data.index));
+
 			destination_connection_data.element_id = null_element;
 			destination_connection_data.index = null_connection;
 

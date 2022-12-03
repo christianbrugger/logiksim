@@ -103,7 +103,7 @@ namespace logicsim {
             state.queue.submit_event({ 0.1, elem0.element_id(), 0, true});
             state.queue.submit_event({ 0.5, elem0.element_id(), 0, false});
 
-            create_placeholders(circuit);
+            create_output_placeholders(circuit);
             auto new_state = advance_simulation(state, circuit, 0, true);
 
             SimulationResult simulation{ 

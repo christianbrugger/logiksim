@@ -49,9 +49,7 @@ add_subdirectory(external/benchmark)
 # Google Test
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 # set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-enable_testing()
 add_subdirectory(external/googletest)
-include(GoogleTest)
 
 # Boost
 find_package(Boost REQUIRED COMPONENTS)
@@ -158,18 +156,22 @@ add_executable(${MAIN_TEST_TARGET}
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
 
-    test/circuit.cpp
-    test/simulation.cpp
+    test/test_circuit.cpp
+    test/test_simulation.cpp
+)
+target_include_directories(${MAIN_TEST_TARGET} PRIVATE
+    src
 )
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     Boost::boost
     range-v3::range-v3
-
-    gtest
-    gtest_main
+    
+    GTest::gtest
+    GTest::gtest_main
 )
+enable_testing()
+include(GoogleTest)
 gtest_discover_tests(${MAIN_TEST_TARGET})
-# add_test(NAME example_test COMMAND example)
 
 
 
