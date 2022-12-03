@@ -1,6 +1,8 @@
 
 #include "simulation.h"
 
+#include "formatters.h"
+
 #include <boost/range/combine.hpp>
 #include <boost/range/adaptors.hpp>
 
@@ -8,8 +10,11 @@
 #include <algorithm>
 #include <functional>
 
-
 namespace logicsim {
+
+    //
+    // Simulation Event
+    //
 
     std::string SimulationEvent::format() const
     {
@@ -49,6 +54,9 @@ namespace logicsim {
         return !(this->operator<(other));
     }
 
+    //
+    // EventGroup
+    //
 
     void validate(const event_group_t& events) {
         if (events.size() == 0)
@@ -70,12 +78,77 @@ namespace logicsim {
             if (!ranges::all_of(tail, [head](const auto& event) { return event.element_id == head.element_id;  }))
                 throw_exception("All events in the group need to have the same time.");
 
-            if (has_duplicates_quadratic(ranges::views::transform(events, [](const auto& event){ return event.input_index; })))
+            if (has_duplicates_quadratic(ranges::views::transform(events, [](const auto& event) { return event.input_index; })))
                 throw_exception("Cannot have two events for the same input at the same time.");
         }
 
     }
 
+    //
+    // SimulationQueue
+    //
+
+
+    time_t SimulationQueue::time() const noexcept {
+        return time_;
+    }
+
+    void SimulationQueue::set_time(time_t time) {
+        if (!std::isfinite(time))
+            throw_exception("New time needs to be finite.");
+        if (time < time_)
+            throw_exception("Cannot set new time to the past.");
+        if (time > next_event_time())
+            throw_exception("New time would be greater than next event.");
+
+        time_ = time;
+    }
+
+    time_t SimulationQueue::next_event_time() const noexcept {
+        return events_.empty()?std::numeric_limits<time_t>::infinity():events_.top().time;
+    }
+
+    bool SimulationQueue::empty() const noexcept {
+        return events_.empty();
+    }
+
+    void SimulationQueue::submit_event(SimulationEvent&& event) {
+        if (event.time <= time_)
+            throw_exception("Event time needs to be in the future.");
+        if (!std::isfinite(event.time))
+            throw_exception("Event time needs to be finite.");
+
+        events_.push(std::move(event));
+    }
+
+    event_group_t SimulationQueue::pop_event_group()
+    {
+        event_group_t group;
+        pop_while(
+            events_,
+            [&group](const SimulationEvent& event) { group.push_back(event); },
+            [&group](const SimulationEvent& event) { return group.size() == 0 || group.front() == event; }
+        );
+        if (group.size() > 0) {
+            set_time(group.front().time);
+        }
+        return group;
+    }
+
+    //
+    // SimulationState
+    //
+
+
+    SimulationState::SimulationState(connection_id_t total_inputs) : 
+        input_values(total_inputs), 
+        queue {} 
+    {
+    }
+
+    //
+    // Simulation
+    //
 
     using logic_small_vector_t = boost::container::small_vector<bool, 8>;
     using con_index_small_vector_t = boost::container::small_vector<connection_size_t, 8>;
@@ -137,7 +210,7 @@ namespace logicsim {
 
     constexpr time_t STANDARD_DELAY = 0.1;
 
-    void create_event(SimulationQueue& queue, Circuit::ConstOutputConnection output, const logic_small_vector_t& output_values) {
+    void create_event(SimulationQueue& queue, Circuit::ConstOutput output, const logic_small_vector_t& output_values) {
         const time_t time { queue.time() + STANDARD_DELAY };
 
         if (output.has_connected_element()) {
@@ -150,7 +223,10 @@ namespace logicsim {
         }
     }
 
-    void process_event_group(SimulationState& state, const event_group_t& events, const Circuit& circuit, bool print_events = false) {
+    void process_event_group(
+        SimulationState& state, const Circuit& circuit, 
+        event_group_t&& events, bool print_events = false) 
+    {
         if (events.size() == 0)
             return;
         validate(events);
@@ -159,7 +235,7 @@ namespace logicsim {
             std::cout << std::format("events: {}\n", events);
         }
 
-        const auto element { circuit.element(events.front().element_id) };
+        const Circuit::ConstElement element { circuit.element(events.front().element_id) };
 
         // short-circuit input placeholders
         if (element.element_type() == ElementType::placeholder) {
@@ -184,37 +260,56 @@ namespace logicsim {
     }
     
 
-    SimulationState advance_simulation(SimulationState old_state, const Circuit& circuit, time_t time_delta, bool print_events) {
+    void advance_simulation(
+        SimulationState &state, const Circuit& circuit, 
+        time_t time_delta, bool print_events) 
+    {
         if (time_delta < 0) [[unlikely]]
             throw_exception("time_delta needs to be zero or positive.");
-        SimulationState state { std::move(old_state), circuit.total_input_count() };
+        if (state.input_values.size() != 
+                static_cast<logic_vector_t::size_type>(circuit.total_input_count())) [[unlikely]]
+            throw_exception("input_values in state needs to match total inputs of the circuit.");
 
-        const double end_time { (time_delta == 0) ? std::numeric_limits<time_t>::infinity(): state.queue.time() + time_delta };
+        const double end_time { (time_delta == 0) ? 
+            std::numeric_limits<time_t>::infinity() : state.queue.time() + time_delta };
 
         while (!state.queue.empty() && state.queue.next_event_time() < end_time) {
-            process_event_group(state, state.queue.get_event_group(), circuit, print_events);
+            process_event_group(state, circuit, state.queue.pop_event_group(), print_events);
         }
 
         if (time_delta > 0) {
             state.queue.set_time(end_time);
         }
-        return state;
     }
 
-    logic_vector_t collect_output_values(const logic_vector_t& input_values, const Circuit& circuit) {
+    bool get_output_value(
+        const Circuit::ConstOutput output, 
+        const logic_vector_t& input_values, 
+        const bool raise_missing
+    ) {
+        if (raise_missing || output.has_connected_element()) {
+            return input_values.at(output.connected_input().input_id());
+        }
+        return false;
+    }
+
+    logic_vector_t output_value_vector(const logic_vector_t& input_values, const Circuit& circuit, 
+        const bool raise_missing)
+    {
         logic_vector_t output_values(circuit.total_output_count());
 
-        // TODO refactor loops
         for (auto element : circuit.elements()) {
             for (auto output : element.outputs()) {
-                if (output.has_connected_element()) {
-                    output_values.at(output.output_id()) = input_values.at(output.connected_input().input_id());
-                }
+                output_values.at(output.output_id()) = get_output_value(output, input_values, raise_missing);
             }
         }
 
         return output_values;
     }
+
+    //
+    // Benchmark
+    //
 
     int benchmark_simulation(const int n_elements, bool print) {
         Circuit circuit;
@@ -223,27 +318,28 @@ namespace logicsim {
         elem0.output(0).connect(elem0.input(0));
         
 
-        SimulationState state;
+        SimulationState state { circuit.total_input_count() };
         state.queue.submit_event({ 0.1, elem0.element_id(), 0, true});
-        // state.queue.submit_event({ 0.1, elem0, 0, true });
+        state.queue.submit_event({ 0.1, elem0.element_id(), 1, true});
         state.queue.submit_event({ 0.5, elem0.element_id(), 1, false });
 
         create_output_placeholders(circuit);
-        auto new_state { advance_simulation(state, circuit, 0, print) };
-        auto output_values { collect_output_values(new_state.input_values, circuit) };
+        advance_simulation(state, circuit, 0, print);
+        auto output_values { output_value_vector(state.input_values, circuit) };
 
         if (print) {
-            for (bool input : new_state.input_values) {
+            for (bool input :state.input_values) {
                 std::cout << std::format("input_values = {}\n", input);
             }
             for (bool output : output_values) {
                 std::cout << std::format("output_values = {}\n", output);
             }
+            std::cout << std::format("input_values = {}", state.input_values);
             // std::cout << std::format("input_values = {}", std::vector<bool>(std::begin(new_state.input_values), std::end(new_state.input_values)));
             // std::cout << std::format("output_values = {}", std::vector<bool>(std::begin(output_values), std::end(output_values)));
         }
 
-        return new_state.input_values.front() + output_values.front() + n_elements;
+        return state.input_values.front() + output_values.front() + n_elements;
     }
 }
 

@@ -29,10 +29,10 @@ namespace logicsim {
 	auto Circuit::create_element(ElementType type,
 		connection_size_t input_count, connection_size_t output_count) -> Element
 	{
-		if (input_count < 0) {
+		if (input_count < 0) [[unlikely]] {
 			throw_exception("Input count needs to be positive.");
 		}
-		if (output_count < 0) {
+		if (output_count < 0) [[unlikely]] {
 			throw_exception("Output count needs to be positive.");
 		}
 
@@ -40,13 +40,13 @@ namespace logicsim {
 		const auto new_output_size { output_data_store_.size() + output_count };
 
 		// make sure we can represent all ids
-		if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) {
+		if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) [[unlikely]] {
 			throw_exception("Reached maximum number of elements.");
 		}
-		if (new_input_size >= std::numeric_limits<connection_id_t>::max()) {
+		if (new_input_size >= std::numeric_limits<connection_id_t>::max()) [[unlikely]] {
 			throw_exception("Reached maximum number of inputs.");
 		}
-		if (new_output_size >= std::numeric_limits<connection_id_t>::max()) {
+		if (new_output_size >= std::numeric_limits<connection_id_t>::max()) [[unlikely]] {
 			throw_exception("Reached maximum number of outputs.");
 		}
 		// TODO create custom exception, as we want to handle theses ones.
@@ -75,8 +75,8 @@ namespace logicsim {
 		return static_cast<connection_id_t>(output_data_store_.size());
 	}
 
-	void validate_output_connected(const Circuit::ConstOutputConnection output) {
-		if (!output.has_connected_element()) {
+	void validate_output_connected(const Circuit::ConstOutput output) {
+		if (!output.has_connected_element()) [[unlikely]] {
 			throw_exception("Element has unconnected output.");
 		}
 	}
@@ -85,22 +85,22 @@ namespace logicsim {
 		ranges::for_each(element.outputs(), validate_output_connected);
 	}
 
-	void validate_input_consistent(const Circuit::ConstInputConnection input) {
+	void validate_input_consistent(const Circuit::ConstInput input) {
 		if (input.has_connected_element()) {
 			auto back_reference { input.connected_output().connected_input() };
-			if (back_reference != input) {
+			if (back_reference != input) [[unlikely]] {
 				throw_exception("Back reference doesn't match.");
 			}
 		}
 	}
 
-	void validate_output_consistent(const Circuit::ConstOutputConnection output) {
+	void validate_output_consistent(const Circuit::ConstOutput output) {
 		if (output.has_connected_element()) {
-			if (!output.connected_input().has_connected_element()) {
+			if (!output.connected_input().has_connected_element()) [[unlikely]] {
 				throw_exception("Back reference is missing.");
 			}
 			auto back_reference { output.connected_input().connected_output() };
-			if (back_reference != output) {
+			if (back_reference != output) [[unlikely]] {
 				throw_exception("Back reference doesn't match.");
 			}
 		}
@@ -114,13 +114,13 @@ namespace logicsim {
 	void Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data)
 	{
 		if (connection_data.element_id != null_element &&
-			connection_data.index == null_connection)
+			connection_data.index == null_connection) [[unlikely]] 
 		{
 			throw_exception("Connection to an element cannot have null_connection.");
 		}
 
 		if (connection_data.element_id == null_element &&
-			connection_data.index != null_connection)
+			connection_data.index != null_connection) [[unlikely]] 
 		{
 			throw_exception("Connection with null_element requires null_connection.");
 		}
@@ -139,7 +139,7 @@ namespace logicsim {
 				input_reference_count.at(input.input_id()) += 1;
 			}
 		}
-		if (!all_one(input_reference_count)) {
+		if (!all_one(input_reference_count)) [[unlikely]] {
 			throw_exception("Input data is inconsistent");
 		}
 
@@ -150,7 +150,7 @@ namespace logicsim {
 				output_reference_count.at(output.output_id()) += 1;
 			}
 		}
-		if (!all_one(output_reference_count)) {
+		if (!all_one(output_reference_count)) [[unlikely]] {
 			throw_exception("Output data is inconsistent");
 		}
 
@@ -172,7 +172,7 @@ namespace logicsim {
 	//
 
 
-	void create_placeholder(Circuit::OutputConnection output) {
+	void create_placeholder(Circuit::Output output) {
 		if (!output.has_connected_element()) {
 			auto placeholder { output.circuit()->create_element(ElementType::placeholder, 1, 0) };
 			output.connect(placeholder.input(0));

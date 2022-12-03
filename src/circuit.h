@@ -43,16 +43,16 @@ namespace logicsim {
 		template<bool Const>
 		class ElementTemplate;
 		template<bool Const>
-		class InputConnectionTemplate;
+		class InputTemplate;
 		template<bool Const>
-		class OutputConnectionTemplate;
+		class OutputTemplate;
 
 		using Element = ElementTemplate<false>;
 		using ConstElement = ElementTemplate<true>;
-		using InputConnection = InputConnectionTemplate<false>;
-		using ConstInputConnection = InputConnectionTemplate<true>;
-		using OutputConnection = OutputConnectionTemplate<false>;
-		using ConstOutputConnection = OutputConnectionTemplate<true>;
+		using Input = InputTemplate<false>;
+		using ConstInput = InputTemplate<true>;
+		using Output = OutputTemplate<false>;
+		using ConstOutput = OutputTemplate<true>;
 
 	public:
 		element_id_t element_count() const noexcept;
@@ -118,8 +118,8 @@ namespace logicsim {
 		connection_id_t first_output_id() const;
 		connection_id_t output_id(connection_size_t output_index) const;
 
-		[[ nodiscard ]] InputConnectionTemplate<Const> input(connection_size_t input) const;
-		[[ nodiscard ]] OutputConnectionTemplate<Const> output(connection_size_t output) const;
+		[[ nodiscard ]] InputTemplate<Const> input(connection_size_t input) const;
+		[[ nodiscard ]] OutputTemplate<Const> output(connection_size_t output) const;
 
 		auto inputs() const;
 		auto outputs() const;
@@ -133,17 +133,17 @@ namespace logicsim {
 
 
 	template<bool Const>
-	class Circuit::InputConnectionTemplate {
+	class Circuit::InputTemplate {
 		using CircuitType = std::conditional_t<Const, Circuit const, Circuit>;
 		using ConnectionDataType = std::conditional_t<Const, ConnectionData const, ConnectionData>;
 
 		friend ElementTemplate<Const>;
-		explicit InputConnectionTemplate(CircuitType* circuit, element_id_t element_id,
+		explicit InputTemplate(CircuitType* circuit, element_id_t element_id,
 			connection_size_t input_index, connection_id_t input_id);
 	public:
-		friend InputConnectionTemplate<!Const>;
+		friend InputTemplate<!Const>;
 		template<bool ConstOther>
-		bool operator==(InputConnectionTemplate<ConstOther> other) const noexcept;
+		bool operator==(InputTemplate<ConstOther> other) const noexcept;
 
 		CircuitType* circuit() const noexcept;
 		element_id_t element_id() const noexcept;
@@ -159,11 +159,11 @@ namespace logicsim {
 		/// @throws if connection doesn't exists. Call has_connected_element to check for this.
 		[[ nodiscard ]] ElementTemplate<Const> connected_element() const;
 		/// @throws if connection doesn't exists. Call has_connected_element to check for this.
-		[[ nodiscard ]] OutputConnectionTemplate<Const> connected_output() const;
+		[[ nodiscard ]] OutputTemplate<Const> connected_output() const;
 
 		void clear_connection() const;
 		template<bool ConstOther>
-		void connect(OutputConnectionTemplate<ConstOther> output) const;
+		void connect(OutputTemplate<ConstOther> output) const;
 	private:
 		ConnectionDataType& connection_data_() const;
 
@@ -174,19 +174,19 @@ namespace logicsim {
 	};
 
 	template<bool Const>
-	class Circuit::OutputConnectionTemplate {
+	class Circuit::OutputTemplate {
 	private:
 		using CircuitType = std::conditional_t<Const, Circuit const, Circuit>;
 		using ConnectionDataType = std::conditional_t<Const, ConnectionData const, ConnectionData>;
 
 		friend ElementTemplate<Const>;
-		explicit OutputConnectionTemplate(CircuitType* circuit, element_id_t element_id,
+		explicit OutputTemplate(CircuitType* circuit, element_id_t element_id,
 			connection_size_t output_index, connection_id_t output_id
 		);
 	public:
-		friend OutputConnectionTemplate<!Const>;
+		friend OutputTemplate<!Const>;
 		template<bool ConstOther>
-		bool operator==(OutputConnectionTemplate<ConstOther> other) const noexcept;
+		bool operator==(OutputTemplate<ConstOther> other) const noexcept;
 
 		CircuitType* circuit() const noexcept;
 		element_id_t element_id() const noexcept;
@@ -201,11 +201,11 @@ namespace logicsim {
 		/// @throws if connection doesn't exists. Call has_connected_element to check for this.
 		[[nodiscard]] ElementTemplate<Const> connected_element() const;
 		/// @throws if connection doesn't exists. Call has_connected_element to check for this.
-		[[nodiscard]] InputConnectionTemplate<Const> connected_input() const;
+		[[nodiscard]] InputTemplate<Const> connected_input() const;
 
 		void clear_connection() const;
 		template<bool ConstOther>
-		void connect(InputConnectionTemplate<ConstOther> input) const;
+		void connect(InputTemplate<ConstOther> input) const;
 	private:
 		ConnectionDataType& connection_data_() const;
 
@@ -246,10 +246,10 @@ namespace logicsim {
 		circuit_(circuit),
 		element_id_(element_id)
 	{
-		if (circuit == nullptr) {
+		if (circuit == nullptr) [[unlikely]] {
 			throw_exception("Circuit cannot be nullptr.");
 		}
-		if (element_id < 0 || element_id >= circuit->element_count()) {
+		if (element_id < 0 || element_id >= circuit->element_count()) [[unlikely]] {
 			throw_exception("Element id is invalid");
 		}
 	}
@@ -301,7 +301,7 @@ namespace logicsim {
 	template<bool Const>
 	connection_id_t Circuit::ElementTemplate<Const>::input_id(connection_size_t input_index) const
 	{
-		if (input_index < 0 || input_index >= input_count()) {
+		if (input_index < 0 || input_index >= input_count()) [[unlikely]] {
 			throw_exception("Index is invalid");
 		}
 		return first_input_id() + input_index;
@@ -316,22 +316,22 @@ namespace logicsim {
 	template<bool Const>
 	connection_id_t Circuit::ElementTemplate<Const>::output_id(connection_size_t output_index) const
 	{
-		if (output_index < 0 || output_index >= output_count()) {
+		if (output_index < 0 || output_index >= output_count()) [[unlikely]] {
 			throw_exception("Index is invalid");
 		}
 		return first_output_id() + output_index;
 	}
 
 	template<bool Const>
-	auto Circuit::ElementTemplate<Const>::input(connection_size_t input) const -> InputConnectionTemplate<Const>
+	auto Circuit::ElementTemplate<Const>::input(connection_size_t input) const -> InputTemplate<Const>
 	{
-		return InputConnectionTemplate<Const>{ circuit_, element_id_, input, input_id(input) };
+		return InputTemplate<Const>{ circuit_, element_id_, input, input_id(input) };
 	}
 
 	template<bool Const>
-	auto Circuit::ElementTemplate<Const>::output(connection_size_t output) const -> OutputConnectionTemplate<Const>
+	auto Circuit::ElementTemplate<Const>::output(connection_size_t output) const -> OutputTemplate<Const>
 	{
-		return OutputConnectionTemplate<Const>{ circuit_, element_id_, output, output_id(output) };
+		return OutputTemplate<Const>{ circuit_, element_id_, output, output_id(output) };
 	}
 
 	template<bool Const>
@@ -354,11 +354,11 @@ namespace logicsim {
 
 
 	//
-	// Circuit::InputConnection
+	// Circuit::Input
 	//
 
 	template<bool Const>
-	Circuit::InputConnectionTemplate<Const>::InputConnectionTemplate(CircuitType* circuit,
+	Circuit::InputTemplate<Const>::InputTemplate(CircuitType* circuit,
 		element_id_t element_id, connection_size_t input_index, connection_id_t input_id
 	) :
 		circuit_(circuit),
@@ -366,14 +366,14 @@ namespace logicsim {
 		input_index_(input_index),
 		input_id_(input_id)
 	{
-		if (circuit == nullptr) {
+		if (circuit == nullptr) [[unlikely]] {
 			throw_exception("Circuit cannot be nullptr.");
 		}
 	}
 
 	template<bool Const>
 	template<bool ConstOther>
-	bool Circuit::InputConnectionTemplate<Const>::operator==(InputConnectionTemplate<ConstOther> other) const noexcept
+	bool Circuit::InputTemplate<Const>::operator==(InputTemplate<ConstOther> other) const noexcept
 	{
 		return circuit_ == other.circuit_ &&
 			element_id_ == other.element_id_ &&
@@ -382,67 +382,67 @@ namespace logicsim {
 	}
 
 	template<bool Const>
-	auto Circuit::InputConnectionTemplate<Const>::circuit() const noexcept -> CircuitType*
+	auto Circuit::InputTemplate<Const>::circuit() const noexcept -> CircuitType*
 	{
 		return circuit_;
 	}
 
 	template<bool Const>
-	element_id_t Circuit::InputConnectionTemplate<Const>::element_id() const noexcept
+	element_id_t Circuit::InputTemplate<Const>::element_id() const noexcept
 	{
 		return element_id_;
 	}
 
 	template<bool Const>
-	connection_size_t Circuit::InputConnectionTemplate<Const>::input_index() const noexcept
+	connection_size_t Circuit::InputTemplate<Const>::input_index() const noexcept
 	{
 		return input_index_;
 	}
 
 	template<bool Const>
-	connection_id_t Circuit::InputConnectionTemplate<Const>::input_id() const noexcept
+	connection_id_t Circuit::InputTemplate<Const>::input_id() const noexcept
 	{
 		return input_id_;
 	}
 
 	template<bool Const>
-	auto Circuit::InputConnectionTemplate<Const>::element() const -> ElementTemplate<Const>
+	auto Circuit::InputTemplate<Const>::element() const -> ElementTemplate<Const>
 	{
 		return ElementTemplate<Const>{ circuit_, element_id_ };
 	}
 
 	template<bool Const>
-	bool Circuit::InputConnectionTemplate<Const>::has_connected_element() const
+	bool Circuit::InputTemplate<Const>::has_connected_element() const
 	{
 		return connected_element_id() != null_element;
 	}
 
 	template<bool Const>
-	element_id_t Circuit::InputConnectionTemplate<Const>::connected_element_id() const
+	element_id_t Circuit::InputTemplate<Const>::connected_element_id() const
 	{
 		return connection_data_().element_id;
 	}
 
 	template<bool Const>
-	connection_size_t Circuit::InputConnectionTemplate<Const>::connected_output_index() const
+	connection_size_t Circuit::InputTemplate<Const>::connected_output_index() const
 	{
 		return connection_data_().index;
 	}
 
 	template<bool Const>
-	auto Circuit::InputConnectionTemplate<Const>::connected_element() const -> ElementTemplate<Const>
+	auto Circuit::InputTemplate<Const>::connected_element() const -> ElementTemplate<Const>
 	{
 		return ElementTemplate<Const> { circuit_, connected_element_id() };
 	}
 
 	template<bool Const>
-	auto Circuit::InputConnectionTemplate<Const>::connected_output() const -> OutputConnectionTemplate<Const>
+	auto Circuit::InputTemplate<Const>::connected_output() const -> OutputTemplate<Const>
 	{
 		return connected_element().output(connected_output_index());
 	}
 
 	template<bool Const>
-	void Circuit::InputConnectionTemplate<Const>::clear_connection() const
+	void Circuit::InputTemplate<Const>::clear_connection() const
 	{
 		static_assert(!Const, "Cannot clear connection for const circuit.");
 
@@ -461,7 +461,7 @@ namespace logicsim {
 
 	template<bool Const>
 	template<bool ConstOther>
-	void Circuit::InputConnectionTemplate<Const>::connect(OutputConnectionTemplate< ConstOther> output) const
+	void Circuit::InputTemplate<Const>::connect(OutputTemplate< ConstOther> output) const
 	{
 		static_assert(!Const, "Cannot connect input for const circuit.");
 		clear_connection();
@@ -478,18 +478,18 @@ namespace logicsim {
 	}
 
 	template<bool Const>
-	auto Circuit::InputConnectionTemplate<Const>::connection_data_() const -> ConnectionDataType&
+	auto Circuit::InputTemplate<Const>::connection_data_() const -> ConnectionDataType&
 	{
 		return circuit_->input_data_store_.at(input_id_);
 	}
 
 
 	//
-	// Circuit::OutputConnection
+	// Circuit::Output
 	//
 
 	template<bool Const>
-	Circuit::OutputConnectionTemplate<Const>::OutputConnectionTemplate(
+	Circuit::OutputTemplate<Const>::OutputTemplate(
 		CircuitType* circuit,
 		element_id_t element_id,
 		connection_size_t output_index,
@@ -500,14 +500,14 @@ namespace logicsim {
 		output_index_(output_index),
 		output_id_(output_id)
 	{
-		if (circuit == nullptr) {
+		if (circuit == nullptr) [[unlikely]] {
 			throw_exception("Circuit cannot be nullptr.");
 		}
 	}
 
 	template<bool Const>
 	template<bool ConstOther>
-	bool Circuit::OutputConnectionTemplate<Const>::operator==(Circuit::OutputConnectionTemplate<ConstOther> other) const noexcept
+	bool Circuit::OutputTemplate<Const>::operator==(Circuit::OutputTemplate<ConstOther> other) const noexcept
 	{
 		return circuit_ == other.circuit_ &&
 			element_id_ == other.element_id_ &&
@@ -516,67 +516,67 @@ namespace logicsim {
 	}
 
 	template<bool Const>
-	auto Circuit::OutputConnectionTemplate<Const>::circuit() const noexcept -> CircuitType*
+	auto Circuit::OutputTemplate<Const>::circuit() const noexcept -> CircuitType*
 	{
 		return circuit_;
 	}
 
 	template<bool Const>
-	element_id_t Circuit::OutputConnectionTemplate<Const>::element_id() const noexcept
+	element_id_t Circuit::OutputTemplate<Const>::element_id() const noexcept
 	{
 		return element_id_;
 	}
 
 	template<bool Const>
-	connection_size_t Circuit::OutputConnectionTemplate<Const>::output_index() const noexcept
+	connection_size_t Circuit::OutputTemplate<Const>::output_index() const noexcept
 	{
 		return output_index_;
 	}
 
 	template<bool Const>
-	connection_id_t Circuit::OutputConnectionTemplate<Const>::output_id() const noexcept
+	connection_id_t Circuit::OutputTemplate<Const>::output_id() const noexcept
 	{
 		return output_id_;
 	}
 
 	template<bool Const>
-	auto Circuit::OutputConnectionTemplate<Const>::element() const -> ElementTemplate<Const>
+	auto Circuit::OutputTemplate<Const>::element() const -> ElementTemplate<Const>
 	{
 		return Circuit::ElementTemplate<Const>{ circuit_, element_id_ };
 	}
 
 	template<bool Const>
-	bool Circuit::OutputConnectionTemplate<Const>::has_connected_element() const
+	bool Circuit::OutputTemplate<Const>::has_connected_element() const
 	{
 		return connected_element_id() != null_element;
 	}
 
 	template<bool Const>
-	element_id_t Circuit::OutputConnectionTemplate<Const>::connected_element_id() const
+	element_id_t Circuit::OutputTemplate<Const>::connected_element_id() const
 	{
 		return connection_data_().element_id;
 	}
 
 	template<bool Const>
-	connection_size_t Circuit::OutputConnectionTemplate<Const>::connected_input_index() const
+	connection_size_t Circuit::OutputTemplate<Const>::connected_input_index() const
 	{
 		return connection_data_().index;
 	}
 
 	template<bool Const>
-	auto Circuit::OutputConnectionTemplate<Const>::connected_element() const -> ElementTemplate<Const>
+	auto Circuit::OutputTemplate<Const>::connected_element() const -> ElementTemplate<Const>
 	{
 		return ElementTemplate<Const>{ circuit_, connected_element_id() };
 	}
 
 	template<bool Const>
-	auto Circuit::OutputConnectionTemplate<Const>::connected_input() const -> InputConnectionTemplate<Const>
+	auto Circuit::OutputTemplate<Const>::connected_input() const -> InputTemplate<Const>
 	{
 		return connected_element().input(connected_input_index());
 	}
 
 	template<bool Const>
-	void Circuit::OutputConnectionTemplate<Const>::clear_connection() const {
+	void Circuit::OutputTemplate<Const>::clear_connection() const {
 		static_assert(!Const, "Cannot clear connection for const circuit.");
 
 		auto& connection_data { connection_data_() };
@@ -594,7 +594,7 @@ namespace logicsim {
 
 	template<bool Const>
 	template<bool ConstOther>
-	void Circuit::OutputConnectionTemplate<Const>::connect(InputConnectionTemplate<ConstOther> input) const
+	void Circuit::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) const
 	{
 		static_assert(!Const, "Cannot connect output for const circuit.");
 		clear_connection();
@@ -611,7 +611,7 @@ namespace logicsim {
 	}
 
 	template<bool Const>
-	auto Circuit::OutputConnectionTemplate<Const>::connection_data_() const -> ConnectionDataType&
+	auto Circuit::OutputTemplate<Const>::connection_data_() const -> ConnectionDataType&
 	{
 		return circuit_->output_data_store_.at(output_id_);
 	}

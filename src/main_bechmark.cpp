@@ -230,7 +230,7 @@ void demo() {
 
 	element0.input(0).connect(element1.output(0));
 
-	Circuit::InputConnection input = element0.input(0);
+	Circuit::Input input = element0.input(0);
 	input.has_connected_element();
 }
 
@@ -249,7 +249,7 @@ void demo_const() {
 	element0.first_input_id();
 	element1.first_output_id();
 
-	Circuit::ConstInputConnection input = element0.input(0);
+	Circuit::ConstInput input = element0.input(0);
 	input.has_connected_element();
 
 	// element0.input(0).connect(element1.output(0));

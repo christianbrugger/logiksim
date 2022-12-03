@@ -20,19 +20,18 @@
 #include <iostream>
 #include <format>
 #include <cmath>
+#include <ostream>
 
 
 namespace logicsim {
 
-    // using event_id_t = int32_t;
     using time_t = double;
 
 
     struct SimulationEvent
     {
-        // event_id_t event_id;
         time_t time;
-        element_id_t element_id;   // TODO rename to element_id
+        element_id_t element_id;
         connection_size_t input_index;
         bool value;
 
@@ -60,86 +59,64 @@ struct std::formatter<logicsim::SimulationEvent> {
 };
 
 
+//template<class CharT>
+//std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, const logicsim::SimulationEvent& dt)
+//{
+//    os << dt.format();
+//    return os;
+//}
+
+
 namespace logicsim {
 
+    /// groups of events for the same element and time  but different inputs
     using event_group_t = boost::container::small_vector<SimulationEvent, 1>;
+    void validate(const event_group_t& events);
+
 
     class SimulationQueue {
     public:
         
-        time_t time() const noexcept {
-            return time_;
-        }
+        time_t time() const noexcept;
+        time_t next_event_time() const noexcept;
+        bool empty() const noexcept;
 
-        void set_time(time_t time) {
-            if (!std::isfinite(time))
-                throw_exception("New time needs to be finite.");
-            if (time < time_)
-                throw_exception("Cannot set new time to the past.");
-            if (time > next_event_time())
-                throw_exception("New time would be greater than next event.");
-
-            time_ = time;
-        }
-
-        time_t next_event_time() const noexcept {
-            return events_.empty() ? std::numeric_limits<time_t>::infinity() : events_.top().time;
-        }
-
-        bool empty() const noexcept {
-            return events_.empty();
-        }
-
-        void submit_event(SimulationEvent &&event) {
-            if (event.time <= time_)
-                throw_exception("Event time needs to be in the future.");
-            if (!std::isfinite(event.time))
-                throw_exception("Event time needs to be finite.");
-
-            events_.push(std::move(event));
-        }
-
-        /* Return next events for the same time and element_id. */
-        event_group_t get_event_group()
-        {
-            event_group_t group;
-            pop_while(
-                events_,
-                [&group](const SimulationEvent& event) { group.push_back(event); },
-                [&group](const SimulationEvent& event) { return group.size() == 0 || group.front() == event; }
-            );
-            if (group.size() > 0) {
-                set_time(group.front().time);
-            }
-            return group;
-        }
+        void set_time(time_t time);
+        void submit_event(SimulationEvent&& event);
+        /// Remove and return all events for the next time and element_id.
+        event_group_t pop_event_group();
     private:
-        time_t time_{ 0 };
+        time_t time_ { 0 };
         std::priority_queue<SimulationEvent, std::vector<SimulationEvent>, std::greater<>> events_;
     };
 
+    /// Represents multiple logic values
     using logic_vector_t = boost::container::vector<bool>;
 
-
+    /// Store simulation data.
     struct SimulationState {
-        logic_vector_t input_values;
-        SimulationQueue queue;
+        logic_vector_t input_values {};
+        SimulationQueue queue {};
 
-        SimulationState()
-        {
-        }
-        
-        SimulationState(SimulationState&& state, connection_id_t total_inputs) :
-            input_values{ std::move(state.input_values) },
-            queue { std::move(state.queue) }
-        {
-            input_values.resize(total_inputs);
-        }
+        SimulationState(connection_id_t total_inputs);
     };
 
-    SimulationState advance_simulation(SimulationState old_state, const Circuit& circuit, time_t time_delta = 0, bool print_events = false);
+    /// @brief Advance the simulation by changing the given simulations state
+    /// @param state          either new or the old simulation state to start from
+    /// @param circuit        the circuit that should be simulated
+    /// @param time_delta     tun for this time or, when zero, run until no more new events are generated
+    /// @param print_events   if true print each processed event information
+    void advance_simulation(
+        SimulationState &state, const Circuit& circuit, 
+        time_t time_delta = 0, bool print_events = false);
 
-    logic_vector_t collect_output_values(const logic_vector_t& input_values, const Circuit& circuit);
+
+    /// infers the output value from the connected input value, if it exists.
+    bool get_output_value(const Circuit::ConstOutput output, const logic_vector_t& input_values, 
+        const bool raise_missing = true);
+    /// infer vector of all output values from the circuit and input values.
+    logic_vector_t output_value_vector(const logic_vector_t& input_values, const Circuit& circuit, 
+        const bool raise_missing = true);
 
     int benchmark_simulation(const int n_elements = 100, bool print = false);
 

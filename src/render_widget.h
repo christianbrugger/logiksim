@@ -99,16 +99,16 @@ namespace logicsim {
             line0.output(0).connect(elem0.input(1));
 
 
-            SimulationState state;
+            SimulationState state { circuit.total_input_count() };
             state.queue.submit_event({ 0.1, elem0.element_id(), 0, true});
             state.queue.submit_event({ 0.5, elem0.element_id(), 0, false});
 
             create_output_placeholders(circuit);
-            auto new_state = advance_simulation(state, circuit, 0, true);
+            advance_simulation(state, circuit, 0, true);
 
             SimulationResult simulation{ 
-                new_state.input_values, 
-                collect_output_values(new_state.input_values, circuit)
+                state.input_values, 
+                output_value_vector(state.input_values, circuit)
             };
 
             attribute_vector_t attributes = {
