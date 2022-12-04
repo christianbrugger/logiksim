@@ -6,9 +6,11 @@
 #include <boost/range/combine.hpp>
 #include <boost/range/adaptors.hpp>
 
-#include <format>
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <functional>
+
 
 namespace logicsim {
 
@@ -18,8 +20,8 @@ namespace logicsim {
 
     std::string SimulationEvent::format() const
     {
-        auto element_id_str { (element_id == null_element) ? "NULL" : std::format("{}", element_id) };
-        return std::format("<SimulationEvent: at {}s set Element_{}[{}] = {}>",
+        auto element_id_str { (element_id == null_element) ? "NULL" : fmt::format("{}", element_id) };
+        return fmt::format("<SimulationEvent: at {}s set Element_{}[{}] = {}>",
             time, element_id_str, input_index, (value ? "true" : "false"));
     }
 
@@ -233,9 +235,9 @@ namespace logicsim {
 
         if (print_events) {
             if (std::size(events) == 1)
-                std::cout << std::format("event: {}\n", events.at(0));
+                fmt::print("event: {}\n", events.at(0));
             else
-                std::cout << std::format("events: {}\n", events);
+                fmt::print("events: {}\n", events);
         }
 
         const Circuit::ConstElement element { circuit.element(events.front().element_id) };
@@ -332,13 +334,13 @@ namespace logicsim {
 
         if (print) {
             for (bool input :state.input_values) {
-                std::cout << std::format("input_values = {}\n", input);
+                fmt::print("input_values = {}\n", input);
             }
             for (bool output : output_values) {
-                std::cout << std::format("output_values = {}\n", output);
+                fmt::print("output_values = {}\n", output);
             }
-            std::cout << std::format("input_values = {}\n", state.input_values);
-            std::cout << std::format("output_values = {}\n", output_values);
+            fmt::print("input_values = {}\n", state.input_values);
+            fmt::print("output_values = {}\n", output_values);
         }
 
         return state.input_values.front() + output_values.front() + n_elements;

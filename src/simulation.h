@@ -14,11 +14,11 @@
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/algorithm/count_if.hpp>
 
+#include <fmt/format.h>
+
 #include <queue>
 #include <string>
-#include <format>
 #include <iostream>
-#include <format>
 #include <cmath>
 #include <ostream>
 
@@ -48,13 +48,13 @@ namespace logicsim {
 }
 
 template <>
-struct std::formatter<logicsim::SimulationEvent> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<logicsim::SimulationEvent> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const logicsim::SimulationEvent& obj, std::format_context& ctx) {
-        return std::format_to(ctx.out(), "{}", obj.format());
+    auto format(const logicsim::SimulationEvent& obj, fmt::format_context& ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 

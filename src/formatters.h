@@ -8,29 +8,32 @@
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/join.hpp>
 
-#include <format>
+#include <fmt/format.h>
+
 #include <iostream>
 #include <format>
 #include <sstream>
 
 
 
+/// A specialization of fmt::formatter for boost::container::small_vector
 template<typename T, std::size_t N, class CharT>
-struct std::formatter<boost::container::small_vector<T, N>, CharT> : std::formatter<string_view> {
-    auto format(const boost::container::small_vector<T, N>& obj, std::format_context& ctx) {
+struct fmt::formatter<boost::container::small_vector<T, N>, CharT> : fmt::formatter<std::string_view> {
+    auto format(const boost::container::small_vector<T, N>& obj, fmt::format_context& ctx) {
         std::ostringstream inner;
         inner << ::ranges::views::all(obj);
-        return std::formatter<string_view>::format(inner.str(), ctx);
+        return fmt::formatter<std::string_view>::format(inner.str(), ctx);
     }
 };
 
 
+/// A specialization of fmt::formatter for boost::container::vector
 template<typename T, class CharT>
-struct std::formatter<boost::container::vector<T>, CharT> : std::formatter<string_view> {
-    auto format(const boost::container::vector<T>& obj, std::format_context& ctx) {
+struct fmt::formatter<boost::container::vector<T>, CharT> : fmt::formatter<std::string_view> {
+    auto format(const boost::container::vector<T>& obj, fmt::format_context& ctx) {
         std::ostringstream inner;
         inner << ::ranges::views::all(obj);
-        return std::formatter<string_view>::format(inner.str(), ctx);
+        return fmt::formatter<std::string_view>::format(inner.str(), ctx);
     }
 };
 

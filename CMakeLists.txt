@@ -66,6 +66,10 @@ add_subdirectory(external/blend2d)
 # range-v3
 add_subdirectory(external/range-v3)
 
+# fmt
+add_subdirectory(external/fmt)
+
+
 ###################################################
 
 # set(CMAKE_CXX_CLANG_TIDY
@@ -90,6 +94,7 @@ target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE
     benchmark::benchmark
     Boost::boost
     range-v3::range-v3
+    fmt::fmt
 )
 if (MSVC)
     target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
@@ -113,6 +118,7 @@ add_executable(${MAIN_TARGET}
 target_link_libraries(${MAIN_TARGET} PRIVATE 
     Boost::boost
     range-v3::range-v3
+    fmt::fmt
 )
 if (MSVC)
     target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
@@ -141,6 +147,7 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
     Qt6::OpenGLWidgets
     Blend2D::Blend2D
     range-v3::range-v3
+    fmt::fmt
 )
 if (MSVC)
     target_compile_options(${MAIN_GUI_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
@@ -169,6 +176,7 @@ target_include_directories(${MAIN_TEST_TARGET} PRIVATE
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     Boost::boost
     range-v3::range-v3
+    fmt::fmt
     
     GTest::gtest
     GTest::gtest_main

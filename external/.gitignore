@@ -2,5 +2,6 @@
 asmjit
 benchmark
 blend2d
+fmt
 googletest
 range-v3
