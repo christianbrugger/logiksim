@@ -58,13 +58,15 @@ struct std::formatter<logicsim::SimulationEvent> {
     }
 };
 
+namespace std {
 
-//template<class CharT>
-//std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, const logicsim::SimulationEvent& dt)
-//{
-//    os << dt.format();
-//    return os;
-//}
+    template<class CharT>
+    std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, const logicsim::SimulationEvent& dt)
+    {
+        os << dt.format();
+        return os;
+    }
+}
 
 
 namespace logicsim {

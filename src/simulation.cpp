@@ -232,7 +232,10 @@ namespace logicsim {
         validate(events);
 
         if (print_events) {
-            std::cout << std::format("events: {}\n", events);
+            if (std::size(events) == 1)
+                std::cout << std::format("event: {}\n", events.at(0));
+            else
+                std::cout << std::format("events: {}\n", events);
         }
 
         const Circuit::ConstElement element { circuit.element(events.front().element_id) };
@@ -334,9 +337,8 @@ namespace logicsim {
             for (bool output : output_values) {
                 std::cout << std::format("output_values = {}\n", output);
             }
-            std::cout << std::format("input_values = {}", state.input_values);
-            // std::cout << std::format("input_values = {}", std::vector<bool>(std::begin(new_state.input_values), std::end(new_state.input_values)));
-            // std::cout << std::format("output_values = {}", std::vector<bool>(std::begin(output_values), std::end(output_values)));
+            std::cout << std::format("input_values = {}\n", state.input_values);
+            std::cout << std::format("output_values = {}\n", output_values);
         }
 
         return state.input_values.front() + output_values.front() + n_elements;
