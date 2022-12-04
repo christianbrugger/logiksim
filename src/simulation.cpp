@@ -192,7 +192,7 @@ namespace logicsim {
     }
 
     void apply_events(logic_vector_t& input_values, const Circuit::ConstElement element, const event_group_t& group) {
-        ranges::for_each(group, [&input_values, element](const SimulationEvent& event) {
+        ranges::for_each(group, [&](const SimulationEvent& event) {
             set_input(input_values, element, event.input_index, event.value);
         });
     }
@@ -202,7 +202,7 @@ namespace logicsim {
             throw_exception("old_outputs and new_outputs need to have the same size.");
 
         con_index_small_vector_t result;
-        for (const auto [index, old_value, new_value] : ranges::views::zip(ranges::views::iota(0), old_outputs, new_outputs)) {
+        for (const auto&& [index, old_value, new_value] : ranges::views::zip(ranges::views::iota(0), old_outputs, new_outputs)) {
             if (old_value != new_value) {
                 result.push_back(static_cast<connection_size_t>(index));
             }
@@ -234,10 +234,7 @@ namespace logicsim {
         validate(events);
 
         if (print_events) {
-            if (std::size(events) == 1)
-                fmt::print("event: {}\n", events.at(0));
-            else
-                fmt::print("events: {}\n", events);
+            fmt::print("events: {:n:}\n", events);
         }
 
         const Circuit::ConstElement element { circuit.element(events.front().element_id) };
@@ -333,12 +330,6 @@ namespace logicsim {
         auto output_values { output_value_vector(state.input_values, circuit) };
 
         if (print) {
-            for (bool input :state.input_values) {
-                fmt::print("input_values = {}\n", input);
-            }
-            for (bool output : output_values) {
-                fmt::print("output_values = {}\n", output);
-            }
             fmt::print("input_values = {::b}\n", state.input_values);
             fmt::print("output_values = {::b}\n", output_values);
         }

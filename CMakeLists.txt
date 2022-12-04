@@ -115,7 +115,7 @@ add_executable(${MAIN_TARGET}
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
-    src/formatters.h
+    
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
     Boost::boost
@@ -139,7 +139,7 @@ add_executable(${MAIN_GUI_TARGET}
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
-    src/formatters.h
+    
 
     src/render_widget.h src/render_widget.cpp 
     src/render_scene.h src/render_scene.cpp
@@ -171,7 +171,7 @@ add_executable(${MAIN_TEST_TARGET}
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
-    src/formatters.h
+    
 
     test/test_circuit.cpp
     test/test_simulation.cpp
