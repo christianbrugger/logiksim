@@ -7,13 +7,7 @@
 
 #include <boost/container/small_vector.hpp>
 #include <boost/container/vector.hpp>
-
-#include <range/v3/core.hpp>
-#include <range/v3/view/drop.hpp>
-#include <range/v3/view/take.hpp>
-#include <range/v3/algorithm/any_of.hpp>
-#include <range/v3/algorithm/count_if.hpp>
-
+#include <range/v3/all.hpp>
 #include <fmt/format.h>
 
 #include <queue>
@@ -53,10 +47,11 @@ struct fmt::formatter<logicsim::SimulationEvent> {
         return ctx.begin();
     }
 
-    auto format(const logicsim::SimulationEvent& obj, fmt::format_context& ctx) {
+    auto format(const logicsim::SimulationEvent& obj, fmt::format_context& ctx) const {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
+
 
 namespace std {
 

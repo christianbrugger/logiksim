@@ -3,16 +3,12 @@
 
 #include "exceptions.h"
 
+#include <range/v3/all.hpp>
+
 #include <cstdint>
 #include <vector>
 #include <iostream>
 #include <functional>
-
-#include <range/v3/core.hpp>
-#include <range/v3/view/iota.hpp>
-#include <range/v3/view/transform.hpp>
-#include <range/v3/algorithm/for_each.hpp>
-#include <range/v3/algorithm/all_of.hpp>
 
 
 namespace logicsim {
@@ -102,7 +98,7 @@ namespace logicsim {
 		using ElementDataType = std::conditional_t<Const, ElementData const, ElementData>;
 
 		friend Circuit;
-		explicit ElementTemplate(CircuitType* circuit, element_id_t element_id);
+		ElementTemplate(CircuitType* circuit, element_id_t element_id);
 	public:
 		template<bool ConstOther>
 		bool operator==(ElementTemplate<ConstOther> other) const noexcept;
@@ -138,7 +134,7 @@ namespace logicsim {
 		using ConnectionDataType = std::conditional_t<Const, ConnectionData const, ConnectionData>;
 
 		friend ElementTemplate<Const>;
-		explicit InputTemplate(CircuitType* circuit, element_id_t element_id,
+		InputTemplate(CircuitType* circuit, element_id_t element_id,
 			connection_size_t input_index, connection_id_t input_id);
 	public:
 		friend InputTemplate<!Const>;
@@ -180,7 +176,7 @@ namespace logicsim {
 		using ConnectionDataType = std::conditional_t<Const, ConnectionData const, ConnectionData>;
 
 		friend ElementTemplate<Const>;
-		explicit OutputTemplate(CircuitType* circuit, element_id_t element_id,
+		OutputTemplate(CircuitType* circuit, element_id_t element_id,
 			connection_size_t output_index, connection_id_t output_id
 		);
 	public:

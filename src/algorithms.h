@@ -2,8 +2,7 @@
 #define LOGIKSIM_ALGORITHMS_H
 
 #include <boost/container/small_vector.hpp>
-
-#include <range/v3/core.hpp>
+#include <range/v3/all.hpp>
 
 #include <concepts>
 #include <format>

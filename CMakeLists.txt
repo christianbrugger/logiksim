@@ -98,6 +98,8 @@ target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE
 )
 if (MSVC)
     target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
+    # unreachable code in range-v3
+    target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE /wd4702)
 else()
     # -Wfloat-equal
     target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
@@ -122,6 +124,8 @@ target_link_libraries(${MAIN_TARGET} PRIVATE
 )
 if (MSVC)
     target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
+    # unreachable code in range-v3
+    target_compile_options(${MAIN_TARGET} PRIVATE /wd4702)
 else()
     target_compile_options(${MAIN_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
 endif()
@@ -151,6 +155,8 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
 )
 if (MSVC)
     target_compile_options(${MAIN_GUI_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
+    # unreachable code in range-v3
+    target_compile_options(${MAIN_GUI_TARGET} PRIVATE /wd4702)
 else()
     target_compile_options(${MAIN_GUI_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
 endif()
@@ -184,6 +190,13 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
 enable_testing()
 include(GoogleTest)
 gtest_discover_tests(${MAIN_TEST_TARGET})
+if (MSVC)
+    target_compile_options(${MAIN_TEST_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
+    # unreachable code in range-v3
+    target_compile_options(${MAIN_TEST_TARGET} PRIVATE /wd4702)
+else()
+    target_compile_options(${MAIN_TEST_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
+endif()
 
 
 

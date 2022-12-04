@@ -1,12 +1,9 @@
 
 #include "simulation.h"
 
-#include "formatters.h"
-
-#include <boost/range/combine.hpp>
-#include <boost/range/adaptors.hpp>
-
+#include <range/v3/all.hpp>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <algorithm>
 #include <functional>
@@ -182,15 +179,16 @@ namespace logicsim {
         }
     }
 
-
     logic_small_vector_t copy_inputs(const logic_vector_t &input_values, const Circuit::ConstElement element) {
-        // TODO use to vector
-        const auto view { input_values | ranges::views::drop(element.first_input_id()) | ranges::views::take(element.input_count()) };
-        return { std::cbegin(view), std::cend(view) };
+        return ranges::views::all(input_values)
+            | ranges::views::drop(element.first_input_id())
+            | ranges::views::take(element.input_count())
+            | ranges::to<logic_small_vector_t>();
     }
 
     void set_input(logic_vector_t& input_values, const Circuit::ConstElement element, connection_size_t input_index, bool value) {
-        input_values.at(static_cast<logic_vector_t::size_type>(element.input_id(input_index))) = value;
+        const auto input_id = static_cast<logic_vector_t::size_type>(element.input_id(input_index));
+        input_values.at(input_id) = value;
     }
 
     void apply_events(logic_vector_t& input_values, const Circuit::ConstElement element, const event_group_t& group) {
@@ -200,11 +198,13 @@ namespace logicsim {
     }
 
     con_index_small_vector_t get_changed_outputs(const logic_small_vector_t& old_outputs, const logic_small_vector_t& new_outputs) {
-        boost::container::small_vector<connection_size_t, 8> result;
+        if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]]
+            throw_exception("old_outputs and new_outputs need to have the same size.");
 
-        for (auto&& element : boost::range::combine(old_outputs, new_outputs) | boost::adaptors::indexed()) {
-            if (element.value().get<0>() != element.value().get<1>()) {
-                result.push_back(static_cast<connection_size_t>(element.index()));
+        con_index_small_vector_t result;
+        for (const auto [index, old_value, new_value] : ranges::views::zip(ranges::views::iota(0), old_outputs, new_outputs)) {
+            if (old_value != new_value) {
+                result.push_back(static_cast<connection_size_t>(index));
             }
         }
         return result;
@@ -217,10 +217,10 @@ namespace logicsim {
 
         if (output.has_connected_element()) {
             queue.submit_event({ 
-                time, 
-                output.connected_element_id(), 
-                output.connected_input_index(), 
-                output_values.at(output.output_index())
+                .time=time, 
+                .element_id=output.connected_element_id(), 
+                .input_index=output.connected_input_index(), 
+                .value=output_values.at(output.output_index())
             });
         }
     }
@@ -339,8 +339,8 @@ namespace logicsim {
             for (bool output : output_values) {
                 fmt::print("output_values = {}\n", output);
             }
-            fmt::print("input_values = {}\n", state.input_values);
-            fmt::print("output_values = {}\n", output_values);
+            fmt::print("input_values = {::b}\n", state.input_values);
+            fmt::print("output_values = {::b}\n", output_values);
         }
 
         return state.input_values.front() + output_values.front() + n_elements;

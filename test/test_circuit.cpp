@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-#include <range/v3/core.hpp>
+#include <range/v3/all.hpp>
 
 
 namespace logicsim {

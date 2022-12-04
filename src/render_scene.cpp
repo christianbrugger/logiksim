@@ -1,14 +1,7 @@
 
 #include "render_scene.h"
 
-#include <boost/range.hpp>
-#include <boost/range/combine.hpp>
-#include <boost/range/adaptors.hpp>
-
-#include <range/v3/core.hpp>
-#include <range/v3/view/transform.hpp>
-#include <range/v3/algorithm/for_each.hpp>
-#include <range/v3/iterator/operations.hpp>
+#include <range/v3/all.hpp>
 
 #include <iostream>
 
