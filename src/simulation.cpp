@@ -1,6 +1,7 @@
 
-#include "algorithms.h"
 #include "simulation.h"
+
+#include "algorithms.h"
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>

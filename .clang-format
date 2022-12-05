@@ -11,6 +11,7 @@ Language:    	Cpp
 UseTab: Never
 SpaceBeforeCpp11BracedList: true
 SeparateDefinitionBlocks: Always
+Standard: c++20
 
 IncludeBlocks: Regroup
 IncludeIsMainRegex: '(_test)?$'
