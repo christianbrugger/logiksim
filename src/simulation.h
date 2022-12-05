@@ -40,7 +40,7 @@ namespace logicsim {
         std::string format() const;
     };
 
-    SimulationEvent simulation_event(Circuit::ConstInput input, time_t time, bool value);
+    SimulationEvent make_event(Circuit::ConstInput input, time_t time, bool value);
 }
 
 template <>
@@ -97,11 +97,14 @@ namespace logicsim {
         SimulationQueue queue {};
 
         SimulationState(connection_id_t total_inputs);
+        SimulationState(const Circuit &circuit);
 
-        void check_input_size(const Circuit& circuit);
     };
+    void check_input_size(const SimulationState &state, const Circuit& circuit);
 
     void initialize_simulation(SimulationState& state, const Circuit& circuit);
+
+    SimulationState get_initialized_state(Circuit& circuit);
 
     /// @brief Advance the simulation by changing the given simulations state
     /// @param state          either new or the old simulation state to start from
@@ -112,10 +115,17 @@ namespace logicsim {
         SimulationState &state, const Circuit& circuit, 
         time_t time_delta = 0, bool print_events = false);
 
+    SimulationState simulate_circuit(Circuit& circuit, time_t time_delta = 0, bool print_events = false);
+
+    bool get_input_value(const Circuit::ConstInput input, const logic_vector_t& input_values);
+    bool get_input_value(const Circuit::ConstInput input, const SimulationState &state);
 
     /// infers the output value from the connected input value, if it exists.
     bool get_output_value(const Circuit::ConstOutput output, const logic_vector_t& input_values, 
         const bool raise_missing = true);
+    bool get_output_value(const Circuit::ConstOutput output, const SimulationState& state,
+        const bool raise_missing = true);
+
     /// infer vector of all output values from the circuit and input values.
     logic_vector_t output_value_vector(const logic_vector_t& input_values, const Circuit& circuit, 
         const bool raise_missing = true);

@@ -100,6 +100,8 @@ namespace logicsim {
 		friend Circuit;
 		ElementTemplate(CircuitType* circuit, element_id_t element_id);
 	public:
+		ElementTemplate<true>(Element element);
+
 		template<bool ConstOther>
 		bool operator==(ElementTemplate<ConstOther> other) const noexcept;
 
@@ -137,6 +139,8 @@ namespace logicsim {
 		InputTemplate(CircuitType* circuit, element_id_t element_id,
 			connection_size_t input_index, connection_id_t input_id);
 	public:
+		InputTemplate<true>(Input input);
+
 		friend InputTemplate<!Const>;
 		template<bool ConstOther>
 		bool operator==(InputTemplate<ConstOther> other) const noexcept;
@@ -180,6 +184,8 @@ namespace logicsim {
 			connection_size_t output_index, connection_id_t output_id
 		);
 	public:
+		OutputTemplate<true>(Output output);
+
 		friend OutputTemplate<!Const>;
 		template<bool ConstOther>
 		bool operator==(OutputTemplate<ConstOther> other) const noexcept;

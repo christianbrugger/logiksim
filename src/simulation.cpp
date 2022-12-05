@@ -15,7 +15,7 @@ namespace logicsim {
     // Simulation Event
     //
 
-    SimulationEvent simulation_event(Circuit::ConstInput input, [[maybe_unused]] time_t time, bool value) {
+    SimulationEvent make_event(Circuit::ConstInput input, time_t time, bool value) {
         return {
             .time = time,
             .element_id = input.element_id(),
@@ -155,10 +155,14 @@ namespace logicsim {
     {
     }
 
+    SimulationState::SimulationState(const Circuit &circuit) :
+        SimulationState(circuit.total_input_count())
+    {
+    }
 
-    void SimulationState::check_input_size(const Circuit& circuit) {
+    void check_input_size(const SimulationState& state, const Circuit& circuit) {
         const auto circuit_inputs = static_cast<logic_vector_t::size_type>(circuit.total_input_count());
-        if (input_values.size() != circuit_inputs) [[unlikely]] {
+        if (state.input_values.size() != circuit_inputs) [[unlikely]] {
             throw_exception("input_values in state needs to match total inputs of the circuit.");
         }
     }
@@ -171,13 +175,15 @@ namespace logicsim {
     using con_index_small_vector_t = boost::container::small_vector<connection_size_t, 8>;
 
 
-    logic_small_vector_t calculate_outputs(const logic_small_vector_t& input, const ElementType type) {
-        if (input.size() == 0)
-            return {};
+    logic_small_vector_t calculate_outputs(const logic_small_vector_t& input, connection_size_t output_count, const ElementType type) {
+        if (input.size() == 0) [[unlikely]]
+            throw_exception("Input size cannot be zero.");
+        if (output_count <= 0) [[unlikely]]
+            throw_exception("Output count cannot be zero or negative.");
 
         switch (type) {
         case ElementType::wire:
-            return { input.at(0) };
+            return ranges::views::repeat_n(input.at(0), output_count) | ranges::to<logic_small_vector_t>();
 
         case ElementType::inverter_element:
             return { !input.at(0) };
@@ -201,6 +207,12 @@ namespace logicsim {
         return ranges::views::all(input_values)
             | ranges::views::drop(element.first_input_id())
             | ranges::views::take(element.input_count())
+            | ranges::to<logic_small_vector_t>();
+    }
+
+    logic_small_vector_t copy_outputs(const logic_vector_t& input_values, const Circuit::ConstElement element) {
+        return element.outputs()
+            | ranges::views::transform([&](const Circuit::ConstOutput output) { return get_output_value(output, input_values, true); })
             | ranges::to<logic_small_vector_t>();
     }
 
@@ -257,7 +269,7 @@ namespace logicsim {
 
         const Circuit::ConstElement element { circuit.element(events.front().element_id) };
 
-        // short-circuit input placeholders
+        // short-circuit placeholders, as they don't have logic
         if (element.element_type() == ElementType::placeholder) {
             apply_events(state.input_values, element, events);
             return;
@@ -269,8 +281,8 @@ namespace logicsim {
         const auto new_inputs { copy_inputs(state.input_values, element) };
 
         // find changing outputs
-        const auto old_outputs { calculate_outputs(old_inputs, element.element_type()) };
-        const auto new_outputs { calculate_outputs(new_inputs, element.element_type()) };
+        const auto old_outputs { calculate_outputs(old_inputs, element.output_count(), element.element_type()) };
+        const auto new_outputs { calculate_outputs(new_inputs, element.output_count(), element.element_type()) };
         const auto changes { get_changed_outputs(old_outputs, new_outputs) };
 
         // submit events
@@ -286,7 +298,7 @@ namespace logicsim {
     {
         if (time_delta < 0) [[unlikely]]
             throw_exception("time_delta needs to be zero or positive.");
-        state.check_input_size(circuit);
+        check_input_size(state, circuit);
 
         const double end_time { (time_delta == 0) ? 
             std::numeric_limits<time_t>::infinity() : state.queue.time() + time_delta };
@@ -300,28 +312,68 @@ namespace logicsim {
         }
     }
 
-    bool get_output_value(
-        const Circuit::ConstOutput output, 
-        const logic_vector_t& input_values, 
-        const bool raise_missing
-    ) {
+    void initialize_simulation(SimulationState& state, const Circuit &circuit) {
+        check_input_size(state, circuit);
+
+        for (auto&& element : circuit.elements()) {
+            // short-circuit placeholders, as they don't have logic
+            if (element.element_type() == ElementType::placeholder)
+                continue;
+
+            // find outputs that need an update
+            const auto old_outputs { copy_outputs(state.input_values, element) };
+            const auto curr_inputs { copy_inputs(state.input_values, element) };
+            const auto new_outputs { calculate_outputs(curr_inputs, element.output_count(), element.element_type()) };
+            const auto changes { get_changed_outputs(old_outputs, new_outputs) };
+
+            // submit new events
+            ranges::for_each(changes, [&, element](auto output_index) {
+                create_event(state.queue, element.output(output_index), new_outputs);
+            });
+        }
+    }
+
+    SimulationState get_initialized_state(Circuit& circuit) {
+        add_output_placeholders(circuit);
+        circuit.validate(true);
+
+        SimulationState state { circuit };
+        initialize_simulation(state, circuit);
+        return state;
+    }
+
+    SimulationState simulate_circuit(Circuit& circuit, time_t time_delta, bool print_events) {
+        add_output_placeholders(circuit);
+        circuit.validate(true);
+
+        SimulationState state { circuit };
+        initialize_simulation(state, circuit);
+
+        advance_simulation(state, circuit, time_delta, print_events);
+        return state;
+    }
+
+    bool get_input_value(const Circuit::ConstInput input, const logic_vector_t& input_values) {
+        return input_values.at(input.input_id());
+    }
+
+    bool get_input_value(const Circuit::ConstInput input, const SimulationState& state) {
+        return get_input_value(input, state.input_values);
+    }
+
+    bool get_output_value(const Circuit::ConstOutput output, 
+        const logic_vector_t& input_values, const bool raise_missing) 
+    {
         if (raise_missing || output.has_connected_element()) {
             return input_values.at(output.connected_input().input_id());
         }
         return false;
     }
 
-    void initialize_simulation(SimulationState& state, const Circuit &circuit) {
-        state.check_input_size(circuit);
-
-        for (auto&& element : circuit.elements()) {
-            for (auto&& input : element.inputs()) {
-                state.queue.submit_event(simulation_event(input, 
-                        state.queue.time() + 0.1, 
-                        state.input_values.at(input.input_id())
-                ));
-            }
-        }
+    bool get_output_value(const Circuit::ConstOutput output,
+        const SimulationState& state, const bool raise_missing)
+    {
+        return get_output_value(output, state.input_values, raise_missing);
     }
 
     logic_vector_t output_value_vector(const logic_vector_t& input_values, const Circuit& circuit, 
