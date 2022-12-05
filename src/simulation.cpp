@@ -149,14 +149,15 @@ namespace logicsim {
     //
 
 
-    SimulationState::SimulationState(connection_id_t total_inputs) : 
+    SimulationState::SimulationState(connection_id_t total_inputs, connection_id_t total_outputs) : 
         input_values(total_inputs), 
-        queue {} 
+        queue {},
+        output_delays(total_outputs)
     {
     }
 
     SimulationState::SimulationState(const Circuit &circuit) :
-        SimulationState(circuit.total_input_count())
+        SimulationState(circuit.total_input_count(), circuit.total_output_count())
     {
     }
 
@@ -221,18 +222,22 @@ namespace logicsim {
         input_values.at(input_id) = value;
     }
 
-    void apply_events(logic_vector_t& input_values, const Circuit::ConstElement element, const event_group_t& group) {
+    void apply_events(logic_vector_t& input_values, const Circuit::ConstElement element, 
+        const event_group_t& group) {
         ranges::for_each(group, [&](const SimulationEvent& event) {
             set_input(input_values, element, event.input_index, event.value);
         });
     }
 
-    con_index_small_vector_t get_changed_outputs(const logic_small_vector_t& old_outputs, const logic_small_vector_t& new_outputs) {
+    con_index_small_vector_t get_changed_outputs(const logic_small_vector_t& old_outputs, 
+        const logic_small_vector_t& new_outputs) {
         if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]]
             throw_exception("old_outputs and new_outputs need to have the same size.");
 
         con_index_small_vector_t result;
-        for (const auto&& [index, old_value, new_value] : ranges::views::zip(ranges::views::iota(0), old_outputs, new_outputs)) {
+        for (const auto&& [index, old_value, new_value] : 
+            ranges::views::zip(ranges::views::iota(0), old_outputs, new_outputs)) 
+        {
             if (old_value != new_value) {
                 result.push_back(static_cast<connection_size_t>(index));
             }
@@ -242,7 +247,8 @@ namespace logicsim {
 
     constexpr time_t STANDARD_DELAY = 0.1;
 
-    void create_event(SimulationQueue& queue, Circuit::ConstOutput output, const logic_small_vector_t& output_values) {
+    void create_event(SimulationQueue& queue, Circuit::ConstOutput output, 
+        const logic_small_vector_t& output_values) {
         const time_t time { queue.time() + STANDARD_DELAY };
 
         if (output.has_connected_element()) {
@@ -281,9 +287,12 @@ namespace logicsim {
         const auto new_inputs { copy_inputs(state.input_values, element) };
 
         // find changing outputs
-        const auto old_outputs { calculate_outputs(old_inputs, element.output_count(), element.element_type()) };
-        const auto new_outputs { calculate_outputs(new_inputs, element.output_count(), element.element_type()) };
-        const auto changes { get_changed_outputs(old_outputs, new_outputs) };
+        const auto old_outputs { 
+            calculate_outputs(old_inputs, element.output_count(), element.element_type()) };
+        const auto new_outputs { 
+            calculate_outputs(new_inputs, element.output_count(), element.element_type()) };
+        const auto changes { 
+            get_changed_outputs(old_outputs, new_outputs) };
 
         // submit events
         ranges::for_each(changes, [&, element](auto output_index) { 
@@ -323,7 +332,8 @@ namespace logicsim {
             // find outputs that need an update
             const auto old_outputs { copy_outputs(state.input_values, element) };
             const auto curr_inputs { copy_inputs(state.input_values, element) };
-            const auto new_outputs { calculate_outputs(curr_inputs, element.output_count(), element.element_type()) };
+            const auto new_outputs { calculate_outputs(
+                curr_inputs, element.output_count(), element.element_type()) };
             const auto changes { get_changed_outputs(old_outputs, new_outputs) };
 
             // submit new events
@@ -383,7 +393,8 @@ namespace logicsim {
 
         for (auto element : circuit.elements()) {
             for (auto output : element.outputs()) {
-                output_values.at(output.output_id()) = get_output_value(output, input_values, raise_missing);
+                output_values.at(output.output_id()) = get_output_value(
+                    output, input_values, raise_missing);
             }
         }
 
@@ -400,7 +411,7 @@ namespace logicsim {
         const auto elem0 { circuit.add_element(ElementType::or_element, 2, 1) };
         elem0.output(0).connect(elem0.input(0));
         
-        SimulationState state { circuit.total_input_count() };
+        SimulationState state { circuit };
         state.queue.submit_event({ 0.1, elem0.element_id(), 0, true});
         state.queue.submit_event({ 0.1, elem0.element_id(), 1, true});
         state.queue.submit_event({ 0.5, elem0.element_id(), 1, false });

@@ -99,7 +99,7 @@ namespace logicsim {
             line0.output(0).connect(elem0.input(1));
 
 
-            SimulationState state { circuit.total_input_count() };
+            SimulationState state { circuit };
             state.queue.submit_event({ 0.1, elem0.element_id(), 0, true});
             state.queue.submit_event({ 0.5, elem0.element_id(), 0, false});
 

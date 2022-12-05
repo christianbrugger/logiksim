@@ -13,7 +13,6 @@ namespace logicsim {
 		SimulationEvent event2 { 123.456, 1, 2, true };
 		EXPECT_TRUE(event1 == event2);
 
-
 		SimulationEvent event3 { 123.456, 1, 3, true };
 		SimulationEvent event4 { 123.456, 1, 2, false };
 		EXPECT_TRUE(event3 == event4);
@@ -155,7 +154,7 @@ namespace logicsim {
 			EXPECT_EQ(get_output_value(carry.output(0), state), false);
 		}
 
-		// 1 + 0 = 01
+        // 1 + 0 = 01                                                                               
 		{
 			const auto t = state.queue.time() + 0.1;
 			state.queue.submit_event(make_event(input0.input(0), t, false));

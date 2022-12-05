@@ -17,6 +17,15 @@
 #include <ostream>
 
 
+/// New Features
+// * delays for each output, needed for wires
+// * flip flops, which requires access to the last state
+// * store transition times for wires so they can be drawn
+// * negation on input and outputs
+// * clock generators
+// * shift registers, requires memory & internal state
+
+
 namespace logicsim {
 
     using time_t = double;
@@ -58,7 +67,8 @@ struct fmt::formatter<logicsim::SimulationEvent> {
 namespace std {
 
     template<class CharT>
-    std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, const logicsim::SimulationEvent& dt)
+    std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, 
+        const logicsim::SimulationEvent& dt)
     {
         os << dt.format();
         return os;
@@ -90,13 +100,15 @@ namespace logicsim {
 
     /// Represents multiple logic values
     using logic_vector_t = boost::container::vector<bool>;
+    using delay_vector_t = boost::container::vector<time_t>;
 
     /// Store simulation data.
     struct SimulationState {
         logic_vector_t input_values {};
         SimulationQueue queue {};
+        delay_vector_t output_delays {};
 
-        SimulationState(connection_id_t total_inputs);
+        SimulationState(connection_id_t total_inputs, connection_id_t total_outputs);
         SimulationState(const Circuit &circuit);
 
     };
@@ -109,13 +121,15 @@ namespace logicsim {
     /// @brief Advance the simulation by changing the given simulations state
     /// @param state          either new or the old simulation state to start from
     /// @param circuit        the circuit that should be simulated
-    /// @param time_delta     tun for this time or, when zero, run until no more new events are generated
+    /// @param time_delta     tun for this time or, when zero, run until 
+    ///                       no more new events are generated
     /// @param print_events   if true print each processed event information
     void advance_simulation(
         SimulationState &state, const Circuit& circuit, 
         time_t time_delta = 0, bool print_events = false);
 
-    SimulationState simulate_circuit(Circuit& circuit, time_t time_delta = 0, bool print_events = false);
+    SimulationState simulate_circuit(Circuit& circuit, time_t time_delta = 0, 
+        bool print_events = false);
 
     bool get_input_value(const Circuit::ConstInput input, const logic_vector_t& input_values);
     bool get_input_value(const Circuit::ConstInput input, const SimulationState &state);
