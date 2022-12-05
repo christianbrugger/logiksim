@@ -23,7 +23,7 @@ namespace logicsim {
 	TEST(Circuit, CircuitSingleElement) {
 		Circuit circuit;
 
-		circuit.create_element(ElementType::wire, 3, 5);
+		circuit.add_element(ElementType::wire, 3, 5);
 
 		EXPECT_EQ(circuit.element_count(), 1);
 		EXPECT_EQ(circuit.total_input_count(), 3);
@@ -35,7 +35,7 @@ namespace logicsim {
 
 	TEST(Circuit, ElementProperties) {
 		Circuit circuit;
-		circuit.create_element(ElementType::wire, 3, 5);
+		circuit.add_element(ElementType::wire, 3, 5);
 
 		const Circuit& circuit_const { circuit };
 		const Circuit::ConstElement element { circuit_const.element(0) };
@@ -56,8 +56,8 @@ namespace logicsim {
 	TEST(Circuit, EqualityOperators) {
 		Circuit circuit;
 
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
-		auto inverter { circuit.create_element(ElementType::inverter_element, 3, 2) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
+		auto inverter { circuit.add_element(ElementType::inverter_element, 3, 2) };
 
 		const Circuit& circuit_const { circuit };
 
@@ -78,8 +78,8 @@ namespace logicsim {
 	TEST(Circuit, ConnectionProperties) {
 		Circuit circuit;
 
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
-		auto inverter { circuit.create_element(ElementType::inverter_element, 3, 2) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
+		auto inverter { circuit.add_element(ElementType::inverter_element, 3, 2) };
 
 		EXPECT_EQ(wire.output(1).element_id(), wire.element_id());
 		EXPECT_EQ(wire.output(1).output_index(), 1);
@@ -97,8 +97,8 @@ namespace logicsim {
 	TEST(Circuit, ConnectedOutput) {
 		Circuit circuit;
 
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
-		auto inverter { circuit.create_element(ElementType::inverter_element, 3, 2) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
+		auto inverter { circuit.add_element(ElementType::inverter_element, 3, 2) };
 
 		wire.output(1).connect(inverter.input(1));
 
@@ -118,8 +118,8 @@ namespace logicsim {
 	TEST(Circuit, ConnectInput) {
 		Circuit circuit;
 
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
-		auto inverter { circuit.create_element(ElementType::inverter_element, 3, 2) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
+		auto inverter { circuit.add_element(ElementType::inverter_element, 3, 2) };
 
 		inverter.input(1).connect(wire.output(1));
 
@@ -139,8 +139,8 @@ namespace logicsim {
 	TEST(Circuit, ClearedInput) {
 		Circuit circuit;
 
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
-		auto inverter { circuit.create_element(ElementType::inverter_element, 3, 2) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
+		auto inverter { circuit.add_element(ElementType::inverter_element, 3, 2) };
 
 		wire.output(1).connect(inverter.input(1));
 		inverter.input(1).clear_connection();
@@ -154,8 +154,8 @@ namespace logicsim {
 	TEST(Circuit, ClearedOutput) {
 		Circuit circuit;
 
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
-		auto inverter { circuit.create_element(ElementType::inverter_element, 3, 2) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
+		auto inverter { circuit.add_element(ElementType::inverter_element, 3, 2) };
 
 		wire.output(1).connect(inverter.input(1));
 		wire.output(1).clear_connection();
@@ -169,8 +169,8 @@ namespace logicsim {
 	TEST(Circuit, ReconnectInput) {
 		Circuit circuit;
 
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
-		auto inverter { circuit.create_element(ElementType::inverter_element, 3, 2) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
+		auto inverter { circuit.add_element(ElementType::inverter_element, 3, 2) };
 
 		wire.output(1).connect(inverter.input(1));
 		inverter.input(1).connect(inverter.output(1));
@@ -185,8 +185,8 @@ namespace logicsim {
 	TEST(Circuit, ReconnectOutput) {
 		Circuit circuit;
 
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
-		auto inverter { circuit.create_element(ElementType::inverter_element, 3, 2) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
+		auto inverter { circuit.add_element(ElementType::inverter_element, 3, 2) };
 
 		wire.output(1).connect(inverter.input(1));
 		wire.output(1).connect(wire.input(1));
@@ -200,10 +200,10 @@ namespace logicsim {
 
 	TEST(Circuit, TestPlaceholders) {
 		Circuit circuit;
-		auto wire { circuit.create_element(ElementType::wire, 3, 5) };
+		auto wire { circuit.add_element(ElementType::wire, 3, 5) };
 		EXPECT_EQ(circuit.element_count(), 1);
 
-		create_output_placeholders(circuit);
+		add_output_placeholders(circuit);
 		EXPECT_EQ(circuit.element_count(), 6);
 
 		EXPECT_EQ(wire.output(3).has_connected_element(), true);

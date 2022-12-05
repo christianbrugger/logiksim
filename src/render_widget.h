@@ -93,8 +93,8 @@ namespace logicsim {
 
             Circuit circuit;
 
-            const auto elem0 = circuit.create_element(ElementType::or_element, 2, 1);
-            const auto line0 = circuit.create_element(ElementType::wire, 1, 1);
+            const auto elem0 = circuit.add_element(ElementType::or_element, 2, 1);
+            const auto line0 = circuit.add_element(ElementType::wire, 1, 1);
             elem0.output(0).connect(line0.input(0));
             line0.output(0).connect(elem0.input(1));
 
@@ -103,7 +103,7 @@ namespace logicsim {
             state.queue.submit_event({ 0.1, elem0.element_id(), 0, true});
             state.queue.submit_event({ 0.5, elem0.element_id(), 0, false});
 
-            create_output_placeholders(circuit);
+            add_output_placeholders(circuit);
             advance_simulation(state, circuit, 0, true);
 
             SimulationResult simulation{ 

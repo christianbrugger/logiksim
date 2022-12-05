@@ -15,6 +15,15 @@ namespace logicsim {
     // Simulation Event
     //
 
+    SimulationEvent simulation_event(Circuit::ConstInput input, [[maybe_unused]] time_t time, bool value) {
+        return {
+            .time = time,
+            .element_id = input.element_id(),
+            .input_index = input.input_index(),
+            .value = value
+        };
+    }
+
     std::string SimulationEvent::format() const
     {
         auto element_id_str { (element_id == null_element) ? "NULL" : fmt::format("{}", element_id) };
@@ -25,7 +34,8 @@ namespace logicsim {
 
     bool SimulationEvent::operator==(const SimulationEvent& other) const
     {
-        return this->element_id == other.element_id && this->time == other.time;
+        return this->element_id == other.element_id && 
+            this->time == other.time;
     }
     bool SimulationEvent::operator<(const SimulationEvent& other) const
     {
@@ -143,6 +153,14 @@ namespace logicsim {
         input_values(total_inputs), 
         queue {} 
     {
+    }
+
+
+    void SimulationState::check_input_size(const Circuit& circuit) {
+        const auto circuit_inputs = static_cast<logic_vector_t::size_type>(circuit.total_input_count());
+        if (input_values.size() != circuit_inputs) [[unlikely]] {
+            throw_exception("input_values in state needs to match total inputs of the circuit.");
+        }
     }
 
     //
@@ -268,9 +286,7 @@ namespace logicsim {
     {
         if (time_delta < 0) [[unlikely]]
             throw_exception("time_delta needs to be zero or positive.");
-        if (state.input_values.size() != 
-                static_cast<logic_vector_t::size_type>(circuit.total_input_count())) [[unlikely]]
-            throw_exception("input_values in state needs to match total inputs of the circuit.");
+        state.check_input_size(circuit);
 
         const double end_time { (time_delta == 0) ? 
             std::numeric_limits<time_t>::infinity() : state.queue.time() + time_delta };
@@ -295,6 +311,19 @@ namespace logicsim {
         return false;
     }
 
+    void initialize_simulation(SimulationState& state, const Circuit &circuit) {
+        state.check_input_size(circuit);
+
+        for (auto&& element : circuit.elements()) {
+            for (auto&& input : element.inputs()) {
+                state.queue.submit_event(simulation_event(input, 
+                        state.queue.time() + 0.1, 
+                        state.input_values.at(input.input_id())
+                ));
+            }
+        }
+    }
+
     logic_vector_t output_value_vector(const logic_vector_t& input_values, const Circuit& circuit, 
         const bool raise_missing)
     {
@@ -316,16 +345,15 @@ namespace logicsim {
     int benchmark_simulation(const int n_elements, bool print) {
         Circuit circuit;
 
-        const auto elem0 { circuit.create_element(ElementType::or_element, 2, 1) };
+        const auto elem0 { circuit.add_element(ElementType::or_element, 2, 1) };
         elem0.output(0).connect(elem0.input(0));
         
-
         SimulationState state { circuit.total_input_count() };
         state.queue.submit_event({ 0.1, elem0.element_id(), 0, true});
         state.queue.submit_event({ 0.1, elem0.element_id(), 1, true});
         state.queue.submit_event({ 0.5, elem0.element_id(), 1, false });
 
-        create_output_placeholders(circuit);
+        add_output_placeholders(circuit);
         advance_simulation(state, circuit, 0, print);
         auto output_values { output_value_vector(state.input_values, circuit) };
 

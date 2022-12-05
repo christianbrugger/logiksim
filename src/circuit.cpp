@@ -26,7 +26,7 @@ namespace logicsim {
 		return ConstElement { this, element_id };
 	}
 
-	auto Circuit::create_element(ElementType type,
+	auto Circuit::add_element(ElementType type,
 		connection_size_t input_count, connection_size_t output_count) -> Element
 	{
 		if (input_count < 0) [[unlikely]] {
@@ -172,19 +172,20 @@ namespace logicsim {
 	//
 
 
-	void create_placeholder(Circuit::Output output) {
+	void add_placeholder(Circuit::Output output) {
 		if (!output.has_connected_element()) {
-			auto placeholder { output.circuit()->create_element(ElementType::placeholder, 1, 0) };
+			auto placeholder { output.circuit()->add_element(
+				ElementType::placeholder, 1, 0) };
 			output.connect(placeholder.input(0));
 		}
 	}
 
-	void create_element_placeholders(Circuit::Element element) {
-		ranges::for_each(element.outputs(), create_placeholder);
+	void add_element_placeholders(Circuit::Element element) {
+		ranges::for_each(element.outputs(), add_placeholder);
 	}
 
-	void create_output_placeholders(Circuit& circuit) {
-		ranges::for_each(circuit.elements(), create_element_placeholders);
+	void add_output_placeholders(Circuit& circuit) {
+		ranges::for_each(circuit.elements(), add_element_placeholders);
 	}
 
 
@@ -194,12 +195,12 @@ namespace logicsim {
 
 		Circuit circuit {};
 
-		auto elem0 { circuit.create_element(ElementType::and_element, 2, 2) };
+		auto elem0 { circuit.add_element(ElementType::and_element, 2, 2) };
 
 		for ([[maybe_unused]] auto _ : ranges::iota_view(1, n_elements)) {
-			auto wire0 { circuit.create_element(ElementType::wire, 1, 1) };
-			auto wire1 { circuit.create_element(ElementType::wire, 1, 1) };
-			auto elem1 { circuit.create_element(ElementType::and_element, 2, 2) };
+			auto wire0 { circuit.add_element(ElementType::wire, 1, 1) };
+			auto wire1 { circuit.add_element(ElementType::wire, 1, 1) };
+			auto elem1 { circuit.add_element(ElementType::and_element, 2, 2) };
 
 			elem0.output(0).connect(wire0.input(0));
 			elem0.output(1).connect(wire1.input(0));

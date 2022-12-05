@@ -39,6 +39,8 @@ namespace logicsim {
 
         std::string format() const;
     };
+
+    SimulationEvent simulation_event(Circuit::ConstInput input, time_t time, bool value);
 }
 
 template <>
@@ -73,7 +75,6 @@ namespace logicsim {
 
     class SimulationQueue {
     public:
-        
         time_t time() const noexcept;
         time_t next_event_time() const noexcept;
         bool empty() const noexcept;
@@ -96,7 +97,11 @@ namespace logicsim {
         SimulationQueue queue {};
 
         SimulationState(connection_id_t total_inputs);
+
+        void check_input_size(const Circuit& circuit);
     };
+
+    void initialize_simulation(SimulationState& state, const Circuit& circuit);
 
     /// @brief Advance the simulation by changing the given simulations state
     /// @param state          either new or the old simulation state to start from

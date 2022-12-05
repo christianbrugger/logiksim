@@ -60,7 +60,7 @@ namespace logicsim {
 		inline auto elements();
 		inline auto elements() const;
 
-		Element create_element(ElementType type,
+		Element add_element(ElementType type,
 			connection_size_t input_count, connection_size_t output_count);
 
 
@@ -213,7 +213,7 @@ namespace logicsim {
 
 
 
-	void create_output_placeholders(Circuit& circuit);
+	void add_output_placeholders(Circuit& circuit);
 
 	Circuit benchmark_circuit(const int n_elements = 100);
 

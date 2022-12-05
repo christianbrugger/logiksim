@@ -137,7 +137,7 @@ logicsim::CircuitGraph generate_graph(const int count) {
 
 	CircuitGraph graph{};
 	for (int i = 0; i < count; ++i) {
-		graph.create_element(dice() ? ElementType::wire : ElementType::inverter_element,
+		graph.add_element(dice() ? ElementType::wire : ElementType::inverter_element,
 			static_cast<connection_size_t>(dice() + 1), 
 			static_cast<connection_size_t>(dice() + 1)
 		);
@@ -219,8 +219,8 @@ void demo() {
 
 	Circuit circuit;
 
-	circuit.create_element(ElementType::wire, 1, 1);
-	circuit.create_element(ElementType::wire, 1, 1);
+	circuit.add_element(ElementType::wire, 1, 1);
+	circuit.add_element(ElementType::wire, 1, 1);
 
 	Circuit::Element element0 { circuit.element(0) };
 	Circuit::Element element1 { circuit.element(0) };
@@ -238,8 +238,8 @@ void demo_const() {
 	using namespace logicsim;
 
 	Circuit circuit_init;
-	circuit_init.create_element(ElementType::wire, 1, 1);
-	circuit_init.create_element(ElementType::wire, 1, 1);
+	circuit_init.add_element(ElementType::wire, 1, 1);
+	circuit_init.add_element(ElementType::wire, 1, 1);
 
 	const Circuit &circuit { circuit_init };
 
@@ -271,7 +271,7 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 		benchmark::ClobberMemory();
 
 		circuit.validate();
-		create_output_placeholders(circuit);
+		add_output_placeholders(circuit);
 		circuit.validate(true);
 
 		benchmark::DoNotOptimize(circuit);
