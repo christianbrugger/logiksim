@@ -1,5 +1,3 @@
 #include "algorithms.h"
 
-namespace logicsim {
-
-}
+namespace logicsim {}

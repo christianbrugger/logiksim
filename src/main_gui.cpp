@@ -1,11 +1,9 @@
 
 
+#include "render_widget.h"
 
 #include <QApplication>
 #include <QtOpenGLWidgets/QOpenGLWidget>
-
-#include "render_widget.h"
-
 
 /* Needs to be called before create QApplication. */
 void disable_opengl_vsync() {
@@ -14,9 +12,7 @@ void disable_opengl_vsync() {
     QSurfaceFormat::setDefaultFormat(format);
 }
 
-
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     disable_opengl_vsync();
     QApplication app(argc, argv);
 

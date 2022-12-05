@@ -172,9 +172,8 @@ add_executable(${MAIN_TEST_TARGET}
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
     
-
-    test/test_circuit.cpp
-    test/test_simulation.cpp
+    test/circuit_test.cpp
+    test/simulation_test.cpp
 )
 target_include_directories(${MAIN_TEST_TARGET} PRIVATE
     src
