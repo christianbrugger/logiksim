@@ -157,8 +157,8 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
 
     switch (type) {
         case ElementType::wire:
-            return ranges::views::repeat_n(input.at(0), output_count) |
-                   ranges::to<logic_small_vector_t>();
+            return ranges::views::repeat_n(input.at(0), output_count)
+                   | ranges::to<logic_small_vector_t>();
 
         case ElementType::inverter_element:
             return {!input.at(0)};
@@ -179,16 +179,19 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
 
 logic_small_vector_t copy_inputs(const logic_vector_t &input_values,
                                  const Circuit::ConstElement element) {
-    return ranges::views::all(input_values) | ranges::views::drop(element.first_input_id()) |
-           ranges::views::take(element.input_count()) | ranges::to<logic_small_vector_t>();
+    return ranges::views::all(input_values)                 //
+           | ranges::views::drop(element.first_input_id())  //
+           | ranges::views::take(element.input_count())     //
+           | ranges::to<logic_small_vector_t>();
 }
 
 logic_small_vector_t copy_outputs(const logic_vector_t &input_values,
                                   const Circuit::ConstElement element) {
-    return element.outputs() | ranges::views::transform([&](const Circuit::ConstOutput output) {
-               return get_output_value(output, input_values, true);
-           }) |
-           ranges::to<logic_small_vector_t>();
+    return element.outputs()  //
+           | ranges::views::transform([&](const Circuit::ConstOutput output) {
+                 return get_output_value(output, input_values, true);
+             })
+           | ranges::to<logic_small_vector_t>();
 }
 
 void set_input(logic_vector_t &input_values, const Circuit::ConstElement element,
@@ -222,8 +225,11 @@ con_index_small_vector_t get_changed_outputs(const logic_small_vector_t &old_out
 constexpr time_t STANDARD_DELAY = 0.1;
 
 void create_event(SimulationQueue &queue, Circuit::ConstOutput output,
-                  const logic_small_vector_t &output_values) {
-    const time_t time {queue.time() + STANDARD_DELAY};
+                  const logic_small_vector_t &output_values, const delay_vector_t &output_delays) {
+    time_t delay {get_output_delay(output, output_delays)};
+    if (delay == 0) delay = STANDARD_DELAY;
+
+    const time_t time {queue.time() + delay};
 
     if (output.has_connected_element()) {
         queue.submit_event({.time = time,
@@ -264,7 +270,7 @@ void process_event_group(SimulationState &state, const Circuit &circuit, event_g
 
     // submit events
     ranges::for_each(changes, [&, element](auto output_index) {
-        create_event(state.queue, element.output(output_index), new_outputs);
+        create_event(state.queue, element.output(output_index), new_outputs, state.output_delays);
     });
 }
 
@@ -302,7 +308,8 @@ void initialize_simulation(SimulationState &state, const Circuit &circuit) {
 
         // submit new events
         ranges::for_each(changes, [&, element](auto output_index) {
-            create_event(state.queue, element.output(output_index), new_outputs);
+            create_event(state.queue, element.output(output_index), new_outputs,
+                         state.output_delays);
         });
     }
 }
@@ -354,12 +361,30 @@ logic_vector_t output_value_vector(const logic_vector_t &input_values, const Cir
 
     for (auto element : circuit.elements()) {
         for (auto output : element.outputs()) {
-            output_values.at(output.output_id()) =
-                get_output_value(output, input_values, raise_missing);
+            output_values.at(output.output_id())
+                = get_output_value(output, input_values, raise_missing);
         }
     }
 
     return output_values;
+}
+
+time_t get_output_delay(const Circuit::ConstOutput output, const delay_vector_t &output_delays) {
+    return output_delays.at(output.output_id());
+}
+
+time_t get_output_delay(const Circuit::ConstOutput output, const SimulationState &state) {
+    return get_output_delay(output, state.output_delays);
+}
+
+void set_output_delay(const Circuit::ConstOutput output, delay_vector_t &output_delays,
+                      const time_t delay) {
+    output_delays.at(output.output_id()) = delay;
+}
+
+void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
+                      const time_t delay) {
+    return set_output_delay(output, state.output_delays, delay);
 }
 
 //

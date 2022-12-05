@@ -26,7 +26,7 @@
 
 namespace logicsim {
 
-using time_t = double;
+using time_t = double;  // TODO try float
 
 struct SimulationEvent {
     time_t time;
@@ -133,6 +133,14 @@ bool get_output_value(const Circuit::ConstOutput output, const SimulationState &
 /// infer vector of all output values from the circuit and input values.
 logic_vector_t output_value_vector(const logic_vector_t &input_values, const Circuit &circuit,
                                    const bool raise_missing = true);
+
+time_t get_output_delay(const Circuit::ConstOutput output, const delay_vector_t &output_delays);
+time_t get_output_delay(const Circuit::ConstOutput output, const SimulationState &state);
+
+void set_output_delay(const Circuit::ConstOutput output, delay_vector_t &output_delays,
+                      const time_t delay);
+void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
+                      const time_t delay);
 
 int benchmark_simulation(const int n_elements = 100, bool print = false);
 
