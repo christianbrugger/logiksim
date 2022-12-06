@@ -87,14 +87,16 @@ struct Circuit::ConnectionData {
 
 template <bool Const>
 class Circuit::ElementTemplate {
-    using CircuitType = std::conditional_t<Const, Circuit const, Circuit>;
-    using ElementDataType = std::conditional_t<Const, ElementData const, ElementData>;
+    using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
+    using ElementDataType = std::conditional_t<Const, const ElementData, ElementData>;
 
+    friend ElementTemplate<!Const>;
     friend Circuit;
     ElementTemplate(CircuitType *circuit, element_id_t element_id);
 
    public:
-    ElementTemplate<true>(Element element);
+    template <bool ConstOther>
+    ElementTemplate(ElementTemplate<ConstOther> element) noexcept;
 
     template <bool ConstOther>
     bool operator==(ElementTemplate<ConstOther> other) const noexcept;
@@ -125,17 +127,18 @@ class Circuit::ElementTemplate {
 
 template <bool Const>
 class Circuit::InputTemplate {
-    using CircuitType = std::conditional_t<Const, Circuit const, Circuit>;
-    using ConnectionDataType = std::conditional_t<Const, ConnectionData const, ConnectionData>;
+    using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
+    using ConnectionDataType = std::conditional_t<Const, const ConnectionData, ConnectionData>;
 
+    friend InputTemplate<!Const>;
     friend ElementTemplate<Const>;
     InputTemplate(CircuitType *circuit, element_id_t element_id, connection_size_t input_index,
                   connection_id_t input_id);
 
    public:
-    InputTemplate<true>(Input input);
+    template <bool ConstOther>
+    InputTemplate(InputTemplate<ConstOther> input) noexcept;
 
-    friend InputTemplate<!Const>;
     template <bool ConstOther>
     bool operator==(InputTemplate<ConstOther> other) const noexcept;
 
@@ -170,17 +173,18 @@ class Circuit::InputTemplate {
 template <bool Const>
 class Circuit::OutputTemplate {
    private:
-    using CircuitType = std::conditional_t<Const, Circuit const, Circuit>;
-    using ConnectionDataType = std::conditional_t<Const, ConnectionData const, ConnectionData>;
+    using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
+    using ConnectionDataType = std::conditional_t<Const, const ConnectionData, ConnectionData>;
 
+    friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;
     OutputTemplate(CircuitType *circuit, element_id_t element_id, connection_size_t output_index,
                    connection_id_t output_id);
 
    public:
-    OutputTemplate<true>(Output output);
+    template <bool ConstOther>
+    OutputTemplate(OutputTemplate<ConstOther> output) noexcept;
 
-    friend OutputTemplate<!Const>;
     template <bool ConstOther>
     bool operator==(OutputTemplate<ConstOther> other) const noexcept;
 
@@ -247,6 +251,13 @@ Circuit::ElementTemplate<Const>::ElementTemplate(CircuitType *circuit, element_i
     if (element_id < 0 || element_id >= circuit->element_count()) [[unlikely]] {
         throw_exception("Element id is invalid");
     }
+}
+
+template <bool Const>
+template <bool ConstOther>
+Circuit::ElementTemplate<Const>::ElementTemplate(ElementTemplate<ConstOther> element) noexcept
+    : circuit_(element.circuit_), element_id_(element.element_id_) {
+    static_assert(!(ConstOther && !Const), "Cannot convert ConstElement to Element.");
 }
 
 template <bool Const>
@@ -352,9 +363,19 @@ Circuit::InputTemplate<Const>::InputTemplate(CircuitType *circuit, element_id_t 
 
 template <bool Const>
 template <bool ConstOther>
+Circuit::InputTemplate<Const>::InputTemplate(InputTemplate<ConstOther> input) noexcept
+    : circuit_(input.circuit_),
+      element_id_(input.element_id_),
+      input_index_(input.input_index_),
+      input_id_(input.input_id_) {
+    static_assert(!(ConstOther && !Const), "Cannot convert ConstInput to Input.");
+}
+
+template <bool Const>
+template <bool ConstOther>
 bool Circuit::InputTemplate<Const>::operator==(InputTemplate<ConstOther> other) const noexcept {
-    return circuit_ == other.circuit_ && element_id_ == other.element_id_ &&
-           input_index_ == other.input_index_ && input_index_ == other.input_index_;
+    return circuit_ == other.circuit_ && element_id_ == other.element_id_
+           && input_index_ == other.input_index_ && input_index_ == other.input_index_;
 }
 
 template <bool Const>
@@ -465,10 +486,20 @@ Circuit::OutputTemplate<Const>::OutputTemplate(CircuitType *circuit, element_id_
 
 template <bool Const>
 template <bool ConstOther>
+Circuit::OutputTemplate<Const>::OutputTemplate(OutputTemplate<ConstOther> output) noexcept
+    : circuit_(output.circuit_),
+      element_id_(output.element_id_),
+      output_index_(output.output_index_),
+      output_id_(output.output_id_) {
+    static_assert(!(ConstOther && !Const), "Cannot convert ConstOutput to Output.");
+}
+
+template <bool Const>
+template <bool ConstOther>
 bool Circuit::OutputTemplate<Const>::operator==(
     Circuit::OutputTemplate<ConstOther> other) const noexcept {
-    return circuit_ == other.circuit_ && element_id_ == other.element_id_ &&
-           output_index_ == other.output_index_ && output_id_ == other.output_id_;
+    return circuit_ == other.circuit_ && element_id_ == other.element_id_
+           && output_index_ == other.output_index_ && output_id_ == other.output_id_;
 }
 
 template <bool Const>

@@ -6,8 +6,14 @@
 #include <iostream>
 
 auto main() -> int {
+    using namespace logicsim;
+
     try {
-        logicsim::benchmark_simulation(100, true);
+        benchmark_simulation(100, true);
+        Circuit circuit;
+        auto test = circuit.element(0);
+        test.element_id();
+
     } catch (const std::exception& exc) {
         std::cerr << exc.what() << '\n';
         return -1;

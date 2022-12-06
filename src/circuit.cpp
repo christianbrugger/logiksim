@@ -149,31 +149,6 @@ void Circuit::validate(bool require_all_outputs_connected) const {
 }
 
 //
-// Circuit::Element
-//
-
-template <>
-Circuit::ElementTemplate<true>::ElementTemplate(Element element)
-    : ElementTemplate(element.circuit(), element.element_id()) {}
-
-//
-// Circuit::Input
-//
-
-template <>
-Circuit::InputTemplate<true>::InputTemplate(Input input)
-    : InputTemplate(input.circuit(), input.element_id(), input.input_index(), input.input_id()) {}
-
-//
-// Circuit::Input
-//
-
-template <>
-Circuit::OutputTemplate<true>::OutputTemplate(Output output)
-    : OutputTemplate(output.circuit(), output.element_id(), output.output_index(),
-                     output.output_id()) {}
-
-//
 // Free Functions
 //
 

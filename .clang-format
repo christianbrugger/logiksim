@@ -13,7 +13,6 @@ SpaceBeforeCpp11BracedList: true
 SeparateDefinitionBlocks: Always
 Standard: c++20
 
-# AllowShortIfStatementsOnASingleLine: false
 BreakBeforeBinaryOperators: All
 
 IncludeBlocks: Regroup
