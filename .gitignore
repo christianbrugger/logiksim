@@ -1,6 +1,4 @@
 .vs
 
-build_msvc/
-build_clang_cl/
-build_clang_gcc/
+_build_*/
 out/

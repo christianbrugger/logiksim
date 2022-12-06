@@ -95,6 +95,9 @@ class Circuit::ElementTemplate {
     ElementTemplate(CircuitType *circuit, element_id_t element_id);
 
    public:
+    /// TODO
+    // * research copy constructor argument types
+    // * check if rule of 3 or 5 applies
     template <bool ConstOther>
     ElementTemplate(ElementTemplate<ConstOther> element) noexcept;
 

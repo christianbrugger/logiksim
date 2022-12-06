@@ -17,55 +17,51 @@ project(simulation_srp CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
+# global flags for all libraries
 if (MSVC)
 	add_compile_options(/EHsc)
-    # required by range-v3, only allow standard conform behaviour
-	# add_compile_options(/permissive-)
-	# add_compile_options(/DEBUG /Zi /fsanitize=address)
+	add_compile_options(-arch:AVX2 /arch:AVX2)
 else()
 endif()
 
 
-###### GOOGLE BENCHMARK
+# TODO: global optimization / link time optimization
+# TODO enable SIMD
+# TODO put flags here
 
-# # google benchmark
-# include(FetchContent)
-# set(BENCHMARK_ENABLE_TESTING OFF)
-# set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
-# # set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
-# # set(BENCHMARK_ENABLE_LTO ON)
-# FetchContent_Declare(
-#     googlebenchmark
-#     GIT_REPOSITORY https://github.com/google/benchmark
-# 	GIT_TAG v1.6.2)
-# FetchContent_MakeAvailable(googlebenchmark)
+if (MSVC)
+    set(MAIN_COMPILE_OPTIONS /WX /W4 /permissive- /EHsc)
+    # unreachable code warnings when using range-v3 templates
+    list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
+    set(MAIN_LINK_OPTIONS dbgeng.lib)
+    set(MAIN_COMPILE_DEFINITIONS BOOST_STACKTRACE_USE_WINDBG)
+else()
+    set(MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow -Wthread-safety -Wstrict-aliasing)
+    list(APPEND MAIN_COMPILE_OPTIONS -pedantic -fexceptions)
+endif()
+
+
+###### GOOGLE BENCHMARK
 
 # Google Benchmark
 # set(BENCHMARK_ENABLE_LTO ON)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 add_subdirectory(external/benchmark)
-
 # Google Test
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-# set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(external/googletest)
-
 # Boost
 find_package(Boost REQUIRED COMPONENTS)
-
 # Qt 6
 set(CMAKE_AUTOMOC TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
-
 # Blend2D
 set(BLEND2D_STATIC TRUE)
 add_subdirectory(external/blend2d)
-
 # range-v3
 add_subdirectory(external/range-v3)
-
 # fmt
 add_subdirectory(external/fmt)
 
@@ -96,15 +92,9 @@ target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE
     range-v3::range-v3
     fmt::fmt
 )
-if (MSVC)
-    target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
-    # unreachable code in range-v3
-    target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE /wd4702)
-else()
-    # -Wfloat-equal
-    target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
-endif()
-
+target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
+target_link_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
+target_compile_definitions(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_DEFINITIONS})
 
 # MAIN
 
@@ -122,14 +112,9 @@ target_link_libraries(${MAIN_TARGET} PRIVATE
     range-v3::range-v3
     fmt::fmt
 )
-if (MSVC)
-    target_compile_options(${MAIN_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
-    # unreachable code in range-v3
-    target_compile_options(${MAIN_TARGET} PRIVATE /wd4702)
-else()
-    target_compile_options(${MAIN_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
-endif()
-
+target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
+target_link_options(${MAIN_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
+target_compile_definitions(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_DEFINITIONS})
 
 # MAIN GUI
 
@@ -153,17 +138,11 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
     range-v3::range-v3
     fmt::fmt
 )
-if (MSVC)
-    target_compile_options(${MAIN_GUI_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
-    # unreachable code in range-v3
-    target_compile_options(${MAIN_GUI_TARGET} PRIVATE /wd4702)
-else()
-    target_compile_options(${MAIN_GUI_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
-endif()
-
+target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
+target_link_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
+target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_DEFINITIONS})
 
 # Google Test
-
 
 set(MAIN_TEST_TARGET "simulation_srp_test")
 add_executable(${MAIN_TEST_TARGET} 
@@ -187,24 +166,14 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     GTest::gmock
     GTest::gtest_main
 )
+target_compile_options(${MAIN_TEST_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
+target_link_options(${MAIN_TEST_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
+target_compile_definitions(${MAIN_TEST_TARGET} PRIVATE ${MAIN_COMPILE_DEFINITIONS})
+
 enable_testing()
 include(GoogleTest)
 gtest_discover_tests(${MAIN_TEST_TARGET})
-if (MSVC)
-    target_compile_options(${MAIN_TEST_TARGET} PRIVATE /WX /W4 /permissive- /EHsc)
-    # unreachable code in range-v3
-    target_compile_options(${MAIN_TEST_TARGET} PRIVATE /wd4702)
-else()
-    target_compile_options(${MAIN_TEST_TARGET} PRIVATE -Werror -W -Wall -Wextra -Wshadow -pedantic -Wthread-safety -Wstrict-aliasing)
-endif()
 
 
-
-# profiling
-# if (MSVC)
-#	target_link_options(${MAIN_TARGET} PRIVATE /PROFILE)
-# endif()
-
-# TODO: global optimization / link time optimization
-
+# end of file
 cmake_policy(POP)
