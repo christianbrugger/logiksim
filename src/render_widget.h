@@ -58,8 +58,8 @@ class WidgetRenderer : public QWidget {
     void init() {
         auto window_size = size_pixels();
 
-        qt_image =
-            QImage(window_size.width(), window_size.height(), QImage::Format_ARGB32_Premultiplied);
+        qt_image = QImage(window_size.width(), window_size.height(),
+                          QImage::Format_ARGB32_Premultiplied);
         qt_image.setDevicePixelRatio(devicePixelRatioF());
         bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
                                 qt_image.bits(), qt_image.bytesPerLine());
@@ -100,7 +100,7 @@ class WidgetRenderer : public QWidget {
         advance_simulation(state, circuit, 0, true);
 
         SimulationResult simulation {state.input_values,
-                                     output_value_vector(state.input_values, circuit)};
+                                     get_all_output_values(state.input_values, circuit)};
 
         attribute_vector_t attributes = {{{}, {5, 3}, 0}, {{{10, 10}, {12, 12}}, {5, 3}, 0}};
 

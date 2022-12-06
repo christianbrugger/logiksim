@@ -145,7 +145,6 @@ void check_input_size(const SimulationState &state, const Circuit &circuit) {
 // Simulation
 //
 
-using logic_small_vector_t = boost::container::small_vector<bool, 8>;
 using con_index_small_vector_t = boost::container::small_vector<connection_size_t, 8>;
 
 logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
@@ -177,21 +176,32 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
     }
 }
 
-logic_small_vector_t copy_inputs(const logic_vector_t &input_values,
-                                 const Circuit::ConstElement element) {
+logic_small_vector_t get_input_values(const Circuit::ConstElement element,
+                                      const logic_vector_t &input_values) {
     return ranges::views::all(input_values)                 //
            | ranges::views::drop(element.first_input_id())  //
            | ranges::views::take(element.input_count())     //
            | ranges::to<logic_small_vector_t>();
 }
 
-logic_small_vector_t copy_outputs(const logic_vector_t &input_values,
-                                  const Circuit::ConstElement element) {
+logic_small_vector_t get_output_values(const Circuit::ConstElement element,
+                                       const logic_vector_t &input_values,
+                                       const bool raise_missing) {
     return element.outputs()  //
            | ranges::views::transform([&](const Circuit::ConstOutput output) {
-                 return get_output_value(output, input_values, true);
+                 return get_output_value(output, input_values, raise_missing);
              })
            | ranges::to<logic_small_vector_t>();
+}
+
+logic_small_vector_t get_input_values(const Circuit::ConstElement element,
+                                      const SimulationState &state) {
+    return get_input_values(element, state.input_values);
+}
+
+logic_small_vector_t get_output_values(const Circuit::ConstElement element,
+                                       const SimulationState &state, const bool raise_missing) {
+    return get_output_values(element, state.input_values, raise_missing);
 }
 
 void set_input(logic_vector_t &input_values, const Circuit::ConstElement element,
@@ -257,9 +267,9 @@ void process_event_group(SimulationState &state, const Circuit &circuit, event_g
     }
 
     // update inputs
-    const auto old_inputs {copy_inputs(state.input_values, element)};
+    const auto old_inputs {get_input_values(element, state)};
     apply_events(state.input_values, element, events);
-    const auto new_inputs {copy_inputs(state.input_values, element)};
+    const auto new_inputs {get_input_values(element, state)};
 
     // find changing outputs
     const auto old_outputs {
@@ -300,8 +310,8 @@ void initialize_simulation(SimulationState &state, const Circuit &circuit) {
         if (element.element_type() == ElementType::placeholder) continue;
 
         // find outputs that need an update
-        const auto old_outputs {copy_outputs(state.input_values, element)};
-        const auto curr_inputs {copy_inputs(state.input_values, element)};
+        const auto old_outputs {get_output_values(element, state, true)};
+        const auto curr_inputs {get_input_values(element, state)};
         const auto new_outputs {
             calculate_outputs(curr_inputs, element.output_count(), element.element_type())};
         const auto changes {get_changed_outputs(old_outputs, new_outputs)};
@@ -355,8 +365,8 @@ bool get_output_value(const Circuit::ConstOutput output, const SimulationState &
     return get_output_value(output, state.input_values, raise_missing);
 }
 
-logic_vector_t output_value_vector(const logic_vector_t &input_values, const Circuit &circuit,
-                                   const bool raise_missing) {
+logic_vector_t get_all_output_values(const logic_vector_t &input_values, const Circuit &circuit,
+                                     const bool raise_missing) {
     logic_vector_t output_values(circuit.total_output_count());
 
     for (auto element : circuit.elements()) {
@@ -404,7 +414,7 @@ int benchmark_simulation(const int n_elements, bool print) {
 
     add_output_placeholders(circuit);
     advance_simulation(state, circuit, 0, print);
-    auto output_values {output_value_vector(state.input_values, circuit)};
+    auto output_values {get_all_output_values(state.input_values, circuit)};
 
     if (print) {
         fmt::print("input_values = {::b}\n", state.input_values);

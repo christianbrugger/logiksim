@@ -184,6 +184,7 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     fmt::fmt
     
     GTest::gtest
+    GTest::gmock
     GTest::gtest_main
 )
 enable_testing()

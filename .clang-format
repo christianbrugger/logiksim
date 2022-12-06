@@ -19,7 +19,7 @@ BreakBeforeBinaryOperators: All
 IncludeBlocks: Regroup
 IncludeIsMainRegex: '(_test)?$'
 IncludeCategories:
-- Regex:    '^(<(boost/|fmt/|range/|blend2d\.h|benchmark/|gtest/))'
+- Regex:    '^(<(boost/|fmt/|range/|blend2d\.h|benchmark/|gtest/|gmock/))'
   Priority: 2
 - Regex:    '^(<Q)'
   CaseSensitive:   true

@@ -23,6 +23,7 @@
 // * negation on input and outputs
 // * clock generators
 // * shift registers, requires memory & internal state
+// * add timeout
 
 namespace logicsim {
 
@@ -93,6 +94,8 @@ class SimulationQueue {
 using logic_vector_t = boost::container::vector<bool>;
 using delay_vector_t = boost::container::vector<time_t>;
 
+using logic_small_vector_t = boost::container::small_vector<bool, 8>;
+
 /// Store simulation data.
 struct SimulationState {
     logic_vector_t input_values {};
@@ -130,9 +133,20 @@ bool get_output_value(const Circuit::ConstOutput output, const logic_vector_t &i
 bool get_output_value(const Circuit::ConstOutput output, const SimulationState &state,
                       const bool raise_missing = true);
 
-/// infer vector of all output values from the circuit and input values.
-logic_vector_t output_value_vector(const logic_vector_t &input_values, const Circuit &circuit,
-                                   const bool raise_missing = true);
+logic_small_vector_t get_input_values(const Circuit::ConstElement element,
+                                      const logic_vector_t &input_values);
+logic_small_vector_t get_output_values(const Circuit::ConstElement element,
+                                       const logic_vector_t &input_values,
+                                       const bool raise_missing = true);
+logic_small_vector_t get_input_values(const Circuit::ConstElement element,
+                                      const SimulationState &state);
+logic_small_vector_t get_output_values(const Circuit::ConstElement element,
+                                       const SimulationState &state,
+                                       const bool raise_missing = true);
+
+/// infer vector of all output values from the circuit.
+logic_vector_t get_all_output_values(const logic_vector_t &input_values, const Circuit &circuit,
+                                     const bool raise_missing = true);
 
 time_t get_output_delay(const Circuit::ConstOutput output, const delay_vector_t &output_delays);
 time_t get_output_delay(const Circuit::ConstOutput output, const SimulationState &state);

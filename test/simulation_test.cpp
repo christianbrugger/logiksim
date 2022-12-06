@@ -1,6 +1,7 @@
 
 #include "simulation.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace logicsim {
@@ -174,6 +175,32 @@ TEST(SimulationTest, HalfAdder) {
         EXPECT_EQ(get_output_value(output.output(0), state), false);
         EXPECT_EQ(get_output_value(carry.output(0), state), true);
     }
+}
+
+TEST(SimulationTest, OutputDelayTest) {
+    Circuit circuit;
+    const auto wire {circuit.add_element(ElementType::wire, 1, 3)};
+    auto state = get_initialized_state(circuit);
+
+    set_output_delay(wire.output(0), state, 1.0);
+    set_output_delay(wire.output(1), state, 2.0);
+    set_output_delay(wire.output(2), state, 3.0);
+
+    state.queue.submit_event(make_event(wire.input(0), 0.01, true));
+    advance_simulation(state, circuit, 0.01);
+
+    // after 0.5 seconds
+    advance_simulation(state, circuit, 0.5);
+    ASSERT_THAT(get_output_values(wire, state), testing::ElementsAre(0, 0, 0));
+    // after 1.5 seconds
+    advance_simulation(state, circuit, 1.0);
+    ASSERT_THAT(get_output_values(wire, state), testing::ElementsAre(1, 0, 0));
+    // after 2.5 seconds
+    advance_simulation(state, circuit, 1.0);
+    ASSERT_THAT(get_output_values(wire, state), testing::ElementsAre(1, 1, 0));
+    // after 3.5 seconds
+    advance_simulation(state, circuit, 1.0);
+    ASSERT_THAT(get_output_values(wire, state), testing::ElementsAre(1, 1, 1));
 }
 
 }  // namespace logicsim
