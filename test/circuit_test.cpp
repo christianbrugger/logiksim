@@ -203,7 +203,8 @@ TEST(Circuit, TestPlaceholders) {
     EXPECT_EQ(circuit.element_count(), 6);
 
     EXPECT_EQ(wire.output(3).has_connected_element(), true);
-    EXPECT_EQ(wire.output(3).connected_element().element_type(), ElementType::placeholder);
+    EXPECT_EQ(wire.output(3).connected_element().element_type(),
+              ElementType::placeholder);
 
     circuit.validate();
     circuit.validate(true);

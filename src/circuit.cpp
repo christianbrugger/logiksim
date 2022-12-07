@@ -44,7 +44,8 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
     const auto new_output_size {output_data_store_.size() + output_count};
 
     // make sure we can represent all ids
-    if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max()) [[unlikely]] {
+    if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max())
+        [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
     if (new_input_size >= std::numeric_limits<connection_id_t>::max()) [[unlikely]] {
@@ -55,9 +56,10 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
     }
     // TODO create custom exception, as we want to handle theses ones.
 
-    element_data_store_.push_back({static_cast<connection_id_t>(input_data_store_.size()),
-                                   static_cast<connection_id_t>(output_data_store_.size()),
-                                   input_count, output_count, type});
+    element_data_store_.push_back(
+        {static_cast<connection_id_t>(input_data_store_.size()),
+         static_cast<connection_id_t>(output_data_store_.size()), input_count,
+         output_count, type});
     input_data_store_.resize(new_input_size);
     output_data_store_.resize(new_output_size);
 
@@ -110,20 +112,21 @@ void validate_element_connections_consistent(const Circuit::ConstElement element
 }
 
 void Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data) {
-    if (connection_data.element_id != null_element && connection_data.index == null_connection)
-        [[unlikely]] {
+    if (connection_data.element_id != null_element
+        && connection_data.index == null_connection) [[unlikely]] {
         throw_exception("Connection to an element cannot have null_connection.");
     }
 
-    if (connection_data.element_id == null_element && connection_data.index != null_connection)
-        [[unlikely]] {
+    if (connection_data.element_id == null_element
+        && connection_data.index != null_connection) [[unlikely]] {
         throw_exception("Connection with null_element requires null_connection.");
     }
 }
 
 void Circuit::validate(bool require_all_outputs_connected) const {
-    auto all_one {
-        [](auto vector) { return ranges::all_of(vector, [](auto item) { return item == 1; }); }};
+    auto all_one {[](auto vector) {
+        return ranges::all_of(vector, [](auto item) { return item == 1; });
+    }};
 
     //  every output_data entry is referenced once
     std::vector<int> input_reference_count(total_input_count(), 0);

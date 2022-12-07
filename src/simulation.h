@@ -94,7 +94,8 @@ class SimulationQueue {
 
    private:
     time_t time_ {0};
-    std::priority_queue<SimulationEvent, std::vector<SimulationEvent>, std::greater<>> events_;
+    std::priority_queue<SimulationEvent, std::vector<SimulationEvent>, std::greater<>>
+        events_;
 };
 
 /// Represents multiple logic values
@@ -125,8 +126,8 @@ SimulationState get_initialized_state(Circuit &circuit);
 /// @param time_delta     tun for this time or, when zero, run until
 ///                       no more new events are generated
 /// @param print_events   if true print each processed event information
-void advance_simulation(SimulationState &state, const Circuit &circuit, time_t time_delta = 0,
-                        bool print_events = false);
+void advance_simulation(SimulationState &state, const Circuit &circuit,
+                        time_t time_delta = 0, bool print_events = false);
 
 SimulationState simulate_circuit(Circuit &circuit, time_t time_delta = 0,
                                  bool print_events = false);
@@ -135,7 +136,8 @@ bool get_input_value(const Circuit::ConstInput input, const logic_vector_t &inpu
 bool get_input_value(const Circuit::ConstInput input, const SimulationState &state);
 
 /// infers the output value from the connected input value, if it exists.
-bool get_output_value(const Circuit::ConstOutput output, const logic_vector_t &input_values,
+bool get_output_value(const Circuit::ConstOutput output,
+                      const logic_vector_t &input_values,
                       const bool raise_missing = true);
 bool get_output_value(const Circuit::ConstOutput output, const SimulationState &state,
                       const bool raise_missing = true);
@@ -152,10 +154,12 @@ logic_small_vector_t get_output_values(const Circuit::ConstElement element,
                                        const bool raise_missing = true);
 
 /// infer vector of all output values from the circuit.
-logic_vector_t get_all_output_values(const logic_vector_t &input_values, const Circuit &circuit,
+logic_vector_t get_all_output_values(const logic_vector_t &input_values,
+                                     const Circuit &circuit,
                                      const bool raise_missing = true);
 
-time_t get_output_delay(const Circuit::ConstOutput output, const delay_vector_t &output_delays);
+time_t get_output_delay(const Circuit::ConstOutput output,
+                        const delay_vector_t &output_delays);
 time_t get_output_delay(const Circuit::ConstOutput output, const SimulationState &state);
 
 void set_output_delay(const Circuit::ConstOutput output, delay_vector_t &output_delays,

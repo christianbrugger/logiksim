@@ -36,8 +36,8 @@ void benchmark_logic_elements(F&& draw_rect, G&& draw_line, int count = 100) {
         }
     }
 
-    // double scale = 0.75 + 0.25 * std::sin(0.1 * details.delta_t * 2 * std::numbers::pi);
-    // return scale;
+    // double scale = 0.75 + 0.25 * std::sin(0.1 * details.delta_t * 2 *
+    // std::numbers::pi); return scale;
 }
 
 class WidgetRenderer : public QWidget {
@@ -102,7 +102,8 @@ class WidgetRenderer : public QWidget {
         SimulationResult simulation {state.input_values,
                                      get_all_output_values(state.input_values, circuit)};
 
-        attribute_vector_t attributes = {{{}, {5, 3}, 0}, {{{10, 10}, {12, 12}}, {5, 3}, 0}};
+        attribute_vector_t attributes
+            = {{{}, {5, 3}, 0}, {{{10, 10}, {12, 12}}, {5, 3}, 0}};
 
         // int w = qt_image.width();
         // int h = qt_image.height();

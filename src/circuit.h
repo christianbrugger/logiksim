@@ -131,14 +131,15 @@ class Circuit::ElementTemplate {
 template <bool Const>
 class Circuit::InputTemplate {
     using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
-    using ConnectionDataType = std::conditional_t<Const, const ConnectionData, ConnectionData>;
+    using ConnectionDataType
+        = std::conditional_t<Const, const ConnectionData, ConnectionData>;
 
     /// This constructor is not regarded as a copy constructor,
     //   so we preserve trivially copyable
     friend InputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    InputTemplate(CircuitType &circuit, element_id_t element_id, connection_size_t input_index,
-                  connection_id_t input_id) noexcept;
+    InputTemplate(CircuitType &circuit, element_id_t element_id,
+                  connection_size_t input_index, connection_id_t input_id) noexcept;
 
    public:
     template <bool ConstOther>
@@ -157,9 +158,11 @@ class Circuit::InputTemplate {
     element_id_t connected_element_id() const;
     connection_size_t connected_output_index() const;
 
-    /// @throws if connection doesn't exists. Call has_connected_element to check for this.
+    /// @throws if connection doesn't exists. Call has_connected_element to check for
+    /// this.
     [[nodiscard]] ElementTemplate<Const> connected_element() const;
-    /// @throws if connection doesn't exists. Call has_connected_element to check for this.
+    /// @throws if connection doesn't exists. Call has_connected_element to check for
+    /// this.
     [[nodiscard]] OutputTemplate<Const> connected_output() const;
 
     void clear_connection() const;
@@ -179,12 +182,13 @@ template <bool Const>
 class Circuit::OutputTemplate {
    private:
     using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
-    using ConnectionDataType = std::conditional_t<Const, const ConnectionData, ConnectionData>;
+    using ConnectionDataType
+        = std::conditional_t<Const, const ConnectionData, ConnectionData>;
 
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    OutputTemplate(CircuitType &circuit, element_id_t element_id, connection_size_t output_index,
-                   connection_id_t output_id) noexcept;
+    OutputTemplate(CircuitType &circuit, element_id_t element_id,
+                   connection_size_t output_index, connection_id_t output_id) noexcept;
 
    public:
     template <bool ConstOther>
@@ -203,9 +207,11 @@ class Circuit::OutputTemplate {
     element_id_t connected_element_id() const;
     connection_size_t connected_input_index() const;
 
-    /// @throws if connection doesn't exists. Call has_connected_element to check for this.
+    /// @throws if connection doesn't exists. Call has_connected_element to check for
+    /// this.
     [[nodiscard]] ElementTemplate<Const> connected_element() const;
-    /// @throws if connection doesn't exists. Call has_connected_element to check for this.
+    /// @throws if connection doesn't exists. Call has_connected_element to check for
+    /// this.
     [[nodiscard]] InputTemplate<Const> connected_input() const;
 
     void clear_connection() const;
@@ -232,15 +238,15 @@ Circuit benchmark_circuit(const int n_elements = 100);
 // auto return methods need to be defined in the header, so the type can be deduced
 
 auto Circuit::elements() {
-    return ranges::views::iota(0, element_count()) | ranges::views::transform([this](int i) {
-               return this->element(static_cast<element_id_t>(i));
-           });
+    return ranges::views::iota(0, element_count())
+           | ranges::views::transform(
+               [this](int i) { return this->element(static_cast<element_id_t>(i)); });
 }
 
 auto Circuit::elements() const {
-    return ranges::views::iota(0, element_count()) | ranges::views::transform([this](int i) {
-               return this->element(static_cast<element_id_t>(i));
-           });
+    return ranges::views::iota(0, element_count())
+           | ranges::views::transform(
+               [this](int i) { return this->element(static_cast<element_id_t>(i)); });
 }
 
 //
@@ -254,14 +260,16 @@ Circuit::ElementTemplate<Const>::ElementTemplate(CircuitType &circuit,
 
 template <bool Const>
 template <bool ConstOther>
-Circuit::ElementTemplate<Const>::ElementTemplate(ElementTemplate<ConstOther> element) noexcept
+Circuit::ElementTemplate<Const>::ElementTemplate(
+    ElementTemplate<ConstOther> element) noexcept
     : circuit_(element.circuit_), element_id_(element.element_id_) {
     static_assert(!(ConstOther && !Const), "Cannot convert ConstElement to Element.");
 }
 
 template <bool Const>
 template <bool ConstOther>
-bool Circuit::ElementTemplate<Const>::operator==(ElementTemplate<ConstOther> other) const noexcept {
+bool Circuit::ElementTemplate<Const>::operator==(
+    ElementTemplate<ConstOther> other) const noexcept {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_;
 }
 
@@ -296,7 +304,8 @@ connection_id_t Circuit::ElementTemplate<Const>::first_input_id() const {
 }
 
 template <bool Const>
-connection_id_t Circuit::ElementTemplate<Const>::input_id(connection_size_t input_index) const {
+connection_id_t Circuit::ElementTemplate<Const>::input_id(
+    connection_size_t input_index) const {
     if (input_index < 0 || input_index >= input_count()) [[unlikely]] {
         throw_exception("Index is invalid");
     }
@@ -309,7 +318,8 @@ connection_id_t Circuit::ElementTemplate<Const>::first_output_id() const {
 }
 
 template <bool Const>
-connection_id_t Circuit::ElementTemplate<Const>::output_id(connection_size_t output_index) const {
+connection_id_t Circuit::ElementTemplate<Const>::output_id(
+    connection_size_t output_index) const {
     if (output_index < 0 || output_index >= output_count()) [[unlikely]] {
         throw_exception("Index is invalid");
     }
@@ -317,7 +327,8 @@ connection_id_t Circuit::ElementTemplate<Const>::output_id(connection_size_t out
 }
 
 template <bool Const>
-auto Circuit::ElementTemplate<Const>::input(connection_size_t input) const -> InputTemplate<Const> {
+auto Circuit::ElementTemplate<Const>::input(connection_size_t input) const
+    -> InputTemplate<Const> {
     return InputTemplate<Const> {*circuit_, element_id_, input, input_id(input)};
 }
 
@@ -329,16 +340,16 @@ auto Circuit::ElementTemplate<Const>::output(connection_size_t output) const
 
 template <bool Const>
 inline auto Circuit::ElementTemplate<Const>::inputs() const {
-    return ranges::views::iota(0, input_count()) | ranges::views::transform([this](int i) {
-               return this->input(static_cast<connection_size_t>(i));
-           });
+    return ranges::views::iota(0, input_count())
+           | ranges::views::transform(
+               [this](int i) { return this->input(static_cast<connection_size_t>(i)); });
 }
 
 template <bool Const>
 inline auto Circuit::ElementTemplate<Const>::outputs() const {
-    return ranges::views::iota(0, output_count()) | ranges::views::transform([this](int i) {
-               return this->output(static_cast<connection_size_t>(i));
-           });
+    return ranges::views::iota(0, output_count())
+           | ranges::views::transform(
+               [this](int i) { return this->output(static_cast<connection_size_t>(i)); });
 }
 
 template <bool Const>
@@ -351,10 +362,14 @@ auto Circuit::ElementTemplate<Const>::element_data_() const -> ElementDataType &
 //
 
 template <bool Const>
-Circuit::InputTemplate<Const>::InputTemplate(CircuitType &circuit, element_id_t element_id,
+Circuit::InputTemplate<Const>::InputTemplate(CircuitType &circuit,
+                                             element_id_t element_id,
                                              connection_size_t input_index,
                                              connection_id_t input_id) noexcept
-    : circuit_(&circuit), element_id_(element_id), input_index_(input_index), input_id_(input_id) {}
+    : circuit_(&circuit),
+      element_id_(element_id),
+      input_index_(input_index),
+      input_id_(input_id) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -368,7 +383,8 @@ Circuit::InputTemplate<Const>::InputTemplate(InputTemplate<ConstOther> input) no
 
 template <bool Const>
 template <bool ConstOther>
-bool Circuit::InputTemplate<Const>::operator==(InputTemplate<ConstOther> other) const noexcept {
+bool Circuit::InputTemplate<Const>::operator==(
+    InputTemplate<ConstOther> other) const noexcept {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_
            && input_index_ == other.input_index_ && input_index_ == other.input_index_;
 }
@@ -429,8 +445,9 @@ void Circuit::InputTemplate<Const>::clear_connection() const {
 
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
-        auto &destination_connection_data {circuit_->output_data_store_.at(
-            circuit_->element(connection_data.element_id).output_id(connection_data.index))};
+        auto &destination_connection_data {
+            circuit_->output_data_store_.at(circuit_->element(connection_data.element_id)
+                                                .output_id(connection_data.index))};
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.index = null_connection;
@@ -447,7 +464,8 @@ void Circuit::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) c
     clear_connection();
 
     // get data before we modify anything, for exception safety
-    auto &destination_connection_data {circuit_->output_data_store_.at(output.output_id())};
+    auto &destination_connection_data {
+        circuit_->output_data_store_.at(output.output_id())};
     auto &connection_data {connection_data_()};
 
     connection_data.element_id = output.element_id();
@@ -467,7 +485,8 @@ auto Circuit::InputTemplate<Const>::connection_data_() const -> ConnectionDataTy
 //
 
 template <bool Const>
-Circuit::OutputTemplate<Const>::OutputTemplate(CircuitType &circuit, element_id_t element_id,
+Circuit::OutputTemplate<Const>::OutputTemplate(CircuitType &circuit,
+                                               element_id_t element_id,
                                                connection_size_t output_index,
                                                connection_id_t output_id) noexcept
     : circuit_(&circuit),
@@ -549,8 +568,9 @@ void Circuit::OutputTemplate<Const>::clear_connection() const {
 
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
-        auto &destination_connection_data = circuit_->input_data_store_.at(
-            circuit_->element(connection_data.element_id).input_id(connection_data.index));
+        auto &destination_connection_data
+            = circuit_->input_data_store_.at(circuit_->element(connection_data.element_id)
+                                                 .input_id(connection_data.index));
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.index = null_connection;

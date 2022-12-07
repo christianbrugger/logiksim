@@ -134,8 +134,8 @@ logicsim::CircuitGraph generate_graph(const int count) {
 
         CircuitGraph graph{};
         for (int i = 0; i < count; ++i) {
-                graph.add_element(dice() ? ElementType::wire : ElementType::inverter_element,
-                        static_cast<connection_size_t>(dice() + 1),
+                graph.add_element(dice() ? ElementType::wire :
+ElementType::inverter_element, static_cast<connection_size_t>(dice() + 1),
                         static_cast<connection_size_t>(dice() + 1)
                 );
         }

@@ -30,7 +30,8 @@ struct DrawAttributes {
 
 using attribute_vector_t = std::vector<DrawAttributes>;
 
-void render_scene(BLContext& ctx, const Circuit& circuit, const SimulationResult& simulation,
+void render_scene(BLContext& ctx, const Circuit& circuit,
+                  const SimulationResult& simulation,
                   const attribute_vector_t& attributes);
 
 }  // namespace logicsim

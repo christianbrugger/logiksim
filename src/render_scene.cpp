@@ -26,7 +26,8 @@ void draw_wire_element(BLContext& ctx, const DrawAttributes& attributes,
     ctx.strokeLine(BLLine(p0[0] * s, p0[1] * s, p1[0] * s, p1[1] * s));
 }
 
-void draw_standard_element(BLContext& ctx, ElementType type, const DrawAttributes& attributes,
+void draw_standard_element(BLContext& ctx, ElementType type,
+                           const DrawAttributes& attributes,
                            const ranges::input_range auto input_values,
                            const ranges::input_range auto output_values) {
     constexpr static double s = 20;
@@ -35,7 +36,8 @@ void draw_standard_element(BLContext& ctx, ElementType type, const DrawAttribute
     // draw rect
     double x = attributes.position[0] * s;
     double y = attributes.position[1] * s;
-    int height = std::max(2, 2);  // ranges::size(input_values), ranges::size(output_values));  TODO
+    int height = std::max(
+        2, 2);  // ranges::size(input_values), ranges::size(output_values));  TODO
     BLPath path;
     path.addRect(x, y + -0.5 * s, 2 * s, height * s);
 
@@ -84,18 +86,20 @@ void draw_element(BLContext& ctx, ElementType type, const DrawAttributes& attrib
     }
 }
 
-void render_scene(BLContext& ctx, const Circuit& circuit, const SimulationResult& simulation,
+void render_scene(BLContext& ctx, const Circuit& circuit,
+                  const SimulationResult& simulation,
                   const attribute_vector_t& attributes) {
     render_background(ctx);
 
     ranges::for_each(circuit.elements(), [&](auto element) {
-        draw_element(ctx, element.element_type(), attributes.at(element.element_id()),
-                     ranges::views::transform(
-                         element.inputs(),
-                         [&](auto input) { return simulation.input_values.at(input.input_id()); }),
-                     ranges::views::transform(element.outputs(), [&](auto output) {
-                         return simulation.output_values.at(output.output_id());
-                     }));
+        draw_element(
+            ctx, element.element_type(), attributes.at(element.element_id()),
+            ranges::views::transform(
+                element.inputs(),
+                [&](auto input) { return simulation.input_values.at(input.input_id()); }),
+            ranges::views::transform(element.outputs(), [&](auto output) {
+                return simulation.output_values.at(output.output_id());
+            }));
     });
 }
 
