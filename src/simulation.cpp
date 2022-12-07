@@ -297,21 +297,42 @@ void process_event_group(SimulationState &state, const Circuit &circuit,
     });
 }
 
-void advance_simulation(SimulationState &state, const Circuit &circuit, time_t time_delta,
-                        bool print_events) {
-    if (time_delta < 0) [[unlikely]]
-        throw_exception("time_delta needs to be zero or positive.");
-    check_input_size(state, circuit);
+class SimulationTimer {
+   public:
+    using time_point = timeout_clock::time_point;
 
-    const double end_time {(time_delta == 0) ? std::numeric_limits<time_t>::infinity()
-                                             : state.queue.time() + time_delta};
+    explicit SimulationTimer(timeout_t timeout = defaults::no_timeout) noexcept
+        : timeout_(timeout), start_time_(timeout_clock::now()) {};
 
-    while (!state.queue.empty() && state.queue.next_event_time() < end_time) {
-        process_event_group(state, circuit, state.queue.pop_event_group(), print_events);
+    [[nodiscard]] bool reached_timeout() const noexcept {
+        return (std::chrono::steady_clock::now() - start_time_) > timeout_;
     }
 
-    if (time_delta > 0) {
-        state.queue.set_time(end_time);
+   private:
+    timeout_t timeout_;
+    time_point start_time_;
+};
+
+void advance_simulation(SimulationState &state, const Circuit &circuit, time_t time_delta,
+                        timeout_t timeout, bool print_events) {
+    if (time_delta <= 0) [[unlikely]]
+        throw_exception("time_delta needs to be positive.");
+    check_input_size(state, circuit);
+
+    const SimulationTimer timer {timeout};
+    const auto queue_end_time {state.queue.time() + time_delta};
+
+    while (!state.queue.empty() && state.queue.next_event_time() < queue_end_time) {
+        process_event_group(state, circuit, state.queue.pop_event_group(), print_events);
+
+        // we check here, so we process at least one group
+        if ((timeout != defaults::no_timeout) && timer.reached_timeout()) {
+            return;
+        }
+    }
+
+    if (std::isfinite(time_delta)) {
+        state.queue.set_time(queue_end_time);
     }
 }
 
@@ -337,6 +358,13 @@ void initialize_simulation(SimulationState &state, const Circuit &circuit) {
     }
 }
 
+SimulationState get_uninitialized_state(Circuit &circuit) {
+    add_output_placeholders(circuit);
+    circuit.validate(true);
+
+    return SimulationState {circuit};
+}
+
 SimulationState get_initialized_state(Circuit &circuit) {
     add_output_placeholders(circuit);
     circuit.validate(true);
@@ -346,14 +374,15 @@ SimulationState get_initialized_state(Circuit &circuit) {
     return state;
 }
 
-SimulationState simulate_circuit(Circuit &circuit, time_t time_delta, bool print_events) {
+SimulationState simulate_circuit(Circuit &circuit, time_t time_delta, timeout_t timeout,
+                                 bool print_events) {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
     SimulationState state {circuit};
     initialize_simulation(state, circuit);
 
-    advance_simulation(state, circuit, time_delta, print_events);
+    advance_simulation(state, circuit, time_delta, timeout, print_events);
     return state;
 }
 
@@ -409,6 +438,9 @@ void set_output_delay(const Circuit::ConstOutput output, delay_vector_t &output_
 
 void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
                       const time_t delay) {
+    if (!state.queue.empty())
+        throw_exception("Cannot set output delay for state with scheduled events.");
+
     return set_output_delay(output, state.output_delays, delay);
 }
 
@@ -428,7 +460,8 @@ int benchmark_simulation(const int n_elements, bool print) {
     state.queue.submit_event({0.5, elem0.element_id(), 1, false});
 
     add_output_placeholders(circuit);
-    advance_simulation(state, circuit, 0, print);
+    advance_simulation(state, circuit, defaults::until_steady, defaults::no_timeout,
+                       print);
     auto output_values {get_all_output_values(state.input_values, circuit)};
 
     if (print) {

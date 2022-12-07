@@ -10,6 +10,7 @@
 #include <fmt/format.h>
 #include <range/v3/all.hpp>
 
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <ostream>
@@ -111,25 +112,39 @@ struct SimulationState {
     delay_vector_t output_delays {};
 
     SimulationState(connection_id_t total_inputs, connection_id_t total_outputs);
-    SimulationState(const Circuit &circuit);
+    explicit SimulationState(const Circuit &circuit);
 };
 
 void check_input_size(const SimulationState &state, const Circuit &circuit);
 
 void initialize_simulation(SimulationState &state, const Circuit &circuit);
 
+SimulationState get_uninitialized_state(Circuit &circuit);
 SimulationState get_initialized_state(Circuit &circuit);
+
+using timeout_clock = std::chrono::steady_clock;
+using timeout_t = timeout_clock::duration;
+
+namespace defaults {
+constexpr auto no_timeout = timeout_t::max();
+constexpr auto until_steady = std::numeric_limits<time_t>::infinity();
+}  // namespace defaults
 
 /// @brief Advance the simulation by changing the given simulations state
 /// @param state          either new or the old simulation state to start from
 /// @param circuit        the circuit that should be simulated
-/// @param time_delta     tun for this time or, when zero, run until
+/// @param time_delta     tun for this time or, when run_until_steady, run until
 ///                       no more new events are generated
+/// @param timeout        return if simulation takes longer than this in realtime
 /// @param print_events   if true print each processed event information
 void advance_simulation(SimulationState &state, const Circuit &circuit,
-                        time_t time_delta = 0, bool print_events = false);
+                        time_t time_delta = defaults::until_steady,
+                        timeout_t timeout = defaults::no_timeout,
+                        bool print_events = false);
 
-SimulationState simulate_circuit(Circuit &circuit, time_t time_delta = 0,
+SimulationState simulate_circuit(Circuit &circuit,
+                                 time_t time_delta = defaults::until_steady,
+                                 timeout_t timeout = defaults::no_timeout,
                                  bool print_events = false);
 
 bool get_input_value(const Circuit::ConstInput input, const logic_vector_t &input_values);

@@ -64,6 +64,36 @@ TEST(SimulationTest, InitializeSimulation) {
     EXPECT_EQ(get_output_value(inverter.output(0), state), true);
 }
 
+TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
+    Circuit circuit;
+
+    auto state {get_initialized_state(circuit)};
+
+    ASSERT_THAT(state.queue.time(), testing::DoubleEq(0.0));
+    advance_simulation(state, circuit, 3.5);
+    ASSERT_THAT(state.queue.time(), testing::DoubleEq(3.5));
+}
+
+TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
+    using namespace std::chrono_literals;
+
+    Circuit circuit;
+    const auto inverter = circuit.add_element(ElementType::inverter_element, 1, 1);
+    inverter.output(0).connect(inverter.input(0));
+    auto state {get_initialized_state(circuit)};
+
+    // run simulation for 5 ms
+    ASSERT_THAT(state.queue.time(), testing::DoubleEq(0.0));
+    const auto start = timeout_clock::now();
+    advance_simulation(state, circuit, defaults::until_steady, 5ms);
+    const auto end = timeout_clock::now();
+
+    ASSERT_THAT(state.queue.time() > 100.0, true);
+    const auto delay = end - start;
+    ASSERT_THAT(delay > 5ms, true);
+    ASSERT_THAT(delay < 6ms, true);
+}
+
 TEST(SimulationTest, AdditionalEvents) {
     Circuit circuit;
     auto xor_element {circuit.add_element(ElementType::xor_element, 2, 1)};
