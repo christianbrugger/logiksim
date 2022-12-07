@@ -74,9 +74,22 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
     ASSERT_THAT(state.queue.time(), testing::DoubleEq(3.5));
 }
 
+TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
+    // create infinite loop
+    Circuit circuit;
+    const auto inverter = circuit.add_element(ElementType::inverter_element, 1, 1);
+    inverter.output(0).connect(inverter.input(0));
+    auto state {get_initialized_state(circuit)};
+
+    ASSERT_THAT(state.queue.time(), testing::DoubleEq(0.0));
+    advance_simulation(state, circuit, 3.5);
+    ASSERT_THAT(state.queue.time(), testing::DoubleEq(3.5));
+}
+
 TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     using namespace std::chrono_literals;
 
+    // create infinite loop
     Circuit circuit;
     const auto inverter = circuit.add_element(ElementType::inverter_element, 1, 1);
     inverter.output(0).connect(inverter.input(0));

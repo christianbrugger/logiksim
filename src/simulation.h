@@ -20,9 +20,9 @@
 
 /// Done Features
 // * delays for each output, needed for wires
+// * add timeout to advance simulations
 
 /// New Features
-// * add timeout to advance simulations
 // * flip flops, which requires access to the last state
 // * store transition times for wires so they can be drawn
 // * negation on input and outputs
