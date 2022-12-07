@@ -15,6 +15,7 @@
 #include <ostream>
 #include <queue>
 #include <string>
+#include <type_traits>
 
 /// Done Features
 // * delays for each output, needed for wires
@@ -47,6 +48,10 @@ struct SimulationEvent {
 
     std::string format() const;
 };
+
+static_assert(std::is_trivial<SimulationEvent>::value);
+static_assert(std::is_trivially_copyable<SimulationEvent>::value);
+static_assert(std::is_standard_layout<SimulationEvent>::value);
 
 SimulationEvent make_event(Circuit::ConstInput input, time_t time, bool value);
 }  // namespace logicsim

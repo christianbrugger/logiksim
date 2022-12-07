@@ -49,6 +49,7 @@ class Circuit {
 
    public:
     element_id_t element_count() const noexcept;
+    bool is_element_id_valid(element_id_t element_id) const noexcept;
     connection_id_t total_input_count() const noexcept;
     connection_id_t total_output_count() const noexcept;
 
@@ -92,12 +93,11 @@ class Circuit::ElementTemplate {
 
     friend ElementTemplate<!Const>;
     friend Circuit;
-    ElementTemplate(CircuitType *circuit, element_id_t element_id);
+    ElementTemplate(CircuitType &circuit, element_id_t element_id) noexcept;
 
    public:
-    /// TODO
-    // * research copy constructor argument types
-    // * check if rule of 3 or 5 applies
+    /// This constructor is not regarded as a copy constructor,
+    //   so we preserve trivially copyable
     template <bool ConstOther>
     ElementTemplate(ElementTemplate<ConstOther> element) noexcept;
 
@@ -124,7 +124,7 @@ class Circuit::ElementTemplate {
    private:
     ElementDataType &element_data_() const;
 
-    CircuitType *circuit_;
+    CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
 };
 
@@ -133,10 +133,12 @@ class Circuit::InputTemplate {
     using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
     using ConnectionDataType = std::conditional_t<Const, const ConnectionData, ConnectionData>;
 
+    /// This constructor is not regarded as a copy constructor,
+    //   so we preserve trivially copyable
     friend InputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    InputTemplate(CircuitType *circuit, element_id_t element_id, connection_size_t input_index,
-                  connection_id_t input_id);
+    InputTemplate(CircuitType &circuit, element_id_t element_id, connection_size_t input_index,
+                  connection_id_t input_id) noexcept;
 
    public:
     template <bool ConstOther>
@@ -167,7 +169,7 @@ class Circuit::InputTemplate {
    private:
     ConnectionDataType &connection_data_() const;
 
-    CircuitType *circuit_;
+    CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
     connection_size_t input_index_;
     connection_id_t input_id_;
@@ -181,8 +183,8 @@ class Circuit::OutputTemplate {
 
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    OutputTemplate(CircuitType *circuit, element_id_t element_id, connection_size_t output_index,
-                   connection_id_t output_id);
+    OutputTemplate(CircuitType &circuit, element_id_t element_id, connection_size_t output_index,
+                   connection_id_t output_id) noexcept;
 
    public:
     template <bool ConstOther>
@@ -213,7 +215,7 @@ class Circuit::OutputTemplate {
    private:
     ConnectionDataType &connection_data_() const;
 
-    CircuitType *circuit_;
+    CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
     connection_size_t output_index_;
     connection_id_t output_id_;
@@ -246,15 +248,9 @@ auto Circuit::elements() const {
 //
 
 template <bool Const>
-Circuit::ElementTemplate<Const>::ElementTemplate(CircuitType *circuit, element_id_t element_id)
-    : circuit_(circuit), element_id_(element_id) {
-    if (circuit == nullptr) [[unlikely]] {
-        throw_exception("Circuit cannot be nullptr.");
-    }
-    if (element_id < 0 || element_id >= circuit->element_count()) [[unlikely]] {
-        throw_exception("Element id is invalid");
-    }
-}
+Circuit::ElementTemplate<Const>::ElementTemplate(CircuitType &circuit,
+                                                 element_id_t element_id) noexcept
+    : circuit_(&circuit), element_id_(element_id) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -322,13 +318,13 @@ connection_id_t Circuit::ElementTemplate<Const>::output_id(connection_size_t out
 
 template <bool Const>
 auto Circuit::ElementTemplate<Const>::input(connection_size_t input) const -> InputTemplate<Const> {
-    return InputTemplate<Const> {circuit_, element_id_, input, input_id(input)};
+    return InputTemplate<Const> {*circuit_, element_id_, input, input_id(input)};
 }
 
 template <bool Const>
 auto Circuit::ElementTemplate<Const>::output(connection_size_t output) const
     -> OutputTemplate<Const> {
-    return OutputTemplate<Const> {circuit_, element_id_, output, output_id(output)};
+    return OutputTemplate<Const> {*circuit_, element_id_, output, output_id(output)};
 }
 
 template <bool Const>
@@ -355,14 +351,10 @@ auto Circuit::ElementTemplate<Const>::element_data_() const -> ElementDataType &
 //
 
 template <bool Const>
-Circuit::InputTemplate<Const>::InputTemplate(CircuitType *circuit, element_id_t element_id,
+Circuit::InputTemplate<Const>::InputTemplate(CircuitType &circuit, element_id_t element_id,
                                              connection_size_t input_index,
-                                             connection_id_t input_id)
-    : circuit_(circuit), element_id_(element_id), input_index_(input_index), input_id_(input_id) {
-    if (circuit == nullptr) [[unlikely]] {
-        throw_exception("Circuit cannot be nullptr.");
-    }
-}
+                                             connection_id_t input_id) noexcept
+    : circuit_(&circuit), element_id_(element_id), input_index_(input_index), input_id_(input_id) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -403,7 +395,7 @@ connection_id_t Circuit::InputTemplate<Const>::input_id() const noexcept {
 
 template <bool Const>
 auto Circuit::InputTemplate<Const>::element() const -> ElementTemplate<Const> {
-    return ElementTemplate<Const> {circuit_, element_id_};
+    return circuit_->element(element_id_);
 }
 
 template <bool Const>
@@ -423,7 +415,7 @@ connection_size_t Circuit::InputTemplate<Const>::connected_output_index() const 
 
 template <bool Const>
 auto Circuit::InputTemplate<Const>::connected_element() const -> ElementTemplate<Const> {
-    return ElementTemplate<Const> {circuit_, connected_element_id()};
+    return circuit_->element(connected_element_id());
 }
 
 template <bool Const>
@@ -475,17 +467,13 @@ auto Circuit::InputTemplate<Const>::connection_data_() const -> ConnectionDataTy
 //
 
 template <bool Const>
-Circuit::OutputTemplate<Const>::OutputTemplate(CircuitType *circuit, element_id_t element_id,
+Circuit::OutputTemplate<Const>::OutputTemplate(CircuitType &circuit, element_id_t element_id,
                                                connection_size_t output_index,
-                                               connection_id_t output_id)
-    : circuit_(circuit),
+                                               connection_id_t output_id) noexcept
+    : circuit_(&circuit),
       element_id_(element_id),
       output_index_(output_index),
-      output_id_(output_id) {
-    if (circuit == nullptr) [[unlikely]] {
-        throw_exception("Circuit cannot be nullptr.");
-    }
-}
+      output_id_(output_id) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -527,7 +515,7 @@ connection_id_t Circuit::OutputTemplate<Const>::output_id() const noexcept {
 
 template <bool Const>
 auto Circuit::OutputTemplate<Const>::element() const -> ElementTemplate<Const> {
-    return Circuit::ElementTemplate<Const> {circuit_, element_id_};
+    return circuit_->element(element_id_);
 }
 
 template <bool Const>
@@ -547,7 +535,7 @@ connection_size_t Circuit::OutputTemplate<Const>::connected_input_index() const 
 
 template <bool Const>
 auto Circuit::OutputTemplate<Const>::connected_element() const -> ElementTemplate<Const> {
-    return ElementTemplate<Const> {circuit_, connected_element_id()};
+    return circuit_->element(connected_element_id());
 }
 
 template <bool Const>

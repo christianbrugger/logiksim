@@ -21,7 +21,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # global flags for all libraries
 if (MSVC)
 	add_compile_options(/EHsc)
-	add_compile_options(-arch:AVX2 /arch:AVX2)
+	add_compile_options(/arch:AVX2)
 else()
 endif()
 
@@ -34,7 +34,7 @@ if (MSVC)
     set(MAIN_COMPILE_OPTIONS /WX /W4 /permissive- /EHsc)
     # unreachable code warnings when using range-v3 templates
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
-    set(MAIN_LINK_OPTIONS dbgeng.lib)
+    #set(MAIN_LINK_OPTIONS dbgeng.lib)
     set(MAIN_COMPILE_DEFINITIONS BOOST_STACKTRACE_USE_WINDBG)
 else()
     set(MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow -Wthread-safety -Wstrict-aliasing)
@@ -48,22 +48,25 @@ endif()
 # set(BENCHMARK_ENABLE_LTO ON)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
-add_subdirectory(external/benchmark)
+add_subdirectory(external/benchmark EXCLUDE_FROM_ALL)
 # Google Test
-add_subdirectory(external/googletest)
+add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 # Boost
-find_package(Boost REQUIRED COMPONENTS)
+# find_package(Boost REQUIRED COMPONENTS)
+add_subdirectory(external/boost EXCLUDE_FROM_ALL)
 # Qt 6
 set(CMAKE_AUTOMOC TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 # Blend2D
 set(BLEND2D_STATIC TRUE)
-add_subdirectory(external/blend2d)
+add_subdirectory(external/blend2d EXCLUDE_FROM_ALL)
 # range-v3
-add_subdirectory(external/range-v3)
+add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL)
 # fmt
-add_subdirectory(external/fmt)
+add_subdirectory(external/fmt EXCLUDE_FROM_ALL)
+# gsl
+add_subdirectory(external/GSL EXCLUDE_FROM_ALL)
 
 
 ###################################################
@@ -87,10 +90,10 @@ add_executable(${MAIN_BENCHMARK_TARGET}
     src/exceptions.h src/exceptions.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    benchmark::benchmark
-    Boost::boost
+    Boost::container Boost::stacktrace_windbg
     range-v3::range-v3
     fmt::fmt
+    benchmark::benchmark
 )
 target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 target_link_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
@@ -108,7 +111,7 @@ add_executable(${MAIN_TARGET}
     
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
-    Boost::boost
+    Boost::container Boost::stacktrace_windbg
     range-v3::range-v3
     fmt::fmt
 )
@@ -131,12 +134,12 @@ add_executable(${MAIN_GUI_TARGET}
     src/main_gui.cpp
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    Boost::boost
+    Boost::container Boost::stacktrace_windbg
+    range-v3::range-v3
+    fmt::fmt
     Qt6::Widgets
     Qt6::OpenGLWidgets
     Blend2D::Blend2D
-    range-v3::range-v3
-    fmt::fmt
 )
 target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 target_link_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
@@ -158,7 +161,7 @@ target_include_directories(${MAIN_TEST_TARGET} PRIVATE
     src
 )
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
-    Boost::boost
+    Boost::container Boost::stacktrace_windbg
     range-v3::range-v3
     fmt::fmt
     

@@ -13,10 +13,22 @@ element_id_t Circuit::element_count() const noexcept {
     return static_cast<element_id_t>(element_data_store_.size());
 }
 
-auto Circuit::element(element_id_t element_id) -> Element { return Element {this, element_id}; }
+bool Circuit::is_element_id_valid(element_id_t element_id) const noexcept {
+    return element_id >= 0 && element_id < element_count();
+}
+
+auto Circuit::element(element_id_t element_id) -> Element {
+    if (!is_element_id_valid(element_id)) [[unlikely]] {
+        throw_exception("Element id is invalid");
+    }
+    return Element {*this, element_id};
+}
 
 auto Circuit::element(element_id_t element_id) const -> ConstElement {
-    return ConstElement {this, element_id};
+    if (!is_element_id_valid(element_id)) [[unlikely]] {
+        throw_exception("Element id is invalid");
+    }
+    return ConstElement {*this, element_id};
 }
 
 auto Circuit::add_element(ElementType type, connection_size_t input_count,
