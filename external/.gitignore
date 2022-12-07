@@ -2,6 +2,7 @@
 asmjit
 benchmark
 blend2d
+boost
 fmt
 googletest
 GSL
