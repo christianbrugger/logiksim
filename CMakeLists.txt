@@ -31,14 +31,16 @@ endif()
 # TODO put flags here
 
 if (MSVC)
-    set(MAIN_COMPILE_OPTIONS /WX /W4 /permissive- /EHsc)
+    set(MAIN_COMPILE_OPTIONS /permissive- /EHsc)
+    list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
     # unreachable code warnings when using range-v3 templates
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
     #set(MAIN_LINK_OPTIONS dbgeng.lib)
     set(MAIN_COMPILE_DEFINITIONS BOOST_STACKTRACE_USE_WINDBG)
 else()
-    set(MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow -Wthread-safety -Wstrict-aliasing)
-    list(APPEND MAIN_COMPILE_OPTIONS -pedantic -fexceptions)
+    set(MAIN_COMPILE_OPTIONS -pedantic -fexceptions)
+    list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
+                             -Wthread-safety -Wstrict-aliasing)
 endif()
 
 
@@ -71,11 +73,23 @@ add_subdirectory(external/GSL EXCLUDE_FROM_ALL)
 
 ###################################################
 
-# set(CMAKE_CXX_CLANG_TIDY
-# 	clang-tidy;
-# 	-header-filter=${CMAKE_CURRENT_SOURCE_DIR}/src;
-# 	-checks=clang-analyzer-*,performance-*,portability-*,concurrency-*,cppcoreguidelines-*,modernize-*;
-# )
+set(CLANG_TIDY_CHECKS "\
+clang-analyzer-*,\
+performance-*,\
+portability-*,\
+concurrency-*,\
+cppcoreguidelines-*,\
+modernize-*,\
+readability-*\
+")
+set(CMAKE_CXX_CLANG_TIDY
+    clang-tidy;
+    -extra-arg=/permissive-;
+    -extra-arg=/EHsc;
+    -header-filter=${CMAKE_CURRENT_SOURCE_DIR}/src;
+    -warnings-as-errors=*;
+    -checks=${CLANG_TIDY_CHECKS};
+)
 
 
 

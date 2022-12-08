@@ -109,11 +109,11 @@ time_t SimulationQueue::next_event_time() const noexcept {
 
 bool SimulationQueue::empty() const noexcept { return events_.empty(); }
 
-void SimulationQueue::submit_event(SimulationEvent &&event) {
+void SimulationQueue::submit_event(SimulationEvent event) {
     if (event.time <= time_) throw_exception("Event time needs to be in the future.");
     if (!std::isfinite(event.time)) throw_exception("Event time needs to be finite.");
 
-    events_.push(std::move(event));
+    events_.push(event);
 }
 
 event_group_t SimulationQueue::pop_event_group() {
@@ -121,10 +121,10 @@ event_group_t SimulationQueue::pop_event_group() {
     pop_while(
         events_, [&group](const SimulationEvent &event) { group.push_back(event); },
         [&group](const SimulationEvent &event) {
-            return group.size() == 0 || group.front() == event;
+            return group.empty() || group.front() == event;
         });
-    if (group.size() > 0) {
-        set_time(group.front().time);
+    if (!group.empty()) {
+        this->set_time(group.front().time);
     }
     return group;
 }
@@ -158,10 +158,12 @@ using con_index_small_vector_t = boost::container::small_vector<connection_size_
 logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
                                        connection_size_t output_count,
                                        const ElementType type) {
-    if (input.size() == 0) [[unlikely]]
+    if (input.empty()) [[unlikely]] {
         throw_exception("Input size cannot be zero.");
-    if (output_count <= 0) [[unlikely]]
+    }
+    if (output_count <= 0) [[unlikely]] {
         throw_exception("Output count cannot be zero or negative.");
+    }
 
     switch (type) {
         case ElementType::wire:
@@ -230,8 +232,9 @@ void apply_events(logic_vector_t &input_values, const Circuit::ConstElement elem
 
 con_index_small_vector_t get_changed_outputs(const logic_small_vector_t &old_outputs,
                                              const logic_small_vector_t &new_outputs) {
-    if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]]
+    if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]] {
         throw_exception("old_outputs and new_outputs need to have the same size.");
+    }
 
     con_index_small_vector_t result;
     for (const auto &&[index, old_value, new_value] :
@@ -243,13 +246,17 @@ con_index_small_vector_t get_changed_outputs(const logic_small_vector_t &old_out
     return result;
 }
 
-constexpr time_t STANDARD_DELAY = 0.1;
+namespace defaults {
+constexpr time_t standard_delay = 0.1;
+}
 
 void create_event(SimulationQueue &queue, Circuit::ConstOutput output,
                   const logic_small_vector_t &output_values,
                   const delay_vector_t &output_delays) {
     time_t delay {get_output_delay(output, output_delays)};
-    if (delay == 0) delay = STANDARD_DELAY;
+    if (delay == 0) {
+        delay = defaults::standard_delay;
+    }
 
     const time_t time {queue.time() + delay};
 
@@ -263,7 +270,9 @@ void create_event(SimulationQueue &queue, Circuit::ConstOutput output,
 
 void process_event_group(SimulationState &state, const Circuit &circuit,
                          event_group_t &&events, bool print_events = false) {
-    if (events.size() == 0) return;
+    if (events.empty()) {
+        return;
+    }
     validate(events);
 
     if (print_events) {
@@ -315,8 +324,9 @@ class SimulationTimer {
 
 void advance_simulation(SimulationState &state, const Circuit &circuit, time_t time_delta,
                         timeout_t timeout, bool print_events) {
-    if (time_delta <= 0) [[unlikely]]
+    if (time_delta <= 0) [[unlikely]] {
         throw_exception("time_delta needs to be positive.");
+    }
     check_input_size(state, circuit);
 
     const SimulationTimer timer {timeout};
@@ -341,7 +351,9 @@ void initialize_simulation(SimulationState &state, const Circuit &circuit) {
 
     for (auto &&element : circuit.elements()) {
         // short-circuit placeholders, as they don't have logic
-        if (element.element_type() == ElementType::placeholder) continue;
+        if (element.element_type() == ElementType::placeholder) {
+            continue;
+        }
 
         // find outputs that need an update
         const auto old_outputs {get_output_values(element, state, true)};

@@ -89,7 +89,7 @@ class SimulationQueue {
     bool empty() const noexcept;
 
     void set_time(time_t time);
-    void submit_event(SimulationEvent &&event);
+    void submit_event(SimulationEvent event);
     /// Remove and return all events for the next time and element_id.
     event_group_t pop_event_group();
 
