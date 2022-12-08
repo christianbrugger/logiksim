@@ -69,29 +69,47 @@ add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL)
 add_subdirectory(external/fmt EXCLUDE_FROM_ALL)
 # gsl
 add_subdirectory(external/GSL EXCLUDE_FROM_ALL)
-
+# abseil
+add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL)
 
 ###################################################
 
-set(CLANG_TIDY_CHECKS "\
-clang-analyzer-*,\
-performance-*,\
-portability-*,\
-concurrency-*,\
-cppcoreguidelines-*,\
-modernize-*,\
-readability-*\
-")
-set(CMAKE_CXX_CLANG_TIDY
-    clang-tidy;
-    -extra-arg=/permissive-;
-    -extra-arg=/EHsc;
-    -header-filter=${CMAKE_CURRENT_SOURCE_DIR}/src;
-    -warnings-as-errors=*;
-    -checks=${CLANG_TIDY_CHECKS};
+if (false)
+    set(CLANG_TIDY_CHECKS "\
+    clang-analyzer-*,\
+    performance-*,\
+    portability-*,\
+    concurrency-*,\
+    cppcoreguidelines-*,\
+    modernize-*,\
+    readability-*,\
+    \
+    -cppcoreguidelines-avoid-magic-numbers,\
+    -readability-magic-numbers,\
+    -readability-identifier-length,\
+    -readability-convert-member-functions-to-static,\
+    -modernize-use-trailing-return-type,\
+    -clang-analyzer-optin.cplusplus.UninitializedObject,\
+    ")
+    set(CMAKE_CXX_CLANG_TIDY
+        clang-tidy;
+        -extra-arg=/permissive-;
+        -extra-arg=/EHsc;
+        -header-filter=\\src\\[a-z0-9_]+\.h$;
+        -warnings-as-errors=*;
+        -checks=${CLANG_TIDY_CHECKS};
+    )
+endif()
+  
+# Folly
+# We build a mimimal version of the library, only what we need
+add_library(folly
+    external/folly/folly/memory/detail/MallocImpl.cpp
 )
-
-
+target_include_directories(folly PUBLIC 
+    external/folly
+)
+target_compile_definitions(folly PUBLIC FOLLY_NO_CONFIG)
 
 # MAIN BENCHMARK
 
@@ -104,9 +122,12 @@ add_executable(${MAIN_BENCHMARK_TARGET}
     src/exceptions.h src/exceptions.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    Boost::container Boost::stacktrace_windbg
+    Boost::container Boost::stacktrace_windbg Boost::mpl
     range-v3::range-v3
     fmt::fmt
+    folly
+    absl::base
+
     benchmark::benchmark
 )
 target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
@@ -125,9 +146,11 @@ add_executable(${MAIN_TARGET}
     
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
-    Boost::container Boost::stacktrace_windbg
+    Boost::container Boost::stacktrace_windbg Boost::mpl
     range-v3::range-v3
     fmt::fmt
+    folly
+    absl::base
 )
 target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 target_link_options(${MAIN_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
@@ -148,9 +171,12 @@ add_executable(${MAIN_GUI_TARGET}
     src/main_gui.cpp
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    Boost::container Boost::stacktrace_windbg
+    Boost::container Boost::stacktrace_windbg Boost::mpl
     range-v3::range-v3
     fmt::fmt
+    folly
+    absl::base
+
     Qt6::Widgets
     Qt6::OpenGLWidgets
     Blend2D::Blend2D
@@ -175,9 +201,11 @@ target_include_directories(${MAIN_TEST_TARGET} PRIVATE
     src
 )
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
-    Boost::container Boost::stacktrace_windbg
+    Boost::container Boost::stacktrace_windbg Boost::mpl
     range-v3::range-v3
     fmt::fmt
+    folly
+    absl::base
     
     GTest::gtest
     GTest::gmock

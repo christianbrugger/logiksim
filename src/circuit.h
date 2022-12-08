@@ -47,16 +47,15 @@ class Circuit {
     using Output = OutputTemplate<false>;
     using ConstOutput = OutputTemplate<true>;
 
-   public:
-    element_id_t element_count() const noexcept;
-    bool is_element_id_valid(element_id_t element_id) const noexcept;
-    connection_id_t total_input_count() const noexcept;
-    connection_id_t total_output_count() const noexcept;
+    [[nodiscard]] element_id_t element_count() const noexcept;
+    [[nodiscard]] bool is_element_id_valid(element_id_t element_id) const noexcept;
+    [[nodiscard]] connection_id_t total_input_count() const noexcept;
+    [[nodiscard]] connection_id_t total_output_count() const noexcept;
 
     [[nodiscard]] Element element(element_id_t element_id);
     [[nodiscard]] ConstElement element(element_id_t element_id) const;
-    inline auto elements();
-    inline auto elements() const;
+    [[nodiscard]] inline auto elements();
+    [[nodiscard]] inline auto elements() const;
 
     Element add_element(ElementType type, connection_size_t input_count,
                         connection_size_t output_count);
@@ -104,25 +103,25 @@ class Circuit::ElementTemplate {
     template <bool ConstOther>
     bool operator==(ElementTemplate<ConstOther> other) const noexcept;
 
-    CircuitType *circuit() const noexcept;
-    element_id_t element_id() const noexcept;
+    [[nodiscard]] CircuitType *circuit() const noexcept;
+    [[nodiscard]] element_id_t element_id() const noexcept;
 
-    ElementType element_type() const;
-    connection_size_t input_count() const;
-    connection_size_t output_count() const;
-    connection_id_t first_input_id() const;
-    connection_id_t input_id(connection_size_t input_index) const;
-    connection_id_t first_output_id() const;
-    connection_id_t output_id(connection_size_t output_index) const;
+    [[nodiscard]] ElementType element_type() const;
+    [[nodiscard]] connection_size_t input_count() const;
+    [[nodiscard]] connection_size_t output_count() const;
+    [[nodiscard]] connection_id_t first_input_id() const;
+    [[nodiscard]] connection_id_t input_id(connection_size_t input_index) const;
+    [[nodiscard]] connection_id_t first_output_id() const;
+    [[nodiscard]] connection_id_t output_id(connection_size_t output_index) const;
 
     [[nodiscard]] InputTemplate<Const> input(connection_size_t input) const;
     [[nodiscard]] OutputTemplate<Const> output(connection_size_t output) const;
 
-    auto inputs() const;
-    auto outputs() const;
+    [[nodiscard]] auto inputs() const;
+    [[nodiscard]] auto outputs() const;
 
    private:
-    ElementDataType &element_data_() const;
+    [[nodiscard]] ElementDataType &element_data_() const;
 
     CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
@@ -148,15 +147,15 @@ class Circuit::InputTemplate {
     template <bool ConstOther>
     bool operator==(InputTemplate<ConstOther> other) const noexcept;
 
-    CircuitType *circuit() const noexcept;
-    element_id_t element_id() const noexcept;
-    connection_size_t input_index() const noexcept;
-    connection_id_t input_id() const noexcept;
+    [[nodiscard]] CircuitType *circuit() const noexcept;
+    [[nodiscard]] element_id_t element_id() const noexcept;
+    [[nodiscard]] connection_size_t input_index() const noexcept;
+    [[nodiscard]] connection_id_t input_id() const noexcept;
 
-    ElementTemplate<Const> element() const;
-    bool has_connected_element() const;
-    element_id_t connected_element_id() const;
-    connection_size_t connected_output_index() const;
+    [[nodiscard]] ElementTemplate<Const> element() const;
+    [[nodiscard]] bool has_connected_element() const;
+    [[nodiscard]] element_id_t connected_element_id() const;
+    [[nodiscard]] connection_size_t connected_output_index() const;
 
     /// @throws if connection doesn't exists. Call has_connected_element to check for
     /// this.
@@ -170,7 +169,7 @@ class Circuit::InputTemplate {
     void connect(OutputTemplate<ConstOther> output) const;
 
    private:
-    ConnectionDataType &connection_data_() const;
+    [[nodiscard]] ConnectionDataType &connection_data_() const;
 
     CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
@@ -197,15 +196,15 @@ class Circuit::OutputTemplate {
     template <bool ConstOther>
     bool operator==(OutputTemplate<ConstOther> other) const noexcept;
 
-    CircuitType *circuit() const noexcept;
-    element_id_t element_id() const noexcept;
-    connection_size_t output_index() const noexcept;
-    connection_id_t output_id() const noexcept;
+    [[nodiscard]] CircuitType *circuit() const noexcept;
+    [[nodiscard]] element_id_t element_id() const noexcept;
+    [[nodiscard]] connection_size_t output_index() const noexcept;
+    [[nodiscard]] connection_id_t output_id() const noexcept;
 
-    ElementTemplate<Const> element() const;
+    [[nodiscard]] ElementTemplate<Const> element() const;
     [[nodiscard]] bool has_connected_element() const;
-    element_id_t connected_element_id() const;
-    connection_size_t connected_input_index() const;
+    [[nodiscard]] element_id_t connected_element_id() const;
+    [[nodiscard]] connection_size_t connected_input_index() const;
 
     /// @throws if connection doesn't exists. Call has_connected_element to check for
     /// this.
@@ -219,7 +218,7 @@ class Circuit::OutputTemplate {
     void connect(InputTemplate<ConstOther> input) const;
 
    private:
-    ConnectionDataType &connection_data_() const;
+    [[nodiscard]] ConnectionDataType &connection_data_() const;
 
     CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
@@ -229,7 +228,7 @@ class Circuit::OutputTemplate {
 
 void add_output_placeholders(Circuit &circuit);
 
-Circuit benchmark_circuit(const int n_elements = 100);
+Circuit benchmark_circuit(int n_elements = 100);
 
 //
 // Circuit
@@ -263,7 +262,7 @@ template <bool ConstOther>
 Circuit::ElementTemplate<Const>::ElementTemplate(
     ElementTemplate<ConstOther> element) noexcept
     : circuit_(element.circuit_), element_id_(element.element_id_) {
-    static_assert(!(ConstOther && !Const), "Cannot convert ConstElement to Element.");
+    static_assert(Const || !ConstOther, "Cannot convert ConstElement to Element.");
 }
 
 template <bool Const>
@@ -378,7 +377,7 @@ Circuit::InputTemplate<Const>::InputTemplate(InputTemplate<ConstOther> input) no
       element_id_(input.element_id_),
       input_index_(input.input_index_),
       input_id_(input.input_id_) {
-    static_assert(!(ConstOther && !Const), "Cannot convert ConstInput to Input.");
+    static_assert(Const || !ConstOther, "Cannot convert ConstInput to Input.");
 }
 
 template <bool Const>
@@ -501,7 +500,7 @@ Circuit::OutputTemplate<Const>::OutputTemplate(OutputTemplate<ConstOther> output
       element_id_(output.element_id_),
       output_index_(output.output_index_),
       output_id_(output.output_id_) {
-    static_assert(!(ConstOther && !Const), "Cannot convert ConstOutput to Output.");
+    static_assert(Const || !ConstOther, "Cannot convert ConstOutput to Output.");
 }
 
 template <bool Const>

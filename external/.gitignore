@@ -1,9 +1,11 @@
 
+abseil-cpp
 asmjit
 benchmark
 blend2d
 boost
 fmt
+folly
 googletest
 GSL
 range-v3

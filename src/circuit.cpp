@@ -1,8 +1,6 @@
 
 #include "circuit.h"
 
-#include <format>
-
 namespace logicsim {
 
 //

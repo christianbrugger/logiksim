@@ -35,11 +35,18 @@ void pop_while(T& queue, ApplyFunc apply_func, WhileFunc while_func) {
 
 /// good for small ranges, scales with O(n^2)
 bool has_duplicates_quadratic(const ranges::input_range auto&& range) {
-    if (std::size(range) <= 1) return false;
+    if (std::size(range) <= 1) {
+        return false;
+    }
 
-    for (auto i1 = std::begin(range); i1 != std::end(range) - 1; ++i1)
-        for (auto i2 = std::begin(range) + 1; i2 != std::end(range); ++i2)
-            if (*i1 == *i2) return true;
+    // TODO refactor using ranges
+    for (auto i1 = std::begin(range); i1 != std::end(range) - 1; ++i1) {
+        for (auto i2 = std::begin(range) + 1; i2 != std::end(range); ++i2) {
+            if (*i1 == *i2) {
+                return true;
+            }
+        }
+    }
     return false;
 }
 

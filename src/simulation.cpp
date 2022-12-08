@@ -35,10 +35,10 @@ bool SimulationEvent::operator==(const SimulationEvent &other) const {
 }
 
 bool SimulationEvent::operator<(const SimulationEvent &other) const {
-    if (this->time == other.time)
+    if (this->time == other.time) {
         return this->element_id < other.element_id;
-    else
-        return this->time < other.time;
+    }
+    return this->time < other.time;
 }
 
 bool SimulationEvent::operator!=(const SimulationEvent &other) const {
@@ -62,29 +62,37 @@ bool SimulationEvent::operator>=(const SimulationEvent &other) const {
 //
 
 void validate(const event_group_t &events) {
-    if (events.size() == 0) return;
+    if (events.empty()) {
+        return;
+    }
 
     const auto &head {events.front()};
     const auto tail {ranges::views::drop(events, 1)};  // TODO use tail
 
-    if (head.element_id == null_element) throw_exception("Event element cannot be null.");
+    if (head.element_id == null_element) {
+        throw_exception("Event element cannot be null.");
+    }
+    if (!std::isfinite(head.time)) {
+        throw_exception("Event time needs to be finite.");
+    }
 
-    if (!std::isfinite(head.time)) throw_exception("Event time needs to be finite.");
-
-    if (tail.size() > 0) {
+    if (!tail.empty()) {
         if (!ranges::all_of(
-                tail, [head](const auto &event) { return event.time == head.time; }))
+                tail, [head](const auto &event) { return event.time == head.time; })) {
             throw_exception("All events in the group need to have the same time.");
+        }
 
         if (!ranges::all_of(tail, [head](const auto &event) {
                 return event.element_id == head.element_id;
-            }))
+            })) {
             throw_exception("All events in the group need to have the same time.");
+        }
 
         if (has_duplicates_quadratic(ranges::views::transform(
-                events, [](const auto &event) { return event.input_index; })))
+                events, [](const auto &event) { return event.input_index; }))) {
             throw_exception(
                 "Cannot have two events for the same input at the same time.");
+        }
     }
 }
 
@@ -95,10 +103,15 @@ void validate(const event_group_t &events) {
 time_t SimulationQueue::time() const noexcept { return time_; }
 
 void SimulationQueue::set_time(time_t time) {
-    if (!std::isfinite(time)) throw_exception("New time needs to be finite.");
-    if (time < time_) throw_exception("Cannot set new time to the past.");
-    if (time > next_event_time())
+    if (!std::isfinite(time)) {
+        throw_exception("New time needs to be finite.");
+    }
+    if (time < time_) {
+        throw_exception("Cannot set new time to the past.");
+    }
+    if (time > next_event_time()) {
         throw_exception("New time would be greater than next event.");
+    }
 
     time_ = time;
 }
@@ -110,8 +123,12 @@ time_t SimulationQueue::next_event_time() const noexcept {
 bool SimulationQueue::empty() const noexcept { return events_.empty(); }
 
 void SimulationQueue::submit_event(SimulationEvent event) {
-    if (event.time <= time_) throw_exception("Event time needs to be in the future.");
-    if (!std::isfinite(event.time)) throw_exception("Event time needs to be finite.");
+    if (event.time <= time_) {
+        throw_exception("Event time needs to be in the future.");
+    }
+    if (!std::isfinite(event.time)) {
+        throw_exception("Event time needs to be finite.");
+    }
 
     events_.push(event);
 }
@@ -189,16 +206,16 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
 
 logic_small_vector_t get_input_values(const Circuit::ConstElement element,
                                       const logic_vector_t &input_values) {
-    return ranges::views::all(input_values)                 //
-           | ranges::views::drop(element.first_input_id())  //
-           | ranges::views::take(element.input_count())     //
+    return ranges::views::all(input_values)
+           | ranges::views::drop(element.first_input_id())
+           | ranges::views::take(element.input_count())
            | ranges::to<logic_small_vector_t>();
 }
 
 logic_small_vector_t get_output_values(const Circuit::ConstElement element,
                                        const logic_vector_t &input_values,
                                        const bool raise_missing) {
-    return element.outputs()  //
+    return element.outputs()
            | ranges::views::transform([&](const Circuit::ConstOutput output) {
                  return get_output_value(output, input_values, raise_missing);
              })
@@ -314,7 +331,8 @@ class SimulationTimer {
         : timeout_(timeout), start_time_(timeout_clock::now()) {};
 
     [[nodiscard]] bool reached_timeout() const noexcept {
-        return (std::chrono::steady_clock::now() - start_time_) > timeout_;
+        return (timeout_ != defaults::no_timeout)
+               && (std::chrono::steady_clock::now() - start_time_) > timeout_;
     }
 
    private:
@@ -336,7 +354,7 @@ void advance_simulation(SimulationState &state, const Circuit &circuit, time_t t
         process_event_group(state, circuit, state.queue.pop_event_group(), print_events);
 
         // we check here, so we process at least one group
-        if ((timeout != defaults::no_timeout) && timer.reached_timeout()) {
+        if (timer.reached_timeout()) {
             return;
         }
     }
@@ -450,8 +468,9 @@ void set_output_delay(const Circuit::ConstOutput output, delay_vector_t &output_
 
 void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
                       const time_t delay) {
-    if (!state.queue.empty())
+    if (!state.queue.empty()) {
         throw_exception("Cannot set output delay for state with scheduled events.");
+    }
 
     return set_output_delay(output, state.output_delays, delay);
 }
@@ -481,6 +500,7 @@ int benchmark_simulation(const int n_elements, bool print) {
         fmt::print("output_values = {::b}\n", output_values);
     }
 
-    return state.input_values.front() + output_values.front() + n_elements;
+    return static_cast<int>(state.input_values.front())
+           + static_cast<int>(output_values.front()) + n_elements;
 }
 }  // namespace logicsim
