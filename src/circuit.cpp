@@ -3,6 +3,23 @@
 
 namespace logicsim {
 
+std::string format(ElementType type) {
+    switch (type) {
+        case ElementType::placeholder:
+            return "Placeholder";
+        case ElementType::wire:
+            return "Wire";
+        case ElementType::inverter_element:
+            return "Inverter";
+        case ElementType::and_element:
+            return "AndElement";
+        case ElementType::or_element:
+            return "OrElement";
+        case ElementType::xor_element:
+            return "XorElement";
+    }
+}
+
 //
 // Circuit
 //

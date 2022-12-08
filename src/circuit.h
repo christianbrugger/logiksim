@@ -3,11 +3,13 @@
 
 #include "exceptions.h"
 
+#include <fmt/format.h>
 #include <range/v3/all.hpp>
 
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <string>
 #include <vector>
 
 namespace logicsim {
@@ -20,6 +22,8 @@ enum class ElementType : uint8_t {
     or_element,
     xor_element
 };
+
+std::string format(ElementType type);
 
 using element_id_t = int32_t;
 using connection_id_t = int32_t;
@@ -102,6 +106,8 @@ class Circuit::ElementTemplate {
 
     template <bool ConstOther>
     bool operator==(ElementTemplate<ConstOther> other) const noexcept;
+
+    [[nodiscard]] std::string format() const;
 
     [[nodiscard]] CircuitType *circuit() const noexcept;
     [[nodiscard]] element_id_t element_id() const noexcept;
@@ -270,6 +276,12 @@ template <bool ConstOther>
 bool Circuit::ElementTemplate<Const>::operator==(
     ElementTemplate<ConstOther> other) const noexcept {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_;
+}
+
+template <bool Const>
+std::string Circuit::ElementTemplate<Const>::format() const {
+    return fmt::format("<Element {}: {} {} x {}>", element_id(), element_type(),
+                       input_count(), output_count());
 }
 
 template <bool Const>
@@ -602,5 +614,32 @@ auto Circuit::OutputTemplate<Const>::connection_data_() const -> ConnectionDataT
 }
 
 }  // namespace logicsim
+
+template <>
+struct fmt::formatter<logicsim::ElementType> {
+    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+
+    auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::Circuit::Element> {
+    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+
+    auto format(const logicsim::Circuit::Element &obj, fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::Circuit::ConstElement> {
+    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+
+    auto format(const logicsim::Circuit::Element &obj, fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
 
 #endif

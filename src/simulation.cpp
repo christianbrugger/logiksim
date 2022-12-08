@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <random>
 
 namespace logicsim {
 
@@ -207,8 +208,8 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
 logic_small_vector_t get_input_values(const Circuit::ConstElement element,
                                       const logic_vector_t &input_values) {
     return ranges::views::all(input_values)
-           | ranges::views::drop(element.first_input_id())
-           | ranges::views::take(element.input_count())
+           | ranges::views::drop_exactly(element.first_input_id())
+           | ranges::views::take_exactly(element.input_count())
            | ranges::to<logic_small_vector_t>();
 }
 
@@ -479,23 +480,62 @@ void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
 // Benchmark
 //
 
-int benchmark_simulation(const int n_elements, bool print) {
+void add_random_element(Circuit &circuit, std::mt19937 &rng) {
+    std::uniform_int_distribution<> element_dist {0, 1};
+    std::uniform_int_distribution<> connection_dist {1, 8};
+
+    const auto element_type {element_dist(rng) == 0 ? ElementType::xor_element
+                                                    : ElementType::wire};
+
+    const auto input_count {static_cast<connection_size_t>(
+        element_type == ElementType::wire ? 1 : connection_dist(rng))};
+    const auto output_count {static_cast<connection_size_t>(
+        element_type == ElementType::wire ? connection_dist(rng) : 1)};
+
+    circuit.add_element(element_type, input_count, output_count);
+}
+
+auto try_add_random_connection(Circuit &circuit, std::mt19937 &rng) -> bool {
+    auto element_id_dist
+        = std::uniform_int_distribution<element_id_t> {0, circuit.element_count() - 1};
+
+    auto element_1 = circuit.element(element_id_dist(rng));
+    auto element_2 = circuit.element(element_id_dist(rng));
+
+    auto input = element_1.input(static_cast<connection_size_t>(
+        std::uniform_int_distribution<> {0, element_1.input_count() - 1}(rng)));
+    auto output = element_2.output(static_cast<connection_size_t>(
+        std::uniform_int_distribution<> {0, element_2.output_count() - 1}(rng)));
+
+    if (input.has_connected_element() || output.has_connected_element()) {
+        return false;
+    }
+    input.connect(output);
+    return true;
+}
+
+int benchmark_simulation(const int n_elements, const int n_events, const bool print) {
+    std::mt19937 rng {0};
+
     Circuit circuit;
-
-    const auto elem0 {circuit.add_element(ElementType::or_element, 2, 1)};
-    elem0.output(0).connect(elem0.input(0));
-
-    SimulationState state {circuit};
-    state.queue.submit_event({0.1, elem0.element_id(), 0, true});
-    state.queue.submit_event({0.1, elem0.element_id(), 1, true});
-    state.queue.submit_event({0.5, elem0.element_id(), 1, false});
+    // create elements
+    ranges::for_each(ranges::views::iota(0, n_elements),
+                     [&](auto) { add_random_element(circuit, rng); });
+    // add connections
+    ranges::for_each(ranges::views::iota(0, n_elements), [&](auto) {
+        while (!try_add_random_connection(circuit, rng)) {
+        }
+    });
 
     add_output_placeholders(circuit);
+    SimulationState state {circuit};
+
     advance_simulation(state, circuit, defaults::until_steady, defaults::no_timeout,
                        print);
     auto output_values {get_all_output_values(state.input_values, circuit)};
 
     if (print) {
+        std::cout << n_events;
         fmt::print("input_values = {::b}\n", state.input_values);
         fmt::print("output_values = {::b}\n", output_values);
     }

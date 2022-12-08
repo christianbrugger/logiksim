@@ -186,7 +186,7 @@ void set_output_delay(Circuit::ConstOutput output, delay_vector_t &output_delays
                       time_t delay);
 void set_output_delay(Circuit::ConstOutput output, SimulationState &state, time_t delay);
 
-int benchmark_simulation(int n_elements = 100, bool print = false);
+int benchmark_simulation(int n_elements = 100, int n_events = 10'000, bool print = false);
 
 }  // namespace logicsim
 
