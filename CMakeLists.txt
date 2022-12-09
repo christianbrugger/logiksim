@@ -35,6 +35,10 @@ if (MSVC)
     list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
     # unreachable code warnings when using range-v3 templates
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
+    # if should be constexpr in folly
+    list(APPEND MAIN_COMPILE_OPTIONS /wd4127)
+    # folly structure was padded due to alignment specifier
+    list(APPEND MAIN_COMPILE_OPTIONS /wd4324)
     #set(MAIN_LINK_OPTIONS dbgeng.lib)
     set(MAIN_COMPILE_DEFINITIONS BOOST_STACKTRACE_USE_WINDBG)
 else()

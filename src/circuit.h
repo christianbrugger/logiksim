@@ -153,6 +153,8 @@ class Circuit::InputTemplate {
     template <bool ConstOther>
     bool operator==(InputTemplate<ConstOther> other) const noexcept;
 
+    [[nodiscard]] std::string format() const;
+
     [[nodiscard]] CircuitType *circuit() const noexcept;
     [[nodiscard]] element_id_t element_id() const noexcept;
     [[nodiscard]] connection_size_t input_index() const noexcept;
@@ -201,6 +203,8 @@ class Circuit::OutputTemplate {
 
     template <bool ConstOther>
     bool operator==(OutputTemplate<ConstOther> other) const noexcept;
+
+    [[nodiscard]] std::string format() const;
 
     [[nodiscard]] CircuitType *circuit() const noexcept;
     [[nodiscard]] element_id_t element_id() const noexcept;
@@ -351,16 +355,19 @@ auto Circuit::ElementTemplate<Const>::output(connection_size_t output) const
 
 template <bool Const>
 inline auto Circuit::ElementTemplate<Const>::inputs() const {
+    // We capture the element by value. This is because elements are temporary objects
+    // and might be discarded before the lambda is evaluated. Also its very cheap.
     return ranges::views::iota(0, input_count())
            | ranges::views::transform(
-               [this](int i) { return this->input(static_cast<connection_size_t>(i)); });
+               [*this](int i) { return this->input(static_cast<connection_size_t>(i)); });
 }
 
 template <bool Const>
 inline auto Circuit::ElementTemplate<Const>::outputs() const {
     return ranges::views::iota(0, output_count())
-           | ranges::views::transform(
-               [this](int i) { return this->output(static_cast<connection_size_t>(i)); });
+           | ranges::views::transform([*this](int i) {
+                 return this->output(static_cast<connection_size_t>(i));
+             });
 }
 
 template <bool Const>
@@ -398,6 +405,14 @@ bool Circuit::InputTemplate<Const>::operator==(
     InputTemplate<ConstOther> other) const noexcept {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_
            && input_index_ == other.input_index_ && input_index_ == other.input_index_;
+}
+
+template <bool Const>
+std::string Circuit::InputTemplate<Const>::format() const {
+    const auto element = this->element();
+    return fmt::format("<Input {} of Element {}: {} {} x {}>", input_index(),
+                       element_id(), element.element_type(), element.input_count(),
+                       element.output_count());
 }
 
 template <bool Const>
@@ -524,6 +539,14 @@ bool Circuit::OutputTemplate<Const>::operator==(
 }
 
 template <bool Const>
+std::string Circuit::OutputTemplate<Const>::format() const {
+    const auto element = this->element();
+    return fmt::format("<Output {} of Element {}: {} {} x {}>", output_index(),
+                       element_id(), element.element_type(), element.input_count(),
+                       element.output_count());
+}
+
+template <bool Const>
 auto Circuit::OutputTemplate<Const>::circuit() const noexcept -> CircuitType * {
     return circuit_;
 }
@@ -638,6 +661,44 @@ struct fmt::formatter<logicsim::Circuit::ConstElement> {
     constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
     auto format(const logicsim::Circuit::Element &obj, fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::Circuit::Input> {
+    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+
+    auto format(const logicsim::Circuit::Input &obj, fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::Circuit::ConstInput> {
+    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+
+    auto format(const logicsim::Circuit::ConstInput &obj,
+                fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::Circuit::Output> {
+    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+
+    auto format(const logicsim::Circuit::Output &obj, fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::Circuit::ConstOutput> {
+    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+
+    auto format(const logicsim::Circuit::ConstOutput &obj,
+                fmt::format_context &ctx) const {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };

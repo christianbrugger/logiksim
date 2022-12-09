@@ -18,6 +18,7 @@ std::string format(ElementType type) {
         case ElementType::xor_element:
             return "XorElement";
     }
+    throw_exception("Don't know how to convert ElementType to string.");
 }
 
 //

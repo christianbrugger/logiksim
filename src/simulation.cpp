@@ -496,6 +496,10 @@ void add_random_element(Circuit &circuit, std::mt19937 &rng) {
 }
 
 auto try_add_random_connection(Circuit &circuit, std::mt19937 &rng) -> bool {
+    if (circuit.element_count() == 0) {
+        return false;
+    }
+
     auto element_id_dist
         = std::uniform_int_distribution<element_id_t> {0, circuit.element_count() - 1};
 
@@ -521,7 +525,32 @@ int benchmark_simulation(const int n_elements, const int n_events, const bool pr
     // create elements
     ranges::for_each(ranges::views::iota(0, n_elements),
                      [&](auto) { add_random_element(circuit, rng); });
-    // add connections
+
+    auto all_inputs
+        = circuit.elements()
+          | ranges::views::transform([](auto element) { return element.inputs(); })
+          | ranges::views::join  //
+          | ranges::to_vector;
+    auto all_outputs
+        = circuit.elements()
+          | ranges::views::transform([](auto element) { return element.outputs(); })
+          | ranges::views::join  //
+          | ranges::to_vector;
+    ;
+    fmt::print("{}\n", all_inputs);
+    fmt::print("{} x {}\n", std::size(all_inputs), std::size(all_outputs));
+    // for (const auto &element : all_inputs) {
+    //     fmt::print("{}\n", element);
+    // }
+    //| ranges::views::join  //
+    //| ranges::to_vector;
+    //   for (const auto &a : all_inputs) {
+    //      for (const auto &i : a) {
+    //          fmt::print("{}\n", i);
+    //      }
+    //  }
+
+    //   add connections
     ranges::for_each(ranges::views::iota(0, n_elements), [&](auto) {
         while (!try_add_random_connection(circuit, rng)) {
         }
@@ -540,7 +569,8 @@ int benchmark_simulation(const int n_elements, const int n_events, const bool pr
         fmt::print("output_values = {::b}\n", output_values);
     }
 
-    return static_cast<int>(state.input_values.front())
-           + static_cast<int>(output_values.front()) + n_elements;
+    return (state.input_values.empty() ? 0 : static_cast<int>(state.input_values.front()))
+           + (output_values.empty() ? 0 : static_cast<int>(output_values.front()))
+           + n_elements;
 }
 }  // namespace logicsim
