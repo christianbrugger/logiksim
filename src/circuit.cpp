@@ -29,6 +29,8 @@ element_id_t Circuit::element_count() const noexcept {
     return static_cast<element_id_t>(element_data_store_.size());
 }
 
+auto Circuit::empty() const noexcept -> bool { return element_data_store_.empty(); }
+
 bool Circuit::is_element_id_valid(element_id_t element_id) const noexcept {
     return element_id >= 0 && element_id < element_count();
 }
@@ -81,6 +83,12 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
 
     element_id_t element_id {static_cast<element_id_t>(element_data_store_.size() - 1)};
     return element(element_id);
+}
+
+auto Circuit::clear() -> void {
+    element_data_store_.clear();
+    output_data_store_.clear();
+    input_data_store_.clear();
 }
 
 connection_id_t Circuit::total_input_count() const noexcept {

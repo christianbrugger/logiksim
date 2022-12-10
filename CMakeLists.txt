@@ -22,6 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MSVC)
 	add_compile_options(/EHsc)
 	add_compile_options(/arch:AVX2)
+	# add_link_options(/PROFILE)
 else()
 endif()
 
@@ -71,7 +72,7 @@ add_subdirectory(external/blend2d EXCLUDE_FROM_ALL)
 add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL)
 # fmt
 add_subdirectory(external/fmt EXCLUDE_FROM_ALL)
-# gsl
+# GSL
 add_subdirectory(external/GSL EXCLUDE_FROM_ALL)
 # abseil
 add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL)
@@ -124,6 +125,7 @@ add_executable(${MAIN_BENCHMARK_TARGET}
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
+    src/timer.h src/timer.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
     Boost::container Boost::stacktrace_windbg Boost::mpl
@@ -131,6 +133,7 @@ target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE
     fmt::fmt
     folly
     absl::base
+    GSL
 
     benchmark::benchmark
 )
@@ -147,6 +150,7 @@ add_executable(${MAIN_TARGET}
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
+    src/timer.h src/timer.cpp
     
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
@@ -155,6 +159,7 @@ target_link_libraries(${MAIN_TARGET} PRIVATE
     fmt::fmt
     folly
     absl::base
+    GSL
 )
 target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 target_link_options(${MAIN_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
@@ -168,6 +173,7 @@ add_executable(${MAIN_GUI_TARGET}
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
+    src/timer.h src/timer.cpp
     
 
     src/render_widget.h src/render_widget.cpp 
@@ -180,6 +186,7 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
     fmt::fmt
     folly
     absl::base
+    GSL
 
     Qt6::Widgets
     Qt6::OpenGLWidgets
@@ -197,6 +204,7 @@ add_executable(${MAIN_TEST_TARGET}
     src/simulation.h src/simulation.cpp 
     src/algorithms.h src/algorithm.cpp
     src/exceptions.h src/exceptions.cpp
+    src/timer.h src/timer.cpp
     
     test/circuit_test.cpp
     test/simulation_test.cpp
@@ -210,6 +218,7 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     fmt::fmt
     folly
     absl::base
+    GSL
     
     GTest::gtest
     GTest::gmock

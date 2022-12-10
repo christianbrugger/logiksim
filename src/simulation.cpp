@@ -2,9 +2,11 @@
 #include "simulation.h"
 
 #include "algorithms.h"
+#include "timer.h"
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <gsl/gsl>
 #include <range/v3/all.hpp>
 
 #include <algorithm>
@@ -518,44 +520,117 @@ auto try_add_random_connection(Circuit &circuit, std::mt19937 &rng) -> bool {
     return true;
 }
 
-int benchmark_simulation(const int n_elements, const int n_events, const bool print) {
-    std::mt19937 rng {0};
+void create_connections_random(Circuit &circuit, std::mt19937 &rng, int n_connections) {
+    // Timer t {"Creating connections 1", Timer::Unit::ms};
+    ranges::for_each(ranges::views::iota(0, n_connections), [&](auto) {
+        while (!try_add_random_connection(circuit, rng)) {
+        }
+    });
+}
 
-    Circuit circuit;
-    // create elements
-    ranges::for_each(ranges::views::iota(0, n_elements),
-                     [&](auto) { add_random_element(circuit, rng); });
+void create_connections_shuffle(Circuit &circuit, std::mt19937 &rng,
+                                float connection_ratio) {
+    // Timer t {"Creating connections 2", Timer::Unit::ms};
 
     auto all_inputs
         = circuit.elements()
           | ranges::views::transform([](auto element) { return element.inputs(); })
-          | ranges::views::join  //
-          | ranges::to_vector;
+          | ranges::views::join | ranges::to_vector | ranges::actions::shuffle(rng);
     auto all_outputs
         = circuit.elements()
           | ranges::views::transform([](auto element) { return element.outputs(); })
-          | ranges::views::join  //
-          | ranges::to_vector;
-    ;
-    fmt::print("{}\n", all_inputs);
-    fmt::print("{} x {}\n", std::size(all_inputs), std::size(all_outputs));
-    // for (const auto &element : all_inputs) {
-    //     fmt::print("{}\n", element);
-    // }
-    //| ranges::views::join  //
-    //| ranges::to_vector;
-    //   for (const auto &a : all_inputs) {
-    //      for (const auto &i : a) {
-    //          fmt::print("{}\n", i);
-    //      }
-    //  }
+          | ranges::views::join | ranges::to_vector | ranges::actions::shuffle(rng);
 
-    //   add connections
-    ranges::for_each(ranges::views::iota(0, n_elements), [&](auto) {
-        while (!try_add_random_connection(circuit, rng)) {
+    auto n_connections = gsl::narrow<std::size_t>(
+        std::round(connection_ratio
+                   * std::min(ranges::size(all_inputs), ranges::size(all_outputs))));
+
+    {
+        ranges::for_each(ranges::views::zip(all_inputs, all_outputs)
+                             | ranges::views::take_exactly(n_connections),
+                         [](const auto pair) {
+                             const auto [input, output] = pair;
+                             input.connect(output);
+                         });
+    }
+}
+
+void create_connections_shuffle_loops(Circuit &circuit, std::mt19937 &rng,
+                                      int n_connections) {
+    // Timer t {"Creating connections 3", Timer::Unit::ms};
+
+    std::vector<Circuit::Input> all_inputs;
+    std::vector<Circuit::Output> all_outputs;
+
+    {
+        // Timer t {"   collect", Timer::Unit::ms};
+        for (auto element : circuit.elements()) {
+            for (auto input : element.inputs()) {
+                all_inputs.push_back(input);
+            }
+            for (auto output : element.outputs()) {
+                all_outputs.push_back(output);
+            }
         }
-    });
+    }
 
+    {
+        // Timer t {"   shuffle", Timer::Unit::ms};
+        std::shuffle(std::begin(all_inputs), std::end(all_inputs), rng);
+        std::shuffle(std::begin(all_outputs), std::end(all_outputs), rng);
+    }
+
+    {
+        // Timer t {"   connect", Timer::Unit::ms};
+        for (int i = 0; i < n_connections; ++i) {
+            all_inputs[i].connect(all_outputs[i]);
+        }
+    }
+}
+
+int benchmark_simulation(int type, const int n_elements,
+                         [[maybe_unused]] const int n_events,
+                         [[maybe_unused]] const bool print) {
+    std::mt19937 rng {0};
+
+    Circuit circuit;
+
+    int n_connections = 2 * n_elements;
+
+    if (type == 0) {
+        {
+            // Timer t {"Creating elements", Timer::Unit::ms};
+            // create elements
+            ranges::for_each(ranges::views::iota(0, n_elements),
+                             [&](auto) { add_random_element(circuit, rng); });
+        }
+
+        create_connections_random(circuit, rng, n_connections);
+    }
+
+    if (type == 1) {
+        {
+            // Timer t {"Creating elements", Timer::Unit::ms};
+            // create elements
+            ranges::for_each(ranges::views::iota(0, n_elements),
+                             [&](auto) { add_random_element(circuit, rng); });
+        }
+
+        create_connections_shuffle(circuit, rng, 0.75);
+    }
+
+    if (type == 2) {
+        {
+            // Timer t {"Creating elements", Timer::Unit::ms};
+            // create elements
+            ranges::for_each(ranges::views::iota(0, n_elements),
+                             [&](auto) { add_random_element(circuit, rng); });
+        }
+
+        create_connections_shuffle_loops(circuit, rng, n_connections);
+    }
+
+    /*
     add_output_placeholders(circuit);
     SimulationState state {circuit};
 
@@ -572,5 +647,7 @@ int benchmark_simulation(const int n_elements, const int n_events, const bool pr
     return (state.input_values.empty() ? 0 : static_cast<int>(state.input_values.front()))
            + (output_values.empty() ? 0 : static_cast<int>(output_values.front()))
            + n_elements;
+    */
+    return circuit.total_input_count();
 }
 }  // namespace logicsim

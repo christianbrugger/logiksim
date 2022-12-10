@@ -186,10 +186,14 @@ auto main() -> int {
     /// TODO consider: ios_base::sync_with_stdio(false);
     /// SL.io.10 in https://isocpp.github.io/CppCoreGuidelines/
 
-    print_all_sizes();
+    // print_all_sizes();
 
     try {
-        benchmark_simulation(100, true);
+        for ([[maybe_unused]] auto _ : ranges::views::iota(0, 10)) {
+            benchmark_simulation(0, 100000, true);
+            benchmark_simulation(1, 100000, true);
+            benchmark_simulation(2, 100000, true);
+        }
         // Circuit circuit;
         // auto test = circuit.element(0);
         // test.element_id();

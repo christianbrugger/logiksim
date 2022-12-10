@@ -228,15 +228,37 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 
 BENCHMARK(BM_Benchmark_Graph_v2);  // NOLINT
 
-static void BM_Simulation(benchmark::State& state) {
+static void BM_Simulation_0(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
-        auto res = logicsim::benchmark_simulation();
+        auto res = logicsim::benchmark_simulation(0, 1000);
 
         benchmark::DoNotOptimize(res);
         benchmark::ClobberMemory();
     }
 }
 
-BENCHMARK(BM_Simulation);  // NOLINT
+BENCHMARK(BM_Simulation_0);  // NOLINT
+
+static void BM_Simulation_1(benchmark::State& state) {
+    for ([[maybe_unused]] auto _ : state) {
+        auto res = logicsim::benchmark_simulation(1, 1000);
+
+        benchmark::DoNotOptimize(res);
+        benchmark::ClobberMemory();
+    }
+}
+
+BENCHMARK(BM_Simulation_1);  // NOLINT
+
+static void BM_Simulation_2(benchmark::State& state) {
+    for ([[maybe_unused]] auto _ : state) {
+        auto res = logicsim::benchmark_simulation(2, 1000);
+
+        benchmark::DoNotOptimize(res);
+        benchmark::ClobberMemory();
+    }
+}
+
+BENCHMARK(BM_Simulation_2);  // NOLINT
 
 BENCHMARK_MAIN();  // NOLINT

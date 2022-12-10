@@ -52,6 +52,7 @@ class Circuit {
     using ConstOutput = OutputTemplate<true>;
 
     [[nodiscard]] element_id_t element_count() const noexcept;
+    [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] bool is_element_id_valid(element_id_t element_id) const noexcept;
     [[nodiscard]] connection_id_t total_input_count() const noexcept;
     [[nodiscard]] connection_id_t total_output_count() const noexcept;
@@ -63,6 +64,7 @@ class Circuit {
 
     Element add_element(ElementType type, connection_size_t input_count,
                         connection_size_t output_count);
+    auto clear() -> void;
 
     void validate(bool require_all_outputs_connected = false) const;
 
