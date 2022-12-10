@@ -190,9 +190,7 @@ auto main() -> int {
 
     try {
         for ([[maybe_unused]] auto _ : ranges::views::iota(0, 10)) {
-            benchmark_simulation(0, 100000, true);
-            benchmark_simulation(1, 100000, true);
-            benchmark_simulation(2, 100000, true);
+            benchmark_simulation(100, 100'000, false);
         }
         // Circuit circuit;
         // auto test = circuit.element(0);

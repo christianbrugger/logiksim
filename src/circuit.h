@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -241,6 +242,9 @@ class Circuit::OutputTemplate {
 void add_output_placeholders(Circuit &circuit);
 
 Circuit benchmark_circuit(int n_elements = 100);
+
+Circuit create_random_circuit(std::mt19937 &rng, int n_elements = 100,
+                              float connection_ratio = 0.75);
 
 //
 // Circuit

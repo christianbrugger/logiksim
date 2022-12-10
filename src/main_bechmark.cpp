@@ -229,36 +229,18 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 BENCHMARK(BM_Benchmark_Graph_v2);  // NOLINT
 
 static void BM_Simulation_0(benchmark::State& state) {
+    int64_t count = 0;
     for ([[maybe_unused]] auto _ : state) {
-        auto res = logicsim::benchmark_simulation(0, 1000);
+        auto res = logicsim::benchmark_simulation(100);
 
         benchmark::DoNotOptimize(res);
         benchmark::ClobberMemory();
+
+        count += 10'000;
     }
+    state.counters["Events"] = benchmark::Counter(count, benchmark::Counter::kIsRate);
 }
 
 BENCHMARK(BM_Simulation_0);  // NOLINT
-
-static void BM_Simulation_1(benchmark::State& state) {
-    for ([[maybe_unused]] auto _ : state) {
-        auto res = logicsim::benchmark_simulation(1, 1000);
-
-        benchmark::DoNotOptimize(res);
-        benchmark::ClobberMemory();
-    }
-}
-
-BENCHMARK(BM_Simulation_1);  // NOLINT
-
-static void BM_Simulation_2(benchmark::State& state) {
-    for ([[maybe_unused]] auto _ : state) {
-        auto res = logicsim::benchmark_simulation(2, 1000);
-
-        benchmark::DoNotOptimize(res);
-        benchmark::ClobberMemory();
-    }
-}
-
-BENCHMARK(BM_Simulation_2);  // NOLINT
 
 BENCHMARK_MAIN();  // NOLINT

@@ -1,6 +1,8 @@
 
 #include "circuit.h"
 
+#include <gsl/gsl>
+
 namespace logicsim {
 
 std::string format(ElementType type) {
@@ -202,7 +204,7 @@ void add_element_placeholders(Circuit::Element element) {
     ranges::for_each(element.outputs(), add_placeholder);
 }
 
-void add_output_placeholders(Circuit& circuit) {
+void add_output_placeholders(Circuit &circuit) {
     ranges::for_each(circuit.elements(), add_element_placeholders);
 }
 
@@ -225,6 +227,66 @@ Circuit benchmark_circuit(const int n_elements) {
         elem0 = elem1;
     }
 
+    return circuit;
+}
+
+void add_random_element(Circuit &circuit, std::mt19937 &rng) {
+    std::uniform_int_distribution<> element_dist {0, 2};
+    std::uniform_int_distribution<> connection_dist {1, 8};
+
+    const auto element_type {element_dist(rng) == 0
+                                 ? ElementType::xor_element
+                                 : (element_dist(rng) == 1 ? ElementType::inverter_element
+                                                           : ElementType ::wire)};
+
+    const auto input_count = gsl::narrow<connection_size_t>(
+        element_type == ElementType::xor_element ? connection_dist(rng) : 1);
+
+    const auto output_count = gsl::narrow<connection_size_t>(
+        element_type == ElementType::wire ? connection_dist(rng) : 1);
+
+    circuit.add_element(element_type, input_count, output_count);
+}
+
+void create_random_elements(Circuit &circuit, std::mt19937 &rng, int n_elements) {
+    ranges::for_each(ranges::views::iota(0, n_elements),
+                     [&](auto) { add_random_element(circuit, rng); });
+}
+
+void create_random_connections(Circuit &circuit, std::mt19937 &rng,
+                               float connection_ratio) {
+    if (connection_ratio == 0) {
+        return;
+    }
+    if (connection_ratio < 0 || connection_ratio > 1) [[unlikely]] {
+        throw_exception("connection ratio needs to be between 0 and 1.");
+    }
+
+    auto all_inputs
+        = circuit.elements()
+          | ranges::views::transform([](auto element) { return element.inputs(); })
+          | ranges::views::join | ranges::to_vector | ranges::actions::shuffle(rng);
+    auto all_outputs
+        = circuit.elements()
+          | ranges::views::transform([](auto element) { return element.outputs(); })
+          | ranges::views::join | ranges::to_vector | ranges::actions::shuffle(rng);
+
+    auto n_connections = gsl::narrow<std::size_t>(
+        std::round(connection_ratio
+                   * std::min(ranges::size(all_inputs), ranges::size(all_outputs))));
+
+    ranges::for_each(ranges::views::zip(all_inputs, all_outputs)
+                         | ranges::views::take_exactly(n_connections),
+                     [](const auto pair) {
+                         const auto [input, output] = pair;
+                         input.connect(output);
+                     });
+}
+
+Circuit create_random_circuit(std::mt19937 &rng, int n_elements, float connection_ratio) {
+    Circuit circuit;
+    create_random_elements(circuit, rng, n_elements);
+    create_random_connections(circuit, rng, connection_ratio);
     return circuit;
 }
 

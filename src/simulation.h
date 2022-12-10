@@ -129,6 +129,7 @@ using timeout_t = timeout_clock::duration;
 namespace defaults {
 constexpr auto no_timeout = timeout_t::max();
 constexpr auto until_steady = std::numeric_limits<time_t>::infinity();
+constexpr int64_t no_max_events = 0;
 }  // namespace defaults
 
 /// @brief Advance the simulation by changing the given simulations state
@@ -138,10 +139,11 @@ constexpr auto until_steady = std::numeric_limits<time_t>::infinity();
 ///                       no more new events are generated
 /// @param timeout        return if simulation takes longer than this in realtime
 /// @param print_events   if true print each processed event information
-void advance_simulation(SimulationState &state, const Circuit &circuit,
-                        time_t time_delta = defaults::until_steady,
-                        timeout_t timeout = defaults::no_timeout,
-                        bool print_events = false);
+int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
+                           time_t time_delta = defaults::until_steady,
+                           timeout_t timeout = defaults::no_timeout,
+                           int64_t max_events = defaults::no_max_events,
+                           bool print_events = false);
 
 [[nodiscard]] SimulationState simulate_circuit(Circuit &circuit,
                                                time_t time_delta = defaults::until_steady,
@@ -186,8 +188,8 @@ void set_output_delay(Circuit::ConstOutput output, delay_vector_t &output_delays
                       time_t delay);
 void set_output_delay(Circuit::ConstOutput output, SimulationState &state, time_t delay);
 
-int benchmark_simulation(int type, int n_elements = 100, int n_events = 10'000,
-                         bool print = false);
+double benchmark_simulation(int n_elements = 100, int n_events = 10'000,
+                            bool print = false);
 
 }  // namespace logicsim
 

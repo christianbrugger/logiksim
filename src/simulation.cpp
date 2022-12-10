@@ -290,14 +290,13 @@ void create_event(SimulationQueue &queue, Circuit::ConstOutput output,
 
 void process_event_group(SimulationState &state, const Circuit &circuit,
                          event_group_t &&events, bool print_events = false) {
+    if (print_events) {
+        fmt::print("events: {:n:}\n", events);
+    }
     if (events.empty()) {
         return;
     }
     validate(events);
-
-    if (print_events) {
-        fmt::print("events: {:n:}\n", events);
-    }
 
     const Circuit::ConstElement element {circuit.element(events.front().element_id)};
 
@@ -343,28 +342,35 @@ class SimulationTimer {
     time_point start_time_;
 };
 
-void advance_simulation(SimulationState &state, const Circuit &circuit, time_t time_delta,
-                        timeout_t timeout, bool print_events) {
+int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
+                           time_t time_delta, timeout_t timeout, int64_t max_events,
+                           bool print_events) {
     if (time_delta <= 0) [[unlikely]] {
         throw_exception("time_delta needs to be positive.");
+    }
+    if (max_events < 0) [[unlikely]] {
+        throw_exception("max events needs to be positive or zero.");
     }
     check_input_size(state, circuit);
 
     const SimulationTimer timer {timeout};
     const auto queue_end_time {state.queue.time() + time_delta};
+    int64_t event_count = 0;
 
     while (!state.queue.empty() && state.queue.next_event_time() < queue_end_time) {
         process_event_group(state, circuit, state.queue.pop_event_group(), print_events);
+        ++event_count;
 
         // we check here, so we process at least one group
-        if (timer.reached_timeout()) {
-            return;
+        if (timer.reached_timeout() || (event_count == max_events)) [[unlikely]] {
+            return event_count;
         }
     }
 
     if (std::isfinite(time_delta)) {
         state.queue.set_time(queue_end_time);
     }
+    return event_count;
 }
 
 void initialize_simulation(SimulationState &state, const Circuit &circuit) {
@@ -415,7 +421,8 @@ SimulationState simulate_circuit(Circuit &circuit, time_t time_delta, timeout_t 
     SimulationState state {circuit};
     initialize_simulation(state, circuit);
 
-    advance_simulation(state, circuit, time_delta, timeout, print_events);
+    advance_simulation(state, circuit, time_delta, timeout, defaults::no_max_events,
+                       print_events);
     return state;
 }
 
@@ -482,172 +489,34 @@ void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
 // Benchmark
 //
 
-void add_random_element(Circuit &circuit, std::mt19937 &rng) {
-    std::uniform_int_distribution<> element_dist {0, 1};
-    std::uniform_int_distribution<> connection_dist {1, 8};
-
-    const auto element_type {element_dist(rng) == 0 ? ElementType::xor_element
-                                                    : ElementType::wire};
-
-    const auto input_count {static_cast<connection_size_t>(
-        element_type == ElementType::wire ? 1 : connection_dist(rng))};
-    const auto output_count {static_cast<connection_size_t>(
-        element_type == ElementType::wire ? connection_dist(rng) : 1)};
-
-    circuit.add_element(element_type, input_count, output_count);
-}
-
-auto try_add_random_connection(Circuit &circuit, std::mt19937 &rng) -> bool {
-    if (circuit.element_count() == 0) {
-        return false;
-    }
-
-    auto element_id_dist
-        = std::uniform_int_distribution<element_id_t> {0, circuit.element_count() - 1};
-
-    auto element_1 = circuit.element(element_id_dist(rng));
-    auto element_2 = circuit.element(element_id_dist(rng));
-
-    auto input = element_1.input(static_cast<connection_size_t>(
-        std::uniform_int_distribution<> {0, element_1.input_count() - 1}(rng)));
-    auto output = element_2.output(static_cast<connection_size_t>(
-        std::uniform_int_distribution<> {0, element_2.output_count() - 1}(rng)));
-
-    if (input.has_connected_element() || output.has_connected_element()) {
-        return false;
-    }
-    input.connect(output);
-    return true;
-}
-
-void create_connections_random(Circuit &circuit, std::mt19937 &rng, int n_connections) {
-    // Timer t {"Creating connections 1", Timer::Unit::ms};
-    ranges::for_each(ranges::views::iota(0, n_connections), [&](auto) {
-        while (!try_add_random_connection(circuit, rng)) {
-        }
-    });
-}
-
-void create_connections_shuffle(Circuit &circuit, std::mt19937 &rng,
-                                float connection_ratio) {
-    // Timer t {"Creating connections 2", Timer::Unit::ms};
-
-    auto all_inputs
-        = circuit.elements()
-          | ranges::views::transform([](auto element) { return element.inputs(); })
-          | ranges::views::join | ranges::to_vector | ranges::actions::shuffle(rng);
-    auto all_outputs
-        = circuit.elements()
-          | ranges::views::transform([](auto element) { return element.outputs(); })
-          | ranges::views::join | ranges::to_vector | ranges::actions::shuffle(rng);
-
-    auto n_connections = gsl::narrow<std::size_t>(
-        std::round(connection_ratio
-                   * std::min(ranges::size(all_inputs), ranges::size(all_outputs))));
-
-    {
-        ranges::for_each(ranges::views::zip(all_inputs, all_outputs)
-                             | ranges::views::take_exactly(n_connections),
-                         [](const auto pair) {
-                             const auto [input, output] = pair;
-                             input.connect(output);
-                         });
-    }
-}
-
-void create_connections_shuffle_loops(Circuit &circuit, std::mt19937 &rng,
-                                      int n_connections) {
-    // Timer t {"Creating connections 3", Timer::Unit::ms};
-
-    std::vector<Circuit::Input> all_inputs;
-    std::vector<Circuit::Output> all_outputs;
-
-    {
-        // Timer t {"   collect", Timer::Unit::ms};
-        for (auto element : circuit.elements()) {
-            for (auto input : element.inputs()) {
-                all_inputs.push_back(input);
-            }
-            for (auto output : element.outputs()) {
-                all_outputs.push_back(output);
-            }
-        }
-    }
-
-    {
-        // Timer t {"   shuffle", Timer::Unit::ms};
-        std::shuffle(std::begin(all_inputs), std::end(all_inputs), rng);
-        std::shuffle(std::begin(all_outputs), std::end(all_outputs), rng);
-    }
-
-    {
-        // Timer t {"   connect", Timer::Unit::ms};
-        for (int i = 0; i < n_connections; ++i) {
-            all_inputs[i].connect(all_outputs[i]);
-        }
-    }
-}
-
-int benchmark_simulation(int type, const int n_elements,
-                         [[maybe_unused]] const int n_events,
-                         [[maybe_unused]] const bool print) {
+double benchmark_simulation(const int n_elements, const int n_events, const bool print) {
     std::mt19937 rng {0};
 
-    Circuit circuit;
+    auto circuit = create_random_circuit(rng, n_elements, 0.75f);
 
-    int n_connections = 2 * n_elements;
-
-    if (type == 0) {
-        {
-            // Timer t {"Creating elements", Timer::Unit::ms};
-            // create elements
-            ranges::for_each(ranges::views::iota(0, n_elements),
-                             [&](auto) { add_random_element(circuit, rng); });
-        }
-
-        create_connections_random(circuit, rng, n_connections);
-    }
-
-    if (type == 1) {
-        {
-            // Timer t {"Creating elements", Timer::Unit::ms};
-            // create elements
-            ranges::for_each(ranges::views::iota(0, n_elements),
-                             [&](auto) { add_random_element(circuit, rng); });
-        }
-
-        create_connections_shuffle(circuit, rng, 0.75);
-    }
-
-    if (type == 2) {
-        {
-            // Timer t {"Creating elements", Timer::Unit::ms};
-            // create elements
-            ranges::for_each(ranges::views::iota(0, n_elements),
-                             [&](auto) { add_random_element(circuit, rng); });
-        }
-
-        create_connections_shuffle_loops(circuit, rng, n_connections);
-    }
-
-    /*
     add_output_placeholders(circuit);
+    // circuit.validate(true);
     SimulationState state {circuit};
+    initialize_simulation(state, circuit);
 
-    advance_simulation(state, circuit, defaults::until_steady, defaults::no_timeout,
-                       print);
-    auto output_values {get_all_output_values(state.input_values, circuit)};
+    Timer t;
+    auto n_sim = advance_simulation(state, circuit, defaults::until_steady,
+                                    defaults::no_timeout, n_events, print);
+    double events_per_seconds = n_sim / t.delta().count();
+    // fmt::print("{:.1f}M events / s\n", events_per_seconds / 1e6);
+
+    if (n_sim != n_events) [[unlikely]] {
+        throw_exception("need to implement triggering of random events");
+    }
 
     if (print) {
-        std::cout << n_events;
+        auto output_values {get_all_output_values(state.input_values, circuit)};
+
+        fmt::print("{}\n", n_sim);
         fmt::print("input_values = {::b}\n", state.input_values);
         fmt::print("output_values = {::b}\n", output_values);
     }
 
-    return (state.input_values.empty() ? 0 : static_cast<int>(state.input_values.front()))
-           + (output_values.empty() ? 0 : static_cast<int>(output_values.front()))
-           + n_elements;
-    */
-    return circuit.total_input_count();
+    return events_per_seconds;
 }
 }  // namespace logicsim
