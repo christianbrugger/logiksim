@@ -203,7 +203,8 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
             return {ranges::count_if(input, std::identity {}) == 1};
 
         default:
-            return {};
+            [[unlikely]] throw_exception(
+                "Unknown type encountered in calculate_outputs.");
     }
 }
 
@@ -358,11 +359,13 @@ int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
     int64_t event_count = 0;
 
     while (!state.queue.empty() && state.queue.next_event_time() < queue_end_time) {
-        process_event_group(state, circuit, state.queue.pop_event_group(), print_events);
-        ++event_count;
+        auto event_group = state.queue.pop_event_group();
+        event_count += event_group.size();
 
-        // we check here, so we process at least one group
-        if (timer.reached_timeout() || (event_count == max_events)) [[unlikely]] {
+        process_event_group(state, circuit, std::move(event_group), print_events);
+
+        // at least one group
+        if (timer.reached_timeout() || (event_count >= max_events)) [[unlikely]] {
             return event_count;
         }
     }
@@ -491,11 +494,15 @@ void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
 
 double benchmark_simulation(const int n_elements, const int n_events, const bool print) {
     std::mt19937 rng {0};
-
     auto circuit = create_random_circuit(rng, n_elements, 0.75f);
-
     add_output_placeholders(circuit);
     // circuit.validate(true);
+
+    return benchmark_simulation(circuit, n_events, print);
+}
+
+double benchmark_simulation(const Circuit &circuit, const int n_events,
+                            const bool print) {
     SimulationState state {circuit};
     initialize_simulation(state, circuit);
 

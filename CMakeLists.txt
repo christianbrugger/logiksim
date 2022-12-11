@@ -22,7 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MSVC)
 	add_compile_options(/EHsc)
 	add_compile_options(/arch:AVX2)
-	# add_link_options(/PROFILE)
+	add_link_options(/PROFILE)
 else()
 endif()
 

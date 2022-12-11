@@ -129,7 +129,8 @@ using timeout_t = timeout_clock::duration;
 namespace defaults {
 constexpr auto no_timeout = timeout_t::max();
 constexpr auto until_steady = std::numeric_limits<time_t>::infinity();
-constexpr int64_t no_max_events = 0;
+constexpr int64_t no_max_events
+    = std::numeric_limits<int64_t>::max() - std::numeric_limits<connection_size_t>::max();
 }  // namespace defaults
 
 /// @brief Advance the simulation by changing the given simulations state
@@ -187,8 +188,9 @@ int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
 void set_output_delay(Circuit::ConstOutput output, delay_vector_t &output_delays,
                       time_t delay);
 void set_output_delay(Circuit::ConstOutput output, SimulationState &state, time_t delay);
-
 double benchmark_simulation(int n_elements = 100, int n_events = 10'000,
+                            bool print = false);
+double benchmark_simulation(const Circuit &circuit, int n_events = 10'000,
                             bool print = false);
 
 }  // namespace logicsim

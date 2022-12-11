@@ -6,6 +6,7 @@
 #include "simulation.h"
 
 #include <benchmark/benchmark.h>
+#include <gsl/gsl>
 
 #include <array>
 #include <functional>
@@ -231,14 +232,27 @@ BENCHMARK(BM_Benchmark_Graph_v2);  // NOLINT
 static void BM_Simulation_0(benchmark::State& state) {
     int64_t count = 0;
     for ([[maybe_unused]] auto _ : state) {
-        auto res = logicsim::benchmark_simulation(100);
+        state.PauseTiming();
+
+        std::mt19937 rng {0};
+        auto circuit = logicsim::create_random_circuit(rng, 100);
+        logicsim::add_output_placeholders(circuit);
+        circuit.validate(true);
+
+        benchmark::DoNotOptimize(circuit);
+        benchmark::ClobberMemory();
+
+        state.ResumeTiming();
+
+        auto res = logicsim::benchmark_simulation(circuit);
 
         benchmark::DoNotOptimize(res);
         benchmark::ClobberMemory();
 
         count += 10'000;
     }
-    state.counters["Events"] = benchmark::Counter(count, benchmark::Counter::kIsRate);
+    state.counters["Events"]
+        = benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
 }
 
 BENCHMARK(BM_Simulation_0);  // NOLINT
