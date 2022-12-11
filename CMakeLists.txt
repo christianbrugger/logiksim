@@ -22,7 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MSVC)
 	add_compile_options(/EHsc)
 	add_compile_options(/arch:AVX2)
-	add_link_options(/PROFILE)
+	# add_link_options(/PROFILE)
 else()
 endif()
 
@@ -75,6 +75,7 @@ add_subdirectory(external/fmt EXCLUDE_FROM_ALL)
 # GSL
 add_subdirectory(external/GSL EXCLUDE_FROM_ALL)
 # abseil
+set(ABSL_PROPAGATE_CXX_STD ON)
 add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL)
 
 ###################################################
@@ -87,7 +88,13 @@ if (false)
     concurrency-*,\
     cppcoreguidelines-*,\
     modernize-*,\
+    bugprone-*,\
     readability-*,\
+    \
+    google-default-arguments,\
+    google-explicit-constructor,\
+    google-readability-avoid-underscore-in-googletest-name,\
+    google-runtime-operator,\
     \
     -cppcoreguidelines-avoid-magic-numbers,\
     -readability-magic-numbers,\

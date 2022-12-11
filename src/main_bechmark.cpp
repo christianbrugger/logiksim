@@ -244,12 +244,10 @@ static void BM_Simulation_0(benchmark::State& state) {
 
         state.ResumeTiming();
 
-        auto res = logicsim::benchmark_simulation(circuit);
+        count += logicsim::benchmark_simulation(rng, circuit, 10'000, false);
 
-        benchmark::DoNotOptimize(res);
+        benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();
-
-        count += 10'000;
     }
     state.counters["Events"]
         = benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);

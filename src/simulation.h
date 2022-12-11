@@ -24,6 +24,7 @@
 // * add timeout to advance simulations
 
 /// New Features
+// * use discrete integer type for time, like chronos::sim_time<int64_t>
 // * flip flops, which requires access to the last state
 // * store transition times for wires so they can be drawn
 // * negation on input and outputs
@@ -32,7 +33,13 @@
 
 namespace logicsim {
 
-using time_t = double;  // TODO try float
+#pragma warning(push)
+#pragma warning(disable : 4455)  // literal suffix identifiers are reserved
+using std::literals::chrono_literals::operator""us;
+using std::literals::chrono_literals::operator""ns;
+#pragma warning(pop)
+
+using time_t = std::chrono::duration<int64_t, std::nano>;
 
 struct SimulationEvent {
     time_t time;
@@ -80,7 +87,7 @@ std::basic_ostream<CharT> &operator<<(std::basic_ostream<CharT> &os,
 namespace logicsim {
 
 /// groups of events for the same element and time  but different inputs
-using event_group_t = boost::container::small_vector<SimulationEvent, 1>;
+using event_group_t = boost::container::small_vector<SimulationEvent, 2>;
 void validate(const event_group_t &events);
 
 class SimulationQueue {
@@ -95,7 +102,7 @@ class SimulationQueue {
     event_group_t pop_event_group();
 
    private:
-    time_t time_ {0};
+    time_t time_ {0us};
     std::priority_queue<SimulationEvent, std::vector<SimulationEvent>, std::greater<>>
         events_;
 };
@@ -104,15 +111,18 @@ class SimulationQueue {
 using logic_vector_t = boost::container::vector<bool>;
 using delay_vector_t = boost::container::vector<time_t>;
 
+// 8 bytes still fit into a small_vector with 32 byte size.
 using logic_small_vector_t = boost::container::small_vector<bool, 8>;
 
 /// Store simulation data.
 struct SimulationState {
+    constexpr static time_t standard_delay = 100us;
+
     logic_vector_t input_values {};
     SimulationQueue queue {};
     delay_vector_t output_delays {};
 
-    SimulationState(connection_id_t total_inputs, connection_id_t total_outputs);
+    explicit SimulationState(connection_id_t total_inputs, connection_id_t total_outputs);
     explicit SimulationState(const Circuit &circuit);
 };
 
@@ -128,26 +138,27 @@ using timeout_t = timeout_clock::duration;
 
 namespace defaults {
 constexpr auto no_timeout = timeout_t::max();
-constexpr auto until_steady = std::numeric_limits<time_t>::infinity();
+constexpr auto infinite_simulation_time = time_t::max();
 constexpr int64_t no_max_events
     = std::numeric_limits<int64_t>::max() - std::numeric_limits<connection_size_t>::max();
 }  // namespace defaults
 
 /// @brief Advance the simulation by changing the given simulations state
-/// @param state          either new or the old simulation state to start from
-/// @param circuit        the circuit that should be simulated
-/// @param time_delta     tun for this time or, when run_until_steady, run until
-///                       no more new events are generated
-/// @param timeout        return if simulation takes longer than this in realtime
-/// @param print_events   if true print each processed event information
+/// @param state             either new or the old simulation state to start from
+/// @param circuit           the circuit that should be simulated
+/// @param simultation_time  simulate for this time or, when run_until_steady, run until
+///                          no more new events are generated
+/// @param timeout           return if simulation takes longer than this in realtime
+/// @param print_events      if true print each processed event information
 int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
-                           time_t time_delta = defaults::until_steady,
+                           time_t simultation_time = defaults::infinite_simulation_time,
                            timeout_t timeout = defaults::no_timeout,
                            int64_t max_events = defaults::no_max_events,
                            bool print_events = false);
 
 [[nodiscard]] SimulationState simulate_circuit(Circuit &circuit,
-                                               time_t time_delta = defaults::until_steady,
+                                               time_t simultation_time
+                                               = defaults::infinite_simulation_time,
                                                timeout_t timeout = defaults::no_timeout,
                                                bool print_events = false);
 
@@ -185,13 +196,11 @@ int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
 [[nodiscard]] time_t get_output_delay(Circuit::ConstOutput output,
                                       const SimulationState &state);
 
-void set_output_delay(Circuit::ConstOutput output, delay_vector_t &output_delays,
-                      time_t delay);
 void set_output_delay(Circuit::ConstOutput output, SimulationState &state, time_t delay);
-double benchmark_simulation(int n_elements = 100, int n_events = 10'000,
-                            bool print = false);
-double benchmark_simulation(const Circuit &circuit, int n_events = 10'000,
-                            bool print = false);
+int64_t benchmark_simulation(int n_elements = 100, int n_events = 10'000,
+                             bool print = false);
+int64_t benchmark_simulation(std::mt19937 &rng, const Circuit &circuit,
+                             int n_events = 10'000, bool print = false);
 
 }  // namespace logicsim
 

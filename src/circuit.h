@@ -146,8 +146,9 @@ class Circuit::InputTemplate {
     //   so we preserve trivially copyable
     friend InputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    InputTemplate(CircuitType &circuit, element_id_t element_id,
-                  connection_size_t input_index, connection_id_t input_id) noexcept;
+    explicit InputTemplate(CircuitType &circuit, element_id_t element_id,
+                           connection_size_t input_index,
+                           connection_id_t input_id) noexcept;
 
    public:
     template <bool ConstOther>
@@ -197,8 +198,9 @@ class Circuit::OutputTemplate {
 
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    OutputTemplate(CircuitType &circuit, element_id_t element_id,
-                   connection_size_t output_index, connection_id_t output_id) noexcept;
+    explicit OutputTemplate(CircuitType &circuit, element_id_t element_id,
+                            connection_size_t output_index,
+                            connection_id_t output_id) noexcept;
 
    public:
     template <bool ConstOther>
@@ -244,7 +246,7 @@ void add_output_placeholders(Circuit &circuit);
 Circuit benchmark_circuit(int n_elements = 100);
 
 Circuit create_random_circuit(std::mt19937 &rng, int n_elements = 100,
-                              float connection_ratio = 0.75);
+                              double connection_ratio = 0.75);
 
 //
 // Circuit

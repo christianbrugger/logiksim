@@ -254,7 +254,7 @@ void create_random_elements(Circuit &circuit, std::mt19937 &rng, int n_elements)
 }
 
 void create_random_connections(Circuit &circuit, std::mt19937 &rng,
-                               float connection_ratio) {
+                               double connection_ratio) {
     if (connection_ratio == 0) {
         return;
     }
@@ -283,7 +283,7 @@ void create_random_connections(Circuit &circuit, std::mt19937 &rng,
                      });
 }
 
-Circuit create_random_circuit(std::mt19937 &rng, int n_elements, float connection_ratio) {
+Circuit create_random_circuit(std::mt19937 &rng, int n_elements, double connection_ratio) {
     Circuit circuit;
     create_random_elements(circuit, rng, n_elements);
     create_random_connections(circuit, rng, connection_ratio);

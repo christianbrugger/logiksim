@@ -1,16 +1,16 @@
-
+﻿
 #include "simulation.h"
 
 #include "algorithms.h"
 #include "timer.h"
 
+#include <fmt/chrono.h>
 #include <fmt/format.h>
-#include <fmt/ranges.h>
+#include <gsl/assert>
 #include <gsl/gsl>
 #include <range/v3/all.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <random>
 
 namespace logicsim {
@@ -27,10 +27,10 @@ SimulationEvent make_event(Circuit::ConstInput input, time_t time, bool value) {
 }
 
 std::string SimulationEvent::format() const {
-    auto element_id_str {(element_id == null_element) ? "NULL"
-                                                      : fmt::format("{}", element_id)};
-    return fmt::format("<SimulationEvent: at {}s set Element_{}[{}] = {}>", time,
-                       element_id_str, input_index, (value ? "true" : "false"));
+    auto time_us = std::chrono::duration<double, std::micro> {time};
+    return fmt::format(std::locale("en_US.UTF-8"),
+                       "<SimulationEvent: at {:L}us set Element_{}[{}] = {}>",
+                       time_us.count(), element_id, input_index, value);
 }
 
 bool SimulationEvent::operator==(const SimulationEvent &other) const {
@@ -75,9 +75,6 @@ void validate(const event_group_t &events) {
     if (head.element_id == null_element) {
         throw_exception("Event element cannot be null.");
     }
-    if (!std::isfinite(head.time)) {
-        throw_exception("Event time needs to be finite.");
-    }
 
     if (!tail.empty()) {
         if (!ranges::all_of(
@@ -106,9 +103,6 @@ void validate(const event_group_t &events) {
 time_t SimulationQueue::time() const noexcept { return time_; }
 
 void SimulationQueue::set_time(time_t time) {
-    if (!std::isfinite(time)) {
-        throw_exception("New time needs to be finite.");
-    }
     if (time < time_) {
         throw_exception("Cannot set new time to the past.");
     }
@@ -120,7 +114,7 @@ void SimulationQueue::set_time(time_t time) {
 }
 
 time_t SimulationQueue::next_event_time() const noexcept {
-    return events_.empty() ? std::numeric_limits<time_t>::infinity() : events_.top().time;
+    return events_.empty() ? time_t::max() : events_.top().time;
 }
 
 bool SimulationQueue::empty() const noexcept { return events_.empty(); }
@@ -129,9 +123,9 @@ void SimulationQueue::submit_event(SimulationEvent event) {
     if (event.time <= time_) {
         throw_exception("Event time needs to be in the future.");
     }
-    if (!std::isfinite(event.time)) {
-        throw_exception("Event time needs to be finite.");
-    }
+    //    if (!std::isfinite(event.time)) {
+    //        throw_exception("Event time needs to be finite.");
+    //    }
 
     events_.push(event);
 }
@@ -155,7 +149,9 @@ event_group_t SimulationQueue::pop_event_group() {
 
 SimulationState::SimulationState(connection_id_t total_inputs,
                                  connection_id_t total_outputs)
-    : input_values(total_inputs), queue {}, output_delays(total_outputs) {}
+    : input_values(total_inputs, false),
+      queue {},
+      output_delays(total_outputs, standard_delay) {}
 
 SimulationState::SimulationState(const Circuit &circuit)
     : SimulationState(circuit.total_input_count(), circuit.total_output_count()) {}
@@ -267,22 +263,13 @@ con_index_small_vector_t get_changed_outputs(const logic_small_vector_t &old_out
     return result;
 }
 
-namespace defaults {
-constexpr time_t standard_delay = 0.1;
-}
-
-void create_event(SimulationQueue &queue, Circuit::ConstOutput output,
+void create_event(SimulationQueue &queue, const Circuit::ConstOutput output,
                   const logic_small_vector_t &output_values,
                   const delay_vector_t &output_delays) {
-    time_t delay {get_output_delay(output, output_delays)};
-    if (delay == 0) {
-        delay = defaults::standard_delay;
-    }
-
-    const time_t time {queue.time() + delay};
+    const auto delay = get_output_delay(output, output_delays);
 
     if (output.has_connected_element()) {
-        queue.submit_event({.time = time,
+        queue.submit_event({.time = queue.time() + delay,
                             .element_id = output.connected_element_id(),
                             .input_index = output.connected_input_index(),
                             .value = output_values.at(output.output_index())});
@@ -290,7 +277,7 @@ void create_event(SimulationQueue &queue, Circuit::ConstOutput output,
 }
 
 void process_event_group(SimulationState &state, const Circuit &circuit,
-                         event_group_t &&events, bool print_events = false) {
+                         event_group_t &&events, const bool print_events = false) {
     if (print_events) {
         fmt::print("events: {:n:}\n", events);
     }
@@ -308,16 +295,16 @@ void process_event_group(SimulationState &state, const Circuit &circuit,
     }
 
     // update inputs
-    const auto old_inputs {get_input_values(element, state)};
+    const auto old_inputs = get_input_values(element, state);
     apply_events(state.input_values, element, events);
-    const auto new_inputs {get_input_values(element, state)};
+    const auto new_inputs = get_input_values(element, state);
 
     // find changing outputs
-    const auto old_outputs {
-        calculate_outputs(old_inputs, element.output_count(), element.element_type())};
-    const auto new_outputs {
-        calculate_outputs(new_inputs, element.output_count(), element.element_type())};
-    const auto changes {get_changed_outputs(old_outputs, new_outputs)};
+    const auto old_outputs
+        = calculate_outputs(old_inputs, element.output_count(), element.element_type());
+    const auto new_outputs
+        = calculate_outputs(new_inputs, element.output_count(), element.element_type());
+    const auto changes = get_changed_outputs(old_outputs, new_outputs);
 
     // submit events
     ranges::for_each(changes, [&, element](auto output_index) {
@@ -344,23 +331,30 @@ class SimulationTimer {
 };
 
 int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
-                           time_t time_delta, timeout_t timeout, int64_t max_events,
-                           bool print_events) {
-    if (time_delta <= 0) [[unlikely]] {
-        throw_exception("time_delta needs to be positive.");
+                           const time_t simultation_time, const timeout_t timeout,
+                           const int64_t max_events, const bool print_events) {
+    Expects(simultation_time >= 0us);
+    if (simultation_time < 0us) [[unlikely]] {
+        throw_exception("simultation_time needs to be positive.");
     }
     if (max_events < 0) [[unlikely]] {
         throw_exception("max events needs to be positive or zero.");
     }
     check_input_size(state, circuit);
 
+    if (simultation_time == 0us) {
+        return 0;
+    }
+
     const SimulationTimer timer {timeout};
-    const auto queue_end_time {state.queue.time() + time_delta};
+    const auto queue_end_time = simultation_time == defaults::infinite_simulation_time
+                                    ? time_t::max()
+                                    : state.queue.time() + simultation_time;
     int64_t event_count = 0;
 
     while (!state.queue.empty() && state.queue.next_event_time() < queue_end_time) {
         auto event_group = state.queue.pop_event_group();
-        event_count += event_group.size();
+        event_count += std::ssize(event_group);
 
         process_event_group(state, circuit, std::move(event_group), print_events);
 
@@ -370,7 +364,7 @@ int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
         }
     }
 
-    if (std::isfinite(time_delta)) {
+    if (simultation_time != defaults::infinite_simulation_time) {
         state.queue.set_time(queue_end_time);
     }
     return event_count;
@@ -416,15 +410,15 @@ SimulationState get_initialized_state(Circuit &circuit) {
     return state;
 }
 
-SimulationState simulate_circuit(Circuit &circuit, time_t time_delta, timeout_t timeout,
-                                 bool print_events) {
+SimulationState simulate_circuit(Circuit &circuit, time_t simultation_time,
+                                 timeout_t timeout, bool print_events) {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
     SimulationState state {circuit};
     initialize_simulation(state, circuit);
 
-    advance_simulation(state, circuit, time_delta, timeout, defaults::no_max_events,
+    advance_simulation(state, circuit, simultation_time, timeout, defaults::no_max_events,
                        print_events);
     return state;
 }
@@ -455,6 +449,7 @@ logic_vector_t get_all_output_values(const logic_vector_t &input_values,
                                      const Circuit &circuit, const bool raise_missing) {
     logic_vector_t output_values(circuit.total_output_count());
 
+    // TODO use ranges
     for (auto element : circuit.elements()) {
         for (auto output : element.outputs()) {
             output_values.at(output.output_id())
@@ -474,56 +469,55 @@ time_t get_output_delay(const Circuit::ConstOutput output, const SimulationState
     return get_output_delay(output, state.output_delays);
 }
 
-void set_output_delay(const Circuit::ConstOutput output, delay_vector_t &output_delays,
-                      const time_t delay) {
-    output_delays.at(output.output_id()) = delay;
-}
-
 void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
                       const time_t delay) {
     if (!state.queue.empty()) {
         throw_exception("Cannot set output delay for state with scheduled events.");
     }
 
-    return set_output_delay(output, state.output_delays, delay);
+    state.output_delays.at(output.output_id()) = delay;
 }
 
 //
 // Benchmark
 //
 
-double benchmark_simulation(const int n_elements, const int n_events, const bool print) {
+int64_t benchmark_simulation(const int n_elements, const int n_events, const bool print) {
     std::mt19937 rng {0};
-    auto circuit = create_random_circuit(rng, n_elements, 0.75f);
+    auto circuit = create_random_circuit(rng, n_elements, 0.75);
     add_output_placeholders(circuit);
-    // circuit.validate(true);
+    circuit.validate(true);
 
-    return benchmark_simulation(circuit, n_events, print);
+    return benchmark_simulation(rng, circuit, n_events, print);
 }
 
-double benchmark_simulation(const Circuit &circuit, const int n_events,
-                            const bool print) {
+int64_t benchmark_simulation(std::mt19937 &rng, const Circuit &circuit,
+                             const int n_events, const bool print) {
     SimulationState state {circuit};
+
+    // set custom delays
+    ranges::generate(state.output_delays, [&rng]() {
+        std::uniform_int_distribution<> nanosecond_dist {5, 500};
+        return 1us * nanosecond_dist(rng);
+    });
+
     initialize_simulation(state, circuit);
+    auto simulated_event_count
+        = advance_simulation(state, circuit, defaults::infinite_simulation_time,
+                             defaults::no_timeout, n_events, print);
 
-    Timer t;
-    auto n_sim = advance_simulation(state, circuit, defaults::until_steady,
-                                    defaults::no_timeout, n_events, print);
-    double events_per_seconds = n_sim / t.delta().count();
-    // fmt::print("{:.1f}M events / s\n", events_per_seconds / 1e6);
-
-    if (n_sim != n_events) [[unlikely]] {
+    if (simulated_event_count < n_events) [[unlikely]] {
         throw_exception("need to implement triggering of random events");
     }
 
     if (print) {
         auto output_values {get_all_output_values(state.input_values, circuit)};
 
-        fmt::print("{}\n", n_sim);
+        fmt::print("events simulated = {}\n", simulated_event_count);
         fmt::print("input_values = {::b}\n", state.input_values);
         fmt::print("output_values = {::b}\n", output_values);
     }
 
-    return events_per_seconds;
+    return simulated_event_count;
 }
 }  // namespace logicsim

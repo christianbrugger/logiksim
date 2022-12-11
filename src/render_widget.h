@@ -93,12 +93,12 @@ class WidgetRenderer : public QWidget {
         line0.output(0).connect(elem0.input(1));
 
         SimulationState state {circuit};
-        state.queue.submit_event({0.1, elem0.element_id(), 0, true});
-        state.queue.submit_event({0.5, elem0.element_id(), 0, false});
+        state.queue.submit_event({100us, elem0.element_id(), 0, true});
+        state.queue.submit_event({500us, elem0.element_id(), 0, false});
 
         add_output_placeholders(circuit);
-        advance_simulation(state, circuit, defaults::until_steady, defaults::no_timeout,
-                           true);
+        advance_simulation(state, circuit, defaults::infinite_simulation_time,
+                           defaults::no_timeout, true);
 
         SimulationResult simulation {state.input_values,
                                      get_all_output_values(state.input_values, circuit)};

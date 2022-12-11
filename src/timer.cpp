@@ -1,4 +1,4 @@
-
+﻿
 #include "timer.h"
 
 #include <fmt/chrono.h>
