@@ -4,8 +4,10 @@ asmjit
 benchmark
 blend2d
 boost
+CMake
 fmt
 folly
 googletest
 GSL
 range-v3
+

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 
 include(CMakePrintHelpers)
 cmake_print_variables(CMAKE_C_COMPILER )
@@ -60,14 +60,14 @@ add_subdirectory(external/benchmark EXCLUDE_FROM_ALL)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 # Boost
 # find_package(Boost REQUIRED COMPONENTS)
-add_subdirectory(external/boost EXCLUDE_FROM_ALL)
+add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
 # Qt 6
 set(CMAKE_AUTOMOC TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 # Blend2D
 set(BLEND2D_STATIC TRUE)
-add_subdirectory(external/blend2d EXCLUDE_FROM_ALL)
+add_subdirectory(external/blend2d EXCLUDE_FROM_ALL SYSTEM)
 # range-v3
 add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL)
 # fmt
@@ -77,6 +77,12 @@ add_subdirectory(external/GSL EXCLUDE_FROM_ALL)
 # abseil
 set(ABSL_PROPAGATE_CXX_STD ON)
 add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL)
+
+if (WIN32)
+    add_library(boost_stacktrace ALIAS boost_stacktrace_windbg)  # Boost::stacktrace_windbg)
+else()
+    add_library(boost_stacktrace ALIAS boost_stacktrace_basic)   # Boost::stacktrace_basic)
+endif()
 
 ###################################################
 
@@ -135,7 +141,7 @@ add_executable(${MAIN_BENCHMARK_TARGET}
     src/timer.h src/timer.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    Boost::container Boost::stacktrace_windbg Boost::mpl
+    Boost::container Boost::mpl boost_stacktrace
     range-v3::range-v3
     fmt::fmt
     folly
@@ -161,7 +167,7 @@ add_executable(${MAIN_TARGET}
     
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
-    Boost::container Boost::stacktrace_windbg Boost::mpl
+    Boost::container Boost::mpl boost_stacktrace
     range-v3::range-v3
     fmt::fmt
     folly
@@ -188,7 +194,7 @@ add_executable(${MAIN_GUI_TARGET}
     src/main_gui.cpp
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    Boost::container Boost::stacktrace_windbg Boost::mpl
+    Boost::container Boost::mpl boost_stacktrace
     range-v3::range-v3
     fmt::fmt
     folly
@@ -220,7 +226,7 @@ target_include_directories(${MAIN_TEST_TARGET} PRIVATE
     src
 )
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
-    Boost::container Boost::stacktrace_windbg Boost::mpl
+    Boost::container Boost::mpl boost_stacktrace
     range-v3::range-v3
     fmt::fmt
     folly

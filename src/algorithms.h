@@ -8,7 +8,6 @@
 
 #include <concepts>
 #include <exception>
-#include <format>
 #include <iostream>
 
 namespace logicsim {
