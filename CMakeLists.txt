@@ -45,7 +45,8 @@ if (MSVC)
 else()
     set(MAIN_COMPILE_OPTIONS -pedantic -fexceptions)
     list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
-                             -Wthread-safety -Wstrict-aliasing)
+                             -Wstrict-aliasing)
+		     # -Wthread-safety 
 endif()
 
 
