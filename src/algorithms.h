@@ -45,7 +45,6 @@ bool has_duplicates_quadratic(const ranges::input_range auto&& range) {
     for (auto i1 = std::begin(range); i1 != std::end(range) - 1; ++i1) {
         for (auto i2 = i1 + 1; i2 != std::end(range); ++i2) {
             if (*i1 == *i2) {
-                throw std::runtime_error("test");
                 return true;
             }
         }

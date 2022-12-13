@@ -352,6 +352,7 @@ int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
                                     : state.queue.time() + simultation_time;
     int64_t event_count = 0;
 
+    // TODO use ranges
     while (!state.queue.empty() && state.queue.next_event_time() < queue_end_time) {
         auto event_group = state.queue.pop_event_group();
         event_count += std::ssize(event_group);

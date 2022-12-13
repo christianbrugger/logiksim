@@ -7,7 +7,12 @@ cmake_print_variables(CMAKE_CXX_COMPILER )
 cmake_policy(PUSH)
 
 if(POLICY CMP0092)
-  cmake_policy(SET CMP0092 NEW) # Don't add -W3 warning level by default.
+  # Don't add -W3 warning level by default.
+  cmake_policy(SET CMP0092 NEW)
+endif()
+if(POLICY CMP0141)
+  # don't use 'MSVC_DEBUG_INFORMATION_FORMAT (BOOST bug 2022-12-14)  # TODO check 
+  cmake_policy(SET CMP0141 OLD) 
 endif()
 
 
@@ -34,14 +39,9 @@ endif()
 if (MSVC)
     set(MAIN_COMPILE_OPTIONS /permissive- /EHsc)
     list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
+
     # unreachable code warnings when using range-v3 templates
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
-    # if should be constexpr in folly
-    list(APPEND MAIN_COMPILE_OPTIONS /wd4127)
-    # folly structure was padded due to alignment specifier
-    list(APPEND MAIN_COMPILE_OPTIONS /wd4324)
-    #set(MAIN_LINK_OPTIONS dbgeng.lib)
-    set(MAIN_COMPILE_DEFINITIONS BOOST_STACKTRACE_USE_WINDBG)
 else()
     set(MAIN_COMPILE_OPTIONS -pedantic -fexceptions)
     list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
@@ -55,34 +55,59 @@ endif()
 # set(BENCHMARK_ENABLE_LTO ON)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
-add_subdirectory(external/benchmark EXCLUDE_FROM_ALL)
+add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
+
 # Google Test
-add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
+add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
+
 # Boost
 # find_package(Boost REQUIRED COMPONENTS)
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
+if (WIN32)
+    # Boost::stacktrace_windbg
+    add_library(boost_stacktrace ALIAS boost_stacktrace_windbg)
+    target_compile_definitions(boost_stacktrace_windbg PRIVATE 
+        BOOST_STACKTRACE_USE_WINDBG
+    )
+else()
+    # Boost::stacktrace_basic
+    add_library(boost_stacktrace ALIAS boost_stacktrace_basic)   
+endif()
+
+
 # Qt 6
 set(CMAKE_AUTOMOC TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
+
 # Blend2D
 set(BLEND2D_STATIC TRUE)
 add_subdirectory(external/blend2d EXCLUDE_FROM_ALL SYSTEM)
+
 # range-v3
-add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL)
+add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL SYSTEM)
+
 # fmt
-add_subdirectory(external/fmt EXCLUDE_FROM_ALL)
+add_subdirectory(external/fmt EXCLUDE_FROM_ALL SYSTEM)
+
 # GSL
-add_subdirectory(external/GSL EXCLUDE_FROM_ALL)
+add_subdirectory(external/GSL EXCLUDE_FROM_ALL SYSTEM)
+
 # abseil
 set(ABSL_PROPAGATE_CXX_STD ON)
-add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL)
+add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL SYSTEM)
+  
+# Folly - we build a mimimal version of the library, only what we need
+add_library(folly
+    external/folly/folly/memory/detail/MallocImpl.cpp
+)
+target_include_directories(folly SYSTEM PUBLIC 
+    external/folly
+)
+target_compile_definitions(folly PUBLIC FOLLY_NO_CONFIG)
 
-if (WIN32)
-    add_library(boost_stacktrace ALIAS boost_stacktrace_windbg)  # Boost::stacktrace_windbg)
-else()
-    add_library(boost_stacktrace ALIAS boost_stacktrace_basic)   # Boost::stacktrace_basic)
-endif()
+
+
 
 ###################################################
 
@@ -118,107 +143,74 @@ if (false)
         -checks=${CLANG_TIDY_CHECKS};
     )
 endif()
-  
-# Folly
-# We build a mimimal version of the library, only what we need
-add_library(folly
-    external/folly/folly/memory/detail/MallocImpl.cpp
+
+# Main Library
+
+add_library(logicsim_core 
+    src/circuit.h src/circuit.cpp
+    src/simulation.h src/simulation.cpp 
+    src/algorithms.h src/algorithm.cpp
+    src/exceptions.h src/exceptions.cpp
+    src/timer.h src/timer.cpp
 )
-target_include_directories(folly PUBLIC 
-    external/folly
+target_link_libraries(logicsim_core PUBLIC 
+    Boost::container Boost::mpl boost_stacktrace
+    range-v3::range-v3
+    fmt::fmt
+    folly
+    absl::base
+    GSL
 )
-target_compile_definitions(folly PUBLIC FOLLY_NO_CONFIG)
+target_compile_options(logicsim_core PRIVATE ${MAIN_COMPILE_OPTIONS})
+
+
 
 # MAIN BENCHMARK
 
 set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET} 
     src/main_bechmark.cpp
-    src/circuit.h src/circuit.cpp
-    src/simulation.h src/simulation.cpp 
-    src/algorithms.h src/algorithm.cpp
-    src/exceptions.h src/exceptions.cpp
-    src/timer.h src/timer.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    Boost::container Boost::mpl boost_stacktrace
-    range-v3::range-v3
-    fmt::fmt
-    folly
-    absl::base
-    GSL
+    logicsim_core
 
     benchmark::benchmark
 )
 target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
-target_link_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
-target_compile_definitions(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_DEFINITIONS})
 
 # MAIN
 
 set(MAIN_TARGET "simulation_srp_main")
 add_executable(${MAIN_TARGET} 
     src/main.cpp
-    src/circuit.h src/circuit.cpp
-    src/simulation.h src/simulation.cpp 
-    src/algorithms.h src/algorithm.cpp
-    src/exceptions.h src/exceptions.cpp
-    src/timer.h src/timer.cpp
     
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
-    Boost::container Boost::mpl boost_stacktrace
-    range-v3::range-v3
-    fmt::fmt
-    folly
-    absl::base
-    GSL
+    logicsim_core
 )
 target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
-target_link_options(${MAIN_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
-target_compile_definitions(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_DEFINITIONS})
 
 # MAIN GUI
 
 set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET} 
-    src/circuit.h src/circuit.cpp
-    src/simulation.h src/simulation.cpp 
-    src/algorithms.h src/algorithm.cpp
-    src/exceptions.h src/exceptions.cpp
-    src/timer.h src/timer.cpp
-    
-
     src/render_widget.h src/render_widget.cpp 
     src/render_scene.h src/render_scene.cpp
     src/main_gui.cpp
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    Boost::container Boost::mpl boost_stacktrace
-    range-v3::range-v3
-    fmt::fmt
-    folly
-    absl::base
-    GSL
+    logicsim_core
 
     Qt6::Widgets
     Qt6::OpenGLWidgets
     Blend2D::Blend2D
 )
 target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
-target_link_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
-target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_DEFINITIONS})
 
 # Google Test
 
 set(MAIN_TEST_TARGET "simulation_srp_test")
 add_executable(${MAIN_TEST_TARGET} 
-    src/circuit.h src/circuit.cpp
-    src/simulation.h src/simulation.cpp 
-    src/algorithms.h src/algorithm.cpp
-    src/exceptions.h src/exceptions.cpp
-    src/timer.h src/timer.cpp
-    
     test/circuit_test.cpp
     test/simulation_test.cpp
 )
@@ -226,20 +218,13 @@ target_include_directories(${MAIN_TEST_TARGET} PRIVATE
     src
 )
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
-    Boost::container Boost::mpl boost_stacktrace
-    range-v3::range-v3
-    fmt::fmt
-    folly
-    absl::base
-    GSL
+    logicsim_core
     
     GTest::gtest
     GTest::gmock
     GTest::gtest_main
 )
 target_compile_options(${MAIN_TEST_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
-target_link_options(${MAIN_TEST_TARGET} PRIVATE ${MAIN_LINK_OPTIONS})
-target_compile_definitions(${MAIN_TEST_TARGET} PRIVATE ${MAIN_COMPILE_DEFINITIONS})
 
 enable_testing()
 include(GoogleTest)
