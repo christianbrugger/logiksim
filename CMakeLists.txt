@@ -34,6 +34,7 @@ if (MSVC)
 	add_compile_options(/arch:AVX2)
 	# add_link_options(/PROFILE)
 else()
+	add_compile_options(-march=native)
 endif()
 
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
