@@ -12,7 +12,12 @@ if(POLICY CMP0092)
 endif()
 if(POLICY CMP0141)
   # don't use 'MSVC_DEBUG_INFORMATION_FORMAT (BOOST bug 2022-12-14)  # TODO check 
-  cmake_policy(SET CMP0141 OLD) 
+  cmake_policy(SET CMP0141 OLD)
+endif()
+if(POLICY CMP0069)
+  # enfore link time optimization is used when enabled
+  cmake_policy(SET CMP0069 NEW)
+  set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 endif()
 
 
@@ -30,6 +35,8 @@ if (MSVC)
 	# add_link_options(/PROFILE)
 else()
 endif()
+
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 
 # TODO: global optimization / link time optimization

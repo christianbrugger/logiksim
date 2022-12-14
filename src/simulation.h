@@ -34,13 +34,13 @@
 namespace logicsim {
 
 #ifdef _MSC_VER
-    #pragma warning(push)
-    #pragma warning(disable : 4455)  // literal suffix identifiers are reserved
+#pragma warning(push)
+#pragma warning(disable : 4455)  // literal suffix identifiers are reserved
 #endif
 using std::literals::chrono_literals::operator""us;
 using std::literals::chrono_literals::operator""ns;
 #ifdef _MSC_VER
-    #pragma warning(pop)
+#pragma warning(pop)
 #endif
 
 using time_t = std::chrono::duration<int64_t, std::nano>;
