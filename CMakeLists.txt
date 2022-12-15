@@ -31,7 +31,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # global flags for all libraries
 if (MSVC)
 	add_compile_options(/EHsc)
-	add_compile_options(/arch:AVX2)
+	# add_compile_options(/arch:AVX2)
 	# add_link_options(/PROFILE)
 else()
 	add_compile_options(-march=native)
@@ -90,7 +90,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 
 # Blend2D
-set(BLEND2D_STATIC TRUE)
+set(BLEND2D_STATIC TRUE)  # TODO test BLEND2D_EMBED
 add_subdirectory(external/blend2d EXCLUDE_FROM_ALL SYSTEM)
 
 # range-v3
