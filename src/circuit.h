@@ -3,13 +3,13 @@
 
 #include "exceptions.h"
 
+#include <boost/random/mersenne_twister.hpp>
 #include <fmt/format.h>
 #include <range/v3/all.hpp>
 
 #include <cstdint>
 #include <functional>
 #include <iostream>
-#include <random>
 #include <string>
 #include <vector>
 
@@ -245,7 +245,7 @@ void add_output_placeholders(Circuit &circuit);
 
 Circuit benchmark_circuit(int n_elements = 100);
 
-Circuit create_random_circuit(std::mt19937 &rng, int n_elements = 100,
+Circuit create_random_circuit(boost::random::mt19937 &rng, int n_elements = 100,
                               double connection_ratio = 0.75);
 
 //

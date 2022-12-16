@@ -18,13 +18,15 @@ BreakBeforeBinaryOperators: All
 IncludeBlocks: Regroup
 IncludeIsMainRegex: '(_test)?$'
 IncludeCategories:
-- Regex:    '^(<(boost/|fmt/|range/|blend2d\.h|benchmark/|gtest/|gmock/|folly/|absl/|gsl/))'
+- Regex:    '^<(gtest/|gmock/)'
   Priority: 2
-- Regex:    '^(<Q)'
-  CaseSensitive:   true
+- Regex:    '^<(boost/|fmt/|range/|blend2d\.h|benchmark/|folly/|absl/|gsl/)'
   Priority: 3
-- Regex:    '^<'
+- Regex:    '^<Q'
+  CaseSensitive:   true
   Priority: 4
+- Regex:    '^<'
+  Priority: 5
 - Regex:    '^"'
   Priority: 1
   SortPriority: 0

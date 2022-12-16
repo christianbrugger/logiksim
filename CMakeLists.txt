@@ -153,6 +153,9 @@ if (false)
     )
 endif()
 
+
+
+
 # Main Library
 
 add_library(logicsim_core 
@@ -163,7 +166,7 @@ add_library(logicsim_core
     src/timer.h src/timer.cpp
 )
 target_link_libraries(logicsim_core PUBLIC 
-    Boost::container Boost::mpl boost_stacktrace
+    Boost::container Boost::mpl boost_stacktrace Boost::random
     range-v3::range-v3
     fmt::fmt
     folly
@@ -221,6 +224,7 @@ target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 set(MAIN_TEST_TARGET "simulation_srp_test")
 add_executable(${MAIN_TEST_TARGET} 
     test/circuit_test.cpp
+    test/random_test.cpp
     test/simulation_test.cpp
 )
 target_include_directories(${MAIN_TEST_TARGET} PRIVATE

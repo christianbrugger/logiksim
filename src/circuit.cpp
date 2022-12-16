@@ -1,6 +1,7 @@
 
 #include "circuit.h"
 
+#include <boost/random/uniform_int_distribution.hpp>
 #include <gsl/gsl>
 
 namespace logicsim {
@@ -230,30 +231,32 @@ Circuit benchmark_circuit(const int n_elements) {
     return circuit;
 }
 
-void add_random_element(Circuit &circuit, std::mt19937 &rng) {
-    std::uniform_int_distribution<> element_dist {0, 2};
-    std::uniform_int_distribution<> connection_dist {1, 8};
+void add_random_element(Circuit &circuit, boost::random::mt19937 &rng) {
+    boost::random::uniform_int_distribution<int8_t> element_dist {0, 2};
+    boost::random::uniform_int_distribution<connection_size_t> connection_dist {1, 8};
 
     const auto element_type {element_dist(rng) == 0
                                  ? ElementType::xor_element
                                  : (element_dist(rng) == 1 ? ElementType::inverter_element
                                                            : ElementType ::wire)};
 
-    const auto input_count = gsl::narrow<connection_size_t>(
-        element_type == ElementType::xor_element ? connection_dist(rng) : 1);
+    const connection_size_t one {1};
+    const connection_size_t input_count {
+        element_type == ElementType::xor_element ? connection_dist(rng) : one};
 
-    const auto output_count = gsl::narrow<connection_size_t>(
-        element_type == ElementType::wire ? connection_dist(rng) : 1);
+    const connection_size_t output_count {
+        element_type == ElementType::wire ? connection_dist(rng) : one};
 
     circuit.add_element(element_type, input_count, output_count);
 }
 
-void create_random_elements(Circuit &circuit, std::mt19937 &rng, int n_elements) {
+void create_random_elements(Circuit &circuit, boost::random::mt19937 &rng,
+                            int n_elements) {
     ranges::for_each(ranges::views::iota(0, n_elements),
                      [&](auto) { add_random_element(circuit, rng); });
 }
 
-void create_random_connections(Circuit &circuit, std::mt19937 &rng,
+void create_random_connections(Circuit &circuit, boost::random::mt19937 &rng,
                                double connection_ratio) {
     if (connection_ratio == 0) {
         return;
@@ -283,7 +286,8 @@ void create_random_connections(Circuit &circuit, std::mt19937 &rng,
                      });
 }
 
-Circuit create_random_circuit(std::mt19937 &rng, int n_elements, double connection_ratio) {
+Circuit create_random_circuit(boost::random::mt19937 &rng, int n_elements,
+                              double connection_ratio) {
     Circuit circuit;
     create_random_elements(circuit, rng, n_elements);
     create_random_connections(circuit, rng, connection_ratio);

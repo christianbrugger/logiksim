@@ -189,9 +189,10 @@ auto main() -> int {
     // print_all_sizes();
 
     try {
-        for ([[maybe_unused]] auto _ : ranges::views::iota(0, 10)) {
-            benchmark_simulation(100, 100'000, false);
-        }
+        // for ([[maybe_unused]] auto _ : ranges::views::iota(0, 10)) {
+        auto count = benchmark_simulation(5, 10, true);
+        fmt::print("count = {}\n", count);
+        // }
         // Circuit circuit;
         // auto test = circuit.element(0);
         // test.element_id();

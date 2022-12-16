@@ -7,6 +7,7 @@
 
 #include <boost/container/small_vector.hpp>
 #include <boost/container/vector.hpp>
+#include <boost/random/mersenne_twister.hpp>
 #include <fmt/format.h>
 #include <folly/small_vector.h>
 #include <range/v3/all.hpp>
@@ -203,7 +204,7 @@ int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
 void set_output_delay(Circuit::ConstOutput output, SimulationState &state, time_t delay);
 int64_t benchmark_simulation(int n_elements = 100, int n_events = 10'000,
                              bool print = false);
-int64_t benchmark_simulation(std::mt19937 &rng, const Circuit &circuit,
+int64_t benchmark_simulation(boost::random::mt19937 &rng, const Circuit &circuit,
                              int n_events = 10'000, bool print = false);
 
 }  // namespace logicsim

@@ -4,6 +4,7 @@
 #include "algorithms.h"
 #include "timer.h"
 
+#include <boost/random/uniform_int_distribution.hpp>
 #include <fmt/chrono.h>
 #include <fmt/format.h>
 #include <gsl/assert>
@@ -11,7 +12,7 @@
 #include <range/v3/all.hpp>
 
 #include <algorithm>
-#include <random>
+#include <utility>
 
 namespace logicsim {
 
@@ -484,7 +485,9 @@ void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
 //
 
 int64_t benchmark_simulation(const int n_elements, const int n_events, const bool print) {
-    std::mt19937 rng {0};
+    boost::random::mt19937 rng;
+    rng.seed(0);
+
     auto circuit = create_random_circuit(rng, n_elements, 0.75);
     add_output_placeholders(circuit);
     circuit.validate(true);
@@ -492,23 +495,43 @@ int64_t benchmark_simulation(const int n_elements, const int n_events, const boo
     return benchmark_simulation(rng, circuit, n_events, print);
 }
 
-int64_t benchmark_simulation(std::mt19937 &rng, const Circuit &circuit,
+void generate_random_events(boost::random::mt19937 &rng, const Circuit &circuit,
+                            SimulationState &state) {
+    boost::random::uniform_int_distribution<int32_t> trigger_event {0, 1};
+
+    for (auto element : circuit.elements()) {
+        for (auto input : element.inputs()) {
+            if (trigger_event(rng) == 0) {
+                state.queue.submit_event(make_event(input, state.queue.time() + 1us,
+                                                    !get_input_value(input, state)));
+            }
+        }
+    }
+}
+
+int64_t benchmark_simulation(boost::random::mt19937 &rng, const Circuit &circuit,
                              const int n_events, const bool print) {
     SimulationState state {circuit};
 
     // set custom delays
     ranges::generate(state.output_delays, [&rng]() {
-        std::uniform_int_distribution<> nanosecond_dist {5, 500};
+        boost::random::uniform_int_distribution<time_t::rep> nanosecond_dist {5, 500};
         return 1us * nanosecond_dist(rng);
     });
 
     initialize_simulation(state, circuit);
-    auto simulated_event_count
-        = advance_simulation(state, circuit, defaults::infinite_simulation_time,
-                             defaults::no_timeout, n_events, print);
 
-    if (simulated_event_count < n_events) [[unlikely]] {
-        throw_exception("need to implement triggering of random events");
+    int64_t simulated_event_count {0};
+    while (true) {
+        simulated_event_count += advance_simulation(
+            state, circuit, defaults::infinite_simulation_time, defaults::no_timeout,
+            n_events - simulated_event_count, print);
+
+        if (simulated_event_count >= n_events) {
+            break;
+        }
+
+        generate_random_events(rng, circuit, state);
     }
 
     if (print) {
@@ -519,6 +542,7 @@ int64_t benchmark_simulation(std::mt19937 &rng, const Circuit &circuit,
         fmt::print("output_values = {::b}\n", output_values);
     }
 
+    Ensures(simulated_event_count >= n_events);
     return simulated_event_count;
 }
 }  // namespace logicsim

@@ -2,6 +2,7 @@
 #include "circuit.h"
 
 #include <gtest/gtest.h>
+
 #include <range/v3/all.hpp>
 
 namespace logicsim {
