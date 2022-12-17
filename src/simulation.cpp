@@ -484,6 +484,9 @@ int64_t benchmark_simulation(const int n_elements, const int n_events, const boo
     boost::random::mt19937 rng {0};
 
     auto circuit = create_random_circuit(rng, n_elements, 0.75);
+    if (print) {
+        fmt::print("{}\n", circuit);
+    }
     add_output_placeholders(circuit);
     circuit.validate(true);
 

@@ -190,7 +190,7 @@ auto main() -> int {
 
     try {
         // for ([[maybe_unused]] auto _ : ranges::views::iota(0, 10)) {
-        auto count = benchmark_simulation(5, 10, true);
+        auto count = benchmark_simulation(10, 10, true);
         fmt::print("count = {}\n", count);
         // }
         // Circuit circuit;

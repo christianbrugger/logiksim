@@ -54,6 +54,8 @@ class Circuit {
     using Output = OutputTemplate<false>;
     using ConstOutput = OutputTemplate<true>;
 
+    [[nodiscard]] std::string format() const;
+
     [[nodiscard]] element_id_t element_count() const noexcept;
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] bool is_element_id_valid(element_id_t element_id) const noexcept;
@@ -112,7 +114,9 @@ class Circuit::ElementTemplate {
     template <bool ConstOther>
     bool operator==(ElementTemplate<ConstOther> other) const noexcept;
 
-    [[nodiscard]] std::string format() const;
+    [[nodiscard]] std::string format(bool with_connections = false) const;
+    [[nodiscard]] std::string format_inputs() const;
+    [[nodiscard]] std::string format_outputs() const;
 
     [[nodiscard]] CircuitType *circuit() const noexcept;
     [[nodiscard]] element_id_t element_id() const noexcept;
@@ -160,6 +164,7 @@ class Circuit::InputTemplate {
     bool operator==(InputTemplate<ConstOther> other) const noexcept;
 
     [[nodiscard]] std::string format() const;
+    [[nodiscard]] std::string format_connection() const;
 
     [[nodiscard]] CircuitType *circuit() const noexcept;
     [[nodiscard]] element_id_t element_id() const noexcept;
@@ -212,6 +217,7 @@ class Circuit::OutputTemplate {
     bool operator==(OutputTemplate<ConstOther> other) const noexcept;
 
     [[nodiscard]] std::string format() const;
+    [[nodiscard]] std::string format_connection() const;
 
     [[nodiscard]] CircuitType *circuit() const noexcept;
     [[nodiscard]] element_id_t element_id() const noexcept;
@@ -286,9 +292,29 @@ bool Circuit::ElementTemplate<Const>::operator==(
 }
 
 template <bool Const>
-std::string Circuit::ElementTemplate<Const>::format() const {
-    return fmt::format("<Element {}: {} {} x {}>", element_id(), element_type(),
-                       input_count(), output_count());
+std::string Circuit::ElementTemplate<Const>::format(bool with_connections) const {
+    auto connections = !with_connections
+                           ? ""
+                           : fmt::format(", inputs = {}, outputs = {}", format(),
+                                         format_inputs(), format_outputs());
+
+    return fmt::format("<Element {}: {}x{} {}{}>", element_id(),
+                       input_count(), output_count(), element_type(), connections);
+}
+
+template <bool Const>
+std::string Circuit::ElementTemplate<Const>::format_inputs() const {
+    auto strings = ranges::views::transform(
+        inputs(), [](Circuit::ConstInput input) { return input.format_connection(); });
+    return fmt::format("{}", strings);
+}
+
+template <bool Const>
+std::string Circuit::ElementTemplate<Const>::format_outputs() const {
+    auto strings = ranges::views::transform(outputs(), [](Circuit::ConstOutput output) {
+        return output.format_connection();
+    });
+    return fmt::format("{}", strings);
 }
 
 template <bool Const>
@@ -416,6 +442,16 @@ std::string Circuit::InputTemplate<Const>::format() const {
     return fmt::format("<Input {} of Element {}: {} {} x {}>", input_index(),
                        element_id(), element.element_type(), element.input_count(),
                        element.output_count());
+}
+
+template <bool Const>
+std::string Circuit::InputTemplate<Const>::format_connection() const {
+    if (has_connected_element()) {
+        return fmt::format("Element {} - {}", connected_element_id(),
+                           connected_output_index());
+    } else {
+        return "Empty";
+    }
 }
 
 template <bool Const>
@@ -550,6 +586,16 @@ std::string Circuit::OutputTemplate<Const>::format() const {
 }
 
 template <bool Const>
+std::string Circuit::OutputTemplate<Const>::format_connection() const {
+    if (has_connected_element()) {
+        return fmt::format("Element {} - {}", connected_element_id(),
+                           connected_input_index());
+    } else {
+        return "Empty";
+    }
+}
+
+template <bool Const>
 auto Circuit::OutputTemplate<Const>::circuit() const noexcept -> CircuitType * {
     return circuit_;
 }
@@ -642,6 +688,15 @@ auto Circuit::OutputTemplate<Const>::connection_data_() const -> ConnectionDataT
 }  // namespace logicsim
 
 template <>
+struct fmt::formatter<logicsim::Circuit> {
+    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+
+    auto format(const logicsim::Circuit &obj, fmt::format_context &ctx) const {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <>
 struct fmt::formatter<logicsim::ElementType> {
     constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
@@ -663,7 +718,8 @@ template <>
 struct fmt::formatter<logicsim::Circuit::ConstElement> {
     constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit::Element &obj, fmt::format_context &ctx) const {
+    auto format(const logicsim::Circuit::ConstElement &obj,
+                fmt::format_context &ctx) const {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };

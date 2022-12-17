@@ -1,6 +1,9 @@
 
 #include "circuit.h"
 
+#include <fmt/ranges.h>
+
+#include <utility>
 
 namespace logicsim {
 
@@ -25,6 +28,16 @@ std::string format(ElementType type) {
 //
 // Circuit
 //
+
+std::string Circuit::format() const {
+    std::string inner;
+    if (!empty()) {
+        auto element_strings = ranges::views::transform(
+            elements(), [&](auto element) { return element.format(true); });
+        inner = fmt::format(": [\n  {}\n]", fmt::join(element_strings, ",\n  "));
+    }
+    return fmt::format("<Circuit with {} elements{}>", element_count(), inner);
+}
 
 element_id_t Circuit::element_count() const noexcept {
     return static_cast<element_id_t>(element_data_store_.size());
