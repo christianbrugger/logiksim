@@ -2,10 +2,12 @@
 #define LOGIKSIM_CIRCUIT_H
 
 #include "exceptions.h"
+#include "random.h"
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <gsl/gsl>
 #include <range/v3/all.hpp>
 
@@ -298,8 +300,8 @@ std::string Circuit::ElementTemplate<Const>::format(bool with_connections) const
                            : fmt::format(", inputs = {}, outputs = {}", format(),
                                          format_inputs(), format_outputs());
 
-    return fmt::format("<Element {}: {}x{} {}{}>", element_id(),
-                       input_count(), output_count(), element_type(), connections);
+    return fmt::format("<Element {}: {}x{} {}{}>", element_id(), input_count(),
+                       output_count(), element_type(), connections);
 }
 
 template <bool Const>
@@ -810,11 +812,14 @@ void _create_random_connections(Circuit &circuit, G &rng, double connection_rati
     auto all_inputs
         = circuit.elements()
           | ranges::views::transform([](auto element) { return element.inputs(); })
-          | ranges::views::join | ranges::to_vector | ranges::actions::shuffle(rng);
+          | ranges::views::join | ranges::to_vector;
     auto all_outputs
         = circuit.elements()
           | ranges::views::transform([](auto element) { return element.outputs(); })
-          | ranges::views::join | ranges::to_vector | ranges::actions::shuffle(rng);
+          | ranges::views::join | ranges::to_vector;
+
+    shuffle(all_inputs, rng);
+    shuffle(all_outputs, rng);
 
     auto n_connections = gsl::narrow<std::size_t>(
         std::round(connection_ratio

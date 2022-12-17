@@ -209,11 +209,11 @@ int64_t benchmark_simulation(int n_elements = 100, int n_events = 10'000,
 
 template <std::uniform_random_bit_generator G>
 void _generate_random_events(G &rng, const Circuit &circuit, SimulationState &state) {
-    boost::random::uniform_int_distribution<int32_t> trigger_event {0, 1};
+    boost::random::uniform_int_distribution<int32_t> trigger_distribution {0, 1};
 
     for (auto element : circuit.elements()) {
         for (auto input : element.inputs()) {
-            if (trigger_event(rng) == 0) {
+            if (trigger_distribution(rng) == 0) {
                 state.queue.submit_event(make_event(input, state.queue.time() + 1us,
                                                     !get_input_value(input, state)));
             }
