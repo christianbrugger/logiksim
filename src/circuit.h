@@ -105,7 +105,7 @@ class Circuit::ElementTemplate {
 
     friend ElementTemplate<!Const>;
     friend Circuit;
-    ElementTemplate(CircuitType &circuit, element_id_t element_id) noexcept;
+    explicit ElementTemplate(CircuitType &circuit, element_id_t element_id) noexcept;
 
    public:
     /// This constructor is not regarded as a copy constructor,
@@ -207,13 +207,12 @@ class Circuit::OutputTemplate {
 
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    explicit OutputTemplate(CircuitType &circuit, element_id_t element_id,
-                            connection_size_t output_index,
-                            connection_id_t output_id) noexcept;
+    OutputTemplate(CircuitType &circuit, element_id_t element_id,
+                   connection_size_t output_index, connection_id_t output_id) noexcept;
 
    public:
     template <bool ConstOther>
-    OutputTemplate(OutputTemplate<ConstOther> output) noexcept;
+    explicit OutputTemplate(OutputTemplate<ConstOther> output) noexcept;
 
     template <bool ConstOther>
     bool operator==(OutputTemplate<ConstOther> other) const noexcept;
@@ -306,15 +305,14 @@ std::string Circuit::ElementTemplate<Const>::format(bool with_connections) const
 template <bool Const>
 std::string Circuit::ElementTemplate<Const>::format_inputs() const {
     auto strings = ranges::views::transform(
-        inputs(), [](Circuit::ConstInput input) { return input.format_connection(); });
+        inputs(), [](auto input) { return input.format_connection(); });
     return fmt::format("{::s}", strings);
 }
 
 template <bool Const>
 std::string Circuit::ElementTemplate<Const>::format_outputs() const {
-    auto strings = ranges::views::transform(outputs(), [](Circuit::ConstOutput output) {
-        return output.format_connection();
-    });
+    auto strings = ranges::views::transform(
+        outputs(), [](auto output) { return output.format_connection(); });
     return fmt::format("{::s}", strings);
 }
 
@@ -450,9 +448,8 @@ std::string Circuit::InputTemplate<Const>::format_connection() const {
     if (has_connected_element()) {
         return fmt::format("Element_{}-{}", connected_element_id(),
                            connected_output_index());
-    } else {
-        return "---";
     }
+    return "---";
 }
 
 template <bool Const>
@@ -591,9 +588,8 @@ std::string Circuit::OutputTemplate<Const>::format_connection() const {
     if (has_connected_element()) {
         return fmt::format("Element_{}-{}", connected_element_id(),
                            connected_input_index());
-    } else {
-        return "---";
     }
+    return "---";
 }
 
 template <bool Const>
