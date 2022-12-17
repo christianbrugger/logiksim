@@ -4,17 +4,17 @@
 /// to make sense these need to be deterministic on all platforms.
 /// We test here the random numbers are still the same.
 
+#include "random.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-#include <fmt/ranges.h>
 #include <range/v3/all.hpp>
 
 TEST(Random, GeneratorStability) {
-    boost::random::mt19937 rng;
-    rng.seed(0);
+    boost::random::mt19937 rng {0};
 
     ASSERT_EQ(rng(), 2357136044);
     ASSERT_EQ(rng(), 2546248239);
@@ -22,9 +22,8 @@ TEST(Random, GeneratorStability) {
     ASSERT_EQ(rng(), 3626093760);
 }
 
-TEST(Random, UniformInt_Stability_int32) {
-    boost::random::mt19937 rng;
-    rng.seed(0);
+TEST(Random, UniformIntStabilityInt32) {
+    boost::random::mt19937 rng {0};
 
     boost::random::uniform_int_distribution<int32_t> numbers(0, 1'000'000);
 
@@ -34,9 +33,8 @@ TEST(Random, UniformInt_Stability_int32) {
     ASSERT_EQ(numbers(rng), 844455);
 }
 
-TEST(Random, UniformInt_Stability_int64) {
-    boost::random::mt19937 rng;
-    rng.seed(0);
+TEST(Random, UniformIntStabilityInt64) {
+    boost::random::mt19937 rng {0};
 
     boost::random::uniform_int_distribution<int64_t> numbers(10'000'000'000,
                                                              20'000'000'000);
@@ -47,9 +45,8 @@ TEST(Random, UniformInt_Stability_int64) {
     ASSERT_EQ(numbers(rng), 11879422756);
 }
 
-TEST(Random, UniformInt_Stability_int8) {
-    boost::random::mt19937 rng;
-    rng.seed(0);
+TEST(Random, UniformIntStabilityInt8) {
+    boost::random::mt19937 rng {0};
 
     boost::random::uniform_int_distribution<int8_t> numbers(0, 100);
 
@@ -59,15 +56,26 @@ TEST(Random, UniformInt_Stability_int8) {
     ASSERT_EQ(numbers(rng), 85);
 }
 
-TEST(Random, Shuffle_Stability) {
-    boost::random::mt19937 rng;
-    rng.seed(0);
+TEST(Random, ShuffleStabilityIterators) {
+    boost::random::mt19937 rng {0};
 
     std::vector<int> vec = ranges::views::iota(0, 10) | ranges::to_vector;
 
-    vec |= ranges::actions::shuffle(rng);
-    ASSERT_THAT(vec, testing::ElementsAre(0, 1, 9, 2, 7, 4, 5, 8, 6, 3));
+    logicsim::shuffle(std::begin(vec), std::end(vec), rng);
+    ASSERT_THAT(vec, testing::ElementsAre(0, 2, 3, 5, 9, 1, 6, 8, 4, 7));
 
-    vec |= ranges::actions::shuffle(rng);
-    ASSERT_THAT(vec, testing::ElementsAre(9, 3, 4, 7, 5, 1, 0, 8, 6, 2));
+    logicsim::shuffle(std::begin(vec), std::end(vec), rng);
+    ASSERT_THAT(vec, testing::ElementsAre(8, 1, 7, 3, 2, 5, 6, 0, 4, 9));
+}
+
+TEST(Random, ShuffleStabilityRanges) {
+    boost::random::mt19937 rng {0};
+
+    std::vector<int> vec = ranges::views::iota(0, 10) | ranges::to_vector;
+
+    logicsim::shuffle(vec, rng);
+    ASSERT_THAT(vec, testing::ElementsAre(0, 2, 3, 5, 9, 1, 6, 8, 4, 7));
+
+    logicsim::shuffle(vec, rng);
+    ASSERT_THAT(vec, testing::ElementsAre(8, 1, 7, 3, 2, 5, 6, 0, 4, 9));
 }

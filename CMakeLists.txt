@@ -158,15 +158,20 @@ endif()
 
 # Main Library
 
-add_library(logicsim_core 
-    src/circuit.h src/circuit.cpp
-    src/simulation.h src/simulation.cpp 
+add_library(logicsim_core
     src/algorithms.h src/algorithm.cpp
+    src/circuit.h src/circuit.cpp
     src/exceptions.h src/exceptions.cpp
+    src/random.h src/random.cpp
+    src/simulation.h src/simulation.cpp
     src/timer.h src/timer.cpp
 )
 target_link_libraries(logicsim_core PUBLIC 
-    Boost::container Boost::mpl boost_stacktrace Boost::random
+    boost_stacktrace 
+    Boost::container 
+    Boost::mpl
+    Boost::random
+
     range-v3::range-v3
     fmt::fmt
     folly

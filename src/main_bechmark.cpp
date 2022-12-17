@@ -217,8 +217,7 @@ static void BM_Simulation_0(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
         state.PauseTiming();
 
-        boost::random::mt19937 rng;
-        rng.seed(0);
+        boost::random::mt19937 rng {0};
 
         auto circuit = logicsim::create_random_circuit(rng, 100);
         logicsim::add_output_placeholders(circuit);
