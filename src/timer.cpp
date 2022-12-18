@@ -7,7 +7,7 @@ namespace logicsim {
 
 Timer::Timer(std::string description, Unit unit, int precision)
     : precision_ {precision},
-      description_(description),
+      description_(std::move(description)),
       unit_(unit),
       start_(timer_t::now()) {};
 
@@ -18,7 +18,7 @@ Timer::~Timer() {
 }
 
 auto Timer::delta() const -> std::chrono::duration<double> {
-    return std::chrono::duration<double>(timer_t::now() - start_);
+    return std::chrono::duration<double> {timer_t::now() - start_};
 }
 
 auto Timer::format() const -> std::string {

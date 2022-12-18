@@ -207,12 +207,13 @@ class Circuit::OutputTemplate {
 
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    OutputTemplate(CircuitType &circuit, element_id_t element_id,
-                   connection_size_t output_index, connection_id_t output_id) noexcept;
+    explicit OutputTemplate(CircuitType &circuit, element_id_t element_id,
+                            connection_size_t output_index,
+                            connection_id_t output_id) noexcept;
 
    public:
     template <bool ConstOther>
-    explicit OutputTemplate(OutputTemplate<ConstOther> output) noexcept;
+    OutputTemplate(OutputTemplate<ConstOther> output) noexcept;
 
     template <bool ConstOther>
     bool operator==(OutputTemplate<ConstOther> other) const noexcept;
@@ -384,7 +385,7 @@ auto Circuit::ElementTemplate<Const>::output(connection_size_t output) const
 template <bool Const>
 inline auto Circuit::ElementTemplate<Const>::inputs() const {
     // We capture the element by value. This is because elements are temporary objects
-    // and might be discarded before the lambda is evaluated. Also its very cheap.
+    // and might be discarded before the lambda is evaluated. Also it's very cheap.
     return ranges::views::iota(0, input_count())
            | ranges::views::transform(
                [*this](int i) { return this->input(static_cast<connection_size_t>(i)); });

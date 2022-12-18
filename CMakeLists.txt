@@ -120,38 +120,17 @@ target_compile_definitions(folly PUBLIC FOLLY_NO_CONFIG)
 
 
 ###################################################
-
+# needed to run clang-tidy outside, generates compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if (false)
-    set(CLANG_TIDY_CHECKS "\
-    clang-analyzer-*,\
-    performance-*,\
-    portability-*,\
-    concurrency-*,\
-    cppcoreguidelines-*,\
-    modernize-*,\
-    bugprone-*,\
-    readability-*,\
-    \
-    google-default-arguments,\
-    google-explicit-constructor,\
-    google-readability-avoid-underscore-in-googletest-name,\
-    google-runtime-operator,\
-    \
-    -cppcoreguidelines-avoid-magic-numbers,\
-    -readability-magic-numbers,\
-    -readability-identifier-length,\
-    -readability-convert-member-functions-to-static,\
-    -modernize-use-trailing-return-type,\
-    -clang-analyzer-optin.cplusplus.UninitializedObject,\
-    ")
     set(CMAKE_CXX_CLANG_TIDY
         clang-tidy;
         -extra-arg=/permissive-;
         -extra-arg=/EHsc;
-        -header-filter=\\src\\[a-z0-9_]+\.h$;
         -warnings-as-errors=*;
         -checks=${CLANG_TIDY_CHECKS};
     )
+    #-header-filter=\\src\\[a-z0-9_]+\.h$;
 endif()
 
 
