@@ -28,7 +28,7 @@ enum class ElementType : uint8_t {
     xor_element
 };
 
-std::string format(ElementType type);
+auto format(ElementType type) -> std::string;
 
 using element_id_t = int32_t;
 using connection_id_t = int32_t;

@@ -7,7 +7,7 @@
 
 namespace logicsim {
 
-std::string format(ElementType type) {
+auto format(ElementType type) -> std::string {
     switch (type) {
         case ElementType::placeholder:
             return "Placeholder";
@@ -29,7 +29,7 @@ std::string format(ElementType type) {
 // Circuit
 //
 
-std::string Circuit::format() const {
+auto Circuit::format() const -> std::string {
     std::string inner;
     if (!empty()) {
         auto element_strings = ranges::views::transform(
@@ -39,13 +39,13 @@ std::string Circuit::format() const {
     return fmt::format("<Circuit with {} elements{}>", element_count(), inner);
 }
 
-element_id_t Circuit::element_count() const noexcept {
+auto Circuit::element_count() const noexcept -> element_id_t {
     return static_cast<element_id_t>(element_data_store_.size());
 }
 
 auto Circuit::empty() const noexcept -> bool { return element_data_store_.empty(); }
 
-bool Circuit::is_element_id_valid(element_id_t element_id) const noexcept {
+auto Circuit::is_element_id_valid(element_id_t element_id) const noexcept -> bool {
     return element_id >= 0 && element_id < element_count();
 }
 
@@ -105,25 +105,25 @@ auto Circuit::clear() -> void {
     input_data_store_.clear();
 }
 
-connection_id_t Circuit::total_input_count() const noexcept {
+auto Circuit::total_input_count() const noexcept -> connection_id_t {
     return static_cast<connection_id_t>(input_data_store_.size());
 }
 
-connection_id_t Circuit::total_output_count() const noexcept {
+auto Circuit::total_output_count() const noexcept -> connection_id_t {
     return static_cast<connection_id_t>(output_data_store_.size());
 }
 
-void validate_output_connected(const Circuit::ConstOutput output) {
+auto validate_output_connected(const Circuit::ConstOutput output) -> void {
     if (!output.has_connected_element()) [[unlikely]] {
         throw_exception("Element has unconnected output.");
     }
 }
 
-void validate_outputs_connected(const Circuit::ConstElement element) {
+auto validate_outputs_connected(const Circuit::ConstElement element) -> void {
     ranges::for_each(element.outputs(), validate_output_connected);
 }
 
-void validate_input_consistent(const Circuit::ConstInput input) {
+auto validate_input_consistent(const Circuit::ConstInput input) -> void {
     if (input.has_connected_element()) {
         auto back_reference {input.connected_output().connected_input()};
         if (back_reference != input) [[unlikely]] {
@@ -132,7 +132,7 @@ void validate_input_consistent(const Circuit::ConstInput input) {
     }
 }
 
-void validate_output_consistent(const Circuit::ConstOutput output) {
+auto validate_output_consistent(const Circuit::ConstOutput output) -> void {
     if (output.has_connected_element()) {
         if (!output.connected_input().has_connected_element()) [[unlikely]] {
             throw_exception("Back reference is missing.");
@@ -144,12 +144,14 @@ void validate_output_consistent(const Circuit::ConstOutput output) {
     }
 }
 
-void validate_element_connections_consistent(const Circuit::ConstElement element) {
+auto validate_element_connections_consistent(const Circuit::ConstElement element)
+    -> void {
     ranges::for_each(element.inputs(), validate_input_consistent);
     ranges::for_each(element.outputs(), validate_output_consistent);
 }
 
-void Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data) {
+auto Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data)
+    -> void {
     if (connection_data.element_id != null_element
         && connection_data.index == null_connection) [[unlikely]] {
         throw_exception("Connection to an element cannot have null_connection.");
@@ -161,7 +163,7 @@ void Circuit::validate_connection_data_(const Circuit::ConnectionData connection
     }
 }
 
-void Circuit::validate(bool require_all_outputs_connected) const {
+auto Circuit::validate(bool require_all_outputs_connected) const -> void {
     auto all_one {[](auto vector) {
         return ranges::all_of(vector, [](auto item) { return item == 1; });
     }};
@@ -205,27 +207,27 @@ void Circuit::validate(bool require_all_outputs_connected) const {
 // Free Functions
 //
 
-void add_placeholder(Circuit::Output output) {
+auto add_placeholder(Circuit::Output output) -> void {
     if (!output.has_connected_element()) {
         auto placeholder {output.circuit()->add_element(ElementType::placeholder, 1, 0)};
         output.connect(placeholder.input(0));
     }
 }
 
-void add_element_placeholders(Circuit::Element element) {
+auto add_element_placeholders(Circuit::Element element) -> void {
     ranges::for_each(element.outputs(), add_placeholder);
 }
 
-void add_output_placeholders(Circuit &circuit) {
+auto add_output_placeholders(Circuit &circuit) -> void {
     ranges::for_each(circuit.elements(), add_element_placeholders);
 }
 
-Circuit benchmark_circuit(const int n_elements) {
+auto benchmark_circuit(const int n_elements) -> Circuit {
     Circuit circuit {};
 
     auto elem0 {circuit.add_element(ElementType::and_element, 2, 2)};
 
-    for ([[maybe_unused]] auto _ : ranges::iota_view(1, n_elements)) {
+    for ([[maybe_unused]] auto count : ranges::iota_view(0, n_elements - 1)) {
         auto wire0 {circuit.add_element(ElementType::wire, 1, 1)};
         auto wire1 {circuit.add_element(ElementType::wire, 1, 1)};
         auto elem1 {circuit.add_element(ElementType::and_element, 2, 2)};

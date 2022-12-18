@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.25)
 
 include(CMakePrintHelpers)
-cmake_print_variables(CMAKE_C_COMPILER )
-cmake_print_variables(CMAKE_CXX_COMPILER )
+cmake_print_variables(CMAKE_C_COMPILER)
+cmake_print_variables(CMAKE_CXX_COMPILER)
 
 cmake_policy(PUSH)
 
@@ -28,6 +28,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
+# enable compiler caching
+set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+# ccache only supports /Z7, not /Zi
+string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+cmake_print_variables(CMAKE_C_FLAGS_DEBUG)
+cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
+cmake_print_variables(CMAKE_C_FLAGS_RELWITHDEBINFO)
+cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+
+
 # global flags for all libraries
 if (MSVC)
 	add_compile_options(/EHsc)
@@ -38,7 +51,7 @@ else()
 	add_compile_options(-fexceptions)
 endif()
 
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 
 # TODO: global optimization / link time optimization
@@ -158,7 +171,10 @@ target_link_libraries(logicsim_core PUBLIC
     absl::base
     GSL
 )
-target_compile_options(logicsim_core PRIVATE ${MAIN_COMPILE_OPTIONS})
+target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
+# target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/format.h)
+# target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/ranges.h)
+# target_precompile_headers(logicsim_core PUBLIC external/range-v3/include/range/v3/all.hpp)
 
 
 
