@@ -10,5 +10,6 @@ fmt
 folly
 googletest
 GSL
+ninjatracing
 range-v3
 
