@@ -1,7 +1,7 @@
 #include "exceptions.h"
 
 #include <boost/stacktrace.hpp>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace logicsim {
 
