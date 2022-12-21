@@ -63,6 +63,21 @@ auto Circuit::element(element_id_t element_id) const -> ConstElement {
     return ConstElement {*this, element_id};
 }
 
+auto Circuit::elements() -> ranges::any_view<Element, ranges::category::random_access
+                                                          | ranges::category::sized> {
+    return ranges::views::iota(element_id_t {0}, element_count())
+           | ranges::views::transform(
+               [this](element_id_t element_id) { return this->element(element_id); });
+}
+
+auto Circuit::elements() const
+    -> ranges::any_view<ConstElement,
+                        ranges::category::random_access | ranges::category::sized> {
+    return ranges::views::iota(element_id_t {0}, element_count())
+           | ranges::views::transform(
+               [this](element_id_t element_id) { return this->element(element_id); });
+}
+
 auto Circuit::add_element(ElementType type, connection_size_t input_count,
                           connection_size_t output_count) -> Element {
     if (input_count < 0) [[unlikely]] {

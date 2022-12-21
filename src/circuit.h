@@ -66,8 +66,12 @@ class Circuit {
 
     [[nodiscard]] Element element(element_id_t element_id);
     [[nodiscard]] ConstElement element(element_id_t element_id) const;
-    [[nodiscard]] inline auto elements();
-    [[nodiscard]] inline auto elements() const;
+    [[nodiscard]] auto elements()
+        -> ranges::any_view<Element,
+                            ranges::category::random_access | ranges::category::sized>;
+    [[nodiscard]] auto elements() const
+        -> ranges::any_view<ConstElement,
+                            ranges::category::random_access | ranges::category::sized>;
 
     Element add_element(ElementType type, connection_size_t input_count,
                         connection_size_t output_count);
@@ -250,24 +254,6 @@ class Circuit::OutputTemplate {
     connection_size_t output_index_;
     connection_id_t output_id_;
 };
-
-//
-// Circuit
-//
-
-// auto return methods need to be defined in the header, so the type can be deduced
-
-auto Circuit::elements() {
-    return ranges::views::iota(0, element_count())
-           | ranges::views::transform(
-               [this](int i) { return this->element(static_cast<element_id_t>(i)); });
-}
-
-auto Circuit::elements() const {
-    return ranges::views::iota(0, element_count())
-           | ranges::views::transform(
-               [this](int i) { return this->element(static_cast<element_id_t>(i)); });
-}
 
 //
 // Circuit::Element
