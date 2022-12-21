@@ -770,8 +770,10 @@ void add_output_placeholders(Circuit &circuit);
 
 Circuit benchmark_circuit(int n_elements = 100);
 
+namespace details {
+
 template <std::uniform_random_bit_generator G>
-void _add_random_element(Circuit &circuit, G &rng) {
+void add_random_element(Circuit &circuit, G &rng) {
     boost::random::uniform_int_distribution<int8_t> element_dist {0, 2};
     boost::random::uniform_int_distribution<connection_size_t> connection_dist {1, 8};
 
@@ -791,13 +793,13 @@ void _add_random_element(Circuit &circuit, G &rng) {
 }
 
 template <std::uniform_random_bit_generator G>
-void _create_random_elements(Circuit &circuit, G &rng, int n_elements) {
+void create_random_elements(Circuit &circuit, G &rng, int n_elements) {
     ranges::for_each(ranges::views::iota(0, n_elements),
-                     [&](auto) { _add_random_element(circuit, rng); });
+                     [&](auto) { add_random_element(circuit, rng); });
 }
 
 template <std::uniform_random_bit_generator G>
-void _create_random_connections(Circuit &circuit, G &rng, double connection_ratio) {
+void create_random_connections(Circuit &circuit, G &rng, double connection_ratio) {
     if (connection_ratio == 0) {
         return;
     }
@@ -829,12 +831,15 @@ void _create_random_connections(Circuit &circuit, G &rng, double connection_rati
                      });
 }
 
+}  // namespace details
+
 template <std::uniform_random_bit_generator G>
 Circuit create_random_circuit(G &rng, int n_elements = 100,
                               double connection_ratio = 0.75) {
     Circuit circuit;
-    _create_random_elements(circuit, rng, n_elements);
-    _create_random_connections(circuit, rng, connection_ratio);
+    details::create_random_elements(circuit, rng, n_elements);
+    details::create_random_connections(circuit, rng, connection_ratio);
+
     return circuit;
 }
 

@@ -4,6 +4,7 @@ asmjit
 benchmark
 blend2d
 boost
+ClangBuildAnalyzer
 CMake
 fmt
 folly

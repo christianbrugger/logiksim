@@ -15,7 +15,7 @@ if(POLICY CMP0141)
   cmake_policy(SET CMP0141 OLD)
 endif()
 if(POLICY CMP0069)
-  # enfore link time optimization is used when enabled
+  # enforce link time optimization is used when enabled
   cmake_policy(SET CMP0069 NEW)
   set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 endif()
@@ -29,7 +29,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 # enable compiler caching
-set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+# set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
 # ccache only supports /Z7, not /Zi
 string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
@@ -51,7 +51,7 @@ else()
 	add_compile_options(-fexceptions)
 endif()
 
-# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 
 # TODO: global optimization / link time optimization
@@ -61,6 +61,7 @@ endif()
 if (MSVC)
     set(MAIN_COMPILE_OPTIONS /permissive- /EHsc)
     list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
+    list(APPEND MAIN_COMPILE_OPTIONS -ftime-trace)
 
     # unreachable code warnings when using range-v3 templates
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
@@ -151,7 +152,7 @@ endif()
 
 # Main Library
 
-add_library(logicsim_core
+set(LS_CORE_SOURCES
     src/algorithms.h src/algorithm.cpp
     src/circuit.h src/circuit.cpp
     src/exceptions.h src/exceptions.cpp
@@ -159,7 +160,7 @@ add_library(logicsim_core
     src/simulation.h src/simulation.cpp
     src/timer.h src/timer.cpp
 )
-target_link_libraries(logicsim_core PUBLIC 
+set(LS_CORE_LIBRARIES  
     boost_stacktrace 
     Boost::container 
     Boost::mpl
@@ -171,7 +172,7 @@ target_link_libraries(logicsim_core PUBLIC
     absl::base
     GSL
 )
-target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
+# target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
 # target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/format.h)
 # target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/ranges.h)
 # target_precompile_headers(logicsim_core PUBLIC external/range-v3/include/range/v3/all.hpp)
@@ -182,10 +183,12 @@ target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
 
 set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET} 
+    ${LS_CORE_SOURCES}
+    
     src/main_bechmark.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    logicsim_core
+    ${LS_CORE_LIBRARIES}
 
     benchmark::benchmark
 )
@@ -195,11 +198,13 @@ target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
 set(MAIN_TARGET "simulation_srp_main")
 add_executable(${MAIN_TARGET} 
+    ${LS_CORE_SOURCES}
+
     src/main.cpp
     
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
-    logicsim_core
+    ${LS_CORE_LIBRARIES}
 )
 target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
@@ -207,12 +212,14 @@ target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
 set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET} 
+    ${LS_CORE_SOURCES}
+
     src/render_widget.h src/render_widget.cpp 
     src/render_scene.h src/render_scene.cpp
     src/main_gui.cpp
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    logicsim_core
+    ${LS_CORE_LIBRARIES}
 
     Qt6::Widgets
     Qt6::OpenGLWidgets
@@ -224,6 +231,8 @@ target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
 set(MAIN_TEST_TARGET "simulation_srp_test")
 add_executable(${MAIN_TEST_TARGET} 
+    ${LS_CORE_SOURCES}
+    
     test/circuit_test.cpp
     test/random_test.cpp
     test/simulation_test.cpp
@@ -232,7 +241,7 @@ target_include_directories(${MAIN_TEST_TARGET} PRIVATE
     src
 )
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
-    logicsim_core
+    ${LS_CORE_LIBRARIES}
     
     GTest::gtest
     GTest::gmock
