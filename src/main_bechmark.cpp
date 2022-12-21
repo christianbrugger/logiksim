@@ -6,6 +6,7 @@
 #include "simulation.h"
 
 #include <benchmark/benchmark.h>
+#include <boost/random/mersenne_twister.hpp>
 #include <gsl/gsl>
 
 #include <array>

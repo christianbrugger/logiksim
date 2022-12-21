@@ -2,7 +2,7 @@
 #define LOGIKSIM_RANDOM_H
 
 #include <boost/random/uniform_int_distribution.hpp>
-#include <range/v3/all.hpp>
+#include <range/v3/range/concepts.hpp>
 
 #include <algorithm>
 #include <iterator>
