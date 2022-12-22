@@ -28,18 +28,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-# enable compiler caching
-# set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
-# ccache only supports /Z7, not /Zi
-string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
-string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-cmake_print_variables(CMAKE_C_FLAGS_DEBUG)
-cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
-cmake_print_variables(CMAKE_C_FLAGS_RELWITHDEBINFO)
-cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-
+option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
+option(LS_ENABLE_CCACHE "Enable ccache." ON)
+option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 
 # global flags for all libraries
 if (MSVC)
@@ -51,9 +42,6 @@ else()
 	add_compile_options(-fexceptions)
 endif()
 
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-
-
 # TODO: global optimization / link time optimization
 # TODO enable SIMD
 # TODO put flags here
@@ -61,7 +49,6 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 if (MSVC)
     set(MAIN_COMPILE_OPTIONS /permissive- /EHsc)
     list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
-    list(APPEND MAIN_COMPILE_OPTIONS -ftime-trace)
 
     # unreachable code warnings when using range-v3 templates
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
@@ -71,6 +58,37 @@ else()
                              -Wstrict-aliasing)
 		     # -Wthread-safety 
 endif()
+
+if (LS_ENABLE_LTO)
+    message(NOTICE "LOGIKSIM: Enabling link time optimization.")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
+if (LS_ENABLE_TIME_TRACE)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(NOTICE "LOGIKSIM: Enabling time tracing.")
+        list(APPEND MAIN_COMPILE_OPTIONS -ftime-trace)
+    else()
+        message(FATAL_ERROR "Time tracing only works for Clang!" )
+    endif()
+endif()
+
+if (LS_ENABLE_CCACHE)
+    message(NOTICE "LOGIKSIM: Enabling ccache.")
+    set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+    # ccache only supports /Z7, not /Zi
+    string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+    string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+    string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+    string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+endif()
+cmake_print_variables(CMAKE_C_FLAGS_DEBUG)
+cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
+cmake_print_variables(CMAKE_C_FLAGS_RELWITHDEBINFO)
+cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+
+cmake_print_variables(MAIN_COMPILE_OPTIONS)
+
 
 
 ###### GOOGLE BENCHMARK
@@ -85,7 +103,7 @@ add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
 # Boost
-# find_package(Boost REQUIRED COMPONENTS)
+set(BOOST_INCLUDE_LIBRARIES container stacktrace mpl random)
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
 if (WIN32)
     # Boost::stacktrace_windbg
@@ -152,6 +170,16 @@ endif()
 
 # Main Library
 
+add_library(logicsim_pch INTERFACE)
+target_precompile_headers(logicsim_pch INTERFACE
+	<iostream>
+	<vector>
+	<algorithm>
+	<chrono>
+	<random>
+)
+
+
 set(LS_CORE_SOURCES
     src/algorithms.h src/algorithm.cpp
     src/circuit.h src/circuit.cpp
@@ -159,8 +187,11 @@ set(LS_CORE_SOURCES
     src/random.h src/random.cpp
     src/simulation.h src/simulation.cpp
     src/timer.h src/timer.cpp
+	src/newlib.cpp
 )
 set(LS_CORE_LIBRARIES  
+    logicsim_pch
+
     boost_stacktrace 
     Boost::container 
     Boost::mpl
@@ -172,6 +203,7 @@ set(LS_CORE_LIBRARIES
     absl::base
     GSL
 )
+
 # target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
 # target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/format.h)
 # target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/ranges.h)
