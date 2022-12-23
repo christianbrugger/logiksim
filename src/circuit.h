@@ -1,6 +1,11 @@
 #ifndef LOGIKSIM_CIRCUIT_H
 #define LOGIKSIM_CIRCUIT_H
 
+// investigations
+// * iterator
+// * std::span
+// * write range(n), similar to python
+
 #include "exceptions.h"
 #include "random.h"
 
@@ -17,6 +22,7 @@
 #include <range/v3/view/zip.hpp>
 
 #include <cstdint>
+#include <ranges>
 #include <string>
 #include <vector>
 

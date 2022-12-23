@@ -32,31 +32,44 @@ option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 
-# global flags for all libraries
+
+# global exceptions
 if (MSVC)
 	add_compile_options(/EHsc)
-	# add_compile_options(/arch:AVX2)
-	# add_link_options(/PROFILE)
 else()
-	# add_compile_options(-march=native)
 	add_compile_options(-fexceptions)
 endif()
 
-# TODO: global optimization / link time optimization
-# TODO enable SIMD
-# TODO put flags here
 
+# global architecture
+#if (MSVC)
+#	# add_compile_options(/arch:AVX2)
+#else()
+#	# add_compile_options(-march=native)
+#endif()
+
+# global profiling
+#if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	# add_link_options(/PROFILE)
+#endif()
+
+# our library: needs to be standard complient
+set(MAIN_COMPILE_OPTIONS)
 if (MSVC)
-    set(MAIN_COMPILE_OPTIONS /permissive- /EHsc)
-    list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
+    list(APPEND MAIN_COMPILE_OPTIONS /permissive-)
+else()
+    list(APPEND MAIN_COMPILE_OPTIONS -pedantic)
+endif()
 
+# our library: enable warnings
+if (MSVC)
+    list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
     # unreachable code warnings when using range-v3 templates
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
 else()
-    set(MAIN_COMPILE_OPTIONS -pedantic -fexceptions)
+	# -Wthread-safety 
     list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
                              -Wstrict-aliasing)
-		     # -Wthread-safety 
 endif()
 
 if (LS_ENABLE_LTO)
@@ -87,9 +100,8 @@ cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
 cmake_print_variables(CMAKE_C_FLAGS_RELWITHDEBINFO)
 cmake_print_variables(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
+
 cmake_print_variables(MAIN_COMPILE_OPTIONS)
-
-
 
 ###### GOOGLE BENCHMARK
 
@@ -172,11 +184,19 @@ endif()
 
 add_library(logicsim_pch INTERFACE)
 target_precompile_headers(logicsim_pch INTERFACE
-	<iostream>
-	<vector>
+	<boost/random/uniform_int_distribution.hpp>
+	<fmt/core.h>
+	<gsl/gsl>
+	
 	<algorithm>
 	<chrono>
+	<cstdint>
+	<iostream>
+	<iterator>
 	<random>
+	<string>
+	<utility>
+	<vector>
 )
 
 
