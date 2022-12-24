@@ -8,6 +8,7 @@
 
 #include "exceptions.h"
 #include "random.h"
+#include "range.h"
 
 #include <boost/random/uniform_int_distribution.hpp>
 #include <fmt/core.h>
@@ -398,8 +399,9 @@ void add_random_element(Circuit &circuit, G &rng) {
 
 template <std::uniform_random_bit_generator G>
 void create_random_elements(Circuit &circuit, G &rng, int n_elements) {
-    ranges::for_each(ranges::views::iota(0, n_elements),
-                     [&](auto) { add_random_element(circuit, rng); });
+    for (auto _ [[maybe_unused]] : range(n_elements)) {
+        add_random_element(circuit, rng);
+    }
 }
 
 template <std::uniform_random_bit_generator G>
@@ -411,35 +413,39 @@ void create_random_connections(Circuit &circuit, G &rng, double connection_ratio
         throw_exception("connection ratio needs to be between 0 and 1.");
     }
 
-    auto all_inputs
-        = circuit.elements()
-          | ranges::views::transform([](auto element) { return element.inputs(); })
-          | ranges::views::join | ranges::to_vector;
-    auto all_outputs
-        = circuit.elements()
-          | ranges::views::transform([](auto element) { return element.outputs(); })
-          | ranges::views::join | ranges::to_vector;
+    // collect inputs
+    std::vector<Circuit::Input> all_inputs;
+    all_inputs.reserve(circuit.total_input_count());
+    for (auto element : circuit.elements()) {
+        for (auto input : element.inputs()) {
+            all_inputs.push_back(input);
+        }
+    }
+
+    // collect outputs
+    std::vector<Circuit::Output> all_outputs;
+    all_outputs.reserve(circuit.total_output_count());
+    for (auto element : circuit.elements()) {
+        for (auto output : element.outputs()) {
+            all_outputs.push_back(output);
+        }
+    }
 
     shuffle(all_inputs, rng);
     shuffle(all_outputs, rng);
 
-    auto n_connections = gsl::narrow<std::size_t>(
-        std::round(connection_ratio
-                   * std::min(ranges::size(all_inputs), ranges::size(all_outputs))));
+    auto n_connections = gsl::narrow<std::size_t>(std::round(
+        connection_ratio * std::min(std::size(all_inputs), std::size(all_outputs))));
 
-    ranges::for_each(ranges::views::zip(all_inputs, all_outputs)
-                         | ranges::views::take_exactly(n_connections),
-                     [](const auto pair) {
-                         const auto [input, output] = pair;
-                         input.connect(output);
-                     });
+    for (auto i [[maybe_unused]] : range(n_connections)) {
+        all_inputs.at(i).connect(all_outputs.at(i));
+    }
 }
 
 }  // namespace details
 
 template <std::uniform_random_bit_generator G>
-Circuit create_random_circuit(G &rng, int n_elements = 100,
-                              double connection_ratio = 0.75) {
+auto create_random_circuit(G &rng, int n_elements = 100, double connection_ratio = 0.75) {
     Circuit circuit;
     details::create_random_elements(circuit, rng, n_elements);
     details::create_random_connections(circuit, rng, connection_ratio);

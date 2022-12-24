@@ -67,6 +67,26 @@ TEST(Range, FmtFormatting) {
     ASSERT_EQ(fmt::format("{}", range(-2, -100)), "range(-2, -100)");
 }
 
+TEST(Range, StlDistance) {
+    // this iterates the iterator
+    {
+        const auto r = range(10);
+        EXPECT_EQ(std::distance(r.begin(), r.end()), 10);
+    }
+    {
+        const auto r = range(0);
+        EXPECT_EQ(std::distance(r.begin(), r.end()), 0);
+    }
+    {
+        const auto r = range(-10, 0);
+        EXPECT_EQ(std::distance(r.begin(), r.end()), 10);
+    }
+    {
+        const auto r = range(-10);
+        EXPECT_EQ(std::distance(r.begin(), r.end()), 0);
+    }
+}
+
 namespace {
 
 struct StrongType {
@@ -79,7 +99,7 @@ struct StrongType {
 
     constexpr auto operator++(int) noexcept -> void { ++value; }
 
-    using difference_type = std::incrementable_traits<decltype(value)>::difference_type;
+    using difference_type = range_difference_t<decltype(value)>;
 
     explicit operator difference_type() const { return value; }
 

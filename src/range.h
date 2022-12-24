@@ -17,13 +17,14 @@ namespace logicsim {
 template <class T>
 inline constexpr T range_type_zero_value = T {0};
 
-namespace detail {
-
+// define difference_type in your own type using this
 template <class T>
 using range_difference_t
     = std::conditional_t<std::is_integral_v<T>,
                          std::conditional_t<sizeof(T) < sizeof(int), int, long long>,
                          std::iter_difference_t<T>>;
+
+namespace detail {
 
 template <typename T>
     requires std::copyable<T>
@@ -56,18 +57,13 @@ struct range_iterator_t {
         ++current_;
         return tmp;
     }
-};
-
-template <typename T>
-struct range_sentinel_t {
-    T last_ {};
 
     [[nodiscard]] friend constexpr auto operator==(
         const range_iterator_t<T>& left,
-        const range_sentinel_t<T>& right) noexcept(noexcept(left.current_ == right.last_))
-        -> bool {
+        const range_iterator_t<T>& right) noexcept(noexcept(left.current_
+                                                            == right.current_)) -> bool {
         // this way we generate an empty range when last < first
-        return left.current_ >= right.last_;
+        return left.current_ >= right.current_;
     }
 };
 
@@ -102,8 +98,8 @@ struct range_t {
     }
 
     [[nodiscard]] constexpr auto end() const
-        noexcept(std::is_nothrow_copy_constructible_v<T>) -> range_sentinel_t<T> {
-        return range_sentinel_t<T> {stop_};
+        noexcept(std::is_nothrow_copy_constructible_v<T>) -> range_iterator_t<T> {
+        return range_iterator_t<T> {stop_};
     }
 
     [[nodiscard]] constexpr auto size() const -> range_difference_t<T>
@@ -137,8 +133,7 @@ struct range_t {
 template <typename T>
 concept range_value_type
     = std::weakly_incrementable<T> && std::equality_comparable<T>
-      && std::totally_ordered<T> && std::input_iterator<detail::range_iterator_t<T>>
-      && std::sentinel_for<detail::range_sentinel_t<T>, detail::range_iterator_t<T>>;
+      && std::totally_ordered<T> && std::input_iterator<detail::range_iterator_t<T>>;
 
 template <range_value_type T>
 [[nodiscard]] constexpr auto range(T stop) noexcept(

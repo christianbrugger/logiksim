@@ -30,7 +30,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
-option(LS_ENABLE_LTO "Enable link time optimization." OFF)
+option(LS_ENABLE_LTO "Enable link time optimization." ON)
 
 
 # global exceptions
@@ -190,11 +190,14 @@ target_precompile_headers(logicsim_pch INTERFACE
 	
 	<algorithm>
 	<chrono>
+    <concepts>
 	<cstdint>
 	<iostream>
 	<iterator>
 	<random>
+    <ranges>
 	<string>
+    <type_traits>
 	<utility>
 	<vector>
 )
