@@ -287,6 +287,7 @@ add_executable(${MAIN_TEST_TARGET}
     
     test/circuit_test.cpp
     test/random_test.cpp
+    test/range_test.cpp
     test/simulation_test.cpp
 )
 target_include_directories(${MAIN_TEST_TARGET} PRIVATE
