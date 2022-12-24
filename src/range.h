@@ -1,20 +1,29 @@
 
-#ifndef TEST_RANGE_H
-#define TEST_RANGE_H
+#ifndef LOGIKSIM_RANGE_H
+#define LOGIKSIM_RANGE_H
+
+#include "concepts.h"
 
 #include <fmt/core.h>
 
 #include <concepts>
 #include <iterator>
+#include <ranges>
+#include <type_traits>
 
 namespace logicsim {
+
+// Specialize this if the default is wrong.
+template <class T>
+inline constexpr T range_type_zero_value = T {0};
 
 namespace detail {
 
 template <class T>
 using range_difference_t
-    = std::conditional_t<std::is_integral_v<T> && sizeof(T) < sizeof(int), int,
-                         long long>;
+    = std::conditional_t<std::is_integral_v<T>,
+                         std::conditional_t<sizeof(T) < sizeof(int), int, long long>,
+                         std::iter_difference_t<T>>;
 
 template <typename T>
     requires std::copyable<T>
@@ -63,26 +72,23 @@ struct range_sentinel_t {
 };
 
 template <typename T>
-    requires std::equality_comparable<T>
 struct range_t {
    public:
     using value_type = T;
     using pointer = T*;
     using reference = T&;
 
-    static_assert(std::input_iterator<detail::range_iterator_t<T>>);
-    static_assert(
-        std::sentinel_for<detail::range_sentinel_t<T>, detail::range_iterator_t<T>>);
+    // static_assert(std::input_iterator<detail::range_iterator_t<T>>);
+    // static_assert(
+    //     std::sentinel_for<detail::range_sentinel_t<T>, detail::range_iterator_t<T>>);
 
     // clang-format off
-    range_t() requires std::default_initializable<T> = default;
+    range_t() = default;
 
     // clang-format on
 
     [[nodiscard]] constexpr explicit range_t(T stop) noexcept(
-        std::is_nothrow_move_constructible_v<T>&&
-            std::is_nothrow_default_constructible_v<T>)
-        requires std::default_initializable<T>
+        std::is_nothrow_move_constructible_v<T>)
         : stop_ {std::move(stop)} {}
 
     // TODO remove linter warning
@@ -100,14 +106,21 @@ struct range_t {
         return range_sentinel_t<T> {stop_};
     }
 
-    [[nodiscard]] constexpr auto size() const
-        noexcept(noexcept(std::max(stop_ - start_, T {}))) -> T {
-        return std::max(stop_ - start_, T {});
+    [[nodiscard]] constexpr auto size() const -> range_difference_t<T>
+        requires explicitly_convertible_to<T, range_difference_t<T>>
+    {
+        using Dt = range_difference_t<T>;
+
+        auto start = Dt {start_};
+        auto stop = Dt {stop_};
+        auto zero = Dt {zero_};
+
+        return std::max(stop - start, zero);
     }
 
-    [[nodiscard]] constexpr auto empty() const noexcept(noexcept(start_ >= stop_))
+    [[nodiscard]] constexpr auto empty() const noexcept(noexcept(begin() == end()))
         -> bool {
-        return start_ >= stop_;
+        return begin() == end();
     }
 
     [[nodiscard]] constexpr auto format() const -> std::string {
@@ -115,28 +128,38 @@ struct range_t {
     }
 
    private:
-    T start_ {};
-    T stop_ {};
+    static constexpr auto zero_ = range_type_zero_value<T>;
+    T start_ {zero_};
+    T stop_ {zero_};
 };
 }  // namespace detail
 
 template <typename T>
-[[nodiscard]] constexpr auto range(T stop) noexcept(
-    std::is_nothrow_constructible_v<detail::range_t<T>, T>) -> detail::range_t<T>
-    requires std::default_initializable<T> && std::equality_comparable<T>
-{
-    return detail::range_t<T> {stop};
-}
+concept range_value_type
+    = std::weakly_incrementable<T> && std::equality_comparable<T>
+      && std::totally_ordered<T> && std::input_iterator<detail::range_iterator_t<T>>
+      && std::sentinel_for<detail::range_sentinel_t<T>, detail::range_iterator_t<T>>;
 
-template <typename T>
+template <range_value_type T>
+[[nodiscard]] constexpr auto range(T stop) noexcept(
+    std::is_nothrow_constructible_v<detail::range_t<T>, T>) -> detail::range_t<T> {
+    return detail::range_t<T> {stop};
+}  // namespace logicsim
+
+template <range_value_type T>
 [[nodiscard]] constexpr auto range(T start, T stop) noexcept(
-    std::is_nothrow_constructible_v<detail::range_t<T>, T, T>) -> detail::range_t<T>
-    requires std::equality_comparable<T>
-{
+    std::is_nothrow_constructible_v<detail::range_t<T>, T, T>) -> detail::range_t<T> {
     return detail::range_t<T> {start, stop};
 }
 
 }  // namespace logicsim
+
+template <typename T>
+inline constexpr bool std::ranges::enable_view<logicsim::detail::range_t<T>> = true;
+
+template <typename T>
+inline constexpr bool std::ranges::enable_borrowed_range<logicsim::detail::range_t<T>>
+    = true;
 
 template <typename T>
 struct fmt::formatter<logicsim::detail::range_t<T>> {

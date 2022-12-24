@@ -13,7 +13,7 @@
 #include <fmt/core.h>
 #include <gsl/gsl>
 #include <range/v3/algorithm/for_each.hpp>
-#include <range/v3/to_container.hpp>
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/any_view.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/join.hpp>

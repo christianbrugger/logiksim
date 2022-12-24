@@ -4,8 +4,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <fmt/chrono.h>
 #include <fmt/core.h>
 
+#include <chrono>
 #include <ranges>
 
 namespace logicsim {
@@ -65,7 +67,45 @@ TEST(Range, FmtFormatting) {
     ASSERT_EQ(fmt::format("{}", range(-2, -100)), "range(-2, -100)");
 }
 
-// TODO test chronos
-// TODO test custom class
+namespace {
+
+struct StrongType {
+    int value;
+
+    constexpr auto operator++() noexcept -> StrongType& {
+        ++value;
+        return *this;
+    }
+
+    constexpr auto operator++(int) noexcept -> void { ++value; }
+
+    using difference_type = std::incrementable_traits<decltype(value)>::difference_type;
+
+    explicit operator difference_type() const { return value; }
+
+    auto operator<=>(const StrongType&) const = default;
+};
+
+TEST(Range, CustomClass) {
+    ASSERT_THAT(range(StrongType {2}, StrongType {5}),
+                testing::ElementsAre(StrongType {2}, StrongType {3}, StrongType {4}));
+
+    ASSERT_THAT(range(StrongType {2}),
+                testing::ElementsAre(StrongType {0}, StrongType {1}));
+
+    ASSERT_THAT(range(StrongType {-2}), testing::ElementsAre());
+
+    ASSERT_EQ(std::empty(range(StrongType {-2})), true);
+    ASSERT_EQ(std::empty(range(StrongType {2})), false);
+
+    // auto v = std::ranges::iota_view<StrongType> {};
+
+    // auto r [[maybe_unused]] = v.size();
+
+    ASSERT_EQ(std::size(range(StrongType {0})), 0);
+    ASSERT_EQ(std::size(range(StrongType {5})), 5);
+    ASSERT_EQ(std::size(range(StrongType {5}, StrongType {15})), 10);
+}
+}  // namespace
 
 }  // namespace logicsim
