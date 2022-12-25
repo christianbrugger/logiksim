@@ -4,7 +4,6 @@
 #include "algorithm.h"
 
 #include <fmt/core.h>
-#include <range/v3/all.hpp>
 
 #include <algorithm>
 #include <utility>
@@ -700,11 +699,11 @@ auto add_placeholder(Circuit::Output output) -> void {
 }
 
 auto add_element_placeholders(Circuit::Element element) -> void {
-    ranges::for_each(element.outputs(), add_placeholder);
+    std::ranges::for_each(element.outputs(), add_placeholder);
 }
 
 auto add_output_placeholders(Circuit &circuit) -> void {
-    ranges::for_each(circuit.elements(), add_element_placeholders);
+    std::ranges::for_each(circuit.elements(), add_element_placeholders);
 }
 
 auto benchmark_circuit(const int n_elements) -> Circuit {
@@ -712,10 +711,10 @@ auto benchmark_circuit(const int n_elements) -> Circuit {
 
     auto elem0 {circuit.add_element(ElementType::and_element, 2, 2)};
 
-    for ([[maybe_unused]] auto count : ranges::iota_view(0, n_elements - 1)) {
-        auto wire0 {circuit.add_element(ElementType::wire, 1, 1)};
-        auto wire1 {circuit.add_element(ElementType::wire, 1, 1)};
-        auto elem1 {circuit.add_element(ElementType::and_element, 2, 2)};
+    for ([[maybe_unused]] auto count : range(n_elements - 1)) {
+        auto wire0 = circuit.add_element(ElementType::wire, 1, 1);
+        auto wire1 = circuit.add_element(ElementType::wire, 1, 1);
+        auto elem1 = circuit.add_element(ElementType::and_element, 2, 2);
 
         elem0.output(0).connect(wire0.input(0));
         elem0.output(1).connect(wire1.input(0));

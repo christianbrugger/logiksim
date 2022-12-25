@@ -185,24 +185,25 @@ endif()
 add_library(logicsim_pch INTERFACE)
 target_precompile_headers(logicsim_pch INTERFACE
     <boost/algorithm/string/join.hpp>
-	<boost/random/uniform_int_distribution.hpp>
-	<fmt/core.h>
-	<gsl/gsl>
+    <boost/random/uniform_int_distribution.hpp>
+    <fmt/core.h>
+    <gsl/gsl>
     <range/v3/range/concepts.hpp>
-	
-	<algorithm>
-	<chrono>
+    
+    <algorithm>
+    <chrono>
     <concepts>
-	<cstdint>
-	<iostream>
-	<iterator>
+    <cstdint>
+    <exception>
+    <iostream>
+    <iterator>
     <optional>
-	<random>
+    <random>
     <ranges>
-	<string>
+    <string>
     <type_traits>
-	<utility>
-	<vector>
+    <utility>
+    <vector>
 )
 
 
