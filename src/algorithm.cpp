@@ -1,3 +1,3 @@
-#include "algorithms.h"
+#include "algorithm.h"
 
 namespace logicsim {}

@@ -1,18 +1,14 @@
 
 #include "circuit.h"
 
+#include "algorithm.h"
+
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <range/v3/all.hpp>
 
+#include <algorithm>
 #include <utility>
-
-// generator<std::tuple<int, int, int>> pytriples() {
-//     for (int z = 1;; ++z)
-//         for (int x = 1; x <= z; ++x)
-//             for (int y = x; y <= z; ++y)
-//                 if (x * x + y * y == z * z) co_yield std::make_tuple(x, y, z);
-// }
 
 namespace logicsim {
 
@@ -135,7 +131,7 @@ auto validate_output_connected(const Circuit::ConstOutput output) -> void {
 }
 
 auto validate_outputs_connected(const Circuit::ConstElement element) -> void {
-    ranges::for_each(element.outputs(), validate_output_connected);
+    std::ranges::for_each(element.outputs(), validate_output_connected);
 }
 
 auto validate_input_consistent(const Circuit::ConstInput input) -> void {
@@ -161,8 +157,8 @@ auto validate_output_consistent(const Circuit::ConstOutput output) -> void {
 
 auto validate_element_connections_consistent(const Circuit::ConstElement element)
     -> void {
-    ranges::for_each(element.inputs(), validate_input_consistent);
-    ranges::for_each(element.outputs(), validate_output_consistent);
+    std::ranges::for_each(element.inputs(), validate_input_consistent);
+    std::ranges::for_each(element.outputs(), validate_output_consistent);
 }
 
 auto Circuit::validate_connection_data_(const Circuit::ConnectionData connection_data)
@@ -179,10 +175,6 @@ auto Circuit::validate_connection_data_(const Circuit::ConnectionData connection
 }
 
 auto Circuit::validate(bool require_all_outputs_connected) const -> void {
-    auto all_one {[](auto vector) {
-        return ranges::all_of(vector, [](auto item) { return item == 1; });
-    }};
-
     //  every output_data entry is referenced once
     std::vector<int> input_reference_count(total_input_count(), 0);
     for (auto element : elements()) {
@@ -190,7 +182,7 @@ auto Circuit::validate(bool require_all_outputs_connected) const -> void {
             input_reference_count.at(input.input_id()) += 1;
         }
     }
-    if (!all_one(input_reference_count)) [[unlikely]] {
+    if (!all_equal(input_reference_count, 1)) [[unlikely]] {
         throw_exception("Input data is inconsistent");
     }
 
@@ -201,20 +193,20 @@ auto Circuit::validate(bool require_all_outputs_connected) const -> void {
             output_reference_count.at(output.output_id()) += 1;
         }
     }
-    if (!all_one(output_reference_count)) [[unlikely]] {
+    if (!all_equal(output_reference_count, 1)) [[unlikely]] {
         throw_exception("Output data is inconsistent");
     }
 
     // connection data valid
-    ranges::for_each(input_data_store_, Circuit::validate_connection_data_);
-    ranges::for_each(output_data_store_, Circuit::validate_connection_data_);
+    std::ranges::for_each(input_data_store_, Circuit::validate_connection_data_);
+    std::ranges::for_each(output_data_store_, Circuit::validate_connection_data_);
 
     // back references consistent
-    ranges::for_each(elements(), validate_element_connections_consistent);
+    std::ranges::for_each(elements(), validate_element_connections_consistent);
 
     // all outputs connected
     if (require_all_outputs_connected) {
-        ranges::for_each(elements(), validate_outputs_connected);
+        std::ranges::for_each(elements(), validate_outputs_connected);
     }
 }
 

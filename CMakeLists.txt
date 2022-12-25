@@ -115,7 +115,7 @@ add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
 # Boost
-set(BOOST_INCLUDE_LIBRARIES container stacktrace mpl random)
+set(BOOST_INCLUDE_LIBRARIES container stacktrace mpl random algorithm)
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
 if (WIN32)
     # Boost::stacktrace_windbg
@@ -184,9 +184,11 @@ endif()
 
 add_library(logicsim_pch INTERFACE)
 target_precompile_headers(logicsim_pch INTERFACE
+    <boost/algorithm/string/join.hpp>
 	<boost/random/uniform_int_distribution.hpp>
 	<fmt/core.h>
 	<gsl/gsl>
+    <range/v3/range/concepts.hpp>
 	
 	<algorithm>
 	<chrono>
@@ -194,6 +196,7 @@ target_precompile_headers(logicsim_pch INTERFACE
 	<cstdint>
 	<iostream>
 	<iterator>
+    <optional>
 	<random>
     <ranges>
 	<string>
@@ -204,7 +207,7 @@ target_precompile_headers(logicsim_pch INTERFACE
 
 
 set(LS_CORE_SOURCES
-    src/algorithms.h src/algorithm.cpp
+    src/algorithm.h src/algorithm.cpp
     src/circuit.h src/circuit.cpp
     src/exceptions.h src/exceptions.cpp
     src/random.h src/random.cpp
@@ -215,10 +218,11 @@ set(LS_CORE_SOURCES
 set(LS_CORE_LIBRARIES  
     logicsim_pch
 
-    boost_stacktrace 
+    Boost::algorithm
     Boost::container 
     Boost::mpl
     Boost::random
+    boost_stacktrace 
 
     range-v3::range-v3
     fmt::fmt

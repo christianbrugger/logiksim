@@ -6,21 +6,16 @@
 // * std::span
 // * write range(n), similar to python
 
+#include "algorithm.h"
 #include "exceptions.h"
 #include "random.h"
 #include "range.h"
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <fmt/core.h>
 #include <gsl/gsl>
-#include <range/v3/algorithm/for_each.hpp>
-#include <range/v3/range/conversion.hpp>
-#include <range/v3/view/any_view.hpp>
-#include <range/v3/view/iota.hpp>
-#include <range/v3/view/join.hpp>
-#include <range/v3/view/take_exactly.hpp>
-#include <range/v3/view/transform.hpp>
-#include <range/v3/view/zip.hpp>
+#include <range/v3/range/concepts.hpp>
 
 #include <concepts>
 #include <cstdint>
@@ -346,6 +341,13 @@ class Circuit::ConnectionIteratorTemplate {
         -> bool {
         return left.connection_id >= right.connection_id;
     }
+
+    [[nodiscard]] friend constexpr auto operator-(
+        const Circuit::ConnectionIteratorTemplate<Const, IsInput> &left,
+        const Circuit::ConnectionIteratorTemplate<Const, IsInput> &right) noexcept
+        -> difference_type {
+        return left.connection_id - right.connection_id;
+    }
 };
 
 template <bool Const, bool IsInput>
@@ -378,6 +380,15 @@ class Circuit::ConnectionViewTemplate {
     }
 
     [[nodiscard]] constexpr auto empty() const -> bool { return size() == 0; }
+
+    [[nodiscard]] constexpr auto format() const -> std::string {
+        // TODO try to pass member function directly
+        // TODO test format-ranges compile time with res
+        // TODO test boost join compile time
+        auto format_single = [](value_type con) { return con.format_connection(); };
+        auto res = transform_to_vector(begin(), end(), format_single);
+        return fmt::format("[{}]", boost::join(res, ", "));
+    }
 
    private:
     ElementTemplate<Const> element_;

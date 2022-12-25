@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_SIMULATION_H
 #define LOGIKSIM_SIMULATION_H
 
-#include "algorithms.h"
+#include "algorithm.h"
 #include "circuit.h"
 #include "exceptions.h"
 

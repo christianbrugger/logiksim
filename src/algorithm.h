@@ -6,9 +6,12 @@
 #include <fmt/ranges.h>
 #include <range/v3/all.hpp>
 
+#include <algorithm>
 #include <concepts>
 #include <exception>
 #include <iostream>
+#include <iterator>
+#include <vector>
 
 namespace logicsim {
 
@@ -50,6 +53,32 @@ bool has_duplicates_quadratic(const ranges::input_range auto&& range) {
         }
     }
     return false;
+}
+
+auto all_equal(std::input_iterator auto first, std::input_iterator auto last, auto value)
+    -> bool {
+    return std::all_of(first, last, [&](auto& item) { return item == value; });
+}
+
+auto all_equal(std::ranges::input_range auto&& range, auto value) -> bool {
+    return all_equal(std::ranges::begin(range), std::ranges::begin(range), value);
+}
+
+template <typename IteratorFirst, typename IteratorLast>
+    requires std::sized_sentinel_for<IteratorLast, IteratorFirst>
+auto distance_fast(IteratorFirst first, IteratorLast last) {
+    return last - first;
+}
+
+template <std::input_iterator InputIt, class Function>
+auto transform_to_vector(InputIt first, InputIt last, Function func) {
+    using result_type = std::invoke_result_t<Function, typename InputIt::value_type>;
+
+    std::vector<result_type> result;
+    result.reserve(distance_fast(first, last));
+
+    std::transform(first, last, std::back_inserter(result), func);
+    return result;
 }
 
 }  // namespace logicsim

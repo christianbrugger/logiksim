@@ -1,7 +1,7 @@
 ﻿
 #include "simulation.h"
 
-#include "algorithms.h"
+#include "algorithm.h"
 #include "timer.h"
 
 #include <fmt/format.h>
