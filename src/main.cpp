@@ -204,11 +204,6 @@ auto main() -> int {
         // auto test = circuit.element(0);
         // test.element_id();
 
-        for (auto element : circuit.elements()) {
-            fmt::print("{}\n", element.inputs().format());
-            fmt::print("{}\n\n", element.format_inputs());
-        }
-
     } catch (const std::exception& exc) {
         std::cerr << exc.what() << '\n';
         return -1;

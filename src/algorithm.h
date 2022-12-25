@@ -78,6 +78,11 @@ auto transform_to_vector(InputIt first, InputIt last, Function func) {
     return result;
 }
 
+template <class Function>
+auto transform_to_vector(std::ranges::input_range auto&& range, Function func) {
+    return transform_to_vector(std::ranges::begin(range), std::ranges::end(range), func);
+}
+
 }  // namespace logicsim
 
 #endif

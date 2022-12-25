@@ -187,6 +187,13 @@ class Circuit::ElementIteratorTemplate {
         return left.element_id_ >= right.element_id_;
     }
 
+    [[nodiscard]] friend constexpr auto operator-(
+        const Circuit::ElementIteratorTemplate<Const> &left,
+        const Circuit::ElementIteratorTemplate<Const> &right) noexcept
+        -> difference_type {
+        return left.element_id_ - right.element_id_;
+    }
+
    private:
     circuit_type *circuit_ {};  // can be null
     element_id_t element_id_ {};
@@ -386,8 +393,8 @@ class Circuit::ConnectionViewTemplate {
         // TODO test format-ranges compile time with res
         // TODO test boost join compile time
         auto format_single = [](value_type con) { return con.format_connection(); };
-        auto res = transform_to_vector(begin(), end(), format_single);
-        return fmt::format("[{}]", boost::join(res, ", "));
+        auto connections = transform_to_vector(begin(), end(), format_single);
+        return fmt::format("[{}]", boost::join(connections, ", "));
     }
 
    private:

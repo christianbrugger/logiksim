@@ -3,8 +3,7 @@
 
 #include "algorithm.h"
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
+#include <fmt/core.h>
 #include <range/v3/all.hpp>
 
 #include <algorithm>
@@ -37,9 +36,9 @@ auto format(ElementType type) -> std::string {
 auto Circuit::format() const -> std::string {
     std::string inner;
     if (!empty()) {
-        auto element_strings = ranges::views::transform(
+        auto element_strings = transform_to_vector(
             elements(), [&](auto element) { return element.format(true); });
-        inner = fmt::format(": [\n  {}\n]", fmt::join(element_strings, ",\n  "));
+        inner = fmt::format(": [\n  {}\n]", boost::join(element_strings, ",\n  "));
     }
     return fmt::format("<Circuit with {} elements{}>", element_count(), inner);
 }
@@ -248,20 +247,12 @@ template <bool Const>
 std::string Circuit::ElementTemplate<Const>::format_inputs() const {
     // TODO remove this alias
     return inputs().format();
-
-    // auto strings = ranges::views::transform(
-    //     inputs(), [](auto input) { return input.format_connection(); });
-    // return fmt::format("{::s}", strings);
 }
 
 template <bool Const>
 std::string Circuit::ElementTemplate<Const>::format_outputs() const {
     // TODO remove this alias
     return outputs().format();
-
-    // auto strings = ranges::views::transform(
-    //     outputs(), [](auto output) { return output.format_connection(); });
-    // return fmt::format("{::s}", strings);
 }
 
 template <bool Const>
