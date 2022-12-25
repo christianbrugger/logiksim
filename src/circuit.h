@@ -269,7 +269,8 @@ class Circuit::ElementTemplate {
     /// This constructor is not regarded as a copy constructor,
     //   so we preserve trivially copyable
     template <bool ConstOther>
-    ElementTemplate(ElementTemplate<ConstOther> element) noexcept;
+    ElementTemplate(ElementTemplate<ConstOther> element) noexcept
+        requires Const && (!ConstOther);
 
     template <bool ConstOther>
     bool operator==(ElementTemplate<ConstOther> other) const noexcept;
@@ -394,7 +395,8 @@ class Circuit::ConnectionViewTemplate {
         // TODO test boost join compile time
         auto format_single = [](value_type con) { return con.format_connection(); };
         auto connections = transform_to_vector(begin(), end(), format_single);
-        return fmt::format("[{}]", boost::join(connections, ", "));
+        return "";
+        // fmt::format("[{}]", boost::join(connections, ", "));
     }
 
    private:
@@ -442,7 +444,8 @@ class Circuit::InputTemplate {
 
    public:
     template <bool ConstOther>
-    InputTemplate(InputTemplate<ConstOther> input) noexcept;
+    InputTemplate(InputTemplate<ConstOther> input) noexcept
+        requires Const && (!ConstOther);
 
     template <bool ConstOther>
     bool operator==(InputTemplate<ConstOther> other) const noexcept;
@@ -467,9 +470,11 @@ class Circuit::InputTemplate {
     /// this.
     [[nodiscard]] OutputTemplate<Const> connected_output() const;
 
-    void clear_connection() const;
+    void clear_connection() const
+        requires(!Const);
     template <bool ConstOther>
-    void connect(OutputTemplate<ConstOther> output) const;
+    void connect(OutputTemplate<ConstOther> output) const
+        requires(!Const);
 
    private:
     [[nodiscard]] ConnectionDataType &connection_data_() const;
@@ -495,7 +500,8 @@ class Circuit::OutputTemplate {
 
    public:
     template <bool ConstOther>
-    OutputTemplate(OutputTemplate<ConstOther> output) noexcept;
+    OutputTemplate(OutputTemplate<ConstOther> output) noexcept
+        requires Const && (!ConstOther);
 
     template <bool ConstOther>
     bool operator==(OutputTemplate<ConstOther> other) const noexcept;
@@ -520,9 +526,11 @@ class Circuit::OutputTemplate {
     /// this.
     [[nodiscard]] InputTemplate<Const> connected_input() const;
 
-    void clear_connection() const;
+    void clear_connection() const
+        requires(!Const);
     template <bool ConstOther>
-    void connect(InputTemplate<ConstOther> input) const;
+    void connect(InputTemplate<ConstOther> input) const
+        requires(!Const);
 
    private:
     [[nodiscard]] ConnectionDataType &connection_data_() const;
@@ -532,38 +540,6 @@ class Circuit::OutputTemplate {
     connection_size_t output_index_;
     connection_id_t output_id_;
 };
-
-// Template Instantiations
-
-extern template class Circuit::ElementTemplate<true>;
-extern template class Circuit::ElementTemplate<false>;
-
-template <>
-void Circuit::InputTemplate<false>::clear_connection() const;
-extern template class Circuit::InputTemplate<true>;
-extern template class Circuit::InputTemplate<false>;
-
-template <>
-void Circuit::OutputTemplate<false>::clear_connection() const;
-extern template class Circuit::OutputTemplate<true>;
-extern template class Circuit::OutputTemplate<false>;
-
-// Iterators and Views
-
-extern template class Circuit::ElementViewTemplate<false>;
-extern template class Circuit::ElementViewTemplate<true>;
-extern template class Circuit::ElementIteratorTemplate<false>;
-extern template class Circuit::ElementIteratorTemplate<true>;
-
-extern template class Circuit::ConnectionViewTemplate<false, false>;
-extern template class Circuit::ConnectionViewTemplate<true, false>;
-extern template class Circuit::ConnectionViewTemplate<false, true>;
-extern template class Circuit::ConnectionViewTemplate<true, true>;
-
-extern template class Circuit::ConnectionIteratorTemplate<false, false>;
-extern template class Circuit::ConnectionIteratorTemplate<true, false>;
-extern template class Circuit::ConnectionIteratorTemplate<false, true>;
-extern template class Circuit::ConnectionIteratorTemplate<true, true>;
 
 }  // namespace logicsim
 

@@ -64,6 +64,8 @@ endif()
 # our library: enable warnings
 if (MSVC)
     list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
+    # disable unused parameters
+    list(APPEND MAIN_COMPILE_OPTIONS /wd4100)
     # unreachable code warnings when using range-v3 templates
     list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
 else()

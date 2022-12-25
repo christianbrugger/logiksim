@@ -221,9 +221,8 @@ template <bool Const>
 template <bool ConstOther>
 Circuit::ElementTemplate<Const>::ElementTemplate(
     ElementTemplate<ConstOther> element) noexcept
-    : circuit_(element.circuit_), element_id_(element.element_id_) {
-    static_assert(Const || !ConstOther, "Cannot convert ConstElement to Element.");
-}
+    requires Const && (!ConstOther)
+    : circuit_(element.circuit_), element_id_(element.element_id_) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -368,12 +367,11 @@ Circuit::InputTemplate<Const>::InputTemplate(CircuitType &circuit,
 template <bool Const>
 template <bool ConstOther>
 Circuit::InputTemplate<Const>::InputTemplate(InputTemplate<ConstOther> input) noexcept
+    requires Const && (!ConstOther)
     : circuit_(input.circuit_),
       element_id_(input.element_id_),
       input_index_(input.input_index_),
-      input_id_(input.input_id_) {
-    static_assert(Const || !ConstOther, "Cannot convert ConstInput to Input.");
-}
+      input_id_(input.input_id_) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -450,10 +448,10 @@ auto Circuit::InputTemplate<Const>::connected_output() const -> OutputTemplate<C
     return connected_element().output(connected_output_index());
 }
 
-template <>
-void Circuit::InputTemplate<false>::clear_connection() const {
-    // static_assert(!Const, "Cannot clear connection for const circuit.");
-
+template <bool Const>
+void Circuit::InputTemplate<Const>::clear_connection() const
+    requires(!Const)
+{
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data {
@@ -470,8 +468,9 @@ void Circuit::InputTemplate<false>::clear_connection() const {
 
 template <bool Const>
 template <bool ConstOther>
-void Circuit::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) const {
-    static_assert(!Const, "Cannot connect input for const circuit.");
+void Circuit::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) const
+    requires(!Const)
+{
     clear_connection();
 
     // get data before we modify anything, for exception safety
@@ -527,12 +526,11 @@ Circuit::OutputTemplate<Const>::OutputTemplate(CircuitType &circuit,
 template <bool Const>
 template <bool ConstOther>
 Circuit::OutputTemplate<Const>::OutputTemplate(OutputTemplate<ConstOther> output) noexcept
+    requires Const && (!ConstOther)
     : circuit_(output.circuit_),
       element_id_(output.element_id_),
       output_index_(output.output_index_),
-      output_id_(output.output_id_) {
-    static_assert(Const || !ConstOther, "Cannot convert ConstOutput to Output.");
-}
+      output_id_(output.output_id_) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -609,10 +607,10 @@ auto Circuit::OutputTemplate<Const>::connected_input() const -> InputTemplate<Co
     return connected_element().input(connected_input_index());
 }
 
-template <>
-void Circuit::OutputTemplate<false>::clear_connection() const {
-    // static_assert(!Const, "Cannot clear connection for const circuit.");
-
+template <bool Const>
+void Circuit::OutputTemplate<Const>::clear_connection() const
+    requires(!Const)
+{
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data
@@ -629,8 +627,9 @@ void Circuit::OutputTemplate<false>::clear_connection() const {
 
 template <bool Const>
 template <bool ConstOther>
-void Circuit::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) const {
-    static_assert(!Const, "Cannot connect output for const circuit.");
+void Circuit::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) const
+    requires(!Const)
+{
     clear_connection();
 
     // get data before we modify anything, for exception safety
