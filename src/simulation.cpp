@@ -5,6 +5,7 @@
 #include "timer.h"
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <gsl/assert>
 #include <range/v3/all.hpp>
 

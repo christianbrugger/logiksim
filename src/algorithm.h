@@ -1,10 +1,7 @@
 #ifndef LOGIKSIM_ALGORITHMS_H
 #define LOGIKSIM_ALGORITHMS_H
 
-#include <boost/container/small_vector.hpp>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
-#include <range/v3/all.hpp>
+#include <range/v3/range/concepts.hpp>
 
 #include <algorithm>
 #include <concepts>

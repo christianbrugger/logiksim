@@ -246,16 +246,22 @@ std::string Circuit::ElementTemplate<Const>::format(bool with_connections) const
 
 template <bool Const>
 std::string Circuit::ElementTemplate<Const>::format_inputs() const {
-    auto strings = ranges::views::transform(
-        inputs(), [](auto input) { return input.format_connection(); });
-    return fmt::format("{::s}", strings);
+    // TODO remove this alias
+    return inputs().format();
+
+    // auto strings = ranges::views::transform(
+    //     inputs(), [](auto input) { return input.format_connection(); });
+    // return fmt::format("{::s}", strings);
 }
 
 template <bool Const>
 std::string Circuit::ElementTemplate<Const>::format_outputs() const {
-    auto strings = ranges::views::transform(
-        outputs(), [](auto output) { return output.format_connection(); });
-    return fmt::format("{::s}", strings);
+    // TODO remove this alias
+    return outputs().format();
+
+    // auto strings = ranges::views::transform(
+    //     outputs(), [](auto output) { return output.format_connection(); });
+    // return fmt::format("{::s}", strings);
 }
 
 template <bool Const>
@@ -671,6 +677,25 @@ template bool Circuit::OutputTemplate<true>::operator==<true>(
 
 template void Circuit::OutputTemplate<false>::connect<false>(InputTemplate<false>) const;
 template void Circuit::OutputTemplate<false>::connect<true>(InputTemplate<true>) const;
+
+//
+// Iterators and Views
+//
+
+template class Circuit::ElementViewTemplate<false>;
+template class Circuit::ElementViewTemplate<true>;
+template class Circuit::ElementIteratorTemplate<false>;
+template class Circuit::ElementIteratorTemplate<true>;
+
+template class Circuit::ConnectionViewTemplate<false, false>;
+template class Circuit::ConnectionViewTemplate<true, false>;
+template class Circuit::ConnectionViewTemplate<false, true>;
+template class Circuit::ConnectionViewTemplate<true, true>;
+
+template class Circuit::ConnectionIteratorTemplate<false, false>;
+template class Circuit::ConnectionIteratorTemplate<true, false>;
+template class Circuit::ConnectionIteratorTemplate<false, true>;
+template class Circuit::ConnectionIteratorTemplate<true, true>;
 
 //
 // Free Functions

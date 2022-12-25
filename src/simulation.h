@@ -10,6 +10,7 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <folly/small_vector.h>
 #include <gsl/gsl>
 #include <range/v3/all.hpp>

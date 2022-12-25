@@ -541,6 +541,23 @@ void Circuit::OutputTemplate<false>::clear_connection() const;
 extern template class Circuit::OutputTemplate<true>;
 extern template class Circuit::OutputTemplate<false>;
 
+// Iterators and Views
+
+extern template class Circuit::ElementViewTemplate<false>;
+extern template class Circuit::ElementViewTemplate<true>;
+extern template class Circuit::ElementIteratorTemplate<false>;
+extern template class Circuit::ElementIteratorTemplate<true>;
+
+extern template class Circuit::ConnectionViewTemplate<false, false>;
+extern template class Circuit::ConnectionViewTemplate<true, false>;
+extern template class Circuit::ConnectionViewTemplate<false, true>;
+extern template class Circuit::ConnectionViewTemplate<true, true>;
+
+extern template class Circuit::ConnectionIteratorTemplate<false, false>;
+extern template class Circuit::ConnectionIteratorTemplate<true, false>;
+extern template class Circuit::ConnectionIteratorTemplate<false, true>;
+extern template class Circuit::ConnectionIteratorTemplate<true, true>;
+
 }  // namespace logicsim
 
 //
