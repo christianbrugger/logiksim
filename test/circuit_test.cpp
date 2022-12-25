@@ -1,9 +1,13 @@
 
 #include "circuit.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <range/v3/all.hpp>
+
+#include <algorithm>
+#include <ranges>
 
 namespace logicsim {
 
@@ -209,6 +213,98 @@ TEST(Circuit, TestPlaceholders) {
 
     circuit.validate();
     circuit.validate(true);
+}
+
+//
+// Element View
+//
+
+TEST(Circuit, ElementViewEmpty) {
+    Circuit circuit;
+
+    auto view = Circuit::ElementView {circuit};
+
+    ASSERT_THAT(view, testing::ElementsAre());
+    ASSERT_EQ(std::empty(view), true);
+    ASSERT_EQ(std::size(view), 0);
+}
+
+TEST(Circuit, ElementViewFull) {
+    Circuit circuit;
+    auto wire = circuit.add_element(ElementType::wire, 1, 1);
+    auto inverter = circuit.add_element(ElementType::inverter_element, 1, 1);
+
+    auto view = Circuit::ElementView {circuit};
+
+    ASSERT_THAT(view, testing::ElementsAre(wire, inverter));
+    ASSERT_EQ(std::empty(view), false);
+    ASSERT_EQ(std::size(view), 2);
+}
+
+TEST(Circuit, ElementViewRanges) {
+    Circuit circuit;
+    circuit.add_element(ElementType::wire, 1, 1);
+    circuit.add_element(ElementType::inverter_element, 1, 1);
+
+    auto view = Circuit::ElementView {circuit};
+
+    ASSERT_EQ(std::distance(view.begin(), view.end()), 2);
+    ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
+    ASSERT_EQ(std::ranges::distance(view), 2);
+}
+
+TEST(Circuit, ElementViewRangesLEGACY) {  // TODO remove when not needed
+    Circuit circuit;
+    circuit.add_element(ElementType::wire, 1, 1);
+    circuit.add_element(ElementType::inverter_element, 1, 1);
+
+    auto view = Circuit::ElementView {circuit};
+
+    ASSERT_EQ(ranges::distance(ranges::begin(view), ranges::end(view)), 2);
+    ASSERT_EQ(ranges::distance(view), 2);
+}
+
+//
+// Element Inputs View
+//
+
+TEST(Circuit, InputsViewEmpty) {
+    Circuit circuit;
+    auto wire = circuit.add_element(ElementType::wire, 0, 1);
+    auto view = Circuit::InputView {wire};
+
+    ASSERT_THAT(view, testing::ElementsAre());
+    ASSERT_EQ(std::empty(view), true);
+    ASSERT_EQ(std::size(view), 0);
+}
+
+TEST(Circuit, InputsViewFull) {
+    Circuit circuit;
+    auto wire = circuit.add_element(ElementType::wire, 2, 1);
+    auto view = Circuit::InputView {wire};
+
+    ASSERT_THAT(view, testing::ElementsAre(wire.input(0), wire.input(1)));
+    ASSERT_EQ(std::empty(view), false);
+    ASSERT_EQ(std::size(view), 2);
+}
+
+TEST(Circuit, InputsViewRanges) {
+    Circuit circuit;
+    auto wire = circuit.add_element(ElementType::wire, 2, 1);
+    auto view = Circuit::InputView {wire};
+
+    ASSERT_EQ(std::distance(view.begin(), view.end()), 2);
+    ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
+    ASSERT_EQ(std::ranges::distance(view), 2);
+}
+
+TEST(Circuit, InputsViewRangesLEGACY) {  // TODO remove when not needed
+    Circuit circuit;
+    auto wire = circuit.add_element(ElementType::wire, 2, 1);
+    auto view = Circuit::InputView {wire};
+
+    ASSERT_EQ(ranges::distance(ranges::begin(view), ranges::end(view)), 2);
+    ASSERT_EQ(ranges::distance(view), 2);
 }
 
 }  // namespace logicsim

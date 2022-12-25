@@ -200,7 +200,7 @@ auto main() -> int {
 
         fmt::print("\n\n\n\n");
         fmt::print("{}\n", ranges::size(circuit.elements()));
-        fmt::print("{}\n", circuit.elements()[2]);
+        // fmt::print("{}\n", circuit.elements()[2]);
         // auto test = circuit.element(0);
         // test.element_id();
 

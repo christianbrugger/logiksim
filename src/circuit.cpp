@@ -72,19 +72,10 @@ auto Circuit::element(element_id_t element_id) const -> ConstElement {
     return ConstElement {*this, element_id};
 }
 
-auto Circuit::elements() -> ranges::any_view<Element, ranges::category::random_access
-                                                          | ranges::category::sized> {
-    return ranges::views::iota(element_id_t {0}, element_count())
-           | ranges::views::transform(
-               [this](element_id_t element_id) { return this->element(element_id); });
-}
+auto Circuit::elements() noexcept -> ElementView { return ElementView {*this}; }
 
-auto Circuit::elements() const
-    -> ranges::any_view<ConstElement,
-                        ranges::category::random_access | ranges::category::sized> {
-    return ranges::views::iota(element_id_t {0}, element_count())
-           | ranges::views::transform(
-               [this](element_id_t element_id) { return this->element(element_id); });
+auto Circuit::elements() const noexcept -> ConstElementView {
+    return ConstElementView {*this};
 }
 
 auto Circuit::add_element(ElementType type, connection_size_t input_count,
@@ -341,23 +332,14 @@ auto Circuit::ElementTemplate<Const>::output(connection_size_t output) const
 }
 
 template <bool Const>
-inline auto Circuit::ElementTemplate<Const>::inputs() const
-    -> ranges::any_view<InputTemplate<Const>,
-                        ranges::category::random_access | ranges::category::sized> {
-    // We capture the element by value. This is because elements are temporary objects
-    // and might be discarded before the lambda is evaluated. Also it's very cheap.
-    return ranges::views::iota(connection_size_t {0}, input_count())
-           | ranges::views::transform(
-               [*this](connection_size_t input_id) { return this->input(input_id); });
+inline auto Circuit::ElementTemplate<Const>::inputs() const -> InputViewTemplate<Const> {
+    return InputViewTemplate<Const> {*this};
 }
 
 template <bool Const>
 inline auto Circuit::ElementTemplate<Const>::outputs() const
-    -> ranges::any_view<OutputTemplate<Const>,
-                        ranges::category::random_access | ranges::category::sized> {
-    return ranges::views::iota(connection_size_t {0}, output_count())
-           | ranges::views::transform(
-               [*this](int output_id) { return this->output(output_id); });
+    -> OutputViewTemplate<Const> {
+    return OutputViewTemplate<Const> {*this};
 }
 
 template <bool Const>

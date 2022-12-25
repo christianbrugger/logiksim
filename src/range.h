@@ -17,7 +17,7 @@ namespace logicsim {
 template <class T>
 inline constexpr T range_type_zero_value = T {0};
 
-// define difference_type in your own type using this
+// define difference_type in your custom type using this
 template <class T>
 using range_difference_t
     = std::conditional_t<std::is_integral_v<T>,
@@ -74,14 +74,7 @@ struct range_t {
     using pointer = T*;
     using reference = T&;
 
-    // static_assert(std::input_iterator<detail::range_iterator_t<T>>);
-    // static_assert(
-    //     std::sentinel_for<detail::range_sentinel_t<T>, detail::range_iterator_t<T>>);
-
-    // clang-format off
     range_t() = default;
-
-    // clang-format on
 
     [[nodiscard]] constexpr explicit range_t(T stop) noexcept(
         std::is_nothrow_move_constructible_v<T>)

@@ -22,9 +22,13 @@
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
 
+#include <concepts>
 #include <cstdint>
+#include <iterator>
+#include <optional>
 #include <ranges>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace logicsim {
@@ -66,6 +70,40 @@ class Circuit {
     using Output = OutputTemplate<false>;
     using ConstOutput = OutputTemplate<true>;
 
+    template <bool Const>
+    class ElementViewTemplate;
+    template <bool Const>
+    class ElementIteratorTemplate;
+
+    using ElementView = ElementViewTemplate<false>;
+    using ConstElementView = ElementViewTemplate<true>;
+    using ElementIterator = ElementIteratorTemplate<false>;
+    using ConstElementIterator = ElementIteratorTemplate<true>;
+
+    template <bool Const, bool IsInput>
+    class ConnectionViewTemplate;
+    template <bool Const, bool IsInput>
+    class ConnectionIteratorTemplate;
+
+    template <bool Const>
+    using InputViewTemplate = ConnectionViewTemplate<Const, true>;
+    template <bool Const>
+    using InputIteratorTemplate = ConnectionIteratorTemplate<Const, true>;
+    template <bool Const>
+    using OutputViewTemplate = ConnectionViewTemplate<Const, false>;
+    template <bool Const>
+    using OutputIteratorTemplate = ConnectionIteratorTemplate<Const, false>;
+
+    using InputView = InputViewTemplate<false>;
+    using ConstInputView = InputViewTemplate<true>;
+    using InputIterator = InputIteratorTemplate<false>;
+    using ConstInputIterator = InputIteratorTemplate<true>;
+
+    using OutputView = OutputViewTemplate<false>;
+    using ConstOutputView = OutputViewTemplate<true>;
+    using OutputIterator = OutputIteratorTemplate<false>;
+    using ConstOutputIterator = OutputIteratorTemplate<true>;
+
     [[nodiscard]] std::string format() const;
 
     [[nodiscard]] element_id_t element_count() const noexcept;
@@ -76,12 +114,8 @@ class Circuit {
 
     [[nodiscard]] Element element(element_id_t element_id);
     [[nodiscard]] ConstElement element(element_id_t element_id) const;
-    [[nodiscard]] auto elements()
-        -> ranges::any_view<Element,
-                            ranges::category::random_access | ranges::category::sized>;
-    [[nodiscard]] auto elements() const
-        -> ranges::any_view<ConstElement,
-                            ranges::category::random_access | ranges::category::sized>;
+    [[nodiscard]] auto elements() noexcept -> ElementView;
+    [[nodiscard]] auto elements() const noexcept -> ConstElementView;
 
     Element add_element(ElementType type, connection_size_t input_count,
                         connection_size_t output_count);
@@ -111,6 +145,114 @@ struct Circuit::ConnectionData {
     element_id_t element_id {null_element};
     connection_size_t index {null_connection};
 };
+
+template <bool Const>
+class Circuit::ElementIteratorTemplate {
+   public:
+    using iterator_concept = std::input_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
+
+    using value_type = Circuit::ElementTemplate<Const>;
+    using difference_type = element_id_t;
+    using pointer = value_type *;
+    using reference = value_type &;
+
+    using circuit_type = std::conditional_t<Const, const Circuit, Circuit>;
+
+    // needs to be default constructable, so ElementView can become a range and view
+    ElementIteratorTemplate() = default;
+
+    [[nodiscard]] explicit constexpr ElementIteratorTemplate(
+        circuit_type &circuit, element_id_t element_id) noexcept
+        : circuit_(&circuit), element_id_(element_id) {}
+
+    [[nodiscard]] constexpr auto operator*() const -> value_type {
+        if (circuit_ == nullptr) [[unlikely]] {
+            throw_exception("circuit cannot be null when dereferencing element iterator");
+        }
+        return circuit_->element(element_id_);
+    }
+
+    // Prefix increment
+    constexpr auto operator++() noexcept -> Circuit::ElementIteratorTemplate<Const> & {
+        ++element_id_;
+        return *this;
+    }
+
+    // Postfix increment
+    constexpr auto operator++(int) noexcept -> Circuit::ElementIteratorTemplate<Const> {
+        auto tmp = *this;
+        ++element_id_;
+        return tmp;
+    }
+
+    [[nodiscard]] friend constexpr auto operator==(
+        const Circuit::ElementIteratorTemplate<Const> &left,
+        const Circuit::ElementIteratorTemplate<Const> &right) noexcept -> bool {
+        return left.element_id_ >= right.element_id_;
+    }
+
+   private:
+    circuit_type *circuit_ {};  // can be null
+    element_id_t element_id_ {};
+};
+
+template <bool Const>
+class Circuit::ElementViewTemplate {
+   public:
+    using iterator_type = Circuit::ElementIteratorTemplate<Const>;
+    using circuit_type = std::conditional_t<Const, const Circuit, Circuit>;
+
+    using value_type = typename iterator_type::value_type;
+    using pointer = typename iterator_type::pointer;
+    using reference = typename iterator_type::reference;
+
+    [[nodiscard]] explicit constexpr ElementViewTemplate(circuit_type &circuit) noexcept
+        : circuit_(&circuit) {}
+
+    [[nodiscard]] constexpr auto begin() const noexcept -> iterator_type {
+        return iterator_type {*circuit_, 0};
+    }
+
+    [[nodiscard]] constexpr auto end() const noexcept -> iterator_type {
+        return iterator_type {*circuit_, circuit_->element_count()};
+    }
+
+    [[nodiscard]] constexpr auto size() const noexcept -> element_id_t {
+        return circuit_->element_count();
+    }
+
+    [[nodiscard]] constexpr auto empty() const noexcept -> bool {
+        return circuit_->empty();
+    }
+
+   private:
+    circuit_type *circuit_;  // never null
+};
+
+}  // namespace logicsim
+
+template <bool Const>
+inline constexpr bool
+    std::ranges::enable_view<logicsim::Circuit::ElementViewTemplate<Const>>
+    = true;
+
+template <bool Const>
+inline constexpr bool
+    std::ranges::enable_borrowed_range<logicsim::Circuit::ElementViewTemplate<Const>>
+    = true;
+
+// TODO remove when not needed any more
+template <bool Const>
+inline constexpr bool ranges::enable_view<logicsim::Circuit::ElementViewTemplate<Const>>
+    = true;
+
+template <bool Const>
+inline constexpr bool
+    ranges::enable_borrowed_range<logicsim::Circuit::ElementViewTemplate<Const>>
+    = true;
+
+namespace logicsim {
 
 template <bool Const>
 class Circuit::ElementTemplate {
@@ -148,12 +290,8 @@ class Circuit::ElementTemplate {
     [[nodiscard]] InputTemplate<Const> input(connection_size_t input) const;
     [[nodiscard]] OutputTemplate<Const> output(connection_size_t output) const;
 
-    [[nodiscard]] auto inputs() const
-        -> ranges::any_view<InputTemplate<Const>,
-                            ranges::category::random_access | ranges::category::sized>;
-    [[nodiscard]] auto outputs() const
-        -> ranges::any_view<OutputTemplate<Const>,
-                            ranges::category::random_access | ranges::category::sized>;
+    [[nodiscard]] auto inputs() const -> InputViewTemplate<Const>;
+    [[nodiscard]] auto outputs() const -> OutputViewTemplate<Const>;
 
    private:
     [[nodiscard]] ElementDataType &element_data_() const;
@@ -161,6 +299,114 @@ class Circuit::ElementTemplate {
     CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
 };
+
+template <bool Const, bool IsInput>
+class Circuit::ConnectionIteratorTemplate {
+   public:
+    std::optional<Circuit::ElementTemplate<Const>> element {};
+    connection_size_t connection_id {};
+
+    using iterator_concept = std::input_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
+
+    using value_type = std::conditional_t<IsInput, Circuit::InputTemplate<Const>,
+                                          Circuit::OutputTemplate<Const>>;
+    using difference_type = connection_size_t;
+    using pointer = value_type *;
+    using reference = value_type &;
+
+    [[nodiscard]] constexpr auto operator*() const -> value_type {
+        if (!element.has_value()) [[unlikely]] {
+            throw_exception("iterator needs a valid element");
+        }
+        if constexpr (IsInput) {
+            return element->input(connection_id);
+        } else {
+            return element->output(connection_id);
+        }
+    }
+
+    // Prefix increment
+    constexpr auto operator++() noexcept
+        -> Circuit::ConnectionIteratorTemplate<Const, IsInput> & {
+        ++connection_id;
+        return *this;
+    }
+
+    // Postfix increment
+    constexpr auto operator++(int) noexcept {
+        auto tmp = *this;
+        ++connection_id;
+        return tmp;
+    }
+
+    [[nodiscard]] friend constexpr auto operator==(
+        const Circuit::ConnectionIteratorTemplate<Const, IsInput> &left,
+        const Circuit::ConnectionIteratorTemplate<Const, IsInput> &right) noexcept
+        -> bool {
+        return left.connection_id >= right.connection_id;
+    }
+};
+
+template <bool Const, bool IsInput>
+class Circuit::ConnectionViewTemplate {
+   public:
+    using iterator_type = Circuit::ConnectionIteratorTemplate<Const, IsInput>;
+
+    using value_type = typename iterator_type::value_type;
+    using pointer = typename iterator_type::pointer;
+    using reference = typename iterator_type::reference;
+
+    [[nodiscard]] explicit constexpr ConnectionViewTemplate(
+        ElementTemplate<Const> element) noexcept
+        : element_(element) {}
+
+    [[nodiscard]] constexpr auto begin() const -> iterator_type {
+        return iterator_type {element_, 0};
+    }
+
+    [[nodiscard]] constexpr auto end() const -> iterator_type {
+        return iterator_type {element_, size()};
+    }
+
+    [[nodiscard]] constexpr auto size() const -> connection_size_t {
+        if constexpr (IsInput) {
+            return element_.input_count();
+        } else {
+            return element_.output_count();
+        }
+    }
+
+    [[nodiscard]] constexpr auto empty() const -> bool { return size() == 0; }
+
+   private:
+    ElementTemplate<Const> element_;
+};
+
+}  // namespace logicsim
+
+template <bool Const, bool IsInput>
+inline constexpr bool
+    std::ranges::enable_view<logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
+    = true;
+
+template <bool Const, bool IsInput>
+inline constexpr bool std::ranges::enable_borrowed_range<
+    logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
+    = true;
+
+// TODO remove when not needed any more
+template <bool Const, bool IsInput>
+inline constexpr bool
+    ranges::enable_view<logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
+    = true;
+
+template <bool Const, bool IsInput>
+inline constexpr bool ranges::enable_borrowed_range<
+    logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
+    = true;
+
+namespace logicsim {
 
 template <bool Const>
 class Circuit::InputTemplate {
