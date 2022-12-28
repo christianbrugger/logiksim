@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <iterator>
 
 namespace logicsim {
 
@@ -185,20 +186,19 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
 
     switch (type) {
         case ElementType::wire:
-            return ranges::views::repeat_n(input.at(0), output_count)
-                   | ranges::to<logic_small_vector_t>();
+            return {logic_small_vector_t(output_count, input.at(0))};
 
         case ElementType::inverter_element:
             return {!input.at(0)};
 
         case ElementType::and_element:
-            return {ranges::all_of(input, std::identity {})};
+            return {std::ranges::all_of(input, std::identity {})};
 
         case ElementType::or_element:
-            return {ranges::any_of(input, std::identity {})};
+            return {std::ranges::any_of(input, std::identity {})};
 
         case ElementType::xor_element:
-            return {ranges::count_if(input, std::identity {}) == 1};
+            return {std::ranges::count_if(input, std::identity {}) == 1};
 
         default:
             [[unlikely]] throw_exception(
@@ -208,20 +208,33 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
 
 logic_small_vector_t get_input_values(const Circuit::ConstElement element,
                                       const logic_vector_t &input_values) {
-    return ranges::views::all(input_values)
-           | ranges::views::drop_exactly(element.first_input_id())
-           | ranges::views::take_exactly(element.input_count())
-           | ranges::to<logic_small_vector_t>();
+    const auto begin = input_values.begin() + element.first_input_id();
+    const auto end = begin + element.input_count();
+
+    if (!(begin >= input_values.begin() && begin < input_values.end()
+          && end >= input_values.begin() && end <= input_values.end())) {
+        throw_exception("Invalid begin or end iterator in get_input_values.");
+    }
+
+    return logic_small_vector_t {begin, end};
 }
 
 logic_small_vector_t get_output_values(const Circuit::ConstElement element,
                                        const logic_vector_t &input_values,
                                        const bool raise_missing) {
-    return element.outputs()
-           | ranges::views::transform([&](const Circuit::ConstOutput output) {
-                 return get_output_value(output, input_values, raise_missing);
-             })
-           | ranges::to<logic_small_vector_t>();
+    logic_small_vector_t result;
+    result.reserve(element.output_count());
+
+    // for (const auto output : element.outputs()) {
+    //     result.push_back(get_output_value(output, input_values, raise_missing));
+    // }
+
+    std::ranges::transform(
+        element.outputs(), std::back_inserter(result), [&](const auto output) {
+            return get_output_value(output, input_values, raise_missing);
+        });
+
+    return result;
 }
 
 logic_small_vector_t get_input_values(const Circuit::ConstElement element,
@@ -244,9 +257,9 @@ void set_input(logic_vector_t &input_values, const Circuit::ConstElement element
 
 void apply_events(logic_vector_t &input_values, const Circuit::ConstElement element,
                   const event_group_t &group) {
-    ranges::for_each(group, [&](const SimulationEvent &event) {
+    for (const auto &event : group) {
         set_input(input_values, element, event.input_index, event.value);
-    });
+    }
 }
 
 con_index_small_vector_t get_changed_outputs(const logic_small_vector_t &old_outputs,

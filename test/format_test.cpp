@@ -21,7 +21,7 @@ TEST(Format, VectorFormatNoBracket) {
 TEST(Format, VectorJoin) {
     auto vec = std::vector<int> {1, 2, 3};
 
-    EXPECT_EQ(logicsim::format_join(vec), "1, 2, 3");
-    EXPECT_EQ(logicsim::format_join("{}", vec, " - "), "1 - 2 - 3");
-    EXPECT_EQ(logicsim::format_join("{:03d}", vec, ":"), "001:002:003");
+    EXPECT_EQ(logicsim::fmt_join(vec), "1, 2, 3");
+    EXPECT_EQ(logicsim::fmt_join("{}", vec, " - "), "1 - 2 - 3");
+    EXPECT_EQ(logicsim::fmt_join("{:03d}", vec, ":"), "001:002:003");
 }

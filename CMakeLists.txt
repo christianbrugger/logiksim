@@ -30,7 +30,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
-# option(LS_ENABLE_LTO "Enable link time optimization." ON)
+option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 
 
 # global exceptions
@@ -77,6 +77,8 @@ endif()
 if (LS_ENABLE_LTO)
     message(NOTICE "LOGIKSIM: Enabling link time optimization.")
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(NOTICE "LOGIKSIM: Disabling link time optimization.")
 endif()
 
 if (LS_ENABLE_TIME_TRACE)
@@ -96,6 +98,8 @@ if (LS_ENABLE_CCACHE)
     string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
     string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
     string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+else()
+    message(NOTICE "LOGIKSIM: Disabling ccache.")
 endif()
 cmake_print_variables(CMAKE_C_FLAGS_DEBUG)
 cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
