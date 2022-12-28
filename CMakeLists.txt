@@ -187,6 +187,7 @@ endif()
 add_library(logicsim_pch INTERFACE)
 target_precompile_headers(logicsim_pch INTERFACE
     <boost/algorithm/string/join.hpp>
+    <boost/random/mersenne_twister.hpp>
     <boost/random/uniform_int_distribution.hpp>
     <fmt/core.h>
     <gsl/gsl>

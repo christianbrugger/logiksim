@@ -39,6 +39,7 @@ enum class ElementType : uint8_t {
 
 auto format(ElementType type) -> std::string;
 
+// TODO use strong types
 using element_id_t = int32_t;
 using connection_id_t = int32_t;
 using connection_size_t = int8_t;
@@ -156,20 +157,19 @@ class Circuit::ElementIteratorTemplate {
 
     // needs to be default constructable, so ElementView can become a range and view
     ElementIteratorTemplate() = default;
-    [[nodiscard]] explicit constexpr ElementIteratorTemplate(
-        circuit_type &circuit, element_id_t element_id) noexcept;
+    [[nodiscard]] explicit ElementIteratorTemplate(circuit_type &circuit,
+                                                   element_id_t element_id) noexcept;
 
-    [[nodiscard]] constexpr auto operator*() const -> value_type;
+    [[nodiscard]] auto operator*() const -> value_type;
     // Prefix increment
-    constexpr auto operator++() noexcept -> Circuit::ElementIteratorTemplate<Const> &;
+    auto operator++() noexcept -> Circuit::ElementIteratorTemplate<Const> &;
     // Postfix increment
-    constexpr auto operator++(int) noexcept -> Circuit::ElementIteratorTemplate<Const>;
+    auto operator++(int) noexcept -> Circuit::ElementIteratorTemplate<Const>;
 
-    [[nodiscard]] constexpr auto operator==(
-        const ElementIteratorTemplate &right) const noexcept -> bool;
-    [[nodiscard]] constexpr auto operator-(
-        const Circuit::ElementIteratorTemplate<Const> &right) const noexcept
-        -> difference_type;
+    [[nodiscard]] auto operator==(const ElementIteratorTemplate &right) const noexcept
+        -> bool;
+    [[nodiscard]] auto operator-(const Circuit::ElementIteratorTemplate<Const> &right)
+        const noexcept -> difference_type;
 
    private:
     circuit_type *circuit_ {};  // can be null
@@ -186,13 +186,13 @@ class Circuit::ElementViewTemplate {
     using pointer = typename iterator_type::pointer;
     using reference = typename iterator_type::reference;
 
-    [[nodiscard]] explicit constexpr ElementViewTemplate(circuit_type &circuit) noexcept;
+    [[nodiscard]] explicit ElementViewTemplate(circuit_type &circuit) noexcept;
 
-    [[nodiscard]] constexpr auto begin() const noexcept -> iterator_type;
-    [[nodiscard]] constexpr auto end() const noexcept -> iterator_type;
+    [[nodiscard]] auto begin() const noexcept -> iterator_type;
+    [[nodiscard]] auto end() const noexcept -> iterator_type;
 
-    [[nodiscard]] constexpr auto size() const noexcept -> element_id_t;
-    [[nodiscard]] constexpr auto empty() const noexcept -> bool;
+    [[nodiscard]] auto size() const noexcept -> element_id_t;
+    [[nodiscard]] auto empty() const noexcept -> bool;
 
    private:
     circuit_type *circuit_;  // never null
@@ -242,8 +242,6 @@ class Circuit::ElementTemplate {
     bool operator==(ElementTemplate<ConstOther> other) const noexcept;
 
     [[nodiscard]] std::string format(bool with_connections = false) const;
-    [[nodiscard]] std::string format_inputs() const;
-    [[nodiscard]] std::string format_outputs() const;
 
     [[nodiscard]] CircuitType *circuit() const noexcept;
     [[nodiscard]] element_id_t element_id() const noexcept;
@@ -265,7 +263,7 @@ class Circuit::ElementTemplate {
    private:
     [[nodiscard]] ElementDataType &element_data_() const;
 
-    CircuitType *circuit_;  // never to be null
+    CircuitType *circuit_;  // never null
     element_id_t element_id_;
 };
 
@@ -284,15 +282,14 @@ class Circuit::ConnectionIteratorTemplate {
     using pointer = value_type *;
     using reference = value_type &;
 
-    [[nodiscard]] constexpr auto operator*() const -> value_type;
+    [[nodiscard]] auto operator*() const -> value_type;
     // Prefix increment
-    constexpr auto operator++() noexcept
-        -> Circuit::ConnectionIteratorTemplate<Const, IsInput> &;
+    auto operator++() noexcept -> Circuit::ConnectionIteratorTemplate<Const, IsInput> &;
     // Postfix increment
-    constexpr auto operator++(int) noexcept -> ConnectionIteratorTemplate;
+    auto operator++(int) noexcept -> ConnectionIteratorTemplate;
 
-    [[nodiscard]] constexpr auto operator==(
-        const ConnectionIteratorTemplate &right) const noexcept -> bool;
+    [[nodiscard]] auto operator==(const ConnectionIteratorTemplate &right) const noexcept
+        -> bool;
     [[nodiscard]] auto operator-(const ConnectionIteratorTemplate &right) const noexcept
         -> difference_type;
 };
@@ -306,16 +303,16 @@ class Circuit::ConnectionViewTemplate {
     using pointer = typename iterator_type::pointer;
     using reference = typename iterator_type::reference;
 
-    [[nodiscard]] explicit constexpr ConnectionViewTemplate(
+    [[nodiscard]] explicit ConnectionViewTemplate(
         ElementTemplate<Const> element) noexcept;
 
-    [[nodiscard]] constexpr auto begin() const -> iterator_type;
-    [[nodiscard]] constexpr auto end() const -> iterator_type;
+    [[nodiscard]] auto begin() const -> iterator_type;
+    [[nodiscard]] auto end() const -> iterator_type;
 
-    [[nodiscard]] constexpr auto size() const -> connection_size_t;
-    [[nodiscard]] constexpr auto empty() const -> bool;
+    [[nodiscard]] auto size() const -> connection_size_t;
+    [[nodiscard]] auto empty() const -> bool;
 
-    [[nodiscard]] constexpr auto format() const -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
 
    private:
     ElementTemplate<Const> element_;
@@ -469,7 +466,8 @@ template <>
 struct fmt::formatter<logicsim::Circuit> {
     constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit &obj, fmt::format_context &ctx) const {
+    auto format(const logicsim::Circuit &obj, fmt::format_context &ctx) const
+        -> format_context::iterator {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
@@ -550,83 +548,9 @@ void add_output_placeholders(Circuit &circuit);
 
 Circuit benchmark_circuit(int n_elements = 100);
 
-namespace details {
-
 template <std::uniform_random_bit_generator G>
-void add_random_element(Circuit &circuit, G &rng) {
-    boost::random::uniform_int_distribution<int8_t> element_dist {0, 2};
-    boost::random::uniform_int_distribution<connection_size_t> connection_dist {1, 8};
-
-    const auto element_type {element_dist(rng) == 0
-                                 ? ElementType::xor_element
-                                 : (element_dist(rng) == 1 ? ElementType::inverter_element
-                                                           : ElementType ::wire)};
-
-    const connection_size_t one {1};
-    const connection_size_t input_count {
-        element_type == ElementType::xor_element ? connection_dist(rng) : one};
-
-    const connection_size_t output_count {
-        element_type == ElementType::wire ? connection_dist(rng) : one};
-
-    circuit.add_element(element_type, input_count, output_count);
-}
-
-template <std::uniform_random_bit_generator G>
-void create_random_elements(Circuit &circuit, G &rng, int n_elements) {
-    for (auto _ [[maybe_unused]] : range(n_elements)) {
-        add_random_element(circuit, rng);
-    }
-}
-
-template <std::uniform_random_bit_generator G>
-void create_random_connections(Circuit &circuit, G &rng, double connection_ratio) {
-    if (connection_ratio == 0) {
-        return;
-    }
-    if (connection_ratio < 0 || connection_ratio > 1) [[unlikely]] {
-        throw_exception("connection ratio needs to be between 0 and 1.");
-    }
-
-    // collect inputs
-    std::vector<Circuit::Input> all_inputs;
-    all_inputs.reserve(circuit.total_input_count());
-    for (auto element : circuit.elements()) {
-        for (auto input : element.inputs()) {
-            all_inputs.push_back(input);
-        }
-    }
-
-    // collect outputs
-    std::vector<Circuit::Output> all_outputs;
-    all_outputs.reserve(circuit.total_output_count());
-    for (auto element : circuit.elements()) {
-        for (auto output : element.outputs()) {
-            all_outputs.push_back(output);
-        }
-    }
-
-    shuffle(all_inputs, rng);
-    shuffle(all_outputs, rng);
-
-    auto n_connections = gsl::narrow<std::size_t>(std::round(
-        connection_ratio * std::min(std::size(all_inputs), std::size(all_outputs))));
-
-    for (auto i [[maybe_unused]] : range(n_connections)) {
-        all_inputs.at(i).connect(all_outputs.at(i));
-    }
-}
-
-}  // namespace details
-
-template <std::uniform_random_bit_generator G>
-auto create_random_circuit(G &rng, int n_elements = 100, double connection_ratio = 0.75) {
-    Circuit circuit;
-    details::create_random_elements(circuit, rng, n_elements);
-    details::create_random_connections(circuit, rng, connection_ratio);
-
-    return circuit;
-}
+auto create_random_circuit(G &rng, int n_elements = 100, double connection_ratio = 0.75)
+    -> Circuit;
 
 }  // namespace logicsim
 

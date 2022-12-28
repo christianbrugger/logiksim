@@ -3,6 +3,7 @@
 
 #include "algorithm.h"
 
+#include <boost/random/mersenne_twister.hpp>
 #include <fmt/core.h>
 
 #include <algorithm>
@@ -216,12 +217,12 @@ auto Circuit::validate(bool require_all_outputs_connected) const -> void {
 //
 
 template <bool Const>
-constexpr Circuit::ElementIteratorTemplate<Const>::ElementIteratorTemplate(
+Circuit::ElementIteratorTemplate<Const>::ElementIteratorTemplate(
     circuit_type &circuit, element_id_t element_id) noexcept
     : circuit_(&circuit), element_id_(element_id) {}
 
 template <bool Const>
-constexpr auto Circuit::ElementIteratorTemplate<Const>::operator*() const -> value_type {
+auto Circuit::ElementIteratorTemplate<Const>::operator*() const -> value_type {
     if (circuit_ == nullptr) [[unlikely]] {
         throw_exception("circuit cannot be null when dereferencing element iterator");
     }
@@ -229,14 +230,14 @@ constexpr auto Circuit::ElementIteratorTemplate<Const>::operator*() const -> val
 }
 
 template <bool Const>
-constexpr auto Circuit::ElementIteratorTemplate<Const>::operator++() noexcept
+auto Circuit::ElementIteratorTemplate<Const>::operator++() noexcept
     -> Circuit::ElementIteratorTemplate<Const> & {
     ++element_id_;
     return *this;
 }
 
 template <bool Const>
-constexpr auto Circuit::ElementIteratorTemplate<Const>::operator++(int) noexcept
+auto Circuit::ElementIteratorTemplate<Const>::operator++(int) noexcept
     -> Circuit::ElementIteratorTemplate<Const> {
     auto tmp = *this;
     ++element_id_;
@@ -244,13 +245,13 @@ constexpr auto Circuit::ElementIteratorTemplate<Const>::operator++(int) noexcept
 }
 
 template <bool Const>
-constexpr auto Circuit::ElementIteratorTemplate<Const>::operator==(
+auto Circuit::ElementIteratorTemplate<Const>::operator==(
     const ElementIteratorTemplate &right) const noexcept -> bool {
     return element_id_ >= right.element_id_;
 }
 
 template <bool Const>
-constexpr auto Circuit::ElementIteratorTemplate<Const>::operator-(
+auto Circuit::ElementIteratorTemplate<Const>::operator-(
     const ElementIteratorTemplate &right) const noexcept -> difference_type {
     return element_id_ - right.element_id_;
 }
@@ -263,30 +264,26 @@ template class Circuit::ElementIteratorTemplate<true>;
 //
 
 template <bool Const>
-constexpr Circuit::ElementViewTemplate<Const>::ElementViewTemplate(
-    circuit_type &circuit) noexcept
+Circuit::ElementViewTemplate<Const>::ElementViewTemplate(circuit_type &circuit) noexcept
     : circuit_(&circuit) {}
 
 template <bool Const>
-constexpr auto Circuit::ElementViewTemplate<Const>::begin() const noexcept
-    -> iterator_type {
+auto Circuit::ElementViewTemplate<Const>::begin() const noexcept -> iterator_type {
     return iterator_type {*circuit_, 0};
 }
 
 template <bool Const>
-constexpr auto Circuit::ElementViewTemplate<Const>::end() const noexcept
-    -> iterator_type {
+auto Circuit::ElementViewTemplate<Const>::end() const noexcept -> iterator_type {
     return iterator_type {*circuit_, circuit_->element_count()};
 }
 
 template <bool Const>
-constexpr auto Circuit::ElementViewTemplate<Const>::size() const noexcept
-    -> element_id_t {
+auto Circuit::ElementViewTemplate<Const>::size() const noexcept -> element_id_t {
     return circuit_->element_count();
 }
 
 template <bool Const>
-constexpr auto Circuit::ElementViewTemplate<Const>::empty() const noexcept -> bool {
+auto Circuit::ElementViewTemplate<Const>::empty() const noexcept -> bool {
     return circuit_->empty();
 }
 
@@ -318,24 +315,13 @@ bool Circuit::ElementTemplate<Const>::operator==(
 
 template <bool Const>
 std::string Circuit::ElementTemplate<Const>::format(bool with_connections) const {
-    auto connections = !with_connections ? ""
-                                         : fmt::format(", inputs = {}, outputs = {}",
-                                                       format_inputs(), format_outputs());
+    auto connections = !with_connections
+                           ? ""
+                           : fmt::format(", inputs = {}, outputs = {}", inputs().format(),
+                                         outputs().format());
 
     return fmt::format("<Element {}: {}x{} {}{}>", element_id(), input_count(),
                        output_count(), element_type(), connections);
-}
-
-template <bool Const>
-std::string Circuit::ElementTemplate<Const>::format_inputs() const {
-    // TODO remove this alias
-    return inputs().format();
-}
-
-template <bool Const>
-std::string Circuit::ElementTemplate<Const>::format_outputs() const {
-    // TODO remove this alias
-    return outputs().format();
 }
 
 template <bool Const>
@@ -440,7 +426,7 @@ template bool Circuit::ElementTemplate<true>::operator==<true>(
 //
 
 template <bool Const, bool IsInput>
-constexpr auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator*() const
+auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator*() const
     -> value_type {
     if (!element.has_value()) [[unlikely]] {
         throw_exception("iterator needs a valid element");
@@ -453,29 +439,28 @@ constexpr auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator*() 
 }
 
 template <bool Const, bool IsInput>
-constexpr auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator++() noexcept
+auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator++() noexcept
     -> Circuit::ConnectionIteratorTemplate<Const, IsInput> & {
     ++connection_id;
     return *this;
 }
 
 template <bool Const, bool IsInput>
-constexpr auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator++(
-    int) noexcept -> ConnectionIteratorTemplate {
+auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator++(int) noexcept
+    -> ConnectionIteratorTemplate {
     auto tmp = *this;
     ++connection_id;
     return tmp;
 }
 
 template <bool Const, bool IsInput>
-[[nodiscard]] constexpr auto
-Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator==(
+auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator==(
     const ConnectionIteratorTemplate &right) const noexcept -> bool {
     return connection_id >= right.connection_id;
 }
 
 template <bool Const, bool IsInput>
-[[nodiscard]] auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator-(
+auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator-(
     const ConnectionIteratorTemplate &right) const noexcept -> difference_type {
     return connection_id - right.connection_id;
 }
@@ -490,25 +475,22 @@ template class Circuit::ConnectionIteratorTemplate<true, true>;
 //
 
 template <bool Const, bool IsInput>
-constexpr Circuit::ConnectionViewTemplate<Const, IsInput>::ConnectionViewTemplate(
+Circuit::ConnectionViewTemplate<Const, IsInput>::ConnectionViewTemplate(
     ElementTemplate<Const> element) noexcept
     : element_(element) {}
 
 template <bool Const, bool IsInput>
-constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::begin() const
-    -> iterator_type {
+auto Circuit::ConnectionViewTemplate<Const, IsInput>::begin() const -> iterator_type {
     return iterator_type {element_, 0};
 }
 
 template <bool Const, bool IsInput>
-constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::end() const
-    -> iterator_type {
+auto Circuit::ConnectionViewTemplate<Const, IsInput>::end() const -> iterator_type {
     return iterator_type {element_, size()};
 }
 
 template <bool Const, bool IsInput>
-constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::size() const
-    -> connection_size_t {
+auto Circuit::ConnectionViewTemplate<Const, IsInput>::size() const -> connection_size_t {
     if constexpr (IsInput) {
         return element_.input_count();
     } else {
@@ -517,13 +499,12 @@ constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::size() const
 }
 
 template <bool Const, bool IsInput>
-constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::empty() const -> bool {
+auto Circuit::ConnectionViewTemplate<Const, IsInput>::empty() const -> bool {
     return size() == 0;
 }
 
 template <bool Const, bool IsInput>
-constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::format() const
-    -> std::string {
+auto Circuit::ConnectionViewTemplate<Const, IsInput>::format() const -> std::string {
     // TODO try to pass member function directly
     // TODO test format-ranges compile time with res
     // TODO test boost join compile time
@@ -854,9 +835,25 @@ template bool Circuit::OutputTemplate<true>::operator==<true>(
 template void Circuit::OutputTemplate<false>::connect<false>(InputTemplate<false>) const;
 template void Circuit::OutputTemplate<false>::connect<true>(InputTemplate<true>) const;
 
+}  // namespace logicsim
+
+//
+// Formatters
+//
+
+/*
+auto fmt::formatter<logicsim::Circuit>::format(const logicsim::Circuit &obj,
+                                               fmt::format_context &ctx) const
+    -> format_context::iterator {
+    return fmt::format_to(ctx.out(), "{}", obj.format());
+}
+*/
+
 //
 // Free Functions
 //
+
+namespace logicsim {
 
 auto add_placeholder(Circuit::Output output) -> void {
     if (!output.has_connected_element()) {
@@ -895,8 +892,86 @@ auto benchmark_circuit(const int n_elements) -> Circuit {
     return circuit;
 }
 
-}  // namespace logicsim
+namespace details {
 
-//
-// Formatters
-//
+template <std::uniform_random_bit_generator G>
+void add_random_element(Circuit &circuit, G &rng) {
+    boost::random::uniform_int_distribution<int8_t> element_dist {0, 2};
+    boost::random::uniform_int_distribution<connection_size_t> connection_dist {1, 8};
+
+    const auto element_type {element_dist(rng) == 0
+                                 ? ElementType::xor_element
+                                 : (element_dist(rng) == 1 ? ElementType::inverter_element
+                                                           : ElementType ::wire)};
+
+    const connection_size_t one {1};
+    const connection_size_t input_count {
+        element_type == ElementType::xor_element ? connection_dist(rng) : one};
+
+    const connection_size_t output_count {
+        element_type == ElementType::wire ? connection_dist(rng) : one};
+
+    circuit.add_element(element_type, input_count, output_count);
+}
+
+template <std::uniform_random_bit_generator G>
+void create_random_elements(Circuit &circuit, G &rng, int n_elements) {
+    for (auto _ [[maybe_unused]] : range(n_elements)) {
+        add_random_element(circuit, rng);
+    }
+}
+
+template <std::uniform_random_bit_generator G>
+void create_random_connections(Circuit &circuit, G &rng, double connection_ratio) {
+    if (connection_ratio == 0) {
+        return;
+    }
+    if (connection_ratio < 0 || connection_ratio > 1) [[unlikely]] {
+        throw_exception("connection ratio needs to be between 0 and 1.");
+    }
+
+    // collect inputs
+    std::vector<Circuit::Input> all_inputs;
+    all_inputs.reserve(circuit.total_input_count());
+    for (auto element : circuit.elements()) {
+        for (auto input : element.inputs()) {
+            all_inputs.push_back(input);
+        }
+    }
+
+    // collect outputs
+    std::vector<Circuit::Output> all_outputs;
+    all_outputs.reserve(circuit.total_output_count());
+    for (auto element : circuit.elements()) {
+        for (auto output : element.outputs()) {
+            all_outputs.push_back(output);
+        }
+    }
+
+    shuffle(all_inputs, rng);
+    shuffle(all_outputs, rng);
+
+    auto n_connections = gsl::narrow<std::size_t>(std::round(
+        connection_ratio * std::min(std::size(all_inputs), std::size(all_outputs))));
+
+    for (auto i [[maybe_unused]] : range(n_connections)) {
+        all_inputs.at(i).connect(all_outputs.at(i));
+    }
+}
+}  // namespace details
+
+template <std::uniform_random_bit_generator G>
+auto create_random_circuit(G &rng, int n_elements, double connection_ratio) -> Circuit {
+    Circuit circuit;
+    details::create_random_elements(circuit, rng, n_elements);
+    details::create_random_connections(circuit, rng, connection_ratio);
+
+    return circuit;
+}
+
+// template instatiations
+
+template auto create_random_circuit(boost::random::mt19937 &rng, int n_elements,
+                                    double connection_ratio) -> Circuit;
+
+}  // namespace logicsim
