@@ -4,12 +4,11 @@
 #include "algorithm.h"
 #include "exceptions.h"
 #include "format.h"
+#include "range.h"
 #include "timer.h"
 
-#include <boost/algorithm/string/join.hpp>
 #include <gsl/assert>
 #include <gsl/gsl>
-#include <range/v3/all.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -73,26 +72,31 @@ void validate(const event_group_t &events) {
     }
 
     const auto &head {events.front()};
-    const auto tail {ranges::views::drop(events, 1)};  // TODO use tail
+    const auto tail = std::ranges::subrange(events.begin() + 1, events.end());
+    //{ranges::views::drop(events, 1)};  // TODO use tail
 
     if (head.element_id == null_element) {
         throw_exception("Event element cannot be null.");
     }
 
     if (!tail.empty()) {
-        if (!ranges::all_of(
-                tail, [head](const auto &event) { return event.time == head.time; })) {
+        if (!std::ranges::all_of(tail, [head](const SimulationEvent &event) {
+                return event.time == head.time;
+            })) {
             throw_exception("All events in the group need to have the same time.");
         }
 
-        if (!ranges::all_of(tail, [head](const auto &event) {
+        if (!std::ranges::all_of(tail, [head](const SimulationEvent &event) {
                 return event.element_id == head.element_id;
             })) {
             throw_exception("All events in the group need to have the same time.");
         }
 
-        if (has_duplicates_quadratic(ranges::views::transform(
-                events, [](const auto &event) { return event.input_index; }))) {
+        boost::container::small_vector<element_id_t, 2> event_ids;
+        std::ranges::transform(
+            events, std::back_inserter(event_ids),
+            [](const SimulationEvent &event) { return event.input_index; });
+        if (has_duplicates_quadratic(event_ids.begin(), event_ids.end())) {
             throw_exception(
                 "Cannot have two events for the same input at the same time.");
         }
@@ -269,12 +273,14 @@ con_index_small_vector_t get_changed_outputs(const logic_small_vector_t &old_out
     }
 
     con_index_small_vector_t result;
-    for (const auto &&[index, old_value, new_value] :
-         ranges::views::zip(ranges::views::iota(0), old_outputs, new_outputs)) {
-        if (old_value != new_value) {
-            result.push_back(static_cast<connection_size_t>(index));
+    result.reserve(std::size(old_outputs));
+
+    for (auto i : range(std::size(old_outputs))) {
+        if (old_outputs[i] != new_outputs[i]) {
+            result.push_back(gsl::narrow<connection_size_t>(i));
         }
     }
+
     return result;
 }
 
@@ -322,10 +328,10 @@ void process_event_group(SimulationState &state, const Circuit &circuit,
     const auto changes = get_changed_outputs(old_outputs, new_outputs);
 
     // submit events
-    ranges::for_each(changes, [&, element](auto output_index) {
+    for (auto output_index : changes) {
         create_event(state.queue, element.output(output_index), new_outputs,
                      state.output_delays);
-    });
+    }
 }
 
 class SimulationTimer {
@@ -348,6 +354,7 @@ class SimulationTimer {
 int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
                            const time_t simultation_time, const timeout_t timeout,
                            const int64_t max_events, const bool print_events) {
+    // TODO test expects
     Expects(simultation_time >= 0us);
     if (simultation_time < 0us) [[unlikely]] {
         throw_exception("simultation_time needs to be positive.");
@@ -403,10 +410,10 @@ void initialize_simulation(SimulationState &state, const Circuit &circuit) {
         const auto changes {get_changed_outputs(old_outputs, new_outputs)};
 
         // submit new events
-        ranges::for_each(changes, [&, element](auto output_index) {
+        for (auto output_index : changes) {
             create_event(state.queue, element.output(output_index), new_outputs,
                          state.output_delays);
-        });
+        }
     }
 }
 
@@ -465,7 +472,6 @@ logic_vector_t get_all_output_values(const logic_vector_t &input_values,
                                      const Circuit &circuit, const bool raise_missing) {
     logic_vector_t output_values(circuit.total_output_count());
 
-    // TODO use ranges
     for (auto element : circuit.elements()) {
         for (auto output : element.outputs()) {
             output_values.at(output.output_id())
@@ -518,7 +524,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     SimulationState state {circuit};
 
     // set custom delays
-    ranges::generate(state.output_delays, [&rng]() {
+    std::ranges::generate(state.output_delays, [&rng]() {
         boost::random::uniform_int_distribution<time_t::rep> nanosecond_dist {5, 500};
         return 1us * nanosecond_dist(rng);
     });

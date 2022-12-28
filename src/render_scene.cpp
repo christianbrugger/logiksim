@@ -1,8 +1,6 @@
 
 #include "render_scene.h"
 
-#include <range/v3/all.hpp>
-
 #include <iostream>
 
 namespace logicsim {
@@ -13,7 +11,7 @@ void render_background(BLContext& ctx) {
 }
 
 void draw_wire_element(BLContext& ctx, const DrawAttributes& attributes,
-                       const ranges::input_range auto input_values) {
+                       const std::ranges::input_range auto input_values) {
     constexpr static double s = 20;
     ctx.setStrokeWidth(2);
 
@@ -28,8 +26,8 @@ void draw_wire_element(BLContext& ctx, const DrawAttributes& attributes,
 
 void draw_standard_element(BLContext& ctx, ElementType type,
                            const DrawAttributes& attributes,
-                           const ranges::input_range auto input_values,
-                           const ranges::input_range auto output_values) {
+                           const std::ranges::input_range auto input_values,
+                           const std::ranges::input_range auto output_values) {
     constexpr static double s = 20;
     ctx.setStrokeWidth(2);
 
@@ -70,8 +68,8 @@ void draw_standard_element(BLContext& ctx, ElementType type,
 }
 
 void draw_element(BLContext& ctx, ElementType type, const DrawAttributes& attributes,
-                  const ranges::input_range auto input_values,
-                  const ranges::input_range auto output_values) {
+                  const std::ranges::input_range auto input_values,
+                  const std::ranges::input_range auto output_values) {
     switch (type) {
         case ElementType::wire:
             draw_wire_element(ctx, attributes, input_values);
@@ -91,16 +89,24 @@ void render_scene(BLContext& ctx, const Circuit& circuit,
                   const attribute_vector_t& attributes) {
     render_background(ctx);
 
-    ranges::for_each(circuit.elements(), [&](auto element) {
-        draw_element(
-            ctx, element.element_type(), attributes.at(element.element_id()),
-            ranges::views::transform(
-                element.inputs(),
-                [&](auto input) { return simulation.input_values.at(input.input_id()); }),
-            ranges::views::transform(element.outputs(), [&](auto output) {
-                return simulation.output_values.at(output.output_id());
-            }));
-    });
+    for (auto element : circuit.elements()) {
+        // TODO use output values in get_output_values()
+        draw_element(ctx, element.element_type(), attributes.at(element.element_id()),
+                     get_input_values(element, simulation.input_values),
+                     get_output_values(element, simulation.input_values));
+    }
+
+    // std::ranges::for_each(circuit.elements(), [&](auto element) {
+    //     draw_element(
+    //         ctx, element.element_type(), attributes.at(element.element_id()),
+    //         ranges::views::transform(
+    //             element.inputs(),
+    //             [&](auto input) { return simulation.input_values.at(input.input_id());
+    //             }),
+    //         ranges::views::transform(element.outputs(), [&](auto output) {
+    //             return simulation.output_values.at(output.output_id());
+    //         }));
+    // });
 }
 
 }  // namespace logicsim

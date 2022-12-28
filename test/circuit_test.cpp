@@ -4,8 +4,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <range/v3/all.hpp>
-
 #include <algorithm>
 #include <ranges>
 
@@ -17,7 +15,7 @@ TEST(Circuit, EmptyCircuit) {
     EXPECT_EQ(circuit.element_count(), 0);
     EXPECT_EQ(circuit.total_input_count(), 0);
     EXPECT_EQ(circuit.total_output_count(), 0);
-    EXPECT_EQ(ranges::distance(circuit.elements()), 0);
+    EXPECT_EQ(std::ranges::distance(circuit.elements()), 0);
 
     circuit.validate();
 }
@@ -30,7 +28,7 @@ TEST(Circuit, CircuitSingleElement) {
     EXPECT_EQ(circuit.element_count(), 1);
     EXPECT_EQ(circuit.total_input_count(), 3);
     EXPECT_EQ(circuit.total_output_count(), 5);
-    EXPECT_EQ(ranges::distance(circuit.elements()), 1);
+    EXPECT_EQ(std::ranges::distance(circuit.elements()), 1);
 
     circuit.validate();
 }
@@ -47,8 +45,8 @@ TEST(Circuit, ElementProperties) {
     EXPECT_EQ(element.input_count(), 3);
     EXPECT_EQ(element.output_count(), 5);
 
-    EXPECT_EQ(ranges::distance(element.inputs()), 3);
-    EXPECT_EQ(ranges::distance(element.outputs()), 5);
+    EXPECT_EQ(std::ranges::distance(element.inputs()), 3);
+    EXPECT_EQ(std::ranges::distance(element.outputs()), 5);
 
     circuit.validate();
     circuit_const.validate();
@@ -260,8 +258,8 @@ TEST(Circuit, ElementViewRangesLEGACY) {  // TODO remove when not needed
 
     auto view = Circuit::ElementView {circuit};
 
-    ASSERT_EQ(ranges::distance(ranges::begin(view), ranges::end(view)), 2);
-    ASSERT_EQ(ranges::distance(view), 2);
+    ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
+    ASSERT_EQ(std::ranges::distance(view), 2);
 }
 
 //
@@ -303,8 +301,8 @@ TEST(Circuit, InputsViewRangesLEGACY) {  // TODO remove when not needed
     auto wire = circuit.add_element(ElementType::wire, 2, 1);
     auto view = Circuit::InputView {wire};
 
-    ASSERT_EQ(ranges::distance(ranges::begin(view), ranges::end(view)), 2);
-    ASSERT_EQ(ranges::distance(view), 2);
+    ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
+    ASSERT_EQ(std::ranges::distance(view), 2);
 }
 
 }  // namespace logicsim

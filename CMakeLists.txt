@@ -145,7 +145,7 @@ set(BLEND2D_STATIC TRUE)  # TODO test BLEND2D_EMBED
 add_subdirectory(external/blend2d EXCLUDE_FROM_ALL SYSTEM)
 
 # range-v3
-add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL SYSTEM)
+# add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL SYSTEM)
 
 # fmt
 add_subdirectory(external/fmt EXCLUDE_FROM_ALL SYSTEM)
@@ -195,7 +195,6 @@ target_precompile_headers(logicsim_pch INTERFACE
     <boost/random/uniform_int_distribution.hpp>
     <fmt/core.h>
     <gsl/gsl>
-    <range/v3/range/concepts.hpp>
     
     <algorithm>
     <chrono>
@@ -232,7 +231,7 @@ set(LS_CORE_LIBRARIES
     Boost::random
     boost_stacktrace 
 
-    range-v3::range-v3
+    # range-v3::range-v3
     fmt::fmt
     folly
     absl::base

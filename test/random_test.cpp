@@ -11,7 +11,8 @@
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-#include <range/v3/all.hpp>
+
+#include <numeric>
 
 TEST(Random, GeneratorStability) {
     boost::random::mt19937 rng {0};
@@ -59,7 +60,8 @@ TEST(Random, UniformIntStabilityInt8) {
 TEST(Random, ShuffleStabilityIterators) {
     boost::random::mt19937 rng {0};
 
-    std::vector<int> vec = ranges::views::iota(0, 10) | ranges::to_vector;
+    std::vector<int> vec(10);
+    std::iota(vec.begin(), vec.end(), 0);
 
     logicsim::shuffle(std::begin(vec), std::end(vec), rng);
     ASSERT_THAT(vec, testing::ElementsAre(0, 2, 3, 5, 9, 1, 6, 8, 4, 7));
@@ -71,7 +73,8 @@ TEST(Random, ShuffleStabilityIterators) {
 TEST(Random, ShuffleStabilityRanges) {
     boost::random::mt19937 rng {0};
 
-    std::vector<int> vec = ranges::views::iota(0, 10) | ranges::to_vector;
+    std::vector<int> vec(10);
+    std::iota(vec.begin(), vec.end(), 0);
 
     logicsim::shuffle(vec, rng);
     ASSERT_THAT(vec, testing::ElementsAre(0, 2, 3, 5, 9, 1, 6, 8, 4, 7));

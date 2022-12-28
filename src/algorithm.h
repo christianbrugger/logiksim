@@ -1,13 +1,12 @@
 #ifndef LOGIKSIM_ALGORITHMS_H
 #define LOGIKSIM_ALGORITHMS_H
 
-#include <range/v3/range/concepts.hpp>
-
 #include <algorithm>
 #include <concepts>
 #include <exception>
 #include <iostream>
 #include <iterator>
+#include <ranges>
 #include <vector>
 
 namespace logicsim {
@@ -36,7 +35,23 @@ void pop_while(T& queue, ApplyFunc apply_func, WhileFunc while_func) {
 }
 
 /// good for small ranges, scales with O(n^2)
-bool has_duplicates_quadratic(const ranges::input_range auto&& range) {
+bool has_duplicates_quadratic(std::input_iterator auto begin,
+                              std::input_iterator auto end) {
+    if (begin == end) {
+        return false;
+    }
+
+    for (auto i1 = begin; i1 != end - 1; ++i1) {
+        for (auto i2 = i1 + 1; i2 != end; ++i2) {
+            if (*i1 == *i2) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool has_duplicates_quadratic(const std::ranges::input_range auto&& range) {
     if (std::size(range) <= 1) {
         return false;
     }

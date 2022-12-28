@@ -2,7 +2,6 @@
 #define LOGIKSIM_RANDOM_H
 
 #include <boost/random/uniform_int_distribution.hpp>
-#include <range/v3/range/concepts.hpp>
 
 #include <algorithm>
 #include <iterator>
@@ -41,9 +40,10 @@ void shuffle(const Iterator first, const Iterator last, Generator &generator) {
 }
 
 /// @brief Shuffles all elements of the given container randomly.
-template <ranges::random_access_range Range, std::uniform_random_bit_generator Generator>
+template <std::ranges::random_access_range Range,
+          std::uniform_random_bit_generator Generator>
 void shuffle(Range &range, Generator &generator) {
-    shuffle(ranges::begin(range), ranges::end(range), generator);
+    shuffle(std::ranges::begin(range), std::ranges::end(range), generator);
 }
 
 }  // namespace logicsim

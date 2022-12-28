@@ -2,10 +2,12 @@
 #define LOGIKSIM_RENDER_WIDGET_H
 
 #include "circuit.h"
+#include "exceptions.h"
 #include "render_scene.h"
 #include "simulation.h"
 
 #include <blend2d.h>
+#include <gsl/gsl>
 
 #include <QFrame>
 #include <QPainter>

@@ -2,7 +2,7 @@
 #define LOGIKSIM_CIRCUIT_H
 
 #include <fmt/core.h>
-#include <range/v3/range/concepts.hpp>
+// #include <range/v3/range/concepts.hpp>
 
 #include <concepts>
 #include <cstdint>
@@ -198,14 +198,15 @@ inline constexpr bool
     = true;
 
 // TODO remove when not needed any more
-template <bool Const>
-inline constexpr bool ranges::enable_view<logicsim::Circuit::ElementViewTemplate<Const>>
-    = true;
-
-template <bool Const>
-inline constexpr bool
-    ranges::enable_borrowed_range<logicsim::Circuit::ElementViewTemplate<Const>>
-    = true;
+// template <bool Const>
+// inline constexpr bool
+// ranges::enable_view<logicsim::Circuit::ElementViewTemplate<Const>>
+//    = true;
+//
+// template <bool Const>
+// inline constexpr bool
+//    ranges::enable_borrowed_range<logicsim::Circuit::ElementViewTemplate<Const>>
+//    = true;
 
 namespace logicsim {
 
@@ -318,15 +319,15 @@ inline constexpr bool std::ranges::enable_borrowed_range<
     = true;
 
 // TODO remove when not needed any more
-template <bool Const, bool IsInput>
-inline constexpr bool
-    ranges::enable_view<logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
-    = true;
-
-template <bool Const, bool IsInput>
-inline constexpr bool ranges::enable_borrowed_range<
-    logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
-    = true;
+// template <bool Const, bool IsInput>
+// inline constexpr bool
+//    ranges::enable_view<logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
+//    = true;
+//
+// template <bool Const, bool IsInput>
+// inline constexpr bool ranges::enable_borrowed_range<
+//    logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
+//    = true;
 
 namespace logicsim {
 
