@@ -35,8 +35,11 @@ auto format(ElementType type) -> std::string {
 auto Circuit::format() const -> std::string {
     std::string inner;
     if (!empty()) {
-        auto element_strings = transform_to_vector(
-            elements(), [&](auto element) { return element.format(true); });
+        // auto element_strings = transform_to_vector(
+        //     elements(), [&](auto element) { return element.format(true); });
+        auto element_strings
+            = transform_to_vector(elements().begin(), elements().end(),
+                                  [&](auto element) { return element.format(true); });
         inner = fmt::format(": [\n  {}\n]", boost::join(element_strings, ",\n  "));
     }
     return fmt::format("<Circuit with {} elements{}>", element_count(), inner);
@@ -209,6 +212,88 @@ auto Circuit::validate(bool require_all_outputs_connected) const -> void {
 }
 
 //
+// Element Iterator
+//
+
+template <bool Const>
+constexpr Circuit::ElementIteratorTemplate<Const>::ElementIteratorTemplate(
+    circuit_type &circuit, element_id_t element_id) noexcept
+    : circuit_(&circuit), element_id_(element_id) {}
+
+template <bool Const>
+constexpr auto Circuit::ElementIteratorTemplate<Const>::operator*() const -> value_type {
+    if (circuit_ == nullptr) [[unlikely]] {
+        throw_exception("circuit cannot be null when dereferencing element iterator");
+    }
+    return circuit_->element(element_id_);
+}
+
+template <bool Const>
+constexpr auto Circuit::ElementIteratorTemplate<Const>::operator++() noexcept
+    -> Circuit::ElementIteratorTemplate<Const> & {
+    ++element_id_;
+    return *this;
+}
+
+template <bool Const>
+constexpr auto Circuit::ElementIteratorTemplate<Const>::operator++(int) noexcept
+    -> Circuit::ElementIteratorTemplate<Const> {
+    auto tmp = *this;
+    ++element_id_;
+    return tmp;
+}
+
+template <bool Const>
+constexpr auto Circuit::ElementIteratorTemplate<Const>::operator==(
+    const ElementIteratorTemplate &right) const noexcept -> bool {
+    return element_id_ >= right.element_id_;
+}
+
+template <bool Const>
+constexpr auto Circuit::ElementIteratorTemplate<Const>::operator-(
+    const ElementIteratorTemplate &right) const noexcept -> difference_type {
+    return element_id_ - right.element_id_;
+}
+
+template class Circuit::ElementIteratorTemplate<false>;
+template class Circuit::ElementIteratorTemplate<true>;
+
+//
+// Element View
+//
+
+template <bool Const>
+constexpr Circuit::ElementViewTemplate<Const>::ElementViewTemplate(
+    circuit_type &circuit) noexcept
+    : circuit_(&circuit) {}
+
+template <bool Const>
+constexpr auto Circuit::ElementViewTemplate<Const>::begin() const noexcept
+    -> iterator_type {
+    return iterator_type {*circuit_, 0};
+}
+
+template <bool Const>
+constexpr auto Circuit::ElementViewTemplate<Const>::end() const noexcept
+    -> iterator_type {
+    return iterator_type {*circuit_, circuit_->element_count()};
+}
+
+template <bool Const>
+constexpr auto Circuit::ElementViewTemplate<Const>::size() const noexcept
+    -> element_id_t {
+    return circuit_->element_count();
+}
+
+template <bool Const>
+constexpr auto Circuit::ElementViewTemplate<Const>::empty() const noexcept -> bool {
+    return circuit_->empty();
+}
+
+template class Circuit::ElementViewTemplate<false>;
+template class Circuit::ElementViewTemplate<true>;
+
+//
 // Circuit::Element
 //
 
@@ -349,6 +434,108 @@ template bool Circuit::ElementTemplate<true>::operator==<false>(
     ElementTemplate<false>) const noexcept;
 template bool Circuit::ElementTemplate<true>::operator==<true>(
     ElementTemplate<true>) const noexcept;
+
+//
+// Connection Iterator
+//
+
+template <bool Const, bool IsInput>
+constexpr auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator*() const
+    -> value_type {
+    if (!element.has_value()) [[unlikely]] {
+        throw_exception("iterator needs a valid element");
+    }
+    if constexpr (IsInput) {
+        return element->input(connection_id);
+    } else {
+        return element->output(connection_id);
+    }
+}
+
+template <bool Const, bool IsInput>
+constexpr auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator++() noexcept
+    -> Circuit::ConnectionIteratorTemplate<Const, IsInput> & {
+    ++connection_id;
+    return *this;
+}
+
+template <bool Const, bool IsInput>
+constexpr auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator++(
+    int) noexcept -> ConnectionIteratorTemplate {
+    auto tmp = *this;
+    ++connection_id;
+    return tmp;
+}
+
+template <bool Const, bool IsInput>
+[[nodiscard]] constexpr auto
+Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator==(
+    const ConnectionIteratorTemplate &right) const noexcept -> bool {
+    return connection_id >= right.connection_id;
+}
+
+template <bool Const, bool IsInput>
+[[nodiscard]] auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator-(
+    const ConnectionIteratorTemplate &right) const noexcept -> difference_type {
+    return connection_id - right.connection_id;
+}
+
+template class Circuit::ConnectionIteratorTemplate<false, false>;
+template class Circuit::ConnectionIteratorTemplate<true, false>;
+template class Circuit::ConnectionIteratorTemplate<false, true>;
+template class Circuit::ConnectionIteratorTemplate<true, true>;
+
+//
+// Connection View
+//
+
+template <bool Const, bool IsInput>
+constexpr Circuit::ConnectionViewTemplate<Const, IsInput>::ConnectionViewTemplate(
+    ElementTemplate<Const> element) noexcept
+    : element_(element) {}
+
+template <bool Const, bool IsInput>
+constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::begin() const
+    -> iterator_type {
+    return iterator_type {element_, 0};
+}
+
+template <bool Const, bool IsInput>
+constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::end() const
+    -> iterator_type {
+    return iterator_type {element_, size()};
+}
+
+template <bool Const, bool IsInput>
+constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::size() const
+    -> connection_size_t {
+    if constexpr (IsInput) {
+        return element_.input_count();
+    } else {
+        return element_.output_count();
+    }
+}
+
+template <bool Const, bool IsInput>
+constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::empty() const -> bool {
+    return size() == 0;
+}
+
+template <bool Const, bool IsInput>
+constexpr auto Circuit::ConnectionViewTemplate<Const, IsInput>::format() const
+    -> std::string {
+    // TODO try to pass member function directly
+    // TODO test format-ranges compile time with res
+    // TODO test boost join compile time
+    auto format_single = [](value_type con) { return con.format_connection(); };
+    auto connections = transform_to_vector(begin(), end(), format_single);
+    return fmt::format("[{}]", boost::join(connections, ", "));
+}
+
+template class Circuit::ConnectionViewTemplate<false, false>;
+template class Circuit::ConnectionViewTemplate<true, false>;
+template class Circuit::ConnectionViewTemplate<false, true>;
+template class Circuit::ConnectionViewTemplate<true, true>;
 
 //
 // Circuit::Input
@@ -666,25 +853,6 @@ template bool Circuit::OutputTemplate<true>::operator==<true>(
 
 template void Circuit::OutputTemplate<false>::connect<false>(InputTemplate<false>) const;
 template void Circuit::OutputTemplate<false>::connect<true>(InputTemplate<true>) const;
-
-//
-// Iterators and Views
-//
-
-template class Circuit::ElementViewTemplate<false>;
-template class Circuit::ElementViewTemplate<true>;
-template class Circuit::ElementIteratorTemplate<false>;
-template class Circuit::ElementIteratorTemplate<true>;
-
-template class Circuit::ConnectionViewTemplate<false, false>;
-template class Circuit::ConnectionViewTemplate<true, false>;
-template class Circuit::ConnectionViewTemplate<false, true>;
-template class Circuit::ConnectionViewTemplate<true, true>;
-
-template class Circuit::ConnectionIteratorTemplate<false, false>;
-template class Circuit::ConnectionIteratorTemplate<true, false>;
-template class Circuit::ConnectionIteratorTemplate<false, true>;
-template class Circuit::ConnectionIteratorTemplate<true, true>;
 
 //
 // Free Functions

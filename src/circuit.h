@@ -156,43 +156,20 @@ class Circuit::ElementIteratorTemplate {
 
     // needs to be default constructable, so ElementView can become a range and view
     ElementIteratorTemplate() = default;
-
     [[nodiscard]] explicit constexpr ElementIteratorTemplate(
-        circuit_type &circuit, element_id_t element_id) noexcept
-        : circuit_(&circuit), element_id_(element_id) {}
+        circuit_type &circuit, element_id_t element_id) noexcept;
 
-    [[nodiscard]] constexpr auto operator*() const -> value_type {
-        if (circuit_ == nullptr) [[unlikely]] {
-            throw_exception("circuit cannot be null when dereferencing element iterator");
-        }
-        return circuit_->element(element_id_);
-    }
-
+    [[nodiscard]] constexpr auto operator*() const -> value_type;
     // Prefix increment
-    constexpr auto operator++() noexcept -> Circuit::ElementIteratorTemplate<Const> & {
-        ++element_id_;
-        return *this;
-    }
-
+    constexpr auto operator++() noexcept -> Circuit::ElementIteratorTemplate<Const> &;
     // Postfix increment
-    constexpr auto operator++(int) noexcept -> Circuit::ElementIteratorTemplate<Const> {
-        auto tmp = *this;
-        ++element_id_;
-        return tmp;
-    }
+    constexpr auto operator++(int) noexcept -> Circuit::ElementIteratorTemplate<Const>;
 
-    [[nodiscard]] friend constexpr auto operator==(
-        const Circuit::ElementIteratorTemplate<Const> &left,
-        const Circuit::ElementIteratorTemplate<Const> &right) noexcept -> bool {
-        return left.element_id_ >= right.element_id_;
-    }
-
-    [[nodiscard]] friend constexpr auto operator-(
-        const Circuit::ElementIteratorTemplate<Const> &left,
-        const Circuit::ElementIteratorTemplate<Const> &right) noexcept
-        -> difference_type {
-        return left.element_id_ - right.element_id_;
-    }
+    [[nodiscard]] constexpr auto operator==(
+        const ElementIteratorTemplate &right) const noexcept -> bool;
+    [[nodiscard]] constexpr auto operator-(
+        const Circuit::ElementIteratorTemplate<Const> &right) const noexcept
+        -> difference_type;
 
    private:
     circuit_type *circuit_ {};  // can be null
@@ -209,24 +186,13 @@ class Circuit::ElementViewTemplate {
     using pointer = typename iterator_type::pointer;
     using reference = typename iterator_type::reference;
 
-    [[nodiscard]] explicit constexpr ElementViewTemplate(circuit_type &circuit) noexcept
-        : circuit_(&circuit) {}
+    [[nodiscard]] explicit constexpr ElementViewTemplate(circuit_type &circuit) noexcept;
 
-    [[nodiscard]] constexpr auto begin() const noexcept -> iterator_type {
-        return iterator_type {*circuit_, 0};
-    }
+    [[nodiscard]] constexpr auto begin() const noexcept -> iterator_type;
+    [[nodiscard]] constexpr auto end() const noexcept -> iterator_type;
 
-    [[nodiscard]] constexpr auto end() const noexcept -> iterator_type {
-        return iterator_type {*circuit_, circuit_->element_count()};
-    }
-
-    [[nodiscard]] constexpr auto size() const noexcept -> element_id_t {
-        return circuit_->element_count();
-    }
-
-    [[nodiscard]] constexpr auto empty() const noexcept -> bool {
-        return circuit_->empty();
-    }
+    [[nodiscard]] constexpr auto size() const noexcept -> element_id_t;
+    [[nodiscard]] constexpr auto empty() const noexcept -> bool;
 
    private:
     circuit_type *circuit_;  // never null
@@ -318,44 +284,17 @@ class Circuit::ConnectionIteratorTemplate {
     using pointer = value_type *;
     using reference = value_type &;
 
-    [[nodiscard]] constexpr auto operator*() const -> value_type {
-        if (!element.has_value()) [[unlikely]] {
-            throw_exception("iterator needs a valid element");
-        }
-        if constexpr (IsInput) {
-            return element->input(connection_id);
-        } else {
-            return element->output(connection_id);
-        }
-    }
-
+    [[nodiscard]] constexpr auto operator*() const -> value_type;
     // Prefix increment
     constexpr auto operator++() noexcept
-        -> Circuit::ConnectionIteratorTemplate<Const, IsInput> & {
-        ++connection_id;
-        return *this;
-    }
-
+        -> Circuit::ConnectionIteratorTemplate<Const, IsInput> &;
     // Postfix increment
-    constexpr auto operator++(int) noexcept {
-        auto tmp = *this;
-        ++connection_id;
-        return tmp;
-    }
+    constexpr auto operator++(int) noexcept -> ConnectionIteratorTemplate;
 
-    [[nodiscard]] friend constexpr auto operator==(
-        const Circuit::ConnectionIteratorTemplate<Const, IsInput> &left,
-        const Circuit::ConnectionIteratorTemplate<Const, IsInput> &right) noexcept
-        -> bool {
-        return left.connection_id >= right.connection_id;
-    }
-
-    [[nodiscard]] friend constexpr auto operator-(
-        const Circuit::ConnectionIteratorTemplate<Const, IsInput> &left,
-        const Circuit::ConnectionIteratorTemplate<Const, IsInput> &right) noexcept
-        -> difference_type {
-        return left.connection_id - right.connection_id;
-    }
+    [[nodiscard]] constexpr auto operator==(
+        const ConnectionIteratorTemplate &right) const noexcept -> bool;
+    [[nodiscard]] auto operator-(const ConnectionIteratorTemplate &right) const noexcept
+        -> difference_type;
 };
 
 template <bool Const, bool IsInput>
@@ -368,36 +307,15 @@ class Circuit::ConnectionViewTemplate {
     using reference = typename iterator_type::reference;
 
     [[nodiscard]] explicit constexpr ConnectionViewTemplate(
-        ElementTemplate<Const> element) noexcept
-        : element_(element) {}
+        ElementTemplate<Const> element) noexcept;
 
-    [[nodiscard]] constexpr auto begin() const -> iterator_type {
-        return iterator_type {element_, 0};
-    }
+    [[nodiscard]] constexpr auto begin() const -> iterator_type;
+    [[nodiscard]] constexpr auto end() const -> iterator_type;
 
-    [[nodiscard]] constexpr auto end() const -> iterator_type {
-        return iterator_type {element_, size()};
-    }
+    [[nodiscard]] constexpr auto size() const -> connection_size_t;
+    [[nodiscard]] constexpr auto empty() const -> bool;
 
-    [[nodiscard]] constexpr auto size() const -> connection_size_t {
-        if constexpr (IsInput) {
-            return element_.input_count();
-        } else {
-            return element_.output_count();
-        }
-    }
-
-    [[nodiscard]] constexpr auto empty() const -> bool { return size() == 0; }
-
-    [[nodiscard]] constexpr auto format() const -> std::string {
-        // TODO try to pass member function directly
-        // TODO test format-ranges compile time with res
-        // TODO test boost join compile time
-        auto format_single = [](value_type con) { return con.format_connection(); };
-        auto connections = transform_to_vector(begin(), end(), format_single);
-        return "";
-        // fmt::format("[{}]", boost::join(connections, ", "));
-    }
+    [[nodiscard]] constexpr auto format() const -> std::string;
 
    private:
     ElementTemplate<Const> element_;

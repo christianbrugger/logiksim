@@ -68,6 +68,7 @@ auto distance_fast(IteratorFirst first, IteratorLast last) {
 }
 
 template <std::input_iterator InputIt, class Function>
+    requires std::sized_sentinel_for<InputIt, InputIt>
 auto transform_to_vector(InputIt first, InputIt last, Function func) {
     using result_type = std::invoke_result_t<Function, typename InputIt::value_type>;
 
