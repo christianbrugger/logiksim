@@ -1,20 +1,7 @@
 #ifndef LOGIKSIM_CIRCUIT_H
 #define LOGIKSIM_CIRCUIT_H
 
-// investigations
-// * iterator
-// * std::span
-// * write range(n), similar to python
-
-#include "algorithm.h"
-#include "exceptions.h"
-#include "random.h"
-#include "range.h"
-
-#include <boost/algorithm/string/join.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
 #include <fmt/core.h>
-#include <gsl/gsl>
 #include <range/v3/range/concepts.hpp>
 
 #include <concepts>

@@ -1,11 +1,10 @@
 
 #include "circuit.h"
+#include "format.h"
 #include "simulation.h"
 
 #include <absl/container/inlined_vector.h>
 #include <boost/container/small_vector.hpp>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
 #include <folly/small_vector.h>
 
 #include <exception>

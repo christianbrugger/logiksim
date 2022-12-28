@@ -69,7 +69,7 @@ auto distance_fast(IteratorFirst first, IteratorLast last) {
 
 template <std::input_iterator InputIt, class Function>
     requires std::sized_sentinel_for<InputIt, InputIt>
-auto transform_to_vector(InputIt first, InputIt last, Function func) {
+constexpr auto transform_to_vector(InputIt first, InputIt last, Function func) {
     using result_type = std::invoke_result_t<Function, typename InputIt::value_type>;
 
     std::vector<result_type> result;
@@ -80,7 +80,7 @@ auto transform_to_vector(InputIt first, InputIt last, Function func) {
 }
 
 template <class Function>
-auto transform_to_vector(std::ranges::input_range auto&& range, Function func) {
+constexpr auto transform_to_vector(std::ranges::input_range auto&& range, Function func) {
     return transform_to_vector(std::ranges::begin(range), std::ranges::end(range), func);
 }
 

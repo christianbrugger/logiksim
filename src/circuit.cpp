@@ -2,9 +2,16 @@
 #include "circuit.h"
 
 #include "algorithm.h"
+#include "exceptions.h"
+#include "format.h"
+#include "random.h"
+#include "range.h"
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 #include <fmt/core.h>
+#include <gsl/gsl>
 
 #include <algorithm>
 #include <utility>
@@ -36,12 +43,10 @@ auto format(ElementType type) -> std::string {
 auto Circuit::format() const -> std::string {
     std::string inner;
     if (!empty()) {
-        // auto element_strings = transform_to_vector(
-        //     elements(), [&](auto element) { return element.format(true); });
-        auto element_strings
-            = transform_to_vector(elements().begin(), elements().end(),
-                                  [&](auto element) { return element.format(true); });
-        inner = fmt::format(": [\n  {}\n]", boost::join(element_strings, ",\n  "));
+        auto element_strings = transform_to_vector(
+            elements(), [&](auto element) { return element.format(true); });
+
+        inner = fmt::format(": [\n  {}\n]", fmt_join(element_strings, ",\n  "));
     }
     return fmt::format("<Circuit with {} elements{}>", element_count(), inner);
 }
@@ -508,9 +513,13 @@ auto Circuit::ConnectionViewTemplate<Const, IsInput>::format() const -> std::str
     // TODO try to pass member function directly
     // TODO test format-ranges compile time with res
     // TODO test boost join compile time
-    auto format_single = [](value_type con) { return con.format_connection(); };
-    auto connections = transform_to_vector(begin(), end(), format_single);
-    return fmt::format("[{}]", boost::join(connections, ", "));
+    // auto format_single = [](value_type con) { return con.format_connection(); };
+    // auto connections = transform_to_vector(begin(), end(), format_single);
+    // return fmt::format("[{}]", boost::join(connections, ", "));
+
+    auto connections = transform_to_vector(
+        *this, [](value_type con) { return con.format_connection(); });
+    return fmt::format("{}", connections);
 }
 
 template class Circuit::ConnectionViewTemplate<false, false>;

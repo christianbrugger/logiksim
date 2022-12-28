@@ -30,7 +30,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
-option(LS_ENABLE_LTO "Enable link time optimization." ON)
+# option(LS_ENABLE_LTO "Enable link time optimization." ON)
 
 
 # global exceptions
@@ -108,7 +108,7 @@ cmake_print_variables(MAIN_COMPILE_OPTIONS)
 ###### GOOGLE BENCHMARK
 
 # Google Benchmark
-# set(BENCHMARK_ENABLE_LTO ON)
+set(BENCHMARK_ENABLE_LTO OFF)
 set(BENCHMARK_ENABLE_TESTING OFF)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
@@ -204,6 +204,7 @@ target_precompile_headers(logicsim_pch INTERFACE
     <random>
     <ranges>
     <string>
+    <string_view>
     <type_traits>
     <utility>
     <vector>
@@ -217,7 +218,6 @@ set(LS_CORE_SOURCES
     src/random.h src/random.cpp
     src/simulation.h src/simulation.cpp
     src/timer.h src/timer.cpp
-	src/newlib.cpp
 )
 set(LS_CORE_LIBRARIES  
     logicsim_pch
@@ -297,6 +297,7 @@ add_executable(${MAIN_TEST_TARGET}
     ${LS_CORE_SOURCES}
     
     test/circuit_test.cpp
+    test/format_test.cpp
     test/random_test.cpp
     test/range_test.cpp
     test/simulation_test.cpp

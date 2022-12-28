@@ -2,14 +2,18 @@
 #include "simulation.h"
 
 #include "algorithm.h"
+#include "exceptions.h"
+#include "format.h"
 #include "timer.h"
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
+#include <boost/algorithm/string/join.hpp>
 #include <gsl/assert>
+#include <gsl/gsl>
 #include <range/v3/all.hpp>
 
 #include <algorithm>
+#include <cmath>
+#include <iostream>
 
 namespace logicsim {
 
@@ -26,9 +30,9 @@ SimulationEvent make_event(Circuit::ConstInput input, time_t time, bool value) {
 
 std::string SimulationEvent::format() const {
     auto time_us = std::chrono::duration<double, std::micro> {time};
-    return fmt::format(std::locale("en_US.UTF-8"),
-                       "<SimulationEvent: at {:L}us set Element_{}[{}] = {}>",
-                       time_us.count(), element_id, input_index, value);
+    return fmt::format(  // std::locale("en_US.UTF-8"),
+        "<SimulationEvent: at {:L}us set Element_{}[{}] = {}>", time_us.count(),
+        element_id, input_index, value);
 }
 
 bool SimulationEvent::operator==(const SimulationEvent &other) const {
@@ -277,7 +281,7 @@ void create_event(SimulationQueue &queue, const Circuit::ConstOutput output,
 void process_event_group(SimulationState &state, const Circuit &circuit,
                          event_group_t &&events, const bool print_events = false) {
     if (print_events) {
-        fmt::print("events: {:n:}\n", events);
+        fmt::print("events: {:n}\n", events);
     }
     if (events.empty()) {
         return;
@@ -481,7 +485,63 @@ void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
 // Benchmark
 //
 
-int64_t benchmark_simulation(const int n_elements, const int n_events, const bool print) {
+template <std::uniform_random_bit_generator G>
+void _generate_random_events(G &rng, const Circuit &circuit, SimulationState &state) {
+    boost::random::uniform_int_distribution<int32_t> trigger_distribution {0, 1};
+
+    for (auto element : circuit.elements()) {
+        for (auto input : element.inputs()) {
+            if (trigger_distribution(rng) == 0) {
+                state.queue.submit_event(make_event(input, state.queue.time() + 1us,
+                                                    !get_input_value(input, state)));
+            }
+        }
+    }
+}
+
+template <std::uniform_random_bit_generator G>
+auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
+                          const bool print) -> int64_t {
+    SimulationState state {circuit};
+
+    // set custom delays
+    ranges::generate(state.output_delays, [&rng]() {
+        boost::random::uniform_int_distribution<time_t::rep> nanosecond_dist {5, 500};
+        return 1us * nanosecond_dist(rng);
+    });
+
+    initialize_simulation(state, circuit);
+
+    int64_t simulated_event_count {0};
+    while (true) {
+        simulated_event_count += advance_simulation(
+            state, circuit, defaults::infinite_simulation_time, defaults::no_timeout,
+            n_events - simulated_event_count, print);
+
+        if (simulated_event_count >= n_events) {
+            break;
+        }
+
+        _generate_random_events(rng, circuit, state);
+    }
+
+    if (print) {
+        auto output_values {get_all_output_values(state.input_values, circuit)};
+
+        fmt::print("events simulated = {}\n", simulated_event_count);
+        fmt::print("input_values = {}\n", fmt_join("{:b}", state.input_values, ""));
+        fmt::print("output_values = {}\n", fmt_join("{:b}", output_values, ""));
+    }
+
+    Ensures(simulated_event_count >= n_events);
+    return simulated_event_count;
+}
+
+template auto benchmark_simulation(boost::random::mt19937 &rng, const Circuit &circuit,
+                                   const int n_events, const bool print) -> int64_t;
+
+auto benchmark_simulation(const int n_elements, const int n_events, const bool print)
+    -> int64_t {
     boost::random::mt19937 rng {0};
 
     auto circuit = create_random_circuit(rng, n_elements, 0.75);
