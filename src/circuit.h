@@ -87,21 +87,22 @@ class Circuit {
     using OutputIterator = OutputIteratorTemplate<false>;
     using ConstOutputIterator = OutputIteratorTemplate<true>;
 
-    [[nodiscard]] std::string format() const;
+    [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] element_id_t element_count() const noexcept;
+    [[nodiscard]] auto element_count() const noexcept -> element_id_t;
     [[nodiscard]] auto empty() const noexcept -> bool;
-    [[nodiscard]] bool is_element_id_valid(element_id_t element_id) const noexcept;
-    [[nodiscard]] connection_id_t total_input_count() const noexcept;
-    [[nodiscard]] connection_id_t total_output_count() const noexcept;
+    [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
+        -> bool;
+    [[nodiscard]] auto total_input_count() const noexcept -> connection_id_t;
+    [[nodiscard]] auto total_output_count() const noexcept -> connection_id_t;
 
-    [[nodiscard]] Element element(element_id_t element_id);
-    [[nodiscard]] ConstElement element(element_id_t element_id) const;
+    [[nodiscard]] auto element(element_id_t element_id) -> Element;
+    [[nodiscard]] auto element(element_id_t element_id) const -> ConstElement;
     [[nodiscard]] auto elements() noexcept -> ElementView;
     [[nodiscard]] auto elements() const noexcept -> ConstElementView;
 
-    Element add_element(ElementType type, connection_size_t input_count,
-                        connection_size_t output_count);
+    auto add_element(ElementType type, connection_size_t input_count,
+                     connection_size_t output_count) -> Element;
     auto clear() -> void;
 
     void validate(bool require_all_outputs_connected = false) const;
@@ -227,29 +228,29 @@ class Circuit::ElementTemplate {
         requires Const && (!ConstOther);
 
     template <bool ConstOther>
-    bool operator==(ElementTemplate<ConstOther> other) const noexcept;
+    auto operator==(ElementTemplate<ConstOther> other) const noexcept -> bool;
 
-    [[nodiscard]] std::string format(bool with_connections = false) const;
+    [[nodiscard]] auto format(bool with_connections = false) const -> std::string;
 
-    [[nodiscard]] CircuitType *circuit() const noexcept;
-    [[nodiscard]] element_id_t element_id() const noexcept;
+    [[nodiscard]] auto circuit() const noexcept -> CircuitType *;
+    [[nodiscard]] auto element_id() const noexcept -> element_id_t;
 
-    [[nodiscard]] ElementType element_type() const;
-    [[nodiscard]] connection_size_t input_count() const;
-    [[nodiscard]] connection_size_t output_count() const;
-    [[nodiscard]] connection_id_t first_input_id() const;
-    [[nodiscard]] connection_id_t input_id(connection_size_t input_index) const;
-    [[nodiscard]] connection_id_t first_output_id() const;
-    [[nodiscard]] connection_id_t output_id(connection_size_t output_index) const;
+    [[nodiscard]] auto element_type() const -> ElementType;
+    [[nodiscard]] auto input_count() const -> connection_size_t;
+    [[nodiscard]] auto output_count() const -> connection_size_t;
+    [[nodiscard]] auto first_input_id() const -> connection_id_t;
+    [[nodiscard]] auto input_id(connection_size_t input_index) const -> connection_id_t;
+    [[nodiscard]] auto first_output_id() const -> connection_id_t;
+    [[nodiscard]] auto output_id(connection_size_t output_index) const -> connection_id_t;
 
-    [[nodiscard]] InputTemplate<Const> input(connection_size_t input) const;
-    [[nodiscard]] OutputTemplate<Const> output(connection_size_t output) const;
+    [[nodiscard]] auto input(connection_size_t input) const -> InputTemplate<Const>;
+    [[nodiscard]] auto output(connection_size_t output) const -> OutputTemplate<Const>;
 
     [[nodiscard]] auto inputs() const -> InputViewTemplate<Const>;
     [[nodiscard]] auto outputs() const -> OutputViewTemplate<Const>;
 
    private:
-    [[nodiscard]] ElementDataType &element_data_() const;
+    [[nodiscard]] auto element_data_() const -> ElementDataType &;
 
     CircuitType *circuit_;  // never null
     element_id_t element_id_;
@@ -351,27 +352,27 @@ class Circuit::InputTemplate {
         requires Const && (!ConstOther);
 
     template <bool ConstOther>
-    bool operator==(InputTemplate<ConstOther> other) const noexcept;
+    auto operator==(InputTemplate<ConstOther> other) const noexcept -> bool;
 
-    [[nodiscard]] std::string format() const;
-    [[nodiscard]] std::string format_connection() const;
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto format_connection() const -> std::string;
 
-    [[nodiscard]] CircuitType *circuit() const noexcept;
-    [[nodiscard]] element_id_t element_id() const noexcept;
-    [[nodiscard]] connection_size_t input_index() const noexcept;
-    [[nodiscard]] connection_id_t input_id() const noexcept;
+    [[nodiscard]] auto circuit() const noexcept -> CircuitType *;
+    [[nodiscard]] auto element_id() const noexcept -> element_id_t;
+    [[nodiscard]] auto input_index() const noexcept -> connection_size_t;
+    [[nodiscard]] auto input_id() const noexcept -> connection_id_t;
 
-    [[nodiscard]] ElementTemplate<Const> element() const;
-    [[nodiscard]] bool has_connected_element() const;
-    [[nodiscard]] element_id_t connected_element_id() const;
-    [[nodiscard]] connection_size_t connected_output_index() const;
+    [[nodiscard]] auto element() const -> ElementTemplate<Const>;
+    [[nodiscard]] auto has_connected_element() const -> bool;
+    [[nodiscard]] auto connected_element_id() const -> element_id_t;
+    [[nodiscard]] auto connected_output_index() const -> connection_size_t;
 
     /// @throws if connection doesn't exists. Call has_connected_element to check for
     /// this.
-    [[nodiscard]] ElementTemplate<Const> connected_element() const;
+    [[nodiscard]] auto connected_element() const -> ElementTemplate<Const>;
     /// @throws if connection doesn't exists. Call has_connected_element to check for
     /// this.
-    [[nodiscard]] OutputTemplate<Const> connected_output() const;
+    [[nodiscard]] auto connected_output() const -> OutputTemplate<Const>;
 
     void clear_connection() const
         requires(!Const);
@@ -380,7 +381,7 @@ class Circuit::InputTemplate {
         requires(!Const);
 
    private:
-    [[nodiscard]] ConnectionDataType &connection_data_() const;
+    [[nodiscard]] auto connection_data_() const -> ConnectionDataType &;
 
     CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
@@ -407,27 +408,27 @@ class Circuit::OutputTemplate {
         requires Const && (!ConstOther);
 
     template <bool ConstOther>
-    bool operator==(OutputTemplate<ConstOther> other) const noexcept;
+    auto operator==(OutputTemplate<ConstOther> other) const noexcept -> bool;
 
-    [[nodiscard]] std::string format() const;
-    [[nodiscard]] std::string format_connection() const;
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto format_connection() const -> std::string;
 
-    [[nodiscard]] CircuitType *circuit() const noexcept;
-    [[nodiscard]] element_id_t element_id() const noexcept;
-    [[nodiscard]] connection_size_t output_index() const noexcept;
-    [[nodiscard]] connection_id_t output_id() const noexcept;
+    [[nodiscard]] auto circuit() const noexcept -> CircuitType *;
+    [[nodiscard]] auto element_id() const noexcept -> element_id_t;
+    [[nodiscard]] auto output_index() const noexcept -> connection_size_t;
+    [[nodiscard]] auto output_id() const noexcept -> connection_id_t;
 
-    [[nodiscard]] ElementTemplate<Const> element() const;
-    [[nodiscard]] bool has_connected_element() const;
-    [[nodiscard]] element_id_t connected_element_id() const;
-    [[nodiscard]] connection_size_t connected_input_index() const;
+    [[nodiscard]] auto element() const -> ElementTemplate<Const>;
+    [[nodiscard]] auto has_connected_element() const -> bool;
+    [[nodiscard]] auto connected_element_id() const -> element_id_t;
+    [[nodiscard]] auto connected_input_index() const -> connection_size_t;
 
     /// @throws if connection doesn't exists. Call has_connected_element to check for
     /// this.
-    [[nodiscard]] ElementTemplate<Const> connected_element() const;
+    [[nodiscard]] auto connected_element() const -> ElementTemplate<Const>;
     /// @throws if connection doesn't exists. Call has_connected_element to check for
     /// this.
-    [[nodiscard]] InputTemplate<Const> connected_input() const;
+    [[nodiscard]] auto connected_input() const -> InputTemplate<Const>;
 
     void clear_connection() const
         requires(!Const);
@@ -436,7 +437,7 @@ class Circuit::OutputTemplate {
         requires(!Const);
 
    private:
-    [[nodiscard]] ConnectionDataType &connection_data_() const;
+    [[nodiscard]] auto connection_data_() const -> ConnectionDataType &;
 
     CircuitType *circuit_;  // never to be null
     element_id_t element_id_;
@@ -534,7 +535,7 @@ namespace logicsim {
 
 void add_output_placeholders(Circuit &circuit);
 
-Circuit benchmark_circuit(int n_elements = 100);
+auto benchmark_circuit(int n_elements = 100) -> Circuit;
 
 template <std::uniform_random_bit_generator G>
 auto create_random_circuit(G &rng, int n_elements = 100, double connection_ratio = 0.75)

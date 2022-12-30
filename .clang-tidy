@@ -2,24 +2,23 @@
 ---
 Checks: '
 -*,
-modernize-use-trailing-return-type
+
+clang-analyzer-*,
+performance-*,
+portability-*,
+concurrency-*,
+cppcoreguidelines-*,
+modernize-*,
+bugprone-*,
+readability-*,
+
+google-default-arguments,
+google-explicit-constructor,
+google-readability-avoid-underscore-in-googletest-name,
+google-runtime-operator,
+ 
 '
 
-# clang-analyzer-*,
-# performance-*,
-# portability-*,
-# concurrency-*,
-# cppcoreguidelines-*,
-# modernize-*,
-# bugprone-*,
-# readability-*,
-# 
-# google-default-arguments,
-# google-explicit-constructor,
-# google-readability-avoid-underscore-in-googletest-name,
-# google-runtime-operator,
-# 
-# '
 # -cppcoreguidelines-avoid-magic-numbers,
 # -readability-magic-numbers,
 # -readability-identifier-length,

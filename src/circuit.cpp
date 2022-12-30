@@ -312,13 +312,13 @@ Circuit::ElementTemplate<Const>::ElementTemplate(
 
 template <bool Const>
 template <bool ConstOther>
-bool Circuit::ElementTemplate<Const>::operator==(
-    ElementTemplate<ConstOther> other) const noexcept {
+auto Circuit::ElementTemplate<Const>::operator==(
+    ElementTemplate<ConstOther> other) const noexcept -> bool {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_;
 }
 
 template <bool Const>
-std::string Circuit::ElementTemplate<Const>::format(bool with_connections) const {
+auto Circuit::ElementTemplate<Const>::format(bool with_connections) const -> std::string {
     auto connections = !with_connections
                            ? ""
                            : fmt::format(", inputs = {}, outputs = {}", inputs().format(),
@@ -334,33 +334,33 @@ auto Circuit::ElementTemplate<Const>::circuit() const noexcept -> CircuitType * 
 }
 
 template <bool Const>
-element_id_t Circuit::ElementTemplate<Const>::element_id() const noexcept {
+auto Circuit::ElementTemplate<Const>::element_id() const noexcept -> element_id_t {
     return element_id_;
 }
 
 template <bool Const>
-ElementType Circuit::ElementTemplate<Const>::element_type() const {
+auto Circuit::ElementTemplate<Const>::element_type() const -> ElementType {
     return element_data_().type;
 }
 
 template <bool Const>
-connection_size_t Circuit::ElementTemplate<Const>::input_count() const {
+auto Circuit::ElementTemplate<Const>::input_count() const -> connection_size_t {
     return element_data_().input_count;
 }
 
 template <bool Const>
-connection_size_t Circuit::ElementTemplate<Const>::output_count() const {
+auto Circuit::ElementTemplate<Const>::output_count() const -> connection_size_t {
     return element_data_().output_count;
 }
 
 template <bool Const>
-connection_id_t Circuit::ElementTemplate<Const>::first_input_id() const {
+auto Circuit::ElementTemplate<Const>::first_input_id() const -> connection_id_t {
     return element_data_().first_input_id;
 }
 
 template <bool Const>
-connection_id_t Circuit::ElementTemplate<Const>::input_id(
-    connection_size_t input_index) const {
+auto Circuit::ElementTemplate<Const>::input_id(connection_size_t input_index) const
+    -> connection_id_t {
     if (input_index < 0 || input_index >= input_count()) [[unlikely]] {
         throw_exception("Index is invalid");
     }
@@ -368,13 +368,13 @@ connection_id_t Circuit::ElementTemplate<Const>::input_id(
 }
 
 template <bool Const>
-connection_id_t Circuit::ElementTemplate<Const>::first_output_id() const {
+auto Circuit::ElementTemplate<Const>::first_output_id() const -> connection_id_t {
     return element_data_().first_output_id;
 }
 
 template <bool Const>
-connection_id_t Circuit::ElementTemplate<Const>::output_id(
-    connection_size_t output_index) const {
+auto Circuit::ElementTemplate<Const>::output_id(connection_size_t output_index) const
+    -> connection_id_t {
     if (output_index < 0 || output_index >= output_count()) [[unlikely]] {
         throw_exception("Index is invalid");
     }
@@ -551,14 +551,14 @@ Circuit::InputTemplate<Const>::InputTemplate(InputTemplate<ConstOther> input) no
 
 template <bool Const>
 template <bool ConstOther>
-bool Circuit::InputTemplate<Const>::operator==(
-    InputTemplate<ConstOther> other) const noexcept {
+auto Circuit::InputTemplate<Const>::operator==(
+    InputTemplate<ConstOther> other) const noexcept -> bool {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_
            && input_index_ == other.input_index_ && input_index_ == other.input_index_;
 }
 
 template <bool Const>
-std::string Circuit::InputTemplate<Const>::format() const {
+auto Circuit::InputTemplate<Const>::format() const -> std::string {
     const auto element = this->element();
     return fmt::format("<Input {} of Element {}: {} {} x {}>", input_index(),
                        element_id(), element.element_type(), element.input_count(),
@@ -566,7 +566,7 @@ std::string Circuit::InputTemplate<Const>::format() const {
 }
 
 template <bool Const>
-std::string Circuit::InputTemplate<Const>::format_connection() const {
+auto Circuit::InputTemplate<Const>::format_connection() const -> std::string {
     if (has_connected_element()) {
         return fmt::format("Element_{}-{}", connected_element_id(),
                            connected_output_index());
@@ -580,17 +580,17 @@ auto Circuit::InputTemplate<Const>::circuit() const noexcept -> CircuitType * {
 }
 
 template <bool Const>
-element_id_t Circuit::InputTemplate<Const>::element_id() const noexcept {
+auto Circuit::InputTemplate<Const>::element_id() const noexcept -> element_id_t {
     return element_id_;
 }
 
 template <bool Const>
-connection_size_t Circuit::InputTemplate<Const>::input_index() const noexcept {
+auto Circuit::InputTemplate<Const>::input_index() const noexcept -> connection_size_t {
     return input_index_;
 }
 
 template <bool Const>
-connection_id_t Circuit::InputTemplate<Const>::input_id() const noexcept {
+auto Circuit::InputTemplate<Const>::input_id() const noexcept -> connection_id_t {
     return input_id_;
 }
 
@@ -600,17 +600,17 @@ auto Circuit::InputTemplate<Const>::element() const -> ElementTemplate<Const> {
 }
 
 template <bool Const>
-bool Circuit::InputTemplate<Const>::has_connected_element() const {
+auto Circuit::InputTemplate<Const>::has_connected_element() const -> bool {
     return connected_element_id() != null_element;
 }
 
 template <bool Const>
-element_id_t Circuit::InputTemplate<Const>::connected_element_id() const {
+auto Circuit::InputTemplate<Const>::connected_element_id() const -> element_id_t {
     return connection_data_().element_id;
 }
 
 template <bool Const>
-connection_size_t Circuit::InputTemplate<Const>::connected_output_index() const {
+auto Circuit::InputTemplate<Const>::connected_output_index() const -> connection_size_t {
     return connection_data_().index;
 }
 
@@ -710,14 +710,14 @@ Circuit::OutputTemplate<Const>::OutputTemplate(OutputTemplate<ConstOther> output
 
 template <bool Const>
 template <bool ConstOther>
-bool Circuit::OutputTemplate<Const>::operator==(
-    Circuit::OutputTemplate<ConstOther> other) const noexcept {
+auto Circuit::OutputTemplate<Const>::operator==(
+    Circuit::OutputTemplate<ConstOther> other) const noexcept -> bool {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_
            && output_index_ == other.output_index_ && output_id_ == other.output_id_;
 }
 
 template <bool Const>
-std::string Circuit::OutputTemplate<Const>::format() const {
+auto Circuit::OutputTemplate<Const>::format() const -> std::string {
     const auto element = this->element();
     return fmt::format("<Output {} of Element {}: {} {} x {}>", output_index(),
                        element_id(), element.element_type(), element.input_count(),
@@ -725,7 +725,7 @@ std::string Circuit::OutputTemplate<Const>::format() const {
 }
 
 template <bool Const>
-std::string Circuit::OutputTemplate<Const>::format_connection() const {
+auto Circuit::OutputTemplate<Const>::format_connection() const -> std::string {
     if (has_connected_element()) {
         return fmt::format("Element_{}-{}", connected_element_id(),
                            connected_input_index());
@@ -739,17 +739,17 @@ auto Circuit::OutputTemplate<Const>::circuit() const noexcept -> CircuitType * {
 }
 
 template <bool Const>
-element_id_t Circuit::OutputTemplate<Const>::element_id() const noexcept {
+auto Circuit::OutputTemplate<Const>::element_id() const noexcept -> element_id_t {
     return element_id_;
 }
 
 template <bool Const>
-connection_size_t Circuit::OutputTemplate<Const>::output_index() const noexcept {
+auto Circuit::OutputTemplate<Const>::output_index() const noexcept -> connection_size_t {
     return output_index_;
 }
 
 template <bool Const>
-connection_id_t Circuit::OutputTemplate<Const>::output_id() const noexcept {
+auto Circuit::OutputTemplate<Const>::output_id() const noexcept -> connection_id_t {
     return output_id_;
 }
 
@@ -759,17 +759,17 @@ auto Circuit::OutputTemplate<Const>::element() const -> ElementTemplate<Const> {
 }
 
 template <bool Const>
-bool Circuit::OutputTemplate<Const>::has_connected_element() const {
+auto Circuit::OutputTemplate<Const>::has_connected_element() const -> bool {
     return connected_element_id() != null_element;
 }
 
 template <bool Const>
-element_id_t Circuit::OutputTemplate<Const>::connected_element_id() const {
+auto Circuit::OutputTemplate<Const>::connected_element_id() const -> element_id_t {
     return connection_data_().element_id;
 }
 
 template <bool Const>
-connection_size_t Circuit::OutputTemplate<Const>::connected_input_index() const {
+auto Circuit::OutputTemplate<Const>::connected_input_index() const -> connection_size_t {
     return connection_data_().index;
 }
 
