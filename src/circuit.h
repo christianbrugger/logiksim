@@ -2,7 +2,6 @@
 #define LOGIKSIM_CIRCUIT_H
 
 #include <fmt/core.h>
-// #include <range/v3/range/concepts.hpp>
 
 #include <concepts>
 #include <cstdint>
