@@ -7,6 +7,8 @@
 #include "range.h"
 #include "timer.h"
 
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 #include <gsl/assert>
 #include <gsl/gsl>
 

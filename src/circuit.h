@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <iterator>
 #include <optional>
+#include <random>
 #include <ranges>
 #include <string>
 #include <type_traits>

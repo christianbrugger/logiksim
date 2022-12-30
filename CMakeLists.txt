@@ -31,6 +31,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
+option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
 
 
 # global exceptions
@@ -189,29 +190,34 @@ endif()
 # Main Library
 
 add_library(logicsim_pch INTERFACE)
-target_precompile_headers(logicsim_pch INTERFACE
-    <boost/algorithm/string/join.hpp>
-    <boost/random/mersenne_twister.hpp>
-    <boost/random/uniform_int_distribution.hpp>
-    <fmt/core.h>
-    <gsl/gsl>
+if (LS_ENABLE_PCH)
+    message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
+    target_precompile_headers(logicsim_pch INTERFACE
+        <boost/algorithm/string/join.hpp>
+        <boost/random/mersenne_twister.hpp>
+        <boost/random/uniform_int_distribution.hpp>
+        <fmt/core.h>
+        <gsl/gsl>
     
-    <algorithm>
-    <chrono>
-    <concepts>
-    <cstdint>
-    <exception>
-    <iostream>
-    <iterator>
-    <optional>
-    <random>
-    <ranges>
-    <string>
-    <string_view>
-    <type_traits>
-    <utility>
-    <vector>
-)
+        <algorithm>
+        <chrono>
+        <concepts>
+        <cstdint>
+        <exception>
+        <iostream>
+        <iterator>
+        <optional>
+        <random>
+        <ranges>
+        <string>
+        <string_view>
+        <type_traits>
+        <utility>
+        <vector>
+    )
+else()
+    message(NOTICE "LOGIKSIM: Disabling pre-compiled headers.")
+endif()
 
 
 set(LS_CORE_SOURCES
