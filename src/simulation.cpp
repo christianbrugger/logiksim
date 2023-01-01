@@ -23,44 +23,44 @@ namespace logicsim {
 // Simulation Event
 //
 
-SimulationEvent make_event(Circuit::ConstInput input, time_t time, bool value) {
+auto make_event(Circuit::ConstInput input, time_t time, bool value) -> SimulationEvent {
     return {.time = time,
             .element_id = input.element_id(),
             .input_index = input.input_index(),
             .value = value};
 }
 
-std::string SimulationEvent::format() const {
+auto SimulationEvent::format() const -> std::string {
     auto time_us = std::chrono::duration<double, std::micro> {time};
     return fmt::format(  // std::locale("en_US.UTF-8"),
         "<SimulationEvent: at {:L}us set Element_{}[{}] = {}>", time_us.count(),
         element_id, input_index, value);
 }
 
-bool SimulationEvent::operator==(const SimulationEvent &other) const {
+auto SimulationEvent::operator==(const SimulationEvent &other) const -> bool {
     return this->element_id == other.element_id && this->time == other.time;
 }
 
-bool SimulationEvent::operator<(const SimulationEvent &other) const {
+auto SimulationEvent::operator<(const SimulationEvent &other) const -> bool {
     if (this->time == other.time) {
         return this->element_id < other.element_id;
     }
     return this->time < other.time;
 }
 
-bool SimulationEvent::operator!=(const SimulationEvent &other) const {
+auto SimulationEvent::operator!=(const SimulationEvent &other) const -> bool {
     return !(this->operator==(other));
 }
 
-bool SimulationEvent::operator>(const SimulationEvent &other) const {
+auto SimulationEvent::operator>(const SimulationEvent &other) const -> bool {
     return other.operator<(*this);
 }
 
-bool SimulationEvent::operator<=(const SimulationEvent &other) const {
+auto SimulationEvent::operator<=(const SimulationEvent &other) const -> bool {
     return !(this->operator>(other));
 }
 
-bool SimulationEvent::operator>=(const SimulationEvent &other) const {
+auto SimulationEvent::operator>=(const SimulationEvent &other) const -> bool {
     return !(this->operator<(other));
 }
 
@@ -109,7 +109,7 @@ void validate(const event_group_t &events) {
 // SimulationQueue
 //
 
-time_t SimulationQueue::time() const noexcept { return time_; }
+auto SimulationQueue::time() const noexcept -> time_t { return time_; }
 
 void SimulationQueue::set_time(time_t time) {
     if (time < time_) {
@@ -122,11 +122,11 @@ void SimulationQueue::set_time(time_t time) {
     time_ = time;
 }
 
-time_t SimulationQueue::next_event_time() const noexcept {
+auto SimulationQueue::next_event_time() const noexcept -> time_t {
     return events_.empty() ? time_t::max() : events_.top().time;
 }
 
-bool SimulationQueue::empty() const noexcept { return events_.empty(); }
+auto SimulationQueue::empty() const noexcept -> bool { return events_.empty(); }
 
 void SimulationQueue::submit_event(SimulationEvent event) {
     if (event.time <= time_) {
@@ -136,7 +136,7 @@ void SimulationQueue::submit_event(SimulationEvent event) {
     events_.push(event);
 }
 
-event_group_t SimulationQueue::pop_event_group() {
+auto SimulationQueue::pop_event_group() -> event_group_t {
     event_group_t group;
     pop_while(
         events_, [&group](const SimulationEvent &event) { group.push_back(event); },
@@ -177,9 +177,8 @@ void check_input_size(const SimulationState &state, const Circuit &circuit) {
 
 using con_index_small_vector_t = boost::container::small_vector<connection_size_t, 8>;
 
-logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
-                                       connection_size_t output_count,
-                                       const ElementType type) {
+auto calculate_outputs(const logic_small_vector_t &input, connection_size_t output_count,
+                       const ElementType type) -> logic_small_vector_t {
     if (input.empty()) [[unlikely]] {
         throw_exception("Input size cannot be zero.");
     }
@@ -209,8 +208,8 @@ logic_small_vector_t calculate_outputs(const logic_small_vector_t &input,
     }
 }
 
-logic_small_vector_t get_input_values(const Circuit::ConstElement element,
-                                      const logic_vector_t &input_values) {
+auto get_input_values(const Circuit::ConstElement element,
+                      const logic_vector_t &input_values) -> logic_small_vector_t {
     const auto begin = input_values.begin() + element.first_input_id();
     const auto end = begin + element.input_count();
 
@@ -222,9 +221,9 @@ logic_small_vector_t get_input_values(const Circuit::ConstElement element,
     return logic_small_vector_t {begin, end};
 }
 
-logic_small_vector_t get_output_values(const Circuit::ConstElement element,
-                                       const logic_vector_t &input_values,
-                                       const bool raise_missing) {
+auto get_output_values(const Circuit::ConstElement element,
+                       const logic_vector_t &input_values, const bool raise_missing)
+    -> logic_small_vector_t {
     logic_small_vector_t result;
     result.reserve(element.output_count());
 
@@ -240,14 +239,13 @@ logic_small_vector_t get_output_values(const Circuit::ConstElement element,
     return result;
 }
 
-logic_small_vector_t get_input_values(const Circuit::ConstElement element,
-                                      const SimulationState &state) {
+auto get_input_values(const Circuit::ConstElement element, const SimulationState &state)
+    -> logic_small_vector_t {
     return get_input_values(element, state.input_values);
 }
 
-logic_small_vector_t get_output_values(const Circuit::ConstElement element,
-                                       const SimulationState &state,
-                                       const bool raise_missing) {
+auto get_output_values(const Circuit::ConstElement element, const SimulationState &state,
+                       const bool raise_missing) -> logic_small_vector_t {
     return get_output_values(element, state.input_values, raise_missing);
 }
 
@@ -265,8 +263,9 @@ void apply_events(logic_vector_t &input_values, const Circuit::ConstElement elem
     }
 }
 
-con_index_small_vector_t get_changed_outputs(const logic_small_vector_t &old_outputs,
-                                             const logic_small_vector_t &new_outputs) {
+auto get_changed_outputs(const logic_small_vector_t &old_outputs,
+                         const logic_small_vector_t &new_outputs)
+    -> con_index_small_vector_t {
     if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]] {
         throw_exception("old_outputs and new_outputs need to have the same size.");
     }
@@ -340,7 +339,7 @@ class SimulationTimer {
     explicit SimulationTimer(timeout_t timeout = defaults::no_timeout) noexcept
         : timeout_(timeout), start_time_(timeout_clock::now()) {};
 
-    [[nodiscard]] bool reached_timeout() const noexcept {
+    [[nodiscard]] auto reached_timeout() const noexcept -> bool {
         return (timeout_ != defaults::no_timeout)
                && (std::chrono::steady_clock::now() - start_time_) > timeout_;
     }
@@ -350,9 +349,9 @@ class SimulationTimer {
     time_point start_time_;
 };
 
-int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
-                           const time_t simultation_time, const timeout_t timeout,
-                           const int64_t max_events, const bool print_events) {
+auto advance_simulation(SimulationState &state, const Circuit &circuit,
+                        const time_t simultation_time, const timeout_t timeout,
+                        const int64_t max_events, const bool print_events) -> int64_t {
     // TODO test expects
     Expects(simultation_time >= 0us);
     if (simultation_time < 0us) [[unlikely]] {
@@ -416,14 +415,14 @@ void initialize_simulation(SimulationState &state, const Circuit &circuit) {
     }
 }
 
-SimulationState get_uninitialized_state(Circuit &circuit) {
+auto get_uninitialized_state(Circuit &circuit) -> SimulationState {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
     return SimulationState {circuit};
 }
 
-SimulationState get_initialized_state(Circuit &circuit) {
+auto get_initialized_state(Circuit &circuit) -> SimulationState {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
@@ -432,8 +431,8 @@ SimulationState get_initialized_state(Circuit &circuit) {
     return state;
 }
 
-SimulationState simulate_circuit(Circuit &circuit, time_t simultation_time,
-                                 timeout_t timeout, bool print_events) {
+auto simulate_circuit(Circuit &circuit, time_t simultation_time, timeout_t timeout,
+                      bool print_events) -> SimulationState {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
@@ -445,30 +444,32 @@ SimulationState simulate_circuit(Circuit &circuit, time_t simultation_time,
     return state;
 }
 
-bool get_input_value(const Circuit::ConstInput input,
-                     const logic_vector_t &input_values) {
+auto get_input_value(const Circuit::ConstInput input, const logic_vector_t &input_values)
+    -> bool {
     return input_values.at(input.input_id());
 }
 
-bool get_input_value(const Circuit::ConstInput input, const SimulationState &state) {
+auto get_input_value(const Circuit::ConstInput input, const SimulationState &state)
+    -> bool {
     return get_input_value(input, state.input_values);
 }
 
-bool get_output_value(const Circuit::ConstOutput output,
-                      const logic_vector_t &input_values, const bool raise_missing) {
+auto get_output_value(const Circuit::ConstOutput output,
+                      const logic_vector_t &input_values, const bool raise_missing)
+    -> bool {
     if (raise_missing || output.has_connected_element()) {
         return input_values.at(output.connected_input().input_id());
     }
     return false;
 }
 
-bool get_output_value(const Circuit::ConstOutput output, const SimulationState &state,
-                      const bool raise_missing) {
+auto get_output_value(const Circuit::ConstOutput output, const SimulationState &state,
+                      const bool raise_missing) -> bool {
     return get_output_value(output, state.input_values, raise_missing);
 }
 
-logic_vector_t get_all_output_values(const logic_vector_t &input_values,
-                                     const Circuit &circuit, const bool raise_missing) {
+auto get_all_output_values(const logic_vector_t &input_values, const Circuit &circuit,
+                           const bool raise_missing) -> logic_vector_t {
     logic_vector_t output_values(circuit.total_output_count());
 
     for (auto element : circuit.elements()) {
@@ -481,12 +482,13 @@ logic_vector_t get_all_output_values(const logic_vector_t &input_values,
     return output_values;
 }
 
-time_t get_output_delay(const Circuit::ConstOutput output,
-                        const delay_vector_t &output_delays) {
+auto get_output_delay(const Circuit::ConstOutput output,
+                      const delay_vector_t &output_delays) -> time_t {
     return output_delays.at(output.output_id());
 }
 
-time_t get_output_delay(const Circuit::ConstOutput output, const SimulationState &state) {
+auto get_output_delay(const Circuit::ConstOutput output, const SimulationState &state)
+    -> time_t {
     return get_output_delay(output, state.output_delays);
 }
 
@@ -562,7 +564,7 @@ auto benchmark_simulation(const int n_elements, const int n_events, const bool p
     -> int64_t {
     boost::random::mt19937 rng {0};
 
-    auto circuit = create_random_circuit(rng, n_elements, 0.75);
+    auto circuit = create_random_circuit(rng, n_elements);
     if (print) {
         fmt::print("{}\n", circuit);
     }

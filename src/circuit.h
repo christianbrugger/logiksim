@@ -538,8 +538,8 @@ namespace logicsim {
 
 void add_output_placeholders(Circuit &circuit);
 
-inline constexpr int BENCHMARK_DEFAULT_ELEMENTS = 100;
-inline constexpr double BENCHMARK_DEFAULT_CONNECTIVITY = 0.75;
+inline constexpr int BENCHMARK_DEFAULT_ELEMENTS {100};
+inline constexpr double BENCHMARK_DEFAULT_CONNECTIVITY {0.75};
 
 auto benchmark_circuit(int n_elements = BENCHMARK_DEFAULT_ELEMENTS) -> Circuit;
 

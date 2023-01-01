@@ -46,22 +46,22 @@ struct SimulationEvent {
     connection_size_t input_index;
     bool value;
 
-    bool operator==(const SimulationEvent &other) const;
-    bool operator<(const SimulationEvent &other) const;
+    auto operator==(const SimulationEvent &other) const -> bool;
+    auto operator<(const SimulationEvent &other) const -> bool;
 
-    bool operator!=(const SimulationEvent &other) const;
-    bool operator>(const SimulationEvent &other) const;
-    bool operator<=(const SimulationEvent &other) const;
-    bool operator>=(const SimulationEvent &other) const;
+    auto operator!=(const SimulationEvent &other) const -> bool;
+    auto operator>(const SimulationEvent &other) const -> bool;
+    auto operator<=(const SimulationEvent &other) const -> bool;
+    auto operator>=(const SimulationEvent &other) const -> bool;
 
-    [[nodiscard]] std::string format() const;
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::is_trivial<SimulationEvent>::value);
 static_assert(std::is_trivially_copyable<SimulationEvent>::value);
 static_assert(std::is_standard_layout<SimulationEvent>::value);
 
-SimulationEvent make_event(Circuit::ConstInput input, time_t time, bool value);
+auto make_event(Circuit::ConstInput input, time_t time, bool value) -> SimulationEvent;
 }  // namespace logicsim
 
 template <>
@@ -76,8 +76,8 @@ struct fmt::formatter<logicsim::SimulationEvent> {
 namespace std {
 
 template <class CharT>
-std::basic_ostream<CharT> &operator<<(std::basic_ostream<CharT> &os,
-                                      const logicsim::SimulationEvent &dt) {
+auto operator<<(std::basic_ostream<CharT> &os, const logicsim::SimulationEvent &dt)
+    -> std::basic_ostream<CharT> & {
     os << dt.format();
     return os;
 }
@@ -91,14 +91,14 @@ void validate(const event_group_t &events);
 
 class SimulationQueue {
    public:
-    [[nodiscard]] time_t time() const noexcept;
-    [[nodiscard]] time_t next_event_time() const noexcept;
-    [[nodiscard]] bool empty() const noexcept;
+    [[nodiscard]] auto time() const noexcept -> time_t;
+    [[nodiscard]] auto next_event_time() const noexcept -> time_t;
+    [[nodiscard]] auto empty() const noexcept -> bool;
 
     void set_time(time_t time);
     void submit_event(SimulationEvent event);
     /// Remove and return all events for the next time and element_id.
-    event_group_t pop_event_group();
+    auto pop_event_group() -> event_group_t;
 
    private:
     time_t time_ {0us};
@@ -129,8 +129,8 @@ void check_input_size(const SimulationState &state, const Circuit &circuit);
 
 void initialize_simulation(SimulationState &state, const Circuit &circuit);
 
-[[nodiscard]] SimulationState get_uninitialized_state(Circuit &circuit);
-[[nodiscard]] SimulationState get_initialized_state(Circuit &circuit);
+[[nodiscard]] auto get_uninitialized_state(Circuit &circuit) -> SimulationState;
+[[nodiscard]] auto get_initialized_state(Circuit &circuit) -> SimulationState;
 
 using timeout_clock = std::chrono::steady_clock;
 using timeout_t = timeout_clock::duration;
@@ -149,58 +149,62 @@ constexpr int64_t no_max_events
 ///                          no more new events are generated
 /// @param timeout           return if simulation takes longer than this in realtime
 /// @param print_events      if true print each processed event information
-int64_t advance_simulation(SimulationState &state, const Circuit &circuit,
-                           time_t simultation_time = defaults::infinite_simulation_time,
-                           timeout_t timeout = defaults::no_timeout,
-                           int64_t max_events = defaults::no_max_events,
-                           bool print_events = false);
+auto advance_simulation(SimulationState &state, const Circuit &circuit,
+                        time_t simultation_time = defaults::infinite_simulation_time,
+                        timeout_t timeout = defaults::no_timeout,
+                        int64_t max_events = defaults::no_max_events,
+                        bool print_events = false) -> int64_t;
 
-[[nodiscard]] SimulationState simulate_circuit(Circuit &circuit,
-                                               time_t simultation_time
-                                               = defaults::infinite_simulation_time,
-                                               timeout_t timeout = defaults::no_timeout,
-                                               bool print_events = false);
+[[nodiscard]] auto simulate_circuit(Circuit &circuit,
+                                    time_t simultation_time
+                                    = defaults::infinite_simulation_time,
+                                    timeout_t timeout = defaults::no_timeout,
+                                    bool print_events = false) -> SimulationState;
 
-[[nodiscard]] bool get_input_value(Circuit::ConstInput input,
-                                   const logic_vector_t &input_values);
-[[nodiscard]] bool get_input_value(Circuit::ConstInput input,
-                                   const SimulationState &state);
+[[nodiscard]] auto get_input_value(Circuit::ConstInput input,
+                                   const logic_vector_t &input_values) -> bool;
+[[nodiscard]] auto get_input_value(Circuit::ConstInput input,
+                                   const SimulationState &state) -> bool;
 
 /// infers the output value from the connected input value, if it exists.
-[[nodiscard]] bool get_output_value(Circuit::ConstOutput output,
+[[nodiscard]] auto get_output_value(Circuit::ConstOutput output,
                                     const logic_vector_t &input_values,
-                                    bool raise_missing = true);
-[[nodiscard]] bool get_output_value(Circuit::ConstOutput output,
+                                    bool raise_missing = true) -> bool;
+[[nodiscard]] auto get_output_value(Circuit::ConstOutput output,
                                     const SimulationState &state,
-                                    bool raise_missing = true);
+                                    bool raise_missing = true) -> bool;
 
-[[nodiscard]] logic_small_vector_t get_input_values(Circuit::ConstElement element,
-                                                    const logic_vector_t &input_values);
-[[nodiscard]] logic_small_vector_t get_output_values(Circuit::ConstElement element,
-                                                     const logic_vector_t &input_values,
-                                                     bool raise_missing = true);
-[[nodiscard]] logic_small_vector_t get_input_values(Circuit::ConstElement element,
-                                                    const SimulationState &state);
-[[nodiscard]] logic_small_vector_t get_output_values(Circuit::ConstElement element,
-                                                     const SimulationState &state,
-                                                     bool raise_missing = true);
+[[nodiscard]] auto get_input_values(Circuit::ConstElement element,
+                                    const logic_vector_t &input_values)
+    -> logic_small_vector_t;
+[[nodiscard]] auto get_output_values(Circuit::ConstElement element,
+                                     const logic_vector_t &input_values,
+                                     bool raise_missing = true) -> logic_small_vector_t;
+[[nodiscard]] auto get_input_values(Circuit::ConstElement element,
+                                    const SimulationState &state) -> logic_small_vector_t;
+[[nodiscard]] auto get_output_values(Circuit::ConstElement element,
+                                     const SimulationState &state,
+                                     bool raise_missing = true) -> logic_small_vector_t;
 
 /// infer vector of all output values from the circuit.
-[[nodiscard]] logic_vector_t get_all_output_values(const logic_vector_t &input_values,
-                                                   const Circuit &circuit,
-                                                   bool raise_missing = true);
+[[nodiscard]] auto get_all_output_values(const logic_vector_t &input_values,
+                                         const Circuit &circuit,
+                                         bool raise_missing = true) -> logic_vector_t;
 
-[[nodiscard]] time_t get_output_delay(Circuit::ConstOutput output,
-                                      const delay_vector_t &output_delays);
-[[nodiscard]] time_t get_output_delay(Circuit::ConstOutput output,
-                                      const SimulationState &state);
+[[nodiscard]] auto get_output_delay(Circuit::ConstOutput output,
+                                    const delay_vector_t &output_delays) -> time_t;
+[[nodiscard]] auto get_output_delay(Circuit::ConstOutput output,
+                                    const SimulationState &state) -> time_t;
 
 void set_output_delay(Circuit::ConstOutput output, SimulationState &state, time_t delay);
+
+inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 
 template <std::uniform_random_bit_generator G>
 auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
                           const bool print) -> int64_t;
-auto benchmark_simulation(int n_elements = 100, int n_events = 10'000, bool print = false)
+auto benchmark_simulation(int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
+                          int n_events = BENCHMARK_DEFAULT_EVENTS, bool print = false)
     -> int64_t;
 
 }  // namespace logicsim
