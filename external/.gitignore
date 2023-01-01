@@ -12,5 +12,6 @@ folly
 googletest
 GSL
 ninjatracing
+llvm-project
 range-v3
 
