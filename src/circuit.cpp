@@ -416,14 +416,14 @@ template class Circuit::ElementTemplate<false>;
 
 template Circuit::ElementTemplate<true>::ElementTemplate(ElementTemplate<false>) noexcept;
 
-template bool Circuit::ElementTemplate<false>::operator==<false>(
-    ElementTemplate<false>) const noexcept;
-template bool Circuit::ElementTemplate<false>::operator==<true>(
-    ElementTemplate<true>) const noexcept;
-template bool Circuit::ElementTemplate<true>::operator==<false>(
-    ElementTemplate<false>) const noexcept;
-template bool Circuit::ElementTemplate<true>::operator==<true>(
-    ElementTemplate<true>) const noexcept;
+template auto Circuit::ElementTemplate<false>::operator==<false>(
+    ElementTemplate<false>) const noexcept -> bool;
+template auto Circuit::ElementTemplate<false>::operator==<true>(
+    ElementTemplate<true>) const noexcept -> bool;
+template auto Circuit::ElementTemplate<true>::operator==<false>(
+    ElementTemplate<false>) const noexcept -> bool;
+template auto Circuit::ElementTemplate<true>::operator==<true>(
+    ElementTemplate<true>) const noexcept -> bool;
 
 //
 // Connection Iterator
@@ -673,14 +673,14 @@ template class Circuit::InputTemplate<false>;
 
 template Circuit::InputTemplate<true>::InputTemplate(InputTemplate<false>) noexcept;
 
-template bool Circuit::InputTemplate<false>::operator==<false>(
-    InputTemplate<false>) const noexcept;
-template bool Circuit::InputTemplate<false>::operator==<true>(
-    InputTemplate<true>) const noexcept;
-template bool Circuit::InputTemplate<true>::operator==<false>(
-    InputTemplate<false>) const noexcept;
-template bool Circuit::InputTemplate<true>::operator==<true>(
-    InputTemplate<true>) const noexcept;
+template auto Circuit::InputTemplate<false>::operator==<false>(
+    InputTemplate<false>) const noexcept -> bool;
+template auto Circuit::InputTemplate<false>::operator==<true>(
+    InputTemplate<true>) const noexcept -> bool;
+template auto Circuit::InputTemplate<true>::operator==<false>(
+    InputTemplate<false>) const noexcept -> bool;
+template auto Circuit::InputTemplate<true>::operator==<true>(
+    InputTemplate<true>) const noexcept -> bool;
 
 template void Circuit::InputTemplate<false>::connect<false>(OutputTemplate<false>) const;
 template void Circuit::InputTemplate<false>::connect<true>(OutputTemplate<true>) const;
@@ -831,14 +831,14 @@ template class Circuit::OutputTemplate<false>;
 
 template Circuit::OutputTemplate<true>::OutputTemplate(OutputTemplate<false>) noexcept;
 
-template bool Circuit::OutputTemplate<false>::operator==<false>(
-    OutputTemplate<false>) const noexcept;
-template bool Circuit::OutputTemplate<false>::operator==<true>(
-    OutputTemplate<true>) const noexcept;
-template bool Circuit::OutputTemplate<true>::operator==<false>(
-    OutputTemplate<false>) const noexcept;
-template bool Circuit::OutputTemplate<true>::operator==<true>(
-    OutputTemplate<true>) const noexcept;
+template auto Circuit::OutputTemplate<false>::operator==<false>(
+    OutputTemplate<false>) const noexcept -> bool;
+template auto Circuit::OutputTemplate<false>::operator==<true>(
+    OutputTemplate<true>) const noexcept -> bool;
+template auto Circuit::OutputTemplate<true>::operator==<false>(
+    OutputTemplate<false>) const noexcept -> bool;
+template auto Circuit::OutputTemplate<true>::operator==<true>(
+    OutputTemplate<true>) const noexcept -> bool;
 
 template void Circuit::OutputTemplate<false>::connect<false>(InputTemplate<false>) const;
 template void Circuit::OutputTemplate<false>::connect<true>(InputTemplate<true>) const;
