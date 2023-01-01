@@ -132,9 +132,6 @@ void SimulationQueue::submit_event(SimulationEvent event) {
     if (event.time <= time_) {
         throw_exception("Event time needs to be in the future.");
     }
-    //    if (!std::isfinite(event.time)) {
-    //        throw_exception("Event time needs to be finite.");
-    //    }
 
     events_.push(event);
 }
