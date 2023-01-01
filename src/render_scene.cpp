@@ -84,16 +84,13 @@ void draw_element(BLContext& ctx, ElementType type, const DrawAttributes& attrib
     }
 }
 
-void render_scene(BLContext& ctx, const Circuit& circuit,
-                  const SimulationResult& simulation,
-                  const attribute_vector_t& attributes) {
+auto render_scene(BLContext& ctx, const Simulation& simulation,
+                  const attribute_vector_t& attributes) -> void {
     render_background(ctx);
 
-    for (auto element : circuit.elements()) {
-        // TODO use output values in get_output_values()
+    for (auto element : simulation.circuit().elements()) {
         draw_element(ctx, element.element_type(), attributes.at(element.element_id()),
-                     get_input_values(element, simulation.input_values),
-                     get_output_values(element, simulation.input_values));
+                     simulation.input_values(element), simulation.output_values(element));
     }
 
     // std::ranges::for_each(circuit.elements(), [&](auto element) {

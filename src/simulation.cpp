@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <iterator>
 
 namespace logicsim {
@@ -150,24 +149,37 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
 }
 
 //
-// SimulationState
+// Simulation
 //
 
-SimulationState::SimulationState(connection_id_t total_inputs,
-                                 connection_id_t total_outputs)
-    : input_values(total_inputs, false),
-      queue {},
-      output_delays(total_outputs, standard_delay) {}
+Simulation::Simulation(const Circuit &circuit)
+    : circuit_ {&circuit},
+      input_values_(circuit.total_input_count(), false),
+      queue_ {},
+      output_delays_(circuit.total_output_count(), defaults::standard_delay) {}
 
-SimulationState::SimulationState(const Circuit &circuit)
-    : SimulationState(circuit.total_input_count(), circuit.total_output_count()) {}
+auto Simulation::circuit() const noexcept -> const Circuit & { return *circuit_; }
 
-void check_input_size(const SimulationState &state, const Circuit &circuit) {
-    const auto circuit_inputs
-        = static_cast<logic_vector_t::size_type>(circuit.total_input_count());
-    if (state.input_values.size() != circuit_inputs) [[unlikely]] {
+auto Simulation::time() const noexcept -> time_t { return queue_.time(); }
+
+auto Simulation::submit_event(Circuit::ConstInput input, time_t delay, bool value)
+    -> void {
+    queue_.submit_event(make_event(input, queue_.time() + delay, value));
+}
+
+auto Simulation::check_state_valid() const -> void {
+    const auto n_inputs
+        = static_cast<logic_vector_t::size_type>(circuit_->total_input_count());
+    const auto n_outputs
+        = static_cast<logic_vector_t::size_type>(circuit_->total_output_count());
+
+    if (input_values_.size() != n_inputs) [[unlikely]] {
         throw_exception(
             "input_values in state needs to match total inputs of the circuit.");
+    }
+    if (output_delays_.size() != n_outputs) [[unlikely]] {
+        throw_exception(
+            "output_delays in state needs to match total outputs of the circuit.");
     }
 }
 
@@ -208,47 +220,6 @@ auto calculate_outputs(const logic_small_vector_t &input, connection_size_t outp
     }
 }
 
-auto get_input_values(const Circuit::ConstElement element,
-                      const logic_vector_t &input_values) -> logic_small_vector_t {
-    const auto begin = input_values.begin() + element.first_input_id();
-    const auto end = begin + element.input_count();
-
-    if (!(begin >= input_values.begin() && begin < input_values.end()
-          && end >= input_values.begin() && end <= input_values.end())) {
-        throw_exception("Invalid begin or end iterator in get_input_values.");
-    }
-
-    return logic_small_vector_t {begin, end};
-}
-
-auto get_output_values(const Circuit::ConstElement element,
-                       const logic_vector_t &input_values, const bool raise_missing)
-    -> logic_small_vector_t {
-    logic_small_vector_t result;
-    result.reserve(element.output_count());
-
-    // for (const auto output : element.outputs()) {
-    //     result.push_back(get_output_value(output, input_values, raise_missing));
-    // }
-
-    std::ranges::transform(
-        element.outputs(), std::back_inserter(result), [&](const auto output) {
-            return get_output_value(output, input_values, raise_missing);
-        });
-
-    return result;
-}
-
-auto get_input_values(const Circuit::ConstElement element, const SimulationState &state)
-    -> logic_small_vector_t {
-    return get_input_values(element, state.input_values);
-}
-
-auto get_output_values(const Circuit::ConstElement element, const SimulationState &state,
-                       const bool raise_missing) -> logic_small_vector_t {
-    return get_output_values(element, state.input_values, raise_missing);
-}
-
 void set_input(logic_vector_t &input_values, const Circuit::ConstElement element,
                connection_size_t input_index, bool value) {
     const auto input_id
@@ -282,21 +253,18 @@ auto get_changed_outputs(const logic_small_vector_t &old_outputs,
     return result;
 }
 
-void create_event(SimulationQueue &queue, const Circuit::ConstOutput output,
-                  const logic_small_vector_t &output_values,
-                  const delay_vector_t &output_delays) {
-    const auto delay = get_output_delay(output, output_delays);
-
+void Simulation::create_event(const Circuit::ConstOutput output,
+                              const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
-        queue.submit_event({.time = queue.time() + delay,
-                            .element_id = output.connected_element_id(),
-                            .input_index = output.connected_input_index(),
-                            .value = output_values.at(output.output_index())});
+        const auto delay = output_delay(output);
+        queue_.submit_event({.time = queue_.time() + delay,
+                             .element_id = output.connected_element_id(),
+                             .input_index = output.connected_input_index(),
+                             .value = output_values.at(output.output_index())});
     }
 }
 
-void process_event_group(SimulationState &state, const Circuit &circuit,
-                         event_group_t &&events, const bool print_events = false) {
+auto Simulation::process_event_group(event_group_t &&events) -> void {
     if (print_events) {
         fmt::print("events: {:n}\n", events);
     }
@@ -305,18 +273,18 @@ void process_event_group(SimulationState &state, const Circuit &circuit,
     }
     validate(events);
 
-    const Circuit::ConstElement element {circuit.element(events.front().element_id)};
+    const Circuit::ConstElement element {circuit_->element(events.front().element_id)};
 
     // short-circuit placeholders, as they don't have logic
     if (element.element_type() == ElementType::placeholder) {
-        apply_events(state.input_values, element, events);
+        apply_events(input_values_, element, events);
         return;
     }
 
     // update inputs
-    const auto old_inputs = get_input_values(element, state);
-    apply_events(state.input_values, element, events);
-    const auto new_inputs = get_input_values(element, state);
+    const auto old_inputs = input_values(element);
+    apply_events(input_values_, element, events);
+    const auto new_inputs = input_values(element);
 
     // find changing outputs
     const auto old_outputs
@@ -327,16 +295,15 @@ void process_event_group(SimulationState &state, const Circuit &circuit,
 
     // submit events
     for (auto output_index : changes) {
-        create_event(state.queue, element.output(output_index), new_outputs,
-                     state.output_delays);
+        create_event(element.output(output_index), new_outputs);
     }
 }
 
-class SimulationTimer {
+class Simulation::Timer {
    public:
     using time_point = timeout_clock::time_point;
 
-    explicit SimulationTimer(timeout_t timeout = defaults::no_timeout) noexcept
+    explicit Timer(timeout_t timeout = defaults::no_timeout) noexcept
         : timeout_(timeout), start_time_(timeout_clock::now()) {};
 
     [[nodiscard]] auto reached_timeout() const noexcept -> bool {
@@ -349,35 +316,34 @@ class SimulationTimer {
     time_point start_time_;
 };
 
-auto advance_simulation(SimulationState &state, const Circuit &circuit,
-                        const time_t simultation_time, const timeout_t timeout,
-                        const int64_t max_events, const bool print_events) -> int64_t {
+auto Simulation::advance(const time_t simulation_time, const timeout_t timeout,
+                         const int64_t max_events) -> int64_t {
     // TODO test expects
-    Expects(simultation_time >= 0us);
-    if (simultation_time < 0us) [[unlikely]] {
+    Expects(simulation_time >= 0us);
+    if (simulation_time < 0us) [[unlikely]] {
         throw_exception("simultation_time needs to be positive.");
     }
     if (max_events < 0) [[unlikely]] {
         throw_exception("max events needs to be positive or zero.");
     }
-    check_input_size(state, circuit);
+    check_state_valid();
 
-    if (simultation_time == 0us) {
+    if (simulation_time == 0us) {
         return 0;
     }
 
-    const SimulationTimer timer {timeout};
-    const auto queue_end_time = simultation_time == defaults::infinite_simulation_time
+    const Simulation::Timer timer {timeout};
+    const auto queue_end_time = simulation_time == defaults::infinite_simulation_time
                                     ? time_t::max()
-                                    : state.queue.time() + simultation_time;
+                                    : queue_.time() + simulation_time;
     int64_t event_count = 0;
 
     // TODO use ranges
-    while (!state.queue.empty() && state.queue.next_event_time() < queue_end_time) {
-        auto event_group = state.queue.pop_event_group();
+    while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
+        auto event_group = queue_.pop_event_group();
         event_count += std::ssize(event_group);
 
-        process_event_group(state, circuit, std::move(event_group), print_events);
+        process_event_group(std::move(event_group));
 
         // at least one group
         if (timer.reached_timeout() || (event_count >= max_events)) [[unlikely]] {
@@ -385,120 +351,126 @@ auto advance_simulation(SimulationState &state, const Circuit &circuit,
         }
     }
 
-    if (simultation_time != defaults::infinite_simulation_time) {
-        state.queue.set_time(queue_end_time);
+    if (simulation_time != defaults::infinite_simulation_time) {
+        queue_.set_time(queue_end_time);
     }
     return event_count;
 }
 
-void initialize_simulation(SimulationState &state, const Circuit &circuit) {
-    check_input_size(state, circuit);
+auto Simulation::initialize() -> void {
+    check_state_valid();
 
-    for (auto &&element : circuit.elements()) {
+    for (auto &&element : circuit_->elements()) {
         // short-circuit placeholders, as they don't have logic
         if (element.element_type() == ElementType::placeholder) {
             continue;
         }
 
         // find outputs that need an update
-        const auto old_outputs {get_output_values(element, state, true)};
-        const auto curr_inputs {get_input_values(element, state)};
+        const auto old_outputs {output_values(element, true)};
+        const auto curr_inputs {input_values(element)};
         const auto new_outputs {calculate_outputs(curr_inputs, element.output_count(),
                                                   element.element_type())};
         const auto changes {get_changed_outputs(old_outputs, new_outputs)};
 
         // submit new events
         for (auto output_index : changes) {
-            create_event(state.queue, element.output(output_index), new_outputs,
-                         state.output_delays);
+            create_event(element.output(output_index), new_outputs);
         }
     }
 }
 
-auto get_uninitialized_state(Circuit &circuit) -> SimulationState {
+auto get_uninitialized_simulation(Circuit &circuit) -> Simulation {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
-    return SimulationState {circuit};
+    return Simulation {circuit};
 }
 
-auto get_initialized_state(Circuit &circuit) -> SimulationState {
+auto get_initialized_simulation(Circuit &circuit) -> Simulation {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
-    SimulationState state {circuit};
-    initialize_simulation(state, circuit);
-    return state;
+    Simulation simulation {circuit};
+    simulation.initialize();
+    return simulation;
 }
 
-auto simulate_circuit(Circuit &circuit, time_t simultation_time, timeout_t timeout,
-                      bool print_events) -> SimulationState {
+auto simulate_circuit(Circuit &circuit, time_t simulation_time, timeout_t timeout,
+                      bool print_events) -> Simulation {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
-    SimulationState state {circuit};
-    initialize_simulation(state, circuit);
+    auto simulation = Simulation {circuit};
+    simulation.print_events = print_events;
 
-    advance_simulation(state, circuit, simultation_time, timeout, defaults::no_max_events,
-                       print_events);
-    return state;
+    simulation.initialize();
+    simulation.advance(simulation_time, timeout);
+    return simulation;
 }
 
-auto get_input_value(const Circuit::ConstInput input, const logic_vector_t &input_values)
-    -> bool {
-    return input_values.at(input.input_id());
+auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
+    return input_values_.at(input.input_id());
 }
 
-auto get_input_value(const Circuit::ConstInput input, const SimulationState &state)
-    -> bool {
-    return get_input_value(input, state.input_values);
+auto Simulation::input_values(const Circuit::ConstElement element) const
+    -> logic_small_vector_t {
+    const auto begin = input_values_.begin() + element.first_input_id();
+    const auto end = begin + element.input_count();
+
+    if (!(begin >= input_values_.begin() && begin < input_values_.end()
+          && end >= input_values_.begin() && end <= input_values_.end())) {
+        throw_exception("Invalid begin or end iterator in get_input_values.");
+    }
+
+    return logic_small_vector_t {begin, end};
 }
 
-auto get_output_value(const Circuit::ConstOutput output,
-                      const logic_vector_t &input_values, const bool raise_missing)
-    -> bool {
+auto Simulation::input_values() const -> const logic_vector_t & { return input_values_; }
+
+auto Simulation::output_value(const Circuit::ConstOutput output,
+                              const bool raise_missing) const -> bool {
     if (raise_missing || output.has_connected_element()) {
-        return input_values.at(output.connected_input().input_id());
+        return input_values_.at(output.connected_input().input_id());
     }
     return false;
 }
 
-auto get_output_value(const Circuit::ConstOutput output, const SimulationState &state,
-                      const bool raise_missing) -> bool {
-    return get_output_value(output, state.input_values, raise_missing);
+auto Simulation::output_values(const Circuit::ConstElement element,
+                               const bool raise_missing) const -> logic_small_vector_t {
+    logic_small_vector_t result;
+    result.reserve(element.output_count());
+
+    for (const auto output : element.outputs()) {
+        result.push_back(output_value(output, raise_missing));
+    }
+
+    return result;
 }
 
-auto get_all_output_values(const logic_vector_t &input_values, const Circuit &circuit,
-                           const bool raise_missing) -> logic_vector_t {
-    logic_vector_t output_values(circuit.total_output_count());
+auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t {
+    logic_vector_t output_values(circuit_->total_output_count());
 
-    for (auto element : circuit.elements()) {
+    for (auto element : circuit_->elements()) {
         for (auto output : element.outputs()) {
-            output_values.at(output.output_id())
-                = get_output_value(output, input_values, raise_missing);
+            output_values.at(output.output_id()) = output_value(output, raise_missing);
         }
     }
 
     return output_values;
 }
 
-auto get_output_delay(const Circuit::ConstOutput output,
-                      const delay_vector_t &output_delays) -> time_t {
-    return output_delays.at(output.output_id());
+auto Simulation::output_delay(const Circuit::ConstOutput output) const -> time_t {
+    return output_delays_.at(output.output_id());
 }
 
-auto get_output_delay(const Circuit::ConstOutput output, const SimulationState &state)
-    -> time_t {
-    return get_output_delay(output, state.output_delays);
-}
-
-void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
-                      const time_t delay) {
-    if (!state.queue.empty()) {
+auto Simulation::set_output_delay(const Circuit::ConstOutput output, const time_t delay)
+    -> void {
+    if (!queue_.empty()) {
         throw_exception("Cannot set output delay for state with scheduled events.");
     }
 
-    state.output_delays.at(output.output_id()) = delay;
+    output_delays_.at(output.output_id()) = delay;
 }
 
 //
@@ -506,14 +478,13 @@ void set_output_delay(const Circuit::ConstOutput output, SimulationState &state,
 //
 
 template <std::uniform_random_bit_generator G>
-void _generate_random_events(G &rng, const Circuit &circuit, SimulationState &state) {
+void _generate_random_events(G &rng, Simulation &simulation) {
     boost::random::uniform_int_distribution<int32_t> trigger_distribution {0, 1};
 
-    for (auto element : circuit.elements()) {
+    for (auto element : simulation.circuit().elements()) {
         for (auto input : element.inputs()) {
             if (trigger_distribution(rng) == 0) {
-                state.queue.submit_event(make_event(input, state.queue.time() + 1us,
-                                                    !get_input_value(input, state)));
+                simulation.submit_event(input, 1us, !simulation.input_value(input));
             }
         }
     }
@@ -522,34 +493,38 @@ void _generate_random_events(G &rng, const Circuit &circuit, SimulationState &st
 template <std::uniform_random_bit_generator G>
 auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
                           const bool print) -> int64_t {
-    SimulationState state {circuit};
+    Simulation simulation {circuit};
+    simulation.print_events = print;
 
     // set custom delays
-    std::ranges::generate(state.output_delays, [&rng]() {
-        boost::random::uniform_int_distribution<time_t::rep> nanosecond_dist {5, 500};
-        return 1us * nanosecond_dist(rng);
-    });
+    for (const auto element : circuit.elements()) {
+        for (const auto output : element.outputs()) {
+            boost::random::uniform_int_distribution<time_t::rep> nanosecond_dist {5, 500};
+            simulation.set_output_delay(output, 1us * nanosecond_dist(rng));
+        }
+    }
 
-    initialize_simulation(state, circuit);
+    simulation.initialize();
 
     int64_t simulated_event_count {0};
     while (true) {
-        simulated_event_count += advance_simulation(
-            state, circuit, defaults::infinite_simulation_time, defaults::no_timeout,
-            n_events - simulated_event_count, print);
+        simulated_event_count += simulation.advance(
+            Simulation::defaults::infinite_simulation_time,
+            Simulation::defaults::no_timeout, n_events - simulated_event_count);
 
         if (simulated_event_count >= n_events) {
             break;
         }
 
-        _generate_random_events(rng, circuit, state);
+        _generate_random_events(rng, simulation);
     }
 
     if (print) {
-        auto output_values {get_all_output_values(state.input_values, circuit)};
+        auto output_values {simulation.output_values()};
 
         fmt::print("events simulated = {}\n", simulated_event_count);
-        fmt::print("input_values = {}\n", fmt_join("{:b}", state.input_values, ""));
+        fmt::print("input_values = {}\n",
+                   fmt_join("{:b}", simulation.input_values(), ""));
         fmt::print("output_values = {}\n", fmt_join("{:b}", output_values, ""));
     }
 

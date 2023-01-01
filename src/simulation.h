@@ -66,9 +66,9 @@ auto make_event(Circuit::ConstInput input, time_t time, bool value) -> Simulatio
 
 template <>
 struct fmt::formatter<logicsim::SimulationEvent> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::SimulationEvent &obj, fmt::format_context &ctx) const {
+    static auto format(const logicsim::SimulationEvent &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
@@ -113,90 +113,82 @@ using delay_vector_t = boost::container::vector<time_t>;
 // 8 bytes still fit into a small_vector with 32 byte size.
 using logic_small_vector_t = boost::container::small_vector<bool, 8>;
 
-/// Store simulation data.
-struct SimulationState {
-    constexpr static time_t standard_delay = 100us;
-
-    logic_vector_t input_values {};
-    SimulationQueue queue {};
-    delay_vector_t output_delays {};
-
-    explicit SimulationState(connection_id_t total_inputs, connection_id_t total_outputs);
-    explicit SimulationState(const Circuit &circuit);
-};
-
-void check_input_size(const SimulationState &state, const Circuit &circuit);
-
-void initialize_simulation(SimulationState &state, const Circuit &circuit);
-
-[[nodiscard]] auto get_uninitialized_state(Circuit &circuit) -> SimulationState;
-[[nodiscard]] auto get_initialized_state(Circuit &circuit) -> SimulationState;
-
 using timeout_clock = std::chrono::steady_clock;
 using timeout_t = timeout_clock::duration;
 
-namespace defaults {
-constexpr auto no_timeout = timeout_t::max();
-constexpr auto infinite_simulation_time = time_t::max();
-constexpr int64_t no_max_events
-    = std::numeric_limits<int64_t>::max() - std::numeric_limits<connection_size_t>::max();
-}  // namespace defaults
+/// Store simulation data.
+class Simulation {
+   public:
+    bool print_events {false};
 
-/// @brief Advance the simulation by changing the given simulations state
-/// @param state             either new or the old simulation state to start from
-/// @param circuit           the circuit that should be simulated
-/// @param simultation_time  simulate for this time or, when run_until_steady, run until
-///                          no more new events are generated
-/// @param timeout           return if simulation takes longer than this in realtime
-/// @param print_events      if true print each processed event information
-auto advance_simulation(SimulationState &state, const Circuit &circuit,
-                        time_t simultation_time = defaults::infinite_simulation_time,
-                        timeout_t timeout = defaults::no_timeout,
-                        int64_t max_events = defaults::no_max_events,
-                        bool print_events = false) -> int64_t;
+    struct defaults {
+        constexpr static time_t standard_delay = 100us;
+
+        constexpr static auto no_timeout = timeout_t::max();
+        constexpr static auto infinite_simulation_time = time_t::max();
+        constexpr static int64_t no_max_events {
+            std::numeric_limits<int64_t>::max()
+            - std::numeric_limits<connection_size_t>::max()};
+    };
+
+    [[nodiscard]] explicit Simulation(const Circuit &circuit);
+    [[nodiscard]] auto circuit() const noexcept -> const Circuit &;
+    [[nodiscard]] auto time() const noexcept -> time_t;
+    auto submit_event(Circuit::ConstInput input, time_t delay, bool value) -> void;
+
+    auto initialize() -> void;
+
+    /// @brief Advance the simulation by changing the given simulations state
+    /// @param state             either new or the old simulation state to start from
+    /// @param circuit           the circuit that should be simulated
+    /// @param simultation_time  simulate for this time or, when run_until_steady, run
+    /// until
+    ///                          no more new events are generated
+    /// @param timeout           return if simulation takes longer than this in realtime
+    /// @param print_events      if true print each processed event information
+    auto advance(time_t simulation_time = defaults::infinite_simulation_time,
+                 timeout_t timeout = defaults::no_timeout,
+                 int64_t max_events = defaults::no_max_events) -> int64_t;
+
+    [[nodiscard]] auto input_value(Circuit::ConstInput input) const -> bool;
+    [[nodiscard]] auto input_values(Circuit::ConstElement element) const
+        -> logic_small_vector_t;
+    [[nodiscard]] auto input_values() const -> const logic_vector_t &;
+
+    /// infers the output value from the connected input value, if it exists.
+    [[nodiscard]] auto output_value(Circuit::ConstOutput output,
+                                    bool raise_missing = true) const -> bool;
+    [[nodiscard]] auto output_values(Circuit::ConstElement element,
+                                     bool raise_missing = true) const
+        -> logic_small_vector_t;
+    [[nodiscard]] auto output_values(bool raise_missing = true) const -> logic_vector_t;
+
+    [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> time_t;
+    auto set_output_delay(Circuit::ConstOutput output, time_t delay) -> void;
+
+   private:
+    class Timer;
+    auto check_state_valid() const -> void;
+
+    auto process_event_group(event_group_t &&events) -> void;
+    auto create_event(const Circuit::ConstOutput output,
+                      const logic_small_vector_t &output_values) -> void;
+
+    const Circuit *circuit_;  // never nullptr
+
+    logic_vector_t input_values_ {};
+    SimulationQueue queue_ {};
+    delay_vector_t output_delays_ {};
+};
+
+[[nodiscard]] auto get_uninitialized_simulation(Circuit &circuit) -> Simulation;
+[[nodiscard]] auto get_initialized_simulation(Circuit &circuit) -> Simulation;
 
 [[nodiscard]] auto simulate_circuit(Circuit &circuit,
-                                    time_t simultation_time
-                                    = defaults::infinite_simulation_time,
-                                    timeout_t timeout = defaults::no_timeout,
-                                    bool print_events = false) -> SimulationState;
-
-[[nodiscard]] auto get_input_value(Circuit::ConstInput input,
-                                   const logic_vector_t &input_values) -> bool;
-[[nodiscard]] auto get_input_value(Circuit::ConstInput input,
-                                   const SimulationState &state) -> bool;
-
-/// infers the output value from the connected input value, if it exists.
-[[nodiscard]] auto get_output_value(Circuit::ConstOutput output,
-                                    const logic_vector_t &input_values,
-                                    bool raise_missing = true) -> bool;
-[[nodiscard]] auto get_output_value(Circuit::ConstOutput output,
-                                    const SimulationState &state,
-                                    bool raise_missing = true) -> bool;
-
-[[nodiscard]] auto get_input_values(Circuit::ConstElement element,
-                                    const logic_vector_t &input_values)
-    -> logic_small_vector_t;
-[[nodiscard]] auto get_output_values(Circuit::ConstElement element,
-                                     const logic_vector_t &input_values,
-                                     bool raise_missing = true) -> logic_small_vector_t;
-[[nodiscard]] auto get_input_values(Circuit::ConstElement element,
-                                    const SimulationState &state) -> logic_small_vector_t;
-[[nodiscard]] auto get_output_values(Circuit::ConstElement element,
-                                     const SimulationState &state,
-                                     bool raise_missing = true) -> logic_small_vector_t;
-
-/// infer vector of all output values from the circuit.
-[[nodiscard]] auto get_all_output_values(const logic_vector_t &input_values,
-                                         const Circuit &circuit,
-                                         bool raise_missing = true) -> logic_vector_t;
-
-[[nodiscard]] auto get_output_delay(Circuit::ConstOutput output,
-                                    const delay_vector_t &output_delays) -> time_t;
-[[nodiscard]] auto get_output_delay(Circuit::ConstOutput output,
-                                    const SimulationState &state) -> time_t;
-
-void set_output_delay(Circuit::ConstOutput output, SimulationState &state, time_t delay);
+                                    time_t simulation_time
+                                    = Simulation::defaults::infinite_simulation_time,
+                                    timeout_t timeout = Simulation::defaults::no_timeout,
+                                    bool print_events = false) -> Simulation;
 
 inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 

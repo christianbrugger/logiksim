@@ -12,11 +12,6 @@
 
 namespace logicsim {
 
-struct SimulationResult {
-    logic_vector_t input_values;
-    logic_vector_t output_values;
-};
-
 using point2d_t = std::array<double, 2>;
 using line_tree_t = boost::container::small_vector<point2d_t, 2>;
 
@@ -30,9 +25,8 @@ struct DrawAttributes {
 
 using attribute_vector_t = std::vector<DrawAttributes>;
 
-void render_scene(BLContext& ctx, const Circuit& circuit,
-                  const SimulationResult& simulation,
-                  const attribute_vector_t& attributes);
+auto render_scene(BLContext& ctx, const Simulation& simulation,
+                  const attribute_vector_t& attributes) -> void;
 
 }  // namespace logicsim
 

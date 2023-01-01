@@ -94,16 +94,15 @@ class WidgetRenderer : public QWidget {
         elem0.output(0).connect(line0.input(0));
         line0.output(0).connect(elem0.input(1));
 
-        SimulationState state {circuit};
-        state.queue.submit_event({100us, elem0.element_id(), 0, true});
-        state.queue.submit_event({500us, elem0.element_id(), 0, false});
-
         add_output_placeholders(circuit);
-        advance_simulation(state, circuit, defaults::infinite_simulation_time,
-                           defaults::no_timeout, true);
+        auto simulation = Simulation {circuit};
+        simulation.print_events = true;
 
-        SimulationResult simulation {state.input_values,
-                                     get_all_output_values(state.input_values, circuit)};
+        simulation.initialize();
+        simulation.submit_event(elem0.input(0), 100us, true);
+        simulation.submit_event(elem0.input(0), 500us, false);
+
+        simulation.advance();
 
         attribute_vector_t attributes
             = {{{}, {5, 3}, 0}, {{{10, 10}, {12, 12}}, {5, 3}, 0}};
@@ -113,7 +112,7 @@ class WidgetRenderer : public QWidget {
 
         bl_ctx.begin(bl_image, bl_info);
         // renderFrame(bl_ctx);
-        render_scene(bl_ctx, circuit, simulation, attributes);
+        render_scene(bl_ctx, simulation, attributes);
         bl_ctx.end();
 
         QPainter painter(this);
