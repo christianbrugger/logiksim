@@ -93,6 +93,7 @@ void validate(const event_group_t &events) {
             throw_exception("All events in the group need to have the same time.");
         }
 
+        // TODO derive 2
         boost::container::small_vector<element_id_t, 2> event_ids;
         std::ranges::transform(
             events, std::back_inserter(event_ids),
@@ -156,7 +157,8 @@ Simulation::Simulation(const Circuit &circuit)
     : circuit_ {&circuit},
       input_values_(circuit.total_input_count(), false),
       queue_ {},
-      output_delays_(circuit.total_output_count(), defaults::standard_delay) {}
+      output_delays_(circuit.total_output_count(), defaults::standard_delay),
+      internal_states_(circuit.total_input_count(), false) {}
 
 auto Simulation::circuit() const noexcept -> const Circuit & { return *circuit_; }
 

@@ -6,6 +6,7 @@
 #include <boost/container/small_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <fmt/core.h>
+#include <folly/small_vector.h>
 
 #include <chrono>
 #include <ostream>
@@ -118,8 +119,15 @@ class Simulation {
     using delay_vector_t = boost::container::vector<time_t>;
 
     // 8 bytes still fit into a small_vector with 32 byte size.
-    using logic_small_vector_t = boost::container::small_vector<bool, 8>;
-    using con_index_small_vector_t = boost::container::small_vector<connection_size_t, 8>;
+    // using logic_small_vector_t = boost::container::small_vector<bool, 8>;
+    // using con_index_small_vector_t = boost::container::small_vector<connection_size_t,
+    // 8>;
+
+    // TODO derive uint8_t
+    using logic_small_vector_t = folly::small_vector<bool, 15, uint8_t>;
+    using con_index_small_vector_t = folly::small_vector<connection_size_t, 15, uint8_t>;
+    static_assert(sizeof(logic_small_vector_t) == 16);
+    static_assert(sizeof(con_index_small_vector_t) == 16);
 
     struct defaults {
         constexpr static time_t standard_delay = 100us;
@@ -183,6 +191,7 @@ class Simulation {
     logic_vector_t input_values_ {};
     SimulationQueue queue_ {};
     delay_vector_t output_delays_ {};
+    logic_vector_t internal_states_ {};
 };
 
 inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};

@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_TIMER_H
 #define LOGIKSIM_TIMER_H
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include <chrono>
 #include <ratio>

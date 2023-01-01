@@ -194,22 +194,30 @@ if (LS_ENABLE_PCH)
     message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
     target_precompile_headers(logicsim_pch INTERFACE
         <boost/algorithm/string/join.hpp>
+        <boost/container/small_vector.hpp>
+        <boost/container/vector.hpp>
         <boost/random/mersenne_twister.hpp>
         <boost/random/uniform_int_distribution.hpp>
         <fmt/core.h>
+        <folly/small_vector.h>
         <gsl/gsl>
     
         <algorithm>
         <chrono>
+        <cmath>
         <concepts>
         <cstdint>
         <exception>
         <iostream>
         <iterator>
         <optional>
+        <ostream>
+        <queue>
         <random>
         <ranges>
+        <ratio>
         <string>
+        <string_view>
         <string_view>
         <type_traits>
         <utility>
