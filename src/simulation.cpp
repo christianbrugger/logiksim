@@ -183,14 +183,9 @@ auto Simulation::check_state_valid() const -> void {
     }
 }
 
-//
-// Simulation
-//
-
-using con_index_small_vector_t = boost::container::small_vector<connection_size_t, 8>;
-
-auto calculate_outputs(const logic_small_vector_t &input, connection_size_t output_count,
-                       const ElementType type) -> logic_small_vector_t {
+auto calculate_outputs(const Simulation::logic_small_vector_t &input,
+                       connection_size_t output_count, const ElementType type)
+    -> Simulation::logic_small_vector_t {
     if (input.empty()) [[unlikely]] {
         throw_exception("Input size cannot be zero.");
     }
@@ -200,7 +195,7 @@ auto calculate_outputs(const logic_small_vector_t &input, connection_size_t outp
 
     switch (type) {
         case ElementType::wire:
-            return {logic_small_vector_t(output_count, input.at(0))};
+            return {Simulation::logic_small_vector_t(output_count, input.at(0))};
 
         case ElementType::inverter_element:
             return {!input.at(0)};
@@ -220,33 +215,31 @@ auto calculate_outputs(const logic_small_vector_t &input, connection_size_t outp
     }
 }
 
-void set_input(logic_vector_t &input_values, const Circuit::ConstElement element,
-               connection_size_t input_index, bool value) {
-    const auto input_id
-        = static_cast<logic_vector_t::size_type>(element.input_id(input_index));
-    input_values.at(input_id) = value;
+auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
+    const auto index = gsl::narrow<logic_vector_t::size_type>(input.input_id());
+    input_values_.at(index) = value;
 }
 
-void apply_events(logic_vector_t &input_values, const Circuit::ConstElement element,
-                  const event_group_t &group) {
+auto Simulation::apply_events(const Circuit::ConstElement element,
+                              const event_group_t &group) -> void {
     for (const auto &event : group) {
-        set_input(input_values, element, event.input_index, event.value);
+        set_input(element.input(event.input_index), event.value);
     }
 }
 
-auto get_changed_outputs(const logic_small_vector_t &old_outputs,
-                         const logic_small_vector_t &new_outputs)
-    -> con_index_small_vector_t {
+auto get_changed_outputs(const Simulation::logic_small_vector_t &old_outputs,
+                         const Simulation::logic_small_vector_t &new_outputs)
+    -> Simulation::con_index_small_vector_t {
     if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]] {
         throw_exception("old_outputs and new_outputs need to have the same size.");
     }
 
-    con_index_small_vector_t result;
+    Simulation::con_index_small_vector_t result;
     result.reserve(std::size(old_outputs));
 
-    for (auto i : range(std::size(old_outputs))) {
-        if (old_outputs[i] != new_outputs[i]) {
-            result.push_back(gsl::narrow<connection_size_t>(i));
+    for (auto index : range(gsl::narrow<connection_size_t>(std::size(old_outputs)))) {
+        if (old_outputs[index] != new_outputs[index]) {
+            result.push_back(index);
         }
     }
 
@@ -272,18 +265,17 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
         return;
     }
     validate(events);
-
     const Circuit::ConstElement element {circuit_->element(events.front().element_id)};
 
     // short-circuit placeholders, as they don't have logic
     if (element.element_type() == ElementType::placeholder) {
-        apply_events(input_values_, element, events);
+        apply_events(element, events);
         return;
     }
 
     // update inputs
     const auto old_inputs = input_values(element);
-    apply_events(input_values_, element, events);
+    apply_events(element, events);
     const auto new_inputs = input_values(element);
 
     // find changing outputs
@@ -338,7 +330,7 @@ auto Simulation::advance(const time_t simulation_time, const timeout_t timeout,
                                     : queue_.time() + simulation_time;
     int64_t event_count = 0;
 
-    // TODO use ranges
+    // TODO refactor loop
     while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
         auto event_group = queue_.pop_event_group();
         event_count += std::ssize(event_group);
@@ -378,35 +370,6 @@ auto Simulation::initialize() -> void {
             create_event(element.output(output_index), new_outputs);
         }
     }
-}
-
-auto get_uninitialized_simulation(Circuit &circuit) -> Simulation {
-    add_output_placeholders(circuit);
-    circuit.validate(true);
-
-    return Simulation {circuit};
-}
-
-auto get_initialized_simulation(Circuit &circuit) -> Simulation {
-    add_output_placeholders(circuit);
-    circuit.validate(true);
-
-    Simulation simulation {circuit};
-    simulation.initialize();
-    return simulation;
-}
-
-auto simulate_circuit(Circuit &circuit, time_t simulation_time, timeout_t timeout,
-                      bool print_events) -> Simulation {
-    add_output_placeholders(circuit);
-    circuit.validate(true);
-
-    auto simulation = Simulation {circuit};
-    simulation.print_events = print_events;
-
-    simulation.initialize();
-    simulation.advance(simulation_time, timeout);
-    return simulation;
 }
 
 auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {

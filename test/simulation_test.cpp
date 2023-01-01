@@ -56,11 +56,28 @@ TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
 
 // Simulation
 
+[[nodiscard]] auto get_uninitialized_simulation(Circuit &circuit) -> Simulation {
+    add_output_placeholders(circuit);
+    circuit.validate(true);
+
+    return Simulation {circuit};
+}
+
+[[nodiscard]] auto get_initialized_simulation(Circuit &circuit) -> Simulation {
+    add_output_placeholders(circuit);
+    circuit.validate(true);
+
+    Simulation simulation {circuit};
+    simulation.initialize();
+    return simulation;
+}
+
 TEST(SimulationTest, InitializeSimulation) {
     Circuit circuit;
     auto inverter {circuit.add_element(ElementType::inverter_element, 1, 1)};
 
-    auto simulation = simulate_circuit(circuit);
+    auto simulation = get_initialized_simulation(circuit);
+    simulation.advance();
 
     EXPECT_EQ(simulation.input_value(inverter.input(0)), false);
     EXPECT_EQ(simulation.output_value(inverter.output(0)), true);

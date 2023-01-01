@@ -20,7 +20,7 @@
 /// New Features
 // * use discrete integer type for time, like chronos::sim_time<int64_t>
 // * flip flops, which requires access to the last state
-// * store transition times for wires so they can be drawn
+// * store transition times for wires, so they can be drawn
 // * negation on input and outputs
 // * clock generators
 // * shift registers, requires memory & internal state
@@ -106,20 +106,20 @@ class SimulationQueue {
         events_;
 };
 
-/// Represents multiple logic values
-using logic_vector_t = boost::container::vector<bool>;
-using delay_vector_t = boost::container::vector<time_t>;
-
-// 8 bytes still fit into a small_vector with 32 byte size.
-using logic_small_vector_t = boost::container::small_vector<bool, 8>;
-
 using timeout_clock = std::chrono::steady_clock;
 using timeout_t = timeout_clock::duration;
 
-/// Store simulation data.
 class Simulation {
    public:
     bool print_events {false};
+
+    /// Represents multiple logic values
+    using logic_vector_t = boost::container::vector<bool>;
+    using delay_vector_t = boost::container::vector<time_t>;
+
+    // 8 bytes still fit into a small_vector with 32 byte size.
+    using logic_small_vector_t = boost::container::small_vector<bool, 8>;
+    using con_index_small_vector_t = boost::container::small_vector<connection_size_t, 8>;
 
     struct defaults {
         constexpr static time_t standard_delay = 100us;
@@ -141,7 +141,7 @@ class Simulation {
     /// @brief Advance the simulation by changing the given simulations state
     /// @param state             either new or the old simulation state to start from
     /// @param circuit           the circuit that should be simulated
-    /// @param simultation_time  simulate for this time or, when run_until_steady, run
+    /// @param simulation_time   simulate for this time or, when run_until_steady, run
     /// until
     ///                          no more new events are generated
     /// @param timeout           return if simulation takes longer than this in realtime
@@ -168,11 +168,15 @@ class Simulation {
 
    private:
     class Timer;
+
     auto check_state_valid() const -> void;
 
     auto process_event_group(event_group_t &&events) -> void;
     auto create_event(const Circuit::ConstOutput output,
                       const logic_small_vector_t &output_values) -> void;
+    auto apply_events(const Circuit::ConstElement element, const event_group_t &group)
+        -> void;
+    auto set_input(const Circuit::ConstInput input, bool value) -> void;
 
     const Circuit *circuit_;  // never nullptr
 
@@ -180,15 +184,6 @@ class Simulation {
     SimulationQueue queue_ {};
     delay_vector_t output_delays_ {};
 };
-
-[[nodiscard]] auto get_uninitialized_simulation(Circuit &circuit) -> Simulation;
-[[nodiscard]] auto get_initialized_simulation(Circuit &circuit) -> Simulation;
-
-[[nodiscard]] auto simulate_circuit(Circuit &circuit,
-                                    time_t simulation_time
-                                    = Simulation::defaults::infinite_simulation_time,
-                                    timeout_t timeout = Simulation::defaults::no_timeout,
-                                    bool print_events = false) -> Simulation;
 
 inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 

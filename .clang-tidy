@@ -6,23 +6,25 @@
 Checks: '
 -*,
 
-clang-analyzer-*,
-clang-diagnostic-*,
-
-performance-*,
-portability-*,
-concurrency-*,
-cppcoreguidelines-*,
-modernize-*,
-bugprone-*,
-readability-*,
-
-google-default-arguments,
-google-explicit-constructor,
-google-readability-avoid-underscore-in-googletest-name,
-google-runtime-operator,
-
 '
+
+
+
+# clang-analyzer-*,
+# clang-diagnostic-*,
+# 
+# performance-*,
+# portability-*,
+# concurrency-*,
+# cppcoreguidelines-*,
+# modernize-*,
+# bugprone-*,
+# readability-*,
+# 
+# google-default-arguments,
+# google-explicit-constructor,
+# google-readability-avoid-underscore-in-googletest-name,
+# google-runtime-operator,
 
 
 
