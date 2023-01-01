@@ -224,6 +224,7 @@ class Circuit::ElementTemplate {
     /// This constructor is not regarded as a copy constructor,
     //   so we preserve trivially copyable
     template <bool ConstOther>
+    // NOLINTNEXTLINE(google-explicit-constructor)
     ElementTemplate(ElementTemplate<ConstOther> element) noexcept
         requires Const && (!ConstOther);
 
@@ -348,6 +349,7 @@ class Circuit::InputTemplate {
 
    public:
     template <bool ConstOther>
+    // NOLINTNEXTLINE(google-explicit-constructor)
     InputTemplate(InputTemplate<ConstOther> input) noexcept
         requires Const && (!ConstOther);
 
@@ -404,6 +406,7 @@ class Circuit::OutputTemplate {
 
    public:
     template <bool ConstOther>
+    // NOLINTNEXTLINE(google-explicit-constructor)
     OutputTemplate(OutputTemplate<ConstOther> output) noexcept
         requires Const && (!ConstOther);
 
@@ -453,9 +456,9 @@ class Circuit::OutputTemplate {
 
 template <>
 struct fmt::formatter<logicsim::Circuit> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit &obj, fmt::format_context &ctx) const
+    static auto format(const logicsim::Circuit &obj, fmt::format_context &ctx)
         -> format_context::iterator {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
@@ -463,66 +466,66 @@ struct fmt::formatter<logicsim::Circuit> {
 
 template <>
 struct fmt::formatter<logicsim::ElementType> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) const {
+    static auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
     }
 };
 
 template <>
 struct fmt::formatter<logicsim::Circuit::Element> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit::Element &obj, fmt::format_context &ctx) const {
+    static auto format(const logicsim::Circuit::Element &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
 template <>
 struct fmt::formatter<logicsim::Circuit::ConstElement> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit::ConstElement &obj,
-                fmt::format_context &ctx) const {
+    static auto format(const logicsim::Circuit::ConstElement &obj,
+                       fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
 template <>
 struct fmt::formatter<logicsim::Circuit::Input> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit::Input &obj, fmt::format_context &ctx) const {
+    static auto format(const logicsim::Circuit::Input &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
 template <>
 struct fmt::formatter<logicsim::Circuit::ConstInput> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit::ConstInput &obj,
-                fmt::format_context &ctx) const {
+    static auto format(const logicsim::Circuit::ConstInput &obj,
+                       fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
 template <>
 struct fmt::formatter<logicsim::Circuit::Output> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit::Output &obj, fmt::format_context &ctx) const {
+    static auto format(const logicsim::Circuit::Output &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
 template <>
 struct fmt::formatter<logicsim::Circuit::ConstOutput> {
-    constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
 
-    auto format(const logicsim::Circuit::ConstOutput &obj,
-                fmt::format_context &ctx) const {
+    static auto format(const logicsim::Circuit::ConstOutput &obj,
+                       fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
@@ -535,10 +538,14 @@ namespace logicsim {
 
 void add_output_placeholders(Circuit &circuit);
 
-auto benchmark_circuit(int n_elements = 100) -> Circuit;
+inline constexpr int BENCHMARK_DEFAULT_ELEMENTS = 100;
+inline constexpr double BENCHMARK_DEFAULT_CONNECTIVITY = 0.75;
+
+auto benchmark_circuit(int n_elements = BENCHMARK_DEFAULT_ELEMENTS) -> Circuit;
 
 template <std::uniform_random_bit_generator G>
-auto create_random_circuit(G &rng, int n_elements = 100, double connection_ratio = 0.75)
+auto create_random_circuit(G &rng, int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
+                           double connection_ratio = BENCHMARK_DEFAULT_CONNECTIVITY)
     -> Circuit;
 
 }  // namespace logicsim

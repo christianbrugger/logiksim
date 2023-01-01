@@ -4,6 +4,8 @@ Checks: '
 -*,
 
 clang-analyzer-*,
+clang-diagnostic-*,
+
 performance-*,
 portability-*,
 concurrency-*,
@@ -16,8 +18,10 @@ google-default-arguments,
 google-explicit-constructor,
 google-readability-avoid-underscore-in-googletest-name,
 google-runtime-operator,
- 
+
 '
+
+
 
 # -cppcoreguidelines-avoid-magic-numbers,
 # -readability-magic-numbers,
@@ -25,3 +29,11 @@ google-runtime-operator,
 # -readability-convert-member-functions-to-static,
 # -clang-analyzer-optin.cplusplus.UninitializedObject,
 # -modernize-use-trailing-return-type,
+
+
+
+
+# logicsim::Circuit::ElementTemplate::ElementTemplate,
+# logicsim::Circuit::InputTemplate::InputTemplate,
+# logicsim::Circuit::InputTemplate::OutputTemplate
+#

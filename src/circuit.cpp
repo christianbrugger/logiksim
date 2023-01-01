@@ -904,8 +904,10 @@ namespace details {
 
 template <std::uniform_random_bit_generator G>
 void add_random_element(Circuit &circuit, G &rng) {
+    constexpr connection_size_t max_connections {8};
+    boost::random::uniform_int_distribution<connection_size_t> connection_dist {
+        1, max_connections};
     boost::random::uniform_int_distribution<int8_t> element_dist {0, 2};
-    boost::random::uniform_int_distribution<connection_size_t> connection_dist {1, 8};
 
     const auto element_type {element_dist(rng) == 0
                                  ? ElementType::xor_element
@@ -959,11 +961,13 @@ void create_random_connections(Circuit &circuit, G &rng, double connection_ratio
     shuffle(all_inputs, rng);
     shuffle(all_outputs, rng);
 
-    auto n_connections = gsl::narrow<std::size_t>(std::round(
-        connection_ratio * std::min(std::size(all_inputs), std::size(all_outputs))));
+    auto n_max_connections
+        = gsl::narrow<double>(std::min(std::size(all_inputs), std::size(all_outputs)));
+    auto n_connections
+        = gsl::narrow<std::size_t>(std::round(connection_ratio * n_max_connections));
 
-    for (auto i [[maybe_unused]] : range(n_connections)) {
-        all_inputs.at(i).connect(all_outputs.at(i));
+    for (auto index : range(n_connections)) {
+        all_inputs.at(index).connect(all_outputs.at(index));
     }
 }
 }  // namespace details
