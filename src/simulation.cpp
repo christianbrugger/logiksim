@@ -181,7 +181,8 @@ auto Simulation::check_state_valid() const -> void {
     }
 }
 
-constexpr auto internal_state_size(const ElementType type) -> connection_size_t {
+[[nodiscard]] constexpr auto internal_state_size(const ElementType type) noexcept
+    -> connection_size_t {
     switch (type) {
         using enum ElementType;
 
@@ -196,6 +197,11 @@ constexpr auto internal_state_size(const ElementType type) -> connection_size_t 
         case flipflop_jk:
             return 1;
     }
+    throw_exception("Dont know internal state of given type.");
+}
+
+[[nodiscard]] constexpr auto has_internal_state(const ElementType type) noexcept -> bool {
+    return internal_state_size(type) != 0;
 }
 
 auto calculate_outputs(const Simulation::logic_small_vector_t &input,
