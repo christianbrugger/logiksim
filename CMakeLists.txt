@@ -158,9 +158,12 @@ add_subdirectory(external/GSL EXCLUDE_FROM_ALL SYSTEM)
 set(ABSL_PROPAGATE_CXX_STD ON)
 add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL SYSTEM)
   
-# Folly - we build a mimimal version of the library, only what we need
+# Folly - we build a minimal version of the library, only what we need
 add_library(folly
     external/folly/folly/memory/detail/MallocImpl.cpp
+    external/folly/folly/lang/SafeAssert.cpp
+    external/folly/folly/ScopeGuard.cpp
+    external/folly/folly/lang/ToAscii.cpp
 )
 target_include_directories(folly SYSTEM PUBLIC 
     external/folly
@@ -297,7 +300,7 @@ add_executable(${MAIN_GUI_TARGET}
     src/render_widget.h src/render_widget.cpp 
     src/render_scene.h src/render_scene.cpp
     src/main_gui.cpp
-)
+    src/iterator.h)
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
 
@@ -315,6 +318,7 @@ add_executable(${MAIN_TEST_TARGET}
     
     test/circuit_test.cpp
     test/format_test.cpp
+    test/iterator_test.cpp
     test/random_test.cpp
     test/range_test.cpp
     test/simulation_test.cpp

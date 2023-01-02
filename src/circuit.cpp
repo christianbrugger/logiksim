@@ -4,6 +4,7 @@
 #include "algorithm.h"
 #include "exceptions.h"
 #include "format.h"
+#include "iterator.h"
 #include "random.h"
 #include "range.h"
 
@@ -48,10 +49,8 @@ auto format(ElementType type) -> std::string {
 auto Circuit::format() const -> std::string {
     std::string inner;
     if (!empty()) {
-        auto element_strings = transform_to_vector(
-            elements(), [&](auto element) { return element.format(true); });
-
-        inner = fmt::format(": [\n  {}\n]", fmt_join(element_strings, ",\n  "));
+        auto format_true = [&](auto element) { return element.format(true); };
+        inner = fmt::format(": [\n  {}\n]", fmt_join(elements(), ",\n  ", format_true));
     }
     return fmt::format("<Circuit with {} elements{}>", element_count(), inner);
 }
@@ -516,14 +515,8 @@ auto Circuit::ConnectionViewTemplate<Const, IsInput>::empty() const -> bool {
 template <bool Const, bool IsInput>
 auto Circuit::ConnectionViewTemplate<Const, IsInput>::format() const -> std::string {
     // TODO try to pass member function directly
-    // TODO test format-ranges compile time with res
-    // TODO test boost join compile time
-    // auto format_single = [](value_type con) { return con.format_connection(); };
-    // auto connections = transform_to_vector(begin(), end(), format_single);
-    // return fmt::format("[{}]", boost::join(connections, ", "));
-
-    auto connections = transform_to_vector(
-        *this, [](value_type con) { return con.format_connection(); });
+    auto connections
+        = transform_view(*this, [](value_type con) { return con.format_connection(); });
     return fmt::format("{}", connections);
 }
 
@@ -850,18 +843,6 @@ template void Circuit::OutputTemplate<false>::connect<false>(InputTemplate<false
 template void Circuit::OutputTemplate<false>::connect<true>(InputTemplate<true>) const;
 
 }  // namespace logicsim
-
-//
-// Formatters
-//
-
-/*
-auto fmt::formatter<logicsim::Circuit>::format(const logicsim::Circuit &obj,
-                                               fmt::format_context &ctx) const
-    -> format_context::iterator {
-    return fmt::format_to(ctx.out(), "{}", obj.format());
-}
-*/
 
 //
 // Free Functions

@@ -327,10 +327,8 @@ class Simulation::Timer {
 
 auto Simulation::advance(const time_t simulation_time, const timeout_t timeout,
                          const int64_t max_events) -> int64_t {
-    // TODO test expects
-    Expects(simulation_time >= 0us);
-    if (simulation_time < 0us) [[unlikely]] {
-        throw_exception("simultation_time needs to be positive.");
+    if (simulation_time <= 0us) [[unlikely]] {
+        throw_exception("simulation_time needs to be positive.");
     }
     if (max_events < 0) [[unlikely]] {
         throw_exception("max events needs to be positive or zero.");

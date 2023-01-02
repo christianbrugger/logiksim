@@ -6,6 +6,7 @@
 
 #include "algorithm.h"
 #include "exceptions.h"
+#include "iterator.h"
 
 #include <boost/algorithm/string/join.hpp>
 #include <fmt/core.h>
@@ -24,20 +25,20 @@ concept format_range_type
                                                                  std::end(container);
                                                              };
 
-template <typename T>
+template <typename T, class Proj = std::identity>
     requires logicsim::format_range_type<T>
 [[nodiscard]] constexpr auto fmt_join(std::string_view fmt, const T &obj,
-                                      std::string_view sep = ", ") {
-    auto items = ::logicsim::transform_to_vector(
-        std::begin(obj), std::end(obj),
-        [&](const auto &item) { return fmt::format(fmt::runtime(fmt), item); });
-    return boost::join(items, sep);
+                                      std::string_view sep = ", ", Proj proj = {}) {
+    auto format_func
+        = [&](const auto &item) { return fmt::format(fmt::runtime(fmt), proj(item)); };
+    return boost::join(transform_view(obj, format_func), sep);
 }
 
-template <typename T>
+template <typename T, class Proj = std::identity>
     requires logicsim::format_range_type<T>
-[[nodiscard]] constexpr auto fmt_join(const T &obj, std::string_view sep = ", ") {
-    return fmt_join("{}", obj, sep);
+[[nodiscard]] constexpr auto fmt_join(const T &obj, std::string_view sep = ", ",
+                                      Proj proj = {}) {
+    return fmt_join("{}", obj, sep, proj);
 }
 
 }  // namespace logicsim

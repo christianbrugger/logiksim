@@ -6,6 +6,8 @@
 
 #include <fmt/core.h>
 
+#include <vector>
+
 TEST(Format, VectorFormat) {
     auto vec = std::vector<int> {1, 2, 3};
 
