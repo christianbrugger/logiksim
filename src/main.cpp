@@ -1,5 +1,6 @@
 
 #include "simulation.h"
+#include "timer.h"
 
 #include <fmt/core.h>
 
@@ -13,7 +14,9 @@ auto main() -> int {
     /// SL.io.10 in https://isocpp.github.io/CppCoreGuidelines/
 
     try {
-        auto count = benchmark_simulation(10, 10, true);
+        auto timer = Timer {"Benchmark", Timer::Unit::ms, 3};
+        // auto count = benchmark_simulation(10, 10, true);
+        auto count = logicsim::benchmark_simulation();
         fmt::print("count = {}\n", count);
 
     } catch (const std::exception& exc) {

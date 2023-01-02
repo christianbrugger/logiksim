@@ -212,9 +212,9 @@ auto Simulation::check_state_valid() const -> void {
     return internal_state_size(type) != 0;
 }
 
-auto calculate_outputs(const Simulation::logic_small_vector_t &input,
-                       connection_size_t output_count, const ElementType type)
-    -> Simulation::logic_small_vector_t {
+auto calculate_outputs_copy(const Simulation::logic_small_vector_t &input,
+                            connection_size_t output_count, const ElementType type,
+                            Simulation::logic_small_vector_t &result) -> void {
     if (input.empty()) [[unlikely]] {
         throw_exception("Input size cannot be zero.");
     }
@@ -226,24 +226,38 @@ auto calculate_outputs(const Simulation::logic_small_vector_t &input,
         using enum ElementType;
 
         case wire:
-            return {Simulation::logic_small_vector_t(output_count, input.at(0))};
+            result.assign(output_count, input.at(0));
+            return;
 
         case inverter_element:
-            return {!input.at(0)};
+            result.assign(1, !input.at(0));
+            return;
 
         case and_element:
-            return {std::ranges::all_of(input, std::identity {})};
+            result.assign(1, std::ranges::all_of(input, std::identity {}));
+            return;
 
         case or_element:
-            return {std::ranges::any_of(input, std::identity {})};
+            result.assign(1, std::ranges::any_of(input, std::identity {}));
+            return;
 
         case xor_element:
-            return {std::ranges::count_if(input, std::identity {}) == 1};
+            result.assign(1, std::ranges::count_if(input, std::identity {}) == 1);
+            return;
 
         default:
             [[unlikely]] throw_exception(
                 "Unknown type encountered in calculate_outputs.");
     }
+}
+
+// TODO delete if not needed anymore
+auto calculate_outputs(const Simulation::logic_small_vector_t &input,
+                       connection_size_t output_count, const ElementType type)
+    -> Simulation::logic_small_vector_t {
+    Simulation::logic_small_vector_t result;
+    calculate_outputs_copy(input, output_count, type, result);
+    return result;
 }
 
 auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
@@ -258,22 +272,27 @@ auto Simulation::apply_events(const Circuit::ConstElement element,
     }
 }
 
-auto get_changed_outputs(const Simulation::logic_small_vector_t &old_outputs,
-                         const Simulation::logic_small_vector_t &new_outputs)
-    -> Simulation::con_index_small_vector_t {
+auto get_changed_outputs_copy(const Simulation::logic_small_vector_t &old_outputs,
+                              const Simulation::logic_small_vector_t &new_outputs,
+                              Simulation::con_index_small_vector_t &result) -> void {
     if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]] {
         throw_exception("old_outputs and new_outputs need to have the same size.");
     }
 
-    Simulation::con_index_small_vector_t result;
-    result.reserve(std::size(old_outputs));
-
+    result.clear();
     for (auto index : range(gsl::narrow<connection_size_t>(std::size(old_outputs)))) {
         if (old_outputs[index] != new_outputs[index]) {
             result.push_back(index);
         }
     }
+}
 
+// TODO delete if not needed anymore
+auto get_changed_outputs(const Simulation::logic_small_vector_t &old_outputs,
+                         const Simulation::logic_small_vector_t &new_outputs)
+    -> Simulation::con_index_small_vector_t {
+    Simulation::con_index_small_vector_t result;
+    get_changed_outputs_copy(old_outputs, new_outputs, result);
     return result;
 }
 
@@ -304,21 +323,41 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
         return;
     }
 
-    // update inputs
-    const auto old_inputs = input_values(element);
-    apply_events(element, events);
-    const auto new_inputs = input_values(element);
+    if (use_buffer) {
+        copy_input_values(element, buffer_.old_inputs);
+        apply_events(element, events);
+        // const auto new_inputs = input_values(element);
+        copy_input_values(element, buffer_.new_inputs);
 
-    // find changing outputs
-    const auto old_outputs
-        = calculate_outputs(old_inputs, element.output_count(), element.element_type());
-    const auto new_outputs
-        = calculate_outputs(new_inputs, element.output_count(), element.element_type());
-    const auto changes = get_changed_outputs(old_outputs, new_outputs);
+        // find changing outputs
+        calculate_outputs_copy(buffer_.old_inputs, element.output_count(),
+                               element.element_type(), buffer_.old_outputs);
+        calculate_outputs_copy(buffer_.new_inputs, element.output_count(),
+                               element.element_type(), buffer_.new_outputs);
+        get_changed_outputs_copy(buffer_.old_outputs, buffer_.new_outputs,
+                                 buffer_.changed_outputs);
 
-    // submit events
-    for (auto output_index : changes) {
-        create_event(element.output(output_index), new_outputs);
+        // submit events
+        for (auto output_index : buffer_.changed_outputs) {
+            create_event(element.output(output_index), buffer_.new_outputs);
+        }
+    } else {
+        // update inputs
+        const auto old_inputs = input_values(element);
+        apply_events(element, events);
+        const auto new_inputs = input_values(element);
+
+        // find changing outputs
+        const auto old_outputs = calculate_outputs(old_inputs, element.output_count(),
+                                                   element.element_type());
+        const auto new_outputs = calculate_outputs(new_inputs, element.output_count(),
+                                                   element.element_type());
+        const auto changes = get_changed_outputs(old_outputs, new_outputs);
+
+        // submit events
+        for (auto output_index : changes) {
+            create_event(element.output(output_index), new_outputs);
+        }
     }
 }
 
@@ -405,8 +444,8 @@ auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
     return input_values_.at(input.input_id());
 }
 
-auto Simulation::input_values(const Circuit::ConstElement element) const
-    -> logic_small_vector_t {
+auto Simulation::copy_input_values(const Circuit::ConstElement element,
+                                   logic_small_vector_t &result) const -> void {
     const auto begin = input_values_.begin() + element.first_input_id();
     const auto end = begin + element.input_count();
 
@@ -415,7 +454,14 @@ auto Simulation::input_values(const Circuit::ConstElement element) const
         throw_exception("Invalid begin or end iterator in get_input_values.");
     }
 
-    return logic_small_vector_t {begin, end};
+    result.assign(begin, end);
+}
+
+auto Simulation::input_values(const Circuit::ConstElement element) const
+    -> logic_small_vector_t {
+    logic_small_vector_t result {};
+    copy_input_values(element, result);
+    return result;
 }
 
 auto Simulation::input_values() const -> const logic_vector_t & {

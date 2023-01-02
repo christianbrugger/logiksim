@@ -17,11 +17,11 @@
 /// Done Features
 // * delays for each output, needed for wires
 // * add timeout to advance simulations
+// * use discrete integer type for time, like chronos::sim_time<int64_t>
+// * store transition times for wires, so they can be drawn
 
 /// New Features
-// * use discrete integer type for time, like chronos::sim_time<int64_t>
 // * flip flops, which requires access to the last state
-// * store transition times for wires, so they can be drawn
 // * negation on input and outputs
 // * clock generators
 // * shift registers, requires memory & internal state
@@ -115,6 +115,7 @@ using timeout_t = timeout_clock::duration;
 class Simulation {
    public:
     bool print_events {false};
+    bool use_buffer {false};
 
     /// Represents multiple logic values
     using logic_vector_t = boost::container::vector<bool>;
@@ -126,10 +127,11 @@ class Simulation {
     // 8>;
 
     // TODO derive uint8_t
-    using logic_small_vector_t = folly::small_vector<bool, 15, uint8_t>;
-    using con_index_small_vector_t = folly::small_vector<connection_size_t, 15, uint8_t>;
-    static_assert(sizeof(logic_small_vector_t) == 16);
-    static_assert(sizeof(con_index_small_vector_t) == 16);
+    using logic_small_vector_t = folly::small_vector<bool, 0, uint8_t>;
+    using con_index_small_vector_t = folly::small_vector<connection_size_t, 0, uint8_t>;
+
+    // static_assert(sizeof(logic_small_vector_t) == 16);
+    // static_assert(sizeof(con_index_small_vector_t) == 16);
 
     struct defaults {
         constexpr static time_t standard_delay = 100us;
@@ -179,7 +181,21 @@ class Simulation {
    private:
     class Timer;
 
+    // we store some vectors here, so we avoid allocations in each function call.
+    struct ProcessEventGroupBuffers {
+        logic_small_vector_t old_inputs;
+        logic_small_vector_t new_inputs;
+
+        logic_small_vector_t old_outputs;
+        logic_small_vector_t new_outputs;
+
+        con_index_small_vector_t changed_outputs;
+    };
+
     auto check_state_valid() const -> void;
+
+    auto copy_input_values(Circuit::ConstElement element,
+                           logic_small_vector_t &result) const -> void;
 
     auto process_event_group(event_group_t &&events) -> void;
     auto create_event(const Circuit::ConstOutput output,
@@ -194,6 +210,8 @@ class Simulation {
     SimulationQueue queue_ {};
     delay_vector_t output_delays_ {};
     logic_vector_t internal_states_ {};
+
+    ProcessEventGroupBuffers buffer_ {};
 };
 
 inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
