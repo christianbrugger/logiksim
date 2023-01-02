@@ -115,7 +115,7 @@ using timeout_t = timeout_clock::duration;
 class Simulation {
    public:
     bool print_events {false};
-    bool use_buffer {false};
+    bool use_buffer {true};
 
     /// Represents multiple logic values
     using logic_vector_t = boost::container::vector<bool>;
@@ -197,7 +197,8 @@ class Simulation {
     auto copy_input_values(Circuit::ConstElement element,
                            logic_small_vector_t &result) const -> void;
 
-    auto process_event_group(event_group_t &&events) -> void;
+    auto process_event_group(event_group_t &&events, ProcessEventGroupBuffers &buffer_)
+        -> void;
     auto create_event(const Circuit::ConstOutput output,
                       const logic_small_vector_t &output_values) -> void;
     auto apply_events(const Circuit::ConstElement element, const event_group_t &group)
@@ -210,8 +211,6 @@ class Simulation {
     SimulationQueue queue_ {};
     delay_vector_t output_delays_ {};
     logic_vector_t internal_states_ {};
-
-    ProcessEventGroupBuffers buffer_ {};
 };
 
 inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};

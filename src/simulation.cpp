@@ -307,7 +307,8 @@ void Simulation::create_event(const Circuit::ConstOutput output,
     }
 }
 
-auto Simulation::process_event_group(event_group_t &&events) -> void {
+auto Simulation::process_event_group(event_group_t &&events,
+                                     ProcessEventGroupBuffers &buffer_) -> void {
     if (print_events) {
         fmt::print("events: {:n}\n", events);
     }
@@ -397,13 +398,14 @@ auto Simulation::advance(const time_t simulation_time, const timeout_t timeout,
                                     ? time_t::max()
                                     : queue_.time() + simulation_time;
     int64_t event_count = 0;
+    ProcessEventGroupBuffers buffer_ {};
 
     // TODO refactor loop
     while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
         auto event_group = queue_.pop_event_group();
         event_count += std::ssize(event_group);
 
-        process_event_group(std::move(event_group));
+        process_event_group(std::move(event_group), buffer_);
 
         // at least one group
         if (timer.reached_timeout() || (event_count >= max_events)) [[unlikely]] {
