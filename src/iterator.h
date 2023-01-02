@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <ranges>
 #include <type_traits>
 
@@ -16,7 +17,9 @@ class TransformIterator {
     using iterator_category = std::input_iterator_tag;
 
     using value_type = typename std::projected<Iterator, Proj>::value_type;
-    using difference_type = typename Iterator::difference_type;
+    using difference_type
+        = std::conditional_t<std::is_pointer_v<Iterator>, std::pointer_traits<Iterator>,
+                             Iterator>::difference_type;
     using pointer = value_type *;
     using reference = value_type &;
 
@@ -41,7 +44,7 @@ class TransformIterator {
     // Postfix increment
     auto operator++(int) noexcept(noexcept(iterator_++)) -> TransformIterator {
         auto tmp = *this;
-        return ++iterator_;
+        ++iterator_;
         return tmp;
     }
 
