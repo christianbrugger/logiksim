@@ -49,7 +49,7 @@ auto format(ElementType type) -> std::string {
 auto Circuit::format() const -> std::string {
     std::string inner;
     if (!empty()) {
-        auto format_true = [&](auto element) { return element.format(true); };
+        auto format_true = [](auto element) { return element.format(true); };
         inner = fmt::format(": [\n  {}\n]", fmt_join(elements(), ",\n  ", format_true));
     }
     return fmt::format("<Circuit with {} elements{}>", element_count(), inner);
@@ -514,9 +514,7 @@ auto Circuit::ConnectionViewTemplate<Const, IsInput>::empty() const -> bool {
 
 template <bool Const, bool IsInput>
 auto Circuit::ConnectionViewTemplate<Const, IsInput>::format() const -> std::string {
-    // TODO try to pass member function directly
-    auto connections
-        = transform_view(*this, [](value_type con) { return con.format_connection(); });
+    auto connections = transform_view(*this, &value_type::format_connection);
     return fmt::format("{}", connections);
 }
 

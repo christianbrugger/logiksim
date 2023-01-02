@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <concepts>
 #include <exception>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <ranges>
@@ -44,7 +45,7 @@ auto has_duplicates_quadratic(std::input_iterator auto begin,
 
     for (auto i1 = begin; i1 != end - 1; ++i1) {
         for (auto i2 = i1 + 1; i2 != end; ++i2) {
-            if (proj(*i1) == proj(*i2)) {
+            if (std::invoke(proj, *i1) == std::invoke(proj, *i2)) {
                 return true;
             }
         }

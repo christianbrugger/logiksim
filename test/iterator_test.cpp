@@ -6,6 +6,7 @@
 
 #include <boost/range/has_range_iterator.hpp>
 
+#include <functional>
 #include <ranges>
 #include <vector>
 
@@ -86,6 +87,46 @@ TEST(Iterator, TransformViewEmptyTrue) {
     auto transform = transform_view(vec, proj);
 
     ASSERT_EQ(transform.empty(), true);
+}
+
+auto proj_times_two(int val) -> int { return val * 2; }
+
+TEST(Iterator, TransformViewPassFunction) {
+    auto vec = std::vector<int> {1, 2, 3};
+    auto transform = transform_view(vec, proj_times_two);
+    ASSERT_THAT(transform, testing::ElementsAre(2, 4, 6));
+}
+
+TEST(Iterator, TransformViewPassStdFunction) {
+    auto vec = std::vector<int> {1, 2, 3};
+
+    auto func = std::function(proj_times_two);
+    auto transform = transform_view(vec, func);
+
+    ASSERT_THAT(transform, testing::ElementsAre(2, 4, 6));
+}
+
+struct MemberTest {
+    int val {};
+
+    auto proj_times_three() -> int { return val * 3; }
+};
+
+TEST(Iterator, TransformViewPassMemberFunctionViaStdFunction) {
+    auto vec = std::vector<MemberTest> {MemberTest {1}, MemberTest {2}, MemberTest {3}};
+
+    auto func = std::function<int(MemberTest &)>(&MemberTest::proj_times_three);
+    auto transform = transform_view(vec, func);
+
+    ASSERT_THAT(transform, testing::ElementsAre(3, 6, 9));
+}
+
+TEST(Iterator, TransformViewPassMemberFunctionDirectly) {
+    auto vec = std::vector<MemberTest> {MemberTest {1}, MemberTest {2}, MemberTest {3}};
+
+    auto transform = transform_view(vec, &MemberTest::proj_times_three);
+
+    ASSERT_THAT(transform, testing::ElementsAre(3, 6, 9));
 }
 
 }  // namespace logicsim

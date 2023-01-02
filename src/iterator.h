@@ -2,6 +2,7 @@
 #ifndef LOGIKSIM_ITERATOR_H
 #define LOGIKSIM_ITERATOR_H
 
+#include <functional>
 #include <iterator>
 #include <ranges>
 #include <type_traits>
@@ -27,7 +28,9 @@ class TransformIterator {
             &&std::is_nothrow_copy_constructible_v<Proj>)
         : iterator_ {iterator}, proj_ {proj} {};
 
-    [[nodiscard]] auto operator*() const -> value_type { return proj_(*iterator_); }
+    [[nodiscard]] auto operator*() const -> value_type {
+        return std::invoke(proj_, *iterator_);
+    }
 
     // Prefix increment
     auto operator++() noexcept(noexcept(++iterator_)) -> TransformIterator & {

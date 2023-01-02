@@ -12,6 +12,7 @@
 #include <fmt/core.h>
 
 #include <concepts>
+#include <functional>
 #include <string_view>
 
 namespace logicsim {
@@ -29,8 +30,9 @@ template <typename T, class Proj = std::identity>
     requires logicsim::format_range_type<T>
 [[nodiscard]] constexpr auto fmt_join(std::string_view fmt, const T &obj,
                                       std::string_view sep = ", ", Proj proj = {}) {
-    auto format_func
-        = [&](const auto &item) { return fmt::format(fmt::runtime(fmt), proj(item)); };
+    auto format_func = [&](const auto &item) {
+        return fmt::format(fmt::runtime(fmt), std::invoke(proj, item));
+    };
     return boost::join(transform_view(obj, format_func), sep);
 }
 
