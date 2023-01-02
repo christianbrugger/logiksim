@@ -316,6 +316,7 @@ set(MAIN_TEST_TARGET "simulation_srp_test")
 add_executable(${MAIN_TEST_TARGET} 
     ${LS_CORE_SOURCES}
     
+    test/algorithm_test.cpp
     test/circuit_test.cpp
     test/format_test.cpp
     test/iterator_test.cpp

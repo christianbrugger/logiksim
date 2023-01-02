@@ -8,6 +8,8 @@
 #include <iostream>
 #include <iterator>
 #include <ranges>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace logicsim {
@@ -87,12 +89,14 @@ auto distance_fast(IteratorFirst first, IteratorLast last) {
 template <std::input_iterator InputIt, class Function>
     requires std::sized_sentinel_for<InputIt, InputIt>
 constexpr auto transform_to_vector(InputIt first, InputIt last, Function func) {
-    using result_type = std::invoke_result_t<Function, typename InputIt::value_type>;
+    using result_type = std::decay_t<decltype(std::invoke(func, *first))>;
 
     std::vector<result_type> result;
     result.reserve(distance_fast(first, last));
 
-    std::transform(first, last, std::back_inserter(result), func);
+    std::transform(first, last, std::back_inserter(result), [func](auto&& item) {
+        return std::invoke(func, std::forward<decltype(item)>(item));
+    });
     return result;
 }
 
