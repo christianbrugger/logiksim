@@ -151,7 +151,9 @@ inline constexpr bool std::ranges::enable_borrowed_range<logicsim::detail::range
 
 template <typename T>
 struct fmt::formatter<logicsim::detail::range_t<T>> {
-    constexpr auto parse(fmt::format_parse_context& ctx) { return ctx.begin(); }
+    constexpr auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
 
     auto format(const logicsim::detail::range_t<T>& obj, fmt::format_context& ctx) const {
         return fmt::format_to(ctx.out(), "{}", obj.format());

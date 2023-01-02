@@ -14,6 +14,7 @@ Standard: c++20
 
 SeparateDefinitionBlocks: Always
 BreakBeforeBinaryOperators: All
+AllowShortFunctionsOnASingleLine: Empty
 
 IncludeBlocks: Regroup
 IncludeIsMainRegex: '(_test)?$'

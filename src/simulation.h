@@ -67,7 +67,9 @@ auto make_event(Circuit::ConstInput input, time_t time, bool value) -> Simulatio
 
 template <>
 struct fmt::formatter<logicsim::SimulationEvent> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) { return ctx.begin(); }
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
 
     static auto format(const logicsim::SimulationEvent &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());

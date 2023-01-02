@@ -105,7 +105,9 @@ void validate(const event_group_t &events) {
 // SimulationQueue
 //
 
-auto SimulationQueue::time() const noexcept -> time_t { return time_; }
+auto SimulationQueue::time() const noexcept -> time_t {
+    return time_;
+}
 
 void SimulationQueue::set_time(time_t time) {
     if (time < time_) {
@@ -122,7 +124,9 @@ auto SimulationQueue::next_event_time() const noexcept -> time_t {
     return events_.empty() ? time_t::max() : events_.top().time;
 }
 
-auto SimulationQueue::empty() const noexcept -> bool { return events_.empty(); }
+auto SimulationQueue::empty() const noexcept -> bool {
+    return events_.empty();
+}
 
 void SimulationQueue::submit_event(SimulationEvent event) {
     if (event.time <= time_) {
@@ -156,9 +160,13 @@ Simulation::Simulation(const Circuit &circuit)
       output_delays_(circuit.total_output_count(), defaults::standard_delay),
       internal_states_(circuit.total_input_count(), false) {}
 
-auto Simulation::circuit() const noexcept -> const Circuit & { return *circuit_; }
+auto Simulation::circuit() const noexcept -> const Circuit & {
+    return *circuit_;
+}
 
-auto Simulation::time() const noexcept -> time_t { return queue_.time(); }
+auto Simulation::time() const noexcept -> time_t {
+    return queue_.time();
+}
 
 auto Simulation::submit_event(Circuit::ConstInput input, time_t delay, bool value)
     -> void {
@@ -410,7 +418,9 @@ auto Simulation::input_values(const Circuit::ConstElement element) const
     return logic_small_vector_t {begin, end};
 }
 
-auto Simulation::input_values() const -> const logic_vector_t & { return input_values_; }
+auto Simulation::input_values() const -> const logic_vector_t & {
+    return input_values_;
+}
 
 auto Simulation::output_value(const Circuit::ConstOutput output,
                               const bool raise_missing) const -> bool {

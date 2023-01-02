@@ -59,7 +59,9 @@ auto Circuit::element_count() const noexcept -> element_id_t {
     return static_cast<element_id_t>(element_data_store_.size());
 }
 
-auto Circuit::empty() const noexcept -> bool { return element_data_store_.empty(); }
+auto Circuit::empty() const noexcept -> bool {
+    return element_data_store_.empty();
+}
 
 auto Circuit::is_element_id_valid(element_id_t element_id) const noexcept -> bool {
     return element_id >= 0 && element_id < element_count();
@@ -79,7 +81,9 @@ auto Circuit::element(element_id_t element_id) const -> ConstElement {
     return ConstElement {*this, element_id};
 }
 
-auto Circuit::elements() noexcept -> ElementView { return ElementView {*this}; }
+auto Circuit::elements() noexcept -> ElementView {
+    return ElementView {*this};
+}
 
 auto Circuit::elements() const noexcept -> ConstElementView {
     return ConstElementView {*this};

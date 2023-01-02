@@ -97,11 +97,15 @@ struct StrongType {
         return *this;
     }
 
-    constexpr auto operator++(int) noexcept -> void { ++value; }
+    constexpr auto operator++(int) noexcept -> void {
+        ++value;
+    }
 
     using difference_type = range_difference_t<decltype(value)>;
 
-    explicit operator difference_type() const { return value; }
+    explicit operator difference_type() const {
+        return value;
+    }
 
     auto operator<=>(const StrongType&) const = default;
 };

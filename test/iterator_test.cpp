@@ -89,7 +89,9 @@ TEST(Iterator, TransformViewEmptyTrue) {
     ASSERT_EQ(transform.empty(), true);
 }
 
-auto proj_times_two(int val) -> int { return val * 2; }
+auto proj_times_two(int val) -> int {
+    return val * 2;
+}
 
 TEST(Iterator, TransformViewPassFunction) {
     auto vec = std::vector<int> {1, 2, 3};
@@ -109,7 +111,9 @@ TEST(Iterator, TransformViewPassStdFunction) {
 struct MemberTest {
     int val {};
 
-    auto proj_times_three() -> int { return val * 3; }
+    auto proj_times_three() -> int {
+        return val * 3;
+    }
 };
 
 TEST(Iterator, TransformViewPassMemberFunctionViaStdFunction) {

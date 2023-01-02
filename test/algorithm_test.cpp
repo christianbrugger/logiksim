@@ -29,7 +29,9 @@ TEST(Algorithm, TransformToVectorChangeType) {
 struct MemberTest {
     int val {};
 
-    auto proj_times_three() -> int { return val * 3; }
+    auto proj_times_three() -> int {
+        return val * 3;
+    }
 };
 
 TEST(Algorithm, TransformToVectorMemberFunction) {
