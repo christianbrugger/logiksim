@@ -1,8 +1,6 @@
 ﻿
 #include "timer.h"
 
-#include <fmt/chrono.h>
-
 namespace logicsim {
 
 Timer::Timer(std::string description, Unit unit, int precision)

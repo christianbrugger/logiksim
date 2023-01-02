@@ -19,18 +19,24 @@ namespace logicsim {
 
 auto format(ElementType type) -> std::string {
     switch (type) {
-        case ElementType::placeholder:
+        using enum ElementType;
+
+        case placeholder:
             return "Placeholder";
-        case ElementType::wire:
+        case wire:
             return "Wire";
-        case ElementType::inverter_element:
+        case inverter_element:
             return "Inverter";
-        case ElementType::and_element:
+        case and_element:
             return "AndElement";
-        case ElementType::or_element:
+        case or_element:
             return "OrElement";
-        case ElementType::xor_element:
+        case xor_element:
             return "XorElement";
+        case clock_element:
+            return "ClockElement";
+        case flipflop_jk:
+            return "JK-FlipFlop";
     }
     throw_exception("Don't know how to convert ElementType to string.");
 }

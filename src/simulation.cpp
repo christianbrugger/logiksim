@@ -74,31 +74,27 @@ void validate(const event_group_t &events) {
 
     const auto &head {events.front()};
     const auto tail = std::ranges::subrange(events.begin() + 1, events.end());
-    //{ranges::views::drop(events, 1)};  // TODO use tail
 
     if (head.element_id == null_element) {
         throw_exception("Event element cannot be null.");
     }
 
     if (!tail.empty()) {
-        if (!std::ranges::all_of(tail, [head](const SimulationEvent &event) {
-                return event.time == head.time;
+        if (!std::ranges::all_of(tail, [time = head.time](const SimulationEvent &event) {
+                return event.time == time;
             })) {
             throw_exception("All events in the group need to have the same time.");
         }
 
-        if (!std::ranges::all_of(tail, [head](const SimulationEvent &event) {
-                return event.element_id == head.element_id;
-            })) {
+        if (!std::ranges::all_of(
+                tail, [element_id = head.element_id](const SimulationEvent &event) {
+                    return event.element_id == element_id;
+                })) {
             throw_exception("All events in the group need to have the same time.");
         }
 
-        // TODO derive 2
-        boost::container::small_vector<element_id_t, 2> event_ids;
-        std::ranges::transform(
-            events, std::back_inserter(event_ids),
-            [](const SimulationEvent &event) { return event.input_index; });
-        if (has_duplicates_quadratic(event_ids.begin(), event_ids.end())) {
+        const auto pred = [](const SimulationEvent &event) { return event.input_index; };
+        if (has_duplicates_quadratic(events.begin(), events.end(), pred)) {
             throw_exception(
                 "Cannot have two events for the same input at the same time.");
         }
@@ -185,6 +181,23 @@ auto Simulation::check_state_valid() const -> void {
     }
 }
 
+constexpr auto internal_state_size(const ElementType type) -> connection_size_t {
+    switch (type) {
+        using enum ElementType;
+
+        case placeholder:
+        case wire:
+        case inverter_element:
+        case and_element:
+        case or_element:
+        case xor_element:
+            return 0;
+        case clock_element:
+        case flipflop_jk:
+            return 1;
+    }
+}
+
 auto calculate_outputs(const Simulation::logic_small_vector_t &input,
                        connection_size_t output_count, const ElementType type)
     -> Simulation::logic_small_vector_t {
@@ -196,19 +209,21 @@ auto calculate_outputs(const Simulation::logic_small_vector_t &input,
     }
 
     switch (type) {
-        case ElementType::wire:
+        using enum ElementType;
+
+        case wire:
             return {Simulation::logic_small_vector_t(output_count, input.at(0))};
 
-        case ElementType::inverter_element:
+        case inverter_element:
             return {!input.at(0)};
 
-        case ElementType::and_element:
+        case and_element:
             return {std::ranges::all_of(input, std::identity {})};
 
-        case ElementType::or_element:
+        case or_element:
             return {std::ranges::any_of(input, std::identity {})};
 
-        case ElementType::xor_element:
+        case xor_element:
             return {std::ranges::count_if(input, std::identity {}) == 1};
 
         default:
