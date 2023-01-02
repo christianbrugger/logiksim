@@ -96,8 +96,8 @@ class Circuit {
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
-    [[nodiscard]] auto total_input_count() const noexcept -> connection_id_t;
-    [[nodiscard]] auto total_output_count() const noexcept -> connection_id_t;
+    [[nodiscard]] auto input_count() const noexcept -> connection_id_t;
+    [[nodiscard]] auto output_count() const noexcept -> connection_id_t;
 
     [[nodiscard]] auto element(element_id_t element_id) -> Element;
     [[nodiscard]] auto element(element_id_t element_id) const -> ConstElement;
@@ -200,17 +200,6 @@ template <bool Const>
 inline constexpr bool
     std::ranges::enable_borrowed_range<logicsim::Circuit::ElementViewTemplate<Const>>
     = true;
-
-// TODO remove when not needed any more
-// template <bool Const>
-// inline constexpr bool
-// ranges::enable_view<logicsim::Circuit::ElementViewTemplate<Const>>
-//    = true;
-//
-// template <bool Const>
-// inline constexpr bool
-//    ranges::enable_borrowed_range<logicsim::Circuit::ElementViewTemplate<Const>>
-//    = true;
 
 namespace logicsim {
 
@@ -322,17 +311,6 @@ template <bool Const, bool IsInput>
 inline constexpr bool std::ranges::enable_borrowed_range<
     logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
     = true;
-
-// TODO remove when not needed any more
-// template <bool Const, bool IsInput>
-// inline constexpr bool
-//    ranges::enable_view<logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
-//    = true;
-//
-// template <bool Const, bool IsInput>
-// inline constexpr bool ranges::enable_borrowed_range<
-//    logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
-//    = true;
 
 namespace logicsim {
 

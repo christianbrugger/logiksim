@@ -17,9 +17,9 @@ class TransformIterator {
     using iterator_category = std::input_iterator_tag;
 
     using value_type = typename std::projected<Iterator, Proj>::value_type;
-    using difference_type
-        = std::conditional_t<std::is_pointer_v<Iterator>, std::pointer_traits<Iterator>,
-                             Iterator>::difference_type;
+    using difference_type = typename std::conditional_t<std::is_pointer_v<Iterator>,
+                                                        std::pointer_traits<Iterator>,
+                                                        Iterator>::difference_type;
     using pointer = value_type *;
     using reference = value_type &;
 

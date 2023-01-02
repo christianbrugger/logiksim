@@ -102,7 +102,7 @@ class WidgetRenderer : public QWidget {
         simulation.submit_event(elem0.input(0), 100us, true);
         simulation.submit_event(elem0.input(0), 500us, false);
 
-        simulation.advance();
+        simulation.run();
 
         attribute_vector_t attributes
             = {{{}, {5, 3}, 0}, {{{10, 10}, {12, 12}}, {5, 3}, 0}};

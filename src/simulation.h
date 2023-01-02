@@ -16,7 +16,7 @@
 
 /// Done Features
 // * delays for each output, needed for wires
-// * add timeout to advance simulations
+// * add timeout to run simulations
 // * use discrete integer type for time, like chronos::sim_time<int64_t>
 // * store transition times for wires, so they can be drawn
 
@@ -145,10 +145,12 @@ class Simulation {
     [[nodiscard]] auto circuit() const noexcept -> const Circuit &;
     [[nodiscard]] auto time() const noexcept -> time_t;
     auto submit_event(Circuit::ConstInput input, time_t delay, bool value) -> void;
+    auto submit_events(Circuit::ConstElement element, time_t delay,
+                       logic_small_vector_t values) -> void;
 
     auto initialize() -> void;
 
-    /// @brief Advance the simulation by changing the given simulations state
+    /// @brief Run the simulation by changing the given simulations state
     /// @param state             either new or the old simulation state to start from
     /// @param circuit           the circuit that should be simulated
     /// @param simulation_time   simulate for this time or, when run_until_steady, run
@@ -156,9 +158,9 @@ class Simulation {
     ///                          no more new events are generated
     /// @param timeout           return if simulation takes longer than this in realtime
     /// @param print_events      if true print each processed event information
-    auto advance(time_t simulation_time = defaults::infinite_simulation_time,
-                 timeout_t timeout = defaults::no_timeout,
-                 int64_t max_events = defaults::no_max_events) -> int64_t;
+    auto run(time_t simulation_time = defaults::infinite_simulation_time,
+             timeout_t timeout = defaults::no_timeout,
+             int64_t max_events = defaults::no_max_events) -> int64_t;
 
     [[nodiscard]] auto input_value(Circuit::ConstInput input) const -> bool;
     [[nodiscard]] auto input_values(Circuit::ConstElement element) const
@@ -176,17 +178,26 @@ class Simulation {
     [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> time_t;
     auto set_output_delay(Circuit::ConstOutput output, time_t delay) -> void;
 
+    [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
+        -> logic_small_vector_t;
+
    private:
     class Timer;
 
     auto check_state_valid() const -> void;
 
+    auto submit_events_for_changed_outputs(const Circuit::ConstElement element,
+                                           const logic_small_vector_t &old_outputs,
+                                           const logic_small_vector_t &new_outputs)
+        -> void;
     auto process_event_group(event_group_t &&events) -> void;
     auto create_event(const Circuit::ConstOutput output,
                       const logic_small_vector_t &output_values) -> void;
     auto apply_events(const Circuit::ConstElement element, const event_group_t &group)
         -> void;
     auto set_input(const Circuit::ConstInput input, bool value) -> void;
+    auto set_internal_state(const Circuit::ConstElement element,
+                            const logic_small_vector_t &state) -> void;
 
     const Circuit *circuit_;  // never nullptr
 

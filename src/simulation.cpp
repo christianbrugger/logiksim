@@ -155,10 +155,10 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
 
 Simulation::Simulation(const Circuit &circuit)
     : circuit_ {&circuit},
-      input_values_(circuit.total_input_count(), false),
+      input_values_(circuit.input_count(), false),
       queue_ {},
-      output_delays_(circuit.total_output_count(), defaults::standard_delay),
-      internal_states_(circuit.total_input_count(), false) {}
+      output_delays_(circuit.output_count(), defaults::standard_delay),
+      internal_states_(circuit.element_count(), false) {}
 
 auto Simulation::circuit() const noexcept -> const Circuit & {
     return *circuit_;
@@ -173,11 +173,20 @@ auto Simulation::submit_event(Circuit::ConstInput input, time_t delay, bool valu
     queue_.submit_event(make_event(input, queue_.time() + delay, value));
 }
 
+auto Simulation::submit_events(Circuit::ConstElement element, time_t delay,
+                               logic_small_vector_t values) -> void {
+    if (std::ssize(values) != element.input_count()) [[unlikely]] {
+        throw_exception("Need to provide number of input values.");
+    }
+    for (auto input : element.inputs()) {
+        submit_event(input, delay, values.at(input.input_index()));
+    }
+}
+
 auto Simulation::check_state_valid() const -> void {
-    const auto n_inputs
-        = static_cast<logic_vector_t::size_type>(circuit_->total_input_count());
+    const auto n_inputs = static_cast<logic_vector_t::size_type>(circuit_->input_count());
     const auto n_outputs
-        = static_cast<logic_vector_t::size_type>(circuit_->total_output_count());
+        = static_cast<logic_vector_t::size_type>(circuit_->output_count());
 
     if (input_values_.size() != n_inputs) [[unlikely]] {
         throw_exception(
@@ -212,8 +221,56 @@ auto Simulation::check_state_valid() const -> void {
     return internal_state_size(type) != 0;
 }
 
-auto calculate_outputs(const Simulation::logic_small_vector_t &input,
-                       connection_size_t output_count, const ElementType type)
+auto calculate_internal_state(const Simulation::logic_small_vector_t &old_input,
+                              const Simulation::logic_small_vector_t &new_input,
+                              const Simulation::logic_small_vector_t &state,
+                              const ElementType type)
+    -> Simulation::logic_small_vector_t {
+    switch (type) {
+        using enum ElementType;
+
+        case flipflop_jk: {
+            // rising edge
+            if (new_input.at(1) && !old_input.at(1)) {
+                bool input_j = new_input.at(0);
+                bool input_k = new_input.at(2);
+
+                if (input_j && input_k) {
+                    return {!state.at(0)};
+                } else if (input_j && !input_k) {
+                    return {true};
+                } else if (!input_j && input_k) {
+                    return {false};
+                }
+            }
+            return state;
+        }
+
+        default:
+            [[unlikely]] throw_exception(
+                "Unexpected type encountered in calculate_new_state.");
+    }
+}
+
+auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
+                                  const ElementType type)
+    -> Simulation::logic_small_vector_t {
+    switch (type) {
+        using enum ElementType;
+
+        case flipflop_jk: {
+            bool enabled = state.at(0);
+            return {enabled, !enabled};
+        }
+
+        default:
+            [[unlikely]] throw_exception(
+                "Unexpected type encountered in calculate_new_state.");
+    }
+}
+
+auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input,
+                                   connection_size_t output_count, const ElementType type)
     -> Simulation::logic_small_vector_t {
     if (input.empty()) [[unlikely]] {
         throw_exception("Input size cannot be zero.");
@@ -242,13 +299,8 @@ auto calculate_outputs(const Simulation::logic_small_vector_t &input,
 
         default:
             [[unlikely]] throw_exception(
-                "Unknown type encountered in calculate_outputs.");
+                "Unexpected type encountered in calculate_outputs.");
     }
-}
-
-auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
-    const auto index = gsl::narrow<logic_vector_t::size_type>(input.input_id());
-    input_values_.at(index) = value;
 }
 
 auto Simulation::apply_events(const Circuit::ConstElement element,
@@ -285,6 +337,15 @@ void Simulation::create_event(const Circuit::ConstOutput output,
     }
 }
 
+auto Simulation::submit_events_for_changed_outputs(
+    const Circuit::ConstElement element, const logic_small_vector_t &old_outputs,
+    const logic_small_vector_t &new_outputs) -> void {
+    const auto changes = get_changed_outputs(old_outputs, new_outputs);
+    for (auto output_index : changes) {
+        create_event(element.output(output_index), new_outputs);
+    }
+}
+
 auto Simulation::process_event_group(event_group_t &&events) -> void {
     if (print_events) {
         fmt::print("events: {:n}\n", events);
@@ -293,10 +354,12 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
         return;
     }
     validate(events);
-    const Circuit::ConstElement element {circuit_->element(events.front().element_id)};
+    const auto element
+        = Circuit::ConstElement {circuit_->element(events.front().element_id)};
+    const auto element_type = element.element_type();
 
     // short-circuit placeholders, as they don't have logic
-    if (element.element_type() == ElementType::placeholder) {
+    if (element_type == ElementType::placeholder) {
         apply_events(element, events);
         return;
     }
@@ -306,16 +369,24 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     apply_events(element, events);
     const auto new_inputs = input_values(element);
 
-    // find changing outputs
-    const auto old_outputs
-        = calculate_outputs(old_inputs, element.output_count(), element.element_type());
-    const auto new_outputs
-        = calculate_outputs(new_inputs, element.output_count(), element.element_type());
-    const auto changes = get_changed_outputs(old_outputs, new_outputs);
+    if (has_internal_state(element_type)) {
+        const auto old_state = internal_state(element);
+        const auto new_state
+            = calculate_internal_state(old_inputs, new_inputs, old_state, element_type);
 
-    // submit events
-    for (auto output_index : changes) {
-        create_event(element.output(output_index), new_outputs);
+        const auto old_outputs = calculate_outputs_from_state(old_state, element_type);
+        const auto new_outputs = calculate_outputs_from_state(new_state, element_type);
+
+        set_internal_state(element, new_state);
+        submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+    } else {
+        // find changing outputs
+        const auto old_outputs = calculate_outputs_from_inputs(
+            old_inputs, element.output_count(), element_type);
+        const auto new_outputs = calculate_outputs_from_inputs(
+            new_inputs, element.output_count(), element_type);
+
+        submit_events_for_changed_outputs(element, old_outputs, new_outputs);
     }
 }
 
@@ -336,8 +407,8 @@ class Simulation::Timer {
     time_point start_time_;
 };
 
-auto Simulation::advance(const time_t simulation_time, const timeout_t timeout,
-                         const int64_t max_events) -> int64_t {
+auto Simulation::run(const time_t simulation_time, const timeout_t timeout,
+                     const int64_t max_events) -> int64_t {
     if (simulation_time <= 0us) [[unlikely]] {
         throw_exception("simulation_time needs to be positive.");
     }
@@ -379,21 +450,26 @@ auto Simulation::initialize() -> void {
     check_state_valid();
 
     for (auto &&element : circuit_->elements()) {
+        auto element_type = element.element_type();
+
         // short-circuit placeholders, as they don't have logic
-        if (element.element_type() == ElementType::placeholder) {
+        if (element_type == ElementType::placeholder) {
             continue;
         }
 
-        // find outputs that need an update
-        const auto old_outputs {output_values(element, true)};
-        const auto curr_inputs {input_values(element)};
-        const auto new_outputs {calculate_outputs(curr_inputs, element.output_count(),
-                                                  element.element_type())};
-        const auto changes {get_changed_outputs(old_outputs, new_outputs)};
+        const auto old_outputs {output_values(element)};
 
-        // submit new events
-        for (auto output_index : changes) {
-            create_event(element.output(output_index), new_outputs);
+        if (has_internal_state(element_type)) {
+            const auto new_outputs
+                = calculate_outputs_from_state(internal_state(element), element_type);
+
+            submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+
+        } else {
+            const auto new_outputs = calculate_outputs_from_inputs(
+                input_values(element), element.output_count(), element_type);
+
+            submit_events_for_changed_outputs(element, old_outputs, new_outputs);
         }
     }
 }
@@ -419,6 +495,11 @@ auto Simulation::input_values() const -> const logic_vector_t & {
     return input_values_;
 }
 
+auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
+    const auto index = gsl::narrow<logic_vector_t::size_type>(input.input_id());
+    input_values_.at(index) = value;
+}
+
 auto Simulation::output_value(const Circuit::ConstOutput output,
                               const bool raise_missing) const -> bool {
     if (raise_missing || output.has_connected_element()) {
@@ -440,7 +521,7 @@ auto Simulation::output_values(const Circuit::ConstElement element,
 }
 
 auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t {
-    logic_vector_t output_values(circuit_->total_output_count());
+    logic_vector_t output_values(circuit_->output_count());
 
     for (auto element : circuit_->elements()) {
         for (auto output : element.outputs()) {
@@ -462,6 +543,16 @@ auto Simulation::set_output_delay(const Circuit::ConstOutput output, const time_
     }
 
     output_delays_.at(output.output_id()) = delay;
+}
+
+auto Simulation::internal_state(Circuit::ConstElement element) const
+    -> logic_small_vector_t {
+    return {internal_states_.at(element.element_id())};
+}
+
+auto Simulation::set_internal_state(const Circuit::ConstElement element,
+                                    const logic_small_vector_t &state) -> void {
+    internal_states_.at(element.element_id()) = state.at(0);
 }
 
 //
@@ -499,7 +590,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
 
     int64_t simulated_event_count {0};
     while (true) {
-        simulated_event_count += simulation.advance(
+        simulated_event_count += simulation.run(
             Simulation::defaults::infinite_simulation_time,
             Simulation::defaults::no_timeout, n_events - simulated_event_count);
 

@@ -13,8 +13,8 @@ TEST(Circuit, EmptyCircuit) {
     const Circuit circuit;
 
     EXPECT_EQ(circuit.element_count(), 0);
-    EXPECT_EQ(circuit.total_input_count(), 0);
-    EXPECT_EQ(circuit.total_output_count(), 0);
+    EXPECT_EQ(circuit.input_count(), 0);
+    EXPECT_EQ(circuit.output_count(), 0);
     EXPECT_EQ(std::ranges::distance(circuit.elements()), 0);
 
     circuit.validate();
@@ -26,8 +26,8 @@ TEST(Circuit, CircuitSingleElement) {
     circuit.add_element(ElementType::wire, 3, 5);
 
     EXPECT_EQ(circuit.element_count(), 1);
-    EXPECT_EQ(circuit.total_input_count(), 3);
-    EXPECT_EQ(circuit.total_output_count(), 5);
+    EXPECT_EQ(circuit.input_count(), 3);
+    EXPECT_EQ(circuit.output_count(), 5);
     EXPECT_EQ(std::ranges::distance(circuit.elements()), 1);
 
     circuit.validate();

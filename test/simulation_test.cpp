@@ -77,7 +77,7 @@ TEST(SimulationTest, InitializeSimulation) {
     auto inverter {circuit.add_element(ElementType::inverter_element, 1, 1)};
 
     auto simulation = get_initialized_simulation(circuit);
-    simulation.advance();
+    simulation.run();
 
     EXPECT_EQ(simulation.input_value(inverter.input(0)), false);
     EXPECT_EQ(simulation.output_value(inverter.output(0)), true);
@@ -90,7 +90,7 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
     auto simulation = get_initialized_simulation(circuit);
 
     EXPECT_EQ(simulation.time(), 0us);
-    simulation.advance(3s);
+    simulation.run(3s);
     EXPECT_EQ(simulation.time(), 3s);
 }
 
@@ -107,7 +107,7 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     simulation.initialize();
 
     EXPECT_EQ(simulation.time(), 0us);
-    simulation.advance(5ms);
+    simulation.run(5ms);
     EXPECT_EQ(simulation.time(), 5ms);
 }
 
@@ -123,7 +123,7 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     // run simulation for 5 ms
     EXPECT_EQ(simulation.time(), 0us);
     const auto start = timeout_clock::now();
-    simulation.advance(Simulation::defaults::infinite_simulation_time, 5ms);
+    simulation.run(Simulation::defaults::infinite_simulation_time, 5ms);
     const auto end = timeout_clock::now();
 
     EXPECT_GT(simulation.time(), 1ms);
@@ -137,7 +137,7 @@ TEST(SimulationTest, AdditionalEvents) {
     auto xor_element {circuit.add_element(ElementType::xor_element, 2, 1)};
 
     auto simulation = get_initialized_simulation(circuit);
-    simulation.advance();
+    simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(0)), false);
     EXPECT_EQ(simulation.input_value(xor_element.input(1)), false);
@@ -145,7 +145,7 @@ TEST(SimulationTest, AdditionalEvents) {
 
     // enable first input
     simulation.submit_event(xor_element.input(0), 10us, true);
-    simulation.advance();
+    simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(0)), true);
     EXPECT_EQ(simulation.input_value(xor_element.input(1)), false);
@@ -153,7 +153,7 @@ TEST(SimulationTest, AdditionalEvents) {
 
     // enable second input
     simulation.submit_event(xor_element.input(1), 10us, true);
-    simulation.advance();
+    simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(0)), true);
     EXPECT_EQ(simulation.input_value(xor_element.input(1)), true);
@@ -166,7 +166,7 @@ TEST(SimulationTest, SimulatanousEvents) {
 
     auto simulation = get_initialized_simulation(circuit);
     simulation.submit_event(xor_element.input(0), 10us, true);
-    simulation.advance();
+    simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(0)), true);
     EXPECT_EQ(simulation.input_value(xor_element.input(1)), false);
@@ -175,7 +175,7 @@ TEST(SimulationTest, SimulatanousEvents) {
     // flip inputs at the same time
     simulation.submit_event(xor_element.input(0), 10us, false);
     simulation.submit_event(xor_element.input(1), 10us, true);
-    simulation.advance();
+    simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(0)), false);
     EXPECT_EQ(simulation.input_value(xor_element.input(1)), true);
@@ -201,7 +201,7 @@ TEST(SimulationTest, HalfAdder) {
     {
         simulation.submit_event(input0.input(0), 10us, false);
         simulation.submit_event(input1.input(0), 10us, false);
-        simulation.advance();
+        simulation.run();
 
         EXPECT_EQ(simulation.output_value(output.output(0)), false);
         EXPECT_EQ(simulation.output_value(carry.output(0)), false);
@@ -211,7 +211,7 @@ TEST(SimulationTest, HalfAdder) {
     {
         simulation.submit_event(input0.input(0), 10us, true);
         simulation.submit_event(input1.input(0), 10us, false);
-        simulation.advance();
+        simulation.run();
 
         EXPECT_EQ(simulation.output_value(output.output(0)), true);
         EXPECT_EQ(simulation.output_value(carry.output(0)), false);
@@ -221,7 +221,7 @@ TEST(SimulationTest, HalfAdder) {
     {
         simulation.submit_event(input0.input(0), 10us, false);
         simulation.submit_event(input1.input(0), 10us, true);
-        simulation.advance();
+        simulation.run();
 
         EXPECT_EQ(simulation.output_value(output.output(0)), true);
         EXPECT_EQ(simulation.output_value(carry.output(0)), false);
@@ -231,7 +231,7 @@ TEST(SimulationTest, HalfAdder) {
     {
         simulation.submit_event(input0.input(0), 10us, true);
         simulation.submit_event(input1.input(0), 10us, true);
-        simulation.advance();
+        simulation.run();
 
         EXPECT_EQ(simulation.output_value(output.output(0)), false);
         EXPECT_EQ(simulation.output_value(carry.output(0)), true);
@@ -250,20 +250,39 @@ TEST(SimulationTest, OutputDelayTest) {
     simulation.set_output_delay(wire.output(2), 3s);
 
     simulation.submit_event(wire.input(0), 1us, true);
-    simulation.advance(1us);
+    simulation.run(1us);
 
     // after 0.5 seconds
-    simulation.advance(500ms);
+    simulation.run(500ms);
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(0, 0, 0));
     // after 1.5 seconds
-    simulation.advance(1s);
+    simulation.run(1s);
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 0, 0));
     // after 2.5 seconds
-    simulation.advance(1s);
+    simulation.run(1s);
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 1, 0));
     // after 3.5 seconds
-    simulation.advance(1s);
+    simulation.run(1s);
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 1, 1));
+}
+
+TEST(SimulationTest, JKFlipFlop) {
+    using namespace std::chrono_literals;
+
+    Circuit circuit;
+    const auto flipflop {circuit.add_element(ElementType::flipflop_jk, 3, 2)};
+    auto simulation = get_initialized_simulation(circuit);
+
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
+
+    // switch to j state
+    simulation.submit_events(flipflop, 1ms, {true, true, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
+    simulation.submit_events(flipflop, 1ms, {false, false, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
 }
 
 }  // namespace logicsim

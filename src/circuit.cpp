@@ -131,11 +131,11 @@ auto Circuit::clear() -> void {
     input_data_store_.clear();
 }
 
-auto Circuit::total_input_count() const noexcept -> connection_id_t {
+auto Circuit::input_count() const noexcept -> connection_id_t {
     return static_cast<connection_id_t>(input_data_store_.size());
 }
 
-auto Circuit::total_output_count() const noexcept -> connection_id_t {
+auto Circuit::output_count() const noexcept -> connection_id_t {
     return static_cast<connection_id_t>(output_data_store_.size());
 }
 
@@ -191,7 +191,7 @@ auto Circuit::validate_connection_data_(const Circuit::ConnectionData connection
 
 auto Circuit::validate(bool require_all_outputs_connected) const -> void {
     //  every output_data entry is referenced once
-    std::vector<int> input_reference_count(total_input_count(), 0);
+    std::vector<int> input_reference_count(input_count(), 0);
     for (auto element : elements()) {
         for (auto input : element.inputs()) {
             input_reference_count.at(input.input_id()) += 1;
@@ -202,7 +202,7 @@ auto Circuit::validate(bool require_all_outputs_connected) const -> void {
     }
 
     //  every output_data entry is referenced once
-    std::vector<int> output_reference_count(total_output_count(), 0);
+    std::vector<int> output_reference_count(output_count(), 0);
     for (auto element : elements()) {
         for (auto output : element.outputs()) {
             output_reference_count.at(output.output_id()) += 1;
@@ -931,7 +931,7 @@ void create_random_connections(Circuit &circuit, G &rng, double connection_ratio
 
     // collect inputs
     std::vector<Circuit::Input> all_inputs;
-    all_inputs.reserve(circuit.total_input_count());
+    all_inputs.reserve(circuit.input_count());
     for (auto element : circuit.elements()) {
         for (auto input : element.inputs()) {
             all_inputs.push_back(input);
@@ -940,7 +940,7 @@ void create_random_connections(Circuit &circuit, G &rng, double connection_ratio
 
     // collect outputs
     std::vector<Circuit::Output> all_outputs;
-    all_outputs.reserve(circuit.total_output_count());
+    all_outputs.reserve(circuit.output_count());
     for (auto element : circuit.elements()) {
         for (auto output : element.outputs()) {
             all_outputs.push_back(output);
