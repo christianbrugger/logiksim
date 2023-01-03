@@ -155,10 +155,15 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
 
 Simulation::Simulation(const Circuit &circuit)
     : circuit_ {&circuit},
-      input_values_(circuit.input_count(), false),
+      states_(circuit.element_count()),
       queue_ {},
       output_delays_(circuit.output_count(), defaults::standard_delay),
-      internal_states_(circuit.element_count(), false) {}
+      internal_states_(circuit.element_count(), false) {
+    for (auto element : circuit.elements()) {
+        states_.at(element.element_id())
+            .input_values.resize(element.input_count(), false);
+    }
+}
 
 auto Simulation::circuit() const noexcept -> const Circuit & {
     return *circuit_;
@@ -184,17 +189,11 @@ auto Simulation::submit_events(Circuit::ConstElement element, time_t delay,
 }
 
 auto Simulation::check_state_valid() const -> void {
-    const auto n_inputs = static_cast<logic_vector_t::size_type>(circuit_->input_count());
-    const auto n_outputs
-        = static_cast<logic_vector_t::size_type>(circuit_->output_count());
+    const auto n_elements
+        = static_cast<logic_vector_t::size_type>(circuit_->element_count());
 
-    if (input_values_.size() != n_inputs) [[unlikely]] {
-        throw_exception(
-            "input_values in state needs to match total inputs of the circuit.");
-    }
-    if (output_delays_.size() != n_outputs) [[unlikely]] {
-        throw_exception(
-            "output_delays in state needs to match total outputs of the circuit.");
+    if (states_.size() != n_elements) [[unlikely]] {
+        throw_exception("number of state needs to match number of elements.");
     }
 }
 
@@ -475,35 +474,34 @@ auto Simulation::initialize() -> void {
 }
 
 auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
-    return input_values_.at(input.input_id());
+    return states_.at(input.element_id()).input_values.at(input.input_index());
 }
 
 auto Simulation::input_values(const Circuit::ConstElement element) const
     -> logic_small_vector_t {
-    const auto begin = input_values_.begin() + element.first_input_id();
-    const auto end = begin + element.input_count();
-
-    if (!(begin >= input_values_.begin() && begin < input_values_.end()
-          && end >= input_values_.begin() && end <= input_values_.end())) {
-        throw_exception("Invalid begin or end iterator in get_input_values.");
-    }
-
-    return logic_small_vector_t {begin, end};
+    return states_.at(element.element_id()).input_values;
+    // auto values = states_.at(element.element_id()).input_values;
+    // return logic_small_vector_t {std::begin(values), std::end(values)};
 }
 
-auto Simulation::input_values() const -> const logic_vector_t & {
-    return input_values_;
+auto Simulation::input_values() const -> const logic_vector_t {
+    auto result = logic_vector_t {};
+
+    for (auto element : circuit_->elements()) {
+        std::ranges::copy(input_values(element), std::back_inserter(result));
+    }
+
+    return result;
 }
 
 auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
-    const auto index = gsl::narrow<logic_vector_t::size_type>(input.input_id());
-    input_values_.at(index) = value;
+    states_.at(input.element_id()).input_values.at(input.input_index()) = value;
 }
 
 auto Simulation::output_value(const Circuit::ConstOutput output,
                               const bool raise_missing) const -> bool {
     if (raise_missing || output.has_connected_element()) {
-        return input_values_.at(output.connected_input().input_id());
+        return input_value(output.connected_input());
     }
     return false;
 }

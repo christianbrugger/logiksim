@@ -165,7 +165,7 @@ class Simulation {
     [[nodiscard]] auto input_value(Circuit::ConstInput input) const -> bool;
     [[nodiscard]] auto input_values(Circuit::ConstElement element) const
         -> logic_small_vector_t;
-    [[nodiscard]] auto input_values() const -> const logic_vector_t &;
+    [[nodiscard]] auto input_values() const -> const logic_vector_t;
 
     /// infers the output value from the connected input value, if it exists.
     [[nodiscard]] auto output_value(Circuit::ConstOutput output,
@@ -199,9 +199,15 @@ class Simulation {
     auto set_internal_state(const Circuit::ConstElement element,
                             const logic_small_vector_t &state) -> void;
 
+    struct ElementState {
+        logic_small_vector_t input_values {};
+        // logic_vector_t input_values {};
+    };
+
     const Circuit *circuit_;  // never nullptr
 
-    logic_vector_t input_values_ {};
+    std::vector<ElementState> states_ {};
+    // logic_vector_t input_values_ {};
     SimulationQueue queue_ {};
     delay_vector_t output_delays_ {};
     logic_vector_t internal_states_ {};
