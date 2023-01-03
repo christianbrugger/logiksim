@@ -98,45 +98,39 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
         throw_exception("Output count needs to be positive.");
     }
 
-    const auto new_input_size {input_data_store_.size() + input_count};
-    const auto new_output_size {output_data_store_.size() + output_count};
+    // TODO handle overflow when adding to many connections
 
     // make sure we can represent all ids
     if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max())
         [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
-    if (new_input_size >= std::numeric_limits<connection_id_t>::max()) [[unlikely]] {
-        throw_exception("Reached maximum number of inputs.");
-    }
-    if (new_output_size >= std::numeric_limits<connection_id_t>::max()) [[unlikely]] {
-        throw_exception("Reached maximum number of outputs.");
-    }
-    // TODO create custom exception, as we want to handle theses ones.
 
     element_data_store_.push_back(
-        {static_cast<connection_id_t>(input_data_store_.size()),
-         static_cast<connection_id_t>(output_data_store_.size()), input_count,
-         output_count, type});
-    input_data_store_.resize(new_input_size);
-    output_data_store_.resize(new_output_size);
-
+        {input_count_, output_count_, input_count, output_count, type, {}, {}});
     element_id_t element_id {static_cast<element_id_t>(element_data_store_.size() - 1)};
+
+    element_data_store_.at(element_id).input_data.resize(input_count);
+    element_data_store_.at(element_id).output_data.resize(output_count);
+
+    input_count_ += input_count;
+    output_count_ += output_count;
+
     return element(element_id);
 }
 
 auto Circuit::clear() -> void {
     element_data_store_.clear();
-    output_data_store_.clear();
-    input_data_store_.clear();
+    input_count_ = 0;
+    output_count_ = 0;
 }
 
 auto Circuit::input_count() const noexcept -> connection_id_t {
-    return static_cast<connection_id_t>(input_data_store_.size());
+    return input_count_;
 }
 
 auto Circuit::output_count() const noexcept -> connection_id_t {
-    return static_cast<connection_id_t>(output_data_store_.size());
+    return output_count_;
 }
 
 auto validate_output_connected(const Circuit::ConstOutput output) -> void {
@@ -213,8 +207,9 @@ auto Circuit::validate(bool require_all_outputs_connected) const -> void {
     }
 
     // connection data valid
-    std::ranges::for_each(input_data_store_, Circuit::validate_connection_data_);
-    std::ranges::for_each(output_data_store_, Circuit::validate_connection_data_);
+    // TODO impelement
+    // std::ranges::for_each(input_data_store_, Circuit::validate_connection_data_);
+    // std::ranges::for_each(output_data_store_, Circuit::validate_connection_data_);
 
     // back references consistent
     std::ranges::for_each(elements(), validate_element_connections_consistent);
@@ -632,8 +627,12 @@ void Circuit::InputTemplate<Const>::clear_connection() const
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data {
-            circuit_->output_data_store_.at(circuit_->element(connection_data.element_id)
-                                                .output_id(connection_data.index))};
+            circuit_->element_data_store_.at(connection_data.element_id)
+                .output_data.at(connection_data.index)};
+
+        // circuit_->output_data_store_.at(
+        //      circuit_->element(connection_data.element_id)
+        //      .output_id(connection_data.index))};
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.index = null_connection;
@@ -651,8 +650,11 @@ void Circuit::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) c
     clear_connection();
 
     // get data before we modify anything, for exception safety
-    auto &destination_connection_data {
-        circuit_->output_data_store_.at(output.output_id())};
+    auto &destination_connection_data
+        = circuit_->element_data_store_.at(output.element_id())
+              .output_data.at(output.output_index());
+    //     circuit_->output_data_store_.at(output.output_id());
+
     auto &connection_data {connection_data_()};
 
     connection_data.element_id = output.element_id();
@@ -664,7 +666,8 @@ void Circuit::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) c
 
 template <bool Const>
 auto Circuit::InputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
-    return circuit_->input_data_store_.at(input_id_);
+    // return circuit_->input_data_store_.at(input_id_);
+    return circuit_->element_data_store_.at(element_id_).input_data.at(input_index_);
 }
 
 // Template Instanciations
@@ -791,8 +794,12 @@ void Circuit::OutputTemplate<Const>::clear_connection() const
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data
-            = circuit_->input_data_store_.at(circuit_->element(connection_data.element_id)
-                                                 .input_id(connection_data.index));
+            = circuit_->element_data_store_.at(connection_data.element_id)
+                  .input_data.at(connection_data.index);
+
+        // circuit_->input_data_store_.at(
+        //     circuit_->element(connection_data.element_id)
+        //     .input_id(connection_data.index));
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.index = null_connection;
@@ -811,7 +818,10 @@ void Circuit::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) co
 
     // get data before we modify anything, for exception safety
     auto &connection_data {connection_data_()};
-    auto &destination_connection_data {circuit_->input_data_store_.at(input.input_id())};
+    auto &destination_connection_data
+        = circuit_->element_data_store_.at(input.element_id())
+              .input_data.at(input.input_index());
+    // circuit_->input_data_store_.at(input.input_id());
 
     connection_data.element_id = input.element_id();
     connection_data.index = input.input_index();
@@ -822,7 +832,8 @@ void Circuit::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) co
 
 template <bool Const>
 auto Circuit::OutputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
-    return circuit_->output_data_store_.at(output_id_);
+    // return circuit_->output_data_store_.at(output_id_);
+    return circuit_->element_data_store_.at(element_id_).output_data.at(output_index_);
 }
 
 // Template Instanciations

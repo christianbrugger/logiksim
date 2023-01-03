@@ -2,6 +2,7 @@
 #define LOGIKSIM_CIRCUIT_H
 
 #include <fmt/core.h>
+#include <folly/small_vector.h>
 
 #include <concepts>
 #include <cstdint>
@@ -114,8 +115,16 @@ class Circuit {
     static void validate_connection_data_(Circuit::ConnectionData connection_data);
 
     std::vector<ElementData> element_data_store_;
-    std::vector<ConnectionData> output_data_store_;
-    std::vector<ConnectionData> input_data_store_;
+    connection_id_t input_count_ {0};
+    connection_id_t output_count_ {0};
+
+    // std::vector<ConnectionData> output_data_store_;
+    // std::vector<ConnectionData> input_data_store_;
+};
+
+struct Circuit::ConnectionData {
+    element_id_t element_id {null_element};
+    connection_size_t index {null_connection};
 };
 
 struct Circuit::ElementData {
@@ -126,11 +135,12 @@ struct Circuit::ElementData {
     connection_size_t output_count;
 
     ElementType type;
-};
 
-struct Circuit::ConnectionData {
-    element_id_t element_id {null_element};
-    connection_size_t index {null_connection};
+    std::vector<ConnectionData> input_data;
+    std::vector<ConnectionData> output_data;
+
+    // folly::small_vector<ConnectionData, 8> input_data;
+    // folly::small_vector<ConnectionData, 8> output_data;
 };
 
 template <bool Const>
