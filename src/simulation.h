@@ -7,6 +7,7 @@
 #include <boost/container/vector.hpp>
 #include <fmt/core.h>
 #include <folly/small_vector.h>
+#include <gsl/gsl>
 
 #include <chrono>
 #include <ostream>
@@ -114,6 +115,9 @@ using timeout_clock = std::chrono::steady_clock;
 using timeout_t = timeout_clock::duration;
 
 class Simulation {
+   private:
+    struct ElementState;
+
    public:
     bool print_events {false};
 
@@ -141,6 +145,7 @@ class Simulation {
             - std::numeric_limits<connection_size_t>::max()};
     };
 
+   public:
     [[nodiscard]] explicit Simulation(const Circuit &circuit);
     [[nodiscard]] auto circuit() const noexcept -> const Circuit &;
     [[nodiscard]] auto time() const noexcept -> time_t;
@@ -199,18 +204,21 @@ class Simulation {
     auto set_internal_state(const Circuit::ConstElement element,
                             const logic_small_vector_t &state) -> void;
 
+    [[nodiscard]] auto get_state(ElementOrConnection auto item) -> ElementState &;
+    [[nodiscard]] auto get_state(ElementOrConnection auto item) const
+        -> const ElementState &;
+
     struct ElementState {
         logic_small_vector_t input_values {};
-        // logic_vector_t input_values {};
+        folly::small_vector<time_t, 4, uint32_t> output_delays {};
+        logic_small_vector_t internal_state {};
+
+        static_assert(sizeof(output_delays) == 36);
     };
 
-    const Circuit *circuit_;  // never nullptr
-
+    gsl::not_null<const Circuit *> circuit_;
     std::vector<ElementState> states_ {};
-    // logic_vector_t input_values_ {};
     SimulationQueue queue_ {};
-    delay_vector_t output_delays_ {};
-    logic_vector_t internal_states_ {};
 };
 
 inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};

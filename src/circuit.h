@@ -122,6 +122,11 @@ class Circuit {
     // std::vector<ConnectionData> input_data_store_;
 };
 
+template <class T>
+concept ElementOrConnection = std::convertible_to<T, Circuit::ConstElement>
+                              || std::convertible_to<T, Circuit::ConstInput>
+                              || std::convertible_to<T, Circuit::ConstOutput>;
+
 struct Circuit::ConnectionData {
     element_id_t element_id {null_element};
     connection_size_t index {null_connection};
@@ -173,7 +178,7 @@ class Circuit::ElementIteratorTemplate {
         const noexcept -> difference_type;
 
    private:
-    circuit_type *circuit_ {};  // can be null
+    circuit_type *circuit_ {};  // can be null, because default constructable
     element_id_t element_id_ {};
 };
 
@@ -196,7 +201,7 @@ class Circuit::ElementViewTemplate {
     [[nodiscard]] auto empty() const noexcept -> bool;
 
    private:
-    circuit_type *circuit_;  // never null
+    gsl::not_null<circuit_type *> circuit_;
 };
 
 }  // namespace logicsim
@@ -255,7 +260,7 @@ class Circuit::ElementTemplate {
    private:
     [[nodiscard]] auto element_data_() const -> ElementDataType &;
 
-    CircuitType *circuit_;  // never null
+    gsl::not_null<CircuitType *> circuit_;
     element_id_t element_id_;
 };
 
@@ -376,7 +381,7 @@ class Circuit::InputTemplate {
    private:
     [[nodiscard]] auto connection_data_() const -> ConnectionDataType &;
 
-    CircuitType *circuit_;  // never to be null
+    gsl::not_null<CircuitType *> circuit_;
     element_id_t element_id_;
     connection_size_t input_index_;
     connection_id_t input_id_;
@@ -433,7 +438,7 @@ class Circuit::OutputTemplate {
    private:
     [[nodiscard]] auto connection_data_() const -> ConnectionDataType &;
 
-    CircuitType *circuit_;  // never to be null
+    gsl::not_null<CircuitType *> circuit_;
     element_id_t element_id_;
     connection_size_t output_index_;
     connection_id_t output_id_;

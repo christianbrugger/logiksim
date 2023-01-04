@@ -153,16 +153,46 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
 // Simulation
 //
 
-Simulation::Simulation(const Circuit &circuit)
-    : circuit_ {&circuit},
-      states_(circuit.element_count()),
-      queue_ {},
-      output_delays_(circuit.output_count(), defaults::standard_delay),
-      internal_states_(circuit.element_count(), false) {
-    for (auto element : circuit.elements()) {
-        states_.at(element.element_id())
-            .input_values.resize(element.input_count(), false);
+[[nodiscard]] constexpr auto internal_state_size(const ElementType type) noexcept
+    -> connection_size_t {
+    switch (type) {
+        using enum ElementType;
+
+        case placeholder:
+        case wire:
+        case inverter_element:
+        case and_element:
+        case or_element:
+        case xor_element:
+            return 0;
+        case clock_element:
+        case flipflop_jk:
+            return 1;
     }
+    throw_exception("Dont know internal state of given type.");
+}
+
+[[nodiscard]] constexpr auto has_internal_state(const ElementType type) noexcept -> bool {
+    return internal_state_size(type) != 0;
+}
+
+Simulation::Simulation(const Circuit &circuit)
+    : circuit_ {&circuit}, states_(circuit.element_count()), queue_ {} {
+    for (auto element : circuit.elements()) {
+        auto &state = get_state(element);
+
+        state.input_values.resize(element.input_count(), false);
+        state.output_delays.resize(element.output_count(), defaults::standard_delay);
+        state.internal_state.resize(internal_state_size(element.element_type()), false);
+    }
+}
+
+auto Simulation::get_state(ElementOrConnection auto obj) -> ElementState & {
+    return states_.at(obj.element_id());
+}
+
+auto Simulation::get_state(ElementOrConnection auto obj) const -> const ElementState & {
+    return states_.at(obj.element_id());
 }
 
 auto Simulation::circuit() const noexcept -> const Circuit & {
@@ -195,29 +225,6 @@ auto Simulation::check_state_valid() const -> void {
     if (states_.size() != n_elements) [[unlikely]] {
         throw_exception("number of state needs to match number of elements.");
     }
-}
-
-[[nodiscard]] constexpr auto internal_state_size(const ElementType type) noexcept
-    -> connection_size_t {
-    switch (type) {
-        using enum ElementType;
-
-        case placeholder:
-        case wire:
-        case inverter_element:
-        case and_element:
-        case or_element:
-        case xor_element:
-            return 0;
-        case clock_element:
-        case flipflop_jk:
-            return 1;
-    }
-    throw_exception("Dont know internal state of given type.");
-}
-
-[[nodiscard]] constexpr auto has_internal_state(const ElementType type) noexcept -> bool {
-    return internal_state_size(type) != 0;
 }
 
 auto calculate_internal_state(const Simulation::logic_small_vector_t &old_input,
@@ -480,8 +487,6 @@ auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
 auto Simulation::input_values(const Circuit::ConstElement element) const
     -> logic_small_vector_t {
     return states_.at(element.element_id()).input_values;
-    // auto values = states_.at(element.element_id()).input_values;
-    // return logic_small_vector_t {std::begin(values), std::end(values)};
 }
 
 auto Simulation::input_values() const -> const logic_vector_t {
@@ -531,7 +536,7 @@ auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t
 }
 
 auto Simulation::output_delay(const Circuit::ConstOutput output) const -> time_t {
-    return output_delays_.at(output.output_id());
+    return get_state(output).output_delays.at(output.output_index());
 }
 
 auto Simulation::set_output_delay(const Circuit::ConstOutput output, const time_t delay)
@@ -539,18 +544,23 @@ auto Simulation::set_output_delay(const Circuit::ConstOutput output, const time_
     if (!queue_.empty()) {
         throw_exception("Cannot set output delay for state with scheduled events.");
     }
-
-    output_delays_.at(output.output_id()) = delay;
+    get_state(output).output_delays.at(output.output_index()) = delay;
 }
 
 auto Simulation::internal_state(Circuit::ConstElement element) const
     -> logic_small_vector_t {
-    return {internal_states_.at(element.element_id())};
+    return get_state(element).internal_state;
 }
 
 auto Simulation::set_internal_state(const Circuit::ConstElement element,
-                                    const logic_small_vector_t &state) -> void {
-    internal_states_.at(element.element_id()) = state.at(0);
+                                    const logic_small_vector_t &new_state) -> void {
+    auto &state = get_state(element);
+
+    if (std::size(new_state) != std::size(state.internal_state)) {
+        throw_exception("New internal state has wrong size.");
+    }
+
+    state.internal_state.assign(new_state.begin(), new_state.end());
 }
 
 //
