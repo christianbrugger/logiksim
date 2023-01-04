@@ -114,7 +114,7 @@ class Circuit {
    private:
     static void validate_connection_data_(Circuit::ConnectionData connection_data);
 
-    std::vector<ElementData> element_data_store_;
+    std::vector<ElementData> element_data_store_ {};
     connection_id_t input_count_ {0};
     connection_id_t output_count_ {0};
 };
@@ -130,16 +130,13 @@ struct Circuit::ConnectionData {
 };
 
 struct Circuit::ElementData {
+    folly::small_vector<ConnectionData, 3> input_data;
+    folly::small_vector<ConnectionData, 3> output_data;
+
     connection_size_t input_count;
     connection_size_t output_count;
 
     ElementType type;
-
-    std::vector<ConnectionData> input_data;
-    std::vector<ConnectionData> output_data;
-
-    // folly::small_vector<ConnectionData, 8> input_data;
-    // folly::small_vector<ConnectionData, 8> output_data;
 };
 
 template <bool Const>

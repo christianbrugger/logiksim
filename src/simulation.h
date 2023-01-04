@@ -210,8 +210,8 @@ class Simulation {
 
     struct ElementState {
         logic_small_vector_t input_values {};
-        folly::small_vector<time_t, 4, uint32_t> output_delays {};
         logic_small_vector_t internal_state {};
+        folly::small_vector<time_t, 4, uint32_t> output_delays {};
 
         static_assert(sizeof(output_delays) == 36);
     };

@@ -106,11 +106,13 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
         throw_exception("Reached maximum number of elements.");
     }
 
-    element_data_store_.push_back({.input_count = input_count,
-                                   .output_count = output_count,
-                                   .type = type,
-                                   .input_data = {},
-                                   .output_data = {}});
+    element_data_store_.push_back({
+        .input_data = {},
+        .output_data = {},
+        .input_count = input_count,
+        .output_count = output_count,
+        .type = type,
+    });
     element_id_t element_id {static_cast<element_id_t>(element_data_store_.size() - 1)};
 
     element_data_store_.at(element_id).input_data.resize(input_count);
