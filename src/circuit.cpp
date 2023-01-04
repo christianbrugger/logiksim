@@ -106,8 +106,11 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
         throw_exception("Reached maximum number of elements.");
     }
 
-    element_data_store_.push_back(
-        {input_count_, output_count_, input_count, output_count, type, {}, {}});
+    element_data_store_.push_back({.input_count = input_count,
+                                   .output_count = output_count,
+                                   .type = type,
+                                   .input_data = {},
+                                   .output_data = {}});
     element_id_t element_id {static_cast<element_id_t>(element_data_store_.size() - 1)};
 
     element_data_store_.at(element_id).input_data.resize(input_count);
@@ -184,27 +187,30 @@ auto Circuit::validate_connection_data_(const Circuit::ConnectionData connection
 }
 
 auto Circuit::validate(bool require_all_outputs_connected) const -> void {
-    //  every output_data entry is referenced once
-    std::vector<int> input_reference_count(input_count(), 0);
-    for (auto element : elements()) {
-        for (auto input : element.inputs()) {
-            input_reference_count.at(input.input_id()) += 1;
-        }
-    }
-    if (!all_equal(input_reference_count, 1)) [[unlikely]] {
-        throw_exception("Input data is inconsistent");
-    }
+    // TODO do we need this still?
+    // TODO What else shall we check?
 
     //  every output_data entry is referenced once
-    std::vector<int> output_reference_count(output_count(), 0);
-    for (auto element : elements()) {
-        for (auto output : element.outputs()) {
-            output_reference_count.at(output.output_id()) += 1;
-        }
-    }
-    if (!all_equal(output_reference_count, 1)) [[unlikely]] {
-        throw_exception("Output data is inconsistent");
-    }
+    // std::vector<int> input_reference_count(input_count(), 0);
+    // for (auto element : elements()) {
+    //    for (auto input : element.inputs()) {
+    //        input_reference_count.at(input.input_id()) += 1;
+    //    }
+    //}
+    // if (!all_equal(input_reference_count, 1)) [[unlikely]] {
+    //    throw_exception("Input data is inconsistent");
+    //}
+    //
+    //  every output_data entry is referenced once
+    // std::vector<int> output_reference_count(output_count(), 0);
+    // for (auto element : elements()) {
+    //    for (auto output : element.outputs()) {
+    //        output_reference_count.at(output.output_id()) += 1;
+    //    }
+    //}
+    // if (!all_equal(output_reference_count, 1)) [[unlikely]] {
+    //    throw_exception("Output data is inconsistent");
+    //}
 
     // connection data valid
     // TODO impelement
@@ -358,43 +364,15 @@ auto Circuit::ElementTemplate<Const>::output_count() const -> connection_size_t 
 }
 
 template <bool Const>
-auto Circuit::ElementTemplate<Const>::first_input_id() const -> connection_id_t {
-    return element_data_().first_input_id;
-}
-
-template <bool Const>
-auto Circuit::ElementTemplate<Const>::input_id(connection_size_t input_index) const
-    -> connection_id_t {
-    if (input_index < 0 || input_index >= input_count()) [[unlikely]] {
-        throw_exception("Index is invalid");
-    }
-    return first_input_id() + input_index;
-}
-
-template <bool Const>
-auto Circuit::ElementTemplate<Const>::first_output_id() const -> connection_id_t {
-    return element_data_().first_output_id;
-}
-
-template <bool Const>
-auto Circuit::ElementTemplate<Const>::output_id(connection_size_t output_index) const
-    -> connection_id_t {
-    if (output_index < 0 || output_index >= output_count()) [[unlikely]] {
-        throw_exception("Index is invalid");
-    }
-    return first_output_id() + output_index;
-}
-
-template <bool Const>
 auto Circuit::ElementTemplate<Const>::input(connection_size_t input) const
     -> InputTemplate<Const> {
-    return InputTemplate<Const> {*circuit_, element_id_, input, input_id(input)};
+    return InputTemplate<Const> {*circuit_, element_id_, input};
 }
 
 template <bool Const>
 auto Circuit::ElementTemplate<Const>::output(connection_size_t output) const
     -> OutputTemplate<Const> {
-    return OutputTemplate<Const> {*circuit_, element_id_, output, output_id(output)};
+    return OutputTemplate<Const> {*circuit_, element_id_, output};
 }
 
 template <bool Const>
@@ -529,12 +507,8 @@ template class Circuit::ConnectionViewTemplate<true, true>;
 template <bool Const>
 Circuit::InputTemplate<Const>::InputTemplate(CircuitType &circuit,
                                              element_id_t element_id,
-                                             connection_size_t input_index,
-                                             connection_id_t input_id) noexcept
-    : circuit_(&circuit),
-      element_id_(element_id),
-      input_index_(input_index),
-      input_id_(input_id) {}
+                                             connection_size_t input_index) noexcept
+    : circuit_(&circuit), element_id_(element_id), input_index_(input_index) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -542,15 +516,14 @@ Circuit::InputTemplate<Const>::InputTemplate(InputTemplate<ConstOther> input) no
     requires Const && (!ConstOther)
     : circuit_(input.circuit_),
       element_id_(input.element_id_),
-      input_index_(input.input_index_),
-      input_id_(input.input_id_) {}
+      input_index_(input.input_index_) {}
 
 template <bool Const>
 template <bool ConstOther>
 auto Circuit::InputTemplate<Const>::operator==(
     InputTemplate<ConstOther> other) const noexcept -> bool {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_
-           && input_index_ == other.input_index_ && input_index_ == other.input_index_;
+           && input_index_ == other.input_index_;
 }
 
 template <bool Const>
@@ -583,11 +556,6 @@ auto Circuit::InputTemplate<Const>::element_id() const noexcept -> element_id_t 
 template <bool Const>
 auto Circuit::InputTemplate<Const>::input_index() const noexcept -> connection_size_t {
     return input_index_;
-}
-
-template <bool Const>
-auto Circuit::InputTemplate<Const>::input_id() const noexcept -> connection_id_t {
-    return input_id_;
 }
 
 template <bool Const>
@@ -696,12 +664,8 @@ template void Circuit::InputTemplate<false>::connect<true>(OutputTemplate<true>)
 template <bool Const>
 Circuit::OutputTemplate<Const>::OutputTemplate(CircuitType &circuit,
                                                element_id_t element_id,
-                                               connection_size_t output_index,
-                                               connection_id_t output_id) noexcept
-    : circuit_(&circuit),
-      element_id_(element_id),
-      output_index_(output_index),
-      output_id_(output_id) {}
+                                               connection_size_t output_index) noexcept
+    : circuit_(&circuit), element_id_(element_id), output_index_(output_index) {}
 
 template <bool Const>
 template <bool ConstOther>
@@ -709,15 +673,14 @@ Circuit::OutputTemplate<Const>::OutputTemplate(OutputTemplate<ConstOther> output
     requires Const && (!ConstOther)
     : circuit_(output.circuit_),
       element_id_(output.element_id_),
-      output_index_(output.output_index_),
-      output_id_(output.output_id_) {}
+      output_index_(output.output_index_) {}
 
 template <bool Const>
 template <bool ConstOther>
 auto Circuit::OutputTemplate<Const>::operator==(
     Circuit::OutputTemplate<ConstOther> other) const noexcept -> bool {
     return circuit_ == other.circuit_ && element_id_ == other.element_id_
-           && output_index_ == other.output_index_ && output_id_ == other.output_id_;
+           && output_index_ == other.output_index_;
 }
 
 template <bool Const>
@@ -750,11 +713,6 @@ auto Circuit::OutputTemplate<Const>::element_id() const noexcept -> element_id_t
 template <bool Const>
 auto Circuit::OutputTemplate<Const>::output_index() const noexcept -> connection_size_t {
     return output_index_;
-}
-
-template <bool Const>
-auto Circuit::OutputTemplate<Const>::output_id() const noexcept -> connection_id_t {
-    return output_id_;
 }
 
 template <bool Const>

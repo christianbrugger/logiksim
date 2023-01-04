@@ -32,8 +32,8 @@ auto format(ElementType type) -> std::string;
 
 // TODO use strong types
 using element_id_t = int32_t;
-using connection_id_t = int32_t;
 using connection_size_t = int8_t;
+using connection_id_t = int64_t;
 
 constexpr element_id_t null_element = -1;
 constexpr connection_size_t null_connection = -1;
@@ -117,9 +117,6 @@ class Circuit {
     std::vector<ElementData> element_data_store_;
     connection_id_t input_count_ {0};
     connection_id_t output_count_ {0};
-
-    // std::vector<ConnectionData> output_data_store_;
-    // std::vector<ConnectionData> input_data_store_;
 };
 
 template <class T>
@@ -133,9 +130,6 @@ struct Circuit::ConnectionData {
 };
 
 struct Circuit::ElementData {
-    connection_id_t first_input_id;
-    connection_id_t first_output_id;
-
     connection_size_t input_count;
     connection_size_t output_count;
 
@@ -246,10 +240,6 @@ class Circuit::ElementTemplate {
     [[nodiscard]] auto element_type() const -> ElementType;
     [[nodiscard]] auto input_count() const -> connection_size_t;
     [[nodiscard]] auto output_count() const -> connection_size_t;
-    [[nodiscard]] auto first_input_id() const -> connection_id_t;
-    [[nodiscard]] auto input_id(connection_size_t input_index) const -> connection_id_t;
-    [[nodiscard]] auto first_output_id() const -> connection_id_t;
-    [[nodiscard]] auto output_id(connection_size_t output_index) const -> connection_id_t;
 
     [[nodiscard]] auto input(connection_size_t input) const -> InputTemplate<Const>;
     [[nodiscard]] auto output(connection_size_t output) const -> OutputTemplate<Const>;
@@ -340,8 +330,7 @@ class Circuit::InputTemplate {
     friend InputTemplate<!Const>;
     friend ElementTemplate<Const>;
     explicit InputTemplate(CircuitType &circuit, element_id_t element_id,
-                           connection_size_t input_index,
-                           connection_id_t input_id) noexcept;
+                           connection_size_t input_index) noexcept;
 
    public:
     template <bool ConstOther>
@@ -358,18 +347,15 @@ class Circuit::InputTemplate {
     [[nodiscard]] auto circuit() const noexcept -> CircuitType *;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
     [[nodiscard]] auto input_index() const noexcept -> connection_size_t;
-    [[nodiscard]] auto input_id() const noexcept -> connection_id_t;
 
     [[nodiscard]] auto element() const -> ElementTemplate<Const>;
     [[nodiscard]] auto has_connected_element() const -> bool;
     [[nodiscard]] auto connected_element_id() const -> element_id_t;
     [[nodiscard]] auto connected_output_index() const -> connection_size_t;
 
-    /// @throws if connection doesn't exists. Call has_connected_element to check for
-    /// this.
+    /// @throws if connection doesn't exists.
     [[nodiscard]] auto connected_element() const -> ElementTemplate<Const>;
-    /// @throws if connection doesn't exists. Call has_connected_element to check for
-    /// this.
+    /// @throws if connection doesn't exists.
     [[nodiscard]] auto connected_output() const -> OutputTemplate<Const>;
 
     void clear_connection() const
@@ -384,7 +370,6 @@ class Circuit::InputTemplate {
     gsl::not_null<CircuitType *> circuit_;
     element_id_t element_id_;
     connection_size_t input_index_;
-    connection_id_t input_id_;
 };
 
 template <bool Const>
@@ -397,8 +382,7 @@ class Circuit::OutputTemplate {
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;
     explicit OutputTemplate(CircuitType &circuit, element_id_t element_id,
-                            connection_size_t output_index,
-                            connection_id_t output_id) noexcept;
+                            connection_size_t output_index) noexcept;
 
    public:
     template <bool ConstOther>
@@ -415,18 +399,15 @@ class Circuit::OutputTemplate {
     [[nodiscard]] auto circuit() const noexcept -> CircuitType *;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
     [[nodiscard]] auto output_index() const noexcept -> connection_size_t;
-    [[nodiscard]] auto output_id() const noexcept -> connection_id_t;
 
     [[nodiscard]] auto element() const -> ElementTemplate<Const>;
     [[nodiscard]] auto has_connected_element() const -> bool;
     [[nodiscard]] auto connected_element_id() const -> element_id_t;
     [[nodiscard]] auto connected_input_index() const -> connection_size_t;
 
-    /// @throws if connection doesn't exists. Call has_connected_element to check for
-    /// this.
+    /// @throws if connection doesn't exists.
     [[nodiscard]] auto connected_element() const -> ElementTemplate<Const>;
-    /// @throws if connection doesn't exists. Call has_connected_element to check for
-    /// this.
+    /// @throws if connection doesn't exists.
     [[nodiscard]] auto connected_input() const -> InputTemplate<Const>;
 
     void clear_connection() const
@@ -441,7 +422,6 @@ class Circuit::OutputTemplate {
     gsl::not_null<CircuitType *> circuit_;
     element_id_t element_id_;
     connection_size_t output_index_;
-    connection_id_t output_id_;
 };
 
 }  // namespace logicsim

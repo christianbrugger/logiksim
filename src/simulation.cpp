@@ -524,15 +524,14 @@ auto Simulation::output_values(const Circuit::ConstElement element,
 }
 
 auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t {
-    logic_vector_t output_values(circuit_->output_count());
+    logic_vector_t result(circuit_->output_count());
 
     for (auto element : circuit_->elements()) {
-        for (auto output : element.outputs()) {
-            output_values.at(output.output_id()) = output_value(output, raise_missing);
-        }
+        std::ranges::copy(output_values(element, raise_missing),
+                          std::back_inserter(result));
     }
 
-    return output_values;
+    return result;
 }
 
 auto Simulation::output_delay(const Circuit::ConstOutput output) const -> time_t {
