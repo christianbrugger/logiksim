@@ -2,6 +2,7 @@
 #define LOGIKSIM_SIMULATION_H
 
 #include "circuit.h"
+#include "exceptions.h"
 
 #include <boost/container/small_vector.hpp>
 #include <boost/container/vector.hpp>
@@ -20,10 +21,11 @@
 // * add timeout to run simulations
 // * use discrete integer type for time, like chronos::sim_time<int64_t>
 // * store transition times for wires, so they can be drawn
+// * flip flops, which requires access to the last state
 
 /// New Features
-// * flip flops, which requires access to the last state
 // * negation on input and outputs
+// * store history of events so lines can be drawn
 // * clock generators
 // * shift registers, requires memory & internal state
 
@@ -41,6 +43,20 @@ using std::literals::chrono_literals::operator""ns;
 
 // TODO strong type for time_t
 using time_t = std::chrono::duration<int64_t, std::nano>;
+
+struct delay_t {
+    std::chrono::duration<int32_t, std::nano> value {};
+
+    [[nodiscard]] constexpr explicit delay_t() noexcept = default;
+
+    [[nodiscard]] constexpr explicit delay_t(
+        std::chrono::duration<int64_t, std::nano> delay)
+        : value {delay} {
+        if (value != delay) {
+            throw_exception("delay cannot be represented.");
+        }
+    };
+};
 
 struct SimulationEvent {
     time_t time;
@@ -123,7 +139,6 @@ class Simulation {
 
     /// Represents multiple logic values
     using logic_vector_t = boost::container::vector<bool>;
-    using delay_vector_t = boost::container::vector<time_t>;
 
     // 8 bytes still fit into a small_vector with 32 byte size.
     // using logic_small_vector_t = boost::container::small_vector<bool, 8>;
@@ -136,7 +151,7 @@ class Simulation {
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
     struct defaults {
-        constexpr static time_t standard_delay = 100us;
+        constexpr static delay_t standard_delay {100us};
 
         constexpr static auto no_timeout = timeout_t::max();
         constexpr static auto infinite_simulation_time = time_t::max();
@@ -149,8 +164,8 @@ class Simulation {
     [[nodiscard]] explicit Simulation(const Circuit &circuit);
     [[nodiscard]] auto circuit() const noexcept -> const Circuit &;
     [[nodiscard]] auto time() const noexcept -> time_t;
-    auto submit_event(Circuit::ConstInput input, time_t delay, bool value) -> void;
-    auto submit_events(Circuit::ConstElement element, time_t delay,
+    auto submit_event(Circuit::ConstInput input, time_t offset, bool value) -> void;
+    auto submit_events(Circuit::ConstElement element, time_t offset,
                        logic_small_vector_t values) -> void;
 
     auto initialize() -> void;
@@ -180,8 +195,8 @@ class Simulation {
         -> logic_small_vector_t;
     [[nodiscard]] auto output_values(bool raise_missing = true) const -> logic_vector_t;
 
-    [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> time_t;
-    auto set_output_delay(Circuit::ConstOutput output, time_t delay) -> void;
+    [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> delay_t;
+    auto set_output_delay(Circuit::ConstOutput output, delay_t delay) -> void;
 
     [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
         -> logic_small_vector_t;
@@ -211,9 +226,11 @@ class Simulation {
     struct ElementState {
         logic_small_vector_t input_values {};
         logic_small_vector_t internal_state {};
-        folly::small_vector<time_t, 4, uint32_t> output_delays {};
+        logic_small_vector_t invert_inputs {};
+        logic_small_vector_t invert_outputs {};
+        folly::small_vector<delay_t, 5, uint32_t> output_delays {};
 
-        static_assert(sizeof(output_delays) == 36);
+        static_assert(sizeof(output_delays) == 24);
     };
 
     gsl::not_null<const Circuit *> circuit_;

@@ -3,6 +3,8 @@
 #include <boost/stacktrace.hpp>
 #include <fmt/core.h>
 
+#include <stdexcept>
+
 namespace logicsim {
 
 [[noreturn]] void throw_exception(const char *msg) {

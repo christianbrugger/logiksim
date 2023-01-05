@@ -183,6 +183,8 @@ Simulation::Simulation(const Circuit &circuit)
 
         state.input_values.resize(element.input_count(), false);
         state.output_delays.resize(element.output_count(), defaults::standard_delay);
+        state.invert_inputs.resize(element.input_count(), false);
+        state.invert_outputs.resize(element.output_count(), false);
         state.internal_state.resize(internal_state_size(element.element_type()), false);
     }
 }
@@ -203,18 +205,18 @@ auto Simulation::time() const noexcept -> time_t {
     return queue_.time();
 }
 
-auto Simulation::submit_event(Circuit::ConstInput input, time_t delay, bool value)
+auto Simulation::submit_event(Circuit::ConstInput input, time_t offset, bool value)
     -> void {
-    queue_.submit_event(make_event(input, queue_.time() + delay, value));
+    queue_.submit_event(make_event(input, queue_.time() + offset, value));
 }
 
-auto Simulation::submit_events(Circuit::ConstElement element, time_t delay,
+auto Simulation::submit_events(Circuit::ConstElement element, time_t offset,
                                logic_small_vector_t values) -> void {
     if (std::ssize(values) != element.input_count()) [[unlikely]] {
         throw_exception("Need to provide number of input values.");
     }
     for (auto input : element.inputs()) {
-        submit_event(input, delay, values.at(input.input_index()));
+        submit_event(input, offset, values.at(input.input_index()));
     }
 }
 
@@ -336,7 +338,7 @@ void Simulation::create_event(const Circuit::ConstOutput output,
                               const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
         const auto delay = output_delay(output);
-        queue_.submit_event({.time = queue_.time() + delay,
+        queue_.submit_event({.time = queue_.time() + delay.value,
                              .element_id = output.connected_element_id(),
                              .input_index = output.connected_input_index(),
                              .value = output_values.at(output.output_index())});
@@ -534,11 +536,11 @@ auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t
     return result;
 }
 
-auto Simulation::output_delay(const Circuit::ConstOutput output) const -> time_t {
+auto Simulation::output_delay(const Circuit::ConstOutput output) const -> delay_t {
     return get_state(output).output_delays.at(output.output_index());
 }
 
-auto Simulation::set_output_delay(const Circuit::ConstOutput output, const time_t delay)
+auto Simulation::set_output_delay(const Circuit::ConstOutput output, const delay_t delay)
     -> void {
     if (!queue_.empty()) {
         throw_exception("Cannot set output delay for state with scheduled events.");
@@ -589,7 +591,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     for (const auto element : circuit.elements()) {
         for (const auto output : element.outputs()) {
             boost::random::uniform_int_distribution<time_t::rep> nanosecond_dist {5, 500};
-            simulation.set_output_delay(output, 1us * nanosecond_dist(rng));
+            simulation.set_output_delay(output, delay_t {1us * nanosecond_dist(rng)});
         }
     }
 

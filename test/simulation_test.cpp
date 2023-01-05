@@ -103,7 +103,7 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     inverter.output(0).connect(inverter.input(0));
 
     auto simulation = get_uninitialized_simulation(circuit);
-    simulation.set_output_delay(inverter.output(0), 100us);
+    simulation.set_output_delay(inverter.output(0), delay_t {100us});
     simulation.initialize();
 
     EXPECT_EQ(simulation.time(), 0us);
@@ -245,24 +245,24 @@ TEST(SimulationTest, OutputDelayTest) {
     const auto wire {circuit.add_element(ElementType::wire, 1, 3)};
     auto simulation = get_initialized_simulation(circuit);
 
-    simulation.set_output_delay(wire.output(0), 1s);
-    simulation.set_output_delay(wire.output(1), 2s);
-    simulation.set_output_delay(wire.output(2), 3s);
+    simulation.set_output_delay(wire.output(0), delay_t {1ms});
+    simulation.set_output_delay(wire.output(1), delay_t {2ms});
+    simulation.set_output_delay(wire.output(2), delay_t {3ms});
 
     simulation.submit_event(wire.input(0), 1us, true);
     simulation.run(1us);
 
     // after 0.5 seconds
-    simulation.run(500ms);
+    simulation.run(500us);
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(0, 0, 0));
     // after 1.5 seconds
-    simulation.run(1s);
+    simulation.run(1ms);
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 0, 0));
     // after 2.5 seconds
-    simulation.run(1s);
+    simulation.run(1ms);
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 1, 0));
     // after 3.5 seconds
-    simulation.run(1s);
+    simulation.run(1ms);
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 1, 1));
 }
 
