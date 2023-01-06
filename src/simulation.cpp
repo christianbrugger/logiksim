@@ -433,6 +433,9 @@ class Simulation::Timer {
 
 auto Simulation::run(const time_t simulation_time, const timeout_t timeout,
                      const int64_t max_events) -> int64_t {
+    if (!is_initialized_) {
+        throw_exception("Simulation first needs to be initialized.");
+    }
     if (simulation_time <= 0us) [[unlikely]] {
         throw_exception("simulation_time needs to be positive.");
     }
@@ -471,6 +474,10 @@ auto Simulation::run(const time_t simulation_time, const timeout_t timeout,
 }
 
 auto Simulation::initialize() -> void {
+    if (!queue_.empty()) [[unlikely]] {
+        throw_exception("Cannot initialize simulation with scheduled events.");
+    }
+
     check_state_valid();
 
     for (auto &&element : circuit_->elements()) {
@@ -498,6 +505,8 @@ auto Simulation::initialize() -> void {
             submit_events_for_changed_outputs(element, old_outputs, new_outputs);
         }
     }
+
+    is_initialized_ = true;
 }
 
 auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
@@ -559,49 +568,26 @@ auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t
     return get_state(element).input_inverters;
 }
 
-[[nodiscard]] auto Simulation::has_output_inverter(Circuit::ConstOutput output,
-                                                   bool raise_missing) const -> bool {
-    if (raise_missing || output.has_connected_element()) {
-        return has_input_inverter(output.connected_input());
-    }
-    return false;
-}
-
-[[nodiscard]] auto Simulation::has_output_inverters(Circuit::ConstElement element,
-                                                    bool raise_missing) const
-    -> logic_small_vector_t {
-    return transform_to_container<logic_small_vector_t>(
-        element.outputs(),
-        [=](auto output) { return has_output_inverter(output, raise_missing); });
-}
-
 auto Simulation::set_input_inverter(Circuit::ConstInput input, bool value) -> void {
+    if (!queue_.empty()) {
+        throw_exception("Cannot set input inverters for state with scheduled events.");
+    }
+    is_initialized_ = false;
+
     get_state(input).input_inverters.at(input.input_index()) = value;
 }
 
 auto Simulation::set_input_inverters(Circuit::ConstElement element,
                                      logic_small_vector_t values) -> void {
+    if (!queue_.empty()) {
+        throw_exception("Cannot set input inverters for state with scheduled events.");
+    }
+    is_initialized_ = false;
+
     if (std::ssize(values) != element.input_count()) {
         throw_exception("Need as many values for has_inverters as inputs.");
     }
     get_state(element).input_inverters.assign(std::begin(values), std::end(values));
-}
-
-auto Simulation::set_output_inverter(Circuit::ConstOutput output, bool value) -> void {
-    if (!output.has_connected_element()) {
-        throw_exception("cannot set inverter for unconnected output.");
-    }
-    set_input_inverter(output.connected_input(), value);
-}
-
-auto Simulation::set_output_inverters(Circuit::ConstElement element,
-                                      logic_small_vector_t values) -> void {
-    if (std::ssize(values) != element.output_count()) {
-        throw_exception("Need as many values for has_inverters as inputs.");
-    }
-    for (auto i : range(element.output_count())) {
-        set_output_inverter(element.output(i), values.at(i));
-    }
 }
 
 auto Simulation::output_delay(const Circuit::ConstOutput output) const -> delay_t {

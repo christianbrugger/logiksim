@@ -309,4 +309,30 @@ TEST(SimulationTest, JKFlipFlop) {
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 }
 
+TEST(SimulationTest, AndInputInverters) {
+    using namespace std::chrono_literals;
+
+    Circuit circuit;
+    auto and_element {circuit.add_element(ElementType::and_element, 2, 1)};
+
+    auto simulation = get_uninitialized_simulation(circuit);
+    simulation.set_input_inverters(and_element, {true, true});
+
+    simulation.initialize();
+    simulation.run();
+    ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(false, false));
+    ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(true));
+
+    simulation.set_input_inverters(and_element, {false, true});
+    simulation.initialize();
+    simulation.run();
+    ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(false, false));
+    ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(false));
+
+    simulation.submit_event(and_element.input(0), 1ms, true);
+    simulation.run();
+    ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(true, false));
+    ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(true));
+}
+
 }  // namespace logicsim

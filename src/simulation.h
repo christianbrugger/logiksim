@@ -217,17 +217,8 @@ class Simulation {
     [[nodiscard]] auto has_input_inverter(Circuit::ConstInput input) const -> bool;
     [[nodiscard]] auto has_input_inverters(Circuit::ConstElement element) const
         -> logic_small_vector_t;
-    [[nodiscard]] auto has_output_inverter(Circuit::ConstOutput output,
-                                           bool raise_missing = true) const -> bool;
-    [[nodiscard]] auto has_output_inverters(Circuit::ConstElement element,
-                                            bool raise_missing = true) const
-        -> logic_small_vector_t;
-
     auto set_input_inverter(Circuit::ConstInput input, bool value) -> void;
     auto set_input_inverters(Circuit::ConstElement element, logic_small_vector_t values)
-        -> void;
-    auto set_output_inverter(Circuit::ConstOutput output, bool value) -> void;
-    auto set_output_inverters(Circuit::ConstElement element, logic_small_vector_t values)
         -> void;
 
     // delays
@@ -272,6 +263,7 @@ class Simulation {
     gsl::not_null<const Circuit *> circuit_;
     std::vector<ElementState> states_ {};
     SimulationQueue queue_ {};
+    bool is_initialized_ {false};
 };
 
 inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
