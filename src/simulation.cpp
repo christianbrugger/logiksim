@@ -182,9 +182,8 @@ Simulation::Simulation(const Circuit &circuit)
         auto &state = get_state(element);
 
         state.input_values.resize(element.input_count(), false);
+        state.input_inverters.resize(element.input_count(), false);
         state.output_delays.resize(element.output_count(), defaults::standard_delay);
-        state.invert_inputs.resize(element.input_count(), false);
-        state.invert_outputs.resize(element.output_count(), false);
         state.internal_state.resize(internal_state_size(element.element_type()), false);
     }
 }
@@ -250,6 +249,7 @@ auto calculate_internal_state(const Simulation::logic_small_vector_t &old_input,
                 } else if (!input_j && input_k) {
                     return {false};
                 }
+                return state;
             }
             return state;
         }
@@ -354,6 +354,16 @@ auto Simulation::submit_events_for_changed_outputs(
     }
 }
 
+auto invert_inputs(Simulation::logic_small_vector_t &values,
+                   const Simulation::logic_small_vector_t &inverters) -> void {
+    if (std::size(values) != std::size(inverters)) [[unlikely]] {
+        throw_exception("Inputs and inverters need to have same size.");
+    }
+    for (auto i : range(std::ssize(values))) {
+        values[i] ^= inverters[i];
+    }
+}
+
 auto Simulation::process_event_group(event_group_t &&events) -> void {
     if (print_events) {
         fmt::print("events: {:n}\n", events);
@@ -373,9 +383,15 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     }
 
     // update inputs
-    const auto old_inputs = input_values(element);
+    auto old_inputs = input_values(element);
     apply_events(element, events);
-    const auto new_inputs = input_values(element);
+    auto new_inputs = input_values(element);
+
+    const auto inverters = has_input_inverters(element);
+    if (std::ranges::any_of(inverters, std::identity {})) {
+        invert_inputs(old_inputs, inverters);
+        invert_inputs(new_inputs, inverters);
+    }
 
     if (has_internal_state(element_type)) {
         const auto old_state = internal_state(element);
@@ -474,8 +490,10 @@ auto Simulation::initialize() -> void {
             submit_events_for_changed_outputs(element, old_outputs, new_outputs);
 
         } else {
+            auto curr_inputs = input_values(element);
+            invert_inputs(curr_inputs, has_input_inverters(element));
             const auto new_outputs = calculate_outputs_from_inputs(
-                input_values(element), element.output_count(), element_type);
+                curr_inputs, element.output_count(), element_type);
 
             submit_events_for_changed_outputs(element, old_outputs, new_outputs);
         }
@@ -515,14 +533,9 @@ auto Simulation::output_value(const Circuit::ConstOutput output,
 
 auto Simulation::output_values(const Circuit::ConstElement element,
                                const bool raise_missing) const -> logic_small_vector_t {
-    logic_small_vector_t result;
-    result.reserve(element.output_count());
-
-    for (const auto output : element.outputs()) {
-        result.push_back(output_value(output, raise_missing));
-    }
-
-    return result;
+    return transform_to_container<logic_small_vector_t>(
+        element.outputs(),
+        [=](auto output) { return output_value(output, raise_missing); });
 }
 
 auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t {
@@ -534,6 +547,61 @@ auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t
     }
 
     return result;
+}
+
+[[nodiscard]] auto Simulation::has_input_inverter(Circuit::ConstInput input) const
+    -> bool {
+    return get_state(input).input_inverters.at(input.input_index());
+}
+
+[[nodiscard]] auto Simulation::has_input_inverters(Circuit::ConstElement element) const
+    -> logic_small_vector_t {
+    return get_state(element).input_inverters;
+}
+
+[[nodiscard]] auto Simulation::has_output_inverter(Circuit::ConstOutput output,
+                                                   bool raise_missing) const -> bool {
+    if (raise_missing || output.has_connected_element()) {
+        return has_input_inverter(output.connected_input());
+    }
+    return false;
+}
+
+[[nodiscard]] auto Simulation::has_output_inverters(Circuit::ConstElement element,
+                                                    bool raise_missing) const
+    -> logic_small_vector_t {
+    return transform_to_container<logic_small_vector_t>(
+        element.outputs(),
+        [=](auto output) { return has_output_inverter(output, raise_missing); });
+}
+
+auto Simulation::set_input_inverter(Circuit::ConstInput input, bool value) -> void {
+    get_state(input).input_inverters.at(input.input_index()) = value;
+}
+
+auto Simulation::set_input_inverters(Circuit::ConstElement element,
+                                     logic_small_vector_t values) -> void {
+    if (std::ssize(values) != element.input_count()) {
+        throw_exception("Need as many values for has_inverters as inputs.");
+    }
+    get_state(element).input_inverters.assign(std::begin(values), std::end(values));
+}
+
+auto Simulation::set_output_inverter(Circuit::ConstOutput output, bool value) -> void {
+    if (!output.has_connected_element()) {
+        throw_exception("cannot set inverter for unconnected output.");
+    }
+    set_input_inverter(output.connected_input(), value);
+}
+
+auto Simulation::set_output_inverters(Circuit::ConstElement element,
+                                      logic_small_vector_t values) -> void {
+    if (std::ssize(values) != element.output_count()) {
+        throw_exception("Need as many values for has_inverters as inputs.");
+    }
+    for (auto i : range(element.output_count())) {
+        set_output_inverter(element.output(i), values.at(i));
+    }
 }
 
 auto Simulation::output_delay(const Circuit::ConstOutput output) const -> delay_t {
@@ -591,7 +659,8 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     for (const auto element : circuit.elements()) {
         for (const auto output : element.outputs()) {
             boost::random::uniform_int_distribution<time_t::rep> nanosecond_dist {5, 500};
-            simulation.set_output_delay(output, delay_t {1us * nanosecond_dist(rng)});
+            simulation.set_output_delay(output,
+                                        delay_t::runtime(1us * nanosecond_dist(rng)));
         }
     }
 

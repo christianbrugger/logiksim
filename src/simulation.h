@@ -21,13 +21,13 @@
 // * add timeout to run simulations
 // * use discrete integer type for time, like chronos::sim_time<int64_t>
 // * store transition times for wires, so they can be drawn
-// * flip flops, which requires access to the last state
+// * flip flops, which requires internal state and access to last input values
+// * negation on input and outputs
 
 /// New Features
-// * negation on input and outputs
 // * store history of events so lines can be drawn
 // * clock generators
-// * shift registers, requires memory & internal state
+// * shift registers, requires more internal state
 
 namespace logicsim {
 
@@ -42,17 +42,34 @@ using std::literals::chrono_literals::operator""ns;
 #endif
 
 // TODO strong type for time_t
+// TODO rename to simulation time
 using time_t = std::chrono::duration<int64_t, std::nano>;
 
 struct delay_t {
+   private:
+    struct wrapped_;
+
+   public:
     std::chrono::duration<int32_t, std::nano> value {};
 
     [[nodiscard]] constexpr explicit delay_t() noexcept = default;
 
-    [[nodiscard]] constexpr explicit delay_t(
+    [[nodiscard]] consteval explicit delay_t(
         std::chrono::duration<int64_t, std::nano> delay)
-        : value {delay} {
-        if (value != delay) {
+        : delay_t {wrapped_ {delay}} {}
+
+    [[nodiscard]] constexpr static auto runtime(
+        std::chrono::duration<int64_t, std::nano> delay) -> delay_t {
+        return delay_t {wrapped_ {delay}};
+    }
+
+   private:
+    struct wrapped_ {
+        std::chrono::duration<int64_t, std::nano> value;
+    };
+
+    [[nodiscard]] constexpr delay_t(wrapped_ delay) : value {delay.value} {
+        if (value != delay.value) {
             throw_exception("delay cannot be represented.");
         }
     };
@@ -182,12 +199,13 @@ class Simulation {
              timeout_t timeout = defaults::no_timeout,
              int64_t max_events = defaults::no_max_events) -> int64_t;
 
+    // input values
     [[nodiscard]] auto input_value(Circuit::ConstInput input) const -> bool;
     [[nodiscard]] auto input_values(Circuit::ConstElement element) const
         -> logic_small_vector_t;
     [[nodiscard]] auto input_values() const -> const logic_vector_t;
 
-    /// infers the output value from the connected input value, if it exists.
+    // infers the output value from the connected input value, if it exists.
     [[nodiscard]] auto output_value(Circuit::ConstOutput output,
                                     bool raise_missing = true) const -> bool;
     [[nodiscard]] auto output_values(Circuit::ConstElement element,
@@ -195,9 +213,28 @@ class Simulation {
         -> logic_small_vector_t;
     [[nodiscard]] auto output_values(bool raise_missing = true) const -> logic_vector_t;
 
+    // inverters
+    [[nodiscard]] auto has_input_inverter(Circuit::ConstInput input) const -> bool;
+    [[nodiscard]] auto has_input_inverters(Circuit::ConstElement element) const
+        -> logic_small_vector_t;
+    [[nodiscard]] auto has_output_inverter(Circuit::ConstOutput output,
+                                           bool raise_missing = true) const -> bool;
+    [[nodiscard]] auto has_output_inverters(Circuit::ConstElement element,
+                                            bool raise_missing = true) const
+        -> logic_small_vector_t;
+
+    auto set_input_inverter(Circuit::ConstInput input, bool value) -> void;
+    auto set_input_inverters(Circuit::ConstElement element, logic_small_vector_t values)
+        -> void;
+    auto set_output_inverter(Circuit::ConstOutput output, bool value) -> void;
+    auto set_output_inverters(Circuit::ConstElement element, logic_small_vector_t values)
+        -> void;
+
+    // delays
     [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> delay_t;
     auto set_output_delay(Circuit::ConstOutput output, delay_t delay) -> void;
 
+    // internal states
     [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
         -> logic_small_vector_t;
 
@@ -225,9 +262,8 @@ class Simulation {
 
     struct ElementState {
         logic_small_vector_t input_values {};
+        logic_small_vector_t input_inverters {};
         logic_small_vector_t internal_state {};
-        logic_small_vector_t invert_inputs {};
-        logic_small_vector_t invert_outputs {};
         folly::small_vector<delay_t, 5, uint32_t> output_delays {};
 
         static_assert(sizeof(output_delays) == 24);

@@ -65,6 +65,11 @@ struct range_iterator_t {
         // this way we generate an empty range when last < first
         return left.current_ >= right.current_;
     }
+
+    [[nodiscard]] auto operator-(const range_iterator_t<T>& right) const
+        noexcept(noexcept(this->current_ - right.current_)) -> difference_type {
+        return this->current_ - right.current_;
+    }
 };
 
 template <typename T>
