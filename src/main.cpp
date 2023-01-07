@@ -15,8 +15,9 @@ auto main() -> int {
 
     try {
         auto timer = Timer {"Benchmark", Timer::Unit::ms, 3};
-        auto count = benchmark_simulation(10, 10, true);
-        // auto count = logicsim::benchmark_simulation();
+        // auto count = benchmark_simulation(6, 10, true);
+        auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
+                                                    BENCHMARK_DEFAULT_EVENTS, true);
         fmt::print("count = {}\n", count);
 
     } catch (const std::exception& exc) {

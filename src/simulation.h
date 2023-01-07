@@ -46,6 +46,21 @@ using std::literals::chrono_literals::operator""ns;
 // TODO rename to simulation time
 using time_t = std::chrono::duration<int64_t, std::nano>;
 
+}  // namespace logicsim
+
+template <>
+struct fmt::formatter<logicsim::time_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::time_t &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.count());
+    }
+};
+
+namespace logicsim {
+
 // TODO create strong type for history type
 struct delay_t {
    private:

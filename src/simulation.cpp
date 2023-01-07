@@ -742,6 +742,12 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
         fmt::print("input_values = {}\n",
                    fmt_join("{:b}", simulation.input_values(), ""));
         fmt::print("output_values = {}\n", fmt_join("{:b}", output_values, ""));
+        for (auto element : circuit.elements()) {
+            if (element.element_type() == ElementType::wire) {
+                auto &hist = simulation.get_input_history(element);
+                fmt::print("{} {}\n", element, hist);
+            }
+        }
     }
 
     Ensures(simulated_event_count >= n_events);
