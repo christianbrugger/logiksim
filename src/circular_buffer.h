@@ -13,6 +13,7 @@ template <typename Value, std::size_t RequestedMaxInline = 1,
 class circular_buffer {
    private:
     using buffer_t = folly::small_vector<Value, RequestedMaxInline, InternalSizeType>;
+    // folly::small_vector_policy::NoHeap>;
 
    public:
     using size_type = std::size_t;
@@ -32,17 +33,33 @@ class circular_buffer {
 
     circular_buffer() = default;
 
-    auto size() const -> size_type {
+    explicit circular_buffer(size_type n) : buffer_(std::max(n, RequestedMaxInline)) {};
+
+    explicit circular_buffer(size_type n, value_type const& t)
+        : buffer_(std::max(n, RequestedMaxInline), t) {}
+
+    [[nodiscard]] auto size() const noexcept -> size_type {
         return size_;
+    }
+
+    [[nodiscard]] auto capacity() const -> size_type {
+        return buffer_.size();
+    }
+
+    [[nodiscard]] auto max_size() const -> size_t {
+        return buffer_.max_size();
+    }
+
+    auto clear() noexcept -> void {
+        size_ = 0;
     }
 
     auto reserve(size_type new_size) -> void {
         if (new_size <= buffer_.size()) {
             return;
         }
-        const auto new_size = std::max(new_size, buffer_.computeNewSize());
-        buffer_t new_buffer {new_size};
-        assert(new_buffer.size() == new_buffer.capacity);
+        buffer_t new_buffer(std::max(new_size, computeNewSize()));
+        assert_ls(new_buffer.size() == new_buffer.capacity());
 
         // copy ring buffer to the beginning of the new buffer
         const auto half_count = buffer_.size() - start_;
@@ -74,38 +91,34 @@ class circular_buffer {
     }
 
     auto pop_back() -> void {
-        assert(size > 0);
+        assert_ls(size() > 0);
         --size_;
     }
 
     auto pop_front() -> void {
-        assert(size > 0);
-        start_ = wrap(start_ + 1);
+        assert_ls(size() > 0);
+        start_ = wrap_plus(start_, 1);
         --size_;
     }
 
-    auto capacity() const -> size_type {
-        return buffer_.size();
+    [[nodiscard]] auto operator[](size_type i) -> reference {
+        assert_ls(i < size());
+        return buffer_[wrap_plus(start_, static_cast<InternalSizeType>(i))];
     }
 
-    reference operator[](size_type i) {
-        assert(i < size());
-        return buffer_[wrap(start_ + i)];
+    [[nodiscard]] auto operator[](size_type i) const -> const_reference {
+        assert_ls(i < size());
+        return buffer_[wrap_plus(start_, static_cast<InternalSizeType>(i))];
     }
 
-    const_reference operator[](size_type i) const {
-        assert(i < size());
-        return buffer_[wrap(start_ + i)];
-    }
-
-    reference at(size_type i) {
+    [[nodiscard]] auto at(size_type i) -> reference {
         if (i >= size()) {
             throw_exception("circular_buffer: index out of range.");
         }
         return (*this)[i];
     }
 
-    const_reference at(size_type i) const {
+    [[nodiscard]] auto at(size_type i) const -> const_reference {
         if (i >= size()) {
             throw_exception("circular_buffer: index out of range.");
         }
@@ -113,23 +126,36 @@ class circular_buffer {
     }
 
    private:
-    auto get_end() -> InternalSizeType {
-        return wrap(start_ + size_);
+    /*
+     * Compute the size after growth. From small_vector implementation.
+     */
+    [[nodiscard]] size_type computeNewSize() const {
+        return std::min((3 * buffer_.capacity()) / 2 + 1, buffer_.max_size());
     }
 
-    auto wrap(InternalSizeType value) {
-        // InternalSizeType is unsigned, so it cannot be negative and overflows
-        return std::min(value, value - buffer_.size());
+    [[nodiscard]] auto wrap_plus(InternalSizeType a, InternalSizeType b) noexcept
+        -> InternalSizeType {
+        if (a + b >= buffer_.size()) {
+            return static_cast<InternalSizeType>(a + b - buffer_.size());
+        }
+        return a + b;
     }
 
-    auto wrap_minus(InternalSizeType a, InternalSizeType b) {
-        return std::min(a - b, buffer_.size() + a - b);
+    [[nodiscard]] auto wrap_minus(InternalSizeType a, InternalSizeType b) noexcept
+        -> InternalSizeType {
+        if (b > a) {
+            return static_cast<InternalSizeType>(buffer_.size() + a - b);
+        }
+        return a - b;
+    }
+
+    [[nodiscard]] auto get_end() noexcept -> InternalSizeType {
+        return wrap_plus(start_, size_);
     }
 
     InternalSizeType start_ {0};
     InternalSizeType size_ {0};
-    // InternalSizeType end_ {0};
-    buffer_t buffer_ {RequestedMaxInline};
+    buffer_t buffer_ = buffer_t(RequestedMaxInline);
 };
 
 }  // namespace logicsim
