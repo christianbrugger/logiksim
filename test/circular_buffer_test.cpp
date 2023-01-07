@@ -209,4 +209,11 @@ TEST(CircularBuffer, TestIteratorRanges) {
     ASSERT_EQ(std::ranges::distance(const_buffer), 4);
 }
 
+TEST(CircularBuffer, HasNonThrowingSwap) {
+    circular_buffer<int32_t, 2, uint32_t> buffer1 {};
+    circular_buffer<int32_t, 2, uint32_t> buffer2 {};
+
+    static_assert(noexcept(std::swap(buffer1, buffer2)));
+}
+
 }  // namespace logicsim

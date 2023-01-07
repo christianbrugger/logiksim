@@ -14,7 +14,10 @@ template <typename Value, std::size_t RequestedMaxInline = 1,
 class circular_buffer {
    private:
     using buffer_t = folly::small_vector<Value, RequestedMaxInline, InternalSizeType>;
-    // folly::small_vector_policy::NoHeap>;
+
+    buffer_t buffer_ = buffer_t(RequestedMaxInline);
+    InternalSizeType start_ {0};
+    InternalSizeType size_ {0};
 
     template <bool Const>
     class Iterator;
@@ -215,10 +218,6 @@ class circular_buffer {
     [[nodiscard]] auto get_end() const noexcept -> InternalSizeType {
         return wrap_plus(start_, size_);
     }
-
-    InternalSizeType start_ {0};
-    InternalSizeType size_ {0};
-    buffer_t buffer_ = buffer_t(RequestedMaxInline);
 
     static_assert(std::random_access_iterator<iterator>);
     static_assert(std::random_access_iterator<const_iterator>);
