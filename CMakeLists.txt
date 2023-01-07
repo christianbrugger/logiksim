@@ -234,6 +234,7 @@ endif()
 set(LS_CORE_SOURCES
     src/algorithm.h src/algorithm.cpp
     src/circuit.h src/circuit.cpp
+    src/circular_buffer.h
     src/exceptions.h src/exceptions.cpp
     src/random.h src/random.cpp
     src/simulation.h src/simulation.cpp
@@ -319,6 +320,7 @@ add_executable(${MAIN_TEST_TARGET}
     
     test/algorithm_test.cpp
     test/circuit_test.cpp
+    test/circular_buffer_test.cpp
     test/format_test.cpp
     test/iterator_test.cpp
     test/random_test.cpp
