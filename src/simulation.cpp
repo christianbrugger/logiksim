@@ -509,6 +509,50 @@ auto Simulation::initialize() -> void {
     is_initialized_ = true;
 }
 
+auto Simulation::record_input_history(const Circuit::ConstInput input,
+                                      const bool new_value) -> void {
+    // we only record the first input, as we only need a history for wires
+    if (input.input_index() != 0) {
+        return;
+    }
+    auto &state = get_state(input);
+    if (state.max_history <= history_t {0ns}) {
+        return;
+    }
+    if (new_value == input_value(input)) {
+        return;
+    }
+    auto &history = state.first_input_history;
+    if (!history.empty() && history.front() == time()) {
+        throw_exception("Cannot have two transitions recorded at the same time.");
+    }
+
+    const auto increase_capacity = [&history]() {
+        const auto capacity = history.capacity();
+        history.set_capacity(
+            {capacity.capacity() + 1,
+             std::max(capacity.capacity() + 1, capacity.min_capacity())});
+    };
+
+    // remove old values
+    clean_history(history, state.max_history);
+
+    // add new entry
+    increase_capacity();
+    history.push_front(time());
+}
+
+auto Simulation::clean_history(history_vector_t &history, history_t max_history) -> void {
+    const auto decrease_capacity = [&history]() {
+        const auto capacity = history.capacity();
+        history.set_capacity({capacity.capacity() - 1, capacity.min_capacity()});
+    };
+
+    while (!history.empty() && history.back() < time() - max_history.value) {
+        decrease_capacity();
+    }
+}
+
 auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
     return states_.at(input.element_id()).input_values.at(input.input_index());
 }
@@ -529,6 +573,8 @@ auto Simulation::input_values() const -> const logic_vector_t {
 }
 
 auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
+    record_input_history(input, value);
+
     states_.at(input.element_id()).input_values.at(input.input_index()) = value;
 }
 
@@ -618,6 +664,23 @@ auto Simulation::set_internal_state(const Circuit::ConstElement element,
     state.internal_state.assign(new_state.begin(), new_state.end());
 }
 
+auto Simulation::get_input_history(const Circuit::ConstElement element) const
+    -> const history_vector_t & {
+    return get_state(element).first_input_history;
+}
+
+auto Simulation::max_history(const Circuit::ConstElement element) const -> history_t {
+    return get_state(element).max_history;
+}
+
+auto Simulation::set_max_history(const Circuit::ConstElement element,
+                                 const history_t max_history) -> void {
+    if (max_history < history_t {0ns}) [[unlikely]] {
+        throw_exception("Max history cannot be negative.");
+    }
+    get_state(element).max_history = max_history;
+}
+
 //
 // Benchmark
 //
@@ -644,9 +707,16 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     // set custom delays
     for (const auto element : circuit.elements()) {
         for (const auto output : element.outputs()) {
-            boost::random::uniform_int_distribution<time_t::rep> nanosecond_dist {5, 500};
-            simulation.set_output_delay(output,
-                                        delay_t::runtime(1us * nanosecond_dist(rng)));
+            boost::random::uniform_int_distribution<time_t::rep> delay_dist {5, 500};
+            simulation.set_output_delay(output, delay_t::runtime(1us * delay_dist(rng)));
+        }
+    }
+
+    // set history for wires
+    for (const auto element : circuit.elements()) {
+        if (element.element_type() == ElementType::wire) {
+            const auto delay = simulation.output_delay(element.output(0));
+            simulation.set_max_history(element, history_t::runtime(delay.value * 10));
         }
     }
 

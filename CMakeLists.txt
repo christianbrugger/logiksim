@@ -122,7 +122,7 @@ add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
 # Boost
-set(BOOST_INCLUDE_LIBRARIES container stacktrace mpl random algorithm)
+set(BOOST_INCLUDE_LIBRARIES algorithm circular_buffer container mpl random stacktrace)
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
 if (WIN32)
     # Boost::stacktrace_windbg
@@ -243,6 +243,7 @@ set(LS_CORE_LIBRARIES
     logicsim_pch
 
     Boost::algorithm
+    Boost::circular_buffer
     Boost::container 
     Boost::mpl
     Boost::random

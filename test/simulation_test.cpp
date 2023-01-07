@@ -335,4 +335,34 @@ TEST(SimulationTest, AndInputInverters) {
     ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(true));
 }
 
+TEST(SimulationTest, TestInputHistory) {
+    using namespace std::chrono_literals;
+
+    Circuit circuit;
+    auto wire {circuit.add_element(ElementType::wire, 1, 2)};
+
+    auto simulation = get_uninitialized_simulation(circuit);
+    simulation.set_max_history(wire, history_t {100us});
+
+    simulation.initialize();
+    simulation.run();
+    ASSERT_EQ(simulation.time(), time_t {0us});
+    ASSERT_THAT(simulation.get_input_history(wire), testing::ElementsAre());
+
+    simulation.submit_event(wire.input(0), 10us, true);
+    simulation.submit_event(wire.input(0), 20us, true);  // shall be ignored
+    simulation.submit_event(wire.input(0), 40us, false);
+    simulation.submit_event(wire.input(0), 60us, true);
+    simulation.submit_event(wire.input(0), 180us, false);
+
+    simulation.run(time_t {100us});
+    ASSERT_EQ(simulation.time(), time_t {100us});
+    ASSERT_THAT(simulation.get_input_history(wire),
+                testing::ElementsAre(60us, 40us, 10us));
+
+    simulation.run(time_t {100us});
+    ASSERT_EQ(simulation.time(), time_t {200us});
+    ASSERT_THAT(simulation.get_input_history(wire), testing::ElementsAre(180us));
+}
+
 }  // namespace logicsim

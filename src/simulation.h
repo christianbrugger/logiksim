@@ -4,6 +4,7 @@
 #include "circuit.h"
 #include "exceptions.h"
 
+#include <boost/circular_buffer.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <fmt/core.h>
@@ -45,6 +46,7 @@ using std::literals::chrono_literals::operator""ns;
 // TODO rename to simulation time
 using time_t = std::chrono::duration<int64_t, std::nano>;
 
+// TODO create strong type for history type
 struct delay_t {
    private:
     struct wrapped_;
@@ -68,7 +70,49 @@ struct delay_t {
         std::chrono::duration<int64_t, std::nano> value;
     };
 
-    [[nodiscard]] constexpr delay_t(wrapped_ delay) : value {delay.value} {
+    [[nodiscard]] constexpr explicit delay_t(wrapped_ delay) : value {delay.value} {
+        if (value != delay.value) {
+            throw_exception("delay cannot be represented.");
+        }
+    };
+};
+
+struct history_t {
+   private:
+    struct wrapped_;
+
+   public:
+    std::chrono::duration<int32_t, std::nano> value {};
+
+    [[nodiscard]] constexpr explicit history_t() noexcept = default;
+
+    [[nodiscard]] consteval explicit history_t(
+        std::chrono::duration<int64_t, std::nano> delay)
+        : history_t {wrapped_ {delay}} {}
+
+    [[nodiscard]] constexpr static auto runtime(
+        std::chrono::duration<int64_t, std::nano> delay) -> history_t {
+        return history_t {wrapped_ {delay}};
+    }
+
+    [[nodiscard]] constexpr auto operator==(history_t other) const noexcept -> bool {
+        return value == other.value;
+    }
+
+    [[nodiscard]] constexpr auto operator<(history_t other) const noexcept -> bool {
+        return value < other.value;
+    }
+
+    [[nodiscard]] constexpr auto operator<=(history_t other) const noexcept -> bool {
+        return value <= other.value;
+    }
+
+   private:
+    struct wrapped_ {
+        std::chrono::duration<int64_t, std::nano> value;
+    };
+
+    [[nodiscard]] constexpr explicit history_t(wrapped_ delay) : value {delay.value} {
         if (value != delay.value) {
             throw_exception("delay cannot be represented.");
         }
@@ -167,6 +211,8 @@ class Simulation {
     static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
+    using history_vector_t = boost::circular_buffer_space_optimized<time_t>;
+
     struct defaults {
         constexpr static delay_t standard_delay {100us};
 
@@ -175,6 +221,8 @@ class Simulation {
         constexpr static int64_t no_max_events {
             std::numeric_limits<int64_t>::max()
             - std::numeric_limits<connection_size_t>::max()};
+
+        constexpr static history_t no_history {0ns};
     };
 
    public:
@@ -229,6 +277,11 @@ class Simulation {
     [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
         -> logic_small_vector_t;
 
+    auto get_input_history(Circuit::ConstElement element) const
+        -> const history_vector_t &;
+    auto max_history(Circuit::ConstElement element) const -> history_t;
+    auto set_max_history(Circuit::ConstElement element, history_t max_history) -> void;
+
    private:
     class Timer;
 
@@ -239,13 +292,15 @@ class Simulation {
                                            const logic_small_vector_t &new_outputs)
         -> void;
     auto process_event_group(event_group_t &&events) -> void;
-    auto create_event(const Circuit::ConstOutput output,
+    auto create_event(Circuit::ConstOutput output,
                       const logic_small_vector_t &output_values) -> void;
-    auto apply_events(const Circuit::ConstElement element, const event_group_t &group)
-        -> void;
-    auto set_input(const Circuit::ConstInput input, bool value) -> void;
-    auto set_internal_state(const Circuit::ConstElement element,
+    auto apply_events(Circuit::ConstElement element, const event_group_t &group) -> void;
+    auto set_input(Circuit::ConstInput input, bool value) -> void;
+    auto set_internal_state(Circuit::ConstElement element,
                             const logic_small_vector_t &state) -> void;
+
+    auto record_input_history(Circuit::ConstInput input, bool new_value) -> void;
+    auto clean_history(history_vector_t &history, history_t max_history) -> void;
 
     [[nodiscard]] auto get_state(ElementOrConnection auto item) -> ElementState &;
     [[nodiscard]] auto get_state(ElementOrConnection auto item) const
@@ -256,8 +311,12 @@ class Simulation {
         logic_small_vector_t input_inverters {};
         logic_small_vector_t internal_state {};
         folly::small_vector<delay_t, 5, uint32_t> output_delays {};
+        // folly::small_vector<time_t, 2, uint32_t> first_input_history {};
+        history_vector_t first_input_history {};
+        history_t max_history {defaults::no_history};
 
         static_assert(sizeof(output_delays) == 24);
+        // static_assert(sizeof(first_input_history) == 20);
     };
 
     gsl::not_null<const Circuit *> circuit_;
@@ -266,7 +325,7 @@ class Simulation {
     bool is_initialized_ {false};
 };
 
-inline constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
+constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 
 template <std::uniform_random_bit_generator G>
 auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,

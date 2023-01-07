@@ -93,7 +93,7 @@ template <std::input_iterator InputIt, class Function>
 constexpr auto transform_to_vector(InputIt first, InputIt last, Function func) {
     using result_type = std::decay_t<decltype(std::invoke(func, *first))>;
 
-    std::vector<result_type> result;
+    std::vector<result_type> result {};
     result.reserve(distance_fast(first, last));
 
     std::transform(first, last, std::back_inserter(result), [func](auto&& item) {
@@ -113,7 +113,7 @@ template <class Container, std::input_iterator InputIt, class Function>
     requires std::sized_sentinel_for<InputIt, InputIt>
 constexpr auto transform_to_container(InputIt first, InputIt last, Function func)
     -> Container {
-    Container result;
+    Container result {};
     result.reserve(distance_fast(first, last));
 
     std::transform(first, last, std::back_inserter(result), [func](auto&& item) {
