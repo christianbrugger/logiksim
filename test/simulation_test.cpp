@@ -242,12 +242,13 @@ TEST(SimulationTest, OutputDelayTest) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    const auto wire {circuit.add_element(ElementType::wire, 1, 3)};
+    const auto wire = circuit.add_element(ElementType::wire, 1, 3);
     auto simulation = get_initialized_simulation(circuit);
 
-    simulation.set_output_delay(wire.output(0), delay_t {1ms});
-    simulation.set_output_delay(wire.output(1), delay_t {2ms});
-    simulation.set_output_delay(wire.output(2), delay_t {3ms});
+    // TODO do not use runtime, clang error
+    simulation.set_output_delay(wire.output(0), delay_t::runtime(1ms));
+    simulation.set_output_delay(wire.output(1), delay_t::runtime(2ms));
+    simulation.set_output_delay(wire.output(2), delay_t::runtime(3ms));
 
     simulation.submit_event(wire.input(0), 1us, true);
     simulation.run(1us);

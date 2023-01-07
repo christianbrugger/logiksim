@@ -179,4 +179,34 @@ TEST(CircularBuffer, AlmostFull) {
     }
 }
 
+TEST(CircularBuffer, TestIterators) {
+    circular_buffer<int32_t, 2, uint32_t> buffer {};
+
+    buffer.push_front(1);
+    buffer.push_back(2);
+    buffer.push_front(0);
+    buffer.push_back(3);
+
+    ASSERT_EQ(std::size(buffer), 4);
+    ASSERT_EQ(std::distance(std::begin(buffer), std::end(buffer)), 4);
+    ASSERT_THAT(buffer, testing::ElementsAre(0, 1, 2, 3));
+
+    const auto &const_buffer = buffer;
+    ASSERT_EQ(std::distance(std::begin(const_buffer), std::end(const_buffer)), 4);
+    ASSERT_THAT(const_buffer, testing::ElementsAre(0, 1, 2, 3));
+}
+
+TEST(CircularBuffer, TestIteratorRanges) {
+    circular_buffer<int32_t, 2, uint32_t> buffer {};
+
+    buffer.push_front(1);
+    buffer.push_back(2);
+    buffer.push_front(0);
+    buffer.push_back(3);
+
+    ASSERT_EQ(std::ranges::distance(buffer), 4);
+    const auto &const_buffer = buffer;
+    ASSERT_EQ(std::ranges::distance(const_buffer), 4);
+}
+
 }  // namespace logicsim

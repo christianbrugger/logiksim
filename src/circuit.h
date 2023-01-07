@@ -148,7 +148,11 @@ class Circuit::ElementIteratorTemplate {
     using value_type = Circuit::ElementTemplate<Const>;
     using difference_type = element_id_t;
     using pointer = value_type *;
-    using reference = value_type &;
+    // TODO check if reference needs to be return type of operator*
+    using reference = value_type;
+    // using reference = value_type &;
+    // TODO also check pointer, if we need it, needs to be return of -> operator
+    //    https://vector-of-bool.github.io/2020/06/13/cpp20-iter-facade.html
 
     using circuit_type = std::conditional_t<Const, const Circuit, Circuit>;
 
@@ -264,7 +268,9 @@ class Circuit::ConnectionIteratorTemplate {
                                           Circuit::OutputTemplate<Const>>;
     using difference_type = connection_size_t;
     using pointer = value_type *;
-    using reference = value_type &;
+    // TODO check if reference needs to be return type of operator*
+    using reference = value_type;
+    // using reference = value_type &;
 
     [[nodiscard]] auto operator*() const -> value_type;
     // Prefix increment

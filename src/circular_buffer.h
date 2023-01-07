@@ -5,6 +5,7 @@
 #include "exceptions.h"
 
 #include <folly/small_vector.h>
+#include <gsl/gsl>
 
 namespace logicsim {
 
@@ -14,6 +15,9 @@ class circular_buffer {
    private:
     using buffer_t = folly::small_vector<Value, RequestedMaxInline, InternalSizeType>;
     // folly::small_vector_policy::NoHeap>;
+
+    template <bool Const>
+    class Iterator;
 
    public:
     using size_type = std::size_t;
@@ -25,11 +29,10 @@ class circular_buffer {
     using const_pointer = const value_type*;
     using difference_type = std::ptrdiff_t;
 
-    // TODO:
-    //  iterator
-    //  const_iterator
-    //  reverse_iterator
-    //  const_reverse_iterator
+    using iterator = Iterator<false>;
+    using const_iterator = Iterator<true>;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     circular_buffer() = default;
 
@@ -125,15 +128,61 @@ class circular_buffer {
         return (*this)[i];
     }
 
+    [[nodiscard]] auto begin() -> iterator {
+        return iterator {*this, 0};
+    }
+
+    [[nodiscard]] auto end() -> iterator {
+        return iterator {*this, size_};
+    }
+
+    [[nodiscard]] auto begin() const -> const_iterator {
+        return const_iterator {*this, 0};
+    }
+
+    [[nodiscard]] auto end() const -> const_iterator {
+        return const_iterator {*this, size_};
+    }
+
+    [[nodiscard]] auto cbegin() const -> const_iterator {
+        return begin();
+    }
+
+    [[nodiscard]] auto cend() const -> const_iterator {
+        return end();
+    }
+
+    [[nodiscard]] auto rbegin() -> reverse_iterator {
+        return reverse_iterator {*this, 0};
+    }
+
+    [[nodiscard]] auto rend() -> reverse_iterator {
+        return reverse_iterator {*this, size_};
+    }
+
+    [[nodiscard]] auto rbegin() const -> const_reverse_iterator {
+        return const_reverse_iterator {*this, 0};
+    }
+
+    [[nodiscard]] auto rend() const -> const_reverse_iterator {
+        return const_reverse_iterator {*this, size_};
+    }
+
+    [[nodiscard]] auto crbegin() const -> const_reverse_iterator {
+        return rbegin();
+    }
+
+    [[nodiscard]] auto crend() const -> const_reverse_iterator {
+        return rend();
+    }
+
    private:
-    /*
-     * Compute the size after growth. From small_vector implementation.
-     */
+    /// Compute the size after growth. From small_vector implementation.
     [[nodiscard]] size_type computeNewSize() const {
         return std::min((3 * buffer_.capacity()) / 2 + 1, buffer_.max_size());
     }
 
-    [[nodiscard]] auto wrap_plus(InternalSizeType a, InternalSizeType b) noexcept
+    [[nodiscard]] auto wrap_plus(InternalSizeType a, InternalSizeType b) const noexcept
         -> InternalSizeType {
         if (a + b >= buffer_.size()) {
             return static_cast<InternalSizeType>(a + b - buffer_.size());
@@ -141,7 +190,7 @@ class circular_buffer {
         return a + b;
     }
 
-    [[nodiscard]] auto wrap_minus(InternalSizeType a, InternalSizeType b) noexcept
+    [[nodiscard]] auto wrap_minus(InternalSizeType a, InternalSizeType b) const noexcept
         -> InternalSizeType {
         if (b > a) {
             return static_cast<InternalSizeType>(buffer_.size() + a - b);
@@ -149,15 +198,117 @@ class circular_buffer {
         return a - b;
     }
 
-    [[nodiscard]] auto get_end() noexcept -> InternalSizeType {
+    [[nodiscard]] auto get_end() const noexcept -> InternalSizeType {
         return wrap_plus(start_, size_);
     }
 
     InternalSizeType start_ {0};
     InternalSizeType size_ {0};
     buffer_t buffer_ = buffer_t(RequestedMaxInline);
+
+    static_assert(std::random_access_iterator<iterator>);
+    static_assert(std::random_access_iterator<const_iterator>);
+};
+
+template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
+template <bool Const>
+class circular_buffer<Value, RequestedMaxInline, InternalSizeType>::Iterator {
+    using container_base_t = circular_buffer<Value, RequestedMaxInline, InternalSizeType>;
+    using container_t
+        = std::conditional_t<Const, const container_base_t, container_base_t>;
+
+    container_t* container_ {};
+    std::size_t index_ {};
+
+   public:
+    using iterator_concept = std::random_access_iterator_tag;
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = std::conditional_t<Const, const Value, Value>;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+    Iterator() = default;
+
+    explicit Iterator(container_t& container, std::size_t index)
+        : container_ {&container}, index_ {index} {}
+
+    auto operator*() const -> reference {
+        return (*container_)[index_];
+    }
+
+    auto operator->() const -> pointer {
+        return &(*(*this));
+    }
+
+    auto operator==(const Iterator& right) const -> bool {
+        return index_ == right.index_;
+    }
+
+    auto operator-(const Iterator& right) const -> difference_type {
+        return index_ - right.index_;
+    }
+
+    auto operator<=>(const Iterator& right) const {
+        return index_ <=> right.index_;
+    }
+
+    auto operator++() -> Iterator& {
+        ++index_;
+        return *this;
+    }
+
+    auto operator++(int) -> Iterator {
+        auto copy = *this;
+        ++index_;
+        return copy;
+    }
+
+    auto operator--() -> Iterator& {
+        --index_;
+        return *this;
+    }
+
+    auto operator--(int) -> Iterator {
+        auto copy = *this;
+        --index_;
+        return copy;
+    }
+
+    auto operator+=(difference_type offset) -> Iterator& {
+        index_ += offset;
+        return *this;
+    }
+
+    auto operator-=(difference_type offset) -> Iterator& {
+        index_ -= offset;
+        return *this;
+    }
+
+    auto operator+(difference_type offset) const -> Iterator {
+        auto copy = *this;
+        return copy += offset;
+    }
+
+    friend auto operator+(difference_type offset, Iterator right) -> Iterator {
+        return right += offset;
+    }
+
+    auto operator-(difference_type offset) const -> Iterator {
+        auto copy = *this;
+        return copy -= offset;
+    }
+
+    auto operator[](difference_type position) const -> reference {
+        return *(*this + position);
+    }
 };
 
 }  // namespace logicsim
+
+template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
+inline constexpr bool std::ranges::enable_view<
+    logicsim::circular_buffer<Value, RequestedMaxInline, InternalSizeType>>
+    = true;
 
 #endif
