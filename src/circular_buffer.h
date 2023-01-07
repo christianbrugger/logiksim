@@ -57,6 +57,10 @@ class circular_buffer {
         size_ = 0;
     }
 
+    auto empty() const noexcept -> bool {
+        return size_ == 0;
+    }
+
     auto reserve(size_type new_size) -> void {
         if (new_size <= buffer_.size()) {
             return;
@@ -102,6 +106,16 @@ class circular_buffer {
         assert_ls(size() > 0);
         start_ = wrap_plus(start_, 1);
         --size_;
+    }
+
+    auto front() -> reference {
+        assert_ls(!empty());
+        return buffer_[start_];
+    }
+
+    auto back() -> reference {
+        assert_ls(!empty());
+        return buffer_[wrap_plus(start_, size_ - 1)];
     }
 
     [[nodiscard]] auto operator[](size_type i) -> reference {

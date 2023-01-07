@@ -2,9 +2,9 @@
 #define LOGIKSIM_SIMULATION_H
 
 #include "circuit.h"
+#include "circular_buffer.h"
 #include "exceptions.h"
 
-#include <boost/circular_buffer.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <fmt/core.h>
@@ -226,7 +226,7 @@ class Simulation {
     static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
-    using history_vector_t = boost::circular_buffer_space_optimized<time_t>;
+    using history_vector_t = circular_buffer<time_t, 2, uint32_t>;
 
     struct defaults {
         constexpr static delay_t standard_delay {100us};
@@ -326,12 +326,11 @@ class Simulation {
         logic_small_vector_t input_inverters {};
         logic_small_vector_t internal_state {};
         folly::small_vector<delay_t, 5, uint32_t> output_delays {};
-        // folly::small_vector<time_t, 2, uint32_t> first_input_history {};
         history_vector_t first_input_history {};
         history_t max_history {defaults::no_history};
 
         static_assert(sizeof(output_delays) == 24);
-        // static_assert(sizeof(first_input_history) == 20);
+        static_assert(sizeof(first_input_history) == 28);
     };
 
     gsl::not_null<const Circuit *> circuit_;

@@ -527,29 +527,16 @@ auto Simulation::record_input_history(const Circuit::ConstInput input,
         throw_exception("Cannot have two transitions recorded at the same time.");
     }
 
-    const auto increase_capacity = [&history]() {
-        const auto capacity = history.capacity();
-        history.set_capacity(
-            {capacity.capacity() + 1,
-             std::max(capacity.capacity() + 1, capacity.min_capacity())});
-    };
-
     // remove old values
     clean_history(history, state.max_history);
 
     // add new entry
-    increase_capacity();
     history.push_front(time());
 }
 
 auto Simulation::clean_history(history_vector_t &history, history_t max_history) -> void {
-    const auto decrease_capacity = [&history]() {
-        const auto capacity = history.capacity();
-        history.set_capacity({capacity.capacity() - 1, capacity.min_capacity()});
-    };
-
     while (!history.empty() && history.back() < time() - max_history.value) {
-        decrease_capacity();
+        history.pop_back();
     }
 }
 
