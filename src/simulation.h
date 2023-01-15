@@ -25,10 +25,10 @@
 // * flip flops, which requires internal state and access to last input values
 // * negation on input and outputs
 // * store history of events so lines can be drawn
-// * clock generators
+// * shift registers, requires more internal state
 
 /// New Features
-// * shift registers, requires more internal state
+// * clock generators
 
 namespace logicsim {
 
@@ -290,7 +290,7 @@ class Simulation {
 
     // internal states
     [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
-        -> logic_small_vector_t;
+        -> const logic_small_vector_t &;
 
     auto get_input_history(Circuit::ConstElement element) const
         -> const history_vector_t &;
@@ -311,8 +311,8 @@ class Simulation {
                       const logic_small_vector_t &output_values) -> void;
     auto apply_events(Circuit::ConstElement element, const event_group_t &group) -> void;
     auto set_input(Circuit::ConstInput input, bool value) -> void;
-    auto set_internal_state(Circuit::ConstElement element,
-                            const logic_small_vector_t &state) -> void;
+    // auto set_internal_state(Circuit::ConstElement element,
+    //                         const logic_small_vector_t &state) -> void;
 
     auto record_input_history(Circuit::ConstInput input, bool new_value) -> void;
     auto clean_history(history_vector_t &history, history_t max_history) -> void;

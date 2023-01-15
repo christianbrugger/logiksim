@@ -230,12 +230,10 @@ auto Simulation::check_state_valid() const -> void {
     }
 }
 
-// TODO: make state in/out parameter to speed it up, in case it creates a bottleneck
-auto calculate_internal_state(const Simulation::logic_small_vector_t &old_input,
-                              const Simulation::logic_small_vector_t &new_input,
-                              const Simulation::logic_small_vector_t &state,
-                              const ElementType type)
-    -> Simulation::logic_small_vector_t {
+auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
+                           const Simulation::logic_small_vector_t &new_input,
+                           const ElementType type,
+                           Simulation::logic_small_vector_t &state) {
     switch (type) {
         using enum ElementType;
 
@@ -246,36 +244,31 @@ auto calculate_internal_state(const Simulation::logic_small_vector_t &old_input,
                 bool input_k = new_input.at(2);
 
                 if (input_j && input_k) {
-                    return {!state.at(0)};
+                    state.at(0) = !state.at(0);
                 } else if (input_j && !input_k) {
-                    return {true};
+                    state.at(0) = true;
                 } else if (!input_j && input_k) {
-                    return {false};
+                    state.at(0) = false;
                 }
-                return state;
             }
-            return state;
+            return;
         }
 
         case shift_register: {
             // rising edge
             if (new_input.at(0) && !old_input.at(0)) {
                 auto n_inputs = std::ssize(new_input) - 1;
-                auto result = Simulation::logic_small_vector_t(state.size());
 
-                if (std::ssize(result) < n_inputs) [[unlikely]] {
+                if (std::ssize(state) < n_inputs) [[unlikely]] {
                     throw_exception(
                         "need at least as many internal states "
                         "as inputs for shift register");
                 }
 
-                std::copy(std::next(new_input.begin()), new_input.end(), result.begin());
-                std::copy(state.begin(), std::prev(state.end(), n_inputs),
-                          std::next(result.begin(), n_inputs));
-
-                return result;
+                std::shift_right(state.begin(), state.end(), n_inputs);
+                std::copy(std::next(new_input.begin()), new_input.end(), state.begin());
             }
-            return state;
+            return;
         }
 
         default:
@@ -434,16 +427,14 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     }
 
     if (has_internal_state(element_type)) {
-        const auto old_state = internal_state(element);
-        const auto new_state
-            = calculate_internal_state(old_inputs, new_inputs, old_state, element_type);
+        auto &internal_state = get_state(element).internal_state;
 
         const auto old_outputs = calculate_outputs_from_state(
-            old_state, element.output_count(), element_type);
+            internal_state, element.output_count(), element_type);
+        update_internal_state(old_inputs, new_inputs, element_type, internal_state);
         const auto new_outputs = calculate_outputs_from_state(
-            new_state, element.output_count(), element_type);
+            internal_state, element.output_count(), element_type);
 
-        set_internal_state(element, new_state);
         submit_events_for_changed_outputs(element, old_outputs, new_outputs);
     } else {
         // find changing outputs
@@ -678,20 +669,20 @@ auto Simulation::set_output_delay(const Circuit::ConstOutput output, const delay
 }
 
 auto Simulation::internal_state(Circuit::ConstElement element) const
-    -> logic_small_vector_t {
+    -> const logic_small_vector_t & {
     return get_state(element).internal_state;
 }
 
-auto Simulation::set_internal_state(const Circuit::ConstElement element,
-                                    const logic_small_vector_t &new_state) -> void {
-    auto &state = get_state(element);
-
-    if (std::size(new_state) != std::size(state.internal_state)) {
-        throw_exception("New internal state has wrong size.");
-    }
-
-    state.internal_state.assign(new_state.begin(), new_state.end());
-}
+// auto Simulation::set_internal_state(const Circuit::ConstElement element,
+//                                     const logic_small_vector_t &new_state) -> void {
+//     auto &state = get_state(element);
+//
+//     if (std::size(new_state) != std::size(state.internal_state)) {
+//         throw_exception("New internal state has wrong size.");
+//     }
+//
+//     state.internal_state.assign(new_state.begin(), new_state.end());
+// }
 
 auto Simulation::get_input_history(const Circuit::ConstElement element) const
     -> const history_vector_t & {
