@@ -1,6 +1,8 @@
 
 #include "simulation.h"
 
+#include "format.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -387,6 +389,78 @@ TEST(SimulationTest, TestClockGenerator) {
     ASSERT_EQ(simulation.output_value(clock.output(1)), false);
     simulation.run(100us);
     ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+}
+
+TEST(SimulationTest, TestShiftRegister) {
+    using namespace std::chrono_literals;
+
+    Circuit circuit;
+    auto shift_register {circuit.add_element(ElementType::shift_register, 3, 2)};
+
+    auto simulation = get_uninitialized_simulation(circuit);
+    simulation.initialize();
+
+    simulation.run();
+    // initial state
+    ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
+    ASSERT_THAT(simulation.internal_state(shift_register),
+                testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
+
+    // insert first element
+    simulation.submit_events(shift_register, 1ms, {true, true, false});
+    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
+    ASSERT_THAT(simulation.internal_state(shift_register),
+                testing::ElementsAre(1, 0, 0, 0, 0, 0, 0, 0));
+
+    // insert second element
+    simulation.submit_events(shift_register, 1ms, {true, false, true});
+    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
+    ASSERT_THAT(simulation.internal_state(shift_register),
+                testing::ElementsAre(0, 1, 1, 0, 0, 0, 0, 0));
+
+    // insert third element
+    simulation.submit_events(shift_register, 1ms, {true, true, true});
+    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
+    ASSERT_THAT(simulation.internal_state(shift_register),
+                testing::ElementsAre(1, 1, 0, 1, 1, 0, 0, 0));
+
+    // insert forth element  &  receive first element
+    simulation.submit_events(shift_register, 1ms, {true, false, false});
+    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(1, 0));
+    ASSERT_THAT(simulation.internal_state(shift_register),
+                testing::ElementsAre(0, 0, 1, 1, 0, 1, 1, 0));
+
+    // receive second element
+    simulation.submit_events(shift_register, 1ms, {true, false, false});
+    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 1));
+    ASSERT_THAT(simulation.internal_state(shift_register),
+                testing::ElementsAre(0, 0, 0, 0, 1, 1, 0, 1));
+
+    // receive third element
+    simulation.submit_events(shift_register, 1ms, {true, false, false});
+    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(1, 1));
+    ASSERT_THAT(simulation.internal_state(shift_register),
+                testing::ElementsAre(0, 0, 0, 0, 0, 0, 1, 1));
+
+    // receive fourth element
+    simulation.submit_events(shift_register, 1ms, {true, false, false});
+    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.run();
+    ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
+    ASSERT_THAT(simulation.internal_state(shift_register),
+                testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 }  // namespace logicsim

@@ -230,6 +230,7 @@ auto Simulation::check_state_valid() const -> void {
     }
 }
 
+// TODO: make state in/out parameter to speed it up, in case it creates a bottleneck
 auto calculate_internal_state(const Simulation::logic_small_vector_t &old_input,
                               const Simulation::logic_small_vector_t &new_input,
                               const Simulation::logic_small_vector_t &state,
@@ -256,6 +257,27 @@ auto calculate_internal_state(const Simulation::logic_small_vector_t &old_input,
             return state;
         }
 
+        case shift_register: {
+            // rising edge
+            if (new_input.at(0) && !old_input.at(0)) {
+                auto n_inputs = std::ssize(new_input) - 1;
+                auto result = Simulation::logic_small_vector_t(state.size());
+
+                if (std::ssize(result) < n_inputs) [[unlikely]] {
+                    throw_exception(
+                        "need at least as many internal states "
+                        "as inputs for shift register");
+                }
+
+                std::copy(std::next(new_input.begin()), new_input.end(), result.begin());
+                std::copy(state.begin(), std::prev(state.end(), n_inputs),
+                          std::next(result.begin(), n_inputs));
+
+                return result;
+            }
+            return state;
+        }
+
         default:
             [[unlikely]] throw_exception(
                 "Unexpected type encountered in calculate_new_state.");
@@ -263,7 +285,7 @@ auto calculate_internal_state(const Simulation::logic_small_vector_t &old_input,
 }
 
 auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
-                                  const ElementType type)
+                                  connection_size_t output_count, const ElementType type)
     -> Simulation::logic_small_vector_t {
     switch (type) {
         using enum ElementType;
@@ -271,6 +293,15 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
         case flipflop_jk: {
             bool enabled = state.at(0);
             return {enabled, !enabled};
+        }
+
+        case shift_register: {
+            if (std::ssize(state) < output_count) [[unlikely]] {
+                throw_exception(
+                    "need at least output count internal state for shift register");
+            }
+            return Simulation::logic_small_vector_t(std::prev(state.end(), output_count),
+                                                    state.end());
         }
 
         default:
@@ -308,9 +339,9 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
             return {std::ranges::count_if(input, std::identity {}) == 1};
 
         case clock_generator: {
-            bool res = !input.at(0)
-                       && std::all_of(std::next(input.cbegin()), input.cend(),
-                                      std::identity {});
+            bool res
+                = !input.at(0)
+                  && std::all_of(std::next(input.begin()), input.end(), std::identity {});
             return {res, res};
         }
 
@@ -407,8 +438,10 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
         const auto new_state
             = calculate_internal_state(old_inputs, new_inputs, old_state, element_type);
 
-        const auto old_outputs = calculate_outputs_from_state(old_state, element_type);
-        const auto new_outputs = calculate_outputs_from_state(new_state, element_type);
+        const auto old_outputs = calculate_outputs_from_state(
+            old_state, element.output_count(), element_type);
+        const auto new_outputs = calculate_outputs_from_state(
+            new_state, element.output_count(), element_type);
 
         set_internal_state(element, new_state);
         submit_events_for_changed_outputs(element, old_outputs, new_outputs);
@@ -500,8 +533,8 @@ auto Simulation::initialize() -> void {
         const auto old_outputs {output_values(element)};
 
         if (has_internal_state(element_type)) {
-            const auto new_outputs
-                = calculate_outputs_from_state(internal_state(element), element_type);
+            const auto new_outputs = calculate_outputs_from_state(
+                internal_state(element), element.output_count(), element_type);
 
             submit_events_for_changed_outputs(element, old_outputs, new_outputs);
 
