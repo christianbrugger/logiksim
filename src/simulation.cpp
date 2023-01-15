@@ -164,8 +164,8 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case and_element:
         case or_element:
         case xor_element:
-        case clock_generator:
             return 0;
+        case clock_generator:
         case flipflop_jk:
             return 1;
         case shift_register:
@@ -237,6 +237,21 @@ auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
     switch (type) {
         using enum ElementType;
 
+        case clock_generator: {
+            bool rise_cycle = !new_input.at(0) && old_input.at(0);
+            bool rise_start = new_input.at(1) && !old_input.at(1);
+
+            bool in_second_phase = !new_input.at(0);
+            bool enabled = new_input.at(1);
+
+            if ((rise_cycle && enabled) || (rise_start && in_second_phase)) {
+                state.at(0) = true;
+            } else if (new_input.at(0) && !old_input.at(0)) {
+                state.at(0) = false;
+            }
+            return;
+        }
+
         case flipflop_jk: {
             // rising edge
             if (new_input.at(0) && !old_input.at(0)) {
@@ -282,6 +297,11 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
     -> Simulation::logic_small_vector_t {
     switch (type) {
         using enum ElementType;
+
+        case clock_generator: {
+            bool enabled = state.at(0);
+            return {enabled, enabled};
+        }
 
         case flipflop_jk: {
             bool enabled = state.at(0);
@@ -330,13 +350,6 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
 
         case xor_element:
             return {std::ranges::count_if(input, std::identity {}) == 1};
-
-        case clock_generator: {
-            bool res
-                = !input.at(0)
-                  && std::all_of(std::next(input.begin()), input.end(), std::identity {});
-            return {res, res};
-        }
 
         default:
             [[unlikely]] throw_exception(
@@ -674,7 +687,8 @@ auto Simulation::internal_state(Circuit::ConstElement element) const
 }
 
 // auto Simulation::set_internal_state(const Circuit::ConstElement element,
-//                                     const logic_small_vector_t &new_state) -> void {
+//                                     const logic_small_vector_t &new_state) -> void
+//                                     {
 //     auto &state = get_state(element);
 //
 //     if (std::size(new_state) != std::size(state.internal_state)) {

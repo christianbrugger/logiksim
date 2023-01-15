@@ -377,6 +377,7 @@ TEST(SimulationTest, TestClockGenerator) {
 
     auto simulation = get_uninitialized_simulation(circuit);
     simulation.set_output_delay(clock.output(0), delay_t {100us});
+    simulation.set_output_delay(clock.output(1), delay_t {100us});
 
     simulation.initialize();
     simulation.submit_event(clock.input(1), 50us, true);
@@ -389,6 +390,69 @@ TEST(SimulationTest, TestClockGenerator) {
     ASSERT_EQ(simulation.output_value(clock.output(1)), false);
     simulation.run(100us);
     ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+}
+
+TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
+    using namespace std::chrono_literals;
+
+    Circuit circuit;
+    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    clock.output(0).connect(clock.input(0));
+
+    auto simulation = get_uninitialized_simulation(circuit);
+    simulation.set_output_delay(clock.output(0), delay_t {500us});
+    simulation.set_output_delay(clock.output(1), delay_t {100us});
+
+    simulation.initialize();
+    simulation.submit_event(clock.input(1), 50us, true);
+
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+    simulation.run(100us);  // 600 us
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+    simulation.run(100us);  // 700 us
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
+}
+
+TEST(SimulationTest, TestClockReset) {
+    using namespace std::chrono_literals;
+
+    Circuit circuit;
+    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    clock.output(0).connect(clock.input(0));
+
+    auto simulation = get_uninitialized_simulation(circuit);
+    simulation.set_output_delay(clock.output(0), delay_t {1ms});
+    simulation.set_output_delay(clock.output(1), delay_t {1ns});
+
+    simulation.initialize();
+    simulation.submit_event(clock.input(1), 1000us, true);
+    simulation.submit_event(clock.input(1), 1100us, false);
+    simulation.run(10ns);
+
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
+    simulation.run(1ms);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+
+    simulation.run(999us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+    simulation.run(1us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
+
+    simulation.run(1ms);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
+    simulation.run(1ms);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
+    simulation.run(1ms);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
 }
 
 TEST(SimulationTest, TestShiftRegister) {

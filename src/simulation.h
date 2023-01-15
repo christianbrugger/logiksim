@@ -26,9 +26,9 @@
 // * negation on input and outputs
 // * store history of events so lines can be drawn
 // * shift registers, requires more internal state
+// * clock generators
 
 /// New Features
-// * clock generators
 
 namespace logicsim {
 
