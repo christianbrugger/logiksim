@@ -34,10 +34,12 @@ auto format(ElementType type) -> std::string {
             return "OrElement";
         case xor_element:
             return "XorElement";
-        case clock_element:
-            return "ClockElement";
+        case clock_generator:
+            return "ClockGenerator";
         case flipflop_jk:
             return "JK-FlipFlop";
+        case shift_register:
+            return "ShiftRegister";
     }
     throw_exception("Don't know how to convert ElementType to string.");
 }

@@ -164,10 +164,12 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case and_element:
         case or_element:
         case xor_element:
+        case clock_generator:
             return 0;
-        case clock_element:
         case flipflop_jk:
             return 1;
+        case shift_register:
+            return 8;
     }
     throw_exception("Dont know internal state of given type.");
 }
@@ -304,6 +306,13 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
 
         case xor_element:
             return {std::ranges::count_if(input, std::identity {}) == 1};
+
+        case clock_generator: {
+            bool res = !input.at(0)
+                       && std::all_of(std::next(input.cbegin()), input.cend(),
+                                      std::identity {});
+            return {res, res};
+        }
 
         default:
             [[unlikely]] throw_exception(

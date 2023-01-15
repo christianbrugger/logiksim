@@ -24,8 +24,9 @@ enum class ElementType : uint8_t {
     or_element,
     xor_element,
 
-    clock_element,
+    clock_generator,
     flipflop_jk,
+    shift_register,
 };
 
 auto format(ElementType type) -> std::string;

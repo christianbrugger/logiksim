@@ -7,10 +7,13 @@
 #include <folly/small_vector.h>
 #include <gsl/gsl>
 
+#include <type_traits>
+
 namespace logicsim {
 
 template <typename Value, std::size_t RequestedMaxInline = 1,
           typename InternalSizeType = std::size_t>
+    requires std::is_trivial_v<Value>
 class circular_buffer {
    private:
     using buffer_t = folly::small_vector<Value, RequestedMaxInline, InternalSizeType>;
@@ -69,7 +72,7 @@ class circular_buffer {
             return;
         }
         buffer_t new_buffer(std::max(new_size, computeNewSize()));
-        assert_ls(new_buffer.size() == new_buffer.capacity());
+        assert(new_buffer.size() == new_buffer.capacity());
 
         // copy ring buffer to the beginning of the new buffer
         const auto half_count = buffer_.size() - start_;
@@ -101,33 +104,33 @@ class circular_buffer {
     }
 
     auto pop_back() -> void {
-        assert_ls(size() > 0);
+        assert(size() > 0);
         --size_;
     }
 
     auto pop_front() -> void {
-        assert_ls(size() > 0);
+        assert(size() > 0);
         start_ = wrap_plus(start_, 1);
         --size_;
     }
 
     auto front() -> reference {
-        assert_ls(!empty());
+        assert(!empty());
         return buffer_[start_];
     }
 
     auto back() -> reference {
-        assert_ls(!empty());
+        assert(!empty());
         return buffer_[wrap_plus(start_, size_ - 1)];
     }
 
     [[nodiscard]] auto operator[](size_type i) -> reference {
-        assert_ls(i < size());
+        assert(i < size());
         return buffer_[wrap_plus(start_, static_cast<InternalSizeType>(i))];
     }
 
     [[nodiscard]] auto operator[](size_type i) const -> const_reference {
-        assert_ls(i < size());
+        assert(i < size());
         return buffer_[wrap_plus(start_, static_cast<InternalSizeType>(i))];
     }
 
@@ -224,6 +227,7 @@ class circular_buffer {
 };
 
 template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
+    requires std::is_trivial_v<Value>
 template <bool Const>
 class circular_buffer<Value, RequestedMaxInline, InternalSizeType>::Iterator {
     using container_base_t = circular_buffer<Value, RequestedMaxInline, InternalSizeType>;

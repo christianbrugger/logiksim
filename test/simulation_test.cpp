@@ -366,4 +366,27 @@ TEST(SimulationTest, TestInputHistory) {
     ASSERT_THAT(simulation.get_input_history(wire), testing::ElementsAre(180us));
 }
 
+TEST(SimulationTest, TestClockGenerator) {
+    using namespace std::chrono_literals;
+
+    Circuit circuit;
+    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    clock.output(0).connect(clock.input(0));
+
+    auto simulation = get_uninitialized_simulation(circuit);
+    simulation.set_output_delay(clock.output(0), delay_t {100us});
+
+    simulation.initialize();
+    simulation.submit_event(clock.input(1), 50us, true);
+
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), false);
+    simulation.run(100us);
+    ASSERT_EQ(simulation.output_value(clock.output(1)), true);
+}
+
 }  // namespace logicsim

@@ -24,10 +24,10 @@
 // * store transition times for wires, so they can be drawn
 // * flip flops, which requires internal state and access to last input values
 // * negation on input and outputs
-
-/// New Features
 // * store history of events so lines can be drawn
 // * clock generators
+
+/// New Features
 // * shift registers, requires more internal state
 
 namespace logicsim {
