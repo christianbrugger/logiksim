@@ -283,12 +283,12 @@ TEST(SimulationTest, JKFlipFlop) {
     simulation.submit_events(flipflop, 1ms, {true, true, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
-    simulation.submit_events(flipflop, 1ms, {true, false, false});
+    simulation.submit_events(flipflop, 1ms, {false, true, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
 
     // switch to k state
-    simulation.submit_events(flipflop, 1ms, {false, true, true});
+    simulation.submit_events(flipflop, 1ms, {true, false, true});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
     simulation.submit_events(flipflop, 1ms, {false, false, true});
@@ -297,16 +297,16 @@ TEST(SimulationTest, JKFlipFlop) {
 
     // toggle state
     simulation.submit_events(flipflop, 1ms, {true, true, true});
-    simulation.submit_events(flipflop, 2ms, {true, false, true});
+    simulation.submit_events(flipflop, 2ms, {false, true, true});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
     simulation.submit_events(flipflop, 1ms, {true, true, true});
-    simulation.submit_events(flipflop, 2ms, {true, false, true});
+    simulation.submit_events(flipflop, 2ms, {false, true, true});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 
     // steady state
-    simulation.submit_events(flipflop, 1ms, {false, true, false});
+    simulation.submit_events(flipflop, 1ms, {true, false, false});
     simulation.submit_events(flipflop, 2ms, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));

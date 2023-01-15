@@ -239,8 +239,8 @@ auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
 
         case flipflop_jk: {
             // rising edge
-            if (new_input.at(1) && !old_input.at(1)) {
-                bool input_j = new_input.at(0);
+            if (new_input.at(0) && !old_input.at(0)) {
+                bool input_j = new_input.at(1);
                 bool input_k = new_input.at(2);
 
                 if (input_j && input_k) {
