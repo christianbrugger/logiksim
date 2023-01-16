@@ -5,25 +5,38 @@
 #include "simulation.h"
 
 #include <blend2d.h>
-#include <boost/container/small_vector.hpp>
+#include <folly/small_vector.h>
 
 #include <array>
 #include <cstdint>
 
 namespace logicsim {
 
-using point2d_t = std::array<double, 2>;
-using line_tree_t = boost::container::small_vector<point2d_t, 2>;
+//           / --- c
+//  a ---- b
+//           \ --- d
+//
 
-/* Draw attributes for one element in the circuit. */
-struct DrawAttributes {
-    line_tree_t line_tree;
-    point2d_t position;
+struct point2d_t {
+    int16_t x;
+    int16_t y;
+};
+
+using point_vector_t = folly::small_vector<point2d_t, 2, uint16_t>;
+using pair_vector_t = folly::small_vector<uint16_t, 4, uint16_t>;
+
+static_assert(sizeof(point_vector_t) == 10);
+static_assert(sizeof(pair_vector_t) == 10);
+
+/* For one element in the circuit. */
+struct DrawAttribute {
+    point_vector_t points;
+    pair_vector_t indices;
 
     int8_t orientation;
 };
 
-using attribute_vector_t = std::vector<DrawAttributes>;
+using attribute_vector_t = std::vector<DrawAttribute>;
 
 auto render_scene(BLContext& ctx, const Simulation& simulation,
                   const attribute_vector_t& attributes) -> void;

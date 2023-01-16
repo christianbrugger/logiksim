@@ -10,30 +10,44 @@ void render_background(BLContext& ctx) {
     ctx.fillAll();
 }
 
-void draw_wire_element(BLContext& ctx, const DrawAttributes& attributes,
-                       const std::ranges::input_range auto input_values) {
-    constexpr static double s = 20;
-    ctx.setStrokeWidth(2);
+void draw_wire_element(BLContext& ctx, Circuit::ConstElement element,
+                       const DrawAttribute& attributes, const Simulation& simulation) {
+    constexpr static double s = 10;
+    ctx.setStrokeWidth(1);
 
-    uint32_t color = *std::begin(input_values) ? 0xFFFF0000u : 0xFF000000u;
-    ctx.setStrokeStyle(BLRgba32(color));
+    if (attributes.points.size() < 2) [[unlikely]] {
+        throw_exception("A line needs at least two points to be drawn.");
+    }
 
-    const auto& p0 = attributes.line_tree.at(0);
-    const auto& p1 = attributes.line_tree.at(1);
+    auto p0 = attributes.points.at(0);
+    auto p1 = attributes.points.at(1);
+    size_t i = 2;
 
-    ctx.strokeLine(BLLine(p0[0] * s, p0[1] * s, p1[0] * s, p1[1] * s));
+    while (true) {
+        uint32_t color
+            = simulation.input_value(element.input(0)) ? 0xFFFF0000u : 0xFF000000u;
+        ctx.setStrokeStyle(BLRgba32(color));
+        ctx.strokeLine(BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s));
+
+        if (i >= attributes.points.size()) {
+            break;
+        }
+        p0 = attributes.points.at(attributes.indices.at(i - 2));
+        p1 = attributes.points.at(i);
+        ++i;
+    }
 }
 
 void draw_standard_element(BLContext& ctx, ElementType type,
-                           const DrawAttributes& attributes,
+                           const DrawAttribute& attributes,
                            const std::ranges::input_range auto input_values,
                            const std::ranges::input_range auto output_values) {
-    constexpr static double s = 20;
-    ctx.setStrokeWidth(2);
+    constexpr static double s = 10;
+    ctx.setStrokeWidth(1);
 
     // draw rect
-    double x = attributes.position[0] * s;
-    double y = attributes.position[1] * s;
+    double x = attributes.points.at(0).x * s;
+    double y = attributes.points.at(0).y * s;
     int height = std::max(
         2, 2);  // ranges::size(input_values), ranges::size(output_values));  TODO
     BLPath path;
@@ -67,18 +81,21 @@ void draw_standard_element(BLContext& ctx, ElementType type,
     std::cout << static_cast<int>(type);
 }
 
-void draw_element(BLContext& ctx, ElementType type, const DrawAttributes& attributes,
-                  const std::ranges::input_range auto input_values,
-                  const std::ranges::input_range auto output_values) {
-    switch (type) {
-        case ElementType::wire:
-            draw_wire_element(ctx, attributes, input_values);
+void draw_element(BLContext& ctx, Circuit::ConstElement element,
+                  const DrawAttribute& attributes, const Simulation& simulation) {
+    switch (element.element_type()) {
+        using enum ElementType;
+
+        case wire:
+            draw_wire_element(ctx, element, attributes, simulation);
             break;
-        case ElementType::inverter_element:
-        case ElementType::and_element:
-        case ElementType::or_element:
-        case ElementType::xor_element:
-            draw_standard_element(ctx, type, attributes, input_values, output_values);
+        case inverter_element:
+        case and_element:
+        case or_element:
+        case xor_element:
+            draw_standard_element(ctx, element.element_type(), attributes,
+                                  simulation.input_values(element),
+                                  simulation.output_values(element));
         default:
             break;
     }
@@ -86,11 +103,13 @@ void draw_element(BLContext& ctx, ElementType type, const DrawAttributes& attrib
 
 auto render_scene(BLContext& ctx, const Simulation& simulation,
                   const attribute_vector_t& attributes) -> void {
+    ctx.postTranslate(BLPoint(0.5, 0.5));
+    // ctx.postScale(2);
+
     render_background(ctx);
 
     for (auto element : simulation.circuit().elements()) {
-        draw_element(ctx, element.element_type(), attributes.at(element.element_id()),
-                     simulation.input_values(element), simulation.output_values(element));
+        draw_element(ctx, element, attributes.at(element.element_id()), simulation);
     }
 
     // std::ranges::for_each(circuit.elements(), [&](auto element) {

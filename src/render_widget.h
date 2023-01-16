@@ -104,8 +104,10 @@ class WidgetRenderer : public QWidget {
 
         simulation.run();
 
-        attribute_vector_t attributes
-            = {{{}, {5, 3}, 0}, {{{10, 10}, {12, 12}}, {5, 3}, 0}};
+        attribute_vector_t attributes = {
+            {{point2d_t {5, 3}}, {}, 0},
+            {{point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {12, 12}}, {1}, 0},
+        };
 
         // int w = qt_image.width();
         // int h = qt_image.height();
