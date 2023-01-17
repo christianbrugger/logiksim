@@ -55,7 +55,13 @@ struct fmt::formatter<logicsim::time_t> {
     }
 
     static auto format(const logicsim::time_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.count());
+        auto count = obj.count();
+
+        if (0 < count && count < 1000) {
+            return fmt::format_to(ctx.out(), "{}ns", count);
+        } else {
+            return fmt::format_to(ctx.out(), "{}us", count / 1000);
+        }
     }
 };
 
@@ -91,6 +97,26 @@ struct delay_t {
         }
     };
 };
+}  // namespace logicsim
+
+template <>
+struct fmt::formatter<logicsim::delay_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::delay_t &obj, fmt::format_context &ctx) {
+        auto count = obj.value.count();
+
+        if (0 < count && count < 1000) {
+            return fmt::format_to(ctx.out(), "{}ns", count);
+        } else {
+            return fmt::format_to(ctx.out(), "{}us", count / 1000);
+        }
+    }
+};
+
+namespace logicsim {
 
 struct history_t {
    private:
@@ -227,6 +253,8 @@ class Simulation {
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
     using history_vector_t = circular_buffer<time_t, 2, uint32_t>;
+
+    constexpr static delay_t wire_delay_per_distance {10us};
 
     struct defaults {
         constexpr static delay_t standard_delay {100us};

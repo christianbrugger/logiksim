@@ -12,7 +12,11 @@
 #include <QFrame>
 #include <QPainter>
 #include <QResizeEvent>
+#include <QTimer>
 #include <QWidget>
+
+#include <chrono>
+#include <cmath>
 
 namespace logicsim {
 
@@ -44,12 +48,24 @@ void benchmark_logic_elements(F&& draw_rect, G&& draw_line, int count = 100) {
 
 class WidgetRenderer : public QWidget {
     Q_OBJECT
+
+    using animation_clock = std::chrono::steady_clock;
+
    public:
     WidgetRenderer(QWidget* parent = nullptr)
-        : QWidget(parent), last_pixel_ratio_(devicePixelRatioF()) {
+        : QWidget(parent),
+          last_pixel_ratio_ {devicePixelRatioF()},
+          animation_start_ {animation_clock::now()} {
         setAutoFillBackground(false);
         setAttribute(Qt::WA_OpaquePaintEvent, true);
         setAttribute(Qt::WA_NoSystemBackground, true);
+
+        connect(&timer_, &QTimer::timeout, this, &WidgetRenderer::on_timeout);
+        timer_.start();
+    }
+
+    Q_SLOT void on_timeout() {
+        this->update();
     }
 
     QSize size_pixels() {
@@ -87,6 +103,11 @@ class WidgetRenderer : public QWidget {
             return;
         }
 
+        const double animation_seconds
+            = std::chrono::duration<double>(animation_clock::now() - animation_start_)
+                  .count();
+        const double animation_frame = fmod(animation_seconds / 5.0, 1.0);
+
         Circuit circuit;
 
         const auto elem0 = circuit.add_element(ElementType::or_element, 2, 1);
@@ -98,16 +119,31 @@ class WidgetRenderer : public QWidget {
         auto simulation = Simulation {circuit};
         simulation.print_events = true;
 
+        simulation.set_output_delay(elem0.output(0), delay_t {10us});
+        simulation.set_output_delay(line0.output(0), delay_t {40us});
+        // TODO rename function to: set_history_length
+        // TODO use delay_t instead of history_t maybe?
+        simulation.set_max_history(line0, history_t {40us});
+
         simulation.initialize();
         simulation.submit_event(elem0.input(0), 100us, true);
+        simulation.submit_event(elem0.input(0), 105us, false);
+        simulation.submit_event(elem0.input(0), 110us, true);
         simulation.submit_event(elem0.input(0), 500us, false);
 
-        simulation.run();
+        // TODO use gsl narrow
+        auto end_time_ns = static_cast<uint64_t>(90'000 + animation_frame * 90'000);
+        const auto end_time = time_t {end_time_ns * 1ns};
+        simulation.run(end_time);
+        // simulation.run(time_t {125us});
+        // simulation.run(time_t {130us});
+        // simulation.run(time_t {600us});
+        // timer_.stop();
 
         auto scene = SimulationScene(simulation);
         scene.set_position(elem0, point2d_t {5, 3});
         scene.set_wire_tree(
-            line0, {point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {12, 12}}, {1});
+            line0, {point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {8, 12}}, {1});
 
         // attribute_vector_t attributes = {
         //     {{point2d_t {5, 3}}, {}, 0},
@@ -153,6 +189,9 @@ class WidgetRenderer : public QWidget {
     constexpr static int n_threads_ {0};
     BLContextCreateInfo bl_info {};
     BLContext bl_ctx {};
+
+    QTimer timer_;
+    animation_clock::time_point animation_start_;
 };
 
 }  // namespace logicsim

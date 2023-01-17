@@ -173,19 +173,19 @@ class circular_buffer {
     }
 
     [[nodiscard]] auto rbegin() -> reverse_iterator {
-        return reverse_iterator {*this, 0};
+        return reverse_iterator {end()};
     }
 
     [[nodiscard]] auto rend() -> reverse_iterator {
-        return reverse_iterator {*this, size_};
+        return reverse_iterator {begin()};
     }
 
     [[nodiscard]] auto rbegin() const -> const_reverse_iterator {
-        return const_reverse_iterator {*this, 0};
+        return const_reverse_iterator {end()};
     }
 
     [[nodiscard]] auto rend() const -> const_reverse_iterator {
-        return const_reverse_iterator {*this, size_};
+        return const_reverse_iterator {begin()};
     }
 
     [[nodiscard]] auto crbegin() const -> const_reverse_iterator {

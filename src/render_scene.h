@@ -19,9 +19,20 @@ namespace logicsim {
 //           \ --- d
 //
 
+struct point2d_fine_t {
+    double x;
+    double y;
+};
+
+using point_t = int16_t;
+
 struct point2d_t {
-    int16_t x;
-    int16_t y;
+    point_t x;
+    point_t y;
+
+    explicit operator point2d_fine_t() const noexcept {
+        return point2d_fine_t {static_cast<double>(x), static_cast<double>(y)};
+    }
 };
 
 using wire_index_t = uint16_t;
