@@ -104,17 +104,22 @@ class WidgetRenderer : public QWidget {
 
         simulation.run();
 
-        attribute_vector_t attributes = {
-            {{point2d_t {5, 3}}, {}, 0},
-            {{point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {12, 12}}, {1}, 0},
-        };
+        auto scene = SimulationScene(simulation);
+        scene.set_position(elem0, point2d_t {5, 3});
+        scene.set_wire_tree(
+            line0, {point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {12, 12}}, {1});
+
+        // attribute_vector_t attributes = {
+        //     {{point2d_t {5, 3}}, {}, 0},
+        //     {{point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {12, 12}}, {1}, 0},
+        // };
 
         // int w = qt_image.width();
         // int h = qt_image.height();
 
         bl_ctx.begin(bl_image, bl_info);
         // renderFrame(bl_ctx);
-        render_scene(bl_ctx, simulation, attributes);
+        scene.render_scene(bl_ctx);
         bl_ctx.end();
 
         QPainter painter(this);

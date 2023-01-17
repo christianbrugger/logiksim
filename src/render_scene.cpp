@@ -5,56 +5,85 @@
 
 namespace logicsim {
 
-void render_background(BLContext& ctx) {
+SimulationScene::SimulationScene(const Simulation& simulation) noexcept
+    : simulation_ {&simulation},
+      draw_data_vector_(simulation.circuit().element_count()) {}
+
+auto SimulationScene::set_position(Circuit::ConstElement element, point2d_t position)
+    -> void {
+    get_data(element).position = position;
+}
+
+auto SimulationScene::set_wire_tree(Circuit::ConstElement element,
+                                    std::vector<point2d_t> points,
+                                    std::vector<wire_index_t> indices) -> void {
+    // this method is potentially very slow
+    get_data(element).points.assign(points.begin(), points.end());
+    get_data(element).indices.assign(indices.begin(), indices.end());
+}
+
+auto SimulationScene::get_data(Circuit::ConstElement element) -> DrawData& {
+    return draw_data_vector_.at(element.element_id());
+}
+
+auto SimulationScene::get_data(Circuit::ConstElement element) const -> const DrawData& {
+    return draw_data_vector_.at(element.element_id());
+}
+
+auto SimulationScene::draw_background(BLContext& ctx) const -> void {
     ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
     ctx.fillAll();
 }
 
-void draw_wire_element(BLContext& ctx, Circuit::ConstElement element,
-                       const DrawAttribute& attributes, const Simulation& simulation) {
-    constexpr static double s = 10;
+auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) const
+    -> void {
+    constexpr static double s = 12;
     ctx.setStrokeWidth(1);
 
-    if (attributes.points.size() < 2) [[unlikely]] {
-        throw_exception("A line needs at least two points to be drawn.");
+    const auto& data = get_data(element);
+
+    if (data.points.size() < 2) {
+        return;
     }
 
-    auto p0 = attributes.points.at(0);
-    auto p1 = attributes.points.at(1);
+    auto p0 = data.points.at(0);
+    auto p1 = data.points.at(1);
     size_t i = 2;
 
     while (true) {
         uint32_t color
-            = simulation.input_value(element.input(0)) ? 0xFFFF0000u : 0xFF000000u;
+            = simulation_->input_value(element.input(0)) ? 0xFFFF0000u : 0xFF000000u;
         ctx.setStrokeStyle(BLRgba32(color));
         ctx.strokeLine(BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s));
 
-        if (i >= attributes.points.size()) {
+        if (i >= data.points.size()) {
             break;
         }
-        p0 = attributes.points.at(attributes.indices.at(i - 2));
-        p1 = attributes.points.at(i);
+        p0 = data.points.at(data.indices.at(i - 2));
+        p1 = data.points.at(i);
         ++i;
     }
 }
 
-void draw_standard_element(BLContext& ctx, ElementType type,
-                           const DrawAttribute& attributes,
-                           const std::ranges::input_range auto input_values,
-                           const std::ranges::input_range auto output_values) {
-    constexpr static double s = 10;
+auto SimulationScene::draw_standard_element(BLContext& ctx,
+                                            Circuit::ConstElement element) const -> void {
+    constexpr static double s = 12;
     ctx.setStrokeWidth(1);
 
+    const auto& data = get_data(element);
+    auto input_values = simulation_->input_values(element);
+    auto output_values = simulation_->output_values(element);
+
     // draw rect
-    double x = attributes.points.at(0).x * s;
-    double y = attributes.points.at(0).y * s;
-    int height = std::max(
-        2, 2);  // ranges::size(input_values), ranges::size(output_values));  TODO
+    double x = data.position.x * s;
+    double y = data.position.y * s;
+    auto height = std::max(std::ssize(input_values), std::ssize(output_values));
     BLPath path;
     path.addRect(x, y + -0.5 * s, 2 * s, height * s);
 
     // draw inputs & outputs
-    int input_offset = (height - 1) / 2;  // ranges::size(input_values)) / 2;  TODO
+    // auto input_offset = (height - 1) / 2;  // ranges::size(input_values)) / 2;
+    auto input_offset = (height - std::ssize(input_values)) / 2;
     for (int i = 0; const auto value : input_values) {
         double y_pin = y + (input_offset + i) * s;
         uint32_t color = value ? 0xFFFF0000u : 0xFF000000u;
@@ -63,7 +92,7 @@ void draw_standard_element(BLContext& ctx, ElementType type,
         ++i;
     }
 
-    int output_offset = (height - 2) / 2;  // ranges::size(output_values)) / 2;  TODO
+    auto output_offset = (height - std::ssize(output_values)) / 2;
     for (int i = 0; const auto value : output_values) {
         double y_pin = y + (output_offset + i) * s;
         uint32_t color = value ? 0xFFFF0000u : 0xFF000000u;
@@ -77,52 +106,21 @@ void draw_standard_element(BLContext& ctx, ElementType type,
     ctx.setStrokeStyle(BLRgba32(0xFF000000u));
     ctx.fillPath(path);
     ctx.strokePath(path);
-
-    std::cout << static_cast<int>(type);
 }
 
-void draw_element(BLContext& ctx, Circuit::ConstElement element,
-                  const DrawAttribute& attributes, const Simulation& simulation) {
-    switch (element.element_type()) {
-        using enum ElementType;
-
-        case wire:
-            draw_wire_element(ctx, element, attributes, simulation);
-            break;
-        case inverter_element:
-        case and_element:
-        case or_element:
-        case xor_element:
-            draw_standard_element(ctx, element.element_type(), attributes,
-                                  simulation.input_values(element),
-                                  simulation.output_values(element));
-        default:
-            break;
-    }
-}
-
-auto render_scene(BLContext& ctx, const Simulation& simulation,
-                  const attribute_vector_t& attributes) -> void {
+auto SimulationScene::render_scene(BLContext& ctx) const -> void {
     ctx.postTranslate(BLPoint(0.5, 0.5));
-    // ctx.postScale(2);
+    ctx.postScale(1);
 
-    render_background(ctx);
+    draw_background(ctx);
 
-    for (auto element : simulation.circuit().elements()) {
-        draw_element(ctx, element, attributes.at(element.element_id()), simulation);
+    for (auto element : simulation_->circuit().elements()) {
+        if (element.element_type() == ElementType::wire) {
+            draw_wire(ctx, element);
+        } else {
+            draw_standard_element(ctx, element);
+        }
     }
-
-    // std::ranges::for_each(circuit.elements(), [&](auto element) {
-    //     draw_element(
-    //         ctx, element.element_type(), attributes.at(element.element_id()),
-    //         ranges::views::transform(
-    //             element.inputs(),
-    //             [&](auto input) { return simulation.input_values.at(input.input_id());
-    //             }),
-    //         ranges::views::transform(element.outputs(), [&](auto output) {
-    //             return simulation.output_values.at(output.output_id());
-    //         }));
-    // });
 }
 
 }  // namespace logicsim
