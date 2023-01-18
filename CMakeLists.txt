@@ -271,11 +271,13 @@ set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET} 
     ${LS_CORE_SOURCES}
     
+    src/render_scene.h src/render_scene.cpp
     src/main_bechmark.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
-
+    
+    Blend2D::Blend2D
     benchmark::benchmark
 )
 target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})

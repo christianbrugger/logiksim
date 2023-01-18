@@ -3,9 +3,11 @@
 // #define _DISABLE_STRING_ANNOTATION
 
 #include "circuit.h"
+#include "render_scene.h"
 #include "simulation.h"
 
 #include <benchmark/benchmark.h>
+#include <blend2d.h>
 #include <boost/random/mersenne_twister.hpp>
 #include <gsl/gsl>
 
@@ -239,5 +241,36 @@ static void BM_Simulation_0(benchmark::State& state) {
 }
 
 BENCHMARK(BM_Simulation_0);  // NOLINT
+
+static void BM_RenderScene_0(benchmark::State& state) {
+    int64_t count = 0;
+    for ([[maybe_unused]] auto _ : state) {
+        state.PauseTiming();
+        logicsim::BenchmarkScene scene;
+        count += logicsim::fill_line_scene(scene, 100);
+
+        benchmark::DoNotOptimize(count);
+        benchmark::ClobberMemory();
+
+        // render image
+        BLImage img(1200, 1200, BL_FORMAT_PRGB32);
+        BLContext ctx(img);
+        ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
+        ctx.fillAll();
+        ctx.flush(BL_CONTEXT_FLUSH_SYNC);
+
+        state.ResumeTiming();
+
+        scene.renderer.render_scene(ctx, false);
+        ctx.end();
+
+        benchmark::DoNotOptimize(img);
+        benchmark::ClobberMemory();
+    }
+    state.counters["Events"]
+        = benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(BM_RenderScene_0);  // NOLINT
 
 BENCHMARK_MAIN();  // NOLINT

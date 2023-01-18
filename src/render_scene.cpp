@@ -213,11 +213,13 @@ auto SimulationScene::draw_standard_element(BLContext& ctx,
     ctx.strokePath(path);
 }
 
-auto SimulationScene::render_scene(BLContext& ctx) const -> void {
+auto SimulationScene::render_scene(BLContext& ctx, bool render_background) const -> void {
     ctx.postTranslate(BLPoint(0.5, 0.5));
     ctx.postScale(1);
 
-    draw_background(ctx);
+    if (render_background) {
+        draw_background(ctx);
+    }
 
     for (auto element : simulation_->circuit().elements()) {
         auto type = element.element_type();
@@ -372,20 +374,36 @@ auto calculate_delay(const std::vector<point2d_t>& points,
     return delay;
 }
 
-auto benchmark_line_renderer(int n_lines) -> int64_t {
+auto calculate_tree_length(std::vector<point2d_t> points,
+                           std::vector<wire_index_t> indices) -> int {
+    int res = distance_1d(points.at(0), points.at(1));
+    int i = 2;
+    for (auto index : indices) {
+        res += distance_1d(points.at(index), points.at(i));
+        ++i;
+    }
+    return res;
+}
+
+auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     auto rng = boost::random::mt19937 {0};
     const auto config = RenderBenchmarkConfig {};
+    auto tree_length_sum = int64_t {0};
 
     // create scene
-    auto circuit = Circuit {};
+    auto& circuit = scene.circuit;
+    // auto circuit = Circuit {};
     for (auto _ [[maybe_unused]] : range(n_lines)) {
         boost::random::uniform_int_distribution<connection_size_t> output_dist {
             config.n_outputs_min, config.n_outputs_max};
         circuit.add_element(ElementType::wire, 1, output_dist(rng));
     }
     add_output_placeholders(circuit);
-    auto simulation = Simulation {circuit};
-    auto renderer = SimulationScene {simulation};
+
+    auto& simulation = scene.simulation = Simulation {circuit};
+    auto& renderer = scene.renderer = SimulationScene {simulation};
+    // auto simulation = Simulation {circuit};
+    // auto renderer = SimulationScene {simulation};
 
     // add line trees
     for (auto element : circuit.elements()) {
@@ -408,6 +426,8 @@ auto benchmark_line_renderer(int n_lines) -> int64_t {
 
             auto tree_max_delay = std::ranges::max(delays);
             simulation.set_max_history(element, history_t::runtime(tree_max_delay.value));
+
+            tree_length_sum += calculate_tree_length(points, indices);
         }
     }
 
@@ -442,14 +462,27 @@ auto benchmark_line_renderer(int n_lines) -> int64_t {
     }
 
     // run simulation
-    simulation.run(max_time);
+    {
+        // auto timer = Timer {"Simulation", Timer::Unit::ms, 3};
+        simulation.run(max_time);
+    }
+
+    return tree_length_sum;
+}
+
+auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
+    BenchmarkScene scene;
+
+    auto tree_length_sum = fill_line_scene(scene, n_lines);
 
     // render image
     BLImage img(1200, 1200, BL_FORMAT_PRGB32);
     BLContext ctx(img);
+    ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
+    ctx.fillAll();
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        renderer.render_scene(ctx);
+        scene.renderer.render_scene(ctx, false);
     }
     ctx.end();
 
@@ -457,8 +490,7 @@ auto benchmark_line_renderer(int n_lines) -> int64_t {
     codec.findByName("PNG");
     img.writeToFile("benchmark_line_renderer.png", codec);
 
-    // TODO fix return type
-    return 0;
+    return tree_length_sum;
 }
 
 }  // namespace logicsim

@@ -22,7 +22,7 @@ class SimulationScene {
    public:
     [[nodiscard]] explicit SimulationScene(const Simulation& simulation) noexcept;
 
-    auto render_scene(BLContext& ctx) const -> void;
+    auto render_scene(BLContext& ctx, bool render_background = true) const -> void;
 
     auto set_position(Circuit::ConstElement element, point2d_t position) -> void;
     auto set_line_tree(Circuit::ConstElement element, std::vector<point2d_t> points,
@@ -57,7 +57,16 @@ class SimulationScene {
     std::vector<DrawData> draw_data_vector_ {};
 };
 
-auto benchmark_line_renderer(int n_lines = 100) -> int64_t;
+struct BenchmarkScene {
+   public:
+    Circuit circuit {};
+    Simulation simulation {circuit};
+    SimulationScene renderer {simulation};
+};
+
+auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100) -> int64_t;
+
+auto benchmark_line_renderer(int n_lines = 100, bool save_image = true) -> int64_t;
 
 }  // namespace logicsim
 
