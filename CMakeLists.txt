@@ -236,6 +236,7 @@ set(LS_CORE_SOURCES
     src/circuit.h src/circuit.cpp
     src/circular_buffer.h
     src/exceptions.h src/exceptions.cpp
+    src/line_tree.h src/line_tree.cpp
     src/random.h src/random.cpp
     src/simulation.h src/simulation.cpp
     src/timer.h src/timer.cpp
@@ -284,12 +285,15 @@ target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 set(MAIN_TARGET "simulation_srp_main")
 add_executable(${MAIN_TARGET} 
     ${LS_CORE_SOURCES}
-
+    
+    src/render_scene.h src/render_scene.cpp
     src/main.cpp
     
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
+
+    Blend2D::Blend2D
 )
 target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
@@ -302,7 +306,7 @@ add_executable(${MAIN_GUI_TARGET}
     src/render_widget.h src/render_widget.cpp 
     src/render_scene.h src/render_scene.cpp
     src/main_gui.cpp
-    src/iterator.h)
+)
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
 

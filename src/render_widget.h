@@ -111,7 +111,7 @@ class WidgetRenderer : public QWidget {
         Circuit circuit;
 
         const auto elem0 = circuit.add_element(ElementType::or_element, 2, 1);
-        const auto line0 = circuit.add_element(ElementType::wire, 1, 1);
+        const auto line0 = circuit.add_element(ElementType::wire, 1, 2);
         elem0.output(0).connect(line0.input(0));
         line0.output(0).connect(elem0.input(1));
 
@@ -121,9 +121,10 @@ class WidgetRenderer : public QWidget {
 
         simulation.set_output_delay(elem0.output(0), delay_t {10us});
         simulation.set_output_delay(line0.output(0), delay_t {40us});
+        simulation.set_output_delay(line0.output(0), delay_t {60us});
         // TODO rename function to: set_history_length
         // TODO use delay_t instead of history_t maybe?
-        simulation.set_max_history(line0, history_t {40us});
+        simulation.set_max_history(line0, history_t {60us});
 
         simulation.initialize();
         simulation.submit_event(elem0.input(0), 100us, true);
@@ -142,8 +143,10 @@ class WidgetRenderer : public QWidget {
 
         auto scene = SimulationScene(simulation);
         scene.set_position(elem0, point2d_t {5, 3});
-        scene.set_wire_tree(
-            line0, {point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {8, 12}}, {1});
+        scene.set_line_tree(line0,
+                            {point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {8, 12},
+                             point2d_t {12, 12}, point2d_t {12, 14}},
+                            {1, 1, 3});
 
         // attribute_vector_t attributes = {
         //     {{point2d_t {5, 3}}, {}, 0},

@@ -1,4 +1,5 @@
 
+#include "render_scene.h"
 #include "simulation.h"
 #include "timer.h"
 
@@ -16,8 +17,11 @@ auto main() -> int {
     try {
         auto timer = Timer {"Benchmark", Timer::Unit::ms, 3};
         // auto count = benchmark_simulation(6, 10, true);
-        auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
-                                                    BENCHMARK_DEFAULT_EVENTS, true);
+        // auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
+        //                                            BENCHMARK_DEFAULT_EVENTS, true);
+
+        auto count = logicsim::benchmark_line_renderer(100);
+
         fmt::print("count = {}\n", count);
 
     } catch (const std::exception& exc) {

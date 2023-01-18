@@ -55,12 +55,12 @@ auto has_duplicates_quadratic(std::input_iterator auto begin,
     return false;
 }
 
-bool has_duplicates_quadratic(const std::ranges::input_range auto&& range) {
+bool has_duplicates_quadratic(const std::ranges::input_range auto& range) {
     if (std::size(range) <= 1) {
         return false;
     }
 
-    // TODO refactor using ranges
+    // TODO refactor using above method
     for (auto i1 = std::begin(range); i1 != std::end(range) - 1; ++i1) {
         for (auto i2 = i1 + 1; i2 != std::end(range); ++i2) {
             if (*i1 == *i2) {

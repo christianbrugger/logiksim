@@ -2,6 +2,7 @@
 #define LOGIKSIM_RENDER_SCENE_H
 
 #include "circuit.h"
+#include "geometry.h"
 #include "simulation.h"
 
 #include <blend2d.h>
@@ -14,27 +15,7 @@
 
 namespace logicsim {
 
-//           / --- c
-//  a ---- b
-//           \ --- d
-//
-
-struct point2d_fine_t {
-    double x;
-    double y;
-};
-
-using point_t = int16_t;
-
-struct point2d_t {
-    point_t x;
-    point_t y;
-
-    explicit operator point2d_fine_t() const noexcept {
-        return point2d_fine_t {static_cast<double>(x), static_cast<double>(y)};
-    }
-};
-
+// TODO remove
 using wire_index_t = uint16_t;
 
 class SimulationScene {
@@ -44,7 +25,7 @@ class SimulationScene {
     auto render_scene(BLContext& ctx) const -> void;
 
     auto set_position(Circuit::ConstElement element, point2d_t position) -> void;
-    auto set_wire_tree(Circuit::ConstElement element, std::vector<point2d_t> points,
+    auto set_line_tree(Circuit::ConstElement element, std::vector<point2d_t> points,
                        std::vector<wire_index_t> indices) -> void;
 
    private:
@@ -75,6 +56,8 @@ class SimulationScene {
     gsl::not_null<const Simulation*> simulation_;
     std::vector<DrawData> draw_data_vector_ {};
 };
+
+auto benchmark_line_renderer(int n_lines = 100) -> int64_t;
 
 }  // namespace logicsim
 

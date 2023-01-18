@@ -1,8 +1,16 @@
 
 #include "render_scene.h"
 
+#include "algorithm.h"
 #include "format.h"
 #include "range.h"
+#include "timer.h"
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+
+#include <algorithm>
+#include <utility>
 
 namespace logicsim {
 
@@ -15,7 +23,7 @@ auto SimulationScene::set_position(Circuit::ConstElement element, point2d_t posi
     get_data(element).position = position;
 }
 
-auto SimulationScene::set_wire_tree(Circuit::ConstElement element,
+auto SimulationScene::set_line_tree(Circuit::ConstElement element,
                                     std::vector<point2d_t> points,
                                     std::vector<wire_index_t> indices) -> void {
     // this method is potentially very slow
@@ -36,21 +44,19 @@ auto SimulationScene::draw_background(BLContext& ctx) const -> void {
     ctx.fillAll();
 }
 
-auto distance_1d(point2d_t p0, point2d_t p1) {
+auto distance_1d(point2d_t p0, point2d_t p1) -> int {
     auto dx = p1.x - p0.x;
     auto dy = p1.y - p0.y;
     assert(dx == 0 || dy == 0);  // distance_1d requires horizontal or vertical line
     return std::abs((dx == 0) ? dy : dx);
 }
 
-auto interpolate_1d(point_t v0, point_t v1, double ratio) -> double {
+auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
     return v0 + (v1 - v0) * ratio;
 }
 
 auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t_start, time_t t_end,
                          time_t t_select) -> point2d_fine_t {
-    fmt::print("interpolate_line_1d t_start = {} t_end = {} t_select = {}\n", t_start,
-               t_end, t_select);
     assert(t_start <= t_end);
 
     if (t_select <= t_start) {
@@ -82,9 +88,6 @@ auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_ena
 auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_start,
                        time_t time_end, const Simulation::history_vector_t& history,
                        bool wire_enabled) -> void {
-    fmt::print("times = {} - {}\n", time_start, time_end);
-    fmt::print("history = {}\n", history);
-
     if (history.size() == 0 || time_end >= history.at(0)) {
         draw_line_segment(ctx, p0, p1, wire_enabled);
         return;
@@ -95,8 +98,6 @@ auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_s
 
     const auto idx_start = history.rend() - it_start;
     const auto idx_end = history.rend() - it_end;
-
-    fmt::print("index start = {} end = {}\n", idx_start, idx_end);
 
     if (idx_start == idx_end) {
         const bool value = static_cast<bool>(idx_start % 2) ^ wire_enabled;
@@ -125,7 +126,6 @@ auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_s
 
 auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) const
     -> void {
-    constexpr static double s = 12;
     ctx.setStrokeWidth(1);
 
     const auto& data = get_data(element);
@@ -220,12 +220,245 @@ auto SimulationScene::render_scene(BLContext& ctx) const -> void {
     draw_background(ctx);
 
     for (auto element : simulation_->circuit().elements()) {
-        if (element.element_type() == ElementType::wire) {
+        auto type = element.element_type();
+
+        if (type == ElementType::wire) {
             draw_wire(ctx, element);
+        } else if (type == ElementType::placeholder) {
+            ;
         } else {
             draw_standard_element(ctx, element);
         }
     }
+}
+
+//
+// benchmark
+//
+
+struct RenderBenchmarkConfig {
+    grid_t min_grid {1};
+    grid_t max_grid {99};
+
+    grid_t max_segment_length {5};
+
+    int min_line_points {1};
+    int max_line_points {5};
+
+    connection_size_t n_outputs_min {1};
+    connection_size_t n_outputs_max {5};
+
+    int min_event_spacing_us {5};
+    int max_event_spacing_us {30};
+};
+
+template <std::uniform_random_bit_generator G>
+auto random_segment_value(grid_t last, const RenderBenchmarkConfig& config, G& rng) {
+    auto grid_dist = boost::random::uniform_int_distribution<grid_t> {
+        std::max(config.min_grid, gsl::narrow<grid_t>(last - config.max_segment_length)),
+        std::min(config.max_grid, gsl::narrow<grid_t>(last + config.max_segment_length))};
+    grid_t res;
+    while ((res = grid_dist(rng)) == last) {
+    }
+    return res;
+}
+
+template <std::uniform_random_bit_generator G>
+auto random_line_point(point2d_t previous, const RenderBenchmarkConfig& config, G& rng)
+    -> point2d_t {
+    auto orientation_dist = boost::random::uniform_int_distribution<int> {0, 1};
+
+    if (orientation_dist(rng)) {
+        return point2d_t {previous.x, random_segment_value(previous.y, config, rng)};
+    }
+    return point2d_t {random_segment_value(previous.x, config, rng), previous.y};
+}
+
+template <std::uniform_random_bit_generator G>
+auto random_line_point(point2d_t p0, point2d_t p1, const RenderBenchmarkConfig& config,
+                       G& rng) -> point2d_t {
+    if (p0.x == p1.x) {
+        return point2d_t {random_segment_value(p1.x, config, rng), p1.y};
+    }
+    return point2d_t {p1.x, random_segment_value(p1.y, config, rng)};
+}
+
+// create single line of length n from start_index
+auto add_random_line(std::vector<point2d_t>& points, std::vector<wire_index_t>& indices,
+                     int n_points, wire_index_t start_index, auto get_next_point) {
+    auto index = start_index;
+
+    for (auto _ [[maybe_unused]] : range(n_points)) {
+        const auto& p0 = points.at(indices.at(index - 1));
+        const auto& p1 = points.at(index);
+
+        points.push_back(get_next_point(p0, p1));
+        indices.push_back(index);
+
+        index = gsl::narrow<wire_index_t>(std::ssize(points) - 1);
+    }
+}
+
+auto is_line_tree_valid(const std::vector<point2d_t>& points) -> bool {
+    return !has_duplicates_quadratic(points);
+}
+
+template <std::uniform_random_bit_generator G>
+auto create_random_line_tree(connection_size_t n_outputs,
+                             const RenderBenchmarkConfig& config, G& rng)
+    -> std::tuple<std::vector<point2d_t>, std::vector<wire_index_t>,
+                  std::vector<wire_index_t>> {
+    while (true) {
+        auto grid_dist = boost::random::uniform_int_distribution<grid_t> {
+            config.min_grid, config.max_grid};
+        auto p0 = point2d_t {grid_dist(rng), grid_dist(rng)};
+
+        auto points = std::vector<point2d_t> {p0, random_line_point(p0, config, rng)};
+        auto indices = std::vector<wire_index_t> {0};
+        auto output_indices = std::vector<wire_index_t> {};
+
+        auto get_next_point = [&](point2d_t p0, point2d_t p1) {
+            return random_line_point(p0, p1, config, rng);
+        };
+
+        for (auto i : range(n_outputs)) {
+            auto length_dist = boost::random::uniform_int_distribution<int> {
+                config.min_line_points, config.max_line_points};
+            auto n_points = length_dist(rng);
+
+            wire_index_t start_index;
+            if (i == 0) {
+                start_index = 1;
+            } else {
+                auto max_index = gsl::narrow<wire_index_t>(std::ssize(points) - 2);
+                auto index_dist = boost::random::uniform_int_distribution<wire_index_t> {
+                    1, max_index};
+                start_index = index_dist(rng);
+            }
+
+            add_random_line(points, indices, n_points, start_index, get_next_point);
+            output_indices.push_back(gsl::narrow<wire_index_t>(std::size(points) - 1));
+        }
+
+        if (!is_line_tree_valid(points)) {
+            continue;
+        }
+
+        // TODO decide first index entry
+        indices.erase(indices.begin());
+
+        return {points, indices, output_indices};
+    }
+}
+
+auto calculate_delay(const std::vector<point2d_t>& points,
+                     const std::vector<wire_index_t>& indices, wire_index_t output_index)
+    -> delay_t {
+    auto delay = delay_t {0us};
+
+    auto p1_index = output_index;
+    while (p1_index > 0) {
+        auto p0_index = (p1_index >= 2) ? indices.at(p1_index - 2) : wire_index_t {0};
+
+        auto& p1 = points.at(p1_index);
+        auto& p0 = points.at(p0_index);
+
+        auto segment_delay
+            = distance_1d(p0, p1) * Simulation::wire_delay_per_distance.value;
+        delay = delay_t::runtime(delay.value + segment_delay);
+        p1_index = p0_index;
+    }
+
+    return delay;
+}
+
+auto benchmark_line_renderer(int n_lines) -> int64_t {
+    auto rng = boost::random::mt19937 {0};
+    const auto config = RenderBenchmarkConfig {};
+
+    // create scene
+    auto circuit = Circuit {};
+    for (auto _ [[maybe_unused]] : range(n_lines)) {
+        boost::random::uniform_int_distribution<connection_size_t> output_dist {
+            config.n_outputs_min, config.n_outputs_max};
+        circuit.add_element(ElementType::wire, 1, output_dist(rng));
+    }
+    add_output_placeholders(circuit);
+    auto simulation = Simulation {circuit};
+    auto renderer = SimulationScene {simulation};
+
+    // add line trees
+    for (auto element : circuit.elements()) {
+        if (element.element_type() == ElementType::wire) {
+            auto [points, indices, output_indices]
+                = create_random_line_tree(element.output_count(), config, rng);
+            renderer.set_line_tree(element, points, indices);
+
+            // set delays
+            auto delays = std::vector<delay_t> {};
+            for (auto output_index : output_indices) {
+                auto delay = calculate_delay(points, indices, output_index);
+
+                auto output
+                    = element.output(gsl::narrow<connection_size_t>(std::size(delays)));
+                simulation.set_output_delay(output, delay);
+
+                delays.push_back(delay);
+            }
+
+            auto tree_max_delay = std::ranges::max(delays);
+            simulation.set_max_history(element, history_t::runtime(tree_max_delay.value));
+        }
+    }
+
+    // initialize simulation
+    simulation.initialize();
+
+    // get maximum delay
+    delay_t max_delay {0us};
+    for (auto element : circuit.elements()) {
+        for (auto output : element.outputs()) {
+            if (simulation.output_delay(output) > max_delay) {
+                max_delay = simulation.output_delay(output);
+            }
+        }
+    }
+    time_t max_time {max_delay.value};
+    // add events
+    for (auto element : circuit.elements()) {
+        if (element.element_type() == ElementType::wire) {
+            auto spacing_dist_us = boost::random::uniform_int_distribution<int> {
+                config.min_event_spacing_us, config.max_event_spacing_us};
+            bool next_value = true;
+            time_t next_time = time_t {spacing_dist_us(rng) * 1us};
+
+            while (next_time < max_time) {
+                simulation.submit_event(element.input(0), next_time, next_value);
+
+                next_value = next_value ^ true;
+                next_time = next_time + spacing_dist_us(rng) * 1us;
+            }
+        }
+    }
+
+    // run simulation
+    simulation.run(max_time);
+
+    // render image
+    BLImage img(1200, 1200, BL_FORMAT_PRGB32);
+    BLContext ctx(img);
+    {
+        auto timer = Timer {"Render", Timer::Unit::ms, 3};
+        renderer.render_scene(ctx);
+    }
+    ctx.end();
+
+    BLImageCodec codec;
+    codec.findByName("PNG");
+    img.writeToFile("benchmark_line_renderer.png", codec);
+
+    // TODO fix return type
+    return 0;
 }
 
 }  // namespace logicsim

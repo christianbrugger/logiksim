@@ -86,6 +86,26 @@ struct delay_t {
         return delay_t {wrapped_ {delay}};
     }
 
+    [[nodiscard]] constexpr auto operator==(const delay_t other) const noexcept -> bool {
+        return value == other.value;
+    }
+
+    [[nodiscard]] constexpr auto operator<(const delay_t other) const noexcept -> bool {
+        return value < other.value;
+    }
+
+    [[nodiscard]] constexpr auto operator<=(const delay_t other) const noexcept -> bool {
+        return value <= other.value;
+    }
+
+    [[nodiscard]] constexpr auto operator>(const delay_t other) const noexcept -> bool {
+        return value > other.value;
+    }
+
+    [[nodiscard]] constexpr auto operator>=(const delay_t other) const noexcept -> bool {
+        return value >= other.value;
+    }
+
    private:
     struct wrapped_ {
         std::chrono::duration<int64_t, std::nano> value;
