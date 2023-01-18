@@ -76,13 +76,61 @@ auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t_start, time_t t_en
     return point2d_fine_t {interpolate_1d(p0.x, p1.x, ratio), static_cast<double>(p0.y)};
 }
 
+auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
+    auto& image = *ctx.targetImage();
+    BLImageData data {};
+    auto res = image.getData(&data);
+
+    if (res != BL_SUCCESS) [[unlikely]] {
+        throw_exception("could not get image data");
+    }
+    if (data.format != BL_FORMAT_PRGB32) [[unlikely]] {
+        throw_exception("unsupported format");
+    }
+
+    auto* array = static_cast<uint32_t*>(data.pixelData);
+    if (line.x0 == line.x1) {
+        auto y0 = static_cast<int>(std::round(line.y0));
+        auto y1 = static_cast<int>(std::round(line.y1));
+
+        if (y0 > y1) {
+            auto y2 = y0;
+            y0 = y1;
+            y1 = y2;
+        }
+
+        for (auto y : range(y0, y1 + 1)) {
+            array[static_cast<int>(std::round(line.x0)) + image.width() * y]
+                = color.value;
+        }
+    } else {
+        auto x0 = static_cast<int>(std::round(line.x0));
+        auto x1 = static_cast<int>(std::round(line.x1));
+
+        if (x0 > x1) {
+            auto x2 = x0;
+            x0 = x1;
+            x1 = x2;
+        }
+
+        for (auto x : range(x0, x1 + 1)) {
+            array[x + image.width() * static_cast<int>(std::round(line.y0))]
+                = color.value;
+        }
+    }
+}
+
 template <typename PointType>
 auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_enabled)
     -> void {
     const uint32_t color = wire_enabled ? 0xFFFF0000u : 0xFF000000u;
-    ctx.setStrokeStyle(BLRgba32(color));
     constexpr static double s = 12;
+
+    ctx.setStrokeStyle(BLRgba32(color));
     ctx.strokeLine(BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s));
+
+    // stroke_line_fast(ctx, BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s),
+    //                  BLRgba32(color));
 }
 
 auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_start,
