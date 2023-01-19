@@ -329,6 +329,7 @@ add_executable(${MAIN_TEST_TARGET}
     test/circular_buffer_test.cpp
     test/format_test.cpp
     test/iterator_test.cpp
+    test/line_tree_test.cpp
     test/random_test.cpp
     test/range_test.cpp
     test/simulation_test.cpp

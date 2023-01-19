@@ -126,11 +126,11 @@ auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_ena
     const uint32_t color = wire_enabled ? 0xFFFF0000u : 0xFF000000u;
     constexpr static double s = 12;
 
-    ctx.setStrokeStyle(BLRgba32(color));
-    ctx.strokeLine(BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s));
+    // ctx.setStrokeStyle(BLRgba32(color));
+    // ctx.strokeLine(BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s));
 
-    // stroke_line_fast(ctx, BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s),
-    //                  BLRgba32(color));
+    stroke_line_fast(ctx, BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s),
+                     BLRgba32(color));
 }
 
 auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_start,

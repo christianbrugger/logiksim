@@ -1,8 +1,11 @@
 #ifndef LOGIKSIM_GEOMETRY_H
 #define LOGIKSIM_GEOMETRY_H
 
+#include <cstdint>
+
 namespace logicsim {
 
+// remove 2d from name
 struct point2d_fine_t {
     double x;
     double y;
@@ -20,6 +23,15 @@ struct point2d_t {
 
     auto operator==(point2d_t other) const noexcept {
         return x == other.x && y == other.y;
+    }
+};
+
+struct line2d_t {
+    point2d_t p0;
+    point2d_t p1;
+
+    auto operator==(line2d_t other) const noexcept {
+        return p0 == other.p0 && p1 == other.p1;
     }
 };
 
@@ -44,6 +56,17 @@ struct fmt::formatter<logicsim::point2d_t> {
 
     static auto format(const logicsim::point2d_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "[{}, {}]", obj.x, obj.y);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::line2d_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::line2d_t &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "Line({}, {})", obj.p0, obj.p1);
     }
 };
 
