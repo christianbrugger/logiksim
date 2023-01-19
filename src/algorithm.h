@@ -38,16 +38,17 @@ void pop_while(T& queue, ApplyFunc apply_func, WhileFunc while_func) {
 }
 
 /// good for small ranges, scales with O(n^2)
-template <class Proj = std::identity>
-auto has_duplicates_quadratic(std::input_iterator auto begin,
-                              std::input_iterator auto end, Proj proj = {}) -> bool {
+template <class Proj = std::identity, class Comp = std::equal_to<>>
+auto has_duplicates_quadratic(std::bidirectional_iterator auto begin,
+                              std::bidirectional_iterator auto end, Proj proj = {},
+                              Comp comp = {}) -> bool {
     if (begin == end) {
         return false;
     }
 
-    for (auto i1 = begin; i1 != end - 1; ++i1) {
-        for (auto i2 = i1 + 1; i2 != end; ++i2) {
-            if (std::invoke(proj, *i1) == std::invoke(proj, *i2)) {
+    for (auto i1 = begin; i1 != std::prev(end); ++i1) {
+        for (auto i2 = std::next(i1); i2 != end; ++i2) {
+            if (comp(std::invoke(proj, *i1), std::invoke(proj, *i2))) {
                 return true;
             }
         }

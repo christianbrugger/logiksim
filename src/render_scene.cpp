@@ -44,13 +44,6 @@ auto SimulationScene::draw_background(BLContext& ctx) const -> void {
     ctx.fillAll();
 }
 
-auto distance_1d(point2d_t p0, point2d_t p1) -> int {
-    auto dx = p1.x - p0.x;
-    auto dy = p1.y - p0.y;
-    assert(dx == 0 || dy == 0);  // distance_1d requires horizontal or vertical line
-    return std::abs((dx == 0) ? dy : dx);
-}
-
 auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
     return v0 + (v1 - v0) * ratio;
 }
@@ -202,11 +195,6 @@ auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) c
         const auto time_start = time_t {simulation_->time() - d0.value};
         const auto time_end = time_t {simulation_->time() - d1.value};
         draw_line_segment(ctx, p0, p1, time_start, time_end, history, wire_enabled);
-
-        // uint32_t color
-        //     = simulation_->input_value(element.input(0)) ? 0xFFFF0000u : 0xFF000000u;
-        // ctx.setStrokeStyle(BLRgba32(color));
-        // ctx.strokeLine(BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s));
 
         if (i >= data.points.size()) {
             break;

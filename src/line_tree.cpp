@@ -2,6 +2,8 @@
 
 #include "line_tree.h"
 
+#include "algorithm.h"
+#include "collision.h"
 #include "exceptions.h"
 #include "range.h"
 
@@ -54,6 +56,8 @@ auto LineTree::validate_no_internal_collisions() const -> bool {
     // no duplicate edges
     // edges not colliding with other points
 
+    // return !has_duplicates_quadratic(segments().begin(), segments().end(), {},
+    //                                  lines_points_colliding);
     return true;
 }
 
@@ -118,7 +122,18 @@ auto LineTree::SegmentIterator::operator++() noexcept -> SegmentIterator& {
 
 auto LineTree::SegmentIterator::operator++(int) noexcept -> SegmentIterator {
     auto tmp = *this;
-    ++index_;
+    ++(*this);
+    return tmp;
+}
+
+auto LineTree::SegmentIterator::operator--() noexcept -> SegmentIterator& {
+    --index_;
+    return *this;
+}
+
+auto LineTree::SegmentIterator::operator--(int) noexcept -> SegmentIterator {
+    auto tmp = *this;
+    --(*this);
     return tmp;
 }
 
@@ -203,5 +218,8 @@ auto LineTree::SegmentSizeView::end() const noexcept -> iterator_type {
     return iterator_type {*line_tree_,
                           gsl::narrow_cast<index_t>(line_tree_->segment_count())};
 }
+
+static_assert(std::bidirectional_iterator<LineTree::SegmentIterator>);
+static_assert(std::input_iterator<LineTree::SegmentSizeIterator>);
 
 }  // namespace logicsim

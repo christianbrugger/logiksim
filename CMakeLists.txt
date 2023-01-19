@@ -235,6 +235,7 @@ set(LS_CORE_SOURCES
     src/algorithm.h src/algorithm.cpp
     src/circuit.h src/circuit.cpp
     src/circular_buffer.h
+    src/collision.h src/collision.cpp
     src/exceptions.h src/exceptions.cpp
     src/line_tree.h src/line_tree.cpp
     src/random.h src/random.cpp
@@ -327,6 +328,7 @@ add_executable(${MAIN_TEST_TARGET}
     test/algorithm_test.cpp
     test/circuit_test.cpp
     test/circular_buffer_test.cpp
+    test/collision_test.cpp
     test/format_test.cpp
     test/iterator_test.cpp
     test/line_tree_test.cpp

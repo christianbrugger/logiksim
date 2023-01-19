@@ -29,6 +29,7 @@ struct point2d_t {
     }
 };
 
+// TODO create type that is only horizontal or vertical
 struct line2d_t {
     point2d_t p0;
     point2d_t p1;

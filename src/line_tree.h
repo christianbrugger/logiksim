@@ -47,6 +47,7 @@ class LineTree {
     explicit LineTree(std::initializer_list<point2d_t> points);
 
     auto validate() const -> bool;
+
     auto segment_count() const noexcept -> int;
     auto segment(int index) const -> line2d_t;
     auto segments() const noexcept -> SegmentView;
@@ -74,11 +75,11 @@ class LineTree {
 
 class LineTree::SegmentIterator {
    public:
-    using iterator_concept = std::input_iterator_tag;
-    using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::bidirectional_iterator_tag;
+    using iterator_category = std::bidirectional_iterator_tag;
 
     using value_type = line2d_t;
-    using difference_type = size_t;
+    using difference_type = std::ptrdiff_t;
     using pointer = value_type *;
     // TODO check if reference needs to be return type of operator*
     using reference = value_type;
@@ -94,6 +95,9 @@ class LineTree::SegmentIterator {
     [[nodiscard]] auto operator*() const -> value_type;
     auto operator++() noexcept -> SegmentIterator &;
     auto operator++(int) noexcept -> SegmentIterator;
+
+    auto operator--() noexcept -> SegmentIterator &;
+    auto operator--(int) noexcept -> SegmentIterator;
 
     [[nodiscard]] auto operator==(const SegmentIterator &right) const noexcept -> bool;
     [[nodiscard]] auto operator-(const SegmentIterator &right) const noexcept
@@ -142,7 +146,7 @@ class LineTree::SegmentSizeIterator {
     using iterator_category = std::input_iterator_tag;
 
     using value_type = sized_line2d_t;
-    using difference_type = size_t;
+    using difference_type = std::ptrdiff_t;
     using pointer = value_type *;
     // TODO check if reference needs to be return type of operator*
     using reference = value_type;
