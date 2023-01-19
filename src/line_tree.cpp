@@ -42,6 +42,10 @@ auto LineTree::segments() const noexcept -> SegmentView {
     return SegmentView(*this);
 }
 
+auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
+    return SegmentSizeView(*this);
+}
+
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
     return true;
 }
@@ -140,6 +144,62 @@ auto LineTree::SegmentView::begin() const noexcept -> iterator_type {
 }
 
 auto LineTree::SegmentView::end() const noexcept -> iterator_type {
+    return iterator_type {*line_tree_,
+                          gsl::narrow_cast<index_t>(line_tree_->segment_count())};
+}
+
+//
+// SegmentSizeIterator
+//
+
+LineTree::SegmentSizeIterator::SegmentSizeIterator(const LineTree& line_tree,
+                                                   index_t index,
+                                                   length_t start_length) noexcept
+    : line_tree_ {&line_tree}, start_length_ {start_length}, index_ {index} {}
+
+auto LineTree::SegmentSizeIterator::operator*() const -> value_type {
+    if (line_tree_ == nullptr) [[unlikely]] {
+        throw_exception("line tree cannot be null when dereferencing segment iterator");
+    }
+
+    auto line = line_tree_->segment(index_);
+    return sized_line2d_t {line, start_length_, start_length_ + distance_1d(line)};
+}
+
+auto LineTree::SegmentSizeIterator::operator++() noexcept -> SegmentSizeIterator& {
+    start_length_ = (**this).p1_length;
+    ++index_;
+    return *this;
+}
+
+auto LineTree::SegmentSizeIterator::operator++(int) noexcept -> SegmentSizeIterator {
+    auto tmp = *this;
+    ++(*this);
+    return tmp;
+}
+
+auto LineTree::SegmentSizeIterator::operator==(
+    const SegmentSizeIterator& right) const noexcept -> bool {
+    return index_ >= right.index_;
+}
+
+auto LineTree::SegmentSizeIterator::operator-(
+    const SegmentSizeIterator& right) const noexcept -> difference_type {
+    return static_cast<difference_type>(index_) - right.index_;
+}
+
+//
+// SegmentSizeView
+//
+
+LineTree::SegmentSizeView::SegmentSizeView(const LineTree& line_tree) noexcept
+    : line_tree_ {&line_tree} {}
+
+auto LineTree::SegmentSizeView::begin() const noexcept -> iterator_type {
+    return iterator_type {*line_tree_, 0};
+}
+
+auto LineTree::SegmentSizeView::end() const noexcept -> iterator_type {
     return iterator_type {*line_tree_,
                           gsl::narrow_cast<index_t>(line_tree_->segment_count())};
 }

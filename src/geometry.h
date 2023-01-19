@@ -1,6 +1,9 @@
 #ifndef LOGIKSIM_GEOMETRY_H
 #define LOGIKSIM_GEOMETRY_H
 
+#include <fmt/core.h>
+
+#include <cassert>
 #include <cstdint>
 
 namespace logicsim {
@@ -34,6 +37,19 @@ struct line2d_t {
         return p0 == other.p0 && p1 == other.p1;
     }
 };
+
+// fast distance for horitonal or vertical lines
+inline auto distance_1d(point2d_t p0, point2d_t p1) -> int {
+    auto dx = p1.x - p0.x;
+    auto dy = p1.y - p0.y;
+    assert(dx == 0 || dy == 0);
+    return std::abs((dx == 0) ? dy : dx);
+}
+
+// fast distance for horitonal or vertical lines
+inline auto distance_1d(line2d_t line) -> int {
+    return distance_1d(line.p0, line.p1);
+}
 
 }  // namespace logicsim
 

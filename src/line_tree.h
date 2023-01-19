@@ -3,6 +3,7 @@
 
 #include "geometry.h"
 
+#include <fmt/core.h>
 #include <folly/small_vector.h>
 #include <gsl/gsl>
 
@@ -36,6 +37,12 @@ class LineTree {
     class SegmentIterator;
     class SegmentView;
 
+    struct sized_line2d_t;
+    class SegmentSizeIterator;
+    class SegmentSizeView;
+
+    using length_t = int32_t;
+
     explicit LineTree() = default;
     explicit LineTree(std::initializer_list<point2d_t> points);
 
@@ -43,6 +50,7 @@ class LineTree {
     auto segment_count() const noexcept -> int;
     auto segment(int index) const -> line2d_t;
     auto segments() const noexcept -> SegmentView;
+    auto sized_segments() const noexcept -> SegmentSizeView;
 
    private:
     auto validate_segments_horizontal_or_vertical() const -> bool;
@@ -50,7 +58,6 @@ class LineTree {
     auto validate_no_unecessary_points() const -> bool;
 
     using index_t = uint16_t;
-    using length_t = uint32_t;
 
     using point_vector_t = folly::small_vector<point2d_t, 2, uint16_t>;
     using index_vector_t = folly::small_vector<index_t, 4, uint16_t>;
@@ -114,6 +121,85 @@ class LineTree::SegmentView {
     gsl::not_null<const LineTree *> line_tree_;
 };
 
+//
+// Size Iterator & View
+//
+
+struct LineTree::sized_line2d_t {
+    line2d_t line;
+    length_t p0_length;
+    length_t p1_length;
+
+    auto operator==(sized_line2d_t other) const noexcept {
+        return line == other.line && p0_length == other.p0_length
+               && p1_length == other.p1_length;
+    }
+};
+
+class LineTree::SegmentSizeIterator {
+   public:
+    using iterator_concept = std::input_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
+
+    using value_type = sized_line2d_t;
+    using difference_type = size_t;
+    using pointer = value_type *;
+    // TODO check if reference needs to be return type of operator*
+    using reference = value_type;
+    // using reference = value_type &;
+    // TODO also check pointer, if we need it, needs to be return of -> operator
+    //    https://vector-of-bool.github.io/2020/06/13/cpp20-iter-facade.html
+
+    // needs to be default constructable, so ElementView can become a range and view
+    SegmentSizeIterator() = default;
+    [[nodiscard]] explicit SegmentSizeIterator(const LineTree &line_tree, index_t index,
+                                               length_t start_length = 0) noexcept;
+
+    [[nodiscard]] auto operator*() const -> value_type;
+    auto operator++() noexcept -> SegmentSizeIterator &;
+    auto operator++(int) noexcept -> SegmentSizeIterator;
+
+    [[nodiscard]] auto operator==(const SegmentSizeIterator &right) const noexcept
+        -> bool;
+    [[nodiscard]] auto operator-(const SegmentSizeIterator &right) const noexcept
+        -> difference_type;
+
+   private:
+    const LineTree *line_tree_ {};  // can be null, because default constructable
+    length_t start_length_ {};
+    index_t index_ {};
+};
+
+class LineTree::SegmentSizeView {
+   public:
+    using iterator_type = SegmentSizeIterator;
+
+    using value_type = typename iterator_type::value_type;
+    using pointer = typename iterator_type::pointer;
+    using reference = typename iterator_type::reference;
+
+    [[nodiscard]] explicit SegmentSizeView(const LineTree &line_tree) noexcept;
+
+    [[nodiscard]] auto begin() const noexcept -> iterator_type;
+    [[nodiscard]] auto end() const noexcept -> iterator_type;
+
+   private:
+    gsl::not_null<const LineTree *> line_tree_;
+};
+
 }  // namespace logicsim
+
+template <>
+struct fmt::formatter<logicsim::LineTree::sized_line2d_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::LineTree::sized_line2d_t &obj,
+                       fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "SizedLine({}, {}, {}, {})", obj.line.p0,
+                              obj.line.p1, obj.p0_length, obj.p1_length);
+    }
+};
 
 #endif
