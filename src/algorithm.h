@@ -37,18 +37,46 @@ void pop_while(T& queue, ApplyFunc apply_func, WhileFunc while_func) {
     }
 }
 
-/// good for small ranges, scales with O(n^2)
-template <class Proj = std::identity, class Comp = std::equal_to<>>
+struct always_false {
+    [[nodiscard]] constexpr auto operator()(auto&& left [[maybe_unused]], auto&& right
+                                            [[maybe_unused]]) const noexcept -> bool {
+        return false;
+    }
+};
+
+/// good for small sizes, scales with O(n^2)
+template <class Proj = std::identity, class Comp = std::equal_to<>,
+          class Ignore = always_false>
 auto has_duplicates_quadratic(std::bidirectional_iterator auto begin,
                               std::bidirectional_iterator auto end, Proj proj = {},
-                              Comp comp = {}) -> bool {
+                              Comp comp = {}, Ignore ignore = {}) -> bool {
     if (begin == end) {
         return false;
     }
-
     for (auto i1 = begin; i1 != std::prev(end); ++i1) {
         for (auto i2 = std::next(i1); i2 != end; ++i2) {
+            if (ignore(i1, i2)) {
+                continue;
+            }
             if (comp(std::invoke(proj, *i1), std::invoke(proj, *i2))) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/// good for small sizes, scales with O(n^2)
+template <class Comp>
+auto has_duplicates_quadratic_custom(std::bidirectional_iterator auto begin,
+                                     std::bidirectional_iterator auto end, Comp comp)
+    -> bool {
+    if (begin == end) {
+        return false;
+    }
+    for (auto i1 = begin; i1 != std::prev(end); ++i1) {
+        for (auto i2 = std::next(i1); i2 != end; ++i2) {
+            if (comp(i1, i2)) {
                 return true;
             }
         }

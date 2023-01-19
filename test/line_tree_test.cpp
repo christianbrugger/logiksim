@@ -48,25 +48,44 @@ TEST(LineTree, TestSizeSegmentIterator) {
     ASSERT_THAT(tree.sized_segments(), testing::ElementsAre(line0, line1, line2));
 }
 
-/*
-TEST(LineTree, CreateWithDiagonalEdges) {
-    EXPECT_THROW(LineTree({{0, 0}, {5, 5}}), std::runtime_error);
-    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {5, 5}}), std::runtime_error);
+TEST(LineTree, TestIteratorNeighborTest) {
+    const auto tree = LineTree {{0, 0}, {10, 0}, {10, 12}, {20, 12}};
+
+    const auto it0 = tree.segments().begin();
+    const auto it1 = std::next(it0);
+    const auto it2 = std::next(it1);
+
+    ASSERT_EQ(it0.is_connected(it0), false);
+    ASSERT_EQ(it0.is_connected(it1), true);
+    ASSERT_EQ(it0.is_connected(it2), false);
+
+    ASSERT_EQ(it1.is_connected(it0), true);
+    ASSERT_EQ(it1.is_connected(it1), false);
+    ASSERT_EQ(it1.is_connected(it2), true);
+
+    ASSERT_EQ(it2.is_connected(it0), false);
+    ASSERT_EQ(it2.is_connected(it1), true);
+    ASSERT_EQ(it2.is_connected(it2), false);
 }
 
-TEST(LineTree, CreateWithUnecessaryPoints) {
-    EXPECT_THROW(LineTree({{0, 0}, {0, 2}, {0, 4}}), std::runtime_error);
-    EXPECT_THROW(LineTree({{0, 0}, {0, 2}, {2, 2}, {4, 2}}), std::runtime_error);
-}
+// TEST(LineTree, CreateWithDiagonalEdges) {
+//     EXPECT_THROW(LineTree({{0, 0}, {5, 5}}), std::runtime_error);
+//     EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {5, 5}}), std::runtime_error);
+// }
+
+// TEST(LineTree, CreateWithUnecessaryPoints) {
+//     EXPECT_THROW(LineTree({{0, 0}, {0, 2}, {0, 4}}), std::runtime_error);
+//     EXPECT_THROW(LineTree({{0, 0}, {0, 2}, {2, 2}, {4, 2}}), std::runtime_error);
+// }
 
 TEST(LineTree, CreateWithDuplicates) {
-    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, 0}}), std::runtime_error);
+    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}, {0, 0}}),
+                 std::runtime_error);
 }
 
 TEST(LineTree, CreateWithCollisions) {
     EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, 5}}), std::runtime_error);
     EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, -5}}), std::runtime_error);
 }
-*/
 
 }  // namespace logicsim

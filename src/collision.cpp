@@ -28,9 +28,9 @@ auto point_in_line(point2d_t point, line2d_t line) -> bool {
     return p1.x <= point.x && point.x <= p0.x;
 }
 
-auto lines_colliding(line2d_t line1, line2d_t line2) -> bool {
-    return point_in_line(line1.p0, line2) || point_in_line(line1.p1, line2)
-           || point_in_line(line2.p0, line1) || point_in_line(line2.p1, line1);
+auto line_points_colliding(line2d_t line0, line2d_t line1) -> bool {
+    return point_in_line(line0.p0, line1) || point_in_line(line0.p1, line1)
+           || point_in_line(line1.p0, line0) || point_in_line(line1.p1, line0);
 }
 
 }  // namespace logicsim

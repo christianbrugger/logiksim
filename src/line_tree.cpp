@@ -5,6 +5,7 @@
 #include "algorithm.h"
 #include "collision.h"
 #include "exceptions.h"
+#include "format.h"
 #include "range.h"
 
 #include <gsl/gsl>
@@ -52,13 +53,26 @@ auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
     return true;
 }
 
-auto LineTree::validate_no_internal_collisions() const -> bool {
-    // no duplicate edges
-    // edges not colliding with other points
+auto connected_lines_colliding(line2d_t line0, line2d_t line1) -> bool {
+    if (line0.p1 == line1.p0) {
+        return point_in_line(line0.p0, line1) || point_in_line(line1.p1, line0);
+    }
+    if (line0.p0 == line1.p0) {
+        return point_in_line(line0.p1, line1) || point_in_line(line1.p1, line0);
+    }
+    [[unlikely]] throw_exception("connected lines need to be ordered differently.");
+}
 
-    // return !has_duplicates_quadratic(segments().begin(), segments().end(), {},
-    //                                  lines_points_colliding);
-    return true;
+auto LineTree::validate_no_internal_collisions() const -> bool {
+    auto are_colliding = [](SegmentIterator it1, SegmentIterator it2) {
+        if (it1.is_connected(it2)) {
+            return connected_lines_colliding(*it1, *it2);
+        }
+        return line_points_colliding(*it1, *it2);
+    };
+
+    return !has_duplicates_quadratic_custom(segments().begin(), segments().end(),
+                                            are_colliding);
 }
 
 auto LineTree::validate_no_unecessary_points() const -> bool {
@@ -145,6 +159,22 @@ auto LineTree::SegmentIterator::operator==(const SegmentIterator& right) const n
 auto LineTree::SegmentIterator::operator-(const SegmentIterator& right) const noexcept
     -> difference_type {
     return static_cast<difference_type>(index_) - right.index_;
+}
+
+auto LineTree::SegmentIterator::is_connected(const SegmentIterator& other) const noexcept
+    -> bool {
+    if (index_ == other.index_) {
+        return false;
+    }
+    auto indirectly_connected = [&]() {
+        return line_tree_->indices_.at(index_) == line_tree_->indices_.at(other.index_);
+    };
+
+    if (index_ < other.index_) {
+        return line_tree_->indices_.at(other.index_) == index_ + 1
+               || indirectly_connected();
+    }
+    return line_tree_->indices_.at(index_) == other.index_ + 1 || indirectly_connected();
 }
 
 //

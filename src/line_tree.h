@@ -8,6 +8,7 @@
 #include <gsl/gsl>
 
 #include <optional>
+#include <ranges>
 
 namespace logicsim {
 
@@ -103,6 +104,8 @@ class LineTree::SegmentIterator {
     [[nodiscard]] auto operator-(const SegmentIterator &right) const noexcept
         -> difference_type;
 
+    [[nodiscard]] auto is_connected(const SegmentIterator &other) const noexcept -> bool;
+
    private:
     const LineTree *line_tree_ {};  // can be null, because default constructable
     index_t index_ {};
@@ -192,6 +195,13 @@ class LineTree::SegmentSizeView {
 };
 
 }  // namespace logicsim
+
+template <>
+inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentView> = true;
+
+template <>
+inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentSizeView>
+    = true;
 
 template <>
 struct fmt::formatter<logicsim::LineTree::sized_line2d_t> {

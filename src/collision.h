@@ -7,7 +7,7 @@ namespace logicsim {
 
 auto point_in_line(point2d_t point, line2d_t line) -> bool;
 
-auto lines_points_colliding(line2d_t line1, line2d_t line2) -> bool;
+auto line_points_colliding(line2d_t line0, line2d_t line1) -> bool;
 
 }  // namespace logicsim
 
