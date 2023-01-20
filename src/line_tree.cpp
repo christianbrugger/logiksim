@@ -8,6 +8,7 @@
 #include "format.h"
 #include "range.h"
 
+#include <boost/container/static_vector.hpp>
 #include <gsl/gsl>
 
 #include <algorithm>
@@ -40,8 +41,112 @@ LineTree::LineTree(std::initializer_list<point2d_t> points)
     }
 }
 
+// TODO return type with error message
+auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) const
+    -> LineTree {
+    // trivial cases
+    if (this->empty()) {
+        return other;
+    }
+    if (other.empty()) {
+        return *this;
+    }
+
+    // collect all points
+    std::vector<point2d_t> points {};
+    points.reserve(std::size(points_) + std::size(other.points_));
+    points.insert(points.end(), this->points_.begin(), this->points_.end());
+    points.insert(points.end(), other.points_.begin(), other.points_.end());
+
+    // remove duplicates & sort
+    auto order = [](point2d_t a, point2d_t b) {
+        return std::tie(a.x, a.y) < std::tie(b.x, b.y);
+    };
+    std::ranges::sort(points, order);
+    points.erase(std::ranges::unique(points).begin(), points.end());
+
+    // adjacency list (each point can only have 4 neighbors)
+    using adjacency_t = boost::container::static_vector<index_t, 4>;
+    std::vector<adjacency_t> neighbors(points.size());
+
+    // add all segments
+    auto to_index = [&](point2d_t _point) {
+        return std::ranges::lower_bound(points, _point, order) - points.begin();
+    };
+    auto add_segments = [&neighbors, &to_index](const SegmentView _segment_view) {
+        for (auto segment : _segment_view) {
+            auto index0 = to_index(segment.p0);
+            auto index1 = to_index(segment.p1);
+
+            neighbors.at(index0).push_back(gsl::narrow_cast<index_t>(index1));
+            neighbors.at(index1).push_back(gsl::narrow_cast<index_t>(index0));
+        }
+    };
+    add_segments(this->segments());
+    add_segments(other.segments());
+
+    // find intra line collisions
+    // TODO implement
+
+    // remove merged straight lines / unnecessary points
+    // TODO implement
+
+    // find possible roots = points with only one neighbor
+    std::vector<point2d_t> root_candidates;
+    for (auto index : range(neighbors.size())) {
+        if (neighbors[index].size() == 1) {
+            root_candidates.push_back(points[index]);
+        }
+    }
+    std::ranges::sort(root_candidates, order);
+    auto has_candiate = [&](point2d_t _root) {
+        return std::ranges::binary_search(root_candidates, _root, order);
+    };
+
+    fmt::print("\n");
+    fmt::print("points          = {}\n", points);
+    fmt::print("neighbors       = {}\n", neighbors);
+    fmt::print("root candidates = {}\n", root_candidates);
+
+    // decide new root
+    if (root_candidates.empty()) {
+        throw_exception("Merged line tree has no root candiates.");
+    }
+    if (new_root) {
+        if (!has_candiate(*new_root)) [[unlikely]] {
+            throw_exception("Requested root is not possible for the merged line tree.");
+        }
+        fmt::print(" -> given root {}\n", *new_root);
+    }
+    if (has_candiate(root())) {
+        fmt::print(" -> this root {}\n", root());
+        // return LineTree {};
+    }
+    if (has_candiate(other.root())) {
+        fmt::print(" -> other root {}\n", other.root());
+        // return LineTree {};
+    }
+
+    return LineTree {};
+}
+
+auto LineTree::reroot(const point2d_t new_root) const -> LineTree {
+    return LineTree {};
+}
+
+auto LineTree::root() const -> point2d_t {
+    if (points_.size() == 0) [[unlikely]] {
+        throw_exception("Empty line tree has no root.");
+    }
+    return points_[0];
+}
+
 auto LineTree::segment_count() const noexcept -> int {
     return gsl::narrow_cast<int>(std::size(points_) == 0 ? 0 : std::size(points_) - 1);
+}
+
+auto LineTree::empty() const noexcept -> bool {
+    return points_.empty();
 }
 
 auto LineTree::segment(int index) const -> line2d_t {
@@ -92,10 +197,8 @@ auto LineTree::validate_no_internal_collisions() const -> bool {
                                             are_colliding);
 }
 
-auto LineTree::validate_no_unecessary_points() const -> bool {
-    // no duplicate edges
-    // edges not colliding with other points
-
+auto LineTree::validate_no_unnecessary_points() const -> bool {
+    // no duplicate edges for merges
     return true;
 }
 

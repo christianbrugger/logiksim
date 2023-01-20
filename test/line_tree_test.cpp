@@ -86,6 +86,26 @@ TEST(LineTree, CreateWithDuplicates) {
 TEST(LineTree, CreateWithCollisions) {
     EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, 5}}), InvalidLineTreeException);
     EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, -5}}), InvalidLineTreeException);
+
+    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {5, 10}, {5, 5}, {0, 5}}),
+                 InvalidLineTreeException);
+    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}, {-10, 0}}),
+                 InvalidLineTreeException);
+}
+
+TEST(LineTree, MergeTreesSimple) {
+    auto tree1 = LineTree({{0, 0}, {0, 10}});
+    auto tree2 = LineTree({{0, 10}, {10, 10}});
+
+    auto tree = tree1.merge(tree2);
+}
+
+TEST(LineTree, MergeTreesLongChain) {
+    auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
+    auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {30, 10}, {30, 0}});
+
+    auto tree = tree1.merge(tree2);
+    auto tree0 = tree1.merge(tree2, {point2d_t {30, 0}});
 }
 
 }  // namespace logicsim

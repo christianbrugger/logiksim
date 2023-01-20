@@ -47,24 +47,35 @@ class LineTree {
     explicit LineTree() = default;
     explicit LineTree(std::initializer_list<point2d_t> points);
 
-    auto validate() const -> bool;
+    [[nodiscard]] auto merge(const LineTree &other,
+                             std::optional<point2d_t> new_root = {}) const -> LineTree;
+    // rearrange the tree such that new_root is the new root of the tree
+    // new_root needs to be already part of the tree.
+    [[nodiscard]] auto reroot(const point2d_t new_root) const -> LineTree;
 
-    auto segment_count() const noexcept -> int;
-    auto segment(int index) const -> line2d_t;
-    auto segments() const noexcept -> SegmentView;
-    auto sized_segments() const noexcept -> SegmentSizeView;
+    [[nodiscard]] auto root() const -> point2d_t;
+
+    [[nodiscard]] auto segment_count() const noexcept -> int;
+    [[nodiscard]] auto empty() const noexcept -> bool;
+    [[nodiscard]] auto segment(int index) const -> line2d_t;
+    [[nodiscard]] auto segments() const noexcept -> SegmentView;
+    [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
+
+    // TODO consider removing
+    [[nodiscard]] auto validate() const -> bool;
 
    private:
-    auto validate_horizontal_follows_vertical() const -> bool;
-    auto validate_segments_horizontal_or_vertical() const -> bool;
-    auto validate_no_internal_collisions() const -> bool;
-    auto validate_no_unecessary_points() const -> bool;
+    [[nodiscard]] auto validate_horizontal_follows_vertical() const -> bool;
+    [[nodiscard]] auto validate_segments_horizontal_or_vertical() const -> bool;
+    [[nodiscard]] auto validate_no_internal_collisions() const -> bool;
+    [[nodiscard]] auto validate_no_unnecessary_points() const -> bool;
 
     using index_t = uint16_t;
 
-    using point_vector_t = folly::small_vector<point2d_t, 2, uint16_t>;
-    using index_vector_t = folly::small_vector<index_t, 4, uint16_t>;
-    using length_vector_t = folly::small_vector<length_t, 2, uint16_t>;
+    // TODO consider merging for better locality
+    using point_vector_t = folly::small_vector<point2d_t, 2, index_t>;
+    using index_vector_t = folly::small_vector<index_t, 4, index_t>;
+    using length_vector_t = folly::small_vector<length_t, 2, index_t>;
 
     static_assert(sizeof(point_vector_t) == 10);
     static_assert(sizeof(index_vector_t) == 10);
