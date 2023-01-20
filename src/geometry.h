@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_GEOMETRY_H
 #define LOGIKSIM_GEOMETRY_H
 
+#include "exceptions.h"
+
 #include <fmt/core.h>
 
 #include <cassert>
@@ -38,6 +40,44 @@ struct line2d_t {
         return p0 == other.p0 && p1 == other.p1;
     }
 };
+
+constexpr auto is_orthogonal(point2d_t p0, point2d_t p1) noexcept {
+    return p0.x == p1.x || p0.y == p1.y;
+}
+
+constexpr auto is_orthogonal(line2d_t line) noexcept -> bool {
+    return is_orthogonal(line.p0, line.p1);
+}
+
+// line that is either horizontal or vertical
+struct orthogonal_line_t {
+    point2d_t p0;
+    point2d_t p1;
+
+    explicit constexpr orthogonal_line_t() noexcept : p0 {}, p1 {} {};
+
+    explicit constexpr orthogonal_line_t(point2d_t p0_, point2d_t p1_)
+        : p0 {p0_}, p1 {p1_} {
+        if (!is_orthogonal(p0_, p1_)) [[unlikely]] {
+            throw_exception("orthogonal line needs to be horizontal or vertical.");
+        }
+    };
+
+    explicit constexpr orthogonal_line_t(grid_t x0, grid_t y0, grid_t x1, grid_t y1)
+        : orthogonal_line_t {{x0, y0}, {x1, y1}} {};
+
+    auto operator==(orthogonal_line_t other) const noexcept {
+        return p0 == other.p0 && p1 == other.p1;
+    }
+};
+
+constexpr auto is_horizontal(orthogonal_line_t line) noexcept -> bool {
+    return line.p0.x == line.p0.y;
+}
+
+constexpr auto is_vertical(orthogonal_line_t line) noexcept -> bool {
+    return !is_horizontal(line);
+}
 
 // fast distance for horitonal or vertical lines
 inline auto distance_1d(point2d_t p0, point2d_t p1) -> int {

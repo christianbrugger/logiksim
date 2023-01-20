@@ -55,6 +55,7 @@ class LineTree {
     auto sized_segments() const noexcept -> SegmentSizeView;
 
    private:
+    auto validate_horizontal_follows_vertical() const -> bool;
     auto validate_segments_horizontal_or_vertical() const -> bool;
     auto validate_no_internal_collisions() const -> bool;
     auto validate_no_unecessary_points() const -> bool;
@@ -72,6 +73,17 @@ class LineTree {
     point_vector_t points_ {};
     index_vector_t indices_ {};
     length_vector_t lengths_ {};
+};
+
+[[noreturn]] auto throw_invalid_line_tree_exception(const char *message) -> void;
+
+class InvalidLineTreeException : public std::exception {
+   public:
+    InvalidLineTreeException(const char *message) noexcept;
+    auto what() const noexcept -> const char *;
+
+   private:
+    const char *message_;
 };
 
 class LineTree::SegmentIterator {

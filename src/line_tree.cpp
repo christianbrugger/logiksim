@@ -17,19 +17,26 @@ namespace logicsim {
 
 LineTree::LineTree(std::initializer_list<point2d_t> points)
     : points_ {points.begin(), points.end()} {
-    if (std::size(points_) == 1) [[unlikely]] {
-        throw_exception("A line tree with one point is invalid.");
+    if (std::size(points) == 1) [[unlikely]] {
+        throw_invalid_line_tree_exception("A line tree with one point is invalid.");
     }
 
-    // indices point to corresponding pair
+    // indices point to previous point for line
     indices_.resize(segment_count());
     std::iota(indices_.begin(), indices_.end(), 0);
 
     if (!validate_segments_horizontal_or_vertical()) [[unlikely]] {
-        throw_exception("Each line segments needs to be horizontal or vertical.");
+        throw_invalid_line_tree_exception(
+            "Each line segments needs to be horizontal or vertical.");
+    }
+    if (!validate_horizontal_follows_vertical()) [[unlikely]] {
+        throw_invalid_line_tree_exception(
+            "Each horizontal segments needs to be followed by a vertical "
+            "and vice versa.");
     }
     if (!validate_no_internal_collisions()) [[unlikely]] {
-        throw_exception("Lines are not allowed to collide with each other in the graph.");
+        throw_invalid_line_tree_exception(
+            "Lines are not allowed to collide with each other in the graph.");
     }
 }
 
@@ -50,7 +57,17 @@ auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
 }
 
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
-    return true;
+    // TODO why is function itself not possible
+    auto test = [](line2d_t line) -> bool { return is_orthogonal(line); };
+    return std::all_of(segments().begin(), segments().end(), test);
+}
+
+// each horizontal segment is followed by a vertical segment and vice versa
+auto LineTree::validate_horizontal_follows_vertical() const -> bool {
+    auto is_horizontal = [](line2d_t line) { return line.p0.x == line.p1.x; };
+    return std::ranges::adjacent_find(segments().begin(), segments().end(), {},
+                                      is_horizontal)
+           == segments().end();
 }
 
 auto connected_lines_colliding(line2d_t line0, line2d_t line1) -> bool {
@@ -112,6 +129,21 @@ auto LineTree::validate() const -> bool {
     }
 
     return true;
+}
+
+//
+// Exceptions
+//
+
+[[noreturn]] auto throw_invalid_line_tree_exception(const char* msg) -> void {
+    throw InvalidLineTreeException(msg);
+}
+
+InvalidLineTreeException::InvalidLineTreeException(const char* message) noexcept
+    : message_ {message} {}
+
+auto InvalidLineTreeException::what() const noexcept -> const char* {
+    return message_;
 }
 
 //

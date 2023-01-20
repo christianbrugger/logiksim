@@ -68,24 +68,24 @@ TEST(LineTree, TestIteratorNeighborTest) {
     ASSERT_EQ(it2.is_connected(it2), false);
 }
 
-// TEST(LineTree, CreateWithDiagonalEdges) {
-//     EXPECT_THROW(LineTree({{0, 0}, {5, 5}}), std::runtime_error);
-//     EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {5, 5}}), std::runtime_error);
-// }
+TEST(LineTree, CreateWithDiagonalEdges) {
+    EXPECT_THROW(LineTree({{0, 0}, {5, 5}}), InvalidLineTreeException);
+    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {5, 5}}), InvalidLineTreeException);
+}
 
-// TEST(LineTree, CreateWithUnecessaryPoints) {
-//     EXPECT_THROW(LineTree({{0, 0}, {0, 2}, {0, 4}}), std::runtime_error);
-//     EXPECT_THROW(LineTree({{0, 0}, {0, 2}, {2, 2}, {4, 2}}), std::runtime_error);
-// }
+TEST(LineTree, CreateWithUnecessaryPoints) {
+    EXPECT_THROW(LineTree({{0, 0}, {0, 2}, {0, 4}}), InvalidLineTreeException);
+    EXPECT_THROW(LineTree({{0, 0}, {0, 2}, {2, 2}, {4, 2}}), InvalidLineTreeException);
+}
 
 TEST(LineTree, CreateWithDuplicates) {
     EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}, {0, 0}}),
-                 std::runtime_error);
+                 InvalidLineTreeException);
 }
 
 TEST(LineTree, CreateWithCollisions) {
-    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, 5}}), std::runtime_error);
-    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, -5}}), std::runtime_error);
+    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, 5}}), InvalidLineTreeException);
+    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, -5}}), InvalidLineTreeException);
 }
 
 }  // namespace logicsim
