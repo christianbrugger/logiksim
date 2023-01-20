@@ -65,7 +65,7 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
     std::ranges::sort(points, order);
     points.erase(std::ranges::unique(points).begin(), points.end());
 
-    // adjacency list (each point can only have 4 neighbors)
+    // adjacency list (each point can only have 4 neighbors without collisions)
     using adjacency_t = boost::container::static_vector<index_t, 4>;
     std::vector<adjacency_t> neighbors(points.size());
 
@@ -78,8 +78,16 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
             auto index0 = to_index(segment.p0);
             auto index1 = to_index(segment.p1);
 
-            neighbors.at(index0).push_back(gsl::narrow_cast<index_t>(index1));
-            neighbors.at(index1).push_back(gsl::narrow_cast<index_t>(index0));
+            auto& adjacency0 = neighbors.at(index0);
+            auto& adjacency1 = neighbors.at(index1);
+
+            if (adjacency0.size() == adjacency0.capacity()
+                || adjacency1.size() == adjacency1.capacity()) [[unlikely]] {
+                throw_exception("point has more too many neighbors");
+            }
+
+            adjacency0.push_back(gsl::narrow_cast<index_t>(index1));
+            adjacency1.push_back(gsl::narrow_cast<index_t>(index0));
         }
     };
     add_segments(this->segments());
@@ -99,9 +107,6 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
         }
     }
     std::ranges::sort(root_candidates, order);
-    auto has_candiate = [&](point2d_t _root) {
-        return std::ranges::binary_search(root_candidates, _root, order);
-    };
 
     fmt::print("\n");
     fmt::print("points          = {}\n", points);
@@ -109,6 +114,9 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
     fmt::print("root candidates = {}\n", root_candidates);
 
     // decide new root
+    auto has_candiate = [&](point2d_t _root) {
+        return std::ranges::binary_search(root_candidates, _root, order);
+    };
     if (root_candidates.empty()) {
         throw_exception("Merged line tree has no root candiates.");
     }
