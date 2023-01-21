@@ -8,13 +8,97 @@
 #include "format.h"
 #include "range.h"
 
+#include <boost/container/small_vector.hpp>
 #include <boost/container/static_vector.hpp>
 #include <gsl/gsl>
 
 #include <algorithm>
 #include <numeric>
+#include <optional>
+#include <utility>
 
 namespace logicsim {
+
+//
+// AdjacencyGraph
+//
+
+// used to run some internal algorithms
+template <typename index_t>
+class AdjacencyGraph {
+   public:
+    // each point can only have 4 neighbors without collisions
+    using adjacency_t = boost::container::static_vector<index_t, 4>;
+
+    std::vector<point2d_t> points {};
+    std::vector<adjacency_t> neighbors {};
+
+   public:
+    // get iterator over all indices
+    auto indices() {
+        return range(std::size(points));
+    }
+
+    AdjacencyGraph() = default;
+
+    AdjacencyGraph(std::ranges::input_range auto&& segments) {
+        // add points
+        points.reserve(2 * std::size(segments));
+        for (line2d_t segment : segments) {
+            points.push_back(segment.p0);
+            points.push_back(segment.p1);
+        }
+
+        // remove duplicates & sort
+        std::ranges::sort(points);
+        points.erase(std::ranges::unique(points).begin(), points.end());
+
+        // create adjacency
+        auto to_index = [&](point2d_t _point) {
+            return std::ranges::lower_bound(points, _point) - points.begin();
+        };
+
+        neighbors.resize(points.size());
+        for (line2d_t segment : segments) {
+            auto index0 = to_index(segment.p0);
+            auto index1 = to_index(segment.p1);
+
+            auto& adjacency0 = neighbors.at(index0);
+            auto& adjacency1 = neighbors.at(index1);
+
+            if (adjacency0.size() == adjacency0.capacity()
+                || adjacency1.size() == adjacency1.capacity()) [[unlikely]] {
+                throw_exception(
+                    "Point has too many neighbors when building adjacency graph.");
+            }
+
+            adjacency0.push_back(gsl::narrow_cast<index_t>(index1));
+            adjacency1.push_back(gsl::narrow_cast<index_t>(index0));
+        }
+    }
+};
+
+}  // namespace logicsim
+
+template <typename index_t>
+struct fmt::formatter<logicsim::AdjacencyGraph<index_t>> {
+    static constexpr auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::AdjacencyGraph<index_t>& obj,
+                       fmt::format_context& ctx) {
+        return fmt::format_to(ctx.out(),
+                              "AdjacencyGraph(\n    points = {}\n    neighbors = {})\n",
+                              obj.points, obj.neighbors);
+    }
+};
+
+namespace logicsim {
+
+//
+// LineTree
+//
 
 LineTree::LineTree(std::initializer_list<point2d_t> points)
     : points_ {points.begin(), points.end()} {
@@ -41,8 +125,71 @@ LineTree::LineTree(std::initializer_list<point2d_t> points)
     }
 }
 
+// todo use orthogonal_line_t & move to geometry
+auto is_parallel(line2d_t line0, line2d_t line1) noexcept -> bool {
+    return is_horizontal(line0) == is_horizontal(line1);
+}
+
+auto is_perpendicular(line2d_t line0, line2d_t line1) noexcept -> bool {
+    return !is_parallel(line0, line1);
+}
+
+namespace {
+using split_result_t = std::optional<std::pair<line2d_t, line2d_t>>;
+}
+
+// if point is inside line, returns splitted line
+auto get_split_line(point2d_t point, line2d_t line) -> split_result_t {
+    if (is_inside(point, line)) {
+        return std::make_pair(line2d_t {line.p0, point}, line2d_t {point, line.p1});
+    }
+    return std::nullopt;
+}
+
+// splits lines  atgiven lines
+auto get_split_line(point2d_t p0, point2d_t p1, line2d_t line) -> split_result_t {
+    if (auto res = get_split_line(p0, line)) {
+        return res;
+    }
+    return get_split_line(p1, line);
+}
+
+auto get_split_segment(line2d_t segment, std::ranges::input_range auto&& splits) {
+    boost::container::small_vector<line2d_t, 4> result {segment};
+
+    for (auto split : splits) {
+        auto splittable_line
+            = std::ranges::find_if(result, [&split](line2d_t line) -> bool {
+                  return get_split_line(split.p0, split.p1, line).has_value();
+              });
+
+        if (splittable_line != result.end()) {
+            auto splitted = get_split_line(split.p0, split.p1, *splittable_line);
+            *splittable_line = splitted->first;
+            result.push_back(splitted->second);
+        }
+    }
+
+    return result;
+}
+
+auto get_split_segments(std::ranges::input_range auto&& segments,
+                        std::ranges::input_range auto&& splits) {
+    std::vector<line2d_t> result;
+    // its okay to over provision, as this is not stored anywhere
+    result.reserve(distance_fast(segments) + distance_fast(splits));
+
+    for (auto segment : segments) {
+        auto splitted_segments = get_split_segment(segment, splits);
+        std::copy(splitted_segments.begin(), splitted_segments.end(),
+                  std::back_inserter(result));
+    }
+    return result;
+}
+
 /// @brief tries to merge two parallel lines and returns the new line, if its possible
-auto merge_parallel_lines(line2d_t line0, line2d_t line1) -> std::optional<line2d_t> {
+auto get_merged_parallel_lines(line2d_t line0, line2d_t line1)
+    -> std::optional<line2d_t> {
     auto [a, b] = order_points(line0, line1);
 
     if (is_horizontal(a)) {
@@ -63,124 +210,32 @@ auto merge_parallel_lines(line2d_t line0, line2d_t line1) -> std::optional<line2
     return line2d_t {a.p0, std::max(a.p1, b.p1)};
 }
 
-namespace {
-
-using split_result_t = std::optional<std::pair<line2d_t, line2d_t>>;
-}
-
-// if point is inside line, returns splitted line
-auto try_split_line(point2d_t point, line2d_t line) -> split_result_t {
-    if (is_inside(point, line)) {
-        return std::make_pair(line2d_t {line.p0, point}, line2d_t {point, line.p1});
-    }
-    return std::nullopt;
-}
-
-// splits lines  atgiven lines
-auto try_split_line(point2d_t p0, point2d_t p1, line2d_t line) -> split_result_t {
-    if (auto res = try_split_line(p0, line)) {
-        return res;
-    }
-    return try_split_line(p1, line);
-}
-
-// todo use orthogonal_line_t
-auto is_parallel(line2d_t line0, line2d_t line1) noexcept -> bool {
-    return is_horizontal(line0) == is_horizontal(line1);
-}
-
-auto is_perpendicular(line2d_t line0, line2d_t line1) noexcept -> bool {
-    return !is_parallel(line0, line1);
-}
-
 // tries to merge the line with the given segments, returns status of merge
-auto try_merge_line(line2d_t line, std::vector<line2d_t>& segments) -> bool {
+auto try_merge_line_into(line2d_t line, std::vector<line2d_t>& segments) -> bool {
     auto mergable_line = std::ranges::find_if(segments, [&](line2d_t other) {
-        return is_parallel(line, other) && merge_parallel_lines(line, other);
+        return is_parallel(line, other) && get_merged_parallel_lines(line, other);
     });
     if (mergable_line != segments.end()) {
-        *mergable_line = *merge_parallel_lines(line, *mergable_line);
+        *mergable_line = *get_merged_parallel_lines(line, *mergable_line);
         return true;
     }
     return false;
 }
 
-auto merge_test(LineTree::SegmentView view0, LineTree::SegmentView view1) {
-    std::vector<line2d_t> segments0(view0.begin(), view0.end());
-    std::vector<line2d_t> segments1(view1.begin(), view1.end());
+auto merge_segments(LineTree::SegmentView view0, LineTree::SegmentView view1) {
+    // splitting segments
+    auto segments0 = get_split_segments(view0, view1);
+    auto segments1 = get_split_segments(view1, view0);
 
-    // splitting step
-    for (size_t idx0 = 0; idx0 < segments0.size(); ++idx0) {
-        auto line0 = segments0[idx0];
-
-        for (size_t idx1 = 0; idx1 < segments1.size(); ++idx1) {
-            auto line1 = segments1[idx1];
-
-            if (is_perpendicular(line0, line1)) {
-                if (auto right_split = try_split_line(line0.p0, line0.p1, line1)) {
-                    segments1[idx1] = right_split->first;
-                    segments1.push_back(right_split->second);
-                } else if (auto left_split = try_split_line(line1.p0, line1.p1, line0)) {
-                    segments0[idx0] = left_split->first;
-                    segments0.push_back(left_split->second);
-                }
-            }
-        }
-    }
-
-    // merging step
+    // merging segments
     std::vector<line2d_t> result;
     result.reserve(segments0.size() + segments1.size());
 
-    std::ranges::copy_if(segments0, result.begin(), [&](line2d_t line0) {
-        return !try_merge_line(line0, segments1);
+    std::ranges::copy_if(segments0, std::back_inserter(result), [&](line2d_t line0) {
+        return !try_merge_line_into(line0, segments1);
     });
 
-    result.insert(result.end(), segments1.begin(), segments1.end());
-    return result;
-}
-
-auto merge_segments(LineTree::SegmentView view0, LineTree::SegmentView view1) {
-    std::vector<line2d_t> segments0(view0.begin(), view0.end());
-    std::vector<line2d_t> segments1(view1.begin(), view1.end());
-
-    std::vector<line2d_t> result;
-    result.reserve(segments0.size());
-
-    // use indices as we insert into arrays during iteration
-    for (size_t idx0 = 0; idx0 < segments0.size(); ++idx0) {
-        auto line0 = segments0[idx0];
-        bool add_segment = true;
-
-        for (size_t idx1 = 0; idx1 < segments1.size(); ++idx1) {
-            auto line1 = segments1[idx1];
-
-            if (is_horizontal(line0) == is_horizontal(line1)) {  // TODO is_parallel
-                // parallel lines
-                auto res = merge_parallel_lines(line0, line1);
-                if (res) {
-                    segments1[idx1] = *res;
-                    add_segment = false;
-                    break;
-                }
-            } else {
-                // perpendicular lines
-                if (auto right_split = try_split_line(line0.p0, line0.p1, line1)) {
-                    segments1[idx1] = right_split->first;
-                    segments1.push_back(right_split->second);
-                } else if (auto left_split = try_split_line(line1.p0, line1.p1, line0)) {
-                    segments0[idx0] = left_split->first;
-                    segments0.push_back(left_split->second);
-                }
-            }
-        }
-        if (add_segment) {
-            result.push_back(segments0[idx0]);
-        }
-    }
-
-    result.reserve(result.size() + segments1.size());
-    result.insert(result.end(), segments1.begin(), segments1.end());
+    std::ranges::copy(segments1, std::back_inserter(result));
     return result;
 }
 
@@ -195,69 +250,28 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
         return *this;
     }
 
-    // collect all points
-    std::vector<point2d_t> points {};
-    points.reserve(std::size(points_) + std::size(other.points_));
-    points.insert(points.end(), this->points_.begin(), this->points_.end());
-    points.insert(points.end(), other.points_.begin(), other.points_.end());
+    // merge segments
+    auto segments = merge_segments(this->segments(), other.segments());
 
-    // remove duplicates & sort
-    auto order = [](point2d_t a, point2d_t b) {
-        return std::tie(a.x, a.y) < std::tie(b.x, b.y);
-    };
-    std::ranges::sort(points, order);
-    points.erase(std::ranges::unique(points).begin(), points.end());
+    // adjacency graph
+    auto graph = AdjacencyGraph<index_t> {segments};
 
-    // adjacency list (each point can only have 4 neighbors without collisions)
-    using adjacency_t = boost::container::static_vector<index_t, 4>;
-    std::vector<adjacency_t> neighbors(points.size());
-
-    // add all segments
-    auto to_index = [&](point2d_t _point) {
-        return std::ranges::lower_bound(points, _point, order) - points.begin();
-    };
-    auto add_segments = [&neighbors, &to_index](const SegmentView _segment_view) {
-        for (auto segment : _segment_view) {
-            auto index0 = to_index(segment.p0);
-            auto index1 = to_index(segment.p1);
-
-            auto& adjacency0 = neighbors.at(index0);
-            auto& adjacency1 = neighbors.at(index1);
-
-            if (adjacency0.size() == adjacency0.capacity()
-                || adjacency1.size() == adjacency1.capacity()) [[unlikely]] {
-                throw_exception("point has more too many neighbors");
-            }
-
-            adjacency0.push_back(gsl::narrow_cast<index_t>(index1));
-            adjacency1.push_back(gsl::narrow_cast<index_t>(index0));
-        }
-    };
-    add_segments(this->segments());
-    add_segments(other.segments());
-
-    // find intra line collisions
-
-    // remove merged straight lines / unnecessary points
-    // TODO implement
-
-    // find possible roots = points with only one neighbor
+    // find possible roots - points with only one neighbor
     std::vector<point2d_t> root_candidates;
-    for (auto index : range(neighbors.size())) {
-        if (neighbors[index].size() == 1) {
-            root_candidates.push_back(points[index]);
+    for (auto index : graph.indices()) {
+        if (graph.neighbors[index].size() == 1) {
+            root_candidates.push_back(graph.points[index]);
         }
     }
-    std::ranges::sort(root_candidates, order);
+    std::ranges::sort(root_candidates);
 
     fmt::print("\n");
-    fmt::print("points          = {}\n", points);
-    fmt::print("neighbors       = {}\n", neighbors);
+    fmt::print("graph = {}\n", graph);
     fmt::print("root candidates = {}\n", root_candidates);
 
     // decide new root
     auto has_candiate = [&](point2d_t _root) {
-        return std::ranges::binary_search(root_candidates, _root, order);
+        return std::ranges::binary_search(root_candidates, _root);
     };
     if (root_candidates.empty()) {
         throw_exception("Merged line tree has no root candiates.");

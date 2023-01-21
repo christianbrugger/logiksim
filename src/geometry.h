@@ -107,7 +107,7 @@ constexpr auto is_vertical(orthogonal_line_t line) noexcept -> bool {
 }
 
 constexpr auto is_horizontal(orthogonal_line_t line) noexcept -> bool {
-    return !is_horizontal(line);
+    return !is_vertical(line);
 }
 
 // fast distance for horitonal or vertical lines

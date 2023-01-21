@@ -120,6 +120,10 @@ auto distance_fast(IteratorFirst first, IteratorLast last) {
     return last - first;
 }
 
+auto distance_fast(std::ranges::input_range auto&& range) {
+    return distance_fast(std::begin(range), std::end(range));
+}
+
 //
 // transform_to_vector
 //
