@@ -13,6 +13,7 @@
 #include <gsl/gsl>
 
 #include <algorithm>
+#include <array>
 #include <numeric>
 #include <optional>
 #include <utility>
@@ -28,15 +29,23 @@ template <typename index_t>
 class AdjacencyGraph {
    public:
     // each point can only have 4 neighbors without collisions
-    using adjacency_t = boost::container::static_vector<index_t, 4>;
+    using neighbor_t = boost::container::static_vector<index_t, 4>;
 
     std::vector<point2d_t> points {};
-    std::vector<adjacency_t> neighbors {};
+    std::vector<neighbor_t> neighbors {};
 
    public:
     // get iterator over all indices
-    auto indices() {
+    auto indices() const noexcept {
         return range(std::size(points));
+    }
+
+    auto find(point2d_t _point) const -> std::optional<index_t> {
+        const auto res = std::ranges::lower_bound(points, _point);
+        if (res != points.end()) {
+            return gsl::narrow_cast<index_t>(res - points.begin());
+        }
+        return std::nullopt;
     }
 
     AdjacencyGraph() = default;
@@ -74,6 +83,12 @@ class AdjacencyGraph {
 
             adjacency0.push_back(gsl::narrow_cast<index_t>(index1));
             adjacency1.push_back(gsl::narrow_cast<index_t>(index0));
+        }
+
+        // sort adjacency to make the representation deterministic
+        for (auto& adjacency : neighbors) {
+            std::ranges::sort(adjacency, {},
+                              [&](index_t index) { return points[index]; });
         }
     }
 };
@@ -239,9 +254,53 @@ auto merge_segments(LineTree::SegmentView view0, LineTree::SegmentView view1) {
     return result;
 }
 
-// TODO return type with error message
+template <typename size_t>
+auto select_best_root(const AdjacencyGraph<size_t>& graph,
+                      std::optional<point2d_t> mandatory,
+                      std::array<point2d_t, 2> preferred) -> std::optional<point2d_t> {
+    // find points with only one neighbor
+    std::vector<point2d_t> root_candidates;
+    for (auto index : graph.indices()) {
+        if (graph.neighbors[index].size() == 1) {
+            root_candidates.push_back(graph.points[index]);
+        }
+    }
+    if (root_candidates.empty()) {
+        // no root candiates
+        return std::nullopt;
+    }
+
+    fmt::print("\n");
+    fmt::print("graph = {}\n", graph);
+    fmt::print("root candidates = {}\n", root_candidates);
+
+    // decide new root
+    std::ranges::sort(root_candidates);
+    auto has_candiate = [&](point2d_t _root) {
+        return std::ranges::binary_search(root_candidates, _root);
+    };
+
+    // mandatory
+    if (mandatory) {
+        if (!has_candiate(*mandatory)) [[unlikely]] {
+            // requested root is not possible
+            return std::nullopt;
+        }
+        return *mandatory;
+    }
+    for (auto root : preferred) {
+        if (has_candiate(root)) {
+            return root;
+        }
+    }
+
+    // first root in sorted list -> deterministic
+    return root_candidates.at(0);
+}
+
+// Merges line tree if possible. With new root, if given.
 auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) const
-    -> LineTree {
+    -> std::optional<LineTree> {
     // trivial cases
     if (this->empty()) {
         return other;
@@ -250,55 +309,109 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
         return *this;
     }
 
-    // merge segments
-    auto segments = merge_segments(this->segments(), other.segments());
+    const auto segments = merge_segments(this->segments(), other.segments());
+    const auto graph = Graph {segments};
 
-    // adjacency graph
-    auto graph = AdjacencyGraph<index_t> {segments};
+    if (const auto root
+        = select_best_root(graph, new_root, {input_point(), other.input_point()})) {
+        return LineTree::from_graph(*root, graph);
+    }
+    return std::nullopt;
+}
 
-    // find possible roots - points with only one neighbor
-    std::vector<point2d_t> root_candidates;
-    for (auto index : graph.indices()) {
-        if (graph.neighbors[index].size() == 1) {
-            root_candidates.push_back(graph.points[index]);
+struct LineTree::backtrack_memory_t {
+    length_t length;
+    index_t index;
+    uint8_t neighbor_id;
+};
+
+auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<LineTree> {
+    // define as optional for RVO
+    auto line_tree = std::optional {LineTree {}};
+
+    index_t last_index;
+    if (auto res = graph.find(root)) {
+        last_index = *res;
+    } else {
+        return std::nullopt;
+    }
+    if (graph.neighbors[last_index].size() != 1) {
+        // root elements have only one neighbor
+        return std::nullopt;
+    }
+    auto current_index = graph.neighbors[last_index][0];
+
+    // depth first search with loop detection
+    boost::container::vector<bool> visited(graph.points.size(), false);
+    std::vector<backtrack_memory_t> backtrack_vector {};
+    size_t backtrack_pos = 0;
+
+    // add first element
+    line_tree->points_.push_back(graph.points[last_index]);
+    visited[last_index] = true;
+
+    while (true) {
+        // check visited
+        if (visited[current_index]) {
+            // graph contains loops
+            return std::nullopt;
+        }
+        visited[current_index] = true;
+
+        // process current point
+        line_tree->points_.push_back(graph.points[current_index]);
+        auto& neighbors = graph.neighbors[current_index];
+
+        // find next index
+        auto next = std::optional<index_t> {};
+        if (neighbors.at(0) != last_index) {
+            next = neighbors[0];
+        } else if (neighbors.size() > 1) {
+            assert(neighbors[1] != last_index);
+            next = neighbors[1];
+        }
+
+        fmt::print("iteration\n");
+        fmt::print("  tree->points = {}\n", line_tree->points_);
+        fmt::print("  last = {} current = {} next = {} neighbors = {}\n", last_index,
+                   current_index, next.value_or(999), neighbors);
+
+        // add backtracking candiates
+        for (auto id : range(neighbors.size())) {
+            if (neighbors[id] != last_index && (!next || neighbors[id] != *next)) {
+                backtrack_vector.push_back(backtrack_memory_t {
+                    .length = 0,
+                    .index = current_index,
+                    .neighbor_id = gsl::narrow_cast<uint8_t>(id),
+                });
+            }
+        }
+
+        // choose where to go next
+        if (next) {
+            // directly connected
+            last_index = current_index;
+            current_index = *next;
+        } else if (backtrack_pos < backtrack_vector.size()) {
+            // load next backtracking
+            auto& backtrack = backtrack_vector[backtrack_pos++];
+            last_index = current_index;
+            current_index = graph.neighbors[backtrack.index][backtrack.neighbor_id];
+        } else {
+            // we are done
+            break;
         }
     }
-    std::ranges::sort(root_candidates);
 
-    fmt::print("\n");
-    fmt::print("graph = {}\n", graph);
-    fmt::print("root candidates = {}\n", root_candidates);
-
-    // decide new root
-    auto has_candiate = [&](point2d_t _root) {
-        return std::ranges::binary_search(root_candidates, _root);
-    };
-    if (root_candidates.empty()) {
-        throw_exception("Merged line tree has no root candiates.");
-    }
-    if (new_root) {
-        if (!has_candiate(*new_root)) [[unlikely]] {
-            throw_exception("Requested root is not possible for the merged line tree.");
-        }
-        fmt::print(" -> given root {}\n", *new_root);
-    }
-    if (has_candiate(root())) {
-        fmt::print(" -> this root {}\n", root());
-        // return LineTree {};
-    }
-    if (has_candiate(other.root())) {
-        fmt::print(" -> other root {}\n", other.root());
-        // return LineTree {};
-    }
-
-    return LineTree {};
+    fmt::print("--done--\n\n\n");
+    return line_tree;
 }
 
 auto LineTree::reroot(const point2d_t new_root) const -> LineTree {
     return LineTree {};
 }
 
-auto LineTree::root() const -> point2d_t {
+auto LineTree::input_point() const -> point2d_t {
     if (points_.size() == 0) [[unlikely]] {
         throw_exception("Empty line tree has no root.");
     }
@@ -359,11 +472,6 @@ auto LineTree::validate_no_internal_collisions() const -> bool {
 
     return !has_duplicates_quadratic_custom(segments().begin(), segments().end(),
                                             are_colliding);
-}
-
-auto LineTree::validate_no_unnecessary_points() const -> bool {
-    // no duplicate edges for merges
-    return true;
 }
 
 auto LineTree::validate() const -> bool {

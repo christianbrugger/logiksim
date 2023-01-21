@@ -33,6 +33,9 @@ namespace logicsim {
 // outputs need to be leaf nodes (cannot have outgoing connections)
 // class does not know about simulation or circuit (reduce coupling)
 
+template <typename index_t>
+class AdjacencyGraph;
+
 class LineTree {
    public:
     class SegmentIterator;
@@ -48,12 +51,13 @@ class LineTree {
     explicit LineTree(std::initializer_list<point2d_t> points);
 
     [[nodiscard]] auto merge(const LineTree &other,
-                             std::optional<point2d_t> new_root = {}) const -> LineTree;
+                             std::optional<point2d_t> new_root = {}) const
+        -> std::optional<LineTree>;
     // rearrange the tree such that new_root is the new root of the tree
     // new_root needs to be already part of the tree.
     [[nodiscard]] auto reroot(const point2d_t new_root) const -> LineTree;
 
-    [[nodiscard]] auto root() const -> point2d_t;
+    [[nodiscard]] auto input_point() const -> point2d_t;
 
     [[nodiscard]] auto segment_count() const noexcept -> int;
     [[nodiscard]] auto empty() const noexcept -> bool;
@@ -65,12 +69,16 @@ class LineTree {
     [[nodiscard]] auto validate() const -> bool;
 
    private:
+    using index_t = uint16_t;
+    using Graph = AdjacencyGraph<index_t>;
+    struct backtrack_memory_t;
+
+    [[nodiscard]] static auto from_graph(point2d_t root, const Graph &graph)
+        -> std::optional<LineTree>;
+
     [[nodiscard]] auto validate_horizontal_follows_vertical() const -> bool;
     [[nodiscard]] auto validate_segments_horizontal_or_vertical() const -> bool;
     [[nodiscard]] auto validate_no_internal_collisions() const -> bool;
-    [[nodiscard]] auto validate_no_unnecessary_points() const -> bool;
-
-    using index_t = uint16_t;
 
     // TODO consider merging for better locality
     using point_vector_t = folly::small_vector<point2d_t, 2, index_t>;
