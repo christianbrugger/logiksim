@@ -41,6 +41,149 @@ LineTree::LineTree(std::initializer_list<point2d_t> points)
     }
 }
 
+/// @brief tries to merge two parallel lines and returns the new line, if its possible
+auto merge_parallel_lines(line2d_t line0, line2d_t line1) -> std::optional<line2d_t> {
+    auto [a, b] = order_points(line0, line1);
+
+    if (is_horizontal(a)) {
+        assert(is_horizontal(b));
+
+        if (a.p0.y != b.p0.y || a.p1.x < b.p0.x) {
+            return std::nullopt;
+        }
+    } else {
+        assert(is_vertical(a));
+        assert(is_vertical(b));
+
+        if (a.p0.x != b.p0.x || a.p1.y < b.p0.y) {
+            return std::nullopt;
+        }
+    }
+
+    return line2d_t {a.p0, std::max(a.p1, b.p1)};
+}
+
+namespace {
+
+using split_result_t = std::optional<std::pair<line2d_t, line2d_t>>;
+}
+
+// if point is inside line, returns splitted line
+auto try_split_line(point2d_t point, line2d_t line) -> split_result_t {
+    if (is_inside(point, line)) {
+        return std::make_pair(line2d_t {line.p0, point}, line2d_t {point, line.p1});
+    }
+    return std::nullopt;
+}
+
+// splits lines  atgiven lines
+auto try_split_line(point2d_t p0, point2d_t p1, line2d_t line) -> split_result_t {
+    if (auto res = try_split_line(p0, line)) {
+        return res;
+    }
+    return try_split_line(p1, line);
+}
+
+// todo use orthogonal_line_t
+auto is_parallel(line2d_t line0, line2d_t line1) noexcept -> bool {
+    return is_horizontal(line0) == is_horizontal(line1);
+}
+
+auto is_perpendicular(line2d_t line0, line2d_t line1) noexcept -> bool {
+    return !is_parallel(line0, line1);
+}
+
+// tries to merge the line with the given segments, returns status of merge
+auto try_merge_line(line2d_t line, std::vector<line2d_t>& segments) -> bool {
+    auto mergable_line = std::ranges::find_if(segments, [&](line2d_t other) {
+        return is_parallel(line, other) && merge_parallel_lines(line, other);
+    });
+    if (mergable_line != segments.end()) {
+        *mergable_line = *merge_parallel_lines(line, *mergable_line);
+        return true;
+    }
+    return false;
+}
+
+auto merge_test(LineTree::SegmentView view0, LineTree::SegmentView view1) {
+    std::vector<line2d_t> segments0(view0.begin(), view0.end());
+    std::vector<line2d_t> segments1(view1.begin(), view1.end());
+
+    // splitting step
+    for (size_t idx0 = 0; idx0 < segments0.size(); ++idx0) {
+        auto line0 = segments0[idx0];
+
+        for (size_t idx1 = 0; idx1 < segments1.size(); ++idx1) {
+            auto line1 = segments1[idx1];
+
+            if (is_perpendicular(line0, line1)) {
+                if (auto right_split = try_split_line(line0.p0, line0.p1, line1)) {
+                    segments1[idx1] = right_split->first;
+                    segments1.push_back(right_split->second);
+                } else if (auto left_split = try_split_line(line1.p0, line1.p1, line0)) {
+                    segments0[idx0] = left_split->first;
+                    segments0.push_back(left_split->second);
+                }
+            }
+        }
+    }
+
+    // merging step
+    std::vector<line2d_t> result;
+    result.reserve(segments0.size() + segments1.size());
+
+    std::ranges::copy_if(segments0, result.begin(), [&](line2d_t line0) {
+        return !try_merge_line(line0, segments1);
+    });
+
+    result.insert(result.end(), segments1.begin(), segments1.end());
+    return result;
+}
+
+auto merge_segments(LineTree::SegmentView view0, LineTree::SegmentView view1) {
+    std::vector<line2d_t> segments0(view0.begin(), view0.end());
+    std::vector<line2d_t> segments1(view1.begin(), view1.end());
+
+    std::vector<line2d_t> result;
+    result.reserve(segments0.size());
+
+    // use indices as we insert into arrays during iteration
+    for (size_t idx0 = 0; idx0 < segments0.size(); ++idx0) {
+        auto line0 = segments0[idx0];
+        bool add_segment = true;
+
+        for (size_t idx1 = 0; idx1 < segments1.size(); ++idx1) {
+            auto line1 = segments1[idx1];
+
+            if (is_horizontal(line0) == is_horizontal(line1)) {  // TODO is_parallel
+                // parallel lines
+                auto res = merge_parallel_lines(line0, line1);
+                if (res) {
+                    segments1[idx1] = *res;
+                    add_segment = false;
+                    break;
+                }
+            } else {
+                // perpendicular lines
+                if (auto right_split = try_split_line(line0.p0, line0.p1, line1)) {
+                    segments1[idx1] = right_split->first;
+                    segments1.push_back(right_split->second);
+                } else if (auto left_split = try_split_line(line1.p0, line1.p1, line0)) {
+                    segments0[idx0] = left_split->first;
+                    segments0.push_back(left_split->second);
+                }
+            }
+        }
+        if (add_segment) {
+            result.push_back(segments0[idx0]);
+        }
+    }
+
+    result.reserve(result.size() + segments1.size());
+    result.insert(result.end(), segments1.begin(), segments1.end());
+    return result;
+}
+
 // TODO return type with error message
 auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) const
     -> LineTree {
@@ -94,7 +237,6 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
     add_segments(other.segments());
 
     // find intra line collisions
-    // TODO implement
 
     // remove merged straight lines / unnecessary points
     // TODO implement
@@ -185,10 +327,10 @@ auto LineTree::validate_horizontal_follows_vertical() const -> bool {
 
 auto connected_lines_colliding(line2d_t line0, line2d_t line1) -> bool {
     if (line0.p1 == line1.p0) {
-        return point_in_line(line0.p0, line1) || point_in_line(line1.p1, line0);
+        return is_colliding(line0.p0, line1) || is_colliding(line1.p1, line0);
     }
     if (line0.p0 == line1.p0) {
-        return point_in_line(line0.p1, line1) || point_in_line(line1.p1, line0);
+        return is_colliding(line0.p1, line1) || is_colliding(line1.p1, line0);
     }
     [[unlikely]] throw_exception("connected lines need to be ordered differently.");
 }

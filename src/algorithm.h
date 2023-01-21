@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <ranges>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -36,6 +37,10 @@ void pop_while(T& queue, ApplyFunc apply_func, WhileFunc while_func) {
         queue.pop();
     }
 }
+
+//
+// has duplicates
+//
 
 struct always_false {
     [[nodiscard]] constexpr auto operator()(auto&& left [[maybe_unused]], auto&& right
@@ -115,7 +120,9 @@ auto distance_fast(IteratorFirst first, IteratorLast last) {
     return last - first;
 }
 
+//
 // transform_to_vector
+//
 
 template <std::input_iterator InputIt, class Function>
     requires std::sized_sentinel_for<InputIt, InputIt>
@@ -156,6 +163,27 @@ constexpr auto transform_to_container(std::ranges::input_range auto&& range,
                                       Function func) -> Container {
     return transform_to_container<Container>(std::ranges::begin(range),
                                              std::ranges::end(range), func);
+}
+
+//
+// sorted
+//
+
+template <class T>
+constexpr auto sorted_ref(T& a, T& b) noexcept(noexcept(a <= b)) -> std::tuple<T&, T&> {
+    if (a <= b) {
+        return std::tie(a, b);
+    }
+    return std::tie(b, a);
+}
+
+template <class T>
+constexpr auto sorted(T&& a, T&& b) noexcept(noexcept(a <= b))
+    -> std::tuple<std::remove_cvref_t<T>, std::remove_cvref_t<T>> {
+    if (a <= b) {
+        return std::tie(std::forward<T>(a), std::forward<T>(b));
+    }
+    return std::tie(std::forward<T>(b), std::forward<T>(a));
 }
 
 }  // namespace logicsim
