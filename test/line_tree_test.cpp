@@ -235,9 +235,29 @@ TEST(LineTree, MergerSplitInsideLine) {
     auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 10}}, 10, 20};
     auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {20, 0}}, 10, 20};
 
-    auto tree_left = tree1.merge(tree2);
-    EXPECT_THAT(tree_left.has_value(), true);
-    EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0, line1, line2));
+    auto tree_merged = tree1.merge(tree2);
+    EXPECT_THAT(tree_merged.has_value(), true);
+    EXPECT_THAT(tree_merged->sized_segments(), testing::ElementsAre(line0, line1, line2));
+}
+
+TEST(LineTree, MergeTwoTimes) {
+    auto tree1 = LineTree({{0, 0}, {0, 5}});
+    auto tree2 = LineTree({{0, 1}, {1, 1}});
+    auto tree3 = LineTree({{0, 2}, {2, 2}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 1}}, 0, 1};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 1}, {0, 2}}, 1, 2};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{0, 2}, {0, 5}}, 2, 5};
+    auto line3 = LineTree::sized_line2d_t {line2d_t {{0, 2}, {2, 2}}, 2, 4};
+    auto line4 = LineTree::sized_line2d_t {line2d_t {{0, 1}, {1, 1}}, 1, 2};
+
+    auto tree_tmp = tree1.merge(tree2);
+    EXPECT_THAT(tree_tmp.has_value(), true);
+    auto tree_merged = tree_tmp->merge(tree3);
+    EXPECT_THAT(tree_merged.has_value(), true);
+
+    EXPECT_THAT(tree_merged->sized_segments(),
+                testing::ElementsAre(line0, line1, line2, line3, line4));
 }
 
 //

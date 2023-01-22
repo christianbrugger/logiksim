@@ -24,6 +24,12 @@ namespace logicsim {
 // AdjacencyGraph
 //
 
+template <typename index_t>
+class GraphVisitor {
+    GraphVisitor(index_t root) {};
+    auto tree_edge(index_t a, index_t b) {};
+};
+
 // used to run some internal algorithms
 template <typename index_t>
 class AdjacencyGraph {
@@ -35,7 +41,7 @@ class AdjacencyGraph {
     std::vector<neighbor_t> neighbors {};
 
    public:
-    // get iterator over all indices
+    // iterator over all indices
     auto indices() const noexcept {
         return range(std::size(points));
     }
@@ -62,11 +68,11 @@ class AdjacencyGraph {
         std::ranges::sort(points);
         points.erase(std::ranges::unique(points).begin(), points.end());
 
-        // create adjacency
         auto to_index = [&](point2d_t _point) {
             return std::ranges::lower_bound(points, _point) - points.begin();
         };
 
+        // create adjacency
         neighbors.resize(points.size());
         for (line2d_t segment : segments) {
             auto index0 = to_index(segment.p0);
@@ -351,18 +357,16 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         return std::nullopt;
     }
     auto current_index = graph.neighbors[last_index][0];
+    length_t current_length = 0;
 
     // depth first search with loop detection
     boost::container::vector<bool> visited(graph.points.size(), false);
     std::vector<backtrack_memory_t> backtrack_vector {};
-    size_t backtrack_pos = 0;
 
     // add first element
     line_tree->points_.push_back(graph.points[last_index]);
     visited[last_index] = true;
     index_t last_tree_index = 0;
-
-    length_t current_length = 0;
 
     while (true) {
         // check visited
@@ -416,15 +420,17 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
             last_index = current_index;
             current_index = *next;
             last_tree_index = gsl::narrow_cast<index_t>(line_tree->points_.size() - 1);
-        } else if (backtrack_pos < backtrack_vector.size()) {
+        } else if (!backtrack_vector.empty()) {
             // load next backtracking
-            auto& backtrack = backtrack_vector[backtrack_pos++];
+            auto& backtrack = backtrack_vector.back();
+
             last_index = backtrack.graph_index;
             current_index = graph.neighbors[backtrack.graph_index][backtrack.neighbor_id];
             last_tree_index = backtrack.last_tree_index;
             current_length = backtrack.current_length;
 
             line_tree->lengths_.push_back(current_length);
+            backtrack_vector.pop_back();
         } else {
             // we are done
             break;
