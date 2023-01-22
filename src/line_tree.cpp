@@ -195,7 +195,7 @@ auto get_split_segments(std::ranges::input_range auto&& segments,
                         std::ranges::input_range auto&& splits) {
     std::vector<line2d_t> result;
     // its okay to over provision, as this is not stored anywhere
-    result.reserve(distance_fast(segments) + distance_fast(splits));
+    result.reserve(std::size(segments) + std::size(splits));
 
     for (auto segment : segments) {
         auto splitted_segments = get_split_segment(segment, splits);
@@ -343,10 +343,11 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
     if (auto res = graph.find(root)) {
         last_index = *res;
     } else {
+        // root is not part of graph
         return std::nullopt;
     }
     if (graph.neighbors[last_index].size() != 1) {
-        // root elements have only one neighbor
+        // root element has more than one neighbor
         return std::nullopt;
     }
     auto current_index = graph.neighbors[last_index][0];
@@ -439,8 +440,13 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
     return line_tree;
 }
 
-auto LineTree::reroot(const point2d_t new_root) const -> LineTree {
-    return LineTree {};
+auto LineTree::reroot(const point2d_t new_root) const -> std::optional<LineTree> {
+    if (new_root == input_point()) {
+        return *this;
+    }
+
+    const auto graph = Graph {segments()};
+    return LineTree::from_graph(new_root, graph);
 }
 
 auto LineTree::input_point() const -> point2d_t {
@@ -607,6 +613,10 @@ auto LineTree::SegmentView::end() const noexcept -> iterator_type {
                           gsl::narrow_cast<index_t>(line_tree_->segment_count())};
 }
 
+auto LineTree::SegmentView::size() const noexcept -> size_t {
+    return line_tree_->segment_count();
+}
+
 //
 // SegmentSizeIterator
 //
@@ -666,6 +676,10 @@ auto LineTree::SegmentSizeView::begin() const noexcept -> iterator_type {
 auto LineTree::SegmentSizeView::end() const noexcept -> iterator_type {
     return iterator_type {*line_tree_,
                           gsl::narrow_cast<index_t>(line_tree_->segment_count())};
+}
+
+auto LineTree::SegmentSizeView::size() const noexcept -> size_t {
+    return line_tree_->segment_count();
 }
 
 static_assert(std::bidirectional_iterator<LineTree::SegmentIterator>);

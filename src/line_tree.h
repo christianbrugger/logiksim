@@ -55,7 +55,7 @@ class LineTree {
         -> std::optional<LineTree>;
     // rearrange the tree such that new_root is the new root of the tree
     // new_root needs to be already part of the tree.
-    [[nodiscard]] auto reroot(const point2d_t new_root) const -> LineTree;
+    [[nodiscard]] auto reroot(const point2d_t new_root) const -> std::optional<LineTree>;
 
     [[nodiscard]] auto input_point() const -> point2d_t;
 
@@ -153,6 +153,7 @@ class LineTree::SegmentView {
 
     [[nodiscard]] auto begin() const noexcept -> iterator_type;
     [[nodiscard]] auto end() const noexcept -> iterator_type;
+    [[nodiscard]] auto size() const noexcept -> size_t;
 
    private:
     gsl::not_null<const LineTree *> line_tree_;
@@ -220,6 +221,7 @@ class LineTree::SegmentSizeView {
 
     [[nodiscard]] auto begin() const noexcept -> iterator_type;
     [[nodiscard]] auto end() const noexcept -> iterator_type;
+    [[nodiscard]] auto size() const noexcept -> size_t;
 
    private:
     gsl::not_null<const LineTree *> line_tree_;

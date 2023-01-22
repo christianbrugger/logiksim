@@ -95,6 +95,10 @@ TEST(LineTree, CreateWithCollisions) {
                  InvalidLineTreeException);
 }
 
+//
+// Merge
+//
+
 TEST(LineTree, MergeTreesSimple) {
     auto tree1 = LineTree({{0, 0}, {0, 10}});
     auto tree2 = LineTree({{0, 10}, {10, 10}});
@@ -234,6 +238,39 @@ TEST(LineTree, MergerSplitInsideLine) {
     auto tree_left = tree1.merge(tree2);
     EXPECT_THAT(tree_left.has_value(), true);
     EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0, line1, line2));
+}
+
+//
+// Reroot
+//
+
+TEST(LineTree, RerootSimple) {
+    auto tree = LineTree({{0, 0}, {10, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {0, 0}}, 0, 10};
+
+    auto tree_reroot = tree.reroot({10, 0});
+    EXPECT_THAT(tree_reroot.has_value(), true);
+    EXPECT_THAT(tree_reroot->sized_segments(), testing::ElementsAre(line0));
+}
+
+TEST(LineTree, RerootSameRoot) {
+    auto tree = LineTree({{0, 0}, {10, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
+
+    auto tree_reroot = tree.reroot({0, 0});
+    EXPECT_THAT(tree_reroot.has_value(), true);
+    EXPECT_THAT(tree_reroot->sized_segments(), testing::ElementsAre(line0));
+}
+
+TEST(LineTree, RerootImpossibleRoot) {
+    auto tree = LineTree({{0, 0}, {10, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
+
+    auto tree_reroot = tree.reroot({10, 10});
+    EXPECT_EQ(tree_reroot, std::nullopt);
 }
 
 }  // namespace logicsim
