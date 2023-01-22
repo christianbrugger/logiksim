@@ -36,6 +36,8 @@ namespace logicsim {
 template <typename index_t>
 class AdjacencyGraph;
 
+auto test_graph() -> void;
+
 class LineTree {
    public:
     class SegmentIterator;

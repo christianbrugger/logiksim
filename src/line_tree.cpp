@@ -6,10 +6,10 @@
 #include "collision.h"
 #include "exceptions.h"
 #include "format.h"
+#include "graph.h"
 #include "range.h"
 
 #include <boost/container/small_vector.hpp>
-#include <boost/container/static_vector.hpp>
 #include <gsl/gsl>
 
 #include <algorithm>
@@ -17,103 +17,6 @@
 #include <numeric>
 #include <optional>
 #include <utility>
-
-namespace logicsim {
-
-//
-// AdjacencyGraph
-//
-
-template <typename index_t>
-class GraphVisitor {
-    GraphVisitor(index_t root) {};
-    auto tree_edge(index_t a, index_t b) {};
-};
-
-// used to run some internal algorithms
-template <typename index_t>
-class AdjacencyGraph {
-   public:
-    // each point can only have 4 neighbors without collisions
-    using neighbor_t = boost::container::static_vector<index_t, 4>;
-
-    std::vector<point2d_t> points {};
-    std::vector<neighbor_t> neighbors {};
-
-   public:
-    // iterator over all indices
-    auto indices() const noexcept {
-        return range(std::size(points));
-    }
-
-    auto find(point2d_t _point) const -> std::optional<index_t> {
-        const auto res = std::ranges::lower_bound(points, _point);
-        if (res != points.end()) {
-            return gsl::narrow_cast<index_t>(res - points.begin());
-        }
-        return std::nullopt;
-    }
-
-    AdjacencyGraph() = default;
-
-    AdjacencyGraph(std::ranges::input_range auto&& segments) {
-        // add points
-        points.reserve(2 * std::size(segments));
-        for (line2d_t segment : segments) {
-            points.push_back(segment.p0);
-            points.push_back(segment.p1);
-        }
-
-        // remove duplicates & sort
-        std::ranges::sort(points);
-        points.erase(std::ranges::unique(points).begin(), points.end());
-
-        auto to_index = [&](point2d_t _point) {
-            return std::ranges::lower_bound(points, _point) - points.begin();
-        };
-
-        // create adjacency
-        neighbors.resize(points.size());
-        for (line2d_t segment : segments) {
-            auto index0 = to_index(segment.p0);
-            auto index1 = to_index(segment.p1);
-
-            auto& adjacency0 = neighbors.at(index0);
-            auto& adjacency1 = neighbors.at(index1);
-
-            if (adjacency0.size() == adjacency0.capacity()
-                || adjacency1.size() == adjacency1.capacity()) [[unlikely]] {
-                throw_exception(
-                    "Point has too many neighbors when building adjacency graph.");
-            }
-
-            adjacency0.push_back(gsl::narrow_cast<index_t>(index1));
-            adjacency1.push_back(gsl::narrow_cast<index_t>(index0));
-        }
-
-        // sort adjacency to make the representation deterministic
-        for (auto& adjacency : neighbors) {
-            std::ranges::sort(adjacency, {},
-                              [&](index_t index) { return points[index]; });
-        }
-    }
-};
-
-}  // namespace logicsim
-
-template <typename index_t>
-struct fmt::formatter<logicsim::AdjacencyGraph<index_t>> {
-    static constexpr auto parse(fmt::format_parse_context& ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::AdjacencyGraph<index_t>& obj,
-                       fmt::format_context& ctx) {
-        return fmt::format_to(ctx.out(),
-                              "AdjacencyGraph(\n    points = {}\n    neighbors = {})\n",
-                              obj.points, obj.neighbors);
-    }
-};
 
 namespace logicsim {
 
@@ -274,8 +177,8 @@ auto select_best_root(const AdjacencyGraph<size_t>& graph,
     // find points with only one neighbor
     std::vector<point2d_t> root_candidates;
     for (auto index : graph.indices()) {
-        if (graph.neighbors[index].size() == 1) {
-            root_candidates.push_back(graph.points[index]);
+        if (graph.neighbors()[index].size() == 1) {
+            root_candidates.push_back(graph.points()[index]);
         }
     }
     if (root_candidates.empty()) {
@@ -352,19 +255,19 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         // root is not part of graph
         return std::nullopt;
     }
-    if (graph.neighbors[last_index].size() != 1) {
+    if (graph.neighbors()[last_index].size() != 1) {
         // root element has more than one neighbor
         return std::nullopt;
     }
-    auto current_index = graph.neighbors[last_index][0];
+    auto current_index = graph.neighbors()[last_index][0];
     length_t current_length = 0;
 
     // depth first search with loop detection
-    boost::container::vector<bool> visited(graph.points.size(), false);
+    boost::container::vector<bool> visited(graph.points().size(), false);
     std::vector<backtrack_memory_t> backtrack_vector {};
 
     // add first element
-    line_tree->points_.push_back(graph.points[last_index]);
+    line_tree->points_.push_back(graph.points()[last_index]);
     visited[last_index] = true;
     index_t last_tree_index = 0;
 
@@ -377,12 +280,12 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         visited[current_index] = true;
 
         // add current point
-        line_tree->points_.push_back(graph.points[current_index]);
+        line_tree->points_.push_back(graph.points()[current_index]);
         line_tree->indices_.push_back(last_tree_index);
         current_length
-            += distance_1d(graph.points[current_index], graph.points[last_index]);
+            += distance_1d(graph.points()[current_index], graph.points()[last_index]);
 
-        auto& neighbors = graph.neighbors[current_index];
+        auto& neighbors = graph.neighbors()[current_index];
 
         // find next index
         auto next = std::optional<index_t> {};
@@ -425,7 +328,8 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
             auto& backtrack = backtrack_vector.back();
 
             last_index = backtrack.graph_index;
-            current_index = graph.neighbors[backtrack.graph_index][backtrack.neighbor_id];
+            current_index
+                = graph.neighbors()[backtrack.graph_index][backtrack.neighbor_id];
             last_tree_index = backtrack.last_tree_index;
             current_length = backtrack.current_length;
 
@@ -437,7 +341,7 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         }
     }
 
-    if (line_tree->points_.size() < graph.points.size()) {
+    if (line_tree->points_.size() < graph.points().size()) {
         // unconnected notes
         return std::nullopt;
     }
