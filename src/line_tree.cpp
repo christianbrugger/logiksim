@@ -326,10 +326,10 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
 }
 
 struct LineTree::backtrack_memory_t {
-    length_t length;
+    length_t current_length;
     index_t graph_index;
-    uint8_t neighbor_id;
     index_t last_tree_index;
+    uint8_t neighbor_id;
 };
 
 auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<LineTree> {
@@ -358,6 +358,8 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
     visited[last_index] = true;
     index_t last_tree_index = 0;
 
+    length_t current_length = 0;
+
     while (true) {
         // check visited
         if (visited[current_index]) {
@@ -369,6 +371,8 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         // add current point
         line_tree->points_.push_back(graph.points[current_index]);
         line_tree->indices_.push_back(last_tree_index);
+        current_length
+            += distance_1d(graph.points[current_index], graph.points[last_index]);
 
         auto& neighbors = graph.neighbors[current_index];
 
@@ -384,6 +388,7 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         fmt::print("iteration\n");
         fmt::print("  tree->points = {}\n", line_tree->points_);
         fmt::print("  tree->indices = {}\n", line_tree->indices_);
+        fmt::print("  tree->lengths = {}\n", line_tree->lengths_);
         fmt::print("  last = {} current = {} next = {} neighbors = {}\n", last_index,
                    current_index, next.value_or(999), neighbors);
         fmt::print("  backtrack_vector.size() = {}\n", backtrack_vector.size());
@@ -392,11 +397,11 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         for (auto id : range(neighbors.size())) {
             if (neighbors[id] != last_index && (!next || neighbors[id] != *next)) {
                 backtrack_vector.push_back(backtrack_memory_t {
-                    .length = 0,
+                    .current_length = current_length,
                     .graph_index = current_index,
-                    .neighbor_id = gsl::narrow_cast<uint8_t>(id),
                     .last_tree_index
                     = gsl::narrow_cast<index_t>(line_tree->points_.size() - 1),
+                    .neighbor_id = gsl::narrow_cast<uint8_t>(id),
                 });
             }
         }
@@ -413,6 +418,9 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
             last_index = backtrack.graph_index;
             current_index = graph.neighbors[backtrack.graph_index][backtrack.neighbor_id];
             last_tree_index = backtrack.last_tree_index;
+            current_length = backtrack.current_length;
+
+            line_tree->lengths_.push_back(current_length);
         } else {
             // we are done
             break;
@@ -440,7 +448,7 @@ auto LineTree::input_point() const -> point2d_t {
 }
 
 auto LineTree::segment_count() const noexcept -> int {
-    return gsl::narrow_cast<int>(std::size(points_) == 0 ? 0 : std::size(points_) - 1);
+    return gsl::narrow_cast<int>(std::size(indices_));
 }
 
 auto LineTree::empty() const noexcept -> bool {
@@ -457,6 +465,13 @@ auto LineTree::segments() const noexcept -> SegmentView {
 
 auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
     return SegmentSizeView(*this);
+}
+
+auto LineTree::starts_new_subtree(int index) const -> bool {
+    if (index == 0) {
+        return false;
+    }
+    return indices_.at(index) != index;
 }
 
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
@@ -626,22 +641,27 @@ auto LineTree::SegmentView::end() const noexcept -> iterator_type {
 //
 
 LineTree::SegmentSizeIterator::SegmentSizeIterator(const LineTree& line_tree,
-                                                   index_t index,
-                                                   length_t start_length) noexcept
-    : line_tree_ {&line_tree}, start_length_ {start_length}, index_ {index} {}
+                                                   index_t point_index) noexcept
+    : line_tree_ {&line_tree}, point_index_ {point_index} {}
 
 auto LineTree::SegmentSizeIterator::operator*() const -> value_type {
     if (line_tree_ == nullptr) [[unlikely]] {
         throw_exception("line tree cannot be null when dereferencing segment iterator");
     }
 
-    auto line = line_tree_->segment(index_);
+    auto line = line_tree_->segment(point_index_);
     return sized_line2d_t {line, start_length_, start_length_ + distance_1d(line)};
 }
 
 auto LineTree::SegmentSizeIterator::operator++() noexcept -> SegmentSizeIterator& {
-    start_length_ = (**this).p1_length;
-    ++index_;
+    if (point_index_ + 1 < line_tree_->indices_.size()
+        && line_tree_->starts_new_subtree(point_index_ + 1)) {
+        start_length_ = line_tree_->lengths_.at(length_index_++);
+    } else {
+        start_length_ = (**this).p1_length;
+    }
+    ++point_index_;
+
     return *this;
 }
 
@@ -653,12 +673,12 @@ auto LineTree::SegmentSizeIterator::operator++(int) noexcept -> SegmentSizeItera
 
 auto LineTree::SegmentSizeIterator::operator==(
     const SegmentSizeIterator& right) const noexcept -> bool {
-    return index_ >= right.index_;
+    return point_index_ >= right.point_index_;
 }
 
 auto LineTree::SegmentSizeIterator::operator-(
     const SegmentSizeIterator& right) const noexcept -> difference_type {
-    return static_cast<difference_type>(index_) - right.index_;
+    return static_cast<difference_type>(point_index_) - right.point_index_;
 }
 
 //

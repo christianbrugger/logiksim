@@ -1,6 +1,8 @@
 
 #include "line_tree.h"
 
+#include "format.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -93,43 +95,93 @@ TEST(LineTree, CreateWithCollisions) {
                  InvalidLineTreeException);
 }
 
-// TEST(LineTree, MergeTreesSimple) {
-//     auto tree1 = LineTree({{0, 0}, {0, 10}});
-//     auto tree2 = LineTree({{0, 10}, {10, 10}});
-//
-//     auto tree = tree1.merge(tree2);
-// }
-//
-// TEST(LineTree, MergeTreesLongChain) {
-//     auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
-//     auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {30, 10}, {30, 0}});
-//
-//     auto tree = tree1.merge(tree2);
-//     auto tree0 = tree1.merge(tree2, {point2d_t {30, 0}});
-// }
-//
-// TEST(LineTree, MergeNoRoot) {
-//    auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}});
-//    auto tree2 = LineTree({{0, 0}, {10, 10}});
-//
-//    auto tree = tree1.merge(tree2);
-//    ASSERT_EQ(tree, std::nullopt);
-//}
+TEST(LineTree, MergeTreesSimple) {
+    auto tree1 = LineTree({{0, 0}, {0, 10}});
+    auto tree2 = LineTree({{0, 10}, {10, 10}});
 
-// TEST(LineTree, MergeWithLoop) {
-//     auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
-//     auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {10, 10}});
-//
-//     auto tree = tree1.merge(tree2);
-//     ASSERT_EQ(tree, std::nullopt);
-// }
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 10}}, 0, 10};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 10, 20};
+
+    auto tree = tree1.merge(tree2);
+
+    EXPECT_THAT(tree.has_value(), true);
+    EXPECT_THAT(tree->sized_segments(), testing::ElementsAre(line0, line1));
+}
+
+TEST(LineTree, MergeTreesLongChain) {
+    auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
+    auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {30, 10}, {30, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 10}}, 0, 10};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 10, 20};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {10, 0}}, 20, 30};
+    auto line3 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {20, 0}}, 30, 40};
+    auto line4 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {20, 10}}, 40, 50};
+    auto line5 = LineTree::sized_line2d_t {line2d_t {{20, 10}, {30, 10}}, 50, 60};
+    auto line6 = LineTree::sized_line2d_t {line2d_t {{30, 10}, {30, 0}}, 60, 70};
+
+    auto tree = tree1.merge(tree2);
+
+    EXPECT_THAT(tree.has_value(), true);
+    EXPECT_THAT(tree->sized_segments(),
+                testing::ElementsAre(line0, line1, line2, line3, line4, line5, line6));
+
+    auto tree_inverter = tree1.merge(tree2, {point2d_t {30, 0}});
+}
+
+TEST(LineTree, MergeTreesLongChainInverter) {
+    auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
+    auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {30, 10}, {30, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{30, 0}, {30, 10}}, 0, 10};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{30, 10}, {20, 10}}, 10, 20};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{20, 10}, {20, 0}}, 20, 30};
+    auto line3 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {10, 0}}, 30, 40};
+    auto line4 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 10}}, 40, 50};
+    auto line5 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {0, 10}}, 50, 60};
+    auto line6 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {0, 0}}, 60, 70};
+
+    auto tree = tree1.merge(tree2, {point2d_t {30, 0}});
+
+    EXPECT_THAT(tree.has_value(), true);
+    EXPECT_THAT(tree->sized_segments(),
+                testing::ElementsAre(line0, line1, line2, line3, line4, line5, line6));
+}
+
+TEST(LineTree, MergeNoRoot) {
+    auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}});
+    auto tree2 = LineTree({{0, 0}, {10, 0}, {10, 10}});
+
+    auto tree = tree1.merge(tree2);
+    ASSERT_EQ(tree, std::nullopt);
+}
+
+TEST(LineTree, MergeWithLoop) {
+    auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
+    auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {10, 10}});
+
+    auto tree = tree1.merge(tree2);
+    ASSERT_EQ(tree, std::nullopt);
+}
 
 TEST(LineTree, MergeWithTriangle) {
     auto tree1 = LineTree({{0, 10}, {10, 10}});
     auto tree2 = LineTree({{10, 0}, {10, 10}, {20, 10}});
 
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 0, 10};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {10, 0}}, 10, 20};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {20, 10}}, 10, 20};
+
     auto tree = tree1.merge(tree2);
-    ASSERT_EQ(tree, std::nullopt);
+    EXPECT_THAT(tree.has_value(), true);
+    fmt::print("sized_segments = {}\n", tree->sized_segments());
+
+    EXPECT_EQ(tree->segment_count(), 3);
+    EXPECT_EQ(tree->starts_new_subtree(0), false);
+    EXPECT_EQ(tree->starts_new_subtree(1), false);
+    EXPECT_EQ(tree->starts_new_subtree(2), true);
+
+    EXPECT_THAT(tree->sized_segments(), testing::ElementsAre(line0, line1, line2));
 }
 
 }  // namespace logicsim

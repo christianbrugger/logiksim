@@ -65,6 +65,8 @@ class LineTree {
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
 
+    [[nodiscard]] auto starts_new_subtree(int index) const -> bool;
+
     // TODO consider removing
     [[nodiscard]] auto validate() const -> bool;
 
@@ -190,8 +192,8 @@ class LineTree::SegmentSizeIterator {
 
     // needs to be default constructable, so ElementView can become a range and view
     SegmentSizeIterator() = default;
-    [[nodiscard]] explicit SegmentSizeIterator(const LineTree &line_tree, index_t index,
-                                               length_t start_length = 0) noexcept;
+    [[nodiscard]] explicit SegmentSizeIterator(const LineTree &line_tree,
+                                               index_t point_index) noexcept;
 
     [[nodiscard]] auto operator*() const -> value_type;
     auto operator++() noexcept -> SegmentSizeIterator &;
@@ -205,7 +207,8 @@ class LineTree::SegmentSizeIterator {
    private:
     const LineTree *line_tree_ {};  // can be null, because default constructable
     length_t start_length_ {};
-    index_t index_ {};
+    index_t point_index_ {};
+    index_t length_index_ {};
 };
 
 class LineTree::SegmentSizeView {
