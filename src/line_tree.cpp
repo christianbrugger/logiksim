@@ -238,20 +238,24 @@ auto try_merge_line_into(line2d_t line, std::vector<line2d_t>& segments) -> bool
 }
 
 auto merge_segments(LineTree::SegmentView view0, LineTree::SegmentView view1) {
+    auto segments0 = std::vector<line2d_t>(view0.begin(), view0.end());
+    auto segments1 = std::vector<line2d_t>(view1.begin(), view1.end());
+
+    auto merge_result = std::vector<line2d_t> {};
+    merge_result.reserve(segments0.size() + segments1.size());
+
+    // merge segments
+    std::ranges::copy_if(
+        segments0, std::back_inserter(merge_result),
+        [&](line2d_t line0) { return !try_merge_line_into(line0, segments1); });
+    fmt::print("segments0_merged = {}\n", merge_result);
+    fmt::print("segments1_merged = {}\n\n", segments1);
+    std::ranges::copy(segments1, std::back_inserter(merge_result));
+
     // splitting segments
-    auto segments0 = get_split_segments(view0, view1);
-    auto segments1 = get_split_segments(view1, view0);
-
-    // merging segments
-    std::vector<line2d_t> result;
-    result.reserve(segments0.size() + segments1.size());
-
-    std::ranges::copy_if(segments0, std::back_inserter(result), [&](line2d_t line0) {
-        return !try_merge_line_into(line0, segments1);
-    });
-
-    std::ranges::copy(segments1, std::back_inserter(result));
-    return result;
+    auto segments_split = get_split_segments(merge_result, merge_result);
+    fmt::print("segments_split = {}\n", segments_split);
+    return segments_split;
 }
 
 template <typename size_t>
@@ -270,8 +274,6 @@ auto select_best_root(const AdjacencyGraph<size_t>& graph,
         return std::nullopt;
     }
 
-    fmt::print("\n");
-    fmt::print("graph = {}\n", graph);
     fmt::print("root candidates = {}\n", root_candidates);
 
     // decide new root
@@ -308,9 +310,13 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
     if (other.empty()) {
         return *this;
     }
+    fmt::print("\n");
 
-    const auto segments = merge_segments(this->segments(), other.segments());
-    const auto graph = Graph {segments};
+    const auto merged_segments = merge_segments(this->segments(), other.segments());
+    const auto graph = Graph {merged_segments};
+
+    fmt::print("merged_segments = {}\n", merged_segments);
+    fmt::print("graph = {}\n", graph);
 
     if (const auto root
         = select_best_root(graph, new_root, {input_point(), other.input_point()})) {
@@ -321,8 +327,9 @@ auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) c
 
 struct LineTree::backtrack_memory_t {
     length_t length;
-    index_t index;
+    index_t graph_index;
     uint8_t neighbor_id;
+    index_t last_tree_index;
 };
 
 auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<LineTree> {
@@ -349,6 +356,7 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
     // add first element
     line_tree->points_.push_back(graph.points[last_index]);
     visited[last_index] = true;
+    index_t last_tree_index = 0;
 
     while (true) {
         // check visited
@@ -358,8 +366,10 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         }
         visited[current_index] = true;
 
-        // process current point
+        // add current point
         line_tree->points_.push_back(graph.points[current_index]);
+        line_tree->indices_.push_back(last_tree_index);
+
         auto& neighbors = graph.neighbors[current_index];
 
         // find next index
@@ -373,16 +383,20 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
 
         fmt::print("iteration\n");
         fmt::print("  tree->points = {}\n", line_tree->points_);
+        fmt::print("  tree->indices = {}\n", line_tree->indices_);
         fmt::print("  last = {} current = {} next = {} neighbors = {}\n", last_index,
                    current_index, next.value_or(999), neighbors);
+        fmt::print("  backtrack_vector.size() = {}\n", backtrack_vector.size());
 
         // add backtracking candiates
         for (auto id : range(neighbors.size())) {
             if (neighbors[id] != last_index && (!next || neighbors[id] != *next)) {
                 backtrack_vector.push_back(backtrack_memory_t {
                     .length = 0,
-                    .index = current_index,
+                    .graph_index = current_index,
                     .neighbor_id = gsl::narrow_cast<uint8_t>(id),
+                    .last_tree_index
+                    = gsl::narrow_cast<index_t>(line_tree->points_.size() - 1),
                 });
             }
         }
@@ -392,15 +406,22 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
             // directly connected
             last_index = current_index;
             current_index = *next;
+            last_tree_index = gsl::narrow_cast<index_t>(line_tree->points_.size() - 1);
         } else if (backtrack_pos < backtrack_vector.size()) {
             // load next backtracking
             auto& backtrack = backtrack_vector[backtrack_pos++];
-            last_index = current_index;
-            current_index = graph.neighbors[backtrack.index][backtrack.neighbor_id];
+            last_index = backtrack.graph_index;
+            current_index = graph.neighbors[backtrack.graph_index][backtrack.neighbor_id];
+            last_tree_index = backtrack.last_tree_index;
         } else {
             // we are done
             break;
         }
+    }
+
+    if (line_tree->points_.size() < graph.points.size()) {
+        // unconnected notes
+        return std::nullopt;
     }
 
     fmt::print("--done--\n\n\n");

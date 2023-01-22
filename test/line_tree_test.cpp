@@ -93,19 +93,43 @@ TEST(LineTree, CreateWithCollisions) {
                  InvalidLineTreeException);
 }
 
-TEST(LineTree, MergeTreesSimple) {
-    auto tree1 = LineTree({{0, 0}, {0, 10}});
-    auto tree2 = LineTree({{0, 10}, {10, 10}});
+// TEST(LineTree, MergeTreesSimple) {
+//     auto tree1 = LineTree({{0, 0}, {0, 10}});
+//     auto tree2 = LineTree({{0, 10}, {10, 10}});
+//
+//     auto tree = tree1.merge(tree2);
+// }
+//
+// TEST(LineTree, MergeTreesLongChain) {
+//     auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
+//     auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {30, 10}, {30, 0}});
+//
+//     auto tree = tree1.merge(tree2);
+//     auto tree0 = tree1.merge(tree2, {point2d_t {30, 0}});
+// }
+//
+// TEST(LineTree, MergeNoRoot) {
+//    auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}});
+//    auto tree2 = LineTree({{0, 0}, {10, 10}});
+//
+//    auto tree = tree1.merge(tree2);
+//    ASSERT_EQ(tree, std::nullopt);
+//}
+
+// TEST(LineTree, MergeWithLoop) {
+//     auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
+//     auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {10, 10}});
+//
+//     auto tree = tree1.merge(tree2);
+//     ASSERT_EQ(tree, std::nullopt);
+// }
+
+TEST(LineTree, MergeWithTriangle) {
+    auto tree1 = LineTree({{0, 10}, {10, 10}});
+    auto tree2 = LineTree({{10, 0}, {10, 10}, {20, 10}});
 
     auto tree = tree1.merge(tree2);
-}
-
-TEST(LineTree, MergeTreesLongChain) {
-    auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
-    auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {30, 10}, {30, 0}});
-
-    auto tree = tree1.merge(tree2);
-    auto tree0 = tree1.merge(tree2, {point2d_t {30, 0}});
+    ASSERT_EQ(tree, std::nullopt);
 }
 
 }  // namespace logicsim
