@@ -12,12 +12,12 @@ namespace logicsim {
 
 TEST(LineTree, DefaultCreation) {
     const auto tree = LineTree {};
-    ASSERT_EQ(tree.validate(), true);
+    ASSERT_EQ(tree.segment_count(), 0);
 }
 
 TEST(LineTree, ListCreation) {
     const auto tree = LineTree {{0, 0}, {10, 0}, {10, 12}};
-    ASSERT_EQ(tree.validate(), true);
+    ASSERT_EQ(tree.segment_count(), 2);
 }
 
 TEST(LineTree, TestSegments) {
@@ -164,6 +164,14 @@ TEST(LineTree, MergeWithLoop) {
     ASSERT_EQ(tree, std::nullopt);
 }
 
+TEST(LineTree, MergeDisconnected) {
+    auto tree1 = LineTree({{0, 0}, {10, 0}});
+    auto tree2 = LineTree({{0, 10}, {10, 10}});
+
+    auto tree = tree1.merge(tree2);
+    ASSERT_EQ(tree, std::nullopt);
+}
+
 TEST(LineTree, MergeWithTriangle) {
     auto tree1 = LineTree({{0, 10}, {10, 10}});
     auto tree2 = LineTree({{10, 0}, {10, 10}, {20, 10}});
@@ -174,7 +182,6 @@ TEST(LineTree, MergeWithTriangle) {
 
     auto tree = tree1.merge(tree2);
     EXPECT_THAT(tree.has_value(), true);
-    fmt::print("sized_segments = {}\n", tree->sized_segments());
 
     EXPECT_EQ(tree->segment_count(), 3);
     EXPECT_EQ(tree->starts_new_subtree(0), false);
@@ -182,6 +189,51 @@ TEST(LineTree, MergeWithTriangle) {
     EXPECT_EQ(tree->starts_new_subtree(2), true);
 
     EXPECT_THAT(tree->sized_segments(), testing::ElementsAre(line0, line1, line2));
+}
+
+TEST(LineTree, MergeCompletely) {
+    auto tree1 = LineTree({{10, 0}, {20, 0}});
+    auto tree2 = LineTree({{0, 0}, {30, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {30, 0}}, 0, 30};
+
+    auto tree_left = tree1.merge(tree2);
+    EXPECT_THAT(tree_left.has_value(), true);
+    EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0));
+
+    auto tree_right = tree2.merge(tree1);
+    EXPECT_THAT(tree_right.has_value(), true);
+    EXPECT_THAT(tree_right->sized_segments(), testing::ElementsAre(line0));
+}
+
+TEST(LineTree, MergeAndSplit) {
+    auto tree1 = LineTree({{10, 0}, {20, 0}, {20, 10}});
+    auto tree2 = LineTree({{0, 0}, {30, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {20, 0}}, 0, 20};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {20, 10}}, 20, 30};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {30, 0}}, 20, 30};
+
+    auto tree_left = tree1.merge(tree2);
+    EXPECT_THAT(tree_left.has_value(), true);
+    EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0, line1, line2));
+
+    auto tree_right = tree2.merge(tree1);
+    EXPECT_THAT(tree_right.has_value(), true);
+    EXPECT_THAT(tree_right->sized_segments(), testing::ElementsAre(line0, line1, line2));
+}
+
+TEST(LineTree, MergerSplitInsideLine) {
+    auto tree1 = LineTree({{0, 0}, {20, 0}});
+    auto tree2 = LineTree({{10, 0}, {10, 10}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 10}}, 10, 20};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {20, 0}}, 10, 20};
+
+    auto tree_left = tree1.merge(tree2);
+    EXPECT_THAT(tree_left.has_value(), true);
+    EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0, line1, line2));
 }
 
 }  // namespace logicsim

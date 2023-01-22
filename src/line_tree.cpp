@@ -120,9 +120,12 @@ LineTree::LineTree(std::initializer_list<point2d_t> points)
     if (std::size(points) == 1) [[unlikely]] {
         throw_invalid_line_tree_exception("A line tree with one point is invalid.");
     }
+    if (std::size(points) == 0) {
+        return;
+    }
 
     // indices point to previous point for line
-    indices_.resize(segment_count());
+    indices_.resize(std::size(points) - 1);
     std::iota(indices_.begin(), indices_.end(), 0);
 
     if (!validate_segments_horizontal_or_vertical()) [[unlikely]] {
@@ -508,38 +511,6 @@ auto LineTree::validate_no_internal_collisions() const -> bool {
 
     return !has_duplicates_quadratic_custom(segments().begin(), segments().end(),
                                             are_colliding);
-}
-
-auto LineTree::validate() const -> bool {
-    if (std::size(indices_) == 0 && std::size(points_) == 0) {
-        return true;
-    }
-    assert(std::size(indices_) + 1 == std::size(points_));
-
-    // root node needs exactly one child
-    if (std::ranges::count_if(indices_, [](auto v) { return v == 0; }) != 1) {
-        return false;
-    }
-
-    if (!validate_segments_horizontal_or_vertical()) {
-        return false;
-    }
-
-    if (!validate_no_internal_collisions()) {
-        return false;
-    }
-
-    // no unconnected nodes
-
-    // contains no cycle
-    // cycles require that an index points to a node to its right
-    for (auto i : range(std::size(indices_))) {
-        if (indices_[i] > i) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 //

@@ -67,9 +67,6 @@ class LineTree {
 
     [[nodiscard]] auto starts_new_subtree(int index) const -> bool;
 
-    // TODO consider removing
-    [[nodiscard]] auto validate() const -> bool;
-
    private:
     using index_t = uint16_t;
     using Graph = AdjacencyGraph<index_t>;
