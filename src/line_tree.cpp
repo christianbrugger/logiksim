@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <numeric>
 #include <optional>
 #include <utility>
@@ -65,97 +66,68 @@ auto split_segments(std::ranges::input_range auto&& segments,
     return result;
 }
 
-auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_t> {
+template <class OutputIterator, class GetterSame, class GetterDifferent>
+auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator result,
+                       GetterSame get_same, GetterDifferent get_different)
+    -> OutputIterator {
     // categorize lines
-    std::vector<line2d_t> horizontal;
-    std::vector<line2d_t> vertical;
+    std::vector<line2d_t> parallel;
 
     for (auto tree_reference : line_trees) {
-        // transform_if(
-        //     tree_reference.get().segments(), std::back_inserter(horizontal),
-        //     [](auto line) { return order_points(line); },
-        //     [](auto line) { return is_horizontal(line); });
-
-        // transform_if(
-        //     tree_reference.get().segments(), std::back_inserter(vertical),
-        //     [](auto line) { return order_points(line); },
-        //     [](auto line) { return is_vertical(line); });
-
-        for (auto line : tree_reference.get().segments()) {
-            if (is_horizontal(line)) {
-                horizontal.push_back(order_points(line));
-            } else {
-                vertical.push_back(order_points(line));
-            }
-        }
+        transform_if(
+            tree_reference.get().segments(), std::back_inserter(parallel),
+            [&](auto line) -> line2d_t { return order_points(line); },
+            [&](auto line) -> bool { return get_same(line.p0) == get_same(line.p1); });
     }
 
     // sort lists
-    std::ranges::sort(horizontal, [](line2d_t a, line2d_t b) {
-        return std::tie(a.p0.y, a.p0.x) < std::tie(b.p0.y, b.p0.x);
-    });
-    std::ranges::sort(vertical, [](line2d_t a, line2d_t b) {
-        return std::tie(a.p0.x, a.p0.y) < std::tie(b.p0.x, b.p0.y);
+    std::ranges::sort(parallel, [&](line2d_t a, line2d_t b) {
+        return std::tie(get_same(a.p0), get_different(a.p0))
+               < std::tie(get_same(b.p0), get_different(b.p0));
     });
 
-    // copy merged
+    {
+        auto i0 = parallel.begin();
+        auto end = parallel.end();
+
+        while (i0 != end) {
+            auto i1 = i0 + 1;
+
+            auto end_point = i0->p1;
+            auto& diff_max = get_different(end_point);
+
+            while (i1 != end && get_same(i0->p0) == get_same(i1->p0)
+                   && diff_max >= get_different(i1->p0)) {
+                diff_max = std::max(diff_max, get_different(i1->p0));
+                ++i1;
+            }
+
+            *result = line2d_t {i0->p0, end_point};
+            ++result;
+
+            i0 = i1;
+        }
+    }
+
+    return result;
+}
+
+auto sum_segment_counts(const line_tree_vector_t& line_trees) -> size_t {
+    return std::transform_reduce(
+        line_trees.begin(), line_trees.end(), size_t {0}, std::plus<>(),
+        [](auto tree_reference) { return tree_reference.get().segment_count(); });
+}
+
+auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_t> {
     std::vector<line2d_t> result;
-    result.reserve(std::size(horizontal) + std::size(vertical));
+    result.reserve(sum_segment_counts(line_trees));
 
-    {
-        // horizontal
-        auto i0 = horizontal.begin();
-        auto end = horizontal.end();
+    auto get_x = [](point2d_t& point) -> grid_t& { return point.x; };
+    auto get_y = [](point2d_t& point) -> grid_t& { return point.y; };
 
-        while (i0 != end) {
-            auto i1 = i0 + 1;
-
-            auto y_max = i0->p1.y;
-
-            while (i1 != end && i0->p0.x == i1->p0.x && y_max >= i1->p0.y) {
-                y_max = std::max(y_max, i1->p0.y);
-                ++i1;
-            }
-
-            if (i1 == i0 + 1) {
-                result.push_back(*i0);
-            } else {
-                // auto x_max = std::ranges::max(std::ranges::subrange(i0, i1), {},
-                //                               [](line2d_t line) { return line.p1.x; })
-                //                  .p1.x;
-
-                result.push_back(line2d_t {i0->p0, point2d_t {x_max, i0->p0.y}});
-            }
-
-            i0 = i1;
-        }
-    }
-
-    // vertical
-    {
-        auto i0 = vertical.begin();
-        auto end = vertical.end();
-
-        while (i0 != end) {
-            auto i1 = i0 + 1;
-
-            while (i1 != end && i0->p0.y == i1->p0.y && i0->p1.x >= i1->p0.x) {
-                ++i1;
-            }
-
-            if (i1 == i0 + 1) {
-                result.push_back(*i0);
-            } else {
-                auto y_max = std::ranges::max(std::ranges::subrange(i0, i1), {},
-                                              [](line2d_t line) { return line.p1.y; })
-                                 .p1.y;
-
-                result.push_back(line2d_t {i0->p0, point2d_t {i0->p0.x, y_max}});
-            }
-
-            i0 = i1;
-        }
-    }
+    // horizontal & vertical
+    merge_segments_1d(line_trees, std::back_inserter(result), get_x, get_y);
+    merge_segments_1d(line_trees, std::back_inserter(result), get_y, get_x);
 
     return result;
 }
@@ -235,7 +207,6 @@ auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root)
     const auto merged_segments = merge_split_segments(line_trees);
     const auto graph = LineTree::Graph {merged_segments};
 
-    fmt::print("merged_segments = {}\n", merged_segments);
     fmt::print("graph = {}\n", graph);
 
     if (const auto root = select_best_root(graph, new_root, line_trees)) {
