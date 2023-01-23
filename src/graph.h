@@ -16,7 +16,7 @@
 
 namespace logicsim {
 
-[[nodiscard]] auto to_sorted_points(std::ranges::input_range auto&& segments)
+[[nodiscard]] auto to_points_sorted_unique(std::ranges::input_range auto&& segments)
     -> std::vector<point2d_t> {
     auto points = std::vector<point2d_t> {};
     points.reserve(2 * std::size(segments));
@@ -45,7 +45,7 @@ class AdjacencyGraph {
     AdjacencyGraph() = default;
 
     AdjacencyGraph(std::ranges::input_range auto&& segments)
-        : points_ {to_sorted_points(segments)} {
+        : points_ {to_points_sorted_unique(segments)} {
         neighbors_.resize(points_.size());
 
         for (line2d_t segment : segments) {
@@ -66,7 +66,7 @@ class AdjacencyGraph {
 
     // iterator over all indices
     auto indices() const noexcept {
-        return range(points_.size());
+        return range(gsl::narrow_cast<index_t>(points_.size()));
     }
 
     auto to_index(point2d_t _point) const -> std::optional<index_t> {

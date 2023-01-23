@@ -105,6 +105,10 @@ bool has_duplicates_quadratic(const std::ranges::input_range auto& range) {
     return false;
 }
 
+//
+// all_equal
+//
+
 auto all_equal(std::input_iterator auto first, std::input_iterator auto last, auto value)
     -> bool {
     return std::all_of(first, last, [&](auto& item) { return item == value; });
@@ -114,6 +118,10 @@ auto all_equal(std::ranges::input_range auto&& range, auto value) -> bool {
     return all_equal(std::ranges::begin(range), std::ranges::begin(range), value);
 }
 
+//
+// distance_fast
+//
+
 template <typename IteratorFirst, typename IteratorLast>
     requires std::sized_sentinel_for<IteratorLast, IteratorFirst>
 auto distance_fast(IteratorFirst first, IteratorLast last) {
@@ -122,6 +130,29 @@ auto distance_fast(IteratorFirst first, IteratorLast last) {
 
 auto distance_fast(std::ranges::input_range auto&& range) {
     return distance_fast(std::begin(range), std::end(range));
+}
+
+//
+// transform if
+//
+
+template <class IteratorFirst, class IteratorLast, class OutputIterator, class Pred,
+          class Proj>
+auto transform_if(IteratorFirst first1, IteratorLast last1, OutputIterator result,
+                  Proj proj, Pred pred) -> OutputIterator {
+    while (first1 != last1) {
+        if (pred(*first1)) {
+            *result = proj(*first1);
+            ++result;
+        }
+        ++first1;
+    }
+    return result;
+}
+
+template <std::ranges::input_range R, class OutputIterator, class Pred, class Proj>
+auto transform_if(R&& r, OutputIterator result, Proj proj, Pred pred) -> void {
+    transform_if(std::begin(r), std::end(r), result, proj, pred);
 }
 
 //

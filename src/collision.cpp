@@ -4,12 +4,16 @@
 namespace logicsim {
 
 auto is_inside(point2d_t point, line2d_t line_) noexcept -> bool {
-    auto line = order_points(line_);
-
-    if (is_horizontal(line_)) {
-        return point.y == line.p0.y && line.p0.x < point.x && point.x < line.p1.x;
+    bool horizontal = is_horizontal(line_);
+    if ((horizontal && point.y != line_.p0.y) || (!horizontal && point.x != line_.p0.x)) {
+        return false;
     }
-    return point.x == line.p0.x && line.p0.y < point.y && point.y < line.p1.y;
+
+    auto line = order_points(line_);
+    if (horizontal) {
+        return line.p0.x < point.x && point.x < line.p1.x;
+    }
+    return line.p0.y < point.y && point.y < line.p1.y;
 }
 
 auto is_colliding(point2d_t point, line2d_t line_) noexcept -> bool {

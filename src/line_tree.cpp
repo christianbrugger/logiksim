@@ -33,134 +33,166 @@ auto is_perpendicular(line2d_t line0, line2d_t line1) noexcept -> bool {
     return !is_parallel(line0, line1);
 }
 
-namespace {
-using split_result_t = std::optional<std::pair<line2d_t, line2d_t>>;
-}
+auto split_segment(line2d_t segment, std::ranges::input_range auto&& points) {
+    boost::container::small_vector<line2d_t, 4> segments {segment};
 
-// if point is inside line, returns splitted line
-auto get_split_line(point2d_t point, line2d_t line) -> split_result_t {
-    if (is_inside(point, line)) {
-        return std::make_pair(line2d_t {line.p0, point}, line2d_t {point, line.p1});
-    }
-    return std::nullopt;
-}
+    for (auto point : points) {
+        auto splittable = std::ranges::find_if(
+            segments, [&point](line2d_t line) -> bool { return is_inside(point, line); });
 
-// splits lines  atgiven lines
-auto get_split_line(point2d_t p0, point2d_t p1, line2d_t line) -> split_result_t {
-    if (auto res = get_split_line(p0, line)) {
-        return res;
-    }
-    return get_split_line(p1, line);
-}
-
-auto get_split_segment(line2d_t segment, std::ranges::input_range auto&& splits) {
-    boost::container::small_vector<line2d_t, 4> result {segment};
-
-    for (auto split : splits) {
-        auto splittable_line
-            = std::ranges::find_if(result, [&split](line2d_t line) -> bool {
-                  return get_split_line(split.p0, split.p1, line).has_value();
-              });
-
-        if (splittable_line != result.end()) {
-            auto splitted = get_split_line(split.p0, split.p1, *splittable_line);
-            *splittable_line = splitted->first;
-            result.push_back(splitted->second);
+        if (splittable != segments.end()) {
+            segments.push_back(line2d_t {point, splittable->p1});
+            *splittable = line2d_t {splittable->p0, point};
         }
     }
 
-    return result;
+    return segments;
 }
 
-auto get_split_segments(std::ranges::input_range auto&& segments,
-                        std::ranges::input_range auto&& splits) {
+auto split_segments(std::ranges::input_range auto&& segments,
+                    std::ranges::input_range auto&& points) -> std::vector<line2d_t> {
     std::vector<line2d_t> result;
     // its okay to over provision, as this is not stored anywhere
-    result.reserve(std::size(segments) + std::size(splits));
+    result.reserve(std::size(segments) + std::size(points));
 
     for (auto segment : segments) {
-        auto splitted_segments = get_split_segment(segment, splits);
+        auto splitted_segments = split_segment(segment, points);
+
+        // TODO use std::ranges::copy
         std::copy(splitted_segments.begin(), splitted_segments.end(),
                   std::back_inserter(result));
     }
     return result;
 }
 
-/// @brief tries to merge two parallel lines and returns the new line, if its possible
-auto get_merged_parallel_lines(line2d_t line0, line2d_t line1)
-    -> std::optional<line2d_t> {
-    auto [a, b] = order_points(line0, line1);
+auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_t> {
+    // categorize lines
+    std::vector<line2d_t> horizontal;
+    std::vector<line2d_t> vertical;
 
-    if (is_horizontal(a)) {
-        assert(is_horizontal(b));
+    for (auto tree_reference : line_trees) {
+        // transform_if(
+        //     tree_reference.get().segments(), std::back_inserter(horizontal),
+        //     [](auto line) { return order_points(line); },
+        //     [](auto line) { return is_horizontal(line); });
 
-        if (a.p0.y != b.p0.y || a.p1.x < b.p0.x) {
-            return std::nullopt;
-        }
-    } else {
-        assert(is_vertical(a));
-        assert(is_vertical(b));
+        // transform_if(
+        //     tree_reference.get().segments(), std::back_inserter(vertical),
+        //     [](auto line) { return order_points(line); },
+        //     [](auto line) { return is_vertical(line); });
 
-        if (a.p0.x != b.p0.x || a.p1.y < b.p0.y) {
-            return std::nullopt;
+        for (auto line : tree_reference.get().segments()) {
+            if (is_horizontal(line)) {
+                horizontal.push_back(order_points(line));
+            } else {
+                vertical.push_back(order_points(line));
+            }
         }
     }
 
-    return line2d_t {a.p0, std::max(a.p1, b.p1)};
-}
-
-// tries to merge the line with the given segments, returns status of merge
-auto try_merge_line_into(line2d_t line, std::vector<line2d_t>& segments) -> bool {
-    auto mergable_line = std::ranges::find_if(segments, [&](line2d_t other) {
-        return is_parallel(line, other) && get_merged_parallel_lines(line, other);
+    // sort lists
+    std::ranges::sort(horizontal, [](line2d_t a, line2d_t b) {
+        return std::tie(a.p0.y, a.p0.x) < std::tie(b.p0.y, b.p0.x);
     });
-    if (mergable_line != segments.end()) {
-        *mergable_line = *get_merged_parallel_lines(line, *mergable_line);
-        return true;
+    std::ranges::sort(vertical, [](line2d_t a, line2d_t b) {
+        return std::tie(a.p0.x, a.p0.y) < std::tie(b.p0.x, b.p0.y);
+    });
+
+    // copy merged
+    std::vector<line2d_t> result;
+    result.reserve(std::size(horizontal) + std::size(vertical));
+
+    {
+        // horizontal
+        auto i0 = horizontal.begin();
+        auto end = horizontal.end();
+
+        while (i0 != end) {
+            auto i1 = i0 + 1;
+
+            auto y_max = i0->p1.y;
+
+            while (i1 != end && i0->p0.x == i1->p0.x && y_max >= i1->p0.y) {
+                y_max = std::max(y_max, i1->p0.y);
+                ++i1;
+            }
+
+            if (i1 == i0 + 1) {
+                result.push_back(*i0);
+            } else {
+                // auto x_max = std::ranges::max(std::ranges::subrange(i0, i1), {},
+                //                               [](line2d_t line) { return line.p1.x; })
+                //                  .p1.x;
+
+                result.push_back(line2d_t {i0->p0, point2d_t {x_max, i0->p0.y}});
+            }
+
+            i0 = i1;
+        }
     }
-    return false;
+
+    // vertical
+    {
+        auto i0 = vertical.begin();
+        auto end = vertical.end();
+
+        while (i0 != end) {
+            auto i1 = i0 + 1;
+
+            while (i1 != end && i0->p0.y == i1->p0.y && i0->p1.x >= i1->p0.x) {
+                ++i1;
+            }
+
+            if (i1 == i0 + 1) {
+                result.push_back(*i0);
+            } else {
+                auto y_max = std::ranges::max(std::ranges::subrange(i0, i1), {},
+                                              [](line2d_t line) { return line.p1.y; })
+                                 .p1.y;
+
+                result.push_back(line2d_t {i0->p0, point2d_t {i0->p0.x, y_max}});
+            }
+
+            i0 = i1;
+        }
+    }
+
+    return result;
 }
 
-auto merge_segments(LineTree::SegmentView view0, LineTree::SegmentView view1) {
-    auto segments0 = std::vector<line2d_t>(view0.begin(), view0.end());
-    auto segments1 = std::vector<line2d_t>(view1.begin(), view1.end());
+auto merge_split_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_t> {
+    auto segments_merged = merge_segments(line_trees);
 
-    auto merge_result = std::vector<line2d_t> {};
-    merge_result.reserve(segments0.size() + segments1.size());
-
-    // merge segments
-    std::ranges::copy_if(
-        segments0, std::back_inserter(merge_result),
-        [&](line2d_t line0) { return !try_merge_line_into(line0, segments1); });
-    fmt::print("segments0_merged = {}\n", merge_result);
-    fmt::print("segments1_merged = {}\n\n", segments1);
-    std::ranges::copy(segments1, std::back_inserter(merge_result));
+    fmt::print("segments_merged = {}\n", segments_merged);
 
     // splitting segments
-    auto segments_split = get_split_segments(merge_result, merge_result);
-    fmt::print("segments_split = {}\n", segments_split);
-    return segments_split;
+    auto points = to_points_sorted_unique(segments_merged);
+    auto segments_splited = split_segments(segments_merged, points);
+
+    fmt::print("points = {}\n", points);
+    fmt::print("segments_splited = {}\n", segments_splited);
+    return segments_splited;
 }
 
-template <typename size_t>
-auto select_best_root(const AdjacencyGraph<size_t>& graph,
+template <typename index_t>
+auto select_best_root(const AdjacencyGraph<index_t>& graph,
                       std::optional<point2d_t> mandatory,
-                      std::array<point2d_t, 2> preferred) -> std::optional<point2d_t> {
-    // find points with only one neighbor
+                      const line_tree_vector_t& line_trees) -> std::optional<point2d_t> {
+    // collect candidates
     std::vector<point2d_t> root_candidates;
+    auto is_leaf = [&](index_t index) { return graph.neighbors()[index].size() == 1; };
+    // TODO use transform_if
     for (auto index : graph.indices()) {
-        if (graph.neighbors()[index].size() == 1) {
+        if (is_leaf(index)) {
             root_candidates.push_back(graph.points()[index]);
         }
     }
+
     if (root_candidates.empty()) {
         // no root candiates
         return std::nullopt;
     }
 
-    fmt::print("root candidates = {}\n", root_candidates);
-
-    // decide new root
     std::ranges::sort(root_candidates);
     auto has_candiate = [&](point2d_t _root) {
         return std::ranges::binary_search(root_candidates, _root);
@@ -174,19 +206,41 @@ auto select_best_root(const AdjacencyGraph<size_t>& graph,
         }
         return *mandatory;
     }
-    for (auto root : preferred) {
-        if (has_candiate(root)) {
-            return root;
+
+    // TODO use find_if
+    for (const auto tree_reference : line_trees) {
+        auto input = tree_reference.get().input_point();
+        if (has_candiate(input)) {
+            return input;
         }
     }
 
-    // first root in sorted list -> deterministic
     return root_candidates.at(0);
 }
 
-// Merges all line trees if possible. With new root, if given.
-auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root = {})
+// Merges line tree if possible. With new root, if given.
+
+auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root)
     -> std::optional<LineTree> {
+    // trivial cases
+    if (std::size(line_trees) == 0) {
+        return std::nullopt;
+    }
+    if (std::size(line_trees) == 1) {
+        return line_trees.at(0).get();
+    }
+
+    fmt::print("\n");
+
+    const auto merged_segments = merge_split_segments(line_trees);
+    const auto graph = LineTree::Graph {merged_segments};
+
+    fmt::print("merged_segments = {}\n", merged_segments);
+    fmt::print("graph = {}\n", graph);
+
+    if (const auto root = select_best_root(graph, new_root, line_trees)) {
+        return LineTree::from_graph(*root, graph);
+    }
     return std::nullopt;
 }
 
@@ -220,31 +274,6 @@ LineTree::LineTree(std::initializer_list<point2d_t> points)
         throw_invalid_line_tree_exception(
             "Lines are not allowed to collide with each other in the graph.");
     }
-}
-
-// Merges line tree if possible. With new root, if given.
-auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) const
-    -> std::optional<LineTree> {
-    // trivial cases
-    if (this->empty()) {
-        return other;
-    }
-    if (other.empty()) {
-        return *this;
-    }
-    fmt::print("\n");
-
-    const auto merged_segments = merge_segments(this->segments(), other.segments());
-    const auto graph = Graph {merged_segments};
-
-    fmt::print("merged_segments = {}\n", merged_segments);
-    fmt::print("graph = {}\n", graph);
-
-    if (const auto root
-        = select_best_root(graph, new_root, {input_point(), other.input_point()})) {
-        return LineTree::from_graph(*root, graph);
-    }
-    return std::nullopt;
 }
 
 struct LineTree::backtrack_memory_t {
@@ -306,13 +335,13 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
             next = neighbors[1];
         }
 
-        fmt::print("iteration\n");
-        fmt::print("  tree->points = {}\n", line_tree->points_);
-        fmt::print("  tree->indices = {}\n", line_tree->indices_);
-        fmt::print("  tree->lengths = {}\n", line_tree->lengths_);
-        fmt::print("  last = {} current = {} next = {} neighbors = {}\n", last_index,
-                   current_index, next.value_or(999), neighbors);
-        fmt::print("  backtrack_vector.size() = {}\n", backtrack_vector.size());
+        // fmt::print("iteration\n");
+        // fmt::print("  tree->points = {}\n", line_tree->points_);
+        // fmt::print("  tree->indices = {}\n", line_tree->indices_);
+        // fmt::print("  tree->lengths = {}\n", line_tree->lengths_);
+        // fmt::print("  last = {} current = {} next = {} neighbors = {}\n", last_index,
+        //            current_index, next.value_or(999), neighbors);
+        // fmt::print("  backtrack_vector.size() = {}\n", backtrack_vector.size());
 
         // add backtracking candiates
         for (auto id : range(neighbors.size())) {
@@ -356,7 +385,7 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
         return std::nullopt;
     }
 
-    fmt::print("--done--\n\n\n");
+    // fmt::print("--done--\n\n\n");
     return line_tree;
 }
 

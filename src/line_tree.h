@@ -37,7 +37,9 @@ namespace logicsim {
 class LineTree;
 
 using line_tree_vector_t = std::vector<std::reference_wrapper<LineTree>>;
-auto merge(line_tree_vector_t line_trees) -> std::optional<LineTree>;
+
+auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root = {})
+    -> std::optional<LineTree>;
 
 template <typename index_t>
 class AdjacencyGraph;
@@ -52,15 +54,17 @@ class LineTree {
     class SegmentSizeView;
 
     using length_t = int32_t;
+    using index_t = uint16_t;
+
+    using Graph = AdjacencyGraph<LineTree::index_t>;
 
     explicit LineTree() = default;
     explicit LineTree(std::initializer_list<point2d_t> points);
 
-    [[nodiscard]] auto merge(const LineTree &other,
-                             std::optional<point2d_t> new_root = {}) const
+    [[nodiscard]] static auto from_graph(point2d_t root, const Graph &graph)
         -> std::optional<LineTree>;
-    // rearrange the tree such that new_root is the new root of the tree
-    // new_root needs to be already part of the tree.
+
+    // return tree with new root, if possible
     [[nodiscard]] auto reroot(const point2d_t new_root) const -> std::optional<LineTree>;
 
     [[nodiscard]] auto input_point() const -> point2d_t;
@@ -74,12 +78,7 @@ class LineTree {
     [[nodiscard]] auto starts_new_subtree(int index) const -> bool;
 
    private:
-    using index_t = uint16_t;
-    using Graph = AdjacencyGraph<index_t>;
     struct backtrack_memory_t;
-
-    [[nodiscard]] static auto from_graph(point2d_t root, const Graph &graph)
-        -> std::optional<LineTree>;
 
     [[nodiscard]] auto validate_horizontal_follows_vertical() const -> bool;
     [[nodiscard]] auto validate_segments_horizontal_or_vertical() const -> bool;
