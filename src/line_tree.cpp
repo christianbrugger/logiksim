@@ -25,54 +25,55 @@ namespace logicsim {
 // merging
 //
 
-// todo use orthogonal_line_t & move to geometry
-auto is_parallel(line2d_t line0, line2d_t line1) noexcept -> bool {
-    return is_horizontal(line0) == is_horizontal(line1);
-}
+class SegmentSplitter {
+   public:
+    using buffer_t = std::vector<line2d_t>;
 
-auto is_perpendicular(line2d_t line0, line2d_t line1) noexcept -> bool {
-    return !is_parallel(line0, line1);
-}
-
-auto split_segment(line2d_t segment, std::ranges::input_range auto&& points) {
-    boost::container::small_vector<line2d_t, 4> segments {segment};
-
-    for (auto point : points) {
-        auto splittable = std::ranges::find_if(
-            segments, [&point](line2d_t line) -> bool { return is_inside(point, line); });
-
-        if (splittable != segments.end()) {
-            segments.push_back(line2d_t {point, splittable->p1});
-            *splittable = line2d_t {splittable->p0, point};
-        }
+    SegmentSplitter() {
+        buffer_.reserve(16);
     }
 
-    return segments;
-}
+    auto split_segment(line2d_t segment, std::ranges::input_range auto&& points)
+        -> const buffer_t& {
+        buffer_.clear();
+        buffer_.push_back(segment);
+
+        for (auto point : points) {
+            auto splittable = std::ranges::find_if(
+                buffer_,
+                [&point](line2d_t line) -> bool { return is_inside(point, line); });
+
+            if (splittable != buffer_.end()) {
+                buffer_.push_back(line2d_t {point, splittable->p1});
+                *splittable = line2d_t {splittable->p0, point};
+            }
+        }
+
+        return buffer_;
+    }
+
+   private:
+    buffer_t buffer_ {};
+};
 
 auto split_segments(std::ranges::input_range auto&& segments,
                     std::ranges::input_range auto&& points) -> std::vector<line2d_t> {
     std::vector<line2d_t> result;
-    // its okay to over provision, as this is not stored anywhere
     result.reserve(std::size(segments) + std::size(points));
 
+    auto splitter = SegmentSplitter {};
     for (auto segment : segments) {
-        auto splitted_segments = split_segment(segment, points);
-
-        // TODO use std::ranges::copy
-        std::copy(splitted_segments.begin(), splitted_segments.end(),
-                  std::back_inserter(result));
+        std::ranges::copy(splitter.split_segment(segment, points),
+                          std::back_inserter(result));
     }
     return result;
 }
 
 template <class OutputIterator, class GetterSame, class GetterDifferent>
 auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator result,
-                       GetterSame get_same, GetterDifferent get_different)
-    -> OutputIterator {
-    // categorize lines
+                       GetterSame get_same, GetterDifferent get_different) -> void {
+    // collect lines
     std::vector<line2d_t> parallel_segments;
-
     for (auto tree_reference : line_trees) {
         transform_if(
             tree_reference.get().segments(), std::back_inserter(parallel_segments),
@@ -108,8 +109,6 @@ auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator resu
             i0 = i1;
         }
     }
-
-    return result;
 }
 
 auto sum_segment_counts(const line_tree_vector_t& line_trees) -> size_t {
@@ -125,7 +124,7 @@ auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_
     auto get_x = [](point2d_t& point) -> grid_t& { return point.x; };
     auto get_y = [](point2d_t& point) -> grid_t& { return point.y; };
 
-    // horizontal & vertical
+    // vertical & horizontal
     merge_segments_1d(line_trees, std::back_inserter(result), get_x, get_y);
     merge_segments_1d(line_trees, std::back_inserter(result), get_y, get_x);
 
@@ -133,17 +132,11 @@ auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_
 }
 
 auto merge_split_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_t> {
+    // merge
     auto segments_merged = merge_segments(line_trees);
-
-    fmt::print("segments_merged = {}\n", segments_merged);
-
-    // splitting segments
+    // split
     auto points = to_points_sorted_unique(segments_merged);
-    auto segments_splited = split_segments(segments_merged, points);
-
-    fmt::print("points = {}\n", points);
-    fmt::print("segments_splited = {}\n", segments_splited);
-    return segments_splited;
+    return split_segments(segments_merged, points);
 }
 
 template <typename index_t>
