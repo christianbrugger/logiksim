@@ -166,108 +166,103 @@ TEST(LineTree, MergeWithLoop) {
     ASSERT_EQ(tree, std::nullopt);
 }
 
-// TEST(LineTree, MergeTwoSidesLoop) {
-//     auto tree1 = LineTree({{1, 0}, {2, 0}, {2, 1}, {3, 1}, {3, 0}, {4, 0}});
-//     auto tree2 = LineTree({{0, 0}, {4, 0}});
-//
-//     auto tree = merge({tree1, tree2});
-//     ASSERT_EQ(tree, std::nullopt);
-// }
+TEST(LineTree, MergeTwoSidesLoop) {
+    auto tree1 = LineTree({{1, 0}, {2, 0}, {2, 1}, {3, 1}, {3, 0}, {4, 0}});
+    auto tree2 = LineTree({{0, 0}, {4, 0}});
 
-// TEST(LineTree, MergeDisconnected) {
-//     auto tree1 = LineTree({{0, 0}, {10, 0}});
-//     auto tree2 = LineTree({{0, 10}, {10, 10}});
-//
-//     auto tree = tree1.merge(tree2);
-//     ASSERT_EQ(tree, std::nullopt);
-// }
-//
-// TEST(LineTree, MergeWithTriangle) {
-//     auto tree1 = LineTree({{0, 10}, {10, 10}});
-//     auto tree2 = LineTree({{10, 0}, {10, 10}, {20, 10}});
-//
-//     auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 0, 10};
-//     auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {10, 0}}, 10, 20};
-//     auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {20, 10}}, 10, 20};
-//
-//     auto tree = tree1.merge(tree2);
-//     ASSERT_EQ(tree.has_value(), true);
-//
-//     EXPECT_EQ(tree->segment_count(), 3);
-//     EXPECT_EQ(tree->starts_new_subtree(0), false);
-//     EXPECT_EQ(tree->starts_new_subtree(1), false);
-//     EXPECT_EQ(tree->starts_new_subtree(2), true);
-//
-//     EXPECT_THAT(tree->sized_segments(), testing::ElementsAre(line0, line1, line2));
-// }
-//
-// TEST(LineTree, MergeCompletely) {
-//     auto tree1 = LineTree({{10, 0}, {20, 0}});
-//     auto tree2 = LineTree({{0, 0}, {30, 0}});
-//
-//     auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {30, 0}}, 0, 30};
-//
-//     auto tree_left = tree1.merge(tree2);
-//     ASSERT_EQ(tree_left.has_value(), true);
-//     EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0));
-//
-//     auto tree_right = tree2.merge(tree1);
-//     ASSERT_EQ(tree_right.has_value(), true);
-//     EXPECT_THAT(tree_right->sized_segments(), testing::ElementsAre(line0));
-// }
-//
-// TEST(LineTree, MergeAndSplit) {
-//     auto tree1 = LineTree({{10, 0}, {20, 0}, {20, 10}});
-//     auto tree2 = LineTree({{0, 0}, {30, 0}});
-//
-//     auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {20, 0}}, 0, 20};
-//     auto line1 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {20, 10}}, 20, 30};
-//     auto line2 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {30, 0}}, 20, 30};
-//
-//     auto tree_left = tree1.merge(tree2);
-//     ASSERT_EQ(tree_left.has_value(), true);
-//     EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0, line1,
-//     line2));
-//
-//     auto tree_right = tree2.merge(tree1);
-//     ASSERT_EQ(tree_right.has_value(), true);
-//     EXPECT_THAT(tree_right->sized_segments(), testing::ElementsAre(line0, line1,
-//     line2));
-// }
-//
-// TEST(LineTree, MergerSplitInsideLine) {
-//     auto tree1 = LineTree({{0, 0}, {20, 0}});
-//     auto tree2 = LineTree({{10, 0}, {10, 10}});
-//
-//     auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
-//     auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 10}}, 10, 20};
-//     auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {20, 0}}, 10, 20};
-//
-//     auto tree_merged = tree1.merge(tree2);
-//     ASSERT_EQ(tree_merged.has_value(), true);
-//     EXPECT_THAT(tree_merged->sized_segments(), testing::ElementsAre(line0, line1,
-//     line2));
-// }
-//
-// TEST(LineTree, MergeTwoTimes) {
-//     auto tree1 = LineTree({{0, 0}, {0, 5}});
-//     auto tree2 = LineTree({{0, 1}, {1, 1}});
-//     auto tree3 = LineTree({{0, 2}, {2, 2}});
-//
-//     auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 1}}, 0, 1};
-//     auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 1}, {0, 2}}, 1, 2};
-//     auto line2 = LineTree::sized_line2d_t {line2d_t {{0, 2}, {0, 5}}, 2, 5};
-//     auto line3 = LineTree::sized_line2d_t {line2d_t {{0, 2}, {2, 2}}, 2, 4};
-//     auto line4 = LineTree::sized_line2d_t {line2d_t {{0, 1}, {1, 1}}, 1, 2};
-//
-//     auto tree_tmp = tree1.merge(tree2);
-//     ASSERT_EQ(tree_tmp.has_value(), true);
-//     auto tree_merged = tree_tmp->merge(tree3);
-//     ASSERT_EQ(tree_merged.has_value(), true);
-//
-//     EXPECT_THAT(tree_merged->sized_segments(),
-//                 testing::ElementsAre(line0, line1, line2, line3, line4));
-// }
+    auto tree = merge({tree1, tree2});
+    ASSERT_EQ(tree, std::nullopt);
+}
+
+TEST(LineTree, MergeDisconnected) {
+    auto tree1 = LineTree({{0, 0}, {10, 0}});
+    auto tree2 = LineTree({{0, 10}, {10, 10}});
+
+    auto tree = merge({tree1, tree2});
+    ASSERT_EQ(tree, std::nullopt);
+}
+
+TEST(LineTree, MergeWithTriangle) {
+    auto tree1 = LineTree({{0, 10}, {10, 10}});
+    auto tree2 = LineTree({{10, 0}, {10, 10}, {20, 10}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 0, 10};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {10, 0}}, 10, 20};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {20, 10}}, 10, 20};
+
+    auto tree = merge({tree1, tree2});
+    ASSERT_EQ(tree.has_value(), true);
+
+    EXPECT_EQ(tree->segment_count(), 3);
+    EXPECT_EQ(tree->starts_new_subtree(0), false);
+    EXPECT_EQ(tree->starts_new_subtree(1), false);
+    EXPECT_EQ(tree->starts_new_subtree(2), true);
+
+    EXPECT_THAT(tree->sized_segments(), testing::ElementsAre(line0, line1, line2));
+}
+
+TEST(LineTree, MergeCompleteOveralapp) {
+    auto tree1 = LineTree({{10, 0}, {20, 0}});
+    auto tree2 = LineTree({{0, 0}, {30, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {30, 0}}, 0, 30};
+
+    auto tree_left = merge({tree1, tree2});
+    ASSERT_EQ(tree_left.has_value(), true);
+    EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0));
+
+    auto tree_right = merge({tree2, tree1});
+    ASSERT_EQ(tree_right.has_value(), true);
+    EXPECT_THAT(tree_right->sized_segments(), testing::ElementsAre(line0));
+}
+
+TEST(LineTree, MergeAndSplit) {
+    auto tree1 = LineTree({{10, 0}, {20, 0}, {20, 10}});
+    auto tree2 = LineTree({{0, 0}, {30, 0}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {20, 0}}, 0, 20};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {20, 10}}, 20, 30};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {30, 0}}, 20, 30};
+
+    auto tree_left = merge({tree1, tree2});
+    ASSERT_EQ(tree_left.has_value(), true);
+    EXPECT_THAT(tree_left->sized_segments(), testing::ElementsAre(line0, line1, line2));
+
+    auto tree_right = merge({tree2, tree1});
+    ASSERT_EQ(tree_right.has_value(), true);
+    EXPECT_THAT(tree_right->sized_segments(), testing::ElementsAre(line0, line1, line2));
+}
+
+TEST(LineTree, MergerSplitInsideLine) {
+    auto tree1 = LineTree({{0, 0}, {20, 0}});
+    auto tree2 = LineTree({{10, 0}, {10, 10}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 10}}, 10, 20};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {20, 0}}, 10, 20};
+
+    auto tree_merged = merge({tree1, tree2});
+    ASSERT_EQ(tree_merged.has_value(), true);
+    EXPECT_THAT(tree_merged->sized_segments(), testing::ElementsAre(line0, line1, line2));
+}
+
+TEST(LineTree, MergeThreeTrees) {
+    auto tree1 = LineTree({{0, 0}, {0, 5}});
+    auto tree2 = LineTree({{0, 1}, {1, 1}});
+    auto tree3 = LineTree({{0, 2}, {2, 2}});
+
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 1}}, 0, 1};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 1}, {0, 2}}, 1, 2};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{0, 2}, {0, 5}}, 2, 5};
+    auto line3 = LineTree::sized_line2d_t {line2d_t {{0, 2}, {2, 2}}, 2, 4};
+    auto line4 = LineTree::sized_line2d_t {line2d_t {{0, 1}, {1, 1}}, 1, 2};
+
+    auto tree_merged = merge({tree1, tree2, tree3});
+    ASSERT_EQ(tree_merged.has_value(), true);
+
+    EXPECT_THAT(tree_merged->sized_segments(),
+                testing::ElementsAre(line0, line1, line2, line3, line4));
+}
 
 //
 // Reroot

@@ -71,24 +71,24 @@ auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator resu
                        GetterSame get_same, GetterDifferent get_different)
     -> OutputIterator {
     // categorize lines
-    std::vector<line2d_t> parallel;
+    std::vector<line2d_t> parallel_segments;
 
     for (auto tree_reference : line_trees) {
         transform_if(
-            tree_reference.get().segments(), std::back_inserter(parallel),
+            tree_reference.get().segments(), std::back_inserter(parallel_segments),
             [&](auto line) -> line2d_t { return order_points(line); },
             [&](auto line) -> bool { return get_same(line.p0) == get_same(line.p1); });
     }
 
     // sort lists
-    std::ranges::sort(parallel, [&](line2d_t a, line2d_t b) {
+    std::ranges::sort(parallel_segments, [&](line2d_t a, line2d_t b) {
         return std::tie(get_same(a.p0), get_different(a.p0))
                < std::tie(get_same(b.p0), get_different(b.p0));
     });
 
     {
-        auto i0 = parallel.begin();
-        auto end = parallel.end();
+        auto i0 = parallel_segments.begin();
+        auto end = parallel_segments.end();
 
         while (i0 != end) {
             auto i1 = i0 + 1;
@@ -98,7 +98,7 @@ auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator resu
 
             while (i1 != end && get_same(i0->p0) == get_same(i1->p0)
                    && diff_max >= get_different(i1->p0)) {
-                diff_max = std::max(diff_max, get_different(i1->p0));
+                diff_max = std::max(diff_max, get_different(i1->p1));
                 ++i1;
             }
 
