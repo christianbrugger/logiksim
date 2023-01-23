@@ -73,7 +73,7 @@ template <class OutputIterator, class GetterSame, class GetterDifferent>
 auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator result,
                        GetterSame get_same, GetterDifferent get_different) -> void {
     // collect lines
-    std::vector<line2d_t> parallel_segments;
+    auto parallel_segments = std::vector<line2d_t> {};
     for (auto tree_reference : line_trees) {
         transform_if(
             tree_reference.get().segments(), std::back_inserter(parallel_segments),
@@ -87,28 +87,42 @@ auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator resu
                < std::tie(get_same(b.p0), get_different(b.p0));
     });
 
-    {
-        auto i0 = parallel_segments.begin();
-        auto end = parallel_segments.end();
+    transform_combine_while(
+        parallel_segments, result,
+        // predicate
+        [&](line2d_t state, auto i1) -> bool {
+            return get_same(state.p0) == get_same(i1->p0)
+                   && get_different(state.p1) >= get_different(i1->p0);
+        },
+        // update
+        [&](line2d_t state, auto i1) -> line2d_t {
+            get_different(state.p1)
+                = std::max(get_different(state.p1), get_different(i1->p1));
+            return state;
+        });
 
-        while (i0 != end) {
-            auto i1 = i0 + 1;
+    //{
+    //    auto i0 = parallel_segments.begin();
+    //    auto end = parallel_segments.end();
 
-            auto end_point = i0->p1;
-            auto& diff_max = get_different(end_point);
+    //    while (i0 != end) {
+    //        auto i1 = i0 + 1;
 
-            while (i1 != end && get_same(i0->p0) == get_same(i1->p0)
-                   && diff_max >= get_different(i1->p0)) {
-                diff_max = std::max(diff_max, get_different(i1->p1));
-                ++i1;
-            }
+    //        auto end_point = i0->p1;
+    //        auto& diff_max = get_different(end_point);
 
-            *result = line2d_t {i0->p0, end_point};
-            ++result;
+    //        while (i1 != end && get_same(i0->p0) == get_same(i1->p0)
+    //               && diff_max >= get_different(i1->p0)) {
+    //            diff_max = std::max(diff_max, get_different(i1->p1));
+    //            ++i1;
+    //        }
 
-            i0 = i1;
-        }
-    }
+    //        *result = line2d_t {i0->p0, end_point};
+    //        ++result;
+
+    //        i0 = i1;
+    //    }
+    //}
 }
 
 auto sum_segment_counts(const line_tree_vector_t& line_trees) -> size_t {
@@ -118,7 +132,7 @@ auto sum_segment_counts(const line_tree_vector_t& line_trees) -> size_t {
 }
 
 auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_t> {
-    std::vector<line2d_t> result;
+    auto result = std::vector<line2d_t> {};
     result.reserve(sum_segment_counts(line_trees));
 
     auto get_x = [](point2d_t& point) -> grid_t& { return point.x; };
@@ -144,7 +158,7 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
                       std::optional<point2d_t> mandatory,
                       const line_tree_vector_t& line_trees) -> std::optional<point2d_t> {
     // collect candidates
-    std::vector<point2d_t> root_candidates;
+    auto root_candidates = std::vector<point2d_t> {};
     auto is_leaf = [&](index_t index) { return graph.neighbors()[index].size() == 1; };
     // TODO use transform_if
     for (auto index : graph.indices()) {

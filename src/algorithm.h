@@ -156,6 +156,43 @@ auto transform_if(R&& r, OutputIterator result, Proj proj, Pred pred) -> void {
 }
 
 //
+// transform_combine_while
+//
+
+template <class IteratorFirst, class IteratorLast, class OutputIterator, class Pred,
+          class Update = std::identity, class Proj = std::identity>
+auto transform_combine_while(IteratorFirst first, IteratorLast last,
+                             OutputIterator result, Pred predicate, Update update = {},
+                             Proj project = {}) -> OutputIterator {
+    auto i0 = first;
+
+    while (i0 != last) {
+        auto i1 = i0 + 1;
+        auto state = *i0;
+
+        while (i1 != last && predicate(state, i1)) {
+            state = update(state, i1);
+            ++i1;
+        }
+
+        *result = project(state);
+        ++result;
+
+        i0 = i1;
+    }
+
+    return result;
+}
+
+template <std::ranges::input_range R, class OutputIterator, class Pred,
+          class Update = std::identity, class Proj = std::identity>
+auto transform_combine_while(R&& r, OutputIterator result, Pred predicate,
+                             Update update = {}, Proj project = {}) -> void {
+    transform_combine_while(std::begin(r), std::end(r), result, predicate, update,
+                            project);
+}
+
+//
 // transform_to_vector
 //
 
