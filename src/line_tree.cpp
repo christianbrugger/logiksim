@@ -87,42 +87,20 @@ auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator resu
                < std::tie(get_same(b.p0), get_different(b.p0));
     });
 
+    // extract elements
     transform_combine_while(
         parallel_segments, result,
-        // predicate
-        [&](line2d_t state, auto i1) -> bool {
-            return get_same(state.p0) == get_same(i1->p0)
-                   && get_different(state.p1) >= get_different(i1->p0);
+        // combine while
+        [&](line2d_t state, auto it) -> bool {
+            return get_same(state.p0) == get_same(it->p0)
+                   && get_different(state.p1) >= get_different(it->p0);
         },
-        // update
-        [&](line2d_t state, auto i1) -> line2d_t {
+        // update state
+        [&](line2d_t state, auto it) -> line2d_t {
             get_different(state.p1)
-                = std::max(get_different(state.p1), get_different(i1->p1));
+                = std::max(get_different(state.p1), get_different(it->p1));
             return state;
         });
-
-    //{
-    //    auto i0 = parallel_segments.begin();
-    //    auto end = parallel_segments.end();
-
-    //    while (i0 != end) {
-    //        auto i1 = i0 + 1;
-
-    //        auto end_point = i0->p1;
-    //        auto& diff_max = get_different(end_point);
-
-    //        while (i1 != end && get_same(i0->p0) == get_same(i1->p0)
-    //               && diff_max >= get_different(i1->p0)) {
-    //            diff_max = std::max(diff_max, get_different(i1->p1));
-    //            ++i1;
-    //        }
-
-    //        *result = line2d_t {i0->p0, end_point};
-    //        ++result;
-
-    //        i0 = i1;
-    //    }
-    //}
 }
 
 auto sum_segment_counts(const line_tree_vector_t& line_trees) -> size_t {
