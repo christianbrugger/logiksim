@@ -7,6 +7,7 @@
 #include <folly/small_vector.h>
 #include <gsl/gsl>
 
+#include <functional>
 #include <optional>
 #include <ranges>
 
@@ -33,10 +34,13 @@ namespace logicsim {
 // outputs need to be leaf nodes (cannot have outgoing connections)
 // class does not know about simulation or circuit (reduce coupling)
 
+class LineTree;
+
+using line_tree_vector_t = std::vector<std::reference_wrapper<LineTree>>;
+auto merge(line_tree_vector_t line_trees) -> std::optional<LineTree>;
+
 template <typename index_t>
 class AdjacencyGraph;
-
-auto test_graph() -> void;
 
 class LineTree {
    public:

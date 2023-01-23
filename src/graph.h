@@ -16,6 +16,22 @@
 
 namespace logicsim {
 
+[[nodiscard]] auto to_sorted_points(std::ranges::input_range auto&& segments)
+    -> std::vector<point2d_t> {
+    auto points = std::vector<point2d_t> {};
+    points.reserve(2 * std::size(segments));
+
+    for (line2d_t segment : segments) {
+        points.push_back(segment.p0);
+        points.push_back(segment.p1);
+    }
+
+    std::ranges::sort(points);
+    points.erase(std::ranges::unique(points).begin(), points.end());
+
+    return points;
+}
+
 template <typename index_t>
 class AdjacencyGraph {
    public:
@@ -28,54 +44,16 @@ class AdjacencyGraph {
    public:
     AdjacencyGraph() = default;
 
-    AdjacencyGraph(std::ranges::input_range auto&& segments) {
-        // add points
-        points_.reserve(2 * std::size(segments));
-        for (line2d_t segment : segments) {
-            points_.push_back(segment.p0);
-            points_.push_back(segment.p1);
-        }
-
-        // remove duplicates & sort
-        std::ranges::sort(points_);
-        points_.erase(std::ranges::unique(points_).begin(), points_.end());
-
-        auto to_index = [&](point2d_t _point) {
-            return std::ranges::lower_bound(points_, _point) - points_.begin();
-        };
-
-        // create adjacency
+    AdjacencyGraph(std::ranges::input_range auto&& segments)
+        : points_ {to_sorted_points(segments)} {
         neighbors_.resize(points_.size());
+
         for (line2d_t segment : segments) {
-            if (segment.p0 == segment.p1) [[unlikely]] {
-                throw_exception("Trying to add segment with zero length.");
-            }
-
-            auto index0 = to_index(segment.p0);
-            auto index1 = to_index(segment.p1);
-
-            auto& adjacency0 = neighbors_[index0];
-            auto& adjacency1 = neighbors_[index1];
-
-            if (std::ranges::find(adjacency0, index0) != adjacency0.end()) [[unlikely]] {
-                throw_exception("Duplicate segments when building graph.");
-            }
-
-            if (adjacency0.size() == adjacency0.capacity()
-                || adjacency1.size() == adjacency1.capacity()) [[unlikely]] {
-                throw_exception(
-                    "Point has too many neighbors when building adjacency graph.");
-            }
-
-            adjacency0.push_back(gsl::narrow_cast<index_t>(index1));
-            adjacency1.push_back(gsl::narrow_cast<index_t>(index0));
+            add_edge_unchecked(segment);
         }
 
-        // sort adjacency to make the representation deterministic
-        for (auto& adjacency : neighbors_) {
-            std::ranges::sort(adjacency, {},
-                              [&](index_t index) { return points_[index]; });
-        }
+        // to make the representation deterministic
+        sort_adjacency();
     }
 
     auto points() const -> const point_vector_t& {
@@ -91,7 +69,7 @@ class AdjacencyGraph {
         return range(points_.size());
     }
 
-    auto find(point2d_t _point) const -> std::optional<index_t> {
+    auto to_index(point2d_t _point) const -> std::optional<index_t> {
         const auto res = std::ranges::lower_bound(points_, _point);
         if (res != points_.end()) {
             return gsl::narrow_cast<index_t>(res - points_.begin());
@@ -100,6 +78,44 @@ class AdjacencyGraph {
     }
 
    private:
+    // assumes point is part of graph
+    auto to_index_unchecked(point2d_t _point) const -> size_t {
+        return std::ranges::lower_bound(points_, _point) - points_.begin();
+    }
+
+    // assumes both endpoints are part of graph
+    auto add_edge_unchecked(line2d_t segment) -> void {
+        if (segment.p0 == segment.p1) [[unlikely]] {
+            throw_exception("Trying to add segment with zero length.");
+        }
+
+        auto index0 = to_index_unchecked(segment.p0);
+        auto index1 = to_index_unchecked(segment.p1);
+
+        auto& adjacency0 = neighbors_[index0];
+        auto& adjacency1 = neighbors_[index1];
+
+        if (std::ranges::find(adjacency0, index1) != adjacency0.end()) [[unlikely]] {
+            throw_exception("Duplicate segments when building graph.");
+        }
+
+        if (adjacency0.size() == adjacency0.capacity()
+            || adjacency1.size() == adjacency1.capacity()) [[unlikely]] {
+            throw_exception(
+                "Point has too many neighbors when building adjacency graph.");
+        }
+
+        adjacency0.push_back(gsl::narrow_cast<index_t>(index1));
+        adjacency1.push_back(gsl::narrow_cast<index_t>(index0));
+    }
+
+    auto sort_adjacency() -> void {
+        for (auto& adjacency : neighbors_) {
+            std::ranges::sort(adjacency, {},
+                              [&](index_t index) { return points_[index]; });
+        }
+    }
+
     point_vector_t points_ {};
     neighbor_vector_t neighbors_ {};
 };
@@ -184,7 +200,6 @@ template <typename index_t, class Visitor>
 
         // mark visited
         if (visited[*index_b]) {
-            // graph contains loops
             return DFSResult::found_loop;
         }
         visited[*index_b] = true;

@@ -237,6 +237,7 @@ set(LS_CORE_SOURCES
     src/circular_buffer.h
     src/collision.h src/collision.cpp
     src/exceptions.h src/exceptions.cpp
+    src/graph.h src/graph.cpp
     src/line_tree.h src/line_tree.cpp
     src/random.h src/random.cpp
     src/simulation.h src/simulation.cpp

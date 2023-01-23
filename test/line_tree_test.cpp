@@ -168,6 +168,14 @@ TEST(LineTree, MergeWithLoop) {
     ASSERT_EQ(tree, std::nullopt);
 }
 
+// TEST(LineTree, MergeTwoSidesLoop) {
+//     auto tree1 = LineTree({{1, 0}, {2, 0}, {2, 1}, {3, 1}, {3, 0}, {4, 0}});
+//     auto tree2 = LineTree({{0, 0}, {4, 0}});
+//
+//     auto tree = tree2.merge(tree1);
+//     ASSERT_EQ(tree, std::nullopt);
+// }
+
 TEST(LineTree, MergeDisconnected) {
     auto tree1 = LineTree({{0, 0}, {10, 0}});
     auto tree2 = LineTree({{0, 10}, {10, 10}});

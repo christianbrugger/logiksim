@@ -21,36 +21,8 @@
 namespace logicsim {
 
 //
-// LineTree
+// merging
 //
-
-LineTree::LineTree(std::initializer_list<point2d_t> points)
-    : points_ {points.begin(), points.end()} {
-    if (std::size(points) == 1) [[unlikely]] {
-        throw_invalid_line_tree_exception("A line tree with one point is invalid.");
-    }
-    if (std::size(points) == 0) {
-        return;
-    }
-
-    // indices point to previous point for line
-    indices_.resize(std::size(points) - 1);
-    std::iota(indices_.begin(), indices_.end(), 0);
-
-    if (!validate_segments_horizontal_or_vertical()) [[unlikely]] {
-        throw_invalid_line_tree_exception(
-            "Each line segments needs to be horizontal or vertical.");
-    }
-    if (!validate_horizontal_follows_vertical()) [[unlikely]] {
-        throw_invalid_line_tree_exception(
-            "Each horizontal segments needs to be followed by a vertical "
-            "and vice versa.");
-    }
-    if (!validate_no_internal_collisions()) [[unlikely]] {
-        throw_invalid_line_tree_exception(
-            "Lines are not allowed to collide with each other in the graph.");
-    }
-}
 
 // todo use orthogonal_line_t & move to geometry
 auto is_parallel(line2d_t line0, line2d_t line1) noexcept -> bool {
@@ -212,6 +184,44 @@ auto select_best_root(const AdjacencyGraph<size_t>& graph,
     return root_candidates.at(0);
 }
 
+// Merges all line trees if possible. With new root, if given.
+auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root = {})
+    -> std::optional<LineTree> {
+    return std::nullopt;
+}
+
+//
+// LineTree
+//
+
+LineTree::LineTree(std::initializer_list<point2d_t> points)
+    : points_ {points.begin(), points.end()} {
+    if (std::size(points) == 1) [[unlikely]] {
+        throw_invalid_line_tree_exception("A line tree with one point is invalid.");
+    }
+    if (std::size(points) == 0) {
+        return;
+    }
+
+    // indices point to previous point for line
+    indices_.resize(std::size(points) - 1);
+    std::iota(indices_.begin(), indices_.end(), 0);
+
+    if (!validate_segments_horizontal_or_vertical()) [[unlikely]] {
+        throw_invalid_line_tree_exception(
+            "Each line segments needs to be horizontal or vertical.");
+    }
+    if (!validate_horizontal_follows_vertical()) [[unlikely]] {
+        throw_invalid_line_tree_exception(
+            "Each horizontal segments needs to be followed by a vertical "
+            "and vice versa.");
+    }
+    if (!validate_no_internal_collisions()) [[unlikely]] {
+        throw_invalid_line_tree_exception(
+            "Lines are not allowed to collide with each other in the graph.");
+    }
+}
+
 // Merges line tree if possible. With new root, if given.
 auto LineTree::merge(const LineTree& other, std::optional<point2d_t> new_root) const
     -> std::optional<LineTree> {
@@ -249,7 +259,7 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
     auto line_tree = std::optional {LineTree {}};
 
     index_t last_index;
-    if (auto res = graph.find(root)) {
+    if (auto res = graph.to_index(root)) {
         last_index = *res;
     } else {
         // root is not part of graph
