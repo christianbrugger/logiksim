@@ -172,9 +172,8 @@ template <typename index_t, class Visitor>
     boost::container::vector<bool> visited(graph.points().size(), false);
     // unhandeled outgoing edges
     std::vector<detail::dfs_backtrack_memory_t<index_t>> backtrack_vector {};
-    auto backtrack_index = size_t {0};
 
-    for (auto neighbor_id : range(graph.neighbors().at(start).size())) {
+    for (auto neighbor_id : reverse_range(graph.neighbors().at(start).size())) {
         backtrack_vector.push_back(
             {.graph_index = start,
              .neighbor_id = gsl::narrow_cast<uint8_t>(neighbor_id)});
@@ -185,12 +184,13 @@ template <typename index_t, class Visitor>
 
     while (true) {
         if (!index_b) {
-            if (backtrack_index >= backtrack_vector.size()) {
+            if (backtrack_vector.empty()) {
                 return DFSResult::success;
             }
 
             // load next backtracking
-            auto backtrack = backtrack_vector[backtrack_index++];
+            auto backtrack = backtrack_vector.back();
+            backtrack_vector.pop_back();
 
             index_a = backtrack.graph_index;
             index_b = graph.neighbors()[backtrack.graph_index][backtrack.neighbor_id];
@@ -218,7 +218,7 @@ template <typename index_t, class Visitor>
         }
 
         // add backtracking candiates
-        for (auto id : range(neighbors.size())) {
+        for (auto id : reverse_range(neighbors.size())) {
             if (neighbors[id] != index_a && (!next || neighbors[id] != *next)) {
                 backtrack_vector.push_back(
                     {.graph_index = *index_b,
