@@ -90,6 +90,8 @@ auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator resu
     // extract elements
     transform_combine_while(
         parallel_segments, result,
+        // make state
+        [](auto it) -> line2d_t { return *it; },
         // combine while
         [&](line2d_t state, auto it) -> bool {
             return get_same(state.p0) == get_same(it->p0)

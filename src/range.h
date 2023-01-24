@@ -3,10 +3,12 @@
 #define LOGIKSIM_RANGE_H
 
 #include "concepts.h"
+#include "exceptions.h"
 
 #include <fmt/core.h>
 
 #include <concepts>
+#include <cstdlib>
 #include <iterator>
 #include <ranges>
 #include <type_traits>
@@ -16,8 +18,10 @@ namespace logicsim {
 // Specialize this if the default is wrong.
 template <class T>
 inline constexpr T range_type_zero_value = T {0};
+template <class T>
+inline constexpr T range_type_one_value = T {1};
 
-// define difference_type in your custom type using this
+// if T is not integral define difference_type in your custom type
 template <class T>
 using range_difference_t
     = std::conditional_t<std::is_integral_v<T>,
@@ -26,7 +30,11 @@ using range_difference_t
 
 namespace detail {
 
-template <typename T>
+//
+// range_iterator_t
+//
+
+template <typename T, bool forward>
     requires std::copyable<T>
 struct range_iterator_t {
     T current_ {};
@@ -40,12 +48,20 @@ struct range_iterator_t {
 
     [[nodiscard]] constexpr auto operator*() const
         noexcept(std::is_nothrow_copy_constructible_v<T>) -> T {
-        return current_;
+        if constexpr (forward) {
+            return current_;
+        } else {
+            return current_ - T {1};
+        }
     }
 
     // Prefix increment
     constexpr auto operator++() noexcept(noexcept(++current_)) -> range_iterator_t& {
-        ++current_;
+        if constexpr (forward) {
+            ++current_;
+        } else {
+            --current_;
+        }
         return *this;
     }
 
@@ -54,25 +70,33 @@ struct range_iterator_t {
                                             && std::is_nothrow_copy_constructible_v<T>)
         -> range_iterator_t {
         auto tmp = *this;
-        ++current_;
+        ++(*this);
         return tmp;
     }
 
     [[nodiscard]] friend constexpr auto operator==(
-        const range_iterator_t<T>& left,
-        const range_iterator_t<T>& right) noexcept(noexcept(left.current_
-                                                            == right.current_)) -> bool {
+        const range_iterator_t<T, forward>& left,
+        const range_iterator_t<T, forward>& right) noexcept(noexcept(left.current_
+                                                                     == right.current_))
+        -> bool {
         // this way we generate an empty range when last < first
-        return left.current_ >= right.current_;
+        if constexpr (forward) {
+            return left.current_ >= right.current_;
+        } else {
+            return left.current_ <= right.current_;
+        }
     }
 
-    [[nodiscard]] auto operator-(const range_iterator_t<T>& right) const
+    [[nodiscard]] auto operator-(const range_iterator_t<T, forward>& right) const
         noexcept(noexcept(this->current_ - right.current_)) -> difference_type {
-        return this->current_ - right.current_;
+        if constexpr (forward) {
+            return this->current_ - right.current_;
+        }
+        return right.current_ - this->current_;
     }
 };
 
-template <typename T>
+template <typename T, bool forward>
 struct range_t {
    public:
     using value_type = T;
@@ -91,13 +115,15 @@ struct range_t {
         : start_ {std::move(start)}, stop_ {std::move(stop)} {}
 
     [[nodiscard]] constexpr auto begin() const
-        noexcept(std::is_nothrow_copy_constructible_v<T>) -> range_iterator_t<T> {
-        return range_iterator_t<T> {start_};
+        noexcept(std::is_nothrow_copy_constructible_v<T>)
+            -> range_iterator_t<T, forward> {
+        return range_iterator_t<T, forward> {start_};
     }
 
     [[nodiscard]] constexpr auto end() const
-        noexcept(std::is_nothrow_copy_constructible_v<T>) -> range_iterator_t<T> {
-        return range_iterator_t<T> {stop_};
+        noexcept(std::is_nothrow_copy_constructible_v<T>)
+            -> range_iterator_t<T, forward> {
+        return range_iterator_t<T, forward> {stop_};
     }
 
     [[nodiscard]] constexpr auto size() const -> range_difference_t<T>
@@ -109,7 +135,10 @@ struct range_t {
         auto stop = Dt {stop_};
         auto zero = Dt {zero_};
 
-        return std::max(stop - start, zero);
+        if constexpr (forward) {
+            return std::max(stop - start, zero);
+        }
+        return std::max(start - stop, zero);
     }
 
     [[nodiscard]] constexpr auto empty() const noexcept(noexcept(begin() == end()))
@@ -118,7 +147,10 @@ struct range_t {
     }
 
     [[nodiscard]] constexpr auto format() const -> std::string {
-        return fmt::format("range({}, {})", start_, stop_);
+        if constexpr (forward) {
+            return fmt::format("range({}, {})", start_, stop_);
+        }
+        return fmt::format("reverse_range({}, {})", stop_, start_);
     }
 
    private:
@@ -126,41 +158,210 @@ struct range_t {
     T start_ {zero_};
     T stop_ {zero_};
 };
+
+//
+// range_iterator_step_t
+//
+
+template <typename T>
+auto range_step_size(T start_, T stop_, T step_) -> range_difference_t<T> {
+    using Dt = range_difference_t<T>;
+
+    auto start = Dt {start_};
+    auto stop = Dt {stop_};
+    auto step = Dt {step_};
+
+    auto step_value = (step >= Dt {0}) ? step : -1 * step;
+    auto difference = (step >= Dt {0}) ? (stop - start) : -1 * (stop - start);
+
+    if (difference < 0) {
+        return 0;
+    }
+
+    auto a = difference / step_value;
+    auto b = difference % step_value;
+
+    if (b != Dt {0}) {
+        return a + Dt {1};
+    }
+    return a;
+}
+
+template <typename T>
+    requires std::copyable<T>
+struct range_iterator_step_t {
+    T current_ {};
+    T step_ {};
+
+    using iterator_concept = std::input_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
+    using value_type = T;
+    using difference_type = range_difference_t<T>;
+    using pointer = T*;
+    using reference = T&;
+
+    [[nodiscard]] constexpr auto operator*() const
+        noexcept(std::is_nothrow_copy_constructible_v<T>) -> T {
+        return current_;
+    }
+
+    // Prefix increment
+    constexpr auto operator++() noexcept(noexcept(++current_)) -> range_iterator_step_t& {
+        current_ += step_;
+        return *this;
+    }
+
+    // Postfix increment
+    constexpr auto operator++(int) noexcept(noexcept(++current_)
+                                            && std::is_nothrow_copy_constructible_v<T>)
+        -> range_iterator_step_t {
+        auto tmp = *this;
+        current_ += step_;
+        return tmp;
+    }
+
+    [[nodiscard]] friend constexpr auto operator==(const range_iterator_step_t<T>& left,
+                                                   const range_iterator_step_t<T>& right)
+        -> bool {
+        // this way we generate an empty range when last < first
+        return (left.step_ > T {0}) ? left.current_ >= right.current_
+                                    : left.current_ <= right.current_;
+    }
+
+    [[nodiscard]] auto operator-(const range_iterator_step_t<T>& right) const
+        -> difference_type {
+        return range_step_size(this->current_, right.current_, this->step_);
+    }
+};
+
+template <typename T>
+struct range_step_t {
+   public:
+    using value_type = T;
+    using pointer = T*;
+    using reference = T&;
+
+    range_step_t() = default;
+
+    [[nodiscard]] constexpr explicit range_step_t(T start, T stop, T step)
+        : start_ {std::move(start)}, stop_ {std::move(stop)}, step_ {std::move(step)} {
+        if (step_ == zero_) {
+            throw_exception("Step cannot be zero.");
+        }
+    }
+
+    [[nodiscard]] constexpr auto begin() const
+        noexcept(std::is_nothrow_copy_constructible_v<T>) -> range_iterator_step_t<T> {
+        return range_iterator_step_t<T> {start_, step_};
+    }
+
+    [[nodiscard]] constexpr auto end() const
+        noexcept(std::is_nothrow_copy_constructible_v<T>) -> range_iterator_step_t<T> {
+        return range_iterator_step_t<T> {stop_, step_};
+    }
+
+    [[nodiscard]] constexpr auto size() const -> range_difference_t<T>
+        requires explicitly_convertible_to<T, range_difference_t<T>>
+    {
+        return range_step_size(start_, stop_, step_);
+    }
+
+    [[nodiscard]] constexpr auto empty() const noexcept(noexcept(begin() == end()))
+        -> bool {
+        return begin() == end();
+    }
+
+    [[nodiscard]] constexpr auto format() const -> std::string {
+        return fmt::format("range({}, {}, {})", start_, stop_, step_);
+    }
+
+   private:
+    static constexpr auto zero_ = range_type_zero_value<T>;
+    static constexpr auto one_ = range_type_one_value<T>;
+    T start_ {zero_};
+    T stop_ {zero_};
+    T step_ {one_};
+};
+
 }  // namespace detail
 
 template <typename T>
-concept range_value_type
-    = std::weakly_incrementable<T> && std::equality_comparable<T>
-      && std::totally_ordered<T> && std::input_iterator<detail::range_iterator_t<T>>;
+concept range_value_type = std::weakly_incrementable<T> && std::equality_comparable<T>
+                           && std::totally_ordered<T>
+                           && std::input_iterator<detail::range_iterator_t<T, true>>;
 
-template <range_value_type T>
+template <range_value_type T, bool forward = true>
 [[nodiscard]] constexpr auto range(T stop) noexcept(
-    std::is_nothrow_constructible_v<detail::range_t<T>, T>) -> detail::range_t<T> {
-    return detail::range_t<T> {stop};
-}  // namespace logicsim
+    std::is_nothrow_constructible_v<detail::range_t<T, forward>, T>)
+    -> detail::range_t<T, forward> {
+    return detail::range_t<T, forward> {stop};
+}
+
+template <range_value_type T, bool forward = true>
+[[nodiscard]] constexpr auto range(T start, T stop) noexcept(
+    std::is_nothrow_constructible_v<detail::range_t<T, forward>, T, T>)
+    -> detail::range_t<T, forward> {
+    return detail::range_t<T, forward> {start, stop};
+}
+
+template <range_value_type T, bool forward = false>
+[[nodiscard]] constexpr auto reverse_range(T stop) noexcept(
+    std::is_nothrow_constructible_v<detail::range_t<T, forward>, T, T>)
+    -> detail::range_t<T, forward> {
+    return detail::range_t<T, forward> {stop, 0};
+}
+
+template <range_value_type T, bool forward = false>
+[[nodiscard]] constexpr auto reverse_range(T start, T stop) noexcept(
+    std::is_nothrow_constructible_v<detail::range_t<T, forward>, T, T>)
+    -> detail::range_t<T, forward> {
+    return detail::range_t<T, forward> {stop, start};
+}
 
 template <range_value_type T>
-[[nodiscard]] constexpr auto range(T start, T stop) noexcept(
-    std::is_nothrow_constructible_v<detail::range_t<T>, T, T>) -> detail::range_t<T> {
-    return detail::range_t<T> {start, stop};
+[[nodiscard]] constexpr auto range(T start, T stop, T step) -> detail::range_step_t<T> {
+    return detail::range_step_t<T> {start, stop, step};
 }
 
 }  // namespace logicsim
 
-template <typename T>
-inline constexpr bool std::ranges::enable_view<logicsim::detail::range_t<T>> = true;
-
-template <typename T>
-inline constexpr bool std::ranges::enable_borrowed_range<logicsim::detail::range_t<T>>
+template <typename T, bool forward>
+inline constexpr bool std::ranges::enable_view<logicsim::detail::range_t<T, forward>>
     = true;
 
-template <typename T>
-struct fmt::formatter<logicsim::detail::range_t<T>> {
+template <typename T, bool forward>
+inline constexpr bool
+    std::ranges::enable_borrowed_range<logicsim::detail::range_t<T, forward>>
+    = true;
+
+template <typename T, bool forward>
+struct fmt::formatter<logicsim::detail::range_t<T, forward>> {
     constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const logicsim::detail::range_t<T>& obj, fmt::format_context& ctx) const {
+    auto format(const logicsim::detail::range_t<T, forward>& obj,
+                fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <typename T>
+inline constexpr bool std::ranges::enable_view<logicsim::detail::range_step_t<T>> = true;
+
+template <typename T>
+inline constexpr bool
+    std::ranges::enable_borrowed_range<logicsim::detail::range_step_t<T>>
+    = true;
+
+template <typename T>
+struct fmt::formatter<logicsim::detail::range_step_t<T>> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const logicsim::detail::range_step_t<T>& obj,
+                fmt::format_context& ctx) const {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };

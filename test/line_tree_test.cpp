@@ -291,8 +291,6 @@ TEST(LineTree, RerootSameRoot) {
 TEST(LineTree, RerootImpossibleRoot) {
     auto tree = LineTree({{0, 0}, {10, 0}});
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
-
     auto tree_reroot = tree.reroot({10, 10});
     EXPECT_EQ(tree_reroot, std::nullopt);
 }

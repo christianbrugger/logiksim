@@ -80,7 +80,9 @@ class AdjacencyGraph {
    private:
     // assumes point is part of graph
     auto to_index_unchecked(point2d_t _point) const -> size_t {
-        return std::ranges::lower_bound(points_, _point) - points_.begin();
+        auto found = std::ranges::lower_bound(points_, _point);
+        assert(found != points_.end());
+        return found - points_.begin();
     }
 
     // assumes both endpoints are part of graph
@@ -142,13 +144,13 @@ namespace logicsim {
 // Depth First Search
 //
 
-namespace {
+namespace detail {
 template <typename index_t>
 struct dfs_backtrack_memory_t {
     index_t graph_index;
     uint8_t neighbor_id;
 };
-}  // namespace
+}  // namespace detail
 
 enum class DFSResult {
     success,
@@ -169,7 +171,7 @@ template <typename index_t, class Visitor>
     // memorize for loop detection
     boost::container::vector<bool> visited(graph.points().size(), false);
     // unhandeled outgoing edges
-    std::vector<dfs_backtrack_memory_t<index_t>> backtrack_vector {};
+    std::vector<detail::dfs_backtrack_memory_t<index_t>> backtrack_vector {};
     auto backtrack_index = size_t {0};
 
     for (auto neighbor_id : range(graph.neighbors().at(start).size())) {
