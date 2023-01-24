@@ -51,7 +51,7 @@ struct range_iterator_t {
         if constexpr (forward) {
             return current_;
         } else {
-            return current_ - T {1};
+            return current_ - range_type_one_value<T>;
         }
     }
 
@@ -163,6 +163,7 @@ struct range_t {
 // range_iterator_step_t
 //
 
+// calculate the size of a range
 template <typename T>
 auto range_step_size(T start_, T stop_, T step_) -> range_difference_t<T> {
     using Dt = range_difference_t<T>;
@@ -171,11 +172,11 @@ auto range_step_size(T start_, T stop_, T step_) -> range_difference_t<T> {
     auto stop = Dt {stop_};
     auto step = Dt {step_};
 
-    auto step_value = (step >= Dt {0}) ? step : -1 * step;
-    auto difference = (step >= Dt {0}) ? (stop - start) : -1 * (stop - start);
+    auto step_value = (step >= Dt {0}) ? step : Dt {-1} * step;
+    auto difference = (step >= Dt {0}) ? (stop - start) : Dt {-1} * (stop - start);
 
-    if (difference < 0) {
-        return 0;
+    if (difference < Dt {0}) {
+        return Dt {0};
     }
 
     auto a = difference / step_value;
