@@ -189,12 +189,8 @@ auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root)
         return line_trees.at(0).get();
     }
 
-    fmt::print("\n");
-
     const auto merged_segments = merge_split_segments(line_trees);
     const auto graph = LineTree::Graph {merged_segments};
-
-    fmt::print("graph = {}\n", graph);
 
     if (const auto root = select_best_root(graph, new_root, line_trees)) {
         return LineTree::from_graph(*root, graph);
@@ -234,116 +230,59 @@ LineTree::LineTree(std::initializer_list<point2d_t> points)
     }
 }
 
-struct LineTree::backtrack_memory_t {
-    length_t current_length;
-    index_t graph_index;
-    index_t last_tree_index;
-    uint8_t neighbor_id;
+class LineTree::TreeBuilderVisitor {
+   public:
+    TreeBuilderVisitor(LineTree& tree, index_t vertex_count)
+        : tree_ {&tree}, length_recorder_ {vertex_count}, target_index_(vertex_count) {
+        if (vertex_count > 0) {
+            tree_->points_.reserve(vertex_count);
+            tree_->indices_.reserve(vertex_count - 1);
+        }
+    }
+
+    auto tree_edge(index_t a, index_t b, AdjacencyGraph<index_t> graph) -> void {
+        length_recorder_.tree_edge(a, b, graph);
+
+        if (tree_->points_.empty()) {
+            tree_->points_.push_back(graph.point(a));
+        }
+
+        auto a_index = target_index_.at(a);
+        auto b_index = gsl::narrow_cast<index_t>(tree_->points_.size());
+
+        target_index_.at(b) = b_index;
+        tree_->points_.push_back(graph.point(b));
+        tree_->indices_.push_back(a_index);
+
+        if (a_index + 1 != b_index) {
+            tree_->lengths_.push_back(length_recorder_.length(a));
+        }
+    };
+
+   private:
+    gsl::not_null<LineTree*> tree_;
+
+    LengthRecorderVisitor<index_t, length_t> length_recorder_;
+    std::vector<index_t> target_index_ {};
 };
 
 auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<LineTree> {
-    // define as optional for RVO
+    // define as optional for RVO (return value optimization)
     auto line_tree = std::optional {LineTree {}};
 
-    index_t last_index;
+    index_t root_index;
     if (auto res = graph.to_index(root)) {
-        last_index = *res;
+        root_index = *res;
     } else {
         // root is not part of graph
         return std::nullopt;
     }
-    if (graph.neighbors()[last_index].size() != 1) {
-        // root element has more than one neighbor
-        return std::nullopt;
-    }
-    auto current_index = graph.neighbors()[last_index][0];
-    length_t current_length = 0;
 
-    // depth first search with loop detection
-    boost::container::vector<bool> visited(graph.points().size(), false);
-    std::vector<backtrack_memory_t> backtrack_vector {};
-
-    // add first element
-    line_tree->points_.push_back(graph.points()[last_index]);
-    visited[last_index] = true;
-    index_t last_tree_index = 0;
-
-    while (true) {
-        // check visited
-        if (visited[current_index]) {
-            // graph contains loops
-            return std::nullopt;
-        }
-        visited[current_index] = true;
-
-        // add current point
-        line_tree->points_.push_back(graph.points()[current_index]);
-        line_tree->indices_.push_back(last_tree_index);
-        current_length
-            += distance_1d(graph.points()[current_index], graph.points()[last_index]);
-
-        auto& neighbors = graph.neighbors()[current_index];
-
-        // find next index
-        auto next = std::optional<index_t> {};
-        if (neighbors.at(0) != last_index) {
-            next = neighbors[0];
-        } else if (neighbors.size() > 1) {
-            assert(neighbors[1] != last_index);
-            next = neighbors[1];
-        }
-
-        // fmt::print("iteration\n");
-        // fmt::print("  tree->points = {}\n", line_tree->points_);
-        // fmt::print("  tree->indices = {}\n", line_tree->indices_);
-        // fmt::print("  tree->lengths = {}\n", line_tree->lengths_);
-        // fmt::print("  last = {} current = {} next = {} neighbors = {}\n", last_index,
-        //            current_index, next.value_or(999), neighbors);
-        // fmt::print("  backtrack_vector.size() = {}\n", backtrack_vector.size());
-
-        // add backtracking candiates
-        for (auto id : range(neighbors.size())) {
-            if (neighbors[id] != last_index && (!next || neighbors[id] != *next)) {
-                backtrack_vector.push_back(backtrack_memory_t {
-                    .current_length = current_length,
-                    .graph_index = current_index,
-                    .last_tree_index
-                    = gsl::narrow_cast<index_t>(line_tree->points_.size() - 1),
-                    .neighbor_id = gsl::narrow_cast<uint8_t>(id),
-                });
-            }
-        }
-
-        // choose where to go next
-        if (next) {
-            // directly connected
-            last_index = current_index;
-            current_index = *next;
-            last_tree_index = gsl::narrow_cast<index_t>(line_tree->points_.size() - 1);
-        } else if (!backtrack_vector.empty()) {
-            // load next backtracking
-            auto& backtrack = backtrack_vector.back();
-
-            last_index = backtrack.graph_index;
-            current_index
-                = graph.neighbors()[backtrack.graph_index][backtrack.neighbor_id];
-            last_tree_index = backtrack.last_tree_index;
-            current_length = backtrack.current_length;
-
-            line_tree->lengths_.push_back(current_length);
-            backtrack_vector.pop_back();
-        } else {
-            // we are done
-            break;
-        }
-    }
-
-    if (line_tree->points_.size() < graph.points().size()) {
-        // unconnected notes
+    auto visitor = TreeBuilderVisitor(*line_tree, graph.vertex_count());
+    if (depth_first_search(graph, visitor, root_index) != DFSResult::success) {
         return std::nullopt;
     }
 
-    // fmt::print("--done--\n\n\n");
     return line_tree;
 }
 

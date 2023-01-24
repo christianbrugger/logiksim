@@ -56,17 +56,25 @@ class AdjacencyGraph {
         sort_adjacency();
     }
 
+    auto point(index_t vertex_id) -> point2d_t {
+        return points_.at(vertex_id);
+    }
+
     auto points() const -> const point_vector_t& {
         return points_;
     }
 
-    auto neighbors() const -> const neighbor_vector_t& {
-        return neighbors_;
+    auto vertex_count() const -> index_t {
+        return gsl::narrow_cast<index_t>(points_.size());
     }
 
     // iterator over all indices
     auto indices() const noexcept {
-        return range(gsl::narrow_cast<index_t>(points_.size()));
+        return range(vertex_count());
+    }
+
+    auto neighbors() const -> const neighbor_vector_t& {
+        return neighbors_;
     }
 
     auto to_index(point2d_t _point) const -> std::optional<index_t> {
@@ -152,16 +160,59 @@ struct dfs_backtrack_memory_t {
 };
 }  // namespace detail
 
-enum class DFSResult {
-    success,
-    found_loop,
-};
-
 template <typename index_t>
 struct PrintingGraphVisitor {
-    auto tree_edge(index_t a, index_t b) {
+    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) {
         fmt::print("{} {}\n", a, b);
     };
+};
+
+template <typename index_t, typename length_t>
+class LengthRecorderVisitor {
+   public:
+    using length_vector_t = std::vector<length_t>;
+
+    LengthRecorderVisitor(index_t vertex_count) : length_vector_(vertex_count, 0) {}
+
+    auto tree_edge(index_t a, index_t b, AdjacencyGraph<index_t> graph) -> void {
+        auto line = line2d_t {graph.points().at(a), graph.points().at(b)};
+        length_vector_.at(b) = length_vector_.at(a) + distance_1d(line);
+    };
+
+    auto lengths() const -> const length_vector_t& {
+        return length_vector_;
+    }
+
+    auto length(index_t vertex_id) const -> length_t {
+        return length_vector_.at(vertex_id);
+    }
+
+   private:
+    length_vector_t length_vector_ {};
+};
+
+template <typename... Ts>
+struct combine_visitors {
+    combine_visitors() = default;
+
+    combine_visitors(Ts... args) : visitors {args...} {}
+
+    template <typename index_t>
+    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) {
+        std::apply([&](auto&... visitor) { (visitor.tree_edge(a, b, graph), ...); },
+                   visitors);
+    }
+
+   private:
+    std::tuple<Ts...> visitors;
+};
+
+enum class DFSResult {
+    success,
+    // aborted due to detection of a loop
+    aborted_loop,
+    // not every vertex was visited, as some parts of the graph where disconnected.
+    aborted_unconnected,
 };
 
 // visits all edges in the graph
@@ -179,13 +230,19 @@ template <typename index_t, class Visitor>
              .neighbor_id = gsl::narrow_cast<uint8_t>(neighbor_id)});
     }
 
+    index_t n_vertex_visited = 1;
+    visited.at(start) = true;
+
     auto index_a = index_t {0};
     auto index_b = std::optional<index_t> {};
 
     while (true) {
         if (!index_b) {
             if (backtrack_vector.empty()) {
-                return DFSResult::success;
+                if (n_vertex_visited == graph.vertex_count()) {
+                    return DFSResult::success;
+                }
+                return DFSResult::aborted_unconnected;
             }
 
             // load next backtracking
@@ -198,11 +255,12 @@ template <typename index_t, class Visitor>
         assert(index_b);
 
         // visit edge
-        visitor.tree_edge(index_a, *index_b);
+        visitor.tree_edge(index_a, *index_b, graph);
+        n_vertex_visited += 1;
 
         // mark visited
         if (visited[*index_b]) {
-            return DFSResult::found_loop;
+            return DFSResult::aborted_loop;
         }
         visited[*index_b] = true;
 

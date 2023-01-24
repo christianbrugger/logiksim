@@ -79,6 +79,7 @@ class LineTree {
 
    private:
     struct backtrack_memory_t;
+    class TreeBuilderVisitor;
 
     [[nodiscard]] auto validate_horizontal_follows_vertical() const -> bool;
     [[nodiscard]] auto validate_segments_horizontal_or_vertical() const -> bool;
