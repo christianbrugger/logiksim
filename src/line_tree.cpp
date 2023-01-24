@@ -139,13 +139,10 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
                       const line_tree_vector_t& line_trees) -> std::optional<point2d_t> {
     // collect candidates
     auto root_candidates = std::vector<point2d_t> {};
+
+    auto to_point = [&](index_t index) { return graph.point(index); };
     auto is_leaf = [&](index_t index) { return graph.neighbors()[index].size() == 1; };
-    // TODO use transform_if
-    for (auto index : graph.indices()) {
-        if (is_leaf(index)) {
-            root_candidates.push_back(graph.points()[index]);
-        }
-    }
+    transform_if(graph.indices(), std::back_inserter(root_candidates), to_point, is_leaf);
 
     if (root_candidates.empty()) {
         // no root candiates
@@ -153,25 +150,24 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
     }
 
     std::ranges::sort(root_candidates);
-    auto has_candiate = [&](point2d_t _root) {
+    auto has_candidate = [&](point2d_t _root) {
         return std::ranges::binary_search(root_candidates, _root);
     };
 
     // mandatory
     if (mandatory) {
-        if (!has_candiate(*mandatory)) [[unlikely]] {
+        if (!has_candidate(*mandatory)) [[unlikely]] {
             // requested root is not possible
             return std::nullopt;
         }
         return *mandatory;
     }
 
-    // TODO use find_if
-    for (const auto tree_reference : line_trees) {
-        auto input = tree_reference.get().input_point();
-        if (has_candiate(input)) {
-            return input;
-        }
+    // original line_tree roots
+    auto to_root = [](auto tree_reference) { return tree_reference.get().input_point(); };
+    if (auto result = std::ranges::find_if(line_trees, has_candidate, to_root);
+        result != line_trees.end()) {
+        return to_root(*result);
     }
 
     return root_candidates.at(0);
@@ -254,7 +250,7 @@ class LineTree::TreeBuilderVisitor {
         tree_->points_.push_back(graph.point(b));
         tree_->indices_.push_back(a_index);
 
-        if (a_index + 1 != b_index) {
+        if (a_index + 1 != b_index) {  // new subtree?
             tree_->lengths_.push_back(length_recorder_.length(a));
         }
     };
@@ -330,9 +326,7 @@ auto LineTree::starts_new_subtree(int index) const -> bool {
 }
 
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
-    // TODO why is function itself not possible
-    auto test = [](line2d_t line) -> bool { return is_orthogonal(line); };
-    return std::all_of(segments().begin(), segments().end(), test);
+    return std::all_of(segments().begin(), segments().end(), is_orthogonal);
 }
 
 // each horizontal segment is followed by a vertical segment and vice versa

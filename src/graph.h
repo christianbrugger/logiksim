@@ -56,7 +56,7 @@ class AdjacencyGraph {
         sort_adjacency();
     }
 
-    auto point(index_t vertex_id) -> point2d_t {
+    auto point(index_t vertex_id) const -> point2d_t {
         return points_.at(vertex_id);
     }
 

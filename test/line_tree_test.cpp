@@ -194,9 +194,6 @@ TEST(LineTree, MergeWithTriangle) {
     ASSERT_EQ(tree.has_value(), true);
 
     EXPECT_EQ(tree->segment_count(), 3);
-    EXPECT_EQ(tree->starts_new_subtree(0), false);
-    EXPECT_EQ(tree->starts_new_subtree(1), false);
-    EXPECT_EQ(tree->starts_new_subtree(2), true);
 
     EXPECT_THAT(tree->sized_segments(), testing::ElementsAre(line0, line1, line2));
 }

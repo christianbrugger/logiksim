@@ -13,14 +13,17 @@
 
 namespace logicsim {
 
-// TODO interface:
-//  * create from what?
+// Done:
+//  * create from lines & merging
 //  * iter over segments
 //  * iter with lengths for each segment
-//  * get lengths of each output
+//  * validate inputs
+//
+// TODO:
 //  * position of connector dots
 //  * calculate number of outputs
-//  * validation
+//  * get lengths of each output
+//  * get position of each output
 //
 
 //
@@ -75,8 +78,6 @@ class LineTree {
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
 
-    [[nodiscard]] auto starts_new_subtree(int index) const -> bool;
-
    private:
     struct backtrack_memory_t;
     class TreeBuilderVisitor;
@@ -84,6 +85,8 @@ class LineTree {
     [[nodiscard]] auto validate_horizontal_follows_vertical() const -> bool;
     [[nodiscard]] auto validate_segments_horizontal_or_vertical() const -> bool;
     [[nodiscard]] auto validate_no_internal_collisions() const -> bool;
+
+    [[nodiscard]] auto starts_new_subtree(int index) const -> bool;
 
     // TODO consider merging for better locality
     using point_vector_t = folly::small_vector<point2d_t, 2, index_t>;
