@@ -35,10 +35,12 @@ namespace logicsim {
 template <typename index_t>
 class AdjacencyGraph {
    public:
-    // each point can only have 4 neighbors without collisions
-    using neighbor_t = boost::container::static_vector<index_t, 4>;
+    using key_type = index_t;
+    using mapped_type = point2d_t;
 
-    using point_vector_t = std::vector<point2d_t>;
+    // each point can only have 4 neighbors without collisions
+    using neighbor_t = boost::container::static_vector<key_type, 4>;
+    using point_vector_t = std::vector<mapped_type>;
     using neighbor_vector_t = std::vector<neighbor_t>;
 
    public:
@@ -254,15 +256,15 @@ template <typename index_t, class Visitor>
         }
         assert(index_b);
 
-        // visit edge
-        visitor.tree_edge(index_a, *index_b, graph);
-        n_vertex_visited += 1;
-
         // mark visited
         if (visited[*index_b]) {
             return DFSResult::aborted_loop;
         }
         visited[*index_b] = true;
+
+        // visit edge
+        visitor.tree_edge(index_a, *index_b, graph);
+        n_vertex_visited += 1;
 
         // find outgoing edge
         auto& neighbors = graph.neighbors()[*index_b];

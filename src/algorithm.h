@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_ALGORITHMS_H
 #define LOGIKSIM_ALGORITHMS_H
 
+#include "iterator.h"
+
 #include <algorithm>
 #include <concepts>
 #include <exception>
@@ -191,6 +193,65 @@ auto transform_combine_while(R&& r, OutputIterator result, MakeState make_state,
     -> void {
     transform_combine_while(std::begin(r), std::end(r), result, make_state, predicate,
                             update, project);
+}
+
+//
+// depth first visitor
+//
+//  start_node:
+//      The index for which the algorithm should start the search.
+//
+//  visited_state:
+//      Datstructure to store the visited state. Should be initialized to false:
+//          visited_state[IndexType] = true;
+//          visited_state[IndexType] -> bool;
+//      Can be a vector for a continous integer index or in general an associative map.
+//
+//  discover_connection:
+//      From the given node add all connected nodes to the output iterator.
+//          auto discover_connection(IndexType node, OutputIterator<IndexType> result,
+//                                  const Container& container) -> void;
+//
+//  visit_edge:
+//      Called for each edge with signature:
+//          auto visit_edge(IndexType from, IndexType to,
+//                          const Container& container) -> void;
+//
+template <typename VisitedStore, typename DiscoverConnected, typename EdgeVisitor,
+          typename IndexType>
+[[nodiscard]] auto depth_first_visitor(IndexType start_node, VisitedStore&& visited_state,
+                                       DiscoverConnected discover, EdgeVisitor visit_edge)
+    -> void {
+    std::vector<std::pair<IndexType, IndexType>> edges_stack {};
+
+    discover_connections(
+        start_node,
+        transform_output_iterator(std::back_inserter(edges_stack), [&](auto&& second) {
+            return std::make_pair(start_node, std::forward<decltype(second)>(second));
+        }));
+
+    while (true) {
+        if (edges_stack.empty()) {
+            return;
+        }
+
+        auto edge = edges_stack.back();
+        edges_stack.pop_back();
+
+        if (visited_state[edge.second]) {
+            return;
+        }
+        visited_state[edge.second] = true;
+
+        visit_edge(edge.first, edge.second);
+        discover_connections(
+            edge.second, transform_output_iterator(
+                             std::back_inserter(edges_stack), [&](IndexType&& second) {
+                                 if (second != edge.first) {
+                                     return std::make_pair(edge.second, second);
+                                 }
+                             }));
+    }
 }
 
 //
