@@ -152,7 +152,7 @@ class transform_output_iterator {
     using iterator_concept = std::output_iterator_tag;
     using iterator_category = std::output_iterator_tag;
 
-    using difference_type = Iterator::difference_type;
+    using difference_type = typename Iterator::difference_type;
     using value_type = void;
     using pointer = void;
     using reference = void;
@@ -184,6 +184,51 @@ class transform_output_iterator {
    private:
     Iterator iterator_;
     Proj proj_;
+};
+
+template <typename Iterator, class Proj, class Pred>
+class transform_if_output_iterator {
+   public:
+    using iterator_concept = std::output_iterator_tag;
+    using iterator_category = std::output_iterator_tag;
+
+    using difference_type = typename Iterator::difference_type;
+    using value_type = void;
+    using pointer = void;
+    using reference = void;
+
+    explicit transform_if_output_iterator(Iterator iterator, Proj proj, Pred pred)
+        : iterator_(std::move(iterator)),
+          proj_(std::move(proj)),
+          pred_(std::move(pred)) {}
+
+    auto operator++() -> transform_if_output_iterator & {
+        ++iterator_;
+        return *this;
+    }
+
+    auto operator++(int) -> transform_if_output_iterator {
+        auto temp = *this;
+        ++iterator_;
+        return temp;
+    }
+
+    auto operator*() -> transform_if_output_iterator & {
+        return *this;
+    }
+
+    template <typename T>
+    auto operator=(T &&value) -> transform_if_output_iterator & {
+        if (pred_(value)) {
+            *iterator_ = std::invoke(proj_, std::forward<T>(value));
+        }
+        return *this;
+    }
+
+   private:
+    Iterator iterator_;
+    Proj proj_;
+    Pred pred_;
 };
 
 }  // namespace logicsim

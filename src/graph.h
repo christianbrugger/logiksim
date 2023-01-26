@@ -162,11 +162,27 @@ struct dfs_backtrack_memory_t {
 };
 }  // namespace detail
 
-template <typename index_t>
 struct PrintingGraphVisitor {
+    template <typename index_t>
     auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) {
-        fmt::print("{} {}\n", a, b);
+        fmt::print("tree_edge: index {} {} - points {} {}\n", a, b, graph.point(a),
+                   graph.point(b));
     };
+};
+
+// template <typename index_t, typename Func>
+template <typename Func>
+class TreeEdgeVisitor {
+   public:
+    explicit TreeEdgeVisitor(Func func) : func_ {std::move(func)} {}
+
+    template <typename index_t>
+    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) {
+        std::invoke(func_, a, b, graph);
+    };
+
+   private:
+    Func func_;
 };
 
 template <typename index_t, typename length_t>
@@ -211,102 +227,40 @@ struct combine_visitors {
 
 enum class DFSResult {
     success,
-    // aborted due to detection of a loop
-    aborted_loop,
-    // not every vertex was visited, as some parts of the graph where disconnected.
-    aborted_unconnected,
+    unfinished_loop,
+    unfinished_disconnected,
 };
 
 // visits all edges in the graph
 template <typename index_t, class Visitor>
-[[nodiscard]] auto depth_first_search(const AdjacencyGraph<index_t>& graph,
-                                      Visitor& visitor, index_t start) -> DFSResult {
+auto depth_first_search(const AdjacencyGraph<index_t>& graph, Visitor&& visitor,
+                        index_t start) -> DFSResult {
     // memorize for loop detection
     boost::container::vector<bool> visited(graph.points().size(), false);
-    // unhandeled outgoing edges
-    std::vector<detail::dfs_backtrack_memory_t<index_t>> backtrack_vector {};
-
-    for (auto neighbor_id : reverse_range(graph.neighbors().at(start).size())) {
-        backtrack_vector.push_back(
-            {.graph_index = start,
-             .neighbor_id = gsl::narrow_cast<uint8_t>(neighbor_id)});
-    }
-
     index_t n_vertex_visited = 1;
-    visited.at(start) = true;
 
-    auto index_a = index_t {0};
-    auto index_b = std::optional<index_t> {};
-
-    while (true) {
-        if (!index_b) {
-            if (backtrack_vector.empty()) {
-                if (n_vertex_visited == graph.vertex_count()) {
-                    return DFSResult::success;
-                }
-                return DFSResult::aborted_unconnected;
+    auto found_loop = depth_first_visitor(
+        start, visited,
+        [&](index_t node, std::output_iterator<index_t> auto result) {
+            for (auto neighbor_id : reverse_range(graph.neighbors().at(node).size())) {
+                *result = graph.neighbors()[node][neighbor_id];
+                ++result;
             }
+        },
+        [&](index_t a, index_t b) {
+            visitor.tree_edge(a, b, graph);
+            ++n_vertex_visited;
+        });
 
-            // load next backtracking
-            auto backtrack = backtrack_vector.back();
-            backtrack_vector.pop_back();
-
-            index_a = backtrack.graph_index;
-            index_b = graph.neighbors()[backtrack.graph_index][backtrack.neighbor_id];
-        }
-        assert(index_b);
-
-        // mark visited
-        if (visited[*index_b]) {
-            return DFSResult::aborted_loop;
-        }
-        visited[*index_b] = true;
-
-        // visit edge
-        visitor.tree_edge(index_a, *index_b, graph);
-        n_vertex_visited += 1;
-
-        // find outgoing edge
-        auto& neighbors = graph.neighbors()[*index_b];
-        auto next = std::optional<index_t> {};
-        if (neighbors.at(0) == index_a) {
-            if (neighbors.size() > 1) {
-                next = neighbors[1];
-            }
-        } else {
-            next = neighbors[0];
-        }
-
-        // add backtracking candiates
-        for (auto id : reverse_range(neighbors.size())) {
-            if (neighbors[id] != index_a && (!next || neighbors[id] != *next)) {
-                backtrack_vector.push_back(
-                    {.graph_index = *index_b,
-                     .neighbor_id = gsl::narrow_cast<uint8_t>(id)});
-            }
-        }
-
-        // choose where to go next
-        index_a = index_b.value_or(0);
-        index_b = next;
+    if (found_loop) {
+        return DFSResult::unfinished_loop;
     }
+    if (n_vertex_visited != graph.vertex_count()) {
+        return DFSResult::unfinished_disconnected;
+    }
+    return DFSResult::success;
 }
 
-inline auto test_graph() -> void {
-    using index_t = uint16_t;
-    auto segments = {
-        line2d_t {{0, 0}, {0, 1}},
-        line2d_t {{0, 1}, {1, 1}},
-        line2d_t {{0, 0}, {1, 0}},
-    };
-    auto graph = AdjacencyGraph<index_t>(segments);
-    fmt::print("graph = {}\n", graph);
-
-    auto visitor = PrintingGraphVisitor<index_t> {};
-    auto res = depth_first_search<index_t>(graph, visitor, 0);
-
-    fmt::print("DFSResult::success = {}\n", res == DFSResult::success);
-}
 }  // namespace logicsim
 
 #endif

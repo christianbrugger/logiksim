@@ -271,7 +271,7 @@ TEST(LineTree, RerootSimple) {
     auto line0 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {0, 0}}, 0, 10};
 
     auto tree_reroot = tree.reroot({10, 0});
-    EXPECT_THAT(tree_reroot.has_value(), true);
+    ASSERT_EQ(tree_reroot.has_value(), true);
     EXPECT_THAT(tree_reroot->sized_segments(), testing::ElementsAre(line0));
 }
 
@@ -281,7 +281,7 @@ TEST(LineTree, RerootSameRoot) {
     auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
 
     auto tree_reroot = tree.reroot({0, 0});
-    EXPECT_THAT(tree_reroot.has_value(), true);
+    ASSERT_EQ(tree_reroot.has_value(), true);
     EXPECT_THAT(tree_reroot->sized_segments(), testing::ElementsAre(line0));
 }
 
@@ -289,7 +289,7 @@ TEST(LineTree, RerootImpossibleRoot) {
     auto tree = LineTree({{0, 0}, {10, 0}});
 
     auto tree_reroot = tree.reroot({10, 10});
-    EXPECT_EQ(tree_reroot, std::nullopt);
+    ASSERT_EQ(tree_reroot, std::nullopt);
 }
 
 }  // namespace logicsim

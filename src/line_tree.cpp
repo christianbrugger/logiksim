@@ -275,11 +275,11 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
     }
 
     auto visitor = TreeBuilderVisitor(*line_tree, graph.vertex_count());
-    if (depth_first_search(graph, visitor, root_index) != DFSResult::success) {
-        return std::nullopt;
+    if (depth_first_search(graph, visitor, root_index) == DFSResult::success) {
+        return line_tree;
     }
 
-    return line_tree;
+    return std::nullopt;
 }
 
 auto LineTree::reroot(const point2d_t new_root) const -> std::optional<LineTree> {
