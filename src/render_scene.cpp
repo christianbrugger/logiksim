@@ -355,8 +355,8 @@ auto create_random_line_tree(connection_size_t n_outputs,
         auto indices = std::vector<wire_index_t> {0};
         auto output_indices = std::vector<wire_index_t> {};
 
-        auto get_next_point = [&](point2d_t p0, point2d_t p1) {
-            return random_line_point(p0, p1, config, rng);
+        auto get_next_point = [&](point2d_t p0_, point2d_t p1_) {
+            return random_line_point(p0_, p1_, config, rng);
         };
 
         for (auto i : range(n_outputs)) {
@@ -522,9 +522,11 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     }
     ctx.end();
 
-    BLImageCodec codec;
-    codec.findByName("PNG");
-    img.writeToFile("benchmark_line_renderer.png", codec);
+    if (save_image) {
+        BLImageCodec codec;
+        codec.findByName("PNG");
+        img.writeToFile("benchmark_line_renderer.png", codec);
+    }
 
     return tree_length_sum;
 }

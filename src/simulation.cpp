@@ -623,7 +623,7 @@ auto Simulation::output_values(const Circuit::ConstElement element,
                                const bool raise_missing) const -> logic_small_vector_t {
     return transform_to_container<logic_small_vector_t>(
         element.outputs(),
-        [=](auto output) { return output_value(output, raise_missing); });
+        [=, this](auto output) { return output_value(output, raise_missing); });
 }
 
 auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t {

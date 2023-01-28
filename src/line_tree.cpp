@@ -16,6 +16,7 @@
 #include <array>
 #include <functional>
 #include <numeric>
+#include <ranges>
 #include <optional>
 #include <utility>
 
@@ -324,7 +325,7 @@ auto LineTree::starts_new_subtree(int index) const -> bool {
 }
 
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
-    return std::all_of(segments().begin(), segments().end(), is_orthogonal);
+    return std::ranges::all_of(segments(), is_orthogonal);
 }
 
 // each horizontal segment is followed by a vertical segment and vice versa
@@ -473,7 +474,7 @@ auto LineTree::SegmentSizeIterator::operator*() const -> value_type {
 }
 
 auto LineTree::SegmentSizeIterator::operator++() noexcept -> SegmentSizeIterator& {
-    if (point_index_ + 1 < line_tree_->indices_.size()
+    if (point_index_ + index_t {1} < line_tree_->indices_.size()
         && line_tree_->starts_new_subtree(point_index_ + 1)) {
         start_length_ = line_tree_->lengths_.at(length_index_++);
     } else {

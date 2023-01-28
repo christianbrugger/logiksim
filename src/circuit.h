@@ -115,6 +115,21 @@ class Circuit {
    private:
     static void validate_connection_data_(Circuit::ConnectionData connection_data);
 
+    struct ConnectionData {
+        element_id_t element_id {null_element};
+        connection_size_t index {null_connection};
+    };
+
+    struct ElementData {
+        folly::small_vector<ConnectionData, 3> input_data;
+        folly::small_vector<ConnectionData, 3> output_data;
+
+        connection_size_t input_count;
+        connection_size_t output_count;
+
+        ElementType type;
+    };
+
     std::vector<ElementData> element_data_store_ {};
     connection_id_t input_count_ {0};
     connection_id_t output_count_ {0};
@@ -125,20 +140,6 @@ concept ElementOrConnection = std::convertible_to<T, Circuit::ConstElement>
                               || std::convertible_to<T, Circuit::ConstInput>
                               || std::convertible_to<T, Circuit::ConstOutput>;
 
-struct Circuit::ConnectionData {
-    element_id_t element_id {null_element};
-    connection_size_t index {null_connection};
-};
-
-struct Circuit::ElementData {
-    folly::small_vector<ConnectionData, 3> input_data;
-    folly::small_vector<ConnectionData, 3> output_data;
-
-    connection_size_t input_count;
-    connection_size_t output_count;
-
-    ElementType type;
-};
 
 template <bool Const>
 class Circuit::ElementIteratorTemplate {

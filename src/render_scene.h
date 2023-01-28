@@ -29,8 +29,9 @@ class SimulationScene {
                        std::vector<wire_index_t> indices) -> void;
 
    private:
-    using point_vector_t = folly::small_vector<point2d_t, 2, uint16_t>;
-    using index_vector_t = folly::small_vector<wire_index_t, 4, uint16_t>;
+    using policy = folly::small_vector_policy::policy_size_type<uint16_t>;
+    using point_vector_t = folly::small_vector<point2d_t, 2, policy>;
+    using index_vector_t = folly::small_vector<wire_index_t, 4, policy>;
 
     static_assert(sizeof(point_vector_t) == 10);
     static_assert(sizeof(index_vector_t) == 10);

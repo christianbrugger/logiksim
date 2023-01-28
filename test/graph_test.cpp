@@ -17,7 +17,7 @@ TEST(Graph, DepthFirstSearchSimple) {
 
     auto edges = std::vector<std::pair<index_t, index_t>> {};
     auto visitor
-        = TreeEdgeVisitor([&](index_t a, index_t b, auto graph [[maybe_unused]]) {
+        = TreeEdgeVisitor([&](index_t a, index_t b, auto graph_ [[maybe_unused]]) {
               edges.push_back({a, b});
           });
 

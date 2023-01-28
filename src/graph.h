@@ -167,7 +167,7 @@ struct PrintingGraphVisitor {
     auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) {
         fmt::print("tree_edge: index {} {} - points {} {}\n", a, b, graph.point(a),
                    graph.point(b));
-    };
+    }
 };
 
 // template <typename index_t, typename Func>
@@ -179,7 +179,7 @@ class TreeEdgeVisitor {
     template <typename index_t>
     auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) {
         std::invoke(func_, a, b, graph);
-    };
+    }
 
    private:
     Func func_;
