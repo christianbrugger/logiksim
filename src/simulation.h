@@ -77,14 +77,13 @@ struct delay_t {
 
     [[nodiscard]] constexpr explicit delay_t() noexcept = default;
 
-    [[nodiscard]] consteval explicit delay_t(
+    [[nodiscard]] constexpr explicit delay_t(
         std::chrono::duration<int64_t, std::nano> delay)
-        : delay_t {wrapped_ {delay}} {}
-
-    [[nodiscard]] constexpr static auto runtime(
-        std::chrono::duration<int64_t, std::nano> delay) -> delay_t {
-        return delay_t {wrapped_ {delay}};
-    }
+        : value {delay} {
+        if (value != delay) {
+            throw_exception("delay cannot be represented.");
+        }
+    };
 
     [[nodiscard]] constexpr auto operator==(const delay_t other) const noexcept -> bool {
         return value == other.value;
@@ -105,17 +104,6 @@ struct delay_t {
     [[nodiscard]] constexpr auto operator>=(const delay_t other) const noexcept -> bool {
         return value >= other.value;
     }
-
-   private:
-    struct wrapped_ {
-        std::chrono::duration<int64_t, std::nano> value;
-    };
-
-    [[nodiscard]] constexpr explicit delay_t(wrapped_ delay) : value {delay.value} {
-        if (value != delay.value) {
-            throw_exception("delay cannot be represented.");
-        }
-    };
 };
 }  // namespace logicsim
 
@@ -147,13 +135,12 @@ struct history_t {
 
     [[nodiscard]] constexpr explicit history_t() noexcept = default;
 
-    [[nodiscard]] consteval explicit history_t(
+    [[nodiscard]] constexpr explicit history_t(
         std::chrono::duration<int64_t, std::nano> delay)
-        : history_t {wrapped_ {delay}} {}
-
-    [[nodiscard]] constexpr static auto runtime(
-        std::chrono::duration<int64_t, std::nano> delay) -> history_t {
-        return history_t {wrapped_ {delay}};
+        : value {delay} {
+        if (value != delay) {
+            throw_exception("delay cannot be represented.");
+        }
     }
 
     [[nodiscard]] constexpr auto operator==(history_t other) const noexcept -> bool {
@@ -167,17 +154,6 @@ struct history_t {
     [[nodiscard]] constexpr auto operator<=(history_t other) const noexcept -> bool {
         return value <= other.value;
     }
-
-   private:
-    struct wrapped_ {
-        std::chrono::duration<int64_t, std::nano> value;
-    };
-
-    [[nodiscard]] constexpr explicit history_t(wrapped_ delay) : value {delay.value} {
-        if (value != delay.value) {
-            throw_exception("delay cannot be represented.");
-        }
-    };
 };
 
 struct SimulationEvent {

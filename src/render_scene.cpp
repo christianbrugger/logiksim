@@ -188,8 +188,8 @@ auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) c
     delay_index.push_back(d0);
 
     while (true) {
-        auto d1 = delay_t::runtime(
-            d0.value + distance_1d(p0, p1) * Simulation::wire_delay_per_distance.value);
+        auto d1 = delay_t {
+            d0.value + distance_1d(p0, p1) * Simulation::wire_delay_per_distance.value};
         delay_index.push_back(d1);
 
         const auto time_start = time_t {simulation_->time() - d0.value};
@@ -403,7 +403,7 @@ auto calculate_delay(const std::vector<point2d_t>& points,
 
         auto segment_delay
             = distance_1d(p0, p1) * Simulation::wire_delay_per_distance.value;
-        delay = delay_t::runtime(delay.value + segment_delay);
+        delay = delay_t {delay.value + segment_delay};
         p1_index = p0_index;
     }
 
@@ -461,7 +461,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             }
 
             auto tree_max_delay = std::ranges::max(delays);
-            simulation.set_max_history(element, history_t::runtime(tree_max_delay.value));
+            simulation.set_max_history(element, history_t {tree_max_delay.value});
 
             tree_length_sum += calculate_tree_length(points, indices);
         }

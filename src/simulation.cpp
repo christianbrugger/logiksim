@@ -742,7 +742,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     for (const auto element : circuit.elements()) {
         for (const auto output : element.outputs()) {
             boost::random::uniform_int_distribution<time_t::rep> delay_dist {5, 500};
-            simulation.set_output_delay(output, delay_t::runtime(1us * delay_dist(rng)));
+            simulation.set_output_delay(output, delay_t {1us * delay_dist(rng)});
         }
     }
 
@@ -750,7 +750,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     for (const auto element : circuit.elements()) {
         if (element.element_type() == ElementType::wire) {
             const auto delay = simulation.output_delay(element.output(0));
-            simulation.set_max_history(element, history_t::runtime(delay.value * 10));
+            simulation.set_max_history(element, history_t {delay.value * 10});
         }
     }
 

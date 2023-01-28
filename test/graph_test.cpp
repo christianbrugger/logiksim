@@ -26,14 +26,19 @@ TEST(Graph, DepthFirstSearchSimple) {
     EXPECT_THAT(found_loop, DFSResult::success);
     ASSERT_THAT(edges.size(), 3);
 
-    ASSERT_THAT(graph.point(edges.at(0).first), point2d_t(0, 0));
-    ASSERT_THAT(graph.point(edges.at(0).second), point2d_t(0, 1));
+    auto p0 = point2d_t {0, 0};
+    auto p1 = point2d_t {0, 1};
+    auto p2 = point2d_t {1, 1};
+    auto p3 = point2d_t {1, 0};
 
-    ASSERT_THAT(graph.point(edges.at(1).first), point2d_t(0, 1));
-    ASSERT_THAT(graph.point(edges.at(1).second), point2d_t(1, 1));
+    ASSERT_THAT(graph.point(edges.at(0).first), p0);
+    ASSERT_THAT(graph.point(edges.at(0).second), p1);
 
-    ASSERT_THAT(graph.point(edges.at(2).first), point2d_t(0, 0));
-    ASSERT_THAT(graph.point(edges.at(2).second), point2d_t(1, 0));
+    ASSERT_THAT(graph.point(edges.at(1).first), p1);
+    ASSERT_THAT(graph.point(edges.at(1).second), p2);
+
+    ASSERT_THAT(graph.point(edges.at(2).first), p0);
+    ASSERT_THAT(graph.point(edges.at(2).second), p3);
 }
 
 }  // namespace logicsim

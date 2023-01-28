@@ -247,10 +247,9 @@ TEST(SimulationTest, OutputDelayTest) {
     const auto wire = circuit.add_element(ElementType::wire, 1, 3);
     auto simulation = get_initialized_simulation(circuit);
 
-    // TODO do not use runtime, clang error
-    simulation.set_output_delay(wire.output(0), delay_t::runtime(1ms));
-    simulation.set_output_delay(wire.output(1), delay_t::runtime(2ms));
-    simulation.set_output_delay(wire.output(2), delay_t::runtime(3ms));
+    simulation.set_output_delay(wire.output(0), delay_t {1ms});
+    simulation.set_output_delay(wire.output(1), delay_t {2ms});
+    simulation.set_output_delay(wire.output(2), delay_t {3ms});
 
     simulation.submit_event(wire.input(0), 1us, true);
     simulation.run(1us);
@@ -377,9 +376,8 @@ TEST(SimulationTest, TestClockGenerator) {
 
     auto simulation = get_uninitialized_simulation(circuit);
 
-    // TODO clang bug removing runtime here
-    simulation.set_output_delay(clock.output(0), delay_t::runtime(100us));
-    simulation.set_output_delay(clock.output(1), delay_t::runtime(100us));
+    simulation.set_output_delay(clock.output(0), delay_t {100us});
+    simulation.set_output_delay(clock.output(1), delay_t {100us});
 
     simulation.initialize();
     simulation.submit_event(clock.input(1), 50us, true);
@@ -402,9 +400,8 @@ TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
     clock.output(0).connect(clock.input(0));
 
     auto simulation = get_uninitialized_simulation(circuit);
-    // TODO clang bug removing runtime here
-    simulation.set_output_delay(clock.output(0), delay_t::runtime(500us));
-    simulation.set_output_delay(clock.output(1), delay_t::runtime(100us));
+    simulation.set_output_delay(clock.output(0), delay_t {500us});
+    simulation.set_output_delay(clock.output(1), delay_t {100us});
 
     simulation.initialize();
     simulation.submit_event(clock.input(1), 50us, true);
@@ -433,9 +430,8 @@ TEST(SimulationTest, TestClockReset) {
     clock.output(0).connect(clock.input(0));
 
     auto simulation = get_uninitialized_simulation(circuit);
-    // TODO clang bug removing runtime here
-    simulation.set_output_delay(clock.output(0), delay_t::runtime(1ms));
-    simulation.set_output_delay(clock.output(1), delay_t::runtime(1ns));
+    simulation.set_output_delay(clock.output(0), delay_t {1ms});
+    simulation.set_output_delay(clock.output(1), delay_t {1ns});
 
     simulation.initialize();
     simulation.submit_event(clock.input(1), 1000us, true);
