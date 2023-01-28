@@ -16,7 +16,8 @@ template <typename Value, std::size_t RequestedMaxInline = 1,
     requires std::is_trivial_v<Value>
 class circular_buffer {
    private:
-    using buffer_t = folly::small_vector<Value, RequestedMaxInline, InternalSizeType>;
+    using policy = folly::small_vector_policy::policy_size_type<InternalSizeType>;
+    using buffer_t = folly::small_vector<Value, RequestedMaxInline, policy>;
 
     buffer_t buffer_ = buffer_t(RequestedMaxInline);
     InternalSizeType start_ {0};

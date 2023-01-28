@@ -222,36 +222,35 @@ auto transform_combine_while(R&& r, OutputIterator result, MakeState make_state,
 //
 template <typename VisitedStore, typename DiscoverConnected, typename EdgeVisitor,
           typename IndexType>
-auto depth_first_visitor(IndexType start_node, VisitedStore& visited_state,
+auto depth_first_visitor(IndexType start_node, VisitedStore& visited,
                          DiscoverConnected discover_connections, EdgeVisitor visit_edge)
     -> bool {
     std::vector<std::pair<IndexType, IndexType>> edges_stack {};
 
-    discover_connections(
-        start_node,
-        transform_output_iterator(std::back_inserter(edges_stack), [&](auto second) {
-            return std::make_pair(start_node, second);
-        }));
+    const auto result = transform_output_iterator(
+        [=](IndexType second) { return std::make_pair(start_node, second); },
+        std::back_inserter(edges_stack));
+    discover_connections(start_node, result);
 
     while (true) {
         if (edges_stack.empty()) {
             return false;
         }
-        auto edge = edges_stack.back();
+        const auto edge = edges_stack.back();
         edges_stack.pop_back();
 
-        if (visited_state[edge.second]) {
+        if (visited[edge.second]) {
             return true;
         }
-        visited_state[edge.second] = true;
+        visited[edge.second] = true;
 
         visit_edge(edge.first, edge.second);
         discover_connections(
             edge.second,
             transform_if_output_iterator(
-                std::back_inserter(edges_stack),
-                [&](IndexType second) { return std::make_pair(edge.second, second); },
-                [&](IndexType second) { return second != edge.first; }));
+                [=](IndexType second) { return second != edge.first; },
+                [=](IndexType second) { return std::make_pair(edge.second, second); },
+                std::back_inserter(edges_stack)));
     }
 }
 

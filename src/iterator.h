@@ -146,7 +146,7 @@ namespace logicsim {
 // Transform Output Iterator
 //
 
-template <typename Iterator, class Proj>
+template <class Proj, typename Iterator>
 class transform_output_iterator {
    public:
     using iterator_concept = std::output_iterator_tag;
@@ -157,7 +157,7 @@ class transform_output_iterator {
     using pointer = void;
     using reference = void;
 
-    explicit transform_output_iterator(Iterator iterator, Proj proj)
+    explicit transform_output_iterator(Proj proj, Iterator iterator)
         : iterator_(std::move(iterator)), proj_(std::move(proj)) {}
 
     auto operator++() -> transform_output_iterator & {
@@ -186,7 +186,7 @@ class transform_output_iterator {
     Proj proj_;
 };
 
-template <typename Iterator, class Proj, class Pred>
+template <typename Pred, class Proj, class Iterator>
 class transform_if_output_iterator {
    public:
     using iterator_concept = std::output_iterator_tag;
@@ -197,7 +197,7 @@ class transform_if_output_iterator {
     using pointer = void;
     using reference = void;
 
-    explicit transform_if_output_iterator(Iterator iterator, Proj proj, Pred pred)
+    explicit transform_if_output_iterator(Pred pred, Proj proj, Iterator iterator)
         : iterator_(std::move(iterator)),
           proj_(std::move(proj)),
           pred_(std::move(pred)) {}
@@ -228,6 +228,48 @@ class transform_if_output_iterator {
    private:
     Iterator iterator_;
     Proj proj_;
+    Pred pred_;
+};
+
+template <typename Iterator, class Pred>
+class filter_output_iterator {
+   public:
+    using iterator_concept = std::output_iterator_tag;
+    using iterator_category = std::output_iterator_tag;
+
+    using difference_type = typename Iterator::difference_type;
+    using value_type = void;
+    using pointer = void;
+    using reference = void;
+
+    explicit filter_output_iterator(Pred pred, Iterator iterator)
+        : iterator_(std::move(iterator)), pred_(std::move(pred)) {}
+
+    auto operator++() -> filter_output_iterator & {
+        ++iterator_;
+        return *this;
+    }
+
+    auto operator++(int) -> filter_output_iterator {
+        auto temp = *this;
+        ++iterator_;
+        return temp;
+    }
+
+    auto operator*() -> filter_output_iterator & {
+        return *this;
+    }
+
+    template <typename T>
+    auto operator=(T &&value) -> filter_output_iterator & {
+        if (pred_(value)) {
+            *iterator_ = std::forward<T>(value);
+        }
+        return *this;
+    }
+
+   private:
+    Iterator iterator_;
     Pred pred_;
 };
 

@@ -221,6 +221,12 @@ struct combine_visitors {
                    visitors);
     }
 
+    template <typename index_t>
+    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) const {
+        std::apply([&](auto&... visitor) { (visitor.tree_edge(a, b, graph), ...); },
+                   visitors);
+    }
+
    private:
     std::tuple<Ts...> visitors;
 };
@@ -236,18 +242,20 @@ template <typename index_t, class Visitor>
 auto depth_first_search(const AdjacencyGraph<index_t>& graph, Visitor&& visitor,
                         index_t start) -> DFSResult {
     // memorize for loop detection
-    boost::container::vector<bool> visited(graph.points().size(), false);
-    index_t n_vertex_visited = 1;
+    auto visited = boost::container::vector<bool>(graph.points().size(), false);
+    auto n_vertex_visited = index_t {1};
 
     auto found_loop = depth_first_visitor(
         start, visited,
-        [&](index_t node, std::output_iterator<index_t> auto result) {
+        // discover_connections
+        [&](index_t node, std::output_iterator<index_t> auto result) -> void {
             for (auto neighbor_id : reverse_range(graph.neighbors().at(node).size())) {
                 *result = graph.neighbors()[node][neighbor_id];
                 ++result;
             }
         },
-        [&](index_t a, index_t b) {
+        // visit_edge
+        [&](index_t a, index_t b) -> void {
             visitor.tree_edge(a, b, graph);
             ++n_vertex_visited;
         });

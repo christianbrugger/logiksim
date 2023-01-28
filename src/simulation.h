@@ -267,8 +267,9 @@ class Simulation {
     // using con_index_small_vector_t = boost::container::small_vector<connection_size_t,
     // 8>;
 
-    using logic_small_vector_t = folly::small_vector<bool, 20, uint32_t>;
-    using con_index_small_vector_t = folly::small_vector<connection_size_t, 20, uint32_t>;
+    using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
+    using logic_small_vector_t = folly::small_vector<bool, 20, policy>;
+    using con_index_small_vector_t = folly::small_vector<connection_size_t, 20, policy>;
     static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
@@ -373,7 +374,10 @@ class Simulation {
         logic_small_vector_t input_values {};
         logic_small_vector_t input_inverters {};
         logic_small_vector_t internal_state {};
-        folly::small_vector<delay_t, 5, uint32_t> output_delays {};
+
+        using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
+        folly::small_vector<delay_t, 5, policy> output_delays {};
+
         history_vector_t first_input_history {};
         history_t max_history {defaults::no_history};
 

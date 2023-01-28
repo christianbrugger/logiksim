@@ -89,9 +89,10 @@ class LineTree {
     [[nodiscard]] auto starts_new_subtree(int index) const -> bool;
 
     // TODO consider merging for better locality
-    using point_vector_t = folly::small_vector<point2d_t, 2, index_t>;
-    using index_vector_t = folly::small_vector<index_t, 4, index_t>;
-    using length_vector_t = folly::small_vector<length_t, 2, index_t>;
+    using policy = folly::small_vector_policy::policy_size_type<index_t>;
+    using point_vector_t = folly::small_vector<point2d_t, 2, policy>;
+    using index_vector_t = folly::small_vector<index_t, 4, policy>;
+    using length_vector_t = folly::small_vector<length_t, 2, policy>;
 
     static_assert(sizeof(point_vector_t) == 10);
     static_assert(sizeof(index_vector_t) == 10);

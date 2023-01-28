@@ -150,7 +150,7 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
     }
 
     std::ranges::sort(root_candidates);
-    auto has_candidate = [&](point2d_t _root) {
+    const auto has_candidate = [&](point2d_t _root) {
         return std::ranges::binary_search(root_candidates, _root);
     };
 
@@ -229,7 +229,7 @@ LineTree::LineTree(std::initializer_list<point2d_t> points)
 class LineTree::TreeBuilderVisitor {
    public:
     TreeBuilderVisitor(LineTree& tree, index_t vertex_count)
-        : tree_ {&tree}, length_recorder_ {vertex_count}, target_index_(vertex_count) {
+        : tree_ {&tree}, length_recorder_ {vertex_count}, line_tree_index_(vertex_count) {
         if (vertex_count > 0) {
             tree_->points_.reserve(vertex_count);
             tree_->indices_.reserve(vertex_count - 1);
@@ -243,10 +243,10 @@ class LineTree::TreeBuilderVisitor {
             tree_->points_.push_back(graph.point(a));
         }
 
-        auto a_index = target_index_.at(a);
+        auto a_index = line_tree_index_.at(a);
         auto b_index = gsl::narrow_cast<index_t>(tree_->points_.size());
 
-        target_index_.at(b) = b_index;
+        line_tree_index_.at(b) = b_index;
         tree_->points_.push_back(graph.point(b));
         tree_->indices_.push_back(a_index);
 
@@ -259,23 +259,21 @@ class LineTree::TreeBuilderVisitor {
     gsl::not_null<LineTree*> tree_;
 
     LengthRecorderVisitor<index_t, length_t> length_recorder_;
-    std::vector<index_t> target_index_ {};
+    std::vector<index_t> line_tree_index_ {};
 };
 
 auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<LineTree> {
     // define as optional for RVO (return value optimization)
     auto line_tree = std::optional {LineTree {}};
 
-    index_t root_index;
-    if (auto res = graph.to_index(root)) {
-        root_index = *res;
-    } else {
+    auto root_index = graph.to_index(root);
+    if (!root_index) {
         // root is not part of graph
         return std::nullopt;
     }
 
-    auto visitor = TreeBuilderVisitor(*line_tree, graph.vertex_count());
-    if (depth_first_search(graph, visitor, root_index) == DFSResult::success) {
+    auto builder = TreeBuilderVisitor {*line_tree, graph.vertex_count()};
+    if (depth_first_search(graph, builder, *root_index) == DFSResult::success) {
         return line_tree;
     }
 
