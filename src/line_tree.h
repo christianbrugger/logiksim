@@ -13,17 +13,18 @@
 
 namespace logicsim {
 
-// Done:
-//  * create from lines & merging
-//  * iter over segments
-//  * iter with lengths for each segment
-//  * validate inputs
 //
 // TODO:
 //  * position of connector dots
 //  * calculate number of outputs
 //  * get lengths of each output
 //  * get position of each output
+//
+// Done:
+//  * create from lines & merging
+//  * iter over segments
+//  * iter with lengths for each segment
+//  * validate inputs
 //
 
 //
@@ -78,6 +79,9 @@ class LineTree {
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
 
+    [[nodiscard]] auto output_count() const -> int;
+    [[nodiscard]] auto output_delays() const -> std::vector<length_t>;
+
    private:
     struct backtrack_memory_t;
     class TreeBuilderVisitor;
@@ -121,7 +125,7 @@ class LineTree::SegmentIterator {
 
     using value_type = line2d_t;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type *;
+    using pointer = value_type;
     // TODO check if reference needs to be return type of operator*
     using reference = value_type;
     // using reference = value_type &;
@@ -186,12 +190,12 @@ struct LineTree::sized_line2d_t {
 
 class LineTree::SegmentSizeIterator {
    public:
-    using iterator_concept = std::input_iterator_tag;
-    using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::forward_iterator_tag;
+    using iterator_category = std::forward_iterator_tag;
 
     using value_type = sized_line2d_t;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type *;
+    using pointer = value_type;
     // TODO check if reference needs to be return type of operator*
     using reference = value_type;
     // using reference = value_type &;
@@ -238,6 +242,9 @@ class LineTree::SegmentSizeView {
 };
 
 }  // namespace logicsim
+
+static_assert(std::forward_iterator<logicsim::LineTree::SegmentIterator>);
+static_assert(std::forward_iterator<logicsim::LineTree::SegmentSizeIterator>);
 
 template <>
 inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentView> = true;

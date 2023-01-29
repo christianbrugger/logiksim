@@ -16,8 +16,8 @@
 #include <array>
 #include <functional>
 #include <numeric>
-#include <ranges>
 #include <optional>
+#include <ranges>
 #include <utility>
 
 namespace logicsim {
@@ -316,6 +316,44 @@ auto LineTree::segments() const noexcept -> SegmentView {
 auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
     return SegmentSizeView(*this);
 }
+
+auto LineTree::output_count() const -> int {
+    if (segment_count() == 0) {
+        return 0;
+    }
+
+    auto count = adjacent_count_if(segments(), [](line2d_t first, line2d_t second) {
+        return first.p1 != second.p0;
+    });
+    return gsl::narrow_cast<int>(count + 1);
+}
+
+auto LineTree::output_delays() const -> std::vector<length_t> {
+    if (segment_count() == 0) {
+        return {};
+    }
+    auto result = std::vector<length_t> {};
+
+    auto next = sized_segments().begin();
+    auto last = sized_segments().end();
+
+    assert(next != last);
+    auto last_val = *next;
+    ++next;
+
+    for (; next != last; ++next) {
+        auto next_val = *next;
+
+        if (last_val.line.p1 != next_val.line.p0) {
+            result.push_back(last_val.p1_length);
+        }
+        last_val = next_val;
+    }
+    result.push_back(last_val.p1_length);
+    return result;
+}
+
+// internal
 
 auto LineTree::starts_new_subtree(int index) const -> bool {
     if (index == 0) {
