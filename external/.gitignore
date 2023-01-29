@@ -11,6 +11,7 @@ fmt
 folly
 googletest
 GSL
+my_folly
 ninjatracing
 llvm-project
 range-v3

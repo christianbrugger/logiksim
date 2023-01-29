@@ -157,16 +157,17 @@ add_subdirectory(external/GSL EXCLUDE_FROM_ALL SYSTEM)
 # abseil
 set(ABSL_PROPAGATE_CXX_STD ON)
 add_subdirectory(external/abseil-cpp EXCLUDE_FROM_ALL SYSTEM)
-  
+
 # Folly - we build a minimal version of the library, only what we need
+set(FOLLY_DIR_NAME my_folly)
 add_library(folly
-    external/folly/folly/memory/detail/MallocImpl.cpp
-    external/folly/folly/lang/SafeAssert.cpp
-    external/folly/folly/ScopeGuard.cpp
-    external/folly/folly/lang/ToAscii.cpp
+    external/${FOLLY_DIR_NAME}/folly/memory/detail/MallocImpl.cpp
+    external/${FOLLY_DIR_NAME}/folly/lang/SafeAssert.cpp
+    external/${FOLLY_DIR_NAME}/folly/ScopeGuard.cpp
+    external/${FOLLY_DIR_NAME}/folly/lang/ToAscii.cpp
 )
 target_include_directories(folly SYSTEM PUBLIC 
-    external/folly
+    external/${FOLLY_DIR_NAME}
 )
 target_compile_definitions(folly PUBLIC FOLLY_NO_CONFIG)
 
