@@ -725,7 +725,6 @@ TEST(SimulationTest, HistoryViewUntil) {
     auto max_history = history_t {10us};
     auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto min_rep = ++time_t::zero();
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
 
@@ -756,7 +755,6 @@ TEST(SimulationTest, HistoryViewFromUntilBounds) {
     auto max_history = history_t {10us};
     auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto min_rep = ++time_t::zero();
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
 

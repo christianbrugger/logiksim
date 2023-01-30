@@ -270,12 +270,6 @@ TEST(LineTree, OutputCoundAndDelays) {
     auto tree2 = LineTree({{0, 1}, {1, 1}});
     auto tree3 = LineTree({{0, 2}, {2, 2}});
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 1}}, 0, 1};
-    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 1}, {0, 2}}, 1, 2};
-    auto line2 = LineTree::sized_line2d_t {line2d_t {{0, 2}, {0, 5}}, 2, 5};
-    auto line3 = LineTree::sized_line2d_t {line2d_t {{0, 2}, {2, 2}}, 2, 4};
-    auto line4 = LineTree::sized_line2d_t {line2d_t {{0, 1}, {1, 1}}, 1, 2};
-
     auto tree_merged = merge({tree1, tree2, tree3});
     ASSERT_EQ(tree_merged.has_value(), true);
 
