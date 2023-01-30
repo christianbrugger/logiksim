@@ -3,6 +3,7 @@
 
 #include "circuit.h"
 #include "geometry.h"
+#include "line_tree.h"
 #include "simulation.h"
 
 #include <blend2d.h>
@@ -37,6 +38,8 @@ class SimulationScene {
     static_assert(sizeof(index_vector_t) == 10);
 
     struct DrawData {
+        LineTree line_tree {};
+
         point_vector_t points {};
         index_vector_t indices {};
 
@@ -44,10 +47,11 @@ class SimulationScene {
         int8_t orientation {0};
     };
 
-   private:
+   public:  // TODO make private again
     auto get_data(Circuit::ConstElement element) -> DrawData&;
     auto get_data(Circuit::ConstElement element) const -> const DrawData&;
 
+   private:
     auto draw_background(BLContext& ctx) const -> void;
     auto draw_wire(BLContext& ctx, Circuit::ConstElement element) const -> void;
     auto draw_standard_element(BLContext& ctx, Circuit::ConstElement element) const

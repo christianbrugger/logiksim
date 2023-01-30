@@ -16,8 +16,6 @@ namespace logicsim {
 //
 // TODO:
 //  * position of connector dots
-//  * calculate number of outputs
-//  * get lengths of each output
 //  * get position of each output
 //
 // Done:
@@ -25,6 +23,8 @@ namespace logicsim {
 //  * iter over segments
 //  * iter with lengths for each segment
 //  * validate inputs
+//  * calculate number of outputs
+//  * get lengths of each output
 //
 
 //
@@ -105,6 +105,11 @@ class LineTree {
     point_vector_t points_ {};
     index_vector_t indices_ {};
     length_vector_t lengths_ {};
+
+   public:
+    explicit LineTree(point_vector_t points, index_vector_t indices,
+                      length_vector_t lengths)
+        : points_ {points}, indices_ {indices}, lengths_ {lengths} {};
 };
 
 [[noreturn]] auto throw_invalid_line_tree_exception(const char *message) -> void;

@@ -467,6 +467,34 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
         }
     }
 
+    // convert to new line tree
+    {
+        // auto timer = Timer {"Convert", Timer::Unit::ms, 3};
+        for (auto element : circuit.elements()) {
+            if (element.element_type() == ElementType::wire) {
+                auto& data = renderer.get_data(element);
+
+                auto lengths_reduced = folly::small_vector<
+                    LineTree::length_t, 2,
+                    folly::small_vector_policy::policy_size_type<uint16_t>> {};
+
+                auto lengths = std::vector<LineTree::length_t>(data.points.size());
+                for (auto index1 : range(size_t {1}, data.points.size())) {
+                    const auto index0 = index1 == 1 ? 0 : data.indices.at(index1 - 2);
+                    const auto line
+                        = line2d_t {data.points.at(index0), data.points.at(index1)};
+
+                    lengths.at(index1) = lengths.at(index0) + distance_1d(line);
+                    if (index0 + size_t {1} != index1) {
+                        lengths_reduced.push_back(lengths.at(index0));
+                    }
+                }
+
+                data.line_tree = LineTree {data.points, data.indices, lengths_reduced};
+            }
+        }
+    }
+
     // initialize simulation
     simulation.initialize();
 
