@@ -611,7 +611,7 @@ TEST(SimulationTest, HistoryViewBeginEndExact) {
     auto value1 = *(begin++);
     ASSERT_THAT(begin == end, true);
 
-    ASSERT_THAT(value0.first_time, time_t {0us});
+    ASSERT_THAT(value0.first_time, time_t::min());
     ASSERT_THAT(value0.last_time, time_t {95us} - min_rep);
     ASSERT_THAT(value0.value, true);
 
@@ -643,7 +643,7 @@ TEST(SimulationTest, HistoryViewBeginEndFull) {
     auto value2 = *(begin++);
     ASSERT_THAT(begin == end, true);
 
-    ASSERT_THAT(value0.first_time, time_t {0us});
+    ASSERT_THAT(value0.first_time, time_t::min());
     ASSERT_THAT(value0.last_time, time_t {90us} - min_rep);
     ASSERT_THAT(value0.value, false);
 
@@ -702,7 +702,7 @@ TEST(SimulationTest, HistoryViewFromSecond) {
     ASSERT_THAT(view.end() - from, 2);
 
     auto value = *from;
-    ASSERT_THAT(value.first_time, time_t {0us});
+    ASSERT_THAT(value.first_time, time_t::min());
     ASSERT_THAT(value.last_time, time_t {95us} - min_rep);
     ASSERT_THAT(value.value, true);
 }

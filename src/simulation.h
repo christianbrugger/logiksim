@@ -323,6 +323,7 @@ class Simulation {
     struct history_entry_t;
     auto input_history(Circuit::ConstElement element) const -> HistoryView;
 
+    // TODO remove get_input_history method
     auto get_input_history(Circuit::ConstElement element) const
         -> const history_vector_t &;
     auto max_history(Circuit::ConstElement element) const -> history_t;

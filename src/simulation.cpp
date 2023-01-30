@@ -821,7 +821,7 @@ auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_min_
     require_history();
 
     if (index < min_index_) {
-        return time_t::zero();  // TODO use ::min instead ?
+        return time_t::min();
     }
     if (index >= std::ssize(*history_)) {
         return simulation_time_;
