@@ -50,23 +50,23 @@ auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
 
 auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t_start, time_t t_end,
                          time_t t_select) -> point2d_fine_t {
-    assert(t_start <= t_end);
+    assert(t_start >= t_end);
 
-    if (t_select <= t_start) {
+    if (t_select >= t_start) {
         return static_cast<point2d_fine_t>(p0);
     }
-    if (t_select >= t_end) {
+    if (t_select <= t_end) {
         return static_cast<point2d_fine_t>(p1);
     }
-    // TODO check numerics
-    const double ratio
-        = static_cast<double>((t_select - t_start).count()) / (t_end - t_start).count();
-    if (p0.x == p1.x) {
-        return point2d_fine_t {static_cast<double>(p0.x),
-                               interpolate_1d(p0.y, p1.y, ratio)};
+
+    const double alpha
+        = static_cast<double>((t_start - t_select).count()) / (t_start - t_end).count();
+
+    if (is_horizontal(line2d_t {p0, p1})) {
+        return point2d_fine_t {interpolate_1d(p0.x, p1.x, alpha),
+                               static_cast<double>(p0.y)};
     }
-    assert(p0.y == p1.y);
-    return point2d_fine_t {interpolate_1d(p0.x, p1.x, ratio), static_cast<double>(p0.y)};
+    return point2d_fine_t {static_cast<double>(p0.x), interpolate_1d(p0.y, p1.y, alpha)};
 }
 
 auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
@@ -126,43 +126,55 @@ auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_ena
                      BLRgba32(color));
 }
 
+// Returns the index to the first element that is smaller or equal to the value,
+// or the history.size() if no such element is found.
+// History must be ordered descending.
+auto get_smaller_equal_index(const Simulation::history_vector_t& history, time_t value)
+    -> std::size_t {
+    const auto it = std::ranges::lower_bound(history, value, std::ranges::greater {});
+    const auto index = it - history.begin();
+
+    assert(index >= 0);
+    assert(index <= std::ssize(history));
+
+    assert(index == std::ssize(history) || history.at(index) <= value);
+    assert(index == 0 || history.at(index - 1) > value);
+
+    return gsl::narrow_cast<std::size_t>(index);
+}
+
+auto is_segment_enabled(std::size_t history_index, bool wire_enabled) {
+    return static_cast<bool>(history_index % 2) ^ wire_enabled;
+}
+
 auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_start,
                        time_t time_end, const Simulation::history_vector_t& history,
                        bool wire_enabled) -> void {
+    // no history
     if (history.size() == 0 || time_end >= history.at(0)) {
         draw_line_segment(ctx, p0, p1, wire_enabled);
         return;
     }
 
-    const auto it_start = std::lower_bound(history.rbegin(), history.rend(), time_start);
-    const auto it_end = std::lower_bound(history.rbegin(), history.rend(), time_end);
+    const auto idx_start = get_smaller_equal_index(history, time_start);
+    const auto idx_end = get_smaller_equal_index(history, time_end);
 
-    const auto idx_start = history.rend() - it_start;
-    const auto idx_end = history.rend() - it_end;
-
-    // single color
+    // single state
     if (idx_start == idx_end) {
-        const bool value = static_cast<bool>(idx_start % 2) ^ wire_enabled;
+        const bool value = is_segment_enabled(idx_start, wire_enabled);
         draw_line_segment(ctx, p0, p1, value);
         return;
     }
 
-    // draw each segment separately
-    auto p_pivot = static_cast<point2d_fine_t>(p0);
+    // draw multiple states
+    auto p_start = static_cast<point2d_fine_t>(p0);
     for (auto index : range(idx_start, idx_end + 1)) {
-        point2d_fine_t p_end;
-        if (index >= std::ssize(history) || time_end >= history.at(index)) {
-            p_end = static_cast<point2d_fine_t>(p1);
-        } else {
-            auto t_end = history.at(index);
-            // TODO fix flipping of time_end and time_start
-            p_end = interpolate_line_1d(p1, p0, time_end, time_start, t_end);
-        }
+        const auto t_end = index < history.size() ? history.at(index) : time_end;
+        const auto p_end = interpolate_line_1d(p0, p1, time_start, time_end, t_end);
+        const bool value = is_segment_enabled(index, wire_enabled);
 
-        const bool value = static_cast<bool>(index % 2) ^ wire_enabled;
-        draw_line_segment(ctx, p_pivot, p_end, value);
-
-        p_pivot = p_end;
+        draw_line_segment(ctx, p_start, p_end, value);
+        p_start = p_end;
     }
 }
 

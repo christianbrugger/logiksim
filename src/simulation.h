@@ -317,6 +317,8 @@ class Simulation {
     [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
         -> const logic_small_vector_t &;
 
+    // auto input_history(Circuit::ConstElement element) const;
+
     auto get_input_history(Circuit::ConstElement element) const
         -> const history_vector_t &;
     auto max_history(Circuit::ConstElement element) const -> history_t;

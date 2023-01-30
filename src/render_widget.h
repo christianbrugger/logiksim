@@ -133,7 +133,7 @@ class WidgetRenderer : public QWidget {
         simulation.submit_event(elem0.input(0), 500us, false);
 
         // TODO use gsl narrow
-        auto end_time_ns = static_cast<uint64_t>(90'000 + animation_frame * 90'000);
+        auto end_time_ns = static_cast<uint64_t>(90'000 + animation_frame * 120'000);
         const auto end_time = time_t {end_time_ns * 1ns};
         simulation.run(end_time);
         // simulation.run(time_t {125us});
@@ -147,6 +147,12 @@ class WidgetRenderer : public QWidget {
                             {point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {8, 12},
                              point2d_t {12, 12}, point2d_t {12, 14}},
                             {1, 1, 3});
+
+        auto tree1
+            = LineTree({point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {8, 12}});
+        auto tree2
+            = LineTree({point2d_t {10, 12}, point2d_t {12, 12}, point2d_t {12, 14}});
+        scene.get_data(line0).line_tree = merge({tree1, tree2}).value_or(LineTree {});
 
         // attribute_vector_t attributes = {
         //     {{point2d_t {5, 3}}, {}, 0},
