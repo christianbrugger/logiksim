@@ -140,14 +140,15 @@ auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_s
     const auto idx_start = history.rend() - it_start;
     const auto idx_end = history.rend() - it_end;
 
+    // single color
     if (idx_start == idx_end) {
         const bool value = static_cast<bool>(idx_start % 2) ^ wire_enabled;
         draw_line_segment(ctx, p0, p1, value);
         return;
     }
 
+    // draw each segment separately
     auto p_pivot = static_cast<point2d_fine_t>(p0);
-
     for (auto index : range(idx_start, idx_end + 1)) {
         point2d_fine_t p_end;
         if (index >= std::ssize(history) || time_end >= history.at(index)) {
@@ -177,33 +178,16 @@ auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) c
 
     const auto& history = simulation_->get_input_history(element);
     const bool wire_enabled = simulation_->input_value(element.input(0));
+    const auto to_time = [time = simulation_->time()](LineTree::length_t length_) {
+        return time_t {time
+                       - static_cast<int64_t>(length_)
+                             * Simulation::wire_delay_per_distance.value};
+    };
 
-    auto d0 = delay_t {0us};
-    auto p0 = data.points.at(0);
-    auto p1 = data.points.at(1);
-    size_t i = 2;
-
-    // TODO remove allocation
-    folly::small_vector<delay_t, 128> delay_index {};
-    delay_index.push_back(d0);
-
-    while (true) {
-        auto d1 = delay_t {
-            d0.value + distance_1d(p0, p1) * Simulation::wire_delay_per_distance.value};
-        delay_index.push_back(d1);
-
-        const auto time_start = time_t {simulation_->time() - d0.value};
-        const auto time_end = time_t {simulation_->time() - d1.value};
-        draw_line_segment(ctx, p0, p1, time_start, time_end, history, wire_enabled);
-
-        if (i >= data.points.size()) {
-            break;
-        }
-        auto p0_index = data.indices.at(i - 2);
-        d0 = delay_index.at(p0_index);
-        p0 = data.points.at(p0_index);
-        p1 = data.points.at(i);
-        ++i;
+    for (auto segment : data.line_tree.sized_segments()) {
+        draw_line_segment(ctx, segment.line.p0, segment.line.p1,
+                          to_time(segment.p0_length), to_time(segment.p1_length), history,
+                          wire_enabled);
     }
 }
 
@@ -489,8 +473,10 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
                         lengths_reduced.push_back(lengths.at(index0));
                     }
                 }
+                auto indices = data.indices;
+                indices.emplace(indices.begin(), 0);
 
-                data.line_tree = LineTree {data.points, data.indices, lengths_reduced};
+                data.line_tree = LineTree {data.points, indices, lengths_reduced};
             }
         }
     }
