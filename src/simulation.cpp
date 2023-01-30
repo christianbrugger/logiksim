@@ -698,6 +698,16 @@ auto Simulation::internal_state(Circuit::ConstElement element) const
 //     state.internal_state.assign(new_state.begin(), new_state.end());
 // }
 
+auto Simulation::input_history(Circuit::ConstElement element) const -> HistoryView {
+    const auto &state = get_state(element);
+    return HistoryView {
+        state.first_input_history,
+        this->time(),
+        state.input_values.at(0),
+        state.max_history,
+    };
+}
+
 auto Simulation::get_input_history(const Circuit::ConstElement element) const
     -> const history_vector_t & {
     return get_state(element).first_input_history;
@@ -713,6 +723,163 @@ auto Simulation::set_max_history(const Circuit::ConstElement element,
         throw_exception("Max history cannot be negative.");
     }
     get_state(element).max_history = max_history;
+}
+
+//
+// History View
+//
+
+Simulation::HistoryView::HistoryView(const history_vector_t &history,
+                                     time_t simulation_time, bool last_value,
+                                     history_t max_history)
+    : history_ {&history}, simulation_time_ {simulation_time}, last_value_ {last_value} {
+    // TODO remove, if slow
+    assert(std::ranges::is_sorted(history));
+    // calculate first index
+    const auto first_time = simulation_time - max_history.value;
+    const auto first_index = get_greater_index(first_time);
+    min_index_ = gsl::narrow<decltype(min_index_)>(first_index);
+
+    assert(min_index_ >= 0);
+    assert(size() >= 1);
+}
+
+auto Simulation::HistoryView::require_history() const -> void {
+    if (history_ == nullptr) [[unlikely]] {
+        throw_exception("History needs to be set.");
+    }
+}
+
+auto Simulation::HistoryView::size() const -> std::size_t {
+    require_history();
+    return history_->size() + 1 - min_index_;
+}
+
+auto Simulation::HistoryView::ssize() const -> std::ptrdiff_t {
+    require_history();
+    return history_->size() + 1 - min_index_;
+}
+
+auto Simulation::HistoryView::value(time_t value) const -> bool {
+    const auto index = get_greater_equal_index(value);
+    return get_value(index);
+}
+
+auto Simulation::HistoryView::begin() const -> HistoryIterator {
+    require_history();
+    return HistoryIterator {*this, min_index_};
+}
+
+auto Simulation::HistoryView::end() const -> HistoryIterator {
+    require_history();
+    return HistoryIterator {*this, size() + min_index_};
+}
+
+auto Simulation::HistoryView::from(time_t value) const -> HistoryIterator {
+    const auto index = get_greater_index(value);
+    fmt::print("from {} -> {} / {}\n", value, index, size() + min_index_);
+    return HistoryIterator {*this, index};
+}
+
+auto Simulation::HistoryView::until(time_t value) const -> HistoryIterator {
+    const auto index = get_greater_index(value) + 1;
+    return HistoryIterator {*this, index};
+}
+
+auto Simulation::HistoryView::get_value(std::size_t history_index) const noexcept
+    -> bool {
+    return static_cast<bool>(history_index % 2) ^ last_value_;
+}
+
+// Returns the index to the first element that is greater to the value,
+// or the history.size() if no such element is found.
+auto Simulation::HistoryView::get_greater_index(time_t value) const -> std::size_t {
+    require_history();
+
+    const auto it
+        = std::ranges::lower_bound(*history_, value, std::ranges::less_equal {});
+    const auto index = it - history_->begin();
+
+    assert(index >= 0);
+    assert(index <= std::ssize(*history_));
+    assert(index == std::ssize(*history_) || history_->at(index) > value);
+    assert(index == 0 || history_->at(index - 1) <= value);
+
+    return std::max(std::size_t {min_index_}, gsl::narrow_cast<std::size_t>(index));
+}
+
+// TODO delete function
+// TODO rename
+
+// Returns the index to the first element that is greater or equal to the value,
+// or the history.size() if no such element is found.
+auto Simulation::HistoryView::get_greater_equal_index(time_t value) const -> std::size_t {
+    require_history();
+
+    const auto it = std::ranges::lower_bound(*history_, value, std::ranges::less {});
+    const auto index = it - history_->begin();
+
+    assert(index >= 0);
+    assert(index <= std::ssize(*history_));
+    assert(index == std::ssize(*history_) || history_->at(index) >= value);
+    assert(index == 0 || history_->at(index - 1) < value);
+
+    return gsl::narrow_cast<std::size_t>(index);
+}
+
+auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_min_rep) const
+    -> time_t {
+    require_history();
+
+    if (index < min_index_) {
+        return time_t {0};
+    }
+    if (index >= std::ssize(*history_)) {
+        return simulation_time_;
+    }
+    const auto result = history_->at(index);
+
+    constexpr auto min_representation = ++time_t::zero();
+    return substract_min_rep ? result - min_representation : result;
+}
+
+//
+// History Iterator
+//
+
+Simulation::HistoryIterator::HistoryIterator(HistoryView view, std::size_t index) noexcept
+    : view_ {std::move(view)}, index_ {index} {}
+
+auto Simulation::HistoryIterator::operator*() const -> value_type {
+    view_.require_history();
+
+    return history_entry_t {
+        .first_time = view_.get_time(static_cast<std::ptrdiff_t>(index_) - 1),
+        .last_time = view_.get_time(index_, true),
+        .value = view_.get_value(index_),
+    };
+}
+
+auto Simulation::HistoryIterator::operator++() noexcept -> HistoryIterator & {
+    ++index_;
+    return *this;
+}
+
+auto Simulation::HistoryIterator::operator++(int) noexcept -> HistoryIterator {
+    const auto tmp = *this;
+    ++(*this);
+    return tmp;
+}
+
+auto Simulation::HistoryIterator::operator==(const HistoryIterator &right) const noexcept
+    -> bool {
+    return index_ >= right.index_;
+}
+
+auto Simulation::HistoryIterator::operator-(const HistoryIterator &right) const noexcept
+    -> difference_type {
+    return static_cast<std::ptrdiff_t>(index_)
+           - static_cast<std::ptrdiff_t>(right.index_);
 }
 
 //

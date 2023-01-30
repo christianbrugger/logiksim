@@ -527,4 +527,251 @@ TEST(SimulationTest, TestShiftRegister) {
                 testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
 }
 
+//
+// History
+//
+
+// size
+
+TEST(SimulationTest, HistoryViewSize) {
+    auto time = time_t {100us};
+    auto max_history = history_t {7us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    ASSERT_THAT(view.size(), 2);
+}
+
+TEST(SimulationTest, HistoryViewSizeExact) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    ASSERT_THAT(view.size(), 2);
+}
+
+TEST(SimulationTest, HistoryViewSizeLast) {
+    auto time = time_t {100us};
+    auto max_history = history_t {20us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    ASSERT_THAT(view.size(), 3);
+}
+
+TEST(SimulationTest, HistoryViewSizeEmpty) {
+    auto time = time_t {10us};
+    auto max_history = history_t {20us};
+    auto history = Simulation::history_vector_t {};
+    auto last_value = false;
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    ASSERT_THAT(view.size(), 1);
+}
+
+TEST(SimulationTest, HistoryViewSizeNegative) {
+    auto time = time_t {10us};
+    auto max_history = history_t {20us};
+    auto history = Simulation::history_vector_t {5us, 7us};
+    auto last_value = false;
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    ASSERT_THAT(view.size(), 3);
+}
+
+// begin end iteration
+
+TEST(SimulationTest, HistoryViewBeginEndExact) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+    constexpr auto min_rep = ++time_t::zero();
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    auto begin = view.begin();
+    auto end = view.end();
+
+    ASSERT_THAT(view.size(), 2);
+    ASSERT_THAT(end - begin, 2);
+
+    ASSERT_THAT(begin == end, false);
+    auto value0 = *(begin++);
+    ASSERT_THAT(begin == end, false);
+    auto value1 = *(begin++);
+    ASSERT_THAT(begin == end, true);
+
+    ASSERT_THAT(value0.first_time, time_t {0us});
+    ASSERT_THAT(value0.last_time, time_t {95us} - min_rep);
+    ASSERT_THAT(value0.value, true);
+
+    ASSERT_THAT(value1.first_time, time_t {95us});
+    ASSERT_THAT(value1.last_time, time_t {100us});
+    ASSERT_THAT(value1.value, false);
+}
+
+TEST(SimulationTest, HistoryViewBeginEndFull) {
+    auto time = time_t {100us};
+    auto max_history = history_t {50us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+    constexpr auto min_rep = ++time_t::zero();
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    auto begin = view.begin();
+    auto end = view.end();
+
+    ASSERT_THAT(view.size(), 3);
+    ASSERT_THAT(end - begin, 3);
+
+    ASSERT_THAT(begin == end, false);
+    auto value0 = *(begin++);
+    ASSERT_THAT(begin == end, false);
+    auto value1 = *(begin++);
+    ASSERT_THAT(begin == end, false);
+    auto value2 = *(begin++);
+    ASSERT_THAT(begin == end, true);
+
+    ASSERT_THAT(value0.first_time, time_t {0us});
+    ASSERT_THAT(value0.last_time, time_t {90us} - min_rep);
+    ASSERT_THAT(value0.value, false);
+
+    ASSERT_THAT(value1.first_time, time_t {90us});
+    ASSERT_THAT(value1.last_time, time_t {95us} - min_rep);
+    ASSERT_THAT(value1.value, true);
+
+    ASSERT_THAT(value2.first_time, time_t {95us});
+    ASSERT_THAT(value2.last_time, time_t {100us});
+    ASSERT_THAT(value2.value, false);
+}
+
+// before
+
+TEST(SimulationTest, HistoryViewFromExact) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+    auto from = view.from(time_t {95us});
+    ASSERT_THAT(view.end() - from, 1);
+
+    auto value = *from;
+    ASSERT_THAT(value.first_time, time_t {95us});
+    ASSERT_THAT(value.last_time, time_t {100us});
+    ASSERT_THAT(value.value, false);
+}
+
+TEST(SimulationTest, HistoryViewFrom) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+    auto from = view.from(time_t {96us});
+    ASSERT_THAT(view.end() - from, 1);
+
+    auto value = *from;
+    ASSERT_THAT(value.first_time, time_t {95us});
+    ASSERT_THAT(value.last_time, time_t {100us});
+    ASSERT_THAT(value.value, false);
+}
+
+TEST(SimulationTest, HistoryViewFromSecond) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+    constexpr auto min_rep = ++time_t::zero();
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+    auto from = view.from(time_t {90us});
+    ASSERT_THAT(view.end() - from, 2);
+
+    auto value = *from;
+    ASSERT_THAT(value.first_time, time_t {0us});
+    ASSERT_THAT(value.last_time, time_t {95us} - min_rep);
+    ASSERT_THAT(value.value, true);
+}
+
+TEST(SimulationTest, HistoryViewFromSmall) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+    auto from = view.from(time_t {50us});
+    ASSERT_THAT(view.end() - from, 2);
+}
+
+// until
+
+TEST(SimulationTest, HistoryViewUntil) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+    constexpr auto min_rep = ++time_t::zero();
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    auto from = view.from(time_t {90us});
+    auto until = view.until(time_t {96us});
+    ASSERT_THAT(view.end() - from, 2);
+    ASSERT_THAT(until - from, 2);
+}
+
+TEST(SimulationTest, HistoryViewUntilExact) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+    constexpr auto min_rep = ++time_t::zero();
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    auto from = view.from(time_t {90us});
+    ASSERT_THAT(view.end() - from, 2);
+
+    ASSERT_THAT(view.until(time_t {95us}) - from, 2);
+    ASSERT_THAT(view.until(time_t {95us} - min_rep) - from, 1);
+}
+
+TEST(SimulationTest, HistoryViewFromUntilBounds) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+    constexpr auto min_rep = ++time_t::zero();
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    ASSERT_THAT(view.end() - view.begin(), 2);
+
+    ASSERT_THAT(view.from(time_t {0us}) - view.begin(), 0);
+    ASSERT_THAT(view.from(time_t {50us}) - view.begin(), 0);
+    ASSERT_THAT(view.from(time_t {99us}) - view.begin(), 1);
+    // ASSERT_THAT(view.from(time_t {150us}) - view.begin(), 2);
+
+    // ASSERT_THAT(view.from(time_t {150us}) - view.begin(), 2);
+
+    // ASSERT_THAT(view.until(time_t {99us}) - view.end(), 0);
+    // ASSERT_THAT(view.until(time_t {150us}) - view.end(), 0);
+    //  ASSERT_THAT(view.until(time_t {0us}) - view.end(), 2);
+}
+
 }  // namespace logicsim

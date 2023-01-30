@@ -249,6 +249,7 @@ class Simulation {
     static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
+    // TODO make private
     using history_vector_t = circular_buffer<time_t, 2, uint32_t>;
 
     constexpr static delay_t wire_delay_per_distance {10us};
@@ -317,7 +318,10 @@ class Simulation {
     [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
         -> const logic_small_vector_t &;
 
-    // auto input_history(Circuit::ConstElement element) const;
+    class HistoryView;
+    class HistoryIterator;
+    struct history_entry_t;
+    auto input_history(Circuit::ConstElement element) const -> HistoryView;
 
     auto get_input_history(Circuit::ConstElement element) const
         -> const history_vector_t &;
@@ -368,6 +372,85 @@ class Simulation {
     SimulationQueue queue_ {};
     bool is_initialized_ {false};
 };
+
+class Simulation::HistoryView {
+    friend Simulation::HistoryIterator;
+
+   public:
+    [[nodiscard]] explicit HistoryView() = default;
+    [[nodiscard]] explicit HistoryView(const history_vector_t &history,
+                                       time_t simulation_time, bool last_value,
+                                       history_t max_history);
+
+    [[nodiscard]] auto size() const -> std::size_t;
+    [[nodiscard]] auto ssize() const -> std::ptrdiff_t;
+
+    [[nodiscard]] auto value(time_t value) const -> bool;
+
+    [[nodiscard]] auto begin() const -> HistoryIterator;
+    [[nodiscard]] auto end() const -> HistoryIterator;
+
+    [[nodiscard]] auto from(time_t value) const -> HistoryIterator;
+    [[nodiscard]] auto until(time_t value) const -> HistoryIterator;
+
+   private:
+    auto require_history() const -> void;
+
+    [[nodiscard]] auto get_value(std::size_t history_index) const noexcept -> bool;
+    [[nodiscard]] auto get_greater_index(time_t value) const -> std::size_t;
+    [[nodiscard]] auto get_greater_equal_index(time_t value) const -> std::size_t;
+    [[nodiscard]] auto get_time(std::ptrdiff_t index,
+                                bool substract_min_rep = false) const -> time_t;
+
+   private:
+    const history_vector_t *history_ {nullptr};
+    time_t simulation_time_ {};
+    history_vector_t::internal_size_t min_index_ {};
+    bool last_value_ {};
+};
+
+struct Simulation::history_entry_t {
+    time_t first_time;
+    time_t last_time;
+    bool value;
+};
+
+class Simulation::HistoryIterator {
+   public:
+    using iterator_concept = std::forward_iterator_tag;
+    using iterator_category = std::forward_iterator_tag;
+
+    using value_type = history_entry_t;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type;
+    using reference = value_type;
+
+    [[nodiscard]] explicit HistoryIterator() = default;
+    [[nodiscard]] explicit HistoryIterator(HistoryView view, std::size_t index) noexcept;
+
+    [[nodiscard]] auto operator*() const -> value_type;
+    auto operator++() noexcept -> HistoryIterator &;
+    auto operator++(int) noexcept -> HistoryIterator;
+
+    [[nodiscard]] auto operator==(const HistoryIterator &right) const noexcept -> bool;
+    [[nodiscard]] auto operator-(const HistoryIterator &right) const noexcept
+        -> difference_type;
+
+   private:
+    HistoryView view_ {};
+    // from 0 to history.size() + 1
+    std::size_t index_ {};
+};
+}  // namespace logicsim
+
+static_assert(std::forward_iterator<logicsim::Simulation::HistoryIterator>);
+
+template <>
+inline constexpr bool std::ranges::enable_view<logicsim::Simulation::HistoryView> = true;
+
+// benchmark
+
+namespace logicsim {
 
 constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 

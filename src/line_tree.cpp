@@ -524,7 +524,7 @@ auto LineTree::SegmentSizeIterator::operator++() noexcept -> SegmentSizeIterator
 }
 
 auto LineTree::SegmentSizeIterator::operator++(int) noexcept -> SegmentSizeIterator {
-    auto tmp = *this;
+    const auto tmp = *this;
     ++(*this);
     return tmp;
 }
@@ -536,7 +536,8 @@ auto LineTree::SegmentSizeIterator::operator==(
 
 auto LineTree::SegmentSizeIterator::operator-(
     const SegmentSizeIterator& right) const noexcept -> difference_type {
-    return static_cast<difference_type>(point_index_) - right.point_index_;
+    return static_cast<difference_type>(point_index_)
+           - static_cast<difference_type>(right.point_index_);
 }
 
 //

@@ -27,6 +27,8 @@ class circular_buffer {
     class Iterator;
 
    public:
+    using internal_size_t = InternalSizeType;
+
     using size_type = std::size_t;
     using value_type = Value;
     using allocator_type = std::allocator<Value>;
@@ -47,6 +49,11 @@ class circular_buffer {
 
     explicit circular_buffer(size_type n, value_type const& t)
         : buffer_(std::max(n, RequestedMaxInline), t) {}
+
+    explicit circular_buffer(std::initializer_list<value_type> list) {
+        reserve(list.size());
+        std::ranges::copy(list, std::back_inserter(*this));
+    }
 
     [[nodiscard]] auto size() const noexcept -> size_type {
         return size_;
