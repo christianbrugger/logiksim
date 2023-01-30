@@ -762,16 +762,62 @@ TEST(SimulationTest, HistoryViewFromUntilBounds) {
 
     ASSERT_THAT(view.end() - view.begin(), 2);
 
+    ASSERT_THAT(view.from(time_t::min()) - view.begin(), 0);
+    ASSERT_THAT(view.from(time_t {-100us}) - view.begin(), 0);
     ASSERT_THAT(view.from(time_t {0us}) - view.begin(), 0);
     ASSERT_THAT(view.from(time_t {50us}) - view.begin(), 0);
     ASSERT_THAT(view.from(time_t {99us}) - view.begin(), 1);
-    // ASSERT_THAT(view.from(time_t {150us}) - view.begin(), 2);
+    ASSERT_THAT(view.from(time_t {100us}) - view.begin(), 1);
 
-    // ASSERT_THAT(view.from(time_t {150us}) - view.begin(), 2);
+    ASSERT_THAT(view.until(time_t::min()) - view.begin(), 1);
+    ASSERT_THAT(view.until(time_t {50us}) - view.begin(), 1);
+    ASSERT_THAT(view.until(time_t {100us}) - view.begin(), 2);
+}
 
-    // ASSERT_THAT(view.until(time_t {99us}) - view.end(), 0);
-    // ASSERT_THAT(view.until(time_t {150us}) - view.end(), 0);
-    //  ASSERT_THAT(view.until(time_t {0us}) - view.end(), 2);
+// value
+
+TEST(SimulationTest, HistoryViewValueFull) {
+    auto time = time_t {100us};
+    auto max_history = history_t {50us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+    constexpr auto min_rep = ++time_t::zero();
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    ASSERT_THAT(view.value(time_t::min()), false);
+    ASSERT_THAT(view.value(time_t {-100us}), false);
+    ASSERT_THAT(view.value(time_t {0us}), false);
+
+    ASSERT_THAT(view.value(time_t {90us} - min_rep), false);
+    ASSERT_THAT(view.value(time_t {90us}), true);
+
+    ASSERT_THAT(view.value(time_t {95us} - min_rep), true);
+    ASSERT_THAT(view.value(time_t {95us}), false);
+
+    ASSERT_THAT(view.value(time_t {100us}), false);
+}
+
+TEST(SimulationTest, HistoryViewValuePartialHistory) {
+    auto time = time_t {100us};
+    auto max_history = history_t {10us};
+    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto last_value = false;
+    constexpr auto min_rep = ++time_t::zero();
+
+    auto view = Simulation::HistoryView {history, time, last_value, max_history};
+
+    ASSERT_THAT(view.value(time_t::min()), true);
+    ASSERT_THAT(view.value(time_t {-100us}), true);
+    ASSERT_THAT(view.value(time_t {0us}), true);
+
+    ASSERT_THAT(view.value(time_t {90us} - min_rep), true);
+    ASSERT_THAT(view.value(time_t {90us}), true);
+
+    ASSERT_THAT(view.value(time_t {95us} - min_rep), true);
+    ASSERT_THAT(view.value(time_t {95us}), false);
+
+    ASSERT_THAT(view.value(time_t {100us}), false);
 }
 
 }  // namespace logicsim

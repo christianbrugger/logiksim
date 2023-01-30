@@ -760,11 +760,6 @@ auto Simulation::HistoryView::ssize() const -> std::ptrdiff_t {
     return history_->size() + 1 - min_index_;
 }
 
-auto Simulation::HistoryView::value(time_t value) const -> bool {
-    const auto index = get_greater_equal_index(value);
-    return get_value(index);
-}
-
 auto Simulation::HistoryView::begin() const -> HistoryIterator {
     require_history();
     return HistoryIterator {*this, min_index_};
@@ -776,14 +771,27 @@ auto Simulation::HistoryView::end() const -> HistoryIterator {
 }
 
 auto Simulation::HistoryView::from(time_t value) const -> HistoryIterator {
+    if (value > simulation_time_) [[unlikely]] {
+        throw_exception("cannot query times in the future");
+    }
     const auto index = get_greater_index(value);
-    fmt::print("from {} -> {} / {}\n", value, index, size() + min_index_);
     return HistoryIterator {*this, index};
 }
 
 auto Simulation::HistoryView::until(time_t value) const -> HistoryIterator {
+    if (value > simulation_time_) [[unlikely]] {
+        throw_exception("cannot query times in the future");
+    }
     const auto index = get_greater_index(value) + 1;
     return HistoryIterator {*this, index};
+}
+
+auto Simulation::HistoryView::value(time_t value) const -> bool {
+    if (value > simulation_time_) [[unlikely]] {
+        throw_exception("cannot query times in the future");
+    }
+    const auto index = get_greater_index(value);
+    return get_value(index);
 }
 
 auto Simulation::HistoryView::get_value(std::size_t history_index) const noexcept
@@ -808,31 +816,12 @@ auto Simulation::HistoryView::get_greater_index(time_t value) const -> std::size
     return std::max(std::size_t {min_index_}, gsl::narrow_cast<std::size_t>(index));
 }
 
-// TODO delete function
-// TODO rename
-
-// Returns the index to the first element that is greater or equal to the value,
-// or the history.size() if no such element is found.
-auto Simulation::HistoryView::get_greater_equal_index(time_t value) const -> std::size_t {
-    require_history();
-
-    const auto it = std::ranges::lower_bound(*history_, value, std::ranges::less {});
-    const auto index = it - history_->begin();
-
-    assert(index >= 0);
-    assert(index <= std::ssize(*history_));
-    assert(index == std::ssize(*history_) || history_->at(index) >= value);
-    assert(index == 0 || history_->at(index - 1) < value);
-
-    return gsl::narrow_cast<std::size_t>(index);
-}
-
 auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_min_rep) const
     -> time_t {
     require_history();
 
     if (index < min_index_) {
-        return time_t {0};
+        return time_t::zero();  // TODO use ::min instead ?
     }
     if (index >= std::ssize(*history_)) {
         return simulation_time_;

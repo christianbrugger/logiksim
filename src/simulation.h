@@ -385,20 +385,19 @@ class Simulation::HistoryView {
     [[nodiscard]] auto size() const -> std::size_t;
     [[nodiscard]] auto ssize() const -> std::ptrdiff_t;
 
-    [[nodiscard]] auto value(time_t value) const -> bool;
-
     [[nodiscard]] auto begin() const -> HistoryIterator;
     [[nodiscard]] auto end() const -> HistoryIterator;
 
     [[nodiscard]] auto from(time_t value) const -> HistoryIterator;
     [[nodiscard]] auto until(time_t value) const -> HistoryIterator;
 
+    [[nodiscard]] auto value(time_t value) const -> bool;
+
    private:
     auto require_history() const -> void;
 
     [[nodiscard]] auto get_value(std::size_t history_index) const noexcept -> bool;
     [[nodiscard]] auto get_greater_index(time_t value) const -> std::size_t;
-    [[nodiscard]] auto get_greater_equal_index(time_t value) const -> std::size_t;
     [[nodiscard]] auto get_time(std::ptrdiff_t index,
                                 bool substract_min_rep = false) const -> time_t;
 
