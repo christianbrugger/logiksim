@@ -708,10 +708,10 @@ auto Simulation::input_history(Circuit::ConstElement element) const -> HistoryVi
     };
 }
 
-auto Simulation::get_input_history(const Circuit::ConstElement element) const
-    -> const history_vector_t & {
-    return get_state(element).first_input_history;
-}
+// auto Simulation::get_input_history(const Circuit::ConstElement element) const
+//     -> const history_vector_t & {
+//     return get_state(element).first_input_history;
+// }
 
 auto Simulation::max_history(const Circuit::ConstElement element) const -> history_t {
     return get_state(element).max_history;
@@ -733,11 +733,11 @@ Simulation::HistoryView::HistoryView(const history_vector_t &history,
                                      time_t simulation_time, bool last_value,
                                      history_t max_history)
     : history_ {&history}, simulation_time_ {simulation_time}, last_value_ {last_value} {
-    // TODO remove, if slow
-    assert(std::ranges::is_sorted(history));
-    // calculate first index
+    // ascending without duplicates
+    assert(std::ranges::is_sorted(history, std::ranges::less_equal {}));
+    // calculate first valid index
     const auto first_time = simulation_time - max_history.value;
-    const auto first_index = get_greater_index(first_time);
+    const auto first_index = find_index(first_time);
     min_index_ = gsl::narrow<decltype(min_index_)>(first_index);
 
     assert(min_index_ >= 0);
@@ -774,7 +774,7 @@ auto Simulation::HistoryView::from(time_t value) const -> HistoryIterator {
     if (value > simulation_time_) [[unlikely]] {
         throw_exception("cannot query times in the future");
     }
-    const auto index = get_greater_index(value);
+    const auto index = find_index(value);
     return HistoryIterator {*this, index};
 }
 
@@ -782,7 +782,7 @@ auto Simulation::HistoryView::until(time_t value) const -> HistoryIterator {
     if (value > simulation_time_) [[unlikely]] {
         throw_exception("cannot query times in the future");
     }
-    const auto index = get_greater_index(value) + 1;
+    const auto index = find_index(value) + 1;
     return HistoryIterator {*this, index};
 }
 
@@ -790,7 +790,7 @@ auto Simulation::HistoryView::value(time_t value) const -> bool {
     if (value > simulation_time_) [[unlikely]] {
         throw_exception("cannot query times in the future");
     }
-    const auto index = get_greater_index(value);
+    const auto index = find_index(value);
     return get_value(index);
 }
 
@@ -803,19 +803,20 @@ auto Simulation::HistoryView::get_value(std::size_t history_index) const -> bool
 
 // Returns the index to the first element that is greater to the value,
 // or the history.size() if no such element is found.
-auto Simulation::HistoryView::get_greater_index(time_t value) const -> std::size_t {
+auto Simulation::HistoryView::find_index(time_t value) const -> std::size_t {
     require_history();
 
     const auto it
-        = std::ranges::lower_bound(*history_, value, std::ranges::less_equal {});
+        = std::ranges::lower_bound(history_->begin() + min_index_, history_->end(), value,
+                                   std::ranges::less_equal {});
     const auto index = it - history_->begin();
 
-    assert(index >= 0);
+    assert(index >= min_index_);
     assert(index <= std::ssize(*history_));
     assert(index == std::ssize(*history_) || history_->at(index) > value);
-    assert(index == 0 || history_->at(index - 1) <= value);
+    assert(index == min_index_ || history_->at(index - 1) <= value);
 
-    return std::max(std::size_t {min_index_}, gsl::narrow_cast<std::size_t>(index));
+    return gsl::narrow_cast<std::size_t>(index);
 }
 
 auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_min_rep) const
@@ -940,7 +941,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
         fmt::print("output_values = {}\n", fmt_join("{:b}", output_values, ""));
         for (auto element : circuit.elements()) {
             if (element.element_type() == ElementType::wire) {
-                auto &hist = simulation.get_input_history(element);
+                auto hist = simulation.input_history(element);
                 fmt::print("{} {}\n", element, hist);
             }
         }

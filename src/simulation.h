@@ -238,6 +238,8 @@ class Simulation {
     /// Represents multiple logic values
     using logic_vector_t = boost::container::vector<bool>;
 
+    using history_vector_t = circular_buffer<time_t, 2, uint32_t>;
+
     // 8 bytes still fit into a small_vector with 32 byte size.
     // using logic_small_vector_t = boost::container::small_vector<bool, 8>;
     // using con_index_small_vector_t = boost::container::small_vector<connection_size_t,
@@ -248,9 +250,6 @@ class Simulation {
     using con_index_small_vector_t = folly::small_vector<connection_size_t, 20, policy>;
     static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
-
-    // TODO make private
-    using history_vector_t = circular_buffer<time_t, 2, uint32_t>;
 
     constexpr static delay_t wire_delay_per_distance {10us};
 
@@ -270,10 +269,13 @@ class Simulation {
     [[nodiscard]] explicit Simulation(const Circuit &circuit);
     [[nodiscard]] auto circuit() const noexcept -> const Circuit &;
     [[nodiscard]] auto time() const noexcept -> time_t;
+
+    // submit custom events
     auto submit_event(Circuit::ConstInput input, time_t offset, bool value) -> void;
     auto submit_events(Circuit::ConstElement element, time_t offset,
                        logic_small_vector_t values) -> void;
 
+    // Initialize logic elements in the simulation
     auto initialize() -> void;
 
     /// @brief Run the simulation by changing the given simulations state
@@ -294,7 +296,7 @@ class Simulation {
         -> logic_small_vector_t;
     [[nodiscard]] auto input_values() const -> const logic_vector_t;
 
-    // infers the output value from the connected input value, if it exists.
+    // infers the output values
     [[nodiscard]] auto output_value(Circuit::ConstOutput output,
                                     bool raise_missing = true) const -> bool;
     [[nodiscard]] auto output_values(Circuit::ConstElement element,
@@ -311,23 +313,20 @@ class Simulation {
         -> void;
 
     // delays
-    [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> delay_t;
     auto set_output_delay(Circuit::ConstOutput output, delay_t delay) -> void;
+    [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> delay_t;
 
     // internal states
     [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
         -> const logic_small_vector_t &;
 
+    // history
     class HistoryView;
     class HistoryIterator;
     struct history_entry_t;
-    auto input_history(Circuit::ConstElement element) const -> HistoryView;
-
-    // TODO remove get_input_history method
-    auto get_input_history(Circuit::ConstElement element) const
-        -> const history_vector_t &;
-    auto max_history(Circuit::ConstElement element) const -> history_t;
     auto set_max_history(Circuit::ConstElement element, history_t max_history) -> void;
+    auto max_history(Circuit::ConstElement element) const -> history_t;
+    auto input_history(Circuit::ConstElement element) const -> HistoryView;
 
    private:
     class Timer;
@@ -375,7 +374,14 @@ class Simulation {
 };
 
 class Simulation::HistoryView {
-    friend Simulation::HistoryIterator;
+    friend HistoryIterator;
+
+   public:
+    using iterator_type = HistoryIterator;
+
+    using value_type = typename history_entry_t;
+    using pointer = typename history_entry_t;
+    using reference = typename history_entry_t;
 
    public:
     [[nodiscard]] explicit HistoryView() = default;
@@ -398,7 +404,7 @@ class Simulation::HistoryView {
     auto require_history() const -> void;
 
     [[nodiscard]] auto get_value(std::size_t history_index) const -> bool;
-    [[nodiscard]] auto get_greater_index(time_t value) const -> std::size_t;
+    [[nodiscard]] auto find_index(time_t value) const -> std::size_t;
     [[nodiscard]] auto get_time(std::ptrdiff_t index,
                                 bool substract_min_rep = false) const -> time_t;
 
@@ -415,6 +421,7 @@ struct Simulation::history_entry_t {
     bool value;
 
     auto format() const -> std::string;
+    auto operator==(const history_entry_t &other) const -> bool = default;
 };
 
 class Simulation::HistoryIterator {

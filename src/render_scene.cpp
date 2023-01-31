@@ -125,84 +125,28 @@ auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_ena
                      BLRgba32(color));
 }
 
-// Returns the index to the first element that is smaller or equal to the value,
-// or the history.size() if no such element is found.
-// History must be ordered descending.
-auto get_smaller_equal_index(const Simulation::history_vector_t& history, time_t value)
-    -> std::size_t {
-    const auto it = std::ranges::lower_bound(history, value, std::ranges::greater {});
-    const auto index = it - history.begin();
-
-    assert(index >= 0);
-    assert(index <= std::ssize(history));
-
-    assert(index == std::ssize(history) || history.at(index) <= value);
-    assert(index == 0 || history.at(index - 1) > value);
-
-    return gsl::narrow_cast<std::size_t>(index);
-}
-
-auto is_segment_enabled(std::size_t history_index, bool wire_enabled) {
-    return static_cast<bool>(history_index % 2) ^ wire_enabled;
-}
-
 auto draw_line_segment(BLContext& ctx, point2d_t p_from, point2d_t p_until,
                        time_t time_from, time_t time_until,
                        const Simulation::HistoryView& history) -> void {
     assert(time_from < time_until);
 
-    auto history_entries
-        = std::ranges::subrange(history.from(time_from), history.until(time_until));
+    const auto it_from = history.from(time_from);
+    const auto it_until = history.until(time_until);
 
-    // auto p_start = static_cast<point2d_fine_t>(p_from);
-    for (const auto& entry : history_entries) {
+    for (const auto& entry : std::ranges::subrange(it_from, it_until)) {
         const auto p_start = interpolate_line_1d(p_from, p_until, time_from, time_until,
                                                  entry.first_time);
         const auto p_end = interpolate_line_1d(p_from, p_until, time_from, time_until,
                                                entry.last_time);
         draw_line_segment(ctx, p_start, p_end, entry.value);
-
-        // p_start = p_end;
     }
-
-    /*
-    // no history
-    if (history.size() == 0 || time_end >= history.at(0)) {
-        draw_line_segment(ctx, p0, p1, wire_enabled);
-        return;
-    }
-
-    const auto idx_start = get_smaller_equal_index(history, time_start);
-    const auto idx_end = get_smaller_equal_index(history, time_end);
-
-    // single state
-    if (idx_start == idx_end) {
-        const bool value = is_segment_enabled(idx_start, wire_enabled);
-        draw_line_segment(ctx, p0, p1, value);
-        return;
-    }
-
-    // draw multiple states
-    auto p_start = static_cast<point2d_fine_t>(p0);
-    for (auto index : range(idx_start, idx_end + 1)) {
-        const auto t_end = index < history.size() ? history.at(index) : time_end;
-        const auto p_end = interpolate_line_1d(p0, p1, time_start, time_end, t_end);
-        const bool value = is_segment_enabled(index, wire_enabled);
-
-        draw_line_segment(ctx, p_start, p_end, value);
-        p_start = p_end;
-    }
-    */
 }
 
 auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) const
     -> void {
-    ctx.setStrokeWidth(1);
+    // ctx.setStrokeWidth(1);
 
-    const auto& data = get_data(element);
-
-    // const auto& history = simulation_->get_input_history(element);
-    // const bool wire_enabled = simulation_->input_value(element.input(0));
+    // TODO move to some class
     const auto to_time = [time = simulation_->time()](LineTree::length_t length_) {
         return time_t {time
                        - static_cast<int64_t>(length_)
@@ -211,7 +155,7 @@ auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) c
 
     const auto history = simulation_->input_history(element);
 
-    for (auto segment : data.line_tree.sized_segments()) {
+    for (auto segment : get_data(element).line_tree.sized_segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0,
                           to_time(segment.p1_length), to_time(segment.p0_length),
                           history);

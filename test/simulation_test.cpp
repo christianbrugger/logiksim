@@ -349,7 +349,11 @@ TEST(SimulationTest, TestInputHistory) {
     simulation.initialize();
     simulation.run();
     ASSERT_EQ(simulation.time(), time_t {0us});
-    ASSERT_THAT(simulation.get_input_history(wire), testing::ElementsAre());
+
+    using entry_t = Simulation::history_entry_t;
+    constexpr auto min_rep = ++time_t::zero();
+    ASSERT_THAT(simulation.input_history(wire),
+                testing::ElementsAre(entry_t {time_t::min(), 0us, false}));
 
     simulation.submit_event(wire.input(0), 10us, true);
     simulation.submit_event(wire.input(0), 20us, true);  // shall be ignored
@@ -359,12 +363,17 @@ TEST(SimulationTest, TestInputHistory) {
 
     simulation.run(time_t {100us});
     ASSERT_EQ(simulation.time(), time_t {100us});
-    ASSERT_THAT(simulation.get_input_history(wire),
-                testing::ElementsAre(60us, 40us, 10us));
+    ASSERT_THAT(simulation.input_history(wire),
+                testing::ElementsAre(entry_t {time_t::min(), 10us - min_rep, false},
+                                     entry_t {10us, 40us - min_rep, true},
+                                     entry_t {40us, 60us - min_rep, false},
+                                     entry_t {60us, 100us, true}));
 
     simulation.run(time_t {100us});
     ASSERT_EQ(simulation.time(), time_t {200us});
-    ASSERT_THAT(simulation.get_input_history(wire), testing::ElementsAre(180us));
+    ASSERT_THAT(simulation.input_history(wire),
+                testing::ElementsAre(entry_t {time_t::min(), 180us - min_rep, true},
+                                     entry_t {180us, 200us, false}));
 }
 
 TEST(SimulationTest, TestClockGenerator) {
