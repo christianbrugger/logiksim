@@ -48,19 +48,18 @@ auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
     return v0 + (v1 - v0) * ratio;
 }
 
-auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t_start, time_t t_end,
+auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t0, time_t t1,
                          time_t t_select) -> point2d_fine_t {
-    assert(t_start >= t_end);
+    assert(t0 < t1);
 
-    if (t_select >= t_start) {
+    if (t_select <= t0) {
         return static_cast<point2d_fine_t>(p0);
     }
-    if (t_select <= t_end) {
+    if (t_select >= t1) {
         return static_cast<point2d_fine_t>(p1);
     }
 
-    const double alpha
-        = static_cast<double>((t_start - t_select).count()) / (t_start - t_end).count();
+    const double alpha = static_cast<double>((t_select - t0).count()) / (t1 - t0).count();
 
     if (is_horizontal(line2d_t {p0, p1})) {
         return point2d_fine_t {interpolate_1d(p0.x, p1.x, alpha),
@@ -147,9 +146,26 @@ auto is_segment_enabled(std::size_t history_index, bool wire_enabled) {
     return static_cast<bool>(history_index % 2) ^ wire_enabled;
 }
 
-auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_start,
-                       time_t time_end, const Simulation::history_vector_t& history,
-                       bool wire_enabled) -> void {
+auto draw_line_segment(BLContext& ctx, point2d_t p_from, point2d_t p_until,
+                       time_t time_from, time_t time_until,
+                       const Simulation::HistoryView& history) -> void {
+    assert(time_from < time_until);
+
+    auto history_entries
+        = std::ranges::subrange(history.from(time_from), history.until(time_until));
+
+    // auto p_start = static_cast<point2d_fine_t>(p_from);
+    for (const auto& entry : history_entries) {
+        const auto p_start = interpolate_line_1d(p_from, p_until, time_from, time_until,
+                                                 entry.first_time);
+        const auto p_end = interpolate_line_1d(p_from, p_until, time_from, time_until,
+                                               entry.last_time);
+        draw_line_segment(ctx, p_start, p_end, entry.value);
+
+        // p_start = p_end;
+    }
+
+    /*
     // no history
     if (history.size() == 0 || time_end >= history.at(0)) {
         draw_line_segment(ctx, p0, p1, wire_enabled);
@@ -176,6 +192,7 @@ auto draw_line_segment(BLContext& ctx, point2d_t p0, point2d_t p1, time_t time_s
         draw_line_segment(ctx, p_start, p_end, value);
         p_start = p_end;
     }
+    */
 }
 
 auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) const
@@ -184,22 +201,20 @@ auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) c
 
     const auto& data = get_data(element);
 
-    if (data.points.size() < 2) {
-        return;
-    }
-
-    const auto& history = simulation_->get_input_history(element);
-    const bool wire_enabled = simulation_->input_value(element.input(0));
+    // const auto& history = simulation_->get_input_history(element);
+    // const bool wire_enabled = simulation_->input_value(element.input(0));
     const auto to_time = [time = simulation_->time()](LineTree::length_t length_) {
         return time_t {time
                        - static_cast<int64_t>(length_)
                              * Simulation::wire_delay_per_distance.value};
     };
 
+    const auto history = simulation_->input_history(element);
+
     for (auto segment : data.line_tree.sized_segments()) {
-        draw_line_segment(ctx, segment.line.p0, segment.line.p1,
-                          to_time(segment.p0_length), to_time(segment.p1_length), history,
-                          wire_enabled);
+        draw_line_segment(ctx, segment.line.p1, segment.line.p0,
+                          to_time(segment.p1_length), to_time(segment.p0_length),
+                          history);
     }
 }
 

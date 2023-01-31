@@ -397,7 +397,7 @@ class Simulation::HistoryView {
    private:
     auto require_history() const -> void;
 
-    [[nodiscard]] auto get_value(std::size_t history_index) const noexcept -> bool;
+    [[nodiscard]] auto get_value(std::size_t history_index) const -> bool;
     [[nodiscard]] auto get_greater_index(time_t value) const -> std::size_t;
     [[nodiscard]] auto get_time(std::ptrdiff_t index,
                                 bool substract_min_rep = false) const -> time_t;
@@ -413,6 +413,8 @@ struct Simulation::history_entry_t {
     time_t first_time;
     time_t last_time;
     bool value;
+
+    auto format() const -> std::string;
 };
 
 class Simulation::HistoryIterator {
@@ -447,6 +449,18 @@ static_assert(std::forward_iterator<logicsim::Simulation::HistoryIterator>);
 
 template <>
 inline constexpr bool std::ranges::enable_view<logicsim::Simulation::HistoryView> = true;
+
+template <>
+struct fmt::formatter<logicsim::Simulation::history_entry_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::Simulation::history_entry_t &obj,
+                       fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
 
 // benchmark
 

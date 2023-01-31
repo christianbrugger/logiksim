@@ -137,9 +137,9 @@ class WidgetRenderer : public QWidget {
         const auto end_time = time_t {end_time_ns * 1ns};
         simulation.run(end_time);
         // simulation.run(time_t {125us});
-        // simulation.run(time_t {130us});
+        //  simulation.run(time_t {130us});
         // simulation.run(time_t {600us});
-        // timer_.stop();
+        //  timer_.stop();
 
         auto scene = SimulationScene(simulation);
         scene.set_position(elem0, point2d_t {5, 3});

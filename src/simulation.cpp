@@ -569,7 +569,7 @@ auto Simulation::record_input_history(const Circuit::ConstInput input,
         return;
     }
     auto &history = state.first_input_history;
-    if (!history.empty() && history.front() == time()) {
+    if (!history.empty() && history.back() == time()) {
         throw_exception("Cannot have two transitions recorded at the same time.");
     }
 
@@ -577,12 +577,12 @@ auto Simulation::record_input_history(const Circuit::ConstInput input,
     clean_history(history, state.max_history);
 
     // add new entry
-    history.push_front(time());
+    history.push_back(time());
 }
 
 auto Simulation::clean_history(history_vector_t &history, history_t max_history) -> void {
-    while (!history.empty() && history.back() < time() - max_history.value) {
-        history.pop_back();
+    while (!history.empty() && history.front() < time() - max_history.value) {
+        history.pop_front();
     }
 }
 
@@ -794,9 +794,11 @@ auto Simulation::HistoryView::value(time_t value) const -> bool {
     return get_value(index);
 }
 
-auto Simulation::HistoryView::get_value(std::size_t history_index) const noexcept
-    -> bool {
-    return static_cast<bool>(history_index % 2) ^ last_value_;
+auto Simulation::HistoryView::get_value(std::size_t history_index) const -> bool {
+    require_history();
+
+    auto number = history_->size() - history_index;
+    return static_cast<bool>(number % 2) ^ last_value_;
 }
 
 // Returns the index to the first element that is greater to the value,
@@ -828,13 +830,17 @@ auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_min_
     }
     const auto result = history_->at(index);
 
-    constexpr auto min_representation = ++time_t::zero();
+    constexpr static auto min_representation = ++time_t::zero();
     return substract_min_rep ? result - min_representation : result;
 }
 
 //
 // History Iterator
 //
+
+auto Simulation::history_entry_t::format() const -> std::string {
+    return fmt::format("HistoryEntry({}, {}, {})", first_time, last_time, value);
+}
 
 Simulation::HistoryIterator::HistoryIterator(HistoryView view, std::size_t index) noexcept
     : view_ {std::move(view)}, index_ {index} {}
