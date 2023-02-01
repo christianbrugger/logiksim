@@ -342,22 +342,49 @@ auto create_random_line_tree(connection_size_t n_outputs,
     }
 }
 
+namespace {
+
+template <typename T>
+using UDist = boost::random::uniform_int_distribution<T>;
+
 template <std::uniform_random_bit_generator G>
-auto create_random_line_tree_segment(point2d_t previous, point2d_t start_point,
-                                     const RenderBenchmarkConfig& config, G& rng)
-    -> LineTree {
-    auto segment_count_dist = boost::random::uniform_int_distribution<int> {
-        config.min_line_segments, config.max_line_segments};
+auto new_line_point(point2d_t origin, bool horizontal,
+                    const RenderBenchmarkConfig& config, G& rng) -> point2d_t {
+    if (horizontal) {
+        return point2d_t {random_segment_value(origin.x, config, rng), origin.y};
+    }
+    return point2d_t {origin.x, random_segment_value(origin.y, config, rng)};
+}
+
+template <std::uniform_random_bit_generator G>
+auto new_line_point(point2d_t origin, point2d_t previous,
+                    const RenderBenchmarkConfig& config, G& rng) -> point2d_t {
+    return new_line_point(origin, is_vertical(line2d_t {previous, origin}), config, rng);
+}
+
+// pick random point on line
+template <std::uniform_random_bit_generator G>
+auto pick_line_point(line2d_t line, G& rng) -> point2d_t {
+    line = order_points(line);
+    return point2d_t {UDist<grid_t> {line.p0.x, line.p1.x}(rng),
+                      UDist<grid_t> {line.p0.y, line.p1.y}(rng)};
+}
+
+template <std::uniform_random_bit_generator G>
+auto create_line_tree_segment(point2d_t start_point, bool horizontal,
+                              const RenderBenchmarkConfig& config, G& rng) -> LineTree {
+    auto segment_count_dist
+        = UDist<int> {config.min_line_segments, config.max_line_segments};
     auto n_segments = segment_count_dist(rng);
 
     auto line_tree = std::optional<LineTree> {};
     do {
         auto points = std::vector<point2d_t> {
             start_point,
-            random_line_point(previous, start_point, config, rng),
+            new_line_point(start_point, horizontal, config, rng),
         };
         std::generate_n(std::back_inserter(points), n_segments - 1, [&]() {
-            return random_line_point(*(points.end() - 2), points.back(), config, rng);
+            return new_line_point(points.back(), *(points.end() - 2), config, rng);
         });
 
         line_tree = LineTree::from_points(points);
@@ -368,19 +395,38 @@ auto create_random_line_tree_segment(point2d_t previous, point2d_t start_point,
 }
 
 template <std::uniform_random_bit_generator G>
+auto create_first_line_tree_segment(const RenderBenchmarkConfig& config, G& rng)
+    -> LineTree {
+    const auto grid_dist = UDist<grid_t> {config.min_grid, config.max_grid};
+    const auto p0 = point2d_t {grid_dist(rng), grid_dist(rng)};
+    const auto is_horizontal = UDist<int> {0, 1}(rng);
+    return create_line_tree_segment(p0, is_horizontal, config, rng);
+}
+
+template <std::uniform_random_bit_generator G>
 auto create_random_line_tree_2(connection_size_t n_outputs,
                                const RenderBenchmarkConfig& config, G& rng) -> LineTree {
-    auto grid_dist = boost::random::uniform_int_distribution<grid_t> {config.min_grid,
-                                                                      config.max_grid};
-    auto p0 = point2d_t {grid_dist(rng), grid_dist(rng)};
+    auto line_tree = create_first_line_tree_segment(config, rng);
 
-    for (auto _ [[maybe_unused]] : range(n_outputs)) {
-        return create_random_line_tree_segment(p0, p0, config, rng);
+    for (auto _ [[maybe_unused]] : range(n_outputs - 1)) {
+        auto new_tree = std::optional<LineTree> {};
+        // TODO flatten loop
+        do {
+            const auto segment_index = UDist<int> {0, line_tree.segment_count() - 1}(rng);
+            const auto segment = line_tree.segment(segment_index);
+            const auto origin = pick_line_point(segment, rng);
 
-        // add_random_line(points, indices, n_points, start_index, get_next_point);
+            const auto sub_tree
+                = create_line_tree_segment(origin, is_vertical(segment), config, rng);
+            new_tree = merge({line_tree, sub_tree});
+        } while (!new_tree.has_value());
+
+        line_tree = std::move(new_tree.value());
     }
-    return LineTree {};
+    return line_tree;
 }
+
+}  // namespace
 
 auto calculate_delay(const std::vector<point2d_t>& points,
                      const std::vector<wire_index_t>& indices, wire_index_t output_index)
@@ -460,8 +506,8 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
         }
     }
 
-    auto lt = create_random_line_tree_2(2, config, rng);
-    fmt::print("ln\n");
+    auto lt = create_random_line_tree_2(1, config, rng);
+    fmt::print("ln = {}\n", lt);
 
     // convert to new line tree
     {

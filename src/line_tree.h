@@ -51,7 +51,7 @@ class InvalidLineTreeException : public std::exception {
 
 class LineTree;
 
-using line_tree_vector_t = std::vector<std::reference_wrapper<LineTree>>;
+using line_tree_vector_t = std::vector<std::reference_wrapper<const LineTree>>;
 
 auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root = {})
     -> std::optional<LineTree>;
@@ -108,6 +108,8 @@ class LineTree {
     [[nodiscard]] auto output_count() const -> int;
     [[nodiscard]] auto output_delays() const -> std::vector<length_t>;
 
+    [[nodiscard]] auto format() const -> std::string;
+
    private:
     struct backtrack_memory_t;
     class TreeBuilderVisitor;
@@ -116,7 +118,7 @@ class LineTree {
     auto construct_impl(I begin, S end) -> void;
     auto initialize_indices() -> void;
 
-    [[nodiscard]] auto validate_points_or_throw() const -> void;
+    auto validate_points_or_throw() const -> void;
     [[nodiscard]] auto validate_points_error() const
         -> std::optional<InvalidLineTreeException>;
     [[nodiscard]] auto validate_horizontal_follows_vertical() const -> bool;
@@ -290,6 +292,17 @@ struct fmt::formatter<logicsim::LineTree::sized_line2d_t> {
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "SizedLine({}, {}, {}, {})", obj.line.p0,
                               obj.line.p1, obj.p0_length, obj.p1_length);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::LineTree> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::LineTree &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 

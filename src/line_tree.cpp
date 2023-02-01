@@ -333,6 +333,10 @@ auto LineTree::output_delays() const -> std::vector<length_t> {
     return result;
 }
 
+auto LineTree::format() const -> std::string {
+    return fmt::format("LineTree({}, {}, {})", points_, indices_, lengths_);
+}
+
 // internal
 
 auto LineTree::starts_new_subtree(int index) const -> bool {
