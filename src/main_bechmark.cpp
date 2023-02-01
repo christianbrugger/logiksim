@@ -63,12 +63,14 @@ static void BM_Simulation_0(benchmark::State& state) {
 
 BENCHMARK(BM_Simulation_0);  // NOLINT
 
-static void BM_RenderScene_0(benchmark::State& state) {
+static void BM_RenderScene_Old(benchmark::State& state) {
+    logicsim::BenchmarkScene scene;
+    auto scene_count = logicsim::fill_line_scene(scene, 100, false);
+
     int64_t count = 0;
     for ([[maybe_unused]] auto _ : state) {
         state.PauseTiming();
-        logicsim::BenchmarkScene scene;
-        count += logicsim::fill_line_scene(scene, 100);
+        count += scene_count;
 
         benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();
@@ -92,6 +94,39 @@ static void BM_RenderScene_0(benchmark::State& state) {
         = benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
 }
 
-BENCHMARK(BM_RenderScene_0);  // NOLINT
+BENCHMARK(BM_RenderScene_Old);  // NOLINT
+
+static void BM_RenderScene_New(benchmark::State& state) {
+    logicsim::BenchmarkScene scene;
+    auto scene_count = logicsim::fill_line_scene(scene, 100, true);
+
+    int64_t count = 0;
+    for ([[maybe_unused]] auto _ : state) {
+        state.PauseTiming();
+        count += scene_count;
+
+        benchmark::DoNotOptimize(count);
+        benchmark::ClobberMemory();
+
+        // render image
+        BLImage img(1200, 1200, BL_FORMAT_PRGB32);
+        BLContext ctx(img);
+        ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
+        ctx.fillAll();
+        ctx.flush(BL_CONTEXT_FLUSH_SYNC);
+
+        state.ResumeTiming();
+
+        scene.renderer.render_scene(ctx, false);
+        ctx.end();
+
+        benchmark::DoNotOptimize(img);
+        benchmark::ClobberMemory();
+    }
+    state.counters["Events"]
+        = benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(BM_RenderScene_New);  // NOLINT
 
 BENCHMARK_MAIN();  // NOLINT

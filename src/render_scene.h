@@ -26,8 +26,10 @@ class SimulationScene {
     auto render_scene(BLContext& ctx, bool render_background = true) const -> void;
 
     auto set_position(Circuit::ConstElement element, point2d_t position) -> void;
+    // TODO remove
     auto set_line_tree(Circuit::ConstElement element, std::vector<point2d_t> points,
                        std::vector<wire_index_t> indices) -> void;
+    auto set_line_tree(Circuit::ConstElement element, LineTree&& line_tree) -> void;
 
    private:
     using policy = folly::small_vector_policy::policy_size_type<uint16_t>;
@@ -69,7 +71,9 @@ struct BenchmarkScene {
     SimulationScene renderer {simulation};
 };
 
-auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100) -> int64_t;
+// TODO remove use_new
+auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100, bool use_new = true)
+    -> int64_t;
 
 auto benchmark_line_renderer(int n_lines = 100, bool save_image = true) -> int64_t;
 

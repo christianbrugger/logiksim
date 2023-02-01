@@ -681,6 +681,16 @@ auto Simulation::set_output_delay(const Circuit::ConstOutput output, const delay
     get_state(output).output_delays.at(output.output_index()) = delay;
 }
 
+auto Simulation::set_output_delays(Circuit::ConstElement element,
+                                   std::vector<delay_t> delays) -> void {
+    if (element.output_count() != std::ssize(delays)) [[unlikely]] {
+        throw_exception("Need as many delays as outputs in the vector.");
+    }
+    for (auto index : range(element.output_count())) {
+        set_output_delay(element.output(index), delays[index]);
+    }
+}
+
 auto Simulation::internal_state(Circuit::ConstElement element) const
     -> const logic_small_vector_t & {
     return get_state(element).internal_state;

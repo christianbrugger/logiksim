@@ -261,6 +261,25 @@ auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<L
     return std::nullopt;
 }
 
+auto LineTree::swap(LineTree& other) noexcept -> void {
+    points_.swap(other.points_);
+    indices_.swap(other.indices_);
+    lengths_.swap(other.lengths_);
+}
+
+auto swap(LineTree& a, LineTree& b) noexcept -> void {
+    a.swap(b);
+}
+
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::LineTree& a, logicsim::LineTree& b) noexcept -> void {
+    a.swap(b);
+}
+
+namespace logicsim {
+
 auto LineTree::reroot(const point2d_t new_root) const -> std::optional<LineTree> {
     if (new_root == input_point()) {
         return *this;

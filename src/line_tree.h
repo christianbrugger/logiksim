@@ -94,6 +94,8 @@ class LineTree {
     [[nodiscard]] static auto from_graph(point2d_t root, const Graph &graph)
         -> std::optional<LineTree>;
 
+    auto swap(LineTree &other) noexcept -> void;
+
     // return tree with new root, if possible
     [[nodiscard]] auto reroot(const point2d_t new_root) const -> std::optional<LineTree>;
 
@@ -146,6 +148,15 @@ class LineTree {
                       length_vector_t lengths)
         : points_ {points}, indices_ {indices}, lengths_ {lengths} {};
 };
+
+auto swap(LineTree &a, LineTree &b) noexcept -> void;
+
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::LineTree &a, logicsim::LineTree &b) noexcept -> void;
+
+namespace logicsim {
 
 class LineTree::SegmentIterator {
    public:

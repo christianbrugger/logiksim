@@ -10,6 +10,7 @@
 #include <boost/random/uniform_int_distribution.hpp>
 
 #include <algorithm>
+#include <numeric>
 #include <utility>
 
 namespace logicsim {
@@ -29,6 +30,11 @@ auto SimulationScene::set_line_tree(Circuit::ConstElement element,
     // this method is potentially very slow
     get_data(element).points.assign(points.begin(), points.end());
     get_data(element).indices.assign(indices.begin(), indices.end());
+}
+
+auto SimulationScene::set_line_tree(Circuit::ConstElement element, LineTree&& line_tree)
+    -> void {
+    get_data(element).line_tree = std::move(line_tree);
 }
 
 auto SimulationScene::get_data(Circuit::ConstElement element) -> DrawData& {
@@ -408,7 +414,7 @@ auto create_random_line_tree_2(connection_size_t n_outputs,
                                const RenderBenchmarkConfig& config, G& rng) -> LineTree {
     auto line_tree = create_first_line_tree_segment(config, rng);
 
-    for (auto _ [[maybe_unused]] : range(n_outputs - 1)) {
+    while (line_tree.output_count() < n_outputs) {
         auto new_tree = std::optional<LineTree> {};
         // TODO flatten loop
         do {
@@ -423,7 +429,14 @@ auto create_random_line_tree_2(connection_size_t n_outputs,
 
         line_tree = std::move(new_tree.value());
     }
+
     return line_tree;
+}
+
+auto calculate_tree_length(const LineTree& line_tree) -> int {
+    return std::transform_reduce(line_tree.segments().begin(), line_tree.segments().end(),
+                                 0, std::plus {},
+                                 [](line2d_t line) { return distance_1d(line); });
 }
 
 }  // namespace
@@ -460,7 +473,7 @@ auto calculate_tree_length(std::vector<point2d_t> points,
     return res;
 }
 
-auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
+auto fill_line_scene(BenchmarkScene& scene, int n_lines, bool use_new) -> int64_t {
     auto rng = boost::random::mt19937 {0};
     const auto config = RenderBenchmarkConfig {};
     auto tree_length_sum = int64_t {0};
@@ -481,37 +494,37 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     // auto renderer = SimulationScene {simulation};
 
     // add line trees
-    for (auto element : circuit.elements()) {
-        if (element.element_type() == ElementType::wire) {
-            auto [points, indices, output_indices]
-                = create_random_line_tree(element.output_count(), config, rng);
-            renderer.set_line_tree(element, points, indices);
+    {
+        auto timer = Timer {"Old LineTree Generation", Timer::Unit::ms, 3};
+        for (auto element : circuit.elements()) {
+            if (element.element_type() == ElementType::wire) {
+                auto [points, indices, output_indices]
+                    = create_random_line_tree(element.output_count(), config, rng);
+                renderer.set_line_tree(element, points, indices);
 
-            // set delays
-            auto delays = std::vector<delay_t> {};
-            for (auto output_index : output_indices) {
-                auto delay = calculate_delay(points, indices, output_index);
+                // set delays
+                auto delays = std::vector<delay_t> {};
+                for (auto output_index : output_indices) {
+                    auto delay = calculate_delay(points, indices, output_index);
 
-                auto output
-                    = element.output(gsl::narrow<connection_size_t>(std::size(delays)));
-                simulation.set_output_delay(output, delay);
+                    auto output = element.output(
+                        gsl::narrow<connection_size_t>(std::size(delays)));
+                    simulation.set_output_delay(output, delay);
 
-                delays.push_back(delay);
+                    delays.push_back(delay);
+                }
+
+                auto tree_max_delay = std::ranges::max(delays);
+                simulation.set_max_history(element, history_t {tree_max_delay.value});
+
+                tree_length_sum += calculate_tree_length(points, indices);
             }
-
-            auto tree_max_delay = std::ranges::max(delays);
-            simulation.set_max_history(element, history_t {tree_max_delay.value});
-
-            tree_length_sum += calculate_tree_length(points, indices);
         }
     }
 
-    auto lt = create_random_line_tree_2(1, config, rng);
-    fmt::print("ln = {}\n", lt);
-
     // convert to new line tree
     {
-        // auto timer = Timer {"Convert", Timer::Unit::ms, 3};
+        auto timer = Timer {"Old LineTree Convertion", Timer::Unit::ms, 3};
         for (auto element : circuit.elements()) {
             if (element.element_type() == ElementType::wire) {
                 auto& data = renderer.get_data(element);
@@ -535,6 +548,34 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
                 indices.emplace(indices.begin(), 0);
 
                 data.line_tree = LineTree {data.points, indices, lengths_reduced};
+            }
+        }
+    }
+
+    if (use_new) {
+        auto timer = Timer {"New LineTree Generation", Timer::Unit::ms, 3};
+        tree_length_sum = 0;
+
+        for (auto element : circuit.elements()) {
+            if (element.element_type() == ElementType::wire) {
+                auto line_tree
+                    = create_random_line_tree_2(element.output_count(), config, rng);
+                // fmt::print("ln = {}\n", line_tree);
+
+                // set delays
+                auto lengths = line_tree.output_delays();
+                assert(lengths.size() == element.output_count());
+                auto delays = transform_to_vector(lengths, [](grid_t length) {
+                    return delay_t {Simulation::wire_delay_per_distance.value * length};
+                });
+                simulation.set_output_delays(element, delays);
+
+                auto tree_max_delay = std::ranges::max(delays);
+                simulation.set_max_history(element, history_t {tree_max_delay.value});
+
+                tree_length_sum += calculate_tree_length(line_tree);
+
+                renderer.set_line_tree(element, std::move(line_tree));
             }
         }
     }
@@ -571,7 +612,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
 
     // run simulation
     {
-        // auto timer = Timer {"Simulation", Timer::Unit::ms, 3};
+        auto timer = Timer {"Simulation", Timer::Unit::ms, 3};
         simulation.run(max_time);
     }
 

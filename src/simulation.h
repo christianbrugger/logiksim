@@ -314,6 +314,8 @@ class Simulation {
 
     // delays
     auto set_output_delay(Circuit::ConstOutput output, delay_t delay) -> void;
+    auto set_output_delays(Circuit::ConstElement element, std::vector<delay_t> delays)
+        -> void;
     [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> delay_t;
 
     // internal states
