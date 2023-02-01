@@ -379,9 +379,9 @@ class Simulation::HistoryView {
    public:
     using iterator_type = HistoryIterator;
 
-    using value_type = typename history_entry_t;
-    using pointer = typename history_entry_t;
-    using reference = typename history_entry_t;
+    using value_type = history_entry_t;
+    using pointer = history_entry_t;
+    using reference = history_entry_t;
 
    public:
     [[nodiscard]] explicit HistoryView() = default;

@@ -200,31 +200,11 @@ auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root)
 //
 
 LineTree::LineTree(std::initializer_list<point2d_t> points)
-    : points_ {points.begin(), points.end()} {
-    if (std::size(points) == 1) [[unlikely]] {
-        throw_invalid_line_tree_exception("A line tree with one point is invalid.");
-    }
-    if (std::size(points) == 0) {
-        return;
-    }
+    : LineTree {points.begin(), points.end()} {}
 
-    // indices point to previous point for line
-    indices_.resize(std::size(points) - 1);
-    std::iota(indices_.begin(), indices_.end(), 0);
-
-    if (!validate_segments_horizontal_or_vertical()) [[unlikely]] {
-        throw_invalid_line_tree_exception(
-            "Each line segments needs to be horizontal or vertical.");
-    }
-    if (!validate_horizontal_follows_vertical()) [[unlikely]] {
-        throw_invalid_line_tree_exception(
-            "Each horizontal segments needs to be followed by a vertical "
-            "and vice versa.");
-    }
-    if (!validate_no_internal_collisions()) [[unlikely]] {
-        throw_invalid_line_tree_exception(
-            "Lines are not allowed to collide with each other in the graph.");
-    }
+auto LineTree::from_points(std::initializer_list<point2d_t> points)
+    -> std::optional<LineTree> {
+    return LineTree::from_points(points.begin(), points.end());
 }
 
 class LineTree::TreeBuilderVisitor {
@@ -362,6 +342,44 @@ auto LineTree::starts_new_subtree(int index) const -> bool {
     return indices_.at(index) != index;
 }
 
+auto LineTree::initialize_indices() -> void {
+    if (points_.size() <= 1) {
+        return;
+    }
+
+    // point to previous points for each segment
+    indices_.resize(points_.size() - 1);
+    std::iota(indices_.begin(), indices_.end(), 0);
+}
+
+auto LineTree::validate_points_or_throw() const -> void {
+    if (auto error = validate_points_error(); error.has_value()) {
+        throw std::move(error.value());
+    }
+}
+
+auto LineTree::validate_points_error() const -> std::optional<InvalidLineTreeException> {
+    using make_result = std::optional<InvalidLineTreeException>;
+
+    if (points_.size() == 1) {
+        return make_result {"A line tree with one point is invalid."};
+    }
+
+    if (!validate_segments_horizontal_or_vertical()) {
+        return make_result {"Each line segments needs to be horizontal or vertical."};
+    }
+    if (!validate_horizontal_follows_vertical()) {
+        return make_result {
+            "Each horizontal segments needs to be followed by a vertical "
+            "and vice versa."};
+    }
+    if (!validate_no_internal_collisions()) {
+        return make_result {
+            "Lines are not allowed to collide with each other in the graph."};
+    }
+    return std::nullopt;
+}
+
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
     return std::ranges::all_of(segments(), is_orthogonal);
 }
@@ -392,6 +410,7 @@ auto LineTree::validate_no_internal_collisions() const -> bool {
         return line_points_colliding(*it1, *it2);
     };
 
+    // TODO why do we need custom here?
     return !has_duplicates_quadratic_custom(segments().begin(), segments().end(),
                                             are_colliding);
 }

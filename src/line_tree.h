@@ -13,6 +13,17 @@
 
 namespace logicsim {
 
+class InvalidLineTreeException : public std::exception {
+   public:
+    InvalidLineTreeException(const char *message) noexcept;
+    auto what() const noexcept -> const char *;
+
+   private:
+    const char *message_;
+};
+
+[[noreturn]] auto throw_invalid_line_tree_exception(const char *message) -> void;
+
 //
 // TODO:
 //  * position of connector dots
@@ -65,6 +76,21 @@ class LineTree {
     explicit LineTree() = default;
     explicit LineTree(std::initializer_list<point2d_t> points);
 
+    template <std::ranges::forward_range R>
+    explicit LineTree(R &&r);
+
+    template <std::input_iterator I, std::sentinel_for<I> S>
+    explicit LineTree(I begin, S end);
+
+    [[nodiscard]] static auto from_points(std::initializer_list<point2d_t> points)
+        -> std::optional<LineTree>;
+
+    template <std::ranges::forward_range R>
+    [[nodiscard]] static auto from_points(R &&r) -> std::optional<LineTree>;
+
+    template <std::input_iterator I, std::sentinel_for<I> S>
+    [[nodiscard]] static auto from_points(I begin, S end) -> std::optional<LineTree>;
+
     [[nodiscard]] static auto from_graph(point2d_t root, const Graph &graph)
         -> std::optional<LineTree>;
 
@@ -86,6 +112,13 @@ class LineTree {
     struct backtrack_memory_t;
     class TreeBuilderVisitor;
 
+    template <std::input_iterator I, std::sentinel_for<I> S>
+    auto construct_impl(I begin, S end) -> void;
+    auto initialize_indices() -> void;
+
+    [[nodiscard]] auto validate_points_or_throw() const -> void;
+    [[nodiscard]] auto validate_points_error() const
+        -> std::optional<InvalidLineTreeException>;
     [[nodiscard]] auto validate_horizontal_follows_vertical() const -> bool;
     [[nodiscard]] auto validate_segments_horizontal_or_vertical() const -> bool;
     [[nodiscard]] auto validate_no_internal_collisions() const -> bool;
@@ -110,17 +143,6 @@ class LineTree {
     explicit LineTree(point_vector_t points, index_vector_t indices,
                       length_vector_t lengths)
         : points_ {points}, indices_ {indices}, lengths_ {lengths} {};
-};
-
-[[noreturn]] auto throw_invalid_line_tree_exception(const char *message) -> void;
-
-class InvalidLineTreeException : public std::exception {
-   public:
-    InvalidLineTreeException(const char *message) noexcept;
-    auto what() const noexcept -> const char *;
-
-   private:
-    const char *message_;
 };
 
 class LineTree::SegmentIterator {
@@ -270,5 +292,45 @@ struct fmt::formatter<logicsim::LineTree::sized_line2d_t> {
                               obj.line.p1, obj.p0_length, obj.p1_length);
     }
 };
+
+//
+// Implementation
+//
+
+namespace logicsim {
+
+template <std::ranges::forward_range R>
+LineTree::LineTree(R &&r) : LineTree {std::ranges::begin(r), std::ranges::end(r)} {}
+
+template <std::input_iterator I, std::sentinel_for<I> S>
+LineTree::LineTree(I begin, S end) {
+    construct_impl(begin, end);
+    validate_points_or_throw();
+}
+
+template <std::input_iterator I, std::sentinel_for<I> S>
+auto LineTree::construct_impl(I begin, S end) -> void {
+    points_ = point_vector_t {begin, end};
+    initialize_indices();
+}
+
+template <std::ranges::forward_range R>
+auto LineTree::from_points(R &&r) -> std::optional<LineTree> {
+    return LineTree::from_points(std::ranges::begin(r), std::ranges::end(r));
+}
+
+template <std::input_iterator I, std::sentinel_for<I> S>
+auto LineTree::from_points(I begin, S end) -> std::optional<LineTree> {
+    auto line_tree = std::optional<LineTree> {LineTree {}};
+    line_tree->construct_impl(begin, end);
+
+    if (line_tree->validate_points_error().has_value()) {
+        return std::nullopt;
+    }
+
+    return line_tree;
+}
+
+}  // namespace logicsim
 
 #endif

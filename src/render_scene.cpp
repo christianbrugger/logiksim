@@ -82,32 +82,30 @@ auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> voi
 
     auto* array = static_cast<uint32_t*>(data.pixelData);
     if (line.x0 == line.x1) {
+        auto x = static_cast<int>(std::round(line.x0));
         auto y0 = static_cast<int>(std::round(line.y0));
         auto y1 = static_cast<int>(std::round(line.y1));
 
         if (y0 > y1) {
-            auto y2 = y0;
-            y0 = y1;
-            y1 = y2;
+            std::swap(y0, y1);
         }
 
+        int w = image.width();
         for (auto y : range(y0, y1 + 1)) {
-            array[static_cast<int>(std::round(line.x0)) + image.width() * y]
-                = color.value;
+            array[x + w * y] = color.value;
         }
     } else {
         auto x0 = static_cast<int>(std::round(line.x0));
         auto x1 = static_cast<int>(std::round(line.x1));
+        auto y = static_cast<int>(std::round(line.y0));
 
         if (x0 > x1) {
-            auto x2 = x0;
-            x0 = x1;
-            x1 = x2;
+            std::swap(x0, x1);
         }
 
+        int w = image.width();
         for (auto x : range(x0, x1 + 1)) {
-            array[x + image.width() * static_cast<int>(std::round(line.y0))]
-                = color.value;
+            array[x + w * y] = color.value;
         }
     }
 }
@@ -178,8 +176,7 @@ auto SimulationScene::draw_standard_element(BLContext& ctx,
     BLPath path;
     path.addRect(x, y + -0.5 * s, 2 * s, height * s);
 
-    // draw inputs & outputs
-    // auto input_offset = (height - 1) / 2;  // ranges::size(input_values)) / 2;
+    // draw inputs
     auto input_offset = (height - std::ssize(input_values)) / 2;
     for (int i = 0; const auto value : input_values) {
         double y_pin = y + (input_offset + i) * s;
@@ -189,6 +186,7 @@ auto SimulationScene::draw_standard_element(BLContext& ctx,
         ++i;
     }
 
+    // draw outputs
     auto output_offset = (height - std::ssize(output_values)) / 2;
     for (int i = 0; const auto value : output_values) {
         double y_pin = y + (output_offset + i) * s;
@@ -235,8 +233,8 @@ struct RenderBenchmarkConfig {
 
     grid_t max_segment_length {5};
 
-    int min_line_points {1};
-    int max_line_points {5};
+    int min_line_segments {1};
+    int max_line_segments {5};
 
     connection_size_t n_outputs_min {1};
     connection_size_t n_outputs_max {5};
@@ -268,12 +266,12 @@ auto random_line_point(point2d_t previous, const RenderBenchmarkConfig& config, 
 }
 
 template <std::uniform_random_bit_generator G>
-auto random_line_point(point2d_t p0, point2d_t p1, const RenderBenchmarkConfig& config,
-                       G& rng) -> point2d_t {
-    if (p0.x == p1.x) {
-        return point2d_t {random_segment_value(p1.x, config, rng), p1.y};
+auto random_line_point(point2d_t previous, point2d_t origin,
+                       const RenderBenchmarkConfig& config, G& rng) -> point2d_t {
+    if (is_horizontal(line2d_t {previous, origin})) {
+        return point2d_t {origin.x, random_segment_value(origin.y, config, rng)};
     }
-    return point2d_t {p1.x, random_segment_value(p1.y, config, rng)};
+    return point2d_t {random_segment_value(origin.x, config, rng), origin.y};
 }
 
 // create single line of length n from start_index
@@ -316,7 +314,7 @@ auto create_random_line_tree(connection_size_t n_outputs,
 
         for (auto i : range(n_outputs)) {
             auto length_dist = boost::random::uniform_int_distribution<int> {
-                config.min_line_points, config.max_line_points};
+                config.min_line_segments, config.max_line_segments};
             auto n_points = length_dist(rng);
 
             wire_index_t start_index;
@@ -342,6 +340,46 @@ auto create_random_line_tree(connection_size_t n_outputs,
 
         return {points, indices, output_indices};
     }
+}
+
+template <std::uniform_random_bit_generator G>
+auto create_random_line_tree_segment(point2d_t previous, point2d_t start_point,
+                                     const RenderBenchmarkConfig& config, G& rng)
+    -> LineTree {
+    auto segment_count_dist = boost::random::uniform_int_distribution<int> {
+        config.min_line_segments, config.max_line_segments};
+    auto n_segments = segment_count_dist(rng);
+
+    auto line_tree = std::optional<LineTree> {};
+    do {
+        auto points = std::vector<point2d_t> {
+            start_point,
+            random_line_point(previous, start_point, config, rng),
+        };
+        std::generate_n(std::back_inserter(points), n_segments - 1, [&]() {
+            return random_line_point(*(points.end() - 2), points.back(), config, rng);
+        });
+
+        line_tree = LineTree::from_points(points);
+    } while (!line_tree.has_value());
+
+    assert(line_tree->segment_count() == n_segments);
+    return std::move(line_tree.value());
+}
+
+template <std::uniform_random_bit_generator G>
+auto create_random_line_tree_2(connection_size_t n_outputs,
+                               const RenderBenchmarkConfig& config, G& rng) -> LineTree {
+    auto grid_dist = boost::random::uniform_int_distribution<grid_t> {config.min_grid,
+                                                                      config.max_grid};
+    auto p0 = point2d_t {grid_dist(rng), grid_dist(rng)};
+
+    for (auto _ [[maybe_unused]] : range(n_outputs)) {
+        return create_random_line_tree_segment(p0, p0, config, rng);
+
+        // add_random_line(points, indices, n_points, start_index, get_next_point);
+    }
+    return LineTree {};
 }
 
 auto calculate_delay(const std::vector<point2d_t>& points,
@@ -421,6 +459,9 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             tree_length_sum += calculate_tree_length(points, indices);
         }
     }
+
+    auto lt = create_random_line_tree_2(2, config, rng);
+    fmt::print("ln\n");
 
     // convert to new line tree
     {
