@@ -24,14 +24,6 @@ auto SimulationScene::set_position(Circuit::ConstElement element, point2d_t posi
     get_data(element).position = position;
 }
 
-auto SimulationScene::set_line_tree(Circuit::ConstElement element,
-                                    std::vector<point2d_t> points,
-                                    std::vector<wire_index_t> indices) -> void {
-    // this method is potentially very slow
-    get_data(element).points.assign(points.begin(), points.end());
-    get_data(element).indices.assign(indices.begin(), indices.end());
-}
-
 auto SimulationScene::set_line_tree(Circuit::ConstElement element, LineTree&& line_tree)
     -> void {
     get_data(element).line_tree = std::move(line_tree);
