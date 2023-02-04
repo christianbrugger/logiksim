@@ -71,9 +71,7 @@ struct BenchmarkScene {
     SimulationScene renderer {simulation};
 };
 
-// TODO remove use_new
-auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100, bool use_new = true)
-    -> int64_t;
+auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100) -> int64_t;
 
 auto benchmark_line_renderer(int n_lines = 100, bool save_image = true) -> int64_t;
 
