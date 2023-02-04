@@ -20,7 +20,8 @@ auto main() -> int {
         // auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
         //                                            BENCHMARK_DEFAULT_EVENTS, true);
 
-        auto count = logicsim::benchmark_line_renderer(100);
+        // auto count = logicsim::benchmark_line_renderer(100);
+        auto count = logicsim::benchmark_line_renderer(1);
 
         fmt::print("count = {}\n", count);
 

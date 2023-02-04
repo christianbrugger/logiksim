@@ -66,10 +66,14 @@ auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t0, time_t t1,
     return point2d_fine_t {static_cast<double>(p0.x), interpolate_1d(p0.y, p1.y, alpha)};
 }
 
-auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
-    auto& image = *ctx.targetImage();
+auto get_image_data(BLContext& ctx) -> BLImageData {
+    auto image = ctx.targetImage();
+    if (image == nullptr) [[unlikely]] {
+        throw_exception("context has no image attached");
+    }
+
     BLImageData data {};
-    auto res = image.getData(&data);
+    auto res = image->getData(&data);
 
     if (res != BL_SUCCESS) [[unlikely]] {
         throw_exception("could not get image data");
@@ -77,8 +81,31 @@ auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> voi
     if (data.format != BL_FORMAT_PRGB32) [[unlikely]] {
         throw_exception("unsupported format");
     }
+    return data;
+}
 
+auto draw_connector_fast(BLContext& ctx, const point2d_t point, BLRgba32 color) -> void {
+    BLImageData data = get_image_data(ctx);
+    auto& image = *ctx.targetImage();
     auto* array = static_cast<uint32_t*>(data.pixelData);
+
+    int w = image.width();
+    int x = point.x * 12;
+    int y = point.y * 12;
+
+    static constexpr int s = 2;
+    for (int xi : range(x - s, x + s + 1)) {
+        for (int yj : range(y - s, y + s + 1)) {
+            array[xi + w * yj] = color.value;
+        }
+    }
+}
+
+auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
+    BLImageData data = get_image_data(ctx);
+    auto& image = *ctx.targetImage();
+    auto* array = static_cast<uint32_t*>(data.pixelData);
+
     if (line.x0 == line.x1) {
         auto x = static_cast<int>(std::round(line.x0));
         auto y0 = static_cast<int>(std::round(line.y0));
@@ -151,10 +178,16 @@ auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) c
 
     const auto history = simulation_->input_history(element);
 
-    for (auto segment : get_data(element).line_tree.sized_segments()) {
+    for (auto&& segment : get_data(element).line_tree.sized_segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0,
                           to_time(segment.p1_length), to_time(segment.p0_length),
                           history);
+
+        if (segment.has_connector_p0) {
+            bool wire_enabled = history.value(to_time(segment.p0_length));
+            const uint32_t color = wire_enabled ? 0xFFFF0000u : 0xFF000000u;
+            draw_connector_fast(ctx, segment.line.p0, BLRgba32(color));
+        }
     }
 }
 

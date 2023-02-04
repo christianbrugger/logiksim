@@ -221,11 +221,9 @@ struct LineTree::sized_line2d_t {
     line2d_t line;
     length_t p0_length;
     length_t p1_length;
+    bool has_connector_p0;
 
-    auto operator==(sized_line2d_t other) const noexcept {
-        return line == other.line && p0_length == other.p0_length
-               && p1_length == other.p1_length;
-    }
+    auto operator==(const sized_line2d_t &other) const noexcept -> bool = default;
 };
 
 class LineTree::SegmentSizeIterator {
