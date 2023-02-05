@@ -3,7 +3,7 @@
 
 #include "circuit.h"
 #include "exceptions.h"
-#include "render_scene.h"
+#include "renderer.h"
 #include "simulation.h"
 
 #include <blend2d.h>

@@ -3,7 +3,7 @@
 // #define _DISABLE_STRING_ANNOTATION
 
 #include "circuit.h"
-#include "render_scene.h"
+#include "renderer.h"
 #include "simulation.h"
 
 #include <benchmark/benchmark.h>

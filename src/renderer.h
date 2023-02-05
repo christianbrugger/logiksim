@@ -14,10 +14,14 @@
 #include <cstdint>
 #include <variant>
 
-namespace logicsim {
+//
+// Tasks:
+// * abstract Blend2d backend
+// * take a scene and render it
+// * store render related attributes like LED color
+//
 
-// TODO remove
-using wire_index_t = uint16_t;
+namespace logicsim {
 
 class SimulationScene {
    public:

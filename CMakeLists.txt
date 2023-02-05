@@ -240,7 +240,9 @@ set(LS_CORE_SOURCES
     src/exceptions.h src/exceptions.cpp
     src/graph.h src/graph.cpp
     src/line_tree.h src/line_tree.cpp
+    src/manager.h src/manager.cpp
     src/random.h src/random.cpp
+    src/renderer.h src/renderer.cpp
     src/simulation.h src/simulation.cpp
     src/timer.h src/timer.cpp
 )
@@ -253,12 +255,12 @@ set(LS_CORE_LIBRARIES
     Boost::mpl
     Boost::random
     boost_stacktrace 
-
-    # range-v3::range-v3
+    
     fmt::fmt
     folly
     absl::base
     GSL
+    Blend2D::Blend2D
 )
 
 # target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
@@ -274,13 +276,11 @@ set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET} 
     ${LS_CORE_SOURCES}
     
-    src/render_scene.h src/render_scene.cpp
     src/main_bechmark.cpp
 )
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
     
-    Blend2D::Blend2D
     benchmark::benchmark
 )
 target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
@@ -291,14 +291,11 @@ set(MAIN_TARGET "simulation_srp_main")
 add_executable(${MAIN_TARGET} 
     ${LS_CORE_SOURCES}
     
-    src/render_scene.h src/render_scene.cpp
     src/main.cpp
     
 )
 target_link_libraries(${MAIN_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
-
-    Blend2D::Blend2D
 )
 target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
@@ -308,8 +305,7 @@ set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET} 
     ${LS_CORE_SOURCES}
 
-    src/render_widget.h src/render_widget.cpp 
-    src/render_scene.h src/render_scene.cpp
+    src/render_widget.h src/render_widget.cpp
     src/main_gui.cpp
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
@@ -317,7 +313,6 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
 
     Qt6::Widgets
     Qt6::OpenGLWidgets
-    Blend2D::Blend2D
 )
 target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
