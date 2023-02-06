@@ -156,6 +156,7 @@ struct history_t {
     }
 };
 
+// TODO packing
 struct SimulationEvent {
     time_t time;
     element_id_t element_id;
@@ -172,6 +173,8 @@ struct SimulationEvent {
 
     [[nodiscard]] auto format() const -> std::string;
 };
+
+static_assert(sizeof(SimulationEvent) == 16);
 
 static_assert(std::is_trivial<SimulationEvent>::value);
 static_assert(std::is_trivially_copyable<SimulationEvent>::value);
@@ -368,6 +371,8 @@ class Simulation {
         static_assert(sizeof(output_delays) == 24);
         static_assert(sizeof(first_input_history) == 28);
     };
+
+    static_assert(sizeof(ElementState) == 128);
 
     gsl::not_null<const Circuit *> circuit_;
     std::vector<ElementState> states_ {};

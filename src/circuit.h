@@ -115,20 +115,26 @@ class Circuit {
    private:
     static void validate_connection_data_(Circuit::ConnectionData connection_data);
 
+    // TODO add packing
     struct ConnectionData {
         element_id_t element_id {null_element};
         connection_size_t index {null_connection};
     };
 
+    // TODO add packing
     struct ElementData {
+        // TODO use connection_size_t as counter
         folly::small_vector<ConnectionData, 3> input_data;
         folly::small_vector<ConnectionData, 3> output_data;
 
-        connection_size_t input_count;
-        connection_size_t output_count;
+        connection_size_t input_count;   // TODO remove input_data.size()
+        connection_size_t output_count;  // TODO remove output_data.size()
 
         ElementType type;
     };
+
+    static_assert(sizeof(ConnectionData) == 8);
+    static_assert(sizeof(ElementData) == 67);
 
     std::vector<ElementData> element_data_store_ {};
     connection_id_t input_count_ {0};
@@ -139,7 +145,6 @@ template <class T>
 concept ElementOrConnection = std::convertible_to<T, Circuit::ConstElement>
                               || std::convertible_to<T, Circuit::ConstInput>
                               || std::convertible_to<T, Circuit::ConstOutput>;
-
 
 template <bool Const>
 class Circuit::ElementIteratorTemplate {

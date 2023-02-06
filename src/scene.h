@@ -2,11 +2,9 @@
 #define LOGIKSIM_SCENE_H
 
 #include "circuit.h"
-#include "render_scene.h"
-#include "simulation.h"
 
 //
-// Tasks:
+// Responsibilites:
 // * store scene related data
 //   * position, orientation
 //   * line tree
@@ -21,6 +19,10 @@
 //   * query input at position
 //
 // * get 2d position of inputs & outputs of element
+//
+// NOT Responsible:
+// * does NOT know about simulation
+// * does NOT know about renderer
 //
 
 namespace logicsim {
