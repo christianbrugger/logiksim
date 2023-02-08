@@ -26,7 +26,6 @@ class InvalidLineTreeException : public std::exception {
 
 //
 // TODO:
-//  * position of connector dots
 //  * get position of each output
 //
 // Done:
@@ -36,6 +35,7 @@ class InvalidLineTreeException : public std::exception {
 //  * validate inputs
 //  * calculate number of outputs
 //  * get lengths of each output
+//  * position of connector dots
 //
 
 //
@@ -73,6 +73,7 @@ class LineTree {
 
     using Graph = AdjacencyGraph<LineTree::index_t>;
 
+    // TODO use orthogonal_line_t everywhere
     explicit LineTree() = default;
     explicit LineTree(std::initializer_list<point2d_t> points);
 
@@ -148,6 +149,8 @@ class LineTree {
                       length_vector_t lengths)
         : points_ {points}, indices_ {indices}, lengths_ {lengths} {};
 };
+
+static_assert(sizeof(LineTree) == 30);
 
 auto swap(LineTree &a, LineTree &b) noexcept -> void;
 

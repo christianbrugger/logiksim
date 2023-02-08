@@ -40,6 +40,8 @@ class SimulationScene {
         int8_t orientation {0};
     };
 
+    static_assert(sizeof(DrawData) == 36);
+
     auto get_data(Circuit::ConstElement element) -> DrawData&;
     auto get_data(Circuit::ConstElement element) const -> const DrawData&;
 

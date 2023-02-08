@@ -32,130 +32,6 @@
 
 namespace logicsim {
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4455)  // literal suffix identifiers are reserved
-#endif
-using std::literals::chrono_literals::operator""us;
-using std::literals::chrono_literals::operator""ns;
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-// TODO strong type for time_t
-// TODO rename to simulation time
-using time_t = std::chrono::duration<int64_t, std::nano>;
-
-}  // namespace logicsim
-
-template <>
-struct fmt::formatter<logicsim::time_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::time_t &obj, fmt::format_context &ctx) {
-        auto count = obj.count();
-
-        if (0 < count && count < 1000) {
-            return fmt::format_to(ctx.out(), "{}ns", count);
-        } else {
-            return fmt::format_to(ctx.out(), "{}us", count / 1000);
-        }
-    }
-};
-
-namespace logicsim {
-
-// TODO create strong type for history type
-struct delay_t {
-   private:
-    struct wrapped_;
-
-   public:
-    std::chrono::duration<int32_t, std::nano> value {};
-
-    [[nodiscard]] constexpr explicit delay_t() noexcept = default;
-
-    [[nodiscard]] constexpr explicit delay_t(
-        std::chrono::duration<int64_t, std::nano> delay)
-        : value {delay} {
-        if (value != delay) {
-            throw_exception("delay cannot be represented.");
-        }
-    };
-
-    [[nodiscard]] constexpr auto operator==(const delay_t other) const noexcept -> bool {
-        return value == other.value;
-    }
-
-    [[nodiscard]] constexpr auto operator<(const delay_t other) const noexcept -> bool {
-        return value < other.value;
-    }
-
-    [[nodiscard]] constexpr auto operator<=(const delay_t other) const noexcept -> bool {
-        return value <= other.value;
-    }
-
-    [[nodiscard]] constexpr auto operator>(const delay_t other) const noexcept -> bool {
-        return value > other.value;
-    }
-
-    [[nodiscard]] constexpr auto operator>=(const delay_t other) const noexcept -> bool {
-        return value >= other.value;
-    }
-};
-}  // namespace logicsim
-
-template <>
-struct fmt::formatter<logicsim::delay_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::delay_t &obj, fmt::format_context &ctx) {
-        auto count = obj.value.count();
-
-        if (0 < count && count < 1000) {
-            return fmt::format_to(ctx.out(), "{}ns", count);
-        } else {
-            return fmt::format_to(ctx.out(), "{}us", count / 1000);
-        }
-    }
-};
-
-namespace logicsim {
-
-struct history_t {
-   private:
-    struct wrapped_;
-
-   public:
-    std::chrono::duration<int32_t, std::nano> value {};
-
-    [[nodiscard]] constexpr explicit history_t() noexcept = default;
-
-    [[nodiscard]] constexpr explicit history_t(
-        std::chrono::duration<int64_t, std::nano> delay)
-        : value {delay} {
-        if (value != delay) {
-            throw_exception("delay cannot be represented.");
-        }
-    }
-
-    [[nodiscard]] constexpr auto operator==(history_t other) const noexcept -> bool {
-        return value == other.value;
-    }
-
-    [[nodiscard]] constexpr auto operator<(history_t other) const noexcept -> bool {
-        return value < other.value;
-    }
-
-    [[nodiscard]] constexpr auto operator<=(history_t other) const noexcept -> bool {
-        return value <= other.value;
-    }
-};
-
 // TODO packing
 struct SimulationEvent {
     time_t time;
@@ -368,8 +244,8 @@ class Simulation {
         history_vector_t first_input_history {};
         history_t max_history {defaults::no_history};
 
-        static_assert(sizeof(output_delays) == 24);
         static_assert(sizeof(first_input_history) == 28);
+        static_assert(sizeof(output_delays) == 24);
     };
 
     static_assert(sizeof(ElementState) == 128);

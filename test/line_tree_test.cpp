@@ -43,9 +43,9 @@ TEST(LineTree, TestSegmentIterator) {
 TEST(LineTree, TestSizeSegmentIterator) {
     const auto tree = LineTree {{0, 0}, {10, 0}, {10, 12}, {20, 12}};
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
-    auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 12}}, 10, 22};
-    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 12}, {20, 12}}, 22, 32};
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10, false};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 12}}, 10, 22, false};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 12}, {20, 12}}, 22, 32, false};
 
     ASSERT_THAT(tree.sized_segments(), testing::ElementsAre(line0, line1, line2));
 }
@@ -103,8 +103,8 @@ TEST(LineTree, MergeTreesSimple) {
     auto tree1 = LineTree({{0, 0}, {0, 10}});
     auto tree2 = LineTree({{0, 10}, {10, 10}});
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 10}}, 0, 10};
-    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 10, 20};
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 10}}, 0, 10, false};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 10, 20, false};
 
     auto tree = merge({tree1, tree2});
 
@@ -116,13 +116,13 @@ TEST(LineTree, MergeTreesLongChain) {
     auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
     auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {30, 10}, {30, 0}});
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 10}}, 0, 10};
-    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 10, 20};
-    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {10, 0}}, 20, 30};
-    auto line3 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {20, 0}}, 30, 40};
-    auto line4 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {20, 10}}, 40, 50};
-    auto line5 = LineTree::sized_line2d_t {line2d_t {{20, 10}, {30, 10}}, 50, 60};
-    auto line6 = LineTree::sized_line2d_t {line2d_t {{30, 10}, {30, 0}}, 60, 70};
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {0, 10}}, 0, 10, false};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {10, 10}}, 10, 20, false};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {10, 0}}, 20, 30, false};
+    auto line3 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {20, 0}}, 30, 40, false};
+    auto line4 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {20, 10}}, 40, 50, false};
+    auto line5 = LineTree::sized_line2d_t {line2d_t {{20, 10}, {30, 10}}, 50, 60, false};
+    auto line6 = LineTree::sized_line2d_t {line2d_t {{30, 10}, {30, 0}}, 60, 70, false};
 
     auto tree = merge({tree1, tree2});
 
@@ -135,13 +135,13 @@ TEST(LineTree, MergeTreesLongChainInverter) {
     auto tree1 = LineTree({{0, 0}, {0, 10}, {10, 10}, {10, 0}});
     auto tree2 = LineTree({{10, 0}, {20, 0}, {20, 10}, {30, 10}, {30, 0}});
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{30, 0}, {30, 10}}, 0, 10};
-    auto line1 = LineTree::sized_line2d_t {line2d_t {{30, 10}, {20, 10}}, 10, 20};
-    auto line2 = LineTree::sized_line2d_t {line2d_t {{20, 10}, {20, 0}}, 20, 30};
-    auto line3 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {10, 0}}, 30, 40};
-    auto line4 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 10}}, 40, 50};
-    auto line5 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {0, 10}}, 50, 60};
-    auto line6 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {0, 0}}, 60, 70};
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{30, 0}, {30, 10}}, 0, 10, false};
+    auto line1 = LineTree::sized_line2d_t {line2d_t {{30, 10}, {20, 10}}, 10, 20, false};
+    auto line2 = LineTree::sized_line2d_t {line2d_t {{20, 10}, {20, 0}}, 20, 30, false};
+    auto line3 = LineTree::sized_line2d_t {line2d_t {{20, 0}, {10, 0}}, 30, 40, false};
+    auto line4 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {10, 10}}, 40, 50, false};
+    auto line5 = LineTree::sized_line2d_t {line2d_t {{10, 10}, {0, 10}}, 50, 60, false};
+    auto line6 = LineTree::sized_line2d_t {line2d_t {{0, 10}, {0, 0}}, 60, 70, false};
 
     auto tree = merge({tree1, tree2}, point2d_t {30, 0});
 
@@ -202,7 +202,7 @@ TEST(LineTree, MergeCompleteOveralapp) {
     auto tree1 = LineTree({{10, 0}, {20, 0}});
     auto tree2 = LineTree({{0, 0}, {30, 0}});
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {30, 0}}, 0, 30};
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {30, 0}}, 0, 30, false};
 
     auto tree_left = merge({tree1, tree2});
     ASSERT_EQ(tree_left.has_value(), true);
@@ -291,7 +291,7 @@ TEST(LineTree, OutputCoundAndDelays) {
 TEST(LineTree, RerootSimple) {
     auto tree = LineTree({{0, 0}, {10, 0}});
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {0, 0}}, 0, 10};
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{10, 0}, {0, 0}}, 0, 10, false};
 
     auto tree_reroot = tree.reroot({10, 0});
     ASSERT_EQ(tree_reroot.has_value(), true);
@@ -301,7 +301,7 @@ TEST(LineTree, RerootSimple) {
 TEST(LineTree, RerootSameRoot) {
     auto tree = LineTree({{0, 0}, {10, 0}});
 
-    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10};
+    auto line0 = LineTree::sized_line2d_t {line2d_t {{0, 0}, {10, 0}}, 0, 10, false};
 
     auto tree_reroot = tree.reroot({0, 0});
     ASSERT_EQ(tree_reroot.has_value(), true);

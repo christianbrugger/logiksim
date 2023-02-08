@@ -235,6 +235,8 @@ endif()
 set(LS_CORE_SOURCES
     src/algorithm.h src/algorithm.cpp
     src/circuit.h src/circuit.cpp
+    src/circuit_index.h src/circuit_index.cpp
+    src/circuit_layout.h src/circuit_layout.cpp
     src/circular_buffer.h
     src/collision.h src/collision.cpp
     src/exceptions.h src/exceptions.cpp
@@ -244,7 +246,6 @@ set(LS_CORE_SOURCES
     src/random.h src/random.cpp
     src/renderer.h src/renderer.cpp
     src/schematic.h src/schematic.cpp
-    src/schematic_index.h src/schematic_index.cpp
     src/simulation.h src/simulation.cpp
     src/timer.h src/timer.cpp
 )

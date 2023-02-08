@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_CIRCUIT_H
 #define LOGIKSIM_CIRCUIT_H
 
+#include "circuit_vocabulary.h"
+
 #include <fmt/core.h>
 #include <folly/small_vector.h>
 
@@ -29,15 +31,10 @@ enum class ElementType : uint8_t {
     shift_register,
 };
 
-auto format(ElementType type) -> std::string;
-
-// TODO use strong types
-using element_id_t = int32_t;
-using connection_size_t = int8_t;
+// TODO remove, use std::size instead
 using connection_id_t = int64_t;
 
-constexpr element_id_t null_element = -1;
-constexpr connection_size_t null_connection = -1;
+auto format(ElementType type) -> std::string;
 
 class Circuit {
     struct ElementData;
