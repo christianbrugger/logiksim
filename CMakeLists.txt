@@ -243,6 +243,8 @@ set(LS_CORE_SOURCES
     src/manager.h src/manager.cpp
     src/random.h src/random.cpp
     src/renderer.h src/renderer.cpp
+    src/schematic.h src/schematic.cpp
+    src/schematic_index.h src/schematic_index.cpp
     src/simulation.h src/simulation.cpp
     src/timer.h src/timer.cpp
 )

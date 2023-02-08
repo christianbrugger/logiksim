@@ -299,8 +299,9 @@ struct fmt::formatter<logicsim::LineTree::sized_line2d_t> {
 
     static auto format(const logicsim::LineTree::sized_line2d_t &obj,
                        fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "SizedLine({}, {}, {}, {})", obj.line.p0,
-                              obj.line.p1, obj.p0_length, obj.p1_length);
+        return fmt::format_to(ctx.out(), "SizedLine({}, {}, {}, {}, {})", obj.line.p0,
+                              obj.line.p1, obj.p0_length, obj.p1_length,
+                              obj.has_connector_p0);
     }
 };
 
