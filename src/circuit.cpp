@@ -57,8 +57,8 @@ auto Circuit::format() const -> std::string {
     return fmt::format("<Circuit with {} elements{}>", element_count(), inner);
 }
 
-auto Circuit::element_count() const noexcept -> element_id_t {
-    return static_cast<element_id_t>(element_data_store_.size());
+auto Circuit::element_count() const noexcept -> std::size_t {
+    return element_data_store_.size();
 }
 
 auto Circuit::empty() const noexcept -> bool {
@@ -66,7 +66,8 @@ auto Circuit::empty() const noexcept -> bool {
 }
 
 auto Circuit::is_element_id_valid(element_id_t element_id) const noexcept -> bool {
-    return element_id >= 0 && element_id < element_count();
+    auto size = gsl::narrow_cast<element_id_t::value_type>(element_count());
+    return element_id.value >= 0 && element_id.value < size;
 }
 
 auto Circuit::element(element_id_t element_id) -> Element {
@@ -103,8 +104,7 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
     // TODO handle overflow when adding to many connections
 
     // make sure we can represent all ids
-    if (element_data_store_.size() + 1 >= std::numeric_limits<element_id_t>::max())
-        [[unlikely]] {
+    if (element_data_store_.size() + 1 >= element_id_t::max()) [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
 
@@ -115,10 +115,11 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
         .output_count = output_count,
         .type = type,
     });
-    element_id_t element_id {static_cast<element_id_t>(element_data_store_.size() - 1)};
+    auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
+        element_data_store_.size() - std::size_t {1})};
 
-    element_data_store_.at(element_id).input_data.resize(input_count);
-    element_data_store_.at(element_id).output_data.resize(output_count);
+    element_data_store_.at(element_id.value).input_data.resize(input_count);
+    element_data_store_.at(element_id.value).output_data.resize(output_count);
 
     input_count_ += input_count;
     output_count_ += output_count;
@@ -250,7 +251,7 @@ auto Circuit::ElementIteratorTemplate<Const>::operator*() const -> value_type {
 template <bool Const>
 auto Circuit::ElementIteratorTemplate<Const>::operator++() noexcept
     -> Circuit::ElementIteratorTemplate<Const> & {
-    ++element_id_;
+    ++element_id_.value;
     return *this;
 }
 
@@ -258,7 +259,7 @@ template <bool Const>
 auto Circuit::ElementIteratorTemplate<Const>::operator++(int) noexcept
     -> Circuit::ElementIteratorTemplate<Const> {
     auto tmp = *this;
-    ++element_id_;
+    ++(*this);
     return tmp;
 }
 
@@ -271,7 +272,7 @@ auto Circuit::ElementIteratorTemplate<Const>::operator==(
 template <bool Const>
 auto Circuit::ElementIteratorTemplate<Const>::operator-(
     const ElementIteratorTemplate &right) const noexcept -> difference_type {
-    return element_id_ - right.element_id_;
+    return element_id_.value - right.element_id_.value;
 }
 
 template class Circuit::ElementIteratorTemplate<false>;
@@ -287,16 +288,18 @@ Circuit::ElementViewTemplate<Const>::ElementViewTemplate(circuit_type &circuit) 
 
 template <bool Const>
 auto Circuit::ElementViewTemplate<Const>::begin() const noexcept -> iterator_type {
-    return iterator_type {*circuit_, 0};
+    return iterator_type {*circuit_, element_id_t {0}};
 }
 
 template <bool Const>
 auto Circuit::ElementViewTemplate<Const>::end() const noexcept -> iterator_type {
-    return iterator_type {*circuit_, circuit_->element_count()};
+    return iterator_type {*circuit_,
+                          element_id_t {gsl::narrow_cast<element_id_t::value_type>(
+                              circuit_->element_count())}};
 }
 
 template <bool Const>
-auto Circuit::ElementViewTemplate<Const>::size() const noexcept -> element_id_t {
+auto Circuit::ElementViewTemplate<Const>::size() const noexcept -> std::size_t {
     return circuit_->element_count();
 }
 
@@ -307,6 +310,9 @@ auto Circuit::ElementViewTemplate<Const>::empty() const noexcept -> bool {
 
 template class Circuit::ElementViewTemplate<false>;
 template class Circuit::ElementViewTemplate<true>;
+
+static_assert(std::ranges::input_range<Circuit::ElementView>);
+static_assert(std::ranges::input_range<Circuit::ConstElementView>);
 
 //
 // Circuit::Element
@@ -392,7 +398,7 @@ inline auto Circuit::ElementTemplate<Const>::outputs() const
 
 template <bool Const>
 auto Circuit::ElementTemplate<Const>::element_data_() const -> ElementDataType & {
-    return circuit_->element_data_store_.at(element_id_);
+    return circuit_->element_data_store_.at(element_id_.value);
 }
 
 // Template Instanciations
@@ -599,7 +605,7 @@ void Circuit::InputTemplate<Const>::clear_connection() const
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data {
-            circuit_->element_data_store_.at(connection_data.element_id)
+            circuit_->element_data_store_.at(connection_data.element_id.value)
                 .output_data.at(connection_data.index)};
 
         // circuit_->output_data_store_.at(
@@ -623,7 +629,7 @@ void Circuit::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) c
 
     // get data before we modify anything, for exception safety
     auto &destination_connection_data
-        = circuit_->element_data_store_.at(output.element_id())
+        = circuit_->element_data_store_.at(output.element_id().value)
               .output_data.at(output.output_index());
     //     circuit_->output_data_store_.at(output.output_id());
 
@@ -639,7 +645,8 @@ void Circuit::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) c
 template <bool Const>
 auto Circuit::InputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
     // return circuit_->input_data_store_.at(input_id_);
-    return circuit_->element_data_store_.at(element_id_).input_data.at(input_index_);
+    return circuit_->element_data_store_.at(element_id_.value)
+        .input_data.at(input_index_);
 }
 
 // Template Instanciations
@@ -756,7 +763,7 @@ void Circuit::OutputTemplate<Const>::clear_connection() const
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data
-            = circuit_->element_data_store_.at(connection_data.element_id)
+            = circuit_->element_data_store_.at(connection_data.element_id.value)
                   .input_data.at(connection_data.index);
 
         // circuit_->input_data_store_.at(
@@ -781,7 +788,7 @@ void Circuit::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) co
     // get data before we modify anything, for exception safety
     auto &connection_data {connection_data_()};
     auto &destination_connection_data
-        = circuit_->element_data_store_.at(input.element_id())
+        = circuit_->element_data_store_.at(input.element_id().value)
               .input_data.at(input.input_index());
     // circuit_->input_data_store_.at(input.input_id());
 
@@ -795,7 +802,8 @@ void Circuit::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) co
 template <bool Const>
 auto Circuit::OutputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
     // return circuit_->output_data_store_.at(output_id_);
-    return circuit_->element_data_store_.at(element_id_).output_data.at(output_index_);
+    return circuit_->element_data_store_.at(element_id_.value)
+        .output_data.at(output_index_);
 }
 
 // Template Instanciations

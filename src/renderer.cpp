@@ -30,11 +30,11 @@ auto SimulationScene::set_line_tree(Circuit::ConstElement element, LineTree&& li
 }
 
 auto SimulationScene::get_data(Circuit::ConstElement element) -> DrawData& {
-    return draw_data_vector_.at(element.element_id());
+    return draw_data_vector_.at(element.element_id().value);
 }
 
 auto SimulationScene::get_data(Circuit::ConstElement element) const -> const DrawData& {
-    return draw_data_vector_.at(element.element_id());
+    return draw_data_vector_.at(element.element_id().value);
 }
 
 auto SimulationScene::draw_background(BLContext& ctx) const -> void {

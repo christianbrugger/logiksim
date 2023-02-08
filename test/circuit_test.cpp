@@ -38,9 +38,9 @@ TEST(Circuit, ElementProperties) {
     circuit.add_element(ElementType::wire, 3, 5);
 
     const Circuit& circuit_const {circuit};
-    const Circuit::ConstElement element {circuit_const.element(0)};
+    const Circuit::ConstElement element {circuit_const.element(element_id_t {0})};
 
-    EXPECT_EQ(element.element_id(), 0);
+    EXPECT_EQ(element.element_id(), element_id_t {0});
     EXPECT_EQ(element.element_type(), ElementType::wire);
     EXPECT_EQ(element.input_count(), 3);
     EXPECT_EQ(element.output_count(), 5);
@@ -61,14 +61,14 @@ TEST(Circuit, EqualityOperators) {
     const Circuit& circuit_const {circuit};
 
     EXPECT_EQ(wire, wire);
-    EXPECT_EQ(wire, circuit_const.element(0));
+    EXPECT_EQ(wire, circuit_const.element(element_id_t {0}));
     EXPECT_NE(wire, inverter);
 
     EXPECT_EQ(wire.output(0), wire.output(0));
-    EXPECT_EQ(wire.output(0), circuit_const.element(0).output(0));
+    EXPECT_EQ(wire.output(0), circuit_const.element(element_id_t {0}).output(0));
     EXPECT_NE(wire.output(0), inverter.output(0));
     EXPECT_NE(wire.output(0), wire.output(1));
-    EXPECT_NE(wire.output(0), circuit_const.element(0).output(1));
+    EXPECT_NE(wire.output(0), circuit_const.element(element_id_t {0}).output(1));
 
     circuit_const.validate();
     circuit.validate();

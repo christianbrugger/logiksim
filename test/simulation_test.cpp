@@ -13,59 +13,59 @@ namespace logicsim {
 // SimulationEvent
 
 TEST(SimulationEventTest, EqualOperatorTest) {
-    SimulationEvent event1 {123us, 1, 2, true};
-    SimulationEvent event2 {123us, 1, 2, true};
+    SimulationEvent event1 {123us, element_id_t {1}, 2, true};
+    SimulationEvent event2 {123us, element_id_t {1}, 2, true};
     EXPECT_TRUE(event1 == event2);
 
-    SimulationEvent event3 {123us, 1, 3, true};
-    SimulationEvent event4 {123us, 1, 2, false};
+    SimulationEvent event3 {123us, element_id_t {1}, 3, true};
+    SimulationEvent event4 {123us, element_id_t {1}, 2, false};
     EXPECT_TRUE(event3 == event4);
 }
 
 TEST(SimulationEventTest, LessThanOperatorTest) {
-    SimulationEvent event1 {123us, 1, 2, true};
-    SimulationEvent event2 {789us, 3, 4, false};
+    SimulationEvent event1 {123us, element_id_t {1}, 2, true};
+    SimulationEvent event2 {789us, element_id_t {3}, 4, false};
     EXPECT_TRUE(event1 < event2);
 
-    SimulationEvent event3 {123us, 1, 4, true};
-    SimulationEvent event4 {123us, 3, 2, false};
+    SimulationEvent event3 {123us, element_id_t {1}, 4, true};
+    SimulationEvent event4 {123us, element_id_t {3}, 2, false};
     EXPECT_TRUE(event3 < event4);
 }
 
 TEST(SimulationEventTest, NotEqualOperatorTest) {
-    SimulationEvent event1 {123ns, 1, 2, true};
-    SimulationEvent event2 {789ns, 3, 4, false};
+    SimulationEvent event1 {123ns, element_id_t {1}, 2, true};
+    SimulationEvent event2 {789ns, element_id_t {3}, 4, false};
     EXPECT_TRUE(event1 != event2);
 }
 
 TEST(SimulationEventTest, GreaterThanOperatorTest) {
-    SimulationEvent event1 {123ns, 1, 2, true};
-    SimulationEvent event2 {789ns, 3, 4, false};
+    SimulationEvent event1 {123ns, element_id_t {1}, 2, true};
+    SimulationEvent event2 {789ns, element_id_t {3}, 4, false};
     EXPECT_TRUE(event2 > event1);
 }
 
 TEST(SimulationEventTest, LessThanOrEqualOperatorTest) {
-    SimulationEvent event1 {123ns, 1, 2, true};
-    SimulationEvent event2 {789ns, 3, 4, false};
+    SimulationEvent event1 {123ns, element_id_t {1}, 2, true};
+    SimulationEvent event2 {789ns, element_id_t {3}, 4, false};
     EXPECT_TRUE(event1 <= event2);
 }
 
 TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
-    SimulationEvent event1 {123ns, 1, 2, true};
-    SimulationEvent event2 {789ns, 3, 4, false};
+    SimulationEvent event1 {123ns, element_id_t {1}, 2, true};
+    SimulationEvent event2 {789ns, element_id_t {3}, 4, false};
     EXPECT_TRUE(event2 >= event1);
 }
 
 // Simulation
 
-[[nodiscard]] auto get_uninitialized_simulation(Circuit &circuit) -> Simulation {
+[[nodiscard]] auto get_uninitialized_simulation(Circuit& circuit) -> Simulation {
     add_output_placeholders(circuit);
     circuit.validate(true);
 
     return Simulation {circuit};
 }
 
-[[nodiscard]] auto get_initialized_simulation(Circuit &circuit) -> Simulation {
+[[nodiscard]] auto get_initialized_simulation(Circuit& circuit) -> Simulation {
     add_output_placeholders(circuit);
     circuit.validate(true);
 

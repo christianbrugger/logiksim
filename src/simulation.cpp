@@ -191,11 +191,11 @@ Simulation::Simulation(const Circuit &circuit)
 }
 
 auto Simulation::get_state(ElementOrConnection auto obj) -> ElementState & {
-    return states_.at(obj.element_id());
+    return states_.at(obj.element_id().value);
 }
 
 auto Simulation::get_state(ElementOrConnection auto obj) const -> const ElementState & {
-    return states_.at(obj.element_id());
+    return states_.at(obj.element_id().value);
 }
 
 auto Simulation::circuit() const noexcept -> const Circuit & {
@@ -587,12 +587,12 @@ auto Simulation::clean_history(history_vector_t &history, history_t max_history)
 }
 
 auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
-    return states_.at(input.element_id()).input_values.at(input.input_index());
+    return get_state(input).input_values.at(input.input_index());
 }
 
 auto Simulation::input_values(const Circuit::ConstElement element) const
     -> logic_small_vector_t {
-    return states_.at(element.element_id()).input_values;
+    return get_state(element).input_values;
 }
 
 auto Simulation::input_values() const -> const logic_vector_t {
@@ -607,8 +607,7 @@ auto Simulation::input_values() const -> const logic_vector_t {
 
 auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
     record_input_history(input, value);
-
-    states_.at(input.element_id()).input_values.at(input.input_index()) = value;
+    get_state(input).input_values.at(input.input_index()) = value;
 }
 
 auto Simulation::output_value(const Circuit::ConstOutput output,

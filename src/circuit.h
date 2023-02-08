@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_CIRCUIT_H
 #define LOGIKSIM_CIRCUIT_H
 
-#include "circuit_vocabulary.h"
+#include "vocabulary.h"
 
 #include <fmt/core.h>
 #include <folly/small_vector.h>
@@ -91,7 +91,7 @@ class Circuit {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto element_count() const noexcept -> element_id_t;
+    [[nodiscard]] auto element_count() const noexcept -> std::size_t;
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
@@ -150,7 +150,7 @@ class Circuit::ElementIteratorTemplate {
     using iterator_category = std::input_iterator_tag;
 
     using value_type = Circuit::ElementTemplate<Const>;
-    using difference_type = element_id_t;
+    using difference_type = std::ptrdiff_t;
     using pointer = value_type *;
     // TODO check if reference needs to be return type of operator*
     using reference = value_type;
@@ -196,7 +196,7 @@ class Circuit::ElementViewTemplate {
     [[nodiscard]] auto begin() const noexcept -> iterator_type;
     [[nodiscard]] auto end() const noexcept -> iterator_type;
 
-    [[nodiscard]] auto size() const noexcept -> element_id_t;
+    [[nodiscard]] auto size() const noexcept -> std::size_t;
     [[nodiscard]] auto empty() const noexcept -> bool;
 
    private:

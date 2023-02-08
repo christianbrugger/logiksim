@@ -16,6 +16,7 @@
 #include <queue>
 #include <random>
 #include <string>
+#include <type_traits>
 
 /// Done Features
 // * delays for each output, needed for wires

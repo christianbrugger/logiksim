@@ -17,7 +17,7 @@ namespace logicsim {
 
 struct circuit_id_t {
     using value_type = int16_t;
-    value_type value {};
+    value_type value;
 
     [[nodiscard]] constexpr explicit circuit_id_t() noexcept = default;
 
@@ -25,14 +25,33 @@ struct circuit_id_t {
 
     auto operator==(const circuit_id_t &other) const -> bool = default;
     auto operator<=>(const circuit_id_t &other) const = default;
+
+    static constexpr auto max() noexcept {
+        return std::numeric_limits<value_type>::max();
+    };
 };
 
+static_assert(std::is_trivial<circuit_id_t>::value);
+
+struct element_id_t {
+    using value_type = int32_t;
+    value_type value;
+
+    auto operator==(const element_id_t &other) const -> bool = default;
+    auto operator<=>(const element_id_t &other) const = default;
+
+    static constexpr auto max() noexcept {
+        return std::numeric_limits<value_type>::max();
+    };
+};
+
+static_assert(std::is_trivial<element_id_t>::value);
+
 // TODO use strong types
-using element_id_t = int32_t;
 using connection_size_t = int8_t;
 
-constexpr element_id_t null_element = -1;
-constexpr connection_size_t null_connection = -1;
+inline constexpr auto null_element = element_id_t {-1};
+inline constexpr auto null_connection = connection_size_t {-1};
 
 //
 // Time Types
@@ -150,6 +169,17 @@ struct fmt::formatter<logicsim::circuit_id_t> {
     }
 
     static auto format(const logicsim::circuit_id_t &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.value);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::element_id_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::element_id_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.value);
     }
 };

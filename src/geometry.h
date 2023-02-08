@@ -2,8 +2,8 @@
 #define LOGIKSIM_GEOMETRY_H
 
 #include "algorithm.h"
-#include "circuit_vocabulary.h"
 #include "exceptions.h"
+#include "vocabulary.h"
 
 #include <fmt/core.h>
 
