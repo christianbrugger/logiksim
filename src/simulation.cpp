@@ -154,7 +154,7 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
 //
 
 [[nodiscard]] constexpr auto internal_state_size(const ElementType type) noexcept
-    -> connection_size_t {
+    -> std::size_t {
     switch (type) {
         using enum ElementType;
 
@@ -183,9 +183,10 @@ Simulation::Simulation(const Circuit &circuit)
     for (auto element : circuit.elements()) {
         auto &state = get_state(element);
 
-        state.input_values.resize(element.input_count(), false);
-        state.input_inverters.resize(element.input_count(), false);
-        state.output_delays.resize(element.output_count(), defaults::standard_delay);
+        state.input_values.resize(element.input_count().value, false);
+        state.input_inverters.resize(element.input_count().value, false);
+        state.output_delays.resize(element.output_count().value,
+                                   defaults::standard_delay);
         state.internal_state.resize(internal_state_size(element.element_type()), false);
     }
 }
@@ -213,11 +214,11 @@ auto Simulation::submit_event(Circuit::ConstInput input, time_t offset, bool val
 
 auto Simulation::submit_events(Circuit::ConstElement element, time_t offset,
                                logic_small_vector_t values) -> void {
-    if (std::ssize(values) != element.input_count()) [[unlikely]] {
+    if (std::ssize(values) != element.input_count().value) [[unlikely]] {
         throw_exception("Need to provide number of input values.");
     }
     for (auto input : element.inputs()) {
-        submit_event(input, offset, values.at(input.input_index()));
+        submit_event(input, offset, values.at(input.input_index().value));
     }
 }
 
@@ -309,12 +310,12 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
         }
 
         case shift_register: {
-            if (std::ssize(state) < output_count) [[unlikely]] {
+            if (std::ssize(state) < output_count.value) [[unlikely]] {
                 throw_exception(
                     "need at least output count internal state for shift register");
             }
-            return Simulation::logic_small_vector_t(std::prev(state.end(), output_count),
-                                                    state.end());
+            return Simulation::logic_small_vector_t(
+                std::prev(state.end(), output_count.value), state.end());
         }
 
         default:
@@ -329,7 +330,7 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
     if (input.empty()) [[unlikely]] {
         throw_exception("Input size cannot be zero.");
     }
-    if (output_count <= 0) [[unlikely]] {
+    if (output_count <= connection_size_t {0}) [[unlikely]] {
         throw_exception("Output count cannot be zero or negative.");
     }
 
@@ -337,7 +338,7 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
         using enum ElementType;
 
         case wire:
-            return {Simulation::logic_small_vector_t(output_count, input.at(0))};
+            return {Simulation::logic_small_vector_t(output_count.value, input.at(0))};
 
         case inverter_element:
             return {!input.at(0)};
@@ -372,9 +373,10 @@ auto get_changed_outputs(const Simulation::logic_small_vector_t &old_outputs,
     }
 
     Simulation::con_index_small_vector_t result;
-    for (auto index : range(gsl::narrow<connection_size_t>(std::size(old_outputs)))) {
+    for (auto index :
+         range(gsl::narrow<connection_size_t::value_type>(std::size(old_outputs)))) {
         if (old_outputs[index] != new_outputs[index]) {
-            result.push_back(index);
+            result.push_back(connection_size_t {index});
         }
     }
     return result;
@@ -387,7 +389,7 @@ void Simulation::create_event(const Circuit::ConstOutput output,
         queue_.submit_event({.time = queue_.time() + delay.value,
                              .element_id = output.connected_element_id(),
                              .input_index = output.connected_input_index(),
-                             .value = output_values.at(output.output_index())});
+                             .value = output_values.at(output.output_index().value)});
     }
 }
 
@@ -558,7 +560,7 @@ auto Simulation::initialize() -> void {
 auto Simulation::record_input_history(const Circuit::ConstInput input,
                                       const bool new_value) -> void {
     // we only record the first input, as we only need a history for wires
-    if (input.input_index() != 0) {
+    if (input.input_index() != connection_size_t {0}) {
         return;
     }
     auto &state = get_state(input);
@@ -587,7 +589,7 @@ auto Simulation::clean_history(history_vector_t &history, history_t max_history)
 }
 
 auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
-    return get_state(input).input_values.at(input.input_index());
+    return get_state(input).input_values.at(input.input_index().value);
 }
 
 auto Simulation::input_values(const Circuit::ConstElement element) const
@@ -607,7 +609,7 @@ auto Simulation::input_values() const -> const logic_vector_t {
 
 auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
     record_input_history(input, value);
-    get_state(input).input_values.at(input.input_index()) = value;
+    get_state(input).input_values.at(input.input_index().value) = value;
 }
 
 auto Simulation::output_value(const Circuit::ConstOutput output,
@@ -638,7 +640,7 @@ auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t
 
 [[nodiscard]] auto Simulation::has_input_inverter(Circuit::ConstInput input) const
     -> bool {
-    return get_state(input).input_inverters.at(input.input_index());
+    return get_state(input).input_inverters.at(input.input_index().value);
 }
 
 [[nodiscard]] auto Simulation::has_input_inverters(Circuit::ConstElement element) const
@@ -652,7 +654,7 @@ auto Simulation::set_input_inverter(Circuit::ConstInput input, bool value) -> vo
     }
     is_initialized_ = false;
 
-    get_state(input).input_inverters.at(input.input_index()) = value;
+    get_state(input).input_inverters.at(input.input_index().value) = value;
 }
 
 auto Simulation::set_input_inverters(Circuit::ConstElement element,
@@ -662,14 +664,14 @@ auto Simulation::set_input_inverters(Circuit::ConstElement element,
     }
     is_initialized_ = false;
 
-    if (std::ssize(values) != element.input_count()) {
+    if (std::ssize(values) != element.input_count().value) {
         throw_exception("Need as many values for has_inverters as inputs.");
     }
     get_state(element).input_inverters.assign(std::begin(values), std::end(values));
 }
 
 auto Simulation::output_delay(const Circuit::ConstOutput output) const -> delay_t {
-    return get_state(output).output_delays.at(output.output_index());
+    return get_state(output).output_delays.at(output.output_index().value);
 }
 
 auto Simulation::set_output_delay(const Circuit::ConstOutput output, const delay_t delay)
@@ -677,16 +679,16 @@ auto Simulation::set_output_delay(const Circuit::ConstOutput output, const delay
     if (!queue_.empty()) {
         throw_exception("Cannot set output delay for state with scheduled events.");
     }
-    get_state(output).output_delays.at(output.output_index()) = delay;
+    get_state(output).output_delays.at(output.output_index().value) = delay;
 }
 
 auto Simulation::set_output_delays(Circuit::ConstElement element,
                                    std::vector<delay_t> delays) -> void {
-    if (element.output_count() != std::ssize(delays)) [[unlikely]] {
+    if (element.output_count().value != std::ssize(delays)) [[unlikely]] {
         throw_exception("Need as many delays as outputs in the vector.");
     }
     for (auto index : range(element.output_count())) {
-        set_output_delay(element.output(index), delays[index]);
+        set_output_delay(element.output(index), delays[index.value]);
     }
 }
 
@@ -694,18 +696,6 @@ auto Simulation::internal_state(Circuit::ConstElement element) const
     -> const logic_small_vector_t & {
     return get_state(element).internal_state;
 }
-
-// auto Simulation::set_internal_state(const Circuit::ConstElement element,
-//                                     const logic_small_vector_t &new_state) -> void
-//                                     {
-//     auto &state = get_state(element);
-//
-//     if (std::size(new_state) != std::size(state.internal_state)) {
-//         throw_exception("New internal state has wrong size.");
-//     }
-//
-//     state.internal_state.assign(new_state.begin(), new_state.end());
-// }
 
 auto Simulation::input_history(Circuit::ConstElement element) const -> HistoryView {
     const auto &state = get_state(element);
@@ -716,11 +706,6 @@ auto Simulation::input_history(Circuit::ConstElement element) const -> HistoryVi
         state.max_history,
     };
 }
-
-// auto Simulation::get_input_history(const Circuit::ConstElement element) const
-//     -> const history_vector_t & {
-//     return get_state(element).first_input_history;
-// }
 
 auto Simulation::max_history(const Circuit::ConstElement element) const -> history_t {
     return get_state(element).max_history;
@@ -913,7 +898,8 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     // set custom delays
     for (const auto element : circuit.elements()) {
         for (const auto output : element.outputs()) {
-            boost::random::uniform_int_distribution<time_t::rep> delay_dist {5, 500};
+            auto delay_dist
+                = boost::random::uniform_int_distribution<time_t::rep> {5, 500};
             simulation.set_output_delay(output, delay_t {1us * delay_dist(rng)});
         }
     }
@@ -921,7 +907,8 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     // set history for wires
     for (const auto element : circuit.elements()) {
         if (element.element_type() == ElementType::wire) {
-            const auto delay = simulation.output_delay(element.output(0));
+            const auto delay
+                = simulation.output_delay(element.output(connection_size_t {0}));
             simulation.set_max_history(element, history_t {delay.value * 10});
         }
     }

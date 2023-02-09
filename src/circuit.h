@@ -31,9 +31,6 @@ enum class ElementType : uint8_t {
     shift_register,
 };
 
-// TODO remove, use std::size instead
-using connection_id_t = int64_t;
-
 auto format(ElementType type) -> std::string;
 
 class Circuit {
@@ -95,8 +92,8 @@ class Circuit {
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
-    [[nodiscard]] auto input_count() const noexcept -> connection_id_t;
-    [[nodiscard]] auto output_count() const noexcept -> connection_id_t;
+    [[nodiscard]] auto input_count() const noexcept -> std::size_t;
+    [[nodiscard]] auto output_count() const noexcept -> std::size_t;
 
     [[nodiscard]] auto element(element_id_t element_id) -> Element;
     [[nodiscard]] auto element(element_id_t element_id) const -> ConstElement;
@@ -134,8 +131,8 @@ class Circuit {
     static_assert(sizeof(ElementData) == 67);
 
     std::vector<ElementData> element_data_store_ {};
-    connection_id_t input_count_ {0};
-    connection_id_t output_count_ {0};
+    std::size_t input_count_ {0};
+    std::size_t output_count_ {0};
 };
 
 template <class T>
@@ -270,7 +267,7 @@ class Circuit::ConnectionIteratorTemplate {
 
     using value_type = std::conditional_t<IsInput, Circuit::InputTemplate<Const>,
                                           Circuit::OutputTemplate<Const>>;
-    using difference_type = connection_size_t;
+    using difference_type = std::ptrdiff_t;
     using pointer = value_type *;
     // TODO check if reference needs to be return type of operator*
     using reference = value_type;

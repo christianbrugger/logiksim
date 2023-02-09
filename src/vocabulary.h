@@ -8,6 +8,7 @@
 #include <chrono>
 #include <compare>
 #include <cstdint>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -47,8 +48,35 @@ struct element_id_t {
 
 static_assert(std::is_trivial<element_id_t>::value);
 
-// TODO use strong types
-using connection_size_t = int8_t;
+struct connection_size_t {
+    using value_type = int8_t;
+    using difference_type = int;
+    // we need more bits to store difference, same as in range_difference_t
+    static_assert(sizeof(difference_type) > sizeof(value_type));
+
+    value_type value;
+
+    auto operator==(const connection_size_t &other) const -> bool = default;
+    auto operator<=>(const connection_size_t &other) const = default;
+
+    auto operator++() -> connection_size_t & {
+        ++value;
+        return *this;
+    }
+
+    auto operator++(int) -> connection_size_t {
+        auto tmp = *this;
+        operator++();
+        return tmp;
+    }
+
+    static constexpr auto max() noexcept {
+        return std::numeric_limits<value_type>::max();
+    };
+};
+
+static_assert(std::is_trivial<connection_size_t>::value);
+static_assert(std::weakly_incrementable<connection_size_t>);
 
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_size_t {-1};
@@ -180,6 +208,17 @@ struct fmt::formatter<logicsim::element_id_t> {
     }
 
     static auto format(const logicsim::element_id_t &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.value);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::connection_size_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::connection_size_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.value);
     }
 };

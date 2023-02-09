@@ -138,9 +138,8 @@ class Simulation {
 
         constexpr static auto no_timeout = timeout_t::max();
         constexpr static auto infinite_simulation_time = time_t::max();
-        constexpr static int64_t no_max_events {
-            std::numeric_limits<int64_t>::max()
-            - std::numeric_limits<connection_size_t>::max()};
+        constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max()
+                                                - connection_size_t::max()};
 
         constexpr static history_t no_history {0ns};
     };

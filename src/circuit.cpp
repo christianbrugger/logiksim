@@ -94,10 +94,10 @@ auto Circuit::elements() const noexcept -> ConstElementView {
 
 auto Circuit::add_element(ElementType type, connection_size_t input_count,
                           connection_size_t output_count) -> Element {
-    if (input_count < 0) [[unlikely]] {
+    if (input_count < connection_size_t {0}) [[unlikely]] {
         throw_exception("Input count needs to be positive.");
     }
-    if (output_count < 0) [[unlikely]] {
+    if (output_count < connection_size_t {0}) [[unlikely]] {
         throw_exception("Output count needs to be positive.");
     }
 
@@ -118,11 +118,11 @@ auto Circuit::add_element(ElementType type, connection_size_t input_count,
     auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
         element_data_store_.size() - std::size_t {1})};
 
-    element_data_store_.at(element_id.value).input_data.resize(input_count);
-    element_data_store_.at(element_id.value).output_data.resize(output_count);
+    element_data_store_.at(element_id.value).input_data.resize(input_count.value);
+    element_data_store_.at(element_id.value).output_data.resize(output_count.value);
 
-    input_count_ += input_count;
-    output_count_ += output_count;
+    input_count_ += input_count.value;
+    output_count_ += output_count.value;
 
     return element(element_id);
 }
@@ -133,11 +133,11 @@ auto Circuit::clear() -> void {
     output_count_ = 0;
 }
 
-auto Circuit::input_count() const noexcept -> connection_id_t {
+auto Circuit::input_count() const noexcept -> std::size_t {
     return input_count_;
 }
 
-auto Circuit::output_count() const noexcept -> connection_id_t {
+auto Circuit::output_count() const noexcept -> std::size_t {
     return output_count_;
 }
 
@@ -437,7 +437,7 @@ auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator*() const
 template <bool Const, bool IsInput>
 auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator++() noexcept
     -> Circuit::ConnectionIteratorTemplate<Const, IsInput> & {
-    ++connection_id;
+    ++connection_id.value;
     return *this;
 }
 
@@ -445,7 +445,7 @@ template <bool Const, bool IsInput>
 auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator++(int) noexcept
     -> ConnectionIteratorTemplate {
     auto tmp = *this;
-    ++connection_id;
+    ++(*this);
     return tmp;
 }
 
@@ -458,7 +458,7 @@ auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator==(
 template <bool Const, bool IsInput>
 auto Circuit::ConnectionIteratorTemplate<Const, IsInput>::operator-(
     const ConnectionIteratorTemplate &right) const noexcept -> difference_type {
-    return connection_id - right.connection_id;
+    return connection_id.value - right.connection_id.value;
 }
 
 template class Circuit::ConnectionIteratorTemplate<false, false>;
@@ -477,7 +477,7 @@ Circuit::ConnectionViewTemplate<Const, IsInput>::ConnectionViewTemplate(
 
 template <bool Const, bool IsInput>
 auto Circuit::ConnectionViewTemplate<Const, IsInput>::begin() const -> iterator_type {
-    return iterator_type {element_, 0};
+    return iterator_type {element_, connection_size_t {0}};
 }
 
 template <bool Const, bool IsInput>
@@ -496,7 +496,7 @@ auto Circuit::ConnectionViewTemplate<Const, IsInput>::size() const -> connection
 
 template <bool Const, bool IsInput>
 auto Circuit::ConnectionViewTemplate<Const, IsInput>::empty() const -> bool {
-    return size() == 0;
+    return size() == connection_size_t {0};
 }
 
 template <bool Const, bool IsInput>
@@ -509,6 +509,11 @@ template class Circuit::ConnectionViewTemplate<false, false>;
 template class Circuit::ConnectionViewTemplate<true, false>;
 template class Circuit::ConnectionViewTemplate<false, true>;
 template class Circuit::ConnectionViewTemplate<true, true>;
+
+static_assert(std::ranges::input_range<Circuit::InputView>);
+static_assert(std::ranges::input_range<Circuit::ConstInputView>);
+static_assert(std::ranges::input_range<Circuit::OutputView>);
+static_assert(std::ranges::input_range<Circuit::ConstOutputView>);
 
 //
 // Circuit::Input
@@ -606,11 +611,7 @@ void Circuit::InputTemplate<Const>::clear_connection() const
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data {
             circuit_->element_data_store_.at(connection_data.element_id.value)
-                .output_data.at(connection_data.index)};
-
-        // circuit_->output_data_store_.at(
-        //      circuit_->element(connection_data.element_id)
-        //      .output_id(connection_data.index))};
+                .output_data.at(connection_data.index.value)};
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.index = null_connection;
@@ -630,8 +631,7 @@ void Circuit::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) c
     // get data before we modify anything, for exception safety
     auto &destination_connection_data
         = circuit_->element_data_store_.at(output.element_id().value)
-              .output_data.at(output.output_index());
-    //     circuit_->output_data_store_.at(output.output_id());
+              .output_data.at(output.output_index().value);
 
     auto &connection_data {connection_data_()};
 
@@ -646,7 +646,7 @@ template <bool Const>
 auto Circuit::InputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
     // return circuit_->input_data_store_.at(input_id_);
     return circuit_->element_data_store_.at(element_id_.value)
-        .input_data.at(input_index_);
+        .input_data.at(input_index_.value);
 }
 
 // Template Instanciations
@@ -764,11 +764,7 @@ void Circuit::OutputTemplate<Const>::clear_connection() const
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data
             = circuit_->element_data_store_.at(connection_data.element_id.value)
-                  .input_data.at(connection_data.index);
-
-        // circuit_->input_data_store_.at(
-        //     circuit_->element(connection_data.element_id)
-        //     .input_id(connection_data.index));
+                  .input_data.at(connection_data.index.value);
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.index = null_connection;
@@ -789,7 +785,7 @@ void Circuit::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) co
     auto &connection_data {connection_data_()};
     auto &destination_connection_data
         = circuit_->element_data_store_.at(input.element_id().value)
-              .input_data.at(input.input_index());
+              .input_data.at(input.input_index().value);
     // circuit_->input_data_store_.at(input.input_id());
 
     connection_data.element_id = input.element_id();
@@ -803,7 +799,7 @@ template <bool Const>
 auto Circuit::OutputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
     // return circuit_->output_data_store_.at(output_id_);
     return circuit_->element_data_store_.at(element_id_.value)
-        .output_data.at(output_index_);
+        .output_data.at(output_index_.value);
 }
 
 // Template Instanciations
@@ -835,8 +831,9 @@ namespace logicsim {
 
 auto add_placeholder(Circuit::Output output) -> void {
     if (!output.has_connected_element()) {
-        auto placeholder {output.circuit()->add_element(ElementType::placeholder, 1, 0)};
-        output.connect(placeholder.input(0));
+        auto placeholder {output.circuit()->add_element(
+            ElementType::placeholder, connection_size_t {1}, connection_size_t {0})};
+        output.connect(placeholder.input(connection_size_t {0}));
     }
 }
 
@@ -851,18 +848,22 @@ auto add_output_placeholders(Circuit &circuit) -> void {
 auto benchmark_circuit(const int n_elements) -> Circuit {
     Circuit circuit {};
 
-    auto elem0 {circuit.add_element(ElementType::and_element, 2, 2)};
+    auto elem0 {circuit.add_element(ElementType::and_element, connection_size_t {2},
+                                    connection_size_t {2})};
 
     for ([[maybe_unused]] auto count : range(n_elements - 1)) {
-        auto wire0 = circuit.add_element(ElementType::wire, 1, 1);
-        auto wire1 = circuit.add_element(ElementType::wire, 1, 1);
-        auto elem1 = circuit.add_element(ElementType::and_element, 2, 2);
+        auto wire0 = circuit.add_element(ElementType::wire, connection_size_t {1},
+                                         connection_size_t {1});
+        auto wire1 = circuit.add_element(ElementType::wire, connection_size_t {1},
+                                         connection_size_t {1});
+        auto elem1 = circuit.add_element(ElementType::and_element, connection_size_t {2},
+                                         connection_size_t {2});
 
-        elem0.output(0).connect(wire0.input(0));
-        elem0.output(1).connect(wire1.input(0));
+        elem0.output(connection_size_t {0}).connect(wire0.input(connection_size_t {0}));
+        elem0.output(connection_size_t {1}).connect(wire1.input(connection_size_t {0}));
 
-        wire0.output(0).connect(elem1.input(0));
-        wire1.output(0).connect(elem1.input(1));
+        wire0.output(connection_size_t {0}).connect(elem1.input(connection_size_t {0}));
+        wire1.output(connection_size_t {0}).connect(elem1.input(connection_size_t {1}));
 
         elem0 = elem1;
     }
@@ -874,22 +875,25 @@ namespace details {
 
 template <std::uniform_random_bit_generator G>
 void add_random_element(Circuit &circuit, G &rng) {
-    constexpr connection_size_t max_connections {8};
-    boost::random::uniform_int_distribution<connection_size_t> connection_dist {
-        1, max_connections};
+    // TODO simplify types ?
+    static constexpr auto max_connections = 8;
+    boost::random::uniform_int_distribution<typename connection_size_t::value_type>
+        connection_dist {typename connection_size_t::value_type {1},
+                         typename connection_size_t::value_type {max_connections}};
     boost::random::uniform_int_distribution<int8_t> element_dist {0, 2};
 
-    const auto element_type {element_dist(rng) == 0
-                                 ? ElementType::xor_element
+    const auto element_type
+        = element_dist(rng) == 0 ? ElementType::xor_element
                                  : (element_dist(rng) == 1 ? ElementType::inverter_element
-                                                           : ElementType ::wire)};
+                                                           : ElementType ::wire);
 
-    const connection_size_t one {1};
-    const connection_size_t input_count {
-        element_type == ElementType::xor_element ? connection_dist(rng) : one};
+    const auto input_count = element_type == ElementType::xor_element
+                                 ? connection_size_t {connection_dist(rng)}
+                                 : connection_size_t {1};
 
-    const connection_size_t output_count {
-        element_type == ElementType::wire ? connection_dist(rng) : one};
+    const auto output_count = element_type == ElementType::wire
+                                  ? connection_size_t {connection_dist(rng)}
+                                  : connection_size_t {1};
 
     circuit.add_element(element_type, input_count, output_count);
 }

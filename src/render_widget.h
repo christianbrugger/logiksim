@@ -110,27 +110,29 @@ class WidgetRenderer : public QWidget {
 
         Circuit circuit;
 
-        const auto elem0 = circuit.add_element(ElementType::or_element, 2, 1);
-        const auto line0 = circuit.add_element(ElementType::wire, 1, 2);
-        elem0.output(0).connect(line0.input(0));
-        line0.output(0).connect(elem0.input(1));
+        const auto elem0 = circuit.add_element(
+            ElementType::or_element, connection_size_t {2}, connection_size_t {1});
+        const auto line0 = circuit.add_element(ElementType::wire, connection_size_t {1},
+                                               connection_size_t {2});
+        elem0.output(connection_size_t {0}).connect(line0.input(connection_size_t {0}));
+        line0.output(connection_size_t {0}).connect(elem0.input(connection_size_t {1}));
 
         add_output_placeholders(circuit);
         auto simulation = Simulation {circuit};
         simulation.print_events = true;
 
-        simulation.set_output_delay(elem0.output(0), delay_t {10us});
-        simulation.set_output_delay(line0.output(0), delay_t {40us});
-        simulation.set_output_delay(line0.output(0), delay_t {60us});
+        simulation.set_output_delay(elem0.output(connection_size_t {0}), delay_t {10us});
+        simulation.set_output_delay(line0.output(connection_size_t {0}), delay_t {40us});
+        simulation.set_output_delay(line0.output(connection_size_t {0}), delay_t {60us});
         // TODO rename function to: set_history_length
         // TODO use delay_t instead of history_t maybe?
         simulation.set_max_history(line0, history_t {60us});
 
         simulation.initialize();
-        simulation.submit_event(elem0.input(0), 100us, true);
-        simulation.submit_event(elem0.input(0), 105us, false);
-        simulation.submit_event(elem0.input(0), 110us, true);
-        simulation.submit_event(elem0.input(0), 500us, false);
+        simulation.submit_event(elem0.input(connection_size_t {0}), 100us, true);
+        simulation.submit_event(elem0.input(connection_size_t {0}), 105us, false);
+        simulation.submit_event(elem0.input(connection_size_t {0}), 110us, true);
+        simulation.submit_event(elem0.input(connection_size_t {0}), 500us, false);
 
         // TODO use gsl narrow
         auto end_time_ns = static_cast<uint64_t>(90'000 + animation_frame * 120'000);
