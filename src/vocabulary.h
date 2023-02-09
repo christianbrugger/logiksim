@@ -46,25 +46,11 @@ static_assert(std::is_trivial<element_id_t>::value);
 
 struct connection_id_t {
     using value_type = int8_t;
-    using difference_type = int;
-    // we need more bits to store difference, same as in range_difference_t
-    static_assert(sizeof(difference_type) > sizeof(value_type));
 
     value_type value;
 
     auto operator==(const connection_id_t &other) const -> bool = default;
     auto operator<=>(const connection_id_t &other) const = default;
-
-    auto operator++() -> connection_id_t & {
-        ++value;
-        return *this;
-    }
-
-    auto operator++(int) -> connection_id_t {
-        auto tmp = *this;
-        operator++();
-        return tmp;
-    }
 
     static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
@@ -72,7 +58,6 @@ struct connection_id_t {
 };
 
 static_assert(std::is_trivial<connection_id_t>::value);
-static_assert(std::weakly_incrementable<connection_id_t>);
 
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
