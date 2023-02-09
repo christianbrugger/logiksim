@@ -200,56 +200,52 @@ struct grid_t {
 
 static_assert(std::is_trivial<grid_t>::value);
 
-// TODO remove 2d from name
-struct point2d_fine_t {
+struct point_fine_t {
     double x;
     double y;
 };
 
-static_assert(std::is_trivial<point2d_fine_t>::value);
+static_assert(std::is_trivial<point_fine_t>::value);
 
-// TODO remove 2d from name
-struct point2d_t {
+struct point_t {
     grid_t x;
     grid_t y;
 
-    explicit constexpr operator point2d_fine_t() const noexcept {
-        return point2d_fine_t {static_cast<double>(x), static_cast<double>(y)};
+    explicit constexpr operator point_fine_t() const noexcept {
+        return point_fine_t {static_cast<double>(x), static_cast<double>(y)};
     }
 
-    constexpr auto operator==(const point2d_t &other) const -> bool = default;
-    constexpr auto operator<=>(const point2d_t &other) const = default;
+    constexpr auto operator==(const point_t &other) const -> bool = default;
+    constexpr auto operator<=>(const point_t &other) const = default;
 };
 
-static_assert(std::is_trivial<point2d_t>::value);
+static_assert(std::is_trivial<point_t>::value);
 
-// TODO remove 2d from name
-struct line2d_t {
-    point2d_t p0;
-    point2d_t p1;
+struct line_t {
+    point_t p0;
+    point_t p1;
 
-    constexpr auto operator==(const line2d_t &other) const -> bool = default;
+    constexpr auto operator==(const line_t &other) const -> bool = default;
 };
 
-static_assert(std::is_trivial<line2d_t>::value);
+static_assert(std::is_trivial<line_t>::value);
 
 // TODO use this in line_tree
 // line that is either horizontal or vertical
 struct orthogonal_line_t {
-    point2d_t p0;
-    point2d_t p1;
+    point_t p0;
+    point_t p1;
 
     explicit constexpr orthogonal_line_t() noexcept : p0 {}, p1 {} {};
 
-    explicit constexpr orthogonal_line_t(point2d_t p0_, point2d_t p1_)
-        : p0 {p0_}, p1 {p1_} {
+    explicit constexpr orthogonal_line_t(point_t p0_, point_t p1_) : p0 {p0_}, p1 {p1_} {
         if (p0_.x != p1_.x && p0_.y != p1_.y) [[unlikely]] {
             throw_exception("orthogonal line needs to be horizontal or vertical.");
         }
     };
 
     explicit constexpr orthogonal_line_t(grid_t x0, grid_t y0, grid_t x1, grid_t y1)
-        : orthogonal_line_t {point2d_t {x0, y0}, point2d_t {x1, y1}} {};
+        : orthogonal_line_t {point_t {x0, y0}, point_t {x1, y1}} {};
 
     auto operator==(const orthogonal_line_t &other) const -> bool = default;
 };
@@ -345,34 +341,34 @@ struct fmt::formatter<logicsim::grid_t> {
 };
 
 template <>
-struct fmt::formatter<logicsim::point2d_fine_t> {
+struct fmt::formatter<logicsim::point_fine_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::point2d_fine_t &obj, fmt::format_context &ctx) {
+    static auto format(const logicsim::point_fine_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "[{:.3f}, {:.3f}]", obj.x, obj.y);
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::point2d_t> {
+struct fmt::formatter<logicsim::point_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::point2d_t &obj, fmt::format_context &ctx) {
+    static auto format(const logicsim::point_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "[{}, {}]", obj.x, obj.y);
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::line2d_t> {
+struct fmt::formatter<logicsim::line_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::line2d_t &obj, fmt::format_context &ctx) {
+    static auto format(const logicsim::line_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "Line({}, {})", obj.p0, obj.p1);
     }
 };

@@ -19,7 +19,7 @@ SimulationScene::SimulationScene(const Simulation& simulation) noexcept
     : simulation_ {&simulation},
       draw_data_vector_(simulation.circuit().element_count()) {}
 
-auto SimulationScene::set_position(Circuit::ConstElement element, point2d_t position)
+auto SimulationScene::set_position(Circuit::ConstElement element, point_t position)
     -> void {
     get_data(element).position = position;
 }
@@ -46,25 +46,25 @@ auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
     return v0.value + (v1.value - v0.value) * ratio;
 }
 
-auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t0, time_t t1,
-                         time_t t_select) -> point2d_fine_t {
+auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_select)
+    -> point_fine_t {
     assert(t0 < t1);
 
     if (t_select <= t0) {
-        return static_cast<point2d_fine_t>(p0);
+        return static_cast<point_fine_t>(p0);
     }
     if (t_select >= t1) {
-        return static_cast<point2d_fine_t>(p1);
+        return static_cast<point_fine_t>(p1);
     }
 
     const double alpha = static_cast<double>((t_select.value - t0.value).count())
                          / static_cast<double>((t1.value - t0.value).count());
 
-    if (is_horizontal(line2d_t {p0, p1})) {
-        return point2d_fine_t {interpolate_1d(p0.x, p1.x, alpha),
-                               static_cast<double>(p0.y)};
+    if (is_horizontal(line_t {p0, p1})) {
+        return point_fine_t {interpolate_1d(p0.x, p1.x, alpha),
+                             static_cast<double>(p0.y)};
     }
-    return point2d_fine_t {static_cast<double>(p0.x), interpolate_1d(p0.y, p1.y, alpha)};
+    return point_fine_t {static_cast<double>(p0.x), interpolate_1d(p0.y, p1.y, alpha)};
 }
 
 auto get_image_data(BLContext& ctx) -> BLImageData {
@@ -85,7 +85,7 @@ auto get_image_data(BLContext& ctx) -> BLImageData {
     return data;
 }
 
-auto draw_connector_fast(BLContext& ctx, const point2d_t point, BLRgba32 color) -> void {
+auto draw_connector_fast(BLContext& ctx, const point_t point, BLRgba32 color) -> void {
     BLImageData data = get_image_data(ctx);
     auto& image = *ctx.targetImage();
     auto* array = static_cast<uint32_t*>(data.pixelData);
@@ -149,9 +149,9 @@ auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_ena
                      BLRgba32(color));
 }
 
-auto draw_line_segment(BLContext& ctx, point2d_t p_from, point2d_t p_until,
-                       time_t time_from, time_t time_until,
-                       const Simulation::HistoryView& history) -> void {
+auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,
+                       time_t time_until, const Simulation::HistoryView& history)
+    -> void {
     assert(time_from < time_until);
 
     const auto it_from = history.from(time_from);
@@ -304,32 +304,32 @@ auto random_segment_value(grid_t last, const RenderBenchmarkConfig& config, G& r
 }
 
 template <std::uniform_random_bit_generator G>
-auto new_line_point(point2d_t origin, bool horizontal,
-                    const RenderBenchmarkConfig& config, G& rng) -> point2d_t {
+auto new_line_point(point_t origin, bool horizontal, const RenderBenchmarkConfig& config,
+                    G& rng) -> point_t {
     if (horizontal) {
-        return point2d_t {random_segment_value(origin.x, config, rng), origin.y};
+        return point_t {random_segment_value(origin.x, config, rng), origin.y};
     }
-    return point2d_t {origin.x, random_segment_value(origin.y, config, rng)};
+    return point_t {origin.x, random_segment_value(origin.y, config, rng)};
 }
 
 template <std::uniform_random_bit_generator G>
-auto new_line_point(point2d_t origin, point2d_t previous,
-                    const RenderBenchmarkConfig& config, G& rng) -> point2d_t {
-    return new_line_point(origin, is_vertical(line2d_t {previous, origin}), config, rng);
+auto new_line_point(point_t origin, point_t previous, const RenderBenchmarkConfig& config,
+                    G& rng) -> point_t {
+    return new_line_point(origin, is_vertical(line_t {previous, origin}), config, rng);
 }
 
 // pick random point on line
 template <std::uniform_random_bit_generator G>
-auto pick_line_point(line2d_t line, G& rng) -> point2d_t {
+auto pick_line_point(line_t line, G& rng) -> point_t {
     line = order_points(line);
     // return point2d_t {UDist<grid_t> {line.p0.x, line.p1.x}(rng),
     //                   UDist<grid_t> {line.p0.y, line.p1.y}(rng)};
-    return point2d_t {get_udist(line.p0.x, line.p1.x, rng)(),
-                      get_udist(line.p0.y, line.p1.y, rng)()};
+    return point_t {get_udist(line.p0.x, line.p1.x, rng)(),
+                    get_udist(line.p0.y, line.p1.y, rng)()};
 }
 
 template <std::uniform_random_bit_generator G>
-auto create_line_tree_segment(point2d_t start_point, bool horizontal,
+auto create_line_tree_segment(point_t start_point, bool horizontal,
                               const RenderBenchmarkConfig& config, G& rng) -> LineTree {
     auto segment_count_dist
         = UDist<int> {config.min_line_segments, config.max_line_segments};
@@ -337,7 +337,7 @@ auto create_line_tree_segment(point2d_t start_point, bool horizontal,
 
     auto line_tree = std::optional<LineTree> {};
     do {
-        auto points = std::vector<point2d_t> {
+        auto points = std::vector<point_t> {
             start_point,
             new_line_point(start_point, horizontal, config, rng),
         };
@@ -357,7 +357,7 @@ auto create_first_line_tree_segment(const RenderBenchmarkConfig& config, G& rng)
     -> LineTree {
     // const auto grid_dist = UDist<grid_t> {config.min_grid, config.max_grid};
     const auto grid_dist = get_udist(config.min_grid, config.max_grid, rng);
-    const auto p0 = point2d_t {grid_dist(), grid_dist()};
+    const auto p0 = point_t {grid_dist(), grid_dist()};
 
     const auto is_horizontal = UDist<int> {0, 1}(rng);
     return create_line_tree_segment(p0, is_horizontal, config, rng);
@@ -390,7 +390,7 @@ auto create_random_line_tree(std::size_t n_outputs, const RenderBenchmarkConfig&
 auto calculate_tree_length(const LineTree& line_tree) -> int {
     return std::transform_reduce(line_tree.segments().begin(), line_tree.segments().end(),
                                  0, std::plus {},
-                                 [](line2d_t line) { return distance_1d(line); });
+                                 [](line_t line) { return distance_1d(line); });
 }
 
 }  // namespace

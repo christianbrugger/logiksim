@@ -29,14 +29,14 @@ class SimulationScene {
 
     auto render_scene(BLContext& ctx, bool render_background = true) const -> void;
 
-    auto set_position(Circuit::ConstElement element, point2d_t position) -> void;
+    auto set_position(Circuit::ConstElement element, point_t position) -> void;
     auto set_line_tree(Circuit::ConstElement element, LineTree&& line_tree) -> void;
 
    private:
     struct DrawData {
         LineTree line_tree {};
 
-        point2d_t position {0, 0};
+        point_t position {0, 0};
         int8_t orientation {0};
     };
 

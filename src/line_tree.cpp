@@ -28,13 +28,13 @@ namespace logicsim {
 
 class SegmentSplitter {
    public:
-    using buffer_t = std::vector<line2d_t>;
+    using buffer_t = std::vector<line_t>;
 
     SegmentSplitter() {
         buffer_.reserve(16);
     }
 
-    auto split_segment(line2d_t segment, std::ranges::input_range auto&& points)
+    auto split_segment(line_t segment, std::ranges::input_range auto&& points)
         -> const buffer_t& {
         buffer_.clear();
         buffer_.push_back(segment);
@@ -42,11 +42,11 @@ class SegmentSplitter {
         for (auto point : points) {
             auto splittable = std::ranges::find_if(
                 buffer_,
-                [&point](line2d_t line) -> bool { return is_inside(point, line); });
+                [&point](line_t line) -> bool { return is_inside(point, line); });
 
             if (splittable != buffer_.end()) {
-                buffer_.push_back(line2d_t {point, splittable->p1});
-                *splittable = line2d_t {splittable->p0, point};
+                buffer_.push_back(line_t {point, splittable->p1});
+                *splittable = line_t {splittable->p0, point};
             }
         }
 
@@ -58,8 +58,8 @@ class SegmentSplitter {
 };
 
 auto split_segments(std::ranges::input_range auto&& segments,
-                    std::ranges::input_range auto&& points) -> std::vector<line2d_t> {
-    std::vector<line2d_t> result;
+                    std::ranges::input_range auto&& points) -> std::vector<line_t> {
+    std::vector<line_t> result;
     result.reserve(std::size(segments) + std::size(points));
 
     auto splitter = SegmentSplitter {};
@@ -74,16 +74,16 @@ template <class OutputIterator, class GetterSame, class GetterDifferent>
 auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator result,
                        GetterSame get_same, GetterDifferent get_different) -> void {
     // collect lines
-    auto parallel_segments = std::vector<line2d_t> {};
+    auto parallel_segments = std::vector<line_t> {};
     for (auto tree_reference : line_trees) {
         transform_if(
             tree_reference.get().segments(), std::back_inserter(parallel_segments),
-            [&](auto line) -> line2d_t { return order_points(line); },
+            [&](auto line) -> line_t { return order_points(line); },
             [&](auto line) -> bool { return get_same(line.p0) == get_same(line.p1); });
     }
 
     // sort lists
-    std::ranges::sort(parallel_segments, [&](line2d_t a, line2d_t b) {
+    std::ranges::sort(parallel_segments, [&](line_t a, line_t b) {
         return std::tie(get_same(a.p0), get_different(a.p0))
                < std::tie(get_same(b.p0), get_different(b.p0));
     });
@@ -92,14 +92,14 @@ auto merge_segments_1d(const line_tree_vector_t& line_trees, OutputIterator resu
     transform_combine_while(
         parallel_segments, result,
         // make state
-        [](auto it) -> line2d_t { return *it; },
+        [](auto it) -> line_t { return *it; },
         // combine while
-        [&](line2d_t state, auto it) -> bool {
+        [&](line_t state, auto it) -> bool {
             return get_same(state.p0) == get_same(it->p0)
                    && get_different(state.p1) >= get_different(it->p0);
         },
         // update state
-        [&](line2d_t state, auto it) -> line2d_t {
+        [&](line_t state, auto it) -> line_t {
             get_different(state.p1)
                 = std::max(get_different(state.p1), get_different(it->p1));
             return state;
@@ -112,12 +112,12 @@ auto sum_segment_counts(const line_tree_vector_t& line_trees) -> size_t {
         [](auto tree_reference) { return tree_reference.get().segment_count(); });
 }
 
-auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_t> {
-    auto result = std::vector<line2d_t> {};
+auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line_t> {
+    auto result = std::vector<line_t> {};
     result.reserve(sum_segment_counts(line_trees));
 
-    auto get_x = [](point2d_t& point) -> grid_t& { return point.x; };
-    auto get_y = [](point2d_t& point) -> grid_t& { return point.y; };
+    auto get_x = [](point_t& point) -> grid_t& { return point.x; };
+    auto get_y = [](point_t& point) -> grid_t& { return point.y; };
 
     // vertical & horizontal
     merge_segments_1d(line_trees, std::back_inserter(result), get_x, get_y);
@@ -126,7 +126,7 @@ auto merge_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_
     return result;
 }
 
-auto merge_split_segments(const line_tree_vector_t& line_trees) -> std::vector<line2d_t> {
+auto merge_split_segments(const line_tree_vector_t& line_trees) -> std::vector<line_t> {
     // merge
     auto segments_merged = merge_segments(line_trees);
     // split
@@ -136,10 +136,10 @@ auto merge_split_segments(const line_tree_vector_t& line_trees) -> std::vector<l
 
 template <typename index_t>
 auto select_best_root(const AdjacencyGraph<index_t>& graph,
-                      std::optional<point2d_t> mandatory,
-                      const line_tree_vector_t& line_trees) -> std::optional<point2d_t> {
+                      std::optional<point_t> mandatory,
+                      const line_tree_vector_t& line_trees) -> std::optional<point_t> {
     // collect candidates
-    auto root_candidates = std::vector<point2d_t> {};
+    auto root_candidates = std::vector<point_t> {};
 
     auto to_point = [&](index_t index) { return graph.point(index); };
     auto is_leaf = [&](index_t index) { return graph.neighbors()[index].size() == 1; };
@@ -151,7 +151,7 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
     }
 
     std::ranges::sort(root_candidates);
-    const auto has_candidate = [&](point2d_t _root) {
+    const auto has_candidate = [&](point_t _root) {
         return std::ranges::binary_search(root_candidates, _root);
     };
 
@@ -176,7 +176,7 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
 
 // Merges line tree if possible. With new root, if given.
 
-auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root)
+auto merge(line_tree_vector_t line_trees, std::optional<point_t> new_root)
     -> std::optional<LineTree> {
     // trivial cases
     if (std::size(line_trees) == 0) {
@@ -199,10 +199,10 @@ auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root)
 // LineTree
 //
 
-LineTree::LineTree(std::initializer_list<point2d_t> points)
+LineTree::LineTree(std::initializer_list<point_t> points)
     : LineTree {points.begin(), points.end()} {}
 
-auto LineTree::from_points(std::initializer_list<point2d_t> points)
+auto LineTree::from_points(std::initializer_list<point_t> points)
     -> std::optional<LineTree> {
     return LineTree::from_points(points.begin(), points.end());
 }
@@ -243,7 +243,7 @@ class LineTree::TreeBuilderVisitor {
     std::vector<index_t> line_tree_index_ {};
 };
 
-auto LineTree::from_graph(point2d_t root, const Graph& graph) -> std::optional<LineTree> {
+auto LineTree::from_graph(point_t root, const Graph& graph) -> std::optional<LineTree> {
     // define as optional for RVO (return value optimization)
     auto line_tree = std::optional {LineTree {}};
 
@@ -280,7 +280,7 @@ auto std::swap(logicsim::LineTree& a, logicsim::LineTree& b) noexcept -> void {
 
 namespace logicsim {
 
-auto LineTree::reroot(const point2d_t new_root) const -> std::optional<LineTree> {
+auto LineTree::reroot(const point_t new_root) const -> std::optional<LineTree> {
     if (new_root == input_point()) {
         return *this;
     }
@@ -289,7 +289,7 @@ auto LineTree::reroot(const point2d_t new_root) const -> std::optional<LineTree>
     return LineTree::from_graph(new_root, graph);
 }
 
-auto LineTree::input_point() const -> point2d_t {
+auto LineTree::input_point() const -> point_t {
     if (points_.size() == 0) [[unlikely]] {
         throw_exception("Empty line tree has no root.");
     }
@@ -304,8 +304,8 @@ auto LineTree::empty() const noexcept -> bool {
     return points_.empty();
 }
 
-auto LineTree::segment(int index) const -> line2d_t {
-    return line2d_t {points_.at(indices_.at(index)), points_.at(index + 1)};
+auto LineTree::segment(int index) const -> line_t {
+    return line_t {points_.at(indices_.at(index)), points_.at(index + 1)};
 }
 
 auto LineTree::segments() const noexcept -> SegmentView {
@@ -321,9 +321,8 @@ auto LineTree::output_count() const -> std::size_t {
         return 0;
     }
 
-    auto count = adjacent_count_if(segments(), [](line2d_t first, line2d_t second) {
-        return first.p1 != second.p0;
-    });
+    auto count = adjacent_count_if(
+        segments(), [](line_t first, line_t second) { return first.p1 != second.p0; });
     return count + 1;
 }
 
@@ -409,13 +408,13 @@ auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
 
 // each horizontal segment is followed by a vertical segment and vice versa
 auto LineTree::validate_horizontal_follows_vertical() const -> bool {
-    auto is_horizontal = [](line2d_t line) { return line.p0.x == line.p1.x; };
+    auto is_horizontal = [](line_t line) { return line.p0.x == line.p1.x; };
     return std::ranges::adjacent_find(segments().begin(), segments().end(), {},
                                       is_horizontal)
            == segments().end();
 }
 
-auto connected_lines_colliding(line2d_t line0, line2d_t line1) -> bool {
+auto connected_lines_colliding(line_t line0, line_t line1) -> bool {
     if (line0.p1 == line1.p0) {
         return is_colliding(line0.p0, line1) || is_colliding(line1.p1, line0);
     }

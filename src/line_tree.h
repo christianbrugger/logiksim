@@ -53,7 +53,7 @@ class LineTree;
 
 using line_tree_vector_t = std::vector<std::reference_wrapper<const LineTree>>;
 
-auto merge(line_tree_vector_t line_trees, std::optional<point2d_t> new_root = {})
+auto merge(line_tree_vector_t line_trees, std::optional<point_t> new_root = {})
     -> std::optional<LineTree>;
 
 template <typename index_t>
@@ -75,7 +75,7 @@ class LineTree {
 
     // TODO use orthogonal_line_t everywhere
     explicit LineTree() = default;
-    explicit LineTree(std::initializer_list<point2d_t> points);
+    explicit LineTree(std::initializer_list<point_t> points);
 
     template <std::ranges::forward_range R>
     explicit LineTree(R &&r);
@@ -83,7 +83,7 @@ class LineTree {
     template <std::input_iterator I, std::sentinel_for<I> S>
     explicit LineTree(I begin, S end);
 
-    [[nodiscard]] static auto from_points(std::initializer_list<point2d_t> points)
+    [[nodiscard]] static auto from_points(std::initializer_list<point_t> points)
         -> std::optional<LineTree>;
 
     template <std::ranges::forward_range R>
@@ -92,19 +92,19 @@ class LineTree {
     template <std::input_iterator I, std::sentinel_for<I> S>
     [[nodiscard]] static auto from_points(I begin, S end) -> std::optional<LineTree>;
 
-    [[nodiscard]] static auto from_graph(point2d_t root, const Graph &graph)
+    [[nodiscard]] static auto from_graph(point_t root, const Graph &graph)
         -> std::optional<LineTree>;
 
     auto swap(LineTree &other) noexcept -> void;
 
     // return tree with new root, if possible
-    [[nodiscard]] auto reroot(const point2d_t new_root) const -> std::optional<LineTree>;
+    [[nodiscard]] auto reroot(const point_t new_root) const -> std::optional<LineTree>;
 
-    [[nodiscard]] auto input_point() const -> point2d_t;
+    [[nodiscard]] auto input_point() const -> point_t;
 
     [[nodiscard]] auto segment_count() const noexcept -> int;
     [[nodiscard]] auto empty() const noexcept -> bool;
-    [[nodiscard]] auto segment(int index) const -> line2d_t;
+    [[nodiscard]] auto segment(int index) const -> line_t;
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
 
@@ -132,7 +132,7 @@ class LineTree {
 
     // TODO consider merging for better locality
     using policy = folly::small_vector_policy::policy_size_type<index_t>;
-    using point_vector_t = folly::small_vector<point2d_t, 2, policy>;
+    using point_vector_t = folly::small_vector<point_t, 2, policy>;
     using index_vector_t = folly::small_vector<index_t, 4, policy>;
     using length_vector_t = folly::small_vector<length_t, 2, policy>;
 
@@ -166,7 +166,7 @@ class LineTree::SegmentIterator {
     using iterator_concept = std::bidirectional_iterator_tag;
     using iterator_category = std::bidirectional_iterator_tag;
 
-    using value_type = line2d_t;
+    using value_type = line_t;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type;
     // TODO check if reference needs to be return type of operator*
@@ -221,7 +221,7 @@ class LineTree::SegmentView {
 //
 
 struct LineTree::sized_line2d_t {
-    line2d_t line;
+    line_t line;
     length_t p0_length;
     length_t p1_length;
     bool has_connector_p0;

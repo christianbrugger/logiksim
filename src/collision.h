@@ -6,13 +6,13 @@
 namespace logicsim {
 
 // is the point inside the line
-auto is_inside(point2d_t point, line2d_t line) noexcept -> bool;
+auto is_inside(point_t point, line_t line) noexcept -> bool;
 
 // is the point colliding with the line
-auto is_colliding(point2d_t point, line2d_t line) noexcept -> bool;
+auto is_colliding(point_t point, line_t line) noexcept -> bool;
 
 // are the line endpoints colliding with the other line
-auto line_points_colliding(line2d_t line0, line2d_t line1) noexcept -> bool;
+auto line_points_colliding(line_t line0, line_t line1) noexcept -> bool;
 
 }  // namespace logicsim
 

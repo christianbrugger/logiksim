@@ -140,12 +140,10 @@ class WidgetRenderer : public QWidget {
         //  timer_.stop();
 
         auto scene = SimulationScene(simulation);
-        scene.set_position(elem0, point2d_t {5, 3});
+        scene.set_position(elem0, point_t {5, 3});
 
-        auto tree1
-            = LineTree({point2d_t {10, 10}, point2d_t {10, 12}, point2d_t {8, 12}});
-        auto tree2
-            = LineTree({point2d_t {10, 12}, point2d_t {12, 12}, point2d_t {12, 14}});
+        auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8, 12}});
+        auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12}, point_t {12, 14}});
         auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
         scene.set_line_tree(line0, std::move(line_tree));
 

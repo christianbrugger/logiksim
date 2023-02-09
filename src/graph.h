@@ -17,11 +17,11 @@
 namespace logicsim {
 
 [[nodiscard]] auto to_points_sorted_unique(std::ranges::input_range auto&& segments)
-    -> std::vector<point2d_t> {
-    auto points = std::vector<point2d_t> {};
+    -> std::vector<point_t> {
+    auto points = std::vector<point_t> {};
     points.reserve(2 * std::size(segments));
 
-    for (line2d_t segment : segments) {
+    for (line_t segment : segments) {
         points.push_back(segment.p0);
         points.push_back(segment.p1);
     }
@@ -36,7 +36,7 @@ template <typename index_t>
 class AdjacencyGraph {
    public:
     using key_type = index_t;
-    using mapped_type = point2d_t;
+    using mapped_type = point_t;
 
     // each point can only have 4 neighbors without collisions
     using neighbor_t = boost::container::static_vector<key_type, 4>;
@@ -50,7 +50,7 @@ class AdjacencyGraph {
         : points_ {to_points_sorted_unique(segments)} {
         neighbors_.resize(points_.size());
 
-        for (line2d_t segment : segments) {
+        for (line_t segment : segments) {
             add_edge_unchecked(segment);
         }
 
@@ -58,7 +58,7 @@ class AdjacencyGraph {
         sort_adjacency();
     }
 
-    auto point(index_t vertex_id) const -> point2d_t {
+    auto point(index_t vertex_id) const -> point_t {
         return points_.at(vertex_id);
     }
 
@@ -79,7 +79,7 @@ class AdjacencyGraph {
         return neighbors_;
     }
 
-    auto to_index(point2d_t _point) const -> std::optional<index_t> {
+    auto to_index(point_t _point) const -> std::optional<index_t> {
         const auto res = std::ranges::lower_bound(points_, _point);
         if (res != points_.end()) {
             return gsl::narrow_cast<index_t>(res - points_.begin());
@@ -89,14 +89,14 @@ class AdjacencyGraph {
 
    private:
     // assumes point is part of graph
-    auto to_index_unchecked(point2d_t _point) const -> size_t {
+    auto to_index_unchecked(point_t _point) const -> size_t {
         auto found = std::ranges::lower_bound(points_, _point);
         assert(found != points_.end());
         return found - points_.begin();
     }
 
     // assumes both endpoints are part of graph
-    auto add_edge_unchecked(line2d_t segment) -> void {
+    auto add_edge_unchecked(line_t segment) -> void {
         if (segment.p0 == segment.p1) [[unlikely]] {
             throw_exception("Trying to add segment with zero length.");
         }
@@ -193,7 +193,7 @@ class LengthRecorderVisitor {
     LengthRecorderVisitor(index_t vertex_count) : length_vector_(vertex_count, 0) {}
 
     auto tree_edge(index_t a, index_t b, AdjacencyGraph<index_t> graph) -> void {
-        auto line = line2d_t {graph.points().at(a), graph.points().at(b)};
+        auto line = line_t {graph.points().at(a), graph.points().at(b)};
         length_vector_.at(b) = length_vector_.at(a) + distance_1d(line);
     };
 
