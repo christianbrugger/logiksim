@@ -411,7 +411,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
 
             // history
             auto tree_max_delay = std::ranges::max(delays);
-            simulation.set_max_history(element, history_t {tree_max_delay.value});
+            simulation.set_history_length(element, delay_t {tree_max_delay.value});
 
             tree_length_sum += calculate_tree_length(line_tree);
             renderer.set_line_tree(element, std::move(line_tree));

@@ -141,7 +141,7 @@ class Simulation {
         constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max()
                                                 - connection_id_t::max()};
 
-        constexpr static history_t no_history {0ns};
+        constexpr static delay_t no_history {0ns};
     };
 
    public:
@@ -206,8 +206,9 @@ class Simulation {
     class HistoryView;
     class HistoryIterator;
     struct history_entry_t;
-    auto set_max_history(Circuit::ConstElement element, history_t max_history) -> void;
-    auto max_history(Circuit::ConstElement element) const -> history_t;
+    auto set_history_length(Circuit::ConstElement element, delay_t history_length)
+        -> void;
+    auto history_length(Circuit::ConstElement element) const -> delay_t;
     auto input_history(Circuit::ConstElement element) const -> HistoryView;
 
    private:
@@ -228,7 +229,7 @@ class Simulation {
     //                         const logic_small_vector_t &state) -> void;
 
     auto record_input_history(Circuit::ConstInput input, bool new_value) -> void;
-    auto clean_history(history_vector_t &history, history_t max_history) -> void;
+    auto clean_history(history_vector_t &history, delay_t history_length) -> void;
 
     [[nodiscard]] auto get_state(ElementOrConnection auto item) -> ElementState &;
     [[nodiscard]] auto get_state(ElementOrConnection auto item) const
@@ -243,7 +244,7 @@ class Simulation {
         folly::small_vector<delay_t, 5, policy> output_delays {};
 
         history_vector_t first_input_history {};
-        history_t max_history {defaults::no_history};
+        delay_t history_length {defaults::no_history};
 
         static_assert(sizeof(first_input_history) == 28);
         static_assert(sizeof(output_delays) == 24);
@@ -271,7 +272,7 @@ class Simulation::HistoryView {
     [[nodiscard]] explicit HistoryView() = default;
     [[nodiscard]] explicit HistoryView(const history_vector_t &history,
                                        time_t simulation_time, bool last_value,
-                                       history_t max_history);
+                                       delay_t history_length);
 
     [[nodiscard]] auto size() const -> std::size_t;
     [[nodiscard]] auto ssize() const -> std::ptrdiff_t;

@@ -67,7 +67,8 @@ inline constexpr auto null_connection = connection_id_t {-1};
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4455)  // literal suffix identifiers are reserved
+// false-positive: literal suffix identifiers are reserved
+#pragma warning(disable : 4455)
 #endif
 using std::literals::chrono_literals::operator""us;
 using std::literals::chrono_literals::operator""ns;
@@ -117,24 +118,6 @@ struct delay_t {
 
     auto operator==(const delay_t &other) const -> bool = default;
     auto operator<=>(const delay_t &other) const = default;
-};
-
-// change to delay_t ?
-struct history_t {
-    std::chrono::duration<int32_t, std::nano> value {};
-
-    [[nodiscard]] constexpr explicit history_t() noexcept = default;
-
-    [[nodiscard]] constexpr explicit history_t(
-        std::chrono::duration<int64_t, std::nano> delay)
-        : value {delay} {
-        if (value != delay) {
-            throw_exception("delay cannot be represented.");
-        }
-    }
-
-    auto operator==(const history_t &other) const -> bool = default;
-    auto operator<=>(const history_t &other) const = default;
 };
 
 //
@@ -255,17 +238,6 @@ struct fmt::formatter<logicsim::delay_t> {
     }
 
     static auto format(const logicsim::delay_t &obj, fmt::format_context &ctx) {
-        return logicsim::format_microsecond_time(ctx.out(), obj.value);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::history_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::history_t &obj, fmt::format_context &ctx) {
         return logicsim::format_microsecond_time(ctx.out(), obj.value);
     }
 };

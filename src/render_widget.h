@@ -122,9 +122,7 @@ class WidgetRenderer : public QWidget {
         simulation.set_output_delay(elem0.output(connection_id_t {0}), delay_t {10us});
         simulation.set_output_delay(line0.output(connection_id_t {0}), delay_t {40us});
         simulation.set_output_delay(line0.output(connection_id_t {0}), delay_t {60us});
-        // TODO rename function to: set_history_length
-        // TODO use delay_t instead of history_t maybe?
-        simulation.set_max_history(line0, history_t {60us});
+        simulation.set_history_length(line0, delay_t {60us});
 
         simulation.initialize();
         simulation.submit_event(elem0.input(connection_id_t {0}), 100us, true);

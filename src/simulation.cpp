@@ -561,7 +561,7 @@ auto Simulation::record_input_history(const Circuit::ConstInput input,
         return;
     }
     auto &state = get_state(input);
-    if (state.max_history <= history_t {0ns}) {
+    if (state.history_length <= delay_t {0ns}) {
         return;
     }
     if (new_value == input_value(input)) {
@@ -573,14 +573,16 @@ auto Simulation::record_input_history(const Circuit::ConstInput input,
     }
 
     // remove old values
-    clean_history(history, state.max_history);
+    clean_history(history, state.history_length);
 
     // add new entry
     history.push_back(time());
 }
 
-auto Simulation::clean_history(history_vector_t &history, history_t max_history) -> void {
-    while (!history.empty() && history.front().value < time().value - max_history.value) {
+auto Simulation::clean_history(history_vector_t &history, delay_t history_length)
+    -> void {
+    while (!history.empty()
+           && history.front().value < time().value - history_length.value) {
         history.pop_front();
     }
 }
@@ -702,20 +704,20 @@ auto Simulation::input_history(Circuit::ConstElement element) const -> HistoryVi
         state.first_input_history,
         this->time(),
         state.input_values.at(0),
-        state.max_history,
+        state.history_length,
     };
 }
 
-auto Simulation::max_history(const Circuit::ConstElement element) const -> history_t {
-    return get_state(element).max_history;
+auto Simulation::history_length(const Circuit::ConstElement element) const -> delay_t {
+    return get_state(element).history_length;
 }
 
-auto Simulation::set_max_history(const Circuit::ConstElement element,
-                                 const history_t max_history) -> void {
-    if (max_history < history_t {0ns}) [[unlikely]] {
+auto Simulation::set_history_length(const Circuit::ConstElement element,
+                                    const delay_t history_length) -> void {
+    if (history_length < delay_t {0ns}) [[unlikely]] {
         throw_exception("Max history cannot be negative.");
     }
-    get_state(element).max_history = max_history;
+    get_state(element).history_length = history_length;
 }
 
 //
@@ -724,12 +726,12 @@ auto Simulation::set_max_history(const Circuit::ConstElement element,
 
 Simulation::HistoryView::HistoryView(const history_vector_t &history,
                                      time_t simulation_time, bool last_value,
-                                     history_t max_history)
+                                     delay_t history_length)
     : history_ {&history}, simulation_time_ {simulation_time}, last_value_ {last_value} {
     // ascending without duplicates
     assert(std::ranges::is_sorted(history, std::ranges::less_equal {}));
     // calculate first valid index
-    const auto first_time = time_t {simulation_time.value - max_history.value};
+    const auto first_time = time_t {simulation_time.value - history_length.value};
     const auto first_index = find_index(first_time);
     min_index_ = gsl::narrow<decltype(min_index_)>(first_index);
 
@@ -906,7 +908,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
         if (element.element_type() == ElementType::wire) {
             const auto delay
                 = simulation.output_delay(element.output(connection_id_t {0}));
-            simulation.set_max_history(element, history_t {delay.value * 10});
+            simulation.set_history_length(element, delay_t {delay.value * 10});
         }
     }
 
