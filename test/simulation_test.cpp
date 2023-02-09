@@ -13,46 +13,46 @@ namespace logicsim {
 // SimulationEvent
 
 TEST(SimulationEventTest, EqualOperatorTest) {
-    SimulationEvent event1 {123us, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {123us, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
     EXPECT_TRUE(event1 == event2);
 
-    SimulationEvent event3 {123us, element_id_t {1}, connection_id_t {3}, true};
-    SimulationEvent event4 {123us, element_id_t {1}, connection_id_t {2}, false};
+    SimulationEvent event3 {time_t {123us}, element_id_t {1}, connection_id_t {3}, true};
+    SimulationEvent event4 {time_t {123us}, element_id_t {1}, connection_id_t {2}, false};
     EXPECT_TRUE(event3 == event4);
 }
 
 TEST(SimulationEventTest, LessThanOperatorTest) {
-    SimulationEvent event1 {123us, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {789us, element_id_t {3}, connection_id_t {4}, false};
+    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event1 < event2);
 
-    SimulationEvent event3 {123us, element_id_t {1}, connection_id_t {4}, true};
-    SimulationEvent event4 {123us, element_id_t {3}, connection_id_t {2}, false};
+    SimulationEvent event3 {time_t {123us}, element_id_t {1}, connection_id_t {4}, true};
+    SimulationEvent event4 {time_t {123us}, element_id_t {3}, connection_id_t {2}, false};
     EXPECT_TRUE(event3 < event4);
 }
 
 TEST(SimulationEventTest, NotEqualOperatorTest) {
-    SimulationEvent event1 {123ns, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {789ns, element_id_t {3}, connection_id_t {4}, false};
+    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event1 != event2);
 }
 
 TEST(SimulationEventTest, GreaterThanOperatorTest) {
-    SimulationEvent event1 {123ns, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {789ns, element_id_t {3}, connection_id_t {4}, false};
+    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event2 > event1);
 }
 
 TEST(SimulationEventTest, LessThanOrEqualOperatorTest) {
-    SimulationEvent event1 {123ns, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {789ns, element_id_t {3}, connection_id_t {4}, false};
+    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event1 <= event2);
 }
 
 TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
-    SimulationEvent event1 {123ns, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {789ns, element_id_t {3}, connection_id_t {4}, false};
+    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event2 >= event1);
 }
 
@@ -91,9 +91,9 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
 
     auto simulation = get_initialized_simulation(circuit);
 
-    EXPECT_EQ(simulation.time(), 0us);
+    EXPECT_EQ(simulation.time(), time_t {0us});
     simulation.run(3s);
-    EXPECT_EQ(simulation.time(), 3s);
+    EXPECT_EQ(simulation.time(), time_t {3s});
 }
 
 TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
@@ -108,9 +108,9 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     simulation.set_output_delay(inverter.output(connection_id_t {0}), delay_t {100us});
     simulation.initialize();
 
-    EXPECT_EQ(simulation.time(), 0us);
+    EXPECT_EQ(simulation.time(), time_t {0us});
     simulation.run(5ms);
-    EXPECT_EQ(simulation.time(), 5ms);
+    EXPECT_EQ(simulation.time(), time_t {5ms});
 }
 
 TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
@@ -123,12 +123,12 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     auto simulation = get_initialized_simulation(circuit);
 
     // run simulation for 5 ms
-    EXPECT_EQ(simulation.time(), 0us);
+    EXPECT_EQ(simulation.time(), time_t {0us});
     const auto start = timeout_clock::now();
     simulation.run(Simulation::defaults::infinite_simulation_time, 5ms);
     const auto end = timeout_clock::now();
 
-    EXPECT_GT(simulation.time(), 1ms);
+    EXPECT_GT(simulation.time(), time_t {1ms});
     const auto delay = end - start;
     ASSERT_THAT(delay > 4ms, true);
     ASSERT_THAT(delay < 6ms, true);
@@ -351,9 +351,8 @@ TEST(SimulationTest, TestInputHistory) {
     ASSERT_EQ(simulation.time(), time_t {0us});
 
     using entry_t = Simulation::history_entry_t;
-    constexpr auto min_rep = ++time_t::zero();
     ASSERT_THAT(simulation.input_history(wire),
-                testing::ElementsAre(entry_t {time_t::min(), 0us, false}));
+                testing::ElementsAre(entry_t {time_t::min(), time_t {0us}, false}));
 
     simulation.submit_event(wire.input(connection_id_t {0}), 10us, true);
     simulation.submit_event(wire.input(connection_id_t {0}), 20us, true);  // ignored
@@ -361,19 +360,23 @@ TEST(SimulationTest, TestInputHistory) {
     simulation.submit_event(wire.input(connection_id_t {0}), 60us, true);
     simulation.submit_event(wire.input(connection_id_t {0}), 180us, false);
 
-    simulation.run(time_t {100us});
+    simulation.run(100us);
     ASSERT_EQ(simulation.time(), time_t {100us});
-    ASSERT_THAT(simulation.input_history(wire),
-                testing::ElementsAre(entry_t {time_t::min(), 10us - min_rep, false},
-                                     entry_t {10us, 40us - min_rep, true},
-                                     entry_t {40us, 60us - min_rep, false},
-                                     entry_t {60us, 100us, true}));
+    constexpr auto epsilon = time_t::epsilon().value;
+    fmt::print("{}\n", simulation.input_history(wire));
+    ASSERT_THAT(
+        simulation.input_history(wire),
+        testing::ElementsAre(entry_t {time_t::min(), time_t {10us - epsilon}, false},
+                             entry_t {time_t {10us}, time_t {40us - epsilon}, true},
+                             entry_t {time_t {40us}, time_t {60us - epsilon}, false},
+                             entry_t {time_t {60us}, time_t {100us}, true}));
 
-    simulation.run(time_t {100us});
+    simulation.run(100us);
     ASSERT_EQ(simulation.time(), time_t {200us});
-    ASSERT_THAT(simulation.input_history(wire),
-                testing::ElementsAre(entry_t {time_t::min(), 180us - min_rep, true},
-                                     entry_t {180us, 200us, false}));
+    ASSERT_THAT(
+        simulation.input_history(wire),
+        testing::ElementsAre(entry_t {time_t::min(), time_t {180us - epsilon}, true},
+                             entry_t {time_t {180us}, time_t {200us}, false}));
 }
 
 TEST(SimulationTest, TestClockGenerator) {
@@ -589,7 +592,7 @@ TEST(SimulationTest, HistoryViewSizeEmpty) {
 TEST(SimulationTest, HistoryViewSizeNegative) {
     auto time = time_t {10us};
     auto max_history = history_t {20us};
-    auto history = Simulation::history_vector_t {5us, 7us};
+    auto history = Simulation::history_vector_t {time_t {5us}, time_t {7us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
@@ -604,7 +607,7 @@ TEST(SimulationTest, HistoryViewBeginEndExact) {
     auto max_history = history_t {10us};
     auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto min_rep = ++time_t::zero();
+    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
 
@@ -621,7 +624,7 @@ TEST(SimulationTest, HistoryViewBeginEndExact) {
     ASSERT_THAT(begin == end, true);
 
     ASSERT_THAT(value0.first_time, time_t::min());
-    ASSERT_THAT(value0.last_time, time_t {95us} - min_rep);
+    ASSERT_THAT(value0.last_time, time_t {95us - epsilon});
     ASSERT_THAT(value0.value, true);
 
     ASSERT_THAT(value1.first_time, time_t {95us});
@@ -634,7 +637,7 @@ TEST(SimulationTest, HistoryViewBeginEndFull) {
     auto max_history = history_t {50us};
     auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto min_rep = ++time_t::zero();
+    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
 
@@ -653,11 +656,11 @@ TEST(SimulationTest, HistoryViewBeginEndFull) {
     ASSERT_THAT(begin == end, true);
 
     ASSERT_THAT(value0.first_time, time_t::min());
-    ASSERT_THAT(value0.last_time, time_t {90us} - min_rep);
+    ASSERT_THAT(value0.last_time, time_t {90us - epsilon});
     ASSERT_THAT(value0.value, false);
 
     ASSERT_THAT(value1.first_time, time_t {90us});
-    ASSERT_THAT(value1.last_time, time_t {95us} - min_rep);
+    ASSERT_THAT(value1.last_time, time_t {95us - epsilon});
     ASSERT_THAT(value1.value, true);
 
     ASSERT_THAT(value2.first_time, time_t {95us});
@@ -704,7 +707,7 @@ TEST(SimulationTest, HistoryViewFromSecond) {
     auto max_history = history_t {10us};
     auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto min_rep = ++time_t::zero();
+    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
     auto from = view.from(time_t {90us});
@@ -712,7 +715,7 @@ TEST(SimulationTest, HistoryViewFromSecond) {
 
     auto value = *from;
     ASSERT_THAT(value.first_time, time_t::min());
-    ASSERT_THAT(value.last_time, time_t {95us} - min_rep);
+    ASSERT_THAT(value.last_time, time_t {95us - epsilon});
     ASSERT_THAT(value.value, true);
 }
 
@@ -748,7 +751,7 @@ TEST(SimulationTest, HistoryViewUntilExact) {
     auto max_history = history_t {10us};
     auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto min_rep = ++time_t::zero();
+    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
 
@@ -756,7 +759,7 @@ TEST(SimulationTest, HistoryViewUntilExact) {
     ASSERT_THAT(view.end() - from, 2);
 
     ASSERT_THAT(view.until(time_t {95us}) - from, 2);
-    ASSERT_THAT(view.until(time_t {95us} - min_rep) - from, 1);
+    ASSERT_THAT(view.until(time_t {95us - epsilon}) - from, 1);
 }
 
 TEST(SimulationTest, HistoryViewFromUntilBounds) {
@@ -788,7 +791,7 @@ TEST(SimulationTest, HistoryViewValueFull) {
     auto max_history = history_t {50us};
     auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto min_rep = ++time_t::zero();
+    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
 
@@ -796,10 +799,10 @@ TEST(SimulationTest, HistoryViewValueFull) {
     ASSERT_THAT(view.value(time_t {-100us}), false);
     ASSERT_THAT(view.value(time_t {0us}), false);
 
-    ASSERT_THAT(view.value(time_t {90us} - min_rep), false);
+    ASSERT_THAT(view.value(time_t {90us - epsilon}), false);
     ASSERT_THAT(view.value(time_t {90us}), true);
 
-    ASSERT_THAT(view.value(time_t {95us} - min_rep), true);
+    ASSERT_THAT(view.value(time_t {95us - epsilon}), true);
     ASSERT_THAT(view.value(time_t {95us}), false);
 
     ASSERT_THAT(view.value(time_t {100us}), false);
@@ -810,7 +813,7 @@ TEST(SimulationTest, HistoryViewValuePartialHistory) {
     auto max_history = history_t {10us};
     auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto min_rep = ++time_t::zero();
+    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = Simulation::HistoryView {history, time, last_value, max_history};
 
@@ -818,10 +821,10 @@ TEST(SimulationTest, HistoryViewValuePartialHistory) {
     ASSERT_THAT(view.value(time_t {-100us}), true);
     ASSERT_THAT(view.value(time_t {0us}), true);
 
-    ASSERT_THAT(view.value(time_t {90us} - min_rep), true);
+    ASSERT_THAT(view.value(time_t {90us - epsilon}), true);
     ASSERT_THAT(view.value(time_t {90us}), true);
 
-    ASSERT_THAT(view.value(time_t {95us} - min_rep), true);
+    ASSERT_THAT(view.value(time_t {95us - epsilon}), true);
     ASSERT_THAT(view.value(time_t {95us}), false);
 
     ASSERT_THAT(view.value(time_t {100us}), false);

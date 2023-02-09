@@ -134,7 +134,7 @@ class WidgetRenderer : public QWidget {
 
         // TODO use gsl narrow
         auto end_time_ns = static_cast<uint64_t>(90'000 + animation_frame * 120'000);
-        const auto end_time = time_t {end_time_ns * 1ns};
+        const auto end_time = end_time_ns * 1ns;
         simulation.run(end_time);
         // simulation.run(time_t {125us});
         //  simulation.run(time_t {130us});

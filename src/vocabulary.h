@@ -46,7 +46,6 @@ static_assert(std::is_trivial<element_id_t>::value);
 
 struct connection_id_t {
     using value_type = int8_t;
-
     value_type value;
 
     auto operator==(const connection_id_t &other) const -> bool = default;
@@ -76,11 +75,33 @@ using std::literals::chrono_literals::operator""ns;
 #pragma warning(pop)
 #endif
 
-// TODO strong type for time_t
-// TODO rename to simulation_time_t
-using time_t = std::chrono::duration<int64_t, std::nano>;
+struct time_t {
+    using value_type = std::chrono::duration<int64_t, std::nano>;
+    using rep = value_type::rep;
+    value_type value;
 
-// TODO create strong type for history type
+    auto operator==(const time_t &other) const -> bool = default;
+    auto operator<=>(const time_t &other) const = default;
+
+    static constexpr auto zero() noexcept -> time_t {
+        return time_t {value_type::zero()};
+    };
+
+    static constexpr auto epsilon() noexcept -> time_t {
+        return time_t {++value_type::zero()};
+    };
+
+    static constexpr auto min() noexcept -> time_t {
+        return time_t {value_type::min()};
+    };
+
+    static constexpr auto max() noexcept -> time_t {
+        return time_t {value_type::max()};
+    };
+};
+
+static_assert(std::is_trivial<time_t>::value);
+
 struct delay_t {
     std::chrono::duration<int32_t, std::nano> value {};
 
@@ -98,6 +119,7 @@ struct delay_t {
     auto operator<=>(const delay_t &other) const = default;
 };
 
+// change to delay_t ?
 struct history_t {
     std::chrono::duration<int32_t, std::nano> value {};
 
@@ -205,6 +227,58 @@ struct fmt::formatter<logicsim::connection_id_t> {
 };
 
 template <>
+struct fmt::formatter<logicsim::time_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::time_t &obj, fmt::format_context &ctx) {
+        using namespace std::literals::chrono_literals;
+
+        if (-1us < obj.value && obj.value < 1us) {
+            return fmt::format_to(ctx.out(), "{}ns", obj.value.count());
+        } else {
+            auto time_us = std::chrono::duration<double, std::micro> {obj.value};
+            return fmt::format_to(ctx.out(), "{:L}us", time_us.count());
+        }
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::delay_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::delay_t &obj, fmt::format_context &ctx) {
+        auto count = obj.value.count();
+
+        if (0 < count && count < 1000) {
+            return fmt::format_to(ctx.out(), "{}ns", count);
+        } else {
+            return fmt::format_to(ctx.out(), "{}us", count / 1000);
+        }
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::history_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::history_t &obj, fmt::format_context &ctx) {
+        auto count = obj.value.count();
+
+        if (0 < count && count < 1000) {
+            return fmt::format_to(ctx.out(), "{}ns", count);
+        } else {
+            return fmt::format_to(ctx.out(), "{}us", count / 1000);
+        }
+    }
+};
+
+template <>
 struct fmt::formatter<logicsim::point2d_fine_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
@@ -234,40 +308,6 @@ struct fmt::formatter<logicsim::line2d_t> {
 
     static auto format(const logicsim::line2d_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "Line({}, {})", obj.p0, obj.p1);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::time_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::time_t &obj, fmt::format_context &ctx) {
-        auto count = obj.count();
-
-        if (0 < count && count < 1000) {
-            return fmt::format_to(ctx.out(), "{}ns", count);
-        } else {
-            return fmt::format_to(ctx.out(), "{}us", count / 1000);
-        }
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::delay_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::delay_t &obj, fmt::format_context &ctx) {
-        auto count = obj.value.count();
-
-        if (0 < count && count < 1000) {
-            return fmt::format_to(ctx.out(), "{}ns", count);
-        } else {
-            return fmt::format_to(ctx.out(), "{}us", count / 1000);
-        }
     }
 };
 

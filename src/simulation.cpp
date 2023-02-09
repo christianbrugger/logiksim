@@ -30,10 +30,8 @@ auto make_event(Circuit::ConstInput input, time_t time, bool value) -> Simulatio
 }
 
 auto SimulationEvent::format() const -> std::string {
-    auto time_us = std::chrono::duration<double, std::micro> {time};
-    return fmt::format(  // std::locale("en_US.UTF-8"),
-        "<SimulationEvent: at {:L}us set Element_{}[{}] = {}>", time_us.count(),
-        element_id, input_index, value);
+    return fmt::format("<SimulationEvent: at {} set Element_{}[{}] = {}>", time,
+                       element_id, input_index, value);
 }
 
 auto SimulationEvent::operator==(const SimulationEvent &other) const -> bool {
@@ -206,12 +204,12 @@ auto Simulation::time() const noexcept -> time_t {
     return queue_.time();
 }
 
-auto Simulation::submit_event(Circuit::ConstInput input, time_t offset, bool value)
-    -> void {
-    queue_.submit_event(make_event(input, queue_.time() + offset, value));
+auto Simulation::submit_event(Circuit::ConstInput input, time_t::value_type offset,
+                              bool value) -> void {
+    queue_.submit_event(make_event(input, time_t {queue_.time().value + offset}, value));
 }
 
-auto Simulation::submit_events(Circuit::ConstElement element, time_t offset,
+auto Simulation::submit_events(Circuit::ConstElement element, time_t::value_type offset,
                                logic_small_vector_t values) -> void {
     if (std::size(values) != element.input_count()) [[unlikely]] {
         throw_exception("Need to provide number of input values.");
@@ -385,7 +383,7 @@ void Simulation::create_event(const Circuit::ConstOutput output,
                               const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
         const auto delay = output_delay(output);
-        queue_.submit_event({.time = queue_.time() + delay.value,
+        queue_.submit_event({.time = time_t {queue_.time().value + delay.value},
                              .element_id = output.connected_element_id(),
                              .input_index = output.connected_input_index(),
                              .value = output_values.at(output.output_index().value)});
@@ -478,7 +476,7 @@ class Simulation::Timer {
     time_point start_time_;
 };
 
-auto Simulation::run(const time_t simulation_time, const timeout_t timeout,
+auto Simulation::run(const time_t::value_type simulation_time, const timeout_t timeout,
                      const int64_t max_events) -> int64_t {
     if (!is_initialized_) {
         throw_exception("Simulation first needs to be initialized.");
@@ -498,7 +496,7 @@ auto Simulation::run(const time_t simulation_time, const timeout_t timeout,
     const Simulation::Timer timer {timeout};
     const auto queue_end_time = simulation_time == defaults::infinite_simulation_time
                                     ? time_t::max()
-                                    : queue_.time() + simulation_time;
+                                    : time_t {queue_.time().value + simulation_time};
     int64_t event_count = 0;
 
     // TODO refactor loop
@@ -582,7 +580,7 @@ auto Simulation::record_input_history(const Circuit::ConstInput input,
 }
 
 auto Simulation::clean_history(history_vector_t &history, history_t max_history) -> void {
-    while (!history.empty() && history.front() < time() - max_history.value) {
+    while (!history.empty() && history.front().value < time().value - max_history.value) {
         history.pop_front();
     }
 }
@@ -731,7 +729,7 @@ Simulation::HistoryView::HistoryView(const history_vector_t &history,
     // ascending without duplicates
     assert(std::ranges::is_sorted(history, std::ranges::less_equal {}));
     // calculate first valid index
-    const auto first_time = simulation_time - max_history.value;
+    const auto first_time = time_t {simulation_time.value - max_history.value};
     const auto first_index = find_index(first_time);
     min_index_ = gsl::narrow<decltype(min_index_)>(first_index);
 
@@ -814,7 +812,7 @@ auto Simulation::HistoryView::find_index(time_t value) const -> std::size_t {
     return gsl::narrow_cast<std::size_t>(index);
 }
 
-auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_min_rep) const
+auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_epsilon) const
     -> time_t {
     require_history();
 
@@ -824,10 +822,8 @@ auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_min_
     if (index >= std::ssize(*history_)) {
         return simulation_time_;
     }
-    const auto result = history_->at(index);
-
-    constexpr static auto min_representation = ++time_t::zero();
-    return substract_min_rep ? result - min_representation : result;
+    const auto &result = history_->at(index);
+    return substract_epsilon ? time_t {result.value - time_t::epsilon().value} : result;
 }
 
 //

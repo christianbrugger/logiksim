@@ -137,7 +137,7 @@ class Simulation {
         constexpr static delay_t standard_delay {100us};
 
         constexpr static auto no_timeout = timeout_t::max();
-        constexpr static auto infinite_simulation_time = time_t::max();
+        constexpr static auto infinite_simulation_time = time_t::value_type::max();
         constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max()
                                                 - connection_id_t::max()};
 
@@ -150,8 +150,9 @@ class Simulation {
     [[nodiscard]] auto time() const noexcept -> time_t;
 
     // submit custom events
-    auto submit_event(Circuit::ConstInput input, time_t offset, bool value) -> void;
-    auto submit_events(Circuit::ConstElement element, time_t offset,
+    auto submit_event(Circuit::ConstInput input, time_t::value_type offset, bool value)
+        -> void;
+    auto submit_events(Circuit::ConstElement element, time_t::value_type offset,
                        logic_small_vector_t values) -> void;
 
     // Initialize logic elements in the simulation
@@ -165,7 +166,7 @@ class Simulation {
     ///                          no more new events are generated
     /// @param timeout           return if simulation takes longer than this in realtime
     /// @param print_events      if true print each processed event information
-    auto run(time_t simulation_time = defaults::infinite_simulation_time,
+    auto run(time_t::value_type simulation_time = defaults::infinite_simulation_time,
              timeout_t timeout = defaults::no_timeout,
              int64_t max_events = defaults::no_max_events) -> int64_t;
 
@@ -289,7 +290,7 @@ class Simulation::HistoryView {
     [[nodiscard]] auto get_value(std::size_t history_index) const -> bool;
     [[nodiscard]] auto find_index(time_t value) const -> std::size_t;
     [[nodiscard]] auto get_time(std::ptrdiff_t index,
-                                bool substract_min_rep = false) const -> time_t;
+                                bool substract_epsilon = false) const -> time_t;
 
    private:
     const history_vector_t *history_ {nullptr};

@@ -57,7 +57,8 @@ auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t0, time_t t1,
         return static_cast<point2d_fine_t>(p1);
     }
 
-    const double alpha = static_cast<double>((t_select - t0).count()) / (t1 - t0).count();
+    const double alpha = static_cast<double>((t_select.value - t0.value).count())
+                         / static_cast<double>((t1.value - t0.value).count());
 
     if (is_horizontal(line2d_t {p0, p1})) {
         return point2d_fine_t {interpolate_1d(p0.x, p1.x, alpha),
@@ -171,7 +172,7 @@ auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) c
 
     // TODO move to some class
     const auto to_time = [time = simulation_->time()](LineTree::length_t length_) {
-        return time_t {time
+        return time_t {time.value
                        - static_cast<int64_t>(length_)
                              * Simulation::wire_delay_per_distance.value};
     };
@@ -427,7 +428,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             max_delay = std::max(max_delay, simulation.output_delay(output));
         }
     }
-    time_t max_time {max_delay.value};
+    auto max_time {max_delay.value};
 
     // add events
     for (auto element : circuit.elements()) {
@@ -435,7 +436,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             auto spacing_dist_us = boost::random::uniform_int_distribution<int> {
                 config.min_event_spacing_us, config.max_event_spacing_us};
             bool next_value = true;
-            time_t next_time = time_t {spacing_dist_us(rng) * 1us};
+            auto next_time = spacing_dist_us(rng) * 1us;
 
             while (next_time < max_time) {
                 simulation.submit_event(element.input(connection_id_t {0}), next_time,
