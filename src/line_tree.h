@@ -109,7 +109,7 @@ class LineTree {
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
 
     [[nodiscard]] auto output_count() const -> std::size_t;
-    [[nodiscard]] auto output_delays() const -> std::vector<length_t>;
+    [[nodiscard]] auto output_lengths() const -> std::vector<length_t>;
 
     [[nodiscard]] auto format() const -> std::string;
 

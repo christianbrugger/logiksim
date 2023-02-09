@@ -53,8 +53,8 @@ constexpr auto is_horizontal(orthogonal_line_t line) noexcept -> bool {
 
 // fast distance for horitonal or vertical lines
 inline auto distance_1d(point2d_t p0, point2d_t p1) -> int {
-    auto dx = p1.x - p0.x;
-    auto dy = p1.y - p0.y;
+    auto dx = p1.x.value - p0.x.value;
+    auto dy = p1.y.value - p0.y.value;
     assert(dx == 0 || dy == 0);
     return std::abs((dx == 0) ? dy : dx);
 }

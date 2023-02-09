@@ -67,8 +67,11 @@ if (MSVC)
     list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
     # disable unused parameters
     list(APPEND MAIN_COMPILE_OPTIONS /wd4100)
-    # unreachable code warnings when using range-v3 templates
-    list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
+    
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        # clang 16 warns on brace elision, why?
+        list(APPEND MAIN_COMPILE_OPTIONS -Wno-missing-braces)
+    endif()
 else()
 	# -Wthread-safety 
     list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 

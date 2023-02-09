@@ -327,7 +327,7 @@ auto LineTree::output_count() const -> std::size_t {
     return count + 1;
 }
 
-auto LineTree::output_delays() const -> std::vector<length_t> {
+auto LineTree::output_lengths() const -> std::vector<length_t> {
     if (segment_count() == 0) {
         return {};
     }

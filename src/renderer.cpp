@@ -43,7 +43,7 @@ auto SimulationScene::draw_background(BLContext& ctx) const -> void {
 }
 
 auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
-    return v0 + (v1 - v0) * ratio;
+    return v0.value + (v1.value - v0.value) * ratio;
 }
 
 auto interpolate_line_1d(point2d_t p0, point2d_t p1, time_t t0, time_t t1,
@@ -91,8 +91,8 @@ auto draw_connector_fast(BLContext& ctx, const point2d_t point, BLRgba32 color) 
     auto* array = static_cast<uint32_t*>(data.pixelData);
 
     int w = image.width();
-    int x = point.x * 12;
-    int y = point.y * 12;
+    int x = point.x.value * 12;
+    int y = point.y.value * 12;
 
     static constexpr int s = 2;
     for (int xi : range(x - s, x + s + 1)) {
@@ -277,19 +277,31 @@ struct RenderBenchmarkConfig {
 
 namespace {
 
+template <typename T>
+using UDist = boost::random::uniform_int_distribution<T>;
+
+template <std::uniform_random_bit_generator G>
+auto get_udist(grid_t a, grid_t b, G& rng) {
+    return [a, b, &rng]() -> grid_t {
+        return grid_t {UDist<grid_t::value_type> {a.value, b.value}(rng)};
+    };
+}
+
 template <std::uniform_random_bit_generator G>
 auto random_segment_value(grid_t last, const RenderBenchmarkConfig& config, G& rng) {
-    auto grid_dist = boost::random::uniform_int_distribution<grid_t> {
-        std::max(config.min_grid, gsl::narrow<grid_t>(last - config.max_segment_length)),
-        std::min(config.max_grid, gsl::narrow<grid_t>(last + config.max_segment_length))};
+    // auto grid_dist = boost::random::uniform_int_distribution<grid_t> {
+    //     std::max(config.min_grid, last - config.max_segment_length),
+    //     std::min(config.max_grid, last + config.max_segment_length)};
+
+    auto grid_dist
+        = get_udist(std::max(config.min_grid, last - config.max_segment_length),
+                    std::min(config.max_grid, last + config.max_segment_length), rng);
+
     grid_t res;
-    while ((res = grid_dist(rng)) == last) {
+    while ((res = grid_dist()) == last) {
     }
     return res;
 }
-
-template <typename T>
-using UDist = boost::random::uniform_int_distribution<T>;
 
 template <std::uniform_random_bit_generator G>
 auto new_line_point(point2d_t origin, bool horizontal,
@@ -310,8 +322,10 @@ auto new_line_point(point2d_t origin, point2d_t previous,
 template <std::uniform_random_bit_generator G>
 auto pick_line_point(line2d_t line, G& rng) -> point2d_t {
     line = order_points(line);
-    return point2d_t {UDist<grid_t> {line.p0.x, line.p1.x}(rng),
-                      UDist<grid_t> {line.p0.y, line.p1.y}(rng)};
+    // return point2d_t {UDist<grid_t> {line.p0.x, line.p1.x}(rng),
+    //                   UDist<grid_t> {line.p0.y, line.p1.y}(rng)};
+    return point2d_t {get_udist(line.p0.x, line.p1.x, rng)(),
+                      get_udist(line.p0.y, line.p1.y, rng)()};
 }
 
 template <std::uniform_random_bit_generator G>
@@ -341,8 +355,10 @@ auto create_line_tree_segment(point2d_t start_point, bool horizontal,
 template <std::uniform_random_bit_generator G>
 auto create_first_line_tree_segment(const RenderBenchmarkConfig& config, G& rng)
     -> LineTree {
-    const auto grid_dist = UDist<grid_t> {config.min_grid, config.max_grid};
-    const auto p0 = point2d_t {grid_dist(rng), grid_dist(rng)};
+    // const auto grid_dist = UDist<grid_t> {config.min_grid, config.max_grid};
+    const auto grid_dist = get_udist(config.min_grid, config.max_grid, rng);
+    const auto p0 = point2d_t {grid_dist(), grid_dist()};
+
     const auto is_horizontal = UDist<int> {0, 1}(rng);
     return create_line_tree_segment(p0, is_horizontal, config, rng);
 }
@@ -387,8 +403,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     // create scene
     auto& circuit = scene.circuit;
     for (auto _ [[maybe_unused]] : range(n_lines)) {
-        boost::random::uniform_int_distribution<int> output_dist {config.n_outputs_min,
-                                                                  config.n_outputs_max};
+        UDist<int> output_dist {config.n_outputs_min, config.n_outputs_max};
         circuit.add_element(ElementType::wire, 1, output_dist(rng));
     }
     add_output_placeholders(circuit);
@@ -402,11 +417,12 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             auto line_tree = create_random_line_tree(element.output_count(), config, rng);
 
             // delays
-            auto lengths = line_tree.output_delays();
+            auto lengths = line_tree.output_lengths();
             assert(lengths.size() == element.output_count());
-            auto delays = transform_to_vector(lengths, [](grid_t length) {
-                return delay_t {Simulation::wire_delay_per_distance.value * length};
-            });
+            auto delays
+                = transform_to_vector(lengths, [](LineTree::length_t length) -> delay_t {
+                      return delay_t {Simulation::wire_delay_per_distance.value * length};
+                  });
             simulation.set_output_delays(element, delays);
 
             // history
@@ -433,8 +449,8 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     // add events
     for (auto element : circuit.elements()) {
         if (element.element_type() == ElementType::wire) {
-            auto spacing_dist_us = boost::random::uniform_int_distribution<int> {
-                config.min_event_spacing_us, config.max_event_spacing_us};
+            auto spacing_dist_us
+                = UDist<int> {config.min_event_spacing_us, config.max_event_spacing_us};
             bool next_value = true;
             auto next_time = spacing_dist_us(rng) * 1us;
 

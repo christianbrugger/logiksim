@@ -4,6 +4,7 @@
 #include "exceptions.h"
 
 #include <fmt/core.h>
+#include <gsl/gsl>
 
 #include <chrono>
 #include <compare>
@@ -20,10 +21,10 @@ struct circuit_id_t {
     using value_type = int16_t;
     value_type value;
 
-    auto operator==(const circuit_id_t &other) const -> bool = default;
-    auto operator<=>(const circuit_id_t &other) const = default;
+    [[nodiscard]] auto operator==(const circuit_id_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const circuit_id_t &other) const = default;
 
-    static constexpr auto max() noexcept {
+    [[nodiscard]] static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
     };
 };
@@ -34,10 +35,10 @@ struct element_id_t {
     using value_type = int32_t;
     value_type value;
 
-    auto operator==(const element_id_t &other) const -> bool = default;
-    auto operator<=>(const element_id_t &other) const = default;
+    [[nodiscard]] auto operator==(const element_id_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const element_id_t &other) const = default;
 
-    static constexpr auto max() noexcept {
+    [[nodiscard]] static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
     };
 };
@@ -48,10 +49,10 @@ struct connection_id_t {
     using value_type = int8_t;
     value_type value;
 
-    auto operator==(const connection_id_t &other) const -> bool = default;
-    auto operator<=>(const connection_id_t &other) const = default;
+    [[nodiscard]] auto operator==(const connection_id_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const connection_id_t &other) const = default;
 
-    static constexpr auto max() noexcept {
+    [[nodiscard]] static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
     };
 };
@@ -84,19 +85,19 @@ struct time_t {
     auto operator==(const time_t &other) const -> bool = default;
     auto operator<=>(const time_t &other) const = default;
 
-    static constexpr auto zero() noexcept -> time_t {
+    [[nodiscard]] static constexpr auto zero() noexcept -> time_t {
         return time_t {value_type::zero()};
     };
 
-    static constexpr auto epsilon() noexcept -> time_t {
+    [[nodiscard]] static constexpr auto epsilon() noexcept -> time_t {
         return time_t {++value_type::zero()};
     };
 
-    static constexpr auto min() noexcept -> time_t {
+    [[nodiscard]] static constexpr auto min() noexcept -> time_t {
         return time_t {value_type::min()};
     };
 
-    static constexpr auto max() noexcept -> time_t {
+    [[nodiscard]] static constexpr auto max() noexcept -> time_t {
         return time_t {value_type::max()};
     };
 };
@@ -116,22 +117,96 @@ struct delay_t {
         }
     };
 
-    auto operator==(const delay_t &other) const -> bool = default;
-    auto operator<=>(const delay_t &other) const = default;
+    [[nodiscard]] auto operator==(const delay_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const delay_t &other) const = default;
+};
+
+//
+// Styling Types
+//
+
+struct color_t {
+    using value_type = uint32_t;
+    value_type value;
+
+    [[nodiscard]] auto operator==(const color_t &other) const -> bool = default;
+
+    [[nodiscard]] constexpr auto r() const noexcept -> int {
+        return (value >> 16) & 0xFFu;
+    }
+
+    [[nodiscard]] constexpr auto g() const noexcept -> int {
+        return (value >> 8) & 0xFFu;
+    }
+
+    [[nodiscard]] constexpr auto b() const noexcept -> int {
+        return (value >> 0) & 0xFFu;
+    }
+
+    [[nodiscard]] constexpr auto a() const noexcept -> int {
+        return (value >> 24);
+    }
 };
 
 //
 // Spacial Types
 //
 
-// TODO strong type
-using grid_t = int16_t;
+struct grid_t {
+    using value_type = int16_t;
+    value_type value;
+
+    [[nodiscard]] auto operator==(const grid_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const grid_t &other) const = default;
+
+    [[nodiscard]] static constexpr auto min() noexcept {
+        return std::numeric_limits<value_type>::min();
+    };
+
+    [[nodiscard]] static constexpr auto max() noexcept {
+        return std::numeric_limits<value_type>::max();
+    };
+
+    // arithmetic (overflow is checked)
+
+    [[nodiscard]] constexpr auto operator+(grid_t other) const -> grid_t {
+        auto result = value + other.value;
+
+        static_assert(sizeof(result) > sizeof(value));
+        return {gsl::narrow<grid_t::value_type>(result)};
+    }
+
+    [[nodiscard]] constexpr auto operator-(grid_t other) const -> grid_t {
+        auto result = value - other.value;
+
+        static_assert(sizeof(result) > sizeof(value));
+        return {gsl::narrow<grid_t::value_type>(result)};
+    }
+
+    // conversions
+
+    [[nodiscard]] explicit constexpr operator int() const noexcept {
+        return static_cast<int>(value);
+    }
+
+    [[nodiscard]] explicit constexpr operator double() const noexcept {
+        return static_cast<double>(value);
+    }
+
+    [[nodiscard]] friend constexpr auto operator*(grid_t a, double b) -> double {
+        return static_cast<double>(a) * b;
+    }
+};
+
+static_assert(std::is_trivial<grid_t>::value);
 
 // TODO remove 2d from name
 struct point2d_fine_t {
     double x;
     double y;
 };
+
+static_assert(std::is_trivial<point2d_fine_t>::value);
 
 // TODO remove 2d from name
 struct point2d_t {
@@ -146,6 +221,8 @@ struct point2d_t {
     constexpr auto operator<=>(const point2d_t &other) const = default;
 };
 
+static_assert(std::is_trivial<point2d_t>::value);
+
 // TODO remove 2d from name
 struct line2d_t {
     point2d_t p0;
@@ -154,6 +231,9 @@ struct line2d_t {
     constexpr auto operator==(const line2d_t &other) const -> bool = default;
 };
 
+static_assert(std::is_trivial<line2d_t>::value);
+
+// TODO use this in line_tree
 // line that is either horizontal or vertical
 struct orthogonal_line_t {
     point2d_t p0;
@@ -169,7 +249,7 @@ struct orthogonal_line_t {
     };
 
     explicit constexpr orthogonal_line_t(grid_t x0, grid_t y0, grid_t x1, grid_t y1)
-        : orthogonal_line_t {{x0, y0}, {x1, y1}} {};
+        : orthogonal_line_t {point2d_t {x0, y0}, point2d_t {x1, y1}} {};
 
     auto operator==(const orthogonal_line_t &other) const -> bool = default;
 };
@@ -239,6 +319,28 @@ struct fmt::formatter<logicsim::delay_t> {
 
     static auto format(const logicsim::delay_t &obj, fmt::format_context &ctx) {
         return logicsim::format_microsecond_time(ctx.out(), obj.value);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::color_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::color_t &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{:X}", obj.value);
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::grid_t> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::grid_t &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.value);
     }
 };
 

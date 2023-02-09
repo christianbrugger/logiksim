@@ -137,8 +137,9 @@ struct range_t {
 
         if constexpr (forward) {
             return std::max(stop - start, zero);
+        } else {
+            return std::max(start - stop, zero);
         }
-        return std::max(start - stop, zero);
     }
 
     [[nodiscard]] constexpr auto empty() const noexcept(noexcept(begin() == end()))
@@ -149,8 +150,9 @@ struct range_t {
     [[nodiscard]] constexpr auto format() const -> std::string {
         if constexpr (forward) {
             return fmt::format("range({}, {})", start_, stop_);
+        } else {
+            return fmt::format("reverse_range({}, {})", stop_, start_);
         }
-        return fmt::format("reverse_range({}, {})", stop_, start_);
     }
 
    private:
