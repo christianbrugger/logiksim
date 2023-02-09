@@ -316,15 +316,15 @@ auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
     return SegmentSizeView(*this);
 }
 
-auto LineTree::output_count() const -> connection_size_t {
+auto LineTree::output_count() const -> std::size_t {
     if (segment_count() == 0) {
-        return connection_size_t {0};
+        return 0;
     }
 
     auto count = adjacent_count_if(segments(), [](line2d_t first, line2d_t second) {
         return first.p1 != second.p0;
     });
-    return connection_size_t {gsl::narrow<connection_size_t::value_type>(count + 1)};
+    return count + 1;
 }
 
 auto LineTree::output_delays() const -> std::vector<length_t> {

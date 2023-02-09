@@ -37,7 +37,7 @@ namespace logicsim {
 struct SimulationEvent {
     time_t time;
     element_id_t element_id;
-    connection_size_t input_index;
+    connection_id_t input_index;
     bool value;
 
     auto operator==(const SimulationEvent &other) const -> bool;
@@ -122,12 +122,12 @@ class Simulation {
 
     // 8 bytes still fit into a small_vector with 32 byte size.
     // using logic_small_vector_t = boost::container::small_vector<bool, 8>;
-    // using con_index_small_vector_t = boost::container::small_vector<connection_size_t,
+    // using con_index_small_vector_t = boost::container::small_vector<connection_id_t,
     // 8>;
 
     using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
     using logic_small_vector_t = folly::small_vector<bool, 20, policy>;
-    using con_index_small_vector_t = folly::small_vector<connection_size_t, 20, policy>;
+    using con_index_small_vector_t = folly::small_vector<connection_id_t, 20, policy>;
     static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
@@ -139,7 +139,7 @@ class Simulation {
         constexpr static auto no_timeout = timeout_t::max();
         constexpr static auto infinite_simulation_time = time_t::max();
         constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max()
-                                                - connection_size_t::max()};
+                                                - connection_id_t::max()};
 
         constexpr static history_t no_history {0ns};
     };

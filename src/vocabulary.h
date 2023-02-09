@@ -20,10 +20,6 @@ struct circuit_id_t {
     using value_type = int16_t;
     value_type value;
 
-    [[nodiscard]] constexpr explicit circuit_id_t() noexcept = default;
-
-    [[nodiscard]] constexpr explicit circuit_id_t(value_type value) : value {value} {}
-
     auto operator==(const circuit_id_t &other) const -> bool = default;
     auto operator<=>(const circuit_id_t &other) const = default;
 
@@ -48,7 +44,7 @@ struct element_id_t {
 
 static_assert(std::is_trivial<element_id_t>::value);
 
-struct connection_size_t {
+struct connection_id_t {
     using value_type = int8_t;
     using difference_type = int;
     // we need more bits to store difference, same as in range_difference_t
@@ -56,15 +52,15 @@ struct connection_size_t {
 
     value_type value;
 
-    auto operator==(const connection_size_t &other) const -> bool = default;
-    auto operator<=>(const connection_size_t &other) const = default;
+    auto operator==(const connection_id_t &other) const -> bool = default;
+    auto operator<=>(const connection_id_t &other) const = default;
 
-    auto operator++() -> connection_size_t & {
+    auto operator++() -> connection_id_t & {
         ++value;
         return *this;
     }
 
-    auto operator++(int) -> connection_size_t {
+    auto operator++(int) -> connection_id_t {
         auto tmp = *this;
         operator++();
         return tmp;
@@ -75,11 +71,11 @@ struct connection_size_t {
     };
 };
 
-static_assert(std::is_trivial<connection_size_t>::value);
-static_assert(std::weakly_incrementable<connection_size_t>);
+static_assert(std::is_trivial<connection_id_t>::value);
+static_assert(std::weakly_incrementable<connection_id_t>);
 
 inline constexpr auto null_element = element_id_t {-1};
-inline constexpr auto null_connection = connection_size_t {-1};
+inline constexpr auto null_connection = connection_id_t {-1};
 
 //
 // Time Types
@@ -213,12 +209,12 @@ struct fmt::formatter<logicsim::element_id_t> {
 };
 
 template <>
-struct fmt::formatter<logicsim::connection_size_t> {
+struct fmt::formatter<logicsim::connection_id_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::connection_size_t &obj, fmt::format_context &ctx) {
+    static auto format(const logicsim::connection_id_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.value);
     }
 };

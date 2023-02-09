@@ -267,8 +267,8 @@ struct RenderBenchmarkConfig {
     int min_line_segments {1};
     int max_line_segments {5};
 
-    connection_size_t n_outputs_min {1};
-    connection_size_t n_outputs_max {5};
+    int n_outputs_min {1};
+    int n_outputs_max {5};
 
     int min_event_spacing_us {5};
     int max_event_spacing_us {30};
@@ -347,8 +347,8 @@ auto create_first_line_tree_segment(const RenderBenchmarkConfig& config, G& rng)
 }
 
 template <std::uniform_random_bit_generator G>
-auto create_random_line_tree(connection_size_t n_outputs,
-                             const RenderBenchmarkConfig& config, G& rng) -> LineTree {
+auto create_random_line_tree(std::size_t n_outputs, const RenderBenchmarkConfig& config,
+                             G& rng) -> LineTree {
     auto line_tree = create_first_line_tree_segment(config, rng);
 
     while (line_tree.output_count() < n_outputs) {
@@ -386,10 +386,9 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     // create scene
     auto& circuit = scene.circuit;
     for (auto _ [[maybe_unused]] : range(n_lines)) {
-        boost::random::uniform_int_distribution<connection_size_t::value_type>
-            output_dist {config.n_outputs_min.value, config.n_outputs_max.value};
-        circuit.add_element(ElementType::wire, connection_size_t {1},
-                            connection_size_t {output_dist(rng)});
+        boost::random::uniform_int_distribution<int> output_dist {config.n_outputs_min,
+                                                                  config.n_outputs_max};
+        circuit.add_element(ElementType::wire, 1, output_dist(rng));
     }
     add_output_placeholders(circuit);
 
@@ -403,7 +402,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
 
             // delays
             auto lengths = line_tree.output_delays();
-            assert(lengths.size() == element.output_count().value);
+            assert(lengths.size() == element.output_count());
             auto delays = transform_to_vector(lengths, [](grid_t length) {
                 return delay_t {Simulation::wire_delay_per_distance.value * length};
             });
@@ -439,7 +438,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             time_t next_time = time_t {spacing_dist_us(rng) * 1us};
 
             while (next_time < max_time) {
-                simulation.submit_event(element.input(connection_size_t {0}), next_time,
+                simulation.submit_event(element.input(connection_id_t {0}), next_time,
                                         next_value);
 
                 next_value = next_value ^ true;

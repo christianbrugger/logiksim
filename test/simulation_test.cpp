@@ -13,46 +13,46 @@ namespace logicsim {
 // SimulationEvent
 
 TEST(SimulationEventTest, EqualOperatorTest) {
-    SimulationEvent event1 {123us, element_id_t {1}, connection_size_t {2}, true};
-    SimulationEvent event2 {123us, element_id_t {1}, connection_size_t {2}, true};
+    SimulationEvent event1 {123us, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {123us, element_id_t {1}, connection_id_t {2}, true};
     EXPECT_TRUE(event1 == event2);
 
-    SimulationEvent event3 {123us, element_id_t {1}, connection_size_t {3}, true};
-    SimulationEvent event4 {123us, element_id_t {1}, connection_size_t {2}, false};
+    SimulationEvent event3 {123us, element_id_t {1}, connection_id_t {3}, true};
+    SimulationEvent event4 {123us, element_id_t {1}, connection_id_t {2}, false};
     EXPECT_TRUE(event3 == event4);
 }
 
 TEST(SimulationEventTest, LessThanOperatorTest) {
-    SimulationEvent event1 {123us, element_id_t {1}, connection_size_t {2}, true};
-    SimulationEvent event2 {789us, element_id_t {3}, connection_size_t {4}, false};
+    SimulationEvent event1 {123us, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {789us, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event1 < event2);
 
-    SimulationEvent event3 {123us, element_id_t {1}, connection_size_t {4}, true};
-    SimulationEvent event4 {123us, element_id_t {3}, connection_size_t {2}, false};
+    SimulationEvent event3 {123us, element_id_t {1}, connection_id_t {4}, true};
+    SimulationEvent event4 {123us, element_id_t {3}, connection_id_t {2}, false};
     EXPECT_TRUE(event3 < event4);
 }
 
 TEST(SimulationEventTest, NotEqualOperatorTest) {
-    SimulationEvent event1 {123ns, element_id_t {1}, connection_size_t {2}, true};
-    SimulationEvent event2 {789ns, element_id_t {3}, connection_size_t {4}, false};
+    SimulationEvent event1 {123ns, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {789ns, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event1 != event2);
 }
 
 TEST(SimulationEventTest, GreaterThanOperatorTest) {
-    SimulationEvent event1 {123ns, element_id_t {1}, connection_size_t {2}, true};
-    SimulationEvent event2 {789ns, element_id_t {3}, connection_size_t {4}, false};
+    SimulationEvent event1 {123ns, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {789ns, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event2 > event1);
 }
 
 TEST(SimulationEventTest, LessThanOrEqualOperatorTest) {
-    SimulationEvent event1 {123ns, element_id_t {1}, connection_size_t {2}, true};
-    SimulationEvent event2 {789ns, element_id_t {3}, connection_size_t {4}, false};
+    SimulationEvent event1 {123ns, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {789ns, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event1 <= event2);
 }
 
 TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
-    SimulationEvent event1 {123ns, element_id_t {1}, connection_size_t {2}, true};
-    SimulationEvent event2 {789ns, element_id_t {3}, connection_size_t {4}, false};
+    SimulationEvent event1 {123ns, element_id_t {1}, connection_id_t {2}, true};
+    SimulationEvent event2 {789ns, element_id_t {3}, connection_id_t {4}, false};
     EXPECT_TRUE(event2 >= event1);
 }
 
@@ -76,14 +76,13 @@ TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
 
 TEST(SimulationTest, InitializeSimulation) {
     Circuit circuit;
-    auto inverter {circuit.add_element(ElementType::inverter_element,
-                                       connection_size_t {1}, connection_size_t {1})};
+    auto inverter {circuit.add_element(ElementType::inverter_element, 1, 1)};
 
     auto simulation = get_initialized_simulation(circuit);
     simulation.run();
 
-    EXPECT_EQ(simulation.input_value(inverter.input(connection_size_t {0})), false);
-    EXPECT_EQ(simulation.output_value(inverter.output(connection_size_t {0})), true);
+    EXPECT_EQ(simulation.input_value(inverter.input(connection_id_t {0})), false);
+    EXPECT_EQ(simulation.output_value(inverter.output(connection_id_t {0})), true);
 }
 
 TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
@@ -102,12 +101,11 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
 
     // create infinite loop
     Circuit circuit;
-    const auto inverter = circuit.add_element(
-        ElementType::inverter_element, connection_size_t {1}, connection_size_t {1});
-    inverter.output(connection_size_t {0}).connect(inverter.input(connection_size_t {0}));
+    const auto inverter = circuit.add_element(ElementType::inverter_element, 1, 1);
+    inverter.output(connection_id_t {0}).connect(inverter.input(connection_id_t {0}));
 
     auto simulation = get_uninitialized_simulation(circuit);
-    simulation.set_output_delay(inverter.output(connection_size_t {0}), delay_t {100us});
+    simulation.set_output_delay(inverter.output(connection_id_t {0}), delay_t {100us});
     simulation.initialize();
 
     EXPECT_EQ(simulation.time(), 0us);
@@ -120,9 +118,8 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
 
     // create infinite loop
     Circuit circuit;
-    const auto inverter = circuit.add_element(
-        ElementType::inverter_element, connection_size_t {1}, connection_size_t {1});
-    inverter.output(connection_size_t {0}).connect(inverter.input(connection_size_t {0}));
+    const auto inverter = circuit.add_element(ElementType::inverter_element, 1, 1);
+    inverter.output(connection_id_t {0}).connect(inverter.input(connection_id_t {0}));
     auto simulation = get_initialized_simulation(circuit);
 
     // run simulation for 5 ms
@@ -139,113 +136,107 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
 
 TEST(SimulationTest, AdditionalEvents) {
     Circuit circuit;
-    auto xor_element {circuit.add_element(ElementType::xor_element, connection_size_t {2},
-                                          connection_size_t {1})};
+    auto xor_element {circuit.add_element(ElementType::xor_element, 2, 1)};
 
     auto simulation = get_initialized_simulation(circuit);
     simulation.run();
 
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {0})), false);
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {1})), false);
-    EXPECT_EQ(simulation.output_value(xor_element.output(connection_size_t {0})), false);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), false);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {1})), false);
+    EXPECT_EQ(simulation.output_value(xor_element.output(connection_id_t {0})), false);
 
     // enable first input
-    simulation.submit_event(xor_element.input(connection_size_t {0}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, true);
     simulation.run();
 
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {0})), true);
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {1})), false);
-    EXPECT_EQ(simulation.output_value(xor_element.output(connection_size_t {0})), true);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), true);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {1})), false);
+    EXPECT_EQ(simulation.output_value(xor_element.output(connection_id_t {0})), true);
 
     // enable second input
-    simulation.submit_event(xor_element.input(connection_size_t {1}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {1}), 10us, true);
     simulation.run();
 
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {0})), true);
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {1})), true);
-    EXPECT_EQ(simulation.output_value(xor_element.output(connection_size_t {0})), false);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), true);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {1})), true);
+    EXPECT_EQ(simulation.output_value(xor_element.output(connection_id_t {0})), false);
 }
 
 TEST(SimulationTest, SimulatanousEvents) {
     Circuit circuit;
-    auto xor_element {circuit.add_element(ElementType::xor_element, connection_size_t {2},
-                                          connection_size_t {1})};
+    auto xor_element {circuit.add_element(ElementType::xor_element, 2, 1)};
 
     auto simulation = get_initialized_simulation(circuit);
-    simulation.submit_event(xor_element.input(connection_size_t {0}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, true);
     simulation.run();
 
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {0})), true);
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {1})), false);
-    EXPECT_EQ(simulation.output_value(xor_element.output(connection_size_t {0})), true);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), true);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {1})), false);
+    EXPECT_EQ(simulation.output_value(xor_element.output(connection_id_t {0})), true);
 
     // flip inputs at the same time
-    simulation.submit_event(xor_element.input(connection_size_t {0}), 10us, false);
-    simulation.submit_event(xor_element.input(connection_size_t {1}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, false);
+    simulation.submit_event(xor_element.input(connection_id_t {1}), 10us, true);
     simulation.run();
 
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {0})), false);
-    EXPECT_EQ(simulation.input_value(xor_element.input(connection_size_t {1})), true);
-    EXPECT_EQ(simulation.output_value(xor_element.output(connection_size_t {0})), true);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), false);
+    EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {1})), true);
+    EXPECT_EQ(simulation.output_value(xor_element.output(connection_id_t {0})), true);
 }
 
 TEST(SimulationTest, HalfAdder) {
     Circuit circuit;
-    const auto input0 {circuit.add_element(ElementType::wire, connection_size_t {1},
-                                           connection_size_t {2})};
-    const auto input1 {circuit.add_element(ElementType::wire, connection_size_t {1},
-                                           connection_size_t {2})};
-    const auto carry {circuit.add_element(ElementType::and_element, connection_size_t {2},
-                                          connection_size_t {1})};
-    const auto output {circuit.add_element(ElementType::xor_element,
-                                           connection_size_t {2}, connection_size_t {1})};
+    const auto input0 {circuit.add_element(ElementType::wire, 1, 2)};
+    const auto input1 {circuit.add_element(ElementType::wire, 1, 2)};
+    const auto carry {circuit.add_element(ElementType::and_element, 2, 1)};
+    const auto output {circuit.add_element(ElementType::xor_element, 2, 1)};
 
-    input0.output(connection_size_t {0}).connect(carry.input(connection_size_t {0}));
-    input0.output(connection_size_t {1}).connect(output.input(connection_size_t {0}));
+    input0.output(connection_id_t {0}).connect(carry.input(connection_id_t {0}));
+    input0.output(connection_id_t {1}).connect(output.input(connection_id_t {0}));
 
-    input1.output(connection_size_t {0}).connect(carry.input(connection_size_t {1}));
-    input1.output(connection_size_t {1}).connect(output.input(connection_size_t {1}));
+    input1.output(connection_id_t {0}).connect(carry.input(connection_id_t {1}));
+    input1.output(connection_id_t {1}).connect(output.input(connection_id_t {1}));
 
     auto simulation = get_initialized_simulation(circuit);
 
     // 0 + 0 -> 00
     {
-        simulation.submit_event(input0.input(connection_size_t {0}), 10us, false);
-        simulation.submit_event(input1.input(connection_size_t {0}), 10us, false);
+        simulation.submit_event(input0.input(connection_id_t {0}), 10us, false);
+        simulation.submit_event(input1.input(connection_id_t {0}), 10us, false);
         simulation.run();
 
-        EXPECT_EQ(simulation.output_value(output.output(connection_size_t {0})), false);
-        EXPECT_EQ(simulation.output_value(carry.output(connection_size_t {0})), false);
+        EXPECT_EQ(simulation.output_value(output.output(connection_id_t {0})), false);
+        EXPECT_EQ(simulation.output_value(carry.output(connection_id_t {0})), false);
     }
 
     // 0 + 1 = 01
     {
-        simulation.submit_event(input0.input(connection_size_t {0}), 10us, true);
-        simulation.submit_event(input1.input(connection_size_t {0}), 10us, false);
+        simulation.submit_event(input0.input(connection_id_t {0}), 10us, true);
+        simulation.submit_event(input1.input(connection_id_t {0}), 10us, false);
         simulation.run();
 
-        EXPECT_EQ(simulation.output_value(output.output(connection_size_t {0})), true);
-        EXPECT_EQ(simulation.output_value(carry.output(connection_size_t {0})), false);
+        EXPECT_EQ(simulation.output_value(output.output(connection_id_t {0})), true);
+        EXPECT_EQ(simulation.output_value(carry.output(connection_id_t {0})), false);
     }
 
     // 1 + 0 = 01
     {
-        simulation.submit_event(input0.input(connection_size_t {0}), 10us, false);
-        simulation.submit_event(input1.input(connection_size_t {0}), 10us, true);
+        simulation.submit_event(input0.input(connection_id_t {0}), 10us, false);
+        simulation.submit_event(input1.input(connection_id_t {0}), 10us, true);
         simulation.run();
 
-        EXPECT_EQ(simulation.output_value(output.output(connection_size_t {0})), true);
-        EXPECT_EQ(simulation.output_value(carry.output(connection_size_t {0})), false);
+        EXPECT_EQ(simulation.output_value(output.output(connection_id_t {0})), true);
+        EXPECT_EQ(simulation.output_value(carry.output(connection_id_t {0})), false);
     }
 
     // 1 + 1 = 10
     {
-        simulation.submit_event(input0.input(connection_size_t {0}), 10us, true);
-        simulation.submit_event(input1.input(connection_size_t {0}), 10us, true);
+        simulation.submit_event(input0.input(connection_id_t {0}), 10us, true);
+        simulation.submit_event(input1.input(connection_id_t {0}), 10us, true);
         simulation.run();
 
-        EXPECT_EQ(simulation.output_value(output.output(connection_size_t {0})), false);
-        EXPECT_EQ(simulation.output_value(carry.output(connection_size_t {0})), true);
+        EXPECT_EQ(simulation.output_value(output.output(connection_id_t {0})), false);
+        EXPECT_EQ(simulation.output_value(carry.output(connection_id_t {0})), true);
     }
 }
 
@@ -253,15 +244,14 @@ TEST(SimulationTest, OutputDelayTest) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    const auto wire = circuit.add_element(ElementType::wire, connection_size_t {1},
-                                          connection_size_t {3});
+    const auto wire = circuit.add_element(ElementType::wire, 1, 3);
     auto simulation = get_initialized_simulation(circuit);
 
-    simulation.set_output_delay(wire.output(connection_size_t {0}), delay_t {1ms});
-    simulation.set_output_delay(wire.output(connection_size_t {1}), delay_t {2ms});
-    simulation.set_output_delay(wire.output(connection_size_t {2}), delay_t {3ms});
+    simulation.set_output_delay(wire.output(connection_id_t {0}), delay_t {1ms});
+    simulation.set_output_delay(wire.output(connection_id_t {1}), delay_t {2ms});
+    simulation.set_output_delay(wire.output(connection_id_t {2}), delay_t {3ms});
 
-    simulation.submit_event(wire.input(connection_size_t {0}), 1us, true);
+    simulation.submit_event(wire.input(connection_id_t {0}), 1us, true);
     simulation.run(1us);
 
     // after 0.5 seconds
@@ -282,8 +272,7 @@ TEST(SimulationTest, JKFlipFlop) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    const auto flipflop {circuit.add_element(
-        ElementType::flipflop_jk, connection_size_t {3}, connection_size_t {2})};
+    const auto flipflop {circuit.add_element(ElementType::flipflop_jk, 3, 2)};
     auto simulation = get_initialized_simulation(circuit);
 
     simulation.run();
@@ -326,8 +315,7 @@ TEST(SimulationTest, AndInputInverters) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    auto and_element {circuit.add_element(ElementType::and_element, connection_size_t {2},
-                                          connection_size_t {1})};
+    auto and_element {circuit.add_element(ElementType::and_element, 2, 1)};
 
     auto simulation = get_uninitialized_simulation(circuit);
     simulation.set_input_inverters(and_element, {true, true});
@@ -343,7 +331,7 @@ TEST(SimulationTest, AndInputInverters) {
     ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(false, false));
     ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(false));
 
-    simulation.submit_event(and_element.input(connection_size_t {0}), 1ms, true);
+    simulation.submit_event(and_element.input(connection_id_t {0}), 1ms, true);
     simulation.run();
     ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(true, false));
     ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(true));
@@ -353,8 +341,7 @@ TEST(SimulationTest, TestInputHistory) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    auto wire {circuit.add_element(ElementType::wire, connection_size_t {1},
-                                   connection_size_t {2})};
+    auto wire {circuit.add_element(ElementType::wire, 1, 2)};
 
     auto simulation = get_uninitialized_simulation(circuit);
     simulation.set_max_history(wire, history_t {100us});
@@ -368,11 +355,11 @@ TEST(SimulationTest, TestInputHistory) {
     ASSERT_THAT(simulation.input_history(wire),
                 testing::ElementsAre(entry_t {time_t::min(), 0us, false}));
 
-    simulation.submit_event(wire.input(connection_size_t {0}), 10us, true);
-    simulation.submit_event(wire.input(connection_size_t {0}), 20us, true);  // ignored
-    simulation.submit_event(wire.input(connection_size_t {0}), 40us, false);
-    simulation.submit_event(wire.input(connection_size_t {0}), 60us, true);
-    simulation.submit_event(wire.input(connection_size_t {0}), 180us, false);
+    simulation.submit_event(wire.input(connection_id_t {0}), 10us, true);
+    simulation.submit_event(wire.input(connection_id_t {0}), 20us, true);  // ignored
+    simulation.submit_event(wire.input(connection_id_t {0}), 40us, false);
+    simulation.submit_event(wire.input(connection_id_t {0}), 60us, true);
+    simulation.submit_event(wire.input(connection_id_t {0}), 180us, false);
 
     simulation.run(time_t {100us});
     ASSERT_EQ(simulation.time(), time_t {100us});
@@ -393,99 +380,95 @@ TEST(SimulationTest, TestClockGenerator) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    auto clock {circuit.add_element(ElementType::clock_generator, connection_size_t {2},
-                                    connection_size_t {2})};
-    clock.output(connection_size_t {0}).connect(clock.input(connection_size_t {0}));
+    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
 
     auto simulation = get_uninitialized_simulation(circuit);
 
-    simulation.set_output_delay(clock.output(connection_size_t {0}), delay_t {100us});
-    simulation.set_output_delay(clock.output(connection_size_t {1}), delay_t {100us});
+    simulation.set_output_delay(clock.output(connection_id_t {0}), delay_t {100us});
+    simulation.set_output_delay(clock.output(connection_id_t {1}), delay_t {100us});
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_size_t {1}), 50us, true);
+    simulation.submit_event(clock.input(connection_id_t {1}), 50us, true);
 
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
 }
 
 TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    auto clock {circuit.add_element(ElementType::clock_generator, connection_size_t {2},
-                                    connection_size_t {2})};
-    clock.output(connection_size_t {0}).connect(clock.input(connection_size_t {0}));
+    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
 
     auto simulation = get_uninitialized_simulation(circuit);
-    simulation.set_output_delay(clock.output(connection_size_t {0}), delay_t {500us});
-    simulation.set_output_delay(clock.output(connection_size_t {1}), delay_t {100us});
+    simulation.set_output_delay(clock.output(connection_id_t {0}), delay_t {500us});
+    simulation.set_output_delay(clock.output(connection_id_t {1}), delay_t {100us});
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_size_t {1}), 50us, true);
+    simulation.submit_event(clock.input(connection_id_t {1}), 50us, true);
 
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
     simulation.run(100us);  // 600 us
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
     simulation.run(100us);  // 700 us
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
 }
 
 TEST(SimulationTest, TestClockReset) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    auto clock {circuit.add_element(ElementType::clock_generator, connection_size_t {2},
-                                    connection_size_t {2})};
-    clock.output(connection_size_t {0}).connect(clock.input(connection_size_t {0}));
+    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
 
     auto simulation = get_uninitialized_simulation(circuit);
-    simulation.set_output_delay(clock.output(connection_size_t {0}), delay_t {1ms});
-    simulation.set_output_delay(clock.output(connection_size_t {1}), delay_t {1ns});
+    simulation.set_output_delay(clock.output(connection_id_t {0}), delay_t {1ms});
+    simulation.set_output_delay(clock.output(connection_id_t {1}), delay_t {1ns});
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_size_t {1}), 1000us, true);
-    simulation.submit_event(clock.input(connection_size_t {1}), 1100us, false);
+    simulation.submit_event(clock.input(connection_id_t {1}), 1000us, true);
+    simulation.submit_event(clock.input(connection_id_t {1}), 1100us, false);
     simulation.run(10ns);
 
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
     simulation.run(1ms);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
 
     simulation.run(999us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
     simulation.run(1us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
 
     simulation.run(1ms);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
     simulation.run(1ms);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
     simulation.run(1ms);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_size_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
 }
 
 TEST(SimulationTest, TestShiftRegister) {
     using namespace std::chrono_literals;
 
     Circuit circuit;
-    auto shift_register {circuit.add_element(
-        ElementType::shift_register, connection_size_t {3}, connection_size_t {2})};
+    auto shift_register {circuit.add_element(ElementType::shift_register, 3, 2)};
 
     auto simulation = get_uninitialized_simulation(circuit);
     simulation.initialize();
