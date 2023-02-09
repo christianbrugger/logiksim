@@ -316,6 +316,7 @@ auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
     return SegmentSizeView(*this);
 }
 
+// TODO rename to calculate output count
 auto LineTree::output_count() const -> std::size_t {
     if (segment_count() == 0) {
         return 0;

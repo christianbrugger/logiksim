@@ -67,6 +67,8 @@ if (MSVC)
     list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
     # disable unused parameters
     list(APPEND MAIN_COMPILE_OPTIONS /wd4100)
+    # unreachable code warnings when using folly::small_vector in release
+    list(APPEND MAIN_COMPILE_OPTIONS /wd4702)
 else()
     # -Wthread-safety 
     list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
