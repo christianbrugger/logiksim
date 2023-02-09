@@ -403,7 +403,16 @@ auto LineTree::validate_points_error() const -> std::optional<InvalidLineTreeExc
 }
 
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
-    return std::ranges::all_of(segments(), is_orthogonal);
+    // TODO refactor loop
+    for (const auto index : range(segment_count())) {
+        const auto& p0 = points_.at(indices_.at(index));
+        const auto& p1 = points_.at(index + 1);
+
+        if (p0.x != p1.x && p0.y != p1.y) {
+            return false;
+        }
+    }
+    return true;
 }
 
 // each horizontal segment is followed by a vertical segment and vice versa

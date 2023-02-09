@@ -43,14 +43,6 @@ constexpr auto order_points(const line_t line0, const line_t line1) noexcept
     return std::tie(b, a);
 }
 
-constexpr auto is_vertical(orthogonal_line_t line) noexcept -> bool {
-    return line.p0.x == line.p1.x;
-}
-
-constexpr auto is_horizontal(orthogonal_line_t line) noexcept -> bool {
-    return !is_vertical(line);
-}
-
 // fast distance for horitonal or vertical lines
 inline auto distance_1d(point_t p0, point_t p1) -> int {
     auto dx = p1.x.value - p0.x.value;

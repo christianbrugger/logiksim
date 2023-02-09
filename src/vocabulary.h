@@ -221,34 +221,24 @@ struct point_t {
 
 static_assert(std::is_trivial<point_t>::value);
 
+// a line is either horizontal or vertical
 struct line_t {
     point_t p0;
     point_t p1;
 
-    constexpr auto operator==(const line_t &other) const -> bool = default;
-};
+    explicit constexpr line_t() noexcept : p0 {}, p1 {} {};
 
-static_assert(std::is_trivial<line_t>::value);
-
-// TODO use this in line_tree
-// line that is either horizontal or vertical
-struct orthogonal_line_t {
-    point_t p0;
-    point_t p1;
-
-    explicit constexpr orthogonal_line_t() noexcept : p0 {}, p1 {} {};
-
-    explicit constexpr orthogonal_line_t(point_t p0_, point_t p1_) : p0 {p0_}, p1 {p1_} {
+    explicit constexpr line_t(point_t p0_, point_t p1_) : p0 {p0_}, p1 {p1_} {
         if (p0_.x != p1_.x && p0_.y != p1_.y) [[unlikely]] {
-            throw_exception("orthogonal line needs to be horizontal or vertical.");
+            throw_exception("line needs to be horizontal or vertical.");
         }
     };
 
-    explicit constexpr orthogonal_line_t(grid_t x0, grid_t y0, grid_t x1, grid_t y1)
-        : orthogonal_line_t {point_t {x0, y0}, point_t {x1, y1}} {};
-
-    auto operator==(const orthogonal_line_t &other) const -> bool = default;
+    constexpr auto operator==(const line_t &other) const -> bool = default;
 };
+
+static_assert(std::is_trivially_copyable<line_t>::value);
+static_assert(std::is_trivially_copy_assignable<line_t>::value);
 
 }  // namespace logicsim
 
