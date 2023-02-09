@@ -363,7 +363,6 @@ TEST(SimulationTest, TestInputHistory) {
     simulation.run(100us);
     ASSERT_EQ(simulation.time(), time_t {100us});
     constexpr auto epsilon = time_t::epsilon().value;
-    fmt::print("{}\n", simulation.input_history(wire));
     ASSERT_THAT(
         simulation.input_history(wire),
         testing::ElementsAre(entry_t {time_t::min(), time_t {10us - epsilon}, false},

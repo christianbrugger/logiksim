@@ -226,6 +226,17 @@ struct fmt::formatter<logicsim::connection_id_t> {
     }
 };
 
+namespace logicsim {
+template <typename OutputIt, typename T>
+auto format_microsecond_time(OutputIt out, T time_value) {
+    if (-1us < time_value && time_value < 1us) {
+        return fmt::format_to(out, "{}ns", time_value.count());
+    }
+    auto time_us = std::chrono::duration<double, std::micro> {time_value};
+    return fmt::format_to(out, "{:L}us", time_us.count());
+}
+}  // namespace logicsim
+
 template <>
 struct fmt::formatter<logicsim::time_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
@@ -233,14 +244,7 @@ struct fmt::formatter<logicsim::time_t> {
     }
 
     static auto format(const logicsim::time_t &obj, fmt::format_context &ctx) {
-        using namespace std::literals::chrono_literals;
-
-        if (-1us < obj.value && obj.value < 1us) {
-            return fmt::format_to(ctx.out(), "{}ns", obj.value.count());
-        } else {
-            auto time_us = std::chrono::duration<double, std::micro> {obj.value};
-            return fmt::format_to(ctx.out(), "{:L}us", time_us.count());
-        }
+        return logicsim::format_microsecond_time(ctx.out(), obj.value);
     }
 };
 
@@ -251,13 +255,7 @@ struct fmt::formatter<logicsim::delay_t> {
     }
 
     static auto format(const logicsim::delay_t &obj, fmt::format_context &ctx) {
-        auto count = obj.value.count();
-
-        if (0 < count && count < 1000) {
-            return fmt::format_to(ctx.out(), "{}ns", count);
-        } else {
-            return fmt::format_to(ctx.out(), "{}us", count / 1000);
-        }
+        return logicsim::format_microsecond_time(ctx.out(), obj.value);
     }
 };
 
@@ -268,13 +266,7 @@ struct fmt::formatter<logicsim::history_t> {
     }
 
     static auto format(const logicsim::history_t &obj, fmt::format_context &ctx) {
-        auto count = obj.value.count();
-
-        if (0 < count && count < 1000) {
-            return fmt::format_to(ctx.out(), "{}ns", count);
-        } else {
-            return fmt::format_to(ctx.out(), "{}us", count / 1000);
-        }
+        return logicsim::format_microsecond_time(ctx.out(), obj.value);
     }
 };
 
