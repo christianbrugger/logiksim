@@ -21,10 +21,6 @@ constexpr auto is_vertical(line_t line) noexcept -> bool {
     return line.p0.x == line.p1.x;
 }
 
-constexpr auto is_orthogonal(line_t line) noexcept -> bool {
-    return is_horizontal(line) || is_vertical(line);
-}
-
 // order points within lines
 constexpr auto order_points(line_t line) noexcept {
     auto [p0, p1] = sorted(line.p0, line.p1);
@@ -47,7 +43,7 @@ constexpr auto order_points(const line_t line0, const line_t line1) noexcept
 inline auto distance_1d(point_t p0, point_t p1) -> int {
     auto dx = p1.x.value - p0.x.value;
     auto dy = p1.y.value - p0.y.value;
-    assert(dx == 0 || dy == 0);
+    assert(dx == 0 ^ dy == 0);
     return std::abs((dx == 0) ? dy : dx);
 }
 

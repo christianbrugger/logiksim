@@ -95,6 +95,12 @@ TEST(LineTree, CreateWithCollisions) {
                  InvalidLineTreeException);
 }
 
+TEST(LineTree, CreateWithZeroLengthLine) {
+    EXPECT_THROW(LineTree({{0, 0}, {0, 0}}), InvalidLineTreeException);
+    EXPECT_THROW(LineTree({{0, 0}, {0, 10}, {0, 10}, {10, 10}}),
+                 InvalidLineTreeException);
+}
+
 //
 // Merge
 //

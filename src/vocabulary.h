@@ -82,8 +82,8 @@ struct time_t {
     using rep = value_type::rep;
     value_type value;
 
-    auto operator==(const time_t &other) const -> bool = default;
-    auto operator<=>(const time_t &other) const = default;
+    [[nodiscard]] auto operator==(const time_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const time_t &other) const = default;
 
     [[nodiscard]] static constexpr auto zero() noexcept -> time_t {
         return time_t {value_type::zero()};
@@ -211,30 +211,36 @@ struct point_t {
     grid_t x;
     grid_t y;
 
-    explicit constexpr operator point_fine_t() const noexcept {
+    [[nodiscard]] explicit constexpr operator point_fine_t() const noexcept {
         return point_fine_t {static_cast<double>(x), static_cast<double>(y)};
     }
 
-    constexpr auto operator==(const point_t &other) const -> bool = default;
-    constexpr auto operator<=>(const point_t &other) const = default;
+    [[nodiscard]] constexpr auto operator==(const point_t &other) const -> bool = default;
+    [[nodiscard]] constexpr auto operator<=>(const point_t &other) const = default;
 };
 
 static_assert(std::is_trivial<point_t>::value);
+
+constexpr auto is_orthogonal(point_t p0, point_t p1) noexcept -> bool {
+    // xor to disallow zero length
+    return (p0.x == p1.x) ^ (p0.y == p1.y);
+}
 
 // a line is either horizontal or vertical
 struct line_t {
     point_t p0;
     point_t p1;
 
-    explicit constexpr line_t() noexcept : p0 {}, p1 {} {};
+    [[nodiscard]] explicit constexpr line_t() noexcept : p0 {}, p1 {} {};
 
-    explicit constexpr line_t(point_t p0_, point_t p1_) : p0 {p0_}, p1 {p1_} {
-        if (p0_.x != p1_.x && p0_.y != p1_.y) [[unlikely]] {
+    [[nodiscard]] explicit constexpr line_t(point_t p0_, point_t p1_)
+        : p0 {p0_}, p1 {p1_} {
+        if (!is_orthogonal(p0_, p1_)) [[unlikely]] {
             throw_exception("line needs to be horizontal or vertical.");
         }
     };
 
-    constexpr auto operator==(const line_t &other) const -> bool = default;
+    [[nodiscard]] constexpr auto operator==(const line_t &other) const -> bool = default;
 };
 
 static_assert(std::is_trivially_copyable<line_t>::value);

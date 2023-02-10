@@ -128,6 +128,7 @@ class LineTree {
     [[nodiscard]] auto validate_segments_horizontal_or_vertical() const -> bool;
     [[nodiscard]] auto validate_no_internal_collisions() const -> bool;
 
+    [[nodiscard]] auto segment_points(int index) const -> std::pair<point_t, point_t>;
     [[nodiscard]] auto starts_new_subtree(int index) const -> bool;
 
     // TODO consider merging for better locality

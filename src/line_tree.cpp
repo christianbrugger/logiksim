@@ -305,7 +305,12 @@ auto LineTree::empty() const noexcept -> bool {
 }
 
 auto LineTree::segment(int index) const -> line_t {
-    return line_t {points_.at(indices_.at(index)), points_.at(index + 1)};
+    auto [a, b] = segment_points(index);
+    return line_t {a, b};
+}
+
+auto LineTree::segment_points(int index) const -> std::pair<point_t, point_t> {
+    return {points_.at(indices_.at(index)), points_.at(index + 1)};
 }
 
 auto LineTree::segments() const noexcept -> SegmentView {
@@ -404,23 +409,19 @@ auto LineTree::validate_points_error() const -> std::optional<InvalidLineTreeExc
 }
 
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
-    // TODO refactor loop
-    for (const auto index : range(segment_count())) {
-        const auto& p0 = points_.at(indices_.at(index));
-        const auto& p1 = points_.at(index + 1);
-
-        if (p0.x != p1.x && p0.y != p1.y) {
-            return false;
-        }
-    }
-    return true;
+    const auto is_segment_orthogonal = [this](int index) {
+        auto [p0, p1] = segment_points(index);
+        return is_orthogonal(p0, p1);
+    };
+    return std::ranges::all_of(range(segment_count()), is_segment_orthogonal);
 }
 
 // each horizontal segment is followed by a vertical segment and vice versa
 auto LineTree::validate_horizontal_follows_vertical() const -> bool {
     auto is_horizontal = [](line_t line) { return line.p0.x == line.p1.x; };
-    return std::ranges::adjacent_find(segments().begin(), segments().end(), {},
-                                      is_horizontal)
+    // finds the first two adjacent items that are equal
+    return std::ranges::adjacent_find(segments().begin(), segments().end(),
+                                      std::ranges::equal_to {}, is_horizontal)
            == segments().end();
 }
 
