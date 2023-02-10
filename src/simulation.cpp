@@ -91,8 +91,9 @@ void validate(const event_group_t &events) {
             throw_exception("All events in the group need to have the same time.");
         }
 
-        const auto pred = [](const SimulationEvent &event) { return event.input_index; };
-        if (has_duplicates_quadratic(events.begin(), events.end(), pred)) {
+        const auto to_index
+            = [](const SimulationEvent &event) { return event.input_index; };
+        if (has_duplicates_quadratic(events, to_index)) {
             throw_exception(
                 "Cannot have two events for the same input at the same time.");
         }

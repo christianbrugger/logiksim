@@ -93,6 +93,15 @@ auto has_duplicates_quadratic(std::bidirectional_iterator auto begin,
 }
 
 /// good for small sizes, scales with O(n^2)
+template <class Proj = std::identity, class Comp = std::equal_to<>,
+          class Ignore = always_false>
+bool has_duplicates_quadratic(std::ranges::input_range auto&& range, Proj proj = {},
+                              Comp comp = {}, Ignore ignore = {}) {
+    return has_duplicates_quadratic(std::ranges::begin(range), std::ranges::end(range),
+                                    std::move(proj), std::move(comp), std::move(ignore));
+}
+
+/// good for small sizes, scales with O(n^2)
 //
 // uses compare with iterators, instead of values
 template <class Comp>
@@ -105,22 +114,6 @@ auto has_duplicates_quadratic_iterator(std::bidirectional_iterator auto begin,
     for (auto i1 = begin; i1 != std::prev(end); ++i1) {
         for (auto i2 = std::next(i1); i2 != end; ++i2) {
             if (comp(i1, i2)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-bool has_duplicates_quadratic(const std::ranges::input_range auto& range) {
-    if (std::size(range) <= 1) {
-        return false;
-    }
-
-    // TODO refactor using above method
-    for (auto i1 = std::begin(range); i1 != std::end(range) - 1; ++i1) {
-        for (auto i2 = i1 + 1; i2 != std::end(range); ++i2) {
-            if (*i1 == *i2) {
                 return true;
             }
         }

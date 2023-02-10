@@ -145,12 +145,8 @@ class Circuit::ElementIteratorTemplate {
 
     using value_type = Circuit::ElementTemplate<Const>;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type *;
-    // TODO check if reference needs to be return type of operator*
+    using pointer = void;
     using reference = value_type;
-    // using reference = value_type &;
-    // TODO also check pointer, if we need it, needs to be return of -> operator
-    //    https://vector-of-bool.github.io/2020/06/13/cpp20-iter-facade.html
 
     using circuit_type = std::conditional_t<Const, const Circuit, Circuit>;
 
@@ -265,10 +261,8 @@ class Circuit::ConnectionIteratorTemplate {
     using value_type = std::conditional_t<IsInput, Circuit::InputTemplate<Const>,
                                           Circuit::OutputTemplate<Const>>;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type *;
-    // TODO check if reference needs to be return type of operator*
+    using pointer = void;
     using reference = value_type;
-    // using reference = value_type &;
 
     [[nodiscard]] auto operator*() const -> value_type;
     // Prefix increment
@@ -354,9 +348,7 @@ class Circuit::InputTemplate {
     [[nodiscard]] auto connected_element_id() const -> element_id_t;
     [[nodiscard]] auto connected_output_index() const -> connection_id_t;
 
-    /// @throws if connection doesn't exists.
     [[nodiscard]] auto connected_element() const -> ElementTemplate<Const>;
-    /// @throws if connection doesn't exists.
     [[nodiscard]] auto connected_output() const -> OutputTemplate<Const>;
 
     void clear_connection() const
@@ -406,9 +398,7 @@ class Circuit::OutputTemplate {
     [[nodiscard]] auto connected_element_id() const -> element_id_t;
     [[nodiscard]] auto connected_input_index() const -> connection_id_t;
 
-    /// @throws if connection doesn't exists.
     [[nodiscard]] auto connected_element() const -> ElementTemplate<Const>;
-    /// @throws if connection doesn't exists.
     [[nodiscard]] auto connected_input() const -> InputTemplate<Const>;
 
     void clear_connection() const

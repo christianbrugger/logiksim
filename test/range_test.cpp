@@ -57,7 +57,7 @@ TEST(Range, ElementsCheck) {
 }
 
 TEST(Range, FormatFunction) {
-    ASSERT_EQ(range(5).format(), "range(0, 5)");  // TODO
+    ASSERT_EQ(range(5).format(), "range(0, 5)");
 }
 
 TEST(Range, FmtFormatting) {
@@ -145,7 +145,8 @@ TEST(RangeReverse, SizeIsCorrect) {
     EXPECT_EQ(std::size(reverse_range(0, 10)), 10);
     EXPECT_EQ(std::size(reverse_range(15)), 15);
 
-    ASSERT_EQ(fmt::format("{}", reverse_range(0, 10)), "reverse_range(0, 10)");
+    ASSERT_EQ(fmt::format("{}", reverse_range(1, 10)), "reverse_range(1, 10)");
+    ASSERT_EQ(fmt::format("{}", reverse_range(10)), "reverse_range(0, 10)");
 }
 
 //

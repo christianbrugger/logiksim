@@ -262,17 +262,6 @@ TEST(Circuit, ElementViewRanges) {
     ASSERT_EQ(std::ranges::distance(view), 2);
 }
 
-TEST(Circuit, ElementViewRangesLEGACY) {  // TODO remove when not needed
-    Circuit circuit;
-    circuit.add_element(ElementType::wire, 1, 1);
-    circuit.add_element(ElementType::inverter_element, 1, 1);
-
-    auto view = Circuit::ElementView {circuit};
-
-    ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
-    ASSERT_EQ(std::ranges::distance(view), 2);
-}
-
 //
 // Element Inputs View
 //
@@ -304,15 +293,6 @@ TEST(Circuit, InputsViewRanges) {
     auto view = Circuit::InputView {wire};
 
     ASSERT_EQ(std::distance(view.begin(), view.end()), 2);
-    ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
-    ASSERT_EQ(std::ranges::distance(view), 2);
-}
-
-TEST(Circuit, InputsViewRangesLEGACY) {  // TODO remove when not needed
-    Circuit circuit;
-    auto wire = circuit.add_element(ElementType::wire, 2, 1);
-    auto view = Circuit::InputView {wire};
-
     ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
     ASSERT_EQ(std::ranges::distance(view), 2);
 }
