@@ -194,7 +194,7 @@ class LengthRecorderVisitor {
 
     auto tree_edge(index_t a, index_t b, AdjacencyGraph<index_t> graph) -> void {
         auto line = line_t {graph.points().at(a), graph.points().at(b)};
-        length_vector_.at(b) = length_vector_.at(a) + distance_1d(line);
+        length_vector_.at(b) = length_vector_.at(a) + distance(line);
     };
 
     auto lengths() const -> const length_vector_t& {

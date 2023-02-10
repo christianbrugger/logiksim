@@ -390,7 +390,7 @@ auto create_random_line_tree(std::size_t n_outputs, const RenderBenchmarkConfig&
 auto calculate_tree_length(const LineTree& line_tree) -> int {
     return std::transform_reduce(line_tree.segments().begin(), line_tree.segments().end(),
                                  0, std::plus {},
-                                 [](line_t line) { return distance_1d(line); });
+                                 [](line_t line) { return distance(line); });
 }
 
 }  // namespace

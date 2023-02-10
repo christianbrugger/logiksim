@@ -40,16 +40,13 @@ constexpr auto order_points(const line_t line0, const line_t line1) noexcept
 }
 
 // fast distance for horitonal or vertical lines
-inline auto distance_1d(point_t p0, point_t p1) -> int {
-    auto dx = p1.x.value - p0.x.value;
-    auto dy = p1.y.value - p0.y.value;
-    assert(dx == 0 ^ dy == 0);
-    return std::abs((dx == 0) ? dy : dx);
-}
+inline auto distance(line_t line) -> int {
+    auto dx = line.p1.x.value - line.p0.x.value;
+    auto dy = line.p1.y.value - line.p0.y.value;
 
-// fast distance for horitonal or vertical lines
-inline auto distance_1d(line_t line) -> int {
-    return distance_1d(line.p0, line.p1);
+    // ensure enough precision, through promotion
+    static_assert(sizeof(dx) > sizeof(line.p0.x.value));
+    return std::abs((dx == 0) ? dy : dx);
 }
 
 }  // namespace logicsim
