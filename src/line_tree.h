@@ -239,7 +239,7 @@ class LineTree::SegmentSizeIterator {
     [[nodiscard]] explicit SegmentSizeIterator(const LineTree &line_tree,
                                                index_t point_index) noexcept;
 
-    [[nodiscard]] auto operator*() const -> reference;
+    [[nodiscard]] auto operator*() const -> value_type;
     auto operator++() noexcept -> SegmentSizeIterator &;
     auto operator++(int) noexcept -> SegmentSizeIterator;
 
