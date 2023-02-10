@@ -93,9 +93,11 @@ auto has_duplicates_quadratic(std::bidirectional_iterator auto begin,
 }
 
 /// good for small sizes, scales with O(n^2)
+//
+// uses compare with iterators, instead of values
 template <class Comp>
-auto has_duplicates_quadratic_custom(std::bidirectional_iterator auto begin,
-                                     std::bidirectional_iterator auto end, Comp comp)
+auto has_duplicates_quadratic_iterator(std::bidirectional_iterator auto begin,
+                                       std::bidirectional_iterator auto end, Comp comp)
     -> bool {
     if (begin == end) {
         return false;

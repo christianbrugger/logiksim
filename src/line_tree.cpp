@@ -321,8 +321,7 @@ auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
     return SegmentSizeView(*this);
 }
 
-// TODO rename to calculate output count
-auto LineTree::output_count() const -> std::size_t {
+auto LineTree::calculate_output_count() const -> std::size_t {
     if (segment_count() == 0) {
         return 0;
     }
@@ -332,7 +331,7 @@ auto LineTree::output_count() const -> std::size_t {
     return count + 1;
 }
 
-auto LineTree::output_lengths() const -> std::vector<length_t> {
+auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
     if (segment_count() == 0) {
         return {};
     }
@@ -442,10 +441,8 @@ auto LineTree::validate_no_internal_collisions() const -> bool {
         }
         return line_points_colliding(*it1, *it2);
     };
-
-    // TODO why do we need custom here?
-    return !has_duplicates_quadratic_custom(segments().begin(), segments().end(),
-                                            are_colliding);
+    return !has_duplicates_quadratic_iterator(segments().begin(), segments().end(),
+                                              are_colliding);
 }
 
 //

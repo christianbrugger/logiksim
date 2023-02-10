@@ -222,7 +222,7 @@ struct point_t {
 static_assert(std::is_trivial<point_t>::value);
 
 constexpr auto is_orthogonal(point_t p0, point_t p1) noexcept -> bool {
-    // xor to disallow zero length
+    // xor to disallow zero length lines
     return (p0.x == p1.x) ^ (p0.y == p1.y);
 }
 

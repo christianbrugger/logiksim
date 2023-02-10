@@ -25,7 +25,7 @@ class InvalidLineTreeException : public std::exception {
 [[noreturn]] auto throw_invalid_line_tree_exception(const char *message) -> void;
 
 //
-// TODO:
+// Tasks:
 //  * get position of each output
 //
 // Done:
@@ -73,7 +73,6 @@ class LineTree {
 
     using Graph = AdjacencyGraph<LineTree::index_t>;
 
-    // TODO use orthogonal_line_t everywhere
     explicit LineTree() = default;
     explicit LineTree(std::initializer_list<point_t> points);
 
@@ -108,8 +107,8 @@ class LineTree {
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
 
-    [[nodiscard]] auto output_count() const -> std::size_t;
-    [[nodiscard]] auto output_lengths() const -> std::vector<length_t>;
+    [[nodiscard]] auto calculate_output_count() const -> std::size_t;
+    [[nodiscard]] auto calculate_output_lengths() const -> std::vector<length_t>;
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -131,7 +130,6 @@ class LineTree {
     [[nodiscard]] auto segment_points(int index) const -> std::pair<point_t, point_t>;
     [[nodiscard]] auto starts_new_subtree(int index) const -> bool;
 
-    // TODO consider merging for better locality
     using policy = folly::small_vector_policy::policy_size_type<index_t>;
     using point_vector_t = folly::small_vector<point_t, 2, policy>;
     using index_vector_t = folly::small_vector<index_t, 4, policy>;
@@ -169,12 +167,8 @@ class LineTree::SegmentIterator {
 
     using value_type = line_t;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type;
-    // TODO check if reference needs to be return type of operator*
+    using pointer = void;
     using reference = value_type;
-    // using reference = value_type &;
-    // TODO also check pointer, if we need it, needs to be return of -> operator
-    //    https://vector-of-bool.github.io/2020/06/13/cpp20-iter-facade.html
 
     // needs to be default constructable, so ElementView can become a range and view
     SegmentIterator() = default;
@@ -237,19 +231,15 @@ class LineTree::SegmentSizeIterator {
 
     using value_type = sized_line2d_t;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type;
-    // TODO check if reference needs to be return type of operator*
+    using pointer = void;
     using reference = value_type;
-    // using reference = value_type &;
-    // TODO also check pointer, if we need it, needs to be return of -> operator
-    //    https://vector-of-bool.github.io/2020/06/13/cpp20-iter-facade.html
 
     // needs to be default constructable, so ElementView can become a range and view
     SegmentSizeIterator() = default;
     [[nodiscard]] explicit SegmentSizeIterator(const LineTree &line_tree,
                                                index_t point_index) noexcept;
 
-    [[nodiscard]] auto operator*() const -> value_type;
+    [[nodiscard]] auto operator*() const -> reference;
     auto operator++() noexcept -> SegmentSizeIterator &;
     auto operator++(int) noexcept -> SegmentSizeIterator;
 

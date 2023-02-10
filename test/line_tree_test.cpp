@@ -279,15 +279,15 @@ TEST(LineTree, OutputCoundAndDelays) {
     auto tree_merged = merge({tree1, tree2, tree3});
     ASSERT_EQ(tree_merged.has_value(), true);
 
-    EXPECT_THAT(tree1.output_count(), 1);
-    EXPECT_THAT(tree2.output_count(), 1);
-    EXPECT_THAT(tree3.output_count(), 1);
-    EXPECT_THAT(tree_merged->output_count(), 3);
+    EXPECT_THAT(tree1.calculate_output_count(), 1);
+    EXPECT_THAT(tree2.calculate_output_count(), 1);
+    EXPECT_THAT(tree3.calculate_output_count(), 1);
+    EXPECT_THAT(tree_merged->calculate_output_count(), 3);
 
-    EXPECT_THAT(tree1.output_lengths(), testing::ElementsAre(5));
-    EXPECT_THAT(tree2.output_lengths(), testing::ElementsAre(1));
-    EXPECT_THAT(tree3.output_lengths(), testing::ElementsAre(2));
-    EXPECT_THAT(tree_merged->output_lengths(), testing::ElementsAre(5, 4, 2));
+    EXPECT_THAT(tree1.calculate_output_lengths(), testing::ElementsAre(5));
+    EXPECT_THAT(tree2.calculate_output_lengths(), testing::ElementsAre(1));
+    EXPECT_THAT(tree3.calculate_output_lengths(), testing::ElementsAre(2));
+    EXPECT_THAT(tree_merged->calculate_output_lengths(), testing::ElementsAre(5, 4, 2));
 }
 
 //
