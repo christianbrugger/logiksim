@@ -25,7 +25,7 @@ auto format(DisplayState state) -> std::string {
 
 CircuitLayout::CircuitLayout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
     if (circuit_id < circuit_id_t {0}) [[unlikely]] {
-        throw_exception("Circuit id of layout cannot be negative.");
+        throw_exception("Schematic id of layout cannot be negative.");
     }
 }
 

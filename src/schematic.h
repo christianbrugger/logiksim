@@ -33,7 +33,7 @@ enum class ElementType : uint8_t {
 
 auto format(ElementType type) -> std::string;
 
-class Circuit {
+class Schematic {
     struct ElementData;
     struct ConnectionData;
 
@@ -107,7 +107,7 @@ class Circuit {
     void validate(bool require_all_outputs_connected = false) const;
 
    private:
-    static void validate_connection_data_(Circuit::ConnectionData connection_data);
+    static void validate_connection_data_(Schematic::ConnectionData connection_data);
 
     // TODO add packing
     struct ConnectionData {
@@ -133,55 +133,55 @@ class Circuit {
 };
 
 template <class T>
-concept ElementOrConnection = std::convertible_to<T, Circuit::ConstElement>
-                              || std::convertible_to<T, Circuit::ConstInput>
-                              || std::convertible_to<T, Circuit::ConstOutput>;
+concept ElementOrConnection = std::convertible_to<T, Schematic::ConstElement>
+                              || std::convertible_to<T, Schematic::ConstInput>
+                              || std::convertible_to<T, Schematic::ConstOutput>;
 
 template <bool Const>
-class Circuit::ElementIteratorTemplate {
+class Schematic::ElementIteratorTemplate {
    public:
     using iterator_concept = std::input_iterator_tag;
     using iterator_category = std::input_iterator_tag;
 
-    using value_type = Circuit::ElementTemplate<Const>;
+    using value_type = Schematic::ElementTemplate<Const>;
     using difference_type = std::ptrdiff_t;
     using pointer = void;
     using reference = value_type;
 
-    using circuit_type = std::conditional_t<Const, const Circuit, Circuit>;
+    using schematic_type = std::conditional_t<Const, const Schematic, Schematic>;
 
     // needs to be default constructable, so ElementView can become a range and view
     ElementIteratorTemplate() = default;
-    [[nodiscard]] explicit ElementIteratorTemplate(circuit_type &circuit,
+    [[nodiscard]] explicit ElementIteratorTemplate(schematic_type &schematic,
                                                    element_id_t element_id) noexcept;
 
     [[nodiscard]] auto operator*() const -> value_type;
     // Prefix increment
-    auto operator++() noexcept -> Circuit::ElementIteratorTemplate<Const> &;
+    auto operator++() noexcept -> Schematic::ElementIteratorTemplate<Const> &;
     // Postfix increment
-    auto operator++(int) noexcept -> Circuit::ElementIteratorTemplate<Const>;
+    auto operator++(int) noexcept -> Schematic::ElementIteratorTemplate<Const>;
 
     [[nodiscard]] auto operator==(const ElementIteratorTemplate &right) const noexcept
         -> bool;
-    [[nodiscard]] auto operator-(const Circuit::ElementIteratorTemplate<Const> &right)
+    [[nodiscard]] auto operator-(const Schematic::ElementIteratorTemplate<Const> &right)
         const noexcept -> difference_type;
 
    private:
-    circuit_type *circuit_ {};  // can be null, because default constructable
+    schematic_type *schematic_ {};  // can be null, because default constructable
     element_id_t element_id_ {};
 };
 
 template <bool Const>
-class Circuit::ElementViewTemplate {
+class Schematic::ElementViewTemplate {
    public:
-    using iterator_type = Circuit::ElementIteratorTemplate<Const>;
-    using circuit_type = std::conditional_t<Const, const Circuit, Circuit>;
+    using iterator_type = Schematic::ElementIteratorTemplate<Const>;
+    using schematic_type = std::conditional_t<Const, const Schematic, Schematic>;
 
     using value_type = typename iterator_type::value_type;
     using pointer = typename iterator_type::pointer;
     using reference = typename iterator_type::reference;
 
-    [[nodiscard]] explicit ElementViewTemplate(circuit_type &circuit) noexcept;
+    [[nodiscard]] explicit ElementViewTemplate(schematic_type &schematic) noexcept;
 
     [[nodiscard]] auto begin() const noexcept -> iterator_type;
     [[nodiscard]] auto end() const noexcept -> iterator_type;
@@ -190,31 +190,31 @@ class Circuit::ElementViewTemplate {
     [[nodiscard]] auto empty() const noexcept -> bool;
 
    private:
-    gsl::not_null<circuit_type *> circuit_;
+    gsl::not_null<schematic_type *> schematic_;
 };
 
 }  // namespace logicsim
 
 template <bool Const>
 inline constexpr bool
-    std::ranges::enable_view<logicsim::Circuit::ElementViewTemplate<Const>>
+    std::ranges::enable_view<logicsim::Schematic::ElementViewTemplate<Const>>
     = true;
 
 template <bool Const>
 inline constexpr bool
-    std::ranges::enable_borrowed_range<logicsim::Circuit::ElementViewTemplate<Const>>
+    std::ranges::enable_borrowed_range<logicsim::Schematic::ElementViewTemplate<Const>>
     = true;
 
 namespace logicsim {
 
 template <bool Const>
-class Circuit::ElementTemplate {
-    using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
+class Schematic::ElementTemplate {
+    using SchematicType = std::conditional_t<Const, const Schematic, Schematic>;
     using ElementDataType = std::conditional_t<Const, const ElementData, ElementData>;
 
     friend ElementTemplate<!Const>;
-    friend Circuit;
-    explicit ElementTemplate(CircuitType &circuit, element_id_t element_id) noexcept;
+    friend Schematic;
+    explicit ElementTemplate(SchematicType &schematic, element_id_t element_id) noexcept;
 
    public:
     /// This constructor is not regarded as a copy constructor,
@@ -231,7 +231,7 @@ class Circuit::ElementTemplate {
 
     [[nodiscard]] auto format(bool with_connections = false) const -> std::string;
 
-    [[nodiscard]] auto circuit() const noexcept -> CircuitType *;
+    [[nodiscard]] auto schematic() const noexcept -> SchematicType *;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
 
     [[nodiscard]] auto element_type() const -> ElementType;
@@ -247,28 +247,28 @@ class Circuit::ElementTemplate {
    private:
     [[nodiscard]] auto element_data_() const -> ElementDataType &;
 
-    gsl::not_null<CircuitType *> circuit_;
+    gsl::not_null<SchematicType *> schematic_;
     element_id_t element_id_;
 };
 
 template <bool Const, bool IsInput>
-class Circuit::ConnectionIteratorTemplate {
+class Schematic::ConnectionIteratorTemplate {
    public:
-    std::optional<Circuit::ElementTemplate<Const>> element {};
+    std::optional<Schematic::ElementTemplate<Const>> element {};
     connection_id_t connection_id {};
 
     using iterator_concept = std::input_iterator_tag;
     using iterator_category = std::input_iterator_tag;
 
-    using value_type = std::conditional_t<IsInput, Circuit::InputTemplate<Const>,
-                                          Circuit::OutputTemplate<Const>>;
+    using value_type = std::conditional_t<IsInput, Schematic::InputTemplate<Const>,
+                                          Schematic::OutputTemplate<Const>>;
     using difference_type = std::ptrdiff_t;
     using pointer = void;
     using reference = value_type;
 
     [[nodiscard]] auto operator*() const -> value_type;
     // Prefix increment
-    auto operator++() noexcept -> Circuit::ConnectionIteratorTemplate<Const, IsInput> &;
+    auto operator++() noexcept -> Schematic::ConnectionIteratorTemplate<Const, IsInput> &;
     // Postfix increment
     auto operator++(int) noexcept -> ConnectionIteratorTemplate;
 
@@ -279,9 +279,9 @@ class Circuit::ConnectionIteratorTemplate {
 };
 
 template <bool Const, bool IsInput>
-class Circuit::ConnectionViewTemplate {
+class Schematic::ConnectionViewTemplate {
    public:
-    using iterator_type = Circuit::ConnectionIteratorTemplate<Const, IsInput>;
+    using iterator_type = Schematic::ConnectionIteratorTemplate<Const, IsInput>;
 
     using value_type = typename iterator_type::value_type;
     using pointer = typename iterator_type::pointer;
@@ -306,19 +306,19 @@ class Circuit::ConnectionViewTemplate {
 
 template <bool Const, bool IsInput>
 inline constexpr bool
-    std::ranges::enable_view<logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
+    std::ranges::enable_view<logicsim::Schematic::ConnectionViewTemplate<Const, IsInput>>
     = true;
 
 template <bool Const, bool IsInput>
 inline constexpr bool std::ranges::enable_borrowed_range<
-    logicsim::Circuit::ConnectionViewTemplate<Const, IsInput>>
+    logicsim::Schematic::ConnectionViewTemplate<Const, IsInput>>
     = true;
 
 namespace logicsim {
 
 template <bool Const>
-class Circuit::InputTemplate {
-    using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
+class Schematic::InputTemplate {
+    using SchematicType = std::conditional_t<Const, const Schematic, Schematic>;
     using ConnectionDataType
         = std::conditional_t<Const, const ConnectionData, ConnectionData>;
 
@@ -326,7 +326,7 @@ class Circuit::InputTemplate {
     //   so we preserve trivially copyable
     friend InputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    explicit InputTemplate(CircuitType &circuit, element_id_t element_id,
+    explicit InputTemplate(SchematicType &schematic, element_id_t element_id,
                            connection_id_t input_index) noexcept;
 
    public:
@@ -341,7 +341,7 @@ class Circuit::InputTemplate {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_connection() const -> std::string;
 
-    [[nodiscard]] auto circuit() const noexcept -> CircuitType *;
+    [[nodiscard]] auto schematic() const noexcept -> SchematicType *;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
     [[nodiscard]] auto input_index() const noexcept -> connection_id_t;
 
@@ -362,21 +362,21 @@ class Circuit::InputTemplate {
    private:
     [[nodiscard]] auto connection_data_() const -> ConnectionDataType &;
 
-    gsl::not_null<CircuitType *> circuit_;
+    gsl::not_null<SchematicType *> schematic_;
     element_id_t element_id_;
     connection_id_t input_index_;
 };
 
 template <bool Const>
-class Circuit::OutputTemplate {
+class Schematic::OutputTemplate {
    private:
-    using CircuitType = std::conditional_t<Const, const Circuit, Circuit>;
+    using SchematicType = std::conditional_t<Const, const Schematic, Schematic>;
     using ConnectionDataType
         = std::conditional_t<Const, const ConnectionData, ConnectionData>;
 
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;
-    explicit OutputTemplate(CircuitType &circuit, element_id_t element_id,
+    explicit OutputTemplate(SchematicType &schematic, element_id_t element_id,
                             connection_id_t output_index) noexcept;
 
    public:
@@ -391,7 +391,7 @@ class Circuit::OutputTemplate {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_connection() const -> std::string;
 
-    [[nodiscard]] auto circuit() const noexcept -> CircuitType *;
+    [[nodiscard]] auto schematic() const noexcept -> SchematicType *;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
     [[nodiscard]] auto output_index() const noexcept -> connection_id_t;
 
@@ -412,7 +412,7 @@ class Circuit::OutputTemplate {
    private:
     [[nodiscard]] auto connection_data_() const -> ConnectionDataType &;
 
-    gsl::not_null<CircuitType *> circuit_;
+    gsl::not_null<SchematicType *> schematic_;
     element_id_t element_id_;
     connection_id_t output_index_;
 };
@@ -424,12 +424,12 @@ class Circuit::OutputTemplate {
 //
 
 template <>
-struct fmt::formatter<logicsim::Circuit> {
+struct fmt::formatter<logicsim::Schematic> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::Circuit &obj, fmt::format_context &ctx)
+    static auto format(const logicsim::Schematic &obj, fmt::format_context &ctx)
         -> format_context::iterator {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
@@ -447,69 +447,70 @@ struct fmt::formatter<logicsim::ElementType> {
 };
 
 template <>
-struct fmt::formatter<logicsim::Circuit::Element> {
+struct fmt::formatter<logicsim::Schematic::Element> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::Circuit::Element &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.format());
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::Circuit::ConstElement> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::Circuit::ConstElement &obj,
+    static auto format(const logicsim::Schematic::Element &obj,
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::Circuit::Input> {
+struct fmt::formatter<logicsim::Schematic::ConstElement> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::Circuit::Input &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.format());
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::Circuit::ConstInput> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::Circuit::ConstInput &obj,
+    static auto format(const logicsim::Schematic::ConstElement &obj,
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::Circuit::Output> {
+struct fmt::formatter<logicsim::Schematic::Input> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::Circuit::Output &obj, fmt::format_context &ctx) {
+    static auto format(const logicsim::Schematic::Input &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::Circuit::ConstOutput> {
+struct fmt::formatter<logicsim::Schematic::ConstInput> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::Circuit::ConstOutput &obj,
+    static auto format(const logicsim::Schematic::ConstInput &obj,
+                       fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::Schematic::Output> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::Schematic::Output &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::Schematic::ConstOutput> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::Schematic::ConstOutput &obj,
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
@@ -521,17 +522,17 @@ struct fmt::formatter<logicsim::Circuit::ConstOutput> {
 
 namespace logicsim {
 
-void add_output_placeholders(Circuit &circuit);
+void add_output_placeholders(Schematic &schematic);
 
 inline constexpr int BENCHMARK_DEFAULT_ELEMENTS {100};
 inline constexpr double BENCHMARK_DEFAULT_CONNECTIVITY {0.75};
 
-auto benchmark_circuit(int n_elements = BENCHMARK_DEFAULT_ELEMENTS) -> Circuit;
+auto benchmark_schematic(int n_elements = BENCHMARK_DEFAULT_ELEMENTS) -> Schematic;
 
 template <std::uniform_random_bit_generator G>
-auto create_random_circuit(G &rng, int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
-                           double connection_ratio = BENCHMARK_DEFAULT_CONNECTIVITY)
-    -> Circuit;
+auto create_random_schematic(G &rng, int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
+                             double connection_ratio = BENCHMARK_DEFAULT_CONNECTIVITY)
+    -> Schematic;
 
 }  // namespace logicsim
 

@@ -8,13 +8,13 @@ namespace logicsim {
 
 class EditableCircuit {
    public:
-    [[nodiscard]] EditableCircuit(CircuitLayout &&layout, Circuit &&schematic);
+    [[nodiscard]] EditableCircuit(CircuitLayout &&layout, Schematic &&schematic);
 
     [[nodiscard]] auto layout() const noexcept -> const CircuitLayout &;
 
    private:
     CircuitLayout layout_;
-    Circuit schematic_;
+    Schematic schematic_;
 };
 
 }  // namespace logicsim

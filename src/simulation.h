@@ -57,7 +57,7 @@ static_assert(std::is_trivial<SimulationEvent>::value);
 static_assert(std::is_trivially_copyable<SimulationEvent>::value);
 static_assert(std::is_standard_layout<SimulationEvent>::value);
 
-auto make_event(Circuit::ConstInput input, time_t time, bool value) -> SimulationEvent;
+auto make_event(Schematic::ConstInput input, time_t time, bool value) -> SimulationEvent;
 }  // namespace logicsim
 
 template <>
@@ -145,90 +145,88 @@ class Simulation {
     };
 
    public:
-    [[nodiscard]] explicit Simulation(const Circuit &circuit);
-    [[nodiscard]] auto circuit() const noexcept -> const Circuit &;
+    [[nodiscard]] explicit Simulation(const Schematic &schematic);
+    [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto time() const noexcept -> time_t;
 
     // submit custom events
-    auto submit_event(Circuit::ConstInput input, time_t::value_type offset, bool value)
+    auto submit_event(Schematic::ConstInput input, time_t::value_type offset, bool value)
         -> void;
-    auto submit_events(Circuit::ConstElement element, time_t::value_type offset,
+    auto submit_events(Schematic::ConstElement element, time_t::value_type offset,
                        logic_small_vector_t values) -> void;
 
     // Initialize logic elements in the simulation
     auto initialize() -> void;
 
     /// @brief Run the simulation by changing the given simulations state
-    /// @param state             either new or the old simulation state to start from
-    /// @param circuit           the circuit that should be simulated
-    /// @param simulation_time   simulate for this time or, when run_until_steady, run
-    /// until
-    ///                          no more new events are generated
+    /// @param simulation_time   simulate for this time or, when run_until_steady,
+    ///                          run until no more new events are generated
     /// @param timeout           return if simulation takes longer than this in realtime
-    /// @param print_events      if true print each processed event information
+    /// @param max_events        return after simulating this many events
     auto run(time_t::value_type simulation_time = defaults::infinite_simulation_time,
              timeout_t timeout = defaults::no_timeout,
              int64_t max_events = defaults::no_max_events) -> int64_t;
 
     // input values
-    [[nodiscard]] auto input_value(Circuit::ConstInput input) const -> bool;
-    [[nodiscard]] auto input_values(Circuit::ConstElement element) const
+    [[nodiscard]] auto input_value(Schematic::ConstInput input) const -> bool;
+    [[nodiscard]] auto input_values(Schematic::ConstElement element) const
         -> logic_small_vector_t;
     [[nodiscard]] auto input_values() const -> const logic_vector_t;
 
     // infers the output values
-    [[nodiscard]] auto output_value(Circuit::ConstOutput output,
+    [[nodiscard]] auto output_value(Schematic::ConstOutput output,
                                     bool raise_missing = true) const -> bool;
-    [[nodiscard]] auto output_values(Circuit::ConstElement element,
+    [[nodiscard]] auto output_values(Schematic::ConstElement element,
                                      bool raise_missing = true) const
         -> logic_small_vector_t;
     [[nodiscard]] auto output_values(bool raise_missing = true) const -> logic_vector_t;
 
     // inverters
-    [[nodiscard]] auto has_input_inverter(Circuit::ConstInput input) const -> bool;
-    [[nodiscard]] auto has_input_inverters(Circuit::ConstElement element) const
+    [[nodiscard]] auto has_input_inverter(Schematic::ConstInput input) const -> bool;
+    [[nodiscard]] auto has_input_inverters(Schematic::ConstElement element) const
         -> logic_small_vector_t;
-    auto set_input_inverter(Circuit::ConstInput input, bool value) -> void;
-    auto set_input_inverters(Circuit::ConstElement element, logic_small_vector_t values)
+    auto set_input_inverter(Schematic::ConstInput input, bool value) -> void;
+    auto set_input_inverters(Schematic::ConstElement element, logic_small_vector_t values)
         -> void;
 
     // delays
-    auto set_output_delay(Circuit::ConstOutput output, delay_t delay) -> void;
-    auto set_output_delays(Circuit::ConstElement element, std::vector<delay_t> delays)
+    auto set_output_delay(Schematic::ConstOutput output, delay_t delay) -> void;
+    auto set_output_delays(Schematic::ConstElement element, std::vector<delay_t> delays)
         -> void;
-    [[nodiscard]] auto output_delay(Circuit::ConstOutput output) const -> delay_t;
+    [[nodiscard]] auto output_delay(Schematic::ConstOutput output) const -> delay_t;
 
     // internal states
-    [[nodiscard]] auto internal_state(Circuit::ConstElement element) const
+    [[nodiscard]] auto internal_state(Schematic::ConstElement element) const
         -> const logic_small_vector_t &;
 
     // history
     class HistoryView;
     class HistoryIterator;
     struct history_entry_t;
-    auto set_history_length(Circuit::ConstElement element, delay_t history_length)
+    auto set_history_length(Schematic::ConstElement element, delay_t history_length)
         -> void;
-    auto history_length(Circuit::ConstElement element) const -> delay_t;
-    auto input_history(Circuit::ConstElement element) const -> HistoryView;
+    auto history_length(Schematic::ConstElement element) const -> delay_t;
+    auto input_history(Schematic::ConstElement element) const -> HistoryView;
 
    private:
     class Timer;
 
     auto check_state_valid() const -> void;
 
-    auto submit_events_for_changed_outputs(const Circuit::ConstElement element,
+    auto submit_events_for_changed_outputs(const Schematic::ConstElement element,
                                            const logic_small_vector_t &old_outputs,
                                            const logic_small_vector_t &new_outputs)
         -> void;
     auto process_event_group(event_group_t &&events) -> void;
-    auto create_event(Circuit::ConstOutput output,
+    auto create_event(Schematic::ConstOutput output,
                       const logic_small_vector_t &output_values) -> void;
-    auto apply_events(Circuit::ConstElement element, const event_group_t &group) -> void;
-    auto set_input(Circuit::ConstInput input, bool value) -> void;
-    // auto set_internal_state(Circuit::ConstElement element,
+    auto apply_events(Schematic::ConstElement element, const event_group_t &group)
+        -> void;
+    auto set_input(Schematic::ConstInput input, bool value) -> void;
+    // auto set_internal_state(Schematic::ConstElement element,
     //                         const logic_small_vector_t &state) -> void;
 
-    auto record_input_history(Circuit::ConstInput input, bool new_value) -> void;
+    auto record_input_history(Schematic::ConstInput input, bool new_value) -> void;
     auto clean_history(history_vector_t &history, delay_t history_length) -> void;
 
     [[nodiscard]] auto get_state(ElementOrConnection auto item) -> ElementState &;
@@ -252,7 +250,7 @@ class Simulation {
 
     static_assert(sizeof(ElementState) == 128);
 
-    gsl::not_null<const Circuit *> circuit_;
+    gsl::not_null<const Schematic *> schematic_;
     std::vector<ElementState> states_ {};
     SimulationQueue queue_ {};
     bool is_initialized_ {false};
@@ -361,7 +359,7 @@ namespace logicsim {
 constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 
 template <std::uniform_random_bit_generator G>
-auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
+auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events,
                           const bool print) -> int64_t;
 auto benchmark_simulation(int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
                           int n_events = BENCHMARK_DEFAULT_EVENTS, bool print = false)

@@ -22,7 +22,7 @@ namespace logicsim {
 // Simulation Event
 //
 
-auto make_event(Circuit::ConstInput input, time_t time, bool value) -> SimulationEvent {
+auto make_event(Schematic::ConstInput input, time_t time, bool value) -> SimulationEvent {
     return {.time = time,
             .element_id = input.element_id(),
             .input_index = input.input_index(),
@@ -177,9 +177,9 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
     return internal_state_size(type) != 0;
 }
 
-Simulation::Simulation(const Circuit &circuit)
-    : circuit_ {&circuit}, states_(circuit.element_count()), queue_ {} {
-    for (auto element : circuit.elements()) {
+Simulation::Simulation(const Schematic &schematic)
+    : schematic_ {&schematic}, states_(schematic.element_count()), queue_ {} {
+    for (auto element : schematic.elements()) {
         auto &state = get_state(element);
 
         state.input_values.resize(element.input_count(), false);
@@ -197,20 +197,20 @@ auto Simulation::get_state(ElementOrConnection auto obj) const -> const ElementS
     return states_.at(obj.element_id().value);
 }
 
-auto Simulation::circuit() const noexcept -> const Circuit & {
-    return *circuit_;
+auto Simulation::schematic() const noexcept -> const Schematic & {
+    return *schematic_;
 }
 
 auto Simulation::time() const noexcept -> time_t {
     return queue_.time();
 }
 
-auto Simulation::submit_event(Circuit::ConstInput input, time_t::value_type offset,
+auto Simulation::submit_event(Schematic::ConstInput input, time_t::value_type offset,
                               bool value) -> void {
     queue_.submit_event(make_event(input, time_t {queue_.time().value + offset}, value));
 }
 
-auto Simulation::submit_events(Circuit::ConstElement element, time_t::value_type offset,
+auto Simulation::submit_events(Schematic::ConstElement element, time_t::value_type offset,
                                logic_small_vector_t values) -> void {
     if (std::size(values) != element.input_count()) [[unlikely]] {
         throw_exception("Need to provide number of input values.");
@@ -222,7 +222,7 @@ auto Simulation::submit_events(Circuit::ConstElement element, time_t::value_type
 
 auto Simulation::check_state_valid() const -> void {
     const auto n_elements
-        = static_cast<logic_vector_t::size_type>(circuit_->element_count());
+        = static_cast<logic_vector_t::size_type>(schematic_->element_count());
 
     if (states_.size() != n_elements) [[unlikely]] {
         throw_exception("number of state needs to match number of elements.");
@@ -356,7 +356,7 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
     }
 }
 
-auto Simulation::apply_events(const Circuit::ConstElement element,
+auto Simulation::apply_events(const Schematic::ConstElement element,
                               const event_group_t &group) -> void {
     for (const auto &event : group) {
         set_input(element.input(event.input_index), event.value);
@@ -380,7 +380,7 @@ auto get_changed_outputs(const Simulation::logic_small_vector_t &old_outputs,
     return result;
 }
 
-void Simulation::create_event(const Circuit::ConstOutput output,
+void Simulation::create_event(const Schematic::ConstOutput output,
                               const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
         const auto delay = output_delay(output);
@@ -392,7 +392,7 @@ void Simulation::create_event(const Circuit::ConstOutput output,
 }
 
 auto Simulation::submit_events_for_changed_outputs(
-    const Circuit::ConstElement element, const logic_small_vector_t &old_outputs,
+    const Schematic::ConstElement element, const logic_small_vector_t &old_outputs,
     const logic_small_vector_t &new_outputs) -> void {
     const auto changes = get_changed_outputs(old_outputs, new_outputs);
     for (auto output_index : changes) {
@@ -419,7 +419,7 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     }
     validate(events);
     const auto element
-        = Circuit::ConstElement {circuit_->element(events.front().element_id)};
+        = Schematic::ConstElement {schematic_->element(events.front().element_id)};
     const auto element_type = element.element_type();
 
     // short-circuit placeholders, as they don't have logic
@@ -526,7 +526,7 @@ auto Simulation::initialize() -> void {
 
     check_state_valid();
 
-    for (auto &&element : circuit_->elements()) {
+    for (auto &&element : schematic_->elements()) {
         auto element_type = element.element_type();
 
         // short-circuit placeholders, as they don't have logic
@@ -555,7 +555,7 @@ auto Simulation::initialize() -> void {
     is_initialized_ = true;
 }
 
-auto Simulation::record_input_history(const Circuit::ConstInput input,
+auto Simulation::record_input_history(const Schematic::ConstInput input,
                                       const bool new_value) -> void {
     // we only record the first input, as we only need a history for wires
     if (input.input_index() != connection_id_t {0}) {
@@ -588,11 +588,11 @@ auto Simulation::clean_history(history_vector_t &history, delay_t history_length
     }
 }
 
-auto Simulation::input_value(const Circuit::ConstInput input) const -> bool {
+auto Simulation::input_value(const Schematic::ConstInput input) const -> bool {
     return get_state(input).input_values.at(input.input_index().value);
 }
 
-auto Simulation::input_values(const Circuit::ConstElement element) const
+auto Simulation::input_values(const Schematic::ConstElement element) const
     -> logic_small_vector_t {
     return get_state(element).input_values;
 }
@@ -600,19 +600,19 @@ auto Simulation::input_values(const Circuit::ConstElement element) const
 auto Simulation::input_values() const -> const logic_vector_t {
     auto result = logic_vector_t {};
 
-    for (auto element : circuit_->elements()) {
+    for (auto element : schematic_->elements()) {
         std::ranges::copy(input_values(element), std::back_inserter(result));
     }
 
     return result;
 }
 
-auto Simulation::set_input(const Circuit::ConstInput input, bool value) -> void {
+auto Simulation::set_input(const Schematic::ConstInput input, bool value) -> void {
     record_input_history(input, value);
     get_state(input).input_values.at(input.input_index().value) = value;
 }
 
-auto Simulation::output_value(const Circuit::ConstOutput output,
+auto Simulation::output_value(const Schematic::ConstOutput output,
                               const bool raise_missing) const -> bool {
     if (raise_missing || output.has_connected_element()) {
         return input_value(output.connected_input());
@@ -620,7 +620,7 @@ auto Simulation::output_value(const Circuit::ConstOutput output,
     return false;
 }
 
-auto Simulation::output_values(const Circuit::ConstElement element,
+auto Simulation::output_values(const Schematic::ConstElement element,
                                const bool raise_missing) const -> logic_small_vector_t {
     return transform_to_container<logic_small_vector_t>(
         element.outputs(),
@@ -628,9 +628,9 @@ auto Simulation::output_values(const Circuit::ConstElement element,
 }
 
 auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t {
-    logic_vector_t result(circuit_->output_count());
+    logic_vector_t result(schematic_->output_count());
 
-    for (auto element : circuit_->elements()) {
+    for (auto element : schematic_->elements()) {
         std::ranges::copy(output_values(element, raise_missing),
                           std::back_inserter(result));
     }
@@ -638,17 +638,17 @@ auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t
     return result;
 }
 
-[[nodiscard]] auto Simulation::has_input_inverter(Circuit::ConstInput input) const
+[[nodiscard]] auto Simulation::has_input_inverter(Schematic::ConstInput input) const
     -> bool {
     return get_state(input).input_inverters.at(input.input_index().value);
 }
 
-[[nodiscard]] auto Simulation::has_input_inverters(Circuit::ConstElement element) const
+[[nodiscard]] auto Simulation::has_input_inverters(Schematic::ConstElement element) const
     -> logic_small_vector_t {
     return get_state(element).input_inverters;
 }
 
-auto Simulation::set_input_inverter(Circuit::ConstInput input, bool value) -> void {
+auto Simulation::set_input_inverter(Schematic::ConstInput input, bool value) -> void {
     if (!queue_.empty()) {
         throw_exception("Cannot set input inverters for state with scheduled events.");
     }
@@ -657,7 +657,7 @@ auto Simulation::set_input_inverter(Circuit::ConstInput input, bool value) -> vo
     get_state(input).input_inverters.at(input.input_index().value) = value;
 }
 
-auto Simulation::set_input_inverters(Circuit::ConstElement element,
+auto Simulation::set_input_inverters(Schematic::ConstElement element,
                                      logic_small_vector_t values) -> void {
     if (!queue_.empty()) {
         throw_exception("Cannot set input inverters for state with scheduled events.");
@@ -670,19 +670,19 @@ auto Simulation::set_input_inverters(Circuit::ConstElement element,
     get_state(element).input_inverters.assign(std::begin(values), std::end(values));
 }
 
-auto Simulation::output_delay(const Circuit::ConstOutput output) const -> delay_t {
+auto Simulation::output_delay(const Schematic::ConstOutput output) const -> delay_t {
     return get_state(output).output_delays.at(output.output_index().value);
 }
 
-auto Simulation::set_output_delay(const Circuit::ConstOutput output, const delay_t delay)
-    -> void {
+auto Simulation::set_output_delay(const Schematic::ConstOutput output,
+                                  const delay_t delay) -> void {
     if (!queue_.empty()) {
         throw_exception("Cannot set output delay for state with scheduled events.");
     }
     get_state(output).output_delays.at(output.output_index().value) = delay;
 }
 
-auto Simulation::set_output_delays(Circuit::ConstElement element,
+auto Simulation::set_output_delays(Schematic::ConstElement element,
                                    std::vector<delay_t> delays) -> void {
     if (element.output_count() != std::size(delays)) [[unlikely]] {
         throw_exception("Need as many delays as outputs in the vector.");
@@ -694,12 +694,12 @@ auto Simulation::set_output_delays(Circuit::ConstElement element,
     }
 }
 
-auto Simulation::internal_state(Circuit::ConstElement element) const
+auto Simulation::internal_state(Schematic::ConstElement element) const
     -> const logic_small_vector_t & {
     return get_state(element).internal_state;
 }
 
-auto Simulation::input_history(Circuit::ConstElement element) const -> HistoryView {
+auto Simulation::input_history(Schematic::ConstElement element) const -> HistoryView {
     const auto &state = get_state(element);
     return HistoryView {
         state.first_input_history,
@@ -709,11 +709,11 @@ auto Simulation::input_history(Circuit::ConstElement element) const -> HistoryVi
     };
 }
 
-auto Simulation::history_length(const Circuit::ConstElement element) const -> delay_t {
+auto Simulation::history_length(const Schematic::ConstElement element) const -> delay_t {
     return get_state(element).history_length;
 }
 
-auto Simulation::set_history_length(const Circuit::ConstElement element,
+auto Simulation::set_history_length(const Schematic::ConstElement element,
                                     const delay_t history_length) -> void {
     if (history_length < delay_t {0ns}) [[unlikely]] {
         throw_exception("Max history cannot be negative.");
@@ -880,7 +880,7 @@ template <std::uniform_random_bit_generator G>
 void _generate_random_events(G &rng, Simulation &simulation) {
     boost::random::uniform_int_distribution<int32_t> trigger_distribution {0, 1};
 
-    for (auto element : simulation.circuit().elements()) {
+    for (auto element : simulation.schematic().elements()) {
         for (auto input : element.inputs()) {
             if (trigger_distribution(rng) == 0) {
                 simulation.submit_event(input, 1us, !simulation.input_value(input));
@@ -890,13 +890,13 @@ void _generate_random_events(G &rng, Simulation &simulation) {
 }
 
 template <std::uniform_random_bit_generator G>
-auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
+auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events,
                           const bool print) -> int64_t {
-    Simulation simulation {circuit};
+    Simulation simulation {schematic};
     simulation.print_events = print;
 
     // set custom delays
-    for (const auto element : circuit.elements()) {
+    for (const auto element : schematic.elements()) {
         for (const auto output : element.outputs()) {
             auto delay_dist
                 = boost::random::uniform_int_distribution<time_t::rep> {5, 500};
@@ -905,7 +905,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     }
 
     // set history for wires
-    for (const auto element : circuit.elements()) {
+    for (const auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
             const auto delay
                 = simulation.output_delay(element.output(connection_id_t {0}));
@@ -935,7 +935,7 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
         fmt::print("input_values = {}\n",
                    fmt_join("{:b}", simulation.input_values(), ""));
         fmt::print("output_values = {}\n", fmt_join("{:b}", output_values, ""));
-        for (auto element : circuit.elements()) {
+        for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
                 auto hist = simulation.input_history(element);
                 fmt::print("{} {}\n", element, hist);
@@ -947,21 +947,22 @@ auto benchmark_simulation(G &rng, const Circuit &circuit, const int n_events,
     return simulated_event_count;
 }
 
-template auto benchmark_simulation(boost::random::mt19937 &rng, const Circuit &circuit,
-                                   const int n_events, const bool print) -> int64_t;
+template auto benchmark_simulation(boost::random::mt19937 &rng,
+                                   const Schematic &schematic, const int n_events,
+                                   const bool print) -> int64_t;
 
 auto benchmark_simulation(const int n_elements, const int n_events, const bool print)
     -> int64_t {
     boost::random::mt19937 rng {0};
 
-    auto circuit = create_random_circuit(rng, n_elements);
+    auto schematic = create_random_schematic(rng, n_elements);
     if (print) {
-        fmt::print("{}\n", circuit);
+        fmt::print("{}\n", schematic);
     }
-    add_output_placeholders(circuit);
-    circuit.validate(true);
+    add_output_placeholders(schematic);
+    schematic.validate(true);
 
-    return benchmark_simulation(rng, circuit, n_events, print);
+    return benchmark_simulation(rng, schematic, n_events, print);
 }
 
 }  // namespace logicsim

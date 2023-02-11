@@ -2,7 +2,7 @@
 
 /// Our benchmark creates random circuits and events. For the benchmark
 /// to make sense these need to be deterministic on all platforms.
-/// We test here the random numbers are still the same.
+/// We test here that random numbers are still the same.
 
 #include "random.h"
 

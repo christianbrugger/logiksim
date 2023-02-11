@@ -47,7 +47,7 @@ class InvalidLineTreeException : public std::exception {
 // first point is input
 // structure is immutable, create new tree, if it needs to be changed
 // outputs need to be leaf nodes (cannot have outgoing connections)
-// class does not know about simulation or circuit (reduce coupling)
+// class does not know about simulation or schematic (reduce coupling)
 
 class LineTree;
 

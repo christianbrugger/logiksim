@@ -1,5 +1,5 @@
-#ifndef CIRCUIT_VOCABULARY_H
-#define CIRCUIT_VOCABULARY_H
+#ifndef LOGIKSIM_VOCABULARY_H
+#define LOGIKSIM_VOCABULARY_H
 
 #include "exceptions.h"
 
@@ -14,7 +14,7 @@
 namespace logicsim {
 
 //
-// Circuit Types
+// Schematic Types
 //
 
 struct circuit_id_t {

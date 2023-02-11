@@ -110,15 +110,15 @@ class WidgetRenderer : public QWidget {
                   .count();
         const double animation_frame = fmod(animation_seconds / 5.0, 1.0);
 
-        Circuit circuit;
+        Schematic schematic;
 
-        const auto elem0 = circuit.add_element(ElementType::or_element, 2, 1);
-        const auto line0 = circuit.add_element(ElementType::wire, 1, 2);
+        const auto elem0 = schematic.add_element(ElementType::or_element, 2, 1);
+        const auto line0 = schematic.add_element(ElementType::wire, 1, 2);
         elem0.output(connection_id_t {0}).connect(line0.input(connection_id_t {0}));
         line0.output(connection_id_t {0}).connect(elem0.input(connection_id_t {1}));
 
-        add_output_placeholders(circuit);
-        auto simulation = Simulation {circuit};
+        add_output_placeholders(schematic);
+        auto simulation = Simulation {schematic};
         simulation.print_events = true;
 
         simulation.set_output_delay(elem0.output(connection_id_t {0}), delay_t {10us});
@@ -143,7 +143,7 @@ class WidgetRenderer : public QWidget {
 
         // create layout
         auto layout = CircuitLayout {};
-        for (auto _ [[maybe_unused]] : range(circuit.element_count())) {
+        for (auto _ [[maybe_unused]] : range(schematic.element_count())) {
             layout.add_default_element();
         }
         layout.set_position(elem0, point_t {5, 3});

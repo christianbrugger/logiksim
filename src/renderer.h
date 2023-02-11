@@ -32,9 +32,9 @@ auto render_circuit(BLContext& ctx, const CircuitLayout& layout,
 
 struct BenchmarkScene {
    public:
-    Circuit circuit {};
+    Schematic schematic {};
     CircuitLayout layout {};
-    Simulation simulation {circuit};
+    Simulation simulation {schematic};
 };
 
 auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100) -> int64_t;

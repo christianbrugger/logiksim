@@ -146,8 +146,8 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
     }
 }
 
-auto draw_wire(BLContext& ctx, Circuit::ConstElement element, const CircuitLayout& layout,
-               const Simulation& simulation) -> void {
+auto draw_wire(BLContext& ctx, Schematic::ConstElement element,
+               const CircuitLayout& layout, const Simulation& simulation) -> void {
     // ctx.setStrokeWidth(1);
 
     // TODO move to some class
@@ -172,7 +172,7 @@ auto draw_wire(BLContext& ctx, Circuit::ConstElement element, const CircuitLayou
     }
 }
 
-auto draw_standard_element(BLContext& ctx, Circuit::ConstElement element,
+auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
                            const CircuitLayout& layout, const Simulation& simulation)
     -> void {
     constexpr static double s = 12;
@@ -225,7 +225,7 @@ auto render_circuit(BLContext& ctx, const CircuitLayout& layout,
         draw_background(ctx);
     }
 
-    for (auto element : simulation.circuit().elements()) {
+    for (auto element : simulation.schematic().elements()) {
         auto type = element.element_type();
 
         if (type == ElementType::wire) {
@@ -382,22 +382,22 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     auto tree_length_sum = int64_t {0};
 
     // create schematics
-    auto& circuit = scene.circuit;
+    auto& schematic = scene.schematic;
     for (auto _ [[maybe_unused]] : range(n_lines)) {
         UDist<int> output_dist {config.n_outputs_min, config.n_outputs_max};
-        circuit.add_element(ElementType::wire, 1, output_dist(rng));
+        schematic.add_element(ElementType::wire, 1, output_dist(rng));
     }
-    add_output_placeholders(circuit);
+    add_output_placeholders(schematic);
 
     // create layout
     auto& layout = scene.layout = CircuitLayout {};
-    for (auto _ [[maybe_unused]] : range(circuit.element_count())) {
+    for (auto _ [[maybe_unused]] : range(schematic.element_count())) {
         layout.add_default_element();
     }
 
     // add line trees
-    auto& simulation = scene.simulation = Simulation {circuit};
-    for (auto element : circuit.elements()) {
+    auto& simulation = scene.simulation = Simulation {schematic};
+    for (auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
             auto line_tree = create_random_line_tree(element.output_count(), config, rng);
 
@@ -424,7 +424,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
 
     // calculate simulation time
     delay_t max_delay {0us};
-    for (auto element : circuit.elements()) {
+    for (auto element : schematic.elements()) {
         for (auto output : element.outputs()) {
             max_delay = std::max(max_delay, simulation.output_delay(output));
         }
@@ -432,7 +432,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     auto max_time {max_delay.value};
 
     // add events
-    for (auto element : circuit.elements()) {
+    for (auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
             auto spacing_dist_us
                 = UDist<int> {config.min_event_spacing_us, config.max_event_spacing_us};

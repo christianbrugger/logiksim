@@ -22,15 +22,15 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
         using namespace logicsim;
 
-        auto circuit = benchmark_circuit(1);
+        auto schematic = benchmark_schematic(1);
 
         benchmark::ClobberMemory();
 
-        circuit.validate();
-        add_output_placeholders(circuit);
-        circuit.validate(true);
+        schematic.validate();
+        add_output_placeholders(schematic);
+        schematic.validate(true);
 
-        benchmark::DoNotOptimize(circuit);
+        benchmark::DoNotOptimize(schematic);
     }
 }
 
@@ -43,16 +43,16 @@ static void BM_Simulation_0(benchmark::State& state) {
 
         boost::random::mt19937 rng {0};
 
-        auto circuit = logicsim::create_random_circuit(rng, 100);
-        logicsim::add_output_placeholders(circuit);
-        circuit.validate(true);
+        auto schematic = logicsim::create_random_schematic(rng, 100);
+        logicsim::add_output_placeholders(schematic);
+        schematic.validate(true);
 
-        benchmark::DoNotOptimize(circuit);
+        benchmark::DoNotOptimize(schematic);
         benchmark::ClobberMemory();
 
         state.ResumeTiming();
 
-        count += logicsim::benchmark_simulation(rng, circuit, 10'000, false);
+        count += logicsim::benchmark_simulation(rng, schematic, 10'000, false);
 
         benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();

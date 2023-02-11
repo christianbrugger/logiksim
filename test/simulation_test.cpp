@@ -58,27 +58,27 @@ TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
 
 // Simulation
 
-[[nodiscard]] auto get_uninitialized_simulation(Circuit& circuit) -> Simulation {
-    add_output_placeholders(circuit);
-    circuit.validate(true);
+[[nodiscard]] auto get_uninitialized_simulation(Schematic& schematic) -> Simulation {
+    add_output_placeholders(schematic);
+    schematic.validate(true);
 
-    return Simulation {circuit};
+    return Simulation {schematic};
 }
 
-[[nodiscard]] auto get_initialized_simulation(Circuit& circuit) -> Simulation {
-    add_output_placeholders(circuit);
-    circuit.validate(true);
+[[nodiscard]] auto get_initialized_simulation(Schematic& schematic) -> Simulation {
+    add_output_placeholders(schematic);
+    schematic.validate(true);
 
-    Simulation simulation {circuit};
+    Simulation simulation {schematic};
     simulation.initialize();
     return simulation;
 }
 
 TEST(SimulationTest, InitializeSimulation) {
-    Circuit circuit;
-    auto inverter {circuit.add_element(ElementType::inverter_element, 1, 1)};
+    Schematic schematic;
+    auto inverter {schematic.add_element(ElementType::inverter_element, 1, 1)};
 
-    auto simulation = get_initialized_simulation(circuit);
+    auto simulation = get_initialized_simulation(schematic);
     simulation.run();
 
     EXPECT_EQ(simulation.input_value(inverter.input(connection_id_t {0})), false);
@@ -87,9 +87,9 @@ TEST(SimulationTest, InitializeSimulation) {
 
 TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
     using namespace std::chrono_literals;
-    Circuit circuit;
+    Schematic schematic;
 
-    auto simulation = get_initialized_simulation(circuit);
+    auto simulation = get_initialized_simulation(schematic);
 
     EXPECT_EQ(simulation.time(), time_t {0us});
     simulation.run(3s);
@@ -100,11 +100,11 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     using namespace std::chrono_literals;
 
     // create infinite loop
-    Circuit circuit;
-    const auto inverter = circuit.add_element(ElementType::inverter_element, 1, 1);
+    Schematic schematic;
+    const auto inverter = schematic.add_element(ElementType::inverter_element, 1, 1);
     inverter.output(connection_id_t {0}).connect(inverter.input(connection_id_t {0}));
 
-    auto simulation = get_uninitialized_simulation(circuit);
+    auto simulation = get_uninitialized_simulation(schematic);
     simulation.set_output_delay(inverter.output(connection_id_t {0}), delay_t {100us});
     simulation.initialize();
 
@@ -117,10 +117,10 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     using namespace std::chrono_literals;
 
     // create infinite loop
-    Circuit circuit;
-    const auto inverter = circuit.add_element(ElementType::inverter_element, 1, 1);
+    Schematic schematic;
+    const auto inverter = schematic.add_element(ElementType::inverter_element, 1, 1);
     inverter.output(connection_id_t {0}).connect(inverter.input(connection_id_t {0}));
-    auto simulation = get_initialized_simulation(circuit);
+    auto simulation = get_initialized_simulation(schematic);
 
     // run simulation for 5 ms
     EXPECT_EQ(simulation.time(), time_t {0us});
@@ -135,10 +135,10 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
 }
 
 TEST(SimulationTest, AdditionalEvents) {
-    Circuit circuit;
-    auto xor_element {circuit.add_element(ElementType::xor_element, 2, 1)};
+    Schematic schematic;
+    auto xor_element {schematic.add_element(ElementType::xor_element, 2, 1)};
 
-    auto simulation = get_initialized_simulation(circuit);
+    auto simulation = get_initialized_simulation(schematic);
     simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), false);
@@ -163,10 +163,10 @@ TEST(SimulationTest, AdditionalEvents) {
 }
 
 TEST(SimulationTest, SimulatanousEvents) {
-    Circuit circuit;
-    auto xor_element {circuit.add_element(ElementType::xor_element, 2, 1)};
+    Schematic schematic;
+    auto xor_element {schematic.add_element(ElementType::xor_element, 2, 1)};
 
-    auto simulation = get_initialized_simulation(circuit);
+    auto simulation = get_initialized_simulation(schematic);
     simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, true);
     simulation.run();
 
@@ -185,11 +185,11 @@ TEST(SimulationTest, SimulatanousEvents) {
 }
 
 TEST(SimulationTest, HalfAdder) {
-    Circuit circuit;
-    const auto input0 {circuit.add_element(ElementType::wire, 1, 2)};
-    const auto input1 {circuit.add_element(ElementType::wire, 1, 2)};
-    const auto carry {circuit.add_element(ElementType::and_element, 2, 1)};
-    const auto output {circuit.add_element(ElementType::xor_element, 2, 1)};
+    Schematic schematic;
+    const auto input0 {schematic.add_element(ElementType::wire, 1, 2)};
+    const auto input1 {schematic.add_element(ElementType::wire, 1, 2)};
+    const auto carry {schematic.add_element(ElementType::and_element, 2, 1)};
+    const auto output {schematic.add_element(ElementType::xor_element, 2, 1)};
 
     input0.output(connection_id_t {0}).connect(carry.input(connection_id_t {0}));
     input0.output(connection_id_t {1}).connect(output.input(connection_id_t {0}));
@@ -197,7 +197,7 @@ TEST(SimulationTest, HalfAdder) {
     input1.output(connection_id_t {0}).connect(carry.input(connection_id_t {1}));
     input1.output(connection_id_t {1}).connect(output.input(connection_id_t {1}));
 
-    auto simulation = get_initialized_simulation(circuit);
+    auto simulation = get_initialized_simulation(schematic);
 
     // 0 + 0 -> 00
     {
@@ -243,9 +243,9 @@ TEST(SimulationTest, HalfAdder) {
 TEST(SimulationTest, OutputDelayTest) {
     using namespace std::chrono_literals;
 
-    Circuit circuit;
-    const auto wire = circuit.add_element(ElementType::wire, 1, 3);
-    auto simulation = get_initialized_simulation(circuit);
+    Schematic schematic;
+    const auto wire = schematic.add_element(ElementType::wire, 1, 3);
+    auto simulation = get_initialized_simulation(schematic);
 
     simulation.set_output_delay(wire.output(connection_id_t {0}), delay_t {1ms});
     simulation.set_output_delay(wire.output(connection_id_t {1}), delay_t {2ms});
@@ -271,9 +271,9 @@ TEST(SimulationTest, OutputDelayTest) {
 TEST(SimulationTest, JKFlipFlop) {
     using namespace std::chrono_literals;
 
-    Circuit circuit;
-    const auto flipflop {circuit.add_element(ElementType::flipflop_jk, 3, 2)};
-    auto simulation = get_initialized_simulation(circuit);
+    Schematic schematic;
+    const auto flipflop {schematic.add_element(ElementType::flipflop_jk, 3, 2)};
+    auto simulation = get_initialized_simulation(schematic);
 
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
@@ -314,10 +314,10 @@ TEST(SimulationTest, JKFlipFlop) {
 TEST(SimulationTest, AndInputInverters) {
     using namespace std::chrono_literals;
 
-    Circuit circuit;
-    auto and_element {circuit.add_element(ElementType::and_element, 2, 1)};
+    Schematic schematic;
+    auto and_element {schematic.add_element(ElementType::and_element, 2, 1)};
 
-    auto simulation = get_uninitialized_simulation(circuit);
+    auto simulation = get_uninitialized_simulation(schematic);
     simulation.set_input_inverters(and_element, {true, true});
 
     simulation.initialize();
@@ -340,10 +340,10 @@ TEST(SimulationTest, AndInputInverters) {
 TEST(SimulationTest, TestInputHistory) {
     using namespace std::chrono_literals;
 
-    Circuit circuit;
-    auto wire {circuit.add_element(ElementType::wire, 1, 2)};
+    Schematic schematic;
+    auto wire {schematic.add_element(ElementType::wire, 1, 2)};
 
-    auto simulation = get_uninitialized_simulation(circuit);
+    auto simulation = get_uninitialized_simulation(schematic);
     simulation.set_history_length(wire, delay_t {100us});
 
     simulation.initialize();
@@ -381,11 +381,11 @@ TEST(SimulationTest, TestInputHistory) {
 TEST(SimulationTest, TestClockGenerator) {
     using namespace std::chrono_literals;
 
-    Circuit circuit;
-    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    Schematic schematic;
+    auto clock {schematic.add_element(ElementType::clock_generator, 2, 2)};
     clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
 
-    auto simulation = get_uninitialized_simulation(circuit);
+    auto simulation = get_uninitialized_simulation(schematic);
 
     simulation.set_output_delay(clock.output(connection_id_t {0}), delay_t {100us});
     simulation.set_output_delay(clock.output(connection_id_t {1}), delay_t {100us});
@@ -406,11 +406,11 @@ TEST(SimulationTest, TestClockGenerator) {
 TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
     using namespace std::chrono_literals;
 
-    Circuit circuit;
-    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    Schematic schematic;
+    auto clock {schematic.add_element(ElementType::clock_generator, 2, 2)};
     clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
 
-    auto simulation = get_uninitialized_simulation(circuit);
+    auto simulation = get_uninitialized_simulation(schematic);
     simulation.set_output_delay(clock.output(connection_id_t {0}), delay_t {500us});
     simulation.set_output_delay(clock.output(connection_id_t {1}), delay_t {100us});
 
@@ -436,11 +436,11 @@ TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
 TEST(SimulationTest, TestClockReset) {
     using namespace std::chrono_literals;
 
-    Circuit circuit;
-    auto clock {circuit.add_element(ElementType::clock_generator, 2, 2)};
+    Schematic schematic;
+    auto clock {schematic.add_element(ElementType::clock_generator, 2, 2)};
     clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
 
-    auto simulation = get_uninitialized_simulation(circuit);
+    auto simulation = get_uninitialized_simulation(schematic);
     simulation.set_output_delay(clock.output(connection_id_t {0}), delay_t {1ms});
     simulation.set_output_delay(clock.output(connection_id_t {1}), delay_t {1ns});
 
@@ -469,10 +469,10 @@ TEST(SimulationTest, TestClockReset) {
 TEST(SimulationTest, TestShiftRegister) {
     using namespace std::chrono_literals;
 
-    Circuit circuit;
-    auto shift_register {circuit.add_element(ElementType::shift_register, 3, 2)};
+    Schematic schematic;
+    auto shift_register {schematic.add_element(ElementType::shift_register, 3, 2)};
 
-    auto simulation = get_uninitialized_simulation(circuit);
+    auto simulation = get_uninitialized_simulation(schematic);
     simulation.initialize();
 
     simulation.run();

@@ -16,7 +16,7 @@ class CircuitIndex {
     // * borrow/return_schematics(&&)
     // * borrow/return_layout(&&)
    private:
-    std::vector<Circuit> schematics_;
+    std::vector<Schematic> schematics_;
     std::vector<CircuitLayout> layouts_;
     std::vector<CircuitDescription> descriptions_;
 };
