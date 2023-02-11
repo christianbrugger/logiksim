@@ -8,16 +8,14 @@
 
 namespace logicsim {
 
-class CircuitDescription {
-   public:
-   private:
-    circuit_id_t circuit_id_ {};
-    std::string name_ {};
+struct CircuitDescription {
+    circuit_id_t circuit_id {};
+    std::string name {};
     std::size_t input_count {};
     std::size_t output_count {};
-    color_t color_ {defaults::color_black};
-    std::vector<std::string> input_names_ {};
-    std::vector<std::string> output_names_ {};
+    color_t color {defaults::color_black};
+    std::vector<std::string> input_names {};
+    std::vector<std::string> output_names {};
 };
 
 }  // namespace logicsim
