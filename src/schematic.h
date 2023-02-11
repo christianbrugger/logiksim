@@ -582,6 +582,9 @@ struct fmt::formatter<logicsim::Schematic::ConstOutput> {
 
 namespace logicsim {
 
+class LineTree;
+auto calculate_output_delays(const LineTree &line_tree) -> std::vector<delay_t>;
+
 void add_output_placeholders(Schematic &schematic);
 
 inline constexpr int BENCHMARK_DEFAULT_ELEMENTS {100};

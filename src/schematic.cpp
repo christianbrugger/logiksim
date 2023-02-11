@@ -5,6 +5,7 @@
 #include "exceptions.h"
 #include "format.h"
 #include "iterator.h"
+#include "line_tree.h"
 #include "random.h"
 #include "range.h"
 
@@ -933,6 +934,14 @@ auto add_placeholder(Schematic::Output output) -> void {
 
 auto add_element_placeholders(Schematic::Element element) -> void {
     std::ranges::for_each(element.outputs(), add_placeholder);
+}
+
+auto calculate_output_delays(const LineTree &line_tree) -> std::vector<delay_t> {
+    auto lengths = line_tree.calculate_output_lengths();
+    return transform_to_vector(lengths, [](LineTree::length_t length) -> delay_t {
+        // TODO handle overflow
+        return delay_t {Schematic::defaults::wire_delay_per_distance.value * length};
+    });
 }
 
 auto add_output_placeholders(Schematic &schematic) -> void {
