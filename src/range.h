@@ -141,8 +141,8 @@ struct range_t {
             zero = gsl::narrow<Dt>(zero_);
         } else {
             start = Dt {start_};
-            stop = Dt {start_};
-            zero = Dt {start_};
+            stop = Dt {stop_};
+            zero = Dt {zero_};
         }
 
         if constexpr (forward) {

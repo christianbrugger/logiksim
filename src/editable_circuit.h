@@ -8,13 +8,20 @@ namespace logicsim {
 
 class EditableCircuit {
    public:
-    [[nodiscard]] EditableCircuit(CircuitLayout &&layout, Schematic &&schematic);
+    [[nodiscard]] EditableCircuit(Schematic &&schematic, CircuitLayout &&layout);
 
+    [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto layout() const noexcept -> const CircuitLayout &;
 
+    auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
+                              DisplayOrientation orientation
+                              = DisplayOrientation::default_right) -> void;
+
+    auto add_wire(LineTree &&line_tree) -> void;
+
    private:
-    CircuitLayout layout_;
     Schematic schematic_;
+    CircuitLayout layout_;
 };
 
 }  // namespace logicsim

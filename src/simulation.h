@@ -131,6 +131,7 @@ class Simulation {
     static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
+    // TODO remove, now part of editable circuit
     constexpr static delay_t wire_delay_per_distance {10us};
 
     struct defaults {

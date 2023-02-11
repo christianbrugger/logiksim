@@ -14,6 +14,8 @@ class CircuitIndex {
    public:
     CircuitIndex() = default;
 
+    [[nodiscard]] auto circuit_count() const -> std::size_t;
+
     [[nodiscard]] auto borrow_schematic(circuit_id_t circuit_id) -> Schematic;
     [[nodiscard]] auto borrow_schematics(circuit_id_t circuit_id)
         -> std::vector<Schematic>;
@@ -32,6 +34,8 @@ class CircuitIndex {
     auto check_are_descriptions_complete() const -> void;
 
    private:
+    auto check_equal_size() const -> void;
+
     std::vector<Schematic> schematics_ {Schematic {}};
     std::vector<CircuitLayout> layouts_ {CircuitLayout {}};
     std::vector<CircuitDescription> descriptions_ {CircuitDescription {}};

@@ -66,14 +66,13 @@ auto CircuitLayout::add_default_element() -> void {
     colors_.push_back(defaults::color_black);
 }
 
-auto CircuitLayout::add_line_tree(LineTree &&line_tree) -> void {
+auto CircuitLayout::add_wire(LineTree &&line_tree) -> void {
     add_default_element();
     line_trees_.back() = std::move(line_tree);
 }
 
-auto CircuitLayout::add_simple_element(point_t position, DisplayOrientation orientation,
-                                       DisplayState display_state, color_t color)
-    -> void {
+auto CircuitLayout::add_logic_element(point_t position, DisplayOrientation orientation,
+                                      DisplayState display_state, color_t color) -> void {
     add_default_element();
     positions_.back() = position;
     orientation_.back() = orientation;

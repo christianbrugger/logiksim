@@ -86,6 +86,12 @@ class Schematic {
     using OutputIterator = OutputIteratorTemplate<false>;
     using ConstOutputIterator = OutputIteratorTemplate<true>;
 
+    struct defaults {
+        constexpr static delay_t standard_delay {100us};
+        constexpr static delay_t wire_delay_per_distance {10us};
+        constexpr static delay_t no_history {0ns};
+    };
+
     explicit constexpr Schematic() = default;
     explicit Schematic(circuit_id_t circuit_id);
 
@@ -105,10 +111,28 @@ class Schematic {
     [[nodiscard]] auto elements() noexcept -> ElementView;
     [[nodiscard]] auto elements() const noexcept -> ConstElementView;
 
+    // TODO consider making public, or putting it somewhere else
+    using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
+    using logic_small_vector_t = folly::small_vector<bool, 20, policy>;
+    static_assert(sizeof(logic_small_vector_t) == 24);
+
+    struct NewElementData {
+        ElementType element_type {ElementType::inverter_element};
+        std::size_t input_count {1};
+        std::size_t output_count {1};
+
+        circuit_id_t circuit_id {null_circuit};
+        logic_small_vector_t input_inverters {};
+        std::vector<delay_t> output_delays {};
+        delay_t history_length = defaults::no_history;
+    };
+
+    // TODO remove when not needed anymore
     auto add_element(ElementType type, std::size_t input_count, std::size_t output_count)
         -> Element;
-    auto clear() -> void;
+    auto add_element(NewElementData &&data) -> Element;
 
+    auto clear() -> void;
     void validate(bool require_all_outputs_connected = false) const;
 
    private:
@@ -133,17 +157,27 @@ class Schematic {
     static_assert(sizeof(ElementData) == 65);
 
     // To add:
-    // * circuit_id
-    // * std::vector<> input_connections
-    // * std::vector<> output_connections
-    // * std::vector<circuit_id>
-    // * std::vector<ElementType>
     // * std::vector<input_inverters>
-    // * std::vector<output_delays>
-    // * std::vector<max_history>
 
-    // TODO use separate vectors
+    // output_delays type
+    using output_delays_t = folly::small_vector<delay_t, 5, policy>;
+    static_assert(sizeof(output_delays_t) == 24);
+
+    // TODO use connection_id_t as counter
+    using connection_vector_t = folly::small_vector<ConnectionData, 3>;
+    static_assert(sizeof(connection_vector_t) == 32);
+
+    // TODO use separate vectors, then delete
     std::vector<ElementData> element_data_store_ {};
+
+    std::vector<ElementType> element_types_ {};
+    std::vector<circuit_id_t> circuit_ids_ {};
+    std::vector<connection_vector_t> input_connections_ {};
+    std::vector<connection_vector_t> output_connections_ {};
+    std::vector<logic_small_vector_t> input_inverters_ {};
+    std::vector<output_delays_t> output_delays_ {};
+    std::vector<delay_t> history_lengths_ {};
+
     std::size_t input_count_ {0};
     std::size_t output_count_ {0};
     circuit_id_t circuit_id_ {0};

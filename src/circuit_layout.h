@@ -26,6 +26,7 @@ enum class DisplayOrientation : uint8_t {
 
 auto format(DisplayState state) -> std::string;
 
+// TODO consider renaming
 class CircuitLayout {
    public:
     [[nodiscard]] explicit CircuitLayout() = default;
@@ -35,12 +36,12 @@ class CircuitLayout {
     [[nodiscard]] auto format() const -> std::string;
 
     auto add_default_element() -> void;
-    auto add_line_tree(LineTree &&line_tree) -> void;
-    auto add_simple_element(point_t position,
-                            DisplayOrientation orientation
-                            = DisplayOrientation::default_right,
-                            DisplayState display_state = DisplayState::normal,
-                            color_t color = defaults::color_black) -> void;
+    auto add_wire(LineTree &&line_tree) -> void;
+    auto add_logic_element(point_t position,
+                           DisplayOrientation orientation
+                           = DisplayOrientation::default_right,
+                           DisplayState display_state = DisplayState::normal,
+                           color_t color = defaults::color_black) -> void;
 
     // TODO remove these, when not needed anymore
     auto set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void;

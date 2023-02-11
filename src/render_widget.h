@@ -1,7 +1,9 @@
 #ifndef LOGIKSIM_RENDER_WIDGET_H
 #define LOGIKSIM_RENDER_WIDGET_H
 
+#include "circuit_index.h"
 #include "circuit_layout.h"
+#include "editable_circuit.h"
 #include "exceptions.h"
 #include "range.h"
 #include "renderer.h"
@@ -104,6 +106,24 @@ class WidgetRenderer : public QWidget {
         if (!this->isVisible()) {
             return;
         }
+
+        // build circuit
+        auto circuit_index = CircuitIndex {};
+        auto circuit_id = circuit_id_t {0};
+        auto editable_circuit
+            = EditableCircuit {circuit_index.borrow_schematic(circuit_id),
+                               circuit_index.borrow_layout(circuit_id)};
+        {
+            auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8, 12}});
+            auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12}, point_t {12, 14}});
+            auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
+
+            editable_circuit.add_standard_element(ElementType::or_element, 2,
+                                                  point_t {5, 3});
+            editable_circuit.add_wire(std::move(line_tree));
+        }
+
+        // old behaviour
 
         const double animation_seconds
             = std::chrono::duration<double>(animation_clock::now() - animation_start_)

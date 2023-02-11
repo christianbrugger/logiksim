@@ -7,6 +7,11 @@
 
 namespace logicsim {
 
+auto CircuitIndex::circuit_count() const -> std::size_t {
+    check_equal_size();
+    return schematics_.size();
+}
+
 auto CircuitIndex::borrow_schematic(circuit_id_t circuit_id) -> Schematic {
     auto& source = schematics_.at(circuit_id.value);
 
@@ -84,13 +89,11 @@ auto CircuitIndex::descriptions() -> const std::vector<CircuitDescription>& {
 }
 
 auto CircuitIndex::check_is_complete() const -> void {
+    check_equal_size();
+
     check_are_schematics_complete();
     check_are_layouts_complete();
     check_are_descriptions_complete();
-
-    if (!(schematics_.size() == layouts_.size() == descriptions_.size())) {
-        throw_exception("Schematics, layouts and descriptions have different sizes.");
-    }
 }
 
 auto CircuitIndex::check_are_schematics_complete() const -> void {
@@ -114,6 +117,12 @@ auto CircuitIndex::check_are_descriptions_complete() const -> void {
             descriptions_, range(descriptions_.size()), {},
             [](const CircuitDescription& item) { return item.circuit_id.value; })) {
         throw_exception("Some descriptions are missing.");
+    }
+}
+
+auto CircuitIndex::check_equal_size() const -> void {
+    if (!(schematics_.size() == layouts_.size() == descriptions_.size())) {
+        throw_exception("Schematics, layouts and descriptions have different sizes.");
     }
 }
 

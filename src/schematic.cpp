@@ -59,6 +59,14 @@ auto Schematic::swap(Schematic &other) noexcept -> void {
 
     element_data_store_.swap(other.element_data_store_);
 
+    input_connections_.swap(other.input_connections_);
+    output_connections_.swap(other.output_connections_);
+    circuit_ids_.swap(other.circuit_ids_);
+    element_types_.swap(other.element_types_);
+    input_inverters_.swap(other.input_inverters_);
+    output_delays_.swap(other.output_delays_);
+    history_lengths_.swap(other.history_lengths_);
+
     swap(input_count_, other.input_count_);
     swap(output_count_, other.output_count_);
     swap(circuit_id_, other.circuit_id_);
@@ -127,10 +135,16 @@ auto Schematic::elements() const noexcept -> ConstElementView {
 
 auto Schematic::add_element(ElementType type, std::size_t input_count,
                             std::size_t output_count) -> Element {
-    if (input_count < 0 || input_count > connection_id_t::max()) [[unlikely]] {
+    return add_element(
+        {.element_type = type, .input_count = input_count, .output_count = output_count});
+}
+
+auto Schematic::add_element(NewElementData &&data) -> Element {
+    if (data.input_count < 0 || data.input_count > connection_id_t::max()) [[unlikely]] {
         throw_exception("Input count needs to be positive and not too large.");
     }
-    if (output_count < 0 || output_count > connection_id_t::max()) [[unlikely]] {
+    if (data.output_count < 0 || data.output_count > connection_id_t::max())
+        [[unlikely]] {
         throw_exception("Output count needs to be positive and not too large.");
     }
 
@@ -138,28 +152,54 @@ auto Schematic::add_element(ElementType type, std::size_t input_count,
     if (element_data_store_.size() + 1 >= element_id_t::max()) [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
-    if (input_count_
-        >= std::numeric_limits<decltype(input_count_)>::max() - input_count) {
+    if (input_count_ >= std::numeric_limits<decltype(input_count_)>::max()
+                            - data.input_count) [[unlikely]] {
         throw_exception("Reached maximum number of inputs.");
     }
-    if (output_count_
-        >= std::numeric_limits<decltype(input_count_)>::max() - output_count) {
+    if (output_count_ >= std::numeric_limits<decltype(input_count_)>::max()
+                             - data.output_count) [[unlikely]] {
         throw_exception("Reached maximum number of outputs.");
     }
 
     element_data_store_.push_back({
         .input_data = {},
         .output_data = {},
-        .type = type,
+        .type = data.element_type,
     });
+
+    // extend vectors
+    element_types_.push_back(data.element_type);
+    circuit_ids_.push_back(data.circuit_id);
+    input_connections_.emplace_back(data.input_count, ConnectionData {});
+    output_connections_.emplace_back(data.output_count, ConnectionData {});
+    if (data.input_inverters.size() == 0) {
+        input_inverters_.emplace_back(data.input_count, false);
+    } else {
+        if (std::size(data.input_inverters) != data.input_count) [[unlikely]] {
+            throw_exception("Need as many values for input_inverters as inputs.");
+        }
+        input_inverters_.emplace_back(std::begin(data.input_inverters),
+                                      std::end(data.input_inverters));
+    }
+    if (data.output_delays.size() == 0) {
+        output_delays_.emplace_back(data.output_count, defaults::standard_delay);
+    } else {
+        if (std::size(data.output_delays) != data.output_count) [[unlikely]] {
+            throw_exception("Need as many output_delays as outputs.");
+        }
+        output_delays_.emplace_back(std::begin(data.output_delays),
+                                    std::end(data.output_delays));
+    }
+    history_lengths_.push_back(data.history_length);
+
+    //
     auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
         element_data_store_.size() - std::size_t {1})};
+    element_data_store_.at(element_id.value).input_data.resize(data.input_count);
+    element_data_store_.at(element_id.value).output_data.resize(data.output_count);
 
-    element_data_store_.at(element_id.value).input_data.resize(input_count);
-    element_data_store_.at(element_id.value).output_data.resize(output_count);
-
-    input_count_ += input_count;
-    output_count_ += output_count;
+    input_count_ += data.input_count;
+    output_count_ += data.output_count;
 
     return element(element_id);
 }
@@ -257,7 +297,8 @@ auto Schematic::validate(bool require_all_outputs_connected) const -> void {
     // connection data valid
     // TODO impelement
     // std::ranges::for_each(input_data_store_, Schematic::validate_connection_data_);
-    // std::ranges::for_each(output_data_store_, Schematic::validate_connection_data_);
+    // std::ranges::for_each(output_data_store_,
+    // Schematic::validate_connection_data_);
 
     // back references consistent
     std::ranges::for_each(elements(), validate_element_connections_consistent);
