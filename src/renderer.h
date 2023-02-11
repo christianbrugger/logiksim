@@ -2,6 +2,7 @@
 #define LOGIKSIM_RENDER_SCENE_H
 
 #include "circuit.h"
+#include "circuit_layout.h"
 #include "geometry.h"
 #include "line_tree.h"
 #include "simulation.h"
@@ -23,43 +24,19 @@
 
 namespace logicsim {
 
-class SimulationScene {
-   public:
-    [[nodiscard]] explicit SimulationScene(const Simulation& simulation) noexcept;
-
-    auto render_scene(BLContext& ctx, bool render_background = true) const -> void;
-
-    auto set_position(Circuit::ConstElement element, point_t position) -> void;
-    auto set_line_tree(Circuit::ConstElement element, LineTree&& line_tree) -> void;
-
-   private:
-    struct DrawData {
-        LineTree line_tree {};
-
-        point_t position {0, 0};
-        int8_t orientation {0};
-    };
-
-    static_assert(sizeof(DrawData) == 36);
-
-    auto get_data(Circuit::ConstElement element) -> DrawData&;
-    auto get_data(Circuit::ConstElement element) const -> const DrawData&;
-
-    auto draw_background(BLContext& ctx) const -> void;
-    auto draw_wire(BLContext& ctx, Circuit::ConstElement element) const -> void;
-    auto draw_standard_element(BLContext& ctx, Circuit::ConstElement element) const
-        -> void;
-
-   private:
-    gsl::not_null<const Simulation*> simulation_;
-    std::vector<DrawData> draw_data_vector_ {};
+struct RenderSettings {
+    bool render_background {true};
 };
+
+auto render_circuit(BLContext& ctx, const CircuitLayout& layout,
+                    const Simulation& simulation,
+                    const RenderSettings& settings = RenderSettings {}) -> void;
 
 struct BenchmarkScene {
    public:
     Circuit circuit {};
+    CircuitLayout layout {};
     Simulation simulation {circuit};
-    SimulationScene renderer {simulation};
 };
 
 auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100) -> int64_t;

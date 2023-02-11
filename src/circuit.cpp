@@ -335,6 +335,11 @@ Circuit::ElementTemplate<Const>::ElementTemplate(
     : circuit_(element.circuit_), element_id_(element.element_id_) {}
 
 template <bool Const>
+Circuit::ElementTemplate<Const>::operator element_id_t() const noexcept {
+    return element_id_;
+}
+
+template <bool Const>
 template <bool ConstOther>
 auto Circuit::ElementTemplate<Const>::operator==(
     ElementTemplate<ConstOther> other) const noexcept -> bool {

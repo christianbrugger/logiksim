@@ -2,7 +2,9 @@
 #define LOGIKSIM_RENDER_WIDGET_H
 
 #include "circuit.h"
+#include "circuit_layout.h"
 #include "exceptions.h"
+#include "range.h"
 #include "renderer.h"
 #include "simulation.h"
 
@@ -139,20 +141,24 @@ class WidgetRenderer : public QWidget {
         // simulation.run(time_t {600us});
         //  timer_.stop();
 
-        auto scene = SimulationScene(simulation);
-        scene.set_position(elem0, point_t {5, 3});
+        // create layout
+        auto layout = CircuitLayout {};
+        for (auto _ [[maybe_unused]] : range(circuit.element_count())) {
+            layout.add_default_element();
+        }
+        layout.set_position(elem0, point_t {5, 3});
 
         auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8, 12}});
         auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12}, point_t {12, 14}});
         auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
-        scene.set_line_tree(line0, std::move(line_tree));
+        layout.set_line_tree(line0, std::move(line_tree));
 
         // int w = qt_image.width();
         // int h = qt_image.height();
 
         bl_ctx.begin(bl_image, bl_info);
         // renderFrame(bl_ctx);
-        scene.render_scene(bl_ctx);
+        render_circuit(bl_ctx, layout, simulation);
         bl_ctx.end();
 
         QPainter painter(this);

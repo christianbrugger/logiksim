@@ -224,6 +224,8 @@ class Circuit::ElementTemplate {
     ElementTemplate(ElementTemplate<ConstOther> element) noexcept
         requires Const && (!ConstOther);
 
+    [[nodiscard]] operator element_id_t() const noexcept;
+
     template <bool ConstOther>
     auto operator==(ElementTemplate<ConstOther> other) const noexcept -> bool;
 

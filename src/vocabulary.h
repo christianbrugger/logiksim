@@ -148,6 +148,10 @@ struct color_t {
     }
 };
 
+namespace defaults {
+constexpr static inline auto color_black = ::logicsim::color_t {0xFF000000};
+}
+
 //
 // Spacial Types
 //

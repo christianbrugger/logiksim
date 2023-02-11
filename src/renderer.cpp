@@ -15,29 +15,7 @@
 
 namespace logicsim {
 
-SimulationScene::SimulationScene(const Simulation& simulation) noexcept
-    : simulation_ {&simulation},
-      draw_data_vector_(simulation.circuit().element_count()) {}
-
-auto SimulationScene::set_position(Circuit::ConstElement element, point_t position)
-    -> void {
-    get_data(element).position = position;
-}
-
-auto SimulationScene::set_line_tree(Circuit::ConstElement element, LineTree&& line_tree)
-    -> void {
-    get_data(element).line_tree = std::move(line_tree);
-}
-
-auto SimulationScene::get_data(Circuit::ConstElement element) -> DrawData& {
-    return draw_data_vector_.at(element.element_id().value);
-}
-
-auto SimulationScene::get_data(Circuit::ConstElement element) const -> const DrawData& {
-    return draw_data_vector_.at(element.element_id().value);
-}
-
-auto SimulationScene::draw_background(BLContext& ctx) const -> void {
+auto draw_background(BLContext& ctx) -> void {
     ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
     ctx.fillAll();
 }
@@ -86,6 +64,7 @@ auto get_image_data(BLContext& ctx) -> BLImageData {
 }
 
 auto draw_connector_fast(BLContext& ctx, const point_t point, BLRgba32 color) -> void {
+    // TODO refactor getting data & width
     BLImageData data = get_image_data(ctx);
     auto& image = *ctx.targetImage();
     auto* array = static_cast<uint32_t*>(data.pixelData);
@@ -103,6 +82,7 @@ auto draw_connector_fast(BLContext& ctx, const point_t point, BLRgba32 color) ->
 }
 
 auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
+    // TODO refactor getting data & width
     BLImageData data = get_image_data(ctx);
     auto& image = *ctx.targetImage();
     auto* array = static_cast<uint32_t*>(data.pixelData);
@@ -166,20 +146,20 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
     }
 }
 
-auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) const
-    -> void {
+auto draw_wire(BLContext& ctx, Circuit::ConstElement element, const CircuitLayout& layout,
+               const Simulation& simulation) -> void {
     // ctx.setStrokeWidth(1);
 
     // TODO move to some class
-    const auto to_time = [time = simulation_->time()](LineTree::length_t length_) {
+    const auto to_time = [time = simulation.time()](LineTree::length_t length_) {
         return time_t {time.value
                        - static_cast<int64_t>(length_)
                              * Simulation::wire_delay_per_distance.value};
     };
 
-    const auto history = simulation_->input_history(element);
+    const auto history = simulation.input_history(element);
 
-    for (auto&& segment : get_data(element).line_tree.sized_segments()) {
+    for (auto&& segment : layout.line_tree(element).sized_segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0,
                           to_time(segment.p1_length), to_time(segment.p0_length),
                           history);
@@ -192,18 +172,19 @@ auto SimulationScene::draw_wire(BLContext& ctx, Circuit::ConstElement element) c
     }
 }
 
-auto SimulationScene::draw_standard_element(BLContext& ctx,
-                                            Circuit::ConstElement element) const -> void {
+auto draw_standard_element(BLContext& ctx, Circuit::ConstElement element,
+                           const CircuitLayout& layout, const Simulation& simulation)
+    -> void {
     constexpr static double s = 12;
     ctx.setStrokeWidth(1);
 
-    const auto& data = get_data(element);
-    auto input_values = simulation_->input_values(element);
-    auto output_values = simulation_->output_values(element);
+    auto position = layout.position(element);
+    auto input_values = simulation.input_values(element);
+    auto output_values = simulation.output_values(element);
 
     // draw rect
-    double x = data.position.x * s;
-    double y = data.position.y * s;
+    double x = position.x * s;
+    double y = position.y * s;
     auto height = std::max(std::ssize(input_values), std::ssize(output_values));
     BLPath path;
     path.addRect(x, y + -0.5 * s, 2 * s, height * s);
@@ -234,23 +215,23 @@ auto SimulationScene::draw_standard_element(BLContext& ctx,
     ctx.strokePath(path);
 }
 
-auto SimulationScene::render_scene(BLContext& ctx, bool render_background) const -> void {
+auto render_circuit(BLContext& ctx, const CircuitLayout& layout,
+                    const Simulation& simulation, const RenderSettings& settings)
+    -> void {
     ctx.postTranslate(BLPoint(0.5, 0.5));
     ctx.postScale(1);
 
-    if (render_background) {
+    if (settings.render_background) {
         draw_background(ctx);
     }
 
-    for (auto element : simulation_->circuit().elements()) {
+    for (auto element : simulation.circuit().elements()) {
         auto type = element.element_type();
 
         if (type == ElementType::wire) {
-            draw_wire(ctx, element);
-        } else if (type == ElementType::placeholder) {
-            ;
-        } else {
-            draw_standard_element(ctx, element);
+            draw_wire(ctx, element, layout, simulation);
+        } else if (type != ElementType::placeholder) {
+            draw_standard_element(ctx, element, layout, simulation);
         }
     }
 }
@@ -400,7 +381,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     const auto config = RenderBenchmarkConfig {};
     auto tree_length_sum = int64_t {0};
 
-    // create scene
+    // create schematics
     auto& circuit = scene.circuit;
     for (auto _ [[maybe_unused]] : range(n_lines)) {
         UDist<int> output_dist {config.n_outputs_min, config.n_outputs_max};
@@ -408,10 +389,14 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     }
     add_output_placeholders(circuit);
 
-    auto& simulation = scene.simulation = Simulation {circuit};
-    auto& renderer = scene.renderer = SimulationScene {simulation};
+    // create layout
+    auto& layout = scene.layout = CircuitLayout {};
+    for (auto _ [[maybe_unused]] : range(circuit.element_count())) {
+        layout.add_default_element();
+    }
 
     // add line trees
+    auto& simulation = scene.simulation = Simulation {circuit};
     for (auto element : circuit.elements()) {
         if (element.element_type() == ElementType::wire) {
             auto line_tree = create_random_line_tree(element.output_count(), config, rng);
@@ -430,7 +415,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             simulation.set_history_length(element, delay_t {tree_max_delay.value});
 
             tree_length_sum += calculate_tree_length(line_tree);
-            renderer.set_line_tree(element, std::move(line_tree));
+            layout.set_line_tree(element, std::move(line_tree));
         }
     }
 
@@ -482,7 +467,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     ctx.fillAll();
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        scene.renderer.render_scene(ctx, false);
+        render_circuit(ctx, scene.layout, scene.simulation);
     }
     ctx.end();
 
