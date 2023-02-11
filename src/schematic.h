@@ -86,8 +86,13 @@ class Schematic {
     using OutputIterator = OutputIteratorTemplate<false>;
     using ConstOutputIterator = OutputIteratorTemplate<true>;
 
+    explicit constexpr Schematic() = default;
+    explicit Schematic(circuit_id_t circuit_id);
+
+    auto swap(Schematic &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
 
+    [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto element_count() const noexcept -> std::size_t;
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
@@ -127,10 +132,31 @@ class Schematic {
     static_assert(sizeof(ConnectionData) == 8);
     static_assert(sizeof(ElementData) == 65);
 
+    // To add:
+    // * circuit_id
+    // * std::vector<> input_connections
+    // * std::vector<> output_connections
+    // * std::vector<circuit_id>
+    // * std::vector<ElementType>
+    // * std::vector<input_inverters>
+    // * std::vector<output_delays>
+    // * std::vector<max_history>
+
+    // TODO use separate vectors
     std::vector<ElementData> element_data_store_ {};
     std::size_t input_count_ {0};
     std::size_t output_count_ {0};
+    circuit_id_t circuit_id_ {0};
 };
+
+auto swap(Schematic &a, Schematic &b) noexcept -> void;
+
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::Schematic &a, logicsim::Schematic &b) noexcept -> void;
+
+namespace logicsim {
 
 template <class T>
 concept ElementOrConnection = std::convertible_to<T, Schematic::ConstElement>

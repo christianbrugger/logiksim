@@ -31,6 +31,7 @@ class CircuitLayout {
     [[nodiscard]] explicit CircuitLayout() = default;
     [[nodiscard]] explicit CircuitLayout(circuit_id_t circuit_id);
 
+    auto swap(CircuitLayout &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
 
     auto add_default_element() -> void;
@@ -58,10 +59,16 @@ class CircuitLayout {
     std::vector<DisplayOrientation> orientation_ {};
     std::vector<DisplayState> display_states_ {};
     std::vector<color_t> colors_ {};
-    circuit_id_t circuit_id_ {};
+
+    circuit_id_t circuit_id_ {0};
 };
 
+auto swap(CircuitLayout &a, CircuitLayout &b) noexcept -> void;
+
 }  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::CircuitLayout &a, logicsim::CircuitLayout &b) noexcept -> void;
 
 template <>
 struct fmt::formatter<logicsim::DisplayState> {

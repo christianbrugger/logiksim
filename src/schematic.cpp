@@ -48,6 +48,35 @@ auto format(ElementType type) -> std::string {
 // Schematic
 //
 
+Schematic::Schematic(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
+    if (circuit_id < null_circuit) [[unlikely]] {
+        throw_exception("Schematic id of layout cannot be negative.");
+    }
+}
+
+auto Schematic::swap(Schematic &other) noexcept -> void {
+    using std::swap;
+
+    element_data_store_.swap(other.element_data_store_);
+
+    swap(input_count_, other.input_count_);
+    swap(output_count_, other.output_count_);
+    swap(circuit_id_, other.circuit_id_);
+}
+
+auto swap(Schematic &a, Schematic &b) noexcept -> void {
+    a.swap(b);
+}
+
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::Schematic &a, logicsim::Schematic &b) noexcept -> void {
+    a.swap(b);
+}
+
+namespace logicsim {
+
 auto Schematic::format() const -> std::string {
     std::string inner;
     if (!empty()) {
@@ -55,6 +84,10 @@ auto Schematic::format() const -> std::string {
         inner = fmt::format(": [\n  {}\n]", fmt_join(elements(), ",\n  ", format_true));
     }
     return fmt::format("<Schematic with {} elements{}>", element_count(), inner);
+}
+
+auto Schematic::circuit_id() const noexcept -> circuit_id_t {
+    return circuit_id_;
 }
 
 auto Schematic::element_count() const noexcept -> std::size_t {

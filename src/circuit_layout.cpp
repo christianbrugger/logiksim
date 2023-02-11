@@ -24,10 +24,35 @@ auto format(DisplayState state) -> std::string {
 }
 
 CircuitLayout::CircuitLayout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
-    if (circuit_id < circuit_id_t {0}) [[unlikely]] {
+    if (circuit_id < null_circuit) [[unlikely]] {
         throw_exception("Schematic id of layout cannot be negative.");
     }
 }
+
+auto CircuitLayout::swap(CircuitLayout &other) noexcept -> void {
+    using std::swap;
+
+    line_trees_.swap(other.line_trees_);
+    positions_.swap(other.positions_);
+    orientation_.swap(other.orientation_);
+    display_states_.swap(other.display_states_);
+    colors_.swap(other.colors_);
+
+    swap(circuit_id_, other.circuit_id_);
+}
+
+auto swap(CircuitLayout &a, CircuitLayout &b) noexcept -> void {
+    a.swap(b);
+}
+
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::CircuitLayout &a, logicsim::CircuitLayout &b) noexcept -> void {
+    a.swap(b);
+}
+
+namespace logicsim {
 
 auto CircuitLayout::format() const -> std::string {
     return "CircuitLayout( ... )";

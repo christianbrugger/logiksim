@@ -99,41 +99,51 @@ struct range_iterator_t {
 template <typename T, bool forward>
 struct range_t {
    public:
-    using value_type = T;
-    using pointer = T*;
-    using reference = T&;
+    using value_type = std::remove_cvref_t<T>;
+    using pointer = value_type*;
+    using reference = value_type&;
 
     range_t() = default;
 
-    [[nodiscard]] constexpr explicit range_t(T stop) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
+    [[nodiscard]] constexpr explicit range_t(value_type stop) noexcept(
+        std::is_nothrow_move_constructible_v<value_type>)
         : stop_ {std::move(stop)} {}
 
     // TODO remove linter warning
-    [[nodiscard]] constexpr explicit range_t(T start, T stop) noexcept(
-        std::is_nothrow_move_constructible_v<T>)
+    [[nodiscard]] constexpr explicit range_t(value_type start, value_type stop) noexcept(
+        std::is_nothrow_move_constructible_v<value_type>)
         : start_ {std::move(start)}, stop_ {std::move(stop)} {}
 
     [[nodiscard]] constexpr auto begin() const
-        noexcept(std::is_nothrow_copy_constructible_v<T>)
-            -> range_iterator_t<T, forward> {
-        return range_iterator_t<T, forward> {start_};
+        noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+            -> range_iterator_t<value_type, forward> {
+        return range_iterator_t<value_type, forward> {start_};
     }
 
     [[nodiscard]] constexpr auto end() const
-        noexcept(std::is_nothrow_copy_constructible_v<T>)
-            -> range_iterator_t<T, forward> {
-        return range_iterator_t<T, forward> {stop_};
+        noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+            -> range_iterator_t<value_type, forward> {
+        return range_iterator_t<value_type, forward> {stop_};
     }
 
-    [[nodiscard]] constexpr auto size() const -> range_difference_t<T>
-        requires explicitly_convertible_to<T, range_difference_t<T>>
+    [[nodiscard]] constexpr auto size() const -> range_difference_t<value_type>
+        requires explicitly_convertible_to<value_type, range_difference_t<value_type>>
     {
-        using Dt = range_difference_t<T>;
+        using Dt = range_difference_t<value_type>;
 
-        auto start = Dt {start_};
-        auto stop = Dt {stop_};
-        auto zero = Dt {zero_};
+        Dt start;
+        Dt stop;
+        Dt zero;
+
+        if constexpr (std::is_arithmetic_v<value_type>) {
+            start = gsl::narrow<Dt>(start_);
+            stop = gsl::narrow<Dt>(stop_);
+            zero = gsl::narrow<Dt>(zero_);
+        } else {
+            start = Dt {start_};
+            stop = Dt {start_};
+            zero = Dt {start_};
+        }
 
         if constexpr (forward) {
             return std::max(stop - start, zero);
@@ -157,8 +167,8 @@ struct range_t {
 
    private:
     static constexpr auto zero_ = range_type_zero_value<T>;
-    T start_ {zero_};
-    T stop_ {zero_};
+    value_type start_ {zero_};
+    value_type stop_ {zero_};
 };
 
 //
@@ -240,13 +250,14 @@ struct range_iterator_step_t {
 template <typename T>
 struct range_step_t {
    public:
-    using value_type = T;
-    using pointer = T*;
-    using reference = T&;
+    using value_type = std::remove_cvref_t<T>;
+    using pointer = value_type*;
+    using reference = value_type&;
 
     range_step_t() = default;
 
-    [[nodiscard]] constexpr explicit range_step_t(T start, T stop, T step)
+    [[nodiscard]] constexpr explicit range_step_t(value_type start, value_type stop,
+                                                  value_type step)
         : start_ {std::move(start)}, stop_ {std::move(stop)}, step_ {std::move(step)} {
         if (step_ == zero_) {
             throw_exception("Step cannot be zero.");
@@ -254,17 +265,19 @@ struct range_step_t {
     }
 
     [[nodiscard]] constexpr auto begin() const
-        noexcept(std::is_nothrow_copy_constructible_v<T>) -> range_iterator_step_t<T> {
-        return range_iterator_step_t<T> {start_, step_};
+        noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+            -> range_iterator_step_t<value_type> {
+        return range_iterator_step_t<value_type> {start_, step_};
     }
 
     [[nodiscard]] constexpr auto end() const
-        noexcept(std::is_nothrow_copy_constructible_v<T>) -> range_iterator_step_t<T> {
-        return range_iterator_step_t<T> {stop_, step_};
+        noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+            -> range_iterator_step_t<value_type> {
+        return range_iterator_step_t<value_type> {stop_, step_};
     }
 
-    [[nodiscard]] constexpr auto size() const -> range_difference_t<T>
-        requires explicitly_convertible_to<T, range_difference_t<T>>
+    [[nodiscard]] constexpr auto size() const -> range_difference_t<value_type>
+        requires explicitly_convertible_to<value_type, range_difference_t<value_type>>
     {
         return range_step_size(start_, stop_, step_);
     }
@@ -279,11 +292,11 @@ struct range_step_t {
     }
 
    private:
-    static constexpr auto zero_ = range_type_zero_value<T>;
-    static constexpr auto one_ = range_type_one_value<T>;
-    T start_ {zero_};
-    T stop_ {zero_};
-    T step_ {one_};
+    static constexpr auto zero_ = range_type_zero_value<value_type>;
+    static constexpr auto one_ = range_type_one_value<value_type>;
+    value_type start_ {zero_};
+    value_type stop_ {zero_};
+    value_type step_ {one_};
 };
 
 }  // namespace detail

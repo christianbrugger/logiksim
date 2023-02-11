@@ -59,6 +59,7 @@ struct connection_id_t {
 
 static_assert(std::is_trivial<connection_id_t>::value);
 
+inline constexpr auto null_circuit = circuit_id_t {-1};
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
 
