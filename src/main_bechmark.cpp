@@ -2,8 +2,8 @@
 // #define _DISABLE_VECTOR_ANNOTATION
 // #define _DISABLE_STRING_ANNOTATION
 
-#include "circuit.h"
 #include "renderer.h"
+#include "schematic.h"
 #include "simulation.h"
 
 #include <benchmark/benchmark.h>

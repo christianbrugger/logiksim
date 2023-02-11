@@ -238,19 +238,21 @@ endif()
 
 set(LS_CORE_SOURCES
     src/algorithm.h src/algorithm.cpp
-    src/circuit.h src/circuit.cpp
+    src/circuit_description.h src/circuit_description.cpp
     src/circuit_index.h src/circuit_index.cpp
     src/circuit_layout.h src/circuit_layout.cpp
     src/circular_buffer.h
     src/collision.h src/collision.cpp
+    src/editable_circuit.h src/editable_circuit.cpp
     src/exceptions.h src/exceptions.cpp
+    src/flat_schematic.h src/flat_schematic.cpp
     src/graph.h src/graph.cpp
     src/line_tree.h src/line_tree.cpp
-    src/manager.h src/manager.cpp
     src/random.h src/random.cpp
     src/renderer.h src/renderer.cpp
     src/schematic.h src/schematic.cpp
     src/simulation.h src/simulation.cpp
+    src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp
 )
 set(LS_CORE_LIBRARIES  
@@ -330,7 +332,6 @@ add_executable(${MAIN_TEST_TARGET}
     ${LS_CORE_SOURCES}
     
     test/algorithm_test.cpp
-    test/circuit_test.cpp
     test/circular_buffer_test.cpp
     test/collision_test.cpp
     test/format_test.cpp
@@ -339,6 +340,7 @@ add_executable(${MAIN_TEST_TARGET}
     test/line_tree_test.cpp
     test/random_test.cpp
     test/range_test.cpp
+    test/schematic_test.cpp
     test/simulation_test.cpp
 )
 target_include_directories(${MAIN_TEST_TARGET} PRIVATE

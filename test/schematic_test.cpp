@@ -1,5 +1,5 @@
 
-#include "circuit.h"
+#include "schematic.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

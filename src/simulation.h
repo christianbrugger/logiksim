@@ -1,9 +1,9 @@
 #ifndef LOGIKSIM_SIMULATION_H
 #define LOGIKSIM_SIMULATION_H
 
-#include "circuit.h"
 #include "circular_buffer.h"
 #include "exceptions.h"
+#include "schematic.h"
 
 #include <boost/container/small_vector.hpp>
 #include <boost/container/vector.hpp>

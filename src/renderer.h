@@ -1,10 +1,8 @@
 #ifndef LOGIKSIM_RENDER_SCENE_H
 #define LOGIKSIM_RENDER_SCENE_H
 
-#include "circuit.h"
 #include "circuit_layout.h"
-#include "geometry.h"
-#include "line_tree.h"
+#include "schematic.h"
 #include "simulation.h"
 
 #include <blend2d.h>

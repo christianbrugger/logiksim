@@ -1,11 +1,11 @@
 #ifndef LOGIKSIM_RENDER_WIDGET_H
 #define LOGIKSIM_RENDER_WIDGET_H
 
-#include "circuit.h"
 #include "circuit_layout.h"
 #include "exceptions.h"
 #include "range.h"
 #include "renderer.h"
+#include "schematic.h"
 #include "simulation.h"
 
 #include <blend2d.h>
