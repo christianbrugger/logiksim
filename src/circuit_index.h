@@ -17,7 +17,7 @@ class CircuitIndex {
     [[nodiscard]] auto circuit_count() const -> std::size_t;
 
     [[nodiscard]] auto borrow_schematic(circuit_id_t circuit_id) -> Schematic;
-    [[nodiscard]] auto borrow_schematics(circuit_id_t circuit_id)
+    [[nodiscard]] auto borrow_schematics()
         -> std::vector<Schematic>;
     [[nodiscard]] auto borrow_layout(circuit_id_t circuit_id) -> CircuitLayout;
 

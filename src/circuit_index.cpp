@@ -23,7 +23,7 @@ auto CircuitIndex::borrow_schematic(circuit_id_t circuit_id) -> Schematic {
     return result;
 }
 
-auto CircuitIndex::borrow_schematics(circuit_id_t circuit_id) -> std::vector<Schematic> {
+auto CircuitIndex::borrow_schematics() -> std::vector<Schematic> {
     check_are_schematics_complete();
 
     auto result = std::vector<Schematic>(schematics_.size(), Schematic {null_circuit});
