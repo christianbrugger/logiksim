@@ -56,8 +56,8 @@ struct fmt::formatter<logicsim::tree_value_t> {
 namespace logicsim {
 
 auto test_tree() -> void {
-    tree_t tree {};
-    map_t map {};
+    auto tree = tree_t {};
+    auto map = map_t {};
 
     auto point = tree_point_t {0, 0};
     auto connection = ConnectionEntry {10, 5};

@@ -133,7 +133,8 @@ set(BOOST_INCLUDE_LIBRARIES
     geometry
     mpl 
     random 
-    stacktrace 
+    stacktrace
+    unordered
 )
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
 if (WIN32)
@@ -278,10 +279,12 @@ set(LS_CORE_LIBRARIES
     Boost::mpl
     Boost::random
     boost_stacktrace 
+    Boost::unordered
     
     fmt::fmt
     folly
     absl::base
+    absl::flat_hash_map
     unordered_dense::unordered_dense
     GSL
     Blend2D::Blend2D
