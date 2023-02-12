@@ -13,18 +13,71 @@
 
 #include <concepts>
 #include <functional>
+#include <string>
 #include <string_view>
+#include <utility>
 
 namespace logicsim {
 
 template <typename T, typename Char = char>
-concept format_range_type
-    = (!std::same_as<T, fmt::basic_string_view<Char>>)
-      && (!std::same_as<T, std::basic_string<Char>>)
-      && (!std::same_as<T, std::basic_string_view<Char>>) && requires(T container) {
-                                                                 std::begin(container);
-                                                                 std::end(container);
-                                                             };
+concept format_string_type = std::same_as<T, fmt::basic_string_view<Char>>
+                             || std::same_as<T, std::basic_string<Char>>
+                             || std::same_as<T, std::basic_string_view<Char>>;
+}
+
+//
+// std::pair
+//
+
+template <typename T1, typename T2, typename Char>
+struct fmt::formatter<std::pair<T1, T2>, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const std::pair<T1, T2> &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "({}, {})", obj.first, obj.second);
+    }
+};
+
+//
+// obj.format()
+//
+
+namespace logicsim {
+
+template <typename T, typename Char = char>
+concept format_obj_with_format_function_type
+    = (!format_string_type<T, Char>) && requires(T container) {
+                                            {
+                                                container.format()
+                                                } -> std::same_as<std::string>;
+                                        };
+}  // namespace logicsim
+
+// TODO remove all obj.format() specializations
+template <typename T, typename Char>
+    requires logicsim::format_obj_with_format_function_type<T, Char>
+struct fmt::formatter<T, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const T &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.format());
+    }
+};
+
+//
+// range(begin, end)
+//
+
+namespace logicsim {
+template <typename T, typename Char = char>
+concept format_range_type = (!format_string_type<T, Char>) && requires(T container) {
+                                                                  std::begin(container);
+                                                                  std::end(container);
+                                                              };
 
 template <typename T, class Proj = std::identity>
     requires logicsim::format_range_type<T>

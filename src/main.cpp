@@ -1,5 +1,6 @@
 
 #include "renderer.h"
+#include "search_tree.h"
 #include "simulation.h"
 #include "timer.h"
 
@@ -20,9 +21,10 @@ auto main() -> int {
         // auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
         //                                             BENCHMARK_DEFAULT_EVENTS, true);
 
-        auto count = logicsim::benchmark_line_renderer(100);
+        test_tree();
 
-        fmt::print("count = {}\n", count);
+        // auto count = logicsim::benchmark_line_renderer(100);
+        // fmt::print("count = {}\n", count);
 
     } catch (const std::exception& exc) {
         std::cerr << exc.what() << '\n';

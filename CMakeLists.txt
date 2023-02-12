@@ -126,7 +126,15 @@ add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
 # Boost
-set(BOOST_INCLUDE_LIBRARIES algorithm circular_buffer container mpl random stacktrace)
+set(BOOST_INCLUDE_LIBRARIES 
+    algorithm 
+    circular_buffer 
+    container 
+    geometry
+    mpl 
+    random 
+    stacktrace 
+)
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
 if (WIN32)
     # Boost::stacktrace_windbg
@@ -175,6 +183,8 @@ target_include_directories(folly SYSTEM PUBLIC
 )
 target_compile_definitions(folly PUBLIC FOLLY_NO_CONFIG)
 
+# unordered_dense (ankerl)
+add_subdirectory(external/unordered_dense EXCLUDE_FROM_ALL SYSTEM)
 
 
 
@@ -201,9 +211,11 @@ add_library(logicsim_pch INTERFACE)
 if (LS_ENABLE_PCH)
     message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
     target_precompile_headers(logicsim_pch INTERFACE
+        <ankerl/unordered_dense.h>
         <boost/algorithm/string/join.hpp>
         <boost/container/small_vector.hpp>
         <boost/container/vector.hpp>
+        <boost/geometry.hpp>
         <boost/random/mersenne_twister.hpp>
         <boost/random/uniform_int_distribution.hpp>
         <fmt/core.h>
@@ -251,6 +263,7 @@ set(LS_CORE_SOURCES
     src/random.h src/random.cpp
     src/renderer.h src/renderer.cpp
     src/schematic.h src/schematic.cpp
+    src/search_tree.h src/search_tree.cpp
     src/simulation.h src/simulation.cpp
     src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp
@@ -261,6 +274,7 @@ set(LS_CORE_LIBRARIES
     Boost::algorithm
     Boost::circular_buffer
     Boost::container 
+    Boost::geometry
     Boost::mpl
     Boost::random
     boost_stacktrace 
@@ -268,6 +282,7 @@ set(LS_CORE_LIBRARIES
     fmt::fmt
     folly
     absl::base
+    unordered_dense::unordered_dense
     GSL
     Blend2D::Blend2D
 )

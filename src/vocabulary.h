@@ -3,6 +3,7 @@
 
 #include "exceptions.h"
 
+#include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
 #include <gsl/gsl>
 
@@ -252,6 +253,35 @@ static_assert(std::is_trivially_copyable<line_t>::value);
 static_assert(std::is_trivially_copy_assignable<line_t>::value);
 
 }  // namespace logicsim
+
+//
+// Hash function
+//
+
+template <>
+struct ankerl::unordered_dense::hash<logicsim::grid_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::grid_t &obj) const noexcept
+        -> uint64_t {
+        return detail::wyhash::hash(gsl::narrow_cast<uint64_t>(obj.value));
+    }
+};
+
+template <>
+struct ankerl::unordered_dense::hash<logicsim::point_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::point_t &obj) const noexcept
+        -> uint64_t {
+        static_assert(std::has_unique_object_representations_v<logicsim::point_t>);
+        return detail::wyhash::hash(&obj, sizeof(obj));
+    }
+};
+
+//
+// Formatters
+//
 
 template <>
 struct fmt::formatter<logicsim::circuit_id_t> {
