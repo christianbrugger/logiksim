@@ -80,7 +80,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
         count += scene_count;
 
         BLContext ctx(img);
-        render_circuit(ctx, scene.layout, scene.simulation);
+        render_circuit(ctx, scene.layout, scene.simulation, {.render_background = false});
         ctx.end();
 
         benchmark::DoNotOptimize(img);
