@@ -146,8 +146,8 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
     }
 }
 
-auto draw_wire(BLContext& ctx, Schematic::ConstElement element,
-               const CircuitLayout& layout, const Simulation& simulation) -> void {
+auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
+               const Simulation& simulation) -> void {
     // ctx.setStrokeWidth(1);
 
     // TODO move to some class
@@ -173,8 +173,7 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element,
 }
 
 auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
-                           const CircuitLayout& layout, const Simulation& simulation)
-    -> void {
+                           const Layout& layout, const Simulation& simulation) -> void {
     constexpr static double s = 12;
     ctx.setStrokeWidth(1);
 
@@ -215,9 +214,8 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
     ctx.strokePath(path);
 }
 
-auto render_circuit(BLContext& ctx, const CircuitLayout& layout,
-                    const Simulation& simulation, const RenderSettings& settings)
-    -> void {
+auto render_circuit(BLContext& ctx, const Layout& layout, const Simulation& simulation,
+                    const RenderSettings& settings) -> void {
     ctx.postTranslate(BLPoint(0.5, 0.5));
     ctx.postScale(1);
 
@@ -390,7 +388,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     add_output_placeholders(schematic);
 
     // create layout
-    auto& layout = scene.layout = CircuitLayout {};
+    auto& layout = scene.layout = Layout {};
     for (auto _ [[maybe_unused]] : range(schematic.element_count())) {
         layout.add_default_element();
     }

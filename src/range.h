@@ -351,6 +351,18 @@ inline constexpr bool
     std::ranges::enable_borrowed_range<logicsim::detail::range_t<T, forward>>
     = true;
 
+template <typename T>
+inline constexpr bool std::ranges::enable_view<logicsim::detail::range_step_t<T>> = true;
+
+template <typename T>
+inline constexpr bool
+    std::ranges::enable_borrowed_range<logicsim::detail::range_step_t<T>>
+    = true;
+
+//
+// formatters
+//
+
 template <typename T, bool forward>
 struct fmt::formatter<logicsim::detail::range_t<T, forward>> {
     constexpr auto parse(fmt::format_parse_context& ctx) {
@@ -362,14 +374,6 @@ struct fmt::formatter<logicsim::detail::range_t<T, forward>> {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
-
-template <typename T>
-inline constexpr bool std::ranges::enable_view<logicsim::detail::range_step_t<T>> = true;
-
-template <typename T>
-inline constexpr bool
-    std::ranges::enable_borrowed_range<logicsim::detail::range_step_t<T>>
-    = true;
 
 template <typename T>
 struct fmt::formatter<logicsim::detail::range_step_t<T>> {

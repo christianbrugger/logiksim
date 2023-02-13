@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_CIRCUIT_LAYOUT_H
-#define LOGIKSIM_CIRCUIT_LAYOUT_H
+#ifndef LOGIKSIM_LAYOUT_H
+#define LOGIKSIM_LAYOUT_H
 
 #include "line_tree.h"
 #include "vocabulary.h"
@@ -27,13 +27,14 @@ enum class DisplayOrientation : uint8_t {
     default_right,
 };
 
-// TODO rename to Layout
-class CircuitLayout {
-   public:
-    [[nodiscard]] explicit CircuitLayout() = default;
-    [[nodiscard]] explicit CircuitLayout(circuit_id_t circuit_id);
+auto format(DisplayOrientation state) -> std::string;
 
-    auto swap(CircuitLayout &other) noexcept -> void;
+class Layout {
+   public:
+    [[nodiscard]] explicit Layout() = default;
+    [[nodiscard]] explicit Layout(circuit_id_t circuit_id);
+
+    auto swap(Layout &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
 
     auto add_default_element() -> void;
@@ -65,34 +66,11 @@ class CircuitLayout {
     circuit_id_t circuit_id_ {0};
 };
 
-auto swap(CircuitLayout &a, CircuitLayout &b) noexcept -> void;
+auto swap(Layout &a, Layout &b) noexcept -> void;
 
 }  // namespace logicsim
 
 template <>
-auto std::swap(logicsim::CircuitLayout &a, logicsim::CircuitLayout &b) noexcept -> void;
-
-// TODO make generic formatter
-template <>
-struct fmt::formatter<logicsim::DisplayState> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::DisplayState &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::CircuitLayout> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::CircuitLayout &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.format());
-    }
-};
+auto std::swap(logicsim::Layout &a, logicsim::Layout &b) noexcept -> void;
 
 #endif

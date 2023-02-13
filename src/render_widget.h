@@ -2,9 +2,9 @@
 #define LOGIKSIM_RENDER_WIDGET_H
 
 #include "circuit_index.h"
-#include "circuit_layout.h"
 #include "editable_circuit.h"
 #include "exceptions.h"
+#include "layout.h"
 #include "range.h"
 #include "renderer.h"
 #include "schematic.h"
@@ -162,7 +162,7 @@ class WidgetRenderer : public QWidget {
         //  timer_.stop();
 
         // create layout
-        auto layout = CircuitLayout {};
+        auto layout = Layout {};
         for (auto _ [[maybe_unused]] : range(schematic.element_count())) {
             layout.add_default_element();
         }

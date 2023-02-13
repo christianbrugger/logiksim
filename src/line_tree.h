@@ -299,17 +299,6 @@ struct fmt::formatter<logicsim::LineTree::sized_line2d_t> {
     }
 };
 
-template <>
-struct fmt::formatter<logicsim::LineTree> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::LineTree &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.format());
-    }
-};
-
 //
 // Implementation
 //

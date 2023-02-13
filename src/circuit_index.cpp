@@ -31,13 +31,13 @@ auto CircuitIndex::borrow_schematics() -> std::vector<Schematic> {
     return result;
 }
 
-auto CircuitIndex::borrow_layout(circuit_id_t circuit_id) -> CircuitLayout {
+auto CircuitIndex::borrow_layout(circuit_id_t circuit_id) -> Layout {
     auto& source = layouts_.at(circuit_id.value);
 
     if (source.circuit_id() != circuit_id) [[unlikely]] {
         throw_exception("Cannot borrow missing layout.");
     }
-    auto result = CircuitLayout {null_circuit};
+    auto result = Layout {null_circuit};
     source.swap(result);
     return result;
 }
@@ -70,7 +70,7 @@ auto CircuitIndex::return_schematics(std::vector<Schematic>&& schematics) -> voi
     schematics_.swap(schematics);
 }
 
-auto CircuitIndex::return_layout(CircuitLayout&& layout) -> void {
+auto CircuitIndex::return_layout(Layout&& layout) -> void {
     auto& source = layouts_.at(layout.circuit_id().value);
 
     if (source.circuit_id() != null_circuit) [[unlikely]] {
@@ -105,9 +105,8 @@ auto CircuitIndex::check_are_schematics_complete() const -> void {
 }
 
 auto CircuitIndex::check_are_layouts_complete() const -> void {
-    if (!std::ranges::equal(
-            layouts_, range(layouts_.size()), {},
-            [](const CircuitLayout& item) { return item.circuit_id().value; })) {
+    if (!std::ranges::equal(layouts_, range(layouts_.size()), {},
+                            [](const Layout& item) { return item.circuit_id().value; })) {
         throw_exception("Some layouts are missing.");
     }
 }

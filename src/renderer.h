@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_RENDER_SCENE_H
 #define LOGIKSIM_RENDER_SCENE_H
 
-#include "circuit_layout.h"
+#include "layout.h"
 #include "schematic.h"
 #include "simulation.h"
 
@@ -26,14 +26,13 @@ struct RenderSettings {
     bool render_background {true};
 };
 
-auto render_circuit(BLContext& ctx, const CircuitLayout& layout,
-                    const Simulation& simulation,
+auto render_circuit(BLContext& ctx, const Layout& layout, const Simulation& simulation,
                     const RenderSettings& settings = RenderSettings {}) -> void;
 
 struct BenchmarkScene {
    public:
     Schematic schematic {};
-    CircuitLayout layout {};
+    Layout layout {};
     Simulation simulation {schematic};
 };
 

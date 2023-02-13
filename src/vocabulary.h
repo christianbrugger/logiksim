@@ -300,17 +300,6 @@ struct ankerl::unordered_dense::hash<logicsim::point_t> {
 //
 
 template <>
-struct fmt::formatter<logicsim::ElementType> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
-
-template <>
 struct fmt::formatter<logicsim::circuit_id_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();

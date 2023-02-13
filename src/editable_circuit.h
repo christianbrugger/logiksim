@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
-#include "circuit_layout.h"
+#include "layout.h"
 #include "schematic.h"
 
 #include <ankerl/unordered_dense.h>
@@ -21,10 +21,10 @@ struct ConnectionEntry {
 
 class EditableCircuit {
    public:
-    [[nodiscard]] EditableCircuit(Schematic &&schematic, CircuitLayout &&layout);
+    [[nodiscard]] EditableCircuit(Schematic &&schematic, Layout &&layout);
 
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
-    [[nodiscard]] auto layout() const noexcept -> const CircuitLayout &;
+    [[nodiscard]] auto layout() const noexcept -> const Layout &;
 
     auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
                               DisplayOrientation orientation
@@ -40,7 +40,7 @@ class EditableCircuit {
     connection_map_t output_connections_;
 
     Schematic schematic_;
-    CircuitLayout layout_;
+    Layout layout_;
 };
 
 }  // namespace logicsim

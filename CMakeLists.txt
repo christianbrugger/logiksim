@@ -253,13 +253,13 @@ set(LS_CORE_SOURCES
     src/algorithm.h src/algorithm.cpp
     src/circuit_description.h src/circuit_description.cpp
     src/circuit_index.h src/circuit_index.cpp
-    src/circuit_layout.h src/circuit_layout.cpp
     src/circular_buffer.h
     src/collision.h src/collision.cpp
     src/editable_circuit.h src/editable_circuit.cpp
     src/exceptions.h src/exceptions.cpp
     src/flat_schematic.h src/flat_schematic.cpp
     src/graph.h src/graph.cpp
+    src/layout.h src/layout.cpp
     src/layout_calculations.h src/layout_calculations.cpp
     src/line_tree.h src/line_tree.cpp
     src/random.h src/random.cpp

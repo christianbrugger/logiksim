@@ -4,10 +4,10 @@
 
 namespace logicsim {
 
-EditableCircuit::EditableCircuit(Schematic&& schematic, CircuitLayout&& layout)
+EditableCircuit::EditableCircuit(Schematic&& schematic, Layout&& layout)
     : schematic_ {std::move(schematic)}, layout_ {std::move(layout)} {}
 
-auto EditableCircuit::layout() const noexcept -> const CircuitLayout& {
+auto EditableCircuit::layout() const noexcept -> const Layout& {
     return layout_;
 }
 

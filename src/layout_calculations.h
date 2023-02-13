@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_LAYOUT_CALCULATIONS_H
 #define LOGIKSIM_LAYOUT_CALCULATIONS_H
 
-#include "circuit_layout.h"
+#include "layout.h"
 #include "schematic.h"
 #include "vocabulary.h"
 

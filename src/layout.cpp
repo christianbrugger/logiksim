@@ -1,5 +1,5 @@
 
-#include "circuit_layout.h"
+#include "layout.h"
 
 #include "exceptions.h"
 
@@ -20,16 +20,26 @@ auto format(DisplayState state) -> std::string {
         case new_colliding:
             return "NewColliding";
     }
-    throw_exception("Don't know how to convert ElementType to string.");
+    throw_exception("Don't know how to convert DisplayState to string.");
 }
 
-CircuitLayout::CircuitLayout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
+auto format(DisplayOrientation orientation) -> std::string {
+    switch (orientation) {
+        using enum DisplayOrientation;
+
+        case default_right:
+            return "Right";
+    }
+    throw_exception("Don't know how to convert DisplayOrientation to string.");
+}
+
+Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
     if (circuit_id < null_circuit) [[unlikely]] {
         throw_exception("Schematic id of layout cannot be negative.");
     }
 }
 
-auto CircuitLayout::swap(CircuitLayout &other) noexcept -> void {
+auto Layout::swap(Layout &other) noexcept -> void {
     using std::swap;
 
     line_trees_.swap(other.line_trees_);
@@ -41,24 +51,24 @@ auto CircuitLayout::swap(CircuitLayout &other) noexcept -> void {
     swap(circuit_id_, other.circuit_id_);
 }
 
-auto swap(CircuitLayout &a, CircuitLayout &b) noexcept -> void {
+auto swap(Layout &a, Layout &b) noexcept -> void {
     a.swap(b);
 }
 
 }  // namespace logicsim
 
 template <>
-auto std::swap(logicsim::CircuitLayout &a, logicsim::CircuitLayout &b) noexcept -> void {
+auto std::swap(logicsim::Layout &a, logicsim::Layout &b) noexcept -> void {
     a.swap(b);
 }
 
 namespace logicsim {
 
-auto CircuitLayout::format() const -> std::string {
-    return "CircuitLayout( ... )";
+auto Layout::format() const -> std::string {
+    return "Layout( ... )";
 }
 
-auto CircuitLayout::add_default_element() -> void {
+auto Layout::add_default_element() -> void {
     line_trees_.push_back(LineTree {});
     positions_.push_back(point_t {});
     orientation_.push_back(DisplayOrientation::default_right);
@@ -66,13 +76,13 @@ auto CircuitLayout::add_default_element() -> void {
     colors_.push_back(defaults::color_black);
 }
 
-auto CircuitLayout::add_wire(LineTree &&line_tree) -> void {
+auto Layout::add_wire(LineTree &&line_tree) -> void {
     add_default_element();
     line_trees_.back() = std::move(line_tree);
 }
 
-auto CircuitLayout::add_logic_element(point_t position, DisplayOrientation orientation,
-                                      DisplayState display_state, color_t color) -> void {
+auto Layout::add_logic_element(point_t position, DisplayOrientation orientation,
+                               DisplayState display_state, color_t color) -> void {
     add_default_element();
     positions_.back() = position;
     orientation_.back() = orientation;
@@ -80,35 +90,35 @@ auto CircuitLayout::add_logic_element(point_t position, DisplayOrientation orien
     colors_.back() = color;
 }
 
-auto CircuitLayout::set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void {
+auto Layout::set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void {
     line_trees_.at(element_id.value) = std::move(line_tree);
 }
 
-auto CircuitLayout::set_position(element_id_t element_id, point_t position) -> void {
+auto Layout::set_position(element_id_t element_id, point_t position) -> void {
     positions_.at(element_id.value) = position;
 }
 
-auto CircuitLayout::circuit_id() const noexcept -> circuit_id_t {
+auto Layout::circuit_id() const noexcept -> circuit_id_t {
     return circuit_id_;
 }
 
-auto CircuitLayout::line_tree(element_id_t element_id) const -> const LineTree & {
+auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
     return line_trees_.at(element_id.value);
 }
 
-auto CircuitLayout::position(element_id_t element_id) const -> point_t {
+auto Layout::position(element_id_t element_id) const -> point_t {
     return positions_.at(element_id.value);
 }
 
-auto CircuitLayout::orientation(element_id_t element_id) const -> DisplayOrientation {
+auto Layout::orientation(element_id_t element_id) const -> DisplayOrientation {
     return orientation_.at(element_id.value);
 }
 
-auto CircuitLayout::display_state(element_id_t element_id) const -> DisplayState {
+auto Layout::display_state(element_id_t element_id) const -> DisplayState {
     return display_states_.at(element_id.value);
 }
 
-auto CircuitLayout::color(element_id_t element_id) const -> color_t {
+auto Layout::color(element_id_t element_id) const -> color_t {
     return colors_.at(element_id.value);
 }
 

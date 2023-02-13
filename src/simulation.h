@@ -58,30 +58,6 @@ static_assert(std::is_trivially_copyable<SimulationEvent>::value);
 static_assert(std::is_standard_layout<SimulationEvent>::value);
 
 auto make_event(Schematic::ConstInput input, time_t time, bool value) -> SimulationEvent;
-}  // namespace logicsim
-
-template <>
-struct fmt::formatter<logicsim::SimulationEvent> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::SimulationEvent &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.format());
-    }
-};
-
-namespace std {
-
-template <class CharT>
-auto operator<<(std::basic_ostream<CharT> &os, const logicsim::SimulationEvent &dt)
-    -> std::basic_ostream<CharT> & {
-    os << dt.format();
-    return os;
-}
-}  // namespace std
-
-namespace logicsim {
 
 /// groups of events for the same element and time  but different inputs
 // using event_group_t = boost::container::small_vector<SimulationEvent, 2>;
@@ -340,18 +316,6 @@ static_assert(std::forward_iterator<logicsim::Simulation::HistoryIterator>);
 
 template <>
 inline constexpr bool std::ranges::enable_view<logicsim::Simulation::HistoryView> = true;
-
-template <>
-struct fmt::formatter<logicsim::Simulation::history_entry_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::Simulation::history_entry_t &obj,
-                       fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.format());
-    }
-};
 
 // benchmark
 

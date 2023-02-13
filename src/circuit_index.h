@@ -2,7 +2,7 @@
 #define LOGIKSIM_CIRCUIT_INDEX_H
 
 #include "circuit_description.h"
-#include "circuit_layout.h"
+#include "layout.h"
 #include "schematic.h"
 #include "vocabulary.h"
 
@@ -17,13 +17,12 @@ class CircuitIndex {
     [[nodiscard]] auto circuit_count() const -> std::size_t;
 
     [[nodiscard]] auto borrow_schematic(circuit_id_t circuit_id) -> Schematic;
-    [[nodiscard]] auto borrow_schematics()
-        -> std::vector<Schematic>;
-    [[nodiscard]] auto borrow_layout(circuit_id_t circuit_id) -> CircuitLayout;
+    [[nodiscard]] auto borrow_schematics() -> std::vector<Schematic>;
+    [[nodiscard]] auto borrow_layout(circuit_id_t circuit_id) -> Layout;
 
     auto return_schematic(Schematic&& schematic) -> void;
     auto return_schematics(std::vector<Schematic>&& schematics) -> void;
-    auto return_layout(CircuitLayout&& layout) -> void;
+    auto return_layout(Layout&& layout) -> void;
 
     [[nodiscard]] auto description(circuit_id_t circuit_id) -> const CircuitDescription&;
     [[nodiscard]] auto descriptions() -> const std::vector<CircuitDescription>&;
@@ -37,7 +36,7 @@ class CircuitIndex {
     auto check_equal_size() const -> void;
 
     std::vector<Schematic> schematics_ {Schematic {}};
-    std::vector<CircuitLayout> layouts_ {CircuitLayout {}};
+    std::vector<Layout> layouts_ {Layout {}};
     std::vector<CircuitDescription> descriptions_ {CircuitDescription {}};
 };
 }  // namespace logicsim

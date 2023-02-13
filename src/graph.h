@@ -58,6 +58,11 @@ class AdjacencyGraph {
         sort_adjacency();
     }
 
+    auto format() const -> std::string {
+        return fmt::format("AdjacencyGraph(\n    points = {}\n    neighbors = {})\n",
+                           points(), neighbors());
+    }
+
     auto point(index_t vertex_id) const -> point_t {
         return points_.at(vertex_id);
     }
@@ -131,24 +136,6 @@ class AdjacencyGraph {
     point_vector_t points_ {};
     neighbor_vector_t neighbors_ {};
 };
-
-}  // namespace logicsim
-
-template <typename index_t>
-struct fmt::formatter<logicsim::AdjacencyGraph<index_t>> {
-    static constexpr auto parse(fmt::format_parse_context& ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::AdjacencyGraph<index_t>& obj,
-                       fmt::format_context& ctx) {
-        return fmt::format_to(ctx.out(),
-                              "AdjacencyGraph(\n    points = {}\n    neighbors = {})\n",
-                              obj.points(), obj.neighbors());
-    }
-};
-
-namespace logicsim {
 
 //
 // Depth First Search

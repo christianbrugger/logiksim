@@ -31,6 +31,7 @@ class Timer {
 
 }  // namespace logicsim
 
+// keep this one, as we don't want to introduce a dependency here
 template <>
 struct fmt::formatter<logicsim::Timer> {
     constexpr auto parse(fmt::format_parse_context &ctx) {
