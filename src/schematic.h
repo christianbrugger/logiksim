@@ -18,21 +18,6 @@
 
 namespace logicsim {
 
-enum class ElementType : uint8_t {
-    placeholder,  // has no logic
-    wire,
-    inverter_element,
-    and_element,
-    or_element,
-    xor_element,
-
-    clock_generator,
-    flipflop_jk,
-    shift_register,
-};
-
-auto format(ElementType type) -> std::string;
-
 class Schematic {
     struct ElementData;
     struct ConnectionData;
@@ -156,9 +141,6 @@ class Schematic {
     static_assert(sizeof(ConnectionData) == 8);
     static_assert(sizeof(ElementData) == 65);
 
-    // To add:
-    // * std::vector<input_inverters>
-
     // output_delays type
     using output_delays_t = folly::small_vector<delay_t, 5, policy>;
     static_assert(sizeof(output_delays_t) == 24);
@@ -171,7 +153,7 @@ class Schematic {
     std::vector<ElementData> element_data_store_ {};
 
     std::vector<ElementType> element_types_ {};
-    std::vector<circuit_id_t> circuit_ids_ {};
+    std::vector<circuit_id_t> sub_circuit_ids_ {};
     std::vector<connection_vector_t> input_connections_ {};
     std::vector<connection_vector_t> output_connections_ {};
     std::vector<logic_small_vector_t> input_inverters_ {};
@@ -483,6 +465,7 @@ class Schematic::OutputTemplate {
 // Formatters
 //
 
+// TODO remove all of these
 template <>
 struct fmt::formatter<logicsim::Schematic> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
@@ -492,17 +475,6 @@ struct fmt::formatter<logicsim::Schematic> {
     static auto format(const logicsim::Schematic &obj, fmt::format_context &ctx)
         -> format_context::iterator {
         return fmt::format_to(ctx.out(), "{}", obj.format());
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::ElementType> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
     }
 };
 

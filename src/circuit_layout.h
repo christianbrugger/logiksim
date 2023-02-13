@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace logicsim {
 
@@ -20,13 +21,13 @@ enum class DisplayState : uint8_t {
     new_colliding,
 };
 
+auto format(DisplayState state) -> std::string;
+
 enum class DisplayOrientation : uint8_t {
     default_right,
 };
 
-auto format(DisplayState state) -> std::string;
-
-// TODO consider renaming
+// TODO rename to Layout
 class CircuitLayout {
    public:
     [[nodiscard]] explicit CircuitLayout() = default;
@@ -71,6 +72,7 @@ auto swap(CircuitLayout &a, CircuitLayout &b) noexcept -> void;
 template <>
 auto std::swap(logicsim::CircuitLayout &a, logicsim::CircuitLayout &b) noexcept -> void;
 
+// TODO make generic formatter
 template <>
 struct fmt::formatter<logicsim::DisplayState> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {

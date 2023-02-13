@@ -260,6 +260,7 @@ set(LS_CORE_SOURCES
     src/exceptions.h src/exceptions.cpp
     src/flat_schematic.h src/flat_schematic.cpp
     src/graph.h src/graph.cpp
+    src/layout_calculations.h src/layout_calculations.cpp
     src/line_tree.h src/line_tree.cpp
     src/random.h src/random.cpp
     src/renderer.h src/renderer.cpp
@@ -268,6 +269,7 @@ set(LS_CORE_SOURCES
     src/simulation.h src/simulation.cpp
     src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp
+    src/vocabulary.h src/vocabulary.cpp
 )
 set(LS_CORE_LIBRARIES  
     logicsim_pch

@@ -38,4 +38,8 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> void {
     layout_.add_wire(std::move(line_tree));
 }
 
+auto EditableCircuit::try_connect_new_element(element_id_t element) -> bool {
+    return false;
+}
+
 }  // namespace logicsim

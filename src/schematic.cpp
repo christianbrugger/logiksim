@@ -19,32 +19,6 @@
 
 namespace logicsim {
 
-auto format(ElementType type) -> std::string {
-    switch (type) {
-        using enum ElementType;
-
-        case placeholder:
-            return "Placeholder";
-        case wire:
-            return "Wire";
-        case inverter_element:
-            return "Inverter";
-        case and_element:
-            return "AndElement";
-        case or_element:
-            return "OrElement";
-        case xor_element:
-            return "XorElement";
-        case clock_generator:
-            return "ClockGenerator";
-        case flipflop_jk:
-            return "JK-FlipFlop";
-        case shift_register:
-            return "ShiftRegister";
-    }
-    throw_exception("Don't know how to convert ElementType to string.");
-}
-
 //
 // Schematic
 //
@@ -62,7 +36,7 @@ auto Schematic::swap(Schematic &other) noexcept -> void {
 
     input_connections_.swap(other.input_connections_);
     output_connections_.swap(other.output_connections_);
-    circuit_ids_.swap(other.circuit_ids_);
+    sub_circuit_ids_.swap(other.sub_circuit_ids_);
     element_types_.swap(other.element_types_);
     input_inverters_.swap(other.input_inverters_);
     output_delays_.swap(other.output_delays_);
@@ -170,7 +144,7 @@ auto Schematic::add_element(NewElementData &&data) -> Element {
 
     // extend vectors
     element_types_.push_back(data.element_type);
-    circuit_ids_.push_back(data.circuit_id);
+    sub_circuit_ids_.push_back(data.circuit_id);
     input_connections_.emplace_back(data.input_count, ConnectionData {});
     output_connections_.emplace_back(data.output_count, ConnectionData {});
     if (data.input_inverters.size() == 0) {

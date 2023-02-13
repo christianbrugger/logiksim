@@ -10,6 +10,7 @@
 #include <chrono>
 #include <compare>
 #include <cstdint>
+#include <string>
 #include <type_traits>
 
 namespace logicsim {
@@ -17,6 +18,21 @@ namespace logicsim {
 //
 // Schematic Types
 //
+
+enum class ElementType : uint8_t {
+    placeholder,  // has no logic
+    wire,
+    inverter_element,
+    and_element,
+    or_element,
+    xor_element,
+
+    clock_generator,
+    flipflop_jk,
+    shift_register,
+};
+
+auto format(ElementType type) -> std::string;
 
 struct circuit_id_t {
     using value_type = int16_t;
@@ -282,6 +298,17 @@ struct ankerl::unordered_dense::hash<logicsim::point_t> {
 //
 // Formatters
 //
+
+template <>
+struct fmt::formatter<logicsim::ElementType> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+    }
+};
 
 template <>
 struct fmt::formatter<logicsim::circuit_id_t> {
