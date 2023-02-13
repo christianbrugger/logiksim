@@ -6,6 +6,7 @@
 #include "exceptions.h"
 
 #include <fmt/core.h>
+#include <gsl/gsl>
 
 #include <concepts>
 #include <cstdlib>
