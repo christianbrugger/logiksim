@@ -68,26 +68,36 @@ auto Layout::format() const -> std::string {
     return "Layout( ... )";
 }
 
-auto Layout::add_default_element() -> void {
+auto Layout::add_default_element() -> element_id_t {
     line_trees_.push_back(LineTree {});
     positions_.push_back(point_t {});
     orientation_.push_back(DisplayOrientation::default_right);
     display_states_.push_back(DisplayState::normal);
     colors_.push_back(defaults::color_black);
+
+    return element_id_t {
+        gsl::narrow_cast<element_id_t::value_type>(positions_.size() - std::size_t {1})};
 }
 
-auto Layout::add_wire(LineTree &&line_tree) -> void {
-    add_default_element();
+auto Layout::add_wire(LineTree &&line_tree) -> element_id_t {
+    const auto id = add_default_element();
+
     line_trees_.back() = std::move(line_tree);
+
+    return id;
 }
 
 auto Layout::add_logic_element(point_t position, DisplayOrientation orientation,
-                               DisplayState display_state, color_t color) -> void {
-    add_default_element();
+                               DisplayState display_state, color_t color)
+    -> element_id_t {
+    const auto id = add_default_element();
+
     positions_.back() = position;
     orientation_.back() = orientation;
     display_states_.back() = display_state;
     colors_.back() = color;
+
+    return id;
 }
 
 auto Layout::set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void {

@@ -272,43 +272,47 @@ TEST(SimulationTest, JKFlipFlop) {
     using namespace std::chrono_literals;
 
     Schematic schematic;
-    const auto flipflop {schematic.add_element(ElementType::flipflop_jk, 3, 2)};
+    const auto flipflop {schematic.add_element(ElementType::flipflop_jk, 5, 2)};
     auto simulation = get_initialized_simulation(schematic);
 
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 
     // switch to j state
-    simulation.submit_events(flipflop, 1ms, {true, true, false});
+    simulation.submit_events(flipflop, 1ms, {true, true, false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
-    simulation.submit_events(flipflop, 1ms, {false, true, false});
+    simulation.submit_events(flipflop, 1ms, {false, true, false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
 
     // switch to k state
-    simulation.submit_events(flipflop, 1ms, {true, false, true});
+    simulation.submit_events(flipflop, 1ms, {true, false, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
-    simulation.submit_events(flipflop, 1ms, {false, false, true});
+    simulation.submit_events(flipflop, 1ms, {false, false, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 
     // toggle state
-    simulation.submit_events(flipflop, 1ms, {true, true, true});
-    simulation.submit_events(flipflop, 2ms, {false, true, true});
+    simulation.submit_events(flipflop, 1ms, {true, true, true, false, false});
+    simulation.submit_events(flipflop, 2ms, {false, true, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
-    simulation.submit_events(flipflop, 1ms, {true, true, true});
-    simulation.submit_events(flipflop, 2ms, {false, true, true});
+    simulation.submit_events(flipflop, 1ms, {true, true, true, false, false});
+    simulation.submit_events(flipflop, 2ms, {false, true, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 
     // steady state
-    simulation.submit_events(flipflop, 1ms, {true, false, false});
-    simulation.submit_events(flipflop, 2ms, {false, false, false});
+    simulation.submit_events(flipflop, 1ms, {true, false, false, false, false});
+    simulation.submit_events(flipflop, 2ms, {false, false, false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
+
+    // TODO test set
+
+    // TODO test reset
 }
 
 TEST(SimulationTest, AndInputInverters) {

@@ -45,24 +45,11 @@ struct fmt::formatter<std::pair<T1, T2>, Char> {
 //
 
 namespace logicsim {
-
 template <typename T, typename Char = char>
 concept format_obj_with_member_format_function
     = (!format_string_type<T, Char>) && requires(T container) {
                                             {
                                                 container.format()
-                                                } -> std::same_as<std::string>;
-                                        };
-
-// we need to define a free function format to be able to compile our templates
-struct _format_dummy;
-auto format(_format_dummy) -> std::string;
-
-template <typename T, typename Char = char>
-concept format_obj_with_free_format_function
-    = (!format_string_type<T, Char>) && requires(T container) {
-                                            {
-                                                ::logicsim::format(container)
                                                 } -> std::same_as<std::string>;
                                         };
 }  // namespace logicsim
@@ -71,27 +58,42 @@ concept format_obj_with_free_format_function
 template <typename T, typename Char>
     requires logicsim::format_obj_with_member_format_function<T, Char>
 struct fmt::formatter<T, Char> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
+    constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const T &obj, fmt::format_context &ctx) {
+    inline auto format(const T &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 
-// TODO remove all format(obj) specializations
-template <typename T, typename Char>
-    requires logicsim::format_obj_with_free_format_function<T, Char>
-struct fmt::formatter<T, Char> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const T &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
+// namespace logicsim {
+//
+//// we need to define a free function format to be able to compile our templates
+// struct _format_dummy;
+// auto format(_format_dummy) -> std::string;
+//
+// template <typename T, typename Char = char>
+// concept format_obj_with_free_format_function
+//     = (!format_string_type<T, Char>) && requires(T container) {
+//                                             {
+//                                                 ::logicsim::format(container)
+//                                                 } -> std::same_as<std::string>;
+//                                         };
+// }  // namespace logicsim
+//
+//// TODO remove all format(obj) specializations
+// template <typename T, typename Char>
+//     requires logicsim::format_obj_with_free_format_function<T, Char>
+// struct fmt::formatter<T, Char> {
+//     constexpr auto parse(fmt::format_parse_context &ctx) {
+//         return ctx.begin();
+//     }
+//
+//     inline auto format(const T &obj, fmt::format_context &ctx) {
+//         return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+//     }
+// };
 
 //
 // range(begin, end)

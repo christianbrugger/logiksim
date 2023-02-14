@@ -37,13 +37,13 @@ class Layout {
     auto swap(Layout &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
 
-    auto add_default_element() -> void;
-    auto add_wire(LineTree &&line_tree) -> void;
+    auto add_default_element() -> element_id_t;
+    auto add_wire(LineTree &&line_tree) -> element_id_t;
     auto add_logic_element(point_t position,
                            DisplayOrientation orientation
                            = DisplayOrientation::default_right,
                            DisplayState display_state = DisplayState::normal,
-                           color_t color = defaults::color_black) -> void;
+                           color_t color = defaults::color_black) -> element_id_t;
 
     // TODO remove these, when not needed anymore
     auto set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void;
@@ -72,5 +72,28 @@ auto swap(Layout &a, Layout &b) noexcept -> void;
 
 template <>
 auto std::swap(logicsim::Layout &a, logicsim::Layout &b) noexcept -> void;
+
+template <>
+struct fmt::formatter<logicsim::DisplayState> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::DisplayState &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::DisplayOrientation> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::DisplayOrientation &obj,
+                       fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+    }
+};
 
 #endif

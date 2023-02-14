@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_SCHEMATIC_H
 #define LOGIKSIM_SCHEMATIC_H
 
+#include "format.h"
 #include "vocabulary.h"
 
 #include <fmt/core.h>

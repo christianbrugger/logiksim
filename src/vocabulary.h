@@ -2,9 +2,11 @@
 #define LOGIKSIM_VOCABULARY_H
 
 #include "exceptions.h"
+#include "format.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
+#include <fmt/format.h>  // TODO remove
 #include <gsl/gsl>
 
 #include <chrono>
@@ -22,6 +24,7 @@ namespace logicsim {
 enum class ElementType : uint8_t {
     placeholder,  // has no logic
     wire,
+
     inverter_element,
     and_element,
     or_element,
@@ -72,6 +75,17 @@ struct connection_id_t {
     [[nodiscard]] static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
     };
+
+    auto operator++() noexcept -> connection_id_t & {
+        ++value;
+        return *this;
+    }
+
+    auto operator++(int) noexcept -> connection_id_t {
+        auto tmp = *this;
+        operator++();
+        return tmp;
+    }
 };
 
 static_assert(std::is_trivial<connection_id_t>::value);
@@ -178,6 +192,18 @@ struct grid_t {
     using value_type = int16_t;
     value_type value;
 
+    [[nodiscard]] grid_t() = default;
+
+    [[nodiscard]] constexpr grid_t(value_type v) noexcept : value {v} {};
+    [[nodiscard]] constexpr explicit grid_t(int v) noexcept
+        : value {gsl::narrow<value_type>(v)} {};
+    [[nodiscard]] constexpr explicit grid_t(unsigned int v) noexcept
+        : value {gsl::narrow<value_type>(v)} {};
+    [[nodiscard]] constexpr explicit grid_t(long long v) noexcept
+        : value {gsl::narrow<value_type>(v)} {};
+    [[nodiscard]] constexpr explicit grid_t(unsigned long long v) noexcept
+        : value {gsl::narrow<value_type>(v)} {};
+
     [[nodiscard]] auto operator==(const grid_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const grid_t &other) const = default;
 
@@ -221,6 +247,8 @@ struct grid_t {
 };
 
 static_assert(std::is_trivial<grid_t>::value);
+static_assert(std::is_standard_layout<grid_t>::value);
+static_assert(std::is_nothrow_default_constructible<grid_t>::value);
 
 struct point_fine_t {
     double x;
@@ -239,6 +267,14 @@ struct point_t {
 
     [[nodiscard]] constexpr auto operator==(const point_t &other) const -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const point_t &other) const = default;
+
+    [[nodiscard]] constexpr auto operator+(point_t other) const -> point_t {
+        return {x + other.x, y + other.y};
+    }
+
+    [[nodiscard]] constexpr auto operator-(point_t other) const -> point_t {
+        return {x - other.x, y - other.y};
+    }
 };
 
 static_assert(std::is_trivial<point_t>::value);
@@ -298,6 +334,17 @@ struct ankerl::unordered_dense::hash<logicsim::point_t> {
 //
 // Formatters
 //
+
+template <>
+struct fmt::formatter<logicsim::ElementType> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+    }
+};
 
 template <>
 struct fmt::formatter<logicsim::circuit_id_t> {

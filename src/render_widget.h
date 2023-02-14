@@ -120,7 +120,7 @@ class WidgetRenderer : public QWidget {
 
             editable_circuit.add_standard_element(ElementType::or_element, 2,
                                                   point_t {5, 3});
-            editable_circuit.add_wire(std::move(line_tree));
+            // editable_circuit.add_wire(std::move(line_tree));
         }
 
         // old behaviour

@@ -237,6 +237,9 @@ auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
         using enum ElementType;
 
         case clock_generator: {
+            // first input & first output are internal signals to loop the clock
+            // second input is reset signal
+
             bool rise_cycle = !new_input.at(0) && old_input.at(0);
             bool rise_start = new_input.at(1) && !old_input.at(1);
 
@@ -252,10 +255,16 @@ auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
         }
 
         case flipflop_jk: {
-            // rising edge
-            if (new_input.at(0) && !old_input.at(0)) {
-                bool input_j = new_input.at(1);
-                bool input_k = new_input.at(2);
+            bool input_j = new_input.at(1);
+            bool input_k = new_input.at(2);
+            bool input_set = new_input.at(3);
+            bool input_reset = new_input.at(4);
+
+            if (input_reset) {
+                state.at(0) = false;
+            } else if (input_set) {
+                state.at(0) = true;
+            } else if (new_input.at(0) && !old_input.at(0)) {  // rising edge
 
                 if (input_j && input_k) {
                     state.at(0) = !state.at(0);

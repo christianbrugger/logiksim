@@ -33,7 +33,7 @@ class EditableCircuit {
     auto add_wire(LineTree &&line_tree) -> void;
 
    private:
-    auto try_connect_new_element(element_id_t element) -> bool;
+    auto connect_new_element(element_id_t element) -> void;
 
     using connection_map_t = ankerl::unordered_dense::map<point_t, ConnectionEntry>;
     connection_map_t input_connections_;

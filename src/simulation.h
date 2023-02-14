@@ -89,6 +89,7 @@ class Simulation {
     struct ElementState;
 
    public:
+    // Remove and put into run parameters
     bool print_events {false};
 
     /// Represents multiple logic values
