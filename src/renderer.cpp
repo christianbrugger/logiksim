@@ -347,7 +347,7 @@ auto create_random_line_tree(std::size_t n_outputs, const RenderBenchmarkConfig&
                              G& rng) -> LineTree {
     auto line_tree = create_first_line_tree_segment(config, rng);
 
-    while (line_tree.calculate_output_count() < n_outputs) {
+    while (line_tree.output_count() < n_outputs) {
         auto new_tree = std::optional<LineTree> {};
         // TODO flatten loop
         do {

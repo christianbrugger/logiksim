@@ -36,7 +36,7 @@ auto for_each_input_locations(const Schematic &schematic, const Layout &layout,
 
         case wire: {
             require_input_count(element, 1);
-            next_input(layout.line_tree(element_id).input_point());
+            next_input(layout.line_tree(element_id).input_position());
             return;
         }
 
@@ -119,7 +119,12 @@ auto for_each_output_locations(const Schematic &schematic, const Layout &layout,
 
         case wire: {
             require_min_output_count(element, 1);
-            // TODO implement
+            const auto &line_tree = layout.line_tree(element_id);
+            require_output_count(element, line_tree.output_count());
+
+            for (auto &&point : line_tree.output_positions()) {
+                next_output(point);
+            }
             return;
         }
 

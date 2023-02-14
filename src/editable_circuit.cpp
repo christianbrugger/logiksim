@@ -47,11 +47,17 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> void {
     auto delays = calculate_output_delays(line_tree);
     auto max_delay = std::ranges::max(delays);
 
-    schematic_.add_element({.element_type = ElementType::wire,
-                            .output_count = delays.size(),
-                            .output_delays = delays,
-                            .history_length = max_delay});
-    layout_.add_wire(std::move(line_tree));
+    const auto element = schematic_.add_element({.element_type = ElementType::wire,
+                                                 .output_count = delays.size(),
+                                                 .output_delays = delays,
+                                                 .history_length = max_delay});
+    const auto element_id = layout_.add_wire(std::move(line_tree));
+
+    if (element.element_id() != element_id) [[unlikely]] {
+        throw_exception("Added element ids don't match.");
+    }
+
+    connect_new_element(element);
 }
 
 auto EditableCircuit::connect_new_element(element_id_t element_id) -> void {

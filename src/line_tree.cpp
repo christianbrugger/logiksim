@@ -165,7 +165,8 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
     }
 
     // original line_tree roots
-    auto to_root = [](auto tree_reference) { return tree_reference.get().input_point(); };
+    auto to_root
+        = [](auto tree_reference) { return tree_reference.get().input_position(); };
     if (auto result = std::ranges::find_if(line_trees, has_candidate, to_root);
         result != line_trees.end()) {
         return to_root(*result);
@@ -224,16 +225,18 @@ class LineTree::TreeBuilderVisitor {
             tree_->points_.push_back(graph.point(a));
         }
 
+        // calculate target index
         auto a_index = line_tree_index_.at(a);
         auto b_index = gsl::narrow_cast<index_t>(tree_->points_.size());
+
+        if (a_index + 1 != b_index) {  // new subtree?
+            tree_->lengths_.push_back(length_recorder_.length(a));
+            tree_->output_points_.push_back(tree_->points_.back());
+        }
 
         line_tree_index_.at(b) = b_index;
         tree_->points_.push_back(graph.point(b));
         tree_->indices_.push_back(a_index);
-
-        if (a_index + 1 != b_index) {  // new subtree?
-            tree_->lengths_.push_back(length_recorder_.length(a));
-        }
     };
 
    private:
@@ -255,6 +258,7 @@ auto LineTree::from_graph(point_t root, const Graph& graph) -> std::optional<Lin
 
     auto builder = TreeBuilderVisitor {*line_tree, graph.vertex_count()};
     if (depth_first_search(graph, builder, *root_index) == DFSResult::success) {
+        line_tree->output_points_.push_back(line_tree->points_.back());
         return line_tree;
     }
 
@@ -265,6 +269,7 @@ auto LineTree::swap(LineTree& other) noexcept -> void {
     points_.swap(other.points_);
     indices_.swap(other.indices_);
     lengths_.swap(other.lengths_);
+    output_points_.swap(other.output_points_);
 }
 
 auto swap(LineTree& a, LineTree& b) noexcept -> void {
@@ -281,7 +286,7 @@ auto std::swap(logicsim::LineTree& a, logicsim::LineTree& b) noexcept -> void {
 namespace logicsim {
 
 auto LineTree::reroot(const point_t new_root) const -> std::optional<LineTree> {
-    if (new_root == input_point()) {
+    if (new_root == input_position()) {
         return *this;
     }
 
@@ -289,11 +294,15 @@ auto LineTree::reroot(const point_t new_root) const -> std::optional<LineTree> {
     return LineTree::from_graph(new_root, graph);
 }
 
-auto LineTree::input_point() const -> point_t {
+auto LineTree::input_position() const -> point_t {
     if (points_.size() == 0) [[unlikely]] {
         throw_exception("Empty line tree has no root.");
     }
     return points_[0];
+}
+
+auto LineTree::output_positions() const -> std::span<const point_t> {
+    return output_points_;
 }
 
 auto LineTree::segment_count() const noexcept -> int {
@@ -321,14 +330,8 @@ auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
     return SegmentSizeView(*this);
 }
 
-auto LineTree::calculate_output_count() const -> std::size_t {
-    if (segment_count() == 0) {
-        return 0;
-    }
-
-    auto count = adjacent_count_if(
-        segments(), [](line_t first, line_t second) { return first.p1 != second.p0; });
-    return count + 1;
+auto LineTree::output_count() const -> std::size_t {
+    return output_points_.size();
 }
 
 auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
@@ -357,7 +360,8 @@ auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
 }
 
 auto LineTree::format() const -> std::string {
-    return fmt::format("LineTree({}, {}, {})", points_, indices_, lengths_);
+    return fmt::format("LineTree({}, {}, {}, {})", points_, indices_, lengths_,
+                       output_points_);
 }
 
 // internal
@@ -369,7 +373,7 @@ auto LineTree::starts_new_subtree(int index) const -> bool {
     return indices_.at(index) != index;
 }
 
-auto LineTree::initialize_indices() -> void {
+auto LineTree::initialize_data_structure() -> void {
     if (points_.size() <= 1) {
         return;
     }
@@ -377,6 +381,8 @@ auto LineTree::initialize_indices() -> void {
     // point to previous points for each segment
     indices_.resize(points_.size() - 1);
     std::iota(indices_.begin(), indices_.end(), 0);
+
+    output_points_.push_back(points_.back());
 }
 
 auto LineTree::validate_points_or_throw() const -> void {

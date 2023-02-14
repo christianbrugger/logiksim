@@ -6,7 +6,6 @@
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
-#include <fmt/format.h>  // TODO remove
 #include <gsl/gsl>
 
 #include <chrono>

@@ -279,15 +279,44 @@ TEST(LineTree, OutputCoundAndDelays) {
     auto tree_merged = merge({tree1, tree2, tree3});
     ASSERT_EQ(tree_merged.has_value(), true);
 
-    EXPECT_THAT(tree1.calculate_output_count(), 1);
-    EXPECT_THAT(tree2.calculate_output_count(), 1);
-    EXPECT_THAT(tree3.calculate_output_count(), 1);
-    EXPECT_THAT(tree_merged->calculate_output_count(), 3);
+    EXPECT_THAT(tree1.output_count(), 1);
+    EXPECT_THAT(tree2.output_count(), 1);
+    EXPECT_THAT(tree3.output_count(), 1);
+    EXPECT_THAT(tree_merged->output_count(), 3);
 
     EXPECT_THAT(tree1.calculate_output_lengths(), testing::ElementsAre(5));
     EXPECT_THAT(tree2.calculate_output_lengths(), testing::ElementsAre(1));
     EXPECT_THAT(tree3.calculate_output_lengths(), testing::ElementsAre(2));
     EXPECT_THAT(tree_merged->calculate_output_lengths(), testing::ElementsAre(5, 4, 2));
+}
+
+//
+// Output Positions
+//
+
+TEST(LineTree, OutputPositions) {
+    auto tree1 = LineTree({{0, 0}, {0, 5}});
+    auto tree2 = LineTree({{0, 1}, {1, 1}});
+    auto tree3 = LineTree({{0, 2}, {2, 2}});
+
+    auto tree_merged = merge({tree1, tree2, tree3});
+    ASSERT_EQ(tree_merged.has_value(), true);
+
+    fmt::print("tree1 = {}\n", tree1);
+    fmt::print("tree2 = {}\n", tree2);
+    fmt::print("tree3 = {}\n", tree3);
+    fmt::print("tree_merged = {}\n", *tree_merged);
+
+    EXPECT_THAT(tree1.output_positions().size(), 1);
+    EXPECT_THAT(tree2.output_positions().size(), 1);
+    EXPECT_THAT(tree3.output_positions().size(), 1);
+    EXPECT_THAT(tree_merged->output_positions().size(), 3);
+
+    EXPECT_THAT(tree1.output_positions(), testing::ElementsAre(point_t {0, 5}));
+    EXPECT_THAT(tree2.output_positions(), testing::ElementsAre(point_t {1, 1}));
+    EXPECT_THAT(tree3.output_positions(), testing::ElementsAre(point_t {2, 2}));
+    EXPECT_THAT(tree_merged->output_positions(),
+                testing::ElementsAre(point_t {0, 5}, point_t {2, 2}, point_t {1, 1}));
 }
 
 //

@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_LINETREE_H
 #define LOGIKSIM_LINETREE_H
 
+#include "format.h"
 #include "geometry.h"
 
 #include <fmt/core.h>
@@ -10,6 +11,7 @@
 #include <functional>
 #include <optional>
 #include <ranges>
+#include <span>
 
 namespace logicsim {
 
@@ -99,15 +101,15 @@ class LineTree {
     // return tree with new root, if possible
     [[nodiscard]] auto reroot(const point_t new_root) const -> std::optional<LineTree>;
 
-    [[nodiscard]] auto input_point() const -> point_t;
-
     [[nodiscard]] auto segment_count() const noexcept -> int;
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment(int index) const -> line_t;
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
 
-    [[nodiscard]] auto calculate_output_count() const -> std::size_t;
+    [[nodiscard]] auto input_position() const -> point_t;
+    [[nodiscard]] auto output_count() const -> std::size_t;
+    [[nodiscard]] auto output_positions() const -> std::span<const point_t>;
     [[nodiscard]] auto calculate_output_lengths() const -> std::vector<length_t>;
 
     [[nodiscard]] auto format() const -> std::string;
@@ -118,7 +120,7 @@ class LineTree {
 
     template <std::input_iterator I, std::sentinel_for<I> S>
     auto construct_impl(I begin, S end) -> void;
-    auto initialize_indices() -> void;
+    auto initialize_data_structure() -> void;
 
     auto validate_points_or_throw() const -> void;
     [[nodiscard]] auto validate_points_error() const
@@ -142,6 +144,7 @@ class LineTree {
     point_vector_t points_ {};
     index_vector_t indices_ {};
     length_vector_t lengths_ {};
+    point_vector_t output_points_ {};
 
    public:
     explicit LineTree(point_vector_t points, index_vector_t indices,
@@ -149,7 +152,7 @@ class LineTree {
         : points_ {points}, indices_ {indices}, lengths_ {lengths} {};
 };
 
-static_assert(sizeof(LineTree) == 30);
+static_assert(sizeof(LineTree) == 40);
 
 auto swap(LineTree &a, LineTree &b) noexcept -> void;
 
@@ -317,7 +320,7 @@ LineTree::LineTree(I begin, S end) {
 template <std::input_iterator I, std::sentinel_for<I> S>
 auto LineTree::construct_impl(I begin, S end) -> void {
     points_ = point_vector_t {begin, end};
-    initialize_indices();
+    initialize_data_structure();
 }
 
 template <std::ranges::forward_range R>
