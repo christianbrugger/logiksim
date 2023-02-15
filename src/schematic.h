@@ -89,6 +89,7 @@ class Schematic {
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
+    // TODO rename to total_...
     [[nodiscard]] auto input_count() const noexcept -> std::size_t;
     [[nodiscard]] auto output_count() const noexcept -> std::size_t;
 
@@ -96,6 +97,11 @@ class Schematic {
     [[nodiscard]] auto element(element_id_t element_id) const -> ConstElement;
     [[nodiscard]] auto elements() noexcept -> ElementView;
     [[nodiscard]] auto elements() const noexcept -> ConstElementView;
+
+    [[nodiscard]] auto input(connection_t connection) -> Input;
+    [[nodiscard]] auto input(connection_t connection) const -> ConstInput;
+    [[nodiscard]] auto output(connection_t connection) -> Output;
+    [[nodiscard]] auto output(connection_t connection) const -> ConstOutput;
 
     // TODO consider making public, or putting it somewhere else
     using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
@@ -125,6 +131,7 @@ class Schematic {
     static void validate_connection_data_(Schematic::ConnectionData connection_data);
 
     // TODO add packing
+    // TODO use vocabulary type?
     struct ConnectionData {
         element_id_t element_id {null_element};
         connection_id_t index {null_connection};

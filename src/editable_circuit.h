@@ -8,20 +8,11 @@
 
 namespace logicsim {
 
-// TODO consider this into vocabulary
-struct ConnectionEntry {
-    element_id_t element_id;
-    connection_id_t connection_id;
-
-    // TODO move to cpp
-    auto format() const -> std::string {
-        return fmt::format("<Con: {}-{}>", element_id, connection_id);
-    }
-};
-
 class EditableCircuit {
    public:
     [[nodiscard]] EditableCircuit(Schematic &&schematic, Layout &&layout);
+
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto layout() const noexcept -> const Layout &;
@@ -32,10 +23,12 @@ class EditableCircuit {
 
     auto add_wire(LineTree &&line_tree) -> void;
 
+    // todo: extract_schematic, extract_layout
+
    private:
     auto connect_new_element(element_id_t element) -> void;
 
-    using connection_map_t = ankerl::unordered_dense::map<point_t, ConnectionEntry>;
+    using connection_map_t = ankerl::unordered_dense::map<point_t, connection_t>;
     connection_map_t input_connections_;
     connection_map_t output_connections_;
 

@@ -61,7 +61,7 @@ auto std::swap(logicsim::Schematic &a, logicsim::Schematic &b) noexcept -> void 
 namespace logicsim {
 
 auto Schematic::format() const -> std::string {
-    std::string inner;
+    std::string inner {};
     if (!empty()) {
         auto format_true = [](auto element) { return element.format(true); };
         inner = fmt::format(": [\n  {}\n]", fmt_join(elements(), ",\n  ", format_true));
@@ -106,6 +106,22 @@ auto Schematic::elements() noexcept -> ElementView {
 
 auto Schematic::elements() const noexcept -> ConstElementView {
     return ConstElementView {*this};
+}
+
+auto Schematic::input(connection_t connection) -> Input {
+    return element(connection.element_id).input(connection.connection_id);
+}
+
+auto Schematic::input(connection_t connection) const -> ConstInput {
+    return element(connection.element_id).input(connection.connection_id);
+}
+
+auto Schematic::output(connection_t connection) -> Output {
+    return element(connection.element_id).output(connection.connection_id);
+}
+
+auto Schematic::output(connection_t connection) const -> ConstOutput {
+    return element(connection.element_id).output(connection.connection_id);
 }
 
 auto Schematic::add_element(ElementType type, std::size_t input_count,

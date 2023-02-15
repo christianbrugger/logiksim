@@ -28,4 +28,8 @@ auto format(ElementType type) -> std::string {
     throw_exception("Don't know how to convert ElementType to string.");
 }
 
+auto connection_t::format() const -> std::string {
+    return fmt::format("<Conection {} of Element {}>", connection_id, element_id);
+}
+
 }  // namespace logicsim

@@ -12,6 +12,10 @@ namespace logicsim {
 EditableCircuit::EditableCircuit(Schematic&& schematic, Layout&& layout)
     : schematic_ {std::move(schematic)}, layout_ {std::move(layout)} {}
 
+auto EditableCircuit::format() const -> std::string {
+    return fmt::format("EditableCircuit{{\n{}\n{}\n}}", schematic_, layout_);
+}
+
 auto EditableCircuit::layout() const noexcept -> const Layout& {
     return layout_;
 }
@@ -61,19 +65,61 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> void {
 }
 
 auto EditableCircuit::connect_new_element(element_id_t element_id) -> void {
+    // inputs
     for_each_input_locations(
         schematic_, layout_, element_id,
-        [this, element_id, input_id = connection_id_t {0}](point_t position) mutable {
+        [this, element_id, input_id = connection_id_t {0}](point_t point) mutable {
             const auto input = schematic_.element(element_id).input(input_id);
-            fmt::print("{} - {}\n", input, position);
+            // pre-conditions
+            if (input.has_connected_element()) [[unlikely]] {
+                throw_exception("Input needs to be unconnected.");
+            }
+            if (input_connections_.contains(point)) [[unlikely]] {
+                throw_exception("Circuit already contains input at this location.");
+            }
+
+            // connect to possible output
+            if (const auto it = output_connections_.find(point);
+                it != output_connections_.end()) {
+                const auto output = schematic_.output(it->second);
+                if (output.has_connected_element()) [[unlikely]] {
+                    throw_exception("Output is already connected at this location.");
+                }
+                input.connect(output);
+                fmt::print("connected input {} to output {}\n", input, output);
+                // TODO handle placeholders
+            }
+            // register input
+            input_connections_[point] = connection_t {element_id, input_id};
             ++input_id;
         });
 
+    // outputs
     for_each_output_locations(
         schematic_, layout_, element_id,
-        [this, element_id, output_id = connection_id_t {0}](point_t position) mutable {
+        [this, element_id, output_id = connection_id_t {0}](point_t point) mutable {
             const auto output = schematic_.element(element_id).output(output_id);
-            fmt::print("{} - {}\n", output, position);
+            // pre-conditions
+            if (output.has_connected_element()) [[unlikely]] {
+                throw_exception("Output needs to be unconnected.");
+            }
+            if (output_connections_.contains(point)) [[unlikely]] {
+                throw_exception("Circuit already contains output at this location.");
+            }
+
+            // connect to possible input
+            if (const auto it = input_connections_.find(point);
+                it != input_connections_.end()) {
+                const auto input = schematic_.input(it->second);
+                if (input.has_connected_element()) [[unlikely]] {
+                    throw_exception("Input is already connected at this location.");
+                }
+                output.connect(input);
+                fmt::print("connected output {} to input {}\n", output, input);
+                // TODO handle placeholders
+            }
+            // register output
+            output_connections_[point] = connection_t {element_id, output_id};
             ++output_id;
         });
 }

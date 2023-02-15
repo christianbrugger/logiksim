@@ -87,6 +87,14 @@ struct connection_id_t {
     }
 };
 
+// use struct packing ???
+struct connection_t {
+    element_id_t element_id;
+    connection_id_t connection_id;
+
+    [[nodiscard]] auto format() const -> std::string;
+};
+
 static_assert(std::is_trivial<connection_id_t>::value);
 
 inline constexpr auto null_circuit = circuit_id_t {-1};

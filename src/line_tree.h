@@ -27,9 +27,6 @@ class InvalidLineTreeException : public std::exception {
 [[noreturn]] auto throw_invalid_line_tree_exception(const char *message) -> void;
 
 //
-// Tasks:
-//  * get position of each output
-//
 // Done:
 //  * create from lines & merging
 //  * iter over segments
@@ -38,6 +35,7 @@ class InvalidLineTreeException : public std::exception {
 //  * calculate number of outputs
 //  * get lengths of each output
 //  * position of connector dots
+//  * get position of each output
 //
 
 //
@@ -46,10 +44,12 @@ class InvalidLineTreeException : public std::exception {
 //           \ --- d
 //
 
-// first point is input
-// structure is immutable, create new tree, if it needs to be changed
-// outputs need to be leaf nodes (cannot have outgoing connections)
-// class does not know about simulation or schematic (reduce coupling)
+//
+// Design:
+// * structure is immutable
+// * inputs and outputs are leaf nodes (have only one outgoing edge)
+// * composable through merging
+//
 
 class LineTree;
 

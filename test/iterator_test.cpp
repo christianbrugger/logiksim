@@ -12,18 +12,7 @@
 
 namespace logicsim {
 
-TEST(Iterator, TransformIterator) {
-    auto vec = std::vector<int> {1, 2, 3};
-    auto proj = [](auto val) { return val * 2; };
-
-    auto begin = TransformIterator(vec.begin(), proj);
-    auto end = TransformIterator(vec.end(), proj);
-    auto result = std::vector<int>(begin, end);
-
-    ASSERT_THAT(result, testing::ElementsAre(2, 4, 6));
-}
-
-TEST(Iterator, TransformView) {
+TEST(Iterator, TransformViewSimple) {
     auto vec = std::vector<int> {1, 2, 3};
     auto proj = [](auto val) { return val * 2; };
     auto transform = TransformView(vec.begin(), vec.end(), proj);

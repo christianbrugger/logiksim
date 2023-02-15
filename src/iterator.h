@@ -1,4 +1,6 @@
 
+// TODO rename file to iterator_adaptors.h
+
 #ifndef LOGIKSIM_ITERATOR_H
 #define LOGIKSIM_ITERATOR_H
 
@@ -15,62 +17,62 @@ namespace logicsim {
 //
 
 template <typename Iterator, class Proj>
-class TransformIterator {
-   public:
-    using iterator_concept = std::input_iterator_tag;
-    using iterator_category = std::input_iterator_tag;
-
-    using value_type = typename std::projected<Iterator, Proj>::value_type;
-    using difference_type = typename std::conditional_t<std::is_pointer_v<Iterator>,
-                                                        std::pointer_traits<Iterator>,
-                                                        Iterator>::difference_type;
-    using pointer = value_type *;
-    using reference = value_type &;
-
-    // needs to be default constructable, so ElementView can become a range and view
-    TransformIterator() = default;
-
-    [[nodiscard]] explicit TransformIterator(Iterator iterator, Proj proj) noexcept(
-        std::is_nothrow_copy_constructible_v<Iterator>
-            &&std::is_nothrow_copy_constructible_v<Proj>)
-        : iterator_ {iterator}, proj_ {proj} {};
-
-    [[nodiscard]] auto operator*() const -> value_type {
-        return std::invoke(proj_, *iterator_);
-    }
-
-    // Prefix increment
-    auto operator++() noexcept(noexcept(++iterator_)) -> TransformIterator & {
-        ++iterator_;
-        return *this;
-    }
-
-    // Postfix increment
-    auto operator++(int) noexcept(noexcept(iterator_++)) -> TransformIterator {
-        auto tmp = *this;
-        ++iterator_;
-        return tmp;
-    }
-
-    [[nodiscard]] auto operator==(const TransformIterator &right) const
-        noexcept(noexcept(this->iterator_ == right.iterator_)) -> bool {
-        return this->iterator_ == right.iterator_;
-    }
-
-    [[nodiscard]] auto operator-(const TransformIterator &right) const
-        noexcept(noexcept(this->iterator_ - right.iterator_)) -> difference_type {
-        return this->iterator_ - right.iterator_;
-    }
-
-   private:
-    Iterator iterator_ {};
-    Proj proj_ {};
-};
-
-template <typename Iterator, class Proj>
 class TransformView {
    public:
-    using iterator_type = TransformIterator<Iterator, Proj>;
+    class TransformIterator {
+       public:
+        using iterator_concept = std::forward_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
+
+        using value_type = typename std::projected<Iterator, Proj>::value_type;
+        using difference_type = typename std::conditional_t<std::is_pointer_v<Iterator>,
+                                                            std::pointer_traits<Iterator>,
+                                                            Iterator>::difference_type;
+        using reference = value_type;
+        using pointer = void;
+
+        // needs to be default constructable, so ElementView can become a range and view
+        TransformIterator() = default;
+
+        [[nodiscard]] explicit TransformIterator(const TransformView &parent,
+                                                 Iterator iterator)
+            : parent_ {&parent}, iterator_ {iterator} {};
+
+        [[nodiscard]] auto operator*() const -> reference {
+            assert(parent_ != nullptr);
+            return std::invoke(parent_->proj_, *iterator_);
+        }
+
+        // Prefix increment
+        auto operator++() noexcept(noexcept(++iterator_)) -> TransformIterator & {
+            ++iterator_;
+            return *this;
+        }
+
+        // Postfix increment
+        auto operator++(int) noexcept(noexcept(iterator_++)) -> TransformIterator {
+            auto tmp = *this;
+            operator++();
+            return tmp;
+        }
+
+        [[nodiscard]] auto operator==(const TransformIterator &right) const
+            noexcept(noexcept(this->iterator_ == right.iterator_)) -> bool {
+            return this->iterator_ == right.iterator_;
+        }
+
+        [[nodiscard]] auto operator-(const TransformIterator &right) const
+            noexcept(noexcept(this->iterator_ - right.iterator_)) -> difference_type {
+            return this->iterator_ - right.iterator_;
+        }
+
+       private:
+        const TransformView *parent_ {};
+        Iterator iterator_ {};
+    };
+
+   public:
+    using iterator_type = TransformIterator;
 
     using value_type = typename iterator_type::value_type;
     using pointer = typename iterator_type::pointer;
@@ -79,22 +81,15 @@ class TransformView {
     using iterator = iterator_type;
     using const_iterator = iterator_type;
 
-    [[nodiscard]] explicit TransformView(
-        Iterator begin, Iterator end,
-        Proj proj) noexcept(std::is_nothrow_copy_constructible_v<Iterator>
-                                &&std::is_nothrow_copy_constructible_v<Proj>)
+    [[nodiscard]] explicit TransformView(Iterator begin, Iterator end, Proj proj)
         : begin_ {begin}, end_ {end}, proj_ {proj} {};
 
-    [[nodiscard]] auto begin() const
-        noexcept(std::is_nothrow_constructible_v<iterator_type, Iterator, Proj>)
-            -> iterator_type {
-        return iterator_type {begin_, proj_};
+    [[nodiscard]] auto begin() const {
+        return iterator_type {*this, begin_};
     }
 
-    [[nodiscard]] auto end() const
-        noexcept(std::is_nothrow_constructible_v<iterator_type, Iterator, Proj>)
-            -> iterator_type {
-        return iterator_type {end_, proj_};
+    [[nodiscard]] auto end() const -> iterator_type {
+        return iterator_type {*this, end_};
     }
 
     [[nodiscard]] auto size() const noexcept(noexcept(end_ - begin_)) ->
@@ -113,18 +108,12 @@ class TransformView {
 };
 
 template <typename Iterator, class Proj>
-[[nodiscard]] auto transform_view(Iterator begin, Iterator end, Proj proj) noexcept(
-    std::is_nothrow_constructible_v<TransformView<Iterator, Proj>, Iterator, Iterator,
-                                    Proj>) {
+[[nodiscard]] auto transform_view(Iterator begin, Iterator end, Proj proj) {
     return TransformView {begin, end, proj};
 }
 
 template <class Proj>
-[[nodiscard]] auto
-transform_view(std::ranges::input_range auto &&range, Proj proj) noexcept(
-    std::is_nothrow_constructible_v<
-        TransformView<decltype(std::ranges::begin(range)), Proj>,
-        decltype(std::ranges::begin(range)), decltype(std::ranges::begin(range)), Proj>) {
+[[nodiscard]] auto transform_view(std::ranges::input_range auto &&range, Proj proj) {
     return TransformView<decltype(std::ranges::begin(range)), Proj> {
         std::ranges::begin(range), std::ranges::end(range), proj};
 }

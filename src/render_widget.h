@@ -121,6 +121,8 @@ class WidgetRenderer : public QWidget {
             editable_circuit.add_standard_element(ElementType::or_element, 2,
                                                   point_t {5, 3});
             editable_circuit.add_wire(std::move(line_tree));
+
+            fmt::print("{}\n", editable_circuit);
         }
 
         // old behaviour
@@ -154,12 +156,13 @@ class WidgetRenderer : public QWidget {
 
         // TODO use gsl narrow
         auto end_time_ns = static_cast<uint64_t>(90'000 + animation_frame * 120'000);
-        const auto end_time = end_time_ns * 1ns;
-        simulation.run(end_time);
-        // simulation.run(time_t {125us});
-        //  simulation.run(time_t {130us});
-        // simulation.run(time_t {600us});
-        //  timer_.stop();
+        const auto end_time [[maybe_unused]] = end_time_ns * 1ns;
+        // simulation.run(end_time);
+
+        // simulation.run(125us);
+        //  simulation.run(130us);
+        simulation.run(600us);
+        timer_.stop();
 
         // create layout
         auto layout = Layout {};

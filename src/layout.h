@@ -36,6 +36,10 @@ class Layout {
 
     auto swap(Layout &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto format_element(element_id_t element_id) const -> std::string;
+
+    [[nodiscard]] auto empty() const -> bool;
+    [[nodiscard]] auto element_count() const -> std::size_t;
 
     auto add_default_element() -> element_id_t;
     auto add_wire(LineTree &&line_tree) -> element_id_t;

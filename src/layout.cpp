@@ -2,6 +2,8 @@
 #include "layout.h"
 
 #include "exceptions.h"
+#include "iterator.h"
+#include "range.h"
 
 namespace logicsim {
 
@@ -65,7 +67,29 @@ auto std::swap(logicsim::Layout &a, logicsim::Layout &b) noexcept -> void {
 namespace logicsim {
 
 auto Layout::format() const -> std::string {
-    return "Layout( ... )";
+    std::string inner {};
+    if (!empty()) {
+        const auto transform = transform_view(
+            range(element_count()), [this](std::size_t id) -> std::string {
+                return format_element(
+                    element_id_t {gsl::narrow<element_id_t::value_type>(id)});
+            });
+        inner = fmt::format(": [\n  {}\n]", fmt_join(transform, ",\n  "));
+    }
+    return fmt::format("<Layout with {} elements{}>", element_count(), inner);
+}
+
+auto Layout::format_element(element_id_t element_id) const -> std::string {
+    return fmt::format("<Element {}: {}, {}, {}>", element_id, position(element_id),
+                       orientation(element_id), line_tree(element_id));
+}
+
+auto Layout::empty() const -> bool {
+    return positions_.empty();
+}
+
+auto Layout::element_count() const -> std::size_t {
+    return positions_.size();
 }
 
 auto Layout::add_default_element() -> element_id_t {
