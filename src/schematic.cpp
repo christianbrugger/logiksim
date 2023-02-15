@@ -534,6 +534,11 @@ auto Schematic::ElementTemplate<Const>::element_type() const -> ElementType {
 }
 
 template <bool Const>
+auto Schematic::ElementTemplate<Const>::is_placeholder() const -> bool {
+    return element_type() == ElementType::placeholder;
+}
+
+template <bool Const>
 auto Schematic::ElementTemplate<Const>::input_count() const -> std::size_t {
     return element_data_().input_data.size();
 }

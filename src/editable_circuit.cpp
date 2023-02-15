@@ -1,6 +1,8 @@
 #include "editable_circuit.h"
 
+#include "algorithm.h"
 #include "exceptions.h"
+#include "iterator.h"
 #include "layout_calculations.h"
 
 #include <fmt/core.h>
@@ -8,6 +10,8 @@
 #include <algorithm>
 
 namespace logicsim {
+
+using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
 EditableCircuit::EditableCircuit(Schematic&& schematic, Layout&& layout)
     : schematic_ {std::move(schematic)}, layout_ {std::move(layout)} {}
@@ -55,28 +59,26 @@ auto EditableCircuit::add_placeholder_element() -> element_id_t {
 }
 
 auto EditableCircuit::add_inverter_element(point_t position,
-                                           DisplayOrientation orientation)
-    -> element_id_t {
-    return add_standard_element(ElementType::inverter_element, 1, position, orientation);
+                                           DisplayOrientation orientation) -> void {
+    add_standard_element(ElementType::inverter_element, 1, position, orientation);
 }
 
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
                                            point_t position,
-                                           DisplayOrientation orientation)
-    -> element_id_t {
+                                           DisplayOrientation orientation) -> void {
     using enum ElementType;
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {
         throw_exception("The type needs to be standard element.");
     }
-    if (type == inverter_element && input_count != 1) {
+    if (type == inverter_element && input_count != 1) [[unlikely]] {
         throw_exception("Inverter needs to have exactly one input.");
     }
     if (type != inverter_element && input_count < 2) [[unlikely]] {
         throw_exception("Input count needs to be at least 2 for standard elements.");
     }
 
-    const auto element_id = layout_.add_logic_element(position, orientation);
+    auto element_id = layout_.add_logic_element(position, orientation);
     {
         const auto element = schematic_.add_element({
             .element_type = type,
@@ -87,15 +89,14 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
             throw_exception("Added element ids don't match.");
         }
     }
-
-    return connect_new_element(element_id);
+    connect_new_element(element_id);
 }
 
-auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_id_t {
+auto EditableCircuit::add_wire(LineTree&& line_tree) -> void {
     auto delays = calculate_output_delays(line_tree);
     auto max_delay = std::ranges::max(delays);
 
-    const auto element_id = layout_.add_wire(std::move(line_tree));
+    auto element_id = layout_.add_wire(std::move(line_tree));
     {
         const auto element = schematic_.add_element({
             .element_type = ElementType::wire,
@@ -108,29 +109,89 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_id_t {
             throw_exception("Added element ids don't match.");
         }
     }
-
-    return connect_new_element(element_id);
+    connect_new_element(element_id);
 }
 
-auto EditableCircuit::swap_and_delete_element(element_id_t element_id) -> element_id_t {
-    auto last_id1 = schematic_.swap_and_delete_element(element_id);
-    auto last_id2 = layout_.swap_and_delete_element(element_id);
-
-    if (last_id1 != last_id2) {
-        throw_exception("Returned id's during deletion are not the same.");
+auto EditableCircuit::swap_and_delete_element(element_id_t element_id) -> void {
+    if (schematic_.element(element_id).is_placeholder()) {
+        throw_exception("cannot directly delete placeholders.");
     }
-    return last_id1;
+
+    auto delete_queue = delete_queue_t {element_id};
+
+    const auto is_placeholder = [](Schematic::Output output) {
+        return output.has_connected_element()
+               && output.connected_element().element_type() == ElementType::placeholder;
+    };
+    transform_if(schematic_.element(element_id).outputs(),
+                 std::back_inserter(delete_queue),
+                 &Schematic::Output::connected_element_id, is_placeholder);
+
+    swap_and_delete_multiple_elements(delete_queue);
 }
 
-auto EditableCircuit::swap_and_delete_elements(std::span<const element_id_t> element_ids)
-    -> void {
-    // sort descending
-    auto sorted_ids
-        = folly::small_vector<element_id_t, 6> {element_ids.begin(), element_ids.end()};
+auto EditableCircuit::swap_and_delete_multiple_elements(
+    std::span<const element_id_t> element_ids) -> void {
+    // sort descending, so we don't invalidate our ids
+    auto sorted_ids = delete_queue_t {element_ids.begin(), element_ids.end()};
     std::ranges::sort(sorted_ids, std::greater<> {});
 
     for (const auto element_id : sorted_ids) {
-        swap_and_delete_element(element_id);
+        swap_and_delete_single_element(element_id);
+    }
+}
+
+auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) -> void {
+    remove_cached_data(element_id);
+
+    // delete in underlying
+    auto last_id1 = schematic_.swap_and_delete_element(element_id);
+    auto last_id2 = layout_.swap_and_delete_element(element_id);
+    if (last_id1 != last_id2) {
+        throw_exception("Returned id's during deletion are not the same.");
+    }
+
+    update_cached_data(element_id, last_id1);
+}
+
+auto EditableCircuit::remove_cached_data(element_id_t element_id) -> void {
+    if (schematic_.element(element_id).is_placeholder()) {
+        return;
+    }
+
+    for_each_input_location_and_id(
+        schematic_, layout_, element_id, [&](connection_id_t input_id, point_t position) {
+            const auto it = input_connections_.find(position);
+            if (it == input_connections_.end() || it->second.element_id != element_id
+                || it->second.connection_id != input_id) [[unlikely]] {
+                throw_exception("unable to delete chached data that should be present.");
+            }
+            input_connections_.erase(it);
+        });
+
+    for_each_output_location_and_id(
+        schematic_, layout_, element_id,
+        [&](connection_id_t output_id, point_t position) {
+            const auto it = output_connections_.find(position);
+            if (it == output_connections_.end() || it->second.element_id != element_id
+                || it->second.connection_id != output_id) [[unlikely]] {
+                throw_exception("unable to delete chached data that should be present.");
+            }
+            output_connections_.erase(it);
+        });
+}
+
+auto EditableCircuit::update_cached_data(element_id_t new_element_id,
+                                         element_id_t old_element_id) -> void {
+    // TODO implement !!!
+}
+
+auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void {
+    for (const auto output : schematic_.element(element_id).outputs()) {
+        if (!output.has_connected_element()) {
+            auto placeholder_id = add_placeholder_element();
+            output.connect(schematic_.element(placeholder_id).input(connection_id_t {0}));
+        }
     }
 }
 
@@ -200,53 +261,38 @@ auto EditableCircuit::connect_output(Schematic::Output output, point_t position)
     return placeholder_id;
 }
 
-auto EditableCircuit::connect_new_element(element_id_t element_id) -> element_id_t {
-    folly::small_vector<element_id_t, 6> delete_queue {};
+auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
+    auto delete_queue = delete_queue_t {};
 
     // connect inputs
-    for_each_input_locations(
+    for_each_input_location_and_id(
         schematic_, layout_, element_id,
-        [&, element_id, input_id = connection_id_t {0}](point_t position) mutable {
+        [&, element_id](connection_id_t input_id, point_t position) {
             const auto input = schematic_.element(element_id).input(input_id);
 
-            const auto placeholder_id = connect_input(input, position);
-            if (placeholder_id.has_value()) {
+            if (const auto placeholder_id = connect_input(input, position);
+                placeholder_id.has_value()) {
                 delete_queue.push_back(placeholder_id.value());
             }
-
-            ++input_id;
         });
 
     // connect outputs
-    for_each_output_locations(
+    for_each_output_location_and_id(
         schematic_, layout_, element_id,
-        [&, element_id, output_id = connection_id_t {0}](point_t position) mutable {
+        [&, element_id](connection_id_t output_id, point_t position) mutable {
             const auto output = schematic_.element(element_id).output(output_id);
 
-            const auto placeholder_id = connect_output(output, position);
-            if (placeholder_id.has_value()) {
+            if (const auto placeholder_id = connect_output(output, position);
+                placeholder_id.has_value()) {
                 delete_queue.push_back(placeholder_id.value());
             }
-
-            ++output_id;
         });
 
     add_missing_placeholders(element_id);
 
     // this invalidates our element_id
-    swap_and_delete_elements(delete_queue);
-
-    // TODO implement if needed
-    return null_element;
-}
-
-auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void {
-    for (const auto output : schematic_.element(element_id).outputs()) {
-        if (!output.has_connected_element()) {
-            auto placeholder_id = add_placeholder_element();
-            output.connect(schematic_.element(placeholder_id).input(connection_id_t {0}));
-        }
-    }
+    swap_and_delete_multiple_elements(delete_queue);
+    element_id = null_element;
 }
 
 }  // namespace logicsim

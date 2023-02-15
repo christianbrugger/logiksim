@@ -301,6 +301,7 @@ class Schematic::ElementTemplate {
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
 
     [[nodiscard]] auto element_type() const -> ElementType;
+    [[nodiscard]] auto is_placeholder() const -> bool;
     [[nodiscard]] auto input_count() const -> std::size_t;
     [[nodiscard]] auto output_count() const -> std::size_t;
 

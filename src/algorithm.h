@@ -199,7 +199,7 @@ auto transform_if(IteratorFirst first1, IteratorLast last1, OutputIterator resul
                   Proj proj, Pred pred) -> OutputIterator {
     while (first1 != last1) {
         if (pred(*first1)) {
-            *result = proj(*first1);
+            *result = std::invoke(proj, *first1);
             ++result;
         }
         ++first1;

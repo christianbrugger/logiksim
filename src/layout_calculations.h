@@ -20,8 +20,8 @@ auto require_output_count(Schematic::ConstElement element, std::size_t count) ->
                              point_t offset) -> point_t;
 
 template <typename Func>
-auto for_each_input_locations(const Schematic &schematic, const Layout &layout,
-                              element_id_t element_id, Func next_input) -> void {
+auto for_each_input_location(const Schematic &schematic, const Layout &layout,
+                             element_id_t element_id, Func next_input) -> void {
     const auto element = schematic.element(element_id);
     const auto orientation = layout.orientation(element_id);
 
@@ -104,8 +104,8 @@ auto for_each_input_locations(const Schematic &schematic, const Layout &layout,
 }
 
 template <typename Func>
-auto for_each_output_locations(const Schematic &schematic, const Layout &layout,
-                               element_id_t element_id, Func next_output) -> void {
+auto for_each_output_location(const Schematic &schematic, const Layout &layout,
+                              element_id_t element_id, Func next_output) -> void {
     const auto element = schematic.element(element_id);
     const auto orientation = layout.orientation(element_id);
 
@@ -183,6 +183,30 @@ auto for_each_output_locations(const Schematic &schematic, const Layout &layout,
         }
     }
     throw_exception("'Don't know to calculate output locations.");
+}
+
+/// next_input(connection_id_t input_id, point_t position) -> void;
+template <typename Func>
+auto for_each_input_location_and_id(const Schematic &schematic, const Layout &layout,
+                                    element_id_t element_id, Func next_input) -> void {
+    for_each_input_location(
+        schematic, layout, element_id,
+        [&, input_id = connection_id_t {0}](point_t position) mutable {
+            next_input(input_id, position);
+            ++input_id;
+        });
+}
+
+/// next_output(connection_id_t output_id, point_t position) -> void;
+template <typename Func>
+auto for_each_output_location_and_id(const Schematic &schematic, const Layout &layout,
+                                     element_id_t element_id, Func next_output) -> void {
+    for_each_output_location(
+        schematic, layout, element_id,
+        [&, output_id = connection_id_t {0}](point_t position) mutable {
+            next_output(output_id, position);
+            ++output_id;
+        });
 }
 
 }  // namespace logicsim

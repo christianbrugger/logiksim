@@ -127,6 +127,7 @@ class WidgetRenderer : public QWidget {
             editable_circuit.add_standard_element(ElementType::or_element, 2,
                                                   point_t {15, 3});
             editable_circuit.add_wire(std::move(line_tree));
+            editable_circuit.swap_and_delete_element(element_id_t {2});
 
             fmt::print("{}\n", editable_circuit);
             editable_circuit.schematic().validate(Schematic::validate_all);
