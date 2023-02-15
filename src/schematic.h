@@ -123,12 +123,28 @@ class Schematic {
     auto add_element(ElementType type, std::size_t input_count, std::size_t output_count)
         -> Element;
     auto add_element(NewElementData &&data) -> Element;
+    // swaps the element with last one and deletes it
+    auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
 
     auto clear() -> void;
-    void validate(bool require_all_outputs_connected = false) const;
+
+    struct ValidationSettings {
+        bool require_all_outputs_connected {false};
+        bool require_all_placeholders_connected {false};
+    };
+
+    constexpr static auto validate_all = ValidationSettings {true, true};
+
+    void validate(ValidationSettings settings = {}) const;
 
    private:
-    static void validate_connection_data_(Schematic::ConnectionData connection_data);
+    static auto validate_connection_data_(Schematic::ConnectionData connection_data)
+        -> void;
+    auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2,
+                           bool update_connections) -> void;
+    auto update_swapped_connections(element_id_t new_element_id,
+                                    element_id_t old_element_id) -> void;
+    auto delete_last_element(bool clear_connections) -> void;
 
     // TODO add packing
     // TODO use vocabulary type?
@@ -294,6 +310,9 @@ class Schematic::ElementTemplate {
     [[nodiscard]] auto inputs() const -> InputViewTemplate<Const>;
     [[nodiscard]] auto outputs() const -> OutputViewTemplate<Const>;
 
+    auto clear_all_connection() const -> void
+        requires(!Const);
+
    private:
     [[nodiscard]] auto element_data_() const -> ElementDataType &;
 
@@ -388,6 +407,8 @@ class Schematic::InputTemplate {
     template <bool ConstOther>
     auto operator==(InputTemplate<ConstOther> other) const noexcept -> bool;
 
+    [[nodiscard]] operator connection_t() const noexcept;
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_connection() const -> std::string;
 
@@ -437,6 +458,8 @@ class Schematic::OutputTemplate {
 
     template <bool ConstOther>
     auto operator==(OutputTemplate<ConstOther> other) const noexcept -> bool;
+
+    [[nodiscard]] operator connection_t() const noexcept;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_connection() const -> std::string;

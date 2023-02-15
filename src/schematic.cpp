@@ -47,6 +47,49 @@ auto Schematic::swap(Schematic &other) noexcept -> void {
     swap(circuit_id_, other.circuit_id_);
 }
 
+auto Schematic::swap_element_data(element_id_t element_id_1, element_id_t element_id_2,
+                                  bool update_connections) -> void {
+    if (element_id_1 == element_id_2) {
+        return;
+    }
+
+    const auto swap_ids = [element_id_1, element_id_2](auto &container) {
+        using std::swap;
+        swap(container.at(element_id_1.value), container.at(element_id_2.value));
+    };
+
+    swap_ids(element_data_store_);
+
+    swap_ids(input_connections_);
+    swap_ids(output_connections_);
+    swap_ids(sub_circuit_ids_);
+    swap_ids(element_types_);
+    swap_ids(input_inverters_);
+    swap_ids(output_delays_);
+    swap_ids(history_lengths_);
+
+    if (update_connections) {
+        update_swapped_connections(element_id_1, element_id_2);
+        update_swapped_connections(element_id_2, element_id_1);
+    }
+}
+
+auto Schematic::delete_last_element(bool clear_connections) -> void {
+    if (empty()) {
+        throw_exception("Cannot delete last element of empty schematics.");
+    }
+
+    element_data_store_.pop_back();
+
+    input_connections_.pop_back();
+    output_connections_.pop_back();
+    sub_circuit_ids_.pop_back();
+    element_types_.pop_back();
+    input_inverters_.pop_back();
+    output_delays_.pop_back();
+    history_lengths_.pop_back();
+}
+
 auto swap(Schematic &a, Schematic &b) noexcept -> void {
     a.swap(b);
 }
@@ -195,6 +238,61 @@ auto Schematic::add_element(NewElementData &&data) -> Element {
     return element(element_id);
 }
 
+auto Schematic::swap_and_delete_element(element_id_t element_id) -> element_id_t {
+    const auto last_element_id = element_id_t {
+        gsl::narrow_cast<element_id_t::value_type>(element_count() - std::size_t {1})};
+
+    element(element_id).clear_all_connection();
+
+    if (element_id != last_element_id) {
+        swap_element_data(element_id, last_element_id, false);
+        update_swapped_connections(element_id, last_element_id);
+    }
+
+    delete_last_element(false);
+    return last_element_id;
+}
+
+auto Schematic::update_swapped_connections(element_id_t new_element_id,
+                                           element_id_t old_element_id) -> void {
+    if (new_element_id == old_element_id) {
+        return;
+    }
+
+    const auto old_element = element(old_element_id);
+    const auto new_element = element(new_element_id);
+
+    for (auto input : new_element.inputs()) {
+        if (input.has_connected_element()) {
+            if (input.connected_element_id() == old_element_id) {
+                // self connection?
+                input.connect(new_element.output(input.connected_output_index()));
+            } else if (input.connected_element_id() == new_element_id) {
+                // swapped connection?
+                input.connect(old_element.output(input.connected_output_index()));
+            } else {
+                // fix back connection
+                input.connect(input.connected_output());
+            }
+        }
+    }
+
+    for (auto output : new_element.outputs()) {
+        if (output.has_connected_element()) {
+            if (output.connected_element_id() == old_element_id) {
+                // self connection?
+                output.connect(new_element.input(output.connected_input_index()));
+            } else if (output.connected_element_id() == new_element_id) {
+                // swapped connection?
+                output.connect(old_element.input(output.connected_input_index()));
+            } else {
+                // fix back connection
+                output.connect(output.connected_input());
+            }
+        }
+    }
+}
+
 auto Schematic::clear() -> void {
     element_data_store_.clear();
     input_count_ = 0;
@@ -209,6 +307,12 @@ auto Schematic::output_count() const noexcept -> std::size_t {
     return output_count_;
 }
 
+auto validate_input_connected(const Schematic::ConstInput input) -> void {
+    if (!input.has_connected_element()) [[unlikely]] {
+        throw_exception("Element has unconnected input.");
+    }
+}
+
 auto validate_output_connected(const Schematic::ConstOutput output) -> void {
     if (!output.has_connected_element()) [[unlikely]] {
         throw_exception("Element has unconnected output.");
@@ -217,6 +321,13 @@ auto validate_output_connected(const Schematic::ConstOutput output) -> void {
 
 auto validate_outputs_connected(const Schematic::ConstElement element) -> void {
     std::ranges::for_each(element.outputs(), validate_output_connected);
+}
+
+auto validate_placeholder_connected(const Schematic::ConstElement element) -> void {
+    if (element.element_type() == ElementType::placeholder) {
+        std::ranges::for_each(element.inputs(), validate_input_connected);
+        std::ranges::for_each(element.outputs(), validate_output_connected);
+    }
 }
 
 auto validate_input_consistent(const Schematic::ConstInput input) -> void {
@@ -246,6 +357,7 @@ auto validate_element_connections_consistent(const Schematic::ConstElement eleme
     std::ranges::for_each(element.outputs(), validate_output_consistent);
 }
 
+// TODO make free method when we remove ConnectionData
 auto Schematic::validate_connection_data_(const Schematic::ConnectionData connection_data)
     -> void {
     if (connection_data.element_id != null_element
@@ -259,45 +371,27 @@ auto Schematic::validate_connection_data_(const Schematic::ConnectionData connec
     }
 }
 
-auto Schematic::validate(bool require_all_outputs_connected) const -> void {
-    // TODO do we need this still?
-    // TODO What else shall we check?
+auto Schematic::validate(ValidationSettings settings) const -> void {
+    for (const auto &data : element_data_store_) {
+        std::ranges::for_each(data.input_data, Schematic::validate_connection_data_);
+        std::ranges::for_each(data.output_data, Schematic::validate_connection_data_);
+    }
 
-    //  every output_data entry is referenced once
-    // std::vector<int> input_reference_count(input_count(), 0);
-    // for (auto element : elements()) {
-    //    for (auto input : element.inputs()) {
-    //        input_reference_count.at(input.input_id()) += 1;
-    //    }
-    //}
-    // if (!all_equal(input_reference_count, 1)) [[unlikely]] {
-    //    throw_exception("Input data is inconsistent");
-    //}
-    //
-    //  every output_data entry is referenced once
-    // std::vector<int> output_reference_count(output_count(), 0);
-    // for (auto element : elements()) {
-    //    for (auto output : element.outputs()) {
-    //        output_reference_count.at(output.output_id()) += 1;
-    //    }
-    //}
-    // if (!all_equal(output_reference_count, 1)) [[unlikely]] {
-    //    throw_exception("Output data is inconsistent");
-    //}
-
-    // connection data valid
-    // TODO impelement
-    // std::ranges::for_each(input_data_store_, Schematic::validate_connection_data_);
-    // std::ranges::for_each(output_data_store_,
-    // Schematic::validate_connection_data_);
-
-    // back references consistent
     std::ranges::for_each(elements(), validate_element_connections_consistent);
 
-    // all outputs connected
-    if (require_all_outputs_connected) {
+    if (settings.require_all_outputs_connected) {
         std::ranges::for_each(elements(), validate_outputs_connected);
     }
+
+    if (settings.require_all_placeholders_connected) {
+        std::ranges::for_each(elements(), validate_placeholder_connected);
+    }
+
+    // TODO check new data members
+    // * sub_circuit_ids_
+    // * input_inverters_
+    // * output_delays_
+    // * history_lengths_
 }
 
 //
@@ -474,6 +568,14 @@ inline auto Schematic::ElementTemplate<Const>::outputs() const
 }
 
 template <bool Const>
+void Schematic::ElementTemplate<Const>::clear_all_connection() const
+    requires(!Const)
+{
+    std::ranges::for_each(inputs(), &Input::clear_connection);
+    std::ranges::for_each(outputs(), &Output::clear_connection);
+}
+
+template <bool Const>
 auto Schematic::ElementTemplate<Const>::element_data_() const -> ElementDataType & {
     return schematic_->element_data_store_.at(element_id_.value);
 }
@@ -622,6 +724,11 @@ auto Schematic::InputTemplate<Const>::operator==(
 }
 
 template <bool Const>
+Schematic::InputTemplate<Const>::operator connection_t() const noexcept {
+    return {element_id(), input_index()};
+}
+
+template <bool Const>
 auto Schematic::InputTemplate<Const>::format() const -> std::string {
     const auto element = this->element();
     return fmt::format("<Input {} of Element {}: {} {} x {}>", input_index(),
@@ -708,6 +815,9 @@ void Schematic::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output)
     requires(!Const)
 {
     clear_connection();
+    schematic_->output(output).clear_connection();
+    assert(!has_connected_element());
+    assert(!output.has_connected_element());
 
     // get data before we modify anything, for exception safety
     auto &destination_connection_data
@@ -775,6 +885,11 @@ auto Schematic::OutputTemplate<Const>::operator==(
     Schematic::OutputTemplate<ConstOther> other) const noexcept -> bool {
     return schematic_ == other.schematic_ && element_id_ == other.element_id_
            && output_index_ == other.output_index_;
+}
+
+template <bool Const>
+Schematic::OutputTemplate<Const>::operator connection_t() const noexcept {
+    return {element_id(), output_index()};
 }
 
 template <bool Const>
@@ -864,6 +979,9 @@ void Schematic::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) 
     requires(!Const)
 {
     clear_connection();
+    schematic_->input(input).clear_connection();
+    assert(!has_connected_element());
+    assert(!input.has_connected_element());
 
     // get data before we modify anything, for exception safety
     auto &connection_data {connection_data_()};

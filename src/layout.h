@@ -41,13 +41,18 @@ class Layout {
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto element_count() const -> std::size_t;
 
+    // TODO make add_default_element private when not needed anymore
     auto add_default_element() -> element_id_t;
+
+    auto add_placeholder() -> element_id_t;
     auto add_wire(LineTree &&line_tree) -> element_id_t;
     auto add_logic_element(point_t position,
                            DisplayOrientation orientation
                            = DisplayOrientation::default_right,
                            DisplayState display_state = DisplayState::normal,
                            color_t color = defaults::color_black) -> element_id_t;
+    // swaps the element with last one and deletes it
+    auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
 
     // TODO remove these, when not needed anymore
     auto set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void;
@@ -61,6 +66,9 @@ class Layout {
     [[nodiscard]] auto color(element_id_t element_id) const -> color_t;
 
    private:
+    auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
+    auto delete_last_element() -> void;
+
     std::vector<LineTree> line_trees_ {};
     std::vector<point_t> positions_ {};
     std::vector<DisplayOrientation> orientation_ {};

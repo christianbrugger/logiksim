@@ -969,7 +969,7 @@ auto benchmark_simulation(const int n_elements, const int n_events, const bool p
         fmt::print("{}\n", schematic);
     }
     add_output_placeholders(schematic);
-    schematic.validate(true);
+    schematic.validate(Schematic::validate_all);
 
     return benchmark_simulation(rng, schematic, n_events, print);
 }

@@ -114,18 +114,22 @@ class WidgetRenderer : public QWidget {
             = EditableCircuit {circuit_index.borrow_schematic(circuit_id),
                                circuit_index.borrow_layout(circuit_id)};
         {
-            // auto tree1 = LineTree({point_t {7, 3}, point_t {10, 3}, point_t {10, 1}});
-            // auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
-            //                        point_t {4, 4}, point_t {5, 4}});
-            auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8, 12}});
-            auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12}, point_t {12, 14}});
+            auto tree1 = LineTree({point_t {7, 3}, point_t {10, 3}, point_t {10, 1}});
+            auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
+                                   point_t {4, 4}, point_t {5, 4}});
+            // auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8,
+            // 12}}); auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12}, point_t
+            // {12, 14}});
             auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
 
             editable_circuit.add_standard_element(ElementType::or_element, 2,
                                                   point_t {5, 3});
+            editable_circuit.add_standard_element(ElementType::or_element, 2,
+                                                  point_t {15, 3});
             editable_circuit.add_wire(std::move(line_tree));
 
             fmt::print("{}\n", editable_circuit);
+            editable_circuit.schematic().validate(Schematic::validate_all);
         }
 
         // old behaviour

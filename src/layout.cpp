@@ -53,6 +53,36 @@ auto Layout::swap(Layout &other) noexcept -> void {
     swap(circuit_id_, other.circuit_id_);
 }
 
+auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_id_2)
+    -> void {
+    if (element_id_1 == element_id_2) {
+        return;
+    }
+
+    const auto swap_ids = [element_id_1, element_id_2](auto &container) {
+        using std::swap;
+        swap(container.at(element_id_1.value), container.at(element_id_2.value));
+    };
+
+    swap_ids(line_trees_);
+    swap_ids(positions_);
+    swap_ids(orientation_);
+    swap_ids(display_states_);
+    swap_ids(colors_);
+}
+
+auto Layout::delete_last_element() -> void {
+    if (empty()) {
+        throw_exception("Cannot delete last element of empty schematics.");
+    }
+
+    line_trees_.pop_back();
+    positions_.pop_back();
+    orientation_.pop_back();
+    display_states_.pop_back();
+    colors_.pop_back();
+}
+
 auto swap(Layout &a, Layout &b) noexcept -> void {
     a.swap(b);
 }
@@ -103,6 +133,11 @@ auto Layout::add_default_element() -> element_id_t {
         gsl::narrow_cast<element_id_t::value_type>(positions_.size() - std::size_t {1})};
 }
 
+auto Layout::add_placeholder() -> element_id_t {
+    const auto id = add_default_element();
+    return id;
+}
+
 auto Layout::add_wire(LineTree &&line_tree) -> element_id_t {
     const auto id = add_default_element();
 
@@ -122,6 +157,15 @@ auto Layout::add_logic_element(point_t position, DisplayOrientation orientation,
     colors_.back() = color;
 
     return id;
+}
+
+auto Layout::swap_and_delete_element(element_id_t element_id) -> element_id_t {
+    const auto last_element_id = element_id_t {
+        gsl::narrow_cast<element_id_t::value_type>(element_count() - std::size_t {1})};
+
+    swap_element_data(element_id, last_element_id);
+    delete_last_element();
+    return last_element_id;
 }
 
 auto Layout::set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void {
