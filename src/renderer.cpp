@@ -15,11 +15,6 @@
 
 namespace logicsim {
 
-auto draw_background(BLContext& ctx) -> void {
-    ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
-    ctx.fillAll();
-}
-
 auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
     return v0.value + (v1.value - v0.value) * ratio;
 }
@@ -216,12 +211,9 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
 
 auto render_circuit(BLContext& ctx, const Layout& layout, const Simulation& simulation,
                     const RenderSettings& settings) -> void {
+    // TODO move globally
     ctx.postTranslate(BLPoint(0.5, 0.5));
     ctx.postScale(1);
-
-    if (settings.render_background) {
-        draw_background(ctx);
-    }
 
     for (auto element : simulation.schematic().elements()) {
         auto type = element.element_type();
@@ -231,6 +223,57 @@ auto render_circuit(BLContext& ctx, const Layout& layout, const Simulation& simu
         } else if (type != ElementType::placeholder) {
             draw_standard_element(ctx, element, layout, simulation);
         }
+    }
+}
+
+auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
+    ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
+    ctx.fillAll();
+}
+
+auto render_point_shape(BLContext& ctx, point_t point, PointShape shape, double size,
+                        const RenderSettings& settings) -> void {
+    switch (shape) {
+        using enum PointShape;
+
+        case circle: {
+            const auto cx = point.x * settings.scale;
+            const auto cy = point.y * settings.scale;
+            const auto r = size;
+
+            ctx.strokeCircle(BLCircle {cx, cy, r});
+            return;
+        }
+        case cross: {
+            const auto x = point.x * settings.scale;
+            const auto y = point.y * settings.scale;
+            const auto d = size;
+
+            ctx.strokeLine(BLLine {x - d, y - d, x + d, y + d});
+            ctx.strokeLine(BLLine {x - d, y + d, x + d, y - d});
+            return;
+        }
+    }
+
+    throw_exception("unknown shape type.");
+}
+
+auto set_point_style(BLContext& ctx, color_t color) {
+    ctx.setStrokeWidth(1);
+    ctx.setStrokeStyle(BLRgba32(color.value));
+}
+
+auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
+                  double size, const RenderSettings& settings) -> void {
+    set_point_style(ctx, color);
+    render_point_shape(ctx, point, shape, size, settings);
+}
+
+auto render_points(BLContext& ctx, std::span<const point_t> points, PointShape shape,
+                   color_t color, double size, const RenderSettings& settings) -> void {
+    set_point_style(ctx, color);
+    for (auto point : points) {
+        render_point_shape(ctx, point, shape, size, settings);
     }
 }
 

@@ -6,6 +6,8 @@
 
 #include <ankerl/unordered_dense.h>
 
+#include <vector>
+
 namespace logicsim {
 
 class EditableCircuit {
@@ -16,6 +18,9 @@ class EditableCircuit {
 
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto layout() const noexcept -> const Layout &;
+
+    [[nodiscard]] auto copy_input_positions() -> std::vector<point_t>;
+    [[nodiscard]] auto copy_output_positions() -> std::vector<point_t>;
 
     auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
                               DisplayOrientation orientation

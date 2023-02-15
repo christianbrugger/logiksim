@@ -114,6 +114,9 @@ class WidgetRenderer : public QWidget {
             = EditableCircuit {circuit_index.borrow_schematic(circuit_id),
                                circuit_index.borrow_layout(circuit_id)};
         {
+            // auto tree1 = LineTree({point_t {7, 3}, point_t {10, 3}, point_t {10, 1}});
+            // auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
+            //                        point_t {4, 4}, point_t {5, 4}});
             auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8, 12}});
             auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12}, point_t {12, 14}});
             auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
@@ -159,9 +162,9 @@ class WidgetRenderer : public QWidget {
         const auto end_time [[maybe_unused]] = end_time_ns * 1ns;
         // simulation.run(end_time);
 
-        // simulation.run(125us);
-        //  simulation.run(130us);
-        simulation.run(600us);
+        simulation.run(125us);
+        // simulation.run(130us);
+        // simulation.run(600us);
         timer_.stop();
 
         // create layout
@@ -179,9 +182,23 @@ class WidgetRenderer : public QWidget {
         // int w = qt_image.width();
         // int h = qt_image.height();
 
+        RenderSettings settings {};
+
         bl_ctx.begin(bl_image, bl_info);
         // renderFrame(bl_ctx);
-        render_circuit(bl_ctx, layout, simulation);
+        render_background(bl_ctx, settings);
+        render_circuit(bl_ctx, layout, simulation, settings);
+
+        {
+            const auto inputs = editable_circuit.copy_input_positions();
+            const auto outputs = editable_circuit.copy_output_positions();
+            const auto size = settings.scale * (1.0 / 3.0);
+            render_points(bl_ctx, inputs, PointShape::circle, defaults::color_green, size,
+                          settings);
+            render_points(bl_ctx, outputs, PointShape::cross, defaults::color_green, size,
+                          settings);
+        }
+
         bl_ctx.end();
 
         QPainter painter(this);

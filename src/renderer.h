@@ -23,11 +23,21 @@
 namespace logicsim {
 
 struct RenderSettings {
-    bool render_background {true};
+    double scale {12.0};
 };
 
+auto render_background(BLContext& ctx, const RenderSettings& settings = {}) -> void;
+
+enum class PointShape { circle, cross };
+
+auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
+                  double size, const RenderSettings& settings = {}) -> void;
+auto render_points(BLContext& ctx, std::span<const point_t> points, PointShape shape,
+                   color_t color, double size, const RenderSettings& settings = {})
+    -> void;
+
 auto render_circuit(BLContext& ctx, const Layout& layout, const Simulation& simulation,
-                    const RenderSettings& settings = RenderSettings {}) -> void;
+                    const RenderSettings& settings = {}) -> void;
 
 struct BenchmarkScene {
    public:

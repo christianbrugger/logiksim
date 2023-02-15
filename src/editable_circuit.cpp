@@ -24,6 +24,16 @@ auto EditableCircuit::schematic() const noexcept -> const Schematic& {
     return schematic_;
 }
 
+auto EditableCircuit::copy_input_positions() -> std::vector<point_t> {
+    return transform_to_vector(input_connections_,
+                               [](auto value) { return value.first; });
+}
+
+auto EditableCircuit::copy_output_positions() -> std::vector<point_t> {
+    return transform_to_vector(output_connections_,
+                               [](auto value) { return value.first; });
+}
+
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
                                            point_t position,
                                            DisplayOrientation orientation) -> void {
