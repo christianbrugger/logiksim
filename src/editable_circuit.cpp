@@ -13,6 +13,137 @@ namespace logicsim {
 
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
+//
+// ConnectionIndex
+//
+
+// TODO implementent rendering here instead
+
+// auto EditableCircuit::copy_input_positions() -> std::vector<point_t> {
+//     return transform_to_vector(input_connections_,
+//                                [](auto value) { return value.first; });
+// }
+//
+// auto EditableCircuit::copy_output_positions() -> std::vector<point_t> {
+//     return transform_to_vector(output_connections_,
+//                                [](auto value) { return value.first; });
+// }
+
+auto get_and_verify_cache_entry(ConnectionIndex<true>::map_type& map, point_t position,
+                                element_id_t element_id, connection_id_t connection_id)
+    -> ConnectionIndex<true>::map_type::iterator {
+    const auto it = map.find(position);
+    if (it == map.end() || it->second.element_id != element_id
+        || it->second.connection_id != connection_id) [[unlikely]] {
+        throw_exception("unable to find chached data that should be present.");
+    }
+    return it;
+}
+
+template <bool IsInput>
+auto ConnectionIndex<IsInput>::add(element_id_t element_id, const Schematic& schematic,
+                                   const Layout& layout) -> void {
+    // placeholders are not cached
+    if (schematic.element(element_id).is_placeholder()) {
+        return;
+    }
+
+    const auto add_position = [&](connection_id_t con_id, point_t position) {
+        if (connections_.contains(position)) [[unlikely]] {
+            throw_exception("index already has an entry at this position");
+        }
+        connections_[position] = {element_id, con_id};
+    };
+
+    if constexpr (IsInput) {
+        for_each_input_location_and_id(schematic, layout, element_id, add_position);
+    } else {
+        for_each_output_location_and_id(schematic, layout, element_id, add_position);
+    }
+}
+
+template <bool IsInput>
+auto ConnectionIndex<IsInput>::remove(element_id_t element_id, const Schematic& schematic,
+                                      const Layout& layout) -> void {
+    // placeholders are not cached
+    if (schematic.element(element_id).is_placeholder()) {
+        return;
+    }
+
+    const auto remove_position = [&](connection_id_t con_id, point_t position) {
+        auto it = get_and_verify_cache_entry(connections_, position, element_id, con_id);
+        connections_.erase(it);
+    };
+
+    if constexpr (IsInput) {
+        for_each_input_location_and_id(schematic, layout, element_id, remove_position);
+    } else {
+        for_each_output_location_and_id(schematic, layout, element_id, remove_position);
+    }
+}
+
+template <bool IsInput>
+auto ConnectionIndex<IsInput>::update_element_id(element_id_t new_element_id,
+                                                 element_id_t old_element_id,
+                                                 const Schematic& schematic,
+                                                 const Layout& layout) -> void {
+    // placeholders are not cached
+    if (schematic.element(new_element_id).is_placeholder()) {
+        return;
+    }
+
+    const auto update_id = [&](connection_id_t connection_id, point_t position) {
+        auto it = get_and_verify_cache_entry(connections_, position, old_element_id,
+                                             connection_id);
+        it->second.element_id = new_element_id;
+    };
+
+    if constexpr (IsInput) {
+        for_each_input_location_and_id(schematic, layout, new_element_id, update_id);
+    } else {
+        for_each_output_location_and_id(schematic, layout, new_element_id, update_id);
+    }
+}
+
+template <bool IsInput>
+auto ConnectionIndex<IsInput>::find(point_t position) const
+    -> std::optional<connection_t> {
+    if (const auto it = connections_.find(position); it != connections_.end()) {
+        return {it->second};
+    }
+    return std::nullopt;
+}
+
+template <bool IsInput>
+auto ConnectionIndex<IsInput>::find(point_t position, Schematic& schematic) const
+    -> std::optional<connection_proxy> {
+    if (auto res = find(position)) {
+        if constexpr (IsInput) {
+            return schematic.input(*res);
+        } else {
+            return schematic.output(*res);
+        }
+    }
+    return std::nullopt;
+}
+
+template <bool IsInput>
+auto ConnectionIndex<IsInput>::find(point_t position, const Schematic& schematic) const
+    -> std::optional<const_connection_proxy> {
+    if (auto res = find(position)) {
+        if constexpr (IsInput) {
+            return schematic.input(*res);
+        } else {
+            return schematic.output(*res);
+        }
+    }
+    return std::nullopt;
+}
+
+//
+// Editable Circuit
+//
+
 EditableCircuit::EditableCircuit(Schematic&& schematic, Layout&& layout)
     : schematic_ {std::move(schematic)}, layout_ {std::move(layout)} {}
 
@@ -28,11 +159,13 @@ auto EditableCircuit::schematic() const noexcept -> const Schematic& {
     return schematic_;
 }
 
+// TODO remove
 auto EditableCircuit::copy_input_positions() -> std::vector<point_t> {
     return transform_to_vector(input_connections_,
                                [](auto value) { return value.first; });
 }
 
+// TODO remove
 auto EditableCircuit::copy_output_positions() -> std::vector<point_t> {
     return transform_to_vector(output_connections_,
                                [](auto value) { return value.first; });
@@ -154,15 +287,18 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
     update_cached_data(element_id, last_id1);
 }
 
-auto get_and_verify_cache_entry(EditableCircuit::connection_map_t& map, point_t position,
-                                element_id_t element_id, connection_id_t connection_id) {
-    const auto it = map.find(position);
-    if (it == map.end() || it->second.element_id != element_id
-        || it->second.connection_id != connection_id) [[unlikely]] {
-        throw_exception("unable to delete chached data that should be present.");
-    }
-    return it;
-}
+// auto get_and_verify_cache_entry(EditableCircuit::connection_map_t& map, point_t
+// position,
+//                                 element_id_t element_id, connection_id_t
+//                                 connection_id)
+//                                 {
+//     const auto it = map.find(position);
+//     if (it == map.end() || it->second.element_id != element_id
+//         || it->second.connection_id != connection_id) [[unlikely]] {
+//         throw_exception("unable to find chached data that should be present.");
+//     }
+//     return it;
+// }
 
 auto EditableCircuit::remove_cached_data(element_id_t element_id) -> void {
     // placeholders are not cached

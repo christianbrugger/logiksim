@@ -10,6 +10,34 @@
 
 namespace logicsim {
 
+template <bool IsInput>
+class ConnectionIndex {
+   public:
+    using map_type = ankerl::unordered_dense::map<point_t, connection_t>;
+
+   public:
+    using connection_proxy
+        = std::conditional_t<IsInput, Schematic::Input, Schematic::Output>;
+    using const_connection_proxy
+        = std::conditional_t<IsInput, Schematic::Input, Schematic::Output>;
+
+    auto add(element_id_t element_id, const Schematic &schematic, const Layout &layout)
+        -> void;
+    auto remove(element_id_t element_id, const Schematic &schematic, const Layout &layout)
+        -> void;
+    auto update_element_id(element_id_t new_element_id, element_id_t old_element_id,
+                           const Schematic &schematic, const Layout &layout) -> void;
+
+    auto find(point_t position) const -> std::optional<connection_t>;
+    auto find(point_t position, Schematic &schematic) const
+        -> std::optional<connection_proxy>;
+    auto find(point_t position, const Schematic &schematic) const
+        -> std::optional<const_connection_proxy>;
+
+   private:
+    map_type connections_;
+};
+
 class EditableCircuit {
    public:
     // Make private and move to connection cache class
