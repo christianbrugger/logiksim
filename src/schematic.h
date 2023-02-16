@@ -133,9 +133,10 @@ class Schematic {
         bool require_all_placeholders_connected {false};
     };
 
+    constexpr static auto validate_basic = ValidationSettings {false, false};
     constexpr static auto validate_all = ValidationSettings {true, true};
 
-    void validate(ValidationSettings settings = {}) const;
+    void validate(ValidationSettings settings = validate_basic) const;
 
    private:
     static auto validate_connection_data_(Schematic::ConnectionData connection_data)

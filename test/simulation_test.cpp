@@ -60,14 +60,14 @@ TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
 
 [[nodiscard]] auto get_uninitialized_simulation(Schematic& schematic) -> Simulation {
     add_output_placeholders(schematic);
-    schematic.validate(true);
+    schematic.validate(Schematic::validate_all);
 
     return Simulation {schematic};
 }
 
 [[nodiscard]] auto get_initialized_simulation(Schematic& schematic) -> Simulation {
     add_output_placeholders(schematic);
-    schematic.validate(true);
+    schematic.validate(Schematic::validate_all);
 
     Simulation simulation {schematic};
     simulation.initialize();

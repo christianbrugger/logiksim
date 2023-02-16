@@ -221,7 +221,7 @@ TEST(Schematic, TestPlaceholders) {
               ElementType::placeholder);
 
     schematic.validate();
-    schematic.validate(true);
+    schematic.validate(Schematic::validate_all);
 }
 
 //

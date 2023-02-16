@@ -25,14 +25,16 @@ class ConnectionIndex {
         -> void;
     auto remove(element_id_t element_id, const Schematic &schematic, const Layout &layout)
         -> void;
-    auto update_element_id(element_id_t new_element_id, element_id_t old_element_id,
-                           const Schematic &schematic, const Layout &layout) -> void;
+    auto update(element_id_t new_element_id, element_id_t old_element_id,
+                const Schematic &schematic, const Layout &layout) -> void;
 
-    auto find(point_t position) const -> std::optional<connection_t>;
-    auto find(point_t position, Schematic &schematic) const
+    [[nodiscard]] auto find(point_t position) const -> std::optional<connection_t>;
+    [[nodiscard]] auto find(point_t position, Schematic &schematic) const
         -> std::optional<connection_proxy>;
-    auto find(point_t position, const Schematic &schematic) const
+    [[nodiscard]] auto find(point_t position, const Schematic &schematic) const
         -> std::optional<const_connection_proxy>;
+
+    [[nodiscard]] auto copy_positions() -> std::vector<point_t>;
 
    private:
     map_type connections_;
@@ -74,22 +76,13 @@ class EditableCircuit {
 
     // invalidates the element_id, as element output placeholders might be deleted
     auto connect_new_element(element_id_t &element_id) -> void;
-    // makes new connection, returns placeholder if it was there before
-    auto connect_input(Schematic::Input input, point_t position)
-        -> std::optional<element_id_t>;
-    auto connect_output(Schematic::Output output, point_t position)
-        -> std::optional<element_id_t>;
 
     auto swap_and_delete_single_element(element_id_t element_id) -> void;
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
         -> void;
 
-    auto remove_cached_data(element_id_t element_id) -> void;
-    auto update_cached_data(element_id_t new_element_id, element_id_t old_element_id)
-        -> void;
-    // move to connection cache class
-    connection_map_t input_connections_;
-    connection_map_t output_connections_;
+    ConnectionIndex<true> input_connections_;
+    ConnectionIndex<false> output_connections_;
 
     Schematic schematic_;
     Layout layout_;

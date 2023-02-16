@@ -504,8 +504,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     // render image
     BLImage img(1200, 1200, BL_FORMAT_PRGB32);
     BLContext ctx(img);
-    ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
-    ctx.fillAll();
+    render_background(ctx);
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
         render_circuit(ctx, scene.layout, scene.simulation);

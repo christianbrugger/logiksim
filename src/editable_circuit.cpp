@@ -17,17 +17,11 @@ using delete_queue_t = folly::small_vector<element_id_t, 6>;
 // ConnectionIndex
 //
 
-// TODO implementent rendering here instead
-
-// auto EditableCircuit::copy_input_positions() -> std::vector<point_t> {
-//     return transform_to_vector(input_connections_,
-//                                [](auto value) { return value.first; });
-// }
-//
-// auto EditableCircuit::copy_output_positions() -> std::vector<point_t> {
-//     return transform_to_vector(output_connections_,
-//                                [](auto value) { return value.first; });
-// }
+// TODO implementent rendering here instead && remove the following
+template <bool IsInput>
+auto ConnectionIndex<IsInput>::copy_positions() -> std::vector<point_t> {
+    return transform_to_vector(connections_, [](auto value) { return value.first; });
+}
 
 auto get_and_verify_cache_entry(ConnectionIndex<true>::map_type& map, point_t position,
                                 element_id_t element_id, connection_id_t connection_id)
@@ -83,10 +77,10 @@ auto ConnectionIndex<IsInput>::remove(element_id_t element_id, const Schematic& 
 }
 
 template <bool IsInput>
-auto ConnectionIndex<IsInput>::update_element_id(element_id_t new_element_id,
-                                                 element_id_t old_element_id,
-                                                 const Schematic& schematic,
-                                                 const Layout& layout) -> void {
+auto ConnectionIndex<IsInput>::update(element_id_t new_element_id,
+                                      element_id_t old_element_id,
+                                      const Schematic& schematic, const Layout& layout)
+    -> void {
     // placeholders are not cached
     if (schematic.element(new_element_id).is_placeholder()) {
         return;
@@ -161,14 +155,12 @@ auto EditableCircuit::schematic() const noexcept -> const Schematic& {
 
 // TODO remove
 auto EditableCircuit::copy_input_positions() -> std::vector<point_t> {
-    return transform_to_vector(input_connections_,
-                               [](auto value) { return value.first; });
+    return input_connections_.copy_positions();
 }
 
 // TODO remove
 auto EditableCircuit::copy_output_positions() -> std::vector<point_t> {
-    return transform_to_vector(output_connections_,
-                               [](auto value) { return value.first; });
+    return output_connections_.copy_positions();
 }
 
 auto EditableCircuit::add_placeholder_element() -> element_id_t {
@@ -275,7 +267,9 @@ auto EditableCircuit::swap_and_delete_multiple_elements(
 }
 
 auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) -> void {
-    remove_cached_data(element_id);
+    // TODO move to separate function
+    input_connections_.remove(element_id, schematic_, layout_);
+    output_connections_.remove(element_id, schematic_, layout_);
 
     // delete in underlying
     auto last_id1 = schematic_.swap_and_delete_element(element_id);
@@ -284,62 +278,9 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
         throw_exception("Returned id's during deletion are not the same.");
     }
 
-    update_cached_data(element_id, last_id1);
-}
-
-// auto get_and_verify_cache_entry(EditableCircuit::connection_map_t& map, point_t
-// position,
-//                                 element_id_t element_id, connection_id_t
-//                                 connection_id)
-//                                 {
-//     const auto it = map.find(position);
-//     if (it == map.end() || it->second.element_id != element_id
-//         || it->second.connection_id != connection_id) [[unlikely]] {
-//         throw_exception("unable to find chached data that should be present.");
-//     }
-//     return it;
-// }
-
-auto EditableCircuit::remove_cached_data(element_id_t element_id) -> void {
-    // placeholders are not cached
-    if (schematic_.element(element_id).is_placeholder()) {
-        return;
-    }
-
-    for_each_input_location_and_id(
-        schematic_, layout_, element_id, [&](connection_id_t con_id, point_t position) {
-            auto it = get_and_verify_cache_entry(input_connections_, position, element_id,
-                                                 con_id);
-            input_connections_.erase(it);
-        });
-
-    for_each_output_location_and_id(
-        schematic_, layout_, element_id, [&](connection_id_t con_id, point_t position) {
-            auto it = get_and_verify_cache_entry(output_connections_, position,
-                                                 element_id, con_id);
-            output_connections_.erase(it);
-        });
-}
-
-auto EditableCircuit::update_cached_data(element_id_t new_element_id,
-                                         element_id_t old_element_id) -> void {
-    if (schematic_.element(new_element_id).is_placeholder()) {
-        return;
-    }
-
-    const auto update_id = [&](connection_map_t& map_) {
-        return [&](connection_id_t connection_id, point_t position) {
-            auto it = get_and_verify_cache_entry(map_, position, old_element_id,
-                                                 connection_id);
-            it->second.element_id = new_element_id;
-        };
-    };
-
-    for_each_input_location_and_id(schematic_, layout_, new_element_id,
-                                   update_id(input_connections_));
-
-    for_each_output_location_and_id(schematic_, layout_, new_element_id,
-                                    update_id(output_connections_));
+    // TODO move to separate function
+    input_connections_.update(element_id, last_id1, schematic_, layout_);
+    output_connections_.update(element_id, last_id1, schematic_, layout_);
 }
 
 auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void {
@@ -351,98 +292,70 @@ auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void 
     }
 }
 
-auto EditableCircuit::connect_input(Schematic::Input input, point_t position)
+template <bool IsInput>
+auto connect_impl(connection_t connection_data, point_t position,
+                  ConnectionIndex<IsInput>& index, Schematic& schematic)
     -> std::optional<element_id_t> {
-    auto placeholder_id = std::optional<element_id_t> {};
+    auto unused_placeholder_id = std::optional<element_id_t> {};
+
+    auto connection = [&] {
+        if constexpr (!IsInput) {
+            return schematic.input(connection_data);
+        } else {
+            return schematic.output(connection_data);
+        }
+    }();
 
     // pre-conditions
-    if (input.has_connected_element()) [[unlikely]] {
-        throw_exception("Input needs to be unconnected.");
-    }
-    if (input_connections_.contains(position)) [[unlikely]] {
-        throw_exception("Circuit already contains input at this location.");
+    if (connection.has_connected_element()) [[unlikely]] {
+        throw_exception("Connections needs to be unconnected.");
     }
 
     // connect to possible output
-    if (const auto it = output_connections_.find(position);
-        it != output_connections_.end()) {
-        const auto found_output = schematic_.output(it->second);
-
-        if (found_output.has_connected_element()) {
-            if (found_output.connected_element().element_type()
-                != ElementType::placeholder) [[unlikely]] {
-                throw_exception("Output is already connected at this location.");
+    if (const auto found_con = index.find(position, schematic)) {
+        if (found_con->has_connected_element()) {
+            if (!found_con->connected_element().is_placeholder()) [[unlikely]] {
+                throw_exception("Connection is already connected at this location.");
             }
             // mark placeholder for deletion
-            placeholder_id = found_output.connected_element_id();
+            unused_placeholder_id = found_con->connected_element_id();
         }
-        input.connect(found_output);
-    }
-    // register input
-    input_connections_[position] = input;
-
-    return placeholder_id;
-}
-
-auto EditableCircuit::connect_output(Schematic::Output output, point_t position)
-    -> std::optional<element_id_t> {
-    auto placeholder_id = std::optional<element_id_t> {};
-
-    // pre-conditions
-    if (output.has_connected_element()) [[unlikely]] {
-        throw_exception("Output needs to be unconnected.");
-    }
-    if (output_connections_.contains(position)) [[unlikely]] {
-        throw_exception("Circuit already contains output at this location.");
+        connection.connect(*found_con);
     }
 
-    // connect to possible input
-    if (const auto it = input_connections_.find(position);
-        it != input_connections_.end()) {
-        const auto found_input = schematic_.input(it->second);
-
-        if (found_input.has_connected_element()) {
-            if (found_input.connected_element().element_type()
-                != ElementType::placeholder) [[unlikely]] {
-                throw_exception("Input is already connected at this location.");
-            }
-            // mark placeholder for deletion
-            placeholder_id = found_input.connected_element_id();
-        }
-        output.connect(found_input);
-    }
-    // register output
-    output_connections_[position] = output;
-
-    return placeholder_id;
+    return unused_placeholder_id;
 }
 
 auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
     auto delete_queue = delete_queue_t {};
 
+    auto add_if_valid = [&](std::optional<element_id_t> placeholder_id) {
+        if (placeholder_id) {
+            delete_queue.push_back(*placeholder_id);
+        }
+    };
+
     // connect inputs
     for_each_input_location_and_id(
         schematic_, layout_, element_id,
         [&, element_id](connection_id_t input_id, point_t position) {
-            const auto input = schematic_.element(element_id).input(input_id);
-
-            if (const auto placeholder_id = connect_input(input, position);
-                placeholder_id.has_value()) {
-                delete_queue.push_back(placeholder_id.value());
-            }
+            const auto placeholder_id = connect_impl({element_id, input_id}, position,
+                                                     output_connections_, schematic_);
+            add_if_valid(placeholder_id);
         });
 
     // connect outputs
     for_each_output_location_and_id(
         schematic_, layout_, element_id,
         [&, element_id](connection_id_t output_id, point_t position) mutable {
-            const auto output = schematic_.element(element_id).output(output_id);
-
-            if (const auto placeholder_id = connect_output(output, position);
-                placeholder_id.has_value()) {
-                delete_queue.push_back(placeholder_id.value());
-            }
+            const auto placeholder_id = connect_impl({element_id, output_id}, position,
+                                                     input_connections_, schematic_);
+            add_if_valid(placeholder_id);
         });
+
+    // TODO create function
+    input_connections_.add(element_id, schematic_, layout_);
+    output_connections_.add(element_id, schematic_, layout_);
 
     add_missing_placeholders(element_id);
 

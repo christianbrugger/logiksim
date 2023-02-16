@@ -30,7 +30,7 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 
         schematic.validate();
         add_output_placeholders(schematic);
-        schematic.validate(true);
+        schematic.validate(logicsim::Schematic::validate_all);
 
         benchmark::DoNotOptimize(schematic);
     }
@@ -47,7 +47,7 @@ static void BM_Simulation_0(benchmark::State& state) {
 
         auto schematic = logicsim::create_random_schematic(rng, 100);
         logicsim::add_output_placeholders(schematic);
-        schematic.validate(true);
+        schematic.validate(logicsim::Schematic::validate_all);
 
         benchmark::DoNotOptimize(schematic);
         benchmark::ClobberMemory();
@@ -82,7 +82,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
         count += scene_count;
 
         BLContext ctx(img);
-        render_circuit(ctx, scene.layout, scene.simulation, {.render_background = false});
+        render_circuit(ctx, scene.layout, scene.simulation);
         ctx.end();
 
         benchmark::DoNotOptimize(img);
