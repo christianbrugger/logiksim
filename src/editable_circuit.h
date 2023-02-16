@@ -12,6 +12,10 @@ namespace logicsim {
 
 class EditableCircuit {
    public:
+    // Make private and move to connection cache class
+    using connection_map_t = ankerl::unordered_dense::map<point_t, connection_t>;
+
+   public:
     [[nodiscard]] EditableCircuit(Schematic &&schematic, Layout &&layout);
 
     [[nodiscard]] auto format() const -> std::string;
@@ -36,8 +40,6 @@ class EditableCircuit {
 
     // todo: extract_schematic, extract_layout
 
-    // TODO implement validation !!!
-
    private:
     auto add_placeholder_element() -> element_id_t;
     auto add_missing_placeholders(element_id_t element_id) -> void;
@@ -57,8 +59,7 @@ class EditableCircuit {
     auto remove_cached_data(element_id_t element_id) -> void;
     auto update_cached_data(element_id_t new_element_id, element_id_t old_element_id)
         -> void;
-
-    using connection_map_t = ankerl::unordered_dense::map<point_t, connection_t>;
+    // move to connection cache class
     connection_map_t input_connections_;
     connection_map_t output_connections_;
 

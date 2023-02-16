@@ -154,36 +154,56 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
     update_cached_data(element_id, last_id1);
 }
 
+auto get_and_verify_cache_entry(EditableCircuit::connection_map_t& map, point_t position,
+                                element_id_t element_id, connection_id_t connection_id) {
+    const auto it = map.find(position);
+    if (it == map.end() || it->second.element_id != element_id
+        || it->second.connection_id != connection_id) [[unlikely]] {
+        throw_exception("unable to delete chached data that should be present.");
+    }
+    return it;
+}
+
 auto EditableCircuit::remove_cached_data(element_id_t element_id) -> void {
+    // placeholders are not cached
     if (schematic_.element(element_id).is_placeholder()) {
         return;
     }
 
     for_each_input_location_and_id(
-        schematic_, layout_, element_id, [&](connection_id_t input_id, point_t position) {
-            const auto it = input_connections_.find(position);
-            if (it == input_connections_.end() || it->second.element_id != element_id
-                || it->second.connection_id != input_id) [[unlikely]] {
-                throw_exception("unable to delete chached data that should be present.");
-            }
+        schematic_, layout_, element_id, [&](connection_id_t con_id, point_t position) {
+            auto it = get_and_verify_cache_entry(input_connections_, position, element_id,
+                                                 con_id);
             input_connections_.erase(it);
         });
 
     for_each_output_location_and_id(
-        schematic_, layout_, element_id,
-        [&](connection_id_t output_id, point_t position) {
-            const auto it = output_connections_.find(position);
-            if (it == output_connections_.end() || it->second.element_id != element_id
-                || it->second.connection_id != output_id) [[unlikely]] {
-                throw_exception("unable to delete chached data that should be present.");
-            }
+        schematic_, layout_, element_id, [&](connection_id_t con_id, point_t position) {
+            auto it = get_and_verify_cache_entry(output_connections_, position,
+                                                 element_id, con_id);
             output_connections_.erase(it);
         });
 }
 
 auto EditableCircuit::update_cached_data(element_id_t new_element_id,
                                          element_id_t old_element_id) -> void {
-    // TODO implement !!!
+    if (schematic_.element(new_element_id).is_placeholder()) {
+        return;
+    }
+
+    const auto update_id = [&](connection_map_t& map_) {
+        return [&](connection_id_t connection_id, point_t position) {
+            auto it = get_and_verify_cache_entry(map_, position, old_element_id,
+                                                 connection_id);
+            it->second.element_id = new_element_id;
+        };
+    };
+
+    for_each_input_location_and_id(schematic_, layout_, new_element_id,
+                                   update_id(input_connections_));
+
+    for_each_output_location_and_id(schematic_, layout_, new_element_id,
+                                    update_id(output_connections_));
 }
 
 auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void {
