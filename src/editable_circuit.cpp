@@ -29,8 +29,8 @@ auto get_and_verify_cache_entry(ConnectionCache<true>::map_type& map, point_t po
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::add(element_id_t element_id, const Schematic& schematic,
-                                   const Layout& layout) -> void {
+auto ConnectionCache<IsInput>::insert(element_id_t element_id, const Schematic& schematic,
+                                      const Layout& layout) -> void {
     // placeholders are not cached
     if (schematic.element(element_id).is_placeholder()) {
         return;
@@ -330,7 +330,7 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
             add_if_valid(placeholder_id);
         });
 
-    cache_add(element_id);
+    cache_insert(element_id);
     add_missing_placeholders(element_id);
 
     // this invalidates our element_id
@@ -338,9 +338,9 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
     element_id = null_element;
 }
 
-auto EditableCircuit::cache_add(element_id_t element_id) -> void {
-    input_connections_.add(element_id, schematic_, layout_);
-    output_connections_.add(element_id, schematic_, layout_);
+auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
+    input_connections_.insert(element_id, schematic_, layout_);
+    output_connections_.insert(element_id, schematic_, layout_);
 }
 
 auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
@@ -349,7 +349,7 @@ auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
 }
 
 auto EditableCircuit::cache_update(element_id_t new_element_id,
-                                   element_id_t old_element_id) {
+                                   element_id_t old_element_id) -> void {
     input_connections_.update(new_element_id, old_element_id, schematic_, layout_);
     output_connections_.update(new_element_id, old_element_id, schematic_, layout_);
 }

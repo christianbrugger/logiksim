@@ -21,7 +21,7 @@ class ConnectionCache {
     using const_connection_proxy
         = std::conditional_t<IsInput, Schematic::ConstInput, Schematic::ConstOutput>;
 
-    auto add(element_id_t element_id, const Schematic &schematic, const Layout &layout)
+    auto insert(element_id_t element_id, const Schematic &schematic, const Layout &layout)
         -> void;
     auto remove(element_id_t element_id, const Schematic &schematic, const Layout &layout)
         -> void;
@@ -88,9 +88,9 @@ class EditableCircuit {
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
         -> void;
 
-    auto cache_add(element_id_t element_id) -> void;
+    auto cache_insert(element_id_t element_id) -> void;
     auto cache_remove(element_id_t element_id) -> void;
-    auto cache_update(element_id_t new_element_id, element_id_t old_element_id);
+    auto cache_update(element_id_t new_element_id, element_id_t old_element_id) -> void;
 
     ConnectionCache<true> input_connections_;
     ConnectionCache<false> output_connections_;
