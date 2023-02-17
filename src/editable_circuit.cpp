@@ -14,18 +14,18 @@ namespace logicsim {
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
 //
-// ConnectionIndex
+// ConnectionCache
 //
 
 // TODO implementent rendering here instead && remove the following
 template <bool IsInput>
-auto ConnectionIndex<IsInput>::copy_positions() -> std::vector<point_t> {
+auto ConnectionCache<IsInput>::copy_positions() -> std::vector<point_t> {
     return transform_to_vector(connections_, [](auto value) { return value.first; });
 }
 
-auto get_and_verify_cache_entry(ConnectionIndex<true>::map_type& map, point_t position,
+auto get_and_verify_cache_entry(ConnectionCache<true>::map_type& map, point_t position,
                                 element_id_t element_id, connection_id_t connection_id)
-    -> ConnectionIndex<true>::map_type::iterator {
+    -> ConnectionCache<true>::map_type::iterator {
     const auto it = map.find(position);
     if (it == map.end() || it->second.element_id != element_id
         || it->second.connection_id != connection_id) [[unlikely]] {
@@ -35,7 +35,7 @@ auto get_and_verify_cache_entry(ConnectionIndex<true>::map_type& map, point_t po
 }
 
 template <bool IsInput>
-auto ConnectionIndex<IsInput>::add(element_id_t element_id, const Schematic& schematic,
+auto ConnectionCache<IsInput>::add(element_id_t element_id, const Schematic& schematic,
                                    const Layout& layout) -> void {
     // placeholders are not cached
     if (schematic.element(element_id).is_placeholder()) {
@@ -57,7 +57,7 @@ auto ConnectionIndex<IsInput>::add(element_id_t element_id, const Schematic& sch
 }
 
 template <bool IsInput>
-auto ConnectionIndex<IsInput>::remove(element_id_t element_id, const Schematic& schematic,
+auto ConnectionCache<IsInput>::remove(element_id_t element_id, const Schematic& schematic,
                                       const Layout& layout) -> void {
     // placeholders are not cached
     if (schematic.element(element_id).is_placeholder()) {
@@ -77,7 +77,7 @@ auto ConnectionIndex<IsInput>::remove(element_id_t element_id, const Schematic& 
 }
 
 template <bool IsInput>
-auto ConnectionIndex<IsInput>::update(element_id_t new_element_id,
+auto ConnectionCache<IsInput>::update(element_id_t new_element_id,
                                       element_id_t old_element_id,
                                       const Schematic& schematic, const Layout& layout)
     -> void {
@@ -100,7 +100,7 @@ auto ConnectionIndex<IsInput>::update(element_id_t new_element_id,
 }
 
 template <bool IsInput>
-auto ConnectionIndex<IsInput>::find(point_t position) const
+auto ConnectionCache<IsInput>::find(point_t position) const
     -> std::optional<connection_t> {
     if (const auto it = connections_.find(position); it != connections_.end()) {
         return {it->second};
@@ -109,7 +109,7 @@ auto ConnectionIndex<IsInput>::find(point_t position) const
 }
 
 template <bool IsInput>
-auto ConnectionIndex<IsInput>::find(point_t position, Schematic& schematic) const
+auto ConnectionCache<IsInput>::find(point_t position, Schematic& schematic) const
     -> std::optional<connection_proxy> {
     if (auto res = find(position)) {
         if constexpr (IsInput) {
@@ -122,7 +122,7 @@ auto ConnectionIndex<IsInput>::find(point_t position, Schematic& schematic) cons
 }
 
 template <bool IsInput>
-auto ConnectionIndex<IsInput>::find(point_t position, const Schematic& schematic) const
+auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic) const
     -> std::optional<const_connection_proxy> {
     if (auto res = find(position)) {
         if constexpr (IsInput) {
@@ -294,7 +294,7 @@ auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void 
 
 template <bool IsInput>
 auto connect_impl(connection_t connection_data, point_t position,
-                  ConnectionIndex<IsInput>& index, Schematic& schematic)
+                  ConnectionCache<IsInput>& index, Schematic& schematic)
     -> std::optional<element_id_t> {
     auto unused_placeholder_id = std::optional<element_id_t> {};
 

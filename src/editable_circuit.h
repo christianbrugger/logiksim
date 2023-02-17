@@ -11,7 +11,7 @@
 namespace logicsim {
 
 template <bool IsInput>
-class ConnectionIndex {
+class ConnectionCache {
    public:
     using map_type = ankerl::unordered_dense::map<point_t, connection_t>;
 
@@ -81,8 +81,8 @@ class EditableCircuit {
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
         -> void;
 
-    ConnectionIndex<true> input_connections_;
-    ConnectionIndex<false> output_connections_;
+    ConnectionCache<true> input_connections_;
+    ConnectionCache<false> output_connections_;
 
     Schematic schematic_;
     Layout layout_;
