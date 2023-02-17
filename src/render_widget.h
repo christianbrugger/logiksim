@@ -193,16 +193,7 @@ class WidgetRenderer : public QWidget {
         // renderFrame(bl_ctx);
         render_background(bl_ctx, settings);
         render_circuit(bl_ctx, layout, simulation, settings);
-
-        {
-            const auto inputs = editable_circuit.copy_input_positions();
-            const auto outputs = editable_circuit.copy_output_positions();
-            const auto size = settings.scale * (1.0 / 3.0);
-            render_points(bl_ctx, inputs, PointShape::circle, defaults::color_green, size,
-                          settings);
-            render_points(bl_ctx, outputs, PointShape::cross, defaults::color_green, size,
-                          settings);
-        }
+        render_editable_circuit_caches(bl_ctx, editable_circuit, settings);
 
         bl_ctx.end();
 

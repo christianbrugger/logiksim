@@ -258,23 +258,33 @@ auto render_point_shape(BLContext& ctx, point_t point, PointShape shape, double 
     throw_exception("unknown shape type.");
 }
 
-auto set_point_style(BLContext& ctx, color_t color) {
+namespace detail {
+
+auto set_point_style(BLContext& ctx, color_t color) -> void {
     ctx.setStrokeWidth(1);
     ctx.setStrokeStyle(BLRgba32(color.value));
 }
 
+}  // namespace detail
+
 auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
                   double size, const RenderSettings& settings) -> void {
-    set_point_style(ctx, color);
+    detail::set_point_style(ctx, color);
     render_point_shape(ctx, point, shape, size, settings);
 }
 
-auto render_points(BLContext& ctx, std::span<const point_t> points, PointShape shape,
-                   color_t color, double size, const RenderSettings& settings) -> void {
-    set_point_style(ctx, color);
-    for (auto point : points) {
-        render_point_shape(ctx, point, shape, size, settings);
-    }
+//
+// Editable Circuit
+//
+
+auto render_editable_circuit_caches(BLContext& ctx,
+                                    const EditableCircuit& editable_circuit,
+                                    const RenderSettings& settings) -> void {
+    const auto size = settings.scale * (1.0 / 3.0);
+    render_points(ctx, editable_circuit.input_positions(), PointShape::circle,
+                  defaults::color_green, size, settings);
+    render_points(ctx, editable_circuit.output_positions(), PointShape::cross,
+                  defaults::color_green, size, settings);
 }
 
 //

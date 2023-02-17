@@ -17,12 +17,6 @@ using delete_queue_t = folly::small_vector<element_id_t, 6>;
 // ConnectionCache
 //
 
-// TODO implementent rendering here instead && remove the following
-template <bool IsInput>
-auto ConnectionCache<IsInput>::copy_positions() -> std::vector<point_t> {
-    return transform_to_vector(connections_, [](auto value) { return value.first; });
-}
-
 auto get_and_verify_cache_entry(ConnectionCache<true>::map_type& map, point_t position,
                                 element_id_t element_id, connection_id_t connection_id)
     -> ConnectionCache<true>::map_type::iterator {
@@ -121,6 +115,7 @@ auto ConnectionCache<IsInput>::find(point_t position, Schematic& schematic) cons
     return std::nullopt;
 }
 
+// TODO Find a way to not have duplicate code here
 template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic) const
     -> std::optional<const_connection_proxy> {
@@ -151,16 +146,6 @@ auto EditableCircuit::layout() const noexcept -> const Layout& {
 
 auto EditableCircuit::schematic() const noexcept -> const Schematic& {
     return schematic_;
-}
-
-// TODO remove
-auto EditableCircuit::copy_input_positions() -> std::vector<point_t> {
-    return input_connections_.copy_positions();
-}
-
-// TODO remove
-auto EditableCircuit::copy_output_positions() -> std::vector<point_t> {
-    return output_connections_.copy_positions();
 }
 
 auto EditableCircuit::add_placeholder_element() -> element_id_t {

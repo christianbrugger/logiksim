@@ -34,7 +34,9 @@ class ConnectionCache {
     [[nodiscard]] auto find(point_t position, const Schematic &schematic) const
         -> std::optional<const_connection_proxy>;
 
-    [[nodiscard]] auto copy_positions() -> std::vector<point_t>;
+    [[nodiscard]] auto positions() const {
+        return std::ranges::views::keys(connections_);
+    }
 
    private:
     map_type connections_;
@@ -53,8 +55,13 @@ class EditableCircuit {
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto layout() const noexcept -> const Layout &;
 
-    [[nodiscard]] auto copy_input_positions() -> std::vector<point_t>;
-    [[nodiscard]] auto copy_output_positions() -> std::vector<point_t>;
+    [[nodiscard]] auto input_positions() const {
+        return input_connections_.positions();
+    };
+
+    [[nodiscard]] auto output_positions() const {
+        return output_connections_.positions();
+    };
 
     auto add_inverter_element(point_t position, DisplayOrientation orientation
                                                 = DisplayOrientation::default_right)
