@@ -88,6 +88,10 @@ class EditableCircuit {
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
         -> void;
 
+    auto cache_add(element_id_t element_id) -> void;
+    auto cache_remove(element_id_t element_id) -> void;
+    auto cache_update(element_id_t new_element_id, element_id_t old_element_id);
+
     ConnectionCache<true> input_connections_;
     ConnectionCache<false> output_connections_;
 

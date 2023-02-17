@@ -248,9 +248,7 @@ auto EditableCircuit::swap_and_delete_multiple_elements(
 }
 
 auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) -> void {
-    // TODO move to separate function
-    input_connections_.remove(element_id, schematic_, layout_);
-    output_connections_.remove(element_id, schematic_, layout_);
+    cache_remove(element_id);
 
     // delete in underlying
     auto last_id1 = schematic_.swap_and_delete_element(element_id);
@@ -259,9 +257,7 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
         throw_exception("Returned id's during deletion are not the same.");
     }
 
-    // TODO move to separate function
-    input_connections_.update(element_id, last_id1, schematic_, layout_);
-    output_connections_.update(element_id, last_id1, schematic_, layout_);
+    cache_update(element_id, last_id1);
 }
 
 auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void {
@@ -334,15 +330,28 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
             add_if_valid(placeholder_id);
         });
 
-    // TODO create function
-    input_connections_.add(element_id, schematic_, layout_);
-    output_connections_.add(element_id, schematic_, layout_);
-
+    cache_add(element_id);
     add_missing_placeholders(element_id);
 
     // this invalidates our element_id
     swap_and_delete_multiple_elements(delete_queue);
     element_id = null_element;
+}
+
+auto EditableCircuit::cache_add(element_id_t element_id) -> void {
+    input_connections_.add(element_id, schematic_, layout_);
+    output_connections_.add(element_id, schematic_, layout_);
+}
+
+auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
+    input_connections_.remove(element_id, schematic_, layout_);
+    output_connections_.remove(element_id, schematic_, layout_);
+}
+
+auto EditableCircuit::cache_update(element_id_t new_element_id,
+                                   element_id_t old_element_id) {
+    input_connections_.update(new_element_id, old_element_id, schematic_, layout_);
+    output_connections_.update(new_element_id, old_element_id, schematic_, layout_);
 }
 
 }  // namespace logicsim
