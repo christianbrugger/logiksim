@@ -200,13 +200,13 @@ auto std::swap(logicsim::Schematic &a, logicsim::Schematic &b) noexcept -> void;
 namespace logicsim {
 
 template <bool IsInput, typename T>
-auto to_connection(T &&schematic, connection_t connection)
+auto to_connection(T &&schematic, connection_t connection_data)
     requires std::same_as<std::remove_cvref_t<T>, Schematic>
 {
     if constexpr (IsInput) {
-        return schematic.input(connection);
+        return schematic.input(connection_data);
     } else {
-        return schematic.output(connection);
+        return schematic.output(connection_data);
     }
 }
 

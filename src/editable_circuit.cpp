@@ -38,7 +38,7 @@ auto ConnectionCache<IsInput>::insert(element_id_t element_id, const Schematic& 
 
     const auto add_position = [&](connection_id_t con_id, point_t position) {
         if (connections_.contains(position)) [[unlikely]] {
-            throw_exception("index already has an entry at this position");
+            throw_exception("cache already has an entry at this position");
         }
         connections_[position] = {element_id, con_id};
     };
@@ -136,7 +136,6 @@ auto EditableCircuit::format() const -> std::string {
 }
 
 auto EditableCircuit::layout() const noexcept -> const Layout& {
-    fmt::print("{}\n", input_connections_.find({}, schematic_).has_value());
     return layout_;
 }
 
@@ -175,7 +174,7 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     using enum ElementType;
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {
-        throw_exception("The type needs to be standard element.");
+        throw_exception("The type needs to be a standard element.");
     }
     if (type == inverter_element && input_count != 1) [[unlikely]] {
         throw_exception("Inverter needs to have exactly one input.");
@@ -270,26 +269,19 @@ auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void 
 }
 
 template <bool IsInput>
-auto connect_impl(connection_t connection_data, point_t position,
-                  ConnectionCache<IsInput>& index, Schematic& schematic)
-    -> std::optional<element_id_t> {
+auto connect_connector_impl(connection_t connection_data, point_t position,
+                            ConnectionCache<IsInput>& connection_cache,
+                            Schematic& schematic) -> std::optional<element_id_t> {
     auto unused_placeholder_id = std::optional<element_id_t> {};
-
-    auto connection = [&] {
-        if constexpr (!IsInput) {
-            return schematic.input(connection_data);
-        } else {
-            return schematic.output(connection_data);
-        }
-    }();
+    auto connection = to_connection<!IsInput>(schematic, connection_data);
 
     // pre-conditions
     if (connection.has_connected_element()) [[unlikely]] {
         throw_exception("Connections needs to be unconnected.");
     }
 
-    // connect to possible output
-    if (const auto found_con = index.find(position, schematic)) {
+    // find connection at position
+    if (const auto found_con = connection_cache.find(position, schematic)) {
         if (found_con->has_connected_element()) {
             if (!found_con->connected_element().is_placeholder()) [[unlikely]] {
                 throw_exception("Connection is already connected at this location.");
@@ -297,6 +289,7 @@ auto connect_impl(connection_t connection_data, point_t position,
             // mark placeholder for deletion
             unused_placeholder_id = found_con->connected_element_id();
         }
+        // make connection in schematic
         connection.connect(*found_con);
     }
 
@@ -305,28 +298,29 @@ auto connect_impl(connection_t connection_data, point_t position,
 
 auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
     auto delete_queue = delete_queue_t {};
-
     auto add_if_valid = [&](std::optional<element_id_t> placeholder_id) {
         if (placeholder_id) {
             delete_queue.push_back(*placeholder_id);
         }
     };
 
-    // connect inputs
+    // inputs
     for_each_input_location_and_id(
         schematic_, layout_, element_id,
         [&, element_id](connection_id_t input_id, point_t position) {
-            const auto placeholder_id = connect_impl({element_id, input_id}, position,
-                                                     output_connections_, schematic_);
+            // connect input with output_cache
+            const auto placeholder_id = connect_connector_impl(
+                {element_id, input_id}, position, output_connections_, schematic_);
             add_if_valid(placeholder_id);
         });
 
-    // connect outputs
+    // outputs
     for_each_output_location_and_id(
         schematic_, layout_, element_id,
         [&, element_id](connection_id_t output_id, point_t position) mutable {
-            const auto placeholder_id = connect_impl({element_id, output_id}, position,
-                                                     input_connections_, schematic_);
+            // connect output with input_cache
+            const auto placeholder_id = connect_connector_impl(
+                {element_id, output_id}, position, input_connections_, schematic_);
             add_if_valid(placeholder_id);
         });
 
