@@ -40,6 +40,8 @@ struct circuit_id_t {
     using value_type = int16_t;
     value_type value;
 
+    [[nodiscard]] auto format() const -> std::string;
+
     [[nodiscard]] auto operator==(const circuit_id_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const circuit_id_t &other) const = default;
 
@@ -54,6 +56,8 @@ struct element_id_t {
     using value_type = int32_t;
     value_type value;
 
+    [[nodiscard]] auto format() const -> std::string;
+
     [[nodiscard]] auto operator==(const element_id_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const element_id_t &other) const = default;
 
@@ -67,6 +71,8 @@ static_assert(std::is_trivial<element_id_t>::value);
 struct connection_id_t {
     using value_type = int8_t;
     value_type value;
+
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const connection_id_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const connection_id_t &other) const = default;
@@ -121,6 +127,8 @@ struct time_t {
     using rep = value_type::rep;
     value_type value;
 
+    [[nodiscard]] auto format() const -> std::string;
+
     [[nodiscard]] auto operator==(const time_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const time_t &other) const = default;
 
@@ -156,6 +164,8 @@ struct delay_t {
         }
     };
 
+    [[nodiscard]] auto format() const -> std::string;
+
     [[nodiscard]] auto operator==(const delay_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const delay_t &other) const = default;
 };
@@ -167,6 +177,8 @@ struct delay_t {
 struct color_t {
     using value_type = uint32_t;
     value_type value;
+
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const color_t &other) const -> bool = default;
 
@@ -217,6 +229,8 @@ struct grid_t {
     [[nodiscard]] constexpr explicit grid_t(unsigned long long v) noexcept
         : value {gsl::narrow<value_type>(v)} {};
 
+    [[nodiscard]] auto format() const -> std::string;
+
     [[nodiscard]] auto operator==(const grid_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const grid_t &other) const = default;
 
@@ -266,6 +280,8 @@ static_assert(std::is_nothrow_default_constructible<grid_t>::value);
 struct point_fine_t {
     double x;
     double y;
+
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::is_trivial<point_fine_t>::value);
@@ -273,6 +289,8 @@ static_assert(std::is_trivial<point_fine_t>::value);
 struct point_t {
     grid_t x;
     grid_t y;
+
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] explicit constexpr operator point_fine_t() const noexcept {
         return point_fine_t {static_cast<double>(x), static_cast<double>(y)};
@@ -310,6 +328,8 @@ struct line_t {
             throw_exception("line needs to be horizontal or vertical.");
         }
     };
+
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const line_t &other) const -> bool = default;
 };
@@ -356,127 +376,6 @@ struct fmt::formatter<logicsim::ElementType> {
 
     static auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::circuit_id_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::circuit_id_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.value);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::element_id_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::element_id_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.value);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::connection_id_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::connection_id_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.value);
-    }
-};
-
-namespace logicsim {
-template <typename OutputIt, typename T>
-auto format_microsecond_time(OutputIt out, T time_value) {
-    if (-1us < time_value && time_value < 1us) {
-        return fmt::format_to(out, "{}ns", time_value.count());
-    }
-    auto time_us = std::chrono::duration<double, std::micro> {time_value};
-    return fmt::format_to(out, "{:L}us", time_us.count());
-}
-}  // namespace logicsim
-
-template <>
-struct fmt::formatter<logicsim::time_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::time_t &obj, fmt::format_context &ctx) {
-        return logicsim::format_microsecond_time(ctx.out(), obj.value);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::delay_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::delay_t &obj, fmt::format_context &ctx) {
-        return logicsim::format_microsecond_time(ctx.out(), obj.value);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::color_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::color_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{:X}", obj.value);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::grid_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::grid_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.value);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::point_fine_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::point_fine_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "[{:.3f}, {:.3f}]", obj.x, obj.y);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::point_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::point_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "[{}, {}]", obj.x, obj.y);
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::line_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::line_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "Line({}, {})", obj.p0, obj.p1);
     }
 };
 

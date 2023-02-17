@@ -1,18 +1,26 @@
 #ifndef LOGIKSIM_GEOMETRY_H
 #define LOGIKSIM_GEOMETRY_H
 
-#include "algorithm.h"
-#include "exceptions.h"
 #include "vocabulary.h"
 
-#include <fmt/core.h>
-
-#include <cassert>
-#include <cstdint>
 #include <tuple>
 
 namespace logicsim {
+auto is_horizontal(line_t line) noexcept -> bool;
 
+auto is_vertical(line_t line) noexcept -> bool;
+
+// order points within lines
+auto order_points(line_t line) noexcept -> line_t;
+
+// order lines and points within lines
+auto order_points(const line_t line0, const line_t line1) noexcept
+    -> std::tuple<line_t, line_t>;
+
+// fast distance for horitonal or vertical lines
+auto distance(line_t line) -> int;
+
+/*
 constexpr auto is_horizontal(line_t line) noexcept -> bool {
     return line.p0.y == line.p1.y;
 }
@@ -48,6 +56,7 @@ inline auto distance(line_t line) -> int {
     static_assert(sizeof(dx) > sizeof(line.p0.x.value));
     return std::abs((dx == 0) ? dy : dx);
 }
+*/
 
 }  // namespace logicsim
 

@@ -213,6 +213,7 @@ if (LS_ENABLE_PCH)
     message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
     target_precompile_headers(logicsim_pch INTERFACE
         <ankerl/unordered_dense.h>
+        <blend2d.h>
         <boost/algorithm/string/join.hpp>
         <boost/container/small_vector.hpp>
         <boost/container/vector.hpp>
@@ -259,6 +260,7 @@ set(LS_CORE_SOURCES
     src/editable_circuit.h src/editable_circuit.cpp
     src/exceptions.h src/exceptions.cpp
     src/flat_schematic.h src/flat_schematic.cpp
+    src/geometry.h src/geometry.cpp
     src/graph.h src/graph.cpp
     src/layout.h src/layout.cpp
     src/layout_calculations.h src/layout_calculations.cpp

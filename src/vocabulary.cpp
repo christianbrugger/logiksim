@@ -28,8 +28,65 @@ auto format(ElementType type) -> std::string {
     throw_exception("Don't know how to convert ElementType to string.");
 }
 
+auto circuit_id_t::format() const -> std::string {
+    return fmt::format("{}", value);
+}
+
+auto element_id_t::format() const -> std::string {
+    return fmt::format("{}", value);
+}
+
+auto connection_id_t::format() const -> std::string {
+    return fmt::format("{}", value);
+}
+
 auto connection_t::format() const -> std::string {
     return fmt::format("<Conection {} of Element {}>", connection_id, element_id);
 }
+
+template <typename T>
+auto format_microsecond_time(T time_value) {
+    if (-1us < time_value && time_value < 1us) {
+        return fmt::format("{}ns", time_value.count());
+    }
+    auto time_us = std::chrono::duration<double, std::micro> {time_value};
+    return fmt::format("{:L}us", time_us.count());
+}
+
+auto time_t::format() const -> std::string {
+    return format_microsecond_time(value);
+}
+
+auto delay_t::format() const -> std::string {
+    return format_microsecond_time(value);
+}
+
+auto color_t::format() const -> std::string {
+    return fmt::format("{:X}", value);
+}
+
+auto grid_t::format() const -> std::string {
+    return fmt::format("{}", value);
+}
+
+auto point_fine_t::format() const -> std::string {
+    return fmt::format("[{:.3f}, {:.3f}]", x, y);
+}
+
+auto point_t::format() const -> std::string {
+    return fmt::format("[{}, {}]", x, y);
+}
+
+auto line_t::format() const -> std::string {
+    return fmt::format("Line({}, {})", p0, p1);
+}
+
+// time_t
+// delay_t      logicsim::format_microsecond_time(ctx.out(), obj.value);
+// color_t      fmt::format_to(ctx.out(), "{:X}", obj.value);
+// grid_t       fmt::format_to(ctx.out(), "{}", obj.value);
+// point_fine_t fmt::format_to(ctx.out(), "[{:.3f}, {:.3f}]", obj.x, obj.y);
+// point_t      fmt::format_to(ctx.out(), "[{}, {}]", obj.x, obj.y);
+// line_t       fmt::format_to(ctx.out(), "Line({}, {})", obj.p0, obj.p1);
 
 }  // namespace logicsim
