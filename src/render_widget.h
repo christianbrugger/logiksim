@@ -131,6 +131,8 @@ class WidgetRenderer : public QWidget {
 
             fmt::print("{}\n", editable_circuit);
             editable_circuit.schematic().validate(Schematic::validate_all);
+
+            fmt::print("{}\n", editable_circuit.layout());
         }
 
         // old behaviour

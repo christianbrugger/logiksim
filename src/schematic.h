@@ -110,8 +110,8 @@ class Schematic {
 
     struct NewElementData {
         ElementType element_type {ElementType::inverter_element};
-        std::size_t input_count {1};
-        std::size_t output_count {1};
+        std::size_t input_count {0};
+        std::size_t output_count {0};
 
         circuit_id_t circuit_id {null_circuit};
         logic_small_vector_t input_inverters {};
@@ -198,6 +198,17 @@ template <>
 auto std::swap(logicsim::Schematic &a, logicsim::Schematic &b) noexcept -> void;
 
 namespace logicsim {
+
+template <bool IsInput, typename T>
+auto to_connection(T &&schematic, connection_t connection)
+    requires std::same_as<std::remove_cvref_t<T>, Schematic>
+{
+    if constexpr (IsInput) {
+        return schematic.input(connection);
+    } else {
+        return schematic.output(connection);
+    }
+}
 
 template <class T>
 concept ElementOrConnection = std::convertible_to<T, Schematic::ConstElement>

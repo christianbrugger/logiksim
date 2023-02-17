@@ -19,7 +19,7 @@ class ConnectionCache {
     using connection_proxy
         = std::conditional_t<IsInput, Schematic::Input, Schematic::Output>;
     using const_connection_proxy
-        = std::conditional_t<IsInput, Schematic::Input, Schematic::Output>;
+        = std::conditional_t<IsInput, Schematic::ConstInput, Schematic::ConstOutput>;
 
     auto add(element_id_t element_id, const Schematic &schematic, const Layout &layout)
         -> void;

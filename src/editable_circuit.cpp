@@ -103,30 +103,24 @@ auto ConnectionCache<IsInput>::find(point_t position) const
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::find(point_t position, Schematic& schematic) const
-    -> std::optional<connection_proxy> {
-    if (auto res = find(position)) {
-        if constexpr (IsInput) {
-            return schematic.input(*res);
-        } else {
-            return schematic.output(*res);
-        }
+auto find_impl(const ConnectionCache<IsInput>& cache, point_t position,
+               auto&& schematic) {
+    if (auto res = cache.find(position)) {
+        return std::make_optional(to_connection<IsInput>(schematic, *res));
     }
-    return std::nullopt;
+    return std::optional<decltype(to_connection<IsInput>(schematic, {}))> {};
 }
 
-// TODO Find a way to not have duplicate code here
+template <bool IsInput>
+auto ConnectionCache<IsInput>::find(point_t position, Schematic& schematic) const
+    -> std::optional<connection_proxy> {
+    return find_impl(*this, position, schematic);
+}
+
 template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic) const
     -> std::optional<const_connection_proxy> {
-    if (auto res = find(position)) {
-        if constexpr (IsInput) {
-            return schematic.input(*res);
-        } else {
-            return schematic.output(*res);
-        }
-    }
-    return std::nullopt;
+    return find_impl(*this, position, schematic);
 }
 
 //
@@ -141,6 +135,7 @@ auto EditableCircuit::format() const -> std::string {
 }
 
 auto EditableCircuit::layout() const noexcept -> const Layout& {
+    fmt::print("{}\n", input_connections_.find({}, schematic_).has_value());
     return layout_;
 }
 
