@@ -108,6 +108,7 @@ auto find_impl(const ConnectionCache<IsInput>& cache, point_t position,
     if (auto res = cache.find(position)) {
         return std::make_optional(to_connection<IsInput>(schematic, *res));
     }
+    // nullopt with correct type
     return std::optional<decltype(to_connection<IsInput>(schematic, {}))> {};
 }
 

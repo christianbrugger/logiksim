@@ -242,6 +242,7 @@ if (LS_ENABLE_PCH)
         <string_view>
         <type_traits>
         <utility>
+        <variant>
         <vector>
     )
 else()
