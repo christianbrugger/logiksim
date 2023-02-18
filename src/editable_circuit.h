@@ -52,9 +52,8 @@ class CollisionCache {
         wire_horizontal,
         wire_vertical,
         wire_point,
-
+        // inferred states
         wire_crossing,
-        body_and_wire,
     };
 
     struct collision_data_t {

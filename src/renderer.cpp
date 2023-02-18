@@ -10,6 +10,7 @@
 #include <boost/random/uniform_int_distribution.hpp>
 
 #include <algorithm>
+#include <array>
 #include <numeric>
 #include <utility>
 
@@ -267,11 +268,7 @@ auto render_point_shape(BLContext& ctx, point_t point, PointShape shape, double 
             const auto y = point.y * settings.scale;
             const auto d = size;
 
-            ctx.strokeLine(BLLine {x - d, y + d, x - d, y - d});
-            ctx.strokeLine(BLLine {x + d, y + d, x + d, y - d});
-
-            ctx.strokeLine(BLLine {x - d, y + d, x + d, y + d});
-            ctx.strokeLine(BLLine {x - d, y - d, x + d, y - d});
+            ctx.strokeRect(BLRect {x - d, y - d, 2 * d, 2 * d});
             return;
         }
         case diamond: {
@@ -279,11 +276,10 @@ auto render_point_shape(BLContext& ctx, point_t point, PointShape shape, double 
             const auto y = point.y * settings.scale;
             const auto d = size;
 
-            ctx.strokeLine(BLLine {x, y + d, x + d, y});
-            ctx.strokeLine(BLLine {x, y + d, x - d, y});
-
-            ctx.strokeLine(BLLine {x, y - d, x + d, y});
-            ctx.strokeLine(BLLine {x, y - d, x - d, y});
+            const auto poly = std::array {BLPoint {x, y - d}, BLPoint {x + d, y},
+                                          BLPoint {x, y + d}, BLPoint {x - d, y}};
+            const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
+            ctx.strokePolygon(BLArrayView<BLPoint>(view));
             return;
         }
         case horizontal: {
@@ -364,10 +360,6 @@ auto render_editable_circuit_caches(BLContext& ctx,
             }
             case wire_crossing: {
                 render_point(ctx, point, PointShape::plus, color, size);
-                break;
-            }
-            case body_and_wire: {
-                render_point(ctx, point, PointShape::circle, color, size);
                 break;
             }
         }
