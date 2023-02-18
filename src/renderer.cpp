@@ -253,6 +253,55 @@ auto render_point_shape(BLContext& ctx, point_t point, PointShape shape, double 
             ctx.strokeLine(BLLine {x - d, y + d, x + d, y - d});
             return;
         }
+        case plus: {
+            const auto x = point.x * settings.scale;
+            const auto y = point.y * settings.scale;
+            const auto d = size;
+
+            ctx.strokeLine(BLLine {x, y + d, x, y - d});
+            ctx.strokeLine(BLLine {x - d, y, x + d, y});
+            return;
+        }
+        case square: {
+            const auto x = point.x * settings.scale;
+            const auto y = point.y * settings.scale;
+            const auto d = size;
+
+            ctx.strokeLine(BLLine {x - d, y + d, x - d, y - d});
+            ctx.strokeLine(BLLine {x + d, y + d, x + d, y - d});
+
+            ctx.strokeLine(BLLine {x - d, y + d, x + d, y + d});
+            ctx.strokeLine(BLLine {x - d, y - d, x + d, y - d});
+            return;
+        }
+        case diamond: {
+            const auto x = point.x * settings.scale;
+            const auto y = point.y * settings.scale;
+            const auto d = size;
+
+            ctx.strokeLine(BLLine {x, y + d, x + d, y});
+            ctx.strokeLine(BLLine {x, y + d, x - d, y});
+
+            ctx.strokeLine(BLLine {x, y - d, x + d, y});
+            ctx.strokeLine(BLLine {x, y - d, x - d, y});
+            return;
+        }
+        case horizontal: {
+            const auto x = point.x * settings.scale;
+            const auto y = point.y * settings.scale;
+            const auto d = size;
+
+            ctx.strokeLine(BLLine {x - d, y, x + d, y});
+            return;
+        }
+        case vertical: {
+            const auto x = point.x * settings.scale;
+            const auto y = point.y * settings.scale;
+            const auto d = size;
+
+            ctx.strokeLine(BLLine {x, y + d, x, y - d});
+            return;
+        }
     }
 
     throw_exception("unknown shape type.");
@@ -280,11 +329,49 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
 auto render_editable_circuit_caches(BLContext& ctx,
                                     const EditableCircuit& editable_circuit,
                                     const RenderSettings& settings) -> void {
-    const auto size = settings.scale * (1.0 / 3.0);
-    render_points(ctx, editable_circuit.input_positions(), PointShape::circle,
-                  defaults::color_green, size, settings);
-    render_points(ctx, editable_circuit.output_positions(), PointShape::cross,
-                  defaults::color_green, size, settings);
+    // connection caches
+    {
+        const auto size = settings.scale * (1.0 / 3.0);
+        render_points(ctx, editable_circuit.input_positions(), PointShape::circle,
+                      defaults::color_green, size, settings);
+        render_points(ctx, editable_circuit.output_positions(), PointShape::cross,
+                      defaults::color_green, size, settings);
+    }
+
+    // collision cache
+    for (auto [point, state] : editable_circuit.collision_states()) {
+        const auto color = defaults::color_orange;
+        const auto size = settings.scale * (1.0 / 4.0);
+
+        switch (state) {
+            using enum CollisionCache::CollisionState;
+
+            case element_body: {
+                render_point(ctx, point, PointShape::square, color, size);
+                break;
+            }
+            case wire_horizontal: {
+                render_point(ctx, point, PointShape::horizontal, color, size);
+                break;
+            }
+            case wire_vertical: {
+                render_point(ctx, point, PointShape::vertical, color, size);
+                break;
+            }
+            case wire_point: {
+                render_point(ctx, point, PointShape::diamond, color, size);
+                break;
+            }
+            case wire_crossing: {
+                render_point(ctx, point, PointShape::plus, color, size);
+                break;
+            }
+            case body_and_wire: {
+                render_point(ctx, point, PointShape::circle, color, size);
+                break;
+            }
+        }
+    }
 }
 
 //

@@ -81,12 +81,8 @@ auto line_t::format() const -> std::string {
     return fmt::format("Line({}, {})", p0, p1);
 }
 
-// time_t
-// delay_t      logicsim::format_microsecond_time(ctx.out(), obj.value);
-// color_t      fmt::format_to(ctx.out(), "{:X}", obj.value);
-// grid_t       fmt::format_to(ctx.out(), "{}", obj.value);
-// point_fine_t fmt::format_to(ctx.out(), "[{:.3f}, {:.3f}]", obj.x, obj.y);
-// point_t      fmt::format_to(ctx.out(), "[{}, {}]", obj.x, obj.y);
-// line_t       fmt::format_to(ctx.out(), "Line({}, {})", obj.p0, obj.p1);
+auto rect_t::format() const -> std::string {
+    return fmt::format("Rect({}, {})", p0, p1);
+}
 
 }  // namespace logicsim

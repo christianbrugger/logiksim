@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
+#include "iterator.h"
 #include "layout.h"
 #include "schematic.h"
 
@@ -38,9 +39,67 @@ class ConnectionCache {
         return std::ranges::views::keys(connections_);
     }
 
+    // TODO implement validate
+
    private:
-    map_type connections_;
+    map_type connections_ {};
 };
+
+class CollisionCache {
+   public:
+    enum class CollisionState : uint8_t {
+        element_body,
+        wire_horizontal,
+        wire_vertical,
+        wire_point,
+
+        wire_crossing,
+        body_and_wire,
+    };
+
+    struct collision_data_t {
+        element_id_t element_id_body {null_element};
+        element_id_t element_id_horizontal {null_element};
+        element_id_t element_id_vertical {null_element};
+
+        auto operator==(const collision_data_t &other) const -> bool = default;
+    };
+
+    constexpr static inline collision_data_t empty_collision_data = {
+        .element_id_body = null_element,
+        .element_id_horizontal = null_element,
+        .element_id_vertical = null_element,
+    };
+
+    static_assert(std::is_aggregate_v<collision_data_t>);
+
+    using map_type = ankerl::unordered_dense::map<point_t, collision_data_t>;
+
+   public:
+    auto insert(element_id_t element_id, const Schematic &schematic, const Layout &layout)
+        -> void;
+    auto remove(element_id_t element_id, const Schematic &schematic, const Layout &layout)
+        -> void;
+    auto update(element_id_t new_element_id, element_id_t old_element_id,
+                const Schematic &schematic, const Layout &layout) -> void;
+
+    auto is_colliding(element_id_t element_id, const Schematic &schematic,
+                      const Layout &layout) -> bool;
+
+    [[nodiscard]] static auto to_collision_state(collision_data_t data) -> CollisionState;
+
+    // std::tuple<point_t, CollisionState>
+    [[nodiscard]] auto states() const {
+        return transform_view(map_, [](const map_type::value_type &value) {
+            return std::make_tuple(value.first, to_collision_state(value.second));
+        });
+    }
+
+    // TODO implement validate
+
+   private:
+    map_type map_ {};
+};  // namespace logicsim
 
 class EditableCircuit {
    public:
@@ -61,6 +120,10 @@ class EditableCircuit {
 
     [[nodiscard]] auto output_positions() const {
         return output_connections_.positions();
+    };
+
+    [[nodiscard]] auto collision_states() const {
+        return collicions_cache_.states();
     };
 
     auto add_inverter_element(point_t position, DisplayOrientation orientation
@@ -94,6 +157,7 @@ class EditableCircuit {
 
     ConnectionCache<true> input_connections_;
     ConnectionCache<false> output_connections_;
+    CollisionCache collicions_cache_;
 
     Schematic schematic_;
     Layout layout_;

@@ -11,17 +11,26 @@
 
 namespace logicsim {
 
+[[nodiscard]] auto element_collision_body(const Schematic &schematic,
+                                          const Layout &layout, element_id_t element_id)
+    -> rect_t;
+
 auto require_min_input_count(Schematic::ConstElement element, std::size_t count) -> void;
 auto require_min_output_count(Schematic::ConstElement element, std::size_t count) -> void;
 auto require_input_count(Schematic::ConstElement element, std::size_t count) -> void;
 auto require_output_count(Schematic::ConstElement element, std::size_t count) -> void;
 
+namespace detail {
+
 [[nodiscard]] auto transform(point_t element_position, DisplayOrientation orientation,
                              point_t offset) -> point_t;
+
+}
 
 template <typename Func>
 auto for_each_input_location(const Schematic &schematic, const Layout &layout,
                              element_id_t element_id, Func next_input) -> void {
+    using detail::transform;
     const auto element = schematic.element(element_id);
     const auto orientation = layout.orientation(element_id);
 
@@ -106,6 +115,7 @@ auto for_each_input_location(const Schematic &schematic, const Layout &layout,
 template <typename Func>
 auto for_each_output_location(const Schematic &schematic, const Layout &layout,
                               element_id_t element_id, Func next_output) -> void {
+    using detail::transform;
     const auto element = schematic.element(element_id);
     const auto orientation = layout.orientation(element_id);
 
@@ -131,7 +141,7 @@ auto for_each_output_location(const Schematic &schematic, const Layout &layout,
         case inverter_element: {
             require_output_count(element, 1);
             const auto position = layout.position(element_id);
-            next_output(transform(position, orientation, point_t {2, 0}));
+            next_output(transform(position, orientation, point_t {1, 0}));
             return;
         }
 

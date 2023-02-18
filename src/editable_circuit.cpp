@@ -2,12 +2,15 @@
 
 #include "algorithm.h"
 #include "exceptions.h"
+#include "geometry.h"
 #include "iterator.h"
 #include "layout_calculations.h"
+#include "range.h"
 
 #include <fmt/core.h>
 
 #include <algorithm>
+#include <cassert>
 
 namespace logicsim {
 
@@ -122,6 +125,191 @@ template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic) const
     -> std::optional<const_connection_proxy> {
     return find_impl(*this, position, schematic);
+}
+
+//
+// Collision Cache
+//
+
+template <typename Func>
+auto for_each_wire_collision_state(const Schematic& schematic, const Layout& layout,
+                                   element_id_t element_id, Func next_state) -> void {
+    const auto& line_tree = layout.line_tree(element_id);
+
+    for (auto segment : line_tree.segments()) {
+        auto line = order_points(line_t {segment.p0, segment.p1});
+
+        if (is_horizontal(line)) {
+            for (auto x : range(line.p0.x + grid_t {1}, line.p1.x)) {
+                next_state(point_t {x, line.p0.y},
+                           CollisionCache::CollisionState::wire_horizontal);
+            }
+        } else {
+            for (auto y : range(line.p0.y + grid_t {1}, line.p1.y)) {
+                next_state(point_t {line.p0.x, y},
+                           CollisionCache::CollisionState::wire_vertical);
+            }
+        }
+    }
+
+    for (point_t point : line_tree.points()) {
+        next_state(point, CollisionCache::CollisionState::wire_point);
+    }
+}
+
+template <typename Func>
+auto for_each_body_collision_state(const Schematic& schematic, const Layout& layout,
+                                   element_id_t element_id, Func next_state) -> void {
+    const auto rect = element_collision_body(schematic, layout, element_id);
+
+    for (auto x : range(rect.p0.x, rect.p1.x + grid_t {1})) {
+        for (auto y : range(rect.p0.y, rect.p1.y + grid_t {1})) {
+            next_state(point_t {x, y}, CollisionCache::CollisionState::element_body);
+        }
+    }
+}
+
+// next_state(point_t position, CollisionState state) -> void
+template <typename Func>
+auto for_each_element_collision_state(const Schematic& schematic, const Layout& layout,
+                                      element_id_t element_id, Func next_state) -> void {
+    const auto element_type = schematic.element(element_id).element_type();
+
+    if (element_type == ElementType::placeholder) {
+        return;
+    } else if (element_type == ElementType::wire) {
+        for_each_wire_collision_state(schematic, layout, element_id, next_state);
+    } else {
+        for_each_body_collision_state(schematic, layout, element_id, next_state);
+    }
+}
+
+namespace {
+template <typename Apply>
+auto apply_function(CollisionCache::map_type& map, point_t position,
+                    CollisionCache::CollisionState state, Apply apply_func) {
+    auto& data = map[position];
+    switch (state) {
+        using enum CollisionCache::CollisionState;
+
+        case element_body: {
+            apply_func(data.element_id_body);
+            break;
+        }
+        case wire_horizontal: {
+            apply_func(data.element_id_horizontal);
+            break;
+        }
+        case wire_vertical: {
+            apply_func(data.element_id_vertical);
+            break;
+        }
+        case wire_point: {
+            apply_func(data.element_id_horizontal);
+            apply_func(data.element_id_vertical);
+            break;
+        }
+        case wire_crossing:
+        case body_and_wire: {
+            throw_exception("invalid state here");
+        }
+    };
+
+    if (data == CollisionCache::empty_collision_data) {
+        map.erase(position);
+    }
+}
+}  // namespace
+
+auto CollisionCache::insert(element_id_t element_id, const Schematic& schematic,
+                            const Layout& layout) -> void {
+    const auto check_empty_and_assign = [element_id](element_id_t& obj) {
+        if (obj != null_element) {
+            throw_exception("collision state is not empty in insert.");
+        }
+        obj = element_id;
+    };
+
+    for_each_element_collision_state(
+        schematic, layout, element_id, [&](point_t position, CollisionState state) {
+            apply_function(map_, position, state, check_empty_and_assign);
+        });
+}
+
+auto CollisionCache::remove(element_id_t element_id, const Schematic& schematic,
+                            const Layout& layout) -> void {
+    const auto check_and_delete = [element_id](element_id_t& obj) {
+        if (obj != element_id) {
+            throw_exception("exected collision state presence in remove.");
+        }
+        obj = null_element;
+    };
+
+    for_each_element_collision_state(
+        schematic, layout, element_id, [&](point_t position, CollisionState state) {
+            apply_function(map_, position, state, check_and_delete);
+        });
+}
+
+auto CollisionCache::update(element_id_t new_element_id, element_id_t old_element_id,
+                            const Schematic& schematic, const Layout& layout) -> void {
+    const auto check_and_update = [new_element_id, old_element_id](element_id_t& obj) {
+        if (obj != old_element_id) {
+            throw_exception("exected collision state presence in update.");
+        }
+        obj = new_element_id;
+    };
+
+    for_each_element_collision_state(
+        schematic, layout, new_element_id, [&](point_t position, CollisionState state) {
+            apply_function(map_, position, state, check_and_update);
+        });
+}
+
+auto CollisionCache::is_colliding(element_id_t element_id, const Schematic& schematic,
+                                  const Layout& layout) -> bool {
+    return false;
+}
+
+auto CollisionCache::to_collision_state(collision_data_t data) -> CollisionState {
+    using enum CollisionState;
+
+    if (data.element_id_body != null_element) {
+        if (data.element_id_horizontal == null_element
+            && data.element_id_vertical == null_element) {
+            return element_body;
+        } else {
+            // needs to be wire point -> both set
+            assert((data.element_id_horizontal != null_element)
+                   && (data.element_id_vertical != null_element));
+            return body_and_wire;
+        }
+    }
+
+    if (data.element_id_body != null_element) {
+        return element_body;
+    }
+
+    if (data.element_id_horizontal != null_element
+        && data.element_id_vertical == null_element) {
+        return wire_horizontal;
+    }
+
+    if (data.element_id_horizontal == null_element
+        && data.element_id_vertical != null_element) {
+        return wire_vertical;
+    }
+
+    if (data.element_id_horizontal == data.element_id_vertical) {
+        return wire_point;
+    }
+
+    if (data.element_id_horizontal != null_element
+        && data.element_id_vertical != null_element) {
+        return wire_crossing;
+    }
+
+    throw_exception("Invalid collision state");
 }
 
 //
@@ -335,17 +523,20 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
 auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
     input_connections_.insert(element_id, schematic_, layout_);
     output_connections_.insert(element_id, schematic_, layout_);
+    collicions_cache_.insert(element_id, schematic_, layout_);
 }
 
 auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
     input_connections_.remove(element_id, schematic_, layout_);
     output_connections_.remove(element_id, schematic_, layout_);
+    collicions_cache_.remove(element_id, schematic_, layout_);
 }
 
 auto EditableCircuit::cache_update(element_id_t new_element_id,
                                    element_id_t old_element_id) -> void {
     input_connections_.update(new_element_id, old_element_id, schematic_, layout_);
     output_connections_.update(new_element_id, old_element_id, schematic_, layout_);
+    collicions_cache_.update(new_element_id, old_element_id, schematic_, layout_);
 }
 
 }  // namespace logicsim

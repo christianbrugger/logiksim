@@ -29,7 +29,7 @@ struct RenderSettings {
 
 auto render_background(BLContext& ctx, const RenderSettings& settings = {}) -> void;
 
-enum class PointShape { circle, cross };
+enum class PointShape { circle, cross, plus, square, diamond, horizontal, vertical };
 
 namespace detail {
 auto set_point_style(BLContext& ctx, color_t color) -> void;

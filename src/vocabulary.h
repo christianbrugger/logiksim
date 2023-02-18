@@ -217,7 +217,10 @@ struct grid_t {
     using value_type = int16_t;
     value_type value;
 
-    [[nodiscard]] grid_t() = default;
+    using difference_type = int32_t;
+    static_assert(sizeof(difference_type) > sizeof(value_type));
+
+    grid_t() = default;
 
     [[nodiscard]] constexpr grid_t(value_type v) noexcept : value {v} {};
     [[nodiscard]] constexpr explicit grid_t(int v) noexcept
@@ -256,6 +259,16 @@ struct grid_t {
 
         static_assert(sizeof(result) > sizeof(value));
         return {gsl::narrow<grid_t::value_type>(result)};
+    }
+
+    auto operator++() -> grid_t & {
+        return *this = *this + grid_t {1};
+    }
+
+    auto operator++(int) -> grid_t {
+        auto tmp = *this;
+        operator++();
+        return tmp;
     }
 
     // conversions
@@ -311,7 +324,7 @@ struct point_t {
 static_assert(std::is_trivial<point_t>::value);
 
 constexpr auto is_orthogonal(point_t p0, point_t p1) noexcept -> bool {
-    // xor to disallow zero length lines
+    // xor disallows zero length lines
     return (p0.x == p1.x) ^ (p0.y == p1.y);
 }
 
@@ -320,7 +333,7 @@ struct line_t {
     point_t p0;
     point_t p1;
 
-    [[nodiscard]] explicit constexpr line_t() noexcept : p0 {}, p1 {} {};
+    line_t() = default;
 
     [[nodiscard]] explicit constexpr line_t(point_t p0_, point_t p1_)
         : p0 {p0_}, p1 {p1_} {
@@ -334,8 +347,28 @@ struct line_t {
     [[nodiscard]] constexpr auto operator==(const line_t &other) const -> bool = default;
 };
 
+static_assert(std::is_trivial_v<line_t>);
+static_assert(std::is_trivially_constructible_v<line_t>);
 static_assert(std::is_trivially_copyable<line_t>::value);
 static_assert(std::is_trivially_copy_assignable<line_t>::value);
+
+struct rect_t {
+    point_t p0;
+    point_t p1;
+
+    rect_t() = default;
+
+    [[nodiscard]] explicit constexpr rect_t(point_t p0_, point_t p1_)
+        : p0 {p0_}, p1 {p1_} {
+        if (p0_.x > p1_.x || p0_.y > p1_.y) [[unlikely]] {
+            throw_exception("point in rect_t need to be ordered");
+        }
+    };
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] constexpr auto operator==(const rect_t &other) const -> bool = default;
+};
 
 }  // namespace logicsim
 

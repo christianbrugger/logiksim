@@ -359,6 +359,10 @@ auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
     return result;
 }
 
+auto LineTree::points() const -> std::span<const point_t> {
+    return points_;
+}
+
 auto LineTree::format() const -> std::string {
     return fmt::format("LineTree({}, {}, {}, {})", points_, indices_, lengths_,
                        output_points_);
