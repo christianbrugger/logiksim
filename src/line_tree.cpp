@@ -324,11 +324,11 @@ auto LineTree::segment_points(int index) const -> std::pair<point_t, point_t> {
 }
 
 auto LineTree::segments() const noexcept -> SegmentView {
-    return SegmentView(*this);
+    return SegmentView {*this};
 }
 
 auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
-    return SegmentSizeView(*this);
+    return SegmentSizeView {*this};
 }
 
 auto LineTree::output_count() const -> std::size_t {
@@ -362,6 +362,10 @@ auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
 
 auto LineTree::points() const -> std::span<const point_t> {
     return points_;
+}
+
+auto LineTree::internal_points() const -> InternalPointView {
+    return InternalPointView {*this};
 }
 
 auto LineTree::format() const -> std::string {
@@ -494,7 +498,7 @@ auto LineTree::SegmentIterator::operator++() noexcept -> SegmentIterator& {
 
 auto LineTree::SegmentIterator::operator++(int) noexcept -> SegmentIterator {
     auto tmp = *this;
-    ++(*this);
+    operator++();
     return tmp;
 }
 
@@ -505,7 +509,7 @@ auto LineTree::SegmentIterator::operator--() noexcept -> SegmentIterator& {
 
 auto LineTree::SegmentIterator::operator--(int) noexcept -> SegmentIterator {
     auto tmp = *this;
-    --(*this);
+    operator--();
     return tmp;
 }
 
@@ -547,12 +551,67 @@ auto LineTree::SegmentView::begin() const noexcept -> iterator_type {
 }
 
 auto LineTree::SegmentView::end() const noexcept -> iterator_type {
-    return iterator_type {*line_tree_,
-                          gsl::narrow_cast<index_t>(line_tree_->segment_count())};
+    return iterator_type {*line_tree_, gsl::narrow_cast<index_t>(size())};
 }
 
 auto LineTree::SegmentView::size() const noexcept -> size_t {
     return line_tree_->segment_count();
+}
+
+//
+// Internal Point Iterator
+//
+
+LineTree::InternalPointIterator::InternalPointIterator(const LineTree& line_tree,
+                                                       index_t index) noexcept
+    : line_tree_ {&line_tree}, index_ {index} {}
+
+auto LineTree::InternalPointIterator::operator*() const -> value_type {
+    if (line_tree_ == nullptr) [[unlikely]] {
+        throw_exception("line tree cannot be null when dereferencing segment iterator");
+    }
+    return line_tree_->points_.at(index_);
+}
+
+auto LineTree::InternalPointIterator::operator++() noexcept -> InternalPointIterator& {
+    ++index_;
+
+    while (index_ < line_tree_->segment_count()
+           && line_tree_->starts_new_subtree(index_)) {
+        ++index_;
+    }
+
+    return *this;
+}
+
+auto LineTree::InternalPointIterator::operator++(int) noexcept -> InternalPointIterator {
+    auto tmp = *this;
+    operator++();
+    return tmp;
+}
+
+auto LineTree::InternalPointIterator::operator==(
+    const InternalPointIterator& right) const noexcept -> bool {
+    return index_ >= right.index_;
+}
+
+//
+// Internal Point View
+//
+
+LineTree::InternalPointView::InternalPointView(const LineTree& line_tree) noexcept
+    : line_tree_ {&line_tree} {}
+
+auto LineTree::InternalPointView::begin() const noexcept -> iterator_type {
+    return iterator_type {*line_tree_, 1};
+}
+
+auto LineTree::InternalPointView::end() const noexcept -> iterator_type {
+    if (line_tree_->points_.size() == 0) {
+        return begin();
+    }
+    return iterator_type {*line_tree_, gsl::narrow_cast<index_t>(
+                                           line_tree_->points_.size() - std::size_t {1})};
 }
 
 //
@@ -581,14 +640,14 @@ auto LineTree::SegmentSizeIterator::operator++() noexcept -> SegmentSizeIterator
     } else {
         start_length_ = (**this).p1_length;
     }
-    ++point_index_;
 
+    ++point_index_;
     return *this;
 }
 
 auto LineTree::SegmentSizeIterator::operator++(int) noexcept -> SegmentSizeIterator {
     const auto tmp = *this;
-    ++(*this);
+    operator++();
     return tmp;
 }
 

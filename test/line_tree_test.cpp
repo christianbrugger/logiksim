@@ -40,6 +40,46 @@ TEST(LineTree, TestSegmentIterator) {
     ASSERT_THAT(tree.segments(), testing::ElementsAre(line0, line1));
 }
 
+TEST(LineTree, TestInternalPointsIteratorEmpty) {
+    const auto tree = LineTree {};
+
+    ASSERT_THAT(tree.internal_points(), testing::ElementsAre());
+}
+
+TEST(LineTree, TestInternalPointsIteratorTwo) {
+    const auto tree = LineTree {{0, 0}, {0, 10}};
+
+    ASSERT_THAT(tree.internal_points(), testing::ElementsAre());
+}
+
+TEST(LineTree, TestInternalPointsIteratorThree) {
+    const auto tree = LineTree {{0, 0}, {10, 0}, {10, 12}};
+
+    ASSERT_THAT(tree.internal_points(), testing::ElementsAre(point_t {10, 0}));
+}
+
+TEST(LineTree, TestInternalPointsIteratorMergedTwo) {
+    auto tree1 = LineTree({{0, 0}, {10, 0}});
+    auto tree2 = LineTree({{5, 0}, {5, 10}});
+
+    auto tree = merge({tree1, tree2});
+    ASSERT_EQ(tree.has_value(), true);
+
+    ASSERT_THAT(tree->internal_points(), testing::ElementsAre(point_t {5, 0}));
+}
+
+TEST(LineTree, TestInternalPointsIteratorMergedThree) {
+    auto tree1 = LineTree({{0, 0}, {10, 0}});
+    auto tree2 = LineTree({{5, 0}, {5, 10}});
+    auto tree3 = LineTree({{2, 0}, {2, 20}, {10, 20}});
+
+    auto tree = merge({tree1, tree2, tree3});
+    ASSERT_EQ(tree.has_value(), true);
+
+    ASSERT_THAT(tree->internal_points(),
+                testing::ElementsAre(point_t {2, 0}, point_t {2, 20}, point_t {5, 0}));
+}
+
 TEST(LineTree, TestSizeSegmentIterator) {
     const auto tree = LineTree {{0, 0}, {10, 0}, {10, 12}, {20, 12}};
 
@@ -301,11 +341,6 @@ TEST(LineTree, OutputPositions) {
 
     auto tree_merged = merge({tree1, tree2, tree3});
     ASSERT_EQ(tree_merged.has_value(), true);
-
-    fmt::print("tree1 = {}\n", tree1);
-    fmt::print("tree2 = {}\n", tree2);
-    fmt::print("tree3 = {}\n", tree3);
-    fmt::print("tree_merged = {}\n", *tree_merged);
 
     EXPECT_THAT(tree1.output_positions().size(), 1);
     EXPECT_THAT(tree2.output_positions().size(), 1);

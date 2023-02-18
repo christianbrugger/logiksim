@@ -67,6 +67,9 @@ class LineTree {
     class SegmentIterator;
     class SegmentView;
 
+    class InternalPointIterator;
+    class InternalPointView;
+
     struct sized_line2d_t;
     class SegmentSizeIterator;
     class SegmentSizeView;
@@ -108,6 +111,8 @@ class LineTree {
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
     [[nodiscard]] auto points() const -> std::span<const point_t>;
+    // skips input and output points
+    [[nodiscard]] auto internal_points() const -> InternalPointView;
 
     [[nodiscard]] auto input_position() const -> point_t;
     [[nodiscard]] auto output_count() const -> std::size_t;
@@ -221,6 +226,54 @@ class LineTree::SegmentView {
 };
 
 //
+// Internal Point Iterator & View
+//
+
+class LineTree::InternalPointIterator {
+   public:
+    using iterator_concept = std::forward_iterator_tag;
+    using iterator_category = std::forward_iterator_tag;
+
+    using value_type = point_t;
+    using difference_type = std::ptrdiff_t;
+    using pointer = void;
+    using reference = value_type;
+
+    // needs to be default constructable, so ElementView can become a range and view
+    InternalPointIterator() = default;
+    [[nodiscard]] explicit InternalPointIterator(const LineTree &line_tree,
+                                                 index_t index) noexcept;
+
+    [[nodiscard]] auto operator*() const -> value_type;
+    auto operator++() noexcept -> InternalPointIterator &;
+    auto operator++(int) noexcept -> InternalPointIterator;
+
+    [[nodiscard]] auto operator==(const InternalPointIterator &right) const noexcept
+        -> bool;
+
+   private:
+    const LineTree *line_tree_ {};  // can be null, because default constructable
+    index_t index_ {};
+};
+
+class LineTree::InternalPointView {
+   public:
+    using iterator_type = InternalPointIterator;
+
+    using value_type = typename iterator_type::value_type;
+    using pointer = typename iterator_type::pointer;
+    using reference = typename iterator_type::reference;
+
+    [[nodiscard]] explicit InternalPointView(const LineTree &line_tree) noexcept;
+
+    [[nodiscard]] auto begin() const noexcept -> iterator_type;
+    [[nodiscard]] auto end() const noexcept -> iterator_type;
+
+   private:
+    gsl::not_null<const LineTree *> line_tree_;
+};
+
+//
 // Size Iterator & View
 //
 
@@ -284,11 +337,16 @@ class LineTree::SegmentSizeView {
 
 }  // namespace logicsim
 
-static_assert(std::forward_iterator<logicsim::LineTree::SegmentIterator>);
+static_assert(std::bidirectional_iterator<logicsim::LineTree::SegmentIterator>);
+static_assert(std::forward_iterator<logicsim::LineTree::InternalPointIterator>);
 static_assert(std::forward_iterator<logicsim::LineTree::SegmentSizeIterator>);
 
 template <>
 inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentView> = true;
+
+template <>
+inline constexpr bool std::ranges::enable_view<logicsim::LineTree::InternalPointIterator>
+    = true;
 
 template <>
 inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentSizeView>
