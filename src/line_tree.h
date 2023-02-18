@@ -3,6 +3,7 @@
 
 #include "format.h"
 #include "geometry.h"
+#include "iterator.h"
 
 #include <fmt/core.h>
 #include <folly/small_vector.h>
@@ -110,8 +111,12 @@ class LineTree {
 
     [[nodiscard]] auto input_position() const -> point_t;
     [[nodiscard]] auto output_count() const -> std::size_t;
-    [[nodiscard]] auto output_positions() const -> std::span<const point_t>;
     [[nodiscard]] auto calculate_output_lengths() const -> std::vector<length_t>;
+
+    [[nodiscard]] auto output_positions() const {
+        return transform_view(output_indices_,
+                              [&](index_t index) { return points_.at(index); });
+    }
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -145,7 +150,7 @@ class LineTree {
     point_vector_t points_ {};
     index_vector_t indices_ {};
     length_vector_t lengths_ {};
-    point_vector_t output_points_ {};
+    index_vector_t output_indices_ {};
 
    public:
     explicit LineTree(point_vector_t points, index_vector_t indices,

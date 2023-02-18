@@ -226,12 +226,15 @@ class LineTree::TreeBuilderVisitor {
         }
 
         // calculate target index
-        auto a_index = line_tree_index_.at(a);
-        auto b_index = gsl::narrow_cast<index_t>(tree_->points_.size());
+        const auto a_index = line_tree_index_.at(a);
+        const auto b_index = gsl::narrow_cast<index_t>(tree_->points_.size());
 
         if (a_index + 1 != b_index) {  // new subtree?
             tree_->lengths_.push_back(length_recorder_.length(a));
-            tree_->output_points_.push_back(tree_->points_.back());
+
+            auto last_index
+                = gsl::narrow_cast<index_t>(tree_->points_.size() - std::size_t {1});
+            tree_->output_indices_.push_back(last_index);
         }
 
         line_tree_index_.at(b) = b_index;
@@ -258,7 +261,9 @@ auto LineTree::from_graph(point_t root, const Graph& graph) -> std::optional<Lin
 
     auto builder = TreeBuilderVisitor {*line_tree, graph.vertex_count()};
     if (depth_first_search(graph, builder, *root_index) == DFSResult::success) {
-        line_tree->output_points_.push_back(line_tree->points_.back());
+        auto last_index
+            = gsl::narrow_cast<index_t>(line_tree->points_.size() - std::size_t {1});
+        line_tree->output_indices_.push_back(last_index);
         return line_tree;
     }
 
@@ -269,7 +274,7 @@ auto LineTree::swap(LineTree& other) noexcept -> void {
     points_.swap(other.points_);
     indices_.swap(other.indices_);
     lengths_.swap(other.lengths_);
-    output_points_.swap(other.output_points_);
+    output_indices_.swap(other.output_indices_);
 }
 
 auto swap(LineTree& a, LineTree& b) noexcept -> void {
@@ -301,10 +306,6 @@ auto LineTree::input_position() const -> point_t {
     return points_[0];
 }
 
-auto LineTree::output_positions() const -> std::span<const point_t> {
-    return output_points_;
-}
-
 auto LineTree::segment_count() const noexcept -> int {
     return gsl::narrow_cast<int>(std::size(indices_));
 }
@@ -331,7 +332,7 @@ auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
 }
 
 auto LineTree::output_count() const -> std::size_t {
-    return output_points_.size();
+    return output_indices_.size();
 }
 
 auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
@@ -365,7 +366,7 @@ auto LineTree::points() const -> std::span<const point_t> {
 
 auto LineTree::format() const -> std::string {
     return fmt::format("LineTree({}, {}, {}, {})", points_, indices_, lengths_,
-                       output_points_);
+                       output_indices_);
 }
 
 // internal
@@ -386,7 +387,8 @@ auto LineTree::initialize_data_structure() -> void {
     indices_.resize(points_.size() - 1);
     std::iota(indices_.begin(), indices_.end(), 0);
 
-    output_points_.push_back(points_.back());
+    auto last_index = gsl::narrow_cast<index_t>(points_.size() - std::size_t {1});
+    output_indices_.push_back(last_index);
 }
 
 auto LineTree::validate_points_or_throw() const -> void {
