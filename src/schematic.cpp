@@ -4,7 +4,7 @@
 #include "algorithm.h"
 #include "exceptions.h"
 #include "format.h"
-#include "iterator.h"
+#include "iterator_adaptor.h"
 #include "line_tree.h"
 #include "random.h"
 #include "range.h"

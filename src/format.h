@@ -6,7 +6,7 @@
 
 #include "algorithm.h"
 #include "exceptions.h"
-#include "iterator.h"
+#include "iterator_adaptor.h"
 
 #include <boost/algorithm/string/join.hpp>
 #include <fmt/core.h>

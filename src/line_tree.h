@@ -3,7 +3,7 @@
 
 #include "format.h"
 #include "geometry.h"
-#include "iterator.h"
+#include "iterator_adaptor.h"
 
 #include <fmt/core.h>
 #include <folly/small_vector.h>

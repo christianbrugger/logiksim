@@ -3,7 +3,7 @@
 #include "algorithm.h"
 #include "exceptions.h"
 #include "geometry.h"
-#include "iterator.h"
+#include "iterator_adaptor.h"
 #include "layout_calculations.h"
 #include "range.h"
 

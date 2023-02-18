@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
-#include "iterator.h"
+#include "iterator_adaptor.h"
 #include "layout.h"
 #include "schematic.h"
 

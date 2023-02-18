@@ -2,7 +2,7 @@
 #include "layout.h"
 
 #include "exceptions.h"
-#include "iterator.h"
+#include "iterator_adaptor.h"
 #include "range.h"
 
 namespace logicsim {

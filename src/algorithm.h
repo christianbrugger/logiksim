@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_ALGORITHMS_H
 #define LOGIKSIM_ALGORITHMS_H
 
-#include "iterator.h"
+#include "iterator_adaptor.h"
 
 #include <algorithm>
 #include <concepts>
