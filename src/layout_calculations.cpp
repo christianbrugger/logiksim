@@ -2,28 +2,15 @@
 
 namespace logicsim {
 
-auto require_min_input_count(Schematic::ConstElement element, std::size_t count) -> void {
-    if (element.input_count() < count) [[unlikely]] {
-        throw_exception("Element has not enough inputs.");
+auto require_min(std::size_t value, std::size_t count) -> void {
+    if (value < count) [[unlikely]] {
+        throw_exception("Object has not enough elements.");
     }
 }
 
-auto require_min_output_count(Schematic::ConstElement element, std::size_t count)
-    -> void {
-    if (element.output_count() < count) [[unlikely]] {
-        throw_exception("Element has not enough outputs.");
-    }
-}
-
-auto require_input_count(Schematic::ConstElement element, std::size_t count) -> void {
-    if (element.input_count() != count) [[unlikely]] {
-        throw_exception("Element has wrong number of inputs.");
-    }
-}
-
-auto require_output_count(Schematic::ConstElement element, std::size_t count) -> void {
-    if (element.output_count() != count) [[unlikely]] {
-        throw_exception("Element has wrong number of outputs.");
+auto require_equal(std::size_t value, std::size_t count) -> void {
+    if (value != count) [[unlikely]] {
+        throw_exception("Object has wrong number of elements.");
     }
 }
 
@@ -73,12 +60,8 @@ auto transform(point_t position, orientation_t orientation, point_t p0, point_t 
     throw_exception("Don't know how to transform locations.");
 }
 
-auto element_collision_rect(const Schematic &schematic, const Layout &layout,
-                            element_id_t element_id) -> rect_t {
-    const auto element = schematic.element(element_id);
-    const auto orientation = layout.orientation(element_id);
-
-    switch (element.element_type()) {
+auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
+    switch (data.element_type) {
         using enum ElementType;
 
         case placeholder: {
@@ -90,41 +73,34 @@ auto element_collision_rect(const Schematic &schematic, const Layout &layout,
         }
 
         case inverter_element: {
-            const auto position = layout.position(element_id);
-            return transform(position, orientation, {0, 0}, {1, 0});
+            return transform(data.position, data.orientation, {0, 0}, {1, 0});
         }
 
         case and_element:
         case or_element:
         case xor_element: {
-            require_min_input_count(element, 1);
-            const auto position = layout.position(element_id);
-            const auto height = element.input_count();
+            require_min(data.input_count, 1);
+            const auto height = data.input_count;
             const auto y2 = grid_t {height - std::size_t {1}};
-            return transform(position, orientation, {0, 0}, {2, y2});
+            return transform(data.position, data.orientation, {0, 0}, {2, y2});
         }
 
         case clock_generator: {
-            const auto position = layout.position(element_id);
-            return transform(position, orientation, {0, 0}, {3, 2});
+            return transform(data.position, data.orientation, {0, 0}, {3, 2});
         }
         case flipflop_jk: {
-            const auto position = layout.position(element_id);
-            return transform(position, orientation, {0, 0}, {4, 2});
+            return transform(data.position, data.orientation, {0, 0}, {4, 2});
         }
         case shift_register: {
-            require_min_output_count(element, 1);
-            const auto position = layout.position(element_id);
-            const auto output_count = element.output_count();
+            require_min(data.output_count, 1);
 
             // TODO width depends on internal state
             const auto width = 2 * 4;
 
             const auto x2 = grid_t {width};
-            const auto y2 = output_count == 1
-                                ? grid_t {1}
-                                : grid_t {2 * (element.output_count() - std::size_t {1})};
-            return transform(position, orientation, {0, 0}, {x2, y2});
+            const auto y2 = data.output_count == 1 ? grid_t {1}
+                                                   : grid_t {2 * (data.output_count - 1)};
+            return transform(data.position, data.orientation, {0, 0}, {x2, y2});
         }
     }
     throw_exception("'Don't know to calculate collision rect.");

@@ -16,6 +16,21 @@ namespace logicsim {
 
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
+auto to_layout_calculation_data(const Schematic& schematic, const Layout& layout,
+                                element_id_t element_id) -> layout_calculation_data_t {
+    const auto element = schematic.element(element_id);
+
+    return layout_calculation_data_t {
+        .line_tree = layout.line_tree(element_id),
+        .input_count = element.input_count(),
+        .output_count = element.output_count(),
+        .internal_state_count = 0,  // TODO implement
+        .position = layout.position(element_id),
+        .orientation = layout.orientation(element_id),
+        .element_type = element.element_type(),
+    };
+}
+
 //
 // ConnectionCache
 //
@@ -32,10 +47,10 @@ auto get_and_verify_cache_entry(ConnectionCache<true>::map_type& map, point_t po
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::insert(element_id_t element_id, const Schematic& schematic,
-                                      const Layout& layout) -> void {
+auto ConnectionCache<IsInput>::insert(element_id_t element_id,
+                                      layout_calculation_data_t data) -> void {
     // placeholders are not cached
-    if (schematic.element(element_id).is_placeholder()) {
+    if (is_placeholder(data)) {
         return;
     }
 
@@ -48,17 +63,17 @@ auto ConnectionCache<IsInput>::insert(element_id_t element_id, const Schematic& 
     };
 
     if constexpr (IsInput) {
-        iter_input_location_and_id(schematic, layout, element_id, add_position);
+        iter_input_location_and_id(data, add_position);
     } else {
-        iter_output_location_and_id(schematic, layout, element_id, add_position);
+        iter_output_location_and_id(data, add_position);
     }
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::remove(element_id_t element_id, const Schematic& schematic,
-                                      const Layout& layout) -> void {
+auto ConnectionCache<IsInput>::remove(element_id_t element_id,
+                                      layout_calculation_data_t data) -> void {
     // placeholders are not cached
-    if (schematic.element(element_id).is_placeholder()) {
+    if (is_placeholder(data)) {
         return;
     }
 
@@ -69,19 +84,18 @@ auto ConnectionCache<IsInput>::remove(element_id_t element_id, const Schematic& 
     };
 
     if constexpr (IsInput) {
-        iter_input_location_and_id(schematic, layout, element_id, remove_position);
+        iter_input_location_and_id(data, remove_position);
     } else {
-        iter_output_location_and_id(schematic, layout, element_id, remove_position);
+        iter_output_location_and_id(data, remove_position);
     }
 }
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::update(element_id_t new_element_id,
                                       element_id_t old_element_id,
-                                      const Schematic& schematic, const Layout& layout)
-    -> void {
+                                      layout_calculation_data_t data) -> void {
     // placeholders are not cached
-    if (schematic.element(new_element_id).is_placeholder()) {
+    if (is_placeholder(data)) {
         return;
     }
 
@@ -93,9 +107,9 @@ auto ConnectionCache<IsInput>::update(element_id_t new_element_id,
     };
 
     if constexpr (IsInput) {
-        iter_input_location_and_id(schematic, layout, new_element_id, update_id);
+        iter_input_location_and_id(data, update_id);
     } else {
-        iter_output_location_and_id(schematic, layout, new_element_id, update_id);
+        iter_output_location_and_id(data, update_id);
     }
 }
 
@@ -168,9 +182,8 @@ auto iter_segment_collision_state(const LineTree& line_tree, Func next_state) ->
 
 // next_state(point_t position, CollisionState state) -> bool
 template <typename Func>
-auto iter_wire_collision_state(const Schematic& schematic, const Layout& layout,
-                               element_id_t element_id, Func next_state) -> bool {
-    const auto& line_tree = layout.line_tree(element_id);
+auto iter_wire_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
+    const auto& line_tree = data.line_tree;
 
     if (line_tree.empty()) {
         return true;
@@ -202,22 +215,21 @@ auto iter_wire_collision_state(const Schematic& schematic, const Layout& layout,
 
 // next_state(point_t position, CollisionState state) -> bool
 template <typename Func>
-auto iter_body_collision_state(const Schematic& schematic, const Layout& layout,
-                               element_id_t element_id, Func next_state) -> bool {
-    if (!iter_input_location(schematic, layout, element_id, [=](point_t position) {
+auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
+    if (!iter_input_location(data, [=](point_t position) {
             return next_state(position,
                               CollisionCache::CollisionState::element_connection);
         })) {
         return false;
     }
 
-    if (!iter_element_body_points(schematic, layout, element_id, [=](point_t position) {
+    if (!iter_element_body_points(data, [=](point_t position) {
             return next_state(position, CollisionCache::CollisionState::element_body);
         })) {
         return false;
     }
 
-    if (!iter_output_location(schematic, layout, element_id, [=](point_t position) {
+    if (!iter_output_location(data, [=](point_t position) {
             return next_state(position,
                               CollisionCache::CollisionState::element_connection);
         })) {
@@ -229,16 +241,13 @@ auto iter_body_collision_state(const Schematic& schematic, const Layout& layout,
 
 // next_state(point_t position, CollisionState state) -> bool
 template <typename Func>
-auto iter_collision_state(const Schematic& schematic, const Layout& layout,
-                          element_id_t element_id, Func next_state) -> bool {
-    const auto element_type = schematic.element(element_id).element_type();
-
-    if (element_type == ElementType::placeholder) {
+auto iter_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
+    if (data.element_type == ElementType::placeholder) {
         return true;
-    } else if (element_type == ElementType::wire) {
-        return iter_wire_collision_state(schematic, layout, element_id, next_state);
+    } else if (data.element_type == ElementType::wire) {
+        return iter_wire_collision_state(data, next_state);
     }
-    return iter_body_collision_state(schematic, layout, element_id, next_state);
+    return iter_body_collision_state(data, next_state);
 }
 
 namespace {
@@ -300,8 +309,8 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
 }
 }  // namespace
 
-auto CollisionCache::insert(element_id_t element_id, const Schematic& schematic,
-                            const Layout& layout) -> void {
+auto CollisionCache::insert(element_id_t element_id, layout_calculation_data_t data)
+    -> void {
     const auto check_empty_and_assign = [element_id](element_id_t& obj) {
         if (obj != null_element) {
             throw_exception("collision state is not empty in insert.");
@@ -309,14 +318,13 @@ auto CollisionCache::insert(element_id_t element_id, const Schematic& schematic,
         obj = element_id;
     };
 
-    iter_collision_state(
-        schematic, layout, element_id, [&](point_t position, CollisionState state) {
-            return apply_function(map_, position, state, check_empty_and_assign);
-        });
+    iter_collision_state(data, [&](point_t position, CollisionState state) {
+        return apply_function(map_, position, state, check_empty_and_assign);
+    });
 }
 
-auto CollisionCache::remove(element_id_t element_id, const Schematic& schematic,
-                            const Layout& layout) -> void {
+auto CollisionCache::remove(element_id_t element_id, layout_calculation_data_t data)
+    -> void {
     const auto check_and_delete = [element_id](element_id_t& obj) {
         if (obj != element_id) {
             throw_exception("exected collision state presence in remove.");
@@ -324,14 +332,13 @@ auto CollisionCache::remove(element_id_t element_id, const Schematic& schematic,
         obj = null_element;
     };
 
-    iter_collision_state(
-        schematic, layout, element_id, [&](point_t position, CollisionState state) {
-            return apply_function(map_, position, state, check_and_delete);
-        });
+    iter_collision_state(data, [&](point_t position, CollisionState state) {
+        return apply_function(map_, position, state, check_and_delete);
+    });
 }
 
 auto CollisionCache::update(element_id_t new_element_id, element_id_t old_element_id,
-                            const Schematic& schematic, const Layout& layout) -> void {
+                            layout_calculation_data_t data) -> void {
     const auto check_and_update = [new_element_id, old_element_id](element_id_t& obj) {
         if (obj != old_element_id) {
             throw_exception("exected collision state presence in update.");
@@ -339,14 +346,13 @@ auto CollisionCache::update(element_id_t new_element_id, element_id_t old_elemen
         obj = new_element_id;
     };
 
-    iter_collision_state(
-        schematic, layout, new_element_id, [&](point_t position, CollisionState state) {
-            return apply_function(map_, position, state, check_and_update);
-        });
+    iter_collision_state(data, [&](point_t position, CollisionState state) {
+        return apply_function(map_, position, state, check_and_update);
+    });
 }
 
-auto CollisionCache::is_colliding(element_id_t element_id, const Schematic& schematic,
-                                  const Layout& layout) -> bool {
+auto CollisionCache::is_colliding(element_id_t element_id, layout_calculation_data_t data)
+    -> bool {
     const auto not_colliding = [&](point_t position, CollisionState state) {
         if (const auto it = map_.find(position); it != map_.end()) {
             const auto data = it->second;
@@ -382,7 +388,7 @@ auto CollisionCache::is_colliding(element_id_t element_id, const Schematic& sche
         return true;
     };
 
-    return iter_collision_state(schematic, layout, element_id, not_colliding);
+    return iter_collision_state(data, not_colliding);
 }
 
 auto CollisionCache::to_state(collision_data_t data) -> CollisionState {
@@ -624,10 +630,11 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
         }
     };
 
+    const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
+
     // inputs
     iter_input_location_and_id(
-        schematic_, layout_, element_id,
-        [&, element_id](connection_id_t input_id, point_t position) {
+        data, [&, element_id](connection_id_t input_id, point_t position) {
             // connect input with output_cache
             const auto placeholder_id = connect_connector_impl(
                 {element_id, input_id}, position, output_connections_, schematic_);
@@ -637,8 +644,7 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
 
     // outputs
     iter_output_location_and_id(
-        schematic_, layout_, element_id,
-        [&, element_id](connection_id_t output_id, point_t position) mutable {
+        data, [&, element_id](connection_id_t output_id, point_t position) mutable {
             // connect output with input_cache
             const auto placeholder_id = connect_connector_impl(
                 {element_id, output_id}, position, input_connections_, schematic_);
@@ -655,22 +661,28 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
 }
 
 auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
-    input_connections_.insert(element_id, schematic_, layout_);
-    output_connections_.insert(element_id, schematic_, layout_);
-    collicions_cache_.insert(element_id, schematic_, layout_);
+    const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
+
+    input_connections_.insert(element_id, data);
+    output_connections_.insert(element_id, data);
+    collicions_cache_.insert(element_id, data);
 }
 
 auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
-    input_connections_.remove(element_id, schematic_, layout_);
-    output_connections_.remove(element_id, schematic_, layout_);
-    collicions_cache_.remove(element_id, schematic_, layout_);
+    const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
+
+    input_connections_.remove(element_id, data);
+    output_connections_.remove(element_id, data);
+    collicions_cache_.remove(element_id, data);
 }
 
 auto EditableCircuit::cache_update(element_id_t new_element_id,
                                    element_id_t old_element_id) -> void {
-    input_connections_.update(new_element_id, old_element_id, schematic_, layout_);
-    output_connections_.update(new_element_id, old_element_id, schematic_, layout_);
-    collicions_cache_.update(new_element_id, old_element_id, schematic_, layout_);
+    const auto data = to_layout_calculation_data(schematic_, layout_, new_element_id);
+
+    input_connections_.update(new_element_id, old_element_id, data);
+    output_connections_.update(new_element_id, old_element_id, data);
+    collicions_cache_.update(new_element_id, old_element_id, data);
 }
 
 }  // namespace logicsim

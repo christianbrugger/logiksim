@@ -3,6 +3,7 @@
 
 #include "iterator_adaptor.h"
 #include "layout.h"
+#include "layout_calculation_type.h"
 #include "schematic.h"
 
 #include <ankerl/unordered_dense.h>
@@ -22,12 +23,10 @@ class ConnectionCache {
     using const_connection_proxy
         = std::conditional_t<IsInput, Schematic::ConstInput, Schematic::ConstOutput>;
 
-    auto insert(element_id_t element_id, const Schematic &schematic, const Layout &layout)
-        -> void;
-    auto remove(element_id_t element_id, const Schematic &schematic, const Layout &layout)
-        -> void;
+    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
+    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
     auto update(element_id_t new_element_id, element_id_t old_element_id,
-                const Schematic &schematic, const Layout &layout) -> void;
+                layout_calculation_data_t data) -> void;
 
     [[nodiscard]] auto find(point_t position) const -> std::optional<connection_t>;
     [[nodiscard]] auto find(point_t position, Schematic &schematic) const
@@ -78,15 +77,12 @@ class CollisionCache {
     using map_type = ankerl::unordered_dense::map<point_t, collision_data_t>;
 
    public:
-    auto insert(element_id_t element_id, const Schematic &schematic, const Layout &layout)
-        -> void;
-    auto remove(element_id_t element_id, const Schematic &schematic, const Layout &layout)
-        -> void;
+    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
+    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
     auto update(element_id_t new_element_id, element_id_t old_element_id,
-                const Schematic &schematic, const Layout &layout) -> void;
+                layout_calculation_data_t data) -> void;
 
-    auto is_colliding(element_id_t element_id, const Schematic &schematic,
-                      const Layout &layout) -> bool;
+    auto is_colliding(element_id_t element_id, layout_calculation_data_t data) -> bool;
 
     [[nodiscard]] static auto to_state(collision_data_t data) -> CollisionState;
 

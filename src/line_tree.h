@@ -79,7 +79,7 @@ class LineTree {
 
     using Graph = AdjacencyGraph<LineTree::index_t>;
 
-    explicit LineTree() = default;
+    explicit constexpr LineTree() = default;
     explicit LineTree(std::initializer_list<point_t> points);
 
     template <std::ranges::forward_range R>
