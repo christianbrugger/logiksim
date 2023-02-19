@@ -346,6 +346,14 @@ auto render_editable_circuit_caches(BLContext& ctx,
                 render_point(ctx, point, PointShape::square, color, size);
                 break;
             }
+            case element_connection: {
+                // TODO symbol !!!
+                break;
+            }
+            case wire_connection: {
+                // TODO symbol !!!
+                break;
+            }
             case wire_horizontal: {
                 render_point(ctx, point, PointShape::horizontal, color, size);
                 break;
@@ -360,6 +368,10 @@ auto render_editable_circuit_caches(BLContext& ctx,
             }
             case wire_crossing: {
                 render_point(ctx, point, PointShape::plus, color, size);
+                break;
+            }
+            case element_wire_connection: {
+                // TODO symbol !!!
                 break;
             }
         }

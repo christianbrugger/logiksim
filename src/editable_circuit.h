@@ -49,11 +49,14 @@ class CollisionCache {
    public:
     enum class CollisionState : uint8_t {
         element_body,
+        element_connection,
         wire_horizontal,
         wire_vertical,
         wire_point,
+        wire_connection,
         // inferred states
         wire_crossing,
+        element_wire_connection,
     };
 
     struct collision_data_t {

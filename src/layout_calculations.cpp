@@ -55,7 +55,7 @@ auto transform(point_t position, DisplayOrientation orientation, point_t p0, poi
     throw_exception("'Don't know to transfor mlocations.");
 }
 
-auto element_collision_body(const Schematic &schematic, const Layout &layout,
+auto element_collision_rect(const Schematic &schematic, const Layout &layout,
                             element_id_t element_id) -> rect_t {
     const auto element = schematic.element(element_id);
     const auto orientation = layout.orientation(element_id);

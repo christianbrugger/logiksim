@@ -44,12 +44,13 @@ auto ConnectionCache<IsInput>::insert(element_id_t element_id, const Schematic& 
             throw_exception("cache already has an entry at this position");
         }
         connections_[position] = {element_id, con_id};
+        return true;
     };
 
     if constexpr (IsInput) {
-        for_each_input_location_and_id(schematic, layout, element_id, add_position);
+        iter_input_location_and_id(schematic, layout, element_id, add_position);
     } else {
-        for_each_output_location_and_id(schematic, layout, element_id, add_position);
+        iter_output_location_and_id(schematic, layout, element_id, add_position);
     }
 }
 
@@ -64,12 +65,13 @@ auto ConnectionCache<IsInput>::remove(element_id_t element_id, const Schematic& 
     const auto remove_position = [&](connection_id_t con_id, point_t position) {
         auto it = get_and_verify_cache_entry(connections_, position, element_id, con_id);
         connections_.erase(it);
+        return true;
     };
 
     if constexpr (IsInput) {
-        for_each_input_location_and_id(schematic, layout, element_id, remove_position);
+        iter_input_location_and_id(schematic, layout, element_id, remove_position);
     } else {
-        for_each_output_location_and_id(schematic, layout, element_id, remove_position);
+        iter_output_location_and_id(schematic, layout, element_id, remove_position);
     }
 }
 
@@ -87,12 +89,13 @@ auto ConnectionCache<IsInput>::update(element_id_t new_element_id,
         auto it = get_and_verify_cache_entry(connections_, position, old_element_id,
                                              connection_id);
         it->second.element_id = new_element_id;
+        return true;
     };
 
     if constexpr (IsInput) {
-        for_each_input_location_and_id(schematic, layout, new_element_id, update_id);
+        iter_input_location_and_id(schematic, layout, new_element_id, update_id);
     } else {
-        for_each_output_location_and_id(schematic, layout, new_element_id, update_id);
+        iter_output_location_and_id(schematic, layout, new_element_id, update_id);
     }
 }
 
@@ -131,11 +134,9 @@ auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic
 // Collision Cache
 //
 
-template <bool only_internal_points, typename Func>
-auto for_each_wire_collision_state(const Schematic& schematic, const Layout& layout,
-                                   element_id_t element_id, Func next_state) -> bool {
-    const auto& line_tree = layout.line_tree(element_id);
-
+// next_state(point_t position, CollisionState state) -> bool
+template <typename Func>
+auto iter_segment_collision_state(const LineTree& line_tree, Func next_state) -> bool {
     for (auto segment : line_tree.segments()) {
         auto line = order_points(line_t {segment.p0, segment.p1});
 
@@ -155,16 +156,36 @@ auto for_each_wire_collision_state(const Schematic& schematic, const Layout& lay
             }
         }
     }
+    return true;
+}
 
-    const auto points = [&] {
-        if constexpr (only_internal_points) {
-            return line_tree.internal_points();
-        } else {
-            return line_tree.points();
-        }
-    }();
-    for (point_t point : points) {
+// next_state(point_t position, CollisionState state) -> bool
+template <typename Func>
+auto iter_wire_collision_state(const Schematic& schematic, const Layout& layout,
+                               element_id_t element_id, Func next_state) -> bool {
+    const auto& line_tree = layout.line_tree(element_id);
+
+    if (line_tree.empty()) {
+        return true;
+    }
+
+    if (!iter_segment_collision_state(line_tree, next_state)) {
+        return false;
+    }
+
+    if (!next_state(line_tree.input_position(),
+                    CollisionCache::CollisionState::wire_connection)) {
+        return false;
+    }
+
+    for (point_t point : line_tree.internal_points()) {
         if (!next_state(point, CollisionCache::CollisionState::wire_point)) {
+            return false;
+        }
+    }
+
+    for (point_t point : line_tree.output_positions()) {
+        if (!next_state(point, CollisionCache::CollisionState::wire_connection)) {
             return false;
         }
     }
@@ -172,66 +193,52 @@ auto for_each_wire_collision_state(const Schematic& schematic, const Layout& lay
     return true;
 }
 
+// next_state(point_t position, CollisionState state) -> bool
 template <typename Func>
-auto for_each_body_collision_state(const Schematic& schematic, const Layout& layout,
-                                   element_id_t element_id, Func next_state) -> bool {
-    const auto rect = element_collision_body(schematic, layout, element_id);
-
-    for (auto x : range(rect.p0.x, rect.p1.x + grid_t {1})) {
-        for (auto y : range(rect.p0.y, rect.p1.y + grid_t {1})) {
-            if (!next_state(point_t {x, y},
-                            CollisionCache::CollisionState::element_body)) {
-                return false;
-            }
-        }
+auto iter_body_collision_state(const Schematic& schematic, const Layout& layout,
+                               element_id_t element_id, Func next_state) -> bool {
+    if (!iter_input_location(schematic, layout, element_id, [=](point_t position) {
+            return next_state(position,
+                              CollisionCache::CollisionState::element_connection);
+        })) {
+        return false;
     }
+
+    if (!iter_element_body_points(schematic, layout, element_id, [=](point_t position) {
+            return next_state(position, CollisionCache::CollisionState::element_body);
+        })) {
+        return false;
+    }
+
+    if (!iter_output_location(schematic, layout, element_id, [=](point_t position) {
+            return next_state(position,
+                              CollisionCache::CollisionState::element_connection);
+        })) {
+        return false;
+    }
+
     return true;
 }
 
-// TODO remove only_internal_points
-template <bool only_internal_points, typename Func>
-auto for_each_element_collision_state_impl_(const Schematic& schematic,
-                                            const Layout& layout, element_id_t element_id,
-                                            Func next_state) -> bool {
+// next_state(point_t position, CollisionState state) -> bool
+template <typename Func>
+auto iter_collision_state(const Schematic& schematic, const Layout& layout,
+                          element_id_t element_id, Func next_state) -> bool {
     const auto element_type = schematic.element(element_id).element_type();
 
     if (element_type == ElementType::placeholder) {
         return true;
     } else if (element_type == ElementType::wire) {
-        return for_each_wire_collision_state<only_internal_points>(
-            schematic, layout, element_id, next_state);
-    } else {
-        return for_each_body_collision_state(schematic, layout, element_id, next_state);
+        return iter_wire_collision_state(schematic, layout, element_id, next_state);
     }
-}
-
-// next_state(point_t position, CollisionState state) -> void
-template <typename Func>
-auto for_each_element_collision_state(const Schematic& schematic, const Layout& layout,
-                                      element_id_t element_id, Func next_state) -> void {
-    const auto wrap_true
-        = [next_state](point_t position, CollisionCache::CollisionState state) {
-              next_state(position, state);
-              return true;
-          };
-
-    const bool result = for_each_element_collision_state_impl_<true>(
-        schematic, layout, element_id, wrap_true);
-    assert(result);
-}
-
-// next_state(point_t position, CollisionState state) -> bool
-template <typename Func>
-auto all_true_collision_state_internal(const Schematic& schematic, const Layout& layout,
-                                       element_id_t element_id, Func next_state) -> bool {
-    return for_each_element_collision_state_impl_<true>(schematic, layout, element_id,
-                                                        next_state);
+    return iter_body_collision_state(schematic, layout, element_id, next_state);
 }
 
 namespace {
+// apply_func(element_id_t& obj) -> void
 template <typename Apply>
 auto apply_function(CollisionCache::map_type& map, point_t position,
-                    CollisionCache::CollisionState state, Apply apply_func) {
+                    CollisionCache::CollisionState state, Apply apply_func) -> bool {
     auto& data = map[position];
     switch (state) {
         using enum CollisionCache::CollisionState;
@@ -240,6 +247,15 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
             apply_func(data.element_id_body);
             break;
         }
+        case element_connection: {
+            apply_func(data.element_id_body);
+            // TODO what to do here !!!
+            break;
+        }
+        case wire_connection:
+            apply_func(data.element_id_horizontal);
+            // TODO what to do here !!!
+            break;
         case wire_horizontal: {
             apply_func(data.element_id_horizontal);
             break;
@@ -253,14 +269,16 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
             apply_func(data.element_id_vertical);
             break;
         }
-        case wire_crossing: {
-            throw_exception("invalid state here");
+        case wire_crossing:
+        case element_wire_connection: {
+            throw_exception("infered states are invalid for new inserts");
         }
     };
 
     if (data == CollisionCache::empty_collision_data) {
         map.erase(position);
     }
+    return true;
 }
 }  // namespace
 
@@ -273,9 +291,9 @@ auto CollisionCache::insert(element_id_t element_id, const Schematic& schematic,
         obj = element_id;
     };
 
-    for_each_element_collision_state(
+    iter_collision_state(
         schematic, layout, element_id, [&](point_t position, CollisionState state) {
-            apply_function(map_, position, state, check_empty_and_assign);
+            return apply_function(map_, position, state, check_empty_and_assign);
         });
 }
 
@@ -288,9 +306,9 @@ auto CollisionCache::remove(element_id_t element_id, const Schematic& schematic,
         obj = null_element;
     };
 
-    for_each_element_collision_state(
+    iter_collision_state(
         schematic, layout, element_id, [&](point_t position, CollisionState state) {
-            apply_function(map_, position, state, check_and_delete);
+            return apply_function(map_, position, state, check_and_delete);
         });
 }
 
@@ -303,9 +321,9 @@ auto CollisionCache::update(element_id_t new_element_id, element_id_t old_elemen
         obj = new_element_id;
     };
 
-    for_each_element_collision_state(
+    iter_collision_state(
         schematic, layout, new_element_id, [&](point_t position, CollisionState state) {
-            apply_function(map_, position, state, check_and_update);
+            return apply_function(map_, position, state, check_and_update);
         });
 }
 
@@ -321,6 +339,14 @@ auto CollisionCache::is_colliding(element_id_t element_id, const Schematic& sche
                 case element_body: {
                     return data == empty_collision_data;
                 }
+                case element_connection: {
+                    // TODO what to do here !!!
+                    return true;
+                }
+                case wire_connection: {
+                    // TODO what to do here !!!
+                    return true;
+                }
                 case wire_horizontal: {
                     return data.element_id_horizontal == null_element
                            && data.element_id_body == null_element;
@@ -332,7 +358,8 @@ auto CollisionCache::is_colliding(element_id_t element_id, const Schematic& sche
                 case wire_point: {
                     return data == empty_collision_data;
                 }
-                case wire_crossing: {
+                case wire_crossing:
+                case element_wire_connection: {
                     throw_exception("invalid state in is_colliding");
                 }
             };
@@ -340,18 +367,19 @@ auto CollisionCache::is_colliding(element_id_t element_id, const Schematic& sche
         return true;
     };
 
-    return all_true_collision_state_internal(schematic, layout, element_id,
-                                             not_colliding);
+    return iter_collision_state(schematic, layout, element_id, not_colliding);
 }
 
 auto CollisionCache::to_collision_state(collision_data_t data) -> CollisionState {
     using enum CollisionState;
 
+    // TODO add new states
+
     if (data.element_id_body != null_element) {
-        if (data.element_id_horizontal != null_element
-            || data.element_id_vertical != null_element) [[unlikely]] {
-            throw_exception("Invalid collision state");
-        }
+        // if (data.element_id_horizontal != null_element
+        //     || data.element_id_vertical != null_element) [[unlikely]] {
+        //     throw_exception("Invalid collision state");
+        // }
 
         return element_body;
     }
@@ -562,23 +590,25 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
     };
 
     // inputs
-    for_each_input_location_and_id(
+    iter_input_location_and_id(
         schematic_, layout_, element_id,
         [&, element_id](connection_id_t input_id, point_t position) {
             // connect input with output_cache
             const auto placeholder_id = connect_connector_impl(
                 {element_id, input_id}, position, output_connections_, schematic_);
             add_if_valid(placeholder_id);
+            return true;
         });
 
     // outputs
-    for_each_output_location_and_id(
+    iter_output_location_and_id(
         schematic_, layout_, element_id,
         [&, element_id](connection_id_t output_id, point_t position) mutable {
             // connect output with input_cache
             const auto placeholder_id = connect_connector_impl(
                 {element_id, output_id}, position, input_connections_, schematic_);
             add_if_valid(placeholder_id);
+            return true;
         });
 
     cache_insert(element_id);
