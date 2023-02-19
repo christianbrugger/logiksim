@@ -34,6 +34,8 @@ class ConnectionCache {
     [[nodiscard]] auto find(point_t position, const Schematic &schematic) const
         -> std::optional<const_connection_proxy>;
 
+    [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
+
     [[nodiscard]] auto positions() const {
         return std::ranges::views::keys(connections_);
     }
@@ -82,7 +84,7 @@ class CollisionCache {
     auto update(element_id_t new_element_id, element_id_t old_element_id,
                 layout_calculation_data_t data) -> void;
 
-    auto is_colliding(element_id_t element_id, layout_calculation_data_t data) -> bool;
+    [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
 
     [[nodiscard]] static auto to_state(collision_data_t data) -> CollisionState;
 
@@ -112,6 +114,18 @@ class EditableCircuit {
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto layout() const noexcept -> const Layout &;
 
+    auto add_inverter_element(point_t position,
+                              orientation_t orientation = orientation_t::right) -> bool;
+    auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
+                              orientation_t orientation = orientation_t::right) -> bool;
+
+    auto add_wire(LineTree &&line_tree) -> bool;
+
+    // swaps the element with last one and deletes it
+    auto swap_and_delete_element(element_id_t element_id) -> void;
+
+    // todo: extract_schematic, extract_layout
+
     [[nodiscard]] auto input_positions() const {
         return input_connections_.positions();
     };
@@ -124,18 +138,6 @@ class EditableCircuit {
         return collicions_cache_.states();
     };
 
-    auto add_inverter_element(point_t position,
-                              orientation_t orientation = orientation_t::right) -> void;
-    auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
-                              orientation_t orientation = orientation_t::right) -> void;
-
-    auto add_wire(LineTree &&line_tree) -> void;
-
-    // swaps the element with last one and deletes it
-    auto swap_and_delete_element(element_id_t element_id) -> void;
-
-    // todo: extract_schematic, extract_layout
-
    private:
     auto add_placeholder_element() -> element_id_t;
     auto add_missing_placeholders(element_id_t element_id) -> void;
@@ -146,6 +148,8 @@ class EditableCircuit {
     auto swap_and_delete_single_element(element_id_t element_id) -> void;
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
         -> void;
+
+    [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
 
     auto cache_insert(element_id_t element_id) -> void;
     auto cache_remove(element_id_t element_id) -> void;

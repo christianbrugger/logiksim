@@ -130,6 +130,10 @@ class WidgetRenderer : public QWidget {
             editable_circuit.add_wire(LineTree({point_t {8, 2}, point_t {15, 2}}));
             editable_circuit.swap_and_delete_element(element_id_t {2});
 
+            auto r = editable_circuit.add_standard_element(ElementType::or_element, 2,
+                                                           point_t {15, 1});
+            fmt::print("r = {}\n", r);
+
             fmt::print("{}\n", editable_circuit);
             editable_circuit.schematic().validate(Schematic::validate_all);
         }

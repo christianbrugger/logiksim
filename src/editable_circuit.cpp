@@ -144,6 +144,21 @@ auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic
     return find_impl(*this, position, schematic);
 }
 
+template <bool IsInput>
+auto ConnectionCache<IsInput>::is_colliding(layout_calculation_data_t data) const
+    -> bool {
+    const auto same_type_not_colliding
+        = [&](point_t position) -> bool { return !connections_.contains(position); };
+
+    // TODO !!! make sure connections orientation matches for other type
+
+    if constexpr (IsInput) {
+        return !iter_input_location(data, same_type_not_colliding);
+    } else {
+        return !iter_output_location(data, same_type_not_colliding);
+    }
+}
+
 //
 // Collision Cache
 //
@@ -351,8 +366,7 @@ auto CollisionCache::update(element_id_t new_element_id, element_id_t old_elemen
     });
 }
 
-auto CollisionCache::is_colliding(element_id_t element_id, layout_calculation_data_t data)
-    -> bool {
+auto CollisionCache::is_colliding(layout_calculation_data_t data) const -> bool {
     const auto not_colliding = [&](point_t position, CollisionState state) {
         if (const auto it = map_.find(position); it != map_.end()) {
             const auto data = it->second;
@@ -388,7 +402,7 @@ auto CollisionCache::is_colliding(element_id_t element_id, layout_calculation_da
         return true;
     };
 
-    return iter_collision_state(data, not_colliding);
+    return !iter_collision_state(data, not_colliding);
 }
 
 auto CollisionCache::to_state(collision_data_t data) -> CollisionState {
@@ -490,13 +504,14 @@ auto EditableCircuit::add_placeholder_element() -> element_id_t {
 }
 
 auto EditableCircuit::add_inverter_element(point_t position, orientation_t orientation)
-    -> void {
-    add_standard_element(ElementType::inverter_element, 1, position, orientation);
+    -> bool {
+    return add_standard_element(ElementType::inverter_element, 1, position, orientation);
+    return true;
 }
 
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
                                            point_t position, orientation_t orientation)
-    -> void {
+    -> bool {
     using enum ElementType;
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {
@@ -509,6 +524,24 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
         throw_exception("Input count needs to be at least 2 for standard elements.");
     }
 
+    // check for collisions
+    {
+        const static auto empty_line_tree = LineTree {};
+        const auto data = layout_calculation_data_t {
+            .line_tree = empty_line_tree,
+            .input_count = input_count,
+            .output_count = 1,
+            .internal_state_count = 0,
+            .position = position,
+            .orientation = orientation,
+            .element_type = type,
+        };
+        if (is_colliding(data)) {
+            return false;
+        }
+    }
+
+    // insert into underlyings
     auto element_id = layout_.add_logic_element(position, orientation);
     {
         const auto element = schematic_.add_element({
@@ -520,19 +553,42 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
             throw_exception("Added element ids don't match.");
         }
     }
+
+    // connect
+    // TODO rename to better name
     connect_new_element(element_id);
+    return true;
 }
 
-auto EditableCircuit::add_wire(LineTree&& line_tree) -> void {
-    auto delays = calculate_output_delays(line_tree);
-    auto max_delay = std::ranges::max(delays);
+auto EditableCircuit::add_wire(LineTree&& line_tree) -> bool {
+    const auto delays = calculate_output_delays(line_tree);
+    const auto max_delay = std::ranges::max(delays);
+    const auto output_count = delays.size();
 
+    // check for collisions
+    {
+        const static auto empty_line_tree = LineTree {};
+        const auto data = layout_calculation_data_t {
+            .line_tree = line_tree,
+            .input_count = 1,
+            .output_count = output_count,
+            .internal_state_count = 0,
+            .position = {0, 0},
+            .orientation = orientation_t::right,
+            .element_type = ElementType::wire,
+        };
+        if (is_colliding(data)) {
+            return false;
+        }
+    }
+
+    // insert into underlyings
     auto element_id = layout_.add_wire(std::move(line_tree));
     {
         const auto element = schematic_.add_element({
             .element_type = ElementType::wire,
             .input_count = 1,
-            .output_count = delays.size(),
+            .output_count = output_count,
             .output_delays = delays,
             .history_length = max_delay,
         });
@@ -540,7 +596,10 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> void {
             throw_exception("Added element ids don't match.");
         }
     }
+
+    // connect
     connect_new_element(element_id);
+    return true;
 }
 
 auto EditableCircuit::swap_and_delete_element(element_id_t element_id) -> void {
@@ -658,6 +717,12 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
     // this invalidates our element_id
     swap_and_delete_multiple_elements(delete_queue);
     element_id = null_element;
+}
+
+auto EditableCircuit::is_colliding(layout_calculation_data_t data) const -> bool {
+    return collicions_cache_.is_colliding(data)  //
+           || input_connections_.is_colliding(data)
+           || output_connections_.is_colliding(data);
 }
 
 auto EditableCircuit::cache_insert(element_id_t element_id) -> void {

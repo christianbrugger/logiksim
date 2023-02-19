@@ -28,14 +28,9 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
     switch (data.element_type) {
         using enum ElementType;
 
-        case placeholder: {
-            return true;
-        }
-
-        case wire: {
-            return true;
-        }
-
+        // without a body
+        case placeholder:
+        case wire:
         case inverter_element: {
             return true;
         }
