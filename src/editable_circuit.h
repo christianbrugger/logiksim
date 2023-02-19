@@ -128,12 +128,10 @@ class EditableCircuit {
         return collicions_cache_.states();
     };
 
-    auto add_inverter_element(point_t position, DisplayOrientation orientation
-                                                = DisplayOrientation::default_right)
-        -> void;
+    auto add_inverter_element(point_t position,
+                              orientation_t orientation = orientation_t::right) -> void;
     auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
-                              DisplayOrientation orientation
-                              = DisplayOrientation::default_right) -> void;
+                              orientation_t orientation = orientation_t::right) -> void;
 
     auto add_wire(LineTree &&line_tree) -> void;
 

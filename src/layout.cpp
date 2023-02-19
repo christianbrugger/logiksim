@@ -25,16 +25,6 @@ auto format(DisplayState state) -> std::string {
     throw_exception("Don't know how to convert DisplayState to string.");
 }
 
-auto format(DisplayOrientation orientation) -> std::string {
-    switch (orientation) {
-        using enum DisplayOrientation;
-
-        case default_right:
-            return "Right";
-    }
-    throw_exception("Don't know how to convert DisplayOrientation to string.");
-}
-
 Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
     if (circuit_id < null_circuit) [[unlikely]] {
         throw_exception("Schematic id of layout cannot be negative.");
@@ -125,7 +115,7 @@ auto Layout::element_count() const -> std::size_t {
 auto Layout::add_default_element() -> element_id_t {
     line_trees_.push_back(LineTree {});
     positions_.push_back(point_t {});
-    orientation_.push_back(DisplayOrientation::default_right);
+    orientation_.push_back(orientation_t::right);
     display_states_.push_back(DisplayState::normal);
     colors_.push_back(defaults::color_black);
 
@@ -146,7 +136,7 @@ auto Layout::add_wire(LineTree &&line_tree) -> element_id_t {
     return id;
 }
 
-auto Layout::add_logic_element(point_t position, DisplayOrientation orientation,
+auto Layout::add_logic_element(point_t position, orientation_t orientation,
                                DisplayState display_state, color_t color)
     -> element_id_t {
     const auto id = add_default_element();
@@ -188,7 +178,7 @@ auto Layout::position(element_id_t element_id) const -> point_t {
     return positions_.at(element_id.value);
 }
 
-auto Layout::orientation(element_id_t element_id) const -> DisplayOrientation {
+auto Layout::orientation(element_id_t element_id) const -> orientation_t {
     return orientation_.at(element_id.value);
 }
 

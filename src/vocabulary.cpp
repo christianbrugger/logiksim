@@ -28,6 +28,22 @@ auto format(ElementType type) -> std::string {
     throw_exception("Don't know how to convert ElementType to string.");
 }
 
+auto format(orientation_t orientation) -> std::string {
+    switch (orientation) {
+        using enum orientation_t;
+
+        case right:
+            return "right";
+        case left:
+            return "left";
+        case up:
+            return "up";
+        case down:
+            return "down";
+    }
+    throw_exception("Don't know how to convert orientation_t to string.");
+}
+
 auto circuit_id_t::format() const -> std::string {
     return fmt::format("{}", value);
 }

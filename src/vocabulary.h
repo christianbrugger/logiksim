@@ -107,6 +107,15 @@ inline constexpr auto null_circuit = circuit_id_t {-1};
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
 
+enum class orientation_t : uint8_t {
+    right,
+    left,
+    up,
+    down,
+};
+
+auto format(orientation_t state) -> std::string;
+
 //
 // Time Types
 //

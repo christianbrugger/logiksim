@@ -483,14 +483,14 @@ auto EditableCircuit::add_placeholder_element() -> element_id_t {
     return element_id;
 }
 
-auto EditableCircuit::add_inverter_element(point_t position,
-                                           DisplayOrientation orientation) -> void {
+auto EditableCircuit::add_inverter_element(point_t position, orientation_t orientation)
+    -> void {
     add_standard_element(ElementType::inverter_element, 1, position, orientation);
 }
 
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
-                                           point_t position,
-                                           DisplayOrientation orientation) -> void {
+                                           point_t position, orientation_t orientation)
+    -> void {
     using enum ElementType;
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {

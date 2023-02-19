@@ -23,12 +23,6 @@ enum class DisplayState : uint8_t {
 
 auto format(DisplayState state) -> std::string;
 
-enum class DisplayOrientation : uint8_t {
-    default_right,
-};
-
-auto format(DisplayOrientation state) -> std::string;
-
 class Layout {
    public:
     [[nodiscard]] explicit Layout() = default;
@@ -47,8 +41,7 @@ class Layout {
     auto add_placeholder() -> element_id_t;
     auto add_wire(LineTree &&line_tree) -> element_id_t;
     auto add_logic_element(point_t position,
-                           DisplayOrientation orientation
-                           = DisplayOrientation::default_right,
+                           orientation_t orientation = orientation_t::right,
                            DisplayState display_state = DisplayState::normal,
                            color_t color = defaults::color_black) -> element_id_t;
     // swaps the element with last one and deletes it
@@ -61,7 +54,7 @@ class Layout {
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto line_tree(element_id_t element_id) const -> const LineTree &;
     [[nodiscard]] auto position(element_id_t element_id) const -> point_t;
-    [[nodiscard]] auto orientation(element_id_t element_id) const -> DisplayOrientation;
+    [[nodiscard]] auto orientation(element_id_t element_id) const -> orientation_t;
     [[nodiscard]] auto display_state(element_id_t element_id) const -> DisplayState;
     [[nodiscard]] auto color(element_id_t element_id) const -> color_t;
 
@@ -71,7 +64,7 @@ class Layout {
 
     std::vector<LineTree> line_trees_ {};
     std::vector<point_t> positions_ {};
-    std::vector<DisplayOrientation> orientation_ {};
+    std::vector<orientation_t> orientation_ {};
     std::vector<DisplayState> display_states_ {};
     std::vector<color_t> colors_ {};
 
@@ -97,13 +90,12 @@ struct fmt::formatter<logicsim::DisplayState> {
 };
 
 template <>
-struct fmt::formatter<logicsim::DisplayOrientation> {
+struct fmt::formatter<logicsim::orientation_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::DisplayOrientation &obj,
-                       fmt::format_context &ctx) {
+    static auto format(const logicsim::orientation_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
     }
 };

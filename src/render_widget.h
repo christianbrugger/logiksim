@@ -118,8 +118,8 @@ class WidgetRenderer : public QWidget {
             auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
                                    point_t {4, 4}, point_t {5, 4}});
             // auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8,
-            // 12}}); auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12}, point_t
-            // {12, 14}});
+            // 12}}); auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12},
+            // point_t {12, 14}});
             auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
 
             editable_circuit.add_standard_element(ElementType::or_element, 2,
@@ -127,6 +127,7 @@ class WidgetRenderer : public QWidget {
             editable_circuit.add_standard_element(ElementType::or_element, 2,
                                                   point_t {15, 3});
             editable_circuit.add_wire(std::move(line_tree));
+            editable_circuit.add_wire(LineTree({point_t {8, 2}, point_t {15, 2}}));
             editable_circuit.swap_and_delete_element(element_id_t {2});
 
             fmt::print("{}\n", editable_circuit);
@@ -192,7 +193,7 @@ class WidgetRenderer : public QWidget {
         bl_ctx.begin(bl_image, bl_info);
         // renderFrame(bl_ctx);
         render_background(bl_ctx, settings);
-        render_circuit(bl_ctx, layout, simulation, settings);
+        // render_circuit(bl_ctx, layout, simulation, settings);
         render_editable_circuit_caches(bl_ctx, editable_circuit, settings);
 
         bl_ctx.end();

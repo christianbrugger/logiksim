@@ -29,30 +29,48 @@ auto require_output_count(Schematic::ConstElement element, std::size_t count) ->
 
 namespace detail {
 
-auto transform(point_t element_position, DisplayOrientation orientation, point_t offset)
+auto transform(point_t element_position, orientation_t orientation, point_t offset)
     -> point_t {
     switch (orientation) {
-        using enum DisplayOrientation;
+        using enum orientation_t;
 
-        case default_right: {
+        case right: {
             return element_position + offset;
         }
+        case left: {
+            throw_exception("Please implement.");
+        }
+        case up: {
+            throw_exception("Please implement.");
+        }
+        case down: {
+            throw_exception("Please implement.");
+        }
     }
-    throw_exception("'Don't know to transfor mlocations.");
+    throw_exception("Don't know how to transform locations.");
 }
 
 }  // namespace detail
 
-auto transform(point_t position, DisplayOrientation orientation, point_t p0, point_t p1)
+auto transform(point_t position, orientation_t orientation, point_t p0, point_t p1)
     -> rect_t {
     switch (orientation) {
-        using enum DisplayOrientation;
+        using enum orientation_t;
 
-        case default_right: {
+        case right: {
             return rect_t {position + p0, position + p1};
         }
+        case left: {
+            throw_exception("Please implement.");
+        }
+        case up: {
+            throw_exception("Please implement.");
+        }
+        case down: {
+            throw_exception("Please implement.");
+        }
     }
-    throw_exception("'Don't know to transfor mlocations.");
+    throw_exception("Don't know how to transform locations.");
 }
 
 auto element_collision_rect(const Schematic &schematic, const Layout &layout,

@@ -12,6 +12,13 @@
 
 namespace logicsim {
 
+struct layout_calculation_data_t {
+    point_t position;
+    std::size_t input_count;
+    std::size_t output_count;
+    orientation_t orientation;
+};
+
 [[nodiscard]] auto element_collision_rect(const Schematic &schematic,
                                           const Layout &layout, element_id_t element_id)
     -> rect_t;
@@ -22,7 +29,7 @@ auto require_input_count(Schematic::ConstElement element, std::size_t count) -> 
 auto require_output_count(Schematic::ConstElement element, std::size_t count) -> void;
 
 namespace detail {
-[[nodiscard]] auto transform(point_t element_position, DisplayOrientation orientation,
+[[nodiscard]] auto transform(point_t element_position, orientation_t orientation,
                              point_t offset) -> point_t;
 }
 
