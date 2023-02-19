@@ -134,6 +134,13 @@ auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic
 // Collision Cache
 //
 
+namespace {
+[[nodiscard]] auto has_vertical_element(CollisionCache::collision_data_t data) -> bool {
+    return data.element_id_vertical >= element_id_t {0};
+}
+
+}  // namespace
+
 // next_state(point_t position, CollisionState state) -> bool
 template <typename Func>
 auto iter_segment_collision_state(const LineTree& line_tree, Func next_state) -> bool {
@@ -240,6 +247,14 @@ template <typename Apply>
 auto apply_function(CollisionCache::map_type& map, point_t position,
                     CollisionCache::CollisionState state, Apply apply_func) -> bool {
     auto& data = map[position];
+
+    const auto set_connection_tag = [&]() {
+        if (has_vertical_element(data)) {
+            throw_exception("cannot set connection tag, second element occupied");
+        }
+        data.element_id_vertical = CollisionCache::connection_tag;
+    };
+
     switch (state) {
         using enum CollisionCache::CollisionState;
 
@@ -248,13 +263,13 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
             break;
         }
         case element_connection: {
+            set_connection_tag();
             apply_func(data.element_id_body);
-            // TODO what to do here !!!
             break;
         }
         case wire_connection:
+            set_connection_tag();
             apply_func(data.element_id_horizontal);
-            // TODO what to do here !!!
             break;
         case wire_horizontal: {
             apply_func(data.element_id_horizontal);
@@ -270,12 +285,15 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
             break;
         }
         case wire_crossing:
-        case element_wire_connection: {
-            throw_exception("infered states are invalid for new inserts");
+        case element_wire_connection:
+        case invalid_state: {
+            throw_exception("infered states are invalid when iterating element");
         }
     };
 
-    if (data == CollisionCache::empty_collision_data) {
+    // delete if empty
+    if (data.element_id_body == null_element && data.element_id_horizontal == null_element
+        && !has_vertical_element(data)) {
         map.erase(position);
     }
     return true;
@@ -337,30 +355,27 @@ auto CollisionCache::is_colliding(element_id_t element_id, const Schematic& sche
                 using enum CollisionCache::CollisionState;
 
                 case element_body: {
-                    return data == empty_collision_data;
+                    return false;
                 }
                 case element_connection: {
-                    // TODO what to do here !!!
-                    return true;
+                    return to_state(data) == wire_connection;
                 }
                 case wire_connection: {
-                    // TODO what to do here !!!
-                    return true;
+                    return to_state(data) == element_connection;
                 }
                 case wire_horizontal: {
-                    return data.element_id_horizontal == null_element
-                           && data.element_id_body == null_element;
+                    return to_state(data) == wire_vertical;
                 }
                 case wire_vertical: {
-                    return data.element_id_vertical == null_element
-                           && data.element_id_body == null_element;
+                    return to_state(data) == wire_horizontal;
                 }
                 case wire_point: {
-                    return data == empty_collision_data;
+                    return false;
                 }
                 case wire_crossing:
-                case element_wire_connection: {
-                    throw_exception("invalid state in is_colliding");
+                case element_wire_connection:
+                case invalid_state: {
+                    throw_exception("infered states are invalid when iterating element");
                 }
             };
         }
@@ -370,43 +385,63 @@ auto CollisionCache::is_colliding(element_id_t element_id, const Schematic& sche
     return iter_collision_state(schematic, layout, element_id, not_colliding);
 }
 
-auto CollisionCache::to_collision_state(collision_data_t data) -> CollisionState {
+auto CollisionCache::to_state(collision_data_t data) -> CollisionState {
     using enum CollisionState;
 
-    // TODO add new states
-
-    if (data.element_id_body != null_element) {
-        // if (data.element_id_horizontal != null_element
-        //     || data.element_id_vertical != null_element) [[unlikely]] {
-        //     throw_exception("Invalid collision state");
-        // }
-
+    if (data.element_id_body != null_element  //
+        && data.element_id_horizontal == null_element
+        && data.element_id_vertical == null_element) {
         return element_body;
     }
 
-    if (data.element_id_horizontal != null_element
+    if (data.element_id_body != null_element  //
+        && data.element_id_horizontal == null_element
+        && data.element_id_vertical == connection_tag) {
+        return element_connection;
+    }
+
+    if (data.element_id_body == null_element           //
+        && data.element_id_horizontal != null_element  //
+        && data.element_id_vertical == connection_tag) {
+        return wire_connection;
+    }
+
+    if (data.element_id_body == null_element  //
+        && data.element_id_horizontal != null_element
         && data.element_id_vertical == null_element) {
         return wire_horizontal;
     }
 
-    if (data.element_id_horizontal == null_element
-        && data.element_id_vertical != null_element) {
+    if (data.element_id_body == null_element           //
+        && data.element_id_horizontal == null_element  //
+        && has_vertical_element(data)) {
         return wire_vertical;
     }
 
-    if (data.element_id_horizontal != null_element
-        && data.element_id_vertical != null_element
+    if (data.element_id_body == null_element           //
+        && data.element_id_horizontal != null_element  //
+        && has_vertical_element(data)
         && data.element_id_horizontal == data.element_id_vertical) {
         return wire_point;
     }
 
-    if (data.element_id_horizontal != null_element
-        && data.element_id_vertical != null_element
+    // inferred states -> two elements
+
+    if (data.element_id_body == null_element           //
+        && data.element_id_horizontal != null_element  //
+        && has_vertical_element(data)
         && data.element_id_horizontal != data.element_id_vertical) {
         return wire_crossing;
     }
 
-    throw_exception("Invalid collision state");
+    if (data.element_id_body != null_element  //
+        && data.element_id_horizontal != null_element
+        && data.element_id_vertical == connection_tag) {
+        return element_wire_connection;
+    }
+
+    // return invalid state, so checking for states compiles efficiently
+    return invalid_state;
 }
 
 //

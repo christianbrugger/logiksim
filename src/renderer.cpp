@@ -271,6 +271,14 @@ auto render_point_shape(BLContext& ctx, point_t point, PointShape shape, double 
             ctx.strokeRect(BLRect {x - d, y - d, 2 * d, 2 * d});
             return;
         }
+        case full_square: {
+            const auto x = point.x * settings.scale;
+            const auto y = point.y * settings.scale;
+            const auto d = size;
+
+            ctx.fillRect(BLRect {x - d, y - d, 2 * d, 2 * d});
+            return;
+        }
         case diamond: {
             const auto x = point.x * settings.scale;
             const auto y = point.y * settings.scale;
@@ -308,6 +316,7 @@ namespace detail {
 auto set_point_style(BLContext& ctx, color_t color) -> void {
     ctx.setStrokeWidth(1);
     ctx.setStrokeStyle(BLRgba32(color.value));
+    ctx.setFillStyle(BLRgba32(color.value));
 }
 
 }  // namespace detail
@@ -347,11 +356,11 @@ auto render_editable_circuit_caches(BLContext& ctx,
                 break;
             }
             case element_connection: {
-                // TODO symbol !!!
+                render_point(ctx, point, PointShape::circle, color, size);
                 break;
             }
             case wire_connection: {
-                // TODO symbol !!!
+                render_point(ctx, point, PointShape::full_square, color, size * (2. / 3));
                 break;
             }
             case wire_horizontal: {
@@ -371,7 +380,12 @@ auto render_editable_circuit_caches(BLContext& ctx,
                 break;
             }
             case element_wire_connection: {
-                // TODO symbol !!!
+                render_point(ctx, point, PointShape::circle, color, size);
+                render_point(ctx, point, PointShape::full_square, color, size * (2. / 3));
+                break;
+            }
+            case invalid_state: {
+                throw_exception("invalid state encountered");
                 break;
             }
         }

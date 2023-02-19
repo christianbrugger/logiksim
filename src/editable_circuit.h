@@ -50,13 +50,15 @@ class CollisionCache {
     enum class CollisionState : uint8_t {
         element_body,
         element_connection,
+        wire_connection,
         wire_horizontal,
         wire_vertical,
         wire_point,
-        wire_connection,
         // inferred states
         wire_crossing,
         element_wire_connection,
+
+        invalid_state,
     };
 
     struct collision_data_t {
@@ -67,11 +69,9 @@ class CollisionCache {
         auto operator==(const collision_data_t &other) const -> bool = default;
     };
 
-    constexpr static inline collision_data_t empty_collision_data = {
-        .element_id_body = null_element,
-        .element_id_horizontal = null_element,
-        .element_id_vertical = null_element,
-    };
+    constexpr static inline auto connection_tag = element_id_t {-2};
+    static_assert(connection_tag != null_element);
+    static_assert(connection_tag < element_id_t {0});
 
     static_assert(std::is_aggregate_v<collision_data_t>);
 
@@ -88,12 +88,12 @@ class CollisionCache {
     auto is_colliding(element_id_t element_id, const Schematic &schematic,
                       const Layout &layout) -> bool;
 
-    [[nodiscard]] static auto to_collision_state(collision_data_t data) -> CollisionState;
+    [[nodiscard]] static auto to_state(collision_data_t data) -> CollisionState;
 
     // std::tuple<point_t, CollisionState>
     [[nodiscard]] auto states() const {
         return transform_view(map_, [](const map_type::value_type &value) {
-            return std::make_tuple(value.first, to_collision_state(value.second));
+            return std::make_tuple(value.first, to_state(value.second));
         });
     }
 
