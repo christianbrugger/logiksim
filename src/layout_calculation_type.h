@@ -12,7 +12,7 @@ struct layout_calculation_data_t {
     std::size_t output_count {0};
     std::size_t internal_state_count {0};
     point_t position {0, 0};
-    orientation_t orientation {orientation_t::right};
+    orientation_t orientation {orientation_t::undirected};
     ElementType element_type {ElementType::placeholder};
 };
 

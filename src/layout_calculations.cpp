@@ -33,8 +33,35 @@ auto transform(point_t element_position, orientation_t orientation, point_t offs
         case down: {
             throw_exception("Please implement.");
         }
+        case undirected: {
+            throw_exception("Cannot transform undirected elements.");
+        }
     }
-    throw_exception("Don't know how to transform locations.");
+    throw_exception("Don't know how to transform position.");
+}
+
+auto transform(orientation_t element_orientation, orientation_t connector)
+    -> orientation_t {
+    switch (element_orientation) {
+        using enum orientation_t;
+
+        case right: {
+            return connector;
+        }
+        case left: {
+            throw_exception("Please implement.");
+        }
+        case up: {
+            throw_exception("Please implement.");
+        }
+        case down: {
+            throw_exception("Please implement.");
+        }
+        case undirected: {
+            throw_exception("Cannot transform undirected element.");
+        }
+    }
+    throw_exception("Don't know how to transform connector.");
 }
 
 }  // namespace detail
@@ -56,8 +83,11 @@ auto transform(point_t position, orientation_t orientation, point_t p0, point_t 
         case down: {
             throw_exception("Please implement.");
         }
+        case undirected: {
+            throw_exception("Cannot transform undirected element.");
+        }
     }
-    throw_exception("Don't know how to transform locations.");
+    throw_exception("Don't know how to transform position.");
 }
 
 auto element_collision_rect(layout_calculation_data_t data) -> rect_t {

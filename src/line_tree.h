@@ -115,13 +115,17 @@ class LineTree {
     [[nodiscard]] auto internal_points() const -> InternalPointView;
 
     [[nodiscard]] auto input_position() const -> point_t;
+    [[nodiscard]] auto input_orientation() const -> orientation_t;
     [[nodiscard]] auto output_count() const -> std::size_t;
-    [[nodiscard]] auto calculate_output_lengths() const -> std::vector<length_t>;
 
     [[nodiscard]] auto output_positions() const {
         return transform_view(output_indices_,
                               [&](index_t index) { return points_.at(index); });
     }
+
+    [[nodiscard]] auto output_position(std::size_t index) const -> point_t;
+    [[nodiscard]] auto output_orientation(std::size_t index) const -> orientation_t;
+    [[nodiscard]] auto calculate_output_lengths() const -> std::vector<length_t>;
 
     [[nodiscard]] auto format() const -> std::string;
 

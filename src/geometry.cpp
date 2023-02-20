@@ -42,4 +42,27 @@ auto distance(line_t line) -> int {
     return std::abs((dx == 0) ? dy : dx);
 }
 
+auto to_orientation(point_t p0, point_t p1) -> orientation_t {
+    return to_orientation(line_t {p0, p1});
+}
+
+auto to_orientation(line_t line) -> orientation_t {
+    using enum orientation_t;
+
+    if (line.p1.x > line.p0.x) {
+        return orientation_t::right;
+    }
+    if (line.p1.x < line.p0.x) {
+        return orientation_t::left;
+    }
+    if (line.p1.y < line.p0.y) {
+        return orientation_t::up;
+    }
+    if (line.p1.y > line.p0.y) {
+        return orientation_t::down;
+    }
+
+    throw_exception("unreachable code");
+}
+
 }  // namespace logicsim

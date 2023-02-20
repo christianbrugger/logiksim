@@ -24,23 +24,35 @@ auto to_layout_calculation_data(const Schematic& schematic, const Layout& layout
         .line_tree = layout.line_tree(element_id),
         .input_count = element.input_count(),
         .output_count = element.output_count(),
-        .internal_state_count = 0,  // TODO implement
+        .internal_state_count = 0,  // TODO get count fromm schematic when implemented
         .position = layout.position(element_id),
         .orientation = layout.orientation(element_id),
         .element_type = element.element_type(),
     };
 }
 
+auto orientations_compatible(orientation_t a, orientation_t b) -> bool {
+    using enum orientation_t;
+    return (a == left && b == right) || (a == right && b == left)
+           || (a == up && b == down) || (a == down && b == up) || (a == undirected)
+           || (b == undirected);
+}
+
 //
 // ConnectionCache
 //
 
-auto get_and_verify_cache_entry(ConnectionCache<true>::map_type& map, point_t position,
-                                element_id_t element_id, connection_id_t connection_id)
-    -> ConnectionCache<true>::map_type::iterator {
+namespace detail::connection_cache {
+inline auto value_type::format() const -> std::string {
+    return fmt::format("<Element {}-{} {}>", connection_id, element_id, orientation);
+}
+}  // namespace detail::connection_cache
+
+auto get_and_verify_cache_entry(detail::connection_cache::map_type& map, point_t position,
+                                detail::connection_cache::value_type value)
+    -> detail::connection_cache::map_type::iterator {
     const auto it = map.find(position);
-    if (it == map.end() || it->second.element_id != element_id
-        || it->second.connection_id != connection_id) [[unlikely]] {
+    if (it == map.end() || it->second != value) [[unlikely]] {
         throw_exception("unable to find chached data that should be present.");
     }
     return it;
@@ -54,11 +66,12 @@ auto ConnectionCache<IsInput>::insert(element_id_t element_id,
         return;
     }
 
-    const auto add_position = [&](connection_id_t con_id, point_t position) {
+    const auto add_position = [&](connection_id_t connection_id, point_t position,
+                                  orientation_t orientation) {
         if (connections_.contains(position)) [[unlikely]] {
             throw_exception("cache already has an entry at this position");
         }
-        connections_[position] = {element_id, con_id};
+        connections_[position] = {element_id, connection_id, orientation};
         return true;
     };
 
@@ -77,8 +90,10 @@ auto ConnectionCache<IsInput>::remove(element_id_t element_id,
         return;
     }
 
-    const auto remove_position = [&](connection_id_t con_id, point_t position) {
-        auto it = get_and_verify_cache_entry(connections_, position, element_id, con_id);
+    const auto remove_position = [&](connection_id_t connection_id, point_t position,
+                                     orientation_t orientation) {
+        const auto value = value_type {element_id, connection_id, orientation};
+        const auto it = get_and_verify_cache_entry(connections_, position, value);
         connections_.erase(it);
         return true;
     };
@@ -99,9 +114,10 @@ auto ConnectionCache<IsInput>::update(element_id_t new_element_id,
         return;
     }
 
-    const auto update_id = [&](connection_id_t connection_id, point_t position) {
-        auto it = get_and_verify_cache_entry(connections_, position, old_element_id,
-                                             connection_id);
+    const auto update_id = [&](connection_id_t connection_id, point_t position,
+                               orientation_t orientation) {
+        const auto old_value = value_type {old_element_id, connection_id, orientation};
+        const auto it = get_and_verify_cache_entry(connections_, position, old_value);
         it->second.element_id = new_element_id;
         return true;
     };
@@ -115,47 +131,68 @@ auto ConnectionCache<IsInput>::update(element_id_t new_element_id,
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position) const
-    -> std::optional<connection_t> {
+    -> std::optional<std::pair<connection_t, orientation_t>> {
     if (const auto it = connections_.find(position); it != connections_.end()) {
-        return {it->second};
+        return std::make_pair(
+            connection_t {it->second.element_id, it->second.connection_id},
+            it->second.orientation);
     }
     return std::nullopt;
 }
 
 template <bool IsInput>
+auto to_connection_entry(auto&& schematic,
+                         std::optional<std::pair<connection_t, orientation_t>> entry) {
+    return std::make_optional(
+        std::make_pair(to_connection<IsInput>(schematic, entry->first), entry->second));
+}
+
+template <bool IsInput>
 auto find_impl(const ConnectionCache<IsInput>& cache, point_t position,
                auto&& schematic) {
-    if (auto res = cache.find(position)) {
-        return std::make_optional(to_connection<IsInput>(schematic, *res));
+    if (auto entry = cache.find(position)) {
+        return to_connection_entry<IsInput>(schematic, entry);
     }
     // nullopt with correct type
-    return std::optional<decltype(to_connection<IsInput>(schematic, {}))> {};
+    return decltype(to_connection_entry<IsInput>(schematic, {})) {};
 }
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position, Schematic& schematic) const
-    -> std::optional<connection_proxy> {
+    -> std::optional<std::pair<connection_proxy, orientation_t>> {
     return find_impl(*this, position, schematic);
 }
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic) const
-    -> std::optional<const_connection_proxy> {
+    -> std::optional<std::pair<const_connection_proxy, orientation_t>> {
     return find_impl(*this, position, schematic);
 }
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::is_colliding(layout_calculation_data_t data) const
     -> bool {
+    // make sure inputs/outputs don't collide with inputs/outputs
     const auto same_type_not_colliding
-        = [&](point_t position) -> bool { return !connections_.contains(position); };
+        = [&](point_t position, orientation_t _ [[maybe_unused]]) -> bool {
+        return !connections_.contains(position);
+    };
 
-    // TODO !!! make sure connections orientation matches for other type
+    // make sure inputs match with output orientations, if present
+    const auto different_type_compatible
+        = [&](point_t position, orientation_t orientation) -> bool {
+        if (const auto it = connections_.find(position); it != connections_.end()) {
+            return orientations_compatible(orientation, it->second.orientation);
+        }
+        return true;
+    };
 
     if constexpr (IsInput) {
-        return !iter_input_location(data, same_type_not_colliding);
+        return !(iter_input_location(data, same_type_not_colliding)
+                 && iter_output_location(data, different_type_compatible));
     } else {
-        return !iter_output_location(data, same_type_not_colliding);
+        return !(iter_output_location(data, same_type_not_colliding)
+                 && iter_input_location(data, different_type_compatible));
     }
 }
 
@@ -231,10 +268,11 @@ auto iter_wire_collision_state(layout_calculation_data_t data, Func next_state) 
 // next_state(point_t position, CollisionState state) -> bool
 template <typename Func>
 auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
-    if (!iter_input_location(data, [=](point_t position) {
-            return next_state(position,
-                              CollisionCache::CollisionState::element_connection);
-        })) {
+    if (!iter_input_location(
+            data, [=](point_t position, orientation_t _ [[maybe_unused]]) {
+                return next_state(position,
+                                  CollisionCache::CollisionState::element_connection);
+            })) {
         return false;
     }
 
@@ -244,10 +282,11 @@ auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) 
         return false;
     }
 
-    if (!iter_output_location(data, [=](point_t position) {
-            return next_state(position,
-                              CollisionCache::CollisionState::element_connection);
-        })) {
+    if (!iter_output_location(
+            data, [=](point_t position, orientation_t _ [[maybe_unused]]) {
+                return next_state(position,
+                                  CollisionCache::CollisionState::element_connection);
+            })) {
         return false;
     }
 
@@ -574,7 +613,7 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> bool {
             .output_count = output_count,
             .internal_state_count = 0,
             .position = {0, 0},
-            .orientation = orientation_t::right,
+            .orientation = orientation_t::undirected,
             .element_type = ElementType::wire,
         };
         if (is_colliding(data)) {
@@ -653,12 +692,23 @@ auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void 
     }
 }
 
+namespace {
+struct connector_data_t {
+    // element_id and connection_id
+    connection_t connection_data;
+    // position of the connector
+    point_t position;
+    // orientation of the connector
+    orientation_t orientation;
+};
+}  // namespace
+
 template <bool IsInput>
-auto connect_connector_impl(connection_t connection_data, point_t position,
-                            ConnectionCache<IsInput>& connection_cache,
-                            Schematic& schematic) -> std::optional<element_id_t> {
+auto connect_connector(connector_data_t connector,
+                       ConnectionCache<IsInput>& connection_cache, Schematic& schematic)
+    -> std::optional<element_id_t> {
     auto unused_placeholder_id = std::optional<element_id_t> {};
-    auto connection = to_connection<!IsInput>(schematic, connection_data);
+    auto connection = to_connection<!IsInput>(schematic, connector.connection_data);
 
     // pre-conditions
     if (connection.has_connected_element()) [[unlikely]] {
@@ -666,16 +716,23 @@ auto connect_connector_impl(connection_t connection_data, point_t position,
     }
 
     // find connection at position
-    if (const auto found_con = connection_cache.find(position, schematic)) {
-        if (found_con->has_connected_element()) {
-            if (!found_con->connected_element().is_placeholder()) [[unlikely]] {
+    if (const auto entry = connection_cache.find(connector.position, schematic)) {
+        const auto found_connection = entry->first;
+        const auto found_orientation = entry->second;
+
+        if (found_connection.has_connected_element()) {
+            if (!found_connection.connected_element().is_placeholder()) [[unlikely]] {
                 throw_exception("Connection is already connected at this location.");
             }
             // mark placeholder for deletion
-            unused_placeholder_id = found_con->connected_element_id();
+            unused_placeholder_id = found_connection.connected_element_id();
         }
+        if (!orientations_compatible(connector.orientation, found_orientation)) {
+            throw_exception("Connection have incompatible orientations.");
+        }
+
         // make connection in schematic
-        connection.connect(*found_con);
+        connection.connect(found_connection);
     }
 
     return unused_placeholder_id;
@@ -693,23 +750,27 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
 
     // inputs
     iter_input_location_and_id(
-        data, [&, element_id](connection_id_t input_id, point_t position) {
-            // connect input with output_cache
-            const auto placeholder_id = connect_connector_impl(
-                {element_id, input_id}, position, output_connections_, schematic_);
+        data, [&, element_id](connection_id_t input_id, point_t position,
+                              orientation_t orientation) {
+            auto input = connector_data_t {{element_id, input_id}, position, orientation};
+            // connect the input using the output_connections cache
+            const auto placeholder_id
+                = connect_connector(input, output_connections_, schematic_);
             add_if_valid(placeholder_id);
             return true;
         });
 
     // outputs
-    iter_output_location_and_id(
-        data, [&, element_id](connection_id_t output_id, point_t position) mutable {
-            // connect output with input_cache
-            const auto placeholder_id = connect_connector_impl(
-                {element_id, output_id}, position, input_connections_, schematic_);
-            add_if_valid(placeholder_id);
-            return true;
-        });
+    iter_output_location_and_id(data, [&, element_id](connection_id_t output_id,
+                                                      point_t position,
+                                                      orientation_t orientation) mutable {
+        auto output = connector_data_t {{element_id, output_id}, position, orientation};
+        // connect the output using the input_connections cache
+        const auto placeholder_id
+            = connect_connector(output, input_connections_, schematic_);
+        add_if_valid(placeholder_id);
+        return true;
+    });
 
     cache_insert(element_id);
     add_missing_placeholders(element_id);

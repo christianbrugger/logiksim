@@ -40,6 +40,9 @@ auto format(orientation_t orientation) -> std::string {
             return "up";
         case down:
             return "down";
+
+        case undirected:
+            return "undirected";
     }
     throw_exception("Don't know how to convert orientation_t to string.");
 }

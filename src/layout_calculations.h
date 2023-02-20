@@ -2,6 +2,7 @@
 #define LOGIKSIM_LAYOUT_CALCULATIONS_H
 
 #include "exceptions.h"
+#include "iterator_adaptor.h"
 #include "layout_calculation_type.h"
 #include "range.h"
 #include "vocabulary.h"
@@ -18,6 +19,9 @@ auto require_equal(std::size_t value, std::size_t count) -> void;
 namespace detail {
 [[nodiscard]] auto transform(point_t element_position, orientation_t orientation,
                              point_t offset) -> point_t;
+
+[[nodiscard]] auto transform(orientation_t element_orientation, orientation_t connector)
+    -> orientation_t;
 }  // namespace detail
 
 /// next_point(point_t position) -> bool;
@@ -125,7 +129,7 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
     throw_exception("'Don't know to calculate input locations.");
 }
 
-/// next_input(point_t position) -> bool;
+/// next_input(point_t position, orientation_t orientation) -> bool;
 template <typename Func>
 auto iter_input_location(layout_calculation_data_t data, Func next_input) -> bool {
     using detail::transform;
@@ -135,17 +139,19 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
 
         case placeholder: {
             require_equal(data.input_count, 1);
-            return next_input(data.position);
+            return next_input(data.position, orientation_t::undirected);
         }
 
         case wire: {
             require_equal(data.input_count, 1);
-            return next_input(data.line_tree.input_position());
+            return next_input(data.line_tree.input_position(),
+                              data.line_tree.input_orientation());
         }
 
         case inverter_element: {
             require_equal(data.input_count, 1);
-            return next_input(data.position);
+            return next_input(data.position,
+                              transform(data.orientation, orientation_t::left));
         }
 
         case and_element:
@@ -156,7 +162,8 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             for (auto i : range(data.input_count)) {
                 const auto y = grid_t {i};
                 if (!next_input(
-                        transform(data.position, data.orientation, point_t {0, y}))) {
+                        transform(data.position, data.orientation, point_t {0, y}),
+                        transform(data.orientation, orientation_t::left))) {
                     return false;
                 }
             }
@@ -168,13 +175,14 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
 
             auto points = std::array {
                 // internal input, placed such that it cannot be connected
-                point_t {1, 1},
-                // output signal
-                point_t {2, 2},
+                std::make_pair(point_t {1, 1}, orientation_t::down),
+                // output clock signal
+                std::make_pair(point_t {2, 2}, orientation_t::down),
             };
 
-            for (auto &&point : points) {
-                if (!next_input(transform(data.position, data.orientation, point))) {
+            for (auto &&[point, orientation] : points) {
+                if (!next_input(transform(data.position, data.orientation, point),
+                                transform(data.orientation, orientation))) {
                     return false;
                 }
             }
@@ -185,17 +193,18 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
 
             auto points = std::array {
                 // clock
-                point_t {0, 1},
+                std::make_pair(point_t {0, 1}, orientation_t::left),
                 // j & k
-                point_t {0, 0},
-                point_t {0, 2},
+                std::make_pair(point_t {0, 0}, orientation_t::left),
+                std::make_pair(point_t {0, 2}, orientation_t::left),
                 // set & reset
-                point_t {2, 0},
-                point_t {2, 2},
+                std::make_pair(point_t {2, 0}, orientation_t::up),
+                std::make_pair(point_t {2, 2}, orientation_t::down),
             };
 
-            for (auto &&point : points) {
-                if (!next_input(transform(data.position, data.orientation, point))) {
+            for (auto &&[point, orientation] : points) {
+                if (!next_input(transform(data.position, data.orientation, point),
+                                transform(data.orientation, orientation))) {
                     return false;
                 }
             }
@@ -205,7 +214,8 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             require_min(data.input_count, 2);
 
             // clock
-            if (!next_input(transform(data.position, data.orientation, point_t {0, 1}))) {
+            if (!next_input(transform(data.position, data.orientation, point_t {0, 1}),
+                            transform(data.orientation, orientation_t::left))) {
                 return false;
             }
 
@@ -213,7 +223,8 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             for (auto i : range(data.input_count - 1)) {
                 const auto y = grid_t {2 * i};
                 if (!next_input(
-                        transform(data.position, data.orientation, point_t {0, y}))) {
+                        transform(data.position, data.orientation, point_t {0, y}),
+                        transform(data.orientation, orientation_t::left))) {
                     return false;
                 }
             }
@@ -224,7 +235,7 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
     throw_exception("'Don't know to calculate input locations.");
 }
 
-/// next_output(point_t position) -> void;
+/// next_output(point_t position, orientation_t orientation) -> bool;
 template <typename Func>
 auto iter_output_location(layout_calculation_data_t data, Func next_output) -> bool {
     using detail::transform;
@@ -241,8 +252,10 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
             require_min(data.output_count, 1);
             require_equal(data.output_count, data.line_tree.output_count());
 
-            for (auto &&point : data.line_tree.output_positions()) {
-                if (!next_output(point)) {
+            for (auto &&[index, point] : enumerate(data.line_tree.output_positions())) {
+                const auto orientation = data.line_tree.output_orientation(index);
+
+                if (!next_output(point, orientation)) {
                     return false;
                 }
             }
@@ -251,8 +264,8 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
 
         case inverter_element: {
             require_equal(data.output_count, 1);
-            return next_output(
-                transform(data.position, data.orientation, point_t {1, 0}));
+            return next_output(transform(data.position, data.orientation, point_t {1, 0}),
+                               transform(data.orientation, orientation_t::right));
         }
 
         case and_element:
@@ -263,7 +276,8 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
             const auto height = data.input_count;
             const auto output_offset = grid_t {(height - data.output_count) / 2};
             return next_output(
-                transform(data.position, data.orientation, point_t {2, output_offset}));
+                transform(data.position, data.orientation, point_t {2, output_offset}),
+                transform(data.orientation, orientation_t::right));
         }
 
         case clock_generator: {
@@ -271,13 +285,14 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
 
             auto points = std::array {
                 // internal input, placed such that it cannot be connected
-                point_t {2, 1},
+                std::make_pair(point_t {2, 1}, orientation_t::up),
                 // reset signal
-                point_t {3, 1},
+                std::make_pair(point_t {3, 1}, orientation_t::right),
             };
 
-            for (auto &&point : points) {
-                if (!next_output(transform(data.position, data.orientation, point))) {
+            for (auto &&[point, orientation] : points) {
+                if (!next_output(transform(data.position, data.orientation, point),
+                                 transform(data.orientation, orientation))) {
                     return false;
                 }
             }
@@ -286,11 +301,15 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
         case flipflop_jk: {
             require_equal(data.output_count, 2);
 
-            // Q and !Q
-            auto points = std::array {point_t {4, 0}, point_t {2, 2}};
+            auto points = std::array {
+                // Q and !Q
+                std::make_pair(point_t {4, 0}, orientation_t::right),
+                std::make_pair(point_t {4, 2}, orientation_t::right),
+            };
 
-            for (auto &&point : points) {
-                if (!next_output(transform(data.position, data.orientation, point))) {
+            for (auto &&[point, orientation] : points) {
+                if (!next_output(transform(data.position, data.orientation, point),
+                                 transform(data.orientation, orientation))) {
                     return false;
                 }
             }
@@ -307,7 +326,8 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
             for (auto i : range(data.output_count)) {
                 const auto y = grid_t {2 * i};
                 if (!next_output(
-                        transform(data.position, data.orientation, point_t {width, y}))) {
+                        transform(data.position, data.orientation, point_t {width, y}),
+                        transform(data.orientation, orientation_t::right))) {
                     return false;
                 }
             }
@@ -317,22 +337,26 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
     throw_exception("'Don't know to calculate output locations.");
 }
 
-/// next_input(connection_id_t input_id, point_t position) -> bool;
+// next_input(connection_id_t input_id, point_t position,
+//            orientation_t orientation) -> bool;
 template <typename Func>
 auto iter_input_location_and_id(layout_calculation_data_t data, Func next_input) -> bool {
     return iter_input_location(
-        data, [&, input_id = connection_id_t {0}](point_t position) mutable {
-            return next_input(input_id++, position);
+        data, [&, input_id = connection_id_t {0}](point_t position,
+                                                  orientation_t orientation) mutable {
+            return next_input(input_id++, position, orientation);
         });
 }
 
-/// next_output(connection_id_t output_id, point_t position) -> bool;
+// next_output(connection_id_t output_id, point_t position,
+//             orientation_t orientation) -> bool;
 template <typename Func>
 auto iter_output_location_and_id(layout_calculation_data_t data, Func next_output)
     -> bool {
     return iter_output_location(
-        data, [&, output_id = connection_id_t {0}](point_t position) mutable {
-            return next_output(output_id++, position);
+        data, [&, output_id = connection_id_t {0}](point_t position,
+                                                   orientation_t orientation) mutable {
+            return next_output(output_id++, position, orientation);
         });
 }
 

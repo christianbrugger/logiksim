@@ -301,9 +301,16 @@ auto LineTree::reroot(const point_t new_root) const -> std::optional<LineTree> {
 
 auto LineTree::input_position() const -> point_t {
     if (points_.size() == 0) [[unlikely]] {
-        throw_exception("Empty line tree has no root.");
+        throw_exception("Empty line tree has no input.");
     }
     return points_[0];
+}
+
+auto LineTree::input_orientation() const -> orientation_t {
+    if (points_.size() < 2) [[unlikely]] {
+        throw_exception("Empty line tree has no input orientation.");
+    }
+    return to_orientation(points_[1], points_[0]);
 }
 
 auto LineTree::segment_count() const noexcept -> int {
@@ -333,6 +340,15 @@ auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
 
 auto LineTree::output_count() const -> std::size_t {
     return output_indices_.size();
+}
+
+auto LineTree::output_position(std::size_t index) const -> point_t {
+    return points_.at(output_indices_.at(index));
+}
+
+auto LineTree::output_orientation(std::size_t index) const -> orientation_t {
+    const auto segment_index = output_indices_.at(index) - 1;
+    return to_orientation(segment(segment_index));
 }
 
 auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {

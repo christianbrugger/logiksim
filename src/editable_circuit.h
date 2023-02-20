@@ -10,12 +10,44 @@
 
 #include <vector>
 
+// Tasks:
+// * re-rooting line_trees if input/output is connected that doesn't match
+// * merge line trees on insert, when colliding
+//
+// * consider second editable_circuit for insert / copy paste / selection
+//   or find other solution
+// * implement collision visualization
+// * consider segment / area / point based visualization / selection for line-trees
+
+// Done:
+// * implement connection orientation
+// * adding it to ConnectionCache & using it for making connections & is_colliding
+
 namespace logicsim {
+
+namespace detail::connection_cache {
+
+// TODO use struct packing ?
+struct value_type {
+    element_id_t element_id;
+    connection_id_t connection_id;
+    orientation_t orientation;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const value_type& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const value_type& other) const = default;
+};
+
+using map_type = ankerl::unordered_dense::map<point_t, value_type>;
+
+}  // namespace detail::connection_cache
 
 template <bool IsInput>
 class ConnectionCache {
    public:
-    using map_type = ankerl::unordered_dense::map<point_t, connection_t>;
+    using map_type = detail::connection_cache::map_type;
+    using value_type = detail::connection_cache::value_type;
 
    public:
     using connection_proxy
@@ -28,11 +60,12 @@ class ConnectionCache {
     auto update(element_id_t new_element_id, element_id_t old_element_id,
                 layout_calculation_data_t data) -> void;
 
-    [[nodiscard]] auto find(point_t position) const -> std::optional<connection_t>;
-    [[nodiscard]] auto find(point_t position, Schematic &schematic) const
-        -> std::optional<connection_proxy>;
-    [[nodiscard]] auto find(point_t position, const Schematic &schematic) const
-        -> std::optional<const_connection_proxy>;
+    [[nodiscard]] auto find(point_t position) const
+        -> std::optional<std::pair<connection_t, orientation_t>>;
+    [[nodiscard]] auto find(point_t position, Schematic& schematic) const
+        -> std::optional<std::pair<connection_proxy, orientation_t>>;
+    [[nodiscard]] auto find(point_t position, const Schematic& schematic) const
+        -> std::optional<std::pair<const_connection_proxy, orientation_t>>;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
 
@@ -67,7 +100,7 @@ class CollisionCache {
         element_id_t element_id_horizontal {null_element};
         element_id_t element_id_vertical {null_element};
 
-        auto operator==(const collision_data_t &other) const -> bool = default;
+        auto operator==(const collision_data_t& other) const -> bool = default;
     };
 
     constexpr static inline auto connection_tag = element_id_t {-2};
@@ -90,7 +123,7 @@ class CollisionCache {
 
     // std::tuple<point_t, CollisionState>
     [[nodiscard]] auto states() const {
-        return transform_view(map_, [](const map_type::value_type &value) {
+        return transform_view(map_, [](const map_type::value_type& value) {
             return std::make_tuple(value.first, to_state(value.second));
         });
     }
@@ -107,19 +140,19 @@ class EditableCircuit {
     using connection_map_t = ankerl::unordered_dense::map<point_t, connection_t>;
 
    public:
-    [[nodiscard]] EditableCircuit(Schematic &&schematic, Layout &&layout);
+    [[nodiscard]] EditableCircuit(Schematic&& schematic, Layout&& layout);
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
-    [[nodiscard]] auto layout() const noexcept -> const Layout &;
+    [[nodiscard]] auto schematic() const noexcept -> const Schematic&;
+    [[nodiscard]] auto layout() const noexcept -> const Layout&;
 
     auto add_inverter_element(point_t position,
                               orientation_t orientation = orientation_t::right) -> bool;
     auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
                               orientation_t orientation = orientation_t::right) -> bool;
 
-    auto add_wire(LineTree &&line_tree) -> bool;
+    auto add_wire(LineTree&& line_tree) -> bool;
 
     // swaps the element with last one and deletes it
     auto swap_and_delete_element(element_id_t element_id) -> void;
@@ -143,7 +176,7 @@ class EditableCircuit {
     auto add_missing_placeholders(element_id_t element_id) -> void;
 
     // invalidates the element_id, as element output placeholders might be deleted
-    auto connect_new_element(element_id_t &element_id) -> void;
+    auto connect_new_element(element_id_t& element_id) -> void;
 
     auto swap_and_delete_single_element(element_id_t element_id) -> void;
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)

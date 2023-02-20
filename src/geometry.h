@@ -20,6 +20,9 @@ auto order_points(const line_t line0, const line_t line1) noexcept
 // fast distance for horitonal or vertical lines
 auto distance(line_t line) -> int;
 
+auto to_orientation(point_t p0, point_t p1) -> orientation_t;
+auto to_orientation(line_t line) -> orientation_t;
+
 /*
 constexpr auto is_horizontal(line_t line) noexcept -> bool {
     return line.p0.y == line.p1.y;

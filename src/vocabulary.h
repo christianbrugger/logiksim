@@ -93,7 +93,7 @@ struct connection_id_t {
     }
 };
 
-// use struct packing ???
+// TODO use struct packing ?
 struct connection_t {
     element_id_t element_id;
     connection_id_t connection_id;
@@ -112,6 +112,8 @@ enum class orientation_t : uint8_t {
     left,
     up,
     down,
+
+    undirected,
 };
 
 auto format(orientation_t state) -> std::string;

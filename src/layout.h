@@ -41,7 +41,7 @@ class Layout {
     auto add_placeholder() -> element_id_t;
     auto add_wire(LineTree &&line_tree) -> element_id_t;
     auto add_logic_element(point_t position,
-                           orientation_t orientation = orientation_t::right,
+                           orientation_t orientation = orientation_t::undirected,
                            DisplayState display_state = DisplayState::normal,
                            color_t color = defaults::color_black) -> element_id_t;
     // swaps the element with last one and deletes it
