@@ -127,13 +127,13 @@ class WidgetRenderer : public QWidget {
             editable_circuit.add_standard_element(ElementType::or_element, 2,
                                                   point_t {15, 6});
             editable_circuit.add_wire(std::move(line_tree));
-            editable_circuit.add_wire(
-                LineTree({point_t {8, 2}, point_t {15, 2}, point_t {15, 4}}));
+            editable_circuit.add_wire(LineTree(
+                {point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15, 4}}));
             // editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
             editable_circuit.swap_and_delete_element(element_id_t {2});
 
-            auto added = editable_circuit.add_standard_element(ElementType::or_element, 2,
-                                                               point_t {15, 4});
+            auto added = editable_circuit.add_standard_element(ElementType::or_element, 9,
+                                                               point_t {20, 4});
             fmt::print("added = {}\n", added);
 
             fmt::print("{}\n", editable_circuit);
@@ -199,8 +199,10 @@ class WidgetRenderer : public QWidget {
         bl_ctx.begin(bl_image, bl_info);
         // renderFrame(bl_ctx);
         render_background(bl_ctx, settings);
-        // render_circuit(bl_ctx, layout, simulation, settings);
-        render_editable_circuit_caches(bl_ctx, editable_circuit, settings);
+
+        render_circuit(bl_ctx, layout, simulation, settings);
+        render_editable_circuit_collision_cache(bl_ctx, editable_circuit, settings);
+        render_editable_circuit_connection_cache(bl_ctx, editable_circuit, settings);
 
         bl_ctx.end();
 

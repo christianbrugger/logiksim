@@ -23,6 +23,9 @@ auto distance(line_t line) -> int;
 auto to_orientation(point_t p0, point_t p1) -> orientation_t;
 auto to_orientation(line_t line) -> orientation_t;
 
+// angle in respect to left orientation
+auto to_angle(orientation_t orientation) -> double;
+
 /*
 constexpr auto is_horizontal(line_t line) noexcept -> bool {
     return line.p0.y == line.p1.y;

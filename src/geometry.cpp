@@ -4,6 +4,8 @@
 #include "exceptions.h"
 #include "vocabulary.h"
 
+#include <numbers>
+
 namespace logicsim {
 
 auto is_horizontal(line_t line) noexcept -> bool {
@@ -63,6 +65,23 @@ auto to_orientation(line_t line) -> orientation_t {
     }
 
     throw_exception("unreachable code");
+}
+
+auto to_angle(orientation_t orientation) -> double {
+    switch (orientation) {
+        using enum orientation_t;
+        case left:
+            return 0.;
+        case right:
+            return std::numbers::pi;
+        case up:
+            return std::numbers::pi / 2;
+        case down:
+            return std::numbers::pi * 3 / 2;
+        case undirected:
+            throw_exception("can't draw arrow for undirected orientation");
+    };
+    throw_exception("unhandeled orientation");
 }
 
 }  // namespace logicsim

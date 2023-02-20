@@ -14,20 +14,15 @@
 #include <cstdint>
 #include <variant>
 
-//
-// Tasks:
-// * abstract Blend2d backend
-// * take a scene and render it
-// * store render related attributes like LED color
-//
-
 namespace logicsim {
+
+//
+// primitives
+//
 
 struct RenderSettings {
     double scale {12.0};
 };
-
-auto render_background(BLContext& ctx, const RenderSettings& settings = {}) -> void;
 
 enum class PointShape {
     circle,
@@ -40,25 +35,38 @@ enum class PointShape {
     vertical
 };
 
-namespace detail {
-auto set_point_style(BLContext& ctx, color_t color) -> void;
-}
-
 auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
-                  double size, const RenderSettings& settings = {}) -> void;
+                  double size, const RenderSettings& settings) -> void;
 
 auto render_points(BLContext& ctx, std::ranges::input_range auto&& points,
                    PointShape shape, color_t color, double size,
-                   const RenderSettings& settings = {}) {
-    detail::set_point_style(ctx, color);
+                   const RenderSettings& settings) {
     for (auto&& point : points) {
-        render_point_shape(ctx, point, shape, size, settings);
+        render_point(ctx, point, shape, color, size, settings);
     }
 }
 
+auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
+                  double size, const RenderSettings& settings) -> void;
+auto render_input_marker(BLContext& ctx, point_t point, color_t color,
+                         orientation_t orientation, double size,
+                         const RenderSettings& settings) -> void;
+
+//
+// scenes
+//
+
+auto render_background(BLContext& ctx, const RenderSettings& settings = {}) -> void;
+
+auto render_editable_circuit_connection_cache(BLContext& ctx,
+                                              const EditableCircuit& editable_circuit,
+                                              const RenderSettings& settings) -> void;
+auto render_editable_circuit_collision_cache(BLContext& ctx,
+                                             const EditableCircuit& editable_circuit,
+                                             const RenderSettings& settings) -> void;
 auto render_editable_circuit_caches(BLContext& ctx,
                                     const EditableCircuit& editable_circuit,
-                                    const RenderSettings& settings = {}) -> void;
+                                    const RenderSettings& settings) -> void;
 
 auto render_circuit(BLContext& ctx, const Layout& layout, const Simulation& simulation,
                     const RenderSettings& settings = {}) -> void;

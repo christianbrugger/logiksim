@@ -11,10 +11,25 @@
 
 #include <algorithm>
 #include <array>
+#include <numbers>
 #include <numeric>
 #include <utility>
 
 namespace logicsim {
+
+class new_context {
+   public:
+    explicit new_context(BLContext& ctx) : ctx_(ctx) {
+        ctx_.save();
+    }
+
+    ~new_context() {
+        ctx_.restore();
+    };
+
+   private:
+    BLContext& ctx_;
+};
 
 auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
     return v0.value + (v1.value - v0.value) * ratio;
@@ -232,8 +247,12 @@ auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
     ctx.fillAll();
 }
 
-auto render_point_shape(BLContext& ctx, point_t point, PointShape shape, double size,
-                        const RenderSettings& settings) -> void {
+auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
+                  double size, const RenderSettings& settings) -> void {
+    ctx.setStrokeWidth(1);
+    ctx.setStrokeStyle(BLRgba32(color.value));
+    ctx.setFillStyle(BLRgba32(color.value));
+
     switch (shape) {
         using enum PointShape;
 
@@ -311,39 +330,75 @@ auto render_point_shape(BLContext& ctx, point_t point, PointShape shape, double 
     throw_exception("unknown shape type.");
 }
 
-namespace detail {
+auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
+                  double size, const RenderSettings& settings) -> void {
+    auto _ = new_context {ctx};
 
-auto set_point_style(BLContext& ctx, color_t color) -> void {
     ctx.setStrokeWidth(1);
     ctx.setStrokeStyle(BLRgba32(color.value));
-    ctx.setFillStyle(BLRgba32(color.value));
+
+    const auto x = point.x * settings.scale;
+    const auto y = point.y * settings.scale;
+
+    const auto angle = to_angle(orientation);
+    const auto d = size;
+
+    ctx.translate(BLPoint {x, y});
+    ctx.rotate(angle);
+
+    ctx.strokeLine(BLLine(0, 0, d, 0));
+    ctx.strokeLine(BLLine(0, 0, d * 0.5, +d * 0.25));
+    ctx.strokeLine(BLLine(0, 0, d * 0.5, -d * 0.25));
 }
 
-}  // namespace detail
+auto render_input_marker(BLContext& ctx, point_t point, color_t color,
+                         orientation_t orientation, double size,
+                         const RenderSettings& settings) -> void {
+    auto _ = new_context {ctx};
 
-auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
-                  double size, const RenderSettings& settings) -> void {
-    detail::set_point_style(ctx, color);
-    render_point_shape(ctx, point, shape, size, settings);
+    ctx.setStrokeWidth(1);
+    ctx.setStrokeStyle(BLRgba32(color.value));
+
+    const auto x = point.x * settings.scale;
+    const auto y = point.y * settings.scale;
+
+    const auto angle = to_angle(orientation);
+    const auto d = size;
+
+    ctx.translate(BLPoint {x, y});
+    ctx.rotate(angle);
+
+    const auto pi = std::numbers::pi;
+
+    ctx.strokeArc(BLArc {0, 0, d, d, -pi / 2, pi});
+    ctx.strokeLine(BLLine {-d, -d, 0, -d});
+    ctx.strokeLine(BLLine {-d, +d, 0, +d});
 }
 
 //
 // Editable Circuit
 //
 
-auto render_editable_circuit_caches(BLContext& ctx,
-                                    const EditableCircuit& editable_circuit,
-                                    const RenderSettings& settings) -> void {
-    // connection caches
-    {
-        const auto size = settings.scale * (1.0 / 3.0);
-        render_points(ctx, editable_circuit.input_positions(), PointShape::circle,
-                      defaults::color_green, size, settings);
-        render_points(ctx, editable_circuit.output_positions(), PointShape::cross,
-                      defaults::color_green, size, settings);
+auto render_editable_circuit_connection_cache(BLContext& ctx,
+                                              const EditableCircuit& editable_circuit,
+                                              const RenderSettings& settings) -> void {
+    for (auto [position, orientation] :
+         editable_circuit.input_positions_and_orientations()) {
+        const auto size = settings.scale / 3;
+        render_input_marker(ctx, position, defaults::color_green, orientation, size,
+                            settings);
     }
 
-    // collision cache
+    for (auto [position, orientation] :
+         editable_circuit.output_positions_and_orientations()) {
+        const auto size = settings.scale * 0.8;
+        render_arrow(ctx, position, defaults::color_green, orientation, size, settings);
+    }
+}
+
+auto render_editable_circuit_collision_cache(BLContext& ctx,
+                                             const EditableCircuit& editable_circuit,
+                                             const RenderSettings& settings) -> void {
     for (auto [point, state] : editable_circuit.collision_states()) {
         const auto color = defaults::color_orange;
         const auto size = settings.scale * (1.0 / 4.0);
@@ -352,36 +407,38 @@ auto render_editable_circuit_caches(BLContext& ctx,
             using enum CollisionCache::CollisionState;
 
             case element_body: {
-                render_point(ctx, point, PointShape::square, color, size);
+                render_point(ctx, point, PointShape::square, color, size, settings);
                 break;
             }
             case element_connection: {
-                render_point(ctx, point, PointShape::circle, color, size);
+                render_point(ctx, point, PointShape::circle, color, size, settings);
                 break;
             }
             case wire_connection: {
-                render_point(ctx, point, PointShape::full_square, color, size * (2. / 3));
+                render_point(ctx, point, PointShape::full_square, color, size * (2. / 3),
+                             settings);
                 break;
             }
             case wire_horizontal: {
-                render_point(ctx, point, PointShape::horizontal, color, size);
+                render_point(ctx, point, PointShape::horizontal, color, size, settings);
                 break;
             }
             case wire_vertical: {
-                render_point(ctx, point, PointShape::vertical, color, size);
+                render_point(ctx, point, PointShape::vertical, color, size, settings);
                 break;
             }
             case wire_point: {
-                render_point(ctx, point, PointShape::diamond, color, size);
+                render_point(ctx, point, PointShape::diamond, color, size, settings);
                 break;
             }
             case wire_crossing: {
-                render_point(ctx, point, PointShape::plus, color, size);
+                render_point(ctx, point, PointShape::plus, color, size, settings);
                 break;
             }
             case element_wire_connection: {
-                render_point(ctx, point, PointShape::circle, color, size);
-                render_point(ctx, point, PointShape::full_square, color, size * (2. / 3));
+                render_point(ctx, point, PointShape::circle, color, size, settings);
+                render_point(ctx, point, PointShape::full_square, color, size * (2. / 3),
+                             settings);
                 break;
             }
             case invalid_state: {
@@ -390,6 +447,13 @@ auto render_editable_circuit_caches(BLContext& ctx,
             }
         }
     }
+}
+
+auto render_editable_circuit_caches(BLContext& ctx,
+                                    const EditableCircuit& editable_circuit,
+                                    const RenderSettings& settings) -> void {
+    render_editable_circuit_connection_cache(ctx, editable_circuit, settings);
+    render_editable_circuit_collision_cache(ctx, editable_circuit, settings);
 }
 
 //

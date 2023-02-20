@@ -73,6 +73,12 @@ class ConnectionCache {
         return std::ranges::views::keys(connections_);
     }
 
+    [[nodiscard]] auto positions_and_orientations() const {
+        return transform_view(connections_, [](const map_type::value_type& value) {
+            return std::make_pair(value.first, value.second.orientation);
+        });
+    }
+
     // TODO implement validate
 
    private:
@@ -163,8 +169,16 @@ class EditableCircuit {
         return input_connections_.positions();
     };
 
+    [[nodiscard]] auto input_positions_and_orientations() const {
+        return input_connections_.positions_and_orientations();
+    };
+
     [[nodiscard]] auto output_positions() const {
         return output_connections_.positions();
+    };
+
+    [[nodiscard]] auto output_positions_and_orientations() const {
+        return output_connections_.positions_and_orientations();
     };
 
     [[nodiscard]] auto collision_states() const {
