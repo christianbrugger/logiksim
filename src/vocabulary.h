@@ -315,13 +315,13 @@ struct point_fine_t {
         return {x - other.x, y - other.y};
     }
 
-    [[nodiscard]] constexpr auto operator+=(point_fine_t other) -> point_fine_t & {
+    constexpr auto operator+=(point_fine_t other) -> point_fine_t & {
         x += other.x;
         y += other.y;
         return *this;
     }
 
-    [[nodiscard]] constexpr auto operator-=(point_fine_t other) -> point_fine_t & {
+    constexpr auto operator-=(point_fine_t other) -> point_fine_t & {
         x -= other.x;
         y -= other.y;
         return *this;

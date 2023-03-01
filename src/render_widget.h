@@ -23,8 +23,66 @@
 
 #include <chrono>
 #include <cmath>
+#include <variant>
 
 namespace logicsim {
+
+template <typename... Func>
+struct overload : Func... {
+    using Func::operator()...;
+};
+
+template <class... Ts>
+overload(Ts...) -> overload<Ts...>;
+
+class EmptyMouseLogic {};
+
+class MouseDragLogic {
+   public:
+    MouseDragLogic(ViewConfig& config) noexcept : config_ {config} {}
+
+    auto mouse_press(QPointF position) -> void {
+        last_position = position;
+    }
+
+    auto mouse_move(QPointF position) -> void {
+        if (last_position.has_value()) {
+            config_.offset += to_grid_fine(position, config_)
+                              - to_grid_fine(*last_position, config_);
+        }
+        last_position = position;
+    }
+
+    auto mouse_release(QPointF position) -> void {
+        mouse_move(position);
+        last_position = std::nullopt;
+    }
+
+   private:
+    ViewConfig& config_;
+    std::optional<QPointF> last_position {};
+};
+
+class MouseInsertLogic {
+   public:
+    MouseInsertLogic(EditableCircuit& editable_circuit) noexcept
+        : editable_circuit_ {editable_circuit} {}
+
+    auto mouse_press(point_t position) -> void {
+        editable_circuit_.add_standard_element(ElementType::or_element, 2, position);
+    }
+
+    auto mouse_move(point_t position) -> void {
+        editable_circuit_.add_standard_element(ElementType::or_element, 2, position);
+    }
+
+    auto mouse_release(point_t position) -> void {
+        editable_circuit_.add_standard_element(ElementType::or_element, 2, position);
+    }
+
+   private:
+    EditableCircuit& editable_circuit_;
+};
 
 class WidgetRenderer : public QWidget {
     Q_OBJECT
@@ -104,6 +162,10 @@ class WidgetRenderer : public QWidget {
 
    protected:
     void resizeEvent(QResizeEvent* event) override {
+        if (event == nullptr) {
+            return;
+        }
+
         if (event->oldSize() == event->size()) {
             event->accept();
             return;
@@ -112,6 +174,10 @@ class WidgetRenderer : public QWidget {
     }
 
     void paintEvent([[maybe_unused]] QPaintEvent* event) override {
+        if (event == nullptr) {
+            return;
+        }
+
         if (last_pixel_ratio_ != devicePixelRatioF()) {
             last_pixel_ratio_ = devicePixelRatioF();
             init();
@@ -199,30 +265,74 @@ class WidgetRenderer : public QWidget {
     }
 
     auto mousePressEvent(QMouseEvent* event) -> void override {
-        if (event->button() == Qt::LeftButton) {
-            const auto pos = to_grid(event->pos(), render_settings_.view_config);
-            fmt::print("mousePressEvent({})\n", pos);
+        if (event == nullptr) {
+            return;
+        }
 
-            editable_circuit_->add_standard_element(ElementType::or_element, 2, pos);
+        // set mouse logic
+        if (event->button() == Qt::MiddleButton) {
+            mouse_logic_.emplace<MouseDragLogic>(render_settings_.view_config);
+        } else if (event->button() == Qt::LeftButton && editable_circuit_.has_value()) {
+            mouse_logic_.emplace<MouseInsertLogic>(*editable_circuit_);
+        }
+
+        // visit mouse logic
+        if (mouse_logic_) {
+            const auto grid_position
+                = to_grid(event->position(), render_settings_.view_config);
+
+            std::visit(
+                overload {
+                    [](EmptyMouseLogic& arg) { ; },
+                    [&](MouseDragLogic& arg) { arg.mouse_press(event->position()); },
+                    [&](MouseInsertLogic& arg) { arg.mouse_press(grid_position); },
+                },
+                *mouse_logic_);
             update();
         }
     }
 
     auto mouseMoveEvent(QMouseEvent* event) -> void override {
-        if (event->buttons() == Qt::LeftButton) {
-            const auto pos = to_grid(event->pos(), render_settings_.view_config);
-            fmt::print("mouseMoveEvent({})\n", pos);
+        if (event == nullptr) {
+            return;
+        }
 
-            editable_circuit_->add_standard_element(ElementType::or_element, 2, pos);
+        if (mouse_logic_) {
+            const auto grid_position
+                = to_grid(event->position(), render_settings_.view_config);
+
+            std::visit(
+                overload {
+                    [&](MouseDragLogic& arg) { arg.mouse_move(event->position()); },
+                    [&](MouseInsertLogic& arg) { arg.mouse_move(grid_position); },
+                },
+                *mouse_logic_);
+
             update();
         }
     }
 
     auto mouseReleaseEvent(QMouseEvent* event) -> void override {
-        if (event->button() == Qt::LeftButton) {
-            const auto pos = to_grid(event->pos(), render_settings_.view_config);
-            fmt::print("mouseReleaseEvent({})\n", pos);
+        if (event == nullptr) {
+            return;
         }
+
+        if (mouse_logic_) {
+            const auto grid_position
+                = to_grid(event->position(), render_settings_.view_config);
+
+            std::visit(
+                overload {
+                    [&](MouseDragLogic& arg) { arg.mouse_release(event->position()); },
+                    [&](MouseInsertLogic& arg) { arg.mouse_release(grid_position); },
+                },
+                *mouse_logic_);
+
+            update();
+        }
+
+        // delete mouse logic
+        mouse_logic_ = std::nullopt;
     }
 
     auto wheelEvent(QWheelEvent* event) -> void override {
@@ -251,7 +361,6 @@ class WidgetRenderer : public QWidget {
                 = to_grid_fine(event->position(), render_settings_.view_config);
 
             render_settings_.view_config.offset += new_grid_point - old_grid_point;
-
             update();
         }
 
@@ -276,7 +385,6 @@ class WidgetRenderer : public QWidget {
                 += standard_scroll_grid * event->angleDelta().y() / standard_delta;
             render_settings_.view_config.offset.y
                 += standard_scroll_grid * event->angleDelta().x() / standard_delta;
-
             update();
         }
     }
@@ -299,6 +407,9 @@ class WidgetRenderer : public QWidget {
     CircuitIndex circuit_index_ {};
     std::optional<EditableCircuit> editable_circuit_ {};
     RenderSettings render_settings_ {};
+
+    // mouse logic
+    std::optional<std::variant<MouseDragLogic, MouseInsertLogic>> mouse_logic_ {};
 };
 
 }  // namespace logicsim
