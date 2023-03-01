@@ -257,51 +257,45 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
         using enum PointShape;
 
         case circle: {
-            const auto cx = point.x * settings.scale;
-            const auto cy = point.y * settings.scale;
-            const auto r = size;
+            const auto center = to_context(point, settings.view_config);
+            const auto r = size * settings.view_config.scale;
 
-            ctx.strokeCircle(BLCircle {cx, cy, r});
+            ctx.strokeCircle(BLCircle {center.x, center.y, r});
             return;
         }
         case cross: {
-            const auto x = point.x * settings.scale;
-            const auto y = point.y * settings.scale;
-            const auto d = size;
+            const auto [x, y] = to_context(point, settings.view_config);
+            const auto d = size * settings.view_config.scale;
 
             ctx.strokeLine(BLLine {x - d, y - d, x + d, y + d});
             ctx.strokeLine(BLLine {x - d, y + d, x + d, y - d});
             return;
         }
         case plus: {
-            const auto x = point.x * settings.scale;
-            const auto y = point.y * settings.scale;
-            const auto d = size;
+            const auto [x, y] = to_context(point, settings.view_config);
+            const auto d = size * settings.view_config.scale;
 
             ctx.strokeLine(BLLine {x, y + d, x, y - d});
             ctx.strokeLine(BLLine {x - d, y, x + d, y});
             return;
         }
         case square: {
-            const auto x = point.x * settings.scale;
-            const auto y = point.y * settings.scale;
-            const auto d = size;
+            const auto [x, y] = to_context(point, settings.view_config);
+            const auto d = size * settings.view_config.scale;
 
             ctx.strokeRect(BLRect {x - d, y - d, 2 * d, 2 * d});
             return;
         }
         case full_square: {
-            const auto x = point.x * settings.scale;
-            const auto y = point.y * settings.scale;
-            const auto d = size;
+            const auto [x, y] = to_context(point, settings.view_config);
+            const auto d = size * settings.view_config.scale;
 
             ctx.fillRect(BLRect {x - d, y - d, 2 * d, 2 * d});
             return;
         }
         case diamond: {
-            const auto x = point.x * settings.scale;
-            const auto y = point.y * settings.scale;
-            const auto d = size;
+            const auto [x, y] = to_context(point, settings.view_config);
+            const auto d = size * settings.view_config.scale;
 
             const auto poly = std::array {BLPoint {x, y - d}, BLPoint {x + d, y},
                                           BLPoint {x, y + d}, BLPoint {x - d, y}};
@@ -310,17 +304,15 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
             return;
         }
         case horizontal: {
-            const auto x = point.x * settings.scale;
-            const auto y = point.y * settings.scale;
-            const auto d = size;
+            const auto [x, y] = to_context(point, settings.view_config);
+            const auto d = size * settings.view_config.scale;
 
             ctx.strokeLine(BLLine {x - d, y, x + d, y});
             return;
         }
         case vertical: {
-            const auto x = point.x * settings.scale;
-            const auto y = point.y * settings.scale;
-            const auto d = size;
+            const auto [x, y] = to_context(point, settings.view_config);
+            const auto d = size * settings.view_config.scale;
 
             ctx.strokeLine(BLLine {x, y + d, x, y - d});
             return;
@@ -337,11 +329,9 @@ auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t or
     ctx.setStrokeWidth(1);
     ctx.setStrokeStyle(BLRgba32(color.value));
 
-    const auto x = point.x * settings.scale;
-    const auto y = point.y * settings.scale;
-
+    const auto [x, y] = to_context(point, settings.view_config);
+    const auto d = size * settings.view_config.scale;
     const auto angle = to_angle(orientation);
-    const auto d = size;
 
     ctx.translate(BLPoint {x, y});
     ctx.rotate(angle);
@@ -359,11 +349,9 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
     ctx.setStrokeWidth(1);
     ctx.setStrokeStyle(BLRgba32(color.value));
 
-    const auto x = point.x * settings.scale;
-    const auto y = point.y * settings.scale;
-
+    const auto [x, y] = to_context(point, settings.view_config);
+    const auto d = size * settings.view_config.scale;
     const auto angle = to_angle(orientation);
-    const auto d = size;
 
     ctx.translate(BLPoint {x, y});
     ctx.rotate(angle);
@@ -384,14 +372,14 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
                                               const RenderSettings& settings) -> void {
     for (auto [position, orientation] :
          editable_circuit.input_positions_and_orientations()) {
-        const auto size = settings.scale / 3;
+        const auto size = 1.0 / 3.0;
         render_input_marker(ctx, position, defaults::color_green, orientation, size,
                             settings);
     }
 
     for (auto [position, orientation] :
          editable_circuit.output_positions_and_orientations()) {
-        const auto size = settings.scale * 0.8;
+        const auto size = 0.8;
         render_arrow(ctx, position, defaults::color_green, orientation, size, settings);
     }
 }
@@ -401,7 +389,7 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
                                              const RenderSettings& settings) -> void {
     for (auto [point, state] : editable_circuit.collision_states()) {
         const auto color = defaults::color_orange;
-        const auto size = settings.scale * (1.0 / 4.0);
+        const auto size = 0.25;
 
         switch (state) {
             using enum CollisionCache::CollisionState;

@@ -306,6 +306,26 @@ struct point_fine_t {
     double y;
 
     [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] constexpr auto operator+(point_fine_t other) const -> point_fine_t {
+        return {x + other.x, y + other.y};
+    }
+
+    [[nodiscard]] constexpr auto operator-(point_fine_t other) const -> point_fine_t {
+        return {x - other.x, y - other.y};
+    }
+
+    [[nodiscard]] constexpr auto operator+=(point_fine_t other) -> point_fine_t & {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
+
+    [[nodiscard]] constexpr auto operator-=(point_fine_t other) -> point_fine_t & {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
 };
 
 static_assert(std::is_trivial<point_fine_t>::value);

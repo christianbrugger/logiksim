@@ -151,6 +151,7 @@ endif()
 
 # Qt 6
 set(CMAKE_AUTOMOC TRUE)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 
@@ -267,6 +268,7 @@ set(LS_CORE_SOURCES
     src/line_tree.h src/line_tree.cpp
     src/random.h src/random.cpp
     src/renderer.h src/renderer.cpp
+    src/scene.h src/scene.cpp
     src/schematic.h src/schematic.cpp
     src/search_tree.h src/search_tree.cpp
     src/simulation.h src/simulation.cpp
@@ -293,6 +295,10 @@ set(LS_CORE_LIBRARIES
     unordered_dense::unordered_dense
     GSL
     Blend2D::Blend2D
+    
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::OpenGLWidgets
 )
 
 # target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
@@ -343,8 +349,6 @@ add_executable(${MAIN_GUI_TARGET}
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
 
-    Qt6::Widgets
-    Qt6::OpenGLWidgets
 )
 target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 

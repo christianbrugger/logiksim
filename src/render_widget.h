@@ -7,6 +7,7 @@
 #include "layout.h"
 #include "range.h"
 #include "renderer.h"
+#include "scene.h"
 #include "schematic.h"
 #include "simulation.h"
 
@@ -14,6 +15,7 @@
 #include <gsl/gsl>
 
 #include <QFrame>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QResizeEvent>
 #include <QTimer>
@@ -23,32 +25,6 @@
 #include <cmath>
 
 namespace logicsim {
-
-template <typename F, typename G>
-void benchmark_logic_elements(F&& draw_rect, G&& draw_line, int count = 100) {
-    double s = 10.;  // *details.pixel_ratio / 2;
-
-    double aspect_ratio = 16. / 9.;
-    double count_y_d = std::sqrt(count / aspect_ratio);
-    int count_x = std::round(count_y_d * aspect_ratio);
-    int count_y = std::round(count_y_d);
-
-    for (int i = 0; i < count_x; ++i) {
-        for (int j = 0; j < count_y; ++j) {
-            double x = 4 * (i + 1) * s;
-            double y = 4 * (j + 1) * s;
-            draw_rect(x, y + -0.5 * s, 2 * s, 3 * s);
-            for (auto dy : {0, 1, 2}) {
-                int y_pin = y + dy * s;
-                if (dy == 1) draw_line(x, y_pin, x - 0.75 * s, y_pin);
-                draw_line(x + 2 * s, y_pin, x + 2.75 * s, y_pin);
-            }
-        }
-    }
-
-    // double scale = 0.75 + 0.25 * std::sin(0.1 * details.delta_t * 2 *
-    // std::numbers::pi); return scale;
-}
 
 class WidgetRenderer : public QWidget {
     Q_OBJECT
@@ -66,6 +42,43 @@ class WidgetRenderer : public QWidget {
 
         connect(&timer_, &QTimer::timeout, this, &WidgetRenderer::on_timeout);
         timer_.start();
+
+        reset_circuit();
+    }
+
+    auto reset_circuit() -> void {
+        circuit_index_ = CircuitIndex {};
+        editable_circuit_ = EditableCircuit {circuit_index_.borrow_schematic(circuit_id_),
+                                             circuit_index_.borrow_layout(circuit_id_)};
+
+        {
+            auto& editable_circuit = editable_circuit_.value();
+
+            auto tree1 = LineTree({point_t {7, 3}, point_t {10, 3}, point_t {10, 1}});
+            auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
+                                   point_t {4, 4}, point_t {5, 4}});
+            // auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8,
+            // 12}}); auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12},
+            // point_t {12, 14}});
+            auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
+
+            editable_circuit.add_standard_element(ElementType::or_element, 2,
+                                                  point_t {5, 3});
+            editable_circuit.add_standard_element(ElementType::or_element, 2,
+                                                  point_t {15, 6});
+            editable_circuit.add_wire(std::move(line_tree));
+            editable_circuit.add_wire(LineTree(
+                {point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15, 4}}));
+            // editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
+            editable_circuit.swap_and_delete_element(element_id_t {2});
+
+            auto added = editable_circuit.add_standard_element(ElementType::or_element, 9,
+                                                               point_t {20, 4});
+            fmt::print("added = {}\n", added);
+
+            fmt::print("{}\n", editable_circuit);
+            editable_circuit.schematic().validate(Schematic::validate_all);
+        }
     }
 
     Q_SLOT void on_timeout() {
@@ -108,40 +121,11 @@ class WidgetRenderer : public QWidget {
         }
 
         // build circuit
-        auto circuit_index = CircuitIndex {};
-        auto circuit_id = circuit_id_t {0};
-        auto editable_circuit
-            = EditableCircuit {circuit_index.borrow_schematic(circuit_id),
-                               circuit_index.borrow_layout(circuit_id)};
-        {
-            auto tree1 = LineTree({point_t {7, 3}, point_t {10, 3}, point_t {10, 1}});
-            auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
-                                   point_t {4, 4}, point_t {5, 4}});
-            // auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8,
-            // 12}}); auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12},
-            // point_t {12, 14}});
-            auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
-
-            editable_circuit.add_standard_element(ElementType::or_element, 2,
-                                                  point_t {5, 3});
-            editable_circuit.add_standard_element(ElementType::or_element, 2,
-                                                  point_t {15, 6});
-            editable_circuit.add_wire(std::move(line_tree));
-            editable_circuit.add_wire(LineTree(
-                {point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15, 4}}));
-            // editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
-            editable_circuit.swap_and_delete_element(element_id_t {2});
-
-            auto added = editable_circuit.add_standard_element(ElementType::or_element, 9,
-                                                               point_t {20, 4});
-            fmt::print("added = {}\n", added);
-
-            fmt::print("{}\n", editable_circuit);
-            editable_circuit.schematic().validate(Schematic::validate_all);
-        }
+        auto& editable_circuit = editable_circuit_.value();
 
         // old behaviour
 
+        /*
         const double animation_seconds
             = std::chrono::duration<double>(animation_clock::now() - animation_start_)
                   .count();
@@ -193,16 +177,20 @@ class WidgetRenderer : public QWidget {
 
         // int w = qt_image.width();
         // int h = qt_image.height();
-
-        RenderSettings settings {};
+        */
 
         bl_ctx.begin(bl_image, bl_info);
         // renderFrame(bl_ctx);
-        render_background(bl_ctx, settings);
+        render_background(bl_ctx, render_settings_);
 
-        render_circuit(bl_ctx, layout, simulation, settings);
-        render_editable_circuit_collision_cache(bl_ctx, editable_circuit, settings);
-        render_editable_circuit_connection_cache(bl_ctx, editable_circuit, settings);
+        // render_circuit(bl_ctx, layout, simulation, settings);
+
+        auto simulation = Simulation {editable_circuit.schematic()};
+        // render_circuit(bl_ctx, editable_circuit.layout(), simulation, settings);
+        render_editable_circuit_collision_cache(bl_ctx, editable_circuit,
+                                                render_settings_);
+        render_editable_circuit_connection_cache(bl_ctx, editable_circuit,
+                                                 render_settings_);
 
         bl_ctx.end();
 
@@ -210,22 +198,87 @@ class WidgetRenderer : public QWidget {
         painter.drawImage(QPoint(0, 0), qt_image);
     }
 
-    void renderFrame(BLContext& ctx) {
-        ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
-        ctx.fillAll();
+    auto mousePressEvent(QMouseEvent* event) -> void override {
+        if (event->button() == Qt::LeftButton) {
+            const auto pos = to_grid(event->pos(), render_settings_.view_config);
+            fmt::print("mousePressEvent({})\n", pos);
 
-        BLPath path;
-        benchmark_logic_elements(
-            [&path](double x, double y, double w, double h) { path.addRect(x, y, w, h); },
-            [&path](double x1, double y1, double x2, double y2) {
-                path.addLine(BLLine(x1, y1, x2, y2));
-            });
+            editable_circuit_->add_standard_element(ElementType::or_element, 2, pos);
+            update();
+        }
+    }
 
-        ctx.setFillStyle(BLRgba32(0xFFFFFF00u));
-        ctx.setStrokeStyle(BLRgba32(0xFF000000u));
-        ctx.setStrokeWidth(2);
-        ctx.fillPath(path);
-        ctx.strokePath(path);
+    auto mouseMoveEvent(QMouseEvent* event) -> void override {
+        if (event->buttons() == Qt::LeftButton) {
+            const auto pos = to_grid(event->pos(), render_settings_.view_config);
+            fmt::print("mouseMoveEvent({})\n", pos);
+
+            editable_circuit_->add_standard_element(ElementType::or_element, 2, pos);
+            update();
+        }
+    }
+
+    auto mouseReleaseEvent(QMouseEvent* event) -> void override {
+        if (event->button() == Qt::LeftButton) {
+            const auto pos = to_grid(event->pos(), render_settings_.view_config);
+            fmt::print("mouseReleaseEvent({})\n", pos);
+        }
+    }
+
+    auto wheelEvent(QWheelEvent* event) -> void override {
+        if (event == nullptr) {
+            return;
+        }
+
+        const auto standard_delta = 120.0;      // standard delta for one scroll
+        const auto standard_zoom_factor = 1.1;  // zoom factor for one scroll
+        const auto standard_scroll_pixel = 20;  // pixels to scroll for one scroll
+
+        const auto standard_scroll_grid
+            = standard_scroll_pixel / render_settings_.view_config.scale;
+
+        // zoom
+        if (event->modifiers() == Qt::ControlModifier) {
+            const auto delta = event->angleDelta().y() / standard_delta;
+            const auto factor = std::exp(delta * std::log(standard_zoom_factor));
+
+            const auto old_grid_point
+                = to_grid_fine(event->position(), render_settings_.view_config);
+
+            render_settings_.view_config.scale *= factor;
+
+            const auto new_grid_point
+                = to_grid_fine(event->position(), render_settings_.view_config);
+
+            render_settings_.view_config.offset += new_grid_point - old_grid_point;
+
+            update();
+        }
+
+        // standard scroll
+        else if (event->modifiers() == Qt::NoModifier) {
+            if (event->hasPixelDelta()) {
+                // TODO test this
+                render_settings_.view_config.offset.x += event->pixelDelta().x();
+                render_settings_.view_config.offset.y += event->pixelDelta().y();
+            } else {
+                render_settings_.view_config.offset.x
+                    += standard_scroll_grid * event->angleDelta().x() / standard_delta;
+                render_settings_.view_config.offset.y
+                    += standard_scroll_grid * event->angleDelta().y() / standard_delta;
+            }
+            update();
+        }
+
+        // inverted scroll
+        else if (event->modifiers() == Qt::ShiftModifier) {
+            render_settings_.view_config.offset.x
+                += standard_scroll_grid * event->angleDelta().y() / standard_delta;
+            render_settings_.view_config.offset.y
+                += standard_scroll_grid * event->angleDelta().x() / standard_delta;
+
+            update();
+        }
     }
 
    private:
@@ -240,6 +293,12 @@ class WidgetRenderer : public QWidget {
 
     QTimer timer_;
     animation_clock::time_point animation_start_;
+
+    // new circuit
+    circuit_id_t circuit_id_ {0};
+    CircuitIndex circuit_index_ {};
+    std::optional<EditableCircuit> editable_circuit_ {};
+    RenderSettings render_settings_ {};
 };
 
 }  // namespace logicsim

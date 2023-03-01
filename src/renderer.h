@@ -3,6 +3,7 @@
 
 #include "editable_circuit.h"
 #include "layout.h"
+#include "scene.h"
 #include "schematic.h"
 #include "simulation.h"
 
@@ -21,7 +22,10 @@ namespace logicsim {
 //
 
 struct RenderSettings {
+    // TODO remove if not needed any more
     double scale {12.0};
+
+    ViewConfig view_config {};
 };
 
 enum class PointShape {
