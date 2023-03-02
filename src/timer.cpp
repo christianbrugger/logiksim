@@ -40,4 +40,32 @@ auto Timer::format() const -> std::string {
     return fmt::format("{}{:.{}f}{}", prefix, seconds, precision_, unit_str);
 }
 
+//
+// EventCounter
+//
+
+auto EventCounter::count_event() -> void {
+    deque_.push_back(timer_t::now());
+}
+
+auto EventCounter::reset() -> void {
+    deque_.clear();
+}
+
+auto EventCounter::events_per_second() const -> double {
+    using namespace std::literals::chrono_literals;
+    const auto now = timer_t::now();
+
+    while (deque_.size() > 20 && now - deque_.front() > 2s) {
+        deque_.pop_front();
+    }
+
+    if (deque_.size() < 2) {
+        return -1.0;
+    }
+
+    auto time_delta = std::chrono::duration<double>(deque_.back() - deque_.front());
+    return (deque_.size() - 1) / time_delta.count();
+}
+
 }  // namespace logicsim

@@ -275,6 +275,9 @@ set(LS_CORE_SOURCES
     src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp
     src/vocabulary.h src/vocabulary.cpp
+    # test
+    src/main_widget.h src/main_widget.cpp
+    src/render_widget.h src/render_widget.cpp
 )
 set(LS_CORE_LIBRARIES  
     logicsim_pch
@@ -343,7 +346,6 @@ set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET} 
     ${LS_CORE_SOURCES}
 
-    src/render_widget.h src/render_widget.cpp
     src/main_gui.cpp
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 

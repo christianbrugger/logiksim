@@ -4,6 +4,7 @@
 #include <fmt/core.h>
 
 #include <chrono>
+#include <deque>
 #include <ratio>
 #include <string>
 
@@ -27,6 +28,20 @@ class Timer {
     std::string description_;
     Unit unit_;
     timepoint_t start_;
+};
+
+class EventCounter {
+   public:
+    using timer_t = std::chrono::steady_clock;
+    using timepoint_t = timer_t::time_point;
+
+    auto count_event() -> void;
+    auto reset() -> void;
+
+    auto events_per_second() const -> double;
+
+   private:
+    mutable std::deque<timepoint_t> deque_ {};
 };
 
 }  // namespace logicsim

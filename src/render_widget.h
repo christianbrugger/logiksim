@@ -10,6 +10,7 @@
 #include "scene.h"
 #include "schematic.h"
 #include "simulation.h"
+#include "timer.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
@@ -99,11 +100,42 @@ class WidgetRenderer : public QWidget {
         setAttribute(Qt::WA_NoSystemBackground, true);
 
         connect(&timer_, &QTimer::timeout, this, &WidgetRenderer::on_timeout);
-        timer_.start();
 
         reset_circuit();
     }
 
+    auto set_do_benchmark(bool value) -> void {
+        do_benchmark_ = value;
+
+        if (value) {
+            timer_.start();
+        } else {
+            timer_.stop();
+        }
+
+        update();
+    }
+
+    auto set_do_render_circuit(bool value) -> void {
+        do_render_circuit_ = value;
+        update();
+    }
+
+    auto set_do_render_collision_cache(bool value) -> void {
+        do_render_collision_cache_ = value;
+        update();
+    }
+
+    auto set_do_render_connection_cache(bool value) -> void {
+        do_render_connection_cache_ = value;
+        update();
+    }
+
+    auto fps() const -> double {
+        return fps_counter_.events_per_second();
+    }
+
+   private:
     auto reset_circuit() -> void {
         circuit_index_ = CircuitIndex {};
         editable_circuit_ = EditableCircuit {circuit_index_.borrow_schematic(circuit_id_),
@@ -156,8 +188,9 @@ class WidgetRenderer : public QWidget {
         qt_image.setDevicePixelRatio(devicePixelRatioF());
         bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
                                 qt_image.bits(), qt_image.bytesPerLine());
-
         bl_info.threadCount = n_threads_;
+
+        fps_counter_.reset();
     };
 
    protected:
@@ -252,16 +285,24 @@ class WidgetRenderer : public QWidget {
         // render_circuit(bl_ctx, layout, simulation, settings);
 
         auto simulation = Simulation {editable_circuit.schematic()};
-        // render_circuit(bl_ctx, editable_circuit.layout(), simulation, settings);
-        render_editable_circuit_collision_cache(bl_ctx, editable_circuit,
-                                                render_settings_);
-        render_editable_circuit_connection_cache(bl_ctx, editable_circuit,
-                                                 render_settings_);
+        if (do_render_circuit_) {
+            // render_circuit(bl_ctx, editable_circuit.layout(), simulation, settings);
+        }
+        if (do_render_collision_cache_) {
+            render_editable_circuit_collision_cache(bl_ctx, editable_circuit,
+                                                    render_settings_);
+        }
+        if (do_render_connection_cache_) {
+            render_editable_circuit_connection_cache(bl_ctx, editable_circuit,
+                                                     render_settings_);
+        }
 
         bl_ctx.end();
 
         QPainter painter(this);
         painter.drawImage(QPoint(0, 0), qt_image);
+
+        fps_counter_.count_event();
     }
 
     auto mousePressEvent(QMouseEvent* event) -> void override {
@@ -410,6 +451,14 @@ class WidgetRenderer : public QWidget {
 
     // mouse logic
     std::optional<std::variant<MouseDragLogic, MouseInsertLogic>> mouse_logic_ {};
+
+    // states
+    bool do_benchmark_ {false};
+    bool do_render_circuit_ {false};
+    bool do_render_collision_cache_ {false};
+    bool do_render_connection_cache_ {false};
+
+    EventCounter fps_counter_;
 };
 
 }  // namespace logicsim
