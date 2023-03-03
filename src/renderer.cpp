@@ -25,6 +25,13 @@ auto stroke_width(const RenderSettings& settings) -> int {
     return std::max(1, static_cast<int>(scale / stepping));
 }
 
+auto line_cross_width(const RenderSettings& settings) -> int {
+    constexpr static auto stepping = 8;
+    const auto scale = settings.view_config.scale;
+
+    return std::max(1, static_cast<int>(scale / stepping));
+}
+
 auto stroke_offset(const RenderSettings& settings) -> double {
     // To allign our strokes to the pixel grid, we need to offset odd strokes
     // otherwise they are drawn between pixels and get blurry
@@ -91,7 +98,8 @@ auto get_image_data(BLContext& ctx) -> BLImageData {
     return data;
 }
 
-auto draw_connector_fast(BLContext& ctx, const point_t point, bool enabled,
+// TODO rename
+auto draw_connector_fast(BLContext& ctx, const point_t point, bool enabled, int width,
                          const RenderSettings& settings) -> void {
     const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
 
@@ -105,12 +113,10 @@ auto draw_connector_fast(BLContext& ctx, const point_t point, bool enabled,
 
     const auto p_ctx = to_context(point, settings.view_config);
 
-    const auto x = static_cast<int>(std::round(p_ctx.x));
-    const auto y = static_cast<int>(std::round(p_ctx.y));
-    // const auto x = round_to<int>(p_ctx.x);
-    // const auto y = round_to<int>(p_ctx.y);
+    const auto x = static_cast<int>(p_ctx.x);
+    const auto y = static_cast<int>(p_ctx.y);
 
-    static constexpr int s = 2;
+    const int s = width;
     for (int xi : range(x - s, x + s + 1)) {
         for (int yj : range(y - s, y + s + 1)) {
             if (xi >= 0 && xi < w && yj >= 0 && yj < h) {
@@ -118,6 +124,23 @@ auto draw_connector_fast(BLContext& ctx, const point_t point, bool enabled,
             }
         }
     }
+}
+
+// TODO rename
+auto draw_connector_blend2d(BLContext& ctx, const point_t point, bool enabled, int width,
+                            const RenderSettings& settings) {
+    if (width < 1) {
+        return;
+    }
+
+    const auto p_ctx = to_context(point, settings.view_config);
+    const int half = width;
+    const int size = 2 * half + 1;
+
+    const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
+
+    ctx.setFillStyle(BLRgba32 {color});
+    ctx.fillRect(p_ctx.x - half, p_ctx.y - half, size, size);
 }
 
 auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
@@ -130,13 +153,9 @@ auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> voi
     const auto h = image.height();
 
     if (line.x0 == line.x1) {
-        auto x = static_cast<int>(std::round(line.x0));
-        auto y0 = static_cast<int>(std::round(line.y0));
-        auto y1 = static_cast<int>(std::round(line.y1));
-
-        // auto x = round_to<int>(line.x0);
-        // auto y0 = round_to<int>(line.y0);
-        // auto y1 = round_to<int>(line.y1);
+        auto x = static_cast<int>(round_fast(line.x0));
+        auto y0 = static_cast<int>(round_fast(line.y0));
+        auto y1 = static_cast<int>(round_fast(line.y1));
 
         if (y0 > y1) {
             std::swap(y0, y1);
@@ -148,13 +167,9 @@ auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> voi
             }
         }
     } else {
-        auto x0 = static_cast<int>(std::round(line.x0));
-        auto x1 = static_cast<int>(std::round(line.x1));
-        auto y = static_cast<int>(std::round(line.y0));
-
-        // auto x0 = round_to<int>(line.x0);
-        // auto x1 = round_to<int>(line.x1);
-        // auto y = round_to<int>(line.y0);
+        auto x0 = static_cast<int>(round_fast(line.x0));
+        auto x1 = static_cast<int>(round_fast(line.x1));
+        auto y = static_cast<int>(round_fast(line.y0));
 
         if (x0 > x1) {
             std::swap(x0, x1);
@@ -168,6 +183,73 @@ auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> voi
     }
 }
 
+auto stroke_line_blend2d(BLContext& ctx, const BLLine& line, BLRgba32 color, int width)
+    -> void {
+    if (width < 1) {
+        return;
+    }
+    ctx.setFillStyle(color);
+
+    const auto offset = (width - 1) / 2;
+
+    if (line.y0 == line.y1) {
+        auto x0 = line.x0;
+        auto x1 = line.x1;
+
+        if (x0 > x1) {
+            std::swap(x0, x1);
+        }
+
+        auto w = x1 - x0 + 1;
+
+        ctx.fillRect(x0, line.y0 - offset, w, width);
+    } else {
+        auto y0 = line.y0;
+        auto y1 = line.y1;
+
+        if (y0 > y1) {
+            std::swap(y0, y1);
+        }
+
+        auto h = y1 - y0 + 1;
+
+        ctx.fillRect(line.x0 - offset, y0, width, h);
+    }
+}
+
+auto stroke_line_blend2d_2(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
+    ctx.setStrokeStyle(color);
+    ctx.setStrokeWidth(1.0);
+
+    if (line.y0 == line.y1) {
+        if (line.x1 > line.x0) {
+            ctx.strokeLine(line.x0, line.y0 + 0.5, line.x1 + 1.0, line.y1 + 0.5);
+        } else {
+            ctx.strokeLine(line.x0 + 1.0, line.y0 + 0.5, line.x1, line.y1 + 0.5);
+        }
+    } else {
+        if (line.y1 > line.y0) {
+            ctx.strokeLine(line.x0 + 0.5, line.y0, line.x1 + 0.5, line.y1 + 1.0);
+        } else {
+            ctx.strokeLine(line.x0 + 0.5, line.y0 + 1.0, line.x1 + 0.5, line.y1);
+        }
+    }
+}
+
+// TODO rename
+auto draw_connector_impl(BLContext& ctx, const point_t point, bool enabled, int width,
+                         const RenderSettings& settings) {
+    // draw_connector_fast(ctx, point, enabled, width, settings);
+    draw_connector_blend2d(ctx, point, enabled, width, settings);
+}
+
+auto stroke_line_impl(BLContext& ctx, const BLLine& line, BLRgba32 color, int width)
+    -> void {
+    // stroke_line_fast(ctx, line, color);
+    stroke_line_blend2d(ctx, line, color, width);
+    // stroke_line_blend2d_2(ctx, line, color);
+}
+
 template <typename PointType>
 auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_enabled,
                        const RenderSettings& settings) -> void {
@@ -176,10 +258,9 @@ auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_ena
     const auto [x0, y0] = to_context(p0, settings.view_config);
     const auto [x1, y1] = to_context(p1, settings.view_config);
 
-    // ctx.setStrokeStyle(BLRgba32(color));
-    // ctx.strokeLine(BLLine(x0, y0, x1, y1));
+    const auto width = stroke_width(settings);
 
-    stroke_line_fast(ctx, BLLine(x0, y0, x1, y1), BLRgba32(color));
+    stroke_line_impl(ctx, BLLine(x0, y0, x1, y1), BLRgba32(color), width);
 }
 
 auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,
@@ -201,18 +282,20 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
 
 auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
                const RenderSettings& settings) -> void {
+    const auto lc_width = line_cross_width(settings);
+
     for (auto&& segment : layout.line_tree(element).sized_segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
         if (segment.has_connector_p0) {
-            draw_connector_fast(ctx, segment.line.p0, false, settings);
+            draw_connector_impl(ctx, segment.line.p0, false, lc_width, settings);
         }
     }
 }
 
 auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
                const Simulation& simulation, const RenderSettings& settings) -> void {
-    // ctx.setStrokeWidth(1);
+    const auto lc_width = line_cross_width(settings);
 
     // TODO move to some class
     const auto to_time = [time = simulation.time()](LineTree::length_t length_) {
@@ -230,7 +313,7 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
 
         if (segment.has_connector_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
-            draw_connector_fast(ctx, segment.line.p0, wire_enabled, settings);
+            draw_connector_impl(ctx, segment.line.p0, wire_enabled, lc_width, settings);
         }
     }
 }
@@ -239,23 +322,29 @@ auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orien
                            bool enabled, const RenderSettings& settings) -> void {
     const auto endpoint = connector_endpoint(position, orientation);
 
-    const auto [x0, y0] = to_context(position, settings.view_config);
-    const auto [x1, y1] = to_context(endpoint, settings.view_config);
+    const auto p0 = to_context(position, settings.view_config);
+    const auto p1 = to_context(endpoint, settings.view_config);
 
     // TODO put this in function
     const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
 
-    const auto stroke = stroke_width(settings);
-    const auto offset = stroke_offset(settings);
+    // const auto stroke = stroke_width(settings);
+    // const auto offset = stroke_offset(settings);
 
-    ctx.setStrokeStyle(BLRgba32(color));
-    ctx.setStrokeWidth(stroke);
+    // ctx.setStrokeStyle(BLRgba32(color));
+    // ctx.setStrokeWidth(stroke);
 
-    if (orientation == orientation_t::left || orientation == orientation_t::right) {
-        ctx.strokeLine(BLLine(x0, y0 + offset, x1, y1 + offset));
-    } else {
-        ctx.strokeLine(BLLine(x0 + offset, y0, x1 + offset, y1));
-    }
+    // const auto line = [=]() {
+    //     if (orientation == orientation_t::left || orientation == orientation_t::right)
+    //     {
+    //         return BLLine(p0.x, p0.y + offset, p1.x, p1.y + offset);
+    //     }
+    //     return BLLine(p0.x + offset, p0.y, p1.x + offset, p1.y);
+    // }();
+
+    const auto width = stroke_width(settings);
+
+    stroke_line_impl(ctx, BLLine {p0.x, p0.y, p1.x, p1.y}, BLRgba32(color), width);
 }
 
 auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
@@ -317,8 +406,11 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
                                    position.y.value + extra_space + element_height - 1},
                      settings.view_config);
 
-    const auto w = x1 - x0;
-    const auto h = y1 - y0;
+    const auto w_ = x1 - x0;
+    const auto h_ = y1 - y0;
+
+    const auto w = w_ == 0 ? 1.0 : w_;
+    const auto h = h_ == 0 ? 1.0 : h_;
 
     ctx.fillRect(x0, y0, w, h);
     ctx.strokeRect(x0 + offset, y0 + offset, w, h);

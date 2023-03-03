@@ -66,8 +66,7 @@ constexpr bool contains(R&& r, const T& value, Proj proj = {}) {
 //
 
 inline auto round_fast(double value) -> double {
-    // TODO test this
-    // std::nearbyint is much faster than std::round, but we need to check rounding mode
+    // std::nearbyint is faster than std::round, but we need to check rounding mode
     assert(std::fegetround() == FE_TONEAREST);
     return std::nearbyint(value);
 }
