@@ -22,11 +22,11 @@ namespace logicsim {
 //
 
 struct RenderSettings {
-    // TODO remove if not needed any more
-    double scale {12.0};
-
     ViewConfig view_config {};
 };
+
+auto stroke_width(const RenderSettings& settings) -> int;
+auto stroke_offset(const RenderSettings& settings) -> double;
 
 enum class PointShape {
     circle,
@@ -72,7 +72,8 @@ auto render_editable_circuit_caches(BLContext& ctx,
                                     const EditableCircuit& editable_circuit,
                                     const RenderSettings& settings) -> void;
 
-auto render_circuit(BLContext& ctx, const Layout& layout, const Simulation& simulation,
+auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& layout,
+                    const Simulation* simulation = nullptr,
                     const RenderSettings& settings = {}) -> void;
 
 struct BenchmarkScene {

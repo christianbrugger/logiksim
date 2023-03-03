@@ -101,6 +101,8 @@ class WidgetRenderer : public QWidget {
 
         connect(&timer_, &QTimer::timeout, this, &WidgetRenderer::on_timeout);
 
+        render_settings_.view_config.scale = 18;
+
         reset_circuit();
     }
 
@@ -133,6 +135,10 @@ class WidgetRenderer : public QWidget {
 
     auto fps() const -> double {
         return fps_counter_.events_per_second();
+    }
+
+    auto scale() const -> double {
+        return render_settings_.view_config.scale;
     }
 
    private:
@@ -279,14 +285,13 @@ class WidgetRenderer : public QWidget {
         */
 
         bl_ctx.begin(bl_image, bl_info);
-        // renderFrame(bl_ctx);
+
         render_background(bl_ctx, render_settings_);
 
-        // render_circuit(bl_ctx, layout, simulation, settings);
-
-        auto simulation = Simulation {editable_circuit.schematic()};
         if (do_render_circuit_) {
-            // render_circuit(bl_ctx, editable_circuit.layout(), simulation, settings);
+            auto simulation = Simulation {editable_circuit.schematic()};
+            render_circuit(bl_ctx, editable_circuit.schematic(),
+                           editable_circuit.layout(), &simulation, render_settings_);
         }
         if (do_render_collision_cache_) {
             render_editable_circuit_collision_cache(bl_ctx, editable_circuit,

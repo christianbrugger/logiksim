@@ -519,8 +519,8 @@ auto Schematic::ElementTemplate<Const>::format(bool with_connections) const
 }
 
 template <bool Const>
-auto Schematic::ElementTemplate<Const>::schematic() const noexcept -> SchematicType * {
-    return schematic_;
+auto Schematic::ElementTemplate<Const>::schematic() const noexcept -> SchematicType & {
+    return *schematic_;
 }
 
 template <bool Const>
@@ -751,8 +751,8 @@ auto Schematic::InputTemplate<Const>::format_connection() const -> std::string {
 }
 
 template <bool Const>
-auto Schematic::InputTemplate<Const>::schematic() const noexcept -> SchematicType * {
-    return schematic_;
+auto Schematic::InputTemplate<Const>::schematic() const noexcept -> SchematicType & {
+    return *schematic_;
 }
 
 template <bool Const>
@@ -915,8 +915,8 @@ auto Schematic::OutputTemplate<Const>::format_connection() const -> std::string 
 }
 
 template <bool Const>
-auto Schematic::OutputTemplate<Const>::schematic() const noexcept -> SchematicType * {
-    return schematic_;
+auto Schematic::OutputTemplate<Const>::schematic() const noexcept -> SchematicType & {
+    return *schematic_;
 }
 
 template <bool Const>
@@ -1039,8 +1039,7 @@ namespace logicsim {
 
 auto add_placeholder(Schematic::Output output) -> void {
     if (!output.has_connected_element()) {
-        auto placeholder {
-            output.schematic()->add_element(ElementType::placeholder, 1, 0)};
+        auto placeholder {output.schematic().add_element(ElementType::placeholder, 1, 0)};
         output.connect(placeholder.input(connection_id_t {0}));
     }
 }

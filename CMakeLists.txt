@@ -43,11 +43,11 @@ endif()
 
 
 # global architecture
-#if (MSVC)
-#	# add_compile_options(/arch:AVX2)
-#else()
-#	# add_compile_options(-march=native)
-#endif()
+if (MSVC)
+	add_compile_options(/arch:AVX2)
+else()
+	add_compile_options(-march=native)
+endif()
 
 # global profiling
 #if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -264,6 +264,7 @@ set(LS_CORE_SOURCES
     src/geometry.h src/geometry.cpp
     src/graph.h src/graph.cpp
     src/layout.h src/layout.cpp
+    src/layout_calculation_type.h src/layout_calculation_type.cpp
     src/layout_calculations.h src/layout_calculations.cpp
     src/line_tree.h src/line_tree.cpp
     src/random.h src/random.cpp

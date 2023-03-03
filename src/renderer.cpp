@@ -3,6 +3,7 @@
 
 #include "algorithm.h"
 #include "format.h"
+#include "layout_calculations.h"
 #include "range.h"
 #include "timer.h"
 
@@ -16,6 +17,22 @@
 #include <utility>
 
 namespace logicsim {
+
+auto stroke_width(const RenderSettings& settings) -> int {
+    constexpr static auto stepping = 12;
+    const auto scale = settings.view_config.scale;
+
+    return std::max(1, static_cast<int>(scale / stepping));
+}
+
+auto stroke_offset(const RenderSettings& settings) -> double {
+    // To allign our strokes to the pixel grid, we need to offset odd strokes
+    // otherwise they are drawn between pixels and get blurry
+    if (stroke_width(settings) % 2 == 0) {
+        return 0;
+    }
+    return 0.5;
+}
 
 class new_context {
    public:
@@ -74,20 +91,31 @@ auto get_image_data(BLContext& ctx) -> BLImageData {
     return data;
 }
 
-auto draw_connector_fast(BLContext& ctx, const point_t point, BLRgba32 color) -> void {
+auto draw_connector_fast(BLContext& ctx, const point_t point, bool enabled,
+                         const RenderSettings& settings) -> void {
+    const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
+
     // TODO refactor getting data & width
     BLImageData data = get_image_data(ctx);
     auto& image = *ctx.targetImage();
     auto* array = static_cast<uint32_t*>(data.pixelData);
 
-    int w = image.width();
-    int x = point.x.value * 12;
-    int y = point.y.value * 12;
+    const auto w = image.width();
+    const auto h = image.height();
+
+    const auto p_ctx = to_context(point, settings.view_config);
+
+    const auto x = static_cast<int>(std::round(p_ctx.x));
+    const auto y = static_cast<int>(std::round(p_ctx.y));
+    // const auto x = round_to<int>(p_ctx.x);
+    // const auto y = round_to<int>(p_ctx.y);
 
     static constexpr int s = 2;
     for (int xi : range(x - s, x + s + 1)) {
         for (int yj : range(y - s, y + s + 1)) {
-            array[xi + w * yj] = color.value;
+            if (xi >= 0 && xi < w && yj >= 0 && yj < h) {
+                array[xi + w * yj] = color;
+            }
         }
     }
 }
@@ -98,51 +126,65 @@ auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> voi
     auto& image = *ctx.targetImage();
     auto* array = static_cast<uint32_t*>(data.pixelData);
 
+    const auto w = image.width();
+    const auto h = image.height();
+
     if (line.x0 == line.x1) {
         auto x = static_cast<int>(std::round(line.x0));
         auto y0 = static_cast<int>(std::round(line.y0));
         auto y1 = static_cast<int>(std::round(line.y1));
 
+        // auto x = round_to<int>(line.x0);
+        // auto y0 = round_to<int>(line.y0);
+        // auto y1 = round_to<int>(line.y1);
+
         if (y0 > y1) {
             std::swap(y0, y1);
         }
 
-        int w = image.width();
         for (auto y : range(y0, y1 + 1)) {
-            array[x + w * y] = color.value;
+            if (x >= 0 && x < w && y >= 0 && y < h) {
+                array[x + w * y] = color.value;
+            }
         }
     } else {
         auto x0 = static_cast<int>(std::round(line.x0));
         auto x1 = static_cast<int>(std::round(line.x1));
         auto y = static_cast<int>(std::round(line.y0));
 
+        // auto x0 = round_to<int>(line.x0);
+        // auto x1 = round_to<int>(line.x1);
+        // auto y = round_to<int>(line.y0);
+
         if (x0 > x1) {
             std::swap(x0, x1);
         }
 
-        int w = image.width();
         for (auto x : range(x0, x1 + 1)) {
-            array[x + w * y] = color.value;
+            if (x >= 0 && x < w && y >= 0 && y < h) {
+                array[x + w * y] = color.value;
+            }
         }
     }
 }
 
 template <typename PointType>
-auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_enabled)
-    -> void {
+auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_enabled,
+                       const RenderSettings& settings) -> void {
     const uint32_t color = wire_enabled ? 0xFFFF0000u : 0xFF000000u;
-    constexpr static double s = 12;
+
+    const auto [x0, y0] = to_context(p0, settings.view_config);
+    const auto [x1, y1] = to_context(p1, settings.view_config);
 
     // ctx.setStrokeStyle(BLRgba32(color));
-    // ctx.strokeLine(BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s));
+    // ctx.strokeLine(BLLine(x0, y0, x1, y1));
 
-    stroke_line_fast(ctx, BLLine(p0.x * s, p0.y * s, p1.x * s, p1.y * s),
-                     BLRgba32(color));
+    stroke_line_fast(ctx, BLLine(x0, y0, x1, y1), BLRgba32(color));
 }
 
 auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,
-                       time_t time_until, const Simulation::HistoryView& history)
-    -> void {
+                       time_t time_until, const Simulation::HistoryView& history,
+                       const RenderSettings& settings) -> void {
     assert(time_from < time_until);
 
     const auto it_from = history.from(time_from);
@@ -153,12 +195,23 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
                                                  entry.first_time);
         const auto p_end = interpolate_line_1d(p_from, p_until, time_from, time_until,
                                                entry.last_time);
-        draw_line_segment(ctx, p_start, p_end, entry.value);
+        draw_line_segment(ctx, p_start, p_end, entry.value, settings);
     }
 }
 
 auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
-               const Simulation& simulation) -> void {
+               const RenderSettings& settings) -> void {
+    for (auto&& segment : layout.line_tree(element).sized_segments()) {
+        draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
+
+        if (segment.has_connector_p0) {
+            draw_connector_fast(ctx, segment.line.p0, false, settings);
+        }
+    }
+}
+
+auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
+               const Simulation& simulation, const RenderSettings& settings) -> void {
     // ctx.setStrokeWidth(1);
 
     // TODO move to some class
@@ -172,72 +225,121 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
 
     for (auto&& segment : layout.line_tree(element).sized_segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0,
-                          to_time(segment.p1_length), to_time(segment.p0_length),
-                          history);
+                          to_time(segment.p1_length), to_time(segment.p0_length), history,
+                          settings);
 
         if (segment.has_connector_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
-            const uint32_t color = wire_enabled ? 0xFFFF0000u : 0xFF000000u;
-            draw_connector_fast(ctx, segment.line.p0, BLRgba32(color));
+            draw_connector_fast(ctx, segment.line.p0, wire_enabled, settings);
         }
     }
 }
 
-auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
-                           const Layout& layout, const Simulation& simulation) -> void {
-    constexpr static double s = 12;
-    ctx.setStrokeWidth(1);
+auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orientation,
+                           bool enabled, const RenderSettings& settings) -> void {
+    const auto endpoint = connector_endpoint(position, orientation);
 
-    auto position = layout.position(element);
-    auto input_values = simulation.input_values(element);
-    auto output_values = simulation.output_values(element);
+    const auto [x0, y0] = to_context(position, settings.view_config);
+    const auto [x1, y1] = to_context(endpoint, settings.view_config);
 
-    // draw rect
-    double x = position.x * s;
-    double y = position.y * s;
-    auto height = std::max(std::ssize(input_values), std::ssize(output_values));
-    BLPath path;
-    path.addRect(x, y + -0.5 * s, 2 * s, height * s);
+    // TODO put this in function
+    const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
 
-    // draw inputs
-    auto input_offset = (height - std::ssize(input_values)) / 2;
-    for (int i = 0; const auto value : input_values) {
-        double y_pin = y + (input_offset + i) * s;
-        uint32_t color = value ? 0xFFFF0000u : 0xFF000000u;
-        ctx.setStrokeStyle(BLRgba32(color));
-        ctx.strokeLine(BLLine(x, y_pin, x - 0.75 * s, y_pin));
-        ++i;
+    const auto stroke = stroke_width(settings);
+    const auto offset = stroke_offset(settings);
+
+    ctx.setStrokeStyle(BLRgba32(color));
+    ctx.setStrokeWidth(stroke);
+
+    if (orientation == orientation_t::left || orientation == orientation_t::right) {
+        ctx.strokeLine(BLLine(x0, y0 + offset, x1, y1 + offset));
+    } else {
+        ctx.strokeLine(BLLine(x0 + offset, y0, x1 + offset, y1));
     }
-
-    // draw outputs
-    auto output_offset = (height - std::ssize(output_values)) / 2;
-    for (int i = 0; const auto value : output_values) {
-        double y_pin = y + (output_offset + i) * s;
-        uint32_t color = value ? 0xFFFF0000u : 0xFF000000u;
-        ctx.setStrokeStyle(BLRgba32(color));
-        ctx.strokeLine(BLLine(x + 2 * s, y_pin, x + 2.75 * s, y_pin));
-        ++i;
-    }
-
-    ctx.setFillStyle(BLRgba32(0xFFFFFF00u));
-    ctx.setStrokeStyle(BLRgba32(0xFF000000u));
-    ctx.fillPath(path);
-    ctx.strokePath(path);
 }
 
-auto render_circuit(BLContext& ctx, const Layout& layout, const Simulation& simulation,
-                    const RenderSettings& settings) -> void {
-    // TODO move globally
-    ctx.postTranslate(BLPoint(0.5, 0.5));
-    ctx.postScale(1);
+auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
+                     const Layout& layout, const Simulation* simulation,
+                     const RenderSettings& settings) -> void {
+    const auto layout_data
+        = to_layout_calculation_data(element.schematic(), layout, element.element_id());
 
-    for (auto element : simulation.schematic().elements()) {
+    if (simulation == nullptr) {
+        iter_input_location(
+            layout_data, [&](point_t position, orientation_t orientation) {
+                draw_single_connector(ctx, position, orientation, false, settings);
+                return true;
+            });
+
+        iter_output_location(
+            layout_data, [&](point_t position, orientation_t orientation) {
+                draw_single_connector(ctx, position, orientation, false, settings);
+                return true;
+            });
+    } else {
+        iter_input_location_and_id(
+            layout_data,
+            [&](connection_id_t input_id, point_t position, orientation_t orientation) {
+                const auto enabled = simulation->input_value(element.input(input_id));
+                draw_single_connector(ctx, position, orientation, enabled, settings);
+                return true;
+            });
+
+        iter_output_location_and_id(
+            layout_data,
+            [&](connection_id_t output_id, point_t position, orientation_t orientation) {
+                const auto enabled = simulation->output_value(element.output(output_id));
+                draw_single_connector(ctx, position, orientation, enabled, settings);
+                return true;
+            });
+    }
+}
+
+auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
+                           const Layout& layout, const Simulation* simulation,
+                           const RenderSettings& settings) -> void {
+    const auto position = layout.position(element);
+    const auto element_height = std::max(element.input_count(), element.output_count());
+
+    const auto extra_space = 0.4;
+    const auto offset = stroke_offset(settings);
+
+    ctx.setStrokeWidth(stroke_width(settings));
+    ctx.setFillStyle(BLRgba32(0xFFFFFF80u));
+    ctx.setStrokeStyle(BLRgba32(0xFF000000u));
+
+    const auto [x0, y0] = to_context(
+        point_fine_t {position.x.value * 1.0, position.y.value - extra_space},
+        settings.view_config);
+
+    const auto [x1, y1]
+        = to_context(point_fine_t {position.x.value + 2.0,
+                                   position.y.value + extra_space + element_height - 1},
+                     settings.view_config);
+
+    const auto w = x1 - x0;
+    const auto h = y1 - y0;
+
+    ctx.fillRect(x0, y0, w, h);
+    ctx.strokeRect(x0 + offset, y0 + offset, w, h);
+
+    draw_connectors(ctx, element, layout, simulation, settings);
+}
+
+auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& layout,
+                    const Simulation* simulation, const RenderSettings& settings)
+    -> void {
+    for (auto element : schematic.elements()) {
         auto type = element.element_type();
 
         if (type == ElementType::wire) {
-            draw_wire(ctx, element, layout, simulation);
+            if (simulation == nullptr) {
+                draw_wire(ctx, element, layout, settings);
+            } else {
+                draw_wire(ctx, element, layout, *simulation, settings);
+            }
         } else if (type != ElementType::placeholder) {
-            draw_standard_element(ctx, element, layout, simulation);
+            draw_standard_element(ctx, element, layout, simulation, settings);
         }
     }
 }
@@ -387,6 +489,9 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
 auto render_editable_circuit_collision_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void {
+    fmt::print("Collision states count: {}\n",
+               editable_circuit.collision_states().size());
+
     for (auto [point, state] : editable_circuit.collision_states()) {
         const auto color = defaults::color_orange;
         const auto size = 0.25;
@@ -674,7 +779,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     render_background(ctx);
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        render_circuit(ctx, scene.layout, scene.simulation);
+        render_circuit(ctx, scene.schematic, scene.layout, &scene.simulation);
     }
     ctx.end();
 

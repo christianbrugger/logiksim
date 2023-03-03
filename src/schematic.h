@@ -309,7 +309,7 @@ class Schematic::ElementTemplate {
 
     [[nodiscard]] auto format(bool with_connections = false) const -> std::string;
 
-    [[nodiscard]] auto schematic() const noexcept -> SchematicType *;
+    [[nodiscard]] auto schematic() const noexcept -> SchematicType &;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
 
     [[nodiscard]] auto element_type() const -> ElementType;
@@ -425,7 +425,7 @@ class Schematic::InputTemplate {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_connection() const -> std::string;
 
-    [[nodiscard]] auto schematic() const noexcept -> SchematicType *;
+    [[nodiscard]] auto schematic() const noexcept -> SchematicType &;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
     [[nodiscard]] auto input_index() const noexcept -> connection_id_t;
 
@@ -477,7 +477,7 @@ class Schematic::OutputTemplate {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_connection() const -> std::string;
 
-    [[nodiscard]] auto schematic() const noexcept -> SchematicType *;
+    [[nodiscard]] auto schematic() const noexcept -> SchematicType &;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
     [[nodiscard]] auto output_index() const noexcept -> connection_id_t;
 

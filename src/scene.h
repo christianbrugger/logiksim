@@ -32,6 +32,9 @@ auto to_widget(point_fine_t position, ViewConfig config) -> QPoint;
 auto to_context(point_t position, ViewConfig config) -> BLPoint;
 auto to_context(point_fine_t position, ViewConfig config) -> BLPoint;
 
+auto to_context(grid_t length, ViewConfig config) -> double;
+auto to_context(double length, ViewConfig config) -> double;
+
 }  // namespace logicsim
 
 #endif

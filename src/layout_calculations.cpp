@@ -90,6 +90,33 @@ auto transform(point_t position, orientation_t orientation, point_t p0, point_t 
     throw_exception("Don't know how to transform position.");
 }
 
+auto connector_endpoint(point_t position, orientation_t orientation) -> point_fine_t {
+    const auto p0 = static_cast<point_fine_t>(position);
+    const auto connector_offset = 0.4;
+
+    switch (orientation) {
+        using enum orientation_t;
+
+        case right: {
+            return {p0.x + connector_offset, p0.y};
+        }
+        case left: {
+            return {p0.x - connector_offset, p0.y};
+        }
+        case up: {
+            return {p0.x, p0.y - connector_offset};
+        }
+        case down: {
+            return {p0.x, p0.y + connector_offset};
+        }
+
+        case undirected: {
+            return p0;
+        }
+    };
+    throw_exception("unknown orientation");
+}
+
 auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
     switch (data.element_type) {
         using enum ElementType;

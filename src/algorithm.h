@@ -4,6 +4,8 @@
 #include "iterator_adaptor.h"
 
 #include <algorithm>
+#include <cassert>
+#include <cfenv>
 #include <concepts>
 #include <exception>
 #include <functional>
@@ -57,6 +59,22 @@ template <std::ranges::input_range R, class T, class Proj = std::identity>
         std::ranges::equal_to, std::projected<std::ranges::iterator_t<R>, Proj>, const T*>
 constexpr bool contains(R&& r, const T& value, Proj proj = {}) {
     return contains(std::ranges::begin(r), std::ranges::end(r), value, std::move(proj));
+}
+
+//
+// Round to
+//
+
+inline auto round_fast(double value) -> double {
+    // TODO test this
+    // std::nearbyint is much faster than std::round, but we need to check rounding mode
+    assert(std::fegetround() == FE_TONEAREST);
+    return std::nearbyint(value);
+}
+
+template <typename result_type = double>
+auto round_to(double value) -> result_type {
+    return gsl::narrow<result_type>(round_fast(value));
 }
 
 //
