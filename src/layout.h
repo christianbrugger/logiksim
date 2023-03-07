@@ -16,9 +16,10 @@ enum class DisplayState : uint8_t {
     normal,
     selected,
 
-    new_unknown,
     new_valid,
     new_colliding,
+
+    new_temporary,
 };
 
 auto format(DisplayState state) -> std::string;

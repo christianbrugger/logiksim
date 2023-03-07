@@ -451,53 +451,57 @@ constexpr auto monochrome(uint8_t value) -> BLRgba32 {
     return BLRgba32 {0xFF000000u + value * 0x1u + value * 0x100u + value * 0x10000u};
 }
 
-auto draw_background_pattern(BLContext& ctx, const RenderSettings& settings) {
-    //  TODO put in render settings
-    const auto min_grid_gap = 10;  // pixel
-
-    const auto a0 = to_grid_fine(0, 0, settings.view_config);
-    const auto a1
-        = to_grid_fine(ctx.targetWidth(), ctx.targetHeight(), settings.view_config);
-
+auto draw_background_pattern_checker(BLContext& ctx, point_fine_t a0, point_fine_t a1,
+                                     int delta, BLRgba32 color, int width,
+                                     const RenderSettings& settings) {
     const auto clamp_to_grid = [](double v_) {
         return gsl::narrow_cast<grid_t::value_type>(
             std::clamp(v_, grid_t::min() * 1.0, grid_t::max() * 1.0));
     };
 
+    const auto g0 = point_t {
+        clamp_to_grid(std::floor(a0.x / delta) * delta),
+        clamp_to_grid(std::floor(a0.y / delta) * delta),
+    };
+    const auto g1 = point_t {
+        clamp_to_grid(std::ceil(a1.x / delta) * delta),
+        clamp_to_grid(std::ceil(a1.y / delta) * delta),
+    };
+
+    const auto p0 = to_context(g0, settings.view_config);
+    const auto p1 = to_context(g1, settings.view_config);
+
+    // vertical
+    for (int x = g0.x.value; x <= g1.x.value; x += delta) {
+        const auto cx = round_fast((x + settings.view_config.offset.x)
+                                   * settings.view_config.scale);
+        stroke_line_impl(ctx, BLLine {cx, p0.y, cx, p1.y}, color, width);
+    }
+    // horizontal
+    for (int y = g0.y.value; y <= g1.y.value; y += delta) {
+        const auto cy = round_fast((y + settings.view_config.offset.y)
+                                   * settings.view_config.scale);
+        stroke_line_impl(ctx, BLLine {p0.x, cy, p1.x, cy}, color, width);
+    }
+}
+
+auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
+    const auto a0 = to_grid_fine(0, 0, settings.view_config);
+    const auto a1
+        = to_grid_fine(ctx.targetWidth(), ctx.targetHeight(), settings.view_config);
+
     constexpr static auto grid_definition = {
-        std::tuple {grid_t::value_type {1}, monochrome(0xF0), 1},
-        std::tuple {grid_t::value_type {8}, monochrome(0xE4), 1},
-        std::tuple {grid_t::value_type {64}, monochrome(0xE4), 2},
-        std::tuple {grid_t::value_type {512}, monochrome(0xD8), 2},
-        std::tuple {grid_t::value_type {4096}, monochrome(0xC0), 2},
+        std::tuple {1, monochrome(0xF0), 1},    //
+        std::tuple {8, monochrome(0xE4), 1},    //
+        std::tuple {64, monochrome(0xE4), 2},   //
+        std::tuple {512, monochrome(0xD8), 2},  //
+        std::tuple {4096, monochrome(0xC0), 2},
     };
 
     for (auto&& [delta, color, width] : grid_definition) {
-        const auto g0 = point_t {
-            clamp_to_grid(std::floor(a0.x / delta) * delta),
-            clamp_to_grid(std::floor(a0.y / delta) * delta),
-        };
-        const auto g1 = point_t {
-            clamp_to_grid(std::ceil(a1.x / delta) * delta),
-            clamp_to_grid(std::ceil(a1.y / delta) * delta),
-        };
-
-        const auto p0 = to_context(g0, settings.view_config);
-        const auto p1 = to_context(g1, settings.view_config);
-
-        if (to_context(delta, settings.view_config) >= min_grid_gap) {
-            // vertical
-            for (int x = g0.x.value; x <= g1.x.value; x += delta) {
-                const auto cx = round_fast((x + settings.view_config.offset.x)
-                                           * settings.view_config.scale);
-                stroke_line_impl(ctx, BLLine {cx, p0.y, cx, p1.y}, color, width);
-            }
-            // horizontal
-            for (int y = g0.y.value; y <= g1.y.value; y += delta) {
-                const auto cy = round_fast((y + settings.view_config.offset.y)
-                                           * settings.view_config.scale);
-                stroke_line_impl(ctx, BLLine {p0.x, cy, p1.x, cy}, color, width);
-            }
+        if (to_context(delta, settings.view_config)
+            >= settings.background_grid_min_distance) {
+            draw_background_pattern_checker(ctx, a0, a1, delta, color, width, settings);
         }
     }
 }
@@ -506,7 +510,7 @@ auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
     ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
     ctx.fillAll();
 
-    draw_background_pattern(ctx, settings);
+    draw_background_patterns(ctx, settings);
     draw_grid_space_limit(ctx, settings);
 }
 

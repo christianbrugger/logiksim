@@ -25,8 +25,13 @@
 
 namespace logicsim {
 
-namespace detail::connection_cache {
+enum class InsertionMode {
+    insert_or_discard,
+    collisions,
+    temporary,
+};
 
+namespace detail::connection_cache {
 // TODO use struct packing ?
 struct value_type {
     element_id_t element_id;
@@ -153,9 +158,10 @@ class EditableCircuit {
     [[nodiscard]] auto schematic() const noexcept -> const Schematic&;
     [[nodiscard]] auto layout() const noexcept -> const Layout&;
 
-    auto add_inverter_element(point_t position,
+    auto add_inverter_element(point_t position, InsertionMode insertion_mode,
                               orientation_t orientation = orientation_t::right) -> bool;
     auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
+                              InsertionMode insertion_mode,
                               orientation_t orientation = orientation_t::right) -> bool;
 
     auto add_wire(LineTree&& line_tree) -> bool;

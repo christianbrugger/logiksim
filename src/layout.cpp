@@ -15,12 +15,14 @@ auto format(DisplayState state) -> std::string {
             return "Normal";
         case selected:
             return "Selected";
-        case new_unknown:
-            return "NewUnknown";
+
         case new_valid:
             return "NewValid";
         case new_colliding:
             return "NewColliding";
+
+        case new_temporary:
+            return "NewTemporary";
     }
     throw_exception("Don't know how to convert DisplayState to string.");
 }

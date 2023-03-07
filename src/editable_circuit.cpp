@@ -528,15 +528,16 @@ auto EditableCircuit::add_placeholder_element() -> element_id_t {
     return element_id;
 }
 
-auto EditableCircuit::add_inverter_element(point_t position, orientation_t orientation)
-    -> bool {
-    return add_standard_element(ElementType::inverter_element, 1, position, orientation);
+auto EditableCircuit::add_inverter_element(point_t position, InsertionMode insertion_mode,
+                                           orientation_t orientation) -> bool {
+    return add_standard_element(ElementType::inverter_element, 1, position,
+                                insertion_mode, orientation);
     return true;
 }
 
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
-                                           point_t position, orientation_t orientation)
-    -> bool {
+                                           point_t position, InsertionMode insertion_mode,
+                                           orientation_t orientation) -> bool {
     using enum ElementType;
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {
@@ -550,7 +551,11 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     }
 
     // check for collisions
-    {
+    const bool colliding = [&]() {
+        if (insertion_mode == InsertionMode::temporary) {
+            return false;
+        }
+
         const static auto empty_line_tree = LineTree {};
         const auto data = layout_calculation_data_t {
             .line_tree = empty_line_tree,
@@ -561,13 +566,35 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
             .orientation = orientation,
             .element_type = type,
         };
-        if (is_colliding(data)) {
-            return false;
-        }
+        return is_colliding(data);
+    }();
+
+    if (insertion_mode == InsertionMode::insert_or_discard && colliding) {
+        return false;
     }
 
+    const auto display_state = [&]() {
+        switch (insertion_mode) {
+            using enum InsertionMode;
+
+            case insert_or_discard:
+                return DisplayState::normal;
+
+            case collisions:
+                if (colliding) {
+                    return DisplayState::new_colliding;
+                } else {
+                    return DisplayState::new_valid;
+                }
+
+            case temporary:
+                return DisplayState::new_temporary;
+        };
+        throw_exception("unknown mode");
+    }();
+
     // insert into underlyings
-    auto element_id = layout_.add_logic_element(position, orientation);
+    auto element_id = layout_.add_logic_element(position, orientation, display_state);
     {
         const auto element = schematic_.add_element({
             .element_type = type,
@@ -580,8 +607,11 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     }
 
     // connect
-    // TODO rename to better name
-    connect_new_element(element_id);
+    if (insertion_mode == InsertionMode::insert_or_discard
+        || (insertion_mode == InsertionMode::collisions && !colliding)) {
+        // TODO rename to better name
+        connect_new_element(element_id);
+    }
     return true;
 }
 

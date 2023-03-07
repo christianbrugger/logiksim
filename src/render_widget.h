@@ -71,19 +71,22 @@ class MouseInsertLogic {
 
     auto mouse_press(std::optional<point_t> position) -> void {
         if (position.has_value()) {
-            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position);
+            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position,
+                                                   InsertionMode::temporary);
         }
     }
 
     auto mouse_move(std::optional<point_t> position) -> void {
         if (position.has_value()) {
-            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position);
+            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position,
+                                                   InsertionMode::temporary);
         }
     }
 
     auto mouse_release(std::optional<point_t> position) -> void {
         if (position.has_value()) {
-            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position);
+            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position,
+                                                   InsertionMode::temporary);
         }
     }
 
@@ -165,17 +168,20 @@ class WidgetRenderer : public QWidget {
             auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
 
             editable_circuit.add_standard_element(ElementType::or_element, 2,
-                                                  point_t {5, 3});
+                                                  point_t {5, 3},
+                                                  InsertionMode::insert_or_discard);
             editable_circuit.add_standard_element(ElementType::or_element, 2,
-                                                  point_t {15, 6});
+                                                  point_t {15, 6},
+                                                  InsertionMode::insert_or_discard);
             editable_circuit.add_wire(std::move(line_tree));
             editable_circuit.add_wire(LineTree(
                 {point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15, 4}}));
             // editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
             editable_circuit.swap_and_delete_element(element_id_t {2});
 
-            auto added = editable_circuit.add_standard_element(ElementType::or_element, 9,
-                                                               point_t {20, 4});
+            auto added = editable_circuit.add_standard_element(
+                ElementType::or_element, 9, point_t {20, 4},
+                InsertionMode::insert_or_discard);
             fmt::print("added = {}\n", added);
 
             fmt::print("{}\n", editable_circuit);
@@ -295,9 +301,9 @@ class WidgetRenderer : public QWidget {
         render_background(bl_ctx, render_settings_);
 
         if (do_render_circuit_) {
-            auto simulation = Simulation {editable_circuit.schematic()};
+            // auto simulation = Simulation {editable_circuit.schematic()};
             render_circuit(bl_ctx, editable_circuit.schematic(),
-                           editable_circuit.layout(), &simulation, render_settings_);
+                           editable_circuit.layout(), nullptr, render_settings_);
         }
         if (do_render_collision_cache_) {
             render_editable_circuit_collision_cache(bl_ctx, editable_circuit,
