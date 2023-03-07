@@ -225,6 +225,7 @@ class EditableCircuit {
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
         -> void;
 
+    [[nodiscard]] auto is_representable_(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_display_state_cached(DisplayState display_state) const -> bool;
 

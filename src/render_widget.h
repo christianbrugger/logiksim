@@ -69,6 +69,10 @@ class MouseInsertLogic {
     MouseInsertLogic(EditableCircuit& editable_circuit) noexcept
         : editable_circuit_ {editable_circuit} {}
 
+    ~MouseInsertLogic() {
+        remove_last_element();
+    }
+
     auto mouse_press(std::optional<point_t> position) -> void {
         remove_and_insert(position, InsertionMode::collisions);
     }
@@ -79,18 +83,26 @@ class MouseInsertLogic {
 
     auto mouse_release(std::optional<point_t> position) -> void {
         remove_and_insert(position, InsertionMode::insert_or_discard);
+        inserted_key_ = null_element_key;
     }
 
    private:
-    auto remove_and_insert(std::optional<point_t> position, InsertionMode mode) -> void {
+    auto remove_last_element() -> void {
         if (inserted_key_ != null_element_key) {
             const auto element_id = editable_circuit_.to_element_id(inserted_key_);
             editable_circuit_.swap_and_delete_element(element_id);
+            inserted_key_ = null_element_key;
         }
+    }
+
+    auto remove_and_insert(std::optional<point_t> position, InsertionMode mode) -> void {
+        remove_last_element();
 
         if (position.has_value()) {
+            assert(inserted_key_ == null_element_key);
+
             inserted_key_ = editable_circuit_.add_standard_element(
-                ElementType::or_element, 20, *position, mode);
+                ElementType::or_element, 3, *position, mode);
         }
     }
 

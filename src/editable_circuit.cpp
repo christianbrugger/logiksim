@@ -634,22 +634,26 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
         throw_exception("Input count needs to be at least 2 for standard elements.");
     }
 
+    const static auto empty_line_tree = LineTree {};
+    const auto data = layout_calculation_data_t {
+        .line_tree = empty_line_tree,
+        .input_count = input_count,
+        .output_count = 1,
+        .internal_state_count = 0,
+        .position = position,
+        .orientation = orientation,
+        .element_type = type,
+    };
+    if (!is_representable_(data)) {
+        return null_element_key;
+    }
+
     // check for collisions
     const bool colliding = [&]() {
         if (insertion_mode == InsertionMode::temporary) {
             return false;
         }
 
-        const static auto empty_line_tree = LineTree {};
-        const auto data = layout_calculation_data_t {
-            .line_tree = empty_line_tree,
-            .input_count = input_count,
-            .output_count = 1,
-            .internal_state_count = 0,
-            .position = position,
-            .orientation = orientation,
-            .element_type = type,
-        };
         return is_colliding(data);
     }();
 
@@ -901,7 +905,7 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
     element_id = null_element;
 }
 
-auto is_representable(layout_calculation_data_t data) -> bool {
+auto EditableCircuit::is_representable_(layout_calculation_data_t data) const -> bool {
     if (is_placeholder(data)) {
         return true;
     }
@@ -920,8 +924,7 @@ auto is_representable(layout_calculation_data_t data) -> bool {
 }
 
 auto EditableCircuit::is_colliding(layout_calculation_data_t data) const -> bool {
-    return !is_representable(data) || collicions_cache_.is_colliding(data)
-           || input_connections_.is_colliding(data)
+    return collicions_cache_.is_colliding(data) || input_connections_.is_colliding(data)
            || output_connections_.is_colliding(data);
 }
 
