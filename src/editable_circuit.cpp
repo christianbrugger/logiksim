@@ -6,6 +6,7 @@
 #include "iterator_adaptor.h"
 #include "layout_calculations.h"
 #include "range.h"
+#include "scene.h"
 
 #include <fmt/core.h>
 
@@ -765,8 +766,26 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
     element_id = null_element;
 }
 
+auto is_representable(layout_calculation_data_t data) -> bool {
+    if (is_placeholder(data)) {
+        return true;
+    }
+    if (data.element_type == ElementType::wire) {
+        return true;
+    }
+
+    const auto position = data.position;
+    data.position = point_t {0, 0};
+    const auto rect = element_collision_rect(data);
+
+    return is_representable(position.x.value + rect.p0.x.value,
+                            position.y.value + rect.p0.y.value)
+           && is_representable(position.x.value + rect.p1.x.value,
+                               position.y.value + rect.p1.y.value);
+}
+
 auto EditableCircuit::is_colliding(layout_calculation_data_t data) const -> bool {
-    return collicions_cache_.is_colliding(data)  //
+    return !is_representable(data) || collicions_cache_.is_colliding(data)
            || input_connections_.is_colliding(data)
            || output_connections_.is_colliding(data);
 }

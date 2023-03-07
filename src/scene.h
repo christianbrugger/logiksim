@@ -7,6 +7,8 @@
 
 #include <QPoint>
 
+#include <optional>
+
 namespace logicsim {
 
 struct ViewConfig {
@@ -14,15 +16,18 @@ struct ViewConfig {
     double scale {12.};
 };
 
+auto is_representable(int x, int y) -> bool;
+auto is_representable(double x, double y) -> bool;
+
 // to grid fine
 auto to_grid_fine(double x, double y, ViewConfig config) -> point_fine_t;
 auto to_grid_fine(QPointF position, ViewConfig config) -> point_fine_t;
 auto to_grid_fine(QPoint position, ViewConfig config) -> point_fine_t;
 
 // to grid
-auto to_grid(double x, double y, ViewConfig config) -> point_t;
-auto to_grid(QPointF position, ViewConfig config) -> point_t;
-auto to_grid(QPoint position, ViewConfig config) -> point_t;
+auto to_grid(double x, double y, ViewConfig config) -> std::optional<point_t>;
+auto to_grid(QPointF position, ViewConfig config) -> std::optional<point_t>;
+auto to_grid(QPoint position, ViewConfig config) -> std::optional<point_t>;
 
 // to Qt widget coordinates
 auto to_widget(point_t position, ViewConfig config) -> QPoint;

@@ -69,16 +69,22 @@ class MouseInsertLogic {
     MouseInsertLogic(EditableCircuit& editable_circuit) noexcept
         : editable_circuit_ {editable_circuit} {}
 
-    auto mouse_press(point_t position) -> void {
-        editable_circuit_.add_standard_element(ElementType::or_element, 2, position);
+    auto mouse_press(std::optional<point_t> position) -> void {
+        if (position.has_value()) {
+            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position);
+        }
     }
 
-    auto mouse_move(point_t position) -> void {
-        editable_circuit_.add_standard_element(ElementType::or_element, 2, position);
+    auto mouse_move(std::optional<point_t> position) -> void {
+        if (position.has_value()) {
+            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position);
+        }
     }
 
-    auto mouse_release(point_t position) -> void {
-        editable_circuit_.add_standard_element(ElementType::or_element, 2, position);
+    auto mouse_release(std::optional<point_t> position) -> void {
+        if (position.has_value()) {
+            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position);
+        }
     }
 
    private:
