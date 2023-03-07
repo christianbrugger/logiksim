@@ -318,33 +318,34 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
     }
 }
 
+auto get_alpha_value(DisplayState display_state) -> uint8_t {
+    switch (display_state) {
+        using enum DisplayState;
+
+        case normal:
+        case new_valid:
+            return 0xFF;
+        case new_colliding:
+            return 0x40;
+        case new_temporary:
+            return 0x80;
+    }
+    throw_exception("unknown display state");
+}
+
 auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orientation,
-                           bool enabled, const RenderSettings& settings) -> void {
+                           bool enabled, DisplayState display_state,
+                           const RenderSettings& settings) -> void {
     const auto endpoint = connector_endpoint(position, orientation);
 
     const auto p0 = to_context(position, settings.view_config);
     const auto p1 = to_context(endpoint, settings.view_config);
 
-    // TODO put this in function
-    const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
-
-    // const auto stroke = stroke_width(settings);
-    // const auto offset = stroke_offset(settings);
-
-    // ctx.setStrokeStyle(BLRgba32(color));
-    // ctx.setStrokeWidth(stroke);
-
-    // const auto line = [=]() {
-    //     if (orientation == orientation_t::left || orientation == orientation_t::right)
-    //     {
-    //         return BLLine(p0.x, p0.y + offset, p1.x, p1.y + offset);
-    //     }
-    //     return BLLine(p0.x + offset, p0.y, p1.x + offset, p1.y);
-    // }();
+    const auto alpha = get_alpha_value(display_state);
+    const auto color = enabled ? BLRgba32(255, 0, 0, alpha) : BLRgba32(0, 0, 0, alpha);
 
     const auto width = stroke_width(settings);
-
-    stroke_line_impl(ctx, BLLine {p0.x, p0.y, p1.x, p1.y}, BLRgba32(color), width);
+    stroke_line_impl(ctx, BLLine {p0.x, p0.y, p1.x, p1.y}, color, width);
 }
 
 auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
@@ -354,23 +355,28 @@ auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
         = to_layout_calculation_data(element.schematic(), layout, element.element_id());
 
     if (simulation == nullptr) {
-        iter_input_location(
-            layout_data, [&](point_t position, orientation_t orientation) {
-                draw_single_connector(ctx, position, orientation, false, settings);
-                return true;
-            });
+        const auto display_state = layout.display_state(element.element_id());
 
-        iter_output_location(
-            layout_data, [&](point_t position, orientation_t orientation) {
-                draw_single_connector(ctx, position, orientation, false, settings);
-                return true;
-            });
+        iter_input_location(layout_data,
+                            [&](point_t position, orientation_t orientation) {
+                                draw_single_connector(ctx, position, orientation, false,
+                                                      display_state, settings);
+                                return true;
+                            });
+
+        iter_output_location(layout_data,
+                             [&](point_t position, orientation_t orientation) {
+                                 draw_single_connector(ctx, position, orientation, false,
+                                                       display_state, settings);
+                                 return true;
+                             });
     } else {
         iter_input_location_and_id(
             layout_data,
             [&](connection_id_t input_id, point_t position, orientation_t orientation) {
                 const auto enabled = simulation->input_value(element.input(input_id));
-                draw_single_connector(ctx, position, orientation, enabled, settings);
+                draw_single_connector(ctx, position, orientation, enabled,
+                                      DisplayState::normal, settings);
                 return true;
             });
 
@@ -378,7 +384,8 @@ auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
             layout_data,
             [&](connection_id_t output_id, point_t position, orientation_t orientation) {
                 const auto enabled = simulation->output_value(element.output(output_id));
-                draw_single_connector(ctx, position, orientation, enabled, settings);
+                draw_single_connector(ctx, position, orientation, enabled,
+                                      DisplayState::normal, settings);
                 return true;
             });
     }
@@ -392,10 +399,6 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
 
     const auto extra_space = 0.4;
     const auto offset = stroke_offset(settings);
-
-    ctx.setStrokeWidth(stroke_width(settings));
-    ctx.setFillStyle(BLRgba32(0xFFFFFF80u));
-    ctx.setStrokeStyle(BLRgba32(0xFF000000u));
 
     const auto [x0, y0] = to_context(
         point_fine_t {position.x.value * 1.0, position.y.value - extra_space},
@@ -411,6 +414,11 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
 
     const auto w = w_ == 0 ? 1.0 : w_;
     const auto h = h_ == 0 ? 1.0 : h_;
+
+    const auto alpha = get_alpha_value(layout.display_state(element.element_id()));
+    ctx.setFillStyle(BLRgba32(255, 255, 128, alpha));
+    ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
+    ctx.setStrokeWidth(stroke_width(settings));
 
     ctx.fillRect(x0, y0, w, h);
     ctx.strokeRect(x0 + offset, y0 + offset, w, h);
