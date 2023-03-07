@@ -52,6 +52,24 @@ struct circuit_id_t {
 
 static_assert(std::is_trivial<circuit_id_t>::value);
 
+// global unchanging identifier of an element
+// increments for each element added
+struct element_key_t {
+    using value_type = int64_t;
+    value_type value;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const element_key_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const element_key_t &other) const = default;
+
+    [[nodiscard]] static constexpr auto max() noexcept {
+        return std::numeric_limits<value_type>::max();
+    };
+};
+
+static_assert(std::is_trivial<element_key_t>::value);
+
 struct element_id_t {
     using value_type = int32_t;
     value_type value;
@@ -104,6 +122,7 @@ struct connection_t {
 static_assert(std::is_trivial<connection_id_t>::value);
 
 inline constexpr auto null_circuit = circuit_id_t {-1};
+inline constexpr auto null_element_key = element_key_t {-1};
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
 
@@ -425,6 +444,26 @@ struct ankerl::unordered_dense::hash<logicsim::point_t> {
         -> uint64_t {
         static_assert(std::has_unique_object_representations_v<logicsim::point_t>);
         return detail::wyhash::hash(&obj, sizeof(obj));
+    }
+};
+
+template <>
+struct ankerl::unordered_dense::hash<logicsim::element_key_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::element_key_t &obj) const noexcept
+        -> uint64_t {
+        return detail::wyhash::hash(gsl::narrow_cast<uint64_t>(obj.value));
+    }
+};
+
+template <>
+struct ankerl::unordered_dense::hash<logicsim::element_id_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::element_id_t &obj) const noexcept
+        -> uint64_t {
+        return detail::wyhash::hash(gsl::narrow_cast<uint64_t>(obj.value));
     }
 };
 

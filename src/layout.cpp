@@ -13,8 +13,6 @@ auto format(DisplayState state) -> std::string {
 
         case normal:
             return "Normal";
-        case selected:
-            return "Selected";
 
         case new_valid:
             return "NewValid";

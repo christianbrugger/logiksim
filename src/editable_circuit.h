@@ -143,13 +143,31 @@ class CollisionCache {
 
    private:
     map_type map_ {};
-};  // namespace logicsim
+};
+
+class ElementKeyStore {
+   public:
+    using map_to_id_t = ankerl::unordered_dense::map<element_key_t, element_id_t>;
+    using map_to_key_t = ankerl::unordered_dense::map<element_id_t, element_key_t>;
+
+   public:
+    auto insert(element_id_t element_id) -> element_key_t;
+    auto remove(element_id_t element_id) -> void;
+    auto update(element_id_t new_element_id, element_id_t old_element_id) -> void;
+
+    [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t;
+    [[nodiscard]] auto to_element_key(element_id_t element_id) const -> element_key_t;
+
+    [[nodiscard]] auto size() const -> std::size_t;
+
+   private:
+    element_key_t next_key_ {0};
+
+    map_to_id_t map_to_id_ {};
+    map_to_key_t map_to_key_ {};
+};
 
 class EditableCircuit {
-   public:
-    // Make private and move to connection cache class
-    using connection_map_t = ankerl::unordered_dense::map<point_t, connection_t>;
-
    public:
     [[nodiscard]] EditableCircuit(Schematic&& schematic, Layout&& layout);
 
@@ -159,15 +177,20 @@ class EditableCircuit {
     [[nodiscard]] auto layout() const noexcept -> const Layout&;
 
     auto add_inverter_element(point_t position, InsertionMode insertion_mode,
-                              orientation_t orientation = orientation_t::right) -> bool;
+                              orientation_t orientation = orientation_t::right)
+        -> element_key_t;
     auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
                               InsertionMode insertion_mode,
-                              orientation_t orientation = orientation_t::right) -> bool;
+                              orientation_t orientation = orientation_t::right)
+        -> element_key_t;
 
-    auto add_wire(LineTree&& line_tree) -> bool;
+    auto add_wire(LineTree&& line_tree) -> element_key_t;
 
     // swaps the element with last one and deletes it
     auto swap_and_delete_element(element_id_t element_id) -> void;
+
+    auto to_element_id(element_key_t element_key) const -> element_id_t;
+    auto to_element_key(element_id_t element_id) const -> element_key_t;
 
     // todo: extract_schematic, extract_layout
 
@@ -203,7 +226,11 @@ class EditableCircuit {
         -> void;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
+    [[nodiscard]] auto is_display_state_cached(DisplayState display_state) const -> bool;
 
+    auto key_insert(element_id_t element_id) -> element_key_t;
+    auto key_remove(element_id_t element_id) -> void;
+    auto key_update(element_id_t new_element_id, element_id_t old_element_id) -> void;
     auto cache_insert(element_id_t element_id) -> void;
     auto cache_remove(element_id_t element_id) -> void;
     auto cache_update(element_id_t new_element_id, element_id_t old_element_id) -> void;
@@ -211,6 +238,7 @@ class EditableCircuit {
     ConnectionCache<true> input_connections_;
     ConnectionCache<false> output_connections_;
     CollisionCache collicions_cache_;
+    ElementKeyStore element_keys_;
 
     Schematic schematic_;
     Layout layout_;

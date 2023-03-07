@@ -70,28 +70,33 @@ class MouseInsertLogic {
         : editable_circuit_ {editable_circuit} {}
 
     auto mouse_press(std::optional<point_t> position) -> void {
-        if (position.has_value()) {
-            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position,
-                                                   InsertionMode::temporary);
-        }
+        remove_and_insert(position, InsertionMode::collisions);
     }
 
     auto mouse_move(std::optional<point_t> position) -> void {
-        if (position.has_value()) {
-            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position,
-                                                   InsertionMode::temporary);
-        }
+        remove_and_insert(position, InsertionMode::collisions);
     }
 
     auto mouse_release(std::optional<point_t> position) -> void {
+        remove_and_insert(position, InsertionMode::insert_or_discard);
+    }
+
+   private:
+    auto remove_and_insert(std::optional<point_t> position, InsertionMode mode) -> void {
+        if (inserted_key_ != null_element_key) {
+            const auto element_id = editable_circuit_.to_element_id(inserted_key_);
+            editable_circuit_.swap_and_delete_element(element_id);
+        }
+
         if (position.has_value()) {
-            editable_circuit_.add_standard_element(ElementType::or_element, 2, *position,
-                                                   InsertionMode::temporary);
+            inserted_key_ = editable_circuit_.add_standard_element(
+                ElementType::or_element, 20, *position, mode);
         }
     }
 
    private:
     EditableCircuit& editable_circuit_;
+    element_key_t inserted_key_ {null_element_key};
 };
 
 class WidgetRenderer : public QWidget {

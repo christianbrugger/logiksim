@@ -78,6 +78,11 @@ auto Schematic::delete_last_element(bool clear_connections) -> void {
     if (empty()) {
         throw_exception("Cannot delete last element of empty schematics.");
     }
+    if (clear_connections) {
+        const auto last_id = element_id_t {
+            gsl::narrow_cast<element_id_t::value_type>(element_count() - 1)};
+        element(last_id).clear_all_connection();
+    }
 
     element_data_store_.pop_back();
 

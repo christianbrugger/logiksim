@@ -14,7 +14,6 @@ namespace logicsim {
 
 enum class DisplayState : uint8_t {
     normal,
-    selected,
 
     new_valid,
     new_colliding,

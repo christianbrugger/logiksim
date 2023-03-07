@@ -490,6 +490,91 @@ auto CollisionCache::to_state(collision_data_t data) -> CollisionState {
 }
 
 //
+// ElementKeyStore
+//
+
+auto ElementKeyStore::insert(element_id_t element_id) -> element_key_t {
+    const auto element_key = next_key_;
+    next_key_.value += 1;
+
+    if (bool was_inserted = map_to_key_.insert({element_id, element_key}).second;
+        !was_inserted) [[unlikely]] {
+        throw_exception("Element id already exists in key store.");
+    }
+
+    if (bool was_inserted = map_to_id_.insert({element_key, element_id}).second;
+        !was_inserted) [[unlikely]] {
+        throw_exception("Element key already exists in key store.");
+    }
+
+    return element_key;
+}
+
+auto ElementKeyStore::remove(element_id_t element_id) -> void {
+    const auto it1 = map_to_key_.find(element_id);
+    if (it1 == map_to_key_.end()) [[unlikely]] {
+        throw_exception("Cannot find element_id in key store.");
+    }
+
+    const auto element_key = it1->second;
+    const auto it2 = map_to_id_.find(element_key);
+    if (it2 == map_to_id_.end()) [[unlikely]] {
+        throw_exception("Cannot find element_key in key store.");
+    }
+
+    map_to_key_.erase(it1);
+    map_to_id_.erase(it2);
+}
+
+auto ElementKeyStore::update(element_id_t new_element_id, element_id_t old_element_id)
+    -> void {
+    const auto it1 = map_to_key_.find(old_element_id);
+    if (it1 == map_to_key_.end()) [[unlikely]] {
+        throw_exception("Cannot find old_element_id in key store.");
+    }
+    const auto element_key = it1->second;
+
+    const auto it2 = map_to_id_.find(element_key);
+    if (it2 == map_to_id_.end()) [[unlikely]] {
+        throw_exception("Cannot find element_key in key store.");
+    }
+
+    // update
+    it2->second = new_element_id;
+    map_to_key_.erase(it1);
+    if (bool was_inserted = map_to_key_.insert({new_element_id, element_key}).second;
+        !was_inserted) [[unlikely]] {
+        throw_exception("New element id was still part of cache.");
+    }
+}
+
+auto ElementKeyStore::to_element_id(element_key_t element_key) const -> element_id_t {
+    if (element_key < element_key_t {0} || element_key >= next_key_) [[unlikely]] {
+        throw_exception("Invalid element key.");
+    }
+
+    const auto it = map_to_id_.find(element_key);
+    return (it == map_to_id_.end()) ? null_element : it->second;
+}
+
+auto ElementKeyStore::to_element_key(element_id_t element_id) const -> element_key_t {
+    const auto it = map_to_key_.find(element_id);
+
+    if (it == map_to_key_.end()) [[unlikely]] {
+        throw_exception("Element id not found in key store.");
+    }
+
+    return it->second;
+}
+
+auto ElementKeyStore::size() const -> std::size_t {
+    if (map_to_id_.size() != map_to_key_.size()) [[unlikely]] {
+        throw_exception("maps have different sizes");
+    }
+    return map_to_id_.size();
+}
+
+//
 // Editable Circuit
 //
 
@@ -529,15 +614,14 @@ auto EditableCircuit::add_placeholder_element() -> element_id_t {
 }
 
 auto EditableCircuit::add_inverter_element(point_t position, InsertionMode insertion_mode,
-                                           orientation_t orientation) -> bool {
+                                           orientation_t orientation) -> element_key_t {
     return add_standard_element(ElementType::inverter_element, 1, position,
                                 insertion_mode, orientation);
-    return true;
 }
 
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
                                            point_t position, InsertionMode insertion_mode,
-                                           orientation_t orientation) -> bool {
+                                           orientation_t orientation) -> element_key_t {
     using enum ElementType;
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {
@@ -570,7 +654,7 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     }();
 
     if (insertion_mode == InsertionMode::insert_or_discard && colliding) {
-        return false;
+        return null_element_key;
     }
 
     const auto display_state = [&]() {
@@ -606,16 +690,18 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
         }
     }
 
+    const auto element_key = key_insert(element_id);
+
     // connect
-    if (insertion_mode == InsertionMode::insert_or_discard
-        || (insertion_mode == InsertionMode::collisions && !colliding)) {
+    if (is_display_state_cached(display_state)) {
         // TODO rename to better name
         connect_new_element(element_id);
     }
-    return true;
+
+    return element_key;
 }
 
-auto EditableCircuit::add_wire(LineTree&& line_tree) -> bool {
+auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_key_t {
     const auto delays = calculate_output_delays(line_tree);
     const auto max_delay = std::ranges::max(delays);
     const auto output_count = delays.size();
@@ -633,7 +719,7 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> bool {
             .element_type = ElementType::wire,
         };
         if (is_colliding(data)) {
-            return false;
+            return null_element_key;
         }
     }
 
@@ -651,10 +737,11 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> bool {
             throw_exception("Added element ids don't match.");
         }
     }
+    const auto element_key = key_insert(element_id);
 
     // connect
     connect_new_element(element_id);
-    return true;
+    return element_key;
 }
 
 auto EditableCircuit::swap_and_delete_element(element_id_t element_id) -> void {
@@ -675,6 +762,14 @@ auto EditableCircuit::swap_and_delete_element(element_id_t element_id) -> void {
     swap_and_delete_multiple_elements(delete_queue);
 }
 
+auto EditableCircuit::to_element_id(element_key_t element_key) const -> element_id_t {
+    return element_keys_.to_element_id(element_key);
+}
+
+auto EditableCircuit::to_element_key(element_id_t element_id) const -> element_key_t {
+    return element_keys_.to_element_key(element_id);
+}
+
 auto EditableCircuit::swap_and_delete_multiple_elements(
     std::span<const element_id_t> element_ids) -> void {
     // sort descending, so we don't invalidate our ids
@@ -687,7 +782,11 @@ auto EditableCircuit::swap_and_delete_multiple_elements(
 }
 
 auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) -> void {
-    cache_remove(element_id);
+    const auto is_cached = is_display_state_cached(layout_.display_state(element_id));
+    key_remove(element_id);
+    if (is_cached) {
+        cache_remove(element_id);
+    }
 
     // delete in underlying
     auto last_id1 = schematic_.swap_and_delete_element(element_id);
@@ -696,7 +795,13 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
         throw_exception("Returned id's during deletion are not the same.");
     }
 
-    cache_update(element_id, last_id1);
+    // update ids
+    if (element_id != last_id1) {
+        key_update(element_id, last_id1);
+        if (is_cached) {
+            cache_update(element_id, last_id1);
+        }
+    }
 }
 
 auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void {
@@ -818,6 +923,34 @@ auto EditableCircuit::is_colliding(layout_calculation_data_t data) const -> bool
     return !is_representable(data) || collicions_cache_.is_colliding(data)
            || input_connections_.is_colliding(data)
            || output_connections_.is_colliding(data);
+}
+
+auto EditableCircuit::is_display_state_cached(DisplayState display_state) const -> bool {
+    return display_state == DisplayState::normal
+           || display_state == DisplayState::new_valid;
+}
+
+auto EditableCircuit::key_insert(element_id_t element_id) -> element_key_t {
+    if (schematic_.element(element_id).is_placeholder()) {
+        return null_element_key;
+    }
+
+    return element_keys_.insert(element_id);
+}
+
+auto EditableCircuit::key_remove(element_id_t element_id) -> void {
+    if (schematic_.element(element_id).is_placeholder()) {
+        return;
+    }
+    element_keys_.remove(element_id);
+}
+
+auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_element_id)
+    -> void {
+    if (schematic_.element(new_element_id).is_placeholder()) {
+        return;
+    }
+    element_keys_.update(new_element_id, old_element_id);
 }
 
 auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
