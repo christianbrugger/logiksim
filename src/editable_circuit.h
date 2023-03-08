@@ -215,6 +215,10 @@ class EditableCircuit {
         return collicions_cache_.states();
     };
 
+    [[nodiscard]] auto selection_boxes() const {
+        return selection_cache_.boxes();
+    }
+
    private:
     auto add_placeholder_element() -> element_id_t;
     auto add_missing_placeholders(element_id_t element_id) -> void;

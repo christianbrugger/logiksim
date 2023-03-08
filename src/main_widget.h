@@ -39,11 +39,13 @@ class MainWidget : public QWidget {
         const auto check_box2 = new QCheckBox("Render C&ircuit");
         const auto check_box3 = new QCheckBox("Render Co&llision Cache");
         const auto check_box4 = new QCheckBox("Render Co&nnection Cache");
+        const auto check_box5 = new QCheckBox("Render S&election Cache");
 
         check_box1->setShortcut(QKeySequence(Qt::ALT | Qt::Key_B));
         check_box2->setShortcut(QKeySequence(Qt::ALT | Qt::Key_I));
         check_box3->setShortcut(QKeySequence(Qt::ALT | Qt::Key_L));
         check_box4->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
+        check_box5->setShortcut(QKeySequence(Qt::ALT | Qt::Key_E));
 
         connect(check_box1, &QCheckBox::clicked, this,
                 [this](bool enabled) { render_widget_->set_do_benchmark(enabled); });
@@ -55,12 +57,16 @@ class MainWidget : public QWidget {
         connect(check_box4, &QCheckBox::clicked, this, [this](bool enabled) {
             render_widget_->set_do_render_connection_cache(enabled);
         });
+        connect(check_box5, &QCheckBox::clicked, this, [this](bool enabled) {
+            render_widget_->set_do_render_selection_cache(enabled);
+        });
 
         const auto layout = new QHBoxLayout();
         layout->addWidget(check_box1);
         layout->addWidget(check_box2);
         layout->addWidget(check_box3);
         layout->addWidget(check_box4);
+        layout->addWidget(check_box5);
         layout->addStretch(1);
 
         const auto panel = new QWidget();

@@ -962,6 +962,7 @@ auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
     input_connections_.insert(element_id, data);
     output_connections_.insert(element_id, data);
     collicions_cache_.insert(element_id, data);
+    selection_cache_.insert(element_id, data);
 }
 
 auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
@@ -970,6 +971,7 @@ auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
     input_connections_.remove(element_id, data);
     output_connections_.remove(element_id, data);
     collicions_cache_.remove(element_id, data);
+    selection_cache_.remove(element_id, data);
 }
 
 auto EditableCircuit::cache_update(element_id_t new_element_id,
@@ -979,6 +981,7 @@ auto EditableCircuit::cache_update(element_id_t new_element_id,
     input_connections_.update(new_element_id, old_element_id, data);
     output_connections_.update(new_element_id, old_element_id, data);
     collicions_cache_.update(new_element_id, old_element_id, data);
+    selection_cache_.update(new_element_id, old_element_id, data);
 }
 
 }  // namespace logicsim

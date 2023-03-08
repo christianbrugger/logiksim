@@ -28,14 +28,35 @@ auto get_box(layout_calculation_data_t data) -> tree_box_t {
     return tree_box_t {min_corner, max_corner};
 }
 
+auto to_rect(tree_box_t box) -> rect_t {
+    const auto p0 = point_t {box.min_corner().x(), box.min_corner().y()};
+    const auto p1 = point_t {box.max_corner().x(), box.max_corner().y()};
+
+    return rect_t {p0, p1};
+}
+
 }  // namespace detail::search_tree
 
 auto SearchTree::insert(element_id_t element_id, layout_calculation_data_t data) -> void {
+    if (is_placeholder(data)) {
+        return;
+    }
+    if (data.element_type == ElementType::wire) {
+        return;
+    }
+
     const auto box = detail::search_tree::get_box(data);
     tree_.insert({box, element_id});
 }
 
 auto SearchTree::remove(element_id_t element_id, layout_calculation_data_t data) -> void {
+    if (is_placeholder(data)) {
+        return;
+    }
+    if (data.element_type == ElementType::wire) {
+        return;
+    }
+
     const auto box = detail::search_tree::get_box(data);
     const auto count = tree_.remove({box, element_id});
 

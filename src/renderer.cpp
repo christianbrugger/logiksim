@@ -715,11 +715,18 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
     }
 }
 
-auto render_editable_circuit_caches(BLContext& ctx,
-                                    const EditableCircuit& editable_circuit,
-                                    const RenderSettings& settings) -> void {
-    render_editable_circuit_connection_cache(ctx, editable_circuit, settings);
-    render_editable_circuit_collision_cache(ctx, editable_circuit, settings);
+auto render_editable_circuit_selection_cache(BLContext& ctx,
+                                             const EditableCircuit& editable_circuit,
+                                             const RenderSettings& settings) -> void {
+    ctx.setStrokeStyle(BLRgba32(0, 255, 0));
+    ctx.setStrokeWidth(1.0);
+
+    for (rect_t rect : editable_circuit.selection_boxes()) {
+        const auto p0 = to_context(rect.p0, settings.view_config);
+        const auto p1 = to_context(rect.p1, settings.view_config);
+
+        ctx.strokeRect(BLRect {p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y});
+    }
 }
 
 //

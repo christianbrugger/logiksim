@@ -164,6 +164,11 @@ class WidgetRenderer : public QWidget {
         update();
     }
 
+    auto set_do_render_selection_cache(bool value) -> void {
+        do_render_selection_cache_ = value;
+        update();
+    }
+
     auto fps() const -> double {
         return fps_counter_.events_per_second();
     }
@@ -338,6 +343,10 @@ class WidgetRenderer : public QWidget {
             render_editable_circuit_connection_cache(bl_ctx, editable_circuit,
                                                      render_settings_);
         }
+        if (do_render_selection_cache_) {
+            render_editable_circuit_selection_cache(bl_ctx, editable_circuit,
+                                                    render_settings_);
+        }
 
         bl_ctx.end();
 
@@ -498,6 +507,7 @@ class WidgetRenderer : public QWidget {
     bool do_render_circuit_ {false};
     bool do_render_collision_cache_ {false};
     bool do_render_connection_cache_ {false};
+    bool do_render_selection_cache_ {false};
 
     EventCounter fps_counter_;
 };
