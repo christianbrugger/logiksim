@@ -74,8 +74,11 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void;
 
+using selection_mask_t = boost::container::vector<bool>;
+
 auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& layout,
                     const Simulation* simulation = nullptr,
+                    const selection_mask_t& selection_mask = {},
                     const RenderSettings& settings = {}) -> void;
 
 struct BenchmarkScene {

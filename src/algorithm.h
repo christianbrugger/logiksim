@@ -387,9 +387,9 @@ template <class T>
 constexpr auto sorted(T&& a, T&& b) noexcept(noexcept(a <= b))
     -> std::tuple<std::remove_cvref_t<T>, std::remove_cvref_t<T>> {
     if (a <= b) {
-        return std::tie(std::forward<T>(a), std::forward<T>(b));
+        return std::make_tuple(std::forward<T>(a), std::forward<T>(b));
     }
-    return std::tie(std::forward<T>(b), std::forward<T>(a));
+    return std::make_tuple(std::forward<T>(b), std::forward<T>(a));
 }
 
 }  // namespace logicsim

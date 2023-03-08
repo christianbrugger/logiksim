@@ -393,7 +393,7 @@ auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
 
 auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
                            const Layout& layout, const Simulation* simulation,
-                           const RenderSettings& settings) -> void {
+                           bool selected, const RenderSettings& settings) -> void {
     const auto position = layout.position(element);
     const auto element_height = std::max(element.input_count(), element.output_count());
 
@@ -416,7 +416,11 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
     const auto h = h_ == 0 ? 1.0 : h_;
 
     const auto alpha = get_alpha_value(layout.display_state(element.element_id()));
-    ctx.setFillStyle(BLRgba32(255, 255, 128, alpha));
+    if (!selected) {
+        ctx.setFillStyle(BLRgba32(255, 255, 128, alpha));
+    } else {
+        ctx.setFillStyle(BLRgba32(128, 128, 64, alpha));
+    }
     ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
     ctx.setStrokeWidth(stroke_width(settings));
 
@@ -427,10 +431,15 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
 }
 
 auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& layout,
-                    const Simulation* simulation, const RenderSettings& settings)
-    -> void {
+                    const Simulation* simulation, const selection_mask_t& selection_mask,
+                    const RenderSettings& settings) -> void {
     for (auto element : schematic.elements()) {
         auto type = element.element_type();
+
+        bool selected = [&] {
+            const auto id = element.element_id().value;
+            return id < selection_mask.size() ? selection_mask[id] : false;
+        }();
 
         if (type == ElementType::wire) {
             if (simulation == nullptr) {
@@ -439,7 +448,7 @@ auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& la
                 draw_wire(ctx, element, layout, *simulation, settings);
             }
         } else if (type != ElementType::placeholder) {
-            draw_standard_element(ctx, element, layout, simulation, settings);
+            draw_standard_element(ctx, element, layout, simulation, selected, settings);
         }
     }
 }
@@ -721,7 +730,7 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
     ctx.setStrokeStyle(BLRgba32(0, 255, 0));
     ctx.setStrokeWidth(1.0);
 
-    for (rect_t rect : editable_circuit.selection_boxes()) {
+    for (rect_fine_t&& rect : editable_circuit.selection_rects()) {
         const auto p0 = to_context(rect.p0, settings.view_config);
         const auto p1 = to_context(rect.p1, settings.view_config);
 

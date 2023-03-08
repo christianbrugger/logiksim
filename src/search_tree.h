@@ -15,14 +15,16 @@ namespace detail::search_tree {
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using tree_point_t = bg::model::d2::point_xy<grid_t::value_type>;
+using tree_point_t = bg::model::d2::point_xy<grid_fine_t>;
 using tree_box_t = bg::model::box<tree_point_t>;
 using tree_value_t = std::pair<tree_box_t, element_id_t>;
 
 constexpr inline static auto tree_max_node_elements = 16;
 using tree_t = bgi::rtree<tree_value_t, bgi::rstar<tree_max_node_elements>>;
 
-auto to_rect(tree_box_t box) -> rect_t;
+auto get_selection_box(layout_calculation_data_t data) -> tree_box_t;
+auto to_rect(tree_box_t box) -> rect_fine_t;
+auto to_box(rect_fine_t rect) -> tree_box_t;
 }  // namespace detail::search_tree
 
 class SearchTree {
@@ -36,9 +38,11 @@ class SearchTree {
     auto update(element_id_t new_element_id, element_id_t old_element_id,
                 layout_calculation_data_t data) -> void;
 
-    auto boxes() const {
+    auto query_selection(rect_fine_t rect) const -> std::vector<element_id_t>;
+
+    auto rects() const {
         return transform_view(tree_.begin(), tree_.end(),
-                              [](const value_type &value) -> rect_t {
+                              [](const value_type &value) -> rect_fine_t {
                                   return detail::search_tree::to_rect(value.first);
                               });
     }

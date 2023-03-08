@@ -19,6 +19,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QResizeEvent>
+#include <QRubberBand>
 #include <QTimer>
 #include <QWidget>
 
@@ -114,6 +115,130 @@ class MouseInsertLogic {
    private:
     EditableCircuit& editable_circuit_;
     element_key_t inserted_key_ {null_element_key};
+};
+
+enum class SelectionFunction {
+    add,
+    substract,
+};
+
+class SelectionManager {
+   public:
+    using selection_mask_t = boost::container::vector<bool>;
+
+    struct operation_t {
+        SelectionFunction function;
+        rect_fine_t rect;
+        point_fine_t anchor;
+    };
+
+   public:
+    auto clear() -> void;
+    auto add(SelectionFunction function, rect_fine_t rect, point_fine_t anchor) -> void;
+    auto update_last(rect_fine_t rect) -> void;
+
+    auto has_selection() const -> bool;
+    auto create_selection_mask(const EditableCircuit& editable_circuit) const
+        -> selection_mask_t;
+    auto last_anchor_position() const -> std::optional<point_fine_t>;
+
+   private:
+    std::vector<operation_t> operations_;
+};
+
+class MouseSelectionLogic {
+   public:
+    struct Args {
+        QWidget* parent;
+        SelectionManager& manager;
+        EditableCircuit& editable_circuit;
+
+        const ViewConfig& view_config;
+    };
+
+    MouseSelectionLogic(Args args)
+        : manager_ {args.manager},
+          editable_circuit_ {args.editable_circuit},
+          view_config_ {args.view_config},
+          band_ {QRubberBand::Rectangle, args.parent} {}
+
+    ~MouseSelectionLogic() {}
+
+    MouseSelectionLogic(const MouseSelectionLogic&) = delete;
+    MouseSelectionLogic(MouseSelectionLogic&&) = delete;
+    auto operator=(const MouseSelectionLogic&) -> MouseSelectionLogic& = delete;
+    auto operator=(MouseSelectionLogic&&) -> MouseSelectionLogic& = delete;
+
+    auto mouse_press(QPointF position, Qt::KeyboardModifiers modifiers) -> void {
+        const auto p0 = to_grid_fine(position, view_config_);
+
+        const auto function = [&, modifiers] {
+            if (modifiers == Qt::AltModifier) {
+                return SelectionFunction::substract;
+            }
+            return SelectionFunction::add;
+        }();
+
+        if (modifiers == Qt::NoModifier) {
+            manager_.clear();
+        }
+        if (modifiers == Qt::ControlModifier) {
+            const auto anchor = manager_.last_anchor_position();
+            if (anchor.has_value()) {
+                fmt::print("anchor = {}\n", *anchor);
+                first_position_ = anchor;
+                update_mouse_position(position);
+                return;
+            }
+        }
+
+        manager_.add(function, rect_fine_t {p0, p0}, p0);
+        first_position_ = p0;
+    }
+
+    auto mouse_move(QPointF position) -> void {
+        update_mouse_position(position);
+    }
+
+    auto mouse_release(QPointF position) -> void {
+        update_mouse_position(position);
+    }
+
+   private:
+    auto update_mouse_position(QPointF position) -> void {
+        if (!first_position_) {
+            return;
+        }
+
+        // order points
+        const auto q0 = to_widget(*first_position_, view_config_);
+        const auto q1 = position.toPoint();
+        const auto [x0, x1] = sorted(q0.x(), q1.x());
+        const auto [y0, y1] = sorted(q0.y(), q1.y());
+
+        // QRect
+        const auto q_minimum = QPoint {x0, y0};
+        const auto q_maximum = QPoint {x1, y1};
+        const auto q_rect = QRect {q_minimum, q_maximum};
+
+        // rect_fine_t
+        const auto a_minimum = to_grid_fine(q_minimum, view_config_);
+        const auto a_maximum = to_grid_fine(q_maximum, view_config_);
+        const auto grid_rect = rect_fine_t {a_minimum, a_maximum};
+
+        // visualize rect
+        band_.setGeometry(q_rect);
+        band_.show();
+
+        manager_.update_last(grid_rect);
+    }
+
+    SelectionManager& manager_ [[maybe_unused]];  // TODO remove tag
+    EditableCircuit& editable_circuit_;
+    const ViewConfig& view_config_;
+    QRubberBand band_;
+
+    std::optional<point_fine_t> first_position_ {};
 };
 
 class WidgetRenderer : public QWidget {
@@ -216,6 +341,20 @@ class WidgetRenderer : public QWidget {
 
             fmt::print("{}\n", editable_circuit);
             editable_circuit.schematic().validate(Schematic::validate_all);
+
+            {
+                auto timer = Timer {};
+                auto count = 0;
+                for (auto x : range(100, 200, 5)) {
+                    for (auto y : range(100, 200, 5)) {
+                        editable_circuit.add_standard_element(
+                            ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
+                            InsertionMode::insert_or_discard);
+                        count++;
+                    }
+                }
+                fmt::print("Added {} elements in {}.", count, timer.format());
+            }
         }
     }
 
@@ -289,10 +428,10 @@ class WidgetRenderer : public QWidget {
         auto simulation = Simulation {schematic};
         simulation.print_events = true;
 
-        simulation.set_output_delay(elem0.output(connection_id_t {0}), delay_t {10us});
-        simulation.set_output_delay(line0.output(connection_id_t {0}), delay_t {40us});
-        simulation.set_output_delay(line0.output(connection_id_t {0}), delay_t {60us});
-        simulation.set_history_length(line0, delay_t {60us});
+        simulation.set_output_delay(elem0.output(connection_id_t {0}), delay_t
+        {10us}); simulation.set_output_delay(line0.output(connection_id_t {0}),
+        delay_t {40us}); simulation.set_output_delay(line0.output(connection_id_t
+        {0}), delay_t {60us}); simulation.set_history_length(line0, delay_t {60us});
 
         simulation.initialize();
         simulation.submit_event(elem0.input(connection_id_t {0}), 100us, true);
@@ -326,6 +465,9 @@ class WidgetRenderer : public QWidget {
         // int h = qt_image.height();
         */
 
+        const auto selection_mask
+            = selection_manager_.create_selection_mask(editable_circuit);
+
         bl_ctx.begin(bl_image, bl_info);
 
         render_background(bl_ctx, render_settings_);
@@ -333,7 +475,8 @@ class WidgetRenderer : public QWidget {
         if (do_render_circuit_) {
             // auto simulation = Simulation {editable_circuit.schematic()};
             render_circuit(bl_ctx, editable_circuit.schematic(),
-                           editable_circuit.layout(), nullptr, render_settings_);
+                           editable_circuit.layout(), nullptr, selection_mask,
+                           render_settings_);
         }
         if (do_render_collision_cache_) {
             render_editable_circuit_collision_cache(bl_ctx, editable_circuit,
@@ -366,6 +509,13 @@ class WidgetRenderer : public QWidget {
             mouse_logic_.emplace(render_settings_.view_config);
         } else if (event->button() == Qt::LeftButton && editable_circuit_.has_value()) {
             mouse_logic_.emplace(*editable_circuit_);
+        } else if (event->button() == Qt::RightButton && editable_circuit_.has_value()) {
+            mouse_logic_.emplace(MouseSelectionLogic::Args {
+                .parent = this,
+                .manager = selection_manager_,
+                .editable_circuit = *editable_circuit_,
+                .view_config = render_settings_.view_config,
+            });
         }
 
         // visit mouse logic
@@ -377,6 +527,9 @@ class WidgetRenderer : public QWidget {
                 overload {
                     [&](MouseDragLogic& arg) { arg.mouse_press(event->position()); },
                     [&](MouseInsertLogic& arg) { arg.mouse_press(grid_position); },
+                    [&](MouseSelectionLogic& arg) {
+                        arg.mouse_press(event->position(), event->modifiers());
+                    },
                 },
                 *mouse_logic_);
             update();
@@ -396,6 +549,7 @@ class WidgetRenderer : public QWidget {
                 overload {
                     [&](MouseDragLogic& arg) { arg.mouse_move(event->position()); },
                     [&](MouseInsertLogic& arg) { arg.mouse_move(grid_position); },
+                    [&](MouseSelectionLogic& arg) { arg.mouse_move(event->position()); },
                 },
                 *mouse_logic_);
 
@@ -416,6 +570,9 @@ class WidgetRenderer : public QWidget {
                 overload {
                     [&](MouseDragLogic& arg) { arg.mouse_release(event->position()); },
                     [&](MouseInsertLogic& arg) { arg.mouse_release(grid_position); },
+                    [&](MouseSelectionLogic& arg) {
+                        arg.mouse_release(event->position());
+                    },
                 },
                 *mouse_logic_);
 
@@ -500,7 +657,9 @@ class WidgetRenderer : public QWidget {
     RenderSettings render_settings_ {};
 
     // mouse logic
-    std::optional<std::variant<MouseDragLogic, MouseInsertLogic>> mouse_logic_ {};
+    SelectionManager selection_manager_ {};
+    std::optional<std::variant<MouseDragLogic, MouseInsertLogic, MouseSelectionLogic>>
+        mouse_logic_ {};
 
     // states
     bool do_benchmark_ {false};

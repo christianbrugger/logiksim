@@ -774,6 +774,11 @@ auto EditableCircuit::to_element_key(element_id_t element_id) const -> element_k
     return element_keys_.to_element_key(element_id);
 }
 
+auto EditableCircuit::query_selection(rect_fine_t rect) const
+    -> std::vector<element_id_t> {
+    return selection_cache_.query_selection(rect);
+}
+
 auto EditableCircuit::swap_and_delete_multiple_elements(
     std::span<const element_id_t> element_ids) -> void {
     // sort descending, so we don't invalidate our ids

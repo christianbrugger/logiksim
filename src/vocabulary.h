@@ -243,6 +243,8 @@ constexpr static inline auto color_blue = ::logicsim::color_t {0xFF0000FF};
 // Spacial Types
 //
 
+using grid_fine_t = double;
+
 struct grid_t {
     using value_type = int16_t;
     value_type value;
@@ -307,12 +309,13 @@ struct grid_t {
         return static_cast<int>(value);
     }
 
-    [[nodiscard]] explicit constexpr operator double() const noexcept {
-        return static_cast<double>(value);
+    [[nodiscard]] explicit constexpr operator grid_fine_t() const noexcept {
+        return static_cast<grid_fine_t>(value);
     }
 
-    [[nodiscard]] friend constexpr auto operator*(grid_t a, double b) -> double {
-        return static_cast<double>(a) * b;
+    [[nodiscard]] friend constexpr auto operator*(grid_t a, grid_fine_t b)
+        -> grid_fine_t {
+        return static_cast<grid_fine_t>(a) * b;
     }
 };
 
@@ -321,10 +324,14 @@ static_assert(std::is_standard_layout<grid_t>::value);
 static_assert(std::is_nothrow_default_constructible<grid_t>::value);
 
 struct point_fine_t {
-    double x;
-    double y;
+    grid_fine_t x;
+    grid_fine_t y;
 
     [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] constexpr auto operator==(const point_fine_t &other) const -> bool
+        = default;
+    [[nodiscard]] constexpr auto operator<=>(const point_fine_t &other) const = default;
 
     [[nodiscard]] constexpr auto operator+(point_fine_t other) const -> point_fine_t {
         return {x + other.x, y + other.y};
@@ -356,7 +363,7 @@ struct point_t {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] explicit constexpr operator point_fine_t() const noexcept {
-        return point_fine_t {static_cast<double>(x), static_cast<double>(y)};
+        return point_fine_t {static_cast<grid_fine_t>(x), static_cast<grid_fine_t>(y)};
     }
 
     [[nodiscard]] constexpr auto operator==(const point_t &other) const -> bool = default;
@@ -402,6 +409,25 @@ static_assert(std::is_trivially_constructible_v<line_t>);
 static_assert(std::is_trivially_copyable<line_t>::value);
 static_assert(std::is_trivially_copy_assignable<line_t>::value);
 
+struct rect_fine_t {
+    point_fine_t p0;
+    point_fine_t p1;
+
+    rect_fine_t() = default;
+
+    [[nodiscard]] explicit constexpr rect_fine_t(point_fine_t p0_, point_fine_t p1_)
+        : p0 {p0_}, p1 {p1_} {
+        if (p0_.x > p1_.x || p0_.y > p1_.y) [[unlikely]] {
+            throw_exception("point in rect_t need to be ordered");
+        }
+    };
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] constexpr auto operator==(const rect_fine_t &other) const -> bool
+        = default;
+};
+
 struct rect_t {
     point_t p0;
     point_t p1;
@@ -414,6 +440,10 @@ struct rect_t {
             throw_exception("point in rect_t need to be ordered");
         }
     };
+
+    [[nodiscard]] explicit constexpr operator rect_fine_t() const noexcept {
+        return rect_fine_t {static_cast<point_fine_t>(p0), static_cast<point_fine_t>(p1)};
+    }
 
     [[nodiscard]] auto format() const -> std::string;
 

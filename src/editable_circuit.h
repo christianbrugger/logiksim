@@ -193,6 +193,8 @@ class EditableCircuit {
     auto to_element_id(element_key_t element_key) const -> element_id_t;
     auto to_element_key(element_id_t element_id) const -> element_key_t;
 
+    auto query_selection(rect_fine_t rect) const -> std::vector<element_id_t>;
+
     // todo: extract_schematic, extract_layout
 
     [[nodiscard]] auto input_positions() const {
@@ -215,8 +217,8 @@ class EditableCircuit {
         return collicions_cache_.states();
     };
 
-    [[nodiscard]] auto selection_boxes() const {
-        return selection_cache_.boxes();
+    [[nodiscard]] auto selection_rects() const {
+        return selection_cache_.rects();
     }
 
    private:
