@@ -117,7 +117,7 @@ class MouseInsertLogic {
 };
 
 class WidgetRenderer : public QWidget {
-    Q_OBJECT
+    // Q_OBJECT
 
     using animation_clock = std::chrono::steady_clock;
 

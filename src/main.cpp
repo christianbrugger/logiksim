@@ -1,6 +1,5 @@
 
 #include "renderer.h"
-#include "search_tree.h"
 #include "simulation.h"
 #include "timer.h"
 

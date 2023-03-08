@@ -11,7 +11,7 @@
 namespace logicsim {
 
 class MainWidget : public QWidget {
-    Q_OBJECT
+    // Q_OBJECT
    public:
     MainWidget(QWidget* parent = nullptr)
         : QWidget(parent), render_widget_ {new WidgetRenderer(this)} {
