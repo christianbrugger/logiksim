@@ -5,6 +5,7 @@
 #include "layout.h"
 #include "layout_calculation_type.h"
 #include "schematic.h"
+#include "search_tree.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -236,10 +237,11 @@ class EditableCircuit {
     auto cache_remove(element_id_t element_id) -> void;
     auto cache_update(element_id_t new_element_id, element_id_t old_element_id) -> void;
 
+    ElementKeyStore element_keys_;
     ConnectionCache<true> input_connections_;
     ConnectionCache<false> output_connections_;
     CollisionCache collicions_cache_;
-    ElementKeyStore element_keys_;
+    SearchTree selection_cache_;
 
     Schematic schematic_;
     Layout layout_;

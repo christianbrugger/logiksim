@@ -21,8 +21,6 @@ auto main() -> int {
         // auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
         //                                             BENCHMARK_DEFAULT_EVENTS, true);
 
-        // test_tree();
-
         auto count = logicsim::benchmark_line_renderer(100, true);
         fmt::print("count = {}\n", count);
 

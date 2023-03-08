@@ -73,6 +73,11 @@ class MouseInsertLogic {
         remove_last_element();
     }
 
+    MouseInsertLogic(const MouseInsertLogic&) = delete;
+    MouseInsertLogic(MouseInsertLogic&&) = delete;
+    auto operator=(const MouseInsertLogic&) -> MouseInsertLogic& = delete;
+    auto operator=(MouseInsertLogic&&) -> MouseInsertLogic& = delete;
+
     auto mouse_press(std::optional<point_t> position) -> void {
         remove_and_insert(position, InsertionMode::collisions);
     }
@@ -200,6 +205,9 @@ class WidgetRenderer : public QWidget {
                 ElementType::or_element, 9, point_t {20, 4},
                 InsertionMode::insert_or_discard);
             fmt::print("added = {}\n", added);
+
+            editable_circuit.add_wire(LineTree({point_t {5, 20}, point_t {20, 20}}));
+            editable_circuit.add_wire(LineTree({point_t {20, 30}, point_t {5, 30}}));
 
             fmt::print("{}\n", editable_circuit);
             editable_circuit.schematic().validate(Schematic::validate_all);
@@ -346,9 +354,9 @@ class WidgetRenderer : public QWidget {
 
         // set mouse logic
         if (event->button() == Qt::MiddleButton) {
-            mouse_logic_.emplace<MouseDragLogic>(render_settings_.view_config);
+            mouse_logic_.emplace(render_settings_.view_config);
         } else if (event->button() == Qt::LeftButton && editable_circuit_.has_value()) {
-            mouse_logic_.emplace<MouseInsertLogic>(*editable_circuit_);
+            mouse_logic_.emplace(*editable_circuit_);
         }
 
         // visit mouse logic
@@ -358,7 +366,6 @@ class WidgetRenderer : public QWidget {
 
             std::visit(
                 overload {
-                    [](EmptyMouseLogic& arg) { ; },
                     [&](MouseDragLogic& arg) { arg.mouse_press(event->position()); },
                     [&](MouseInsertLogic& arg) { arg.mouse_press(grid_position); },
                 },
