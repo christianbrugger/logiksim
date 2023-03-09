@@ -132,6 +132,30 @@ auto apply_function(SelectionManager::selection_mask_t& selection,
 }
 }  // namespace
 
+auto SelectionManager::create_selection_mask(
+    const EditableCircuit& editable_circuit) const -> selection_mask_t {
+    const auto t = Timer("Create selection mask", Timer::Unit::ms, 3);
+
+    if (initial_selected_.empty() && operations_.empty()) {
+        return {};
+    }
+
+    const auto element_count = editable_circuit.schematic().element_count();
+    auto selection = selection_mask_t(element_count, false);
+
+    const auto initial_element_ids = editable_circuit.to_element_ids(initial_selected_);
+    for (element_id_t element_id : initial_element_ids) {
+        if (element_id != null_element) {
+            selection.at(element_id.value) = true;
+        }
+    }
+
+    for (auto&& operation : operations_) {
+        apply_function(selection, editable_circuit, operation);
+    }
+    return selection;
+}
+
 auto SelectionManager::claculate_item_selected(
     element_id_t element_id, const EditableCircuit& editable_circuit) const -> bool {
     if (element_id < element_id_t {0}) [[unlikely]] {
@@ -147,27 +171,13 @@ auto SelectionManager::claculate_item_selected(
     return selections.at(element_id.value);
 }
 
-auto SelectionManager::create_selection_mask(
-    const EditableCircuit& editable_circuit) const -> selection_mask_t {
-    if (operations_.empty()) {
-        return {};
-    }
-
-    const auto element_count = editable_circuit.schematic().element_count();
-    auto selection = selection_mask_t(element_count, false);
-
-    for (auto&& operation : operations_) {
-        apply_function(selection, editable_circuit, operation);
-    }
-    return selection;
-}
-
 auto SelectionManager::bake_selection(const EditableCircuit& editable_circuit) -> void {
     using std::swap;
 
     auto selected_keys = calculate_selected_keys(editable_circuit);
 
     swap(initial_selected_, selected_keys);
+    operations_.clear();
 }
 
 auto SelectionManager::calculate_selected_ids(
@@ -232,7 +242,7 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
 
     convert_selection();
 
-    fmt::print("{} {}\n", delta_x, delta_y);
+    // fmt::print("{} {}\n", delta_x, delta_y);
 }
 
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {}
@@ -241,6 +251,8 @@ auto MouseMoveSelectionLogic::convert_selection() -> void {
     if (converted_) {
         return;
     }
+
+    manager_.bake_selection(editable_circuit_);
 
     converted_ = true;
 }
@@ -457,7 +469,7 @@ auto RendererWidget::reset_circuit() -> void {
                     count++;
                 }
             }
-            fmt::print("Added {} elements in {}.", count, timer.format());
+            fmt::print("Added {} elements in {}.\n", count, timer.format());
         }
     }
 }
