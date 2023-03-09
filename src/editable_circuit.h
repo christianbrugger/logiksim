@@ -195,9 +195,11 @@ class EditableCircuit {
 
     auto change_insertion_mode(element_key_t element_key,
                                InsertionMode new_insertion_mode) -> bool;
+    // moves or deletes element
+    auto move_element(element_key_t element_key, point_t position) -> bool;
 
     // swaps the element with last one and deletes it
-    auto swap_and_delete_element(element_key_t element_key) -> void;
+    auto delete_element(element_key_t element_key) -> void;
 
     [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t;
     [[nodiscard]] auto to_element_ids(std::span<const element_key_t> element_keys) const
@@ -242,6 +244,7 @@ class EditableCircuit {
     auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
 
     auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
+    auto disconnect_outputs_and_remove_placeholders(element_id_t& element_id) -> void;
     auto add_missing_placeholders_for_outputs(element_id_t element_id) -> void;
 
     // may change the element_id, as element might be deleted
@@ -255,7 +258,7 @@ class EditableCircuit {
 
     [[nodiscard]] auto is_representable_(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
-    [[nodiscard]] auto is_display_state_cached(DisplayState display_state) const -> bool;
+    [[nodiscard]] auto is_element_cached(element_id_t element_id) const -> bool;
 
     auto key_insert(element_id_t element_id) -> element_key_t;
     auto key_remove(element_id_t element_id) -> void;

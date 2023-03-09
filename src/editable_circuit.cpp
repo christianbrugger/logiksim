@@ -784,6 +784,19 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     return null_element_key;
 }
 
+auto EditableCircuit::move_element(element_key_t element_key, point_t position) -> bool {
+    const auto element_id = to_element_id(element_key);
+    const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
+
+    if (!is_representable_(data)) {
+        delete_element(element_key);
+        return false;
+    }
+
+    layout_.set_position(element_id, position);
+    return true;
+}
+
 auto EditableCircuit::change_insertion_mode(element_key_t element_key,
                                             InsertionMode new_insertion_mode) -> bool {
     auto element_id = to_element_id(element_key);
@@ -855,10 +868,11 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
 
         if (display_state == DisplayState::new_valid) {
             // remove from cache
-            disconnect_inputs_and_add_placeholders(element_id);
             cache_remove(element_id);
-
             layout_.set_display_state(element_id, DisplayState::new_temporary);
+
+            disconnect_inputs_and_add_placeholders(element_id);
+            disconnect_outputs_and_remove_placeholders(element_id);
             return true;
         }
         if (display_state == DisplayState::new_colliding) {
@@ -915,7 +929,7 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_key_t {
     return element_key;
 }
 
-auto EditableCircuit::swap_and_delete_element(element_key_t element_key) -> void {
+auto EditableCircuit::delete_element(element_key_t element_key) -> void {
     const auto element_id = to_element_id(element_key);
 
     if (schematic_.element(element_id).is_placeholder()) {
@@ -999,11 +1013,7 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
     // update ids
     if (element_id != last_id1) {
         key_update(element_id, last_id1);
-
-        const auto is_cached = is_display_state_cached(layout_.display_state(element_id));
-        if (is_cached) {
-            cache_update(element_id, last_id1);
-        }
+        cache_update(element_id, last_id1);
     }
 }
 
@@ -1027,6 +1037,26 @@ auto EditableCircuit::disconnect_inputs_and_add_placeholders(element_id_t elemen
             add_and_connect_placeholder(input.connected_output());
         }
     }
+}
+
+auto EditableCircuit::disconnect_outputs_and_remove_placeholders(element_id_t& element_id)
+    -> void {
+    auto delete_queue = delete_queue_t {};
+
+    for (auto output : schematic_.element(element_id).outputs()) {
+        if (output.has_connected_element()) {
+            const auto connected_element = output.connected_element();
+
+            if (connected_element.is_placeholder()) {
+                delete_queue.push_back(connected_element.element_id());
+            }
+            output.clear_connection();
+        }
+    }
+
+    const auto element_key = to_element_key(element_id);
+    swap_and_delete_multiple_elements(delete_queue);
+    element_id = to_element_id(element_key);
 }
 
 auto EditableCircuit::add_missing_placeholders_for_outputs(element_id_t element_id)
@@ -1150,7 +1180,9 @@ auto EditableCircuit::is_colliding(layout_calculation_data_t data) const -> bool
            || output_connections_.is_colliding(data);
 }
 
-auto EditableCircuit::is_display_state_cached(DisplayState display_state) const -> bool {
+auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {
+    const auto display_state = layout_.display_state(element_id);
+
     return display_state == DisplayState::normal
            || display_state == DisplayState::new_valid;
 }
@@ -1198,6 +1230,12 @@ auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
 
 auto EditableCircuit::cache_update(element_id_t new_element_id,
                                    element_id_t old_element_id) -> void {
+    if (schematic_.element(new_element_id).is_placeholder()) {
+        return;
+    }
+    if (!is_element_cached(new_element_id)) {
+        return;
+    }
     const auto data = to_layout_calculation_data(schematic_, layout_, new_element_id);
 
     input_connections_.update(new_element_id, old_element_id, data);

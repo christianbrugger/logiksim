@@ -57,7 +57,7 @@ auto MouseInsertLogic::mouse_release(std::optional<point_t> position) -> void {
 
 auto MouseInsertLogic::remove_last_element() -> void {
     if (inserted_key_ != null_element_key) {
-        editable_circuit_.swap_and_delete_element(inserted_key_);
+        editable_circuit_.delete_element(inserted_key_);
         inserted_key_ = null_element_key;
     }
 }
@@ -170,13 +170,23 @@ auto SelectionManager::claculate_item_selected(
     return selections.at(element_id.value);
 }
 
-auto SelectionManager::bake_selection(const EditableCircuit& editable_circuit) -> void {
+auto SelectionManager::bake_selection(const EditableCircuit& editable_circuit)
+    -> const std::vector<element_key_t>& {
     using std::swap;
 
     auto selected_keys = calculate_selected_keys(editable_circuit);
-
     swap(initial_selected_, selected_keys);
     operations_.clear();
+
+    return initial_selected_;
+}
+
+auto SelectionManager::get_baked_selection() const -> const std::vector<element_key_t>& {
+    if (!operations_.empty()) [[unlikely]] {
+        throw_exception("Selection has been modified after baking.");
+    }
+
+    return initial_selected_;
 }
 
 auto SelectionManager::calculate_selected_ids(
@@ -208,6 +218,10 @@ auto SelectionManager::calculate_selected_keys(
 MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
     : manager_ {args.manager}, editable_circuit_ {args.editable_circuit} {}
 
+MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
+    apply_new_positions();
+}
+
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
     const auto element_under_cursor = editable_circuit_.query_selection(point);
 
@@ -228,6 +242,8 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
 }
 
 auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
+    const auto t = Timer("Move selection", Timer::Unit::ms, 3);
+
     if (!last_position_) {
         return;
     }
@@ -239,21 +255,61 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
         return;
     }
 
-    convert_selection();
+    convert_to_temporary();
+
+    for (auto&& element_key : manager_.get_baked_selection()) {
+        const auto element_id = editable_circuit_.to_element_id(element_key);
+        const auto position = editable_circuit_.layout().position(element_id);
+
+        const auto x = position.x.value + delta_x;
+        const auto y = position.y.value + delta_y;
+
+        if (is_representable(x, y)) {
+            const auto new_position = point_t {grid_t {x}, grid_t {y}};
+            editable_circuit_.move_element(element_key, new_position);
+        }
+    }
+
+    last_position_ = point_fine_t {
+        last_position_->x + delta_x,
+        last_position_->y + delta_y,
+    };
 
     // fmt::print("{} {}\n", delta_x, delta_y);
 }
 
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {}
 
-auto MouseMoveSelectionLogic::convert_selection() -> void {
+auto MouseMoveSelectionLogic::convert_to_temporary() -> void {
     if (converted_) {
         return;
     }
+    converted_ = true;
 
+    // bake selection, so we can move the elements
     manager_.bake_selection(editable_circuit_);
 
-    converted_ = true;
+    // mark all elements as temporary
+    for (auto&& element_key : manager_.get_baked_selection()) {
+        editable_circuit_.change_insertion_mode(element_key, InsertionMode::temporary);
+    }
+}
+
+auto MouseMoveSelectionLogic::apply_new_positions() -> void {
+    if (!converted_) {
+        return;
+    }
+    converted_ = false;
+
+    // insert again all elements
+    for (auto&& element_key : manager_.get_baked_selection()) {
+        const auto element = editable_circuit_.schematic().element(
+            editable_circuit_.to_element_id(element_key));
+        fmt::print("{}\n", element.format(true));
+
+        editable_circuit_.change_insertion_mode(element_key,
+                                                InsertionMode::insert_or_discard);
+    }
 }
 
 //
@@ -448,7 +504,7 @@ auto RendererWidget::reset_circuit() -> void {
         editable_circuit.add_wire(
             LineTree({point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15, 4}}));
         // editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
-        editable_circuit.swap_and_delete_element(element1);
+        editable_circuit.delete_element(element1);
 
         auto added = editable_circuit.add_standard_element(
             ElementType::or_element, 9, point_t {20, 4},
@@ -620,8 +676,8 @@ auto RendererWidget::delete_selected_items() -> void {
     const auto selected
         = selection_manager_.calculate_selected_keys(editable_circuit_.value());
 
-    for (const auto element_key : selected) {
-        editable_circuit_.value().swap_and_delete_element(element_key);
+    for (auto&& element_key : selected) {
+        editable_circuit_.value().delete_element(element_key);
     }
     update();
 

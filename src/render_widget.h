@@ -48,7 +48,6 @@ class MouseInsertLogic {
     };
 
     MouseInsertLogic(Args args) noexcept;
-
     ~MouseInsertLogic();
 
     MouseInsertLogic(const MouseInsertLogic&) = delete;
@@ -100,7 +99,9 @@ class SelectionManager {
     auto calculate_selected_keys(const EditableCircuit& editable_circuit) const
         -> std::vector<element_key_t>;
 
-    auto bake_selection(const EditableCircuit& editable_circuit) -> void;
+    auto bake_selection(const EditableCircuit& editable_circuit)
+        -> const std::vector<element_key_t>&;
+    auto get_baked_selection() const -> const std::vector<element_key_t>&;
 
    private:
     std::vector<element_key_t> initial_selected_ {};
@@ -115,13 +116,20 @@ class MouseMoveSelectionLogic {
     };
 
     MouseMoveSelectionLogic(Args args);
+    ~MouseMoveSelectionLogic();
+
+    MouseMoveSelectionLogic(const MouseMoveSelectionLogic&) = delete;
+    MouseMoveSelectionLogic(MouseMoveSelectionLogic&&) = delete;
+    auto operator=(const MouseMoveSelectionLogic&) -> MouseMoveSelectionLogic& = delete;
+    auto operator=(MouseMoveSelectionLogic&&) -> MouseMoveSelectionLogic& = delete;
 
     auto mouse_press(point_fine_t point) -> void;
     auto mouse_move(point_fine_t point) -> void;
     auto mouse_release(point_fine_t point) -> void;
 
    private:
-    auto convert_selection() -> void;
+    auto convert_to_temporary() -> void;
+    auto apply_new_positions() -> void;
 
     SelectionManager& manager_;
     EditableCircuit& editable_circuit_;
