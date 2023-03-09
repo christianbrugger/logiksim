@@ -557,6 +557,13 @@ auto ElementKeyStore::to_element_id(element_key_t element_key) const -> element_
     return (it == map_to_id_.end()) ? null_element : it->second;
 }
 
+auto ElementKeyStore::to_element_ids(std::span<const element_key_t> element_keys) const
+    -> std::vector<element_id_t> {
+    return transform_to_vector(element_keys, [&](element_key_t element_key) {
+        return to_element_id(element_key);
+    });
+}
+
 auto ElementKeyStore::to_element_key(element_id_t element_id) const -> element_key_t {
     const auto it = map_to_key_.find(element_id);
 
@@ -565,6 +572,12 @@ auto ElementKeyStore::to_element_key(element_id_t element_id) const -> element_k
     }
 
     return it->second;
+}
+
+auto ElementKeyStore::to_element_keys(std::span<const element_id_t> element_ids) const
+    -> std::vector<element_key_t> {
+    return transform_to_vector(
+        element_ids, [&](element_id_t element_id) { return to_element_key(element_id); });
 }
 
 auto ElementKeyStore::size() const -> std::size_t {
@@ -770,8 +783,18 @@ auto EditableCircuit::to_element_id(element_key_t element_key) const -> element_
     return element_keys_.to_element_id(element_key);
 }
 
+auto EditableCircuit::to_element_ids(std::span<const element_key_t> element_keys) const
+    -> std::vector<element_id_t> {
+    return element_keys_.to_element_ids(element_keys);
+}
+
 auto EditableCircuit::to_element_key(element_id_t element_id) const -> element_key_t {
     return element_keys_.to_element_key(element_id);
+}
+
+auto EditableCircuit::to_element_keys(std::span<const element_id_t> element_ids) const
+    -> std::vector<element_key_t> {
+    return element_keys_.to_element_keys(element_ids);
 }
 
 auto EditableCircuit::query_selection(rect_fine_t rect) const

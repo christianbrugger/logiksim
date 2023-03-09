@@ -82,23 +82,29 @@ class SelectionManager {
     struct operation_t {
         SelectionFunction function;
         rect_fine_t rect;
-        point_fine_t anchor;
     };
 
    public:
     auto clear() -> void;
-    auto add(SelectionFunction function, rect_fine_t rect, point_fine_t anchor) -> void;
+    auto add(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last(rect_fine_t rect) -> void;
 
     auto claculate_item_selected(element_id_t element_id,
                                  const EditableCircuit& editable_circuit) const -> bool;
     auto create_selection_mask(const EditableCircuit& editable_circuit) const
         -> selection_mask_t;
-    auto has_selection() const -> bool;
-    auto last_anchor_position() const -> std::optional<point_fine_t>;
+
+    auto bake_selection(const EditableCircuit& editable_circuit) -> void;
 
    private:
-    std::vector<operation_t> operations_;
+    auto calculate_selected_ids(const EditableCircuit& editable_circuit) const
+        -> std::vector<element_id_t>;
+    auto calculate_selected_keys(const EditableCircuit& editable_circuit) const
+        -> std::vector<element_key_t>;
+
+   private:
+    std::vector<element_key_t> initial_selected_ {};
+    std::vector<operation_t> operations_ {};
 };
 
 class MouseMoveSelectionLogic {
@@ -115,8 +121,13 @@ class MouseMoveSelectionLogic {
     auto mouse_release(point_fine_t point) -> void;
 
    private:
+    auto convert_selection() -> void;
+
     SelectionManager& manager_;
     EditableCircuit& editable_circuit_;
+
+    std::optional<point_fine_t> last_position_ {};
+    bool converted_ {false};
 };
 
 class MouseSingleSelectionLogic {

@@ -80,12 +80,12 @@ auto MouseInsertLogic::remove_and_insert(std::optional<point_t> position,
 //
 
 auto SelectionManager::clear() -> void {
+    initial_selected_.clear();
     operations_.clear();
 }
 
-auto SelectionManager::add(SelectionFunction function, rect_fine_t rect,
-                           point_fine_t anchor) -> void {
-    operations_.emplace_back(operation_t {function, rect, anchor});
+auto SelectionManager::add(SelectionFunction function, rect_fine_t rect) -> void {
+    operations_.emplace_back(operation_t {function, rect});
 }
 
 auto SelectionManager::update_last(rect_fine_t rect) -> void {
@@ -132,10 +132,6 @@ auto apply_function(SelectionManager::selection_mask_t& selection,
 }
 }  // namespace
 
-auto SelectionManager::has_selection() const -> bool {
-    return !operations_.empty();
-}
-
 auto SelectionManager::claculate_item_selected(
     element_id_t element_id, const EditableCircuit& editable_circuit) const -> bool {
     if (element_id < element_id_t {0}) [[unlikely]] {
@@ -166,11 +162,34 @@ auto SelectionManager::create_selection_mask(
     return selection;
 }
 
-auto SelectionManager::last_anchor_position() const -> std::optional<point_fine_t> {
-    if (operations_.empty()) {
-        return std::nullopt;
-    }
-    return operations_.back().anchor;
+auto SelectionManager::bake_selection(const EditableCircuit& editable_circuit) -> void {
+    using std::swap;
+
+    auto selected_keys = calculate_selected_keys(editable_circuit);
+
+    swap(initial_selected_, selected_keys);
+}
+
+auto SelectionManager::calculate_selected_ids(
+    const EditableCircuit& editable_circuit) const -> std::vector<element_id_t> {
+    const auto selection = create_selection_mask(editable_circuit);
+    const auto maximum_id = gsl::narrow<element_id_t::value_type>(selection.size());
+
+    // TODO create algorithm
+    auto selected_ids = std::vector<element_id_t> {};
+    for (auto i : range(maximum_id)) {
+        if (selection[i]) {
+            selected_ids.push_back(element_id_t {i});
+        }
+    };
+
+    return selected_ids;
+}
+
+auto SelectionManager::calculate_selected_keys(
+    const EditableCircuit& editable_circuit) const -> std::vector<element_key_t> {
+    const auto selected_ids = calculate_selected_ids(editable_circuit);
+    return editable_circuit.to_element_keys(selected_ids);
 }
 
 //
@@ -193,13 +212,38 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
 
     if (!element_is_selected) {
         manager_.clear();
-        manager_.add(SelectionFunction::add, rect_fine_t {point, point}, point);
+        manager_.add(SelectionFunction::add, rect_fine_t {point, point});
     }
+
+    last_position_ = point;
 }
 
-auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {}
+auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
+    if (!last_position_) {
+        return;
+    }
+
+    const auto delta_x = round_to<int>(point.x - last_position_->x);
+    const auto delta_y = round_to<int>(point.y - last_position_->y);
+
+    if (delta_x == 0 && delta_y == 0) {
+        return;
+    }
+
+    convert_selection();
+
+    fmt::print("{} {}\n", delta_x, delta_y);
+}
 
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {}
+
+auto MouseMoveSelectionLogic::convert_selection() -> void {
+    if (converted_) {
+        return;
+    }
+
+    converted_ = true;
+}
 
 //
 // Mouse Item Selection Logic
@@ -210,7 +254,7 @@ MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
 
 auto MouseSingleSelectionLogic::mouse_press(point_fine_t point,
                                             Qt::KeyboardModifiers modifiers) -> void {
-    manager_.add(SelectionFunction::toggle, rect_fine_t {point, point}, point);
+    manager_.add(SelectionFunction::toggle, rect_fine_t {point, point});
 }
 
 auto MouseSingleSelectionLogic::mouse_move(point_fine_t point) -> void {}
@@ -241,7 +285,7 @@ auto MouseAreaSelectionLogic::mouse_press(QPointF position,
         manager_.clear();
     }
 
-    manager_.add(function, rect_fine_t {p0, p0}, p0);
+    manager_.add(function, rect_fine_t {p0, p0});
     first_position_ = p0;
 }
 

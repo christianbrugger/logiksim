@@ -157,7 +157,11 @@ class ElementKeyStore {
     auto update(element_id_t new_element_id, element_id_t old_element_id) -> void;
 
     [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t;
+    [[nodiscard]] auto to_element_ids(std::span<const element_key_t> element_keys) const
+        -> std::vector<element_id_t>;
     [[nodiscard]] auto to_element_key(element_id_t element_id) const -> element_key_t;
+    [[nodiscard]] auto to_element_keys(std::span<const element_id_t> element_ids) const
+        -> std::vector<element_key_t>;
 
     [[nodiscard]] auto size() const -> std::size_t;
 
@@ -190,11 +194,17 @@ class EditableCircuit {
     // swaps the element with last one and deletes it
     auto swap_and_delete_element(element_id_t element_id) -> void;
 
-    auto to_element_id(element_key_t element_key) const -> element_id_t;
-    auto to_element_key(element_id_t element_id) const -> element_key_t;
+    [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t;
+    [[nodiscard]] auto to_element_ids(std::span<const element_key_t> element_keys) const
+        -> std::vector<element_id_t>;
+    [[nodiscard]] auto to_element_key(element_id_t element_id) const -> element_key_t;
+    [[nodiscard]] auto to_element_keys(std::span<const element_id_t> element_ids) const
+        -> std::vector<element_key_t>;
 
-    auto query_selection(rect_fine_t rect) const -> std::vector<element_id_t>;
-    auto query_selection(point_fine_t point) const -> std::optional<element_id_t>;
+    [[nodiscard]] auto query_selection(rect_fine_t rect) const
+        -> std::vector<element_id_t>;
+    [[nodiscard]] auto query_selection(point_fine_t point) const
+        -> std::optional<element_id_t>;
 
     // todo: extract_schematic, extract_layout
 
