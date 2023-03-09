@@ -615,35 +615,10 @@ auto EditableCircuit::schematic() const noexcept -> const Schematic& {
     return schematic_;
 }
 
-auto EditableCircuit::add_placeholder_element() -> element_id_t {
-    constexpr static auto connector_delay
-        = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
-
-    const auto element_id = layout_.add_placeholder();
-    {
-        const auto element = schematic_.add_element(Schematic::NewElementData {
-            .element_type = ElementType::placeholder,
-            .input_count = 1,
-            .output_count = 0,
-            .history_length = connector_delay,
-        });
-        if (element.element_id() != element_id) [[unlikely]] {
-            throw_exception("Added element ids don't match.");
-        }
-    }
-
-    return element_id;
-}
-
-auto EditableCircuit::add_inverter_element(point_t position, InsertionMode insertion_mode,
-                                           orientation_t orientation) -> element_key_t {
-    return add_standard_element(ElementType::inverter_element, 1, position,
-                                insertion_mode, orientation);
-}
-
 auto to_insertion_mode(DisplayState display_state) -> InsertionMode {
     switch (display_state) {
         using enum DisplayState;
+
         case normal:
             return InsertionMode::insert_or_discard;
         case new_colliding:
@@ -677,9 +652,37 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding) -> Displa
     throw_exception("unknown insertion mode");
 }
 
-auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
-                                           point_t position, InsertionMode insertion_mode,
+auto EditableCircuit::add_placeholder_element() -> element_id_t {
+    constexpr static auto connector_delay
+        = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
+
+    const auto element_id = layout_.add_placeholder();
+    {
+        const auto element = schematic_.add_element(Schematic::NewElementData {
+            .element_type = ElementType::placeholder,
+            .input_count = 1,
+            .output_count = 0,
+            .history_length = connector_delay,
+        });
+        if (element.element_id() != element_id) [[unlikely]] {
+            throw_exception("Added element ids don't match.");
+        }
+    }
+
+    return element_id;
+}
+
+auto EditableCircuit::add_inverter_element(point_t position, InsertionMode insertion_mode,
                                            orientation_t orientation) -> element_key_t {
+    return add_standard_element(ElementType::inverter_element, 1, position,
+                                insertion_mode, orientation);
+}
+
+/*
+auto EditableCircuit::add_standard_element_2(ElementType type, std::size_t input_count,
+                                             point_t position,
+                                             InsertionMode insertion_mode,
+                                             orientation_t orientation) -> element_key_t {
     using enum ElementType;
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {
@@ -738,28 +741,135 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
 
     // connect
     if (is_display_state_cached(display_state)) {
-        // TODO rename to better name
         connect_and_cache_element(element_id);
     }
 
     return element_key;
 }
+*/
+
+auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
+                                           point_t position, InsertionMode insertion_mode,
+                                           orientation_t orientation) -> element_key_t {
+    using enum ElementType;
+    if (!(type == and_element || type == or_element || type == xor_element
+          || type == inverter_element)) [[unlikely]] {
+        throw_exception("The type needs to be a standard element.");
+    }
+    if (type == inverter_element && input_count != 1) [[unlikely]] {
+        throw_exception("Inverter needs to have exactly one input.");
+    }
+    if (type != inverter_element && input_count < 2) [[unlikely]] {
+        throw_exception("Input count needs to be at least 2 for standard elements.");
+    }
+
+    // insert into underlyings
+    const auto element_id
+        = layout_.add_logic_element(position, orientation, DisplayState::new_temporary);
+    {
+        const auto element = schematic_.add_element({
+            .element_type = type,
+            .input_count = input_count,
+            .output_count = 1,
+        });
+        if (element.element_id() != element_id) [[unlikely]] {
+            throw_exception("Added element ids don't match.");
+        }
+    }
+    const auto element_key = key_insert(element_id);
+
+    if (change_insertion_mode(element_key, insertion_mode)) {
+        return element_key;
+    }
+    return null_element_key;
+}
 
 auto EditableCircuit::change_insertion_mode(element_key_t element_key,
                                             InsertionMode new_insertion_mode) -> bool {
-    const auto element_id = to_element_id(element_key);
+    auto element_id = to_element_id(element_key);
+    return change_insertion_mode(element_id, new_insertion_mode);
+}
 
+auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
+                                            InsertionMode new_insertion_mode) -> bool {
+    if (schematic_.element(element_id).is_placeholder()) [[unlikely]] {
+        throw_exception("cannot change insertion mode of placeholders.");
+    }
     const auto old_insertion_mode = to_insertion_mode(layout_.display_state(element_id));
 
     if (old_insertion_mode == new_insertion_mode) {
         return true;
     }
 
-    if (old_insertion_mode == InsertionMode::insert_or_discard
-        && new_insertion_mode == InsertionMode::temporary) {
+    // transition: temporary -> collisions
+    if (old_insertion_mode == InsertionMode::temporary) {
+        // check collisions
+        const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
+        const bool colliding = is_colliding(data);
+
+        const auto display_state
+            = colliding ? DisplayState::new_colliding : DisplayState::new_valid;
+        layout_.set_display_state(element_id, display_state);
+
+        if (!colliding) {
+            // add to cache
+            connect_and_cache_element(element_id);
+        }
+
+        if (new_insertion_mode == InsertionMode::collisions) {
+            return true;
+        }
     }
 
-    throw_exception("unimplemented mode change");
+    // transition: collisions -> insert or discard
+    if (new_insertion_mode == InsertionMode::insert_or_discard) {
+        const auto display_state = layout_.display_state(element_id);
+
+        if (display_state == DisplayState::new_valid) {
+            layout_.set_display_state(element_id, DisplayState::normal);
+            return true;
+        }
+        if (display_state == DisplayState::new_colliding) {
+            // delete element
+            layout_.set_display_state(element_id, DisplayState::new_temporary);
+            swap_and_delete_single_element(element_id);
+            element_id = null_element;
+            return false;
+        }
+
+        throw_exception("unexpected display state at this point.");
+    }
+
+    // transition: insert or discard -> collisions
+    if (old_insertion_mode == InsertionMode::insert_or_discard) {
+        layout_.set_display_state(element_id, DisplayState::new_valid);
+
+        if (new_insertion_mode == InsertionMode::collisions) {
+            return true;
+        }
+    }
+
+    // transition: collisions -> temporary
+    if (new_insertion_mode == InsertionMode::temporary) {
+        const auto display_state = layout_.display_state(element_id);
+
+        if (display_state == DisplayState::new_valid) {
+            // remove from cache
+            disconnect_inputs_and_add_placeholders(element_id);
+            cache_remove(element_id);
+
+            layout_.set_display_state(element_id, DisplayState::new_temporary);
+            return true;
+        }
+        if (display_state == DisplayState::new_colliding) {
+            layout_.set_display_state(element_id, DisplayState::new_temporary);
+            return true;
+        }
+
+        throw_exception("unexpected display state at this point.");
+    }
+
+    throw_exception("unknown mode change");
 }
 
 auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_key_t {
@@ -874,14 +984,10 @@ auto EditableCircuit::swap_and_delete_multiple_elements(
 }
 
 auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) -> void {
-    const auto is_cached = is_display_state_cached(layout_.display_state(element_id));
-    key_remove(element_id);
-    if (is_cached) {
-        cache_remove(element_id);
+    if (!schematic_.element(element_id).is_placeholder()) {
+        change_insertion_mode(element_id, InsertionMode::temporary);
+        key_remove(element_id);
     }
-
-    // disconnect inputs
-    disconnect_inputs_and_add_placeholders(element_id);
 
     // delete in underlying
     auto last_id1 = schematic_.swap_and_delete_element(element_id);
@@ -893,6 +999,8 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
     // update ids
     if (element_id != last_id1) {
         key_update(element_id, last_id1);
+
+        const auto is_cached = is_display_state_cached(layout_.display_state(element_id));
         if (is_cached) {
             cache_update(element_id, last_id1);
         }
@@ -1014,8 +1122,9 @@ auto EditableCircuit::connect_and_cache_element(element_id_t& element_id) -> voi
     add_missing_placeholders_for_outputs(element_id);
 
     // this invalidates our element_id
+    const auto element_key = to_element_key(element_id);
     swap_and_delete_multiple_elements(delete_queue);
-    element_id = null_element;
+    element_id = to_element_id(element_key);
 }
 
 auto EditableCircuit::is_representable_(layout_calculation_data_t data) const -> bool {

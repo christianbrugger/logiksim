@@ -624,7 +624,10 @@ auto RendererWidget::delete_selected_items() -> void {
         editable_circuit_.value().swap_and_delete_element(element_key);
     }
     update();
-    // editable_circuit_->schematic().validate(Schematic::validate_all);
+
+#ifndef NDEBUG
+    editable_circuit_->schematic().validate(Schematic::validate_all);
+#endif
 }
 
 auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {

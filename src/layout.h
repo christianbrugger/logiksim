@@ -47,9 +47,10 @@ class Layout {
     // swaps the element with last one and deletes it
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
 
-    // TODO remove these, when not needed anymore
+    // TODO remove line tree, when not needed anymore
     auto set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void;
     auto set_position(element_id_t element_id, point_t point) -> void;
+    auto set_display_state(element_id_t element_id, DisplayState display_state) -> void;
 
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto line_tree(element_id_t element_id) const -> const LineTree &;

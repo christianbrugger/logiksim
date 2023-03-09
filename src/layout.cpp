@@ -166,6 +166,11 @@ auto Layout::set_position(element_id_t element_id, point_t position) -> void {
     positions_.at(element_id.value) = position;
 }
 
+auto Layout::set_display_state(element_id_t element_id, DisplayState display_state)
+    -> void {
+    display_states_.at(element_id.value) = display_state;
+}
+
 auto Layout::circuit_id() const noexcept -> circuit_id_t {
     return circuit_id_;
 }

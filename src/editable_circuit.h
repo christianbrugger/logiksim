@@ -244,8 +244,10 @@ class EditableCircuit {
     auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
     auto add_missing_placeholders_for_outputs(element_id_t element_id) -> void;
 
-    // invalidates the element_id, as element output placeholders might be deleted
+    // may change the element_id, as element might be deleted
     auto connect_and_cache_element(element_id_t& element_id) -> void;
+    auto change_insertion_mode(element_id_t& element_id, InsertionMode new_insertion_mode)
+        -> bool;
 
     auto swap_and_delete_single_element(element_id_t element_id) -> void;
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
