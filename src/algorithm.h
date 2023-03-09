@@ -62,6 +62,18 @@ constexpr bool contains(R&& r, const T& value, Proj proj = {}) {
 }
 
 //
+// Variant overload
+//
+
+template <typename... Func>
+struct overload : Func... {
+    using Func::operator()...;
+};
+
+template <class... Ts>
+overload(Ts...) -> overload<Ts...>;
+
+//
 // Round to
 //
 

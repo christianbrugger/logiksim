@@ -438,7 +438,7 @@ auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& la
 
         bool selected = [&] {
             const auto id = element.element_id().value;
-            return id < selection_mask.size() ? selection_mask[id] : false;
+            return id < std::ssize(selection_mask) ? selection_mask[id] : false;
         }();
 
         if (type == ElementType::wire) {
