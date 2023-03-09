@@ -548,20 +548,22 @@ auto ElementKeyStore::update(element_id_t new_element_id, element_id_t old_eleme
     }
 }
 
-auto ElementKeyStore::to_element_id(element_key_t element_key) const -> element_id_t {
+auto ElementKeyStore::element_key_exists(element_key_t element_key) const -> bool {
     if (element_key < element_key_t {0} || element_key >= next_key_) [[unlikely]] {
         throw_exception("Invalid element key.");
     }
 
-    const auto it = map_to_id_.find(element_key);
-    return (it == map_to_id_.end()) ? null_element : it->second;
+    return map_to_id_.find(element_key) != map_to_id_.end();
 }
 
-auto ElementKeyStore::to_element_ids(std::span<const element_key_t> element_keys) const
-    -> std::vector<element_id_t> {
-    return transform_to_vector(element_keys, [&](element_key_t element_key) {
-        return to_element_id(element_key);
-    });
+auto ElementKeyStore::to_element_id(element_key_t element_key) const -> element_id_t {
+    const auto it = map_to_id_.find(element_key);
+
+    if (it == map_to_id_.end()) [[unlikely]] {
+        throw_exception("Element key not found in key store.");
+    }
+
+    return it->second;
 }
 
 auto ElementKeyStore::to_element_key(element_id_t element_id) const -> element_key_t {
@@ -572,6 +574,13 @@ auto ElementKeyStore::to_element_key(element_id_t element_id) const -> element_k
     }
 
     return it->second;
+}
+
+auto ElementKeyStore::to_element_ids(std::span<const element_key_t> element_keys) const
+    -> std::vector<element_id_t> {
+    return transform_to_vector(element_keys, [&](element_key_t element_key) {
+        return to_element_id(element_key);
+    });
 }
 
 auto ElementKeyStore::to_element_keys(std::span<const element_id_t> element_ids) const
@@ -632,6 +641,42 @@ auto EditableCircuit::add_inverter_element(point_t position, InsertionMode inser
                                 insertion_mode, orientation);
 }
 
+auto to_insertion_mode(DisplayState display_state) -> InsertionMode {
+    switch (display_state) {
+        using enum DisplayState;
+        case normal:
+            return InsertionMode::insert_or_discard;
+        case new_colliding:
+            return InsertionMode::collisions;
+        case new_valid:
+            return InsertionMode::collisions;
+        case new_temporary:
+            return InsertionMode::temporary;
+    };
+
+    throw_exception("Unknown display state.");
+};
+
+auto to_display_state(InsertionMode insertion_mode, bool is_colliding) -> DisplayState {
+    switch (insertion_mode) {
+        using enum InsertionMode;
+
+        case insert_or_discard:
+            return DisplayState::normal;
+
+        case collisions:
+            if (is_colliding) {
+                return DisplayState::new_colliding;
+            } else {
+                return DisplayState::new_valid;
+            }
+
+        case temporary:
+            return DisplayState::new_temporary;
+    };
+    throw_exception("unknown insertion mode");
+}
+
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
                                            point_t position, InsertionMode insertion_mode,
                                            orientation_t orientation) -> element_key_t {
@@ -670,29 +715,11 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
         return is_colliding(data);
     }();
 
-    if (insertion_mode == InsertionMode::insert_or_discard && colliding) {
+    if (colliding && insertion_mode == InsertionMode::insert_or_discard) {
         return null_element_key;
     }
 
-    const auto display_state = [&]() {
-        switch (insertion_mode) {
-            using enum InsertionMode;
-
-            case insert_or_discard:
-                return DisplayState::normal;
-
-            case collisions:
-                if (colliding) {
-                    return DisplayState::new_colliding;
-                } else {
-                    return DisplayState::new_valid;
-                }
-
-            case temporary:
-                return DisplayState::new_temporary;
-        };
-        throw_exception("unknown mode");
-    }();
+    const auto display_state = to_display_state(insertion_mode, colliding);
 
     // insert into underlyings
     auto element_id = layout_.add_logic_element(position, orientation, display_state);
@@ -712,10 +739,27 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     // connect
     if (is_display_state_cached(display_state)) {
         // TODO rename to better name
-        connect_new_element(element_id);
+        connect_and_cache_element(element_id);
     }
 
     return element_key;
+}
+
+auto EditableCircuit::change_insertion_mode(element_key_t element_key,
+                                            InsertionMode new_insertion_mode) -> bool {
+    const auto element_id = to_element_id(element_key);
+
+    const auto old_insertion_mode = to_insertion_mode(layout_.display_state(element_id));
+
+    if (old_insertion_mode == new_insertion_mode) {
+        return true;
+    }
+
+    if (old_insertion_mode == InsertionMode::insert_or_discard
+        && new_insertion_mode == InsertionMode::temporary) {
+    }
+
+    throw_exception("unimplemented mode change");
 }
 
 auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_key_t {
@@ -757,11 +801,13 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_key_t {
     const auto element_key = key_insert(element_id);
 
     // connect
-    connect_new_element(element_id);
+    connect_and_cache_element(element_id);
     return element_key;
 }
 
-auto EditableCircuit::swap_and_delete_element(element_id_t element_id) -> void {
+auto EditableCircuit::swap_and_delete_element(element_key_t element_key) -> void {
+    const auto element_id = to_element_id(element_key);
+
     if (schematic_.element(element_id).is_placeholder()) {
         throw_exception("cannot directly delete placeholders.");
     }
@@ -770,7 +816,7 @@ auto EditableCircuit::swap_and_delete_element(element_id_t element_id) -> void {
 
     const auto is_placeholder = [](Schematic::Output output) {
         return output.has_connected_element()
-               && output.connected_element().element_type() == ElementType::placeholder;
+               && output.connected_element().is_placeholder();
     };
     transform_if(schematic_.element(element_id).outputs(),
                  std::back_inserter(delete_queue),
@@ -834,6 +880,9 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
         cache_remove(element_id);
     }
 
+    // disconnect inputs
+    disconnect_inputs_and_add_placeholders(element_id);
+
     // delete in underlying
     auto last_id1 = schematic_.swap_and_delete_element(element_id);
     auto last_id2 = layout_.swap_and_delete_element(element_id);
@@ -850,11 +899,33 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
     }
 }
 
-auto EditableCircuit::add_missing_placeholders(element_id_t element_id) -> void {
+auto EditableCircuit::add_and_connect_placeholder(Schematic::Output output)
+    -> element_id_t {
+    const auto placeholder_id = add_placeholder_element();
+    const auto input = schematic_.element(placeholder_id).input(connection_id_t {0});
+    output.connect(input);
+
+    return placeholder_id;
+}
+
+auto EditableCircuit::disconnect_inputs_and_add_placeholders(element_id_t element_id)
+    -> void {
+    if (schematic_.element(element_id).is_placeholder()) {
+        return;
+    }
+
+    for (const auto input : schematic_.element(element_id).inputs()) {
+        if (input.has_connected_element()) {
+            add_and_connect_placeholder(input.connected_output());
+        }
+    }
+}
+
+auto EditableCircuit::add_missing_placeholders_for_outputs(element_id_t element_id)
+    -> void {
     for (const auto output : schematic_.element(element_id).outputs()) {
         if (!output.has_connected_element()) {
-            auto placeholder_id = add_placeholder_element();
-            output.connect(schematic_.element(placeholder_id).input(connection_id_t {0}));
+            add_and_connect_placeholder(output);
         }
     }
 }
@@ -905,7 +976,7 @@ auto connect_connector(connector_data_t connector,
     return unused_placeholder_id;
 }
 
-auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
+auto EditableCircuit::connect_and_cache_element(element_id_t& element_id) -> void {
     auto delete_queue = delete_queue_t {};
     auto add_if_valid = [&](std::optional<element_id_t> placeholder_id) {
         if (placeholder_id) {
@@ -940,7 +1011,7 @@ auto EditableCircuit::connect_new_element(element_id_t& element_id) -> void {
     });
 
     cache_insert(element_id);
-    add_missing_placeholders(element_id);
+    add_missing_placeholders_for_outputs(element_id);
 
     // this invalidates our element_id
     swap_and_delete_multiple_elements(delete_queue);

@@ -163,6 +163,8 @@ class ElementKeyStore {
     [[nodiscard]] auto to_element_keys(std::span<const element_id_t> element_ids) const
         -> std::vector<element_key_t>;
 
+    [[nodiscard]] auto element_key_exists(element_key_t) const -> bool;
+
     [[nodiscard]] auto size() const -> std::size_t;
 
    private:
@@ -191,8 +193,11 @@ class EditableCircuit {
 
     auto add_wire(LineTree&& line_tree) -> element_key_t;
 
+    auto change_insertion_mode(element_key_t element_key,
+                               InsertionMode new_insertion_mode) -> bool;
+
     // swaps the element with last one and deletes it
-    auto swap_and_delete_element(element_id_t element_id) -> void;
+    auto swap_and_delete_element(element_key_t element_key) -> void;
 
     [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t;
     [[nodiscard]] auto to_element_ids(std::span<const element_key_t> element_keys) const
@@ -234,10 +239,13 @@ class EditableCircuit {
 
    private:
     auto add_placeholder_element() -> element_id_t;
-    auto add_missing_placeholders(element_id_t element_id) -> void;
+    auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
+
+    auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
+    auto add_missing_placeholders_for_outputs(element_id_t element_id) -> void;
 
     // invalidates the element_id, as element output placeholders might be deleted
-    auto connect_new_element(element_id_t& element_id) -> void;
+    auto connect_and_cache_element(element_id_t& element_id) -> void;
 
     auto swap_and_delete_single_element(element_id_t element_id) -> void;
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)

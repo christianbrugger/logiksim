@@ -57,8 +57,7 @@ auto MouseInsertLogic::mouse_release(std::optional<point_t> position) -> void {
 
 auto MouseInsertLogic::remove_last_element() -> void {
     if (inserted_key_ != null_element_key) {
-        const auto element_id = editable_circuit_.to_element_id(inserted_key_);
-        editable_circuit_.swap_and_delete_element(element_id);
+        editable_circuit_.swap_and_delete_element(inserted_key_);
         inserted_key_ = null_element_key;
     }
 }
@@ -363,6 +362,9 @@ RendererWidget::RendererWidget(QWidget* parent)
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
 
+    // accept focus so keyboard signals gets fired
+    setFocusPolicy(Qt::StrongFocus);
+
     connect(&timer_, &QTimer::timeout, this, &RendererWidget::on_timeout);
 
     render_settings_.view_config.scale = 18;
@@ -439,13 +441,14 @@ auto RendererWidget::reset_circuit() -> void {
 
         editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {5, 3},
                                               InsertionMode::insert_or_discard);
-        editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {15, 6},
-                                              InsertionMode::insert_or_discard);
+        auto element1 = editable_circuit.add_standard_element(
+            ElementType::or_element, 2, point_t {15, 6},
+            InsertionMode::insert_or_discard);
         editable_circuit.add_wire(std::move(line_tree));
         editable_circuit.add_wire(
             LineTree({point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15, 4}}));
         // editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
-        editable_circuit.swap_and_delete_element(element_id_t {2});
+        editable_circuit.swap_and_delete_element(element1);
 
         auto added = editable_circuit.add_standard_element(
             ElementType::or_element, 9, point_t {20, 4},
@@ -611,6 +614,17 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     painter.drawImage(QPoint(0, 0), qt_image);
 
     fps_counter_.count_event();
+}
+
+auto RendererWidget::delete_selected_items() -> void {
+    const auto selected
+        = selection_manager_.calculate_selected_keys(editable_circuit_.value());
+
+    for (const auto element_key : selected) {
+        editable_circuit_.value().swap_and_delete_element(element_key);
+    }
+    update();
+    // editable_circuit_->schematic().validate(Schematic::validate_all);
 }
 
 auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
@@ -807,6 +821,15 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
             += standard_scroll_grid * event->angleDelta().x() / standard_delta;
         update();
     }
+}
+
+auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
+    if (event->key() == Qt::Key_Delete) {
+        delete_selected_items();
+        return;
+    }
+
+    QWidget::keyPressEvent(event);
 }
 
 }  // namespace logicsim

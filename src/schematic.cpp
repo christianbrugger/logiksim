@@ -382,6 +382,8 @@ auto Schematic::validate(ValidationSettings settings) const -> void {
         std::ranges::for_each(data.output_data, Schematic::validate_connection_data_);
     }
 
+    // TODO make sure outputs are not connected to inputs of the same element
+
     std::ranges::for_each(elements(), validate_element_connections_consistent);
 
     if (settings.require_all_outputs_connected) {

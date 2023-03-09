@@ -75,6 +75,7 @@ enum class SelectionFunction {
     substract,
 };
 
+// TODO make EditableCircuit part of constructor
 class SelectionManager {
    public:
     using selection_mask_t = boost::container::vector<bool>;
@@ -94,13 +95,12 @@ class SelectionManager {
     auto create_selection_mask(const EditableCircuit& editable_circuit) const
         -> selection_mask_t;
 
-    auto bake_selection(const EditableCircuit& editable_circuit) -> void;
-
-   private:
     auto calculate_selected_ids(const EditableCircuit& editable_circuit) const
         -> std::vector<element_id_t>;
     auto calculate_selected_keys(const EditableCircuit& editable_circuit) const
         -> std::vector<element_key_t>;
+
+    auto bake_selection(const EditableCircuit& editable_circuit) -> void;
 
    private:
     std::vector<element_key_t> initial_selected_ {};
@@ -204,6 +204,7 @@ class RendererWidget : public QWidget {
     auto reset_circuit() -> void;
     void init();
 
+    auto delete_selected_items() -> void;
     auto set_new_mouse_logic(QMouseEvent* event) -> void;
 
    protected:
@@ -215,6 +216,7 @@ class RendererWidget : public QWidget {
     auto mouseReleaseEvent(QMouseEvent* event) -> void override;
 
     auto wheelEvent(QWheelEvent* event) -> void override;
+    auto keyPressEvent(QKeyEvent* event) -> void override;
 
    private:
     qreal last_pixel_ratio_ {-1};
