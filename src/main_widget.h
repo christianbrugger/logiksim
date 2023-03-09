@@ -3,9 +3,6 @@
 
 #include <gsl/gsl>
 
-#include <QCheckBox>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QWidget>
 
 namespace logicsim {
@@ -16,7 +13,9 @@ class MainWidget : public QWidget {
     MainWidget(QWidget* parent = nullptr);
 
    private:
-    auto build_buttons() -> QWidget*;
+    auto build_render_buttons() -> QWidget*;
+    auto build_mode_buttons() -> QWidget*;
+
     void update_title();
 
    private:

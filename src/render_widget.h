@@ -3,13 +3,8 @@
 
 #include "circuit_index.h"
 #include "editable_circuit.h"
-#include "exceptions.h"
-#include "layout.h"
-#include "range.h"
 #include "renderer.h"
 #include "scene.h"
-#include "schematic.h"
-#include "simulation.h"
 #include "timer.h"
 
 #include <blend2d.h>
@@ -31,7 +26,11 @@ namespace logicsim {
 
 class MouseDragLogic {
    public:
-    MouseDragLogic(ViewConfig& config) noexcept;
+    struct Args {
+        ViewConfig& view_config;
+    };
+
+    MouseDragLogic(Args args) noexcept;
 
     auto mouse_press(QPointF position) -> void;
     auto mouse_move(QPointF position) -> void;
@@ -44,7 +43,12 @@ class MouseDragLogic {
 
 class MouseInsertLogic {
    public:
-    MouseInsertLogic(EditableCircuit& editable_circuit) noexcept;
+    struct Args {
+        EditableCircuit& editable_circuit;
+    };
+
+    MouseInsertLogic(Args args) noexcept;
+
     ~MouseInsertLogic();
 
     MouseInsertLogic(const MouseInsertLogic&) = delete;
@@ -66,6 +70,7 @@ class MouseInsertLogic {
 };
 
 enum class SelectionFunction {
+    toggle,
     add,
     substract,
 };
@@ -85,16 +90,52 @@ class SelectionManager {
     auto add(SelectionFunction function, rect_fine_t rect, point_fine_t anchor) -> void;
     auto update_last(rect_fine_t rect) -> void;
 
-    auto has_selection() const -> bool;
+    auto claculate_item_selected(element_id_t element_id,
+                                 const EditableCircuit& editable_circuit) const -> bool;
     auto create_selection_mask(const EditableCircuit& editable_circuit) const
         -> selection_mask_t;
+    auto has_selection() const -> bool;
     auto last_anchor_position() const -> std::optional<point_fine_t>;
 
    private:
     std::vector<operation_t> operations_;
 };
 
-class MouseSelectionLogic {
+class MouseMoveSelectionLogic {
+   public:
+    struct Args {
+        SelectionManager& manager;
+        EditableCircuit& editable_circuit;
+    };
+
+    MouseMoveSelectionLogic(Args args);
+
+    auto mouse_press(point_fine_t point) -> void;
+    auto mouse_move(point_fine_t point) -> void;
+    auto mouse_release(point_fine_t point) -> void;
+
+   private:
+    SelectionManager& manager_;
+    EditableCircuit& editable_circuit_;
+};
+
+class MouseSingleSelectionLogic {
+   public:
+    struct Args {
+        SelectionManager& manager;
+    };
+
+    MouseSingleSelectionLogic(Args args);
+
+    auto mouse_press(point_fine_t point, Qt::KeyboardModifiers modifiers) -> void;
+    auto mouse_move(point_fine_t point) -> void;
+    auto mouse_release(point_fine_t point) -> void;
+
+   private:
+    SelectionManager& manager_;
+};
+
+class MouseAreaSelectionLogic {
    public:
     struct Args {
         QWidget* parent;
@@ -102,7 +143,7 @@ class MouseSelectionLogic {
         const ViewConfig& view_config;
     };
 
-    MouseSelectionLogic(Args args);
+    MouseAreaSelectionLogic(Args args);
 
     auto mouse_press(QPointF position, Qt::KeyboardModifiers modifiers) -> void;
     auto mouse_move(QPointF position) -> void;
@@ -117,6 +158,14 @@ class MouseSelectionLogic {
 
     std::optional<point_fine_t> first_position_ {};
 };
+
+enum class InteractionState {
+    not_interactive,
+    select,
+    insert,
+};
+
+auto format(InteractionState type) -> std::string;
 
 class RendererWidget : public QWidget {
     // TODO use Q_OBJECT because of Q_SLOT
@@ -133,6 +182,8 @@ class RendererWidget : public QWidget {
     auto set_do_render_connection_cache(bool value) -> void;
     auto set_do_render_selection_cache(bool value) -> void;
 
+    auto set_interaction_state(InteractionState state) -> void;
+
     auto fps() const -> double;
     auto scale() const -> double;
 
@@ -141,6 +192,8 @@ class RendererWidget : public QWidget {
     Q_SLOT void on_timeout();
     auto reset_circuit() -> void;
     void init();
+
+    auto set_new_mouse_logic(QMouseEvent* event) -> void;
 
    protected:
     void resizeEvent(QResizeEvent* event) override;
@@ -173,7 +226,10 @@ class RendererWidget : public QWidget {
 
     // mouse logic
     SelectionManager selection_manager_ {};
-    std::optional<std::variant<MouseDragLogic, MouseInsertLogic, MouseSelectionLogic>>
+    InteractionState interaction_state_ {InteractionState::not_interactive};
+    std::optional<
+        std::variant<MouseDragLogic, MouseInsertLogic, MouseSingleSelectionLogic,
+                     MouseAreaSelectionLogic, MouseMoveSelectionLogic>>
         mouse_logic_ {};
 
     // states
@@ -187,5 +243,20 @@ class RendererWidget : public QWidget {
 };
 
 }  // namespace logicsim
+
+//
+// Formatters
+//
+
+template <>
+struct fmt::formatter<logicsim::InteractionState> {
+    static constexpr auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::InteractionState& obj, fmt::format_context& ctx) {
+        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+    }
+};
 
 #endif

@@ -194,6 +194,7 @@ class EditableCircuit {
     auto to_element_key(element_id_t element_id) const -> element_key_t;
 
     auto query_selection(rect_fine_t rect) const -> std::vector<element_id_t>;
+    auto query_selection(point_fine_t point) const -> std::optional<element_id_t>;
 
     // todo: extract_schematic, extract_layout
 

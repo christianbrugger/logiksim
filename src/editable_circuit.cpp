@@ -779,6 +779,20 @@ auto EditableCircuit::query_selection(rect_fine_t rect) const
     return selection_cache_.query_selection(rect);
 }
 
+auto EditableCircuit::query_selection(point_fine_t point) const
+    -> std::optional<element_id_t> {
+    auto selection = selection_cache_.query_selection(rect_fine_t {point, point});
+
+    if (selection.size() > 1) [[unlikely]] {
+        throw_exception("Two elements at the same position");
+    }
+
+    if (selection.size() == 1) {
+        return selection[0];
+    }
+    return std::nullopt;
+}
+
 auto EditableCircuit::swap_and_delete_multiple_elements(
     std::span<const element_id_t> element_ids) -> void {
     // sort descending, so we don't invalidate our ids

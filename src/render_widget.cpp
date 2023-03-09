@@ -1,12 +1,18 @@
 #include "render_widget.h"
 
+#include "exceptions.h"
+#include "layout.h"
+#include "range.h"
+#include "schematic.h"
+#include "simulation.h"
+
 namespace logicsim {
 
 //
 // Mouse Drag Logic
 //
 
-MouseDragLogic::MouseDragLogic(ViewConfig& config) noexcept : config_ {config} {}
+MouseDragLogic::MouseDragLogic(Args args) noexcept : config_ {args.view_config} {}
 
 auto MouseDragLogic::mouse_press(QPointF position) -> void {
     last_position = position;
@@ -29,8 +35,8 @@ auto MouseDragLogic::mouse_release(QPointF position) -> void {
 // Mouse Insert Logic
 //
 
-MouseInsertLogic::MouseInsertLogic(EditableCircuit& editable_circuit) noexcept
-    : editable_circuit_ {editable_circuit} {}
+MouseInsertLogic::MouseInsertLogic(Args args) noexcept
+    : editable_circuit_ {args.editable_circuit} {}
 
 MouseInsertLogic::~MouseInsertLogic() {
     remove_last_element();
@@ -106,6 +112,12 @@ auto apply_function(SelectionManager::selection_mask_t& selection,
         throw_exception("Element ids are out of selection bounds.");
     }
 
+    if (operation.function == SelectionFunction::toggle) {
+        for (auto&& element_id : elements) {
+            selection[element_id.value] ^= true;
+        }
+    }
+
     if (operation.function == SelectionFunction::add) {
         for (auto&& element_id : elements) {
             selection[element_id.value] = true;
@@ -122,6 +134,21 @@ auto apply_function(SelectionManager::selection_mask_t& selection,
 
 auto SelectionManager::has_selection() const -> bool {
     return !operations_.empty();
+}
+
+auto SelectionManager::claculate_item_selected(
+    element_id_t element_id, const EditableCircuit& editable_circuit) const -> bool {
+    if (element_id < element_id_t {0}) [[unlikely]] {
+        throw_exception("Invalid element id");
+    }
+
+    const auto selections = create_selection_mask(editable_circuit);
+
+    if (element_id.value >= std::ssize(selections)) {
+        return false;
+    }
+
+    return selections.at(element_id.value);
 }
 
 auto SelectionManager::create_selection_mask(
@@ -147,19 +174,63 @@ auto SelectionManager::last_anchor_position() const -> std::optional<point_fine_
 }
 
 //
-// Mouse Selection Logic
+// Mouse Move Selection Logic
 //
 
-MouseSelectionLogic::MouseSelectionLogic(Args args)
+MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
+    : manager_ {args.manager}, editable_circuit_ {args.editable_circuit} {}
+
+auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
+    const auto element_under_cursor = editable_circuit_.query_selection(point);
+
+    if (!element_under_cursor.has_value()) {
+        manager_.clear();
+        return;
+    }
+
+    const auto element_is_selected = manager_.claculate_item_selected(
+        element_under_cursor.value(), editable_circuit_);
+
+    if (!element_is_selected) {
+        manager_.clear();
+        manager_.add(SelectionFunction::add, rect_fine_t {point, point}, point);
+    }
+}
+
+auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {}
+
+auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {}
+
+//
+// Mouse Item Selection Logic
+//
+
+MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
+    : manager_ {args.manager} {}
+
+auto MouseSingleSelectionLogic::mouse_press(point_fine_t point,
+                                            Qt::KeyboardModifiers modifiers) -> void {
+    manager_.add(SelectionFunction::toggle, rect_fine_t {point, point}, point);
+}
+
+auto MouseSingleSelectionLogic::mouse_move(point_fine_t point) -> void {}
+
+auto MouseSingleSelectionLogic::mouse_release(point_fine_t point) -> void {}
+
+//
+// Mouse Area Selection Logic
+//
+
+MouseAreaSelectionLogic::MouseAreaSelectionLogic(Args args)
     : manager_ {args.manager},
       view_config_ {args.view_config},
       band_ {QRubberBand::Rectangle, args.parent} {}
 
-auto MouseSelectionLogic::mouse_press(QPointF position, Qt::KeyboardModifiers modifiers)
-    -> void {
+auto MouseAreaSelectionLogic::mouse_press(QPointF position,
+                                          Qt::KeyboardModifiers modifiers) -> void {
     const auto p0 = to_grid_fine(position, view_config_);
 
-    const auto function = [&, modifiers] {
+    const auto function = [modifiers] {
         if (modifiers == Qt::AltModifier) {
             return SelectionFunction::substract;
         }
@@ -174,15 +245,15 @@ auto MouseSelectionLogic::mouse_press(QPointF position, Qt::KeyboardModifiers mo
     first_position_ = p0;
 }
 
-auto MouseSelectionLogic::mouse_move(QPointF position) -> void {
+auto MouseAreaSelectionLogic::mouse_move(QPointF position) -> void {
     update_mouse_position(position);
 }
 
-auto MouseSelectionLogic::mouse_release(QPointF position) -> void {
+auto MouseAreaSelectionLogic::mouse_release(QPointF position) -> void {
     update_mouse_position(position);
 }
 
-auto MouseSelectionLogic::update_mouse_position(QPointF position) -> void {
+auto MouseAreaSelectionLogic::update_mouse_position(QPointF position) -> void {
     if (!first_position_) {
         return;
     }
@@ -213,6 +284,20 @@ auto MouseSelectionLogic::update_mouse_position(QPointF position) -> void {
 //
 // Render Widget
 //
+
+auto format(InteractionState state) -> std::string {
+    switch (state) {
+        using enum InteractionState;
+
+        case not_interactive:
+            return "not_interactive";
+        case select:
+            return "select";
+        case insert:
+            return "insert";
+    }
+    throw_exception("Don't know how to convert InteractionState to string.");
+}
 
 RendererWidget::RendererWidget(QWidget* parent)
     : QWidget(parent),
@@ -258,6 +343,17 @@ auto RendererWidget::set_do_render_connection_cache(bool value) -> void {
 
 auto RendererWidget::set_do_render_selection_cache(bool value) -> void {
     do_render_selection_cache_ = value;
+    update();
+}
+
+auto RendererWidget::set_interaction_state(InteractionState state) -> void {
+    if (interaction_state_ == state) {
+        return;
+    }
+    interaction_state_ = state;
+
+    selection_manager_.clear();
+    mouse_logic_.reset();
     update();
 }
 
@@ -461,34 +557,81 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     fps_counter_.count_event();
 }
 
+auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
+    if (event == nullptr) {
+        return;
+    }
+
+    if (event->button() == Qt::MiddleButton) {
+        mouse_logic_.emplace(MouseDragLogic::Args {
+            .view_config = render_settings_.view_config,
+        });
+        return;
+    }
+
+    if (interaction_state_ == InteractionState::insert
+        && event->button() == Qt::LeftButton) {
+        mouse_logic_.emplace(MouseInsertLogic::Args {
+            .editable_circuit = editable_circuit_.value(),
+        });
+        return;
+    }
+
+    if (interaction_state_ == InteractionState::select
+        && event->button() == Qt::LeftButton) {
+        const auto point = to_grid_fine(event->position(), render_settings_.view_config);
+        const bool has_element_under_cursor
+            = editable_circuit_.value().query_selection(point).has_value();
+
+        if (has_element_under_cursor) {
+            if (event->modifiers() == Qt::NoModifier) {
+                mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
+                    .manager = selection_manager_,
+                    .editable_circuit = editable_circuit_.value(),
+                });
+                return;
+            }
+
+            mouse_logic_.emplace(MouseSingleSelectionLogic::Args {
+                .manager = selection_manager_,
+            });
+            return;
+        }
+
+        mouse_logic_.emplace(MouseAreaSelectionLogic::Args {
+            .parent = this,
+            .manager = selection_manager_,
+            .view_config = render_settings_.view_config,
+        });
+        return;
+    }
+}
+
 auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
 
-    // set mouse logic
-    if (event->button() == Qt::MiddleButton) {
-        mouse_logic_.emplace(render_settings_.view_config);
-    } else if (event->button() == Qt::LeftButton && editable_circuit_.has_value()) {
-        mouse_logic_.emplace(*editable_circuit_);
-    } else if (event->button() == Qt::RightButton && editable_circuit_.has_value()) {
-        mouse_logic_.emplace(MouseSelectionLogic::Args {
-            .parent = this,
-            .manager = selection_manager_,
-            .view_config = render_settings_.view_config,
-        });
-    }
+    set_new_mouse_logic(event);
 
     // visit mouse logic
     if (mouse_logic_) {
         const auto grid_position
             = to_grid(event->position(), render_settings_.view_config);
+        const auto grid_fine_position
+            = to_grid_fine(event->position(), render_settings_.view_config);
 
         std::visit(overload {
                        [&](MouseDragLogic& arg) { arg.mouse_press(event->position()); },
                        [&](MouseInsertLogic& arg) { arg.mouse_press(grid_position); },
-                       [&](MouseSelectionLogic& arg) {
+                       [&](MouseAreaSelectionLogic& arg) {
                            arg.mouse_press(event->position(), event->modifiers());
+                       },
+                       [&](MouseSingleSelectionLogic& arg) {
+                           arg.mouse_press(grid_fine_position, event->modifiers());
+                       },
+                       [&](MouseMoveSelectionLogic& arg) {
+                           arg.mouse_press(grid_fine_position);
                        },
                    },
                    *mouse_logic_);
@@ -504,12 +647,18 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
     if (mouse_logic_) {
         const auto grid_position
             = to_grid(event->position(), render_settings_.view_config);
+        const auto grid_fine_position
+            = to_grid_fine(event->position(), render_settings_.view_config);
 
         std::visit(
             overload {
                 [&](MouseDragLogic& arg) { arg.mouse_move(event->position()); },
                 [&](MouseInsertLogic& arg) { arg.mouse_move(grid_position); },
-                [&](MouseSelectionLogic& arg) { arg.mouse_move(event->position()); },
+                [&](MouseAreaSelectionLogic& arg) { arg.mouse_move(event->position()); },
+                [&](MouseSingleSelectionLogic& arg) {
+                    arg.mouse_move(grid_fine_position);
+                },
+                [&](MouseMoveSelectionLogic& arg) { arg.mouse_move(grid_fine_position); },
             },
             *mouse_logic_);
 
@@ -525,14 +674,23 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
     if (mouse_logic_) {
         const auto grid_position
             = to_grid(event->position(), render_settings_.view_config);
+        const auto grid_fine_position
+            = to_grid_fine(event->position(), render_settings_.view_config);
 
-        std::visit(
-            overload {
-                [&](MouseDragLogic& arg) { arg.mouse_release(event->position()); },
-                [&](MouseInsertLogic& arg) { arg.mouse_release(grid_position); },
-                [&](MouseSelectionLogic& arg) { arg.mouse_release(event->position()); },
-            },
-            *mouse_logic_);
+        std::visit(overload {
+                       [&](MouseDragLogic& arg) { arg.mouse_release(event->position()); },
+                       [&](MouseInsertLogic& arg) { arg.mouse_release(grid_position); },
+                       [&](MouseAreaSelectionLogic& arg) {
+                           arg.mouse_release(event->position());
+                       },
+                       [&](MouseSingleSelectionLogic& arg) {
+                           arg.mouse_release(grid_fine_position);
+                       },
+                       [&](MouseMoveSelectionLogic& arg) {
+                           arg.mouse_release(grid_fine_position);
+                       },
+                   },
+                   *mouse_logic_);
 
         update();
     }
