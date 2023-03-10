@@ -18,6 +18,34 @@
 
 namespace logicsim {
 
+enum class DrawType {
+    fill,
+    stroke,
+    fill_and_stroke,
+};
+
+auto draw_standard_rect(BLContext& ctx, rect_fine_t rect, DrawType draw_type,
+                        const RenderSettings& settings) {
+    const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
+    const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
+
+    const auto w_ = x1 - x0;
+    const auto h_ = y1 - y0;
+
+    const auto w = w_ == 0 ? 1.0 : w_;
+    const auto h = h_ == 0 ? 1.0 : h_;
+
+    if (draw_type == DrawType::fill || draw_type == DrawType::fill_and_stroke) {
+        ctx.fillRect(x0, y0, w, h);
+    }
+
+    if (draw_type == DrawType::stroke || draw_type == DrawType::fill_and_stroke) {
+        const auto offset = stroke_offset(settings);
+        ctx.setStrokeWidth(stroke_width(settings));
+        ctx.strokeRect(x0 + offset, y0 + offset, w, h);
+    }
+}
+
 auto stroke_width(const RenderSettings& settings) -> int {
     constexpr static auto stepping = 12;
     const auto scale = settings.view_config.scale;
@@ -32,13 +60,17 @@ auto line_cross_width(const RenderSettings& settings) -> int {
     return std::max(1, static_cast<int>(scale / stepping));
 }
 
-auto stroke_offset(const RenderSettings& settings) -> double {
+auto stroke_offset(int stroke_width) -> double {
     // To allign our strokes to the pixel grid, we need to offset odd strokes
     // otherwise they are drawn between pixels and get blurry
-    if (stroke_width(settings) % 2 == 0) {
+    if (stroke_width % 2 == 0) {
         return 0;
     }
     return 0.5;
+}
+
+auto stroke_offset(const RenderSettings& settings) -> double {
+    return stroke_offset(stroke_width(settings));
 }
 
 class new_context {
@@ -398,60 +430,106 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
     const auto element_height = std::max(element.input_count(), element.output_count());
 
     const auto extra_space = 0.4;
-    const auto offset = stroke_offset(settings);
 
-    const auto [x0, y0] = to_context(
-        point_fine_t {position.x.value * 1.0, position.y.value - extra_space},
-        settings.view_config);
-
-    const auto [x1, y1]
-        = to_context(point_fine_t {position.x.value + 2.0,
-                                   position.y.value + extra_space + element_height - 1},
-                     settings.view_config);
-
-    const auto w_ = x1 - x0;
-    const auto h_ = y1 - y0;
-
-    const auto w = w_ == 0 ? 1.0 : w_;
-    const auto h = h_ == 0 ? 1.0 : h_;
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value * 1.0,
+            position.y.value - extra_space,
+        },
+        point_fine_t {
+            position.x.value + 2.0,
+            position.y.value + extra_space + element_height - 1,
+        },
+    };
 
     const auto alpha = get_alpha_value(layout.display_state(element.element_id()));
-    if (!selected) {
-        ctx.setFillStyle(BLRgba32(255, 255, 128, alpha));
-    } else {
+    if (selected) {
         ctx.setFillStyle(BLRgba32(128, 128, 64, alpha));
+    } else {
+        ctx.setFillStyle(BLRgba32(255, 255, 128, alpha));
     }
     ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
-    ctx.setStrokeWidth(stroke_width(settings));
-
-    ctx.fillRect(x0, y0, w, h);
-    ctx.strokeRect(x0 + offset, y0 + offset, w, h);
+    draw_standard_rect(ctx, rect, DrawType::fill_and_stroke, settings);
 
     draw_connectors(ctx, element, layout, simulation, settings);
+}
+
+auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
+                         const Layout& layout, bool selected,
+                         const RenderSettings& settings) -> void {
+    const auto type = element.element_type();
+
+    if (type == ElementType::placeholder || type == ElementType::wire) {
+        return;
+    }
+
+    const auto display_state = layout.display_state(element.element_id());
+    if (display_state == DisplayState::normal) {
+        return;
+    }
+
+    const auto data
+        = to_layout_calculation_data(element.schematic(), layout, element.element_id());
+    const auto rect = static_cast<rect_fine_t>(element_collision_rect(data));
+
+    const auto overdraw = 0.5;
+    const auto selection_rect = rect_fine_t {
+        point_fine_t {rect.p0.x - overdraw, rect.p0.y - overdraw},
+        point_fine_t {rect.p1.x + overdraw, rect.p1.y + overdraw},
+    };
+
+    if (display_state == DisplayState::new_colliding) {
+        ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
+    } else if (display_state == DisplayState::new_valid) {
+        ctx.setFillStyle(BLRgba32(0, 192, 0, 96));
+    } else if (display_state == DisplayState::new_temporary) {
+        ctx.setFillStyle(BLRgba32(0, 0, 255, 96));
+    } else {
+        throw_exception("unknown state");
+    }
+
+    draw_standard_rect(ctx, selection_rect, DrawType::fill, settings);
 }
 
 auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& layout,
                     const Simulation* simulation, const selection_mask_t& selection_mask,
                     const RenderSettings& settings) -> void {
+    const auto is_selected = [&](Schematic::ConstElement element) {
+        const auto id = element.element_id().value;
+        return id < std::ssize(selection_mask) ? selection_mask[id] : false;
+    };
+
+    // elements
     for (auto element : schematic.elements()) {
-        auto type = element.element_type();
+        const auto type = element.element_type();
 
-        bool selected = [&] {
-            const auto id = element.element_id().value;
-            return id < std::ssize(selection_mask) ? selection_mask[id] : false;
-        }();
+        if (type != ElementType::placeholder && type != ElementType::wire) {
+            bool selected = is_selected(element);
+            draw_standard_element(ctx, element, layout, simulation, selected, settings);
+        }
+    }
 
-        if (type == ElementType::wire) {
+    // wires
+    for (auto element : schematic.elements()) {
+        if (element.element_type() == ElementType::wire) {
             if (simulation == nullptr) {
                 draw_wire(ctx, element, layout, settings);
             } else {
                 draw_wire(ctx, element, layout, *simulation, settings);
             }
-        } else if (type != ElementType::placeholder) {
-            draw_standard_element(ctx, element, layout, simulation, selected, settings);
         }
     }
+
+    // shadow
+    for (auto element : schematic.elements()) {
+        bool selected = is_selected(element);
+        draw_element_shadow(ctx, element, layout, selected, settings);
+    }
 }
+
+//
+// Background
+//
 
 auto draw_grid_space_limit(BLContext& ctx, const RenderSettings& settings) {
     const auto p0
@@ -530,6 +608,10 @@ auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
     draw_background_patterns(ctx, settings);
     draw_grid_space_limit(ctx, settings);
 }
+
+//
+// Primitives
+//
 
 auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
                   double size, const RenderSettings& settings) -> void {

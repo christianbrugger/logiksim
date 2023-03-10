@@ -306,7 +306,7 @@ auto MouseMoveSelectionLogic::convert_to_temporary() -> void {
     const auto& selection = manager_.get_baked_selection();
 
     // store initial positions
-    if (!original_positions_.empty()) [[unlikey]] {
+    if (!original_positions_.empty()) [[unlikely]] {
         throw_exception("Original positions need to be empty when converting.");
     }
     original_positions_.reserve(selection.size());
@@ -749,6 +749,16 @@ auto RendererWidget::delete_selected_items() -> void {
 #endif
 }
 
+auto RendererWidget::select_all_items() -> void {
+    const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
+                                   point_fine_t {grid_t::max(), grid_t::max()}};
+
+    selection_manager_.clear();
+    selection_manager_.add(SelectionFunction::add, rect);
+
+    update();
+}
+
 auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
@@ -950,11 +960,13 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
 }
 
 auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
+    // Delete
     if (event->key() == Qt::Key_Delete) {
         delete_selected_items();
         return;
     }
 
+    // Escape
     if (event->key() == Qt::Key_Escape) {
         if (mouse_logic_) {
             mouse_logic_.reset();
@@ -962,6 +974,12 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
             selection_manager_.clear();
         }
         update();
+        return;
+    }
+
+    // CTRL + A
+    if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_A) {
+        select_all_items();
         return;
     }
 

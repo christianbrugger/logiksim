@@ -223,6 +223,7 @@ class RendererWidget : public QWidget {
     void init();
 
     auto delete_selected_items() -> void;
+    auto select_all_items() -> void;
     auto set_new_mouse_logic(QMouseEvent* event) -> void;
 
    protected:
