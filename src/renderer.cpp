@@ -499,13 +499,23 @@ auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& la
         return id < std::ssize(selection_mask) ? selection_mask[id] : false;
     };
 
-    // elements
+    // unselected elements
     for (auto element : schematic.elements()) {
-        const auto type = element.element_type();
+        if (!is_selected(element)) {
+            if (const auto type = element.element_type();
+                type != ElementType::placeholder && type != ElementType::wire) {
+                draw_standard_element(ctx, element, layout, simulation, false, settings);
+            }
+        }
+    }
 
-        if (type != ElementType::placeholder && type != ElementType::wire) {
-            bool selected = is_selected(element);
-            draw_standard_element(ctx, element, layout, simulation, selected, settings);
+    // selected elements
+    for (auto element : schematic.elements()) {
+        if (is_selected(element)) {
+            if (const auto type = element.element_type();
+                type != ElementType::placeholder && type != ElementType::wire) {
+                draw_standard_element(ctx, element, layout, simulation, true, settings);
+            }
         }
     }
 
