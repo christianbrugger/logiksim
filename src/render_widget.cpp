@@ -902,7 +902,7 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
-    if (event->buttons() && Qt::MiddleButton) {
+    if (event->buttons() & Qt::MiddleButton) {
         mouse_drag_logic_.mouse_move(event->position());
         update();
     }

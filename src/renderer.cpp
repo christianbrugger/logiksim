@@ -459,8 +459,10 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
         if (display_state == DisplayState::normal) {
             if (selected) {
                 // return BLRgba32(128, 128, 64, alpha);
-                return BLRgba32(192, 192, 192, alpha);
                 // return BLRgba32(255, 255, 128, alpha);
+
+                // return BLRgba32(192, 192, 192, alpha);
+                return BLRgba32(224, 224, 224, alpha);
             }
             return BLRgba32(255, 255, 128, alpha);
         }
@@ -495,13 +497,13 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
     const auto selection_rect = element_selection_rect(data);
 
     if (display_state == DisplayState::normal && selected) {
-        ctx.setFillStyle(BLRgba32(0, 0, 255, 96));
+        ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
     } else if (display_state == DisplayState::new_colliding) {
         ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
     } else if (display_state == DisplayState::new_valid) {
         ctx.setFillStyle(BLRgba32(0, 192, 0, 96));
     } else if (display_state == DisplayState::new_temporary) {
-        ctx.setFillStyle(BLRgba32(0, 0, 255, 96));
+        ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
     } else {
         throw_exception("unknown state");
     }
