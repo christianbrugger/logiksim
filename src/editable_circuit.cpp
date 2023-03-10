@@ -760,8 +760,8 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     }
 
     // insert into underlyings
-    const auto element_id
-        = layout_.add_logic_element(position, orientation, DisplayState::new_temporary);
+    const auto element_id = layout_.add_logic_element(point_t {0, 0}, orientation,
+                                                      DisplayState::new_temporary);
     {
         const auto element = schematic_.add_element({
             .element_type = type,
@@ -774,26 +774,45 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     }
     const auto element_key = key_insert(element_id);
 
-    if (change_insertion_mode(element_key, insertion_mode)) {
-        return element_key;
+    // this validates our position
+    if (!move_or_delete_element(element_key, position)) {
+        return null_element_key;
     }
-    return null_element_key;
+    if (!change_insertion_mode(element_key, insertion_mode)) {
+        return null_element_key;
+    }
+    return element_key;
+}
+
+auto EditableCircuit::is_position_valid(element_key_t element_key, int x, int y) const
+    -> bool {
+    if (!is_representable(x, y)) {
+        return false;
+    }
+    return is_position_valid(element_key, point_t {grid_t {x}, grid_t {y}});
+}
+
+auto EditableCircuit::is_position_valid(element_key_t element_key, point_t position) const
+    -> bool {
+    const auto element_id = to_element_id(element_key);
+
+    auto data = to_layout_calculation_data(schematic_, layout_, element_id);
+    data.position = position;
+
+    return is_representable_(data);
 }
 
 auto EditableCircuit::move_or_delete_element(element_key_t element_key, point_t position)
     -> bool {
-    // is representable
-    const auto element_id = to_element_id(element_key);
-    const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
-
-    if (!is_representable_(data)) {
+    if (!is_position_valid(element_key, position)) {
         delete_element(element_key);
         return false;
     }
 
     // only temporary items can be freely moved
-    if (to_insertion_mode(layout_.display_state(element_id)) != InsertionMode::temporary)
-        [[unlikely]] {
+    const auto element_id = to_element_id(element_key);
+    const auto display_state = layout_.display_state(element_id);
+    if (to_insertion_mode(display_state) != InsertionMode::temporary) [[unlikely]] {
         throw_exception("Only temporary items can be freely moded.");
     }
 

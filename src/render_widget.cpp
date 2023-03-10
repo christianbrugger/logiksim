@@ -56,10 +56,12 @@ auto MouseInsertLogic::mouse_release(std::optional<point_t> position) -> void {
 }
 
 auto MouseInsertLogic::remove_last_element() -> void {
-    if (inserted_key_ != null_element_key) {
-        editable_circuit_.delete_element(inserted_key_);
-        inserted_key_ = null_element_key;
+    if (inserted_key_ == null_element_key) {
+        return;
     }
+
+    editable_circuit_.delete_element(inserted_key_);
+    inserted_key_ = null_element_key;
 }
 
 auto MouseInsertLogic::remove_and_insert(std::optional<point_t> position,
@@ -240,16 +242,17 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
         return;
     }
 
+    // select element under mouse
     const auto element_under_cursor = editable_circuit_.query_selection(point);
     if (!element_under_cursor.has_value()) {
         manager_.clear();
         return;
     }
 
-    const auto element_is_selected = manager_.claculate_item_selected(
+    const auto element_selected = manager_.claculate_item_selected(
         element_under_cursor.value(), editable_circuit_);
 
-    if (!element_is_selected) {
+    if (!element_selected) {
         manager_.clear();
         manager_.add(SelectionFunction::add, rect_fine_t {point, point});
     }
@@ -274,25 +277,36 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
 
     convert_to(InsertionMode::temporary);
 
-    for (auto&& element_key : get_selection()) {
+    const auto calculate_new_position = [&, delta_x, delta_y](element_key_t element_key) {
         const auto element_id = editable_circuit_.to_element_id(element_key);
         const auto position = editable_circuit_.layout().position(element_id);
 
-        const auto x = position.x.value + delta_x;
-        const auto y = position.y.value + delta_y;
-
-        if (is_representable(x, y)) {
-            const auto new_position = point_t {grid_t {x}, grid_t {y}};
-            editable_circuit_.move_or_delete_element(element_key, new_position);
-        }
-    }
-
-    last_position_ = point_fine_t {
-        last_position_->x + delta_x,
-        last_position_->y + delta_y,
+        return std::pair<int, int> {
+            position.x.value + delta_x,
+            position.y.value + delta_y,
+        };
     };
 
-    // fmt::print("{} {}\n", delta_x, delta_y);
+    // check if all positions are valid
+    const auto all_valid
+        = std::ranges::all_of(get_selection(), [&](element_key_t element_key) {
+              const auto [x, y] = calculate_new_position(element_key);
+              return editable_circuit_.is_position_valid(element_key, x, y);
+          });
+
+    if (all_valid) {
+        // move all items
+        for (auto&& element_key : get_selection()) {
+            const auto [x, y] = calculate_new_position(element_key);
+            const auto point = point_t {grid_t {x}, grid_t {y}};
+            editable_circuit_.move_or_delete_element(element_key, point);
+        }
+
+        last_position_ = point_fine_t {
+            last_position_->x + delta_x,
+            last_position_->y + delta_y,
+        };
+    }
 }
 
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {

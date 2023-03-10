@@ -199,6 +199,8 @@ class EditableCircuit {
     auto change_insertion_mode(element_key_t element_key,
                                InsertionMode new_insertion_mode) -> bool;
     // moves or deletes element
+    auto is_position_valid(element_key_t element_key, int x, int y) const -> bool;
+    auto is_position_valid(element_key_t element_key, point_t position) const -> bool;
     auto move_or_delete_element(element_key_t element_key, point_t position) -> bool;
 
     // swaps the element with last one and deletes it
