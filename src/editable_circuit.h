@@ -168,6 +168,9 @@ class ElementKeyStore {
     [[nodiscard]] auto size() const -> std::size_t;
 
    private:
+    auto insert(element_id_t element_id, element_key_t element_key) -> void;
+
+   private:
     element_key_t next_key_ {0};
 
     map_to_id_t map_to_id_ {};
@@ -239,6 +242,8 @@ class EditableCircuit {
     [[nodiscard]] auto selection_rects() const {
         return selection_cache_.rects();
     }
+
+    auto validate() -> void;
 
    private:
     auto add_placeholder_element() -> element_id_t;

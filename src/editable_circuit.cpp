@@ -495,8 +495,14 @@ auto CollisionCache::to_state(collision_data_t data) -> CollisionState {
 
 auto ElementKeyStore::insert(element_id_t element_id) -> element_key_t {
     const auto element_key = next_key_;
-    next_key_.value += 1;
+    ++next_key_.value;
 
+    insert(element_id, element_key);
+
+    return element_key;
+}
+
+auto ElementKeyStore::insert(element_id_t element_id, element_key_t element_key) -> void {
     if (bool was_inserted = map_to_key_.insert({element_id, element_key}).second;
         !was_inserted) [[unlikely]] {
         throw_exception("Element id already exists in key store.");
@@ -506,8 +512,6 @@ auto ElementKeyStore::insert(element_id_t element_id) -> element_key_t {
         !was_inserted) [[unlikely]] {
         throw_exception("Element key already exists in key store.");
     }
-
-    return element_key;
 }
 
 auto ElementKeyStore::remove(element_id_t element_id) -> void {
@@ -528,29 +532,14 @@ auto ElementKeyStore::remove(element_id_t element_id) -> void {
 
 auto ElementKeyStore::update(element_id_t new_element_id, element_id_t old_element_id)
     -> void {
-    const auto it1 = map_to_key_.find(old_element_id);
-    if (it1 == map_to_key_.end()) [[unlikely]] {
-        throw_exception("Cannot find old_element_id in key store.");
-    }
-    const auto element_key = it1->second;
-
-    const auto it2 = map_to_id_.find(element_key);
-    if (it2 == map_to_id_.end()) [[unlikely]] {
-        throw_exception("Cannot find element_key in key store.");
-    }
-
-    // update
-    it2->second = new_element_id;
-    map_to_key_.erase(it1);
-    if (bool was_inserted = map_to_key_.insert({new_element_id, element_key}).second;
-        !was_inserted) [[unlikely]] {
-        throw_exception("New element id was still part of cache.");
-    }
+    const auto element_key = to_element_key(old_element_id);
+    remove(old_element_id);
+    insert(new_element_id, element_key);
 }
 
 auto ElementKeyStore::element_key_valid(element_key_t element_key) const -> bool {
     if (element_key < element_key_t {0} || element_key >= next_key_) [[unlikely]] {
-        throw_exception("Invalid element key.");
+        throw_exception("This key was never handed out.");
     }
 
     return map_to_id_.find(element_key) != map_to_id_.end();
@@ -650,6 +639,13 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding) -> Displa
             return DisplayState::new_temporary;
     };
     throw_exception("unknown insertion mode");
+}
+
+auto EditableCircuit::validate() -> void {
+    schematic_.validate(Schematic::validate_all);
+
+    // TODO validate layout
+    // TODO validate caches, etc.
 }
 
 auto EditableCircuit::add_placeholder_element() -> element_id_t {
@@ -937,17 +933,7 @@ auto EditableCircuit::delete_element(element_key_t element_key) -> void {
         throw_exception("cannot directly delete placeholders.");
     }
 
-    auto delete_queue = delete_queue_t {element_id};
-
-    const auto is_placeholder = [](Schematic::Output output) {
-        return output.has_connected_element()
-               && output.connected_element().is_placeholder();
-    };
-    transform_if(schematic_.element(element_id).outputs(),
-                 std::back_inserter(delete_queue),
-                 &Schematic::Output::connected_element_id, is_placeholder);
-
-    swap_and_delete_multiple_elements(delete_queue);
+    swap_and_delete_single_element(element_id);
 }
 
 auto EditableCircuit::to_element_id(element_key_t element_key) const -> element_id_t {

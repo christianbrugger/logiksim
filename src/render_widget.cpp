@@ -140,7 +140,7 @@ auto apply_function(SelectionManager::selection_mask_t& selection,
 
 auto SelectionManager::create_selection_mask(
     const EditableCircuit& editable_circuit) const -> selection_mask_t {
-    const auto t = Timer("Create selection mask", Timer::Unit::ms, 3);
+    // const auto t = Timer("Create selection mask", Timer::Unit::ms, 3);
 
     if (initial_selected_.empty() && operations_.empty()) {
         return {};
@@ -216,7 +216,9 @@ auto SelectionManager::calculate_selected_ids(
 auto SelectionManager::calculate_selected_keys(
     const EditableCircuit& editable_circuit) const -> std::vector<element_key_t> {
     const auto selected_ids = calculate_selected_ids(editable_circuit);
-    return editable_circuit.to_element_keys(selected_ids);
+    const auto selected_keys = editable_circuit.to_element_keys(selected_ids);
+
+    return selected_keys;
 }
 
 //
@@ -253,7 +255,7 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
 }
 
 auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
-    const auto t = Timer("Move selection", Timer::Unit::ms, 3);
+    // const auto t = Timer("Move selection", Timer::Unit::ms, 3);
 
     if (!last_position_) {
         return;
@@ -322,7 +324,8 @@ auto MouseMoveSelectionLogic::convert_to_temporary() -> void {
 }
 
 auto MouseMoveSelectionLogic::apply_current_positions() -> void {
-    const auto t = Timer("Apply new positions", Timer::Unit::ms, 3);
+    // const auto t = Timer("Apply new positions", Timer::Unit::ms, 3);
+
     if (!converted_) {
         return;
     }
@@ -742,7 +745,7 @@ auto RendererWidget::delete_selected_items() -> void {
     update();
 
 #ifndef NDEBUG
-    editable_circuit_->schematic().validate(Schematic::validate_all);
+    editable_circuit_->validate();
 #endif
 }
 
@@ -886,6 +889,10 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
 
     // delete mouse logic
     mouse_logic_.reset();
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
