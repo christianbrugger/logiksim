@@ -163,7 +163,7 @@ class ElementKeyStore {
     [[nodiscard]] auto to_element_keys(std::span<const element_id_t> element_ids) const
         -> std::vector<element_key_t>;
 
-    [[nodiscard]] auto element_key_exists(element_key_t) const -> bool;
+    [[nodiscard]] auto element_key_valid(element_key_t element_key) const -> bool;
 
     [[nodiscard]] auto size() const -> std::size_t;
 
@@ -196,7 +196,7 @@ class EditableCircuit {
     auto change_insertion_mode(element_key_t element_key,
                                InsertionMode new_insertion_mode) -> bool;
     // moves or deletes element
-    auto move_element(element_key_t element_key, point_t position) -> bool;
+    auto move_or_delete_element(element_key_t element_key, point_t position) -> bool;
 
     // swaps the element with last one and deletes it
     auto delete_element(element_key_t element_key) -> void;
@@ -207,6 +207,7 @@ class EditableCircuit {
     [[nodiscard]] auto to_element_key(element_id_t element_id) const -> element_key_t;
     [[nodiscard]] auto to_element_keys(std::span<const element_id_t> element_ids) const
         -> std::vector<element_key_t>;
+    [[nodiscard]] auto element_key_valid(element_key_t element_key) const -> bool;
 
     [[nodiscard]] auto query_selection(rect_fine_t rect) const
         -> std::vector<element_id_t>;

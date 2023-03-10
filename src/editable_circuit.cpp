@@ -548,7 +548,7 @@ auto ElementKeyStore::update(element_id_t new_element_id, element_id_t old_eleme
     }
 }
 
-auto ElementKeyStore::element_key_exists(element_key_t element_key) const -> bool {
+auto ElementKeyStore::element_key_valid(element_key_t element_key) const -> bool {
     if (element_key < element_key_t {0} || element_key >= next_key_) [[unlikely]] {
         throw_exception("Invalid element key.");
     }
@@ -784,7 +784,8 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     return null_element_key;
 }
 
-auto EditableCircuit::move_element(element_key_t element_key, point_t position) -> bool {
+auto EditableCircuit::move_or_delete_element(element_key_t element_key, point_t position)
+    -> bool {
     const auto element_id = to_element_id(element_key);
     const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
 
@@ -965,6 +966,10 @@ auto EditableCircuit::to_element_key(element_id_t element_id) const -> element_k
 auto EditableCircuit::to_element_keys(std::span<const element_id_t> element_ids) const
     -> std::vector<element_key_t> {
     return element_keys_.to_element_keys(element_ids);
+}
+
+auto EditableCircuit::element_key_valid(element_key_t element_key) const -> bool {
+    return element_keys_.element_key_valid(element_key);
 }
 
 auto EditableCircuit::query_selection(rect_fine_t rect) const

@@ -88,20 +88,20 @@ class SelectionManager {
     auto clear() -> void;
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last(rect_fine_t rect) -> void;
+    auto pop_last() -> void;
 
-    auto claculate_item_selected(element_id_t element_id,
-                                 const EditableCircuit& editable_circuit) const -> bool;
-    auto create_selection_mask(const EditableCircuit& editable_circuit) const
-        -> selection_mask_t;
+    [[nodiscard]] auto claculate_item_selected(
+        element_id_t element_id, const EditableCircuit& editable_circuit) const -> bool;
+    [[nodiscard]] auto create_selection_mask(
+        const EditableCircuit& editable_circuit) const -> selection_mask_t;
+    [[nodiscard]] auto calculate_selected_ids(
+        const EditableCircuit& editable_circuit) const -> std::vector<element_id_t>;
+    [[nodiscard]] auto calculate_selected_keys(
+        const EditableCircuit& editable_circuit) const -> std::vector<element_key_t>;
 
-    auto calculate_selected_ids(const EditableCircuit& editable_circuit) const
-        -> std::vector<element_id_t>;
-    auto calculate_selected_keys(const EditableCircuit& editable_circuit) const
-        -> std::vector<element_key_t>;
-
-    auto bake_selection(const EditableCircuit& editable_circuit)
-        -> const std::vector<element_key_t>&;
-    auto get_baked_selection() const -> const std::vector<element_key_t>&;
+    auto set_selection(std::vector<element_key_t>&& selected_keys) -> void;
+    auto bake_selection(const EditableCircuit& editable_circuit) -> void;
+    [[nodiscard]] auto get_baked_selection() const -> const std::vector<element_key_t>&;
 
    private:
     std::vector<element_key_t> initial_selected_ {};
@@ -129,13 +129,16 @@ class MouseMoveSelectionLogic {
 
    private:
     auto convert_to_temporary() -> void;
-    auto apply_new_positions() -> void;
+    auto apply_current_positions() -> void;
+    auto revert_original_positions() -> void;
 
     SelectionManager& manager_;
     EditableCircuit& editable_circuit_;
 
     std::optional<point_fine_t> last_position_ {};
     bool converted_ {false};
+    bool keep_positions_ {false};
+    std::vector<point_t> original_positions_;
 };
 
 class MouseSingleSelectionLogic {
@@ -163,6 +166,12 @@ class MouseAreaSelectionLogic {
     };
 
     MouseAreaSelectionLogic(Args args);
+    ~MouseAreaSelectionLogic();
+
+    MouseAreaSelectionLogic(const MouseAreaSelectionLogic&) = delete;
+    MouseAreaSelectionLogic(MouseAreaSelectionLogic&&) = delete;
+    auto operator=(const MouseAreaSelectionLogic&) -> MouseAreaSelectionLogic& = delete;
+    auto operator=(MouseAreaSelectionLogic&&) -> MouseAreaSelectionLogic& = delete;
 
     auto mouse_press(QPointF position, Qt::KeyboardModifiers modifiers) -> void;
     auto mouse_move(QPointF position) -> void;
@@ -176,6 +185,7 @@ class MouseAreaSelectionLogic {
     QRubberBand band_;
 
     std::optional<point_fine_t> first_position_ {};
+    bool keep_last_selection_ {false};
 };
 
 enum class InteractionState {

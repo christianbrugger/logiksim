@@ -94,6 +94,13 @@ auto SelectionManager::update_last(rect_fine_t rect) -> void {
     operations_.back().rect = rect;
 }
 
+auto SelectionManager::pop_last() -> void {
+    if (operations_.empty()) [[unlikely]] {
+        throw_exception("Cannot update with empty operations.");
+    }
+    operations_.pop_back();
+}
+
 namespace {
 auto apply_function(SelectionManager::selection_mask_t& selection,
                     const EditableCircuit& editable_circuit,
@@ -170,15 +177,16 @@ auto SelectionManager::claculate_item_selected(
     return selections.at(element_id.value);
 }
 
-auto SelectionManager::bake_selection(const EditableCircuit& editable_circuit)
-    -> const std::vector<element_key_t>& {
+auto SelectionManager::set_selection(std::vector<element_key_t>&& selected_keys) -> void {
     using std::swap;
 
-    auto selected_keys = calculate_selected_keys(editable_circuit);
-    swap(initial_selected_, selected_keys);
     operations_.clear();
+    swap(initial_selected_, selected_keys);
+}
 
-    return initial_selected_;
+auto SelectionManager::bake_selection(const EditableCircuit& editable_circuit) -> void {
+    auto selected_keys = calculate_selected_keys(editable_circuit);
+    set_selection(std::move(selected_keys));
 }
 
 auto SelectionManager::get_baked_selection() const -> const std::vector<element_key_t>& {
@@ -219,7 +227,10 @@ MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
     : manager_ {args.manager}, editable_circuit_ {args.editable_circuit} {}
 
 MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
-    apply_new_positions();
+    if (!keep_positions_) {
+        revert_original_positions();
+    }
+    apply_current_positions();
 }
 
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
@@ -266,7 +277,7 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
 
         if (is_representable(x, y)) {
             const auto new_position = point_t {grid_t {x}, grid_t {y}};
-            editable_circuit_.move_element(element_key, new_position);
+            editable_circuit_.move_or_delete_element(element_key, new_position);
         }
     }
 
@@ -278,7 +289,9 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
     // fmt::print("{} {}\n", delta_x, delta_y);
 }
 
-auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {}
+auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {
+    keep_positions_ = true;
+}
 
 auto MouseMoveSelectionLogic::convert_to_temporary() -> void {
     if (converted_) {
@@ -288,27 +301,65 @@ auto MouseMoveSelectionLogic::convert_to_temporary() -> void {
 
     // bake selection, so we can move the elements
     manager_.bake_selection(editable_circuit_);
+    const auto& selection = manager_.get_baked_selection();
+
+    // store initial positions
+    if (!original_positions_.empty()) [[unlikey]] {
+        throw_exception("Original positions need to be empty when converting.");
+    }
+    original_positions_.reserve(selection.size());
+    std::ranges::transform(selection, std::back_inserter(original_positions_),
+                           [&](element_key_t element_key) {
+                               const auto element_id
+                                   = editable_circuit_.to_element_id(element_key);
+                               return editable_circuit_.layout().position(element_id);
+                           });
 
     // mark all elements as temporary
-    for (auto&& element_key : manager_.get_baked_selection()) {
+    for (auto&& element_key : selection) {
         editable_circuit_.change_insertion_mode(element_key, InsertionMode::temporary);
     }
 }
 
-auto MouseMoveSelectionLogic::apply_new_positions() -> void {
+auto MouseMoveSelectionLogic::apply_current_positions() -> void {
+    const auto t = Timer("Apply new positions", Timer::Unit::ms, 3);
     if (!converted_) {
         return;
     }
     converted_ = false;
 
-    // insert again all elements
-    for (auto&& element_key : manager_.get_baked_selection()) {
-        const auto element = editable_circuit_.schematic().element(
-            editable_circuit_.to_element_id(element_key));
-        fmt::print("{}\n", element.format(true));
+    original_positions_.clear();
+    const auto& selection = manager_.get_baked_selection();
 
+    // insert again all elements
+    for (auto&& element_key : selection) {
         editable_circuit_.change_insertion_mode(element_key,
                                                 InsertionMode::insert_or_discard);
+    }
+
+    // remove invalid items from selection
+    auto new_selection = std::vector<element_key_t> {};
+    new_selection.reserve(selection.size());
+    std::ranges::copy_if(selection, std::back_inserter(new_selection),
+                         [&](element_key_t element_key) {
+                             return editable_circuit_.element_key_valid(element_key);
+                         });
+
+    manager_.set_selection(std::move(new_selection));
+}
+
+auto MouseMoveSelectionLogic::revert_original_positions() -> void {
+    if (!converted_) {
+        return;
+    }
+    const auto& selection = manager_.get_baked_selection();
+
+    if (selection.size() != original_positions_.size()) [[unlikely]] {
+        throw_exception("Number of original positions doesn't match selection.");
+    }
+
+    for (auto i : range(selection.size())) {
+        editable_circuit_.move_or_delete_element(selection[i], original_positions_[i]);
     }
 }
 
@@ -337,6 +388,12 @@ MouseAreaSelectionLogic::MouseAreaSelectionLogic(Args args)
       view_config_ {args.view_config},
       band_ {QRubberBand::Rectangle, args.parent} {}
 
+MouseAreaSelectionLogic::~MouseAreaSelectionLogic() {
+    if (!keep_last_selection_) {
+        manager_.pop_last();
+    }
+}
+
 auto MouseAreaSelectionLogic::mouse_press(QPointF position,
                                           Qt::KeyboardModifiers modifiers) -> void {
     const auto p0 = to_grid_fine(position, view_config_);
@@ -362,6 +419,7 @@ auto MouseAreaSelectionLogic::mouse_move(QPointF position) -> void {
 
 auto MouseAreaSelectionLogic::mouse_release(QPointF position) -> void {
     update_mouse_position(position);
+    keep_last_selection_ = true;
 }
 
 auto MouseAreaSelectionLogic::update_mouse_position(QPointF position) -> void {
@@ -673,8 +731,10 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 }
 
 auto RendererWidget::delete_selected_items() -> void {
+    mouse_logic_.reset();
     const auto selected
         = selection_manager_.calculate_selected_keys(editable_circuit_.value());
+    selection_manager_.clear();
 
     for (auto&& element_key : selected) {
         editable_circuit_.value().delete_element(element_key);
@@ -825,7 +885,7 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
     }
 
     // delete mouse logic
-    mouse_logic_ = std::nullopt;
+    mouse_logic_.reset();
 }
 
 auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
@@ -885,6 +945,16 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
 auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
     if (event->key() == Qt::Key_Delete) {
         delete_selected_items();
+        return;
+    }
+
+    if (event->key() == Qt::Key_Escape) {
+        if (mouse_logic_) {
+            mouse_logic_.reset();
+        } else {
+            selection_manager_.clear();
+        }
+        update();
         return;
     }
 
