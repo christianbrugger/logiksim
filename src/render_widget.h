@@ -132,6 +132,7 @@ class MouseMoveSelectionLogic {
 
    private:
     enum class State {
+        waiting_for_first_click,
         move_selection,
         waiting_for_confirmation,
         finished,
@@ -152,7 +153,7 @@ class MouseMoveSelectionLogic {
     std::vector<point_t> original_positions_;
     InsertionMode insertion_mode_ {InsertionMode::insert_or_discard};
 
-    State state_ {State::move_selection};
+    State state_ {State::waiting_for_first_click};
 };
 
 class MouseSingleSelectionLogic {

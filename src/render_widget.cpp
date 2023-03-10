@@ -238,26 +238,28 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
 }
 
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
-    if (state_ != State::move_selection) {
-        return;
+    if (state_ == State::waiting_for_first_click) {
+        // select element under mouse
+        const auto element_under_cursor = editable_circuit_.query_selection(point);
+        if (!element_under_cursor.has_value()) {
+            manager_.clear();
+            return;
+        }
+
+        const auto element_selected = manager_.claculate_item_selected(
+            element_under_cursor.value(), editable_circuit_);
+
+        if (!element_selected) {
+            manager_.clear();
+            manager_.add(SelectionFunction::add, rect_fine_t {point, point});
+        }
     }
 
-    // select element under mouse
-    const auto element_under_cursor = editable_circuit_.query_selection(point);
-    if (!element_under_cursor.has_value()) {
-        manager_.clear();
-        return;
+    if (state_ == State::waiting_for_first_click
+        || state_ == State::waiting_for_confirmation) {
+        state_ = State::move_selection;
+        last_position_ = point;
     }
-
-    const auto element_selected = manager_.claculate_item_selected(
-        element_under_cursor.value(), editable_circuit_);
-
-    if (!element_selected) {
-        manager_.clear();
-        manager_.add(SelectionFunction::add, rect_fine_t {point, point});
-    }
-
-    last_position_ = point;
 }
 
 auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
@@ -800,6 +802,10 @@ auto RendererWidget::delete_selected_items() -> void {
 }
 
 auto RendererWidget::select_all_items() -> void {
+    if (interaction_state_ != InteractionState::select) {
+        return;
+    }
+
     const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
                                    point_fine_t {grid_t::max(), grid_t::max()}};
 
@@ -957,13 +963,12 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
 
         if (finished) {
             mouse_logic_.reset();
+#ifndef NDEBUG
+            editable_circuit_->validate();
+#endif
         }
         update();
     }
-
-#ifndef NDEBUG
-//    editable_circuit_->validate();
-#endif
 }
 
 auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
@@ -1031,6 +1036,9 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
     if (event->key() == Qt::Key_Escape) {
         if (mouse_logic_) {
             mouse_logic_.reset();
+#ifndef NDEBUG
+            editable_circuit_->validate();
+#endif
         } else {
             selection_manager_.clear();
         }
@@ -1062,6 +1070,9 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
 
             if (finished) {
                 mouse_logic_.reset();
+#ifndef NDEBUG
+                editable_circuit_->validate();
+#endif
             }
 
             update();
