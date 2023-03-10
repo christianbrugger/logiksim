@@ -127,18 +127,31 @@ class MouseMoveSelectionLogic {
     auto mouse_move(point_fine_t point) -> void;
     auto mouse_release(point_fine_t point) -> void;
 
+    [[nodiscard]] auto finished() -> bool;
+    auto confirm() -> void;
+
    private:
-    auto convert_to_temporary() -> void;
-    auto apply_current_positions() -> void;
-    auto revert_original_positions() -> void;
+    enum class State {
+        move_selection,
+        waiting_for_confirmation,
+        finished,
+    };
+
+    auto bake_selection_and_positions() -> void;
+    auto remove_invalid_items_from_selection() -> void;
+    auto convert_to(InsertionMode mode) -> void;
+    auto restore_original_positions() -> void;
+    [[nodiscard]] auto calculate_any_element_colliding() -> bool;
 
     SelectionManager& manager_;
     EditableCircuit& editable_circuit_;
 
     std::optional<point_fine_t> last_position_ {};
-    bool converted_ {false};
-    bool keep_positions_ {false};
+    bool selection_and_positions_baked_ {false};
     std::vector<point_t> original_positions_;
+    InsertionMode insertion_mode_ {InsertionMode::insert_or_discard};
+
+    State state_ {State::move_selection};
 };
 
 class MouseSingleSelectionLogic {

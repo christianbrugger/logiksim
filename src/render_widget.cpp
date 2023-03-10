@@ -140,8 +140,6 @@ auto apply_function(SelectionManager::selection_mask_t& selection,
 
 auto SelectionManager::create_selection_mask(
     const EditableCircuit& editable_circuit) const -> selection_mask_t {
-    // const auto t = Timer("Create selection mask", Timer::Unit::ms, 3);
-
     if (initial_selected_.empty() && operations_.empty()) {
         return {};
     }
@@ -229,15 +227,20 @@ MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
     : manager_ {args.manager}, editable_circuit_ {args.editable_circuit} {}
 
 MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
-    if (!keep_positions_) {
-        revert_original_positions();
+    if (state_ != State::finished) {
+        convert_to(InsertionMode::temporary);
+        restore_original_positions();
     }
-    apply_current_positions();
+    convert_to(InsertionMode::insert_or_discard);
+    remove_invalid_items_from_selection();
 }
 
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
-    const auto element_under_cursor = editable_circuit_.query_selection(point);
+    if (state_ != State::move_selection) {
+        return;
+    }
 
+    const auto element_under_cursor = editable_circuit_.query_selection(point);
     if (!element_under_cursor.has_value()) {
         manager_.clear();
         return;
@@ -255,8 +258,9 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
 }
 
 auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
-    // const auto t = Timer("Move selection", Timer::Unit::ms, 3);
-
+    if (state_ != State::move_selection) {
+        return;
+    }
     if (!last_position_) {
         return;
     }
@@ -268,7 +272,8 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
         return;
     }
 
-    convert_to_temporary();
+    bake_selection_and_positions();
+    convert_to(InsertionMode::temporary);
 
     for (auto&& element_key : manager_.get_baked_selection()) {
         const auto element_id = editable_circuit_.to_element_id(element_key);
@@ -292,14 +297,37 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
 }
 
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {
-    keep_positions_ = true;
-}
-
-auto MouseMoveSelectionLogic::convert_to_temporary() -> void {
-    if (converted_) {
+    if (state_ != State::move_selection) {
         return;
     }
-    converted_ = true;
+
+    convert_to(InsertionMode::collisions);
+    const auto collisions = calculate_any_element_colliding();
+
+    if (collisions) {
+        state_ = State::waiting_for_confirmation;
+    } else {
+        state_ = State::finished;
+    }
+}
+
+auto MouseMoveSelectionLogic::confirm() -> void {
+    if (state_ != State::waiting_for_confirmation) {
+        return;
+    }
+
+    state_ = State::finished;
+}
+
+auto MouseMoveSelectionLogic::finished() -> bool {
+    return state_ == State::finished;
+}
+
+auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
+    if (selection_and_positions_baked_) {
+        return;
+    }
+    selection_and_positions_baked_ = true;
 
     // bake selection, so we can move the elements
     manager_.bake_selection(editable_circuit_);
@@ -307,7 +335,7 @@ auto MouseMoveSelectionLogic::convert_to_temporary() -> void {
 
     // store initial positions
     if (!original_positions_.empty()) [[unlikely]] {
-        throw_exception("Original positions need to be empty when converting.");
+        throw_exception("Original positions need to be empty.");
     }
     original_positions_.reserve(selection.size());
     std::ranges::transform(selection, std::back_inserter(original_positions_),
@@ -316,31 +344,11 @@ auto MouseMoveSelectionLogic::convert_to_temporary() -> void {
                                    = editable_circuit_.to_element_id(element_key);
                                return editable_circuit_.layout().position(element_id);
                            });
-
-    // mark all elements as temporary
-    for (auto&& element_key : selection) {
-        editable_circuit_.change_insertion_mode(element_key, InsertionMode::temporary);
-    }
 }
 
-auto MouseMoveSelectionLogic::apply_current_positions() -> void {
-    // const auto t = Timer("Apply new positions", Timer::Unit::ms, 3);
-
-    if (!converted_) {
-        return;
-    }
-    converted_ = false;
-
-    original_positions_.clear();
+auto MouseMoveSelectionLogic::remove_invalid_items_from_selection() -> void {
     const auto& selection = manager_.get_baked_selection();
 
-    // insert again all elements
-    for (auto&& element_key : selection) {
-        editable_circuit_.change_insertion_mode(element_key,
-                                                InsertionMode::insert_or_discard);
-    }
-
-    // remove invalid items from selection
     auto new_selection = std::vector<element_key_t> {};
     new_selection.reserve(selection.size());
     std::ranges::copy_if(selection, std::back_inserter(new_selection),
@@ -351,10 +359,18 @@ auto MouseMoveSelectionLogic::apply_current_positions() -> void {
     manager_.set_selection(std::move(new_selection));
 }
 
-auto MouseMoveSelectionLogic::revert_original_positions() -> void {
-    if (!converted_) {
+auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
+    if (insertion_mode_ == mode) {
         return;
     }
+    insertion_mode_ = mode;
+
+    for (auto&& element_key : manager_.get_baked_selection()) {
+        editable_circuit_.change_insertion_mode(element_key, mode);
+    }
+}
+
+auto MouseMoveSelectionLogic::restore_original_positions() -> void {
     const auto& selection = manager_.get_baked_selection();
 
     if (selection.size() != original_positions_.size()) [[unlikely]] {
@@ -362,8 +378,22 @@ auto MouseMoveSelectionLogic::revert_original_positions() -> void {
     }
 
     for (auto i : range(selection.size())) {
-        editable_circuit_.move_or_delete_element(selection[i], original_positions_[i]);
+        bool moved = editable_circuit_.move_or_delete_element(selection[i],
+                                                              original_positions_[i]);
+        if (!moved) [[unlikely]] {
+            throw_exception("item was not revertable to old positions.");
+        }
     }
+}
+
+auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
+    const auto element_colliding = [&](element_key_t element_key) {
+        const auto element_id = editable_circuit_.to_element_id(element_key);
+        return editable_circuit_.layout().display_state(element_id)
+               == DisplayState::new_colliding;
+    };
+
+    return std::ranges::any_of(manager_.get_baked_selection(), element_colliding);
 }
 
 //
@@ -814,7 +844,9 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
         return;
     }
 
-    set_new_mouse_logic(event);
+    if (!mouse_logic_.has_value()) {
+        set_new_mouse_logic(event);
+    }
 
     // visit mouse logic
     if (mouse_logic_) {
@@ -879,29 +911,38 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
         const auto grid_fine_position
             = to_grid_fine(event->position(), render_settings_.view_config);
 
-        std::visit(overload {
-                       [&](MouseDragLogic& arg) { arg.mouse_release(event->position()); },
-                       [&](MouseInsertLogic& arg) { arg.mouse_release(grid_position); },
-                       [&](MouseAreaSelectionLogic& arg) {
-                           arg.mouse_release(event->position());
-                       },
-                       [&](MouseSingleSelectionLogic& arg) {
-                           arg.mouse_release(grid_fine_position);
-                       },
-                       [&](MouseMoveSelectionLogic& arg) {
-                           arg.mouse_release(grid_fine_position);
-                       },
-                   },
-                   *mouse_logic_);
+        bool finished = std::visit(overload {
+                                       [&](MouseDragLogic& arg) {
+                                           arg.mouse_release(event->position());
+                                           return true;
+                                       },
+                                       [&](MouseInsertLogic& arg) {
+                                           arg.mouse_release(grid_position);
+                                           return true;
+                                       },
+                                       [&](MouseAreaSelectionLogic& arg) {
+                                           arg.mouse_release(event->position());
+                                           return true;
+                                       },
+                                       [&](MouseSingleSelectionLogic& arg) {
+                                           arg.mouse_release(grid_fine_position);
+                                           return true;
+                                       },
+                                       [&](MouseMoveSelectionLogic& arg) {
+                                           arg.mouse_release(grid_fine_position);
+                                           return arg.finished();
+                                       },
+                                   },
+                                   *mouse_logic_);
 
+        if (finished) {
+            mouse_logic_.reset();
+        }
         update();
     }
 
-    // delete mouse logic
-    mouse_logic_.reset();
-
 #ifndef NDEBUG
-    editable_circuit_->validate();
+//    editable_circuit_->validate();
 #endif
 }
 
@@ -981,6 +1022,31 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
     if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_A) {
         select_all_items();
         return;
+    }
+
+    // Enter
+    if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
+        if (mouse_logic_) {
+            bool finished
+                = std::visit(overload {
+                                 [&](MouseDragLogic& arg) { return false; },
+                                 [&](MouseInsertLogic& arg) { return false; },
+                                 [&](MouseAreaSelectionLogic& arg) { return false; },
+                                 [&](MouseSingleSelectionLogic& arg) { return false; },
+                                 [&](MouseMoveSelectionLogic& arg) {
+                                     arg.confirm();
+                                     return arg.finished();
+                                 },
+                             },
+                             *mouse_logic_);
+
+            if (finished) {
+                mouse_logic_.reset();
+            }
+
+            update();
+            return;
+        }
     }
 
     QWidget::keyPressEvent(event);

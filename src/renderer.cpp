@@ -442,12 +442,20 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
         },
     };
 
-    const auto alpha = get_alpha_value(layout.display_state(element.element_id()));
-    if (selected) {
-        ctx.setFillStyle(BLRgba32(128, 128, 64, alpha));
-    } else {
-        ctx.setFillStyle(BLRgba32(255, 255, 128, alpha));
-    }
+    const auto display_state = layout.display_state(element.element_id());
+    const auto alpha = get_alpha_value(display_state);
+
+    const auto fill_color = [&] {
+        if (display_state == DisplayState::normal) {
+            if (selected) {
+                return BLRgba32(128, 128, 64, alpha);
+            }
+            return BLRgba32(255, 255, 128, alpha);
+        }
+        return BLRgba32(192, 192, 192, alpha);
+    }();
+
+    ctx.setFillStyle(fill_color);
     ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
     draw_standard_rect(ctx, rect, DrawType::fill_and_stroke, settings);
 
@@ -509,16 +517,6 @@ auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& la
         }
     }
 
-    // selected elements
-    for (auto element : schematic.elements()) {
-        if (is_selected(element)) {
-            if (const auto type = element.element_type();
-                type != ElementType::placeholder && type != ElementType::wire) {
-                draw_standard_element(ctx, element, layout, simulation, true, settings);
-            }
-        }
-    }
-
     // wires
     for (auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
@@ -526,6 +524,16 @@ auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& la
                 draw_wire(ctx, element, layout, settings);
             } else {
                 draw_wire(ctx, element, layout, *simulation, settings);
+            }
+        }
+    }
+
+    // selected elements
+    for (auto element : schematic.elements()) {
+        if (is_selected(element)) {
+            if (const auto type = element.element_type();
+                type != ElementType::placeholder && type != ElementType::wire) {
+                draw_standard_element(ctx, element, layout, simulation, true, settings);
             }
         }
     }

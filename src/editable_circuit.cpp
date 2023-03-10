@@ -782,12 +782,19 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
 
 auto EditableCircuit::move_or_delete_element(element_key_t element_key, point_t position)
     -> bool {
+    // is representable
     const auto element_id = to_element_id(element_key);
     const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
 
     if (!is_representable_(data)) {
         delete_element(element_key);
         return false;
+    }
+
+    // only temporary items can be freely moved
+    if (to_insertion_mode(layout_.display_state(element_id)) != InsertionMode::temporary)
+        [[unlikely]] {
+        throw_exception("Only temporary items can be freely moded.");
     }
 
     layout_.set_position(element_id, position);
