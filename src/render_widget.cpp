@@ -557,8 +557,8 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
     }
     interaction_state_ = state;
 
-    selection_manager_.clear();
     mouse_logic_.reset();
+    selection_manager_.clear();
     update();
 }
 
