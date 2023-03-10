@@ -272,10 +272,9 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
         return;
     }
 
-    bake_selection_and_positions();
     convert_to(InsertionMode::temporary);
 
-    for (auto&& element_key : manager_.get_baked_selection()) {
+    for (auto&& element_key : get_selection()) {
         const auto element_id = editable_circuit_.to_element_id(element_key);
         const auto position = editable_circuit_.layout().position(element_id);
 
@@ -323,6 +322,13 @@ auto MouseMoveSelectionLogic::finished() -> bool {
     return state_ == State::finished;
 }
 
+auto MouseMoveSelectionLogic::get_selection() -> const std::vector<element_key_t>& {
+    if (!selection_and_positions_baked_) {
+        bake_selection_and_positions();
+    }
+    return manager_.get_baked_selection();
+}
+
 auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
     if (selection_and_positions_baked_) {
         return;
@@ -331,7 +337,7 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
 
     // bake selection, so we can move the elements
     manager_.bake_selection(editable_circuit_);
-    const auto& selection = manager_.get_baked_selection();
+    const auto& selection = get_selection();
 
     // store initial positions
     if (!original_positions_.empty()) [[unlikely]] {
@@ -347,7 +353,7 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
 }
 
 auto MouseMoveSelectionLogic::remove_invalid_items_from_selection() -> void {
-    const auto& selection = manager_.get_baked_selection();
+    const auto& selection = get_selection();
 
     auto new_selection = std::vector<element_key_t> {};
     new_selection.reserve(selection.size());
@@ -365,13 +371,13 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
     }
     insertion_mode_ = mode;
 
-    for (auto&& element_key : manager_.get_baked_selection()) {
+    for (auto&& element_key : get_selection()) {
         editable_circuit_.change_insertion_mode(element_key, mode);
     }
 }
 
 auto MouseMoveSelectionLogic::restore_original_positions() -> void {
-    const auto& selection = manager_.get_baked_selection();
+    const auto& selection = get_selection();
 
     if (selection.size() != original_positions_.size()) [[unlikely]] {
         throw_exception("Number of original positions doesn't match selection.");
@@ -393,7 +399,7 @@ auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
                == DisplayState::new_colliding;
     };
 
-    return std::ranges::any_of(manager_.get_baked_selection(), element_colliding);
+    return std::ranges::any_of(get_selection(), element_colliding);
 }
 
 //
