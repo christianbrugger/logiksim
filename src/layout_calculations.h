@@ -12,6 +12,7 @@
 
 namespace logicsim {
 [[nodiscard]] auto element_collision_rect(layout_calculation_data_t data) -> rect_t;
+[[nodiscard]] auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t;
 
 auto require_min(std::size_t value, std::size_t count) -> void;
 auto require_equal(std::size_t value, std::size_t count) -> void;

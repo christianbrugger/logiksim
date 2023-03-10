@@ -163,4 +163,15 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
     throw_exception("'Don't know to calculate collision rect.");
 }
 
+auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t {
+    constexpr static auto overdraw = 0.5;
+
+    const auto rect = element_collision_rect(data);
+
+    return rect_fine_t {
+        point_fine_t {rect.p0.x.value - overdraw, rect.p0.y.value - overdraw},
+        point_fine_t {rect.p1.x.value + overdraw, rect.p1.y.value + overdraw},
+    };
+}
+
 }  // namespace logicsim

@@ -28,6 +28,7 @@ struct RenderSettings {
 };
 
 auto stroke_width(const RenderSettings& settings) -> int;
+auto stroke_offset(int stroke_width) -> double;
 auto stroke_offset(const RenderSettings& settings) -> double;
 
 enum class PointShape {

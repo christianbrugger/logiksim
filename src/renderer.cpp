@@ -24,8 +24,13 @@ enum class DrawType {
     fill_and_stroke,
 };
 
-auto draw_standard_rect(BLContext& ctx, rect_fine_t rect, DrawType draw_type,
-                        const RenderSettings& settings) {
+struct RectAttributes {
+    DrawType draw_type {DrawType::fill_and_stroke};
+    int stroke_width {-1};
+};
+
+auto draw_standard_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
+                        const RenderSettings& settings) -> void {
     const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
     const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
 
@@ -35,13 +40,18 @@ auto draw_standard_rect(BLContext& ctx, rect_fine_t rect, DrawType draw_type,
     const auto w = w_ == 0 ? 1.0 : w_;
     const auto h = h_ == 0 ? 1.0 : h_;
 
-    if (draw_type == DrawType::fill || draw_type == DrawType::fill_and_stroke) {
+    if (attributes.draw_type == DrawType::fill
+        || attributes.draw_type == DrawType::fill_and_stroke) {
         ctx.fillRect(x0, y0, w, h);
     }
 
-    if (draw_type == DrawType::stroke || draw_type == DrawType::fill_and_stroke) {
-        const auto offset = stroke_offset(settings);
-        ctx.setStrokeWidth(stroke_width(settings));
+    if (attributes.draw_type == DrawType::stroke
+        || attributes.draw_type == DrawType::fill_and_stroke) {
+        const auto width = attributes.stroke_width == -1 ? stroke_width(settings)
+                                                         : attributes.stroke_width;
+        const auto offset = stroke_offset(width);
+
+        ctx.setStrokeWidth(width);
         ctx.strokeRect(x0 + offset, y0 + offset, w, h);
     }
 }
@@ -448,7 +458,9 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
     const auto fill_color = [&] {
         if (display_state == DisplayState::normal) {
             if (selected) {
-                return BLRgba32(128, 128, 64, alpha);
+                // return BLRgba32(128, 128, 64, alpha);
+                return BLRgba32(192, 192, 192, alpha);
+                // return BLRgba32(255, 255, 128, alpha);
             }
             return BLRgba32(255, 255, 128, alpha);
         }
@@ -457,7 +469,8 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
 
     ctx.setFillStyle(fill_color);
     ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
-    draw_standard_rect(ctx, rect, DrawType::fill_and_stroke, settings);
+
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 
     draw_connectors(ctx, element, layout, simulation, settings);
 }
@@ -472,21 +485,18 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
     }
 
     const auto display_state = layout.display_state(element.element_id());
-    if (display_state == DisplayState::normal) {
+
+    if (display_state == DisplayState::normal && !selected) {
         return;
     }
 
     const auto data
         = to_layout_calculation_data(element.schematic(), layout, element.element_id());
-    const auto rect = static_cast<rect_fine_t>(element_collision_rect(data));
+    const auto selection_rect = element_selection_rect(data);
 
-    const auto overdraw = 0.5;
-    const auto selection_rect = rect_fine_t {
-        point_fine_t {rect.p0.x - overdraw, rect.p0.y - overdraw},
-        point_fine_t {rect.p1.x + overdraw, rect.p1.y + overdraw},
-    };
-
-    if (display_state == DisplayState::new_colliding) {
+    if (display_state == DisplayState::normal && selected) {
+        ctx.setFillStyle(BLRgba32(0, 0, 255, 96));
+    } else if (display_state == DisplayState::new_colliding) {
         ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
     } else if (display_state == DisplayState::new_valid) {
         ctx.setFillStyle(BLRgba32(0, 192, 0, 96));
@@ -496,7 +506,7 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
         throw_exception("unknown state");
     }
 
-    draw_standard_rect(ctx, selection_rect, DrawType::fill, settings);
+    draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
 }
 
 auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& layout,

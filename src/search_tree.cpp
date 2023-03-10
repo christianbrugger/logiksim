@@ -20,8 +20,7 @@ namespace logicsim {
 namespace detail::search_tree {
 
 auto get_selection_box(layout_calculation_data_t data) -> tree_box_t {
-    const auto rect = static_cast<rect_fine_t>(element_collision_rect(data));
-
+    const auto rect = element_selection_rect(data);
     return to_box(rect);
 }
 
