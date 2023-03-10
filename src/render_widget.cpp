@@ -22,8 +22,8 @@ auto MouseDragLogic::mouse_move(QPointF position) -> void {
     if (last_position.has_value()) {
         config_.offset
             += to_grid_fine(position, config_) - to_grid_fine(*last_position, config_);
+        last_position = position;
     }
-    last_position = position;
 }
 
 auto MouseDragLogic::mouse_release(QPointF position) -> void {
@@ -526,7 +526,8 @@ auto format(InteractionState state) -> std::string {
 RendererWidget::RendererWidget(QWidget* parent)
     : QWidget(parent),
       last_pixel_ratio_ {devicePixelRatioF()},
-      animation_start_ {animation_clock::now()} {
+      animation_start_ {animation_clock::now()},
+      mouse_drag_logic_ {MouseDragLogic::Args {render_settings_.view_config}} {
     setAutoFillBackground(false);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
@@ -819,24 +820,18 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
-
-    if (event->button() == Qt::MiddleButton) {
-        mouse_logic_.emplace(MouseDragLogic::Args {
-            .view_config = render_settings_.view_config,
-        });
+    if (event->button() != Qt::LeftButton) {
         return;
     }
 
-    if (interaction_state_ == InteractionState::insert
-        && event->button() == Qt::LeftButton) {
+    if (interaction_state_ == InteractionState::insert) {
         mouse_logic_.emplace(MouseInsertLogic::Args {
             .editable_circuit = editable_circuit_.value(),
         });
         return;
     }
 
-    if (interaction_state_ == InteractionState::select
-        && event->button() == Qt::LeftButton) {
+    if (interaction_state_ == InteractionState::select) {
         const auto point = to_grid_fine(event->position(), render_settings_.view_config);
         const bool has_element_under_cursor
             = editable_circuit_.value().query_selection(point).has_value();
@@ -869,12 +864,17 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+    if (event->button() == Qt::MiddleButton) {
+        mouse_drag_logic_.mouse_press(event->position());
+        update();
+    }
+    if (event->button() != Qt::LeftButton) {
+        return;
+    }
 
     if (!mouse_logic_.has_value()) {
         set_new_mouse_logic(event);
     }
-
-    // visit mouse logic
     if (mouse_logic_) {
         const auto grid_position
             = to_grid(event->position(), render_settings_.view_config);
@@ -882,7 +882,6 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
             = to_grid_fine(event->position(), render_settings_.view_config);
 
         std::visit(overload {
-                       [&](MouseDragLogic& arg) { arg.mouse_press(event->position()); },
                        [&](MouseInsertLogic& arg) { arg.mouse_press(grid_position); },
                        [&](MouseAreaSelectionLogic& arg) {
                            arg.mouse_press(event->position(), event->modifiers());
@@ -903,6 +902,10 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+    if (event->buttons() && Qt::MiddleButton) {
+        mouse_drag_logic_.mouse_move(event->position());
+        update();
+    }
 
     if (mouse_logic_) {
         const auto grid_position
@@ -912,7 +915,6 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
 
         std::visit(
             overload {
-                [&](MouseDragLogic& arg) { arg.mouse_move(event->position()); },
                 [&](MouseInsertLogic& arg) { arg.mouse_move(grid_position); },
                 [&](MouseAreaSelectionLogic& arg) { arg.mouse_move(event->position()); },
                 [&](MouseSingleSelectionLogic& arg) {
@@ -930,6 +932,13 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+    if (event->button() == Qt::MiddleButton) {
+        mouse_drag_logic_.mouse_release(event->position());
+        update();
+    }
+    if (event->button() != Qt::LeftButton) {
+        return;
+    }
 
     if (mouse_logic_) {
         const auto grid_position
@@ -938,10 +947,6 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
             = to_grid_fine(event->position(), render_settings_.view_config);
 
         bool finished = std::visit(overload {
-                                       [&](MouseDragLogic& arg) {
-                                           arg.mouse_release(event->position());
-                                           return true;
-                                       },
                                        [&](MouseInsertLogic& arg) {
                                            arg.mouse_release(grid_position);
                                            return true;
@@ -1004,8 +1009,9 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
     else if (event->modifiers() == Qt::NoModifier) {
         if (event->hasPixelDelta()) {
             // TODO test this
-            render_settings_.view_config.offset.x += event->pixelDelta().x();
-            render_settings_.view_config.offset.y += event->pixelDelta().y();
+            const auto scale = render_settings_.view_config.scale;
+            render_settings_.view_config.offset.x += event->pixelDelta().x() / scale;
+            render_settings_.view_config.offset.y += event->pixelDelta().y() / scale;
         } else {
             render_settings_.view_config.offset.x
                 += standard_scroll_grid * event->angleDelta().x() / standard_delta;
@@ -1057,7 +1063,6 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
         if (mouse_logic_) {
             bool finished
                 = std::visit(overload {
-                                 [&](MouseDragLogic& arg) { return false; },
                                  [&](MouseInsertLogic& arg) { return false; },
                                  [&](MouseAreaSelectionLogic& arg) { return false; },
                                  [&](MouseSingleSelectionLogic& arg) { return false; },

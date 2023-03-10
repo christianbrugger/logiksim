@@ -274,9 +274,9 @@ class RendererWidget : public QWidget {
     // mouse logic
     SelectionManager selection_manager_ {};
     InteractionState interaction_state_ {InteractionState::not_interactive};
-    std::optional<
-        std::variant<MouseDragLogic, MouseInsertLogic, MouseSingleSelectionLogic,
-                     MouseAreaSelectionLogic, MouseMoveSelectionLogic>>
+    MouseDragLogic mouse_drag_logic_;
+    std::optional<std::variant<MouseInsertLogic, MouseSingleSelectionLogic,
+                               MouseAreaSelectionLogic, MouseMoveSelectionLogic>>
         mouse_logic_ {};
 
     // states
