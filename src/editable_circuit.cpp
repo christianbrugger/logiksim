@@ -789,15 +789,14 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
     if (insertion_mode != InsertionMode::insert_or_discard) {
         throw_exception("Not implemented.");
     }
-    fmt::print("{} ", line);
 
-    auto tree = SegmentTree {SegmentInfo {
+    auto segment_tree = SegmentTree {SegmentInfo {
         .line = line,
         .p0_type = SegmentPointType::cross_point,
     }};
 
     // insert into underlyings
-    const auto element_id = layout_.add_line_segment(std::move(tree));
+    const auto element_id = layout_.add_line_segment(std::move(segment_tree));
     {
         const auto element = schematic_.add_element({
             .element_type = ElementType::wire,
@@ -826,7 +825,6 @@ auto EditableCircuit::add_line_segment(point_t p0, point_t p1, LineSegmentType t
     if (p0.y != p1.y) {
         add_line_segment(line_t {pm, p1}, insertion_mode);
     }
-    fmt::print("\n");
     // TODO what with p0 == p1
 
     return null_element_key;

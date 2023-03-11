@@ -55,6 +55,7 @@ auto SegmentTree::add_segment(SegmentInfo segment) -> void {
          }) {
         switch (type) {
             using enum SegmentPointType;
+
             case normal: {
                 break;
             }
@@ -88,9 +89,11 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> void {
         input_position_ = tree.input_position_;
     }
 
+    segments_.insert(segments_.end(), tree.segments_.begin(), tree.segments_.end());
+    cross_points_.insert(cross_points_.end(), tree.cross_points_.begin(),
+                         tree.cross_points_.end());
     output_positions_.insert(output_positions_.end(), tree.output_positions_.begin(),
                              tree.output_positions_.end());
-    segments_.insert(segments_.end(), tree.segments_.begin(), tree.segments_.end());
 }
 
 auto SegmentTree::empty() const noexcept -> bool {
@@ -138,8 +141,8 @@ auto SegmentTree::output_position(std::size_t index) const -> point_t {
 
 auto SegmentTree::format() const -> std::string {
     const auto input_format = !has_input_ ? "" : fmt::format(", {}", input_position_);
-    return fmt::format("SegmentTree({}, {}{})", segments_, input_format,
-                       output_positions_);
+    return fmt::format("SegmentTree({}, {}, {}{})", segments_, cross_points_,
+                       output_positions_, input_format);
 }
 
 auto SegmentTree::verify() const -> void {
