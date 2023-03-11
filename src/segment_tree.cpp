@@ -43,6 +43,13 @@ auto SegmentTree::add_segment(SegmentInfo segment) -> void {
     if (segment.p1_is_output) {
         output_positions_.push_back(segment.line.p1);
     }
+    if (segment.p0_is_cross_point) {
+        cross_points_.push_back(segment.line.p0);
+    }
+    if (segment.p1_is_cross_point) {
+        cross_points_.push_back(segment.line.p1);
+    }
+
     segments_.push_back(segment.line);
 }
 

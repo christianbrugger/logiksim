@@ -14,8 +14,12 @@ namespace logicsim {
 
 struct SegmentInfo {
     line_t line {};
+
     bool p0_is_input {false};
     bool p1_is_output {false};
+
+    bool p0_is_cross_point {false};
+    bool p1_is_cross_point {false};
 };
 
 class SegmentTree {
