@@ -337,7 +337,7 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
 
 auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
                const Simulation& simulation, const RenderSettings& settings) -> void {
-    const auto lc_width = line_cross_width(settings);
+    const auto cross_width = line_cross_width(settings);
 
     // TODO move to some class
     const auto to_time = [time = simulation.time()](LineTree::length_t length_) {
@@ -355,8 +355,22 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
 
         if (segment.has_connector_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
-            draw_connector_impl(ctx, segment.line.p0, wire_enabled, lc_width, settings);
+            draw_connector_impl(ctx, segment.line.p0, wire_enabled, cross_width,
+                                settings);
         }
+    }
+}
+
+auto draw_element_tree(BLContext& ctx, Schematic::ConstElement element,
+                       const Layout& layout, const RenderSettings& settings) {
+    const auto& segment_tree = layout.segment_tree(element);
+    const auto cross_width = line_cross_width(settings);
+
+    for (auto&& line : segment_tree.segments()) {
+        draw_line_segment(ctx, line.p1, line.p0, false, settings);
+    }
+    for (auto&& point : segment_tree.cross_points()) {
+        draw_connector_impl(ctx, point, false, cross_width, settings);
     }
 }
 
@@ -534,6 +548,7 @@ auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& la
         if (element.element_type() == ElementType::wire) {
             if (simulation == nullptr) {
                 draw_wire(ctx, element, layout, settings);
+                draw_element_tree(ctx, element, layout, settings);
             } else {
                 draw_wire(ctx, element, layout, *simulation, settings);
             }

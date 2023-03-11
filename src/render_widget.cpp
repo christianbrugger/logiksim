@@ -35,27 +35,27 @@ auto MouseDragLogic::mouse_release(QPointF position) -> void {
 // Mouse Insert Logic
 //
 
-MouseInsertLogic::MouseInsertLogic(Args args) noexcept
+MouseElementInsertLogic::MouseElementInsertLogic(Args args) noexcept
     : editable_circuit_ {args.editable_circuit} {}
 
-MouseInsertLogic::~MouseInsertLogic() {
+MouseElementInsertLogic::~MouseElementInsertLogic() {
     remove_last_element();
 }
 
-auto MouseInsertLogic::mouse_press(std::optional<point_t> position) -> void {
+auto MouseElementInsertLogic::mouse_press(std::optional<point_t> position) -> void {
     remove_and_insert(position, InsertionMode::collisions);
 }
 
-auto MouseInsertLogic::mouse_move(std::optional<point_t> position) -> void {
+auto MouseElementInsertLogic::mouse_move(std::optional<point_t> position) -> void {
     remove_and_insert(position, InsertionMode::collisions);
 }
 
-auto MouseInsertLogic::mouse_release(std::optional<point_t> position) -> void {
+auto MouseElementInsertLogic::mouse_release(std::optional<point_t> position) -> void {
     remove_and_insert(position, InsertionMode::insert_or_discard);
     inserted_key_ = null_element_key;
 }
 
-auto MouseInsertLogic::remove_last_element() -> void {
+auto MouseElementInsertLogic::remove_last_element() -> void {
     if (inserted_key_ == null_element_key) {
         return;
     }
@@ -64,8 +64,8 @@ auto MouseInsertLogic::remove_last_element() -> void {
     inserted_key_ = null_element_key;
 }
 
-auto MouseInsertLogic::remove_and_insert(std::optional<point_t> position,
-                                         InsertionMode mode) -> void {
+auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
+                                                InsertionMode mode) -> void {
     remove_last_element();
 
     if (position.has_value()) {
@@ -75,6 +75,34 @@ auto MouseInsertLogic::remove_and_insert(std::optional<point_t> position,
                                                                *position, mode);
     }
 }
+
+//
+// Mouse Line Insert Logic
+//
+
+MouseLineInsertLogic::MouseLineInsertLogic(Args args) noexcept
+    : editable_circuit_ {args.editable_circuit} {}
+
+MouseLineInsertLogic::~MouseLineInsertLogic() {}
+
+auto MouseLineInsertLogic::mouse_press(std::optional<point_t> position) -> void {
+    first_position_ = position;
+}
+
+auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {}
+
+auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> void {
+    if (position && first_position_) {
+        editable_circuit_.add_line_segment(*first_position_, *position,
+                                           LineSegmentType::horizontal_first,
+                                           InsertionMode::insert_or_discard);
+    }
+}
+
+// auto MouseLineInsertLogic::remove_last_element() -> void {}
+
+// auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
+//                                              InsertionMode mode) -> void {}
 
 //
 // Selection Manager
@@ -517,8 +545,10 @@ auto format(InteractionState state) -> std::string {
             return "not_interactive";
         case select:
             return "select";
-        case insert:
-            return "insert";
+        case element_insert:
+            return "element_insert";
+        case line_insert:
+            return "line_insert";
     }
     throw_exception("Don't know how to convert InteractionState to string.");
 }
@@ -824,8 +854,15 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
         return;
     }
 
-    if (interaction_state_ == InteractionState::insert) {
-        mouse_logic_.emplace(MouseInsertLogic::Args {
+    if (interaction_state_ == InteractionState::element_insert) {
+        mouse_logic_.emplace(MouseElementInsertLogic::Args {
+            .editable_circuit = editable_circuit_.value(),
+        });
+        return;
+    }
+
+    if (interaction_state_ == InteractionState::line_insert) {
+        mouse_logic_.emplace(MouseLineInsertLogic::Args {
             .editable_circuit = editable_circuit_.value(),
         });
         return;
@@ -881,19 +918,21 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
         const auto grid_fine_position
             = to_grid_fine(event->position(), render_settings_.view_config);
 
-        std::visit(overload {
-                       [&](MouseInsertLogic& arg) { arg.mouse_press(grid_position); },
-                       [&](MouseAreaSelectionLogic& arg) {
-                           arg.mouse_press(event->position(), event->modifiers());
-                       },
-                       [&](MouseSingleSelectionLogic& arg) {
-                           arg.mouse_press(grid_fine_position, event->modifiers());
-                       },
-                       [&](MouseMoveSelectionLogic& arg) {
-                           arg.mouse_press(grid_fine_position);
-                       },
-                   },
-                   *mouse_logic_);
+        std::visit(
+            overload {
+                [&](MouseElementInsertLogic& arg) { arg.mouse_press(grid_position); },
+                [&](MouseLineInsertLogic& arg) { arg.mouse_press(grid_position); },
+                [&](MouseAreaSelectionLogic& arg) {
+                    arg.mouse_press(event->position(), event->modifiers());
+                },
+                [&](MouseSingleSelectionLogic& arg) {
+                    arg.mouse_press(grid_fine_position, event->modifiers());
+                },
+                [&](MouseMoveSelectionLogic& arg) {
+                    arg.mouse_press(grid_fine_position);
+                },
+            },
+            *mouse_logic_);
         update();
     }
 }
@@ -915,7 +954,8 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
 
         std::visit(
             overload {
-                [&](MouseInsertLogic& arg) { arg.mouse_move(grid_position); },
+                [&](MouseElementInsertLogic& arg) { arg.mouse_move(grid_position); },
+                [&](MouseLineInsertLogic& arg) { arg.mouse_move(grid_position); },
                 [&](MouseAreaSelectionLogic& arg) { arg.mouse_move(event->position()); },
                 [&](MouseSingleSelectionLogic& arg) {
                     arg.mouse_move(grid_fine_position);
@@ -947,7 +987,11 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
             = to_grid_fine(event->position(), render_settings_.view_config);
 
         bool finished = std::visit(overload {
-                                       [&](MouseInsertLogic& arg) {
+                                       [&](MouseElementInsertLogic& arg) {
+                                           arg.mouse_release(grid_position);
+                                           return true;
+                                       },
+                                       [&](MouseLineInsertLogic& arg) {
                                            arg.mouse_release(grid_position);
                                            return true;
                                        },
@@ -1063,7 +1107,8 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
         if (mouse_logic_) {
             bool finished
                 = std::visit(overload {
-                                 [&](MouseInsertLogic& arg) { return false; },
+                                 [&](MouseElementInsertLogic& arg) { return false; },
+                                 [&](MouseLineInsertLogic& arg) { return false; },
                                  [&](MouseAreaSelectionLogic& arg) { return false; },
                                  [&](MouseSingleSelectionLogic& arg) { return false; },
                                  [&](MouseMoveSelectionLogic& arg) {

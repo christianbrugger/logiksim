@@ -4,6 +4,34 @@
 
 namespace logicsim {
 
+SegmentTree::SegmentTree(SegmentInfo segment) {
+    add_segment(segment);
+}
+
+auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
+    using std::swap;
+
+    segments_.swap(other.segments_);
+    cross_points_.swap(other.cross_points_);
+    output_positions_.swap(other.output_positions_);
+
+    swap(input_position_, other.input_position_);
+    swap(has_input_, other.has_input_);
+}
+
+auto swap(SegmentTree& a, SegmentTree& b) noexcept -> void {
+    a.swap(b);
+}
+
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::SegmentTree& a, logicsim::SegmentTree& b) noexcept -> void {
+    a.swap(b);
+}
+
+namespace logicsim {
+
 auto SegmentTree::add_segment(SegmentInfo segment) -> void {
     if (segment.p0_is_input) {
         if (has_input_) [[unlikely]] {
@@ -44,6 +72,10 @@ auto SegmentTree::segment(std::size_t index) const -> line_t {
     return segments_.at(index);
 }
 
+auto SegmentTree::segments() const -> std::span<const line_t> {
+    return segments_;
+}
+
 auto SegmentTree::has_input() const noexcept -> bool {
     return has_input_;
 }
@@ -61,6 +93,10 @@ auto SegmentTree::input_position() const -> point_t {
 //     }
 //     return input_orientation_;
 // }
+
+auto SegmentTree::cross_points() const -> std::span<const point_t> {
+    return cross_points_;
+}
 
 auto SegmentTree::output_count() const noexcept -> std::size_t {
     return output_positions_.size();

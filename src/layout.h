@@ -2,6 +2,7 @@
 #define LOGIKSIM_LAYOUT_H
 
 #include "line_tree.h"
+#include "segment_tree.h"
 #include "vocabulary.h"
 
 #include <fmt/core.h>
@@ -39,6 +40,8 @@ class Layout {
     auto add_default_element() -> element_id_t;
 
     auto add_placeholder() -> element_id_t;
+    // TODO rework these methods
+    auto add_line_segment(SegmentTree &&segment_tree) -> element_id_t;
     auto add_wire(LineTree &&line_tree) -> element_id_t;
     auto add_logic_element(point_t position,
                            orientation_t orientation = orientation_t::undirected,
@@ -53,6 +56,7 @@ class Layout {
     auto set_display_state(element_id_t element_id, DisplayState display_state) -> void;
 
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
+    [[nodiscard]] auto segment_tree(element_id_t element_id) const -> const SegmentTree &;
     [[nodiscard]] auto line_tree(element_id_t element_id) const -> const LineTree &;
     [[nodiscard]] auto position(element_id_t element_id) const -> point_t;
     [[nodiscard]] auto orientation(element_id_t element_id) const -> orientation_t;
@@ -63,6 +67,7 @@ class Layout {
     auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
     auto delete_last_element() -> void;
 
+    std::vector<SegmentTree> segment_trees_ {};
     std::vector<LineTree> line_trees_ {};
     std::vector<point_t> positions_ {};
     std::vector<orientation_t> orientation_ {};

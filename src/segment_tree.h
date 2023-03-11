@@ -23,16 +23,24 @@ class SegmentTree {
     using index_t = uint16_t;
 
    public:
+    [[nodiscard]] constexpr SegmentTree() = default;
+    [[nodiscard]] explicit SegmentTree(SegmentInfo segment);
+
+    auto swap(SegmentTree &other) noexcept -> void;
+
     auto add_segment(SegmentInfo segment) -> void;
-    auto add_tree(const SegmentTree& tree) -> void;
+    auto add_tree(const SegmentTree &tree) -> void;
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
     [[nodiscard]] auto segment(std::size_t index) const -> line_t;
+    [[nodiscard]] auto segments() const -> std::span<const line_t>;
 
     [[nodiscard]] auto has_input() const noexcept -> bool;
     [[nodiscard]] auto input_position() const -> point_t;
     //[[nodiscard]] auto input_orientation() const -> orientation_t;
+
+    [[nodiscard]] auto cross_points() const -> std::span<const point_t>;
 
     [[nodiscard]] auto output_count() const noexcept -> std::size_t;
     [[nodiscard]] auto output_positions() const -> std::span<const point_t>;
@@ -45,15 +53,16 @@ class SegmentTree {
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;
     using segment_vector_t = folly::small_vector<line_t, 2, policy>;
-    using output_position_vector_t = folly::small_vector<point_t, 2, policy>;
+    using point_vector_t = folly::small_vector<point_t, 2, policy>;
     // using output_orientation_vector_t = folly::small_vector<orientation_t, 8, policy>;
 
     static_assert(sizeof(segment_vector_t) == 18);
-    static_assert(sizeof(output_position_vector_t) == 10);
+    static_assert(sizeof(point_vector_t) == 10);
     // static_assert(sizeof(output_orientation_vector_t) == 10);
 
     segment_vector_t segments_ {};
-    output_position_vector_t output_positions_ {};
+    point_vector_t cross_points_ {};
+    point_vector_t output_positions_ {};
     // output_orientation_vector_t output_orientations_ {};
 
     // orientation_t input_orientation_ {orientation_t::undirected};
@@ -61,8 +70,13 @@ class SegmentTree {
     bool has_input_ {false};
 };
 
-static_assert(sizeof(SegmentTree) == 34);  // 18 + 10 + 4 + 1 (+ 1)
+static_assert(sizeof(SegmentTree) == 44);  // 18 + 10 + 10 + 4 + 1 (+ 1)
+
+auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
 
 }  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::SegmentTree &a, logicsim::SegmentTree &b) noexcept -> void;
 
 #endif

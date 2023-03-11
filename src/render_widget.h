@@ -41,19 +41,19 @@ class MouseDragLogic {
     std::optional<QPointF> last_position {};
 };
 
-class MouseInsertLogic {
+class MouseElementInsertLogic {
    public:
     struct Args {
         EditableCircuit& editable_circuit;
     };
 
-    MouseInsertLogic(Args args) noexcept;
-    ~MouseInsertLogic();
+    MouseElementInsertLogic(Args args) noexcept;
+    ~MouseElementInsertLogic();
 
-    MouseInsertLogic(const MouseInsertLogic&) = delete;
-    MouseInsertLogic(MouseInsertLogic&&) = delete;
-    auto operator=(const MouseInsertLogic&) -> MouseInsertLogic& = delete;
-    auto operator=(MouseInsertLogic&&) -> MouseInsertLogic& = delete;
+    MouseElementInsertLogic(const MouseElementInsertLogic&) = delete;
+    MouseElementInsertLogic(MouseElementInsertLogic&&) = delete;
+    auto operator=(const MouseElementInsertLogic&) -> MouseElementInsertLogic& = delete;
+    auto operator=(MouseElementInsertLogic&&) -> MouseElementInsertLogic& = delete;
 
     auto mouse_press(std::optional<point_t> position) -> void;
     auto mouse_move(std::optional<point_t> position) -> void;
@@ -66,6 +66,34 @@ class MouseInsertLogic {
    private:
     EditableCircuit& editable_circuit_;
     element_key_t inserted_key_ {null_element_key};
+};
+
+class MouseLineInsertLogic {
+   public:
+    struct Args {
+        EditableCircuit& editable_circuit;
+    };
+
+    MouseLineInsertLogic(Args args) noexcept;
+    ~MouseLineInsertLogic();
+
+    MouseLineInsertLogic(const MouseLineInsertLogic&) = delete;
+    MouseLineInsertLogic(MouseLineInsertLogic&&) = delete;
+    auto operator=(const MouseLineInsertLogic&) -> MouseLineInsertLogic& = delete;
+    auto operator=(MouseLineInsertLogic&&) -> MouseLineInsertLogic& = delete;
+
+    auto mouse_press(std::optional<point_t> position) -> void;
+    auto mouse_move(std::optional<point_t> position) -> void;
+    auto mouse_release(std::optional<point_t> position) -> void;
+
+   private:
+    // auto remove_last_element() -> void;
+    // auto remove_and_insert(std::optional<point_t> position, InsertionMode mode) ->
+    // void;
+
+   private:
+    EditableCircuit& editable_circuit_;
+    std::optional<point_t> first_position_ {};
 };
 
 enum class SelectionFunction {
@@ -206,7 +234,8 @@ class MouseAreaSelectionLogic {
 enum class InteractionState {
     not_interactive,
     select,
-    insert,
+    element_insert,
+    line_insert,
 };
 
 auto format(InteractionState type) -> std::string;
@@ -275,8 +304,9 @@ class RendererWidget : public QWidget {
     SelectionManager selection_manager_ {};
     InteractionState interaction_state_ {InteractionState::not_interactive};
     MouseDragLogic mouse_drag_logic_;
-    std::optional<std::variant<MouseInsertLogic, MouseSingleSelectionLogic,
-                               MouseAreaSelectionLogic, MouseMoveSelectionLogic>>
+    std::optional<std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
+                               MouseSingleSelectionLogic, MouseAreaSelectionLogic,
+                               MouseMoveSelectionLogic>>
         mouse_logic_ {};
 
     // states

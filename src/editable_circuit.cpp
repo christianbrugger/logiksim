@@ -784,6 +784,55 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     return element_key;
 }
 
+auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
+    -> element_key_t {
+    if (insertion_mode != InsertionMode::insert_or_discard) {
+        throw_exception("Not implemented.");
+    }
+    fmt::print("{} ", line);
+
+    auto tree = SegmentTree {SegmentInfo {
+        .line = line,
+        .p0_is_input = false,
+        .p1_is_output = false,
+    }};
+
+    // insert into underlyings
+    const auto element_id = layout_.add_line_segment(std::move(tree));
+    {
+        const auto element = schematic_.add_element({
+            .element_type = ElementType::wire,
+            .input_count = 1,
+            .output_count = 0,
+        });
+        if (element.element_id() != element_id) [[unlikely]] {
+            throw_exception("Added element ids don't match.");
+        }
+    }
+    const auto element_key = key_insert(element_id);
+
+    return element_key;
+}
+
+auto EditableCircuit::add_line_segment(point_t p0, point_t p1, LineSegmentType type,
+                                       InsertionMode insertion_mode) -> element_key_t {
+    if (type != LineSegmentType::horizontal_first) {
+        throw_exception("Not implemented.");
+    }
+
+    const auto pm = point_t {p1.x, p0.y};
+    if (p0.x != p1.x) {
+        add_line_segment(line_t {p0, pm}, insertion_mode);
+    }
+    if (p0.y != p1.y) {
+        add_line_segment(line_t {pm, p1}, insertion_mode);
+    }
+    fmt::print("\n");
+    // TODO what with p0 == p1
+
+    return null_element_key;
+}
+
 auto EditableCircuit::is_position_valid(element_key_t element_key, int x, int y) const
     -> bool {
     if (!is_representable(x, y)) {

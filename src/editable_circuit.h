@@ -177,6 +177,11 @@ class ElementKeyStore {
     map_to_key_t map_to_key_ {};
 };
 
+enum class LineSegmentType {
+    horizontal_first,
+    vertical_first,
+};
+
 class EditableCircuit {
    public:
     [[nodiscard]] EditableCircuit(Schematic&& schematic, Layout&& layout);
@@ -193,6 +198,9 @@ class EditableCircuit {
                               InsertionMode insertion_mode,
                               orientation_t orientation = orientation_t::right)
         -> element_key_t;
+
+    auto add_line_segment(point_t p0, point_t p1, LineSegmentType type,
+                          InsertionMode insertion_mode) -> element_key_t;
 
     auto add_wire(LineTree&& line_tree) -> element_key_t;
 
@@ -250,6 +258,8 @@ class EditableCircuit {
    private:
     auto add_placeholder_element() -> element_id_t;
     auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
+
+    auto add_line_segment(line_t line, InsertionMode insertion_mode) -> element_key_t;
 
     auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
     auto disconnect_outputs_and_remove_placeholders(element_id_t& element_id) -> void;

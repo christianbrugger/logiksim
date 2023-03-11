@@ -34,6 +34,7 @@ Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
 auto Layout::swap(Layout &other) noexcept -> void {
     using std::swap;
 
+    segment_trees_.swap(other.segment_trees_);
     line_trees_.swap(other.line_trees_);
     positions_.swap(other.positions_);
     orientation_.swap(other.orientation_);
@@ -54,6 +55,7 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
         swap(container.at(element_id_1.value), container.at(element_id_2.value));
     };
 
+    swap_ids(segment_trees_);
     swap_ids(line_trees_);
     swap_ids(positions_);
     swap_ids(orientation_);
@@ -66,6 +68,7 @@ auto Layout::delete_last_element() -> void {
         throw_exception("Cannot delete last element of empty schematics.");
     }
 
+    segment_trees_.pop_back();
     line_trees_.pop_back();
     positions_.pop_back();
     orientation_.pop_back();
@@ -113,6 +116,7 @@ auto Layout::element_count() const -> std::size_t {
 }
 
 auto Layout::add_default_element() -> element_id_t {
+    segment_trees_.push_back(SegmentTree {});
     line_trees_.push_back(LineTree {});
     positions_.push_back(point_t {});
     orientation_.push_back(orientation_t::right);
@@ -125,6 +129,14 @@ auto Layout::add_default_element() -> element_id_t {
 
 auto Layout::add_placeholder() -> element_id_t {
     const auto id = add_default_element();
+    return id;
+}
+
+auto Layout::add_line_segment(SegmentTree &&segment_tree) -> element_id_t {
+    const auto id = add_default_element();
+
+    segment_trees_.back() = std::move(segment_tree);
+
     return id;
 }
 
@@ -173,6 +185,10 @@ auto Layout::set_display_state(element_id_t element_id, DisplayState display_sta
 
 auto Layout::circuit_id() const noexcept -> circuit_id_t {
     return circuit_id_;
+}
+
+auto Layout::segment_tree(element_id_t element_id) const -> const SegmentTree & {
+    return segment_trees_.at(element_id.value);
 }
 
 auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
