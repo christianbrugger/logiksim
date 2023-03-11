@@ -73,8 +73,11 @@ auto MainWidget::build_render_buttons() -> QWidget* {
 }
 
 auto MainWidget::build_mode_buttons() -> QWidget* {
-    const auto radio1 = new QRadioButton("Select");
-    const auto radio2 = new QRadioButton("Insert");
+    const auto radio1 = new QRadioButton("&Select");
+    const auto radio2 = new QRadioButton("Inse&rt");
+
+    radio1->setShortcut(QKeySequence(Qt::ALT | Qt::Key_S));
+    radio2->setShortcut(QKeySequence(Qt::ALT | Qt::Key_R));
 
     connect(radio1, &QRadioButton::toggled, this, [this](bool enabled) {
         if (enabled) {

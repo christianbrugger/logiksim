@@ -272,6 +272,7 @@ set(LS_CORE_SOURCES
     src/scene.h src/scene.cpp
     src/schematic.h src/schematic.cpp
     src/search_tree.h src/search_tree.cpp
+    src/segment_tree.h src/segment_tree.cpp
     src/simulation.h src/simulation.cpp
     src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp

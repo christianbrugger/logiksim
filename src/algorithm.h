@@ -62,6 +62,20 @@ constexpr bool contains(R&& r, const T& value, Proj proj = {}) {
 }
 
 //
+// accumulate
+//
+
+template <std::input_iterator I, class T>
+constexpr T accumulate(I first, I last, T init) {
+    return std::accumulate(first, last, std::move(init));
+}
+
+template <std::ranges::input_range R, class T>
+constexpr T accumulate(R&& r, T init) {
+    return std::accumulate(std::ranges::begin(r), std::ranges::end(r), std::move(init));
+}
+
+//
 // Variant overload
 //
 
