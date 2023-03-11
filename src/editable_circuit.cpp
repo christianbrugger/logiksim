@@ -793,12 +793,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 
     auto tree = SegmentTree {SegmentInfo {
         .line = line,
-
-        .p0_is_input = false,
-        .p1_is_output = false,
-
-        .p0_is_cross_point = true,
-        .p1_is_cross_point = true,
+        .p0_type = SegmentPointType::cross_point,
     }};
 
     // insert into underlyings

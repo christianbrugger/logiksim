@@ -4,6 +4,22 @@
 
 namespace logicsim {
 
+auto format(SegmentPointType type) -> std::string {
+    switch (type) {
+        using enum SegmentPointType;
+
+        case normal:
+            return "normal";
+        case input:
+            return "input";
+        case output:
+            return "output";
+        case cross_point:
+            return "cross_point";
+    }
+    throw_exception("Don't know how to convert SegmentPointType to string.");
+}
+
 SegmentTree::SegmentTree(SegmentInfo segment) {
     add_segment(segment);
 }
@@ -33,23 +49,33 @@ auto std::swap(logicsim::SegmentTree& a, logicsim::SegmentTree& b) noexcept -> v
 namespace logicsim {
 
 auto SegmentTree::add_segment(SegmentInfo segment) -> void {
-    if (segment.p0_is_input) {
-        if (has_input_) [[unlikely]] {
-            throw_exception("Segment tree already has one input.");
+    for (auto [type, point] : {
+             std::pair {segment.p0_type, segment.line.p0},
+             std::pair {segment.p1_type, segment.line.p1},
+         }) {
+        switch (type) {
+            using enum SegmentPointType;
+            case normal: {
+                break;
+            }
+            case input: {
+                if (has_input_) [[unlikely]] {
+                    throw_exception("Segment tree already has one input.");
+                }
+                has_input_ = true;
+                input_position_ = point;
+                break;
+            }
+            case output: {
+                output_positions_.push_back(point);
+                break;
+            }
+            case cross_point: {
+                cross_points_.push_back(point);
+                break;
+            }
         }
-        has_input_ = true;
-        input_position_ = segment.line.p0;
     }
-    if (segment.p1_is_output) {
-        output_positions_.push_back(segment.line.p1);
-    }
-    if (segment.p0_is_cross_point) {
-        cross_points_.push_back(segment.line.p0);
-    }
-    if (segment.p1_is_cross_point) {
-        cross_points_.push_back(segment.line.p1);
-    }
-
     segments_.push_back(segment.line);
 }
 
@@ -94,13 +120,6 @@ auto SegmentTree::input_position() const -> point_t {
     return input_position_;
 }
 
-// auto SegmentTree::input_orientation() const -> orientation_t {
-//     if (!has_input_) {
-//         throw_exception("Segment tree has no input.");
-//     }
-//     return input_orientation_;
-// }
-
 auto SegmentTree::cross_points() const -> std::span<const point_t> {
     return cross_points_;
 }
@@ -117,17 +136,7 @@ auto SegmentTree::output_position(std::size_t index) const -> point_t {
     return output_positions_.at(index);
 }
 
-// auto SegmentTree::output_orientation(std::size_t index) const -> orientation_t {
-//     return output_orientations_.at(index);
-// }
-
 auto SegmentTree::format() const -> std::string {
-    // const auto input_format
-    //     = !has_input_ ? "" : fmt::format(", {}, {}", input_position_,
-    //     input_orientation_);
-    // return fmt::format("SegmentTree({}{}, {}, {})", segments_, input_format,
-    //                    output_positions_, output_orientations_);
-
     const auto input_format = !has_input_ ? "" : fmt::format(", {}", input_position_);
     return fmt::format("SegmentTree({}, {}{})", segments_, input_format,
                        output_positions_);
@@ -140,6 +149,9 @@ auto SegmentTree::verify() const -> void {
     if (!line_tree.has_value()) [[unlikely]] {
         throw_exception("Invalid Segment Tree.");
     }
+
+    // TODO verify outputs
+    // TODO verify cross points
 }
 
 }  // namespace logicsim
