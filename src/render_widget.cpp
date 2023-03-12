@@ -631,23 +631,24 @@ auto RendererWidget::reset_circuit() -> void {
     {
         auto& editable_circuit = editable_circuit_.value();
 
-        auto tree1 = LineTree({point_t {7, 3}, point_t {10, 3}, point_t {10, 1}});
-        auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
-                               point_t {4, 4}, point_t {5, 4}});
-        // auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8,
-        // 12}}); auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12},
-        // point_t {12, 14}});
-        auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
+        // auto tree1 = LineTree({point_t {7, 3}, point_t {10, 3}, point_t {10, 1}});
+        // auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
+        //                        point_t {4, 4}, point_t {5, 4}});
+        //// auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8,
+        //// 12}}); auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12},
+        //// point_t {12, 14}});
+        // auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
 
         editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {5, 3},
                                               InsertionMode::insert_or_discard);
         auto element1 = editable_circuit.add_standard_element(
             ElementType::or_element, 2, point_t {15, 6},
             InsertionMode::insert_or_discard);
-        editable_circuit.add_wire(std::move(line_tree));
-        editable_circuit.add_wire(
-            LineTree({point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15, 4}}));
-        // editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
+        // editable_circuit.add_wire(std::move(line_tree));
+        // editable_circuit.add_wire(
+        //     LineTree({point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15,
+        //     4}}));
+        //  editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
         editable_circuit.delete_element(element1);
 
         auto added = editable_circuit.add_standard_element(
@@ -655,8 +656,8 @@ auto RendererWidget::reset_circuit() -> void {
             InsertionMode::insert_or_discard);
         fmt::print("added = {}\n", added);
 
-        editable_circuit.add_wire(LineTree({point_t {5, 20}, point_t {20, 20}}));
-        editable_circuit.add_wire(LineTree({point_t {20, 30}, point_t {5, 30}}));
+        // editable_circuit.add_wire(LineTree({point_t {5, 20}, point_t {20, 20}}));
+        // editable_circuit.add_wire(LineTree({point_t {20, 30}, point_t {5, 30}}));
 
         fmt::print("{}\n", editable_circuit);
         editable_circuit.schematic().validate(Schematic::validate_all);

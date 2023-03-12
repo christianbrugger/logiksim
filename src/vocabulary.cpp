@@ -67,6 +67,14 @@ auto connection_t::format() const -> std::string {
     return fmt::format("<Conection {} of Element {}>", connection_id, element_id);
 }
 
+auto segment_index_t::format() const -> std::string {
+    return fmt::format("{}", value);
+}
+
+auto segment_t::format() const -> std::string {
+    return fmt::format("<Segment {} of Element {}>", segment_index, element_id);
+}
+
 template <typename T>
 auto format_microsecond_time(T time_value) {
     if (-1us < time_value && time_value < 1us) {

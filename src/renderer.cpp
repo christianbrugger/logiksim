@@ -662,11 +662,10 @@ auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
 // Primitives
 //
 
-auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
+auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
                   double size, const RenderSettings& settings) -> void {
-    ctx.setStrokeWidth(1);
-    ctx.setStrokeStyle(BLRgba32(color.value));
-    ctx.setFillStyle(BLRgba32(color.value));
+    constexpr auto stroke_width = 1;
+    const auto color = BLRgba32(color_.value);
 
     switch (shape) {
         using enum PointShape;
@@ -675,12 +674,25 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
             const auto center = to_context(point, settings.view_config);
             const auto r = size * settings.view_config.scale;
 
+            ctx.setStrokeWidth(stroke_width);
+            ctx.setStrokeStyle(color);
             ctx.strokeCircle(BLCircle {center.x, center.y, r});
+            return;
+        }
+        case full_circle: {
+            const auto center = to_context(point, settings.view_config);
+            const auto r = size * settings.view_config.scale;
+
+            ctx.setFillStyle(color);
+            ctx.fillCircle(BLCircle {center.x, center.y, r});
             return;
         }
         case cross: {
             const auto [x, y] = to_context(point, settings.view_config);
             const auto d = size * settings.view_config.scale;
+
+            ctx.setStrokeWidth(stroke_width);
+            ctx.setStrokeStyle(color);
 
             ctx.strokeLine(BLLine {x - d, y - d, x + d, y + d});
             ctx.strokeLine(BLLine {x - d, y + d, x + d, y - d});
@@ -690,22 +702,35 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
             const auto [x, y] = to_context(point, settings.view_config);
             const auto d = size * settings.view_config.scale;
 
-            ctx.strokeLine(BLLine {x, y + d, x, y - d});
-            ctx.strokeLine(BLLine {x - d, y, x + d, y});
+            stroke_line_impl(ctx, BLLine {x, y + d, x, y - d}, color, stroke_width);
+            stroke_line_impl(ctx, BLLine {x - d, y, x + d, y}, color, stroke_width);
             return;
         }
         case square: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = size * settings.view_config.scale;
+            ctx.setStrokeStyle(color);
+            draw_standard_rect(
+                ctx,
+                rect_fine_t {
+                    point_fine_t {point.x.value - size, point.y.value - size},
+                    point_fine_t {point.x.value + size, point.y.value + size},
+                },
+                RectAttributes {.draw_type = DrawType::stroke,
+                                .stroke_width = stroke_width},
+                settings);
 
-            ctx.strokeRect(BLRect {x - d, y - d, 2 * d, 2 * d});
             return;
         }
         case full_square: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = size * settings.view_config.scale;
-
-            ctx.fillRect(BLRect {x - d, y - d, 2 * d, 2 * d});
+            ctx.setFillStyle(color);
+            draw_standard_rect(
+                ctx,
+                rect_fine_t {
+                    point_fine_t {point.x.value - size, point.y.value - size},
+                    point_fine_t {point.x.value + size, point.y.value + size},
+                },
+                RectAttributes {.draw_type = DrawType::fill,
+                                .stroke_width = stroke_width},
+                settings);
             return;
         }
         case diamond: {
@@ -715,6 +740,9 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
             const auto poly = std::array {BLPoint {x, y - d}, BLPoint {x + d, y},
                                           BLPoint {x, y + d}, BLPoint {x - d, y}};
             const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
+
+            ctx.setStrokeWidth(stroke_width);
+            ctx.setStrokeStyle(color);
             ctx.strokePolygon(BLArrayView<BLPoint>(view));
             return;
         }
@@ -722,14 +750,14 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
             const auto [x, y] = to_context(point, settings.view_config);
             const auto d = size * settings.view_config.scale;
 
-            ctx.strokeLine(BLLine {x - d, y, x + d, y});
+            stroke_line_impl(ctx, BLLine {x - d, y, x + d, y}, color, stroke_width);
             return;
         }
         case vertical: {
             const auto [x, y] = to_context(point, settings.view_config);
             const auto d = size * settings.view_config.scale;
 
-            ctx.strokeLine(BLLine {x, y + d, x, y - d});
+            stroke_line_impl(ctx, BLLine {x, y + d, x, y - d}, color, stroke_width);
             return;
         }
     }
@@ -842,9 +870,11 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
                 break;
             }
             case element_wire_connection: {
-                render_point(ctx, point, PointShape::circle, color, size, settings);
-                render_point(ctx, point, PointShape::full_square, color, size * (2. / 3),
-                             settings);
+                render_point(ctx, point, PointShape::full_circle, color, size, settings);
+                // render_point(ctx, point, PointShape::circle, color, size, settings);
+                // render_point(ctx, point, PointShape::full_square, color, size * (2. /
+                // 4),
+                //              settings);
                 break;
             }
             case invalid_state: {
@@ -859,13 +889,11 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void {
     ctx.setStrokeStyle(BLRgba32(0, 255, 0));
-    ctx.setStrokeWidth(1.0);
 
     for (rect_fine_t&& rect : editable_circuit.selection_rects()) {
-        const auto p0 = to_context(rect.p0, settings.view_config);
-        const auto p1 = to_context(rect.p1, settings.view_config);
-
-        ctx.strokeRect(BLRect {p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y});
+        draw_standard_rect(
+            ctx, rect, RectAttributes {.draw_type = DrawType::stroke, .stroke_width = 1},
+            settings);
     }
 }
 

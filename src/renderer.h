@@ -33,6 +33,7 @@ auto stroke_offset(const RenderSettings& settings) -> double;
 
 enum class PointShape {
     circle,
+    full_circle,
     cross,
     plus,
     square,

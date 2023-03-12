@@ -11,7 +11,7 @@ auto to_layout_calculation_data(const Schematic& schematic, const Layout& layout
     const auto element = schematic.element(element_id);
 
     return layout_calculation_data_t {
-        .line_tree = layout.line_tree(element_id),
+        .segment_tree = layout.segment_tree(element_id),
         .input_count = element.input_count(),
         .output_count = element.output_count(),
         .internal_state_count = 0,  // TODO get count fromm schematic when implemented

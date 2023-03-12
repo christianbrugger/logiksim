@@ -41,8 +41,7 @@ class Layout {
 
     auto add_placeholder() -> element_id_t;
     // TODO rework these methods
-    auto add_line_segment(SegmentTree &&segment_tree) -> element_id_t;
-    auto add_wire(LineTree &&line_tree) -> element_id_t;
+    auto add_line_tree(SegmentTree &&segment_tree) -> element_id_t;
     auto add_logic_element(point_t position,
                            orientation_t orientation = orientation_t::undirected,
                            DisplayState display_state = DisplayState::normal,

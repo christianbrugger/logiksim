@@ -1,16 +1,16 @@
 #ifndef LOGIKSIM_LAYOUT_CALCULATION_TYPE
 #define LOGIKSIM_LAYOUT_CALCULATION_TYPE
 
-#include "line_tree.h"
 #include "vocabulary.h"
 
 namespace logicsim {
 
 class Schematic;
 class Layout;
+class SegmentTree;
 
 struct layout_calculation_data_t {
-    const LineTree& line_tree;
+    const SegmentTree& segment_tree;
     std::size_t input_count {0};
     std::size_t output_count {0};
     std::size_t internal_state_count {0};

@@ -1,5 +1,7 @@
 #include "layout_calculations.h"
 
+#include "geometry.h"
+
 namespace logicsim {
 
 auto require_min(std::size_t value, std::size_t count) -> void {
@@ -164,7 +166,7 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
 }
 
 auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t {
-    constexpr static auto overdraw = 0.5;
+    constexpr static auto overdraw = grid_fine_t {0.5};
 
     const auto rect = element_collision_rect(data);
 
@@ -172,6 +174,28 @@ auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t {
         point_fine_t {rect.p0.x.value - overdraw, rect.p0.y.value - overdraw},
         point_fine_t {rect.p1.x.value + overdraw, rect.p1.y.value + overdraw},
     };
+}
+
+auto element_selection_rect(line_t segment) -> rect_fine_t {
+    constexpr auto width = grid_fine_t {0.5};
+
+    const auto ordered_segment = order_points(segment);
+    const auto p0 = static_cast<point_fine_t>(ordered_segment.p0);
+    const auto p1 = static_cast<point_fine_t>(ordered_segment.p1);
+
+    if (is_horizontal(segment)) {
+        return rect_fine_t {
+            point_fine_t {p0.x, p0.y - width},
+            point_fine_t {p1.x, p1.y + width},
+        };
+    }
+    if (is_vertical(segment)) {
+        return rect_fine_t {
+            point_fine_t {p0.x - width, p0.y},
+            point_fine_t {p1.x + width, p1.y},
+        };
+    }
+    return rect_fine_t {p0, p1};
 }
 
 }  // namespace logicsim

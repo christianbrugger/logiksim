@@ -132,18 +132,10 @@ auto Layout::add_placeholder() -> element_id_t {
     return id;
 }
 
-auto Layout::add_line_segment(SegmentTree &&segment_tree) -> element_id_t {
+auto Layout::add_line_tree(SegmentTree &&segment_tree) -> element_id_t {
     const auto id = add_default_element();
 
     segment_trees_.back() = std::move(segment_tree);
-
-    return id;
-}
-
-auto Layout::add_wire(LineTree &&line_tree) -> element_id_t {
-    const auto id = add_default_element();
-
-    line_trees_.back() = std::move(line_tree);
 
     return id;
 }

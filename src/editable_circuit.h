@@ -100,6 +100,7 @@ class CollisionCache {
         wire_horizontal,
         wire_vertical,
         wire_point,
+
         // inferred states
         wire_crossing,
         element_wire_connection,
@@ -129,7 +130,11 @@ class CollisionCache {
     auto update(element_id_t new_element_id, element_id_t old_element_id,
                 layout_calculation_data_t data) -> void;
 
+    auto insert(element_id_t element_id, segment_info_t segment) -> void;
+    auto remove(element_id_t element_id, segment_info_t segment) -> void;
+
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
+    [[nodiscard]] auto is_colliding(segment_info_t segment) const -> bool;
 
     [[nodiscard]] static auto to_state(collision_data_t data) -> CollisionState;
 
@@ -143,6 +148,8 @@ class CollisionCache {
     // TODO implement validate
 
    private:
+    auto state_colliding(point_t position, CollisionState state) const -> bool;
+
     map_type map_ {};
 };
 
@@ -199,10 +206,10 @@ class EditableCircuit {
                               orientation_t orientation = orientation_t::right)
         -> element_key_t;
 
-    auto add_line_segment(point_t p0, point_t p1, LineSegmentType type,
+    auto add_line_segment(point_t p0, point_t p1, LineSegmentType segment_type,
                           InsertionMode insertion_mode) -> element_key_t;
 
-    auto add_wire(LineTree&& line_tree) -> element_key_t;
+    // auto add_wire(LineTree&& line_tree) -> element_key_t;
 
     auto change_insertion_mode(element_key_t element_key,
                                InsertionMode new_insertion_mode) -> bool;
@@ -259,7 +266,8 @@ class EditableCircuit {
     auto add_placeholder_element() -> element_id_t;
     auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
 
-    auto add_line_segment(line_t line, InsertionMode insertion_mode) -> element_key_t;
+    auto add_line_segment(segment_info_t segment, InsertionMode insertion_mode)
+        -> element_key_t;
 
     auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
     auto disconnect_outputs_and_remove_placeholders(element_id_t& element_id) -> void;
@@ -276,14 +284,23 @@ class EditableCircuit {
 
     [[nodiscard]] auto is_representable_(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
+    [[nodiscard]] auto is_colliding(segment_info_t segment) const -> bool;
     [[nodiscard]] auto is_element_cached(element_id_t element_id) const -> bool;
 
     auto key_insert(element_id_t element_id) -> element_key_t;
     auto key_remove(element_id_t element_id) -> void;
     auto key_update(element_id_t new_element_id, element_id_t old_element_id) -> void;
+
     auto cache_insert(element_id_t element_id) -> void;
     auto cache_remove(element_id_t element_id) -> void;
     auto cache_update(element_id_t new_element_id, element_id_t old_element_id) -> void;
+
+    auto cache_insert(element_id_t element_id, segment_info_t segment,
+                      segment_index_t segment_index) -> void;
+    auto cache_remove(element_id_t element_id, segment_info_t segment,
+                      segment_index_t segment_index) -> void;
+    auto cache_update(element_id_t new_element_id, element_id_t old_element_id,
+                      segment_info_t segment, segment_index_t segment_index) -> void;
 
     ElementKeyStore element_keys_;
     ConnectionCache<true> input_connections_;

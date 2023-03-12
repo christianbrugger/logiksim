@@ -13,6 +13,7 @@
 namespace logicsim {
 [[nodiscard]] auto element_collision_rect(layout_calculation_data_t data) -> rect_t;
 [[nodiscard]] auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t;
+[[nodiscard]] auto element_selection_rect(line_t segment) -> rect_fine_t;
 
 auto require_min(std::size_t value, std::size_t count) -> void;
 auto require_equal(std::size_t value, std::size_t count) -> void;
@@ -146,9 +147,7 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
         }
 
         case wire: {
-            require_equal(data.input_count, 1);
-            return next_input(data.line_tree.input_position(),
-                              data.line_tree.input_orientation());
+            throw_exception("not supported");
         }
 
         case inverter_element: {
@@ -252,17 +251,7 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
         }
 
         case wire: {
-            require_min(data.output_count, 1);
-            require_equal(data.output_count, data.line_tree.output_count());
-
-            for (auto &&[index, point] : enumerate(data.line_tree.output_positions())) {
-                const auto orientation = data.line_tree.output_orientation(index);
-
-                if (!next_output(point, orientation)) {
-                    return false;
-                }
-            }
-            return true;
+            throw_exception("not supported");
         }
 
         case inverter_element: {

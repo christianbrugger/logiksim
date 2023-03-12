@@ -55,7 +55,7 @@ auto std::swap(logicsim::SegmentTree& a, logicsim::SegmentTree& b) noexcept -> v
 
 namespace logicsim {
 
-auto SegmentTree::add_segment(segment_info_t segment) -> void {
+auto SegmentTree::add_segment(segment_info_t segment) -> std::size_t {
     for (auto [type, point] : {
              std::pair {segment.p0_type, segment.line.p0},
              std::pair {segment.p1_type, segment.line.p1},
@@ -83,7 +83,9 @@ auto SegmentTree::add_segment(segment_info_t segment) -> void {
             }
         }
     }
+    const auto new_index = segments_.size();
     segments_.push_back(segment);
+    return new_index;
 }
 
 auto SegmentTree::add_tree(const SegmentTree& tree) -> void {

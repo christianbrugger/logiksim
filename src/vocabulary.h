@@ -111,20 +111,51 @@ struct connection_id_t {
     }
 };
 
-// TODO use struct packing ?
+static_assert(std::is_trivial<connection_id_t>::value);
+
+// TODO use struct packing?
 struct connection_t {
     element_id_t element_id;
     connection_id_t connection_id;
 
     [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const connection_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const connection_t &other) const = default;
 };
 
-static_assert(std::is_trivial<connection_id_t>::value);
+struct segment_index_t {
+    using value_type = int16_t;
+    value_type value;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const segment_index_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const segment_index_t &other) const = default;
+
+    [[nodiscard]] static constexpr auto max() noexcept {
+        return std::numeric_limits<value_type>::max();
+    };
+};
+
+// TODO use struct packing?
+struct segment_t {
+    element_id_t element_id;
+    segment_index_t segment_index;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const segment_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const segment_t &other) const = default;
+};
 
 inline constexpr auto null_circuit = circuit_id_t {-1};
 inline constexpr auto null_element_key = element_key_t {-1};
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
+
+inline constexpr auto null_segment_index = segment_index_t {-1};
+inline constexpr auto null_segment = segment_t {null_element, null_segment_index};
 
 enum class orientation_t : uint8_t {
     right,
@@ -242,6 +273,10 @@ constexpr static inline auto color_blue = ::logicsim::color_t {0xFF0000FF};
 //
 // Spacial Types
 //
+
+// Are float enough for our fine grid?
+// The highest representable float integer is 2**24 = 16'777'216.
+// At 2**15 = 32'768 we have 9 fractional bits, a resolution of 2**-9 = 0.001953125.
 
 using grid_fine_t = double;
 
@@ -421,6 +456,12 @@ struct rect_fine_t {
             throw_exception("point in rect_t need to be ordered");
         }
     };
+
+    [[nodiscard]] explicit constexpr rect_fine_t(point_t p0_, point_t p1_)
+        : rect_fine_t {
+            static_cast<point_fine_t>(p0_),
+            static_cast<point_fine_t>(p1_),
+        } {};
 
     [[nodiscard]] auto format() const -> std::string;
 

@@ -37,6 +37,7 @@ static_assert(sizeof(segment_info_t) == 10);
 
 class SegmentTree {
    public:
+    // TODO use segment_index_t
     using index_t = uint16_t;
 
    public:
@@ -45,7 +46,7 @@ class SegmentTree {
 
     auto swap(SegmentTree &other) noexcept -> void;
 
-    auto add_segment(segment_info_t segment) -> void;
+    auto add_segment(segment_info_t segment) -> std::size_t;
     auto add_tree(const SegmentTree &tree) -> void;
 
     [[nodiscard]] auto empty() const noexcept -> bool;

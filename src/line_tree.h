@@ -75,6 +75,7 @@ class LineTree {
     class SegmentSizeView;
 
     using length_t = int32_t;
+    // TODO use segment_index_t
     using index_t = uint16_t;
 
     using Graph = AdjacencyGraph<LineTree::index_t>;
