@@ -500,7 +500,7 @@ auto CollisionCache::creates_loop(line_t line) const -> bool {
 
 auto CollisionCache::is_colliding(line_t line) const -> bool {
     if (creates_loop(line)) {
-        return false;
+        return true;
     }
 
     const auto segment = segment_info_t {
@@ -992,7 +992,8 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 
             auto segment_index = m_tree.add_tree(tree_copy);
             // TODO add only in specific mode?
-            for (auto&& segment : m_tree.segments()) {
+            while (segment_index.value < m_tree.segment_count()) {
+                const auto segment = m_tree.segment(segment_index);
                 cache_insert(element_id, segment, segment_index++);
             }
         }
@@ -1035,6 +1036,11 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 
     // TODO output placeholders
     // TODO insertion mode change
+
+#ifndef NDEBUG
+    // TODO enable validation
+    // layout_.segment_tree(to_element_id(merge_tree)).validate();
+#endif
 
     return merge_tree;
 }
@@ -1503,11 +1509,7 @@ auto EditableCircuit::is_colliding(layout_calculation_data_t data) const -> bool
 auto EditableCircuit::is_colliding(line_t line) const -> bool {
     // TODO connections colliding
 
-    if (collicions_cache_.is_colliding(line)) {
-        return true;
-    }
-
-    return false;
+    return collicions_cache_.is_colliding(line);
 }
 
 auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {

@@ -628,6 +628,7 @@ auto RendererWidget::reset_circuit() -> void {
     editable_circuit_ = EditableCircuit {circuit_index_.borrow_schematic(circuit_id_),
                                          circuit_index_.borrow_layout(circuit_id_)};
 
+    return;
     {
         auto& editable_circuit = editable_circuit_.value();
 

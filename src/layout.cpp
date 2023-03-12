@@ -104,7 +104,7 @@ auto Layout::format() const -> std::string {
 
 auto Layout::format_element(element_id_t element_id) const -> std::string {
     return fmt::format("<Element {}: {}, {}, {}>", element_id, position(element_id),
-                       orientation(element_id), line_tree(element_id));
+                       orientation(element_id), segment_tree(element_id));
 }
 
 auto Layout::empty() const -> bool {

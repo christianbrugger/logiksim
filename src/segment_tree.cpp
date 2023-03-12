@@ -218,7 +218,7 @@ auto SegmentTree::format() const -> std::string {
                        segments_);
 }
 
-auto SegmentTree::verify() const -> void {
+auto SegmentTree::validate() const -> void {
     const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
 
     // TODO optimize this?

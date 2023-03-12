@@ -73,7 +73,7 @@ class SegmentTree {
     [[nodiscard]] auto output_count() const noexcept -> std::size_t;
 
     [[nodiscard]] auto format() const -> std::string;
-    auto verify() const -> void;
+    auto validate() const -> void;
 
    private:
     auto get_next_index() const -> segment_index_t;
