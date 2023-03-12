@@ -16,19 +16,24 @@
 namespace logicsim {
 
 enum class SegmentPointType : uint8_t {
-    normal,
+    // has collision
     input,
     output,
+    colliding_point,
+    // no collision
+    shadow_point,
     cross_point,
 };
 
 auto format(SegmentPointType type) -> std::string;
 
+auto is_connection(SegmentPointType point_type) -> bool;
+
 struct segment_info_t {
     line_t line {};
 
-    SegmentPointType p0_type {SegmentPointType::normal};
-    SegmentPointType p1_type {SegmentPointType::normal};
+    SegmentPointType p0_type {SegmentPointType::colliding_point};
+    SegmentPointType p1_type {SegmentPointType::colliding_point};
 
     [[nodiscard]] auto format() const -> std::string;
 };
@@ -46,12 +51,15 @@ class SegmentTree {
 
     auto swap(SegmentTree &other) noexcept -> void;
 
-    auto add_segment(segment_info_t segment) -> std::size_t;
+    auto add_segment(segment_info_t segment) -> segment_index_t;
     auto add_tree(const SegmentTree &tree) -> void;
+
+    auto update_segment(segment_index_t index, segment_info_t segment) -> void;
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
     [[nodiscard]] auto segment(std::size_t index) const -> segment_info_t;
+    [[nodiscard]] auto segment(segment_index_t index) const -> segment_info_t;
     [[nodiscard]] auto segments() const -> std::span<const segment_info_t>;
 
     [[nodiscard]] auto has_input() const noexcept -> bool;
@@ -62,6 +70,10 @@ class SegmentTree {
 
     [[nodiscard]] auto format() const -> std::string;
     auto verify() const -> void;
+
+   private:
+    auto register_segment(segment_info_t segment) -> void;
+    auto unregister_segment(segment_info_t segment) -> void;
 
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;

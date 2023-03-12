@@ -266,8 +266,7 @@ class EditableCircuit {
     auto add_placeholder_element() -> element_id_t;
     auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
 
-    auto add_line_segment(segment_info_t segment, InsertionMode insertion_mode)
-        -> element_key_t;
+    auto add_line_segment(line_t line, InsertionMode insertion_mode) -> element_key_t;
 
     auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
     auto disconnect_outputs_and_remove_placeholders(element_id_t& element_id) -> void;
@@ -299,9 +298,9 @@ class EditableCircuit {
                       segment_index_t segment_index) -> void;
     auto cache_remove(element_id_t element_id, segment_info_t segment,
                       segment_index_t segment_index) -> void;
-    auto cache_update(element_id_t new_element_id, element_id_t old_element_id,
-                      segment_info_t segment, segment_index_t segment_index) -> void;
 
+    // TODO Consider using element_key_t for Caches, especially SearchTree,
+    // TODO so we don't need costly update for element_trees
     ElementKeyStore element_keys_;
     ConnectionCache<true> input_connections_;
     ConnectionCache<false> output_connections_;

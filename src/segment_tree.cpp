@@ -8,16 +8,23 @@ auto format(SegmentPointType type) -> std::string {
     switch (type) {
         using enum SegmentPointType;
 
-        case normal:
-            return "normal";
         case input:
             return "input";
         case output:
             return "output";
+        case colliding_point:
+            return "mid_point";
+        case shadow_point:
+            return "shadow_point";
         case cross_point:
             return "cross_point";
     }
     throw_exception("Don't know how to convert SegmentPointType to string.");
+}
+
+auto is_connection(SegmentPointType point_type) -> bool {
+    return point_type == SegmentPointType::input
+           || point_type == SegmentPointType::output;
 }
 
 auto segment_info_t::format() const -> std::string {
@@ -55,7 +62,7 @@ auto std::swap(logicsim::SegmentTree& a, logicsim::SegmentTree& b) noexcept -> v
 
 namespace logicsim {
 
-auto SegmentTree::add_segment(segment_info_t segment) -> std::size_t {
+auto SegmentTree::register_segment(segment_info_t segment) -> void {
     for (auto [type, point] : {
              std::pair {segment.p0_type, segment.line.p0},
              std::pair {segment.p1_type, segment.line.p1},
@@ -77,14 +84,56 @@ auto SegmentTree::add_segment(segment_info_t segment) -> std::size_t {
                 break;
             }
 
-            case cross_point:
-            case normal: {
+            case colliding_point:
+            case shadow_point:
+            case cross_point: {
                 break;
             }
         }
     }
-    const auto new_index = segments_.size();
+}
+
+auto SegmentTree::unregister_segment(segment_info_t segment) -> void {
+    for (auto [type, point] : {
+             std::pair {segment.p0_type, segment.line.p0},
+             std::pair {segment.p1_type, segment.line.p1},
+         }) {
+        switch (type) {
+            using enum SegmentPointType;
+
+            case input: {
+                if (!has_input_) [[unlikely]] {
+                    throw_exception("Tree should have input thats not present.");
+                }
+                has_input_ = false;
+                input_position_ = {};
+                break;
+            }
+
+            case output: {
+                if (output_count_ <= 0) [[unlikely]] {
+                    throw_exception("Tree should have output thats not present.");
+                }
+                --output_count_;
+                break;
+            }
+
+            case colliding_point:
+            case shadow_point:
+            case cross_point: {
+                break;
+            }
+        }
+    }
+}
+
+auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
+    const auto new_index
+        = segment_index_t {gsl::narrow<segment_index_t::value_type>(segments_.size())};
+
+    register_segment(segment);
     segments_.push_back(segment);
+
     return new_index;
 }
 
@@ -101,6 +150,15 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> void {
     segments_.insert(segments_.end(), tree.segments_.begin(), tree.segments_.end());
 }
 
+auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {
+    auto& entry = segments_.at(index.value);
+
+    unregister_segment(entry);
+    register_segment(segment);
+
+    entry = segment;
+}
+
 auto SegmentTree::empty() const noexcept -> bool {
     return segments_.empty();
 }
@@ -111,6 +169,10 @@ auto SegmentTree::segment_count() const noexcept -> std::size_t {
 
 auto SegmentTree::segment(std::size_t index) const -> segment_info_t {
     return segments_.at(index);
+}
+
+auto SegmentTree::segment(segment_index_t index) const -> segment_info_t {
+    return segments_.at(index.value);
 }
 
 auto SegmentTree::segments() const -> std::span<const segment_info_t> {

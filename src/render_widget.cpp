@@ -665,8 +665,8 @@ auto RendererWidget::reset_circuit() -> void {
         {
             auto timer = Timer {};
             auto count = 0;
-            for (auto x : range(100, 200, 5)) {
-                for (auto y : range(100, 200, 5)) {
+            for (auto x : range(100, 20, 5)) {
+                for (auto y : range(100, 20, 5)) {
                     editable_circuit.add_standard_element(
                         ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
                         InsertionMode::insert_or_discard);

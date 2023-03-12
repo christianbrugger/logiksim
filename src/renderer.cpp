@@ -830,9 +830,6 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
 auto render_editable_circuit_collision_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void {
-    fmt::print("Collision states count: {}\n",
-               editable_circuit.collision_states().size());
-
     for (auto [point, state] : editable_circuit.collision_states()) {
         const auto color = defaults::color_orange;
         const auto size = 0.25;
@@ -871,10 +868,6 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
             }
             case element_wire_connection: {
                 render_point(ctx, point, PointShape::full_circle, color, size, settings);
-                // render_point(ctx, point, PointShape::circle, color, size, settings);
-                // render_point(ctx, point, PointShape::full_square, color, size * (2. /
-                // 4),
-                //              settings);
                 break;
             }
             case invalid_state: {

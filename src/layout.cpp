@@ -203,4 +203,8 @@ auto Layout::color(element_id_t element_id) const -> color_t {
     return colors_.at(element_id.value);
 }
 
+auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
+    return segment_trees_.at(element_id.value);
+}
+
 }  // namespace logicsim

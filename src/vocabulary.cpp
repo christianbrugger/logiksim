@@ -64,7 +64,7 @@ auto connection_id_t::format() const -> std::string {
 }
 
 auto connection_t::format() const -> std::string {
-    return fmt::format("<Conection {} of Element {}>", connection_id, element_id);
+    return fmt::format("<Element {}, Conection {}>", element_id, connection_id);
 }
 
 auto segment_index_t::format() const -> std::string {
@@ -72,7 +72,14 @@ auto segment_index_t::format() const -> std::string {
 }
 
 auto segment_t::format() const -> std::string {
-    return fmt::format("<Segment {} of Element {}>", segment_index, element_id);
+    if (!*this) {
+        return fmt::format("<NullSegment>", segment_index, element_id);
+    }
+    return fmt::format("<Element {}, Segment {}>", element_id, segment_index);
+}
+
+constexpr segment_t::operator bool() const noexcept {
+    return element_id != null_element;
 }
 
 template <typename T>

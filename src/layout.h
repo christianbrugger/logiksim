@@ -62,6 +62,8 @@ class Layout {
     [[nodiscard]] auto display_state(element_id_t element_id) const -> DisplayState;
     [[nodiscard]] auto color(element_id_t element_id) const -> color_t;
 
+    [[nodiscard]] auto modifyable_segment_tree(element_id_t element_id) -> SegmentTree &;
+
    private:
     auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
     auto delete_last_element() -> void;

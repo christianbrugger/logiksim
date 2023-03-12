@@ -138,23 +138,36 @@ struct segment_index_t {
     };
 };
 
-// TODO use struct packing?
-struct segment_t {
-    element_id_t element_id;
-    segment_index_t segment_index;
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto operator==(const segment_t &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const segment_t &other) const = default;
-};
-
 inline constexpr auto null_circuit = circuit_id_t {-1};
 inline constexpr auto null_element_key = element_key_t {-1};
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
 
 inline constexpr auto null_segment_index = segment_index_t {-1};
+
+// TODO use struct packing?
+struct segment_t {
+    element_id_t element_id {null_element};
+    segment_index_t segment_index {null_segment_index};
+
+    constexpr segment_t() noexcept = default;
+
+    constexpr segment_t(element_id_t element_id_, segment_index_t segment_index_)
+        : element_id {element_id_}, segment_index {segment_index_} {
+        if ((element_id == null_element) ^ (segment_index == null_segment_index))
+            [[unlikely]] {
+            throw_exception("Segment cannot be partially null.");
+        }
+    }
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const segment_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const segment_t &other) const = default;
+
+    [[nodiscard]] explicit constexpr operator bool() const noexcept;
+};
+
 inline constexpr auto null_segment = segment_t {null_element, null_segment_index};
 
 enum class orientation_t : uint8_t {

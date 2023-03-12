@@ -133,8 +133,7 @@ auto SearchTree::query_selection(rect_fine_t rect) const -> std::vector<element_
     return result;
 }
 
-auto SearchTree::query_line_segments(point_t grid_point) const
-    -> std::array<segment_t, 4> {
+auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
     using namespace detail::search_tree;
 
     const auto grid_point_fine = static_cast<point_fine_t>(grid_point);
@@ -154,6 +153,21 @@ auto SearchTree::query_line_segments(point_t grid_point) const
 
     tree_.query(bgi::intersects(tree_point), output_callable(inserter));
     return result;
+}
+
+auto get_unique_element_id(SearchTree::queried_segments_t result) -> element_id_t {
+    const auto first_id = result.at(0).element_id;
+
+    if (first_id == null_element) {
+        return null_element;
+    }
+
+    const auto same_element_id
+        = std::all_of(result.begin() + 1, result.end(), [=](segment_t value) {
+              return value.element_id == null_element || value.element_id == first_id;
+          });
+
+    return same_element_id ? first_id : null_element;
 }
 
 }  // namespace logicsim

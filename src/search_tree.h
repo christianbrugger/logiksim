@@ -8,6 +8,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <ranges>
 
 namespace logicsim {
@@ -47,6 +48,8 @@ class SearchTree {
     using tree_t = detail::search_tree::tree_t;
     using value_type = detail::search_tree::tree_value_t;
 
+    using queried_segments_t = std::array<segment_t, 4>;
+
    public:
     auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
     auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
@@ -58,7 +61,7 @@ class SearchTree {
 
     auto query_selection(rect_fine_t rect) const -> std::vector<element_id_t>;
 
-    auto query_line_segments(point_t point) const -> std::array<segment_t, 4>;
+    auto query_line_segments(point_t point) const -> queried_segments_t;
 
     auto rects() const {
         return transform_view(tree_.begin(), tree_.end(),
@@ -70,6 +73,8 @@ class SearchTree {
    private:
     tree_t tree_ {};
 };
+
+auto get_unique_element_id(SearchTree::queried_segments_t) -> element_id_t;
 
 }  // namespace logicsim
 
