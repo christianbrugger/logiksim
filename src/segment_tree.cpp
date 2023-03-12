@@ -20,7 +20,15 @@ auto format(SegmentPointType type) -> std::string {
     throw_exception("Don't know how to convert SegmentPointType to string.");
 }
 
-SegmentTree::SegmentTree(SegmentInfo segment) {
+auto segment_info_t::format() const -> std::string {
+    return fmt::format("Segment({} {} - {} {})", p0_type, line.p0, line.p1, p1_type);
+}
+
+//
+// Segment Tree
+//
+
+SegmentTree::SegmentTree(segment_info_t segment) {
     add_segment(segment);
 }
 
@@ -28,9 +36,8 @@ auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
     using std::swap;
 
     segments_.swap(other.segments_);
-    cross_points_.swap(other.cross_points_);
-    output_positions_.swap(other.output_positions_);
 
+    swap(output_count_, other.output_count_);
     swap(input_position_, other.input_position_);
     swap(has_input_, other.has_input_);
 }
@@ -48,7 +55,7 @@ auto std::swap(logicsim::SegmentTree& a, logicsim::SegmentTree& b) noexcept -> v
 
 namespace logicsim {
 
-auto SegmentTree::add_segment(SegmentInfo segment) -> void {
+auto SegmentTree::add_segment(segment_info_t segment) -> void {
     for (auto [type, point] : {
              std::pair {segment.p0_type, segment.line.p0},
              std::pair {segment.p1_type, segment.line.p1},
@@ -56,9 +63,6 @@ auto SegmentTree::add_segment(SegmentInfo segment) -> void {
         switch (type) {
             using enum SegmentPointType;
 
-            case normal: {
-                break;
-            }
             case input: {
                 if (has_input_) [[unlikely]] {
                     throw_exception("Segment tree already has one input.");
@@ -67,17 +71,19 @@ auto SegmentTree::add_segment(SegmentInfo segment) -> void {
                 input_position_ = point;
                 break;
             }
+
             case output: {
-                output_positions_.push_back(point);
+                ++output_count_;
                 break;
             }
-            case cross_point: {
-                cross_points_.push_back(point);
+
+            case cross_point:
+            case normal: {
                 break;
             }
         }
     }
-    segments_.push_back(segment.line);
+    segments_.push_back(segment);
 }
 
 auto SegmentTree::add_tree(const SegmentTree& tree) -> void {
@@ -89,11 +95,8 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> void {
         input_position_ = tree.input_position_;
     }
 
+    output_count_ += tree.output_count_;
     segments_.insert(segments_.end(), tree.segments_.begin(), tree.segments_.end());
-    cross_points_.insert(cross_points_.end(), tree.cross_points_.begin(),
-                         tree.cross_points_.end());
-    output_positions_.insert(output_positions_.end(), tree.output_positions_.begin(),
-                             tree.output_positions_.end());
 }
 
 auto SegmentTree::empty() const noexcept -> bool {
@@ -104,16 +107,20 @@ auto SegmentTree::segment_count() const noexcept -> std::size_t {
     return segments_.size();
 }
 
-auto SegmentTree::segment(std::size_t index) const -> line_t {
+auto SegmentTree::segment(std::size_t index) const -> segment_info_t {
     return segments_.at(index);
 }
 
-auto SegmentTree::segments() const -> std::span<const line_t> {
+auto SegmentTree::segments() const -> std::span<const segment_info_t> {
     return segments_;
 }
 
 auto SegmentTree::has_input() const noexcept -> bool {
     return has_input_;
+}
+
+auto SegmentTree::input_count() const noexcept -> std::size_t {
+    return has_input_ ? 1 : 0;
 }
 
 auto SegmentTree::input_position() const -> point_t {
@@ -123,31 +130,22 @@ auto SegmentTree::input_position() const -> point_t {
     return input_position_;
 }
 
-auto SegmentTree::cross_points() const -> std::span<const point_t> {
-    return cross_points_;
-}
-
 auto SegmentTree::output_count() const noexcept -> std::size_t {
-    return output_positions_.size();
-}
-
-auto SegmentTree::output_positions() const -> std::span<const point_t> {
-    return output_positions_;
-}
-
-auto SegmentTree::output_position(std::size_t index) const -> point_t {
-    return output_positions_.at(index);
+    return output_count_;
 }
 
 auto SegmentTree::format() const -> std::string {
-    const auto input_format = !has_input_ ? "" : fmt::format(", {}", input_position_);
-    return fmt::format("SegmentTree({}, {}, {}{})", segments_, cross_points_,
-                       output_positions_, input_format);
+    return fmt::format("SegmentTree({}x{}, {})", input_count(), output_count(),
+                       segments_);
 }
 
 auto SegmentTree::verify() const -> void {
     const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
-    const auto line_tree = LineTree::from_segments(segments_, new_root);
+
+    // TODO optimize this?
+    const auto segments = transform_to_vector(
+        segments_, [](const segment_info_t& segment) { return segment.line; });
+    const auto line_tree = LineTree::from_segments(segments, new_root);
 
     if (!line_tree.has_value()) [[unlikely]] {
         throw_exception("Invalid Segment Tree.");

@@ -674,76 +674,6 @@ auto EditableCircuit::add_inverter_element(point_t position, InsertionMode inser
                                 insertion_mode, orientation);
 }
 
-/*
-auto EditableCircuit::add_standard_element_2(ElementType type, std::size_t input_count,
-                                             point_t position,
-                                             InsertionMode insertion_mode,
-                                             orientation_t orientation) -> element_key_t {
-    using enum ElementType;
-    if (!(type == and_element || type == or_element || type == xor_element
-          || type == inverter_element)) [[unlikely]] {
-        throw_exception("The type needs to be a standard element.");
-    }
-    if (type == inverter_element && input_count != 1) [[unlikely]] {
-        throw_exception("Inverter needs to have exactly one input.");
-    }
-    if (type != inverter_element && input_count < 2) [[unlikely]] {
-        throw_exception("Input count needs to be at least 2 for standard elements.");
-    }
-
-    const static auto empty_line_tree = LineTree {};
-    const auto data = layout_calculation_data_t {
-        .line_tree = empty_line_tree,
-        .input_count = input_count,
-        .output_count = 1,
-        .internal_state_count = 0,
-        .position = position,
-        .orientation = orientation,
-        .element_type = type,
-    };
-    if (!is_representable_(data)) {
-        return null_element_key;
-    }
-
-    // check for collisions
-    const bool colliding = [&]() {
-        if (insertion_mode == InsertionMode::temporary) {
-            return false;
-        }
-
-        return is_colliding(data);
-    }();
-
-    if (colliding && insertion_mode == InsertionMode::insert_or_discard) {
-        return null_element_key;
-    }
-
-    const auto display_state = to_display_state(insertion_mode, colliding);
-
-    // insert into underlyings
-    auto element_id = layout_.add_logic_element(position, orientation, display_state);
-    {
-        const auto element = schematic_.add_element({
-            .element_type = type,
-            .input_count = input_count,
-            .output_count = 1,
-        });
-        if (element.element_id() != element_id) [[unlikely]] {
-            throw_exception("Added element ids don't match.");
-        }
-    }
-
-    const auto element_key = key_insert(element_id);
-
-    // connect
-    if (is_display_state_cached(display_state)) {
-        connect_and_cache_element(element_id);
-    }
-
-    return element_key;
-}
-*/
-
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
                                            point_t position, InsertionMode insertion_mode,
                                            orientation_t orientation) -> element_key_t {
@@ -774,7 +704,7 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     }
     const auto element_key = key_insert(element_id);
 
-    // this validates our position
+    // validates our position
     if (!move_or_delete_element(element_key, position)) {
         return null_element_key;
     }
@@ -790,10 +720,12 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
         throw_exception("Not implemented.");
     }
 
-    auto segment_tree = SegmentTree {SegmentInfo {
+    auto segment_tree = SegmentTree {segment_info_t {
         .line = line,
         .p0_type = SegmentPointType::cross_point,
     }};
+
+    fmt::print("{}\n", segment_tree);
 
     // insert into underlyings
     const auto element_id = layout_.add_line_segment(std::move(segment_tree));

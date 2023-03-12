@@ -24,12 +24,16 @@ enum class SegmentPointType : uint8_t {
 
 auto format(SegmentPointType type) -> std::string;
 
-struct SegmentInfo {
+struct segment_info_t {
     line_t line {};
 
     SegmentPointType p0_type {SegmentPointType::normal};
     SegmentPointType p1_type {SegmentPointType::normal};
+
+    [[nodiscard]] auto format() const -> std::string;
 };
+
+static_assert(sizeof(segment_info_t) == 10);
 
 class SegmentTree {
    public:
@@ -37,48 +41,42 @@ class SegmentTree {
 
    public:
     [[nodiscard]] constexpr SegmentTree() = default;
-    [[nodiscard]] explicit SegmentTree(SegmentInfo segment);
+    [[nodiscard]] explicit SegmentTree(segment_info_t segment);
 
     auto swap(SegmentTree &other) noexcept -> void;
 
-    auto add_segment(SegmentInfo segment) -> void;
+    auto add_segment(segment_info_t segment) -> void;
     auto add_tree(const SegmentTree &tree) -> void;
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
-    [[nodiscard]] auto segment(std::size_t index) const -> line_t;
-    [[nodiscard]] auto segments() const -> std::span<const line_t>;
+    [[nodiscard]] auto segment(std::size_t index) const -> segment_info_t;
+    [[nodiscard]] auto segments() const -> std::span<const segment_info_t>;
 
     [[nodiscard]] auto has_input() const noexcept -> bool;
+    [[nodiscard]] auto input_count() const noexcept -> std::size_t;
     [[nodiscard]] auto input_position() const -> point_t;
 
-    [[nodiscard]] auto cross_points() const -> std::span<const point_t>;
-
     [[nodiscard]] auto output_count() const noexcept -> std::size_t;
-    [[nodiscard]] auto output_positions() const -> std::span<const point_t>;
-    [[nodiscard]] auto output_position(std::size_t index) const -> point_t;
 
     [[nodiscard]] auto format() const -> std::string;
     auto verify() const -> void;
 
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;
-    using segment_vector_t = folly::small_vector<line_t, 2, policy>;
-    using point_vector_t = folly::small_vector<point_t, 2, policy>;
+    using segment_vector_t = folly::small_vector<segment_info_t, 2, policy>;
 
-    static_assert(sizeof(segment_vector_t) == 18);
-    static_assert(sizeof(point_vector_t) == 10);
+    static_assert(sizeof(segment_vector_t) == 22);
 
     segment_vector_t segments_ {};
-    point_vector_t cross_points_ {};
-    // TODO do we need to store outputs?
-    point_vector_t output_positions_ {};
 
+    index_t output_count_ {0};
+    // TODO do we need input position?
     point_t input_position_ {};
     bool has_input_ {false};
 };
 
-static_assert(sizeof(SegmentTree) == 44);  // 18 + 10 + 10 + 4 + 1 (+ 1)
+static_assert(sizeof(SegmentTree) == 30);  // 22 + 2 + 4 + 1 (+ 1)
 
 auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
 
@@ -86,5 +84,20 @@ auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
 
 template <>
 auto std::swap(logicsim::SegmentTree &a, logicsim::SegmentTree &b) noexcept -> void;
+
+//
+// Formatters
+//
+
+template <>
+struct fmt::formatter<logicsim::SegmentPointType> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::SegmentPointType &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+    }
+};
 
 #endif

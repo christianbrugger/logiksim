@@ -366,11 +366,15 @@ auto draw_element_tree(BLContext& ctx, Schematic::ConstElement element,
     const auto& segment_tree = layout.segment_tree(element);
     const auto cross_width = line_cross_width(settings);
 
-    for (auto&& line : segment_tree.segments()) {
-        draw_line_segment(ctx, line.p1, line.p0, false, settings);
-    }
-    for (auto&& point : segment_tree.cross_points()) {
-        draw_connector_impl(ctx, point, false, cross_width, settings);
+    for (const segment_info_t& segment : segment_tree.segments()) {
+        draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
+
+        if (segment.p0_type == SegmentPointType::cross_point) {
+            draw_connector_impl(ctx, segment.line.p0, false, cross_width, settings);
+        }
+        if (segment.p1_type == SegmentPointType::cross_point) {
+            draw_connector_impl(ctx, segment.line.p1, false, cross_width, settings);
+        }
     }
 }
 
