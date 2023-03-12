@@ -283,8 +283,9 @@ class EditableCircuit {
 
     auto add_line_segment(line_t line, InsertionMode insertion_mode) -> element_key_t;
     auto fix_line_segments(point_t position) -> void;
-    auto set_segment_point_type(segment_t segment, point_t position,
-                                SegmentPointType point_type) -> void;
+    auto set_segment_point_types(
+        std::initializer_list<const std::pair<segment_t, SegmentPointType>> data,
+        point_t position) -> void;
 
     auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
     auto disconnect_outputs_and_remove_placeholders(element_id_t& element_id) -> void;

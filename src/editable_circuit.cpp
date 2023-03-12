@@ -264,9 +264,13 @@ auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
             case input:
             case output:
                 return wire_connection;
-
             case colliding_point:
                 return wire_point;
+
+            case horizontal_segment:
+                return wire_horizontal;
+            case vertical_segment:
+                return wire_vertical;
 
             case shadow_point:
             case cross_point:
@@ -796,35 +800,46 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     return element_key;
 }
 
-auto EditableCircuit::set_segment_point_type(segment_t segment, point_t position,
-                                             SegmentPointType point_type) -> void {
-    if (!segment.element_id) [[unlikely]] {
-        throw_exception("segment id invalid");
-    }
-    auto&& m_tree = layout_.modifyable_segment_tree(segment.element_id);
-    const auto old_segment = m_tree.segment(segment.segment_index);
-
-    auto new_segment = old_segment;
-    if (new_segment.line.p0 == position) {
-        new_segment.p0_type = point_type;
-    } else if (new_segment.line.p1 == position) {
-        new_segment.p1_type = point_type;
-    } else {
-        throw_exception("Position needs to be an endpoint of the given segment.");
-    }
-
-    m_tree.update_segment(segment.segment_index, new_segment);
-    // TODO only do this for some insertion modes
-    cache_remove(segment.element_id, old_segment, segment.segment_index);
-    cache_insert(segment.element_id, new_segment, segment.segment_index);
-}
-
 auto get_segment(const Layout& layout, segment_t segment) -> segment_info_t {
     return layout.segment_tree(segment.element_id).segment(segment.segment_index);
 }
 
 auto get_segment_line(const Layout& layout, segment_t segment) -> line_t {
     return get_segment(layout, segment).line;
+}
+
+auto EditableCircuit::set_segment_point_types(
+    std::initializer_list<const std::pair<segment_t, SegmentPointType>> data,
+    point_t position) -> void {
+    // remove cache
+    for (auto&& [segment, point_type] : data) {
+        const auto old_segment = get_segment(layout_, segment);
+        // TODO only do this for some insertion modes
+        cache_remove(segment.element_id, old_segment, segment.segment_index);
+    }
+
+    // update segments
+    for (auto&& [segment, point_type] : data) {
+        auto&& m_tree = layout_.modifyable_segment_tree(segment.element_id);
+        auto new_segment = m_tree.segment(segment.segment_index);
+
+        if (new_segment.line.p0 == position) {
+            new_segment.p0_type = point_type;
+        } else if (new_segment.line.p1 == position) {
+            new_segment.p1_type = point_type;
+        } else {
+            throw_exception("Position needs to be an endpoint of the given segment.");
+        }
+
+        m_tree.update_segment(segment.segment_index, new_segment);
+    }
+
+    // add to cache
+    for (auto&& [segment, point_type] : data) {
+        const auto new_segment = get_segment(layout_, segment);
+        // TODO only do this for some insertion modes
+        cache_insert(segment.element_id, new_segment, segment.segment_index);
+    }
 }
 
 auto sort_lines_with_endpoints_last(std::span<line_t> lines, point_t point) -> void {
@@ -844,7 +859,11 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
     }
 
     if (segment_count == 1) {
-        set_segment_point_type(segment.at(0), position, SegmentPointType::output);
+        set_segment_point_types(
+            {
+                std::pair {segment.at(0), SegmentPointType::output},
+            },
+            position);
         return;
     }
 
@@ -854,11 +873,14 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
             get_segment_line(layout_, segment.at(1)),
         };
         sort_lines_with_endpoints_last(lines, position);
-        const auto has_through_line = !is_endpoint(position, lines.at(0));
+        const auto has_through_line_0 = !is_endpoint(position, lines.at(0));
 
-        if (has_through_line) {
-            set_segment_point_type(segment.at(1), position,
-                                   SegmentPointType::cross_point);
+        if (has_through_line_0) {
+            set_segment_point_types(
+                {
+                    std::pair {segment.at(1), SegmentPointType::cross_point},
+                },
+                position);
             return;
         }
 
@@ -867,14 +889,30 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
         const auto parallel = horizontal_0 == horizontal_1;
 
         if (!parallel) {
-            set_segment_point_type(segment.at(0), position,
-                                   SegmentPointType::colliding_point);
-            set_segment_point_type(segment.at(1), position,
-                                   SegmentPointType::shadow_point);
+            set_segment_point_types(
+                {
+                    std::pair {segment.at(0), SegmentPointType::colliding_point},
+                    std::pair {segment.at(1), SegmentPointType::shadow_point},
+                },
+                position);
             return;
         }
 
-        // TODO
+        if (horizontal_0) {
+            set_segment_point_types(
+                {
+                    std::pair {segment.at(0), SegmentPointType::horizontal_segment},
+                    std::pair {segment.at(1), SegmentPointType::shadow_point},
+                },
+                position);
+        } else {
+            set_segment_point_types(
+                {
+                    std::pair {segment.at(0), SegmentPointType::vertical_segment},
+                    std::pair {segment.at(1), SegmentPointType::shadow_point},
+                },
+                position);
+        }
         return;
     }
 
@@ -885,30 +923,36 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
             get_segment_line(layout_, segment.at(2)),
         };
         sort_lines_with_endpoints_last(lines, position);
-        const auto has_through_line = !is_endpoint(position, lines.at(0));
+        const auto has_through_line_0 = !is_endpoint(position, lines.at(0));
 
-        if (has_through_line) {
-            set_segment_point_type(segment.at(1), position,
-                                   SegmentPointType::shadow_point);
-            set_segment_point_type(segment.at(2), position,
-                                   SegmentPointType::cross_point);
+        if (has_through_line_0) {
+            set_segment_point_types(
+                {
+                    std::pair {segment.at(1), SegmentPointType::shadow_point},
+                    std::pair {segment.at(2), SegmentPointType::cross_point},
+                },
+                position);
         } else {
-            set_segment_point_type(segment.at(0), position,
-                                   SegmentPointType::colliding_point);
-            set_segment_point_type(segment.at(1), position,
-                                   SegmentPointType::shadow_point);
-            set_segment_point_type(segment.at(2), position,
-                                   SegmentPointType::cross_point);
+            set_segment_point_types(
+                {
+                    std::pair {segment.at(0), SegmentPointType::colliding_point},
+                    std::pair {segment.at(1), SegmentPointType::shadow_point},
+                    std::pair {segment.at(2), SegmentPointType::cross_point},
+                },
+                position);
         }
         return;
     }
 
     if (segment_count == 4) {
-        set_segment_point_type(segment.at(0), position,
-                               SegmentPointType::colliding_point);
-        set_segment_point_type(segment.at(1), position, SegmentPointType::shadow_point);
-        set_segment_point_type(segment.at(2), position, SegmentPointType::shadow_point);
-        set_segment_point_type(segment.at(3), position, SegmentPointType::cross_point);
+        set_segment_point_types(
+            {
+                std::pair {segment.at(0), SegmentPointType::colliding_point},
+                std::pair {segment.at(1), SegmentPointType::shadow_point},
+                std::pair {segment.at(2), SegmentPointType::shadow_point},
+                std::pair {segment.at(3), SegmentPointType::cross_point},
+            },
+            position);
         return;
     }
 

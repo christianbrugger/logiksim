@@ -13,7 +13,13 @@ auto format(SegmentPointType type) -> std::string {
         case output:
             return "output";
         case colliding_point:
-            return "mid_point";
+            return "colliding_point";
+
+        case horizontal_segment:
+            return "horizontal_segment";
+        case vertical_segment:
+            return "vertical_segment";
+
         case shadow_point:
             return "shadow_point";
         case cross_point:
@@ -85,6 +91,8 @@ auto SegmentTree::register_segment(segment_info_t segment) -> void {
             }
 
             case colliding_point:
+            case horizontal_segment:
+            case vertical_segment:
             case shadow_point:
             case cross_point:
             case new_unknown: {
@@ -120,6 +128,8 @@ auto SegmentTree::unregister_segment(segment_info_t segment) -> void {
             }
 
             case colliding_point:
+            case horizontal_segment:
+            case vertical_segment:
             case shadow_point:
             case cross_point:
             case new_unknown: {
