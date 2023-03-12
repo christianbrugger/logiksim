@@ -93,7 +93,19 @@ class ConnectionCache {
 
 class CollisionCache {
    public:
-    enum class CollisionState : uint8_t {
+    enum class ItemType {
+        element_body,
+        element_connection,
+        wire_connection,
+        wire_horizontal,
+        wire_vertical,
+        wire_point,
+
+        // only for collisions
+        wire_new_unknown_point,
+    };
+
+    enum class CacheState {
         element_body,
         element_connection,
         wire_connection,
@@ -134,9 +146,9 @@ class CollisionCache {
     auto remove(element_id_t element_id, segment_info_t segment) -> void;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
-    [[nodiscard]] auto is_colliding(segment_info_t segment) const -> bool;
+    [[nodiscard]] auto is_colliding(line_t line) const -> bool;
 
-    [[nodiscard]] static auto to_state(collision_data_t data) -> CollisionState;
+    [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
 
     // std::tuple<point_t, CollisionState>
     [[nodiscard]] auto states() const {
@@ -148,7 +160,9 @@ class CollisionCache {
     // TODO implement validate
 
    private:
-    auto state_colliding(point_t position, CollisionState state) const -> bool;
+    auto state_colliding(point_t position, ItemType item_type) const -> bool;
+    auto get_first_wire(point_t position) const -> element_id_t;
+    auto creates_loop(line_t line) const -> bool;
 
     map_type map_ {};
 };
@@ -283,7 +297,7 @@ class EditableCircuit {
 
     [[nodiscard]] auto is_representable_(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
-    [[nodiscard]] auto is_colliding(segment_info_t segment) const -> bool;
+    [[nodiscard]] auto is_colliding(line_t line) const -> bool;
     [[nodiscard]] auto is_element_cached(element_id_t element_id) const -> bool;
 
     auto key_insert(element_id_t element_id) -> element_key_t;

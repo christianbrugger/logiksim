@@ -835,7 +835,7 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
         const auto size = 0.25;
 
         switch (state) {
-            using enum CollisionCache::CollisionState;
+            using enum CollisionCache::CacheState;
 
             case element_body: {
                 render_point(ctx, point, PointShape::square, color, size, settings);

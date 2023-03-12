@@ -18,13 +18,10 @@ auto format(SegmentPointType type) -> std::string {
             return "shadow_point";
         case cross_point:
             return "cross_point";
+        case new_unknown:
+            return "new_unknown";
     }
     throw_exception("Don't know how to convert SegmentPointType to string.");
-}
-
-auto is_connection(SegmentPointType point_type) -> bool {
-    return point_type == SegmentPointType::input
-           || point_type == SegmentPointType::output;
 }
 
 auto segment_info_t::format() const -> std::string {
@@ -86,7 +83,8 @@ auto SegmentTree::register_segment(segment_info_t segment) -> void {
 
             case colliding_point:
             case shadow_point:
-            case cross_point: {
+            case cross_point:
+            case new_unknown: {
                 break;
             }
         }
@@ -120,7 +118,8 @@ auto SegmentTree::unregister_segment(segment_info_t segment) -> void {
 
             case colliding_point:
             case shadow_point:
-            case cross_point: {
+            case cross_point:
+            case new_unknown: {
                 break;
             }
         }

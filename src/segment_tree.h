@@ -23,11 +23,11 @@ enum class SegmentPointType : uint8_t {
     // no collision
     shadow_point,
     cross_point,
+    // unknown state
+    new_unknown,
 };
 
 auto format(SegmentPointType type) -> std::string;
-
-auto is_connection(SegmentPointType point_type) -> bool;
 
 struct segment_info_t {
     line_t line {};

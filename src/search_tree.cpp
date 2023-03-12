@@ -90,8 +90,6 @@ auto SearchTree::update(element_id_t new_element_id, element_id_t old_element_id
             remove(old_element_id, segment.line, segment_index_t {segment_index});
             insert(new_element_id, segment.line, segment_index_t {segment_index});
         }
-        for (auto &&segment : data.segment_tree.segments()) {
-        }
     } else {
         // r-tree data is immutable
         remove(old_element_id, data);

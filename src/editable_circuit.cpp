@@ -193,27 +193,25 @@ namespace {
 
 }  // namespace
 
-// next_state(point_t position, CollisionState state) -> bool
+// next_state(point_t position, ItemType state) -> bool
 template <typename Func>
 auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
     if (!iter_input_location(
             data, [=](point_t position, orientation_t _ [[maybe_unused]]) {
-                return next_state(position,
-                                  CollisionCache::CollisionState::element_connection);
+                return next_state(position, CollisionCache::ItemType::element_connection);
             })) {
         return false;
     }
 
     if (!iter_element_body_points(data, [=](point_t position) {
-            return next_state(position, CollisionCache::CollisionState::element_body);
+            return next_state(position, CollisionCache::ItemType::element_body);
         })) {
         return false;
     }
 
     if (!iter_output_location(
             data, [=](point_t position, orientation_t _ [[maybe_unused]]) {
-                return next_state(position,
-                                  CollisionCache::CollisionState::element_connection);
+                return next_state(position, CollisionCache::ItemType::element_connection);
             })) {
         return false;
     }
@@ -221,7 +219,7 @@ auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) 
     return true;
 }
 
-// next_state(point_t position, CollisionState state) -> bool
+// next_state(point_t position, ItemType state) -> bool
 template <typename Func>
 auto iter_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
     if (data.element_type == ElementType::placeholder) {
@@ -235,49 +233,61 @@ auto iter_collision_state(layout_calculation_data_t data, Func next_state) -> bo
 
 auto is_connection(SegmentPointType point_type) -> bool;
 
-// next_state(point_t position, CollisionState state) -> bool
+// next_state(point_t position, ItemType state) -> bool
 template <typename Func>
 auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
+    using enum CollisionCache::ItemType;
+
     {
         const auto line = order_points(segment.line);
 
         if (is_horizontal(line)) {
             for (auto x : range(line.p0.x + grid_t {1}, line.p1.x)) {
-                if (!next_state(point_t {x, line.p0.y},
-                                CollisionCache::CollisionState::wire_horizontal)) {
+                if (!next_state(point_t {x, line.p0.y}, wire_horizontal)) {
                     return false;
                 }
             }
         } else {
             for (auto y : range(line.p0.y + grid_t {1}, line.p1.y)) {
-                if (!next_state(point_t {line.p0.x, y},
-                                CollisionCache::CollisionState::wire_vertical)) {
+                if (!next_state(point_t {line.p0.x, y}, wire_vertical)) {
                     return false;
                 }
             }
         }
     }
 
-    const auto to_state = [](SegmentPointType type) {
-        if (is_connection(type)) {
-            return CollisionCache::CollisionState::wire_connection;
+    const auto to_state
+        = [](SegmentPointType type) -> std::optional<CollisionCache::ItemType> {
+        switch (type) {
+            using enum SegmentPointType;
+
+            case input:
+            case output:
+                return wire_connection;
+
+            case colliding_point:
+                return wire_point;
+
+            case shadow_point:
+            case cross_point:
+                return std::nullopt;
+
+            case new_unknown:
+                return wire_new_unknown_point;
         }
-        if (type == SegmentPointType::colliding_point) {
-            return CollisionCache::CollisionState::wire_point;
-        }
-        return CollisionCache::CollisionState::invalid_state;
+        throw_exception("unknown point type");
     };
 
     const auto p0_state = to_state(segment.p0_type);
     const auto p1_state = to_state(segment.p1_type);
 
-    if (p0_state != CollisionCache::CollisionState::invalid_state) {
-        if (!next_state(segment.line.p0, p0_state)) {
+    if (p0_state) {
+        if (!next_state(segment.line.p0, *p0_state)) {
             return false;
         }
     }
-    if (p1_state != CollisionCache::CollisionState::invalid_state) {
-        if (!next_state(segment.line.p1, p1_state)) {
+    if (p1_state) {
+        if (!next_state(segment.line.p1, *p1_state)) {
             return false;
         }
     }
@@ -289,7 +299,7 @@ namespace {
 // apply_func(element_id_t& obj) -> void
 template <typename Apply>
 auto apply_function(CollisionCache::map_type& map, point_t position,
-                    CollisionCache::CollisionState state, Apply apply_func) -> bool {
+                    CollisionCache::ItemType state, Apply apply_func) -> bool {
     auto& data = map[position];
 
     const auto set_connection_tag = [&]() {
@@ -300,7 +310,7 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
     };
 
     switch (state) {
-        using enum CollisionCache::CollisionState;
+        using enum CollisionCache::ItemType;
 
         case element_body: {
             apply_func(data.element_id_body);
@@ -329,10 +339,9 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
             apply_func(data.element_id_vertical);
             break;
         }
-        case wire_crossing:
-        case element_wire_connection:
-        case invalid_state: {
-            throw_exception("infered states are invalid when iterating element");
+        case wire_new_unknown_point: {
+            throw_exception("cannot add unknown point type");
+            break;
         }
     };
 
@@ -355,10 +364,9 @@ auto insert_impl(CollisionCache::map_type& map, element_id_t element_id, Data da
         obj = element_id;
     };
 
-    iter_collision_state(
-        data, [&](point_t position, CollisionCache::CollisionState state) {
-            return apply_function(map, position, state, check_empty_and_assign);
-        });
+    iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
+        return apply_function(map, position, state, check_empty_and_assign);
+    });
 }
 
 template <class Data>
@@ -371,10 +379,9 @@ auto remove_impl(CollisionCache::map_type& map, element_id_t element_id, Data da
         obj = null_element;
     };
 
-    iter_collision_state(
-        data, [&](point_t position, CollisionCache::CollisionState state) {
-            return apply_function(map, position, state, check_and_delete);
-        });
+    iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
+        return apply_function(map, position, state, check_and_delete);
+    });
 }
 
 template <class Data>
@@ -387,10 +394,9 @@ auto update_impl(CollisionCache::map_type& map, element_id_t new_element_id,
         obj = new_element_id;
     };
 
-    iter_collision_state(
-        data, [&](point_t position, CollisionCache::CollisionState state) {
-            return apply_function(map, position, state, check_and_update);
-        });
+    iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
+        return apply_function(map, position, state, check_and_update);
+    });
 }
 
 auto CollisionCache::insert(element_id_t element_id, layout_calculation_data_t data)
@@ -422,36 +428,40 @@ auto CollisionCache::remove(element_id_t element_id, segment_info_t segment) -> 
     remove_impl(map_, element_id, segment);
 }
 
-auto CollisionCache::state_colliding(point_t position, CollisionState state) const
-    -> bool {
+auto CollisionCache::state_colliding(point_t position, ItemType item_type) const -> bool {
     if (const auto it = map_.find(position); it != map_.end()) {
         const auto data = it->second;
 
-        switch (state) {
-            using enum CollisionCache::CollisionState;
+        switch (item_type) {
+            using enum CollisionCache::ItemType;
 
             case element_body: {
                 return true;
             }
             case element_connection: {
-                return to_state(data) != wire_connection;
+                return to_state(data) != CacheState::wire_connection;
             }
             case wire_connection: {
-                return to_state(data) != element_connection;
+                return to_state(data) != CacheState::element_connection;
             }
             case wire_horizontal: {
-                return to_state(data) != wire_vertical;
+                return to_state(data) != CacheState::wire_vertical;
             }
             case wire_vertical: {
-                return to_state(data) != wire_horizontal;
+                return to_state(data) != CacheState::wire_horizontal;
             }
             case wire_point: {
                 return true;
             }
-            case wire_crossing:
-            case element_wire_connection:
-            case invalid_state: {
-                throw_exception("infered states are invalid when iterating element");
+            case ItemType::wire_new_unknown_point: {
+                const auto state = to_state(data);
+
+                return state != CacheState::element_connection
+                       && state != CacheState::wire_connection
+                       && state != CacheState::wire_horizontal
+                       && state != CacheState::wire_vertical
+                       && state != CacheState::wire_point
+                       && state != CacheState::wire_crossing;
             }
         };
     }
@@ -459,19 +469,50 @@ auto CollisionCache::state_colliding(point_t position, CollisionState state) con
 };
 
 auto CollisionCache::is_colliding(layout_calculation_data_t data) const -> bool {
-    return !iter_collision_state(data, [&](point_t position, CollisionState state) {
+    return !iter_collision_state(data, [&](point_t position, ItemType state) {
         return !state_colliding(position, state);
     });
 }
 
-auto CollisionCache::is_colliding(segment_info_t segment) const -> bool {
-    return !iter_collision_state(segment, [&](point_t position, CollisionState state) {
+auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
+    if (const auto it = map_.find(position); it != map_.end()) {
+        const auto data = it->second;
+
+        if (data.element_id_horizontal != null_element) {
+            return data.element_id_horizontal;
+        }
+        if (has_vertical_element(data)) {
+            return data.element_id_vertical;
+        }
+    }
+    return null_element;
+}
+
+auto CollisionCache::creates_loop(line_t line) const -> bool {
+    const auto element_id_0 = get_first_wire(line.p0);
+    const auto element_id_1 = get_first_wire(line.p1);
+
+    return element_id_0 != null_element && element_id_0 == element_id_1;
+}
+
+auto CollisionCache::is_colliding(line_t line) const -> bool {
+    if (creates_loop(line)) {
+        return false;
+    }
+
+    const auto segment = segment_info_t {
+        .line = line,
+        .p0_type = SegmentPointType::new_unknown,
+        .p1_type = SegmentPointType::new_unknown,
+    };
+
+    return !iter_collision_state(segment, [&](point_t position, ItemType state) {
         return !state_colliding(position, state);
     });
 }
 
-auto CollisionCache::to_state(collision_data_t data) -> CollisionState {
-    using enum CollisionState;
+auto CollisionCache::to_state(collision_data_t data) -> CacheState {
+    using enum CacheState;
 
     if (data.element_id_body != null_element  //
         && data.element_id_horizontal == null_element
@@ -726,7 +767,9 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
         throw_exception("Inverter needs to have exactly one input.");
     }
     if (type != inverter_element && input_count < 2) [[unlikely]] {
-        throw_exception("Input count needs to be at least 2 for standard elements.");
+        throw_exception(
+            "Input count needs to be at least 2 for "
+            "standard elements.");
     }
 
     // insert into underlyings
@@ -760,81 +803,82 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
         throw_exception("Not implemented.");
     }
 
-    const auto segments_p0 = selection_cache_.query_line_segments(line.p0);
-    const auto segments_p1 = selection_cache_.query_line_segments(line.p1);
+    // check collisions
+    if (is_colliding(line)) {
+        fmt::print("Collision failed\n");
+        return null_element_key;
+    }
 
-    fmt::print("p0 = {}\n", segments_p0);
-    fmt::print("p1 = {}\n", segments_p1);
+    if (false) {
+        const auto segments_p0 = selection_cache_.query_line_segments(line.p0);
+        const auto segments_p1 = selection_cache_.query_line_segments(line.p1);
 
-    if (segments_p0.at(0)) {
-        const auto element_id = get_unique_element_id(segments_p0);
+        fmt::print("p0 = {}\n", segments_p0);
+        fmt::print("p1 = {}\n", segments_p1);
 
-        if (element_id == null_element) {
-            return null_element_key;
-        }
+        if (segments_p0.at(0)) {
+            const auto element_id = get_unique_element_id(segments_p0);
 
-        if (segments_p0.at(1)) {
-            return null_element_key;
-        }
-
-        const auto colliding_index = segments_p0.at(0).segment_index;
-        const auto colliding_segment
-            = layout_.segment_tree(element_id).segment(colliding_index);
-
-        const auto segment = segment_info_t {
-            .line = line,
-            .p0_type = SegmentPointType::shadow_point,
-            .p1_type = SegmentPointType::output,
-        };
-
-        if (is_colliding(segment)) {
-            return null_element_key;
-        }
-
-        if (colliding_segment.line.p0 == line.p0) {
-            if (colliding_segment.p0_type == SegmentPointType::output) {
-                auto&& mtree = layout_.modifyable_segment_tree(element_id);
-                auto msegment = colliding_segment;
-
-                msegment.p0_type = SegmentPointType::colliding_point;
-
-                mtree.update_segment(colliding_index, msegment);
-
-                cache_remove(element_id, colliding_segment, colliding_index);
-                cache_insert(element_id, msegment, colliding_index);
+            if (element_id == null_element) {
+                return null_element_key;
             }
-        }
-        if (colliding_segment.line.p1 == line.p0) {
-            if (colliding_segment.p1_type == SegmentPointType::output) {
-                auto&& mtree = layout_.modifyable_segment_tree(element_id);
-                auto msegment = colliding_segment;
 
-                msegment.p1_type = SegmentPointType::colliding_point;
-
-                mtree.update_segment(colliding_index, msegment);
-
-                cache_remove(element_id, colliding_segment, colliding_index);
-                cache_insert(element_id, msegment, colliding_index);
+            if (segments_p0.at(1)) {
+                return null_element_key;
             }
+
+            const auto colliding_index = segments_p0.at(0).segment_index;
+            const auto colliding_segment
+                = layout_.segment_tree(element_id).segment(colliding_index);
+
+            const auto segment = segment_info_t {
+                .line = line,
+                .p0_type = SegmentPointType::shadow_point,
+                .p1_type = SegmentPointType::output,
+            };
+
+            if (colliding_segment.line.p0 == line.p0) {
+                if (colliding_segment.p0_type == SegmentPointType::output) {
+                    auto&& mtree = layout_.modifyable_segment_tree(element_id);
+                    auto msegment = colliding_segment;
+
+                    msegment.p0_type = SegmentPointType::colliding_point;
+
+                    mtree.update_segment(colliding_index, msegment);
+
+                    cache_remove(element_id, colliding_segment, colliding_index);
+                    cache_insert(element_id, msegment, colliding_index);
+                }
+            }
+            if (colliding_segment.line.p1 == line.p0) {
+                if (colliding_segment.p1_type == SegmentPointType::output) {
+                    auto&& mtree = layout_.modifyable_segment_tree(element_id);
+                    auto msegment = colliding_segment;
+
+                    msegment.p1_type = SegmentPointType::colliding_point;
+
+                    mtree.update_segment(colliding_index, msegment);
+
+                    cache_remove(element_id, colliding_segment, colliding_index);
+                    cache_insert(element_id, msegment, colliding_index);
+                }
+            }
+
+            auto& tree = layout_.modifyable_segment_tree(element_id);
+            const auto index = tree.add_segment(segment);
+
+            cache_insert(element_id, segment, index);
+            return to_element_key(element_id);
         }
-
-        auto& tree = layout_.modifyable_segment_tree(element_id);
-        const auto index = tree.add_segment(segment);
-
-        cache_insert(element_id, segment, index);
-        return to_element_key(element_id);
     }
 
     // Create new segment tree
 
     const auto segment = segment_info_t {
         .line = line,
-        .p0_type = SegmentPointType::output,
-        .p1_type = SegmentPointType::output,
+        .p0_type = SegmentPointType::shadow_point,
+        .p1_type = SegmentPointType::shadow_point,
     };
-    if (is_colliding(segment)) {
-        return null_element_key;
-    }
 
     // insert into underlyings
     const auto element_id = layout_.add_line_tree(SegmentTree {segment});
@@ -919,7 +963,9 @@ auto EditableCircuit::change_insertion_mode(element_key_t element_key,
 auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
                                             InsertionMode new_insertion_mode) -> bool {
     if (schematic_.element(element_id).is_placeholder()) [[unlikely]] {
-        throw_exception("cannot change insertion mode of placeholders.");
+        throw_exception(
+            "cannot change insertion mode of "
+            "placeholders.");
     }
     const auto old_insertion_mode = to_insertion_mode(layout_.display_state(element_id));
 
@@ -1000,10 +1046,11 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
 }
 
 /*
-auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_key_t {
-    const auto delays = calculate_output_delays(line_tree);
-    const auto max_delay = std::ranges::max(delays);
-    const auto output_count = delays.size();
+auto EditableCircuit::add_wire(LineTree&& line_tree) ->
+element_key_t { const auto delays =
+calculate_output_delays(line_tree); const auto max_delay =
+std::ranges::max(delays); const auto output_count =
+delays.size();
 
     // check for collisions
     {
@@ -1023,7 +1070,8 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_key_t {
     }
 
     // insert into underlyings
-    auto element_id = layout_.add_wire(std::move(line_tree));
+    auto element_id =
+layout_.add_wire(std::move(line_tree));
     {
         const auto element = schematic_.add_element({
             .element_type = ElementType::wire,
@@ -1032,8 +1080,9 @@ auto EditableCircuit::add_wire(LineTree&& line_tree) -> element_key_t {
             .output_delays = delays,
             .history_length = max_delay,
         });
-        if (element.element_id() != element_id) [[unlikely]] {
-            throw_exception("Added element ids don't match.");
+        if (element.element_id() != element_id)
+[[unlikely]] { throw_exception("Added element ids don't
+match.");
         }
     }
     const auto element_key = key_insert(element_id);
@@ -1116,7 +1165,9 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
     auto last_id1 = schematic_.swap_and_delete_element(element_id);
     auto last_id2 = layout_.swap_and_delete_element(element_id);
     if (last_id1 != last_id2) {
-        throw_exception("Returned id's during deletion are not the same.");
+        throw_exception(
+            "Returned id's during deletion are not the "
+            "same.");
     }
 
     // update ids
@@ -1207,13 +1258,17 @@ auto connect_connector(connector_data_t connector,
 
         if (found_connection.has_connected_element()) {
             if (!found_connection.connected_element().is_placeholder()) [[unlikely]] {
-                throw_exception("Connection is already connected at this location.");
+                throw_exception(
+                    "Connection is already connected at "
+                    "this location.");
             }
             // mark placeholder for deletion
             unused_placeholder_id = found_connection.connected_element_id();
         }
         if (!orientations_compatible(connector.orientation, found_orientation)) {
-            throw_exception("Connection have incompatible orientations.");
+            throw_exception(
+                "Connection have incompatible "
+                "orientations.");
         }
 
         // make connection in schematic
@@ -1238,7 +1293,8 @@ auto EditableCircuit::connect_and_cache_element(element_id_t& element_id) -> voi
         data, [&, element_id](connection_id_t input_id, point_t position,
                               orientation_t orientation) {
             auto input = connector_data_t {{element_id, input_id}, position, orientation};
-            // connect the input using the output_connections cache
+            // connect the input using the
+            // output_connections cache
             const auto placeholder_id
                 = connect_connector(input, output_connections_, schematic_);
             add_if_valid(placeholder_id);
@@ -1250,7 +1306,8 @@ auto EditableCircuit::connect_and_cache_element(element_id_t& element_id) -> voi
                                                       point_t position,
                                                       orientation_t orientation) mutable {
         auto output = connector_data_t {{element_id, output_id}, position, orientation};
-        // connect the output using the input_connections cache
+        // connect the output using the
+        // input_connections cache
         const auto placeholder_id
             = connect_connector(output, input_connections_, schematic_);
         add_if_valid(placeholder_id);
@@ -1293,9 +1350,14 @@ auto EditableCircuit::is_colliding(layout_calculation_data_t data) const -> bool
            || output_connections_.is_colliding(data);
 }
 
-auto EditableCircuit::is_colliding(segment_info_t segment) const -> bool {
+auto EditableCircuit::is_colliding(line_t line) const -> bool {
     // TODO connections colliding
-    return collicions_cache_.is_colliding(segment);
+
+    if (collicions_cache_.is_colliding(line)) {
+        return true;
+    }
+
+    return false;
 }
 
 auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {

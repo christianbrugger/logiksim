@@ -165,7 +165,9 @@ struct segment_t {
     [[nodiscard]] auto operator==(const segment_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const segment_t &other) const = default;
 
-    [[nodiscard]] explicit constexpr operator bool() const noexcept;
+    [[nodiscard]] explicit constexpr operator bool() const noexcept {
+        return element_id != null_element;
+    }
 };
 
 inline constexpr auto null_segment = segment_t {null_element, null_segment_index};

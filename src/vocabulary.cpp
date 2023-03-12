@@ -78,10 +78,6 @@ auto segment_t::format() const -> std::string {
     return fmt::format("<Element {}, Segment {}>", element_id, segment_index);
 }
 
-constexpr segment_t::operator bool() const noexcept {
-    return element_id != null_element;
-}
-
 template <typename T>
 auto format_microsecond_time(T time_value) {
     if (-1us < time_value && time_value < 1us) {
