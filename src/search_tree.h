@@ -74,6 +74,8 @@ class SearchTree {
     tree_t tree_ {};
 };
 
+auto get_segment_count(SearchTree::queried_segments_t result) -> int;
+auto all_same_element_id(SearchTree::queried_segments_t result) -> bool;
 auto get_unique_element_id(SearchTree::queried_segments_t) -> element_id_t;
 
 }  // namespace logicsim

@@ -84,4 +84,8 @@ auto to_angle(orientation_t orientation) -> double {
     throw_exception("unhandeled orientation");
 }
 
+auto is_endpoint(point_t point, line_t line) -> bool {
+    return line.p0 == point || line.p1 == point;
+}
+
 }  // namespace logicsim

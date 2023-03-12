@@ -58,6 +58,9 @@ auto std::swap(logicsim::SegmentTree& a, logicsim::SegmentTree& b) noexcept -> v
 }
 
 namespace logicsim {
+auto SegmentTree::get_next_index() const -> segment_index_t {
+    return segment_index_t {gsl::narrow<segment_index_t::value_type>(segments_.size())};
+}
 
 auto SegmentTree::register_segment(segment_info_t segment) -> void {
     for (auto [type, point] : {
@@ -127,8 +130,7 @@ auto SegmentTree::unregister_segment(segment_info_t segment) -> void {
 }
 
 auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
-    const auto new_index
-        = segment_index_t {gsl::narrow<segment_index_t::value_type>(segments_.size())};
+    const auto new_index = get_next_index();
 
     register_segment(segment);
     segments_.push_back(segment);
@@ -136,7 +138,9 @@ auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
     return new_index;
 }
 
-auto SegmentTree::add_tree(const SegmentTree& tree) -> void {
+auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
+    const auto next_index = get_next_index();
+
     if (tree.has_input_) {
         if (has_input_) [[unlikely]] {
             throw_exception("Merged tree cannot have two inputs");
@@ -147,6 +151,8 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> void {
 
     output_count_ += tree.output_count_;
     segments_.insert(segments_.end(), tree.segments_.begin(), tree.segments_.end());
+
+    return next_index;
 }
 
 auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {

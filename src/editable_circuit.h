@@ -148,7 +148,7 @@ class CollisionCache {
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(line_t line) const -> bool;
 
-    [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
+    [[nodiscard]] auto get_first_wire(point_t position) const -> element_id_t;
 
     // std::tuple<point_t, CollisionState>
     [[nodiscard]] auto states() const {
@@ -160,9 +160,10 @@ class CollisionCache {
     // TODO implement validate
 
    private:
-    auto state_colliding(point_t position, ItemType item_type) const -> bool;
-    auto get_first_wire(point_t position) const -> element_id_t;
-    auto creates_loop(line_t line) const -> bool;
+    [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
+    [[nodiscard]] auto state_colliding(point_t position, ItemType item_type) const
+        -> bool;
+    [[nodiscard]] auto creates_loop(line_t line) const -> bool;
 
     map_type map_ {};
 };
@@ -281,6 +282,9 @@ class EditableCircuit {
     auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
 
     auto add_line_segment(line_t line, InsertionMode insertion_mode) -> element_key_t;
+    auto fix_line_segments(point_t position) -> void;
+    auto set_segment_point_type(segment_t segment, point_t position,
+                                SegmentPointType point_type) -> void;
 
     auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
     auto disconnect_outputs_and_remove_placeholders(element_id_t& element_id) -> void;

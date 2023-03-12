@@ -460,8 +460,7 @@ auto CollisionCache::state_colliding(point_t position, ItemType item_type) const
                        && state != CacheState::wire_connection
                        && state != CacheState::wire_horizontal
                        && state != CacheState::wire_vertical
-                       && state != CacheState::wire_point
-                       && state != CacheState::wire_crossing;
+                       && state != CacheState::wire_point;
             }
         };
     }
@@ -797,106 +796,203 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     return element_key;
 }
 
+auto EditableCircuit::set_segment_point_type(segment_t segment, point_t position,
+                                             SegmentPointType point_type) -> void {
+    if (!segment.element_id) [[unlikely]] {
+        throw_exception("segment id invalid");
+    }
+    auto&& m_tree = layout_.modifyable_segment_tree(segment.element_id);
+    const auto old_segment = m_tree.segment(segment.segment_index);
+
+    auto new_segment = old_segment;
+    if (new_segment.line.p0 == position) {
+        new_segment.p0_type = point_type;
+    } else if (new_segment.line.p1 == position) {
+        new_segment.p1_type = point_type;
+    } else {
+        throw_exception("Position needs to be an endpoint of the given segment.");
+    }
+
+    m_tree.update_segment(segment.segment_index, new_segment);
+    // TODO only do this for some insertion modes
+    cache_remove(segment.element_id, old_segment, segment.segment_index);
+    cache_insert(segment.element_id, new_segment, segment.segment_index);
+}
+
+auto get_segment(const Layout& layout, segment_t segment) -> segment_info_t {
+    return layout.segment_tree(segment.element_id).segment(segment.segment_index);
+}
+
+auto get_segment_line(const Layout& layout, segment_t segment) -> line_t {
+    return get_segment(layout, segment).line;
+}
+
+auto sort_lines_with_endpoints_last(std::span<line_t> lines, point_t point) -> void {
+    std::ranges::sort(lines, {},
+                      [point](line_t line) { return is_endpoint(point, line); });
+}
+
+auto EditableCircuit::fix_line_segments(point_t position) -> void {
+    const auto segment = selection_cache_.query_line_segments(position);
+    const auto segment_count = get_segment_count(segment);
+
+    if (segment_count == 0) [[unlikely]] {
+        throw_exception("Could not find even one segments at position.");
+    }
+    if (!all_same_element_id(segment)) [[unlikely]] {
+        throw_exception("All segments need to belong to the same segment tree.");
+    }
+
+    if (segment_count == 1) {
+        set_segment_point_type(segment.at(0), position, SegmentPointType::output);
+        return;
+    }
+
+    if (segment_count == 2) {
+        auto lines = std::array {
+            get_segment_line(layout_, segment.at(0)),
+            get_segment_line(layout_, segment.at(1)),
+        };
+        sort_lines_with_endpoints_last(lines, position);
+        const auto has_through_line = !is_endpoint(position, lines.at(0));
+
+        if (has_through_line) {
+            set_segment_point_type(segment.at(1), position,
+                                   SegmentPointType::cross_point);
+            return;
+        }
+
+        const auto horizontal_0 = is_horizontal(lines.at(0));
+        const auto horizontal_1 = is_horizontal(lines.at(1));
+        const auto parallel = horizontal_0 == horizontal_1;
+
+        if (!parallel) {
+            set_segment_point_type(segment.at(0), position,
+                                   SegmentPointType::colliding_point);
+            set_segment_point_type(segment.at(1), position,
+                                   SegmentPointType::shadow_point);
+            return;
+        }
+
+        // TODO
+        return;
+    }
+
+    if (segment_count == 3) {
+        auto lines = std::array {
+            get_segment_line(layout_, segment.at(0)),
+            get_segment_line(layout_, segment.at(1)),
+            get_segment_line(layout_, segment.at(2)),
+        };
+        sort_lines_with_endpoints_last(lines, position);
+        const auto has_through_line = !is_endpoint(position, lines.at(0));
+
+        if (has_through_line) {
+            set_segment_point_type(segment.at(1), position,
+                                   SegmentPointType::shadow_point);
+            set_segment_point_type(segment.at(2), position,
+                                   SegmentPointType::cross_point);
+        } else {
+            set_segment_point_type(segment.at(0), position,
+                                   SegmentPointType::colliding_point);
+            set_segment_point_type(segment.at(1), position,
+                                   SegmentPointType::shadow_point);
+            set_segment_point_type(segment.at(2), position,
+                                   SegmentPointType::cross_point);
+        }
+        return;
+    }
+
+    if (segment_count == 4) {
+        set_segment_point_type(segment.at(0), position,
+                               SegmentPointType::colliding_point);
+        set_segment_point_type(segment.at(1), position, SegmentPointType::shadow_point);
+        set_segment_point_type(segment.at(2), position, SegmentPointType::shadow_point);
+        set_segment_point_type(segment.at(3), position, SegmentPointType::cross_point);
+        return;
+    }
+
+    throw_exception("unexpected unhandeled case");
+}
+
 auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
     -> element_key_t {
     if (insertion_mode != InsertionMode::insert_or_discard) {
         throw_exception("Not implemented.");
     }
 
-    // check collisions
     if (is_colliding(line)) {
         fmt::print("Collision failed\n");
         return null_element_key;
     }
 
-    if (false) {
-        const auto segments_p0 = selection_cache_.query_line_segments(line.p0);
-        const auto segments_p1 = selection_cache_.query_line_segments(line.p1);
+    const auto colliding_id_0 = collicions_cache_.get_first_wire(line.p0);
+    const auto colliding_id_1 = collicions_cache_.get_first_wire(line.p1);
 
-        fmt::print("p0 = {}\n", segments_p0);
-        fmt::print("p1 = {}\n", segments_p1);
+    auto merge_tree = null_element_key;
 
-        if (segments_p0.at(0)) {
-            const auto element_id = get_unique_element_id(segments_p0);
+    if (colliding_id_0) {
+        merge_tree = to_element_key(colliding_id_0);
+    }
 
-            if (element_id == null_element) {
-                return null_element_key;
+    if (colliding_id_1) {
+        if (!merge_tree) {
+            merge_tree = to_element_key(colliding_id_1);
+        } else {
+            // merge two trees
+            const auto tree_copy = layout_.segment_tree(colliding_id_1);
+            swap_and_delete_single_element(colliding_id_1);
+
+            const auto element_id = to_element_id(merge_tree);
+            auto&& m_tree = layout_.modifyable_segment_tree(element_id);
+
+            auto segment_index = m_tree.add_tree(tree_copy);
+            // TODO add only in specific mode?
+            for (auto&& segment : m_tree.segments()) {
+                cache_insert(element_id, segment, segment_index++);
             }
-
-            if (segments_p0.at(1)) {
-                return null_element_key;
-            }
-
-            const auto colliding_index = segments_p0.at(0).segment_index;
-            const auto colliding_segment
-                = layout_.segment_tree(element_id).segment(colliding_index);
-
-            const auto segment = segment_info_t {
-                .line = line,
-                .p0_type = SegmentPointType::shadow_point,
-                .p1_type = SegmentPointType::output,
-            };
-
-            if (colliding_segment.line.p0 == line.p0) {
-                if (colliding_segment.p0_type == SegmentPointType::output) {
-                    auto&& mtree = layout_.modifyable_segment_tree(element_id);
-                    auto msegment = colliding_segment;
-
-                    msegment.p0_type = SegmentPointType::colliding_point;
-
-                    mtree.update_segment(colliding_index, msegment);
-
-                    cache_remove(element_id, colliding_segment, colliding_index);
-                    cache_insert(element_id, msegment, colliding_index);
-                }
-            }
-            if (colliding_segment.line.p1 == line.p0) {
-                if (colliding_segment.p1_type == SegmentPointType::output) {
-                    auto&& mtree = layout_.modifyable_segment_tree(element_id);
-                    auto msegment = colliding_segment;
-
-                    msegment.p1_type = SegmentPointType::colliding_point;
-
-                    mtree.update_segment(colliding_index, msegment);
-
-                    cache_remove(element_id, colliding_segment, colliding_index);
-                    cache_insert(element_id, msegment, colliding_index);
-                }
-            }
-
-            auto& tree = layout_.modifyable_segment_tree(element_id);
-            const auto index = tree.add_segment(segment);
-
-            cache_insert(element_id, segment, index);
-            return to_element_key(element_id);
         }
     }
 
-    // Create new segment tree
-
-    const auto segment = segment_info_t {
-        .line = line,
-        .p0_type = SegmentPointType::shadow_point,
-        .p1_type = SegmentPointType::shadow_point,
-    };
-
-    // insert into underlyings
-    const auto element_id = layout_.add_line_tree(SegmentTree {segment});
-    {
-        const auto element = schematic_.add_element({
-            .element_type = ElementType::wire,
-            .input_count = 1,
-            .output_count = 0,
-        });
-        if (element.element_id() != element_id) [[unlikely]] {
-            throw_exception("Added element ids don't match.");
+    if (merge_tree == null_element_key) {
+        // create new element tree
+        const auto element_id = layout_.add_line_tree(SegmentTree {});
+        {
+            const auto element = schematic_.add_element({
+                .element_type = ElementType::wire,
+                .input_count = 1,
+                .output_count = 0,
+            });
+            if (element.element_id() != element_id) [[unlikely]] {
+                throw_exception("Added element ids don't match.");
+            }
         }
+        merge_tree = key_insert(element_id);
     }
-    const auto element_key = key_insert(element_id);
 
-    // TODO
-    cache_insert(element_id, segment, segment_index_t {0});
-    return element_key;
+    if (merge_tree) {
+        // insert new segment with non-colliding endpoints
+        const auto element_id = to_element_id(merge_tree);
+        auto&& m_tree = layout_.modifyable_segment_tree(element_id);
+
+        const auto segment = segment_info_t {
+            .line = line,
+            .p0_type = SegmentPointType::shadow_point,
+            .p1_type = SegmentPointType::shadow_point,
+        };
+
+        const auto index = m_tree.add_segment(segment);
+        // TODO add only in specific mode?
+        cache_insert(element_id, segment, index);
+    }
+
+    fix_line_segments(line.p0);
+    fix_line_segments(line.p1);
+
+    // TODO output placeholders
+    // TODO insertion mode change
+
+    return merge_tree;
 }
 
 auto EditableCircuit::add_line_segment(point_t p0, point_t p1,
@@ -1156,9 +1252,19 @@ auto EditableCircuit::swap_and_delete_multiple_elements(
 }
 
 auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) -> void {
-    if (!schematic_.element(element_id).is_placeholder()) {
-        change_insertion_mode(element_id, InsertionMode::temporary);
+    if (schematic_.element(element_id).element_type() == ElementType::wire) {
+        // TODO merge this logic into change_insertion_mode
+        auto segment_index = segment_index_t {0};
+
+        for (auto&& segment : layout_.segment_tree(element_id).segments()) {
+            cache_remove(element_id, segment, segment_index++);
+        }
         key_remove(element_id);
+    } else {
+        if (!schematic_.element(element_id).is_placeholder()) {
+            change_insertion_mode(element_id, InsertionMode::temporary);
+            key_remove(element_id);
+        }
     }
 
     // delete in underlying

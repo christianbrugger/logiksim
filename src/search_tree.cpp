@@ -153,19 +153,26 @@ auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segmen
     return result;
 }
 
-auto get_unique_element_id(SearchTree::queried_segments_t result) -> element_id_t {
+auto get_segment_count(SearchTree::queried_segments_t result) -> int {
+    return std::ranges::count_if(
+        result, [](segment_t segment) { return bool {segment.element_id}; });
+}
+
+auto all_same_element_id(SearchTree::queried_segments_t result) -> bool {
     const auto first_id = result.at(0).element_id;
 
-    if (first_id == null_element) {
-        return null_element;
+    if (!first_id) {
+        return true;
     }
 
-    const auto same_element_id
-        = std::all_of(result.begin() + 1, result.end(), [=](segment_t value) {
-              return value.element_id == null_element || value.element_id == first_id;
-          });
+    return std::all_of(result.begin() + 1, result.end(), [first_id](segment_t value) {
+        return value.element_id == null_element || value.element_id == first_id;
+    });
+}
 
-    return same_element_id ? first_id : null_element;
+auto get_unique_element_id(SearchTree::queried_segments_t result) -> element_id_t {
+    const auto first_id = result.at(0).element_id;
+    return (first_id && all_same_element_id(result)) ? first_id : null_element;
 }
 
 }  // namespace logicsim

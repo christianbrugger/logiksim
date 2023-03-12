@@ -26,6 +26,8 @@ auto to_orientation(line_t line) -> orientation_t;
 // angle in respect to left orientation
 auto to_angle(orientation_t orientation) -> double;
 
+auto is_endpoint(point_t point, line_t line) -> bool;
+
 /*
 constexpr auto is_horizontal(line_t line) noexcept -> bool {
     return line.p0.y == line.p1.y;

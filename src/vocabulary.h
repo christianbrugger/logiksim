@@ -66,6 +66,10 @@ struct element_key_t {
     [[nodiscard]] static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
     };
+
+    [[nodiscard]] explicit constexpr operator bool() const noexcept {
+        return value >= 0;
+    }
 };
 
 static_assert(std::is_trivial<element_key_t>::value);
@@ -82,6 +86,10 @@ struct element_id_t {
     [[nodiscard]] static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
     };
+
+    [[nodiscard]] explicit constexpr operator bool() const noexcept {
+        return value >= 0;
+    }
 };
 
 static_assert(std::is_trivial<element_id_t>::value);
@@ -136,6 +144,17 @@ struct segment_index_t {
     [[nodiscard]] static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
     };
+
+    auto operator++() noexcept -> segment_index_t & {
+        ++value;
+        return *this;
+    }
+
+    auto operator++(int) noexcept -> segment_index_t {
+        auto tmp = *this;
+        operator++();
+        return tmp;
+    }
 };
 
 inline constexpr auto null_circuit = circuit_id_t {-1};
@@ -166,7 +185,7 @@ struct segment_t {
     [[nodiscard]] auto operator<=>(const segment_t &other) const = default;
 
     [[nodiscard]] explicit constexpr operator bool() const noexcept {
-        return element_id != null_element;
+        return element_id.value >= 0;
     }
 };
 

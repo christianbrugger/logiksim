@@ -52,7 +52,7 @@ class SegmentTree {
     auto swap(SegmentTree &other) noexcept -> void;
 
     auto add_segment(segment_info_t segment) -> segment_index_t;
-    auto add_tree(const SegmentTree &tree) -> void;
+    auto add_tree(const SegmentTree &tree) -> segment_index_t;
 
     auto update_segment(segment_index_t index, segment_info_t segment) -> void;
 
@@ -72,6 +72,7 @@ class SegmentTree {
     auto verify() const -> void;
 
    private:
+    auto get_next_index() const -> segment_index_t;
     auto register_segment(segment_info_t segment) -> void;
     auto unregister_segment(segment_info_t segment) -> void;
 
