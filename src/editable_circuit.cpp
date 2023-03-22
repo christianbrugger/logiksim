@@ -842,9 +842,11 @@ auto EditableCircuit::set_segment_point_types(
     }
 }
 
-auto sort_lines_with_endpoints_last(std::span<line_t> lines, point_t point) -> void {
-    std::ranges::sort(lines, {},
-                      [point](line_t line) { return is_endpoint(point, line); });
+auto sort_lines_with_endpoints_last(std::span<std::pair<line_t, segment_t>> lines,
+                                    point_t point) -> void {
+    std::ranges::sort(lines, {}, [point](std::pair<line_t, segment_t> item) {
+        return is_endpoint(point, item.first);
+    });
 }
 
 auto EditableCircuit::fix_line_segments(point_t position) -> void {
@@ -869,23 +871,23 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
 
     if (segment_count == 2) {
         auto lines = std::array {
-            get_segment_line(layout_, segment.at(0)),
-            get_segment_line(layout_, segment.at(1)),
+            std::pair {get_segment_line(layout_, segment.at(0)), segment.at(0)},
+            std::pair {get_segment_line(layout_, segment.at(1)), segment.at(1)},
         };
         sort_lines_with_endpoints_last(lines, position);
-        const auto has_through_line_0 = !is_endpoint(position, lines.at(0));
+        const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
 
         if (has_through_line_0) {
             set_segment_point_types(
                 {
-                    std::pair {segment.at(1), SegmentPointType::cross_point},
+                    std::pair {lines.at(1).second, SegmentPointType::cross_point},
                 },
                 position);
             return;
         }
 
-        const auto horizontal_0 = is_horizontal(lines.at(0));
-        const auto horizontal_1 = is_horizontal(lines.at(1));
+        const auto horizontal_0 = is_horizontal(lines.at(0).first);
+        const auto horizontal_1 = is_horizontal(lines.at(1).first);
         const auto parallel = horizontal_0 == horizontal_1;
 
         if (!parallel) {
@@ -918,18 +920,18 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
 
     if (segment_count == 3) {
         auto lines = std::array {
-            get_segment_line(layout_, segment.at(0)),
-            get_segment_line(layout_, segment.at(1)),
-            get_segment_line(layout_, segment.at(2)),
+            std::pair {get_segment_line(layout_, segment.at(0)), segment.at(0)},
+            std::pair {get_segment_line(layout_, segment.at(1)), segment.at(1)},
+            std::pair {get_segment_line(layout_, segment.at(2)), segment.at(2)},
         };
         sort_lines_with_endpoints_last(lines, position);
-        const auto has_through_line_0 = !is_endpoint(position, lines.at(0));
+        const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
 
         if (has_through_line_0) {
             set_segment_point_types(
                 {
-                    std::pair {segment.at(1), SegmentPointType::shadow_point},
-                    std::pair {segment.at(2), SegmentPointType::cross_point},
+                    std::pair {lines.at(1).second, SegmentPointType::shadow_point},
+                    std::pair {lines.at(2).second, SegmentPointType::cross_point},
                 },
                 position);
         } else {
@@ -992,7 +994,8 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 
             auto segment_index = m_tree.add_tree(tree_copy);
             // TODO add only in specific mode?
-            while (segment_index.value < m_tree.segment_count()) {
+            while (gsl::narrow_cast<std::size_t>(segment_index.value)
+                   < m_tree.segment_count()) {
                 const auto segment = m_tree.segment(segment_index);
                 cache_insert(element_id, segment, segment_index++);
             }
@@ -1038,8 +1041,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
     // TODO insertion mode change
 
 #ifndef NDEBUG
-    // TODO enable validation
-    // layout_.segment_tree(to_element_id(merge_tree)).validate();
+    layout_.segment_tree(to_element_id(merge_tree)).validate();
 #endif
 
     return merge_tree;

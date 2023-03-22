@@ -121,10 +121,13 @@ auto merge_segments(std::span<const line_t> segments) -> std::vector<line_t> {
 
 auto merge_split_segments(std::span<const line_t> segments) -> std::vector<line_t> {
     // merge
-    auto segments_merged = merge_segments(segments);
+    const auto segments_merged = merge_segments(segments);
     // split
-    auto points = to_points_sorted_unique(segments_merged);
-    return split_segments(segments_merged, points);
+    // TODO can this be simplified?
+    const auto points1 = to_points_sorted_unique(segments);
+    const auto segments_split = split_segments(segments_merged, points1);
+    const auto points2 = points_with_both_orientations(segments_split);
+    return split_segments(segments_merged, points2);
 }
 
 template <typename index_t>

@@ -142,6 +142,23 @@ TEST(LineTree, CreateWithZeroLengthLine) {
 }
 
 //
+// From segments
+//
+
+TEST(LineTree, FromSegmentsBugfix) {
+    const auto segments = {
+        line_t {{8, 8}, {8, 16}},
+        line_t {{8, 13}, {14, 13}},
+        line_t {{11, 10}, {11, 13}},
+        line_t {{11, 13}, {11, 16}},
+    };
+
+    const auto tree = LineTree::from_segments(segments);
+
+    ASSERT_EQ(tree.has_value(), true);
+}
+
+//
 // Merge
 //
 

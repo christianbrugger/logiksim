@@ -96,6 +96,7 @@ auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> voi
         editable_circuit_.add_line_segment(*first_position_, *position,
                                            LineSegmentType::horizontal_first,
                                            InsertionMode::insert_or_discard);
+        fmt::print("{}\n", editable_circuit_);
     }
 }
 

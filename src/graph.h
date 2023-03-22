@@ -12,9 +12,48 @@
 
 #include <algorithm>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace logicsim {
+
+struct point_and_orientation_t {
+    point_t point;
+    bool is_horizontal;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const point_and_orientation_t& other) const -> bool
+        = default;
+    [[nodiscard]] auto operator<=>(const point_and_orientation_t& other) const = default;
+};
+
+[[nodiscard]] auto to_point_and_orientation(std::ranges::input_range auto&& lines)
+    -> std::vector<point_and_orientation_t> {
+    auto points = std::vector<point_and_orientation_t> {};
+    points.reserve(2 * std::size(lines));
+
+    for (line_t line : lines) {
+        const auto orientation = is_horizontal(line);
+
+        points.push_back({line.p0, orientation});
+        points.push_back({line.p1, orientation});
+    }
+
+    return points;
+}
+
+namespace detail {
+// put in detail, as we are modifying the arguments
+[[nodiscard]] auto extract_points_with_both_orientations(
+    std::vector<point_and_orientation_t>& points) -> std::vector<point_t>;
+}  // namespace detail
+
+[[nodiscard]] auto points_with_both_orientations(std::ranges::input_range auto&& lines)
+    -> std::vector<point_t> {
+    auto points = to_point_and_orientation(lines);
+    return detail::extract_points_with_both_orientations(points);
+}
 
 [[nodiscard]] auto to_points_sorted_unique(std::ranges::input_range auto&& segments)
     -> std::vector<point_t> {
