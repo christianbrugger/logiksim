@@ -267,11 +267,6 @@ auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
             case colliding_point:
                 return wire_point;
 
-            case horizontal_segment:
-                return wire_horizontal;
-            case vertical_segment:
-                return wire_vertical;
-
             case shadow_point:
             case cross_point:
                 return std::nullopt;
@@ -976,24 +971,6 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
 
         merge_line_segments(segment.at(0).element_id, segment.at(0).segment_index,
                             segment.at(1).segment_index);
-
-        /*
-        if (horizontal_0) {
-            set_segment_point_types(
-                {
-                    std::pair {segment.at(0), SegmentPointType::horizontal_segment},
-                    std::pair {segment.at(1), SegmentPointType::shadow_point},
-                },
-                position);
-        } else {
-            set_segment_point_types(
-                {
-                    std::pair {segment.at(0), SegmentPointType::vertical_segment},
-                    std::pair {segment.at(1), SegmentPointType::shadow_point},
-                },
-                position);
-        }
-        */
         return;
     }
 

@@ -20,9 +20,6 @@ enum class SegmentPointType : uint8_t {
     input,
     output,
     colliding_point,
-    // when segments are broken up by points
-    horizontal_segment,
-    vertical_segment,
 
     // no collision
     shadow_point,
