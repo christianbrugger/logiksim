@@ -59,12 +59,17 @@ class SegmentTree {
     auto add_tree(const SegmentTree &tree) -> segment_index_t;
 
     auto update_segment(segment_index_t index, segment_info_t segment) -> void;
+    // swaps the element with last one and deletes it
+    auto swap_and_delete_segment(segment_index_t index) -> void;
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
     [[nodiscard]] auto segment(std::size_t index) const -> segment_info_t;
     [[nodiscard]] auto segment(segment_index_t index) const -> segment_info_t;
     [[nodiscard]] auto segments() const -> std::span<const segment_info_t>;
+
+    [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
+    [[nodiscard]] auto last_index() const noexcept -> segment_index_t;
 
     [[nodiscard]] auto has_input() const noexcept -> bool;
     [[nodiscard]] auto input_count() const noexcept -> std::size_t;
@@ -79,6 +84,7 @@ class SegmentTree {
     auto get_next_index() const -> segment_index_t;
     auto register_segment(segment_info_t segment) -> void;
     auto unregister_segment(segment_info_t segment) -> void;
+    auto delete_last_segment() -> void;
 
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;

@@ -46,7 +46,7 @@ class Layout {
                            orientation_t orientation = orientation_t::undirected,
                            DisplayState display_state = DisplayState::normal,
                            color_t color = defaults::color_black) -> element_id_t;
-    // swaps the element with last one and deletes it
+    // swaps the element with last one and deletes it, returns deleted id
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
 
     // TODO remove line tree, when not needed anymore

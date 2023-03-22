@@ -813,9 +813,8 @@ auto EditableCircuit::set_segment_point_types(
     point_t position) -> void {
     // remove cache
     for (auto&& [segment, point_type] : data) {
-        const auto old_segment = get_segment(layout_, segment);
         // TODO only do this for some insertion modes
-        cache_remove(segment.element_id, old_segment, segment.segment_index);
+        cache_remove(segment.element_id, segment.segment_index);
     }
 
     // update segments
@@ -836,9 +835,8 @@ auto EditableCircuit::set_segment_point_types(
 
     // add to cache
     for (auto&& [segment, point_type] : data) {
-        const auto new_segment = get_segment(layout_, segment);
         // TODO only do this for some insertion modes
-        cache_insert(segment.element_id, new_segment, segment.segment_index);
+        cache_insert(segment.element_id, segment.segment_index);
     }
 }
 
@@ -849,12 +847,88 @@ auto sort_lines_with_endpoints_last(std::span<std::pair<line_t, segment_t>> line
     });
 }
 
+auto merge_parallel_segments(segment_info_t segment_info_0, segment_info_t segment_info_1)
+    -> segment_info_t {
+    const auto line0 = segment_info_0.line;
+    const auto line1 = segment_info_1.line;
+
+    if (line0.p0 == line1.p0) {
+        return segment_info_t {
+            .line = line_t {line0.p1, line1.p1},
+            .p0_type = segment_info_0.p1_type,
+            .p1_type = segment_info_1.p1_type,
+        };
+    }
+
+    if (line0.p0 == line1.p1) {
+        return segment_info_t {
+            .line = line_t {line0.p1, line1.p0},
+            .p0_type = segment_info_0.p1_type,
+            .p1_type = segment_info_1.p0_type,
+        };
+    }
+
+    if (line0.p1 == line1.p0) {
+        return segment_info_t {
+            .line = line_t {line0.p0, line1.p1},
+            .p0_type = segment_info_0.p0_type,
+            .p1_type = segment_info_1.p1_type,
+        };
+    }
+
+    if (line0.p1 == line1.p1) {
+        return segment_info_t {
+            .line = line_t {line0.p0, line1.p0},
+            .p0_type = segment_info_0.p0_type,
+            .p1_type = segment_info_1.p0_type,
+        };
+    }
+
+    throw_exception("segments need to have commont on shared point");
+}
+
+auto EditableCircuit::merge_line_segments(element_id_t element_id, segment_index_t index0,
+                                          segment_index_t index1) -> void {
+    if (index0 == index1) [[unlikely]] {
+        throw_exception("Cannot merge the same segments.");
+    }
+    if (index0 > index1) {
+        std::swap(index0, index1);
+    }
+
+    auto& m_tree = layout_.modifyable_segment_tree(element_id);
+    const auto last_index = m_tree.last_index();
+
+    // merged segment
+    const auto merged_segment
+        = merge_parallel_segments(m_tree.segment(index0), m_tree.segment(index1));
+
+    // TODO depends on mode
+    // remove from cache
+    cache_remove(element_id, index0);
+    cache_remove(element_id, index1);
+    if (index1 != last_index) {
+        cache_remove(element_id, last_index);
+    }
+
+    // merge
+    m_tree.update_segment(index0, merged_segment);
+    m_tree.swap_and_delete_segment(index1);
+
+    // TODO depends on mode
+    // add back to cache
+    cache_insert(element_id, index0);
+    if (index1 != last_index) {
+        cache_insert(element_id, index1);
+    }
+}
+
 auto EditableCircuit::fix_line_segments(point_t position) -> void {
     const auto segment = selection_cache_.query_line_segments(position);
     const auto segment_count = get_segment_count(segment);
 
     if (segment_count == 0) [[unlikely]] {
-        throw_exception("Could not find even one segments at position.");
+        throw_exception("Could not find any segments at position.");
     }
     if (!all_same_element_id(segment)) [[unlikely]] {
         throw_exception("All segments need to belong to the same segment tree.");
@@ -900,6 +974,10 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
             return;
         }
 
+        merge_line_segments(segment.at(0).element_id, segment.at(0).segment_index,
+                            segment.at(1).segment_index);
+
+        /*
         if (horizontal_0) {
             set_segment_point_types(
                 {
@@ -915,6 +993,7 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
                 },
                 position);
         }
+        */
         return;
     }
 
@@ -975,52 +1054,53 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
     const auto colliding_id_0 = collicions_cache_.get_first_wire(line.p0);
     const auto colliding_id_1 = collicions_cache_.get_first_wire(line.p1);
 
-    auto merge_tree = null_element_key;
+    auto tree_key = null_element_key;
 
     if (colliding_id_0) {
-        merge_tree = to_element_key(colliding_id_0);
+        tree_key = to_element_key(colliding_id_0);
     }
 
     if (colliding_id_1) {
-        if (!merge_tree) {
-            merge_tree = to_element_key(colliding_id_1);
+        if (!tree_key) {
+            tree_key = to_element_key(colliding_id_1);
         } else {
             // merge two trees
             const auto tree_copy = layout_.segment_tree(colliding_id_1);
             swap_and_delete_single_element(colliding_id_1);
 
-            const auto element_id = to_element_id(merge_tree);
+            const auto element_id = to_element_id(tree_key);
             auto&& m_tree = layout_.modifyable_segment_tree(element_id);
 
-            auto segment_index = m_tree.add_tree(tree_copy);
+            auto first_index = m_tree.add_tree(tree_copy);
             // TODO add only in specific mode?
-            while (gsl::narrow_cast<std::size_t>(segment_index.value)
-                   < m_tree.segment_count()) {
-                const auto segment = m_tree.segment(segment_index);
-                cache_insert(element_id, segment, segment_index++);
+            for (auto index : range(gsl::narrow<std::size_t>(first_index.value),
+                                    m_tree.segment_count())) {
+                const auto segment_index = segment_index_t {
+                    gsl::narrow_cast<segment_index_t::value_type>(index)};
+                cache_insert(element_id, segment_index);
             }
         }
     }
 
-    if (merge_tree == null_element_key) {
-        // create new element tree
+    if (tree_key == null_element_key) {
+        // create new empty tree
         const auto element_id = layout_.add_line_tree(SegmentTree {});
         {
             const auto element = schematic_.add_element({
                 .element_type = ElementType::wire,
-                .input_count = 1,
+                .input_count = 0,
                 .output_count = 0,
             });
             if (element.element_id() != element_id) [[unlikely]] {
                 throw_exception("Added element ids don't match.");
             }
         }
-        merge_tree = key_insert(element_id);
+        tree_key = key_insert(element_id);
     }
 
-    if (merge_tree) {
-        // insert new segment with non-colliding endpoints
-        const auto element_id = to_element_id(merge_tree);
+    if (tree_key) {
+        // insert new segment with dummy endpoints
+        const auto element_id = to_element_id(tree_key);
         auto&& m_tree = layout_.modifyable_segment_tree(element_id);
 
         const auto segment = segment_info_t {
@@ -1031,9 +1111,10 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 
         const auto index = m_tree.add_segment(segment);
         // TODO add only in specific mode?
-        cache_insert(element_id, segment, index);
+        cache_insert(element_id, index);
     }
 
+    // now fix all endpoints at given positions
     fix_line_segments(line.p0);
     fix_line_segments(line.p1);
 
@@ -1041,10 +1122,10 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
     // TODO insertion mode change
 
 #ifndef NDEBUG
-    layout_.segment_tree(to_element_id(merge_tree)).validate();
+    layout_.segment_tree(to_element_id(tree_key)).validate();
 #endif
 
-    return merge_tree;
+    return tree_key;
 }
 
 auto EditableCircuit::add_line_segment(point_t p0, point_t p1,
@@ -1306,10 +1387,10 @@ auto EditableCircuit::swap_and_delete_multiple_elements(
 auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) -> void {
     if (schematic_.element(element_id).element_type() == ElementType::wire) {
         // TODO merge this logic into change_insertion_mode
-        auto segment_index = segment_index_t {0};
-
-        for (auto&& segment : layout_.segment_tree(element_id).segments()) {
-            cache_remove(element_id, segment, segment_index++);
+        for (auto&& index : range(layout_.segment_tree(element_id).segment_count())) {
+            const auto segment_index
+                = segment_index_t {gsl::narrow<segment_index_t::value_type>(index)};
+            cache_remove(element_id, segment_index);
         }
         key_remove(element_id);
     } else {
@@ -1592,15 +1673,19 @@ auto EditableCircuit::cache_update(element_id_t new_element_id,
     selection_cache_.update(new_element_id, old_element_id, data);
 }
 
-auto EditableCircuit::cache_insert(element_id_t element_id, segment_info_t segment,
-                                   segment_index_t segment_index) -> void {
+auto EditableCircuit::cache_insert(element_id_t element_id, segment_index_t segment_index)
+    -> void {
+    const auto segment = layout_.segment_tree(element_id).segment(segment_index);
+
     // TODO connection cache
     collicions_cache_.insert(element_id, segment);
     selection_cache_.insert(element_id, segment.line, segment_index);
 }
 
-auto EditableCircuit::cache_remove(element_id_t element_id, segment_info_t segment,
-                                   segment_index_t segment_index) -> void {
+auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segment_index)
+    -> void {
+    const auto segment = layout_.segment_tree(element_id).segment(segment_index);
+
     // TODO connection cache
     collicions_cache_.remove(element_id, segment);
     selection_cache_.remove(element_id, segment.line, segment_index);

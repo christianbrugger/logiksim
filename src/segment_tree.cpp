@@ -139,6 +139,8 @@ auto SegmentTree::unregister_segment(segment_info_t segment) -> void {
     }
 }
 
+auto SegmentTree::delete_last_segment() -> void {}
+
 auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
     const auto new_index = get_next_index();
 
@@ -146,6 +148,20 @@ auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
     segments_.push_back(segment);
 
     return new_index;
+}
+
+auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
+    if (segments_.empty()) [[unlikely]] {
+        throw_exception("Cannot delete from empty segment tree.");
+    }
+
+    const auto last_index = segments_.size() - std::size_t {1};
+    segments_.at(index.value) = segments_.at(last_index);
+
+    // delete
+    const auto& entry = segments_.at(last_index);
+    unregister_segment(entry);
+    segments_.pop_back();
 }
 
 auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
@@ -192,6 +208,15 @@ auto SegmentTree::segment(segment_index_t index) const -> segment_info_t {
 
 auto SegmentTree::segments() const -> std::span<const segment_info_t> {
     return segments_;
+}
+
+auto SegmentTree::first_index() const noexcept -> segment_index_t {
+    return segment_index_t {0};
+}
+
+auto SegmentTree::last_index() const noexcept -> segment_index_t {
+    const auto result = segment_count() - std::size_t {1};
+    return segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(result)};
 }
 
 auto SegmentTree::has_input() const noexcept -> bool {

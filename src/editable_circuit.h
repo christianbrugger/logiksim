@@ -283,6 +283,8 @@ class EditableCircuit {
 
     auto add_line_segment(line_t line, InsertionMode insertion_mode) -> element_key_t;
     auto fix_line_segments(point_t position) -> void;
+    auto merge_line_segments(element_id_t element_id, segment_index_t segment0,
+                             segment_index_t segment1) -> void;
     auto set_segment_point_types(
         std::initializer_list<const std::pair<segment_t, SegmentPointType>> data,
         point_t position) -> void;
@@ -313,10 +315,8 @@ class EditableCircuit {
     auto cache_remove(element_id_t element_id) -> void;
     auto cache_update(element_id_t new_element_id, element_id_t old_element_id) -> void;
 
-    auto cache_insert(element_id_t element_id, segment_info_t segment,
-                      segment_index_t segment_index) -> void;
-    auto cache_remove(element_id_t element_id, segment_info_t segment,
-                      segment_index_t segment_index) -> void;
+    auto cache_insert(element_id_t element_id, segment_index_t segment_index) -> void;
+    auto cache_remove(element_id_t element_id, segment_index_t segment_index) -> void;
 
     // TODO Consider using element_key_t for Caches, especially SearchTree,
     // TODO so we don't need costly update for element_trees
