@@ -7,24 +7,6 @@
 
 namespace logicsim {
 
-auto format(DisplayState state) -> std::string {
-    switch (state) {
-        using enum DisplayState;
-
-        case normal:
-            return "Normal";
-
-        case new_valid:
-            return "NewValid";
-        case new_colliding:
-            return "NewColliding";
-
-        case new_temporary:
-            return "NewTemporary";
-    }
-    throw_exception("Don't know how to convert DisplayState to string.");
-}
-
 Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
     if (circuit_id < null_circuit) [[unlikely]] {
         throw_exception("Schematic id of layout cannot be negative.");
@@ -120,7 +102,7 @@ auto Layout::add_default_element() -> element_id_t {
     line_trees_.push_back(LineTree {});
     positions_.push_back(point_t {});
     orientation_.push_back(orientation_t::right);
-    display_states_.push_back(DisplayState::normal);
+    display_states_.push_back(display_state_t::normal);
     colors_.push_back(defaults::color_black);
 
     return element_id_t {
@@ -141,7 +123,7 @@ auto Layout::add_line_tree(SegmentTree &&segment_tree) -> element_id_t {
 }
 
 auto Layout::add_logic_element(point_t position, orientation_t orientation,
-                               DisplayState display_state, color_t color)
+                               display_state_t display_state, color_t color)
     -> element_id_t {
     const auto id = add_default_element();
 
@@ -170,7 +152,7 @@ auto Layout::set_position(element_id_t element_id, point_t position) -> void {
     positions_.at(element_id.value) = position;
 }
 
-auto Layout::set_display_state(element_id_t element_id, DisplayState display_state)
+auto Layout::set_display_state(element_id_t element_id, display_state_t display_state)
     -> void {
     display_states_.at(element_id.value) = display_state;
 }
@@ -195,7 +177,7 @@ auto Layout::orientation(element_id_t element_id) const -> orientation_t {
     return orientation_.at(element_id.value);
 }
 
-auto Layout::display_state(element_id_t element_id) const -> DisplayState {
+auto Layout::display_state(element_id_t element_id) const -> display_state_t {
     return display_states_.at(element_id.value);
 }
 

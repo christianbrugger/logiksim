@@ -378,9 +378,9 @@ auto draw_element_tree(BLContext& ctx, Schematic::ConstElement element,
     }
 }
 
-auto get_alpha_value(DisplayState display_state) -> uint8_t {
+auto get_alpha_value(display_state_t display_state) -> uint8_t {
     switch (display_state) {
-        using enum DisplayState;
+        using enum display_state_t;
 
         case normal:
         case new_valid:
@@ -394,7 +394,7 @@ auto get_alpha_value(DisplayState display_state) -> uint8_t {
 }
 
 auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orientation,
-                           bool enabled, DisplayState display_state,
+                           bool enabled, display_state_t display_state,
                            const RenderSettings& settings) -> void {
     const auto endpoint = connector_endpoint(position, orientation);
 
@@ -436,7 +436,7 @@ auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
             [&](connection_id_t input_id, point_t position, orientation_t orientation) {
                 const auto enabled = simulation->input_value(element.input(input_id));
                 draw_single_connector(ctx, position, orientation, enabled,
-                                      DisplayState::normal, settings);
+                                      display_state_t::normal, settings);
                 return true;
             });
 
@@ -445,7 +445,7 @@ auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
             [&](connection_id_t output_id, point_t position, orientation_t orientation) {
                 const auto enabled = simulation->output_value(element.output(output_id));
                 draw_single_connector(ctx, position, orientation, enabled,
-                                      DisplayState::normal, settings);
+                                      display_state_t::normal, settings);
                 return true;
             });
     }
@@ -474,7 +474,7 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
     const auto alpha = get_alpha_value(display_state);
 
     const auto fill_color = [&] {
-        if (display_state == DisplayState::normal) {
+        if (display_state == display_state_t::normal) {
             if (selected) {
                 // return BLRgba32(128, 128, 64, alpha);
                 // return BLRgba32(255, 255, 128, alpha);
@@ -506,7 +506,7 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
 
     const auto display_state = layout.display_state(element.element_id());
 
-    if (display_state == DisplayState::normal && !selected) {
+    if (display_state == display_state_t::normal && !selected) {
         return;
     }
 
@@ -514,13 +514,13 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
         = to_layout_calculation_data(element.schematic(), layout, element.element_id());
     const auto selection_rect = element_selection_rect(data);
 
-    if (display_state == DisplayState::normal && selected) {
+    if (display_state == display_state_t::normal && selected) {
         ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
-    } else if (display_state == DisplayState::new_colliding) {
+    } else if (display_state == display_state_t::new_colliding) {
         ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
-    } else if (display_state == DisplayState::new_valid) {
+    } else if (display_state == display_state_t::new_valid) {
         ctx.setFillStyle(BLRgba32(0, 192, 0, 96));
-    } else if (display_state == DisplayState::new_temporary) {
+    } else if (display_state == display_state_t::new_temporary) {
         ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
     } else {
         throw_exception("unknown state");

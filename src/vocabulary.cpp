@@ -47,6 +47,29 @@ auto format(orientation_t orientation) -> std::string {
     throw_exception("Don't know how to convert orientation_t to string.");
 }
 
+auto format(display_state_t state) -> std::string {
+    switch (state) {
+        using enum display_state_t;
+
+        case normal:
+            return "normal";
+
+        case new_valid:
+            return "new_valid";
+        case new_colliding:
+            return "new_colliding";
+
+        case new_temporary:
+            return "new_temporary";
+    }
+    throw_exception("Don't know how to convert display_state_t to string.");
+}
+
+auto is_collision_considered(display_state_t display_state) -> bool {
+    return display_state == display_state_t::normal
+           || display_state == display_state_t::new_valid;
+}
+
 auto circuit_id_t::format() const -> std::string {
     return fmt::format("{}", value);
 }

@@ -441,7 +441,7 @@ auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
     const auto element_colliding = [&](element_key_t element_key) {
         const auto element_id = editable_circuit_.to_element_id(element_key);
         return editable_circuit_.layout().display_state(element_id)
-               == DisplayState::new_colliding;
+               == display_state_t::new_colliding;
     };
 
     return std::ranges::any_of(get_selection(), element_colliding);

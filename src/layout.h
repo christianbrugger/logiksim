@@ -13,17 +13,6 @@
 
 namespace logicsim {
 
-enum class DisplayState : uint8_t {
-    normal,
-
-    new_valid,
-    new_colliding,
-
-    new_temporary,
-};
-
-auto format(DisplayState state) -> std::string;
-
 class Layout {
    public:
     [[nodiscard]] explicit Layout() = default;
@@ -44,7 +33,7 @@ class Layout {
     auto add_line_tree(SegmentTree &&segment_tree) -> element_id_t;
     auto add_logic_element(point_t position,
                            orientation_t orientation = orientation_t::undirected,
-                           DisplayState display_state = DisplayState::normal,
+                           display_state_t display_state = display_state_t::normal,
                            color_t color = defaults::color_black) -> element_id_t;
     // swaps the element with last one and deletes it, returns deleted id
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
@@ -52,14 +41,15 @@ class Layout {
     // TODO remove line tree, when not needed anymore
     auto set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void;
     auto set_position(element_id_t element_id, point_t point) -> void;
-    auto set_display_state(element_id_t element_id, DisplayState display_state) -> void;
+    auto set_display_state(element_id_t element_id, display_state_t display_state)
+        -> void;
 
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto segment_tree(element_id_t element_id) const -> const SegmentTree &;
     [[nodiscard]] auto line_tree(element_id_t element_id) const -> const LineTree &;
     [[nodiscard]] auto position(element_id_t element_id) const -> point_t;
     [[nodiscard]] auto orientation(element_id_t element_id) const -> orientation_t;
-    [[nodiscard]] auto display_state(element_id_t element_id) const -> DisplayState;
+    [[nodiscard]] auto display_state(element_id_t element_id) const -> display_state_t;
     [[nodiscard]] auto color(element_id_t element_id) const -> color_t;
 
     [[nodiscard]] auto modifyable_segment_tree(element_id_t element_id) -> SegmentTree &;
@@ -72,7 +62,7 @@ class Layout {
     std::vector<LineTree> line_trees_ {};
     std::vector<point_t> positions_ {};
     std::vector<orientation_t> orientation_ {};
-    std::vector<DisplayState> display_states_ {};
+    std::vector<display_state_t> display_states_ {};
     std::vector<color_t> colors_ {};
 
     circuit_id_t circuit_id_ {0};
@@ -86,12 +76,12 @@ template <>
 auto std::swap(logicsim::Layout &a, logicsim::Layout &b) noexcept -> void;
 
 template <>
-struct fmt::formatter<logicsim::DisplayState> {
+struct fmt::formatter<logicsim::display_state_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::DisplayState &obj, fmt::format_context &ctx) {
+    static auto format(const logicsim::display_state_t &obj, fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
     }
 };

@@ -191,6 +191,9 @@ struct segment_t {
 
 inline constexpr auto null_segment = segment_t {null_element, null_segment_index};
 
+//
+// Display Type
+//
 enum class orientation_t : uint8_t {
     right,
     left,
@@ -201,6 +204,19 @@ enum class orientation_t : uint8_t {
 };
 
 auto format(orientation_t state) -> std::string;
+
+enum class display_state_t : uint8_t {
+    normal,
+
+    new_valid,
+    new_colliding,
+
+    new_temporary,
+};
+
+auto format(display_state_t state) -> std::string;
+
+auto is_collision_considered(display_state_t display_state) -> bool;
 
 //
 // Time Types

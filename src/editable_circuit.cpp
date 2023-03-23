@@ -683,9 +683,9 @@ auto EditableCircuit::schematic() const noexcept -> const Schematic& {
     return schematic_;
 }
 
-auto to_insertion_mode(DisplayState display_state) -> InsertionMode {
+auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
     switch (display_state) {
-        using enum DisplayState;
+        using enum display_state_t;
 
         case normal:
             return InsertionMode::insert_or_discard;
@@ -700,22 +700,23 @@ auto to_insertion_mode(DisplayState display_state) -> InsertionMode {
     throw_exception("Unknown display state.");
 };
 
-auto to_display_state(InsertionMode insertion_mode, bool is_colliding) -> DisplayState {
+auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
+    -> display_state_t {
     switch (insertion_mode) {
         using enum InsertionMode;
 
         case insert_or_discard:
-            return DisplayState::normal;
+            return display_state_t::normal;
 
         case collisions:
             if (is_colliding) {
-                return DisplayState::new_colliding;
+                return display_state_t::new_colliding;
             } else {
-                return DisplayState::new_valid;
+                return display_state_t::new_valid;
             }
 
         case temporary:
-            return DisplayState::new_temporary;
+            return display_state_t::new_temporary;
     };
     throw_exception("unknown insertion mode");
 }
@@ -772,7 +773,7 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
 
     // insert into underlyings
     const auto element_id = layout_.add_logic_element(point_t {0, 0}, orientation,
-                                                      DisplayState::new_temporary);
+                                                      display_state_t::new_temporary);
     {
         const auto element = schematic_.add_element({
             .element_type = type,
@@ -825,7 +826,8 @@ auto EditableCircuit::set_segment_point_types(
             throw_exception("Position needs to be an endpoint of the given segment.");
         }
 
-        m_tree.update_segment(segment.segment_index, new_segment);
+        m_tree.update_segment(segment.segment_index, new_segment,
+                              display_state_t::normal);
     }
 
     // add to cache
@@ -894,6 +896,11 @@ auto EditableCircuit::merge_line_segments(element_id_t element_id, segment_index
     auto& m_tree = layout_.modifyable_segment_tree(element_id);
     const auto last_index = m_tree.last_index();
 
+    if (!is_collision_considered(m_tree.display_state(index0))
+        || !is_collision_considered(m_tree.display_state(index1))) [[unlikely]] {
+        throw_exception("Can only merge collision considered segments.");
+    }
+
     // merged segment
     const auto merged_segment
         = merge_parallel_segments(m_tree.segment(index0), m_tree.segment(index1));
@@ -907,7 +914,7 @@ auto EditableCircuit::merge_line_segments(element_id_t element_id, segment_index
     }
 
     // merge
-    m_tree.update_segment(index0, merged_segment);
+    m_tree.update_segment(index0, merged_segment, display_state_t::normal);
     m_tree.swap_and_delete_segment(index1);
 
     // TODO depends on mode
@@ -918,7 +925,16 @@ auto EditableCircuit::merge_line_segments(element_id_t element_id, segment_index
     }
 }
 
+auto all_collision_condered(const SegmentTree& tree,
+                            SearchTree::queried_segments_t result) -> bool {
+    return std::ranges::all_of(result, [&](segment_t value) {
+        return value.segment_index == null_segment_index
+               || is_collision_considered(tree.display_state(value.segment_index));
+    });
+}
+
 auto EditableCircuit::fix_line_segments(point_t position) -> void {
+    // TODO rename to segments
     const auto segment = selection_cache_.query_line_segments(position);
     const auto segment_count = get_segment_count(segment);
 
@@ -927,6 +943,10 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
     }
     if (!all_same_element_id(segment)) [[unlikely]] {
         throw_exception("All segments need to belong to the same segment tree.");
+    }
+    if (const auto tree = layout_.segment_tree(segment.at(0).element_id);
+        !all_collision_condered(tree, segment)) {
+        throw_exception("Can only fix collision considered segments.");
     }
 
     if (segment_count == 1) {
@@ -959,18 +979,18 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
         const auto horizontal_1 = is_horizontal(lines.at(1).first);
         const auto parallel = horizontal_0 == horizontal_1;
 
-        if (!parallel) {
-            set_segment_point_types(
-                {
-                    std::pair {segment.at(0), SegmentPointType::colliding_point},
-                    std::pair {segment.at(1), SegmentPointType::shadow_point},
-                },
-                position);
+        if (parallel) {
+            merge_line_segments(segment.at(0).element_id, segment.at(0).segment_index,
+                                segment.at(1).segment_index);
             return;
         }
 
-        merge_line_segments(segment.at(0).element_id, segment.at(0).segment_index,
-                            segment.at(1).segment_index);
+        set_segment_point_types(
+            {
+                std::pair {segment.at(0), SegmentPointType::colliding_point},
+                std::pair {segment.at(1), SegmentPointType::shadow_point},
+            },
+            position);
         return;
     }
 
@@ -1086,7 +1106,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
             .p1_type = SegmentPointType::shadow_point,
         };
 
-        const auto index = m_tree.add_segment(segment);
+        const auto index = m_tree.add_segment(segment, display_state_t::normal);
         // TODO add only in specific mode?
         cache_insert(element_id, index);
     }
@@ -1186,7 +1206,7 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
         const bool colliding = is_colliding(data);
 
         const auto display_state
-            = colliding ? DisplayState::new_colliding : DisplayState::new_valid;
+            = colliding ? display_state_t::new_colliding : display_state_t::new_valid;
         layout_.set_display_state(element_id, display_state);
 
         if (!colliding) {
@@ -1203,13 +1223,13 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
     if (new_insertion_mode == InsertionMode::insert_or_discard) {
         const auto display_state = layout_.display_state(element_id);
 
-        if (display_state == DisplayState::new_valid) {
-            layout_.set_display_state(element_id, DisplayState::normal);
+        if (display_state == display_state_t::new_valid) {
+            layout_.set_display_state(element_id, display_state_t::normal);
             return true;
         }
-        if (display_state == DisplayState::new_colliding) {
+        if (display_state == display_state_t::new_colliding) {
             // delete element
-            layout_.set_display_state(element_id, DisplayState::new_temporary);
+            layout_.set_display_state(element_id, display_state_t::new_temporary);
             swap_and_delete_single_element(element_id);
             element_id = null_element;
             return false;
@@ -1220,7 +1240,7 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
 
     // transition: insert or discard -> collisions
     if (old_insertion_mode == InsertionMode::insert_or_discard) {
-        layout_.set_display_state(element_id, DisplayState::new_valid);
+        layout_.set_display_state(element_id, display_state_t::new_valid);
 
         if (new_insertion_mode == InsertionMode::collisions) {
             return true;
@@ -1231,17 +1251,17 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
     if (new_insertion_mode == InsertionMode::temporary) {
         const auto display_state = layout_.display_state(element_id);
 
-        if (display_state == DisplayState::new_valid) {
+        if (display_state == display_state_t::new_valid) {
             // remove from cache
             cache_remove(element_id);
-            layout_.set_display_state(element_id, DisplayState::new_temporary);
+            layout_.set_display_state(element_id, display_state_t::new_temporary);
 
             disconnect_inputs_and_add_placeholders(element_id);
             disconnect_outputs_and_remove_placeholders(element_id);
             return true;
         }
-        if (display_state == DisplayState::new_colliding) {
-            layout_.set_display_state(element_id, DisplayState::new_temporary);
+        if (display_state == display_state_t::new_colliding) {
+            layout_.set_display_state(element_id, display_state_t::new_temporary);
             return true;
         }
 
@@ -1574,9 +1594,7 @@ auto EditableCircuit::is_colliding(line_t line) const -> bool {
 
 auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {
     const auto display_state = layout_.display_state(element_id);
-
-    return display_state == DisplayState::normal
-           || display_state == DisplayState::new_valid;
+    return is_collision_considered(display_state);
 }
 
 auto EditableCircuit::key_insert(element_id_t element_id) -> element_key_t {

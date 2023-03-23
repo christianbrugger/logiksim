@@ -33,14 +33,11 @@ auto segment_info_t::format() const -> std::string {
 // Segment Tree
 //
 
-SegmentTree::SegmentTree(segment_info_t segment) {
-    add_segment(segment);
-}
-
 auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
     using std::swap;
 
     segments_.swap(other.segments_);
+    display_states_.swap(other.display_states_);
 
     swap(output_count_, other.output_count_);
     swap(input_position_, other.input_position_);
@@ -63,7 +60,12 @@ auto SegmentTree::get_next_index() const -> segment_index_t {
     return segment_index_t {gsl::narrow<segment_index_t::value_type>(segments_.size())};
 }
 
-auto SegmentTree::register_segment(segment_info_t segment) -> void {
+auto SegmentTree::register_segment(segment_index_t index) -> void {
+    if (!is_collision_considered(display_states_.at(index.value))) {
+        return;
+    }
+    const auto& segment = segments_.at(index.value);
+
     for (auto [type, point] : {
              std::pair {segment.p0_type, segment.line.p0},
              std::pair {segment.p1_type, segment.line.p1},
@@ -95,7 +97,12 @@ auto SegmentTree::register_segment(segment_info_t segment) -> void {
     }
 }
 
-auto SegmentTree::unregister_segment(segment_info_t segment) -> void {
+auto SegmentTree::unregister_segment(segment_index_t index) -> void {
+    if (!is_collision_considered(display_states_.at(index.value))) {
+        return;
+    }
+    const auto& segment = segments_.at(index.value);
+
     for (auto [type, point] : {
              std::pair {segment.p0_type, segment.line.p0},
              std::pair {segment.p1_type, segment.line.p1},
@@ -106,6 +113,10 @@ auto SegmentTree::unregister_segment(segment_info_t segment) -> void {
             case input: {
                 if (!has_input_) [[unlikely]] {
                     throw_exception("Tree should have input thats not present.");
+                }
+                if (point != input_position_) [[unlikely]] {
+                    throw_exception(
+                        "Removed segment has wrong input position as stored.");
                 }
                 has_input_ = false;
                 input_position_ = {};
@@ -132,11 +143,13 @@ auto SegmentTree::unregister_segment(segment_info_t segment) -> void {
 
 auto SegmentTree::delete_last_segment() -> void {}
 
-auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
+auto SegmentTree::add_segment(segment_info_t segment, display_state_t display_state)
+    -> segment_index_t {
     const auto new_index = get_next_index();
 
-    register_segment(segment);
     segments_.push_back(segment);
+    display_states_.push_back(display_state);
+    register_segment(new_index);
 
     return new_index;
 }
@@ -146,13 +159,14 @@ auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
         throw_exception("Cannot delete from empty segment tree.");
     }
 
-    const auto last_index = segments_.size() - std::size_t {1};
-    segments_.at(index.value) = segments_.at(last_index);
+    const auto last_index = this->last_index();
+    segments_.at(index.value) = segments_.at(last_index.value);
+    display_states_.at(index.value) = display_states_.at(last_index.value);
 
     // delete
-    const auto& entry = segments_.at(last_index);
-    unregister_segment(entry);
+    unregister_segment(last_index);
     segments_.pop_back();
+    display_states_.pop_back();
 }
 
 auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
@@ -168,17 +182,17 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
 
     output_count_ += tree.output_count_;
     segments_.insert(segments_.end(), tree.segments_.begin(), tree.segments_.end());
+    display_states_.insert(display_states_.end(), tree.display_states_.begin(),
+                           tree.display_states_.end());
 
     return next_index;
 }
 
-auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {
-    auto& entry = segments_.at(index.value);
-
-    unregister_segment(entry);
-    register_segment(segment);
-
-    entry = segment;
+auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment,
+                                 display_state_t display_state) -> void {
+    unregister_segment(index);
+    segments_.at(index.value) = segment;
+    register_segment(index);
 }
 
 auto SegmentTree::empty() const noexcept -> bool {
@@ -199,6 +213,10 @@ auto SegmentTree::segment(segment_index_t index) const -> segment_info_t {
 
 auto SegmentTree::segments() const -> std::span<const segment_info_t> {
     return segments_;
+}
+
+auto SegmentTree::display_state(segment_index_t index) const -> display_state_t {
+    return display_states_.at(index.value);
 }
 
 auto SegmentTree::first_index() const noexcept -> segment_index_t {
@@ -235,6 +253,13 @@ auto SegmentTree::format() const -> std::string {
 }
 
 auto SegmentTree::validate() const -> void {
+    if (display_states_.size() != segments_.size()) [[unlikely]] {
+        throw_exception("Vector sizes don't match in segment tree.");
+    }
+    if ((has_input_ ? 1 : 0) + output_count_ > segments_.size() + 1) [[unlikely]] {
+        throw_exception("To many inputs / outputs.");
+    }
+
     const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
 
     // TODO optimize this?
@@ -248,6 +273,7 @@ auto SegmentTree::validate() const -> void {
 
     // TODO verify outputs
     // TODO verify cross points
+    // TODO size of segmetns, display_state, count
 }
 
 }  // namespace logicsim
