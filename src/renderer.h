@@ -25,7 +25,7 @@ namespace logicsim {
 struct RenderSettings {
     ViewConfig view_config {};
 
-    int background_grid_min_distance {10};  // pixel
+    int background_grid_min_distance {10};  // device pixels
 
     auto format() const -> std::string;
 };

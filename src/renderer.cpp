@@ -634,7 +634,7 @@ auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
     };
 
     for (auto&& [delta, color, width] : grid_definition) {
-        if (to_context(delta, settings.view_config)
+        if (delta * settings.view_config.device_scale()
             >= settings.background_grid_min_distance) {
             draw_background_pattern_checker(ctx, a0, a1, delta, color, width, settings);
         }
