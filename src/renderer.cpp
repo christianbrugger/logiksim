@@ -65,7 +65,7 @@ auto draw_standard_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attribu
 }
 
 auto stroke_width(const RenderSettings& settings) -> int {
-    constexpr static auto stepping = 12;
+    constexpr static auto stepping = 16;  // 12
     const auto scale = settings.view_config.pixel_scale();
 
     return std::max(1, static_cast<int>(scale / stepping));
@@ -184,13 +184,16 @@ auto draw_connector_blend2d(BLContext& ctx, const point_t point, bool enabled, i
     }
 
     const auto p_ctx = to_context(point, settings.view_config);
-    const int half = width;
-    const int size = 2 * half + 1;
+
+    const int wire_width = stroke_width(settings);
+    const int wire_offset = (wire_width - 1) / 2;
+
+    const int size = 2 * width + wire_width;
+    const int offset = wire_offset + width;
 
     const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
-
     ctx.setFillStyle(BLRgba32 {color});
-    ctx.fillRect(p_ctx.x - half, p_ctx.y - half, size, size);
+    ctx.fillRect(p_ctx.x - offset, p_ctx.y - offset, size, size);
 }
 
 auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
@@ -240,7 +243,7 @@ auto stroke_line_blend2d(BLContext& ctx, const BLLine& line, BLRgba32 color, int
     }
     ctx.setFillStyle(color);
 
-    const auto offset = (width - 1) / 2;
+    const int offset = (width - 1) / 2;
 
     if (line.y0 == line.y1) {
         auto x0 = line.x0;
@@ -267,25 +270,6 @@ auto stroke_line_blend2d(BLContext& ctx, const BLLine& line, BLRgba32 color, int
     }
 }
 
-auto stroke_line_blend2d_2(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
-    ctx.setStrokeStyle(color);
-    ctx.setStrokeWidth(1.0);
-
-    if (line.y0 == line.y1) {
-        if (line.x1 > line.x0) {
-            ctx.strokeLine(line.x0, line.y0 + 0.5, line.x1 + 1.0, line.y1 + 0.5);
-        } else {
-            ctx.strokeLine(line.x0 + 1.0, line.y0 + 0.5, line.x1, line.y1 + 0.5);
-        }
-    } else {
-        if (line.y1 > line.y0) {
-            ctx.strokeLine(line.x0 + 0.5, line.y0, line.x1 + 0.5, line.y1 + 1.0);
-        } else {
-            ctx.strokeLine(line.x0 + 0.5, line.y0 + 1.0, line.x1 + 0.5, line.y1);
-        }
-    }
-}
-
 // TODO rename
 auto draw_connector_impl(BLContext& ctx, const point_t point, bool enabled, int width,
                          const RenderSettings& settings) {
@@ -297,7 +281,6 @@ auto stroke_line_impl(BLContext& ctx, const BLLine& line, BLRgba32 color, int wi
     -> void {
     // stroke_line_fast(ctx, line, color);
     stroke_line_blend2d(ctx, line, color, width);
-    // stroke_line_blend2d_2(ctx, line, color);
 }
 
 template <typename PointType>
@@ -559,7 +542,6 @@ auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& la
     for (auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
             if (simulation == nullptr) {
-                draw_wire(ctx, element, layout, settings);
                 draw_element_tree(ctx, element, layout, settings);
             } else {
                 draw_wire(ctx, element, layout, *simulation, settings);
