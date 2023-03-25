@@ -636,7 +636,12 @@ auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
     for (auto&& [delta, color, width] : grid_definition) {
         if (delta * settings.view_config.device_scale()
             >= settings.background_grid_min_distance) {
-            draw_background_pattern_checker(ctx, a0, a1, delta, color, width, settings);
+            const auto draw_width_f = width * settings.view_config.device_pixel_ratio();
+            // we substract a little, as we want 150% scaling to round down
+            const auto epsilon = 0.01;
+            const auto draw_width = std::max(1, round_to<int>(draw_width_f - epsilon));
+            draw_background_pattern_checker(ctx, a0, a1, delta, color, draw_width,
+                                            settings);
         }
     }
 }
