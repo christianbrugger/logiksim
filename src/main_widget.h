@@ -8,6 +8,7 @@
 namespace logicsim {
 
 class MainWidget : public QWidget {
+    // TODO use Q_OBJECT because of Q_SLOT
     // Q_OBJECT
    public:
     MainWidget(QWidget* parent = nullptr);

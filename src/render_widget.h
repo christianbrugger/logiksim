@@ -5,6 +5,7 @@
 #include "editable_circuit.h"
 #include "renderer.h"
 #include "scene.h"
+#include "selection_builder.h"
 #include "timer.h"
 
 #include <blend2d.h>
@@ -96,50 +97,10 @@ class MouseLineInsertLogic {
     std::optional<point_t> first_position_ {};
 };
 
-enum class SelectionFunction {
-    toggle,
-    add,
-    substract,
-};
-
-// TODO make EditableCircuit part of constructor
-class SelectionManager {
-   public:
-    using selection_mask_t = boost::container::vector<bool>;
-
-    struct operation_t {
-        SelectionFunction function;
-        rect_fine_t rect;
-    };
-
-   public:
-    auto clear() -> void;
-    auto add(SelectionFunction function, rect_fine_t rect) -> void;
-    auto update_last(rect_fine_t rect) -> void;
-    auto pop_last() -> void;
-
-    [[nodiscard]] auto claculate_item_selected(
-        element_id_t element_id, const EditableCircuit& editable_circuit) const -> bool;
-    [[nodiscard]] auto create_selection_mask(
-        const EditableCircuit& editable_circuit) const -> selection_mask_t;
-    [[nodiscard]] auto calculate_selected_ids(
-        const EditableCircuit& editable_circuit) const -> std::vector<element_id_t>;
-    [[nodiscard]] auto calculate_selected_keys(
-        const EditableCircuit& editable_circuit) const -> std::vector<element_key_t>;
-
-    auto set_selection(std::vector<element_key_t>&& selected_keys) -> void;
-    auto bake_selection(const EditableCircuit& editable_circuit) -> void;
-    [[nodiscard]] auto get_baked_selection() const -> const std::vector<element_key_t>&;
-
-   private:
-    std::vector<element_key_t> initial_selected_ {};
-    std::vector<operation_t> operations_ {};
-};
-
 class MouseMoveSelectionLogic {
    public:
     struct Args {
-        SelectionManager& manager;
+        SelectionBuilder& builder;
         EditableCircuit& editable_circuit;
     };
 
@@ -173,7 +134,7 @@ class MouseMoveSelectionLogic {
     auto restore_original_positions() -> void;
     [[nodiscard]] auto calculate_any_element_colliding() -> bool;
 
-    SelectionManager& manager_;
+    SelectionBuilder& builder_;
     EditableCircuit& editable_circuit_;
 
     std::optional<point_fine_t> last_position_ {};
@@ -187,7 +148,7 @@ class MouseMoveSelectionLogic {
 class MouseSingleSelectionLogic {
    public:
     struct Args {
-        SelectionManager& manager;
+        SelectionBuilder& builder;
     };
 
     MouseSingleSelectionLogic(Args args);
@@ -197,14 +158,14 @@ class MouseSingleSelectionLogic {
     auto mouse_release(point_fine_t point) -> void;
 
    private:
-    SelectionManager& manager_;
+    SelectionBuilder& builder_;
 };
 
 class MouseAreaSelectionLogic {
    public:
     struct Args {
         QWidget* parent;
-        SelectionManager& manager;
+        SelectionBuilder& builder;
         const ViewConfig& view_config;
     };
 
@@ -223,7 +184,7 @@ class MouseAreaSelectionLogic {
    private:
     auto update_mouse_position(QPointF position) -> void;
 
-    SelectionManager& manager_;
+    SelectionBuilder& builder_;
     const ViewConfig& view_config_;
     QRubberBand band_;
 
@@ -301,7 +262,7 @@ class RendererWidget : public QWidget {
     RenderSettings render_settings_ {};
 
     // mouse logic
-    SelectionManager selection_manager_ {};
+    std::optional<SelectionBuilder> selection_builder_ {};
     InteractionState interaction_state_ {InteractionState::not_interactive};
     MouseDragLogic mouse_drag_logic_;
     std::optional<std::variant<MouseElementInsertLogic, MouseLineInsertLogic,

@@ -192,6 +192,7 @@ auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment,
                                  display_state_t display_state) -> void {
     unregister_segment(index);
     segments_.at(index.value) = segment;
+    display_states_.at(index.value) = display_state;
     register_segment(index);
 }
 
@@ -260,11 +261,10 @@ auto SegmentTree::validate() const -> void {
         throw_exception("To many inputs / outputs.");
     }
 
-    const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
-
     // TODO optimize this?
     const auto segments = transform_to_vector(
         segments_, [](const segment_info_t& segment) { return segment.line; });
+    const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
     const auto line_tree = LineTree::from_segments(segments, new_root);
 
     if (!line_tree.has_value()) [[unlikely]] {
@@ -273,7 +273,6 @@ auto SegmentTree::validate() const -> void {
 
     // TODO verify outputs
     // TODO verify cross points
-    // TODO size of segmetns, display_state, count
 }
 
 }  // namespace logicsim

@@ -14,6 +14,7 @@ namespace logicsim {
 struct ViewConfig {
     point_fine_t offset {};  // in fine grid points
     double scale {12.};
+    double dpi_scaling {1.};
 };
 
 auto is_representable(int x, int y) -> bool;

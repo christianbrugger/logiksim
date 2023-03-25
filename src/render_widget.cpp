@@ -106,156 +106,11 @@ auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> voi
 //                                              InsertionMode mode) -> void {}
 
 //
-// Selection Manager
-//
-
-auto SelectionManager::clear() -> void {
-    initial_selected_.clear();
-    operations_.clear();
-}
-
-auto SelectionManager::add(SelectionFunction function, rect_fine_t rect) -> void {
-    operations_.emplace_back(operation_t {function, rect});
-}
-
-auto SelectionManager::update_last(rect_fine_t rect) -> void {
-    if (operations_.empty()) [[unlikely]] {
-        throw_exception("Cannot update with empty operations.");
-    }
-    operations_.back().rect = rect;
-}
-
-auto SelectionManager::pop_last() -> void {
-    if (operations_.empty()) [[unlikely]] {
-        throw_exception("Cannot update with empty operations.");
-    }
-    operations_.pop_back();
-}
-
-namespace {
-auto apply_function(SelectionManager::selection_mask_t& selection,
-                    const EditableCircuit& editable_circuit,
-                    SelectionManager::operation_t operation) -> void {
-    auto elements = editable_circuit.query_selection(operation.rect);
-    std::ranges::sort(elements);
-
-    if (elements.size() == 0) {
-        return;
-    }
-
-    // bound checking
-    if (elements.front().value < 0 || elements.back().value >= std::ssize(selection))
-        [[unlikely]] {
-        throw_exception("Element ids are out of selection bounds.");
-    }
-
-    if (operation.function == SelectionFunction::toggle) {
-        for (auto&& element_id : elements) {
-            selection[element_id.value] ^= true;
-        }
-    }
-
-    if (operation.function == SelectionFunction::add) {
-        for (auto&& element_id : elements) {
-            selection[element_id.value] = true;
-        }
-    }
-
-    if (operation.function == SelectionFunction::substract) {
-        for (auto&& element_id : elements) {
-            selection[element_id.value] = false;
-        }
-    }
-}
-}  // namespace
-
-auto SelectionManager::create_selection_mask(
-    const EditableCircuit& editable_circuit) const -> selection_mask_t {
-    if (initial_selected_.empty() && operations_.empty()) {
-        return {};
-    }
-
-    const auto element_count = editable_circuit.schematic().element_count();
-    auto selection = selection_mask_t(element_count, false);
-
-    const auto initial_element_ids = editable_circuit.to_element_ids(initial_selected_);
-    for (element_id_t element_id : initial_element_ids) {
-        if (element_id != null_element) {
-            selection.at(element_id.value) = true;
-        }
-    }
-
-    for (auto&& operation : operations_) {
-        apply_function(selection, editable_circuit, operation);
-    }
-    return selection;
-}
-
-auto SelectionManager::claculate_item_selected(
-    element_id_t element_id, const EditableCircuit& editable_circuit) const -> bool {
-    if (element_id < element_id_t {0}) [[unlikely]] {
-        throw_exception("Invalid element id");
-    }
-
-    const auto selections = create_selection_mask(editable_circuit);
-
-    if (element_id.value >= std::ssize(selections)) {
-        return false;
-    }
-
-    return selections.at(element_id.value);
-}
-
-auto SelectionManager::set_selection(std::vector<element_key_t>&& selected_keys) -> void {
-    using std::swap;
-
-    operations_.clear();
-    swap(initial_selected_, selected_keys);
-}
-
-auto SelectionManager::bake_selection(const EditableCircuit& editable_circuit) -> void {
-    auto selected_keys = calculate_selected_keys(editable_circuit);
-    set_selection(std::move(selected_keys));
-}
-
-auto SelectionManager::get_baked_selection() const -> const std::vector<element_key_t>& {
-    if (!operations_.empty()) [[unlikely]] {
-        throw_exception("Selection has been modified after baking.");
-    }
-
-    return initial_selected_;
-}
-
-auto SelectionManager::calculate_selected_ids(
-    const EditableCircuit& editable_circuit) const -> std::vector<element_id_t> {
-    const auto selection = create_selection_mask(editable_circuit);
-    const auto maximum_id = gsl::narrow<element_id_t::value_type>(selection.size());
-
-    // TODO create algorithm
-    auto selected_ids = std::vector<element_id_t> {};
-    for (auto i : range(maximum_id)) {
-        if (selection[i]) {
-            selected_ids.push_back(element_id_t {i});
-        }
-    };
-
-    return selected_ids;
-}
-
-auto SelectionManager::calculate_selected_keys(
-    const EditableCircuit& editable_circuit) const -> std::vector<element_key_t> {
-    const auto selected_ids = calculate_selected_ids(editable_circuit);
-    const auto selected_keys = editable_circuit.to_element_keys(selected_ids);
-
-    return selected_keys;
-}
-
-//
 // Mouse Move Selection Logic
 //
 
 MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
-    : manager_ {args.manager}, editable_circuit_ {args.editable_circuit} {}
+    : builder_ {args.builder}, editable_circuit_ {args.editable_circuit} {}
 
 MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
     if (state_ != State::finished) {
@@ -271,16 +126,16 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
         // select element under mouse
         const auto element_under_cursor = editable_circuit_.query_selection(point);
         if (!element_under_cursor.has_value()) {
-            manager_.clear();
+            builder_.clear();
             return;
         }
 
-        const auto element_selected = manager_.claculate_item_selected(
-            element_under_cursor.value(), editable_circuit_);
+        const auto element_selected
+            = builder_.claculate_item_selected(element_under_cursor.value());
 
         if (!element_selected) {
-            manager_.clear();
-            manager_.add(SelectionFunction::add, rect_fine_t {point, point});
+            builder_.clear();
+            builder_.add(SelectionFunction::add, rect_fine_t {point, point});
         }
     }
 
@@ -371,7 +226,7 @@ auto MouseMoveSelectionLogic::get_selection() -> const std::vector<element_key_t
     if (!selection_and_positions_baked_) {
         bake_selection_and_positions();
     }
-    return manager_.get_baked_selection();
+    return builder_.get_baked_selection();
 }
 
 auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
@@ -381,7 +236,7 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
     selection_and_positions_baked_ = true;
 
     // bake selection, so we can move the elements
-    manager_.bake_selection(editable_circuit_);
+    builder_.bake_selection();
     const auto& selection = get_selection();
 
     // store initial positions
@@ -407,7 +262,7 @@ auto MouseMoveSelectionLogic::remove_invalid_items_from_selection() -> void {
                              return editable_circuit_.element_key_valid(element_key);
                          });
 
-    manager_.set_selection(std::move(new_selection));
+    builder_.set_selection(std::move(new_selection));
 }
 
 auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
@@ -452,11 +307,11 @@ auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
 //
 
 MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
-    : manager_ {args.manager} {}
+    : builder_ {args.builder} {}
 
 auto MouseSingleSelectionLogic::mouse_press(point_fine_t point,
                                             Qt::KeyboardModifiers modifiers) -> void {
-    manager_.add(SelectionFunction::toggle, rect_fine_t {point, point});
+    builder_.add(SelectionFunction::toggle, rect_fine_t {point, point});
 }
 
 auto MouseSingleSelectionLogic::mouse_move(point_fine_t point) -> void {}
@@ -468,13 +323,13 @@ auto MouseSingleSelectionLogic::mouse_release(point_fine_t point) -> void {}
 //
 
 MouseAreaSelectionLogic::MouseAreaSelectionLogic(Args args)
-    : manager_ {args.manager},
+    : builder_ {args.builder},
       view_config_ {args.view_config},
       band_ {QRubberBand::Rectangle, args.parent} {}
 
 MouseAreaSelectionLogic::~MouseAreaSelectionLogic() {
     if (!keep_last_selection_) {
-        manager_.pop_last();
+        builder_.pop_last();
     }
 }
 
@@ -490,10 +345,10 @@ auto MouseAreaSelectionLogic::mouse_press(QPointF position,
     }();
 
     if (modifiers == Qt::NoModifier) {
-        manager_.clear();
+        builder_.clear();
     }
 
-    manager_.add(function, rect_fine_t {p0, p0});
+    builder_.add(function, rect_fine_t {p0, p0});
     first_position_ = p0;
 }
 
@@ -531,7 +386,7 @@ auto MouseAreaSelectionLogic::update_mouse_position(QPointF position) -> void {
     band_.setGeometry(q_rect);
     band_.show();
 
-    manager_.update_last(grid_rect);
+    builder_.update_last(grid_rect);
 }
 
 //
@@ -612,7 +467,9 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
     interaction_state_ = state;
 
     mouse_logic_.reset();
-    selection_manager_.clear();
+    if (selection_builder_.has_value()) {
+        selection_builder_.value().clear();
+    }
     update();
 }
 
@@ -628,6 +485,7 @@ auto RendererWidget::reset_circuit() -> void {
     circuit_index_ = CircuitIndex {};
     editable_circuit_ = EditableCircuit {circuit_index_.borrow_schematic(circuit_id_),
                                          circuit_index_.borrow_layout(circuit_id_)};
+    selection_builder_.emplace(editable_circuit_.value());
 
     return;
     {
@@ -786,8 +644,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     // int h = qt_image.height();
     */
 
-    const auto selection_mask
-        = selection_manager_.create_selection_mask(editable_circuit);
+    const auto selection_mask = selection_builder_.value().create_selection_mask();
 
     bl_ctx.begin(bl_image, bl_info);
 
@@ -821,9 +678,8 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
 auto RendererWidget::delete_selected_items() -> void {
     mouse_logic_.reset();
-    const auto selected
-        = selection_manager_.calculate_selected_keys(editable_circuit_.value());
-    selection_manager_.clear();
+    const auto selected = selection_builder_.value().calculate_selected_keys();
+    selection_builder_.value().clear();
 
     for (auto&& element_key : selected) {
         editable_circuit_.value().delete_element(element_key);
@@ -843,8 +699,8 @@ auto RendererWidget::select_all_items() -> void {
     const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
                                    point_fine_t {grid_t::max(), grid_t::max()}};
 
-    selection_manager_.clear();
-    selection_manager_.add(SelectionFunction::add, rect);
+    selection_builder_.value().clear();
+    selection_builder_.value().add(SelectionFunction::add, rect);
 
     update();
 }
@@ -879,21 +735,21 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
         if (has_element_under_cursor) {
             if (event->modifiers() == Qt::NoModifier) {
                 mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
-                    .manager = selection_manager_,
+                    .builder = selection_builder_.value(),
                     .editable_circuit = editable_circuit_.value(),
                 });
                 return;
             }
 
             mouse_logic_.emplace(MouseSingleSelectionLogic::Args {
-                .manager = selection_manager_,
+                .builder = selection_builder_.value(),
             });
             return;
         }
 
         mouse_logic_.emplace(MouseAreaSelectionLogic::Args {
             .parent = this,
-            .manager = selection_manager_,
+            .builder = selection_builder_.value(),
             .view_config = render_settings_.view_config,
         });
         return;
@@ -1093,7 +949,7 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
             editable_circuit_->validate();
 #endif
         } else {
-            selection_manager_.clear();
+            selection_builder_.value().clear();
         }
         update();
         return;
