@@ -888,8 +888,8 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
 
     auto& view_config = render_settings_.view_config;
 
-    const auto standard_zoom_factor = 1.2;  // zoom factor for one scroll
-    const auto standard_scroll_pixel = 45;  // pixels to scroll for one scroll
+    const auto standard_zoom_factor = 1.1;  // zoom factor for one scroll
+    const auto standard_scroll_pixel = 45;  // device pixels to scroll for one scroll
     const auto standard_delta = 120.0;      // degree delta for one scroll
 
     const auto standard_scroll_grid = standard_scroll_pixel / view_config.device_scale();
@@ -928,7 +928,7 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
         update();
     }
 
-    // inverted scroll
+    // sideway scroll
     else if (event->modifiers() == Qt::ShiftModifier) {
         view_config.set_offset(point_fine_t {
             view_config.offset().x

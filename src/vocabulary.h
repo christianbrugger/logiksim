@@ -553,7 +553,7 @@ struct ankerl::unordered_dense::hash<logicsim::grid_t> {
 
     [[nodiscard]] auto operator()(const logicsim::grid_t &obj) const noexcept
         -> uint64_t {
-        return detail::wyhash::hash(gsl::narrow_cast<uint64_t>(obj.value));
+        return detail::wyhash::hash(obj.value);
     }
 };
 
@@ -563,6 +563,7 @@ struct ankerl::unordered_dense::hash<logicsim::point_t> {
 
     [[nodiscard]] auto operator()(const logicsim::point_t &obj) const noexcept
         -> uint64_t {
+        // TODO check assymbly & maybe use hash_16_byte ?
         static_assert(std::has_unique_object_representations_v<logicsim::point_t>);
         return detail::wyhash::hash(&obj, sizeof(obj));
     }
@@ -574,7 +575,7 @@ struct ankerl::unordered_dense::hash<logicsim::element_key_t> {
 
     [[nodiscard]] auto operator()(const logicsim::element_key_t &obj) const noexcept
         -> uint64_t {
-        return detail::wyhash::hash(gsl::narrow_cast<uint64_t>(obj.value));
+        return detail::wyhash::hash(obj.value);
     }
 };
 
@@ -584,7 +585,7 @@ struct ankerl::unordered_dense::hash<logicsim::element_id_t> {
 
     [[nodiscard]] auto operator()(const logicsim::element_id_t &obj) const noexcept
         -> uint64_t {
-        return detail::wyhash::hash(gsl::narrow_cast<uint64_t>(obj.value));
+        return detail::wyhash::hash(obj.value);
     }
 };
 
