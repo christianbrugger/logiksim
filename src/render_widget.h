@@ -219,10 +219,10 @@ class RendererWidget : public QWidget {
     auto set_interaction_state(InteractionState state) -> void;
 
     auto fps() const -> double;
-    auto scale() const -> double;
+    auto pixel_scale() const -> double;
+    auto pixel_size() const -> QSize;
 
    private:
-    QSize size_pixels();
     Q_SLOT void on_timeout();
     auto reset_circuit() -> void;
     void init();

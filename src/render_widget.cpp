@@ -20,8 +20,10 @@ auto MouseDragLogic::mouse_press(QPointF position) -> void {
 
 auto MouseDragLogic::mouse_move(QPointF position) -> void {
     if (last_position.has_value()) {
-        config_.offset
-            += to_grid_fine(position, config_) - to_grid_fine(*last_position, config_);
+        const auto new_offset = config_.offset()                   //
+                                + to_grid_fine(position, config_)  //
+                                - to_grid_fine(*last_position, config_);
+        config_.set_offset(new_offset);
         last_position = position;
     }
 }
@@ -423,8 +425,7 @@ RendererWidget::RendererWidget(QWidget* parent)
 
     connect(&timer_, &QTimer::timeout, this, &RendererWidget::on_timeout);
 
-    render_settings_.view_config.scale = 18;
-
+    render_settings_.view_config.set_device_scale(18);
     reset_circuit();
 }
 
@@ -477,8 +478,8 @@ auto RendererWidget::fps() const -> double {
     return fps_counter_.events_per_second();
 }
 
-auto RendererWidget::scale() const -> double {
-    return render_settings_.view_config.scale;
+auto RendererWidget::pixel_scale() const -> double {
+    return render_settings_.view_config.pixel_scale();
 }
 
 auto RendererWidget::reset_circuit() -> void {
@@ -542,13 +543,13 @@ Q_SLOT void RendererWidget::on_timeout() {
     this->update();
 }
 
-QSize RendererWidget::size_pixels() {
+auto RendererWidget::pixel_size() const -> QSize {
     double ratio = devicePixelRatioF();
     return QSize(width() * ratio, height() * ratio);
 }
 
 void RendererWidget::init() {
-    auto window_size = size_pixels();
+    auto window_size = pixel_size();
 
     qt_image = QImage(window_size.width(), window_size.height(),
                       QImage::Format_ARGB32_Premultiplied);
@@ -556,6 +557,7 @@ void RendererWidget::init() {
     bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
                             qt_image.bits(), qt_image.bytesPerLine());
     bl_info.threadCount = n_threads_;
+    render_settings_.view_config.set_device_pixel_ratio(devicePixelRatioF());
 
     fps_counter_.reset();
 };
@@ -577,12 +579,12 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         return;
     }
 
+    if (!this->isVisible()) {
+        return;
+    }
     if (last_pixel_ratio_ != devicePixelRatioF()) {
         last_pixel_ratio_ = devicePixelRatioF();
         init();
-    }
-    if (!this->isVisible()) {
-        return;
     }
 
     // build circuit
@@ -884,27 +886,24 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
         return;
     }
 
+    auto& view_config = render_settings_.view_config;
+
     const auto standard_delta = 120.0;      // standard delta for one scroll
     const auto standard_zoom_factor = 1.1;  // zoom factor for one scroll
     const auto standard_scroll_pixel = 20;  // pixels to scroll for one scroll
 
-    const auto standard_scroll_grid
-        = standard_scroll_pixel / render_settings_.view_config.scale;
+    const auto standard_scroll_grid = standard_scroll_pixel / view_config.device_scale();
 
     // zoom
     if (event->modifiers() == Qt::ControlModifier) {
         const auto delta = event->angleDelta().y() / standard_delta;
         const auto factor = std::exp(delta * std::log(standard_zoom_factor));
 
-        const auto old_grid_point
-            = to_grid_fine(event->position(), render_settings_.view_config);
+        const auto old_grid_point = to_grid_fine(event->position(), view_config);
+        view_config.set_device_scale(view_config.device_scale() * factor);
+        const auto new_grid_point = to_grid_fine(event->position(), view_config);
 
-        render_settings_.view_config.scale *= factor;
-
-        const auto new_grid_point
-            = to_grid_fine(event->position(), render_settings_.view_config);
-
-        render_settings_.view_config.offset += new_grid_point - old_grid_point;
+        view_config.set_offset(view_config.offset() + new_grid_point - old_grid_point);
         update();
     }
 
@@ -912,24 +911,31 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
     else if (event->modifiers() == Qt::NoModifier) {
         if (event->hasPixelDelta()) {
             // TODO test this
-            const auto scale = render_settings_.view_config.scale;
-            render_settings_.view_config.offset.x += event->pixelDelta().x() / scale;
-            render_settings_.view_config.offset.y += event->pixelDelta().y() / scale;
+            const auto scale = view_config.device_scale();
+
+            view_config.set_offset(point_fine_t {
+                view_config.offset().x + event->pixelDelta().x() / scale,
+                view_config.offset().y + event->pixelDelta().y() / scale,
+            });
         } else {
-            render_settings_.view_config.offset.x
-                += standard_scroll_grid * event->angleDelta().x() / standard_delta;
-            render_settings_.view_config.offset.y
-                += standard_scroll_grid * event->angleDelta().y() / standard_delta;
+            view_config.set_offset(point_fine_t {
+                view_config.offset().x
+                    + standard_scroll_grid * event->angleDelta().x() / standard_delta,
+                view_config.offset().y
+                    + standard_scroll_grid * event->angleDelta().y() / standard_delta,
+            });
         }
         update();
     }
 
     // inverted scroll
     else if (event->modifiers() == Qt::ShiftModifier) {
-        render_settings_.view_config.offset.x
-            += standard_scroll_grid * event->angleDelta().y() / standard_delta;
-        render_settings_.view_config.offset.y
-            += standard_scroll_grid * event->angleDelta().x() / standard_delta;
+        view_config.set_offset(point_fine_t {
+            view_config.offset().x
+                + standard_scroll_grid * event->angleDelta().y() / standard_delta,
+            view_config.offset().y
+                + standard_scroll_grid * event->angleDelta().x() / standard_delta,
+        });
         update();
     }
 }

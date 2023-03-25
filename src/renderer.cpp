@@ -18,6 +18,14 @@
 
 namespace logicsim {
 
+auto RenderSettings::format() const -> std::string {
+    return fmt::format(
+        "RenderSettings(\n"
+        "  view_config = {},\n"
+        "  background_grid_min_distance = {})",
+        view_config, background_grid_min_distance);
+}
+
 enum class DrawType {
     fill,
     stroke,
@@ -58,14 +66,14 @@ auto draw_standard_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attribu
 
 auto stroke_width(const RenderSettings& settings) -> int {
     constexpr static auto stepping = 12;
-    const auto scale = settings.view_config.scale;
+    const auto scale = settings.view_config.pixel_scale();
 
     return std::max(1, static_cast<int>(scale / stepping));
 }
 
 auto line_cross_width(const RenderSettings& settings) -> int {
     constexpr static auto stepping = 8;
-    const auto scale = settings.view_config.scale;
+    const auto scale = settings.view_config.pixel_scale();
 
     return std::max(1, static_cast<int>(scale / stepping));
 }
@@ -615,16 +623,17 @@ auto draw_background_pattern_checker(BLContext& ctx, point_fine_t a0, point_fine
     const auto p0 = to_context(g0, settings.view_config);
     const auto p1 = to_context(g1, settings.view_config);
 
+    const auto offset = settings.view_config.offset();
+    const auto scale = settings.view_config.pixel_scale();
+
     // vertical
     for (int x = g0.x.value; x <= g1.x.value; x += delta) {
-        const auto cx = round_fast((x + settings.view_config.offset.x)
-                                   * settings.view_config.scale);
+        const auto cx = round_fast((x + offset.x) * scale);
         stroke_line_impl(ctx, BLLine {cx, p0.y, cx, p1.y}, color, width);
     }
     // horizontal
     for (int y = g0.y.value; y <= g1.y.value; y += delta) {
-        const auto cy = round_fast((y + settings.view_config.offset.y)
-                                   * settings.view_config.scale);
+        const auto cy = round_fast((y + offset.y) * scale);
         stroke_line_impl(ctx, BLLine {p0.x, cy, p1.x, cy}, color, width);
     }
 }
@@ -672,7 +681,7 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
 
         case circle: {
             const auto center = to_context(point, settings.view_config);
-            const auto r = size * settings.view_config.scale;
+            const auto r = to_context(size, settings.view_config);
 
             ctx.setStrokeWidth(stroke_width);
             ctx.setStrokeStyle(color);
@@ -681,7 +690,7 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
         }
         case full_circle: {
             const auto center = to_context(point, settings.view_config);
-            const auto r = size * settings.view_config.scale;
+            const auto r = to_context(size, settings.view_config);
 
             ctx.setFillStyle(color);
             ctx.fillCircle(BLCircle {center.x, center.y, r});
@@ -689,7 +698,7 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
         }
         case cross: {
             const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = size * settings.view_config.scale;
+            const auto d = to_context(size, settings.view_config);
 
             ctx.setStrokeWidth(stroke_width);
             ctx.setStrokeStyle(color);
@@ -700,7 +709,7 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
         }
         case plus: {
             const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = size * settings.view_config.scale;
+            const auto d = to_context(size, settings.view_config);
 
             stroke_line_impl(ctx, BLLine {x, y + d, x, y - d}, color, stroke_width);
             stroke_line_impl(ctx, BLLine {x - d, y, x + d, y}, color, stroke_width);
@@ -735,7 +744,7 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
         }
         case diamond: {
             const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = size * settings.view_config.scale;
+            const auto d = to_context(size, settings.view_config);
 
             const auto poly = std::array {BLPoint {x, y - d}, BLPoint {x + d, y},
                                           BLPoint {x, y + d}, BLPoint {x - d, y}};
@@ -748,14 +757,14 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
         }
         case horizontal: {
             const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = size * settings.view_config.scale;
+            const auto d = to_context(size, settings.view_config);
 
             stroke_line_impl(ctx, BLLine {x - d, y, x + d, y}, color, stroke_width);
             return;
         }
         case vertical: {
             const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = size * settings.view_config.scale;
+            const auto d = to_context(size, settings.view_config);
 
             stroke_line_impl(ctx, BLLine {x, y + d, x, y - d}, color, stroke_width);
             return;
@@ -773,7 +782,7 @@ auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t or
     ctx.setStrokeStyle(BLRgba32(color.value));
 
     const auto [x, y] = to_context(point, settings.view_config);
-    const auto d = size * settings.view_config.scale;
+    const auto d = to_context(size, settings.view_config);
     const auto angle = to_angle(orientation);
 
     ctx.translate(BLPoint {x, y});
@@ -793,7 +802,7 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
     ctx.setStrokeStyle(BLRgba32(color.value));
 
     const auto [x, y] = to_context(point, settings.view_config);
-    const auto d = size * settings.view_config.scale;
+    const auto d = to_context(size, settings.view_config);
     const auto angle = to_angle(orientation);
 
     ctx.translate(BLPoint {x, y});

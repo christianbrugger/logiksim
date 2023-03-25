@@ -113,10 +113,10 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
 
 void MainWidget::update_title() {
     const auto fps = render_widget_->fps();
-    const auto scale = render_widget_->scale();
-    const auto size = render_widget_->size();
+    const auto scale = render_widget_->pixel_scale();
+    const auto size = render_widget_->pixel_size();
 
-    auto text = fmt::format("[{}x{}] {:.1f} FPS {:.1f} scale", size.width(),
+    auto text = fmt::format("[{}x{}] {:.1f} FPS {:.1f} pixel scale", size.width(),
                             size.height(), fps, scale);
 
     QString title = QString::fromUtf8(text);

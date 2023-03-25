@@ -2,6 +2,7 @@
 #define LOGIKSIM_RENDER_SCENE_H
 
 #include "editable_circuit.h"
+#include "format.h"
 #include "layout.h"
 #include "scene.h"
 #include "schematic.h"
@@ -25,6 +26,8 @@ struct RenderSettings {
     ViewConfig view_config {};
 
     int background_grid_min_distance {10};  // pixel
+
+    auto format() const -> std::string;
 };
 
 auto stroke_width(const RenderSettings& settings) -> int;
