@@ -127,7 +127,7 @@ class MouseMoveSelectionLogic {
         finished,
     };
 
-    auto get_selection() -> const std::vector<element_key_t>&;
+    auto get_selection() -> const Selection&;
     auto bake_selection_and_positions() -> void;
     auto remove_invalid_items_from_selection() -> void;
     auto convert_to(InsertionMode mode) -> void;

@@ -2,6 +2,7 @@
 #define LOGIKSIM_SELECTION_MANAGER_H
 
 #include "editable_circuit.h"
+#include "selection.h"
 #include "vocabulary.h"
 
 #include <boost/container/vector.hpp>
@@ -32,19 +33,22 @@ class SelectionBuilder {
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
 
-    [[nodiscard]] auto claculate_item_selected(element_id_t element_id) const -> bool;
+    // currently very slow implementation
+    [[nodiscard]] auto claculate_is_item_selected(element_key_t element_key) const
+        -> bool;
+
+    [[nodiscard]] auto calculate_selection() const -> Selection;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
-    [[nodiscard]] auto calculate_selected_ids() const -> std::vector<element_id_t>;
     [[nodiscard]] auto calculate_selected_keys() const -> std::vector<element_key_t>;
 
-    auto set_selection(std::vector<element_key_t>&& selected_keys) -> void;
+    auto set_selection(Selection&& selection) -> void;
     auto bake_selection() -> void;
-    [[nodiscard]] auto get_baked_selection() const -> const std::vector<element_key_t>&;
+    [[nodiscard]] auto get_baked_selection() const -> const Selection&;
 
    private:
     const EditableCircuit& editable_circuit_;
 
-    std::vector<element_key_t> initial_selected_ {};
+    Selection initial_selection_ {};
     std::vector<operation_t> operations_ {};
 };
 

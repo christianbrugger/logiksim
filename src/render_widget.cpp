@@ -131,11 +131,11 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
             builder_.clear();
             return;
         }
+        const auto element_key
+            = editable_circuit_.to_element_key(element_under_cursor.value());
+        const auto is_element_selected = builder_.claculate_is_item_selected(element_key);
 
-        const auto element_selected
-            = builder_.claculate_item_selected(element_under_cursor.value());
-
-        if (!element_selected) {
+        if (!is_element_selected) {
             builder_.clear();
             builder_.add(SelectionFunction::add, rect_fine_t {point, point});
         }
@@ -176,15 +176,15 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
     };
 
     // check if all positions are valid
-    const auto all_valid
-        = std::ranges::all_of(get_selection(), [&](element_key_t element_key) {
-              const auto [x, y] = calculate_new_position(element_key);
-              return editable_circuit_.is_position_valid(element_key, x, y);
-          });
+    const auto all_valid = std::ranges::all_of(
+        get_selection().selected_elements(), [&](element_key_t element_key) {
+            const auto [x, y] = calculate_new_position(element_key);
+            return editable_circuit_.is_position_valid(element_key, x, y);
+        });
 
     if (all_valid) {
         // move all items
-        for (auto&& element_key : get_selection()) {
+        for (auto&& element_key : get_selection().selected_elements()) {
             const auto [x, y] = calculate_new_position(element_key);
             const auto p = point_t {grid_t {x}, grid_t {y}};
             editable_circuit_.move_or_delete_element(element_key, p);
@@ -224,7 +224,7 @@ auto MouseMoveSelectionLogic::finished() -> bool {
     return state_ == State::finished;
 }
 
-auto MouseMoveSelectionLogic::get_selection() -> const std::vector<element_key_t>& {
+auto MouseMoveSelectionLogic::get_selection() -> const Selection& {
     if (!selection_and_positions_baked_) {
         bake_selection_and_positions();
     }
@@ -240,13 +240,14 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
     // bake selection, so we can move the elements
     builder_.bake_selection();
     const auto& selection = get_selection();
+    const auto selected_keys = selection.selected_elements();
 
     // store initial positions
     if (!original_positions_.empty()) [[unlikely]] {
         throw_exception("Original positions need to be empty.");
     }
-    original_positions_.reserve(selection.size());
-    std::ranges::transform(selection, std::back_inserter(original_positions_),
+    original_positions_.reserve(selected_keys.size());
+    std::ranges::transform(selected_keys, std::back_inserter(original_positions_),
                            [&](element_key_t element_key) {
                                const auto element_id
                                    = editable_circuit_.to_element_id(element_key);
@@ -256,13 +257,13 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
 
 auto MouseMoveSelectionLogic::remove_invalid_items_from_selection() -> void {
     const auto& selection = get_selection();
+    auto new_selection = Selection {selection};
 
-    auto new_selection = std::vector<element_key_t> {};
-    new_selection.reserve(selection.size());
-    std::ranges::copy_if(selection, std::back_inserter(new_selection),
-                         [&](element_key_t element_key) {
-                             return editable_circuit_.element_key_valid(element_key);
-                         });
+    for (element_key_t element_key : new_selection.selected_elements()) {
+        if (!editable_circuit_.element_key_valid(element_key)) {
+            new_selection.remove_element(element_key);
+        }
+    }
 
     builder_.set_selection(std::move(new_selection));
 }
@@ -273,20 +274,21 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
     }
     insertion_mode_ = mode;
 
-    for (auto&& element_key : get_selection()) {
+    for (auto&& element_key : get_selection().selected_elements()) {
         editable_circuit_.change_insertion_mode(element_key, mode);
     }
 }
 
 auto MouseMoveSelectionLogic::restore_original_positions() -> void {
     const auto& selection = get_selection();
+    const auto selected_keys = selection.selected_elements();
 
-    if (selection.size() != original_positions_.size()) [[unlikely]] {
+    if (selected_keys.size() != original_positions_.size()) [[unlikely]] {
         throw_exception("Number of original positions doesn't match selection.");
     }
 
-    for (auto i : range(selection.size())) {
-        bool moved = editable_circuit_.move_or_delete_element(selection[i],
+    for (auto i : range(selected_keys.size())) {
+        bool moved = editable_circuit_.move_or_delete_element(selected_keys[i],
                                                               original_positions_[i]);
         if (!moved) [[unlikely]] {
             throw_exception("item was not revertable to old positions.");
@@ -301,7 +303,7 @@ auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
                == display_state_t::new_colliding;
     };
 
-    return std::ranges::any_of(get_selection(), element_colliding);
+    return std::ranges::any_of(get_selection().selected_elements(), element_colliding);
 }
 
 //
@@ -488,8 +490,6 @@ auto RendererWidget::reset_circuit() -> void {
                                          circuit_index_.borrow_layout(circuit_id_)};
     selection_builder_.emplace(editable_circuit_.value());
 
-    return;
-    /*
     {
         auto& editable_circuit = editable_circuit_.value();
 
@@ -503,7 +503,7 @@ auto RendererWidget::reset_circuit() -> void {
 
         editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {5, 3},
                                               InsertionMode::insert_or_discard);
-        auto element1 = editable_circuit.add_standard_element(
+        const auto element1 = editable_circuit.add_standard_element(
             ElementType::or_element, 2, point_t {15, 6},
             InsertionMode::insert_or_discard);
         // editable_circuit.add_wire(std::move(line_tree));
@@ -513,7 +513,7 @@ auto RendererWidget::reset_circuit() -> void {
         //  editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
         editable_circuit.delete_element(element1);
 
-        auto added = editable_circuit.add_standard_element(
+        const auto added = editable_circuit.add_standard_element(
             ElementType::or_element, 9, point_t {20, 4},
             InsertionMode::insert_or_discard);
         fmt::print("added = {}\n", added);
@@ -527,8 +527,13 @@ auto RendererWidget::reset_circuit() -> void {
         {
             auto timer = Timer {};
             auto count = 0;
-            for (auto x : range(100, 20, 5)) {
-                for (auto y : range(100, 20, 5)) {
+#ifdef NDEBUG
+            constexpr auto max_value = 2000;
+#else
+            constexpr auto max_value = 200;
+#endif
+            for (auto x : range(100, max_value, 5)) {
+                for (auto y : range(100, max_value, 5)) {
                     editable_circuit.add_standard_element(
                         ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
                         InsertionMode::insert_or_discard);
@@ -538,7 +543,6 @@ auto RendererWidget::reset_circuit() -> void {
             fmt::print("Added {} elements in {}.\n", count, timer.format());
         }
     }
-    */
 }
 
 Q_SLOT void RendererWidget::on_timeout() {
@@ -647,17 +651,16 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     // int w = qt_image.width();
     // int h = qt_image.height();
     */
-
-    const auto selection_mask = selection_builder_.value().create_selection_mask();
-
     bl_ctx.begin(bl_image, bl_info);
 
     render_background(bl_ctx, render_settings_);
 
     if (do_render_circuit_) {
+        const auto mask = selection_builder_.value().create_selection_mask();
+
         // auto simulation = Simulation {editable_circuit.schematic()};
         render_circuit(bl_ctx, editable_circuit.schematic(), editable_circuit.layout(),
-                       nullptr, selection_mask, render_settings_);
+                       nullptr, mask, render_settings_);
     }
     if (do_render_collision_cache_) {
         render_editable_circuit_collision_cache(bl_ctx, editable_circuit,

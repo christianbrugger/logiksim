@@ -1659,6 +1659,7 @@ auto EditableCircuit::cache_update(element_id_t new_element_id,
     // element cache update
     const auto data = to_layout_calculation_data(schematic_, layout_, new_element_id);
 
+    // TODO never called for wires
     if (element_type != ElementType::wire) {
         // TODO connection cache
         input_connections_.update(new_element_id, old_element_id, data);

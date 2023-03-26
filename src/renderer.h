@@ -6,6 +6,7 @@
 #include "layout.h"
 #include "scene.h"
 #include "schematic.h"
+#include "selection.h"
 #include "simulation.h"
 
 #include <blend2d.h>

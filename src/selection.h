@@ -53,8 +53,15 @@ using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 
 class Selection {
    public:
+    auto swap(Selection &other) noexcept -> void;
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto empty() const noexcept -> bool;
+    auto clear() -> void;
+
     auto add_element(element_key_t element) -> void;
     auto remove_element(element_key_t element) -> void;
+    auto toggle_element(element_key_t element) -> void;
 
     auto add_segment(element_key_t element, segment_index_t segment_index,
                      segment_selection_t selection) -> void;
@@ -63,11 +70,18 @@ class Selection {
 
     [[nodiscard]] auto is_selected(element_key_t element) const -> bool;
 
+    [[nodiscard]] auto selected_elements() const -> std::span<const element_key_t>;
+
    private:
     detail::selection::elements_set_t selected_elements_ {};
     detail::selection::segment_map_t selected_segments_ {};
 };
 
+auto swap(Selection &a, Selection &b) noexcept -> void;
+
 }  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void;
 
 #endif
