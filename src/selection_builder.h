@@ -28,7 +28,9 @@ class SelectionBuilder {
    public:
     [[nodiscard]] explicit SelectionBuilder(const EditableCircuit& editable_circuit);
 
+    [[nodiscard]] auto empty() const noexcept -> bool;
     auto clear() -> void;
+
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
@@ -37,9 +39,9 @@ class SelectionBuilder {
     [[nodiscard]] auto claculate_is_item_selected(element_key_t element_key) const
         -> bool;
 
-    [[nodiscard]] auto calculate_selection() const -> Selection;
+    [[nodiscard]] auto calculate_selection() const -> const Selection&;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
-    [[nodiscard]] auto calculate_selected_keys() const -> std::vector<element_key_t>;
+    [[nodiscard]] auto calculate_selected_keys() const -> std::span<const element_key_t>;
 
     auto set_selection(Selection&& selection) -> void;
     auto bake_selection() -> void;
@@ -50,6 +52,8 @@ class SelectionBuilder {
 
     Selection initial_selection_ {};
     std::vector<operation_t> operations_ {};
+
+    mutable std::optional<Selection> cached_selection_ {};
 };
 
 }  // namespace logicsim

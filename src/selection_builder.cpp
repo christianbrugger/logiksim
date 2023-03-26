@@ -14,27 +14,40 @@ namespace logicsim {
 SelectionBuilder::SelectionBuilder(const EditableCircuit& editable_circuit)
     : editable_circuit_ {editable_circuit} {}
 
+auto SelectionBuilder::empty() const noexcept -> bool {
+    return initial_selection_.empty() && operations_.empty();
+}
+
 auto SelectionBuilder::clear() -> void {
     initial_selection_.clear();
     operations_.clear();
+    cached_selection_.reset();
 }
 
 auto SelectionBuilder::add(SelectionFunction function, rect_fine_t rect) -> void {
     operations_.emplace_back(operation_t {function, rect});
+    cached_selection_.reset();
 }
 
 auto SelectionBuilder::update_last(rect_fine_t rect) -> void {
     if (operations_.empty()) [[unlikely]] {
-        throw_exception("Cannot update with empty operations.");
+        throw_exception("Cannot update last with no operations.");
     }
+    if (operations_.back().rect == rect) {
+        return;
+    }
+
     operations_.back().rect = rect;
+    cached_selection_.reset();
 }
 
 auto SelectionBuilder::pop_last() -> void {
     if (operations_.empty()) [[unlikely]] {
-        throw_exception("Cannot update with empty operations.");
+        throw_exception("Cannot remove last with no operations.");
     }
+
     operations_.pop_back();
+    cached_selection_.reset();
 }
 
 namespace {
@@ -65,38 +78,39 @@ auto apply_function(Selection& selection, const EditableCircuit& editable_circui
 
 }  // namespace
 
-auto SelectionBuilder::calculate_selection() const -> Selection {
-    auto selection = Selection {initial_selection_};
+auto SelectionBuilder::calculate_selection() const -> const Selection& {
+    if (operations_.empty()) {
+        return initial_selection_;
+    }
+    if (cached_selection_.has_value()) {
+        return *cached_selection_;
+    }
 
+    auto selection = Selection {initial_selection_};
     for (auto&& operation : operations_) {
         apply_function(selection, editable_circuit_, operation);
     }
 
-    return selection;
+    cached_selection_->swap(selection);
+    return *cached_selection_;
 }
 
-// TODO remove
 auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
-    if (initial_selection_.empty() && operations_.empty()) {
+    if (empty()) {
         return {};
     }
 
-    const auto element_ids = [&]() {
-        if (operations_.empty()) {
-            return editable_circuit_.to_element_ids(
-                initial_selection_.selected_elements());
-        }
-        // TODO cache selection
-        const auto selection = calculate_selection();
-        return editable_circuit_.to_element_ids(selection.selected_elements());
-    }();
+    const auto selected_ids
+        = editable_circuit_.to_element_ids(calculate_selection().selected_elements());
 
+    // TODO create algorithm to mask?
     const auto element_count = editable_circuit_.schematic().element_count();
     auto mask = selection_mask_t(element_count, false);
 
-    for (element_id_t element_id : element_ids) {
+    for (element_id_t element_id : selected_ids) {
         mask.at(element_id.value) = true;
     }
+
     return mask;
 }
 
@@ -106,19 +120,26 @@ auto SelectionBuilder::claculate_is_item_selected(element_key_t element_key) con
         throw_exception("Invalid element key");
     }
 
-    const auto selection = calculate_selection();
-    return selection.is_selected(element_key);
+    return calculate_selection().is_selected(element_key);
 }
 
 auto SelectionBuilder::set_selection(Selection&& selection) -> void {
     using std::swap;
 
-    operations_.clear();
     swap(initial_selection_, selection);
+
+    operations_.clear();
+    cached_selection_.reset();
 }
 
 auto SelectionBuilder::bake_selection() -> void {
-    set_selection(calculate_selection());
+    static_cast<void>(calculate_selection());
+
+    auto temp = Selection {};
+    temp.swap(*cached_selection_);
+    cached_selection_.reset();
+
+    set_selection(std::move(temp));
 }
 
 auto SelectionBuilder::get_baked_selection() const -> const Selection& {
@@ -129,11 +150,8 @@ auto SelectionBuilder::get_baked_selection() const -> const Selection& {
     return initial_selection_;
 }
 
-auto SelectionBuilder::calculate_selected_keys() const -> std::vector<element_key_t> {
-    // TODO cache the last selection somehow, then return span
-    const auto selection = calculate_selection();
-    const auto keys = selection.selected_elements();
-    return std::vector<element_key_t>(keys.begin(), keys.end());
+auto SelectionBuilder::calculate_selected_keys() const -> std::span<const element_key_t> {
+    return calculate_selection().selected_elements();
 }
 
 }  // namespace logicsim

@@ -381,6 +381,15 @@ auto depth_first_visitor(IndexType start_node, VisitedStore& visited,
 }
 
 //
+// span to vector
+//
+
+template <typename T>
+constexpr auto to_vector(std::span<T> values) -> std::vector<std::decay_t<T>> {
+    return std::vector<std::decay_t<T>>(values.begin(), values.end());
+}
+
+//
 // transform_to_vector
 //
 

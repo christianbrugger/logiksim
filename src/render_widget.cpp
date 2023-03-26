@@ -685,12 +685,13 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
 auto RendererWidget::delete_selected_items() -> void {
     mouse_logic_.reset();
-    const auto selected = selection_builder_.value().calculate_selected_keys();
-    selection_builder_.value().clear();
 
-    for (auto&& element_key : selected) {
+    auto&& selected_keys = selection_builder_.value().calculate_selected_keys();
+    for (auto&& element_key : selected_keys) {
         editable_circuit_.value().delete_element(element_key);
     }
+
+    selection_builder_.value().clear();
     update();
 
 #ifndef NDEBUG
