@@ -186,8 +186,8 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
         // move all items
         for (auto&& element_key : get_selection()) {
             const auto [x, y] = calculate_new_position(element_key);
-            const auto point = point_t {grid_t {x}, grid_t {y}};
-            editable_circuit_.move_or_delete_element(element_key, point);
+            const auto p = point_t {grid_t {x}, grid_t {y}};
+            editable_circuit_.move_or_delete_element(element_key, p);
         }
 
         last_position_ = point_fine_t {
@@ -489,6 +489,7 @@ auto RendererWidget::reset_circuit() -> void {
     selection_builder_.emplace(editable_circuit_.value());
 
     return;
+    /*
     {
         auto& editable_circuit = editable_circuit_.value();
 
@@ -537,6 +538,7 @@ auto RendererWidget::reset_circuit() -> void {
             fmt::print("Added {} elements in {}.\n", count, timer.format());
         }
     }
+    */
 }
 
 Q_SLOT void RendererWidget::on_timeout() {

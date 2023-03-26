@@ -5,14 +5,17 @@
 
 namespace logicsim {
 
-inline auto hash_16_byte(uint64_t a, uint64_t b) -> uint64_t {
-    // standard secret from wyhash
-    static constexpr auto secret = std::array {
-        uint64_t {0xa0761d6478bd642f},
-        uint64_t {0xe7037ed1a0b428db},
-    };
+// standard secret from wyhash & ankerl
+inline constexpr auto wyhash_secret = std::array {
+    uint64_t {0xa0761d6478bd642f},
+    uint64_t {0xe7037ed1a0b428db},
+    uint64_t {0x8ebc6af09c88c6e3},
+    uint64_t {0x589965cc75374cc3},
+};
 
-    return ankerl::unordered_dense::detail::wyhash::mix(a ^ secret[1], b ^ secret[0]);
+inline auto hash_16_byte(uint64_t a, uint64_t b) -> uint64_t {
+    return ankerl::unordered_dense::detail::wyhash::mix(a ^ wyhash_secret[1],
+                                                        b ^ wyhash_secret[0]);
 }
 
 }  // namespace logicsim

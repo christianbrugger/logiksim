@@ -64,7 +64,23 @@ endif()
 
 # our library: enable warnings
 if (MSVC)
-    list(APPEND MAIN_COMPILE_OPTIONS /WX /W4)
+    list(APPEND MAIN_COMPILE_OPTIONS /WX /W4 /external:W0)
+    list(APPEND MAIN_COMPILE_OPTIONS /analyze /analyze:external-)
+    
+    # list(APPEND MAIN_COMPILE_OPTIONS /we4062 /we4826 /we5204 /we5219 /we5240)
+    # list(APPEND MAIN_COMPILE_OPTIONS /we4242 /we4254 /we4287 /we4388)
+    # list(APPEND MAIN_COMPILE_OPTIONS /we4263 /we4264 /we4265 /we4266 /we4355)
+    # list(APPEND MAIN_COMPILE_OPTIONS /we4296 /we4437 /we4471 /we4545 /we4582 /we4583)
+    list(APPEND MAIN_COMPILE_OPTIONS /we5263)
+
+    # list(APPEND MAIN_COMPILE_OPTIONS /we4365)
+    
+    # disable Spectre mitigation code generation warnings in external files
+    list(APPEND MAIN_COMPILE_OPTIONS /wd5045)
+    # disable left-to-right evaluation order in braced initializer list
+    # list(APPEND MAIN_COMPILE_OPTIONS /wd4868)
+    
+
     # disable unused parameters
     list(APPEND MAIN_COMPILE_OPTIONS /wd4100)
     # unreachable code warnings when using folly::small_vector in release
@@ -72,7 +88,7 @@ if (MSVC)
 else()
     # -Wthread-safety 
     list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
-                             -Wstrict-aliasing)
+                             -Wstrict-aliasing -Wconversion -Wsign-conversion)
 endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # clang 16 warns on brace elision, why?
@@ -128,7 +144,6 @@ add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 # Boost
 set(BOOST_INCLUDE_LIBRARIES 
     algorithm 
-    circular_buffer 
     container 
     geometry
     mpl 
@@ -153,14 +168,10 @@ endif()
 set(CMAKE_AUTOMOC TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
-find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
 
 # Blend2D
-set(BLEND2D_STATIC TRUE)  # TODO test BLEND2D_EMBED
+set(BLEND2D_STATIC TRUE)
 add_subdirectory(external/blend2d EXCLUDE_FROM_ALL SYSTEM)
-
-# range-v3
-# add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL SYSTEM)
 
 # fmt
 add_subdirectory(external/fmt EXCLUDE_FROM_ALL SYSTEM)
@@ -287,7 +298,6 @@ set(LS_CORE_LIBRARIES
     logicsim_pch
 
     Boost::algorithm
-    Boost::circular_buffer
     Boost::container 
     Boost::geometry
     Boost::mpl
@@ -305,7 +315,6 @@ set(LS_CORE_LIBRARIES
     
     Qt6::Core
     Qt6::Widgets
-    Qt6::OpenGLWidgets
 )
 
 # target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})

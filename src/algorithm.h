@@ -3,6 +3,8 @@
 
 #include "iterator_adaptor.h"
 
+#include <gsl/gsl>
+
 #include <algorithm>
 #include <cassert>
 #include <cfenv>
@@ -11,6 +13,7 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <ranges>
 #include <tuple>
 #include <type_traits>

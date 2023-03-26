@@ -563,9 +563,13 @@ struct ankerl::unordered_dense::hash<logicsim::point_t> {
 
     [[nodiscard]] auto operator()(const logicsim::point_t &obj) const noexcept
         -> uint64_t {
-        // TODO check assymbly & maybe use hash_16_byte ?
-        static_assert(std::has_unique_object_representations_v<logicsim::point_t>);
-        return detail::wyhash::hash(&obj, sizeof(obj));
+        using value_type = logicsim::point_t;
+        using bit_type = uint32_t;
+
+        static_assert(std::has_unique_object_representations_v<value_type>);
+        static_assert(sizeof(value_type) == sizeof(bit_type));
+
+        return detail::wyhash::hash(std::bit_cast<bit_type>(obj));
     }
 };
 

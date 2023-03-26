@@ -4,11 +4,11 @@
 
 #include <QApplication>
 
-int main(int argc, char* argv[]) {
-    QApplication app(argc, argv);
+auto main(int argc, char* argv[]) -> int {
+    auto app = QApplication {argc, argv};
 
     auto frame = logicsim::MainWidget {};
     frame.show();
 
-    return QApplication::exec();
+    return app.exec();
 }

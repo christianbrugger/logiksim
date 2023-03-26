@@ -4,6 +4,7 @@
 #ifndef LOGIKSIM_ITERATOR_H
 #define LOGIKSIM_ITERATOR_H
 
+#include <cassert>
 #include <functional>
 #include <iterator>
 #include <memory>

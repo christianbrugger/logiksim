@@ -430,7 +430,7 @@ auto LineTree::initialize_data_structure() -> void {
 
     // point to previous points for each segment
     indices_.resize(points_.size() - 1);
-    std::iota(indices_.begin(), indices_.end(), 0);
+    std::iota(indices_.begin(), indices_.end(), index_t {0});
 
     auto last_index = gsl::narrow_cast<index_t>(points_.size() - std::size_t {1});
     output_indices_.push_back(last_index);

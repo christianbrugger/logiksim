@@ -154,8 +154,8 @@ auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segmen
 }
 
 auto get_segment_count(SearchTree::queried_segments_t result) -> int {
-    return std::ranges::count_if(
-        result, [](segment_t segment) { return bool {segment.element_id}; });
+    return gsl::narrow_cast<int>(std::ranges::count_if(
+        result, [](segment_t segment) { return bool {segment.element_id}; }));
 }
 
 auto all_same_element_id(SearchTree::queried_segments_t result) -> bool {

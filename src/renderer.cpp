@@ -1028,7 +1028,7 @@ auto calculate_tree_length(const LineTree& line_tree) -> int {
 
 auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     auto rng = boost::random::mt19937 {0};
-    const auto config = RenderBenchmarkConfig {};
+    const auto config = RenderBenchmarkConfig();
     auto tree_length_sum = int64_t {0};
 
     // create schematics

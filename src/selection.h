@@ -40,7 +40,8 @@ struct ankerl::unordered_dense::hash<logicsim::detail::selection::map_key_t> {
     using object_type = logicsim::detail::selection::map_key_t;
 
     [[nodiscard]] auto operator()(const object_type &obj) const noexcept -> uint64_t {
-        return logicsim::hash_16_byte(obj.element_key.value, obj.segment_index.value);
+        return logicsim::hash_16_byte(static_cast<uint64_t>(obj.element_key.value),
+                                      static_cast<uint64_t>(obj.segment_index.value));
     }
 };
 
