@@ -1,19 +1,9 @@
 
-abseil-cpp
-asmjit
-benchmark
-blend2d
-boost
 ccache
 ClangBuildAnalyzer
 CMake
-fmt
 folly
-googletest
-GSL
-my_folly
 ninjatracing
 llvm-project
 range-v3
-unordered_dense
 

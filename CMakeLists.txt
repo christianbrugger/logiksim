@@ -65,7 +65,7 @@ endif()
 # our library: enable warnings
 if (MSVC)
     list(APPEND MAIN_COMPILE_OPTIONS /WX /W4 /external:W0)
-    list(APPEND MAIN_COMPILE_OPTIONS /analyze /analyze:external-)
+    # list(APPEND MAIN_COMPILE_OPTIONS /analyze /analyze:external-)
     
     # list(APPEND MAIN_COMPILE_OPTIONS /we4062 /we4826 /we5204 /we5219 /we5240)
     # list(APPEND MAIN_COMPILE_OPTIONS /we4242 /we4254 /we4287 /we4388)

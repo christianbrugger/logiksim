@@ -1,0 +1,39 @@
+[submodule "external/abseil-cpp"]
+	path = external/abseil-cpp
+	url = https://github.com/abseil/abseil-cpp
+	
+[submodule "external/asmjit"]
+	path = external/asmjit
+	url = https://github.com/asmjit/asmjit
+	
+[submodule "external/benchmark"]
+	path = external/benchmark
+	url = https://github.com/google/benchmark.git
+	
+[submodule "external/blend2d"]
+	path = external/blend2d
+	url = https://github.com/blend2d/blend2d.git
+
+[submodule "external/boost"]
+	path = external/boost
+	url = https://github.com/boostorg/boost
+
+[submodule "external/fmt"]
+	path = external/fmt
+	url = https://github.com/fmtlib/fmt
+
+[submodule "external/googletest"]
+	path = external/googletest
+	url = https://github.com/google/googletest
+	
+[submodule "external/GSL"]
+	path = external/GSL
+	url = https://github.com/microsoft/GSL.git
+	
+[submodule "external/my_folly"]
+	path = external/my_folly
+	url = https://github.com/christianbrugger/my_folly
+	
+[submodule "external/unordered_dense"]
+	path = external/unordered_dense
+	url = https://github.com/martinus/unordered_dense
