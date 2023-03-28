@@ -2,6 +2,7 @@
 #include "selection_builder.h"
 
 #include "algorithm.h"
+#include "editable_circuit.h"
 #include "format.h"
 #include "range.h"
 
@@ -12,7 +13,7 @@ namespace logicsim {
 //
 
 SelectionBuilder::SelectionBuilder(const EditableCircuit& editable_circuit)
-    : editable_circuit_ {editable_circuit} {}
+    : editable_circuit_ {&editable_circuit} {}
 
 auto SelectionBuilder::empty() const noexcept -> bool {
     return initial_selection_.empty() && operations_.empty();
@@ -79,32 +80,31 @@ auto apply_function(Selection& selection, const EditableCircuit& editable_circui
 }  // namespace
 
 auto SelectionBuilder::calculate_selection() const -> const Selection& {
-    if (operations_.empty()) {
-        return initial_selection_;
-    }
     if (cached_selection_.has_value()) {
         return *cached_selection_;
+    }
+    if (operations_.empty()) {
+        return initial_selection_;
     }
 
     auto selection = Selection {initial_selection_};
     for (auto&& operation : operations_) {
-        apply_function(selection, editable_circuit_, operation);
+        apply_function(selection, *editable_circuit_, operation);
     }
 
-    cached_selection_->swap(selection);
-    return *cached_selection_;
+    cached_selection_.emplace(std::move(selection));
+    return cached_selection_.value();
 }
 
 auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
     if (empty()) {
         return {};
     }
-
     const auto selected_ids
-        = editable_circuit_.to_element_ids(calculate_selection().selected_elements());
+        = editable_circuit_->to_element_ids(calculate_selection().selected_elements());
 
     // TODO create algorithm to mask?
-    const auto element_count = editable_circuit_.schematic().element_count();
+    const auto element_count = editable_circuit_->schematic().element_count();
     auto mask = selection_mask_t(element_count, false);
 
     for (element_id_t element_id : selected_ids) {
@@ -114,44 +114,29 @@ auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
     return mask;
 }
 
-auto SelectionBuilder::claculate_is_item_selected(element_key_t element_key) const
-    -> bool {
-    if (element_key < element_key_t {0}) [[unlikely]] {
-        throw_exception("Invalid element key");
-    }
-
-    return calculate_selection().is_selected(element_key);
-}
-
-auto SelectionBuilder::set_selection(Selection&& selection) -> void {
-    using std::swap;
-
-    swap(initial_selection_, selection);
-
-    operations_.clear();
-    cached_selection_.reset();
+auto SelectionBuilder::is_selection_baked() const -> bool {
+    return operations_.empty();
 }
 
 auto SelectionBuilder::bake_selection() -> void {
     static_cast<void>(calculate_selection());
 
-    auto temp = Selection {};
-    temp.swap(*cached_selection_);
-    cached_selection_.reset();
-
-    set_selection(std::move(temp));
-}
-
-auto SelectionBuilder::get_baked_selection() const -> const Selection& {
-    if (!operations_.empty()) [[unlikely]] {
-        throw_exception("Selection has been modified after baking.");
+    if (cached_selection_.has_value()) {
+        initial_selection_.swap(*cached_selection_);
     }
 
-    return initial_selection_;
+    operations_.clear();
+    cached_selection_.reset();
 }
 
-auto SelectionBuilder::calculate_selected_keys() const -> std::span<const element_key_t> {
-    return calculate_selection().selected_elements();
+auto SelectionBuilder::remove_invalid_element_keys() -> void {
+    cached_selection_.reset();
+
+    for (element_key_t element_key : initial_selection_.selected_elements()) {
+        if (!editable_circuit_->element_key_valid(element_key)) {
+            initial_selection_.remove_element(element_key);
+        }
+    }
 }
 
 }  // namespace logicsim

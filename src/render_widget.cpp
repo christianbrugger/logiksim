@@ -120,7 +120,7 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
         restore_original_positions();
     }
     convert_to(InsertionMode::insert_or_discard);
-    remove_invalid_items_from_selection();
+    builder_.remove_invalid_element_keys();
 }
 
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
@@ -133,9 +133,9 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
         }
         const auto element_key
             = editable_circuit_.to_element_key(element_under_cursor.value());
-        const auto is_element_selected = builder_.claculate_is_item_selected(element_key);
+        const auto is_selected = builder_.calculate_selection().is_selected(element_key);
 
-        if (!is_element_selected) {
+        if (!is_selected) {
             builder_.clear();
             builder_.add(SelectionFunction::add, rect_fine_t {point, point});
         }
@@ -228,7 +228,11 @@ auto MouseMoveSelectionLogic::get_selection() -> const Selection& {
     if (!selection_and_positions_baked_) {
         bake_selection_and_positions();
     }
-    return builder_.get_baked_selection();
+    if (!builder_.is_selection_baked()) [[unlikely]] {
+        throw_exception("Selection has been modified after baking.");
+    }
+
+    return builder_.calculate_selection();
 }
 
 auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
@@ -253,19 +257,6 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
                                    = editable_circuit_.to_element_id(element_key);
                                return editable_circuit_.layout().position(element_id);
                            });
-}
-
-auto MouseMoveSelectionLogic::remove_invalid_items_from_selection() -> void {
-    const auto& selection = get_selection();
-    auto new_selection = Selection {selection};
-
-    for (element_key_t element_key : new_selection.selected_elements()) {
-        if (!editable_circuit_.element_key_valid(element_key)) {
-            new_selection.remove_element(element_key);
-        }
-    }
-
-    builder_.set_selection(std::move(new_selection));
 }
 
 auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
@@ -470,9 +461,7 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
     interaction_state_ = state;
 
     mouse_logic_.reset();
-    if (selection_builder_.has_value()) {
-        selection_builder_.value().clear();
-    }
+    editable_circuit_.value().selection_builder().clear();
     update();
 }
 
@@ -486,9 +475,8 @@ auto RendererWidget::pixel_scale() const -> double {
 
 auto RendererWidget::reset_circuit() -> void {
     circuit_index_ = CircuitIndex {};
-    editable_circuit_ = EditableCircuit {circuit_index_.borrow_schematic(circuit_id_),
-                                         circuit_index_.borrow_layout(circuit_id_)};
-    selection_builder_.emplace(editable_circuit_.value());
+    editable_circuit_.emplace(circuit_index_.borrow_schematic(circuit_id_),
+                              circuit_index_.borrow_layout(circuit_id_));
 
     {
         auto& editable_circuit = editable_circuit_.value();
@@ -656,7 +644,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     render_background(bl_ctx, render_settings_);
 
     if (do_render_circuit_) {
-        const auto mask = selection_builder_.value().create_selection_mask();
+        const auto mask = editable_circuit.selection_builder().create_selection_mask();
 
         // auto simulation = Simulation {editable_circuit.schematic()};
         render_circuit(bl_ctx, editable_circuit.schematic(), editable_circuit.layout(),
@@ -686,12 +674,14 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 auto RendererWidget::delete_selected_items() -> void {
     mouse_logic_.reset();
 
-    auto&& selected_keys = selection_builder_.value().calculate_selected_keys();
+    auto& selection_builder = editable_circuit_.value().selection_builder();
+
+    auto&& selected_keys = selection_builder.calculate_selection().selected_elements();
     for (auto&& element_key : selected_keys) {
         editable_circuit_.value().delete_element(element_key);
     }
 
-    selection_builder_.value().clear();
+    selection_builder.clear();
     update();
 
 #ifndef NDEBUG
@@ -703,12 +693,13 @@ auto RendererWidget::select_all_items() -> void {
     if (interaction_state_ != InteractionState::select) {
         return;
     }
+    auto& selection_builder = editable_circuit_.value().selection_builder();
 
     const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
                                    point_fine_t {grid_t::max(), grid_t::max()}};
 
-    selection_builder_.value().clear();
-    selection_builder_.value().add(SelectionFunction::add, rect);
+    selection_builder.clear();
+    selection_builder.add(SelectionFunction::add, rect);
 
     update();
 }
@@ -740,24 +731,26 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
         const bool has_element_under_cursor
             = editable_circuit_.value().query_selection(point).has_value();
 
+        auto& selection_builder = editable_circuit_.value().selection_builder();
+
         if (has_element_under_cursor) {
             if (event->modifiers() == Qt::NoModifier) {
                 mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
-                    .builder = selection_builder_.value(),
+                    .builder = selection_builder,
                     .editable_circuit = editable_circuit_.value(),
                 });
                 return;
             }
 
             mouse_logic_.emplace(MouseSingleSelectionLogic::Args {
-                .builder = selection_builder_.value(),
+                .builder = selection_builder,
             });
             return;
         }
 
         mouse_logic_.emplace(MouseAreaSelectionLogic::Args {
             .parent = this,
-            .builder = selection_builder_.value(),
+            .builder = selection_builder,
             .view_config = render_settings_.view_config,
         });
         return;
@@ -961,7 +954,7 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
             editable_circuit_->validate();
 #endif
         } else {
-            selection_builder_.value().clear();
+            editable_circuit_.value().selection_builder().clear();
         }
         update();
         return;

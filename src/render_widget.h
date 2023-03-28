@@ -5,7 +5,6 @@
 #include "editable_circuit.h"
 #include "renderer.h"
 #include "scene.h"
-#include "selection_builder.h"
 #include "timer.h"
 
 #include <blend2d.h>
@@ -129,7 +128,6 @@ class MouseMoveSelectionLogic {
 
     auto get_selection() -> const Selection&;
     auto bake_selection_and_positions() -> void;
-    auto remove_invalid_items_from_selection() -> void;
     auto convert_to(InsertionMode mode) -> void;
     auto restore_original_positions() -> void;
     [[nodiscard]] auto calculate_any_element_colliding() -> bool;
@@ -262,7 +260,6 @@ class RendererWidget : public QWidget {
     RenderSettings render_settings_ {};
 
     // mouse logic
-    std::optional<SelectionBuilder> selection_builder_ {};
     InteractionState interaction_state_ {InteractionState::not_interactive};
     MouseDragLogic mouse_drag_logic_;
     std::optional<std::variant<MouseElementInsertLogic, MouseLineInsertLogic,

@@ -669,7 +669,9 @@ auto ElementKeyStore::size() const -> std::size_t {
 //
 
 EditableCircuit::EditableCircuit(Schematic&& schematic, Layout&& layout)
-    : schematic_ {std::move(schematic)}, layout_ {std::move(layout)} {}
+    : selection_builder_ {*this},
+      schematic_ {std::move(schematic)},
+      layout_ {std::move(layout)} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}\n{}\n}}", schematic_, layout_);
@@ -1327,6 +1329,14 @@ auto EditableCircuit::delete_element(element_key_t element_key) -> void {
     }
 
     swap_and_delete_single_element(element_id);
+}
+
+auto EditableCircuit::selection_builder() const noexcept -> const SelectionBuilder& {
+    return selection_builder_;
+}
+
+auto EditableCircuit::selection_builder() noexcept -> SelectionBuilder& {
+    return selection_builder_;
 }
 
 auto EditableCircuit::to_element_id(element_key_t element_key) const -> element_id_t {

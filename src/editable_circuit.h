@@ -6,6 +6,7 @@
 #include "layout_calculation_type.h"
 #include "schematic.h"
 #include "search_tree.h"
+#include "selection_builder.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -236,6 +237,9 @@ class EditableCircuit {
     // swaps the element with last one and deletes it
     auto delete_element(element_key_t element_key) -> void;
 
+    auto selection_builder() const noexcept -> const SelectionBuilder&;
+    auto selection_builder() noexcept -> SelectionBuilder&;
+
     [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t;
     [[nodiscard]] auto to_element_ids(std::span<const element_key_t> element_keys) const
         -> std::vector<element_id_t>;
@@ -320,11 +324,13 @@ class EditableCircuit {
 
     // TODO Consider using element_key_t for Caches, especially SearchTree,
     // TODO so we don't need costly update for element_trees
-    ElementKeyStore element_keys_;
-    ConnectionCache<true> input_connections_;
-    ConnectionCache<false> output_connections_;
-    CollisionCache collicions_cache_;
-    SearchTree selection_cache_;
+    ElementKeyStore element_keys_ {};
+    ConnectionCache<true> input_connections_ {};
+    ConnectionCache<false> output_connections_ {};
+    CollisionCache collicions_cache_ {};
+    SearchTree selection_cache_ {};
+
+    SelectionBuilder selection_builder_;
 
     Schematic schematic_;
     Layout layout_;

@@ -1,11 +1,13 @@
 #ifndef LOGIKSIM_SELECTION_MANAGER_H
 #define LOGIKSIM_SELECTION_MANAGER_H
 
-#include "editable_circuit.h"
 #include "selection.h"
 #include "vocabulary.h"
 
 #include <boost/container/vector.hpp>
+#include <gsl/gsl>
+
+#include <functional>
 
 namespace logicsim {
 
@@ -15,7 +17,8 @@ enum class SelectionFunction {
     substract,
 };
 
-// TODO make EditableCircuit part of constructor
+class EditableCircuit;
+
 class SelectionBuilder {
    public:
     using selection_mask_t = boost::container::vector<bool>;
@@ -29,26 +32,22 @@ class SelectionBuilder {
     [[nodiscard]] explicit SelectionBuilder(const EditableCircuit& editable_circuit);
 
     [[nodiscard]] auto empty() const noexcept -> bool;
-    auto clear() -> void;
 
+    auto clear() -> void;
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
 
-    // currently very slow implementation
-    [[nodiscard]] auto claculate_is_item_selected(element_key_t element_key) const
-        -> bool;
-
     [[nodiscard]] auto calculate_selection() const -> const Selection&;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
-    [[nodiscard]] auto calculate_selected_keys() const -> std::span<const element_key_t>;
 
-    auto set_selection(Selection&& selection) -> void;
+    [[nodiscard]] auto is_selection_baked() const -> bool;
     auto bake_selection() -> void;
-    [[nodiscard]] auto get_baked_selection() const -> const Selection&;
+
+    auto remove_invalid_element_keys() -> void;
 
    private:
-    const EditableCircuit& editable_circuit_;
+    gsl::not_null<const EditableCircuit*> editable_circuit_;
 
     Selection initial_selection_ {};
     std::vector<operation_t> operations_ {};
