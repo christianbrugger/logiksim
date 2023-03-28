@@ -1,39 +1,50 @@
 [submodule "external/abseil-cpp"]
 	path = external/abseil-cpp
 	url = https://github.com/abseil/abseil-cpp
+	ignore = dirty
 	
 [submodule "external/asmjit"]
 	path = external/asmjit
 	url = https://github.com/asmjit/asmjit
+	ignore = dirty
 	
 [submodule "external/benchmark"]
 	path = external/benchmark
 	url = https://github.com/google/benchmark.git
+	ignore = dirty
 	
 [submodule "external/blend2d"]
 	path = external/blend2d
 	url = https://github.com/blend2d/blend2d.git
+	ignore = dirty
 
 [submodule "external/boost"]
 	path = external/boost
 	url = https://github.com/boostorg/boost
+	ignore = dirty
+	fetchRecurseSubmodules = true
 
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt
+	ignore = dirty
 
 [submodule "external/googletest"]
 	path = external/googletest
 	url = https://github.com/google/googletest
+	ignore = dirty
 	
 [submodule "external/GSL"]
 	path = external/GSL
 	url = https://github.com/microsoft/GSL.git
+	ignore = dirty
 	
 [submodule "external/my_folly"]
 	path = external/my_folly
 	url = https://github.com/christianbrugger/my_folly
+	ignore = dirty
 	
 [submodule "external/unordered_dense"]
 	path = external/unordered_dense
 	url = https://github.com/martinus/unordered_dense
+	ignore = dirty
