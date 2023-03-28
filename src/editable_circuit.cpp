@@ -1366,6 +1366,11 @@ auto EditableCircuit::query_selection(rect_fine_t rect) const
     return selection_cache_.query_selection(rect);
 }
 
+auto EditableCircuit::query_selection2(rect_fine_t rect) const
+    -> std::vector<SearchTree::query_result_t> {
+    return selection_cache_.query_selection2(rect);
+};
+
 auto EditableCircuit::query_selection(point_fine_t point) const
     -> std::optional<element_id_t> {
     auto selection = selection_cache_.query_selection(rect_fine_t {point, point});

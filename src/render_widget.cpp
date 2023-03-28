@@ -98,7 +98,6 @@ auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> voi
         editable_circuit_.add_line_segment(*first_position_, *position,
                                            LineSegmentType::horizontal_first,
                                            InsertionMode::insert_or_discard);
-        fmt::print("{}\n", editable_circuit_);
     }
 }
 
@@ -644,11 +643,20 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     render_background(bl_ctx, render_settings_);
 
     if (do_render_circuit_) {
+        const auto& selection = editable_circuit.selection_builder().selection();
+        fmt::print("{}\n", selection);
+
         const auto mask = editable_circuit.selection_builder().create_selection_mask();
 
         // auto simulation = Simulation {editable_circuit.schematic()};
-        render_circuit(bl_ctx, editable_circuit.schematic(), editable_circuit.layout(),
-                       nullptr, mask, render_settings_);
+        render_circuit(bl_ctx, render_args_t {
+                                   .schematic = editable_circuit.schematic(),
+                                   .layout = editable_circuit.layout(),
+                                   .key_resolver = KeyResolver {editable_circuit},
+                                   .selection_mask = mask,
+                                   .selection = selection,
+                                   .settings = render_settings_,
+                               });
     }
     if (do_render_collision_cache_) {
         render_editable_circuit_collision_cache(bl_ctx, editable_circuit,

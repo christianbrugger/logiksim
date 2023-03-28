@@ -130,6 +130,20 @@ auto SearchTree::query_selection(rect_fine_t rect) const -> std::vector<element_
     return result;
 }
 
+auto SearchTree::query_selection2(rect_fine_t rect) const -> std::vector<query_result_t> {
+    using namespace detail::search_tree;
+
+    auto result = std::vector<query_result_t> {};
+
+    const auto inserter
+        = [&result](const tree_value_t &value) { result.push_back(value.second); };
+
+    // intersects or covered_by
+    tree_.query(bgi::intersects(to_box(rect)), output_callable(inserter));
+
+    return result;
+}
+
 auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
     using namespace detail::search_tree;
 

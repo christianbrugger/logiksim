@@ -5,6 +5,7 @@
 #include "editable_circuit.h"
 #include "format.h"
 #include "range.h"
+#include "timer.h"
 
 namespace logicsim {
 
@@ -53,26 +54,75 @@ auto SelectionBuilder::pop_last() -> void {
 
 namespace {
 
+auto add_element_to_selection(element_id_t element_id, SelectionFunction function,
+                              Selection& selection,
+                              const EditableCircuit& editable_circuit) {
+    const auto element_key = editable_circuit.to_element_key(element_id);
+
+    switch (function) {
+        using enum SelectionFunction;
+
+        case add: {
+            selection.add_element(element_key);
+            return;
+        }
+        case substract: {
+            selection.remove_element(element_key);
+            return;
+        }
+        case toggle: {
+            selection.toggle_element(element_key);
+            return;
+        }
+    }
+
+    throw_exception("Unknown function");
+}
+
+auto add_segment_to_selection(element_id_t element_id, segment_index_t segment_index,
+                              SelectionBuilder::operation_t operation,
+                              Selection& selection,
+                              const EditableCircuit& editable_circuit) {
+    const auto line
+        = editable_circuit.layout().segment_tree(element_id).segment(segment_index).line;
+    const auto segment_sel = get_segment_selection(line, operation.rect);
+
+    if (!segment_sel) {
+        return;
+    }
+    const auto element_key = editable_circuit.to_element_key(element_id);
+
+    switch (operation.function) {
+        using enum SelectionFunction;
+
+        case add: {
+            selection.add_segment(element_key, segment_index, *segment_sel);
+            return;
+        }
+        case substract: {
+            selection.remove_segment(element_key, segment_index, *segment_sel);
+            return;
+        }
+        case toggle: {
+            selection.toggle_segment(element_key, segment_index, *segment_sel);
+            return;
+        }
+    }
+
+    throw_exception("Unknown function");
+}
+
 auto apply_function(Selection& selection, const EditableCircuit& editable_circuit,
                     SelectionBuilder::operation_t operation) -> void {
-    const auto element_ids = editable_circuit.query_selection(operation.rect);
-    const auto element_keys = editable_circuit.to_element_keys(element_ids);
+    const auto selected_elements = editable_circuit.query_selection2(operation.rect);
 
-    if (operation.function == SelectionFunction::toggle) {
-        for (auto&& element_key : element_keys) {
-            selection.toggle_element(element_key);
-        }
-    }
-
-    if (operation.function == SelectionFunction::add) {
-        for (auto&& element_key : element_keys) {
-            selection.add_element(element_key);
-        }
-    }
-
-    if (operation.function == SelectionFunction::substract) {
-        for (auto&& element_key : element_keys) {
-            selection.remove_element(element_key);
+    for (auto&& element : selected_elements) {
+        if (element.segment_index == null_segment_index) {
+            add_element_to_selection(element.element_id, operation.function, selection,
+                                     editable_circuit);
+        } else {
+            add_segment_to_selection(element.element_id, element.segment_index, operation,
+                                     selection, editable_circuit);
         }
     }
 }

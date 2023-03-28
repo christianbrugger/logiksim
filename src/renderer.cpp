@@ -520,49 +520,78 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
     draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
 }
 
-auto render_circuit(BLContext& ctx, const Schematic& schematic, const Layout& layout,
-                    const Simulation* simulation, const selection_mask_t& selection_mask,
-                    const RenderSettings& settings) -> void {
+auto draw_wire_shadows(BLContext& ctx, const Layout& layout, KeyResolver key_resolver,
+                       const Selection& selection, const RenderSettings& settings) {
+    for (auto&& [segment, parts] : selection.selected_segments()) {
+        const auto element_id = key_resolver.to_element_id(segment.element_key);
+
+        const auto line
+            = layout.segment_tree(element_id).segment(segment.segment_index).line;
+
+        for (auto&& part : parts) {
+            const auto selected_segment = get_selected_segment(line, part);
+            const auto selection_rect = element_selection_rect(selected_segment);
+
+            ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
+            draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill},
+                               settings);
+        }
+    }
+}
+
+auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     const auto is_selected = [&](Schematic::ConstElement element) {
         const auto id = element.element_id().value;
-        return id < std::ssize(selection_mask) ? selection_mask[id] : false;
+        return id < std::ssize(args.selection_mask) ? args.selection_mask[id] : false;
     };
 
     // unselected elements
-    for (auto element : schematic.elements()) {
+    for (auto element : args.schematic.elements()) {
         if (!is_selected(element)) {
             if (const auto type = element.element_type();
                 type != ElementType::placeholder && type != ElementType::wire) {
-                draw_standard_element(ctx, element, layout, simulation, false, settings);
+                draw_standard_element(ctx, element, args.layout, args.simulation, false,
+                                      args.settings);
             }
         }
     }
 
     // wires
-    for (auto element : schematic.elements()) {
+    for (auto element : args.schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
-            if (simulation == nullptr) {
-                draw_element_tree(ctx, element, layout, settings);
+            if (args.simulation == nullptr) {
+                draw_element_tree(ctx, element, args.layout, args.settings);
             } else {
-                draw_wire(ctx, element, layout, *simulation, settings);
+                draw_wire(ctx, element, args.layout, *args.simulation, args.settings);
             }
         }
     }
 
     // selected elements
-    for (auto element : schematic.elements()) {
+    for (auto element : args.schematic.elements()) {
         if (is_selected(element)) {
             if (const auto type = element.element_type();
                 type != ElementType::placeholder && type != ElementType::wire) {
-                draw_standard_element(ctx, element, layout, simulation, true, settings);
+                draw_standard_element(ctx, element, args.layout, args.simulation, true,
+                                      args.settings);
             }
         }
     }
 
     // shadow
-    for (auto element : schematic.elements()) {
+    for (auto element : args.schematic.elements()) {
         bool selected = is_selected(element);
-        draw_element_shadow(ctx, element, layout, selected, settings);
+        draw_element_shadow(ctx, element, args.layout, selected, args.settings);
+    }
+
+    // wire shadow
+    if (!args.selection.empty()) {
+        if (!args.key_resolver.has_value()) [[unlikely]] {
+            throw_exception("Selection requires a key resolver to be passed.");
+        }
+
+        draw_wire_shadows(ctx, args.layout, args.key_resolver.value(), args.selection,
+                          args.settings);
     }
 }
 
@@ -1116,7 +1145,11 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     render_background(ctx);
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        render_circuit(ctx, scene.schematic, scene.layout, &scene.simulation);
+        render_circuit(ctx, render_args_t {
+                                .schematic = scene.schematic,
+                                .layout = scene.layout,
+                                .simulation = &scene.simulation,
+                            });
     }
     ctx.end();
 

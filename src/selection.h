@@ -13,6 +13,19 @@ namespace logicsim {
 struct segment_selection_t {
     grid_t begin;
     grid_t end;
+
+    [[nodiscard]] explicit constexpr segment_selection_t(grid_t begin_, grid_t end_)
+        : begin {begin_}, end {end_} {
+        if (!(begin_ < end_)) [[unlikely]] {
+            throw_exception("begin needs to be smaller than end.");
+        }
+    };
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const segment_selection_t &other) const -> bool
+        = default;
+    [[nodiscard]] auto operator<=>(const segment_selection_t &other) const = default;
 };
 
 namespace detail::selection {
@@ -20,6 +33,11 @@ namespace detail::selection {
 struct map_key_t {
     element_key_t element_key {null_element_key};
     segment_index_t segment_index {null_segment_index};
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const map_key_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const map_key_t &other) const = default;
 };
 
 using policy = folly::small_vector_policy::policy_size_type<uint16_t>;
@@ -51,8 +69,15 @@ using elements_set_t = ankerl::unordered_dense::set<element_key_t>;
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 }  // namespace detail::selection
 
+auto get_segment_selection(line_t segment, rect_fine_t selection_rect)
+    -> std::optional<segment_selection_t>;
+
+auto get_selected_segment(line_t segment, segment_selection_t selection) -> line_t;
+
 class Selection {
    public:
+    using segment_pair_t = detail::selection::map_pair_t;
+
     auto swap(Selection &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
 
@@ -67,10 +92,13 @@ class Selection {
                      segment_selection_t selection) -> void;
     auto remove_segment(element_key_t element, segment_index_t segment_index,
                         segment_selection_t selection) -> void;
+    auto toggle_segment(element_key_t element, segment_index_t segment_index,
+                        segment_selection_t selection) -> void;
 
     [[nodiscard]] auto is_selected(element_key_t element) const -> bool;
 
     [[nodiscard]] auto selected_elements() const -> std::span<const element_key_t>;
+    [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;
 
    private:
     detail::selection::elements_set_t selected_elements_ {};

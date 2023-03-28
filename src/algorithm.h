@@ -13,6 +13,7 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <numeric>
 #include <ranges>
 #include <tuple>
@@ -128,6 +129,24 @@ inline auto round_fast(double value) -> double {
 template <typename result_type = double>
 auto round_to(double value) -> result_type {
     return gsl::narrow<result_type>(round_fast(value));
+}
+
+template <typename result_type = double>
+auto clamp_to(double value) -> result_type {
+    constexpr static double max
+        = gsl::narrow<double>(std::numeric_limits<result_type>::max());
+    constexpr static double min
+        = gsl::narrow<double>(std::numeric_limits<result_type>::lowest());
+
+    // we don't handle NaN for now, as not needed
+    if (value >= max) {
+        return std::numeric_limits<result_type>::max();
+    }
+    if (value <= min) {
+        return std::numeric_limits<result_type>::lowest();
+    }
+
+    return gsl::narrow_cast<result_type>(round_fast(value));
 }
 
 //

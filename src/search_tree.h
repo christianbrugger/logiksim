@@ -48,6 +48,7 @@ class SearchTree {
     using tree_t = detail::search_tree::tree_t;
     using value_type = detail::search_tree::tree_value_t;
 
+    using query_result_t = detail::search_tree::tree_payload_t;
     using queried_segments_t = std::array<segment_t, 4>;
 
    public:
@@ -60,6 +61,7 @@ class SearchTree {
     auto remove(element_id_t element_id, line_t segment, segment_index_t index) -> void;
 
     auto query_selection(rect_fine_t rect) const -> std::vector<element_id_t>;
+    auto query_selection2(rect_fine_t rect) const -> std::vector<query_result_t>;
 
     auto query_line_segments(point_t point) const -> queried_segments_t;
 
