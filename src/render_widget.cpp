@@ -524,6 +524,13 @@ auto RendererWidget::reset_circuit() -> void {
                     editable_circuit.add_standard_element(
                         ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
                         InsertionMode::insert_or_discard);
+
+                    editable_circuit.add_line_segment(
+                        point_t {grid_t {x + 2}, grid_t {y + 1}},
+                        point_t {grid_t {x + 4}, grid_t {y + 0}},
+                        LineSegmentType::horizontal_first,
+                        InsertionMode::insert_or_discard);
+
                     count++;
                 }
             }
