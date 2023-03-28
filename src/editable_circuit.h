@@ -248,10 +248,7 @@ class EditableCircuit {
         -> std::vector<element_key_t>;
     [[nodiscard]] auto element_key_valid(element_key_t element_key) const -> bool;
 
-    // TODO unify
     [[nodiscard]] auto query_selection(rect_fine_t rect) const
-        -> std::vector<element_id_t>;
-    [[nodiscard]] auto query_selection2(rect_fine_t rect) const
         -> std::vector<SearchTree::query_result_t>;
     [[nodiscard]] auto query_selection(point_fine_t point) const
         -> std::optional<element_id_t>;

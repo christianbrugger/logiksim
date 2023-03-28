@@ -114,7 +114,7 @@ auto add_segment_to_selection(element_id_t element_id, segment_index_t segment_i
 
 auto apply_function(Selection& selection, const EditableCircuit& editable_circuit,
                     SelectionBuilder::operation_t operation) -> void {
-    const auto selected_elements = editable_circuit.query_selection2(operation.rect);
+    const auto selected_elements = editable_circuit.query_selection(operation.rect);
 
     for (auto&& element : selected_elements) {
         if (element.segment_index == null_segment_index) {

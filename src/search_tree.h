@@ -60,9 +60,7 @@ class SearchTree {
     auto insert(element_id_t element_id, line_t segment, segment_index_t index) -> void;
     auto remove(element_id_t element_id, line_t segment, segment_index_t index) -> void;
 
-    auto query_selection(rect_fine_t rect) const -> std::vector<element_id_t>;
-    auto query_selection2(rect_fine_t rect) const -> std::vector<query_result_t>;
-
+    auto query_selection(rect_fine_t rect) const -> std::vector<query_result_t>;
     auto query_line_segments(point_t point) const -> queried_segments_t;
 
     auto rects() const {

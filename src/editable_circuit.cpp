@@ -1362,25 +1362,28 @@ auto EditableCircuit::element_key_valid(element_key_t element_key) const -> bool
 }
 
 auto EditableCircuit::query_selection(rect_fine_t rect) const
-    -> std::vector<element_id_t> {
-    return selection_cache_.query_selection(rect);
-}
-
-auto EditableCircuit::query_selection2(rect_fine_t rect) const
     -> std::vector<SearchTree::query_result_t> {
-    return selection_cache_.query_selection2(rect);
+    return selection_cache_.query_selection(rect);
 };
 
 auto EditableCircuit::query_selection(point_fine_t point) const
     -> std::optional<element_id_t> {
-    auto selection = selection_cache_.query_selection(rect_fine_t {point, point});
+    auto query_result = selection_cache_.query_selection(rect_fine_t {point, point});
 
-    if (selection.size() > 1) [[unlikely]] {
+    auto elements = std::vector<element_id_t> {};
+    transform_if(
+        query_result, std::back_inserter(elements),
+        [](const SearchTree::query_result_t& value) { return value.element_id; },
+        [](const SearchTree::query_result_t& value) {
+            return value.segment_index == null_segment_index;
+        });
+
+    if (elements.size() > 1) [[unlikely]] {
         throw_exception("Two elements at the same position");
     }
 
-    if (selection.size() == 1) {
-        return selection[0];
+    if (elements.size() == 1) {
+        return elements[0];
     }
     return std::nullopt;
 }

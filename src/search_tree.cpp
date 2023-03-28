@@ -113,24 +113,7 @@ auto SearchTree::remove(element_id_t element_id, line_t segment, segment_index_t
     }
 }
 
-auto SearchTree::query_selection(rect_fine_t rect) const -> std::vector<element_id_t> {
-    using namespace detail::search_tree;
-
-    auto result = std::vector<element_id_t> {};
-
-    const auto inserter = [&result](const tree_value_t &value) {
-        if (value.second.segment_index == null_segment_index) {
-            result.push_back(value.second.element_id);
-        }
-    };
-
-    // intersects or covered_by
-    tree_.query(bgi::intersects(to_box(rect)), output_callable(inserter));
-
-    return result;
-}
-
-auto SearchTree::query_selection2(rect_fine_t rect) const -> std::vector<query_result_t> {
+auto SearchTree::query_selection(rect_fine_t rect) const -> std::vector<query_result_t> {
     using namespace detail::search_tree;
 
     auto result = std::vector<query_result_t> {};
