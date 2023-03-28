@@ -119,7 +119,6 @@ auto SearchTree::query_selection(rect_fine_t rect) const -> std::vector<element_
     auto result = std::vector<element_id_t> {};
 
     const auto inserter = [&result](const tree_value_t &value) {
-        // TODO later add line segments
         if (value.second.segment_index == null_segment_index) {
             result.push_back(value.second.element_id);
         }

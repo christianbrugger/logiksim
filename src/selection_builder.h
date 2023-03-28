@@ -38,7 +38,7 @@ class SelectionBuilder {
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
 
-    [[nodiscard]] auto calculate_selection() const -> const Selection&;
+    [[nodiscard]] auto selection() const -> const Selection&;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
 
     [[nodiscard]] auto is_selection_baked() const -> bool;

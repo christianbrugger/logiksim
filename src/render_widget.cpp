@@ -133,7 +133,7 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
         }
         const auto element_key
             = editable_circuit_.to_element_key(element_under_cursor.value());
-        const auto is_selected = builder_.calculate_selection().is_selected(element_key);
+        const auto is_selected = builder_.selection().is_selected(element_key);
 
         if (!is_selected) {
             builder_.clear();
@@ -232,7 +232,7 @@ auto MouseMoveSelectionLogic::get_selection() -> const Selection& {
         throw_exception("Selection has been modified after baking.");
     }
 
-    return builder_.calculate_selection();
+    return builder_.selection();
 }
 
 auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
@@ -676,7 +676,7 @@ auto RendererWidget::delete_selected_items() -> void {
 
     auto& selection_builder = editable_circuit_.value().selection_builder();
 
-    auto&& selected_keys = selection_builder.calculate_selection().selected_elements();
+    auto&& selected_keys = selection_builder.selection().selected_elements();
     for (auto&& element_key : selected_keys) {
         editable_circuit_.value().delete_element(element_key);
     }
@@ -727,11 +727,10 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
     }
 
     if (interaction_state_ == InteractionState::select) {
+        auto& selection_builder = editable_circuit_.value().selection_builder();
         const auto point = to_grid_fine(event->position(), render_settings_.view_config);
         const bool has_element_under_cursor
             = editable_circuit_.value().query_selection(point).has_value();
-
-        auto& selection_builder = editable_circuit_.value().selection_builder();
 
         if (has_element_under_cursor) {
             if (event->modifiers() == Qt::NoModifier) {

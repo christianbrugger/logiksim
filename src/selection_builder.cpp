@@ -79,7 +79,7 @@ auto apply_function(Selection& selection, const EditableCircuit& editable_circui
 
 }  // namespace
 
-auto SelectionBuilder::calculate_selection() const -> const Selection& {
+auto SelectionBuilder::selection() const -> const Selection& {
     if (cached_selection_.has_value()) {
         return *cached_selection_;
     }
@@ -101,7 +101,7 @@ auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
         return {};
     }
     const auto selected_ids
-        = editable_circuit_->to_element_ids(calculate_selection().selected_elements());
+        = editable_circuit_->to_element_ids(selection().selected_elements());
 
     // TODO create algorithm to mask?
     const auto element_count = editable_circuit_->schematic().element_count();
@@ -119,7 +119,8 @@ auto SelectionBuilder::is_selection_baked() const -> bool {
 }
 
 auto SelectionBuilder::bake_selection() -> void {
-    static_cast<void>(calculate_selection());
+    // update cache
+    static_cast<void>(selection());
 
     if (cached_selection_.has_value()) {
         initial_selection_.swap(*cached_selection_);
