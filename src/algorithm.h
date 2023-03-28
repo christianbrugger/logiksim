@@ -146,7 +146,7 @@ auto clamp_to(double value) -> result_type {
         return std::numeric_limits<result_type>::lowest();
     }
 
-    return gsl::narrow_cast<result_type>(round_fast(value));
+    return gsl::narrow_cast<result_type>(value);
 }
 
 //

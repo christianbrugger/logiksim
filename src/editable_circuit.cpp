@@ -1370,6 +1370,7 @@ auto EditableCircuit::query_selection(point_fine_t point) const
     -> std::optional<element_id_t> {
     auto query_result = selection_cache_.query_selection(rect_fine_t {point, point});
 
+    // TODO rethink this, maybe use find?
     auto elements = std::vector<element_id_t> {};
     transform_if(
         query_result, std::back_inserter(elements),

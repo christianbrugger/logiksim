@@ -177,7 +177,7 @@ auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t {
 }
 
 auto element_selection_rect(line_t segment) -> rect_fine_t {
-    constexpr auto width = grid_fine_t {1.0 / 3.0};
+    constexpr auto width = grid_fine_t {0.3};
 
     const auto ordered_segment = order_points(segment);
     const auto p0 = static_cast<point_fine_t>(ordered_segment.p0);
