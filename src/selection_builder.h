@@ -41,8 +41,8 @@ class SelectionBuilder {
     [[nodiscard]] auto selection() const -> const Selection&;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
 
-    [[nodiscard]] auto is_selection_baked() const -> bool;
-    auto bake_selection() -> void;
+    [[nodiscard]] auto all_operations_applied() const -> bool;
+    auto apply_all_operations() -> void;
 
     auto remove_invalid_element_keys() -> void;
 

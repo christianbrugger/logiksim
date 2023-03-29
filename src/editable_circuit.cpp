@@ -687,8 +687,7 @@ auto selection_handle_t::reset() noexcept -> void {
     if (editable_circuit_ == nullptr) [[unlikely]] {
         return;
     }
-
-    // TODO delete in editable_circuit
+    editable_circuit_->delete_selection(selection_key_);
 
     editable_circuit_ = nullptr;
     selection_ = nullptr;
@@ -705,6 +704,7 @@ selection_handle_t::selection_handle_t(selection_handle_t&& other) noexcept {
 
 auto selection_handle_t::operator=(selection_handle_t&& other) noexcept
     -> selection_handle_t& {
+    // we add a 'copy' so our state is destroyed at the end of this scope
     auto copy = selection_handle_t {std::move(other)};
     swap(copy);
     return *this;
@@ -719,6 +719,10 @@ auto selection_handle_t::value() const -> reference {
 
 auto selection_handle_t::operator*() const noexcept -> reference {
     return *selection_;
+}
+
+auto selection_handle_t::get() const -> pointer {
+    return selection_;
 }
 
 auto selection_handle_t::operator->() const noexcept -> pointer {
@@ -1122,15 +1126,15 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
     throw_exception("unexpected unhandeled case");
 }
 
-auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
-    -> element_key_t {
+auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode,
+                                       Selection* selection) -> void {
     if (insertion_mode != InsertionMode::insert_or_discard) {
         throw_exception("Not implemented.");
     }
 
     if (is_colliding(line)) {
         fmt::print("Collision failed\n");
-        return null_element_key;
+        return;
     }
 
     const auto colliding_id_0 = collicions_cache_.get_first_wire(line.p0);
@@ -1180,7 +1184,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
         tree_key = key_insert(element_id);
     }
 
-    if (tree_key) {
+    {
         // insert new segment with dummy endpoints
         const auto element_id = to_element_id(tree_key);
         auto&& m_tree = layout_.modifyable_segment_tree(element_id);
@@ -1191,9 +1195,14 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
             .p1_type = SegmentPointType::shadow_point,
         };
 
-        const auto index = m_tree.add_segment(segment, display_state_t::normal);
+        const auto segment_index = m_tree.add_segment(segment, display_state_t::normal);
         // TODO add only in specific mode?
-        cache_insert(element_id, index);
+        cache_insert(element_id, segment_index);
+
+        if (selection != nullptr) {
+            const auto segment_selection = get_segment_selection(segment.line);
+            selection->add_segment(tree_key, segment_index, segment_selection);
+        }
     }
 
     // now fix all endpoints at given positions
@@ -1206,27 +1215,28 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 #ifndef NDEBUG
     layout_.segment_tree(to_element_id(tree_key)).validate();
 #endif
-
-    return tree_key;
 }
 
 auto EditableCircuit::add_line_segment(point_t p0, point_t p1,
                                        LineSegmentType segment_type,
-                                       InsertionMode insertion_mode) -> element_key_t {
+                                       InsertionMode insertion_mode)
+    -> selection_handle_t {
     if (segment_type != LineSegmentType::horizontal_first) {
         throw_exception("Not implemented.");
     }
 
+    auto selection_handle = create_selection();
+
     const auto pm = point_t {p1.x, p0.y};
     if (p0.x != p1.x) {
-        add_line_segment(line_t {p0, pm}, insertion_mode);
+        add_line_segment(line_t {p0, pm}, insertion_mode, selection_handle.get());
     }
     if (p0.y != p1.y) {
-        add_line_segment(line_t {pm, p1}, insertion_mode);
+        add_line_segment(line_t {pm, p1}, insertion_mode, selection_handle.get());
     }
     // TODO what with p0 == p1
 
-    return null_element_key;
+    return selection_handle;
 }
 
 auto EditableCircuit::is_position_valid(element_key_t element_key, int x, int y) const
@@ -1787,6 +1797,25 @@ auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segm
     // TODO connection cache
     collicions_cache_.remove(element_id, segment);
     selection_cache_.remove(element_id, segment.line, segment_index);
+}
+
+auto EditableCircuit::create_selection() -> selection_handle_t {
+    const auto key = next_selection_key_++;
+
+    auto&& [it, inserted]
+        = managed_selections_.emplace(key, std::make_unique<Selection>());
+
+    if (!inserted) {
+        throw_exception("unable to create new selection.");
+    }
+
+    return selection_handle_t {*(it->second.get()), *this, key};
+}
+
+auto EditableCircuit::delete_selection(selection_key_t selection_key) -> void {
+    if (!managed_selections_.erase(selection_key)) {
+        throw_exception("unable to delete selection that should be present.");
+    }
 }
 
 }  // namespace logicsim

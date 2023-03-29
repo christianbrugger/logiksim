@@ -164,11 +164,11 @@ auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
     return mask;
 }
 
-auto SelectionBuilder::is_selection_baked() const -> bool {
+auto SelectionBuilder::all_operations_applied() const -> bool {
     return operations_.empty();
 }
 
-auto SelectionBuilder::bake_selection() -> void {
+auto SelectionBuilder::apply_all_operations() -> void {
     // update cache
     static_cast<void>(selection());
 

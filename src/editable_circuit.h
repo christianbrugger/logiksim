@@ -228,6 +228,7 @@ class selection_handle_t {
 
     [[nodiscard]] auto value() const -> reference;
     [[nodiscard]] auto operator*() const noexcept -> reference;
+    [[nodiscard]] auto get() const -> pointer;
     [[nodiscard]] auto operator->() const noexcept -> pointer;
 
     auto reset() noexcept -> void;
@@ -259,7 +260,18 @@ enum class LineSegmentType {
     vertical_first,
 };
 
+namespace detail::editable_circuit {
+// we want stable references
+using selection_map_t
+    = ankerl::unordered_dense::map<selection_key_t, std::unique_ptr<Selection>>;
+}  // namespace detail::editable_circuit
+
 class EditableCircuit {
+   private:
+    using selection_map_t = detail::editable_circuit::selection_map_t;
+
+    friend selection_handle_t;
+
    public:
     [[nodiscard]] EditableCircuit(Schematic&& schematic, Layout&& layout);
 
@@ -277,7 +289,7 @@ class EditableCircuit {
         -> element_key_t;
 
     auto add_line_segment(point_t p0, point_t p1, LineSegmentType segment_type,
-                          InsertionMode insertion_mode) -> element_key_t;
+                          InsertionMode insertion_mode) -> selection_handle_t;
 
     // auto add_wire(LineTree&& line_tree) -> element_key_t;
 
@@ -291,6 +303,7 @@ class EditableCircuit {
     // swaps the element with last one and deletes it
     auto delete_element(element_key_t element_key) -> void;
 
+    auto create_selection() -> selection_handle_t;
     auto selection_builder() const noexcept -> const SelectionBuilder&;
     auto selection_builder() noexcept -> SelectionBuilder&;
 
@@ -340,7 +353,8 @@ class EditableCircuit {
     auto add_placeholder_element() -> element_id_t;
     auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
 
-    auto add_line_segment(line_t line, InsertionMode insertion_mode) -> element_key_t;
+    auto add_line_segment(line_t line, InsertionMode insertion_mode, Selection* selection)
+        -> void;
     auto fix_line_segments(point_t position) -> void;
     auto merge_line_segments(element_id_t element_id, segment_index_t segment0,
                              segment_index_t segment1) -> void;
@@ -377,6 +391,8 @@ class EditableCircuit {
     auto cache_insert(element_id_t element_id, segment_index_t segment_index) -> void;
     auto cache_remove(element_id_t element_id, segment_index_t segment_index) -> void;
 
+    auto delete_selection(selection_key_t selection_key) -> void;
+
     // TODO Consider using element_key_t for Caches, especially SearchTree,
     // TODO so we don't need costly update for element_trees
     ElementKeyStore element_keys_ {};
@@ -384,6 +400,9 @@ class EditableCircuit {
     ConnectionCache<false> output_connections_ {};
     CollisionCache collicions_cache_ {};
     SearchTree selection_cache_ {};
+
+    selection_key_t next_selection_key_ {0};
+    selection_map_t managed_selections_ {};
 
     SelectionBuilder selection_builder_;
 

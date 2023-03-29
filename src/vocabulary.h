@@ -607,6 +607,16 @@ struct ankerl::unordered_dense::hash<logicsim::element_id_t> {
     }
 };
 
+template <>
+struct ankerl::unordered_dense::hash<logicsim::selection_key_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::selection_key_t &obj) const noexcept
+        -> uint64_t {
+        return detail::wyhash::hash(obj.value);
+    }
+};
+
 //
 // Formatters
 //

@@ -199,10 +199,10 @@ auto Selection::selected_segments(element_key_t element_key,
     return it->second;
 }
 
-auto get_segment_begin_end(line_t segment, rect_fine_t selection_rect) {
-    const auto ordered_line = order_points(segment);
+auto get_segment_begin_end(line_t line, rect_fine_t selection_rect) {
+    const auto ordered_line = order_points(line);
 
-    if (is_horizontal(segment)) {
+    if (is_horizontal(line)) {
         const auto xmin = clamp_to<grid_t::value_type>(std::floor(selection_rect.p0.x));
         const auto xmax = clamp_to<grid_t::value_type>(std::ceil(selection_rect.p1.x));
 
@@ -222,9 +222,18 @@ auto get_segment_begin_end(line_t segment, rect_fine_t selection_rect) {
     return std::make_pair(begin, end);
 }
 
-auto get_segment_selection(line_t segment, rect_fine_t selection_rect)
+auto get_segment_selection(line_t line) -> segment_selection_t {
+    const auto ordered_line = order_points(line);
+
+    if (is_horizontal(line)) {
+        return segment_selection_t {ordered_line.p0.x, ordered_line.p1.x};
+    }
+    return segment_selection_t {ordered_line.p0.y, ordered_line.p1.y};
+}
+
+auto get_segment_selection(line_t line, rect_fine_t selection_rect)
     -> std::optional<segment_selection_t> {
-    const auto [begin, end] = get_segment_begin_end(segment, selection_rect);
+    const auto [begin, end] = get_segment_begin_end(line, selection_rect);
 
     if (begin == end) {
         return std::nullopt;

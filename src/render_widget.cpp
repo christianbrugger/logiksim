@@ -95,9 +95,11 @@ auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
 
 auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> void {
     if (position && first_position_) {
-        editable_circuit_.add_line_segment(*first_position_, *position,
-                                           LineSegmentType::horizontal_first,
-                                           InsertionMode::insert_or_discard);
+        const auto handle = editable_circuit_.add_line_segment(
+            *first_position_, *position, LineSegmentType::horizontal_first,
+            InsertionMode::insert_or_discard);
+        fmt::print("{}\n", handle.value());
+        fmt::print("{}\n", editable_circuit_);
     }
 }
 
@@ -227,7 +229,7 @@ auto MouseMoveSelectionLogic::get_selection() -> const Selection& {
     if (!selection_and_positions_baked_) {
         bake_selection_and_positions();
     }
-    if (!builder_.is_selection_baked()) [[unlikely]] {
+    if (!builder_.all_operations_applied()) [[unlikely]] {
         throw_exception("Selection has been modified after baking.");
     }
 
@@ -241,7 +243,7 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
     selection_and_positions_baked_ = true;
 
     // bake selection, so we can move the elements
-    builder_.bake_selection();
+    builder_.apply_all_operations();
     const auto& selection = get_selection();
     const auto selected_keys = selection.selected_elements();
 

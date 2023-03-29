@@ -72,7 +72,9 @@ using elements_set_t = ankerl::unordered_dense::set<element_key_t>;
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 }  // namespace detail::selection
 
-auto get_segment_selection(line_t segment, rect_fine_t selection_rect)
+auto get_segment_selection(line_t line) -> segment_selection_t;
+
+auto get_segment_selection(line_t line, rect_fine_t selection_rect)
     -> std::optional<segment_selection_t>;
 
 auto get_selected_segment(line_t segment, segment_selection_t selection) -> line_t;
