@@ -5,6 +5,7 @@
 #include "editable_circuit.h"
 #include "renderer.h"
 #include "scene.h"
+#include "selection_builder.h"
 #include "timer.h"
 
 #include <blend2d.h>
@@ -257,6 +258,7 @@ class RendererWidget : public QWidget {
     circuit_id_t circuit_id_ {0};
     CircuitIndex circuit_index_ {};
     std::optional<EditableCircuit> editable_circuit_ {};
+    std::optional<SelectionBuilder> selection_builder_ {};
     RenderSettings render_settings_ {};
 
     // mouse logic

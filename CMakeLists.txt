@@ -286,6 +286,7 @@ set(LS_CORE_SOURCES
     src/segment_tree.h src/segment_tree.cpp
     src/selection.h src/selection.cpp
     src/selection_builder.h src/selection_builder.cpp
+    src/selection_handle.h src/selection_handle.cpp
     src/simulation.h src/simulation.cpp
     src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp

@@ -4,6 +4,7 @@
 #include "layout.h"
 #include "range.h"
 #include "schematic.h"
+#include "selection_handle.h"
 #include "simulation.h"
 
 namespace logicsim {
@@ -95,11 +96,9 @@ auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
 
 auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> void {
     if (position && first_position_) {
-        const auto handle = editable_circuit_.add_line_segment(
-            *first_position_, *position, LineSegmentType::horizontal_first,
-            InsertionMode::insert_or_discard);
-        fmt::print("{}\n", handle.value());
-        fmt::print("{}\n", editable_circuit_);
+        editable_circuit_.add_line_segment(*first_position_, *position,
+                                           LineSegmentType::horizontal_first,
+                                           InsertionMode::insert_or_discard);
     }
 }
 
@@ -478,7 +477,7 @@ auto RendererWidget::reset_circuit() -> void {
     circuit_index_ = CircuitIndex {};
     editable_circuit_.emplace(circuit_index_.borrow_schematic(circuit_id_),
                               circuit_index_.borrow_layout(circuit_id_));
-
+    /*
     {
         auto& editable_circuit = editable_circuit_.value();
 
@@ -539,6 +538,7 @@ auto RendererWidget::reset_circuit() -> void {
             fmt::print("Added {} elements in {}.\n", count, timer.format());
         }
     }
+    */
 }
 
 Q_SLOT void RendererWidget::on_timeout() {
@@ -653,7 +653,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
     if (do_render_circuit_) {
         const auto& selection = editable_circuit.selection_builder().selection();
-        fmt::print("{}\n", selection);
+        // fmt::print("{}\n", selection);
 
         const auto mask = editable_circuit.selection_builder().create_selection_mask();
 
