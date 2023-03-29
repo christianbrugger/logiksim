@@ -11,7 +11,7 @@ namespace logicsim {
 //
 
 selection_handle_t::selection_handle_t(Selection& selection,
-                                       EditableCircuit& editable_circuit,
+                                       const EditableCircuit& editable_circuit,
                                        selection_key_t selection_key)
     : selection_ {&selection},
       editable_circuit_ {&editable_circuit},
@@ -23,6 +23,10 @@ auto selection_handle_t::swap(selection_handle_t& other) noexcept -> void {
     swap(selection_, other.selection_);
     swap(editable_circuit_, other.editable_circuit_);
     swap(selection_key_, other.selection_key_);
+}
+
+auto selection_handle_t::operator==(std::nullptr_t) const noexcept -> bool {
+    return selection_ == nullptr;
 }
 
 auto selection_handle_t::reset() noexcept -> void {

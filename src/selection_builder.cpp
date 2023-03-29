@@ -14,14 +14,15 @@ namespace logicsim {
 //
 
 SelectionBuilder::SelectionBuilder(const EditableCircuit& editable_circuit)
-    : editable_circuit_ {&editable_circuit} {}
+    : editable_circuit_ {&editable_circuit},
+      initial_selection_ {editable_circuit.create_selection()} {}
 
 auto SelectionBuilder::empty() const noexcept -> bool {
-    return initial_selection_.empty() && operations_.empty();
+    return initial_selection_->empty() && operations_.empty();
 }
 
 auto SelectionBuilder::clear() -> void {
-    initial_selection_.clear();
+    initial_selection_->clear();
     operations_.clear();
     cached_selection_.reset();
 }
@@ -130,20 +131,22 @@ auto apply_function(Selection& selection, const EditableCircuit& editable_circui
 }  // namespace
 
 auto SelectionBuilder::selection() const -> const Selection& {
-    if (cached_selection_.has_value()) {
+    if (cached_selection_) {
         return *cached_selection_;
     }
     if (operations_.empty()) {
-        return initial_selection_;
+        return *initial_selection_;
     }
 
-    auto selection = Selection {initial_selection_};
+    cached_selection_ = editable_circuit_->create_selection();
+    auto& selection = cached_selection_.value();
+
+    selection = initial_selection_.get().value();
     for (auto&& operation : operations_) {
         apply_function(selection, *editable_circuit_, operation);
     }
 
-    cached_selection_.emplace(std::move(selection));
-    return cached_selection_.value();
+    return selection;
 }
 
 auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
@@ -172,8 +175,8 @@ auto SelectionBuilder::apply_all_operations() -> void {
     // update cache
     static_cast<void>(selection());
 
-    if (cached_selection_.has_value()) {
-        initial_selection_.swap(*cached_selection_);
+    if (cached_selection_) {
+        initial_selection_->swap(*cached_selection_);
     }
 
     operations_.clear();
@@ -183,9 +186,9 @@ auto SelectionBuilder::apply_all_operations() -> void {
 auto SelectionBuilder::remove_invalid_element_keys() -> void {
     cached_selection_.reset();
 
-    for (element_key_t element_key : initial_selection_.selected_elements()) {
+    for (element_key_t element_key : initial_selection_->selected_elements()) {
         if (!editable_circuit_->element_key_valid(element_key)) {
-            initial_selection_.remove_element(element_key);
+            initial_selection_->remove_element(element_key);
         }
     }
 }

@@ -2,6 +2,7 @@
 #define LOGIKSIM_SELECTION_MANAGER_H
 
 #include "selection.h"
+#include "selection_handle.h"
 #include "vocabulary.h"
 
 #include <boost/container/vector.hpp>
@@ -49,10 +50,10 @@ class SelectionBuilder {
    private:
     gsl::not_null<const EditableCircuit*> editable_circuit_;
 
-    Selection initial_selection_ {};
+    gsl::not_null<selection_handle_t> initial_selection_;
     std::vector<operation_t> operations_ {};
 
-    mutable std::optional<Selection> cached_selection_ {};
+    mutable selection_handle_t cached_selection_ {};
 };
 
 }  // namespace logicsim

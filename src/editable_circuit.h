@@ -253,7 +253,7 @@ class EditableCircuit {
     // swaps the element with last one and deletes it
     auto delete_element(element_key_t element_key) -> void;
 
-    auto create_selection() -> selection_handle_t;
+    auto create_selection() const -> selection_handle_t;
     auto selection_builder() const noexcept -> const SelectionBuilder&;
     auto selection_builder() noexcept -> SelectionBuilder&;
 
@@ -341,7 +341,7 @@ class EditableCircuit {
     auto cache_insert(element_id_t element_id, segment_index_t segment_index) -> void;
     auto cache_remove(element_id_t element_id, segment_index_t segment_index) -> void;
 
-    auto delete_selection(selection_key_t selection_key) -> void;
+    auto delete_selection(selection_key_t selection_key) const -> void;
 
     // TODO Consider using element_key_t for Caches, especially SearchTree,
     // TODO so we don't need costly update for element_trees
@@ -351,8 +351,8 @@ class EditableCircuit {
     CollisionCache collicions_cache_ {};
     SearchTree selection_cache_ {};
 
-    selection_key_t next_selection_key_ {0};
-    selection_map_t managed_selections_ {};
+    mutable selection_key_t next_selection_key_ {0};
+    mutable selection_map_t managed_selections_ {};
 
     SelectionBuilder selection_builder_;
 

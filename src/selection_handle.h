@@ -19,7 +19,7 @@ class selection_handle_t {
 
     selection_handle_t() = default;
     [[nodiscard]] explicit selection_handle_t(Selection& selection,
-                                              EditableCircuit& editable_circuit,
+                                              const EditableCircuit& editable_circuit,
                                               selection_key_t selection_key);
     ~selection_handle_t();
     // disallow copying
@@ -40,9 +40,11 @@ class selection_handle_t {
     auto reset() noexcept -> void;
     auto swap(selection_handle_t& other) noexcept -> void;
 
+    auto operator==(std::nullptr_t) const noexcept -> bool;
+
    private:
     Selection* selection_ {nullptr};
-    EditableCircuit* editable_circuit_ {nullptr};
+    const EditableCircuit* editable_circuit_ {nullptr};
     selection_key_t selection_key_ {null_selection_key};
 };
 

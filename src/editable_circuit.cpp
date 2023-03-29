@@ -1713,7 +1713,7 @@ auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segm
     selection_cache_.remove(element_id, segment.line, segment_index);
 }
 
-auto EditableCircuit::create_selection() -> selection_handle_t {
+auto EditableCircuit::create_selection() const -> selection_handle_t {
     const auto key = next_selection_key_++;
 
     auto&& [it, inserted]
@@ -1723,10 +1723,11 @@ auto EditableCircuit::create_selection() -> selection_handle_t {
         throw_exception("unable to create new selection.");
     }
 
-    return selection_handle_t {*(it->second.get()), *this, key};
+    Selection& selection = *(it->second.get());
+    return selection_handle_t {selection, *this, key};
 }
 
-auto EditableCircuit::delete_selection(selection_key_t selection_key) -> void {
+auto EditableCircuit::delete_selection(selection_key_t selection_key) const -> void {
     if (!managed_selections_.erase(selection_key)) {
         throw_exception("unable to delete selection that should be present.");
     }
