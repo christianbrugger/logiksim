@@ -665,6 +665,89 @@ auto ElementKeyStore::size() const -> std::size_t {
 }
 
 //
+// Selection Handle
+//
+
+selection_handle_t::selection_handle_t(Selection& selection,
+                                       EditableCircuit& editable_circuit,
+                                       selection_key_t selection_key)
+    : selection_ {&selection},
+      editable_circuit_ {&editable_circuit},
+      selection_key_ {selection_key} {}
+
+auto selection_handle_t::swap(selection_handle_t& other) noexcept -> void {
+    using std::swap;
+
+    swap(selection_, other.selection_);
+    swap(editable_circuit_, other.editable_circuit_);
+    swap(selection_key_, other.selection_key_);
+}
+
+auto selection_handle_t::reset() noexcept -> void {
+    if (editable_circuit_ == nullptr) [[unlikely]] {
+        return;
+    }
+
+    // TODO delete in editable_circuit
+
+    editable_circuit_ = nullptr;
+    selection_ = nullptr;
+    selection_key_ = null_selection_key;
+}
+
+selection_handle_t::~selection_handle_t() {
+    reset();
+}
+
+selection_handle_t::selection_handle_t(selection_handle_t&& other) noexcept {
+    swap(other);
+}
+
+auto selection_handle_t::operator=(selection_handle_t&& other) noexcept
+    -> selection_handle_t& {
+    auto copy = selection_handle_t {std::move(other)};
+    swap(copy);
+    return *this;
+}
+
+auto selection_handle_t::value() const -> reference {
+    if (!has_value()) [[unlikely]] {
+        throw_exception("selection is not set");
+    }
+    return *selection_;
+}
+
+auto selection_handle_t::operator*() const noexcept -> reference {
+    return *selection_;
+}
+
+auto selection_handle_t::operator->() const noexcept -> pointer {
+    return selection_;
+}
+
+auto swap(selection_handle_t& a, selection_handle_t& b) noexcept -> void {
+    a.swap(b);
+}
+
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::selection_handle_t& a, logicsim::selection_handle_t& b) noexcept
+    -> void {
+    a.swap(b);
+}
+
+namespace logicsim {
+
+selection_handle_t::operator bool() const noexcept {
+    return has_value();
+}
+
+auto selection_handle_t::has_value() const noexcept -> bool {
+    return selection_ != nullptr;
+}
+
+//
 // Editable Circuit
 //
 
@@ -1064,7 +1147,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
             tree_key = to_element_key(colliding_id_1);
         } else {
             // merge two trees
-            const auto tree_copy = layout_.segment_tree(colliding_id_1);
+            const auto tree_copy = SegmentTree {layout_.segment_tree(colliding_id_1)};
             swap_and_delete_single_element(colliding_id_1);
 
             const auto element_id = to_element_id(tree_key);

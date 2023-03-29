@@ -6,10 +6,13 @@
 #include "layout_calculation_type.h"
 #include "schematic.h"
 #include "search_tree.h"
+#include "selection.h"
 #include "selection_builder.h"
 
 #include <ankerl/unordered_dense.h>
+#include <gsl/gsl>
 
+#include <memory>
 #include <vector>
 
 // Tasks:
@@ -200,6 +203,57 @@ class ElementKeyStore {
     map_to_key_t map_to_key_ {};
 };
 
+class EditableCircuit;
+
+class selection_handle_t {
+   public:
+    using type = Selection;
+    using reference = Selection&;
+    using pointer = Selection*;
+
+    selection_handle_t() = default;
+    [[nodiscard]] explicit selection_handle_t(Selection& selection,
+                                              EditableCircuit& editable_circuit,
+                                              selection_key_t selection_key);
+    ~selection_handle_t();
+    // disallow copying
+    selection_handle_t(const selection_handle_t& other) = delete;
+    auto operator=(const selection_handle_t& other) = delete;
+    // allow move
+    selection_handle_t(selection_handle_t&& other) noexcept;
+    auto operator=(selection_handle_t&& other) noexcept -> selection_handle_t&;
+
+    [[nodiscard]] auto has_value() const noexcept -> bool;
+    [[nodiscard]] operator bool() const noexcept;
+
+    [[nodiscard]] auto value() const -> reference;
+    [[nodiscard]] auto operator*() const noexcept -> reference;
+    [[nodiscard]] auto operator->() const noexcept -> pointer;
+
+    auto reset() noexcept -> void;
+    auto swap(selection_handle_t& other) noexcept -> void;
+
+   private:
+    Selection* selection_ {nullptr};
+    EditableCircuit* editable_circuit_ {nullptr};
+    selection_key_t selection_key_ {null_selection_key};
+};
+
+auto swap(selection_handle_t& a, selection_handle_t& b) noexcept -> void;
+
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::selection_handle_t& a, logicsim::selection_handle_t& b) noexcept
+    -> void;
+
+namespace logicsim {
+
+static_assert(!std::is_copy_constructible_v<selection_handle_t>);
+static_assert(!std::is_copy_assignable_v<selection_handle_t>);
+static_assert(std::is_move_constructible_v<selection_handle_t>);
+static_assert(std::is_move_assignable_v<selection_handle_t>);
+
 enum class LineSegmentType {
     horizontal_first,
     vertical_first,
@@ -248,6 +302,7 @@ class EditableCircuit {
         -> std::vector<element_key_t>;
     [[nodiscard]] auto element_key_valid(element_key_t element_key) const -> bool;
 
+    // TODO do these need to be public? Only accessed by selection builder?
     [[nodiscard]] auto query_selection(rect_fine_t rect) const
         -> std::vector<SearchTree::query_result_t>;
     [[nodiscard]] auto query_selection(point_fine_t point) const

@@ -10,6 +10,8 @@
 
 namespace logicsim {
 
+// TODO rename
+// TODO use offsets instead of absolute values
 struct segment_selection_t {
     grid_t begin;
     grid_t end;
@@ -30,6 +32,7 @@ struct segment_selection_t {
 
 namespace detail::selection {
 
+// TODO use element_t, after we remove element_key_t
 struct map_key_t {
     element_key_t element_key {null_element_key};
     segment_index_t segment_index {null_segment_index};
@@ -84,21 +87,24 @@ class Selection {
     [[nodiscard]] auto empty() const noexcept -> bool;
     auto clear() -> void;
 
-    auto add_element(element_key_t element) -> void;
-    auto remove_element(element_key_t element) -> void;
-    auto toggle_element(element_key_t element) -> void;
+    auto add_element(element_key_t element_key) -> void;
+    auto remove_element(element_key_t element_key) -> void;
+    auto toggle_element(element_key_t element_key) -> void;
 
-    auto add_segment(element_key_t element, segment_index_t segment_index,
+    auto add_segment(element_key_t element_key, segment_index_t segment_index,
                      segment_selection_t selection) -> void;
-    auto remove_segment(element_key_t element, segment_index_t segment_index,
+    auto remove_segment(element_key_t element_key, segment_index_t segment_index,
                         segment_selection_t selection) -> void;
-    auto toggle_segment(element_key_t element, segment_index_t segment_index,
+    auto toggle_segment(element_key_t element_key, segment_index_t segment_index,
                         segment_selection_t selection) -> void;
 
     [[nodiscard]] auto is_selected(element_key_t element) const -> bool;
 
     [[nodiscard]] auto selected_elements() const -> std::span<const element_key_t>;
     [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;
+    [[nodiscard]] auto selected_segments(element_key_t element_key,
+                                         segment_index_t segment_index) const
+        -> std::span<const segment_selection_t>;
 
    private:
     detail::selection::elements_set_t selected_elements_ {};

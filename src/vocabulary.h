@@ -157,11 +157,25 @@ struct segment_index_t {
     }
 };
 
+struct selection_key_t {
+    using value_type = int64_t;
+    value_type value;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const selection_key_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const selection_key_t &other) const = default;
+
+    auto operator++() noexcept -> selection_key_t &;
+    auto operator++(int) noexcept -> selection_key_t;
+};
+
 inline constexpr auto null_circuit = circuit_id_t {-1};
 inline constexpr auto null_element_key = element_key_t {-1};
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
 
+inline constexpr auto null_selection_key = selection_key_t {-1};
 inline constexpr auto null_segment_index = segment_index_t {-1};
 
 // TODO use struct packing?

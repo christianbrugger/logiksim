@@ -178,6 +178,27 @@ auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
     return selected_segments_.values();
 }
 
+auto Selection::selected_segments(element_key_t element_key,
+                                  segment_index_t segment_index) const
+    -> std::span<const segment_selection_t> {
+    const auto key = detail::selection::map_key_t {
+        .element_key = element_key,
+        .segment_index = segment_index,
+    };
+
+    const auto it = selected_segments_.find(key);
+    if (it == selected_segments_.end()) {
+        return {};
+    }
+
+    auto &entries = it->second;
+    if (entries.size() == 0) [[unlikely]] {
+        throw_exception("found segment selection with zero selection entries");
+    }
+
+    return it->second;
+}
+
 auto get_segment_begin_end(line_t segment, rect_fine_t selection_rect) {
     const auto ordered_line = order_points(segment);
 
