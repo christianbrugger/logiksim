@@ -125,6 +125,7 @@ class MouseMoveSelectionLogic {
         move_selection,
         waiting_for_confirmation,
         finished,
+        finished_confirmed,
     };
 
     auto get_selection() -> const Selection&;

@@ -113,11 +113,15 @@ MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
     : builder_ {args.builder}, editable_circuit_ {args.editable_circuit} {}
 
 MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
-    if (state_ != State::finished) {
+    if (!finished()) {
         convert_to(InsertionMode::temporary);
         restore_original_positions();
     }
     convert_to(InsertionMode::insert_or_discard);
+
+    if (state_ == State::finished_confirmed) {
+        builder_.clear();
+    }
 }
 
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
@@ -195,11 +199,11 @@ auto MouseMoveSelectionLogic::confirm() -> void {
         return;
     }
 
-    state_ = State::finished;
+    state_ = State::finished_confirmed;
 }
 
 auto MouseMoveSelectionLogic::finished() -> bool {
-    return state_ == State::finished;
+    return state_ == State::finished || state_ == State::finished_confirmed;
 }
 
 auto MouseMoveSelectionLogic::get_selection() -> const Selection& {
