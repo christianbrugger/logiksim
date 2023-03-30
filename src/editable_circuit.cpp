@@ -1213,20 +1213,9 @@ auto EditableCircuit::move_or_delete_element(element_id_t& element_id, int x, in
     return true;
 }
 
-auto EditableCircuit::are_positions_valid(const Selection& selection, int x, int y) const
-    -> bool {
-    if (!is_representable(x, y)) {
-        return false;
-    }
-    return are_positions_valid(selection, point_t {grid_t {x}, grid_t {y}});
-}
-
 namespace {
 
-auto position_calculator(point_t pivot, point_t position, const Layout& layout) {
-    const int delta_x = position.x.value - pivot.x.value;
-    const int delta_y = position.y.value - pivot.y.value;
-
+auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
     return [delta_x, delta_y, &layout](element_id_t element_id) {
         const auto& element_position = layout.position(element_id);
 
@@ -1237,53 +1226,32 @@ auto position_calculator(point_t pivot, point_t position, const Layout& layout) 
     };
 };
 
-/*
-auto position_calculator_2(const Selection& selection, point_t position,
-                           const Layout& layout) {
-    const auto pivot = get_pivot(selection, layout);
-    if (!pivot) {
-        return std::optional<decltype(position_calculator(*pivot, position, layout))> {};
-    }
-
-    return std::make_optional(position_calculator(*pivot, position, layout));
-}
-*/
-
 }  // namespace
 
-auto EditableCircuit::are_positions_valid(const Selection& selection,
-                                          point_t position) const -> bool {
-    const auto pivot = get_pivot(selection, layout_);
-    if (!pivot) {
-        return true;
-    }
-    const auto calc_position = position_calculator(*pivot, position, layout_);
+auto EditableCircuit::are_positions_valid(const Selection& selection, int delta_x,
+                                          int delta_y) const -> bool {
+    const auto get_position = position_calculator(layout_, delta_x, delta_y);
 
     const auto is_valid = [&](element_id_t element_id) {
-        const auto [x, y] = calc_position(element_id);
+        const auto [x, y] = get_position(element_id);
         return is_position_valid(element_id, x, y);
     };
-
     return std::ranges::all_of(selection.selected_elements(), is_valid);
 }
 
-auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, point_t position)
-    -> void {
+auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int delta_x,
+                                              int delta_y) -> void {
     if (!handle) {
         return;
     }
-    const auto pivot = get_pivot(handle.value(), layout_);
-    if (!pivot) {
-        return;
-    }
-    const auto calc_position = position_calculator(*pivot, position, layout_);
+    const auto get_position = position_calculator(layout_, delta_x, delta_y);
 
     // TODO refactor to algorithm
     while (handle->selected_elements().size() > 0) {
         auto element_id = *handle->selected_elements().begin();
         handle->remove_element(element_id);
 
-        const auto [x, y] = calc_position(element_id);
+        const auto [x, y] = get_position(element_id);
         move_or_delete_element(element_id, x, y);
     }
 }

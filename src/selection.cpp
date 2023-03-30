@@ -2,7 +2,6 @@
 #include "selection.h"
 
 #include "geometry.h"
-#include "layout.h"
 #include "range.h"
 
 namespace logicsim {
@@ -280,19 +279,3 @@ template <>
 auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void {
     a.swap(b);
 }
-
-namespace logicsim {
-
-auto get_pivot(const Selection &selection, const Layout &layout)
-    -> std::optional<point_t> {
-    const auto &elements = selection.selected_elements();
-
-    if (elements.empty()) {
-        return std::nullopt;
-    }
-
-    const auto &element_id = elements.front();
-    return layout.position(element_id);
-}
-
-}  // namespace logicsim

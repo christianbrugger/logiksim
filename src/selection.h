@@ -94,13 +94,4 @@ auto swap(Selection &a, Selection &b) noexcept -> void;
 template <>
 auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void;
 
-namespace logicsim {
-
-class Layout;
-
-auto get_pivot(const Selection &selection, const Layout &layout)
-    -> std::optional<point_t>;
-
-}  // namespace logicsim
-
 #endif

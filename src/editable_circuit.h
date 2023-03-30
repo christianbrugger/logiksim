@@ -248,9 +248,10 @@ class EditableCircuit {
                                InsertionMode new_insertion_mode) -> void;
 
     // moves or deletes elements
-    auto are_positions_valid(const Selection& selection, int x, int y) const -> bool;
-    auto are_positions_valid(const Selection& selection, point_t position) const -> bool;
-    auto move_or_delete_elements(selection_handle_t handle, point_t position) -> void;
+    auto are_positions_valid(const Selection& selection, int delta_x, int delta_y) const
+        -> bool;
+    auto move_or_delete_elements(selection_handle_t handle, int delta_x, int delta_y)
+        -> void;
 
     auto create_selection() const -> selection_handle_t;
     auto create_selection(const Selection& selection) const -> selection_handle_t;

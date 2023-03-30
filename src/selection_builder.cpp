@@ -174,6 +174,10 @@ auto SelectionBuilder::all_operations_applied() const -> bool {
 }
 
 auto SelectionBuilder::apply_all_operations() -> void {
+    if (operations_.empty()) {
+        return;
+    }
+
     // update cache
     static_cast<void>(selection());
 

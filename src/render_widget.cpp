@@ -159,31 +159,20 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
     }
 
     const auto& selection = get_selection();
-    const auto pivot = get_pivot(selection, editable_circuit_.layout());
-    if (!pivot) {
-        return;
-    }
 
-    const auto new_x = pivot->x.value + delta_x;
-    const auto new_y = pivot->y.value + delta_y;
-
-    if (!is_representable(new_x, new_y)) {
-        return;
-    }
-    const auto position = point_t {grid_t {new_x}, grid_t {new_y}};
-
-    if (!editable_circuit_.are_positions_valid(selection, position)) {
+    if (!editable_circuit_.are_positions_valid(selection, delta_x, delta_y)) {
         return;
     }
 
     convert_to(InsertionMode::temporary);
-    editable_circuit_.move_or_delete_elements(
-        editable_circuit_.create_selection(selection), position);
+    editable_circuit_.move_or_delete_elements(copy_selection(), delta_x, delta_y);
 
     last_position_ = point_fine_t {
         last_position_->x + delta_x,
         last_position_->y + delta_y,
     };
+    total_offsets_.first += delta_x;
+    total_offsets_.second += delta_y;
 }
 
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {
@@ -214,26 +203,12 @@ auto MouseMoveSelectionLogic::finished() -> bool {
 }
 
 auto MouseMoveSelectionLogic::get_selection() -> const Selection& {
-    if (!selection_and_positions_baked_) {
-        bake_selection_and_positions();
-    }
-    if (!builder_.all_operations_applied()) [[unlikely]] {
-        throw_exception("Selection has been modified after baking.");
-    }
-
+    builder_.apply_all_operations();
     return builder_.selection();
 }
 
-auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
-    if (selection_and_positions_baked_) {
-        return;
-    }
-    selection_and_positions_baked_ = true;
-
-    // bake selection, so we can move the elements
-    builder_.apply_all_operations();
-
-    original_pivot_ = get_pivot(builder_.selection(), editable_circuit_.layout());
+auto MouseMoveSelectionLogic::copy_selection() -> selection_handle_t {
+    return editable_circuit_.create_selection(get_selection());
 }
 
 auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
@@ -241,16 +216,16 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
         return;
     }
     insertion_mode_ = mode;
-    editable_circuit_.change_insertion_mode(builder_.copy_selection(), mode);
+    editable_circuit_.change_insertion_mode(copy_selection(), mode);
 }
 
 auto MouseMoveSelectionLogic::restore_original_positions() -> void {
-    if (!original_pivot_) {
+    if (total_offsets_.first == 0 && total_offsets_.second == 0) {
         return;
     }
 
-    editable_circuit_.move_or_delete_elements(builder_.copy_selection(),
-                                              *original_pivot_);
+    editable_circuit_.move_or_delete_elements(copy_selection(), -total_offsets_.first,
+                                              -total_offsets_.second);
 }
 
 auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {

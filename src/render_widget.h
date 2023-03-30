@@ -128,7 +128,8 @@ class MouseMoveSelectionLogic {
     };
 
     auto get_selection() -> const Selection&;
-    auto bake_selection_and_positions() -> void;
+    auto copy_selection() -> selection_handle_t;
+
     auto convert_to(InsertionMode mode) -> void;
     auto restore_original_positions() -> void;
     [[nodiscard]] auto calculate_any_element_colliding() -> bool;
@@ -137,8 +138,7 @@ class MouseMoveSelectionLogic {
     EditableCircuit& editable_circuit_;
 
     std::optional<point_fine_t> last_position_ {};
-    bool selection_and_positions_baked_ {false};
-    std::optional<point_t> original_pivot_ {};
+    std::pair<int, int> total_offsets_ {};
     InsertionMode insertion_mode_ {InsertionMode::insert_or_discard};
 
     State state_ {State::waiting_for_first_click};
