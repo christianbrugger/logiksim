@@ -47,10 +47,7 @@ auto selection_handle_t::copy() -> selection_handle_t {
     if (editable_circuit_ == nullptr || selection_ == nullptr) {
         return selection_handle_t {};
     }
-
-    auto handle = editable_circuit_->create_selection();
-    handle.value() = *selection_;
-    return handle;
+    return editable_circuit_->create_selection(*selection_);
 }
 
 auto selection_handle_t::reset() noexcept -> void {
@@ -122,6 +119,9 @@ auto element_handle_t::clear_element() -> void {
 auto element_handle_t::set_element(element_id_t element_id) -> void {
     if (!selection_handle_) [[unlikely]] {
         throw_exception("handle cannot be empty");
+    }
+    if (!element_id) [[unlikely]] {
+        throw_exception("element_id needs to be valid.");
     }
 
     selection_handle_->clear();

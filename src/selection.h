@@ -79,6 +79,8 @@ class Selection {
 
     auto update_element_id(element_id_t new_element_id, element_id_t old_element_id)
         -> void;
+    auto remove_segment(segment_t segment) -> void;
+    auto update_segment_id(segment_t new_segment, segment_t old_segment) -> void;
 
    private:
     detail::selection::elements_set_t selected_elements_ {};

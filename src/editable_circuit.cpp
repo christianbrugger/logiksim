@@ -1679,7 +1679,9 @@ auto EditableCircuit::key_insert(element_id_t element_id) -> void {
 }
 
 auto EditableCircuit::key_remove(element_id_t element_id) -> void {
-    if (schematic_.element(element_id).is_placeholder()) {
+    const auto type = schematic_.element(element_id).element_type();
+
+    if (type == ElementType::placeholder) {
         return;
     }
     // TODO maybe invalidate selection_builder cache?
@@ -1688,11 +1690,26 @@ auto EditableCircuit::key_remove(element_id_t element_id) -> void {
         auto& selection = *entry.second;
         selection.remove_element(element_id);
     }
+
+    if (type == ElementType::wire) {
+        const auto indices = layout_.segment_tree(element_id).indices();
+
+        for (auto&& entry : managed_selections_) {
+            auto& selection = *entry.second;
+
+            for (auto&& segment_index : indices) {
+                const auto segment = segment_t {element_id, segment_index};
+                selection.remove_segment(segment);
+            }
+        }
+    }
 }
 
 auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_element_id)
     -> void {
-    if (schematic_.element(new_element_id).is_placeholder()) {
+    const auto type = schematic_.element(new_element_id).element_type();
+
+    if (type == ElementType::placeholder) {
         return;
     }
     // TODO maybe invalidate selection_builder cache?
@@ -1700,6 +1717,20 @@ auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_e
     for (auto&& entry : managed_selections_) {
         auto& selection = *entry.second;
         selection.update_element_id(new_element_id, old_element_id);
+    }
+
+    if (type == ElementType::wire) {
+        const auto indices = layout_.segment_tree(new_element_id).indices();
+
+        for (auto&& entry : managed_selections_) {
+            auto& selection = *entry.second;
+
+            for (auto&& segment_index : indices) {
+                const auto new_segment = segment_t {new_element_id, segment_index};
+                const auto old_segment = segment_t {old_element_id, segment_index};
+                selection.update_segment_id(new_segment, old_segment);
+            }
+        }
     }
 }
 
@@ -1782,6 +1813,17 @@ auto EditableCircuit::create_selection() const -> selection_handle_t {
 
     Selection& selection = *(it->second.get());
     return selection_handle_t {selection, *this, key};
+}
+
+auto EditableCircuit::create_selection(const Selection& selection) const
+    -> selection_handle_t {
+    auto handle = create_selection();
+    handle.value() = selection;
+    return handle;
+}
+
+auto EditableCircuit::element_handle() const -> element_handle_t {
+    return element_handle_t {create_selection()};
 }
 
 auto EditableCircuit::element_handle(element_id_t element_id) const -> element_handle_t {

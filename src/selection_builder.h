@@ -52,7 +52,7 @@ class SelectionBuilder {
     gsl::not_null<selection_handle_t> initial_selection_;
     std::vector<operation_t> operations_ {};
 
-    mutable selection_handle_t cached_selection_ {};
+    mutable std::optional<Selection> cached_selection_ {};
 };
 
 }  // namespace logicsim

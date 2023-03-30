@@ -158,7 +158,7 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
         return;
     }
 
-    const auto& selection = builder_.selection();
+    const auto& selection = get_selection();
     const auto pivot = get_pivot(selection, editable_circuit_.layout());
     if (!pivot) {
         return;
@@ -177,45 +177,13 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
     }
 
     convert_to(InsertionMode::temporary);
-    editable_circuit_.move_or_delete_elements(builder_.copy_selection(), position);
+    editable_circuit_.move_or_delete_elements(
+        editable_circuit_.create_selection(selection), position);
 
     last_position_ = point_fine_t {
         last_position_->x + delta_x,
         last_position_->y + delta_y,
     };
-
-    /*
-    const auto calculate_new_position = [&, delta_x, delta_y](element_key_t element_key) {
-        const auto element_id = editable_circuit_.to_element_id(element_key);
-        const auto position = editable_circuit_.layout().position(element_id);
-
-        return std::pair<int, int> {
-            position.x.value + delta_x,
-            position.y.value + delta_y,
-        };
-    };
-
-    // check if all positions are valid
-    const auto all_valid = std::ranges::all_of(
-        get_selection().selected_elements(), [&](element_key_t element_key) {
-            const auto [x, y] = calculate_new_position(element_key);
-            return editable_circuit_.is_position_valid(element_key, x, y);
-        });
-
-    if (all_valid) {
-        // move all items
-        for (auto&& element_key : get_selection().selected_elements()) {
-            const auto [x, y] = calculate_new_position(element_key);
-            const auto p = point_t {grid_t {x}, grid_t {y}};
-            editable_circuit_.move_or_delete_element(element_key, p);
-        }
-
-        last_position_ = point_fine_t {
-            last_position_->x + delta_x,
-            last_position_->y + delta_y,
-        };
-    }
-    */
 }
 
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {
@@ -266,23 +234,6 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
     builder_.apply_all_operations();
 
     original_pivot_ = get_pivot(builder_.selection(), editable_circuit_.layout());
-
-    /*
-    const auto& selection = get_selection();
-    const auto selected_keys = selection.selected_elements();
-
-    // store initial positions
-    if (!original_positions_.empty()) [[unlikely]] {
-        throw_exception("Original positions need to be empty.");
-    }
-    original_positions_.reserve(selected_keys.size());
-    std::ranges::transform(selected_keys, std::back_inserter(original_positions_),
-                           [&](element_key_t element_key) {
-                               const auto element_id
-                                   = editable_circuit_.to_element_id(element_key);
-                               return editable_circuit_.layout().position(element_id);
-                           });
-     */
 }
 
 auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
@@ -300,23 +251,6 @@ auto MouseMoveSelectionLogic::restore_original_positions() -> void {
 
     editable_circuit_.move_or_delete_elements(builder_.copy_selection(),
                                               *original_pivot_);
-
-    /*
-    const auto& selection = get_selection();
-    const auto selected_keys = selection.selected_elements();
-
-    if (selected_keys.size() != original_positions_.size()) [[unlikely]] {
-        throw_exception("Number of original positions doesn't match selection.");
-    }
-
-    for (auto i : range(selected_keys.size())) {
-        bool moved = editable_circuit_.move_or_delete_element(selected_keys[i],
-                                                              original_positions_[i]);
-        if (!moved) [[unlikely]] {
-            throw_exception("item was not revertable to old positions.");
-        }
-    }
-    */
 }
 
 auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
@@ -532,6 +466,8 @@ auto RendererWidget::load_circuit(int id) -> void {
 #else
     constexpr auto debug_build = true;
 #endif
+    constexpr auto debug_max = 275;
+    constexpr auto release_max = 1600;
 
     if (id == 1) {
         editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {5, 3},
@@ -544,7 +480,7 @@ auto RendererWidget::load_circuit(int id) -> void {
     }
 
     if (id == 2) {
-        constexpr auto max_value = debug_build ? 75 : 1600;
+        constexpr auto max_value = debug_build ? debug_max : release_max;
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
@@ -565,7 +501,7 @@ auto RendererWidget::load_circuit(int id) -> void {
         }
     }
     if (id == 3) {
-        constexpr auto max_value = debug_build ? 75 : 1600;
+        constexpr auto max_value = debug_build ? debug_max : release_max;
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
@@ -576,7 +512,7 @@ auto RendererWidget::load_circuit(int id) -> void {
         }
     }
     if (id == 4) {
-        constexpr auto max_value = debug_build ? 75 : 1600;
+        constexpr auto max_value = debug_build ? debug_max : release_max;
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {

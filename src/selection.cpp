@@ -37,14 +37,26 @@ auto Selection::empty() const noexcept -> bool {
 }
 
 auto Selection::add_element(element_id_t element_id) -> void {
+    if (!element_id) [[unlikely]] {
+        throw_exception("added element_id needs to be valid");
+    }
+
     selected_elements_.insert(element_id);
 }
 
 auto Selection::remove_element(element_id_t element_id) -> void {
+    if (!element_id) [[unlikely]] {
+        throw_exception("removed element_id needs to be valid");
+    }
+
     selected_elements_.erase(element_id);
 }
 
 auto Selection::toggle_element(element_id_t element_id) -> void {
+    if (!element_id) [[unlikely]] {
+        throw_exception("toggled element_id needs to be valid");
+    }
+
     if (is_selected(element_id)) {
         remove_element(element_id);
     } else {
@@ -57,6 +69,25 @@ auto Selection::update_element_id(element_id_t new_element_id,
     const auto count = selected_elements_.erase(old_element_id);
     if (count > 0) {
         selected_elements_.insert(new_element_id);
+    }
+}
+
+auto Selection::remove_segment(segment_t segment) -> void {
+    selected_segments_.erase(segment);
+}
+
+auto Selection::update_segment_id(segment_t new_segment, segment_t old_segment) -> void {
+    const auto it = selected_segments_.find(old_segment);
+    if (it != selected_segments_.end()) {
+        auto sel = std::move(it->second);
+        selected_segments_.erase(it);
+
+        const auto inserted
+            = selected_segments_.emplace(new_segment, std::move(sel)).second;
+
+        if (!inserted) [[unlikely]] {
+            throw_exception("line segment already exists");
+        }
     }
 }
 

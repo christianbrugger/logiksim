@@ -113,6 +113,7 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
 
 auto apply_function(Selection& selection, const EditableCircuit& editable_circuit,
                     SelectionBuilder::operation_t operation) -> void {
+    const auto t = Timer {"apply_function", Timer::Unit::ms, 3};
     const auto selected_elements = editable_circuit.query_selection(operation.rect);
 
     for (auto&& element : selected_elements) {
@@ -136,7 +137,8 @@ auto SelectionBuilder::selection() const -> const Selection& {
         return *initial_selection_;
     }
 
-    cached_selection_ = editable_circuit_->create_selection();
+    cached_selection_ = Selection {};
+    // cached_selection_ = editable_circuit_->create_selection();
     auto& selection = *cached_selection_;
 
     selection = *initial_selection_;
@@ -164,9 +166,7 @@ auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
 }
 
 auto SelectionBuilder::copy_selection() const -> selection_handle_t {
-    auto handle = editable_circuit_->create_selection();
-    handle.value() = selection();
-    return handle;
+    return editable_circuit_->create_selection(selection());
 }
 
 auto SelectionBuilder::all_operations_applied() const -> bool {

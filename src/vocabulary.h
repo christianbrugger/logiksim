@@ -4,6 +4,7 @@
 #include "exceptions.h"
 #include "format.h"
 #include "hashing.h"
+#include "range.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
@@ -130,6 +131,7 @@ struct connection_t {
 
 struct segment_index_t {
     using value_type = int16_t;
+    using difference_type = range_difference_t<value_type>;
     value_type value;
 
     [[nodiscard]] auto format() const -> std::string;

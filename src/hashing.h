@@ -19,7 +19,7 @@ inline auto hash_16_byte(uint64_t a, uint64_t b) -> uint64_t {
 }
 
 inline auto hash_8_byte(uint32_t a, uint32_t b) -> uint64_t {
-    auto packed = (uint64_t {a} << 32) & uint64_t {b};
+    auto packed = (uint64_t {a} << 32) + uint64_t {b};
     return ankerl::unordered_dense::detail::wyhash::hash(packed);
 }
 

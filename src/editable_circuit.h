@@ -253,7 +253,9 @@ class EditableCircuit {
     auto move_or_delete_elements(selection_handle_t handle, point_t position) -> void;
 
     auto create_selection() const -> selection_handle_t;
-    auto element_handle(element_id_t element_id = null_element) const -> element_handle_t;
+    auto create_selection(const Selection& selection) const -> selection_handle_t;
+    auto element_handle() const -> element_handle_t;
+    auto element_handle(element_id_t element_id) const -> element_handle_t;
 
     auto selection_builder() const noexcept -> const SelectionBuilder&;
     auto selection_builder() noexcept -> SelectionBuilder&;

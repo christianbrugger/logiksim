@@ -1,6 +1,7 @@
 #include "segment_tree.h"
 
 #include "line_tree.h"
+#include "range.h"
 
 namespace logicsim {
 
@@ -241,6 +242,13 @@ auto SegmentTree::first_index() const noexcept -> segment_index_t {
 auto SegmentTree::last_index() const noexcept -> segment_index_t {
     const auto result = segment_count() - std::size_t {1};
     return segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(result)};
+}
+
+auto SegmentTree::indices() const noexcept -> detail::range_t<segment_index_t, true> {
+    const auto count = segment_index_t {
+        gsl::narrow_cast<segment_index_t::value_type>(segment_count())};
+
+    return range(count);
 }
 
 auto SegmentTree::has_input() const noexcept -> bool {
