@@ -1316,6 +1316,7 @@ auto EditableCircuit::delete_all(selection_handle_t selection) -> void {
         delete_queue.push_back(to_element_id(element_key));
     }
 
+    // we don't need to track the selection anymore at this point
     selection.reset();
     swap_and_delete_multiple_elements(delete_queue);
 }
