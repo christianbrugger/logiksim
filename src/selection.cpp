@@ -2,16 +2,13 @@
 #include "selection.h"
 
 #include "geometry.h"
+#include "layout.h"
 #include "range.h"
 
 namespace logicsim {
 
 auto segment_selection_t::format() const -> std::string {
     return fmt::format("{}-{}", begin, end);
-}
-
-auto detail::selection::map_key_t::format() const -> std::string {
-    return fmt::format("{}-{}", element_key, segment_index);
 }
 
 auto Selection::swap(Selection &other) noexcept -> void {
@@ -39,34 +36,36 @@ auto Selection::empty() const noexcept -> bool {
     return selected_elements_.empty() && selected_segments_.empty();
 }
 
-auto Selection::add_element(element_key_t element) -> void {
-    selected_elements_.insert(element);
+auto Selection::add_element(element_id_t element_id) -> void {
+    selected_elements_.insert(element_id);
 }
 
-auto Selection::remove_element(element_key_t element) -> void {
-    selected_elements_.erase(element);
+auto Selection::remove_element(element_id_t element_id) -> void {
+    selected_elements_.erase(element_id);
 }
 
-auto Selection::toggle_element(element_key_t element) -> void {
-    if (is_selected(element)) {
-        remove_element(element);
+auto Selection::toggle_element(element_id_t element_id) -> void {
+    if (is_selected(element_id)) {
+        remove_element(element_id);
     } else {
-        add_element(element);
+        add_element(element_id);
     }
 }
 
-auto Selection::add_segment(element_key_t element_key, segment_index_t segment_index,
-                            segment_selection_t selection) -> void {
-    const auto key = detail::selection::map_key_t {
-        .element_key = element_key,
-        .segment_index = segment_index,
-    };
+auto Selection::update_element_id(element_id_t new_element_id,
+                                  element_id_t old_element_id) -> void {
+    const auto count = selected_elements_.erase(old_element_id);
+    if (count > 0) {
+        selected_elements_.insert(new_element_id);
+    }
+}
 
-    const auto it = selected_segments_.find(key);
+auto Selection::add_segment(segment_t segment, segment_selection_t selection) -> void {
+    const auto it = selected_segments_.find(segment);
     if (it == selected_segments_.end()) {
         // insert new list
         const auto value = detail::selection::map_value_t {selection};
-        bool inserted = selected_segments_.insert(std::make_pair(key, value)).second;
+        bool inserted = selected_segments_.insert(std::make_pair(segment, value)).second;
         if (!inserted) [[unlikely]] {
             throw_exception("unable to insert value");
         }
@@ -103,14 +102,8 @@ auto Selection::add_segment(element_key_t element_key, segment_index_t segment_i
     entries.swap(result);
 }
 
-auto Selection::remove_segment(element_key_t element_key, segment_index_t segment_index,
-                               segment_selection_t removing) -> void {
-    const auto key = detail::selection::map_key_t {
-        .element_key = element_key,
-        .segment_index = segment_index,
-    };
-
-    const auto it = selected_segments_.find(key);
+auto Selection::remove_segment(segment_t segment, segment_selection_t removing) -> void {
+    const auto it = selected_segments_.find(segment);
     if (it == selected_segments_.end()) {
         return;
     }
@@ -157,20 +150,20 @@ auto Selection::remove_segment(element_key_t element_key, segment_index_t segmen
     }
 
     if (entries.empty()) {
-        if (!selected_segments_.erase(key)) {
+        if (!selected_segments_.erase(segment)) {
             throw_exception("unable to delete key");
         }
     }
 }
 
-auto Selection::toggle_segment(element_key_t element_key, segment_index_t segment_index,
-                               segment_selection_t selection) -> void {}
-
-auto Selection::is_selected(element_key_t element) const -> bool {
-    return selected_elements_.contains(element);
+auto Selection::toggle_segment(segment_t segment, segment_selection_t selection) -> void {
 }
 
-auto Selection::selected_elements() const -> std::span<const element_key_t> {
+auto Selection::is_selected(element_id_t element_id) const -> bool {
+    return selected_elements_.contains(element_id);
+}
+
+auto Selection::selected_elements() const -> std::span<const element_id_t> {
     return selected_elements_.values();
 }
 
@@ -178,15 +171,9 @@ auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
     return selected_segments_.values();
 }
 
-auto Selection::selected_segments(element_key_t element_key,
-                                  segment_index_t segment_index) const
+auto Selection::selected_segments(segment_t segment) const
     -> std::span<const segment_selection_t> {
-    const auto key = detail::selection::map_key_t {
-        .element_key = element_key,
-        .segment_index = segment_index,
-    };
-
-    const auto it = selected_segments_.find(key);
+    const auto it = selected_segments_.find(segment);
     if (it == selected_segments_.end()) {
         return {};
     }
@@ -262,3 +249,19 @@ template <>
 auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void {
     a.swap(b);
 }
+
+namespace logicsim {
+
+auto get_pivot(const Selection &selection, const Layout &layout)
+    -> std::optional<point_t> {
+    const auto &elements = selection.selected_elements();
+
+    if (elements.empty()) {
+        return std::nullopt;
+    }
+
+    const auto &element_id = elements.front();
+    return layout.position(element_id);
+}
+
+}  // namespace logicsim

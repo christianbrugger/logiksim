@@ -58,21 +58,19 @@ namespace {
 auto add_element_to_selection(element_id_t element_id, SelectionFunction function,
                               Selection& selection,
                               const EditableCircuit& editable_circuit) {
-    const auto element_key = editable_circuit.to_element_key(element_id);
-
     switch (function) {
         using enum SelectionFunction;
 
         case add: {
-            selection.add_element(element_key);
+            selection.add_element(element_id);
             return;
         }
         case substract: {
-            selection.remove_element(element_key);
+            selection.remove_element(element_id);
             return;
         }
         case toggle: {
-            selection.toggle_element(element_key);
+            selection.toggle_element(element_id);
             return;
         }
     }
@@ -80,32 +78,32 @@ auto add_element_to_selection(element_id_t element_id, SelectionFunction functio
     throw_exception("Unknown function");
 }
 
-auto add_segment_to_selection(element_id_t element_id, segment_index_t segment_index,
-                              SelectionBuilder::operation_t operation,
+auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t operation,
                               Selection& selection,
                               const EditableCircuit& editable_circuit) {
-    const auto line
-        = editable_circuit.layout().segment_tree(element_id).segment(segment_index).line;
+    const auto line = editable_circuit.layout()
+                          .segment_tree(segment.element_id)
+                          .segment(segment.segment_index)
+                          .line;
     const auto segment_sel = get_segment_selection(line, operation.rect);
 
     if (!segment_sel) {
         return;
     }
-    const auto element_key = editable_circuit.to_element_key(element_id);
 
     switch (operation.function) {
         using enum SelectionFunction;
 
         case add: {
-            selection.add_segment(element_key, segment_index, *segment_sel);
+            selection.add_segment(segment, *segment_sel);
             return;
         }
         case substract: {
-            selection.remove_segment(element_key, segment_index, *segment_sel);
+            selection.remove_segment(segment, *segment_sel);
             return;
         }
         case toggle: {
-            selection.toggle_segment(element_key, segment_index, *segment_sel);
+            selection.toggle_segment(segment, *segment_sel);
             return;
         }
     }
@@ -122,8 +120,8 @@ auto apply_function(Selection& selection, const EditableCircuit& editable_circui
             add_element_to_selection(element.element_id, operation.function, selection,
                                      editable_circuit);
         } else {
-            add_segment_to_selection(element.element_id, element.segment_index, operation,
-                                     selection, editable_circuit);
+            const auto segment = segment_t {element.element_id, element.segment_index};
+            add_segment_to_selection(segment, operation, selection, editable_circuit);
         }
     }
 }
@@ -153,18 +151,22 @@ auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
     if (empty()) {
         return {};
     }
-    const auto selected_ids
-        = editable_circuit_->to_element_ids(selection().selected_elements());
 
     // TODO create algorithm to mask?
     const auto element_count = editable_circuit_->schematic().element_count();
     auto mask = selection_mask_t(element_count, false);
 
-    for (element_id_t element_id : selected_ids) {
+    for (element_id_t element_id : selection().selected_elements()) {
         mask.at(element_id.value) = true;
     }
 
     return mask;
+}
+
+auto SelectionBuilder::copy_selection() const -> selection_handle_t {
+    auto handle = editable_circuit_->create_selection();
+    handle.value() = selection();
+    return handle;
 }
 
 auto SelectionBuilder::all_operations_applied() const -> bool {
@@ -181,16 +183,6 @@ auto SelectionBuilder::apply_all_operations() -> void {
 
     operations_.clear();
     cached_selection_.reset();
-}
-
-auto SelectionBuilder::remove_invalid_element_keys() -> void {
-    cached_selection_.reset();
-
-    for (element_key_t element_key : initial_selection_->selected_elements()) {
-        if (!editable_circuit_->element_key_valid(element_key)) {
-            initial_selection_->remove_element(element_key);
-        }
-    }
 }
 
 }  // namespace logicsim

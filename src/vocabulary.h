@@ -3,6 +3,7 @@
 
 #include "exceptions.h"
 #include "format.h"
+#include "hashing.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
@@ -52,27 +53,22 @@ struct circuit_id_t {
 
 static_assert(std::is_trivial<circuit_id_t>::value);
 
-// global unchanging identifier of an element
-// increments for each element added
-struct element_key_t {
+// global unchanging identifier of an selection
+// increments for each selection added
+struct selection_key_t {
     using value_type = int64_t;
     value_type value;
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const element_key_t &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const element_key_t &other) const = default;
+    [[nodiscard]] auto operator==(const selection_key_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const selection_key_t &other) const = default;
 
-    [[nodiscard]] static constexpr auto max() noexcept {
-        return std::numeric_limits<value_type>::max();
-    };
-
-    [[nodiscard]] explicit constexpr operator bool() const noexcept {
-        return value >= 0;
-    }
+    auto operator++() noexcept -> selection_key_t &;
+    auto operator++(int) noexcept -> selection_key_t;
 };
 
-static_assert(std::is_trivial<element_key_t>::value);
+static_assert(std::is_trivial<selection_key_t>::value);
 
 struct element_id_t {
     using value_type = int32_t;
@@ -157,25 +153,11 @@ struct segment_index_t {
     }
 };
 
-struct selection_key_t {
-    using value_type = int64_t;
-    value_type value;
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto operator==(const selection_key_t &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const selection_key_t &other) const = default;
-
-    auto operator++() noexcept -> selection_key_t &;
-    auto operator++(int) noexcept -> selection_key_t;
-};
-
 inline constexpr auto null_circuit = circuit_id_t {-1};
-inline constexpr auto null_element_key = element_key_t {-1};
+inline constexpr auto null_selection_key = selection_key_t {-1};
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
 
-inline constexpr auto null_selection_key = selection_key_t {-1};
 inline constexpr auto null_segment_index = segment_index_t {-1};
 
 // TODO use struct packing?
@@ -203,7 +185,7 @@ struct segment_t {
     }
 };
 
-inline constexpr auto null_segment = segment_t {null_element, null_segment_index};
+inline constexpr auto null_segment = segment_t {};
 
 //
 // Display Type
@@ -588,10 +570,10 @@ struct ankerl::unordered_dense::hash<logicsim::point_t> {
 };
 
 template <>
-struct ankerl::unordered_dense::hash<logicsim::element_key_t> {
+struct ankerl::unordered_dense::hash<logicsim::selection_key_t> {
     using is_avalanching = void;
 
-    [[nodiscard]] auto operator()(const logicsim::element_key_t &obj) const noexcept
+    [[nodiscard]] auto operator()(const logicsim::selection_key_t &obj) const noexcept
         -> uint64_t {
         return detail::wyhash::hash(obj.value);
     }
@@ -608,12 +590,13 @@ struct ankerl::unordered_dense::hash<logicsim::element_id_t> {
 };
 
 template <>
-struct ankerl::unordered_dense::hash<logicsim::selection_key_t> {
+struct ankerl::unordered_dense::hash<logicsim::segment_t> {
     using is_avalanching = void;
 
-    [[nodiscard]] auto operator()(const logicsim::selection_key_t &obj) const noexcept
+    [[nodiscard]] auto operator()(const logicsim::segment_t &obj) const noexcept
         -> uint64_t {
-        return detail::wyhash::hash(obj.value);
+        return logicsim::hash_8_byte(static_cast<uint32_t>(obj.element_id.value),
+                                     static_cast<uint32_t>(obj.segment_index.value));
     }
 };
 

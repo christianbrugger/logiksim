@@ -82,23 +82,9 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
 
 using selection_mask_t = boost::container::vector<bool>;
 
-class KeyResolver {
-   public:
-    explicit KeyResolver(const EditableCircuit& editable_circuit)
-        : editable_circuit_ {&editable_circuit} {}
-
-    [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t {
-        return editable_circuit_->to_element_id(element_key);
-    }
-
-   private:
-    gsl::not_null<const EditableCircuit*> editable_circuit_;
-};
-
 struct render_args_t {
     const Schematic& schematic;
     const Layout& layout;
-    std::optional<KeyResolver> key_resolver {};
     const Simulation* simulation {nullptr};
     const selection_mask_t& selection_mask {};
     const Selection& selection {};

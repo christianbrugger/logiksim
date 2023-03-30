@@ -138,7 +138,7 @@ class MouseMoveSelectionLogic {
 
     std::optional<point_fine_t> last_position_ {};
     bool selection_and_positions_baked_ {false};
-    std::vector<point_t> original_positions_;
+    std::optional<point_t> original_pivot_ {};
     InsertionMode insertion_mode_ {InsertionMode::insert_or_discard};
 
     State state_ {State::waiting_for_first_click};

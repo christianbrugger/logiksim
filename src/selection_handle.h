@@ -11,6 +11,7 @@ namespace logicsim {
 
 class EditableCircuit;
 
+// TODO make Selection part of the handle, so we don't introduce allocations
 class selection_handle_t {
    public:
     using type = Selection;
@@ -28,6 +29,9 @@ class selection_handle_t {
     // allow move
     selection_handle_t(selection_handle_t&& other) noexcept;
     auto operator=(selection_handle_t&& other) noexcept -> selection_handle_t&;
+
+    // we allow explicit copy, as it is expensive
+    auto copy() -> selection_handle_t;
 
     [[nodiscard]] auto has_value() const noexcept -> bool;
     [[nodiscard]] operator bool() const noexcept;
@@ -62,6 +66,22 @@ static_assert(!std::is_copy_constructible_v<selection_handle_t>);
 static_assert(!std::is_copy_assignable_v<selection_handle_t>);
 static_assert(std::is_move_constructible_v<selection_handle_t>);
 static_assert(std::is_move_assignable_v<selection_handle_t>);
+
+// Keeps track of a single element
+class element_handle_t {
+   public:
+    element_handle_t() = default;
+    explicit element_handle_t(selection_handle_t selection_handle);
+
+    auto clear_element() -> void;
+    auto set_element(element_id_t element_id) -> void;
+    auto element() const -> element_id_t;
+
+    [[nodiscard]] operator bool() const noexcept;
+
+   private:
+    selection_handle_t selection_handle_ {};
+};
 
 }  // namespace logicsim
 

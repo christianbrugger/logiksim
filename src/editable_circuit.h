@@ -172,6 +172,7 @@ class CollisionCache {
     map_type map_ {};
 };
 
+/*
 class ElementKeyStore {
    public:
     using map_to_id_t = ankerl::unordered_dense::map<element_key_t, element_id_t>;
@@ -202,6 +203,7 @@ class ElementKeyStore {
     map_to_id_t map_to_id_ {};
     map_to_key_t map_to_key_ {};
 };
+*/
 
 enum class LineSegmentType {
     horizontal_first,
@@ -241,30 +243,20 @@ class EditableCircuit {
     auto add_line_segment(point_t p0, point_t p1, LineSegmentType segment_type,
                           InsertionMode insertion_mode) -> selection_handle_t;
 
-    // auto add_wire(LineTree&& line_tree) -> element_key_t;
-
-    auto change_insertion_mode(element_key_t element_key,
-                               InsertionMode new_insertion_mode) -> bool;
-    // moves or deletes element
-    auto is_position_valid(element_key_t element_key, int x, int y) const -> bool;
-    auto is_position_valid(element_key_t element_key, point_t position) const -> bool;
-    auto move_or_delete_element(element_key_t element_key, point_t position) -> bool;
-
-    // swaps the element with last one and deletes it
     auto delete_all(selection_handle_t selection) -> void;
-    auto delete_element(element_key_t element_key) -> void;
+    auto change_insertion_mode(selection_handle_t handle,
+                               InsertionMode new_insertion_mode) -> void;
+
+    // moves or deletes elements
+    auto are_positions_valid(const Selection& selection, int x, int y) const -> bool;
+    auto are_positions_valid(const Selection& selection, point_t position) const -> bool;
+    auto move_or_delete_elements(selection_handle_t handle, point_t position) -> void;
 
     auto create_selection() const -> selection_handle_t;
+    auto element_handle(element_id_t element_id = null_element) const -> element_handle_t;
+
     auto selection_builder() const noexcept -> const SelectionBuilder&;
     auto selection_builder() noexcept -> SelectionBuilder&;
-
-    [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t;
-    [[nodiscard]] auto to_element_ids(std::span<const element_key_t> element_keys) const
-        -> std::vector<element_id_t>;
-    [[nodiscard]] auto to_element_key(element_id_t element_id) const -> element_key_t;
-    [[nodiscard]] auto to_element_keys(std::span<const element_id_t> element_ids) const
-        -> std::vector<element_key_t>;
-    [[nodiscard]] auto element_key_valid(element_key_t element_key) const -> bool;
 
     // TODO do these need to be public? Only accessed by selection builder?
     [[nodiscard]] auto query_selection(rect_fine_t rect) const
@@ -301,9 +293,10 @@ class EditableCircuit {
     auto validate() -> void;
 
    private:
-    auto add_placeholder_element() -> element_id_t;
-    auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
+    auto change_insertion_mode(element_id_t& element_id, InsertionMode new_insertion_mode)
+        -> bool;
 
+    // line segments
     auto add_line_segment(line_t line, InsertionMode insertion_mode, Selection* selection)
         -> void;
     auto fix_line_segments(point_t position) -> void;
@@ -313,16 +306,19 @@ class EditableCircuit {
         std::initializer_list<const std::pair<segment_t, SegmentPointType>> data,
         point_t position) -> void;
 
+    // position
+    auto is_position_valid(element_id_t element_id, int x, int y) const -> bool;
+    auto move_or_delete_element(element_id_t& element_id, int x, int y) -> bool;
+
+    // placeholders
+    auto add_placeholder_element() -> element_id_t;
+    auto add_and_connect_placeholder(Schematic::Output output) -> element_id_t;
     auto disconnect_inputs_and_add_placeholders(element_id_t element_id) -> void;
     auto disconnect_outputs_and_remove_placeholders(element_id_t& element_id) -> void;
     auto add_missing_placeholders_for_outputs(element_id_t element_id) -> void;
 
-    // may change the element_id, as element might be deleted
     auto connect_and_cache_element(element_id_t& element_id) -> void;
-    auto change_insertion_mode(element_id_t& element_id, InsertionMode new_insertion_mode)
-        -> bool;
-
-    auto swap_and_delete_single_element(element_id_t element_id) -> void;
+    auto swap_and_delete_single_element(element_id_t& element_id) -> void;
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
         -> void;
 
@@ -331,7 +327,7 @@ class EditableCircuit {
     [[nodiscard]] auto is_colliding(line_t line) const -> bool;
     [[nodiscard]] auto is_element_cached(element_id_t element_id) const -> bool;
 
-    auto key_insert(element_id_t element_id) -> element_key_t;
+    auto key_insert(element_id_t element_id) -> void;
     auto key_remove(element_id_t element_id) -> void;
     auto key_update(element_id_t new_element_id, element_id_t old_element_id) -> void;
 
@@ -344,9 +340,6 @@ class EditableCircuit {
 
     auto delete_selection(selection_key_t selection_key) const -> void;
 
-    // TODO Consider using element_key_t for Caches, especially SearchTree,
-    // TODO so we don't need costly update for element_trees
-    ElementKeyStore element_keys_ {};
     ConnectionCache<true> input_connections_ {};
     ConnectionCache<false> output_connections_ {};
     CollisionCache collicions_cache_ {};

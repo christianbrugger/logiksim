@@ -520,10 +520,10 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
     draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
 }
 
-auto draw_wire_shadows(BLContext& ctx, const Layout& layout, KeyResolver key_resolver,
-                       const Selection& selection, const RenderSettings& settings) {
+auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& selection,
+                       const RenderSettings& settings) {
     for (auto&& [segment, parts] : selection.selected_segments()) {
-        const auto element_id = key_resolver.to_element_id(segment.element_key);
+        const auto element_id = segment.element_id;
 
         const auto line
             = layout.segment_tree(element_id).segment(segment.segment_index).line;
@@ -586,12 +586,7 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
 
     // wire shadow
     if (!args.selection.empty()) {
-        if (!args.key_resolver.has_value()) [[unlikely]] {
-            throw_exception("Selection requires a key resolver to be passed.");
-        }
-
-        draw_wire_shadows(ctx, args.layout, args.key_resolver.value(), args.selection,
-                          args.settings);
+        draw_wire_shadows(ctx, args.layout, args.selection, args.settings);
     }
 }
 

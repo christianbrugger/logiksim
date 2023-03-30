@@ -43,6 +43,16 @@ auto selection_handle_t::operator=(selection_handle_t&& other) noexcept
     return *this;
 }
 
+auto selection_handle_t::copy() -> selection_handle_t {
+    if (editable_circuit_ == nullptr || selection_ == nullptr) {
+        return selection_handle_t {};
+    }
+
+    auto handle = editable_circuit_->create_selection();
+    handle.value() = *selection_;
+    return handle;
+}
+
 auto selection_handle_t::reset() noexcept -> void {
     *this = selection_handle_t {};
 }
@@ -81,7 +91,6 @@ auto selection_handle_t::has_value() const noexcept -> bool {
 auto swap(selection_handle_t& a, selection_handle_t& b) noexcept -> void {
     a.swap(b);
 }
-
 }  // namespace logicsim
 
 template <>
@@ -89,3 +98,54 @@ auto std::swap(logicsim::selection_handle_t& a, logicsim::selection_handle_t& b)
     -> void {
     a.swap(b);
 }
+
+//
+// Element Handle
+//
+
+namespace logicsim {
+element_handle_t::element_handle_t(selection_handle_t selection_handle)
+    : selection_handle_ {std::move(selection_handle)} {
+    if (!selection_handle_) [[unlikely]] {
+        throw_exception("handle cannot be empty");
+    }
+    selection_handle_->clear();
+}
+
+auto element_handle_t::clear_element() -> void {
+    if (!selection_handle_) [[unlikely]] {
+        throw_exception("handle cannot be empty");
+    }
+    selection_handle_->clear();
+}
+
+auto element_handle_t::set_element(element_id_t element_id) -> void {
+    if (!selection_handle_) [[unlikely]] {
+        throw_exception("handle cannot be empty");
+    }
+
+    selection_handle_->clear();
+    selection_handle_->add_element(element_id);
+}
+
+auto element_handle_t::element() const -> element_id_t {
+    if (!selection_handle_) [[unlikely]] {
+        throw_exception("handle cannot be empty");
+    }
+
+    const auto& elements = selection_handle_->selected_elements();
+    const auto count = selection_handle_->selected_elements().size();
+
+    if (count == 0) {
+        return null_element;
+    } else if (count == 1) {
+        return elements[0];
+    }
+    throw_exception("selectiion should never have more than one element");
+}
+
+element_handle_t::operator bool() const noexcept {
+    return selection_handle_ && !selection_handle_->empty();
+}
+
+}  // namespace logicsim

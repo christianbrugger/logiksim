@@ -118,7 +118,6 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
         restore_original_positions();
     }
     convert_to(InsertionMode::insert_or_discard);
-    builder_.remove_invalid_element_keys();
 }
 
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
@@ -129,9 +128,7 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
             builder_.clear();
             return;
         }
-        const auto element_key
-            = editable_circuit_.to_element_key(element_under_cursor.value());
-        const auto is_selected = builder_.selection().is_selected(element_key);
+        const auto is_selected = builder_.selection().is_selected(*element_under_cursor);
 
         if (!is_selected) {
             builder_.clear();
@@ -161,8 +158,33 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
         return;
     }
 
-    convert_to(InsertionMode::temporary);
+    const auto& selection = builder_.selection();
+    const auto pivot = get_pivot(selection, editable_circuit_.layout());
+    if (!pivot) {
+        return;
+    }
 
+    const auto new_x = pivot->x.value + delta_x;
+    const auto new_y = pivot->y.value + delta_y;
+
+    if (!is_representable(new_x, new_y)) {
+        return;
+    }
+    const auto position = point_t {grid_t {new_x}, grid_t {new_y}};
+
+    if (!editable_circuit_.are_positions_valid(selection, position)) {
+        return;
+    }
+
+    convert_to(InsertionMode::temporary);
+    editable_circuit_.move_or_delete_elements(builder_.copy_selection(), position);
+
+    last_position_ = point_fine_t {
+        last_position_->x + delta_x,
+        last_position_->y + delta_y,
+    };
+
+    /*
     const auto calculate_new_position = [&, delta_x, delta_y](element_key_t element_key) {
         const auto element_id = editable_circuit_.to_element_id(element_key);
         const auto position = editable_circuit_.layout().position(element_id);
@@ -193,6 +215,7 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
             last_position_->y + delta_y,
         };
     }
+    */
 }
 
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {
@@ -241,6 +264,10 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
 
     // bake selection, so we can move the elements
     builder_.apply_all_operations();
+
+    original_pivot_ = get_pivot(builder_.selection(), editable_circuit_.layout());
+
+    /*
     const auto& selection = get_selection();
     const auto selected_keys = selection.selected_elements();
 
@@ -255,6 +282,7 @@ auto MouseMoveSelectionLogic::bake_selection_and_positions() -> void {
                                    = editable_circuit_.to_element_id(element_key);
                                return editable_circuit_.layout().position(element_id);
                            });
+     */
 }
 
 auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
@@ -262,13 +290,18 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
         return;
     }
     insertion_mode_ = mode;
-
-    for (auto&& element_key : get_selection().selected_elements()) {
-        editable_circuit_.change_insertion_mode(element_key, mode);
-    }
+    editable_circuit_.change_insertion_mode(builder_.copy_selection(), mode);
 }
 
 auto MouseMoveSelectionLogic::restore_original_positions() -> void {
+    if (!original_pivot_) {
+        return;
+    }
+
+    editable_circuit_.move_or_delete_elements(builder_.copy_selection(),
+                                              *original_pivot_);
+
+    /*
     const auto& selection = get_selection();
     const auto selected_keys = selection.selected_elements();
 
@@ -283,11 +316,11 @@ auto MouseMoveSelectionLogic::restore_original_positions() -> void {
             throw_exception("item was not revertable to old positions.");
         }
     }
+    */
 }
 
 auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
-    const auto element_colliding = [&](element_key_t element_key) {
-        const auto element_id = editable_circuit_.to_element_id(element_key);
+    const auto element_colliding = [&](element_id_t element_id) {
         return editable_circuit_.layout().display_state(element_id)
                == display_state_t::new_colliding;
     };
@@ -709,7 +742,6 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         render_circuit(bl_ctx, render_args_t {
                                    .schematic = editable_circuit.schematic(),
                                    .layout = editable_circuit.layout(),
-                                   .key_resolver = KeyResolver {editable_circuit},
                                    .selection_mask = mask,
                                    .selection = selection,
                                    .settings = render_settings_,
@@ -739,14 +771,12 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 auto RendererWidget::delete_selected_items() -> void {
     mouse_logic_.reset();
 
-    auto& selection_builder = editable_circuit_.value().selection_builder();
+    auto& editable_circuit = editable_circuit_.value();
 
-    auto&& selected_keys = selection_builder.selection().selected_elements();
-    for (auto&& element_key : selected_keys) {
-        editable_circuit_.value().delete_element(element_key);
-    }
+    auto handle = editable_circuit.selection_builder().copy_selection();
+    editable_circuit.selection_builder().clear();
 
-    selection_builder.clear();
+    editable_circuit_.value().delete_all(std::move(handle));
     update();
 
 #ifndef NDEBUG

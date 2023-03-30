@@ -571,6 +571,7 @@ auto CollisionCache::to_state(collision_data_t data) -> CacheState {
     return invalid_state;
 }
 
+/*
 //
 // ElementKeyStore
 //
@@ -666,6 +667,7 @@ auto ElementKeyStore::size() const -> std::size_t {
     }
     return map_to_id_.size();
 }
+*/
 
 //
 // Editable Circuit
@@ -780,8 +782,8 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     auto selection_handle = create_selection();
 
     // insert into underlyings
-    const auto element_id = layout_.add_logic_element(point_t {0, 0}, orientation,
-                                                      display_state_t::new_temporary);
+    auto element_id = layout_.add_logic_element(point_t {0, 0}, orientation,
+                                                display_state_t::new_temporary);
     {
         const auto element = schematic_.add_element({
             .element_type = type,
@@ -792,15 +794,13 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
             throw_exception("Added element ids don't match.");
         }
     }
-    const auto element_key = key_insert(element_id);
-    selection_handle.value().add_element(element_key);
+    key_insert(element_id);
+    selection_handle.value().add_element(element_id);
 
     // validates our position
-    if (!move_or_delete_element(element_key, position)) {
-        return selection_handle;
-    }
-    if (!change_insertion_mode(element_key, insertion_mode)) {
-        return selection_handle;
+    move_or_delete_element(element_id, position.x.value, position.y.value);
+    if (element_id) {
+        change_insertion_mode(element_id, insertion_mode);
     }
     return selection_handle;
 }
@@ -1064,23 +1064,23 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
     }
 
     const auto colliding_id_0 = collicions_cache_.get_first_wire(line.p0);
-    const auto colliding_id_1 = collicions_cache_.get_first_wire(line.p1);
+    auto colliding_id_1 = collicions_cache_.get_first_wire(line.p1);
 
-    auto tree_key = null_element_key;
+    auto tree_handle = element_handle();
 
     if (colliding_id_0) {
-        tree_key = to_element_key(colliding_id_0);
+        tree_handle.set_element(colliding_id_0);
     }
 
     if (colliding_id_1) {
-        if (!tree_key) {
-            tree_key = to_element_key(colliding_id_1);
+        if (!tree_handle) {
+            tree_handle.set_element(colliding_id_1);
         } else {
             // merge two trees
             const auto tree_copy = SegmentTree {layout_.segment_tree(colliding_id_1)};
             swap_and_delete_single_element(colliding_id_1);
 
-            const auto element_id = to_element_id(tree_key);
+            const auto element_id = tree_handle.element();
             auto&& m_tree = layout_.modifyable_segment_tree(element_id);
 
             auto first_index = m_tree.add_tree(tree_copy);
@@ -1094,7 +1094,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
         }
     }
 
-    if (tree_key == null_element_key) {
+    if (!tree_handle) {
         // create new empty tree
         const auto element_id = layout_.add_line_tree(SegmentTree {});
         {
@@ -1107,12 +1107,13 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
                 throw_exception("Added element ids don't match.");
             }
         }
-        tree_key = key_insert(element_id);
+        key_insert(element_id);
+        tree_handle.set_element(element_id);
     }
 
     {
         // insert new segment with dummy endpoints
-        const auto element_id = to_element_id(tree_key);
+        const auto element_id = tree_handle.element();
         auto&& m_tree = layout_.modifyable_segment_tree(element_id);
 
         const auto segment = segment_info_t {
@@ -1127,7 +1128,8 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 
         if (selection != nullptr) {
             const auto segment_selection = get_segment_selection(segment.line);
-            selection->add_segment(tree_key, segment_index, segment_selection);
+            selection->add_segment(segment_t {element_id, segment_index},
+                                   segment_selection);
         }
     }
 
@@ -1139,7 +1141,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
     // TODO insertion mode change
 
 #ifndef NDEBUG
-    layout_.segment_tree(to_element_id(tree_key)).validate();
+    layout_.segment_tree(tree_handle.element()).validate();
 #endif
 }
 
@@ -1179,17 +1181,12 @@ auto EditableCircuit::add_line_segment(point_t p0, point_t p1,
     return selection_handle;
 }
 
-auto EditableCircuit::is_position_valid(element_key_t element_key, int x, int y) const
+auto EditableCircuit::is_position_valid(element_id_t element_id, int x, int y) const
     -> bool {
     if (!is_representable(x, y)) {
         return false;
     }
-    return is_position_valid(element_key, point_t {grid_t {x}, grid_t {y}});
-}
-
-auto EditableCircuit::is_position_valid(element_key_t element_key, point_t position) const
-    -> bool {
-    const auto element_id = to_element_id(element_key);
+    const auto position = point_t {grid_t {x}, grid_t {y}};
 
     auto data = to_layout_calculation_data(schematic_, layout_, element_id);
     data.position = position;
@@ -1197,28 +1194,130 @@ auto EditableCircuit::is_position_valid(element_key_t element_key, point_t posit
     return is_representable_(data);
 }
 
-auto EditableCircuit::move_or_delete_element(element_key_t element_key, point_t position)
+auto EditableCircuit::move_or_delete_element(element_id_t& element_id, int x, int y)
     -> bool {
-    if (!is_position_valid(element_key, position)) {
-        delete_element(element_key);
-        return false;
-    }
-
     // only temporary items can be freely moved
-    const auto element_id = to_element_id(element_key);
-    const auto display_state = layout_.display_state(element_id);
-    if (to_insertion_mode(display_state) != InsertionMode::temporary) [[unlikely]] {
+    if (layout_.display_state(element_id) != display_state_t::new_temporary)
+        [[unlikely]] {
         throw_exception("Only temporary items can be freely moded.");
     }
 
+    if (!is_position_valid(element_id, x, y)) {
+        change_insertion_mode(element_id, InsertionMode::temporary);
+        swap_and_delete_single_element(element_id);
+        return false;
+    }
+
+    const auto position = point_t {grid_t {x}, grid_t {y}};
     layout_.set_position(element_id, position);
     return true;
 }
 
-auto EditableCircuit::change_insertion_mode(element_key_t element_key,
-                                            InsertionMode new_insertion_mode) -> bool {
-    auto element_id = to_element_id(element_key);
-    return change_insertion_mode(element_id, new_insertion_mode);
+auto EditableCircuit::are_positions_valid(const Selection& selection, int x, int y) const
+    -> bool {
+    if (!is_representable(x, y)) {
+        return false;
+    }
+    return are_positions_valid(selection, point_t {grid_t {x}, grid_t {y}});
+}
+
+namespace {
+
+auto position_calculator(point_t pivot, point_t position, const Layout& layout) {
+    const int delta_x = position.x.value - pivot.x.value;
+    const int delta_y = position.y.value - pivot.y.value;
+
+    return [delta_x, delta_y, &layout](element_id_t element_id) {
+        const auto& element_position = layout.position(element_id);
+
+        const int x = element_position.x.value + delta_x;
+        const int y = element_position.y.value + delta_y;
+
+        return std::make_pair(x, y);
+    };
+};
+
+/*
+auto position_calculator_2(const Selection& selection, point_t position,
+                           const Layout& layout) {
+    const auto pivot = get_pivot(selection, layout);
+    if (!pivot) {
+        return std::optional<decltype(position_calculator(*pivot, position, layout))> {};
+    }
+
+    return std::make_optional(position_calculator(*pivot, position, layout));
+}
+*/
+
+}  // namespace
+
+auto EditableCircuit::are_positions_valid(const Selection& selection,
+                                          point_t position) const -> bool {
+    const auto pivot = get_pivot(selection, layout_);
+    if (!pivot) {
+        return true;
+    }
+    const auto calc_position = position_calculator(*pivot, position, layout_);
+
+    const auto is_valid = [&](element_id_t element_id) {
+        const auto [x, y] = calc_position(element_id);
+        return is_position_valid(element_id, x, y);
+    };
+
+    return std::ranges::all_of(selection.selected_elements(), is_valid);
+}
+
+auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, point_t position)
+    -> void {
+    if (!handle) {
+        return;
+    }
+    const auto pivot = get_pivot(handle.value(), layout_);
+    if (!pivot) {
+        return;
+    }
+    const auto calc_position = position_calculator(*pivot, position, layout_);
+
+    // TODO refactor to algorithm
+    while (handle->selected_elements().size() > 0) {
+        auto element_id = *handle->selected_elements().begin();
+        handle->remove_element(element_id);
+
+        const auto [x, y] = calc_position(element_id);
+        move_or_delete_element(element_id, x, y);
+    }
+}
+
+auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
+                                            InsertionMode new_insertion_mode) -> void {
+    if (!handle) {
+        return;
+    }
+
+    // TODO refactor to algorithm
+    while (handle->selected_elements().size() > 0) {
+        auto element_id = *handle->selected_elements().begin();
+        handle->remove_element(element_id);
+
+        change_insertion_mode(element_id, new_insertion_mode);
+    }
+}
+
+auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
+    if (!handle) {
+        return;
+    }
+
+    // TODO refactor to algorithm
+    while (handle->selected_elements().size() > 0) {
+        auto element_id = *handle->selected_elements().begin();
+        handle->remove_element(element_id);
+
+        change_insertion_mode(element_id, InsertionMode::temporary);
+        if (element_id) {
+            swap_and_delete_single_element(element_id);
+        }
+    }
 }
 
 auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
@@ -1266,7 +1365,6 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
             // delete element
             layout_.set_display_state(element_id, display_state_t::new_temporary);
             swap_and_delete_single_element(element_id);
-            element_id = null_element;
             return false;
         }
 
@@ -1306,59 +1404,12 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
     throw_exception("unknown mode change");
 }
 
-auto EditableCircuit::delete_all(selection_handle_t selection) -> void {
-    if (!selection || selection->empty()) {
-        return;
-    }
-
-    auto delete_queue = delete_queue_t {};
-    for (auto&& element_key : selection->selected_elements()) {
-        delete_queue.push_back(to_element_id(element_key));
-    }
-
-    // we don't need to track the selection anymore at this point
-    selection.reset();
-    swap_and_delete_multiple_elements(delete_queue);
-}
-
-auto EditableCircuit::delete_element(element_key_t element_key) -> void {
-    const auto element_id = to_element_id(element_key);
-
-    if (schematic_.element(element_id).is_placeholder()) {
-        throw_exception("cannot directly delete placeholders.");
-    }
-
-    swap_and_delete_single_element(element_id);
-}
-
 auto EditableCircuit::selection_builder() const noexcept -> const SelectionBuilder& {
     return selection_builder_;
 }
 
 auto EditableCircuit::selection_builder() noexcept -> SelectionBuilder& {
     return selection_builder_;
-}
-
-auto EditableCircuit::to_element_id(element_key_t element_key) const -> element_id_t {
-    return element_keys_.to_element_id(element_key);
-}
-
-auto EditableCircuit::to_element_ids(std::span<const element_key_t> element_keys) const
-    -> std::vector<element_id_t> {
-    return element_keys_.to_element_ids(element_keys);
-}
-
-auto EditableCircuit::to_element_key(element_id_t element_id) const -> element_key_t {
-    return element_keys_.to_element_key(element_id);
-}
-
-auto EditableCircuit::to_element_keys(std::span<const element_id_t> element_ids) const
-    -> std::vector<element_key_t> {
-    return element_keys_.to_element_keys(element_ids);
-}
-
-auto EditableCircuit::element_key_valid(element_key_t element_key) const -> bool {
-    return element_keys_.element_key_valid(element_key);
 }
 
 auto EditableCircuit::query_selection(rect_fine_t rect) const
@@ -1395,12 +1446,12 @@ auto EditableCircuit::swap_and_delete_multiple_elements(
     auto sorted_ids = delete_queue_t {element_ids.begin(), element_ids.end()};
     std::ranges::sort(sorted_ids, std::greater<> {});
 
-    for (const auto element_id : sorted_ids) {
+    for (auto element_id : sorted_ids) {
         swap_and_delete_single_element(element_id);
     }
 }
 
-auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) -> void {
+auto EditableCircuit::swap_and_delete_single_element(element_id_t& element_id) -> void {
     if (schematic_.element(element_id).element_type() == ElementType::wire) {
         // TODO merge this logic into change_insertion_mode
         for (auto&& index : range(layout_.segment_tree(element_id).segment_count())) {
@@ -1410,10 +1461,12 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
         }
         key_remove(element_id);
     } else {
-        if (!schematic_.element(element_id).is_placeholder()) {
-            change_insertion_mode(element_id, InsertionMode::temporary);
-            key_remove(element_id);
+        if (layout_.display_state(element_id) != display_state_t::new_temporary)
+            [[unlikely]] {
+            throw_exception("can only delete temporary objects");
         }
+        // change_insertion_mode(element_id, InsertionMode::temporary);
+        key_remove(element_id);
     }
 
     // delete in underlying
@@ -1430,6 +1483,8 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t element_id) ->
         key_update(element_id, last_id1);
         cache_update(element_id, last_id1);
     }
+
+    element_id = null_element;
 }
 
 auto EditableCircuit::add_and_connect_placeholder(Schematic::Output output)
@@ -1469,9 +1524,9 @@ auto EditableCircuit::disconnect_outputs_and_remove_placeholders(element_id_t& e
         }
     }
 
-    const auto element_key = to_element_key(element_id);
+    const auto handle = element_handle(element_id);
     swap_and_delete_multiple_elements(delete_queue);
-    element_id = to_element_id(element_key);
+    element_id = handle.element();
 }
 
 auto EditableCircuit::add_missing_placeholders_for_outputs(element_id_t element_id)
@@ -1573,9 +1628,9 @@ auto EditableCircuit::connect_and_cache_element(element_id_t& element_id) -> voi
     add_missing_placeholders_for_outputs(element_id);
 
     // this invalidates our element_id
-    const auto element_key = to_element_key(element_id);
+    auto handle = element_handle(element_id);
     swap_and_delete_multiple_elements(delete_queue);
-    element_id = to_element_id(element_key);
+    element_id = handle.element();
 }
 
 auto EditableCircuit::is_representable_(layout_calculation_data_t data) const -> bool {
@@ -1616,19 +1671,23 @@ auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {
     return is_collision_considered(display_state);
 }
 
-auto EditableCircuit::key_insert(element_id_t element_id) -> element_key_t {
+auto EditableCircuit::key_insert(element_id_t element_id) -> void {
     if (schematic_.element(element_id).is_placeholder()) {
-        return null_element_key;
+        return;
     }
-
-    return element_keys_.insert(element_id);
+    // TODO maybe invalidate selection_builder cache?
 }
 
 auto EditableCircuit::key_remove(element_id_t element_id) -> void {
     if (schematic_.element(element_id).is_placeholder()) {
         return;
     }
-    element_keys_.remove(element_id);
+    // TODO maybe invalidate selection_builder cache?
+
+    for (auto&& entry : managed_selections_) {
+        auto& selection = *entry.second;
+        selection.remove_element(element_id);
+    }
 }
 
 auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_element_id)
@@ -1636,7 +1695,12 @@ auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_e
     if (schematic_.element(new_element_id).is_placeholder()) {
         return;
     }
-    element_keys_.update(new_element_id, old_element_id);
+    // TODO maybe invalidate selection_builder cache?
+
+    for (auto&& entry : managed_selections_) {
+        auto& selection = *entry.second;
+        selection.update_element_id(new_element_id, old_element_id);
+    }
 }
 
 auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
@@ -1718,6 +1782,12 @@ auto EditableCircuit::create_selection() const -> selection_handle_t {
 
     Selection& selection = *(it->second.get());
     return selection_handle_t {selection, *this, key};
+}
+
+auto EditableCircuit::element_handle(element_id_t element_id) const -> element_handle_t {
+    auto handle = element_handle_t {create_selection()};
+    handle.set_element(element_id);
+    return handle;
 }
 
 auto EditableCircuit::delete_selection(selection_key_t selection_key) const -> void {

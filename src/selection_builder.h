@@ -41,11 +41,10 @@ class SelectionBuilder {
 
     [[nodiscard]] auto selection() const -> const Selection&;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
+    [[nodiscard]] auto copy_selection() const -> selection_handle_t;
 
     [[nodiscard]] auto all_operations_applied() const -> bool;
     auto apply_all_operations() -> void;
-
-    auto remove_invalid_element_keys() -> void;
 
    private:
     gsl::not_null<const EditableCircuit*> editable_circuit_;

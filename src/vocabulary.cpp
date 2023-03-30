@@ -74,10 +74,6 @@ auto circuit_id_t::format() const -> std::string {
     return fmt::format("{}", value);
 }
 
-auto element_key_t::format() const -> std::string {
-    return fmt::format("{}", value);
-}
-
 auto element_id_t::format() const -> std::string {
     return fmt::format("{}", value);
 }
