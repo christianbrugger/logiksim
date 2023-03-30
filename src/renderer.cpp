@@ -360,10 +360,10 @@ auto draw_element_tree(BLContext& ctx, Schematic::ConstElement element,
     for (const segment_info_t& segment : segment_tree.segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
-        if (segment.p0_type == SegmentPointType::cross_point) {
+        if (is_cross_point(segment.p0_type)) {
             draw_connector_impl(ctx, segment.line.p0, false, cross_width, settings);
         }
-        if (segment.p1_type == SegmentPointType::cross_point) {
+        if (is_cross_point(segment.p1_type)) {
             draw_connector_impl(ctx, segment.line.p1, false, cross_width, settings);
         }
     }

@@ -232,8 +232,6 @@ auto iter_collision_state(layout_calculation_data_t data, Func next_state) -> bo
     return iter_body_collision_state(data, next_state);
 }
 
-auto is_connection(SegmentPointType point_type) -> bool;
-
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
 auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
@@ -267,6 +265,10 @@ auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
                 return wire_connection;
             case colliding_point:
                 return wire_point;
+            case cross_point_horizontal:
+                return wire_horizontal;
+            case cross_point_vertical:
+                return wire_vertical;
 
             case shadow_point:
             case cross_point:
@@ -972,9 +974,12 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
         const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
 
         if (has_through_line_0) {
+            const auto cross_point_type = is_horizontal(lines.at(1).first)
+                                              ? SegmentPointType::cross_point_horizontal
+                                              : SegmentPointType::cross_point_vertical;
             set_segment_point_types(
                 {
-                    std::pair {lines.at(1).second, SegmentPointType::cross_point},
+                    std::pair {lines.at(1).second, cross_point_type},
                 },
                 position);
             return;
@@ -1009,10 +1014,13 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
         const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
 
         if (has_through_line_0) {
+            const auto cross_point_type = is_horizontal(lines.at(2).first)
+                                              ? SegmentPointType::cross_point_horizontal
+                                              : SegmentPointType::cross_point_vertical;
             set_segment_point_types(
                 {
                     std::pair {lines.at(1).second, SegmentPointType::shadow_point},
-                    std::pair {lines.at(2).second, SegmentPointType::cross_point},
+                    std::pair {lines.at(2).second, cross_point_type},
                 },
                 position);
         } else {
