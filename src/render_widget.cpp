@@ -55,26 +55,24 @@ auto MouseElementInsertLogic::mouse_move(std::optional<point_t> position) -> voi
 
 auto MouseElementInsertLogic::mouse_release(std::optional<point_t> position) -> void {
     remove_and_insert(position, InsertionMode::insert_or_discard);
-    inserted_key_ = null_element_key;
+    temp_element_.reset();
 }
 
 auto MouseElementInsertLogic::remove_last_element() -> void {
-    if (inserted_key_ == null_element_key) {
+    if (!temp_element_) {
         return;
     }
 
-    editable_circuit_.delete_element(inserted_key_);
-    inserted_key_ = null_element_key;
+    editable_circuit_.delete_all(std::move(temp_element_));
 }
 
 auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
                                                 InsertionMode mode) -> void {
     remove_last_element();
+    assert(!temp_element_);
 
     if (position.has_value()) {
-        assert(inserted_key_ == null_element_key);
-
-        inserted_key_ = editable_circuit_.add_standard_element(ElementType::or_element, 3,
+        temp_element_ = editable_circuit_.add_standard_element(ElementType::or_element, 3,
                                                                *position, mode);
     }
 }

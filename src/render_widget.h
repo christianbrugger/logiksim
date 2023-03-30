@@ -66,7 +66,7 @@ class MouseElementInsertLogic {
 
    private:
     EditableCircuit& editable_circuit_;
-    element_key_t inserted_key_ {null_element_key};
+    selection_handle_t temp_element_ {};
 };
 
 class MouseLineInsertLogic {

@@ -25,23 +25,10 @@ auto selection_handle_t::swap(selection_handle_t& other) noexcept -> void {
     swap(selection_key_, other.selection_key_);
 }
 
-auto selection_handle_t::operator==(std::nullptr_t) const noexcept -> bool {
-    return selection_ == nullptr;
-}
-
-auto selection_handle_t::reset() noexcept -> void {
-    if (editable_circuit_ == nullptr) [[unlikely]] {
-        return;
-    }
-    editable_circuit_->delete_selection(selection_key_);
-
-    editable_circuit_ = nullptr;
-    selection_ = nullptr;
-    selection_key_ = null_selection_key;
-}
-
 selection_handle_t::~selection_handle_t() {
-    reset();
+    if (editable_circuit_ != nullptr) {
+        editable_circuit_->delete_selection(selection_key_);
+    }
 }
 
 selection_handle_t::selection_handle_t(selection_handle_t&& other) noexcept {
@@ -50,10 +37,14 @@ selection_handle_t::selection_handle_t(selection_handle_t&& other) noexcept {
 
 auto selection_handle_t::operator=(selection_handle_t&& other) noexcept
     -> selection_handle_t& {
-    // we add a 'copy' so our state is destroyed at the end of this scope
-    auto copy = selection_handle_t {std::move(other)};
-    swap(copy);
+    // we add a 'copy' so our state is destroyed other at the end of this scope
+    auto temp = selection_handle_t {std::move(other)};
+    swap(temp);
     return *this;
+}
+
+auto selection_handle_t::reset() noexcept -> void {
+    *this = selection_handle_t {};
 }
 
 auto selection_handle_t::value() const -> reference {
@@ -75,6 +66,18 @@ auto selection_handle_t::operator->() const noexcept -> pointer {
     return selection_;
 }
 
+auto selection_handle_t::operator==(std::nullptr_t) const noexcept -> bool {
+    return selection_ == nullptr;
+}
+
+selection_handle_t::operator bool() const noexcept {
+    return has_value();
+}
+
+auto selection_handle_t::has_value() const noexcept -> bool {
+    return selection_ != nullptr;
+}
+
 auto swap(selection_handle_t& a, selection_handle_t& b) noexcept -> void {
     a.swap(b);
 }
@@ -86,15 +89,3 @@ auto std::swap(logicsim::selection_handle_t& a, logicsim::selection_handle_t& b)
     -> void {
     a.swap(b);
 }
-
-namespace logicsim {
-
-selection_handle_t::operator bool() const noexcept {
-    return has_value();
-}
-
-auto selection_handle_t::has_value() const noexcept -> bool {
-    return selection_ != nullptr;
-}
-
-}  // namespace logicsim

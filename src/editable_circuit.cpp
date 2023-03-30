@@ -754,14 +754,16 @@ auto EditableCircuit::add_placeholder_element() -> element_id_t {
 }
 
 auto EditableCircuit::add_inverter_element(point_t position, InsertionMode insertion_mode,
-                                           orientation_t orientation) -> element_key_t {
+                                           orientation_t orientation)
+    -> selection_handle_t {
     return add_standard_element(ElementType::inverter_element, 1, position,
                                 insertion_mode, orientation);
 }
 
 auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
                                            point_t position, InsertionMode insertion_mode,
-                                           orientation_t orientation) -> element_key_t {
+                                           orientation_t orientation)
+    -> selection_handle_t {
     using enum ElementType;
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {
@@ -775,8 +777,7 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
             "Input count needs to be at least 2 for "
             "standard elements.");
     }
-
-    // auto selection_handle = create_selection();
+    auto selection_handle = create_selection();
 
     // insert into underlyings
     const auto element_id = layout_.add_logic_element(point_t {0, 0}, orientation,
@@ -792,15 +793,16 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
         }
     }
     const auto element_key = key_insert(element_id);
+    selection_handle.value().add_element(element_key);
 
     // validates our position
     if (!move_or_delete_element(element_key, position)) {
-        return null_element_key;
+        return selection_handle;
     }
     if (!change_insertion_mode(element_key, insertion_mode)) {
-        return null_element_key;
+        return selection_handle;
     }
-    return element_key;
+    return selection_handle;
 }
 
 auto get_segment(const Layout& layout, segment_t segment) -> segment_info_t {
@@ -1304,53 +1306,19 @@ auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
     throw_exception("unknown mode change");
 }
 
-/*
-auto EditableCircuit::add_wire(LineTree&& line_tree) ->
-element_key_t { const auto delays =
-calculate_output_delays(line_tree); const auto max_delay =
-std::ranges::max(delays); const auto output_count =
-delays.size();
-
-    // check for collisions
-    {
-        const static auto empty_line_tree = LineTree {};
-        const auto data = layout_calculation_data_t {
-            .line_tree = line_tree,
-            .input_count = 1,
-            .output_count = output_count,
-            .internal_state_count = 0,
-            .position = {0, 0},
-            .orientation = orientation_t::undirected,
-            .element_type = ElementType::wire,
-        };
-        if (is_colliding(data)) {
-            return null_element_key;
-        }
+auto EditableCircuit::delete_all(selection_handle_t selection) -> void {
+    if (!selection || selection->empty()) {
+        return;
     }
 
-    // insert into underlyings
-    auto element_id =
-layout_.add_wire(std::move(line_tree));
-    {
-        const auto element = schematic_.add_element({
-            .element_type = ElementType::wire,
-            .input_count = 1,
-            .output_count = output_count,
-            .output_delays = delays,
-            .history_length = max_delay,
-        });
-        if (element.element_id() != element_id)
-[[unlikely]] { throw_exception("Added element ids don't
-match.");
-        }
+    auto delete_queue = delete_queue_t {};
+    for (auto&& element_key : selection->selected_elements()) {
+        delete_queue.push_back(to_element_id(element_key));
     }
-    const auto element_key = key_insert(element_id);
 
-    // connect
-    connect_and_cache_element(element_id);
-    return element_key;
+    selection.reset();
+    swap_and_delete_multiple_elements(delete_queue);
 }
-*/
 
 auto EditableCircuit::delete_element(element_key_t element_key) -> void {
     const auto element_id = to_element_id(element_key);

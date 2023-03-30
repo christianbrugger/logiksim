@@ -232,11 +232,11 @@ class EditableCircuit {
 
     auto add_inverter_element(point_t position, InsertionMode insertion_mode,
                               orientation_t orientation = orientation_t::right)
-        -> element_key_t;
+        -> selection_handle_t;
     auto add_standard_element(ElementType type, std::size_t input_count, point_t position,
                               InsertionMode insertion_mode,
                               orientation_t orientation = orientation_t::right)
-        -> element_key_t;
+        -> selection_handle_t;
 
     auto add_line_segment(point_t p0, point_t p1, LineSegmentType segment_type,
                           InsertionMode insertion_mode) -> selection_handle_t;
@@ -251,6 +251,7 @@ class EditableCircuit {
     auto move_or_delete_element(element_key_t element_key, point_t position) -> bool;
 
     // swaps the element with last one and deletes it
+    auto delete_all(selection_handle_t selection) -> void;
     auto delete_element(element_key_t element_key) -> void;
 
     auto create_selection() const -> selection_handle_t;
