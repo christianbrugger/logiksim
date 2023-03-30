@@ -510,14 +510,10 @@ auto RendererWidget::load_circuit(int id) -> void {
 
         editable_circuit.add_standard_element(ElementType::or_element, 9, point_t {20, 4},
                                               InsertionMode::insert_or_discard);
-
-        fmt::print("{}\n", editable_circuit);
-
-        editable_circuit.schematic().validate(Schematic::validate_all);
     }
 
     if (id == 2) {
-        constexpr auto max_value = debug_build ? 100 : 1600;
+        constexpr auto max_value = debug_build ? 75 : 1600;
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
@@ -538,7 +534,7 @@ auto RendererWidget::load_circuit(int id) -> void {
         }
     }
     if (id == 3) {
-        constexpr auto max_value = debug_build ? 100 : 1600;
+        constexpr auto max_value = debug_build ? 75 : 1600;
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
@@ -549,7 +545,7 @@ auto RendererWidget::load_circuit(int id) -> void {
         }
     }
     if (id == 4) {
-        constexpr auto max_value = debug_build ? 100 : 1600;
+        constexpr auto max_value = debug_build ? 75 : 1600;
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
@@ -566,8 +562,10 @@ auto RendererWidget::load_circuit(int id) -> void {
         }
     }
 
-    // count elements and segments
+    // count & print
     {
+        const auto timer_str = timer.format();
+
         auto element_count = std::size_t {0};
         auto segment_count = std::size_t {0};
 
@@ -583,8 +581,13 @@ auto RendererWidget::load_circuit(int id) -> void {
             }
         }
 
+        if (editable_circuit.schematic().element_count() < 10) {
+            fmt::print("{}\n", editable_circuit);
+            editable_circuit.schematic().validate(Schematic::validate_all);
+        }
+
         fmt::print("Added {} elements and {} wire segments in {}.\n", element_count,
-                   segment_count, timer.format());
+                   segment_count, timer_str);
     }
 }
 
