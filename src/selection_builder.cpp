@@ -139,9 +139,9 @@ auto SelectionBuilder::selection() const -> const Selection& {
     }
 
     cached_selection_ = editable_circuit_->create_selection();
-    auto& selection = cached_selection_.value();
+    auto& selection = *cached_selection_;
 
-    selection = initial_selection_.get().value();
+    selection = *initial_selection_;
     for (auto&& operation : operations_) {
         apply_function(selection, *editable_circuit_, operation);
     }

@@ -774,6 +774,8 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
             "standard elements.");
     }
 
+    // auto selection_handle = create_selection();
+
     // insert into underlyings
     const auto element_id = layout_.add_logic_element(point_t {0, 0}, orientation,
                                                       display_state_t::new_temporary);
@@ -1135,20 +1137,34 @@ auto EditableCircuit::add_line_segment(point_t p0, point_t p1,
                                        LineSegmentType segment_type,
                                        InsertionMode insertion_mode)
     -> selection_handle_t {
-    if (segment_type != LineSegmentType::horizontal_first) {
-        throw_exception("Not implemented.");
-    }
-
     auto selection_handle = create_selection();
 
-    const auto pm = point_t {p1.x, p0.y};
-    if (p0.x != p1.x) {
-        add_line_segment(line_t {p0, pm}, insertion_mode, selection_handle.get());
-    }
-    if (p0.y != p1.y) {
-        add_line_segment(line_t {pm, p1}, insertion_mode, selection_handle.get());
-    }
     // TODO what with p0 == p1
+
+    switch (segment_type) {
+        using enum LineSegmentType;
+
+        case horizontal_first: {
+            const auto pm = point_t {p1.x, p0.y};
+            if (p0.x != pm.x) {
+                add_line_segment(line_t {p0, pm}, insertion_mode, selection_handle.get());
+            }
+            if (pm.y != p1.y) {
+                add_line_segment(line_t {pm, p1}, insertion_mode, selection_handle.get());
+            }
+            break;
+        }
+        case vertical_first: {
+            const auto pm = point_t {p0.x, p1.y};
+            if (p0.y != pm.y) {
+                add_line_segment(line_t {p0, pm}, insertion_mode, selection_handle.get());
+            }
+            if (pm.x != p1.x) {
+                add_line_segment(line_t {pm, p1}, insertion_mode, selection_handle.get());
+            }
+            break;
+        }
+    }
 
     return selection_handle;
 }

@@ -221,10 +221,13 @@ class RendererWidget : public QWidget {
     auto pixel_scale() const -> double;
     auto pixel_size() const -> QSize;
 
+    auto reset_circuit() -> void;
+    auto load_circuit(int id) -> void;
+
    private:
     Q_SLOT void on_timeout();
-    auto reset_circuit() -> void;
     void init();
+    auto reset_interaction_state() -> void;
 
     auto delete_selected_items() -> void;
     auto select_all_items() -> void;

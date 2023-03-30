@@ -2,6 +2,7 @@
 
 #include <QCheckBox>
 #include <QHBoxLayout>
+#include <QPushButton>
 #include <QRadioButton>
 #include <QVBoxLayout>
 
@@ -76,6 +77,11 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     const auto radio1 = new QRadioButton("&Select");
     const auto radio2 = new QRadioButton("Element Inse&rt");
     const auto radio3 = new QRadioButton("Line Inser&t");
+    const auto button0 = new QPushButton("Clear");
+    const auto button1 = new QPushButton("Simple");
+    const auto button2 = new QPushButton("Elements + Wires");
+    const auto button3 = new QPushButton("Elements");
+    const auto button4 = new QPushButton("Wires");
 
     radio1->setShortcut(QKeySequence(Qt::ALT | Qt::Key_S));
     radio2->setShortcut(QKeySequence(Qt::ALT | Qt::Key_R));
@@ -96,6 +102,16 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
             render_widget_->set_interaction_state(InteractionState::line_insert);
         }
     });
+    connect(button0, &QPushButton::clicked, this,
+            [this](bool enabled) { render_widget_->reset_circuit(); });
+    connect(button1, &QPushButton::clicked, this,
+            [this](bool checked) { render_widget_->load_circuit(1); });
+    connect(button2, &QPushButton::clicked, this,
+            [this](bool checked) { render_widget_->load_circuit(2); });
+    connect(button3, &QPushButton::clicked, this,
+            [this](bool checked) { render_widget_->load_circuit(3); });
+    connect(button4, &QPushButton::clicked, this,
+            [this](bool checked) { render_widget_->load_circuit(4); });
 
     // startup states
     radio1->setChecked(true);
@@ -104,6 +120,11 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     layout->addWidget(radio1);
     layout->addWidget(radio2);
     layout->addWidget(radio3);
+    layout->addWidget(button0);
+    layout->addWidget(button1);
+    layout->addWidget(button2);
+    layout->addWidget(button3);
+    layout->addWidget(button4);
     layout->addStretch(1);
 
     const auto panel = new QWidget();

@@ -459,11 +459,16 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
         return;
     }
     interaction_state_ = state;
-
-    mouse_logic_.reset();
-    editable_circuit_.value().selection_builder().clear();
-    update();
+    reset_interaction_state();
 }
+
+auto RendererWidget::reset_interaction_state() -> void {
+    mouse_logic_.reset();
+    if (editable_circuit_) {
+        editable_circuit_->selection_builder().clear();
+    }
+    update();
+};
 
 auto RendererWidget::fps() const -> double {
     return fps_counter_.events_per_second();
@@ -474,71 +479,113 @@ auto RendererWidget::pixel_scale() const -> double {
 }
 
 auto RendererWidget::reset_circuit() -> void {
+    reset_interaction_state();
+
     circuit_index_ = CircuitIndex {};
     editable_circuit_.emplace(circuit_index_.borrow_schematic(circuit_id_),
                               circuit_index_.borrow_layout(circuit_id_));
-    /*
-    {
-        auto& editable_circuit = editable_circuit_.value();
+    update();
+}
 
-        // auto tree1 = LineTree({point_t {7, 3}, point_t {10, 3}, point_t {10, 1}});
-        // auto tree2 = LineTree({point_t {10, 3}, point_t {10, 7}, point_t {4, 7},
-        //                        point_t {4, 4}, point_t {5, 4}});
-        //// auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8,
-        //// 12}}); auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12},
-        //// point_t {12, 14}});
-        // auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
+auto RendererWidget::load_circuit(int id) -> void {
+    reset_circuit();
+    auto timer = Timer {"", Timer::Unit::ms, 1};
 
+    if (!editable_circuit_) {
+        return;
+    }
+    auto& editable_circuit = editable_circuit_.value();
+
+#ifdef NDEBUG
+    constexpr auto debug_build = false;
+#else
+    constexpr auto debug_build = true;
+#endif
+
+    if (id == 1) {
         editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {5, 3},
                                               InsertionMode::insert_or_discard);
-        const auto element1 = editable_circuit.add_standard_element(
-            ElementType::or_element, 2, point_t {15, 6},
-            InsertionMode::insert_or_discard);
-        // editable_circuit.add_wire(std::move(line_tree));
-        // editable_circuit.add_wire(
-        //     LineTree({point_t {8, 1}, point_t {8, 2}, point_t {15, 2}, point_t {15,
-        //     4}}));
-        //  editable_circuit.add_wire(LineTree({point_t {15, 2}, point_t {8, 2}}));
-        editable_circuit.delete_element(element1);
+        editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {15, 6},
+                                              InsertionMode::insert_or_discard);
 
-        const auto added = editable_circuit.add_standard_element(
-            ElementType::or_element, 9, point_t {20, 4},
-            InsertionMode::insert_or_discard);
-        fmt::print("added = {}\n", added);
-
-        // editable_circuit.add_wire(LineTree({point_t {5, 20}, point_t {20, 20}}));
-        // editable_circuit.add_wire(LineTree({point_t {20, 30}, point_t {5, 30}}));
+        editable_circuit.add_standard_element(ElementType::or_element, 9, point_t {20, 4},
+                                              InsertionMode::insert_or_discard);
 
         fmt::print("{}\n", editable_circuit);
+
         editable_circuit.schematic().validate(Schematic::validate_all);
+    }
 
-        {
-            auto timer = Timer {};
-            auto count = 0;
-#ifdef NDEBUG
-            constexpr auto max_value = 2000;
-#else
-            constexpr auto max_value = 200;
-#endif
-            for (auto x : range(100, max_value, 5)) {
-                for (auto y : range(100, max_value, 5)) {
-                    editable_circuit.add_standard_element(
-                        ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
-                        InsertionMode::insert_or_discard);
+    if (id == 2) {
+        constexpr auto max_value = debug_build ? 100 : 1600;
 
-                    editable_circuit.add_line_segment(
-                        point_t {grid_t {x + 2}, grid_t {y + 1}},
-                        point_t {grid_t {x + 4}, grid_t {y + 0}},
-                        LineSegmentType::horizontal_first,
-                        InsertionMode::insert_or_discard);
+        for (auto x : range(5, max_value, 5)) {
+            for (auto y : range(5, max_value, 5)) {
+                editable_circuit.add_standard_element(ElementType::or_element, 3,
+                                                      point_t {grid_t {x}, grid_t {y}},
+                                                      InsertionMode::insert_or_discard);
 
-                    count++;
-                }
+                editable_circuit.add_line_segment(
+                    point_t {grid_t {x + 2}, grid_t {y + 1}},
+                    point_t {grid_t {x + 4}, grid_t {y - 1}},
+                    LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
+
+                editable_circuit.add_line_segment(
+                    point_t {grid_t {x + 3}, grid_t {y + 1}},
+                    point_t {grid_t {x + 5}, grid_t {y + 2}},
+                    LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
             }
-            fmt::print("Added {} elements in {}.\n", count, timer.format());
         }
     }
-    */
+    if (id == 3) {
+        constexpr auto max_value = debug_build ? 100 : 1600;
+
+        for (auto x : range(5, max_value, 5)) {
+            for (auto y : range(5, max_value, 5)) {
+                editable_circuit.add_standard_element(ElementType::or_element, 3,
+                                                      point_t {grid_t {x}, grid_t {y}},
+                                                      InsertionMode::insert_or_discard);
+            }
+        }
+    }
+    if (id == 4) {
+        constexpr auto max_value = debug_build ? 100 : 1600;
+
+        for (auto x : range(5, max_value, 5)) {
+            for (auto y : range(5, max_value, 5)) {
+                editable_circuit.add_line_segment(
+                    point_t {grid_t {x + 2}, grid_t {y + 1}},
+                    point_t {grid_t {x + 4}, grid_t {y - 1}},
+                    LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
+
+                editable_circuit.add_line_segment(
+                    point_t {grid_t {x + 3}, grid_t {y + 1}},
+                    point_t {grid_t {x + 5}, grid_t {y + 2}},
+                    LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
+            }
+        }
+    }
+
+    // count elements and segments
+    {
+        auto element_count = std::size_t {0};
+        auto segment_count = std::size_t {0};
+
+        for (auto element : editable_circuit.schematic().elements()) {
+            if (element.is_wire()) {
+                auto&& tree
+                    = editable_circuit.layout().segment_tree(element.element_id());
+                segment_count += tree.segment_count();
+            }
+
+            if (!(element.is_wire() || element.is_placeholder())) {
+                ++element_count;
+            }
+        }
+
+        fmt::print("Added {} elements and {} wire segments in {}.\n", element_count,
+                   segment_count, timer.format());
+    }
 }
 
 Q_SLOT void RendererWidget::on_timeout() {
@@ -562,7 +609,7 @@ void RendererWidget::init() {
     render_settings_.view_config.set_device_pixel_ratio(devicePixelRatioF());
 
     fps_counter_.reset();
-};
+}
 
 void RendererWidget::resizeEvent(QResizeEvent* event) {
     if (event == nullptr) {

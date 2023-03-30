@@ -546,6 +546,11 @@ auto Schematic::ElementTemplate<Const>::is_placeholder() const -> bool {
 }
 
 template <bool Const>
+auto Schematic::ElementTemplate<Const>::is_wire() const -> bool {
+    return element_type() == ElementType::wire;
+}
+
+template <bool Const>
 auto Schematic::ElementTemplate<Const>::input_count() const -> std::size_t {
     return element_data_().input_data.size();
 }
