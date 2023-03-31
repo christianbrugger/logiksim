@@ -224,6 +224,7 @@ class RendererWidget : public QWidget {
 
     auto reset_circuit() -> void;
     auto load_circuit(int id) -> void;
+    auto reload_circuit() -> void;
 
    private:
     Q_SLOT void on_timeout();

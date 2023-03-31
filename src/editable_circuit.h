@@ -237,7 +237,9 @@ class EditableCircuit {
     [[nodiscard]] auto query_selection(point_fine_t point) const
         -> std::optional<element_id_t>;
 
-    // todo: extract_schematic, extract_layout
+    // TODO merge to extract circuit
+    auto extract_schematic() -> Schematic;
+    auto extract_layout() -> Layout;
 
     [[nodiscard]] auto input_positions() const {
         return input_connections_.positions();

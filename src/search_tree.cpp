@@ -1,5 +1,6 @@
 #include "search_tree.h"
 
+#include "circuit.h"
 #include "format.h"
 #include "iterator_adaptor.h"
 #include "layout.h"
@@ -11,6 +12,13 @@
 #include <fmt/core.h>
 
 #include <string>
+
+namespace boost::geometry::model {
+template <typename T>
+auto operator==(box<T> a, box<T> b) -> bool {
+    return equals(a, b);
+}
+}  // namespace boost::geometry::model
 
 template <>
 struct ankerl::unordered_dense::hash<logicsim::detail::search_tree::tree_payload_t> {
@@ -159,60 +167,44 @@ auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segmen
     return result;
 }
 
-auto SearchTree::validate(const Layout& layout, const Schematic& schematic) const
-    -> void {
-    using namespace detail::search_tree;
+namespace detail::search_tree {
 
-    // collect all entries
-    auto index = ankerl::unordered_dense::map<tree_payload_t, tree_box_t> {};
-    for (auto&& item : tree_) {
-        const auto [it, inserted] = index.try_emplace(item.second, item.first);
+using index_map_t = ankerl::unordered_dense::map<tree_payload_t, tree_box_t>;
+
+auto to_reverse_index(const tree_t& tree) -> index_map_t {
+    auto index = index_map_t {};
+
+    for (auto&& item : tree) {
+        const auto inserted = index.try_emplace(item.second, item.first).second;
         if (!inserted) [[unlikely]] {
             throw_exception("found duplicate item in cache");
         }
     }
 
-    // remove one-by-one
-    const auto check_and_remove = [&index](tree_payload_t key, tree_box_t box) {
-        const auto it = index.find(key);
-        if (it == index.end()) [[unlikely]] {
-            throw_exception("could not find item in index");
-        }
-        if (!bg::equals(it->second, box)) [[unlikely]] {
-            throw_exception("cached box is different than the item");
-        }
-        index.erase(it);
-    };
+    return index;
+}
 
-    for (const auto element : schematic.elements()) {
-        const auto is_cached = is_inserted(layout.display_state(element.element_id()));
+auto operator==(const tree_t& a, const tree_t& b) -> bool {
+    const auto index_a = logicsim::detail::search_tree::to_reverse_index(a);
+    const auto index_b = logicsim::detail::search_tree::to_reverse_index(b);
+    return index_a == index_b;
+}
 
-        // elements
-        if (element.is_element() && is_cached) {
-            const auto key = tree_payload_t {.element_id = element.element_id()};
-            const auto data
-                = to_layout_calculation_data(schematic, layout, element.element_id());
-            const auto box = get_selection_box(data);
-            check_and_remove(key, box);
-        }
+auto operator!=(const tree_t& a, const tree_t& b) -> bool {
+    return !(a == b);
+}
 
-        // line segments
-        if (element.is_wire() && is_cached) {
-            const auto& segment_tree = layout.segment_tree(element.element_id());
+}  // namespace detail::search_tree
 
-            for (const auto segment_index : segment_tree.indices()) {
-                const auto key = tree_payload_t {.element_id = element.element_id(),
-                                                 .segment_index = segment_index};
-                const auto line = segment_tree.segment(segment_index).line;
-                const auto box = get_selection_box(line);
-                check_and_remove(key, box);
-            }
-        }
-    }
+auto SearchTree::validate(const Layout& layout, const Schematic& schematic) const
+    -> void {
+    using namespace detail::search_tree;
 
-    // leftover?
-    if (!index.empty()) [[unlikely]] {
-        throw_exception("found items in the index that don't exist anymore");
+    auto cache = SearchTree {};
+    add_circuit_to_cache(cache, layout, schematic);
+
+    if (cache.tree_ != this->tree_) [[unlikely]] {
+        throw_exception("current cache state doesn't match circuit");
     }
 }
 
@@ -236,6 +228,19 @@ auto all_same_element_id(SearchTree::queried_segments_t result) -> bool {
 auto get_unique_element_id(SearchTree::queried_segments_t result) -> element_id_t {
     const auto first_id = result.at(0).element_id;
     return (first_id && all_same_element_id(result)) ? first_id : null_element;
+}
+
+auto add_circuit_to_cache(SearchTree& cache, const Layout& layout,
+                          const Schematic& schematic) -> void {
+    iter_circuit_elements(
+        layout, schematic,
+        [&cache](element_id_t element_id, layout_calculation_data_t data) {
+            cache.insert(element_id, data);
+        },
+        [&cache](element_id_t element_id, segment_info_t segment,
+                 segment_index_t segment_index) {
+            cache.insert(element_id, segment.line, segment_index);
+        });
 }
 
 }  // namespace logicsim

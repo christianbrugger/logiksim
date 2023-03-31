@@ -439,6 +439,26 @@ auto RendererWidget::reset_circuit() -> void {
 #endif
 }
 
+auto RendererWidget::reload_circuit() -> void {
+    if (!editable_circuit_) {
+        return;
+    }
+    reset_interaction_state();
+
+    const auto t = Timer {"reload", Timer::Unit::ms, 3};
+
+    auto layout = editable_circuit_->extract_layout();
+    auto schematic = editable_circuit_->extract_schematic();
+
+    editable_circuit_.reset();
+    editable_circuit_.emplace(std::move(schematic), std::move(layout));
+
+    update();
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
+}
+
 auto RendererWidget::load_circuit(int id) -> void {
     reset_circuit();
     auto timer = Timer {"", Timer::Unit::ms, 1};

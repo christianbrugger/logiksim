@@ -44,7 +44,14 @@ auto get_selection_box(layout_calculation_data_t data) -> tree_box_t;
 auto get_selection_box(line_t segment) -> tree_box_t;
 auto to_rect(tree_box_t box) -> rect_fine_t;
 auto to_box(rect_fine_t rect) -> tree_box_t;
+
+auto operator==(const tree_t &a, const tree_t &b) -> bool;
+auto operator!=(const tree_t &a, const tree_t &b) -> bool;
+
 }  // namespace detail::search_tree
+}  // namespace logicsim
+
+namespace logicsim {
 
 class Layout;
 class Schematic;
@@ -85,6 +92,9 @@ class SearchTree {
 auto get_segment_count(SearchTree::queried_segments_t result) -> int;
 auto all_same_element_id(SearchTree::queried_segments_t result) -> bool;
 auto get_unique_element_id(SearchTree::queried_segments_t) -> element_id_t;
+
+auto add_circuit_to_cache(SearchTree &cache, const Layout &layout,
+                          const Schematic &schematic) -> void;
 
 }  // namespace logicsim
 

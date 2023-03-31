@@ -1,6 +1,7 @@
 #include "editable_circuit.h"
 
 #include "algorithm.h"
+#include "circuit.h"
 #include "circuit_index.h"
 #include "exceptions.h"
 #include "geometry.h"
@@ -26,23 +27,15 @@ auto orientations_compatible(orientation_t a, orientation_t b) -> bool {
            || (b == undirected);
 }
 
-auto add_circuit_to_cache(auto&& cache, const Layout& layout,
-                          const Schematic& schematic) {
-    for (const auto element : schematic.elements()) {
-        const auto element_id = element.element_id();
-        if (is_inserted(layout.display_state(element_id))) {
-            if (element.is_element()) {
-                const auto data
-                    = to_layout_calculation_data(schematic, layout, element_id);
-                cache.insert(element_id, data);
-            }
-            if (element.is_wire()) {
-                for (const auto& segment : layout.segment_tree(element_id).segments()) {
-                    cache.insert(element_id, segment);
-                }
-            }
-        }
-    }
+auto add_circuit_to_cache(auto&& cache, const Layout& layout, const Schematic& schematic)
+    -> void {
+    iter_circuit_elements(
+        layout, schematic,
+        [&cache](element_id_t element_id, layout_calculation_data_t data) {
+            cache.insert(element_id, data);
+        },
+        [&cache](element_id_t element_id, segment_info_t segment,
+                 segment_index_t segment_index) { cache.insert(element_id, segment); });
 }
 
 //
@@ -631,7 +624,7 @@ EditableCircuit::EditableCircuit(Schematic&& schematic, Layout&& layout)
     add_circuit_to_cache(input_connections_, layout_, schematic_);
     add_circuit_to_cache(output_connections_, layout_, schematic_);
     add_circuit_to_cache(collision_cache_, layout_, schematic_);
-    // add_circuit_to_cache(spatial_cache_, layout_, schematic_);
+    add_circuit_to_cache(spatial_cache_, layout_, schematic_);
 }
 
 auto EditableCircuit::format() const -> std::string {
@@ -1375,6 +1368,16 @@ auto EditableCircuit::query_selection(point_fine_t point) const
         return elements[0];
     }
     return std::nullopt;
+}
+
+auto EditableCircuit::extract_schematic() -> Schematic {
+    // TODO cleanup state
+    return std::move(schematic_);
+}
+
+auto EditableCircuit::extract_layout() -> Layout {
+    // TODO cleanup state
+    return std::move(layout_);
 }
 
 auto EditableCircuit::swap_and_delete_multiple_elements(
