@@ -12,11 +12,14 @@
 #include <ranges>
 
 namespace logicsim {
-
 namespace detail::search_tree {
+// Boost R-Tree Documentation:
+// https://www.boost.org/doc/libs/1_81_0/libs/geometry/doc/html/geometry/spatial_indexes.html
+
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
+// TODO create new type? used elsehwere?
 struct tree_payload_t {
     element_id_t element_id {null_element};
     segment_index_t segment_index {null_segment_index};
@@ -42,6 +45,9 @@ auto get_selection_box(line_t segment) -> tree_box_t;
 auto to_rect(tree_box_t box) -> rect_fine_t;
 auto to_box(rect_fine_t rect) -> tree_box_t;
 }  // namespace detail::search_tree
+
+class Layout;
+class Schematic;
 
 class SearchTree {
    public:
@@ -69,6 +75,8 @@ class SearchTree {
                                   return detail::search_tree::to_rect(value.first);
                               });
     }
+
+    auto validate(const Layout &layout, const Schematic &schematic) const -> void;
 
    private:
     tree_t tree_ {};

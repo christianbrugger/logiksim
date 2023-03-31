@@ -732,6 +732,16 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
 auto EditableCircuit::validate() -> void {
     logicsim::validate(layout_, schematic_);
 
+    selection_cache_.validate(layout_, schematic_);
+
+    // possible:
+    // - selection builder
+    // - managed selections
+    // - selection cache
+    // - collision cache
+    // - input_connections
+    // - output_connections
+
     // TODO validate layout
     // TODO validate caches, etc.
 }
@@ -1637,10 +1647,7 @@ auto EditableCircuit::is_colliding(line_t line) const -> bool {
     return collicions_cache_.is_colliding(line);
 }
 
-auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {
-    const auto display_state = layout_.display_state(element_id);
-    return is_collision_considered(display_state);
-}
+// keys
 
 auto EditableCircuit::key_insert(element_id_t element_id) -> void {
     if (schematic_.element(element_id).is_placeholder()) {
@@ -1709,6 +1716,13 @@ auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_e
     }
 }
 
+// caches
+
+auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {
+    const auto display_state = layout_.display_state(element_id);
+    return is_collision_considered(display_state);
+}
+
 auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
     const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
 
@@ -1775,6 +1789,8 @@ auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segm
     collicions_cache_.remove(element_id, segment);
     selection_cache_.remove(element_id, segment.line, segment_index);
 }
+
+// selectionis
 
 auto EditableCircuit::create_selection() const -> selection_handle_t {
     const auto key = next_selection_key_++;

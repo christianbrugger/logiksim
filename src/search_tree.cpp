@@ -2,18 +2,28 @@
 
 #include "format.h"
 #include "iterator_adaptor.h"
+#include "layout.h"
 #include "layout_calculations.h"
+#include "schematic.h"
 #include "segment_tree.h"
 
+#include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
 
 #include <string>
 
-namespace logicsim {
+template <>
+struct ankerl::unordered_dense::hash<logicsim::detail::search_tree::tree_payload_t> {
+    using is_avalanching = void;
+    using type = logicsim::detail::search_tree::tree_payload_t;
 
-// Documentation:
-// https://www.boost.org/doc/libs/1_81_0/libs/geometry/doc/html/geometry/spatial_indexes.html
-//
+    [[nodiscard]] auto operator()(const type& obj) const noexcept -> uint64_t {
+        return logicsim::hash_8_byte(static_cast<uint32_t>(obj.element_id.value),
+                                     static_cast<uint32_t>(obj.segment_index.value));
+    }
+};
+
+namespace logicsim {
 
 //
 // SearchTree
@@ -119,7 +129,7 @@ auto SearchTree::query_selection(rect_fine_t rect) const -> std::vector<query_re
     auto result = std::vector<query_result_t> {};
 
     const auto inserter
-        = [&result](const tree_value_t &value) { result.push_back(value.second); };
+        = [&result](const tree_value_t& value) { result.push_back(value.second); };
 
     // intersects or covered_by
     tree_.query(bgi::intersects(to_box(rect)), output_callable(inserter));
@@ -136,7 +146,7 @@ auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segmen
     auto result = std::array {null_segment, null_segment, null_segment, null_segment};
 
     const auto inserter
-        = [&result, index = std::size_t {0}](const tree_value_t &value) mutable {
+        = [&result, index = std::size_t {0}](const tree_value_t& value) mutable {
               if (value.second.segment_index == null_segment_index) {
                   // we only return segments
                   return;
@@ -147,6 +157,66 @@ auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segmen
 
     tree_.query(bgi::intersects(tree_point), output_callable(inserter));
     return result;
+}
+
+auto SearchTree::validate(const Layout& layout, const Schematic& schematic) const
+    -> void {
+    using namespace detail::search_tree;
+
+    // collect all entries
+    auto index = ankerl::unordered_dense::map<tree_payload_t, tree_box_t> {};
+    for (auto&& item : tree_) {
+        const auto [it, inserted] = index.try_emplace(item.second, item.first);
+        if (!inserted) [[unlikely]] {
+            throw_exception("found duplicate item in cache");
+        }
+    }
+
+    // remove one-by-one
+    const auto check_and_remove = [&index](tree_payload_t key, tree_box_t box) {
+        const auto it = index.find(key);
+        if (it == index.end()) [[unlikely]] {
+            throw_exception("could not find item in index");
+        }
+        if (!bg::equals(it->second, box)) [[unlikely]] {
+            throw_exception("cached box is different than the item");
+        }
+        index.erase(it);
+    };
+
+    for (const auto element : schematic.elements()) {
+        const auto display_state = layout.display_state(element.element_id());
+        // TODO reuse is_inserted ?
+        const auto is_cached = display_state == display_state_t::new_valid
+                               || display_state == display_state_t::normal;
+
+        // elements
+        if (element.is_element() && is_cached) {
+            const auto key = tree_payload_t {.element_id = element.element_id()};
+            const auto data
+                = to_layout_calculation_data(schematic, layout, element.element_id());
+            const auto box = get_selection_box(data);
+            check_and_remove(key, box);
+        }
+
+        // line segments
+        if (element.is_wire() && is_cached) {
+            const auto& segment_tree = layout.segment_tree(element.element_id());
+
+            for (const auto segment_index : segment_tree.indices()) {
+                const auto key = tree_payload_t {.element_id = element.element_id(),
+                                                 .segment_index = segment_index};
+                const auto line = segment_tree.segment(segment_index).line;
+                const auto box = get_selection_box(line);
+                check_and_remove(key, box);
+            }
+        }
+    }
+
+    // leftover?
+    if (!index.empty()) [[unlikely]] {
+        throw_exception("found items in the index that don't exist anymore");
+    }
 }
 
 auto get_segment_count(SearchTree::queried_segments_t result) -> int {

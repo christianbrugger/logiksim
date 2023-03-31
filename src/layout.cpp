@@ -117,10 +117,12 @@ auto Layout::add_placeholder(display_state_t display_state) -> element_id_t {
     return id;
 }
 
-auto Layout::add_line_tree(SegmentTree &&segment_tree) -> element_id_t {
+auto Layout::add_line_tree(SegmentTree &&segment_tree, display_state_t display_state)
+    -> element_id_t {
     const auto id = add_default_element();
 
     segment_trees_.back() = std::move(segment_tree);
+    display_states_.back() = display_state;
 
     return id;
 }
