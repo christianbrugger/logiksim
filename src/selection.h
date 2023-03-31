@@ -52,6 +52,9 @@ auto get_segment_selection(line_t line, rect_fine_t selection_rect)
 
 auto get_selected_segment(line_t segment, segment_selection_t selection) -> line_t;
 
+class Layout;
+class Schematic;
+
 class Selection {
    public:
     using segment_pair_t = detail::selection::map_pair_t;
@@ -81,6 +84,8 @@ class Selection {
         -> void;
     auto remove_segment(segment_t segment) -> void;
     auto update_segment_id(segment_t new_segment, segment_t old_segment) -> void;
+
+    auto validate(const Layout &layout, const Schematic &schematic) const -> void;
 
    private:
     detail::selection::elements_set_t selected_elements_ {};

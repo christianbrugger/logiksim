@@ -286,7 +286,7 @@ class EditableCircuit {
     };
 
     [[nodiscard]] auto collision_states() const {
-        return collicions_cache_.states();
+        return collision_cache_.states();
     };
 
     [[nodiscard]] auto selection_rects() const {
@@ -345,7 +345,7 @@ class EditableCircuit {
 
     ConnectionCache<true> input_connections_ {};
     ConnectionCache<false> output_connections_ {};
-    CollisionCache collicions_cache_ {};
+    CollisionCache collision_cache_ {};
     SearchTree spatial_cache_ {};
 
     mutable selection_key_t next_selection_key_ {0};

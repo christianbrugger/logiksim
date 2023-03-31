@@ -4,7 +4,9 @@
 #include "algorithm.h"
 #include "editable_circuit.h"
 #include "format.h"
+#include "layout.h"
 #include "range.h"
+#include "schematic.h"
 #include "timer.h"
 
 namespace logicsim {
@@ -129,6 +131,16 @@ auto apply_function(Selection& selection, const EditableCircuit& editable_circui
 
 }  // namespace
 
+auto SelectionBuilder::calculate_selection() const -> Selection {
+    auto selection = Selection {*initial_selection_};
+
+    for (auto&& operation : operations_) {
+        apply_function(selection, *editable_circuit_, operation);
+    }
+
+    return selection;
+}
+
 auto SelectionBuilder::selection() const -> const Selection& {
     if (cached_selection_) {
         return *cached_selection_;
@@ -137,16 +149,8 @@ auto SelectionBuilder::selection() const -> const Selection& {
         return *initial_selection_;
     }
 
-    cached_selection_ = Selection {};
-    // cached_selection_ = editable_circuit_->create_selection();
-    auto& selection = *cached_selection_;
-
-    selection = *initial_selection_;
-    for (auto&& operation : operations_) {
-        apply_function(selection, *editable_circuit_, operation);
-    }
-
-    return selection;
+    cached_selection_ = calculate_selection();
+    return *cached_selection_;
 }
 
 auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
@@ -191,6 +195,24 @@ auto SelectionBuilder::apply_all_operations() -> void {
 
 auto SelectionBuilder::clear_cache() const -> void {
     cached_selection_.reset();
+}
+
+auto SelectionBuilder::validate(const Layout& layout, const Schematic& schematic) const
+    -> void {
+    if (editable_circuit_.get() == nullptr) [[unlikely]] {
+        throw_exception("editable_circuit is nullptr");
+    }
+    if (initial_selection_.get() == nullptr) [[unlikely]] {
+        throw_exception("inital selection is nullptr");
+    }
+
+    initial_selection_->validate(layout, schematic);
+
+    if (cached_selection_) {
+        cached_selection_->validate(layout, schematic);
+    }
+
+    calculate_selection().validate(layout, schematic);
 }
 
 }  // namespace logicsim

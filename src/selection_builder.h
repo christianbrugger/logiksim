@@ -18,6 +18,8 @@ enum class SelectionFunction {
     substract,
 };
 
+class Layout;
+class Schematic;
 class EditableCircuit;
 
 class SelectionBuilder {
@@ -30,7 +32,7 @@ class SelectionBuilder {
     };
 
    public:
-    [[nodiscard]] explicit SelectionBuilder(const EditableCircuit& editable_circuit);
+    [[nodiscard]] explicit SelectionBuilder(const EditableCircuit &editable_circuit);
 
     [[nodiscard]] auto empty() const noexcept -> bool;
 
@@ -39,7 +41,7 @@ class SelectionBuilder {
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
 
-    [[nodiscard]] auto selection() const -> const Selection&;
+    [[nodiscard]] auto selection() const -> const Selection &;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
     [[nodiscard]] auto copy_selection() const -> selection_handle_t;
 
@@ -47,9 +49,12 @@ class SelectionBuilder {
     auto apply_all_operations() -> void;
 
     auto clear_cache() const -> void;
+    auto validate(const Layout &layout, const Schematic &schematic) const -> void;
 
    private:
-    gsl::not_null<const EditableCircuit*> editable_circuit_;
+    auto calculate_selection() const -> Selection;
+
+    gsl::not_null<const EditableCircuit *> editable_circuit_;
 
     gsl::not_null<selection_handle_t> initial_selection_;
     std::vector<operation_t> operations_ {};

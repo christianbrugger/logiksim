@@ -2,7 +2,9 @@
 #include "selection.h"
 
 #include "geometry.h"
+#include "layout.h"
 #include "range.h"
+#include "schematic.h"
 
 namespace logicsim {
 
@@ -87,6 +89,88 @@ auto Selection::update_segment_id(segment_t new_segment, segment_t old_segment) 
         if (!inserted) [[unlikely]] {
             throw_exception("line segment already exists");
         }
+    }
+}
+
+namespace {
+
+using namespace detail::selection;
+
+auto check_and_remove_element(elements_set_t &element_set,
+                              const Schematic::ConstElement element) -> void {
+    if (!element.is_placeholder()) {
+        element_set.erase(element.element_id());
+    } else if (element_set.contains(element.element_id())) [[unlikely]] {
+        throw_exception("selection contains placeholder");
+    }
+}
+
+auto check_segment_parts_destructive(line_t line, map_value_t &parts) -> void {
+    const auto sorted_line = order_points(line);
+
+    // part of line?
+    for (const auto part : parts) {
+        if (is_horizontal(line)) {
+            if (part.begin < sorted_line.p0.x || part.end > sorted_line.p1.x)
+                [[unlikely]] {
+                throw_exception("part is not part of line");
+            }
+        } else {
+            if (part.begin < sorted_line.p0.y || part.end > sorted_line.p1.y)
+                [[unlikely]] {
+                throw_exception("part is not part of line");
+            }
+        }
+    }
+
+    // overlapping or touching?
+    std::ranges::sort(parts);
+    const auto part_overlapping
+        = [](segment_selection_t part0, segment_selection_t part1) -> bool {
+        return part0.end >= part1.begin;
+    };
+    if (std::ranges::adjacent_find(parts, part_overlapping) != parts.end()) {
+        throw_exception("some parts are overlapping");
+    }
+}
+
+auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
+                               const element_id_t element_id,
+                               const SegmentTree &segment_tree) -> void {
+    for (const auto segment_index : segment_tree.indices()) {
+        const auto key = segment_t {element_id, segment_index};
+        const auto it = segment_map.find(key);
+
+        if (it != segment_map.end()) {
+            const auto line = segment_tree.segment(segment_index).line;
+            check_segment_parts_destructive(line, it->second);
+            segment_map.erase(it);
+        }
+    }
+}
+
+}  // namespace
+
+auto Selection::validate(const Layout &layout, const Schematic &schematic) const -> void {
+    // elements
+    auto element_set = detail::selection::elements_set_t {selected_elements_};
+    for (const auto element : schematic.elements()) {
+        check_and_remove_element(element_set, element);
+    }
+    if (!element_set.empty()) [[unlikely]] {
+        throw_exception("selection contains elements that don't exist anymore");
+    }
+
+    // segments
+    auto segment_map = detail::selection::segment_map_t {selected_segments_};
+    for (const auto element : schematic.elements()) {
+        if (element.is_wire()) {
+            check_and_remove_segments(segment_map, element.element_id(),
+                                      layout.segment_tree(element.element_id()));
+        }
+    }
+    if (!segment_map.empty()) [[unlikely]] {
+        throw_exception("selection contains segments that don't exist anymore");
     }
 }
 

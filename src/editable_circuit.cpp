@@ -730,20 +730,25 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
 }
 
 auto EditableCircuit::validate() -> void {
+    // validates layout & schematic
     logicsim::validate(layout_, schematic_);
 
+    // caches
     spatial_cache_.validate(layout_, schematic_);
 
+    // selections
+    for (const auto& item : managed_selections_) {
+        if (item.second == nullptr) [[unlikely]] {
+            throw_exception("selection cannot be nullptr");
+        }
+        item.second->validate(layout_, schematic_);
+    }
+    selection_builder_.validate(layout_, schematic_);
+
     // possible:
-    // - selection builder
-    // - managed selections
-    // - selection cache
     // - collision cache
     // - input_connections
     // - output_connections
-
-    // TODO validate layout
-    // TODO validate caches, etc.
 }
 
 auto EditableCircuit::add_placeholder_element() -> element_id_t {
@@ -1074,8 +1079,8 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
         return;
     }
 
-    const auto colliding_id_0 = collicions_cache_.get_first_wire(line.p0);
-    auto colliding_id_1 = collicions_cache_.get_first_wire(line.p1);
+    const auto colliding_id_0 = collision_cache_.get_first_wire(line.p0);
+    auto colliding_id_1 = collision_cache_.get_first_wire(line.p1);
 
     auto tree_handle = element_handle();
 
@@ -1637,14 +1642,14 @@ auto EditableCircuit::is_colliding(layout_calculation_data_t data) const -> bool
         throw_exception("Not supported for wires.");
     }
 
-    return collicions_cache_.is_colliding(data) || input_connections_.is_colliding(data)
+    return collision_cache_.is_colliding(data) || input_connections_.is_colliding(data)
            || output_connections_.is_colliding(data);
 }
 
 auto EditableCircuit::is_colliding(line_t line) const -> bool {
     // TODO connections colliding
 
-    return collicions_cache_.is_colliding(line);
+    return collision_cache_.is_colliding(line);
 }
 
 // keys
@@ -1732,7 +1737,7 @@ auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
 
     input_connections_.insert(element_id, data);
     output_connections_.insert(element_id, data);
-    collicions_cache_.insert(element_id, data);
+    collision_cache_.insert(element_id, data);
     spatial_cache_.insert(element_id, data);
 }
 
@@ -1745,7 +1750,7 @@ auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
 
     input_connections_.remove(element_id, data);
     output_connections_.remove(element_id, data);
-    collicions_cache_.remove(element_id, data);
+    collision_cache_.remove(element_id, data);
     spatial_cache_.remove(element_id, data);
 }
 
@@ -1768,7 +1773,7 @@ auto EditableCircuit::cache_update(element_id_t new_element_id,
         input_connections_.update(new_element_id, old_element_id, data);
         output_connections_.update(new_element_id, old_element_id, data);
     }
-    collicions_cache_.update(new_element_id, old_element_id, data);
+    collision_cache_.update(new_element_id, old_element_id, data);
     spatial_cache_.update(new_element_id, old_element_id, data);
 }
 
@@ -1777,7 +1782,7 @@ auto EditableCircuit::cache_insert(element_id_t element_id, segment_index_t segm
     const auto segment = layout_.segment_tree(element_id).segment(segment_index);
 
     // TODO connection cache
-    collicions_cache_.insert(element_id, segment);
+    collision_cache_.insert(element_id, segment);
     spatial_cache_.insert(element_id, segment.line, segment_index);
 }
 
@@ -1786,7 +1791,7 @@ auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segm
     const auto segment = layout_.segment_tree(element_id).segment(segment_index);
 
     // TODO connection cache
-    collicions_cache_.remove(element_id, segment);
+    collision_cache_.remove(element_id, segment);
     spatial_cache_.remove(element_id, segment.line, segment_index);
 }
 
