@@ -75,15 +75,33 @@ auto Schematic::swap_element_data(element_id_t element_id_1, element_id_t elemen
 }
 
 auto Schematic::delete_last_element(bool clear_connections) -> void {
-    if (empty()) {
+    if (element_data_store_.empty()     //
+        || input_connections_.empty()   //
+        || output_connections_.empty()  //
+        || sub_circuit_ids_.empty()     //
+        || element_types_.empty()       //
+        || input_inverters_.empty()     //
+        || output_delays_.empty()       //
+        || history_lengths_.empty()     //
+        ) [[unlikely]] {
         throw_exception("Cannot delete last element of empty schematics.");
     }
+
     if (clear_connections) {
         const auto last_id = element_id_t {
             gsl::narrow_cast<element_id_t::value_type>(element_count() - 1)};
         element(last_id).clear_all_connection();
     }
 
+    const auto &data = element_data_store_.back();
+    if (input_count_ < data.input_data.size() || output_count_ < data.output_data.size())
+        [[unlikely]] {
+        throw_exception("input or output count underflows");
+    }
+    input_count_ -= data.input_data.size();
+    output_count_ -= data.output_data.size();
+
+    // delete
     element_data_store_.pop_back();
 
     input_connections_.pop_back();
@@ -379,6 +397,12 @@ auto validate_output_consistent(const Schematic::ConstOutput output) -> void {
     }
 }
 
+auto validate_element_connections_consistent(const Schematic::ConstElement element)
+    -> void {
+    std::ranges::for_each(element.inputs(), validate_input_consistent);
+    std::ranges::for_each(element.outputs(), validate_output_consistent);
+}
+
 auto validate_no_input_loops(const Schematic::ConstInput input) -> void {
     if (input.connected_element_id() == input.element_id()) [[unlikely]] {
         throw_exception("element connects to itself, loops are not allowed.");
@@ -389,12 +413,6 @@ auto validate_no_output_loops(const Schematic::ConstOutput output) -> void {
     if (output.connected_element_id() == output.element_id()) [[unlikely]] {
         throw_exception("element connects to itself, loops are not allowed.");
     }
-}
-
-auto validate_element_connections_consistent(const Schematic::ConstElement element)
-    -> void {
-    std::ranges::for_each(element.inputs(), validate_input_consistent);
-    std::ranges::for_each(element.outputs(), validate_output_consistent);
 }
 
 auto validate_element_connections_no_loops(const Schematic::ConstElement element)
@@ -473,14 +491,8 @@ auto validate_sub_circuit_ids(const Schematic::ConstElement element) -> void {
 }
 
 auto Schematic::validate(ValidationSettings settings) const -> void {
+    // connections
     std::ranges::for_each(elements(), validate_input_output_count);
-    std::ranges::for_each(elements(), validate_sub_circuit_ids);
-
-    // TODO check new data members
-    // * input_inverters_
-    // * output_delays_
-    // * history_lengths_
-
     for (const auto &data : element_data_store_) {
         std::ranges::for_each(data.input_data, Schematic::validate_connection_data_);
         std::ranges::for_each(data.output_data, Schematic::validate_connection_data_);
@@ -495,6 +507,31 @@ auto Schematic::validate(ValidationSettings settings) const -> void {
 
     if (settings.require_all_placeholders_connected) {
         std::ranges::for_each(elements(), validate_placeholder_connected);
+    }
+
+    // simulation attributes
+    std::ranges::for_each(elements(), validate_sub_circuit_ids);
+
+    // TODO check new data members
+    // * input_inverters_
+    // * output_delays_
+    // * history_lengths_
+
+    // global attributes
+    if (!circuit_id_) {
+        throw_exception("invalid circuit id");
+    }
+    const auto input_count = accumulate(
+        transform_view(elements(), &ConstElement::input_count), std::size_t {0});
+    const auto output_count = accumulate(
+        transform_view(elements(), &ConstElement::output_count), std::size_t {0});
+
+    if (input_count != input_count_) [[unlikely]] {
+        fmt::print("{} == {}", input_count, input_count_);
+        throw_exception("input count is wrong");
+    }
+    if (output_count != output_count_) [[unlikely]] {
+        throw_exception("input count is wrong");
     }
 }
 

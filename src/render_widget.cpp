@@ -462,6 +462,13 @@ auto RendererWidget::load_circuit(int id) -> void {
         editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {15, 6},
                                               InsertionMode::insert_or_discard);
 
+        editable_circuit.add_line_segment(
+            point_t {grid_t {10}, grid_t {10}}, point_t {grid_t {15}, grid_t {12}},
+            LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
+        editable_circuit.add_line_segment(
+            point_t {grid_t {10}, grid_t {15}}, point_t {grid_t {15}, grid_t {15}},
+            LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
+
         editable_circuit.add_standard_element(ElementType::or_element, 9, point_t {20, 4},
                                               InsertionMode::insert_or_discard);
     }
