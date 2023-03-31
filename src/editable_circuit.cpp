@@ -732,7 +732,7 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
 auto EditableCircuit::validate() -> void {
     logicsim::validate(layout_, schematic_);
 
-    selection_cache_.validate(layout_, schematic_);
+    spatial_cache_.validate(layout_, schematic_);
 
     // possible:
     // - selection builder
@@ -955,7 +955,7 @@ auto all_collision_condered(const SegmentTree& tree,
 
 auto EditableCircuit::fix_line_segments(point_t position) -> void {
     // TODO rename to segments
-    const auto segment = selection_cache_.query_line_segments(position);
+    const auto segment = spatial_cache_.query_line_segments(position);
     const auto segment_count = get_segment_count(segment);
 
     if (segment_count == 0) [[unlikely]] {
@@ -1393,12 +1393,12 @@ auto EditableCircuit::selection_builder() noexcept -> SelectionBuilder& {
 
 auto EditableCircuit::query_selection(rect_fine_t rect) const
     -> std::vector<SearchTree::query_result_t> {
-    return selection_cache_.query_selection(rect);
+    return spatial_cache_.query_selection(rect);
 };
 
 auto EditableCircuit::query_selection(point_fine_t point) const
     -> std::optional<element_id_t> {
-    auto query_result = selection_cache_.query_selection(rect_fine_t {point, point});
+    auto query_result = spatial_cache_.query_selection(rect_fine_t {point, point});
 
     // TODO rethink this, maybe use find?
     auto elements = std::vector<element_id_t> {};
@@ -1733,7 +1733,7 @@ auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
     input_connections_.insert(element_id, data);
     output_connections_.insert(element_id, data);
     collicions_cache_.insert(element_id, data);
-    selection_cache_.insert(element_id, data);
+    spatial_cache_.insert(element_id, data);
 }
 
 auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
@@ -1746,7 +1746,7 @@ auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
     input_connections_.remove(element_id, data);
     output_connections_.remove(element_id, data);
     collicions_cache_.remove(element_id, data);
-    selection_cache_.remove(element_id, data);
+    spatial_cache_.remove(element_id, data);
 }
 
 auto EditableCircuit::cache_update(element_id_t new_element_id,
@@ -1769,7 +1769,7 @@ auto EditableCircuit::cache_update(element_id_t new_element_id,
         output_connections_.update(new_element_id, old_element_id, data);
     }
     collicions_cache_.update(new_element_id, old_element_id, data);
-    selection_cache_.update(new_element_id, old_element_id, data);
+    spatial_cache_.update(new_element_id, old_element_id, data);
 }
 
 auto EditableCircuit::cache_insert(element_id_t element_id, segment_index_t segment_index)
@@ -1778,7 +1778,7 @@ auto EditableCircuit::cache_insert(element_id_t element_id, segment_index_t segm
 
     // TODO connection cache
     collicions_cache_.insert(element_id, segment);
-    selection_cache_.insert(element_id, segment.line, segment_index);
+    spatial_cache_.insert(element_id, segment.line, segment_index);
 }
 
 auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segment_index)
@@ -1787,7 +1787,7 @@ auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segm
 
     // TODO connection cache
     collicions_cache_.remove(element_id, segment);
-    selection_cache_.remove(element_id, segment.line, segment_index);
+    spatial_cache_.remove(element_id, segment.line, segment_index);
 }
 
 // selectionis

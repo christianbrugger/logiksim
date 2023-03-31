@@ -290,7 +290,7 @@ class EditableCircuit {
     };
 
     [[nodiscard]] auto selection_rects() const {
-        return selection_cache_.rects();
+        return spatial_cache_.rects();
     }
 
     auto validate() -> void;
@@ -346,7 +346,7 @@ class EditableCircuit {
     ConnectionCache<true> input_connections_ {};
     ConnectionCache<false> output_connections_ {};
     CollisionCache collicions_cache_ {};
-    SearchTree selection_cache_ {};
+    SearchTree spatial_cache_ {};
 
     mutable selection_key_t next_selection_key_ {0};
     mutable selection_map_t managed_selections_ {};
