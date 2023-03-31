@@ -29,11 +29,16 @@ auto validate_placeholder_display_state(Schematic::ConstElement element,
 }
 
 auto validate(const Layout& layout, const Schematic& schematic) -> void {
+    // schematic
     schematic.validate(Schematic::ValidationSettings {
         .require_all_outputs_connected = false,
         .require_all_placeholders_connected = true,
     });
 
+    // layout
+    layout.validate();
+
+    // connections
     for (const auto element : schematic.elements()) {
         const auto display_state = layout.display_state(element.element_id());
 

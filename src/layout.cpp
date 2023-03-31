@@ -192,4 +192,15 @@ auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
     return segment_trees_.at(element_id.value);
 }
 
+auto Layout::validate() const -> void {
+    // wires
+    std::ranges::for_each(segment_trees_, &SegmentTree::validate);
+    std::ranges::for_each(line_trees_, &LineTree::validate);
+
+    // global attributes
+    if (!circuit_id_) [[unlikely]] {
+        throw_exception("invalid circuit id");
+    }
+}
+
 }  // namespace logicsim

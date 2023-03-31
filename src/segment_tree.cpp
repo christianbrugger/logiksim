@@ -279,22 +279,28 @@ auto SegmentTree::validate() const -> void {
     if (display_states_.size() != segments_.size()) [[unlikely]] {
         throw_exception("Vector sizes don't match in segment tree.");
     }
-    if ((has_input_ ? 1 : 0) + output_count_ > segments_.size() + 1) [[unlikely]] {
+    if ((has_input_ ? 1 : 0) + std::size_t {output_count_} > segments_.size() + 1)
+        [[unlikely]] {
         throw_exception("To many inputs / outputs.");
     }
 
-    // TODO optimize this?
+    // convert to line_tree
     const auto segments = transform_to_vector(
         segments_, [](const segment_info_t& segment) { return segment.line; });
     const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
     const auto line_tree = LineTree::from_segments(segments, new_root);
-
     if (!line_tree.has_value()) [[unlikely]] {
         throw_exception("Invalid Segment Tree.");
     }
 
-    // TODO verify outputs
-    // TODO verify cross points
+    // TODO verify
+    // - segment p0_type & p1_type
+    //
+    // - has_input_
+    // - output_count_
+    //
+    // - input & output points
+    // - cross points
 }
 
 }  // namespace logicsim

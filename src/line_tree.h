@@ -134,6 +134,8 @@ class LineTree {
 
     [[nodiscard]] auto format() const -> std::string;
 
+    auto validate() const -> void;
+
    private:
     struct backtrack_memory_t;
     class TreeBuilderVisitor;
@@ -167,6 +169,7 @@ class LineTree {
     index_vector_t output_indices_ {};
 
    public:
+    // TODO make private
     explicit LineTree(point_vector_t points, index_vector_t indices,
                       length_vector_t lengths)
         : points_ {points}, indices_ {indices}, lengths_ {lengths} {};

@@ -544,9 +544,7 @@ auto RendererWidget::load_circuit(int id) -> void {
 
         if (editable_circuit.schematic().element_count() < 10) {
             fmt::print("{}\n", editable_circuit);
-            editable_circuit.validate();
         }
-
         fmt::print("Added {} elements and {} wire segments in {}.\n", element_count,
                    segment_count, timer_str);
     }

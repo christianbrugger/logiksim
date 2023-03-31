@@ -465,7 +465,6 @@ auto is_input_output_count_valid(const Schematic::ConstElement element) -> bool 
 
 auto validate_input_output_count(const Schematic::ConstElement element) {
     if (!is_input_output_count_valid(element)) [[unlikely]] {
-        fmt::print("{}\n", element);
         throw_exception("element has wrong input or output count.");
     }
 }
@@ -485,7 +484,7 @@ auto Schematic::validate_connection_data_(const Schematic::ConnectionData connec
 }
 
 auto validate_sub_circuit_ids(const Schematic::ConstElement element) -> void {
-    if (!(element.is_sub_circuit() == bool {element.sub_circuit_id()})) {
+    if (!(element.is_sub_circuit() == bool {element.sub_circuit_id()})) [[unlikely]] {
         throw_exception("Not a sub-circuit or no circuit id.");
     }
 }
@@ -518,7 +517,7 @@ auto Schematic::validate(ValidationSettings settings) const -> void {
     // * history_lengths_
 
     // global attributes
-    if (!circuit_id_) {
+    if (!circuit_id_) [[unlikely]] {
         throw_exception("invalid circuit id");
     }
     const auto input_count = accumulate(
@@ -527,7 +526,6 @@ auto Schematic::validate(ValidationSettings settings) const -> void {
         transform_view(elements(), &ConstElement::output_count), std::size_t {0});
 
     if (input_count != input_count_) [[unlikely]] {
-        fmt::print("{} == {}", input_count, input_count_);
         throw_exception("input count is wrong");
     }
     if (output_count != output_count_) [[unlikely]] {

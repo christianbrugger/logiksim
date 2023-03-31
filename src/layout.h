@@ -54,6 +54,8 @@ class Layout {
 
     [[nodiscard]] auto modifyable_segment_tree(element_id_t element_id) -> SegmentTree &;
 
+    auto validate() const -> void;
+
    private:
     auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
     auto delete_last_element() -> void;

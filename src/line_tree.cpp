@@ -315,6 +315,13 @@ auto std::swap(logicsim::LineTree& a, logicsim::LineTree& b) noexcept -> void {
 
 namespace logicsim {
 
+auto LineTree::validate() const -> void {
+    if ((points_.size() == 0 && indices_.size() != 0)
+        || (points_.size() > 0 && indices_.size() + 1 != points_.size())) [[unlikely]] {
+        throw_exception("indices array has wrong size");
+    }
+}
+
 auto LineTree::reroot(const point_t new_root) const -> std::optional<LineTree> {
     if (new_root == input_position()) {
         return *this;
@@ -382,6 +389,7 @@ auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
     }
     auto result = std::vector<length_t> {};
 
+    // TODO use algorithm?
     auto next = sized_segments().begin();
     auto last = sized_segments().end();
 
