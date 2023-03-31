@@ -129,6 +129,10 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             }
             return true;
         }
+
+        case sub_circuit: {
+            throw_exception("not implemented");
+        }
     }
     throw_exception("'Don't know to calculate input locations.");
 }
@@ -233,6 +237,10 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
 
             return true;
         }
+
+        case sub_circuit: {
+            throw_exception("not implemented");
+        }
     }
     throw_exception("'Don't know to calculate input locations.");
 }
@@ -324,6 +332,10 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
                 }
             }
             return true;
+        }
+
+        case sub_circuit: {
+            throw_exception("not implemented");
         }
     }
     throw_exception("'Don't know to calculate output locations.");

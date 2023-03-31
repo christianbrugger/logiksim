@@ -161,6 +161,10 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
                                                    : grid_t {2 * (data.output_count - 1)};
             return transform(data.position, data.orientation, {0, 0}, {x2, y2});
         }
+
+        case sub_circuit: {
+            throw_exception("not implemented");
+        }
     }
     throw_exception("'Don't know to calculate collision rect.");
 }

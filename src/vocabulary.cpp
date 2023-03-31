@@ -24,6 +24,8 @@ auto format(ElementType type) -> std::string {
             return "JK-FlipFlop";
         case shift_register:
             return "ShiftRegister";
+        case sub_circuit:
+            return "SubCircuit";
     }
     throw_exception("Don't know how to convert ElementType to string.");
 }

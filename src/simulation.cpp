@@ -169,6 +169,8 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
             return 1;
         case shift_register:
             return 8;
+        case sub_circuit:
+            return 0;
     }
     throw_exception("Dont know internal state of given type.");
 }
