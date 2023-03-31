@@ -621,6 +621,7 @@ EditableCircuit::EditableCircuit(Schematic&& schematic, Layout&& layout)
     : selection_builder_ {*this},
       schematic_ {std::move(schematic)},
       layout_ {std::move(layout)} {
+    // TODO consider bulk insertion, especially for spatial_cache_
     add_circuit_to_cache(input_connections_, layout_, schematic_);
     add_circuit_to_cache(output_connections_, layout_, schematic_);
     add_circuit_to_cache(collision_cache_, layout_, schematic_);
@@ -1099,7 +1100,6 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
     fix_line_segments(line.p0);
     fix_line_segments(line.p1);
 
-    // TODO output placeholders
     // TODO insertion mode change
 
 #ifndef NDEBUG
