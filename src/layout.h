@@ -28,7 +28,7 @@ class Layout {
     // TODO make add_default_element private when not needed anymore
     auto add_default_element() -> element_id_t;
 
-    auto add_placeholder() -> element_id_t;
+    auto add_placeholder(display_state_t display_state) -> element_id_t;
     // TODO rework these methods
     auto add_line_tree(SegmentTree &&segment_tree) -> element_id_t;
     auto add_logic_element(point_t position,

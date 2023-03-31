@@ -10,6 +10,8 @@
 
 namespace logicsim {
 
+auto validate(const Layout& layout, const Schematic& schematic) -> void;
+
 class CircuitIndex {
    public:
     CircuitIndex() = default;

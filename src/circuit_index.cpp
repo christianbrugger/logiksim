@@ -7,6 +7,45 @@
 
 namespace logicsim {
 
+auto validate_connections(Schematic::ConstElement element,
+                          display_state_t display_state) {
+    if (display_state == display_state_t::normal
+        || display_state == display_state_t::new_valid) {
+        validate_all_outputs_connected(element);
+    } else {
+        validate_all_inputs_disconnected(element);
+        validate_all_outputs_disconnected(element);
+    }
+}
+
+auto validate_placeholder_display_state(Schematic::ConstElement element,
+                                        display_state_t display_state) {
+    if (element.is_placeholder()) {
+        if (display_state != display_state_t::normal
+            && display_state != display_state_t::new_colliding) {
+            throw_exception("placeholder has wrong display state");
+        }
+    }
+}
+
+auto validate(const Layout& layout, const Schematic& schematic) -> void {
+    schematic.validate(Schematic::ValidationSettings {
+        .require_all_outputs_connected = false,
+        .require_all_placeholders_connected = true,
+    });
+
+    for (const auto element : schematic.elements()) {
+        const auto display_state = layout.display_state(element.element_id());
+
+        validate_connections(element, display_state);
+        validate_placeholder_display_state(element, display_state);
+    }
+}
+
+//
+// Circuit Index
+//
+
 auto CircuitIndex::circuit_count() const -> std::size_t {
     check_equal_size();
     return schematics_.size();
@@ -124,5 +163,4 @@ auto CircuitIndex::check_equal_size() const -> void {
         throw_exception("Schematics, layouts and descriptions have different sizes.");
     }
 }
-
 }  // namespace logicsim

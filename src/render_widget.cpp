@@ -404,6 +404,10 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
     }
     interaction_state_ = state;
     reset_interaction_state();
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::reset_interaction_state() -> void {
@@ -429,6 +433,10 @@ auto RendererWidget::reset_circuit() -> void {
     editable_circuit_.emplace(circuit_index_.borrow_schematic(circuit_id_),
                               circuit_index_.borrow_layout(circuit_id_));
     update();
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::load_circuit(int id) -> void {
@@ -445,7 +453,7 @@ auto RendererWidget::load_circuit(int id) -> void {
 #else
     constexpr auto debug_build = true;
 #endif
-    constexpr auto debug_max = 275;
+    constexpr auto debug_max = 75;
     constexpr auto release_max = 1600;
 
     if (id == 1) {
@@ -529,12 +537,16 @@ auto RendererWidget::load_circuit(int id) -> void {
 
         if (editable_circuit.schematic().element_count() < 10) {
             fmt::print("{}\n", editable_circuit);
-            editable_circuit.schematic().validate(Schematic::validate_all);
+            editable_circuit.validate();
         }
 
         fmt::print("Added {} elements and {} wire segments in {}.\n", element_count,
                    segment_count, timer_str);
     }
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 Q_SLOT void RendererWidget::on_timeout() {
@@ -693,10 +705,6 @@ auto RendererWidget::delete_selected_items() -> void {
 
     editable_circuit_.value().delete_all(std::move(handle));
     update();
-
-#ifndef NDEBUG
-    editable_circuit_->validate();
-#endif
 }
 
 auto RendererWidget::select_all_items() -> void {
@@ -718,51 +726,50 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
-    if (event->button() != Qt::LeftButton) {
-        return;
-    }
-
-    if (interaction_state_ == InteractionState::element_insert) {
-        mouse_logic_.emplace(MouseElementInsertLogic::Args {
-            .editable_circuit = editable_circuit_.value(),
-        });
-        return;
-    }
-
-    if (interaction_state_ == InteractionState::line_insert) {
-        mouse_logic_.emplace(MouseLineInsertLogic::Args {
-            .editable_circuit = editable_circuit_.value(),
-        });
-        return;
-    }
-
-    if (interaction_state_ == InteractionState::select) {
-        auto& selection_builder = editable_circuit_.value().selection_builder();
-        const auto point = to_grid_fine(event->position(), render_settings_.view_config);
-        const bool has_element_under_cursor
-            = editable_circuit_.value().query_selection(point).has_value();
-
-        if (has_element_under_cursor) {
-            if (event->modifiers() == Qt::NoModifier) {
-                mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
-                    .builder = selection_builder,
-                    .editable_circuit = editable_circuit_.value(),
-                });
-                return;
-            }
-
-            mouse_logic_.emplace(MouseSingleSelectionLogic::Args {
-                .builder = selection_builder,
+    if (event->button() == Qt::LeftButton) {
+        if (interaction_state_ == InteractionState::element_insert) {
+            mouse_logic_.emplace(MouseElementInsertLogic::Args {
+                .editable_circuit = editable_circuit_.value(),
             });
             return;
         }
 
-        mouse_logic_.emplace(MouseAreaSelectionLogic::Args {
-            .parent = this,
-            .builder = selection_builder,
-            .view_config = render_settings_.view_config,
-        });
-        return;
+        if (interaction_state_ == InteractionState::line_insert) {
+            mouse_logic_.emplace(MouseLineInsertLogic::Args {
+                .editable_circuit = editable_circuit_.value(),
+            });
+            return;
+        }
+
+        if (interaction_state_ == InteractionState::select) {
+            auto& selection_builder = editable_circuit_.value().selection_builder();
+            const auto point
+                = to_grid_fine(event->position(), render_settings_.view_config);
+            const bool has_element_under_cursor
+                = editable_circuit_.value().query_selection(point).has_value();
+
+            if (has_element_under_cursor) {
+                if (event->modifiers() == Qt::NoModifier) {
+                    mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
+                        .builder = selection_builder,
+                        .editable_circuit = editable_circuit_.value(),
+                    });
+                    return;
+                }
+
+                mouse_logic_.emplace(MouseSingleSelectionLogic::Args {
+                    .builder = selection_builder,
+                });
+                return;
+            }
+
+            mouse_logic_.emplace(MouseAreaSelectionLogic::Args {
+                .parent = this,
+                .builder = selection_builder,
+                .view_config = render_settings_.view_config,
+            });
+            return;
+        }
     }
 }
 
@@ -770,40 +777,44 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+
     if (event->button() == Qt::MiddleButton) {
         mouse_drag_logic_.mouse_press(event->position());
         update();
     }
-    if (event->button() != Qt::LeftButton) {
-        return;
+
+    else if (event->button() == Qt::LeftButton) {
+        if (!mouse_logic_) {
+            set_new_mouse_logic(event);
+        }
+        if (mouse_logic_) {
+            const auto grid_position
+                = to_grid(event->position(), render_settings_.view_config);
+            const auto grid_fine_position
+                = to_grid_fine(event->position(), render_settings_.view_config);
+
+            std::visit(
+                overload {
+                    [&](MouseElementInsertLogic& arg) { arg.mouse_press(grid_position); },
+                    [&](MouseLineInsertLogic& arg) { arg.mouse_press(grid_position); },
+                    [&](MouseAreaSelectionLogic& arg) {
+                        arg.mouse_press(event->position(), event->modifiers());
+                    },
+                    [&](MouseSingleSelectionLogic& arg) {
+                        arg.mouse_press(grid_fine_position, event->modifiers());
+                    },
+                    [&](MouseMoveSelectionLogic& arg) {
+                        arg.mouse_press(grid_fine_position);
+                    },
+                },
+                *mouse_logic_);
+            update();
+        }
     }
 
-    if (!mouse_logic_.has_value()) {
-        set_new_mouse_logic(event);
-    }
-    if (mouse_logic_) {
-        const auto grid_position
-            = to_grid(event->position(), render_settings_.view_config);
-        const auto grid_fine_position
-            = to_grid_fine(event->position(), render_settings_.view_config);
-
-        std::visit(
-            overload {
-                [&](MouseElementInsertLogic& arg) { arg.mouse_press(grid_position); },
-                [&](MouseLineInsertLogic& arg) { arg.mouse_press(grid_position); },
-                [&](MouseAreaSelectionLogic& arg) {
-                    arg.mouse_press(event->position(), event->modifiers());
-                },
-                [&](MouseSingleSelectionLogic& arg) {
-                    arg.mouse_press(grid_fine_position, event->modifiers());
-                },
-                [&](MouseMoveSelectionLogic& arg) {
-                    arg.mouse_press(grid_fine_position);
-                },
-            },
-            *mouse_logic_);
-        update();
-    }
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
@@ -835,21 +846,23 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
 
         update();
     }
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+
     if (event->button() == Qt::MiddleButton) {
         mouse_drag_logic_.mouse_release(event->position());
         update();
     }
-    if (event->button() != Qt::LeftButton) {
-        return;
-    }
 
-    if (mouse_logic_) {
+    else if (event->button() == Qt::LeftButton && mouse_logic_) {
         const auto grid_position
             = to_grid(event->position(), render_settings_.view_config);
         const auto grid_fine_position
@@ -881,12 +894,13 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
 
         if (finished) {
             mouse_logic_.reset();
-#ifndef NDEBUG
-            editable_circuit_->validate();
-#endif
         }
         update();
     }
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
@@ -946,37 +960,38 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
         });
         update();
     }
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
     // Delete
     if (event->key() == Qt::Key_Delete) {
         delete_selected_items();
-        return;
+        event->accept();
     }
 
     // Escape
-    if (event->key() == Qt::Key_Escape) {
+    else if (event->key() == Qt::Key_Escape) {
         if (mouse_logic_) {
             mouse_logic_.reset();
-#ifndef NDEBUG
-            editable_circuit_->validate();
-#endif
         } else {
             editable_circuit_.value().selection_builder().clear();
         }
         update();
-        return;
+        event->accept();
     }
 
     // CTRL + A
-    if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_A) {
+    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_A) {
         select_all_items();
-        return;
+        event->accept();
     }
 
     // Enter
-    if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
+    else if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
         if (mouse_logic_) {
             bool finished
                 = std::visit(overload {
@@ -993,17 +1008,20 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
 
             if (finished) {
                 mouse_logic_.reset();
-#ifndef NDEBUG
-                editable_circuit_->validate();
-#endif
             }
 
             update();
-            return;
         }
+        event->accept();
     }
 
-    QWidget::keyPressEvent(event);
+    else {
+        QWidget::keyPressEvent(event);
+    }
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 }  // namespace logicsim

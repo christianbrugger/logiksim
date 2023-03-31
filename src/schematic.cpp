@@ -324,8 +324,28 @@ auto validate_output_connected(const Schematic::ConstOutput output) -> void {
     }
 }
 
-auto validate_outputs_connected(const Schematic::ConstElement element) -> void {
+auto validate_input_disconnected(const Schematic::ConstInput input) -> void {
+    if (input.has_connected_element()) [[unlikely]] {
+        throw_exception("Element has connected input.");
+    }
+}
+
+auto validate_output_disconnected(const Schematic::ConstOutput output) -> void {
+    if (output.has_connected_element()) [[unlikely]] {
+        throw_exception("Element has connected output.");
+    }
+}
+
+auto validate_all_outputs_connected(const Schematic::ConstElement element) -> void {
     std::ranges::for_each(element.outputs(), validate_output_connected);
+}
+
+auto validate_all_inputs_disconnected(const Schematic::ConstElement element) -> void {
+    std::ranges::for_each(element.inputs(), validate_input_disconnected);
+}
+
+auto validate_all_outputs_disconnected(const Schematic::ConstElement element) -> void {
+    std::ranges::for_each(element.outputs(), validate_output_disconnected);
 }
 
 auto validate_placeholder_connected(const Schematic::ConstElement element) -> void {
@@ -337,6 +357,9 @@ auto validate_placeholder_connected(const Schematic::ConstElement element) -> vo
 
 auto validate_input_consistent(const Schematic::ConstInput input) -> void {
     if (input.has_connected_element()) {
+        if (!input.connected_output().has_connected_element()) [[unlikely]] {
+            throw_exception("Back reference is missing.");
+        }
         auto back_reference {input.connected_output().connected_input()};
         if (back_reference != input) [[unlikely]] {
             throw_exception("Back reference doesn't match.");
@@ -356,10 +379,77 @@ auto validate_output_consistent(const Schematic::ConstOutput output) -> void {
     }
 }
 
+auto validate_no_input_loops(const Schematic::ConstInput input) -> void {
+    if (input.connected_element_id() == input.element_id()) [[unlikely]] {
+        throw_exception("element connects to itself, loops are not allowed.");
+    }
+}
+
+auto validate_no_output_loops(const Schematic::ConstOutput output) -> void {
+    if (output.connected_element_id() == output.element_id()) [[unlikely]] {
+        throw_exception("element connects to itself, loops are not allowed.");
+    }
+}
+
 auto validate_element_connections_consistent(const Schematic::ConstElement element)
     -> void {
     std::ranges::for_each(element.inputs(), validate_input_consistent);
     std::ranges::for_each(element.outputs(), validate_output_consistent);
+}
+
+auto validate_element_connections_no_loops(const Schematic::ConstElement element)
+    -> void {
+    std::ranges::for_each(element.inputs(), validate_no_input_loops);
+    std::ranges::for_each(element.outputs(), validate_no_output_loops);
+}
+
+auto is_input_output_count_valid(const Schematic::ConstElement element) -> bool {
+    switch (element.element_type()) {
+        using enum ElementType;
+
+        case placeholder: {
+            return element.input_count() == 1 && element.output_count() == 0;
+        }
+        case wire: {
+            // TODO change once we handle inputs & outputs correctly
+            // return element.input_count() == 1 && element.output_count() >= 1;
+            return element.input_count() <= 1;
+        }
+
+        case inverter_element: {
+            return element.input_count() == 1 && element.output_count() == 1;
+        }
+        case and_element:
+        case or_element:
+        case xor_element: {
+            return element.input_count() >= 1 && element.output_count() == 1;
+        }
+
+        case clock_generator: {
+            return element.input_count() == 2 && element.output_count() == 2;
+        }
+        case flipflop_jk: {
+            return element.input_count() == 5 && element.output_count() == 2;
+        }
+        case shift_register: {
+            // TODO consider internal state
+            return element.input_count() >= 2 && element.output_count() >= 1
+                   && element.input_count() == element.output_count() + 1;
+        }
+
+        case sub_circuit: {
+            return element.input_count() > 0 || element.output_count() > 0;
+        }
+    }
+
+    throw_exception("invalid element");
+}
+
+auto validate_input_output_count(const Schematic::ConstElement element) {
+    if (!is_input_output_count_valid(element)) [[unlikely]] {
+        fmt::print("{}\n", element);
+        throw_exception("element has wrong input or output count.");
+    }
 }
 
 // TODO make free method when we remove ConnectionData
@@ -376,29 +466,36 @@ auto Schematic::validate_connection_data_(const Schematic::ConnectionData connec
     }
 }
 
+auto validate_sub_circuit_ids(const Schematic::ConstElement element) -> void {
+    if (!(element.is_sub_circuit() == bool {element.sub_circuit_id()})) {
+        throw_exception("Not a sub-circuit or no circuit id.");
+    }
+}
+
 auto Schematic::validate(ValidationSettings settings) const -> void {
+    std::ranges::for_each(elements(), validate_input_output_count);
+    std::ranges::for_each(elements(), validate_sub_circuit_ids);
+
+    // TODO check new data members
+    // * input_inverters_
+    // * output_delays_
+    // * history_lengths_
+
     for (const auto &data : element_data_store_) {
         std::ranges::for_each(data.input_data, Schematic::validate_connection_data_);
         std::ranges::for_each(data.output_data, Schematic::validate_connection_data_);
     }
 
-    // TODO make sure outputs are not connected to inputs of the same element
-
     std::ranges::for_each(elements(), validate_element_connections_consistent);
+    std::ranges::for_each(elements(), validate_element_connections_no_loops);
 
     if (settings.require_all_outputs_connected) {
-        std::ranges::for_each(elements(), validate_outputs_connected);
+        std::ranges::for_each(elements(), validate_all_outputs_connected);
     }
 
     if (settings.require_all_placeholders_connected) {
         std::ranges::for_each(elements(), validate_placeholder_connected);
     }
-
-    // TODO check new data members
-    // * sub_circuit_ids_
-    // * input_inverters_
-    // * output_delays_
-    // * history_lengths_
 }
 
 //
@@ -536,6 +633,11 @@ auto Schematic::ElementTemplate<Const>::element_id() const noexcept -> element_i
 }
 
 template <bool Const>
+auto Schematic::ElementTemplate<Const>::sub_circuit_id() const -> circuit_id_t {
+    return schematic_->sub_circuit_ids_.at(element_id_.value);
+}
+
+template <bool Const>
 auto Schematic::ElementTemplate<Const>::element_type() const -> ElementType {
     return element_data_().type;
 }
@@ -548,6 +650,16 @@ auto Schematic::ElementTemplate<Const>::is_placeholder() const -> bool {
 template <bool Const>
 auto Schematic::ElementTemplate<Const>::is_wire() const -> bool {
     return element_type() == ElementType::wire;
+}
+
+template <bool Const>
+auto Schematic::ElementTemplate<Const>::is_element() const -> bool {
+    return !(is_placeholder() || is_wire());
+}
+
+template <bool Const>
+auto Schematic::ElementTemplate<Const>::is_sub_circuit() const -> bool {
+    return element_type() == ElementType::sub_circuit;
 }
 
 template <bool Const>

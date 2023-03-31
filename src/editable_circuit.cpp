@@ -1,6 +1,7 @@
 #include "editable_circuit.h"
 
 #include "algorithm.h"
+#include "circuit_index.h"
 #include "exceptions.h"
 #include "geometry.h"
 #include "iterator_adaptor.h"
@@ -729,7 +730,7 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
 }
 
 auto EditableCircuit::validate() -> void {
-    schematic_.validate(Schematic::validate_all);
+    logicsim::validate(layout_, schematic_);
 
     // TODO validate layout
     // TODO validate caches, etc.
@@ -739,7 +740,7 @@ auto EditableCircuit::add_placeholder_element() -> element_id_t {
     constexpr static auto connector_delay
         = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
 
-    const auto element_id = layout_.add_placeholder();
+    const auto element_id = layout_.add_placeholder(display_state_t::normal);
     {
         const auto element = schematic_.add_element(Schematic::NewElementData {
             .element_type = ElementType::placeholder,
@@ -1429,7 +1430,8 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t& element_id) -
         }
         key_remove(element_id);
     } else {
-        if (layout_.display_state(element_id) != display_state_t::new_temporary)
+        // TODO handle placeholders differently?
+        if (!schematic_.element(element_id).is_placeholder() && layout_.display_state(element_id) != display_state_t::new_temporary)
             [[unlikely]] {
             throw_exception("can only delete temporary objects");
         }

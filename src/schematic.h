@@ -311,10 +311,14 @@ class Schematic::ElementTemplate {
 
     [[nodiscard]] auto schematic() const noexcept -> SchematicType &;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
+    [[nodiscard]] auto sub_circuit_id() const -> circuit_id_t;
 
     [[nodiscard]] auto element_type() const -> ElementType;
     [[nodiscard]] auto is_placeholder() const -> bool;
     [[nodiscard]] auto is_wire() const -> bool;
+    [[nodiscard]] auto is_element() const -> bool;
+    [[nodiscard]] auto is_sub_circuit() const -> bool;
+
     [[nodiscard]] auto input_count() const -> std::size_t;
     [[nodiscard]] auto output_count() const -> std::size_t;
 
@@ -511,6 +515,10 @@ class Schematic::OutputTemplate {
 //
 
 namespace logicsim {
+
+auto validate_all_outputs_connected(const Schematic::ConstElement element) -> void;
+auto validate_all_inputs_disconnected(const Schematic::ConstElement element) -> void;
+auto validate_all_outputs_disconnected(const Schematic::ConstElement element) -> void;
 
 class LineTree;
 auto calculate_output_delays(const LineTree &line_tree) -> std::vector<delay_t>;

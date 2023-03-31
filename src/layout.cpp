@@ -101,7 +101,7 @@ auto Layout::add_default_element() -> element_id_t {
     segment_trees_.push_back(SegmentTree {});
     line_trees_.push_back(LineTree {});
     positions_.push_back(point_t {});
-    orientation_.push_back(orientation_t::right);
+    orientation_.push_back(orientation_t::undirected);
     display_states_.push_back(display_state_t::new_temporary);
     colors_.push_back(defaults::color_black);
 
@@ -109,8 +109,11 @@ auto Layout::add_default_element() -> element_id_t {
         gsl::narrow_cast<element_id_t::value_type>(positions_.size() - std::size_t {1})};
 }
 
-auto Layout::add_placeholder() -> element_id_t {
+auto Layout::add_placeholder(display_state_t display_state) -> element_id_t {
     const auto id = add_default_element();
+
+    display_states_.back() = display_state;
+
     return id;
 }
 

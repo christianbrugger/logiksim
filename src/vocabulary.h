@@ -34,6 +34,8 @@ enum class ElementType : uint8_t {
     clock_generator,
     flipflop_jk,
     shift_register,
+
+    sub_circuit,
 };
 
 auto format(ElementType type) -> std::string;
@@ -50,6 +52,10 @@ struct circuit_id_t {
     [[nodiscard]] static constexpr auto max() noexcept {
         return std::numeric_limits<value_type>::max();
     };
+
+    [[nodiscard]] explicit constexpr operator bool() const noexcept {
+        return value >= 0;
+    }
 };
 
 static_assert(std::is_trivial<circuit_id_t>::value);
