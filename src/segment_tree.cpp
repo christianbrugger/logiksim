@@ -72,7 +72,7 @@ auto SegmentTree::get_next_index() const -> segment_index_t {
 }
 
 auto SegmentTree::register_segment(segment_index_t index) -> void {
-    if (!is_collision_considered(display_states_.at(index.value))) {
+    if (!is_inserted(display_states_.at(index.value))) {
         return;
     }
     const auto& segment = segments_.at(index.value);
@@ -111,7 +111,7 @@ auto SegmentTree::register_segment(segment_index_t index) -> void {
 }
 
 auto SegmentTree::unregister_segment(segment_index_t index) -> void {
-    if (!is_collision_considered(display_states_.at(index.value))) {
+    if (!is_inserted(display_states_.at(index.value))) {
         return;
     }
     const auto& segment = segments_.at(index.value);
@@ -244,7 +244,7 @@ auto SegmentTree::last_index() const noexcept -> segment_index_t {
     return segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(result)};
 }
 
-auto SegmentTree::indices() const noexcept -> detail::range_t<segment_index_t, true> {
+auto SegmentTree::indices() const noexcept -> forward_range_t<segment_index_t> {
     const auto count = segment_index_t {
         gsl::narrow_cast<segment_index_t::value_type>(segment_count())};
 

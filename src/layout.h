@@ -2,6 +2,7 @@
 #define LOGIKSIM_LAYOUT_H
 
 #include "line_tree.h"
+#include "range.h"
 #include "segment_tree.h"
 #include "vocabulary.h"
 
@@ -45,6 +46,8 @@ class Layout {
     auto set_position(element_id_t element_id, point_t point) -> void;
     auto set_display_state(element_id_t element_id, display_state_t display_state)
         -> void;
+
+    [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;
 
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto segment_tree(element_id_t element_id) const -> const SegmentTree &;

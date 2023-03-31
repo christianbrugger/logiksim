@@ -8,10 +8,6 @@
 
 namespace logicsim {
 
-auto segment_selection_t::format() const -> std::string {
-    return fmt::format("{}-{}", begin, end);
-}
-
 auto Selection::swap(Selection &other) noexcept -> void {
     using std::swap;
 
@@ -125,8 +121,7 @@ auto check_segment_parts_destructive(line_t line, map_value_t &parts) -> void {
 
     // overlapping or touching?
     std::ranges::sort(parts);
-    const auto part_overlapping
-        = [](segment_selection_t part0, segment_selection_t part1) -> bool {
+    const auto part_overlapping = [](segment_part_t part0, segment_part_t part1) -> bool {
         return part0.end >= part1.begin;
     };
     if (std::ranges::adjacent_find(parts, part_overlapping) != parts.end()) {
@@ -174,7 +169,7 @@ auto Selection::validate(const Layout &layout, const Schematic &schematic) const
     }
 }
 
-auto Selection::add_segment(segment_t segment, segment_selection_t selection) -> void {
+auto Selection::add_segment(segment_t segment, segment_part_t selection) -> void {
     const auto it = selected_segments_.find(segment);
     if (it == selected_segments_.end()) {
         // insert new list
@@ -202,12 +197,12 @@ auto Selection::add_segment(segment_t segment, segment_selection_t selection) ->
     transform_combine_while(
         entries, std::back_inserter(result),
         // make state
-        [](it_t it) -> segment_selection_t { return *it; },
+        [](it_t it) -> segment_part_t { return *it; },
         // combine while
-        [](segment_selection_t state, it_t it) -> bool { return state.end >= it->begin; },
+        [](segment_part_t state, it_t it) -> bool { return state.end >= it->begin; },
         // update state
-        [](segment_selection_t state, it_t it) -> segment_selection_t {
-            return segment_selection_t {state.begin, std::max(state.end, it->end)};
+        [](segment_part_t state, it_t it) -> segment_part_t {
+            return segment_part_t {state.begin, std::max(state.end, it->end)};
         });
 
     if (result.size() == 0) [[unlikely]] {
@@ -216,7 +211,7 @@ auto Selection::add_segment(segment_t segment, segment_selection_t selection) ->
     entries.swap(result);
 }
 
-auto Selection::remove_segment(segment_t segment, segment_selection_t removing) -> void {
+auto Selection::remove_segment(segment_t segment, segment_part_t removing) -> void {
     const auto it = selected_segments_.find(segment);
     if (it == selected_segments_.end()) {
         return;
@@ -228,7 +223,7 @@ auto Selection::remove_segment(segment_t segment, segment_selection_t removing) 
     }
 
     for (auto i : reverse_range(entries.size())) {
-        const auto entry = segment_selection_t {entries[i]};
+        const auto entry = segment_part_t {entries[i]};
         // SEE 'selection_model.md' for visual cases
 
         // no overlapp -> keep
@@ -237,7 +232,7 @@ auto Selection::remove_segment(segment_t segment, segment_selection_t removing) 
 
         // new completely inside -> split
         else if (entry.begin < removing.begin && entry.end > removing.end) {
-            entries[i] = segment_selection_t {entry.begin, removing.begin};
+            entries[i] = segment_part_t {entry.begin, removing.begin};
             entries.emplace_back(removing.end, entry.end);
         }
 
@@ -250,12 +245,12 @@ auto Selection::remove_segment(segment_t segment, segment_selection_t removing) 
         // right sided overlap -> shrink right
         else if (entry.begin < removing.begin && entry.end > removing.begin
                  && entry.end <= removing.end) {
-            entries[i] = segment_selection_t {entry.begin, removing.begin};
+            entries[i] = segment_part_t {entry.begin, removing.begin};
         }
         // left sided overlap -> shrink left
         else if (entry.begin >= removing.begin && entry.begin < removing.end
                  && entry.end > removing.end) {
-            entries[i] = segment_selection_t {removing.end, entry.end};
+            entries[i] = segment_part_t {removing.end, entry.end};
         }
 
         else {
@@ -270,8 +265,7 @@ auto Selection::remove_segment(segment_t segment, segment_selection_t removing) 
     }
 }
 
-auto Selection::toggle_segment(segment_t segment, segment_selection_t selection) -> void {
-}
+auto Selection::toggle_segment(segment_t segment, segment_part_t selection) -> void {}
 
 auto Selection::is_selected(element_id_t element_id) const -> bool {
     return selected_elements_.contains(element_id);
@@ -286,7 +280,7 @@ auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
 }
 
 auto Selection::selected_segments(segment_t segment) const
-    -> std::span<const segment_selection_t> {
+    -> std::span<const segment_part_t> {
     const auto it = selected_segments_.find(segment);
     if (it == selected_segments_.end()) {
         return {};
@@ -323,26 +317,26 @@ auto get_segment_begin_end(line_t line, rect_fine_t selection_rect) {
     return std::make_pair(begin, end);
 }
 
-auto get_segment_selection(line_t line) -> segment_selection_t {
+auto get_segment_selection(line_t line) -> segment_part_t {
     const auto ordered_line = order_points(line);
 
     if (is_horizontal(line)) {
-        return segment_selection_t {ordered_line.p0.x, ordered_line.p1.x};
+        return segment_part_t {ordered_line.p0.x, ordered_line.p1.x};
     }
-    return segment_selection_t {ordered_line.p0.y, ordered_line.p1.y};
+    return segment_part_t {ordered_line.p0.y, ordered_line.p1.y};
 }
 
 auto get_segment_selection(line_t line, rect_fine_t selection_rect)
-    -> std::optional<segment_selection_t> {
+    -> std::optional<segment_part_t> {
     const auto [begin, end] = get_segment_begin_end(line, selection_rect);
 
     if (begin == end) {
         return std::nullopt;
     }
-    return segment_selection_t {begin, end};
+    return segment_part_t {begin, end};
 }
 
-auto get_selected_segment(line_t segment, segment_selection_t selection) -> line_t {
+auto get_selected_segment(line_t segment, segment_part_t selection) -> line_t {
     if (is_horizontal(segment)) {
         const auto y = segment.p0.y;
         return line_t {point_t {selection.begin, y}, point_t {selection.end, y}};

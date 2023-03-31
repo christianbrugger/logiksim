@@ -26,6 +26,25 @@ auto orientations_compatible(orientation_t a, orientation_t b) -> bool {
            || (b == undirected);
 }
 
+auto add_circuit_to_cache(auto&& cache, const Layout& layout,
+                          const Schematic& schematic) {
+    for (const auto element : schematic.elements()) {
+        const auto element_id = element.element_id();
+        if (is_inserted(layout.display_state(element_id))) {
+            if (element.is_element()) {
+                const auto data
+                    = to_layout_calculation_data(schematic, layout, element_id);
+                cache.insert(element_id, data);
+            }
+            if (element.is_wire()) {
+                for (const auto& segment : layout.segment_tree(element_id).segments()) {
+                    cache.insert(element_id, segment);
+                }
+            }
+        }
+    }
+}
+
 //
 // ConnectionCache
 //
@@ -118,6 +137,14 @@ auto ConnectionCache<IsInput>::update(element_id_t new_element_id,
 }
 
 template <bool IsInput>
+auto ConnectionCache<IsInput>::insert(element_id_t element_id, segment_info_t segment)
+    -> void {}
+
+template <bool IsInput>
+auto ConnectionCache<IsInput>::remove(element_id_t element_id, segment_info_t segment)
+    -> void {}
+
+template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position) const
     -> std::optional<std::pair<connection_t, orientation_t>> {
     if (const auto it = connections_.find(position); it != connections_.end()) {
@@ -181,6 +208,17 @@ auto ConnectionCache<IsInput>::is_colliding(layout_calculation_data_t data) cons
     } else {
         return !(iter_output_location(data, same_type_not_colliding)
                  && iter_input_location(data, different_type_compatible));
+    }
+}
+
+template <bool IsInput>
+auto ConnectionCache<IsInput>::validate(const Layout& layout,
+                                        const Schematic& schematic) const -> void {
+    auto cache = ConnectionCache<IsInput> {};
+    add_circuit_to_cache(cache, layout, schematic);
+
+    if (cache.connections_ != this->connections_) [[unlikely]] {
+        throw_exception("current cache state doesn't match circuit");
     }
 }
 
@@ -458,7 +496,7 @@ auto CollisionCache::state_colliding(point_t position, ItemType item_type) const
             }
             case ItemType::wire_new_unknown_point: {
                 const auto state = to_state(data);
-
+                // disallow element body
                 return state != CacheState::element_connection
                        && state != CacheState::wire_connection
                        && state != CacheState::wire_horizontal
@@ -572,103 +610,15 @@ auto CollisionCache::to_state(collision_data_t data) -> CacheState {
     return invalid_state;
 }
 
-/*
-//
-// ElementKeyStore
-//
-
-auto ElementKeyStore::insert(element_id_t element_id) -> element_key_t {
-    const auto element_key = next_key_;
-    ++next_key_.value;
-
-    insert(element_id, element_key);
-
-    return element_key;
-}
-
-auto ElementKeyStore::insert(element_id_t element_id, element_key_t element_key) -> void {
-    if (bool was_inserted = map_to_key_.insert({element_id, element_key}).second;
-        !was_inserted) [[unlikely]] {
-        throw_exception("Element id already exists in key store.");
-    }
-
-    if (bool was_inserted = map_to_id_.insert({element_key, element_id}).second;
-        !was_inserted) [[unlikely]] {
-        throw_exception("Element key already exists in key store.");
-    }
-}
-
-auto ElementKeyStore::remove(element_id_t element_id) -> void {
-    const auto it1 = map_to_key_.find(element_id);
-    if (it1 == map_to_key_.end()) [[unlikely]] {
-        throw_exception("Cannot find element_id in key store.");
-    }
-
-    const auto element_key = it1->second;
-    const auto it2 = map_to_id_.find(element_key);
-    if (it2 == map_to_id_.end()) [[unlikely]] {
-        throw_exception("Cannot find element_key in key store.");
-    }
-
-    map_to_key_.erase(it1);
-    map_to_id_.erase(it2);
-}
-
-auto ElementKeyStore::update(element_id_t new_element_id, element_id_t old_element_id)
+auto CollisionCache::validate(const Layout& layout, const Schematic& schematic) const
     -> void {
-    const auto element_key = to_element_key(old_element_id);
-    remove(old_element_id);
-    insert(new_element_id, element_key);
-}
+    auto cache = CollisionCache {};
+    add_circuit_to_cache(cache, layout, schematic);
 
-auto ElementKeyStore::element_key_valid(element_key_t element_key) const -> bool {
-    if (element_key < element_key_t {0} || element_key >= next_key_) [[unlikely]] {
-        throw_exception("This key was never handed out.");
+    if (cache.map_ != this->map_) [[unlikely]] {
+        throw_exception("current cache state doesn't match circuit");
     }
-
-    return map_to_id_.find(element_key) != map_to_id_.end();
 }
-
-auto ElementKeyStore::to_element_id(element_key_t element_key) const -> element_id_t {
-    const auto it = map_to_id_.find(element_key);
-
-    if (it == map_to_id_.end()) [[unlikely]] {
-        throw_exception("Element key not found in key store.");
-    }
-
-    return it->second;
-}
-
-auto ElementKeyStore::to_element_key(element_id_t element_id) const -> element_key_t {
-    const auto it = map_to_key_.find(element_id);
-
-    if (it == map_to_key_.end()) [[unlikely]] {
-        throw_exception("Element id not found in key store.");
-    }
-
-    return it->second;
-}
-
-auto ElementKeyStore::to_element_ids(std::span<const element_key_t> element_keys) const
-    -> std::vector<element_id_t> {
-    return transform_to_vector(element_keys, [&](element_key_t element_key) {
-        return to_element_id(element_key);
-    });
-}
-
-auto ElementKeyStore::to_element_keys(std::span<const element_id_t> element_ids) const
-    -> std::vector<element_key_t> {
-    return transform_to_vector(
-        element_ids, [&](element_id_t element_id) { return to_element_key(element_id); });
-}
-
-auto ElementKeyStore::size() const -> std::size_t {
-    if (map_to_id_.size() != map_to_key_.size()) [[unlikely]] {
-        throw_exception("maps have different sizes");
-    }
-    return map_to_id_.size();
-}
-*/
 
 //
 // Editable Circuit
@@ -677,7 +627,12 @@ auto ElementKeyStore::size() const -> std::size_t {
 EditableCircuit::EditableCircuit(Schematic&& schematic, Layout&& layout)
     : selection_builder_ {*this},
       schematic_ {std::move(schematic)},
-      layout_ {std::move(layout)} {}
+      layout_ {std::move(layout)} {
+    add_circuit_to_cache(input_connections_, layout_, schematic_);
+    add_circuit_to_cache(output_connections_, layout_, schematic_);
+    add_circuit_to_cache(collision_cache_, layout_, schematic_);
+    // add_circuit_to_cache(spatial_cache_, layout_, schematic_);
+}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}\n{}\n}}", schematic_, layout_);
@@ -735,6 +690,9 @@ auto EditableCircuit::validate() -> void {
 
     // caches
     spatial_cache_.validate(layout_, schematic_);
+    collision_cache_.validate(layout_, schematic_);
+    input_connections_.validate(layout_, schematic_);
+    output_connections_.validate(layout_, schematic_);
 
     // selections
     for (const auto& item : managed_selections_) {
@@ -744,11 +702,6 @@ auto EditableCircuit::validate() -> void {
         item.second->validate(layout_, schematic_);
     }
     selection_builder_.validate(layout_, schematic_);
-
-    // possible:
-    // - collision cache
-    // - input_connections
-    // - output_connections
 }
 
 auto EditableCircuit::add_placeholder_element() -> element_id_t {
@@ -921,8 +874,8 @@ auto EditableCircuit::merge_line_segments(element_id_t element_id, segment_index
     auto& m_tree = layout_.modifyable_segment_tree(element_id);
     const auto last_index = m_tree.last_index();
 
-    if (!is_collision_considered(m_tree.display_state(index0))
-        || !is_collision_considered(m_tree.display_state(index1))) [[unlikely]] {
+    if (!is_inserted(m_tree.display_state(index0))
+        || !is_inserted(m_tree.display_state(index1))) [[unlikely]] {
         throw_exception("Can only merge collision considered segments.");
     }
 
@@ -954,7 +907,7 @@ auto all_collision_condered(const SegmentTree& tree,
                             SearchTree::queried_segments_t result) -> bool {
     return std::ranges::all_of(result, [&](segment_t value) {
         return value.segment_index == null_segment_index
-               || is_collision_considered(tree.display_state(value.segment_index));
+               || is_inserted(tree.display_state(value.segment_index));
     });
 }
 
@@ -1725,7 +1678,7 @@ auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_e
 
 auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {
     const auto display_state = layout_.display_state(element_id);
-    return is_collision_considered(display_state);
+    return is_inserted(display_state);
 }
 
 auto EditableCircuit::cache_insert(element_id_t element_id) -> void {

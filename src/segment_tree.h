@@ -72,7 +72,7 @@ class SegmentTree {
 
     [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
     [[nodiscard]] auto last_index() const noexcept -> segment_index_t;
-    [[nodiscard]] auto indices() const noexcept -> detail::range_t<segment_index_t, true>;
+    [[nodiscard]] auto indices() const noexcept -> forward_range_t<segment_index_t>;
 
     [[nodiscard]] auto has_input() const noexcept -> bool;
     [[nodiscard]] auto input_count() const noexcept -> std::size_t;

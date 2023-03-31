@@ -70,6 +70,9 @@ class ConnectionCache {
     auto update(element_id_t new_element_id, element_id_t old_element_id,
                 layout_calculation_data_t data) -> void;
 
+    auto insert(element_id_t element_id, segment_info_t segment) -> void;
+    auto remove(element_id_t element_id, segment_info_t segment) -> void;
+
     [[nodiscard]] auto find(point_t position) const
         -> std::optional<std::pair<connection_t, orientation_t>>;
     [[nodiscard]] auto find(point_t position, Schematic& schematic) const
@@ -89,7 +92,7 @@ class ConnectionCache {
         });
     }
 
-    // TODO implement validate
+    auto validate(const Layout& layout, const Schematic& schematic) const -> void;
 
    private:
     map_type connections_ {};
@@ -105,7 +108,7 @@ class CollisionCache {
         wire_vertical,
         wire_point,
 
-        // only for collisions
+        // for collisions not insertions
         wire_new_unknown_point,
     };
 
@@ -161,7 +164,7 @@ class CollisionCache {
         });
     }
 
-    // TODO implement validate
+    auto validate(const Layout& layout, const Schematic& schematic) const -> void;
 
    private:
     [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
@@ -171,39 +174,6 @@ class CollisionCache {
 
     map_type map_ {};
 };
-
-/*
-class ElementKeyStore {
-   public:
-    using map_to_id_t = ankerl::unordered_dense::map<element_key_t, element_id_t>;
-    using map_to_key_t = ankerl::unordered_dense::map<element_id_t, element_key_t>;
-
-   public:
-    auto insert(element_id_t element_id) -> element_key_t;
-    auto remove(element_id_t element_id) -> void;
-    auto update(element_id_t new_element_id, element_id_t old_element_id) -> void;
-
-    [[nodiscard]] auto to_element_id(element_key_t element_key) const -> element_id_t;
-    [[nodiscard]] auto to_element_ids(std::span<const element_key_t> element_keys) const
-        -> std::vector<element_id_t>;
-    [[nodiscard]] auto to_element_key(element_id_t element_id) const -> element_key_t;
-    [[nodiscard]] auto to_element_keys(std::span<const element_id_t> element_ids) const
-        -> std::vector<element_key_t>;
-
-    [[nodiscard]] auto element_key_valid(element_key_t element_key) const -> bool;
-
-    [[nodiscard]] auto size() const -> std::size_t;
-
-   private:
-    auto insert(element_id_t element_id, element_key_t element_key) -> void;
-
-   private:
-    element_key_t next_key_ {0};
-
-    map_to_id_t map_to_id_ {};
-    map_to_key_t map_to_key_ {};
-};
-*/
 
 enum class LineSegmentType {
     horizontal_first,

@@ -185,10 +185,7 @@ auto SearchTree::validate(const Layout& layout, const Schematic& schematic) cons
     };
 
     for (const auto element : schematic.elements()) {
-        const auto display_state = layout.display_state(element.element_id());
-        // TODO reuse is_inserted ?
-        const auto is_cached = display_state == display_state_t::new_valid
-                               || display_state == display_state_t::normal;
+        const auto is_cached = is_inserted(layout.display_state(element.element_id()));
 
         // elements
         if (element.is_element() && is_cached) {

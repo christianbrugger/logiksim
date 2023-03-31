@@ -162,6 +162,12 @@ auto Layout::set_display_state(element_id_t element_id, display_state_t display_
     display_states_.at(element_id.value) = display_state;
 }
 
+auto Layout::element_ids() const noexcept -> forward_range_t<element_id_t> {
+    const auto count
+        = element_id_t {gsl::narrow_cast<element_id_t::value_type>(element_count())};
+    return range(count);
+}
+
 auto Layout::circuit_id() const noexcept -> circuit_id_t {
     return circuit_id_;
 }

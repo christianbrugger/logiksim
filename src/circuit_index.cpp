@@ -7,13 +7,6 @@
 
 namespace logicsim {
 
-namespace {
-auto is_inserted(display_state_t display_state) {
-    return display_state == display_state_t::normal
-           || display_state == display_state_t::new_valid;
-}
-}  // namespace
-
 auto validate_connections(Schematic::ConstElement element,
                           display_state_t display_state) {
     if (is_inserted(display_state)) {

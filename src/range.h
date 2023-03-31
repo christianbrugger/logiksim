@@ -303,6 +303,11 @@ struct range_step_t {
 }  // namespace detail
 
 template <typename T>
+using forward_range_t = detail::range_t<T, true>;
+template <typename T>
+using reverse_range_t = detail::range_t<T, false>;
+
+template <typename T>
 concept range_value_type = std::weakly_incrementable<T> && std::equality_comparable<T>
                            && std::totally_ordered<T>
                            && std::input_iterator<detail::range_iterator_t<T, true>>;

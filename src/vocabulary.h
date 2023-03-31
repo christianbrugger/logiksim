@@ -81,6 +81,9 @@ struct element_id_t {
     using value_type = int32_t;
     value_type value;
 
+    using difference_type = range_difference_t<value_type>;
+    static_assert(sizeof(difference_type) > sizeof(value_type));
+
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const element_id_t &other) const -> bool = default;
@@ -92,6 +95,17 @@ struct element_id_t {
 
     [[nodiscard]] explicit constexpr operator bool() const noexcept {
         return value >= 0;
+    }
+
+    auto operator++() noexcept -> element_id_t & {
+        ++value;
+        return *this;
+    }
+
+    auto operator++(int) noexcept -> element_id_t {
+        auto tmp = *this;
+        operator++();
+        return tmp;
     }
 };
 
@@ -137,8 +151,10 @@ struct connection_t {
 
 struct segment_index_t {
     using value_type = int16_t;
-    using difference_type = range_difference_t<value_type>;
     value_type value;
+
+    using difference_type = range_difference_t<value_type>;
+    static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -220,7 +236,7 @@ enum class display_state_t : uint8_t {
 
 auto format(display_state_t state) -> std::string;
 
-auto is_collision_considered(display_state_t display_state) -> bool;
+auto is_inserted(display_state_t display_state) -> bool;
 
 //
 // Time Types
@@ -338,7 +354,7 @@ struct grid_t {
     using value_type = int16_t;
     value_type value;
 
-    using difference_type = int32_t;
+    using difference_type = range_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     grid_t() = default;
@@ -543,6 +559,24 @@ struct rect_t {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const rect_t &other) const -> bool = default;
+};
+
+// TODO use offsets instead of absolute values
+struct segment_part_t {
+    grid_t begin;
+    grid_t end;
+
+    [[nodiscard]] explicit constexpr segment_part_t(grid_t begin_, grid_t end_)
+        : begin {begin_}, end {end_} {
+        if (!(begin_ < end_)) [[unlikely]] {
+            throw_exception("begin needs to be smaller than end.");
+        }
+    };
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const segment_part_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const segment_part_t &other) const = default;
 };
 
 }  // namespace logicsim

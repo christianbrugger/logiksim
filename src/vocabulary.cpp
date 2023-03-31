@@ -67,7 +67,7 @@ auto format(display_state_t state) -> std::string {
     throw_exception("Don't know how to convert display_state_t to string.");
 }
 
-auto is_collision_considered(display_state_t display_state) -> bool {
+auto is_inserted(display_state_t display_state) -> bool {
     return display_state == display_state_t::normal
            || display_state == display_state_t::new_valid;
 }
@@ -112,6 +112,10 @@ auto segment_t::format() const -> std::string {
         return fmt::format("<NullSegment>", segment_index, element_id);
     }
     return fmt::format("<Element {}, Segment {}>", element_id, segment_index);
+}
+
+auto segment_part_t::format() const -> std::string {
+    return fmt::format("<part {}-{}>", begin, end);
 }
 
 template <typename T>

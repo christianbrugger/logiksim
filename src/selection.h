@@ -10,31 +10,11 @@
 
 namespace logicsim {
 
-// TODO rename
-// TODO use offsets instead of absolute values
-struct segment_selection_t {
-    grid_t begin;
-    grid_t end;
-
-    [[nodiscard]] explicit constexpr segment_selection_t(grid_t begin_, grid_t end_)
-        : begin {begin_}, end {end_} {
-        if (!(begin_ < end_)) [[unlikely]] {
-            throw_exception("begin needs to be smaller than end.");
-        }
-    };
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto operator==(const segment_selection_t &other) const -> bool
-        = default;
-    [[nodiscard]] auto operator<=>(const segment_selection_t &other) const = default;
-};
-
 namespace detail::selection {
 
 using map_key_t = segment_t;
 using policy = folly::small_vector_policy::policy_size_type<uint16_t>;
-using map_value_t = folly::small_vector<segment_selection_t, 3, policy>;
+using map_value_t = folly::small_vector<segment_part_t, 3, policy>;
 using map_pair_t = std::pair<map_key_t, map_value_t>;
 
 static_assert(sizeof(map_key_t) == 8);
@@ -45,12 +25,12 @@ using elements_set_t = ankerl::unordered_dense::set<element_id_t>;
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 }  // namespace detail::selection
 
-auto get_segment_selection(line_t line) -> segment_selection_t;
+auto get_segment_selection(line_t line) -> segment_part_t;
 
 auto get_segment_selection(line_t line, rect_fine_t selection_rect)
-    -> std::optional<segment_selection_t>;
+    -> std::optional<segment_part_t>;
 
-auto get_selected_segment(line_t segment, segment_selection_t selection) -> line_t;
+auto get_selected_segment(line_t segment, segment_part_t selection) -> line_t;
 
 class Layout;
 class Schematic;
@@ -69,16 +49,16 @@ class Selection {
     auto remove_element(element_id_t element_id) -> void;
     auto toggle_element(element_id_t element_id) -> void;
 
-    auto add_segment(segment_t segment, segment_selection_t selection) -> void;
-    auto remove_segment(segment_t segment, segment_selection_t selection) -> void;
-    auto toggle_segment(segment_t segment, segment_selection_t selection) -> void;
+    auto add_segment(segment_t segment, segment_part_t selection) -> void;
+    auto remove_segment(segment_t segment, segment_part_t selection) -> void;
+    auto toggle_segment(segment_t segment, segment_part_t selection) -> void;
 
     [[nodiscard]] auto is_selected(element_id_t element_id) const -> bool;
 
     [[nodiscard]] auto selected_elements() const -> std::span<const element_id_t>;
     [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;
     [[nodiscard]] auto selected_segments(segment_t segment) const
-        -> std::span<const segment_selection_t>;
+        -> std::span<const segment_part_t>;
 
     auto update_element_id(element_id_t new_element_id, element_id_t old_element_id)
         -> void;
