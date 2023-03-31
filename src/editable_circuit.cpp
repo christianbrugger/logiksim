@@ -1431,7 +1431,8 @@ auto EditableCircuit::swap_and_delete_single_element(element_id_t& element_id) -
         key_remove(element_id);
     } else {
         // TODO handle placeholders differently?
-        if (!schematic_.element(element_id).is_placeholder() && layout_.display_state(element_id) != display_state_t::new_temporary)
+        if (!schematic_.element(element_id).is_placeholder()
+            && layout_.display_state(element_id) != display_state_t::new_temporary)
             [[unlikely]] {
             throw_exception("can only delete temporary objects");
         }
@@ -1645,7 +1646,7 @@ auto EditableCircuit::key_insert(element_id_t element_id) -> void {
     if (schematic_.element(element_id).is_placeholder()) {
         return;
     }
-    // TODO maybe invalidate selection_builder cache?
+    selection_builder_.clear_cache();
 }
 
 auto EditableCircuit::key_remove(element_id_t element_id) -> void {
@@ -1654,13 +1655,15 @@ auto EditableCircuit::key_remove(element_id_t element_id) -> void {
     if (type == ElementType::placeholder) {
         return;
     }
-    // TODO maybe invalidate selection_builder cache?
+    selection_builder_.clear_cache();
 
+    // elements
     for (auto&& entry : managed_selections_) {
         auto& selection = *entry.second;
         selection.remove_element(element_id);
     }
 
+    // segments
     if (type == ElementType::wire) {
         const auto indices = layout_.segment_tree(element_id).indices();
 
@@ -1682,13 +1685,15 @@ auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_e
     if (type == ElementType::placeholder) {
         return;
     }
-    // TODO maybe invalidate selection_builder cache?
+    selection_builder_.clear_cache();
 
+    // elements
     for (auto&& entry : managed_selections_) {
         auto& selection = *entry.second;
         selection.update_element_id(new_element_id, old_element_id);
     }
 
+    // segments
     if (type == ElementType::wire) {
         const auto indices = layout_.segment_tree(new_element_id).indices();
 

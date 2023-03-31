@@ -189,4 +189,8 @@ auto SelectionBuilder::apply_all_operations() -> void {
     cached_selection_.reset();
 }
 
+auto SelectionBuilder::clear_cache() const -> void {
+    cached_selection_.reset();
+}
+
 }  // namespace logicsim

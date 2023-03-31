@@ -46,6 +46,8 @@ class SelectionBuilder {
     [[nodiscard]] auto all_operations_applied() const -> bool;
     auto apply_all_operations() -> void;
 
+    auto clear_cache() const -> void;
+
    private:
     gsl::not_null<const EditableCircuit*> editable_circuit_;
 
