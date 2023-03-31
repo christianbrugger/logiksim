@@ -516,6 +516,7 @@ class Schematic::OutputTemplate {
 
 namespace logicsim {
 
+auto validate_has_no_placeholders(const Schematic::ConstElement element) -> void;
 auto validate_all_outputs_connected(const Schematic::ConstElement element) -> void;
 auto validate_all_inputs_disconnected(const Schematic::ConstElement element) -> void;
 auto validate_all_outputs_disconnected(const Schematic::ConstElement element) -> void;

@@ -373,6 +373,17 @@ auto validate_placeholder_connected(const Schematic::ConstElement element) -> vo
     }
 }
 
+auto validate_has_no_placeholders(const Schematic::ConstElement element) -> void {
+    const auto is_placeholder = [](const Schematic::ConstOutput output) {
+        return !output.has_connected_element()
+               || !output.connected_element().is_placeholder();
+    };
+
+    if (std::ranges::any_of(element.outputs(), is_placeholder)) {
+        throw_exception("element should not have output placeholders");
+    }
+}
+
 auto validate_input_consistent(const Schematic::ConstInput input) -> void {
     if (input.has_connected_element()) {
         if (!input.connected_output().has_connected_element()) [[unlikely]] {
@@ -429,8 +440,6 @@ auto is_input_output_count_valid(const Schematic::ConstElement element) -> bool 
             return element.input_count() == 1 && element.output_count() == 0;
         }
         case wire: {
-            // TODO change once we handle inputs & outputs correctly
-            // return element.input_count() == 1 && element.output_count() >= 1;
             return element.input_count() <= 1;
         }
 
