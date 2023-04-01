@@ -340,10 +340,10 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
     }
 }
 
-auto check_element_not_in_segments(element_id_t element_id, const Layout &layout,
+auto check_element_not_in_segments(element_id_t element_id, const SegmentTree &tree,
                                    const detail::selection::segment_map_t &segment_map)
     -> void {
-    for (const auto index : layout.segment_tree(element_id).indices()) {
+    for (const auto index : tree.indices()) {
         const auto key = segment_t(element_id, index);
 
         if (segment_map.contains(key)) [[unlikely]] {
@@ -360,11 +360,13 @@ auto Selection::validate(const Layout &layout, const Schematic &schematic) const
     auto element_set = detail::selection::elements_set_t {selected_elements_};
     auto segment_map = detail::selection::segment_map_t {selected_segments_};
 
-    print(element_set, segment_map);
+    for (const auto element_id : element_set) {
+        check_element_not_in_segments(element_id, layout.segment_tree(element_id),
+                                      segment_map);
+    }
 
     // elements
     for (const auto element : schematic.elements()) {
-        check_element_not_in_segments(element.element_id(), layout, segment_map);
         check_and_remove_element(element_set, element);
     }
     if (!element_set.empty()) [[unlikely]] {

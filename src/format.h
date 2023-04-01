@@ -31,23 +31,24 @@ concept format_string_type = std::same_as<T, fmt::basic_string_view<Char>>
 
 namespace detail {
 
-template <std::size_t N>
-constexpr auto print_format_impl(std::size_t count, std::array<char, N> &buffer) {
+// repeats {} count times: 2 -> "{} {}\n"
+template <std::size_t count>
+constexpr auto repeat_format_string() {
+    constexpr auto buffer_size = count == 0 ? 1 : count * 3;
+    std::array<char, buffer_size> buffer;
+
     std::size_t pos = 0;
-
     for (std::size_t i = 0; i < count; ++i) {
-        const std::string_view format = "{}";
-
+        std::string_view format = "{} ";
         for (char c : format) {
             buffer[pos++] = c;
         }
-
-        if (i != count - 1) {
-            buffer[pos++] = ' ';
-        }
     }
-
+    if constexpr (count > 0) {
+        --pos;
+    }
     buffer[pos] = '\n';
+    return buffer;
 }
 
 }  // namespace detail
@@ -55,16 +56,10 @@ constexpr auto print_format_impl(std::size_t count, std::array<char, N> &buffer)
 template <typename... Args>
 auto print(Args &&...args) {
     constexpr static std::size_t count = sizeof...(Args);
-    constexpr static std::size_t buffer_size = count * 3 - 1 + 1;
+    constexpr static auto buffer = detail::repeat_format_string<count>();
 
-    constexpr static std::array<char, buffer_size> buffer = []() {
-        std::array<char, buffer_size> buffer_;
-        detail::print_format_impl(count, buffer_);
-        return buffer_;
-    }();
-
-    constexpr static auto sv = std::string_view(buffer.data(), buffer_size);
-    fmt::print(sv, std::forward<Args>(args)...);
+    constexpr static auto fmt_str = std::string_view {buffer.data(), buffer.size()};
+    fmt::print(fmt_str, std::forward<Args>(args)...);
 }
 
 }  // namespace logicsim

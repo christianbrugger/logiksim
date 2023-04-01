@@ -479,7 +479,7 @@ auto RendererWidget::load_circuit(int id) -> void {
 #else
     constexpr auto debug_build = true;
 #endif
-    constexpr auto debug_max = 75;
+    constexpr auto debug_max = 50;
     constexpr auto release_max = 1600;
 
     if (id == 1) {
