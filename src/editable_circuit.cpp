@@ -818,42 +818,17 @@ auto sort_lines_with_endpoints_last(std::span<std::pair<line_t, segment_t>> line
 
 auto merge_parallel_segments(segment_info_t segment_info_0, segment_info_t segment_info_1)
     -> segment_info_t {
-    const auto line0 = segment_info_0.line;
-    const auto line1 = segment_info_1.line;
+    const auto [a, b] = order_points(segment_info_0, segment_info_1);
 
-    if (line0.p0 == line1.p0) {
-        return segment_info_t {
-            .line = line_t {line0.p1, line1.p1},
-            .p0_type = segment_info_0.p1_type,
-            .p1_type = segment_info_1.p1_type,
-        };
+    if (a.line.p1 != b.line.p0) [[unlikely]] {
+        throw_exception("segments need to have common shared point");
     }
 
-    if (line0.p0 == line1.p1) {
-        return segment_info_t {
-            .line = line_t {line0.p1, line1.p0},
-            .p0_type = segment_info_0.p1_type,
-            .p1_type = segment_info_1.p0_type,
-        };
-    }
-
-    if (line0.p1 == line1.p0) {
-        return segment_info_t {
-            .line = line_t {line0.p0, line1.p1},
-            .p0_type = segment_info_0.p0_type,
-            .p1_type = segment_info_1.p1_type,
-        };
-    }
-
-    if (line0.p1 == line1.p1) {
-        return segment_info_t {
-            .line = line_t {line0.p0, line1.p0},
-            .p0_type = segment_info_0.p0_type,
-            .p1_type = segment_info_1.p0_type,
-        };
-    }
-
-    throw_exception("segments need to have commont on shared point");
+    return segment_info_t {
+        .line = line_t {a.line.p0, b.line.p1},
+        .p0_type = a.p0_type,
+        .p1_type = b.p1_type,
+    };
 }
 
 auto EditableCircuit::merge_line_segments(element_id_t element_id, segment_index_t index0,

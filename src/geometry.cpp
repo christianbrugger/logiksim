@@ -29,9 +29,9 @@ auto order_points(const line_t line0, const line_t line1) noexcept
     auto b = order_points(line1);
 
     if (a.p0 <= b.p0) {
-        return std::tie(a, b);
+        return std::make_tuple(a, b);
     }
-    return std::tie(b, a);
+    return std::make_tuple(b, a);
 }
 
 // fast distance for horitonal or vertical lines

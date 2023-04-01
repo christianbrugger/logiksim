@@ -13,6 +13,7 @@
 
 #include <concepts>
 #include <functional>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -23,7 +24,50 @@ template <typename T, typename Char = char>
 concept format_string_type = std::same_as<T, fmt::basic_string_view<Char>>
                              || std::same_as<T, std::basic_string<Char>>
                              || std::same_as<T, std::basic_string_view<Char>>;
+
+//
+// print
+//
+
+namespace detail {
+
+template <std::size_t N>
+constexpr auto print_format_impl(std::size_t count, std::array<char, N> &buffer) {
+    std::size_t pos = 0;
+
+    for (std::size_t i = 0; i < count; ++i) {
+        const std::string_view format = "{}";
+
+        for (char c : format) {
+            buffer[pos++] = c;
+        }
+
+        if (i != count - 1) {
+            buffer[pos++] = ' ';
+        }
+    }
+
+    buffer[pos] = '\n';
 }
+
+}  // namespace detail
+
+template <typename... Args>
+auto print(Args &&...args) {
+    constexpr static std::size_t count = sizeof...(Args);
+    constexpr static std::size_t buffer_size = count * 3 - 1 + 1;
+
+    constexpr static std::array<char, buffer_size> buffer = []() {
+        std::array<char, buffer_size> buffer_;
+        detail::print_format_impl(count, buffer_);
+        return buffer_;
+    }();
+
+    constexpr static auto sv = std::string_view(buffer.data(), buffer_size);
+    fmt::print(sv, std::forward<Args>(args)...);
+}
+
+}  // namespace logicsim
 
 //
 // std::pair
@@ -41,6 +85,24 @@ struct fmt::formatter<std::pair<T1, T2>, Char> {
 };
 
 //
+// std::optional
+//
+
+template <typename T, typename Char>
+struct fmt::formatter<std::optional<T>, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const std::optional<T> &obj, fmt::format_context &ctx) {
+        if (obj.has_value()) {
+            return fmt::format_to(ctx.out(), "{}", *obj);
+        }
+        return fmt::format_to(ctx.out(), "std::nullopt<{}>", typeid(T).name());
+    }
+};
+
+//
 // obj.format() and format(obj)
 //
 
@@ -54,7 +116,6 @@ concept format_obj_with_member_format_function
                                         };
 }  // namespace logicsim
 
-// TODO remove all obj.format() specializations
 template <typename T, typename Char>
     requires logicsim::format_obj_with_member_format_function<T, Char>
 struct fmt::formatter<T, Char> {

@@ -36,6 +36,28 @@ auto is_cross_point(SegmentPointType point_type) -> bool {
            || point_type == visual_cross_point;
 }
 
+auto order_points(segment_info_t segment) -> segment_info_t {
+    if (segment.line.p0 <= segment.line.p1) {
+        return segment;
+    }
+    return segment_info_t {
+        .line = line_t {segment.line.p1, segment.line.p0},
+        .p0_type = segment.p1_type,
+        .p1_type = segment.p0_type,
+    };
+}
+
+auto order_points(segment_info_t segment0, segment_info_t segment1)
+    -> std::tuple<segment_info_t, segment_info_t> {
+    auto a = order_points(segment0);
+    auto b = order_points(segment1);
+
+    if (a.line.p0 <= b.line.p0) {
+        return std::make_tuple(a, b);
+    }
+    return std::make_tuple(b, a);
+}
+
 auto segment_info_t::format() const -> std::string {
     return fmt::format("Segment({} {} - {} {})", p0_type, line.p0, line.p1, p1_type);
 }

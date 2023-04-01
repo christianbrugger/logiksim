@@ -326,9 +326,9 @@ constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 
 template <std::uniform_random_bit_generator G>
 auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events,
-                          const bool print) -> int64_t;
+                          const bool do_print) -> int64_t;
 auto benchmark_simulation(int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
-                          int n_events = BENCHMARK_DEFAULT_EVENTS, bool print = false)
+                          int n_events = BENCHMARK_DEFAULT_EVENTS, bool do_print = false)
     -> int64_t;
 
 }  // namespace logicsim

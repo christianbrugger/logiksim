@@ -459,7 +459,7 @@ auto RendererWidget::reload_circuit() -> void {
 
 #ifndef NDEBUG
     if (editable_circuit_->schematic().element_count() < 30) {
-        fmt::print("{}\n", *editable_circuit_);
+        print(editable_circuit_);
     }
     editable_circuit_->validate();
 #endif
@@ -569,7 +569,7 @@ auto RendererWidget::load_circuit(int id) -> void {
         }
 
         if (editable_circuit.schematic().element_count() < 10) {
-            fmt::print("{}\n", editable_circuit);
+            print(editable_circuit);
         }
         fmt::print("Added {} elements and {} wire segments in {}.\n", element_count,
                    segment_count, timer_str);
@@ -692,7 +692,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
     if (do_render_circuit_) {
         const auto& selection = editable_circuit.selection_builder().selection();
-        // fmt::print("{}\n", selection);
+        // print(selection);
 
         const auto mask = editable_circuit.selection_builder().create_selection_mask();
 

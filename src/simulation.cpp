@@ -902,9 +902,9 @@ void _generate_random_events(G &rng, Simulation &simulation) {
 
 template <std::uniform_random_bit_generator G>
 auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events,
-                          const bool print) -> int64_t {
+                          const bool do_print) -> int64_t {
     Simulation simulation {schematic};
-    simulation.print_events = print;
+    simulation.print_events = do_print;
 
     // set custom delays
     for (const auto element : schematic.elements()) {
@@ -939,7 +939,7 @@ auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events
         _generate_random_events(rng, simulation);
     }
 
-    if (print) {
+    if (do_print) {
         auto output_values {simulation.output_values()};
 
         fmt::print("events simulated = {}\n", simulated_event_count);
@@ -949,7 +949,7 @@ auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
                 auto hist = simulation.input_history(element);
-                fmt::print("{} {}\n", element, hist);
+                print(element, hist);
             }
         }
     }
@@ -960,20 +960,20 @@ auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events
 
 template auto benchmark_simulation(boost::random::mt19937 &rng,
                                    const Schematic &schematic, const int n_events,
-                                   const bool print) -> int64_t;
+                                   const bool do_print) -> int64_t;
 
-auto benchmark_simulation(const int n_elements, const int n_events, const bool print)
+auto benchmark_simulation(const int n_elements, const int n_events, const bool do_print)
     -> int64_t {
     boost::random::mt19937 rng {0};
 
     auto schematic = create_random_schematic(rng, n_elements);
-    if (print) {
-        fmt::print("{}\n", schematic);
+    if (do_print) {
+        print(schematic);
     }
     add_output_placeholders(schematic);
     schematic.validate(Schematic::validate_all);
 
-    return benchmark_simulation(rng, schematic, n_events, print);
+    return benchmark_simulation(rng, schematic, n_events, do_print);
 }
 
 }  // namespace logicsim
