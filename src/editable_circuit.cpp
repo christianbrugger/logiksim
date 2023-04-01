@@ -303,7 +303,7 @@ auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
                 return wire_vertical;
 
             case shadow_point:
-            case cross_point:
+            case visual_cross_point:
                 return std::nullopt;
 
             case new_unknown:
@@ -870,14 +870,13 @@ auto EditableCircuit::merge_line_segments(element_id_t element_id, segment_index
 
     if (!is_inserted(m_tree.display_state(index0))
         || !is_inserted(m_tree.display_state(index1))) [[unlikely]] {
-        throw_exception("Can only merge collision considered segments.");
+        throw_exception("Can only merge inserted segments.");
     }
 
     // merged segment
     const auto merged_segment
         = merge_parallel_segments(m_tree.segment(index0), m_tree.segment(index1));
 
-    // TODO depends on mode
     // remove from cache
     cache_remove(element_id, index0);
     cache_remove(element_id, index1);
@@ -889,7 +888,6 @@ auto EditableCircuit::merge_line_segments(element_id_t element_id, segment_index
     m_tree.update_segment(index0, merged_segment, display_state_t::normal);
     m_tree.swap_and_delete_segment(index1);
 
-    // TODO depends on mode
     // add back to cache
     cache_insert(element_id, index0);
     if (index1 != last_index) {
@@ -960,6 +958,7 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
             return;
         }
 
+        // handle corner
         set_segment_point_types(
             {
                 std::pair {segment.at(0), SegmentPointType::colliding_point},
@@ -993,7 +992,7 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
                 {
                     std::pair {segment.at(0), SegmentPointType::colliding_point},
                     std::pair {segment.at(1), SegmentPointType::shadow_point},
-                    std::pair {segment.at(2), SegmentPointType::cross_point},
+                    std::pair {segment.at(2), SegmentPointType::visual_cross_point},
                 },
                 position);
         }
@@ -1006,7 +1005,7 @@ auto EditableCircuit::fix_line_segments(point_t position) -> void {
                 std::pair {segment.at(0), SegmentPointType::colliding_point},
                 std::pair {segment.at(1), SegmentPointType::shadow_point},
                 std::pair {segment.at(2), SegmentPointType::shadow_point},
-                std::pair {segment.at(3), SegmentPointType::cross_point},
+                std::pair {segment.at(3), SegmentPointType::visual_cross_point},
             },
             position);
         return;
@@ -1047,11 +1046,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
             auto&& m_tree = layout_.modifyable_segment_tree(element_id);
 
             auto first_index = m_tree.add_tree(tree_copy);
-            // TODO add only in specific mode?
-            for (auto index : range(gsl::narrow<std::size_t>(first_index.value),
-                                    m_tree.segment_count())) {
-                const auto segment_index = segment_index_t {
-                    gsl::narrow_cast<segment_index_t::value_type>(index)};
+            for (auto segment_index : range(first_index, ++m_tree.last_index())) {
                 cache_insert(element_id, segment_index);
             }
         }
@@ -1086,13 +1081,11 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
         };
 
         const auto segment_index = m_tree.add_segment(segment, display_state_t::normal);
-        // TODO add only in specific mode?
         cache_insert(element_id, segment_index);
 
         if (selection != nullptr) {
-            const auto segment_selection = get_segment_selection(segment.line);
-            selection->add_segment(segment_t {element_id, segment_index},
-                                   segment_selection);
+            const auto segment_part = get_segment_part(segment.line);
+            selection->add_segment(segment_t {element_id, segment_index}, segment_part);
         }
     }
 
@@ -1244,9 +1237,10 @@ auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
         handle->remove_element(element_id);
 
         change_insertion_mode(element_id, InsertionMode::temporary);
-        if (element_id) {
-            swap_and_delete_single_element(element_id);
+        if (!element_id) {
+            throw_exception("element disappeared in mode change.");
         }
+        swap_and_delete_single_element(element_id);
     }
 }
 
@@ -1687,6 +1681,7 @@ auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {
 auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
     const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
 
+    // TODO should we add support for wires?
     if (data.element_type == ElementType::wire) [[unlikely]] {
         throw_exception("Not supported for wires.");
     }
@@ -1700,6 +1695,7 @@ auto EditableCircuit::cache_insert(element_id_t element_id) -> void {
 auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
     const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
 
+    // TODO should we add support for wires?
     if (data.element_type == ElementType::wire) [[unlikely]] {
         throw_exception("Not supported for wires.");
     }
@@ -1712,20 +1708,18 @@ auto EditableCircuit::cache_remove(element_id_t element_id) -> void {
 
 auto EditableCircuit::cache_update(element_id_t new_element_id,
                                    element_id_t old_element_id) -> void {
-    const auto element_type = schematic_.element(new_element_id).element_type();
-
-    if (element_type == ElementType::placeholder) {
+    if (schematic_.element(new_element_id).is_placeholder()) {
         return;
     }
     if (!is_element_cached(new_element_id)) {
         return;
     }
+
     // element cache update
     const auto data = to_layout_calculation_data(schematic_, layout_, new_element_id);
 
-    // TODO never called for wires
-    if (element_type != ElementType::wire) {
-        // TODO connection cache
+    if (data.element_type != ElementType::wire) {
+        // TODO here we need to support wires
         input_connections_.update(new_element_id, old_element_id, data);
         output_connections_.update(new_element_id, old_element_id, data);
     }
@@ -1737,7 +1731,8 @@ auto EditableCircuit::cache_insert(element_id_t element_id, segment_index_t segm
     -> void {
     const auto segment = layout_.segment_tree(element_id).segment(segment_index);
 
-    // TODO connection cache
+    input_connections_.insert(element_id, segment);
+    output_connections_.insert(element_id, segment);
     collision_cache_.insert(element_id, segment);
     spatial_cache_.insert(element_id, segment.line, segment_index);
 }
@@ -1746,7 +1741,8 @@ auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segm
     -> void {
     const auto segment = layout_.segment_tree(element_id).segment(segment_index);
 
-    // TODO connection cache
+    input_connections_.remove(element_id, segment);
+    output_connections_.remove(element_id, segment);
     collision_cache_.remove(element_id, segment);
     spatial_cache_.remove(element_id, segment.line, segment_index);
 }

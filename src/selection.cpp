@@ -317,7 +317,7 @@ auto get_segment_begin_end(line_t line, rect_fine_t selection_rect) {
     return std::make_pair(begin, end);
 }
 
-auto get_segment_selection(line_t line) -> segment_part_t {
+auto get_segment_part(line_t line) -> segment_part_t {
     const auto ordered_line = order_points(line);
 
     if (is_horizontal(line)) {
@@ -326,7 +326,7 @@ auto get_segment_selection(line_t line) -> segment_part_t {
     return segment_part_t {ordered_line.p0.y, ordered_line.p1.y};
 }
 
-auto get_segment_selection(line_t line, rect_fine_t selection_rect)
+auto get_segment_part(line_t line, rect_fine_t selection_rect)
     -> std::optional<segment_part_t> {
     const auto [begin, end] = get_segment_begin_end(line, selection_rect);
 
@@ -336,6 +336,7 @@ auto get_segment_selection(line_t line, rect_fine_t selection_rect)
     return segment_part_t {begin, end};
 }
 
+// TODO rename
 auto get_selected_segment(line_t segment, segment_part_t selection) -> line_t {
     if (is_horizontal(segment)) {
         const auto y = segment.p0.y;

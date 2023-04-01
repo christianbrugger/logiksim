@@ -87,7 +87,7 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
                           .segment_tree(segment.element_id)
                           .segment(segment.segment_index)
                           .line;
-    const auto segment_sel = get_segment_selection(line, operation.rect);
+    const auto segment_sel = get_segment_part(line, operation.rect);
 
     if (!segment_sel) {
         return;

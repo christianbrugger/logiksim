@@ -24,7 +24,7 @@ enum class SegmentPointType : uint8_t {
     cross_point_vertical,
 
     // no collision
-    cross_point,
+    visual_cross_point,
     shadow_point,
     // unknown state
     new_unknown,

@@ -22,8 +22,8 @@ auto format(SegmentPointType type) -> std::string {
 
         case shadow_point:
             return "shadow_point";
-        case cross_point:
-            return "cross_point";
+        case visual_cross_point:
+            return "visual_cross_point";
         case new_unknown:
             return "new_unknown";
     }
@@ -33,7 +33,7 @@ auto format(SegmentPointType type) -> std::string {
 auto is_cross_point(SegmentPointType point_type) -> bool {
     using enum SegmentPointType;
     return point_type == cross_point_horizontal || point_type == cross_point_vertical
-           || point_type == cross_point;
+           || point_type == visual_cross_point;
 }
 
 auto segment_info_t::format() const -> std::string {
@@ -102,7 +102,7 @@ auto SegmentTree::register_segment(segment_index_t index) -> void {
             case cross_point_horizontal:
             case cross_point_vertical:
             case shadow_point:
-            case cross_point:
+            case visual_cross_point:
             case new_unknown: {
                 break;
             }
@@ -148,7 +148,7 @@ auto SegmentTree::unregister_segment(segment_index_t index) -> void {
             case cross_point_horizontal:
             case cross_point_vertical:
             case shadow_point:
-            case cross_point:
+            case visual_cross_point:
             case new_unknown: {
                 break;
             }
@@ -247,7 +247,6 @@ auto SegmentTree::last_index() const noexcept -> segment_index_t {
 auto SegmentTree::indices() const noexcept -> forward_range_t<segment_index_t> {
     const auto count = segment_index_t {
         gsl::narrow_cast<segment_index_t::value_type>(segment_count())};
-
     return range(count);
 }
 

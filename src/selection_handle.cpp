@@ -130,7 +130,7 @@ auto element_handle_t::set_element(element_id_t element_id) -> void {
 
 auto element_handle_t::element() const -> element_id_t {
     if (!selection_handle_) [[unlikely]] {
-        throw_exception("handle cannot be empty");
+        throw_exception("access to empty handle");
     }
 
     const auto& elements = selection_handle_->selected_elements();
@@ -141,7 +141,7 @@ auto element_handle_t::element() const -> element_id_t {
     } else if (count == 1) {
         return elements[0];
     }
-    throw_exception("selectiion should never have more than one element");
+    throw_exception("selection should never have more than one element");
 }
 
 element_handle_t::operator bool() const noexcept {
