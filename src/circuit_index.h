@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_CIRCUIT_INDEX_H
 #define LOGIKSIM_CIRCUIT_INDEX_H
 
+#include "circuit.h"
 #include "circuit_description.h"
 #include "layout.h"
 #include "schematic.h"
@@ -16,6 +17,7 @@ class CircuitIndex {
 
     [[nodiscard]] auto circuit_count() const -> std::size_t;
 
+    [[nodiscard]] auto borrow_circuit(circuit_id_t circuit_id) -> Circuit;
     [[nodiscard]] auto borrow_schematic(circuit_id_t circuit_id) -> Schematic;
     [[nodiscard]] auto borrow_schematics() -> std::vector<Schematic>;
     [[nodiscard]] auto borrow_layout(circuit_id_t circuit_id) -> Layout;

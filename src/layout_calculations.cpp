@@ -1,6 +1,7 @@
 #include "layout_calculations.h"
 
 #include "geometry.h"
+#include "scene.h"
 
 namespace logicsim {
 
@@ -200,6 +201,31 @@ auto element_selection_rect(line_t segment) -> rect_fine_t {
         };
     }
     return rect_fine_t {p0, p1};
+}
+
+auto is_representable(layout_calculation_data_t data) -> bool {
+    if (is_placeholder(data)) {
+        return true;
+    }
+    if (data.element_type == ElementType::wire) {
+        throw_exception("Not implemented for wires.");
+    }
+
+    const auto position = data.position;
+    data.position = point_t {0, 0};
+    const auto rect = element_collision_rect(data);
+
+    return is_representable(position.x.value + rect.p0.x.value,
+                            position.y.value + rect.p0.y.value)
+           && is_representable(position.x.value + rect.p1.x.value,
+                               position.y.value + rect.p1.y.value);
+}
+
+auto orientations_compatible(orientation_t a, orientation_t b) -> bool {
+    using enum orientation_t;
+    return (a == left && b == right) || (a == right && b == left)
+           || (a == up && b == down) || (a == down && b == up) || (a == undirected)
+           || (b == undirected);
 }
 
 }  // namespace logicsim

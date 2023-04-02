@@ -78,6 +78,12 @@ class SegmentTree {
     [[nodiscard]] auto last_index() const noexcept -> segment_index_t;
     [[nodiscard]] auto indices() const noexcept -> forward_range_t<segment_index_t>;
 
+    [[nodiscard]] auto indices(element_id_t element_id) const {
+        return transform_view(indices(), [=](segment_index_t index) -> segment_t {
+            return segment_t {element_id, index};
+        });
+    };
+
     [[nodiscard]] auto has_input() const noexcept -> bool;
     [[nodiscard]] auto input_count() const noexcept -> std::size_t;
     [[nodiscard]] auto input_position() const -> point_t;

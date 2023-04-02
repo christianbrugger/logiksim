@@ -19,8 +19,7 @@ enum class SelectionFunction {
 };
 
 class Layout;
-class Schematic;
-class EditableCircuit;
+class SearchTree;
 
 class SelectionBuilder {
    public:
@@ -32,7 +31,10 @@ class SelectionBuilder {
     };
 
    public:
-    [[nodiscard]] explicit SelectionBuilder(const EditableCircuit &editable_circuit);
+    // TODO take cache provider as argument instead
+    [[nodiscard]] explicit SelectionBuilder(const Layout &layout,
+                                            const SearchTree &spatial_cache,
+                                            selection_handle_t initial_selection);
 
     [[nodiscard]] auto empty() const noexcept -> bool;
 
@@ -43,22 +45,21 @@ class SelectionBuilder {
 
     [[nodiscard]] auto selection() const -> const Selection &;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
-    [[nodiscard]] auto copy_selection() const -> selection_handle_t;
 
     [[nodiscard]] auto all_operations_applied() const -> bool;
     auto apply_all_operations() -> void;
 
     auto clear_cache() const -> void;
-    auto validate(const Layout &layout, const Schematic &schematic) const -> void;
+    auto validate(const Circuit &circuit) const -> void;
 
    private:
     auto calculate_selection() const -> Selection;
 
-    gsl::not_null<const EditableCircuit *> editable_circuit_;
+    gsl::not_null<const Layout *> layout_;
+    gsl::not_null<const SearchTree *> spatial_cache_;
 
     gsl::not_null<selection_handle_t> initial_selection_;
     std::vector<operation_t> operations_ {};
-
     mutable std::optional<Selection> cached_selection_ {};
 };
 

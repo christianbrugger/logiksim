@@ -94,9 +94,9 @@ auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
 
 auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> void {
     if (position && first_position_) {
-        editable_circuit_.add_line_segment(*first_position_, *position,
-                                           LineSegmentType::horizontal_first,
-                                           InsertionMode::insert_or_discard);
+        editable_circuit_.add_line_segments(*first_position_, *position,
+                                            LineSegmentType::horizontal_first,
+                                            InsertionMode::insert_or_discard);
     }
 }
 
@@ -127,7 +127,10 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
     if (state_ == State::waiting_for_first_click) {
         // select element under mouse
-        const auto element_under_cursor = editable_circuit_.query_selection(point);
+
+        // TODO create better abstraction / name
+        const auto element_under_cursor
+            = editable_circuit_.caches().query_selection(point);
         if (!element_under_cursor.has_value()) {
             builder_.clear();
             return;
@@ -164,7 +167,7 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
 
     const auto& selection = get_selection();
 
-    if (!editable_circuit_.are_positions_valid(selection, delta_x, delta_y)) {
+    if (!editable_circuit_.new_positions_representable(selection, delta_x, delta_y)) {
         return;
     }
 
@@ -233,9 +236,10 @@ auto MouseMoveSelectionLogic::restore_original_positions() -> void {
 }
 
 auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
+    const auto& layout = editable_circuit_.circuit().layout();
+
     const auto element_colliding = [&](element_id_t element_id) {
-        return editable_circuit_.layout().display_state(element_id)
-               == display_state_t::new_colliding;
+        return layout.display_state(element_id) == display_state_t::new_colliding;
     };
 
     return std::ranges::any_of(get_selection().selected_elements(), element_colliding);
@@ -430,8 +434,7 @@ auto RendererWidget::reset_circuit() -> void {
     reset_interaction_state();
 
     circuit_index_ = CircuitIndex {};
-    editable_circuit_.emplace(circuit_index_.borrow_schematic(circuit_id_),
-                              circuit_index_.borrow_layout(circuit_id_));
+    editable_circuit_.emplace(circuit_index_.borrow_circuit(circuit_id_));
     update();
 
 #ifndef NDEBUG
@@ -448,17 +451,16 @@ auto RendererWidget::reload_circuit() -> void {
     {
         const auto t = Timer {"reload", Timer::Unit::ms, 3};
 
-        auto layout = editable_circuit_->extract_layout();
-        auto schematic = editable_circuit_->extract_schematic();
+        auto circuit = editable_circuit_->extract_circuit();
 
         editable_circuit_.reset();
-        editable_circuit_.emplace(std::move(schematic), std::move(layout));
+        editable_circuit_.emplace(std::move(circuit));
     }
 
     update();
 
 #ifndef NDEBUG
-    if (editable_circuit_->schematic().element_count() < 30) {
+    if (editable_circuit_->circuit().schematic().element_count() < 30) {
         print(editable_circuit_);
     }
     editable_circuit_->validate();
@@ -488,10 +490,10 @@ auto RendererWidget::load_circuit(int id) -> void {
         editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {15, 6},
                                               InsertionMode::insert_or_discard);
 
-        editable_circuit.add_line_segment(
+        editable_circuit.add_line_segments(
             point_t {grid_t {10}, grid_t {10}}, point_t {grid_t {15}, grid_t {12}},
             LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
-        editable_circuit.add_line_segment(
+        editable_circuit.add_line_segments(
             point_t {grid_t {10}, grid_t {15}}, point_t {grid_t {15}, grid_t {15}},
             LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
 
@@ -508,12 +510,12 @@ auto RendererWidget::load_circuit(int id) -> void {
                                                       point_t {grid_t {x}, grid_t {y}},
                                                       InsertionMode::insert_or_discard);
 
-                editable_circuit.add_line_segment(
+                editable_circuit.add_line_segments(
                     point_t {grid_t {x + 2}, grid_t {y + 1}},
                     point_t {grid_t {x + 4}, grid_t {y - 1}},
                     LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
 
-                editable_circuit.add_line_segment(
+                editable_circuit.add_line_segments(
                     point_t {grid_t {x + 3}, grid_t {y + 1}},
                     point_t {grid_t {x + 5}, grid_t {y + 2}},
                     LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
@@ -536,12 +538,12 @@ auto RendererWidget::load_circuit(int id) -> void {
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
-                editable_circuit.add_line_segment(
+                editable_circuit.add_line_segments(
                     point_t {grid_t {x + 2}, grid_t {y + 1}},
                     point_t {grid_t {x + 4}, grid_t {y - 1}},
                     LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
 
-                editable_circuit.add_line_segment(
+                editable_circuit.add_line_segments(
                     point_t {grid_t {x + 3}, grid_t {y + 1}},
                     point_t {grid_t {x + 5}, grid_t {y + 2}},
                     LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
@@ -552,14 +554,15 @@ auto RendererWidget::load_circuit(int id) -> void {
     // count & print
     {
         const auto timer_str = timer.format();
+        const auto& schematic = editable_circuit.circuit().schematic();
+        const auto& layout = editable_circuit.circuit().layout();
 
         auto element_count = std::size_t {0};
         auto segment_count = std::size_t {0};
 
-        for (auto element : editable_circuit.schematic().elements()) {
+        for (auto element : schematic.elements()) {
             if (element.is_wire()) {
-                auto&& tree
-                    = editable_circuit.layout().segment_tree(element.element_id());
+                auto&& tree = layout.segment_tree(element.element_id());
                 segment_count += tree.segment_count();
             }
 
@@ -568,7 +571,7 @@ auto RendererWidget::load_circuit(int id) -> void {
             }
         }
 
-        if (editable_circuit.schematic().element_count() < 10) {
+        if (schematic.element_count() < 10) {
             print(editable_circuit);
         }
         fmt::print("Added {} elements and {} wire segments in {}.\n", element_count,
@@ -698,8 +701,8 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
         // auto simulation = Simulation {editable_circuit.schematic()};
         render_circuit(bl_ctx, render_args_t {
-                                   .schematic = editable_circuit.schematic(),
-                                   .layout = editable_circuit.layout(),
+                                   .schematic = editable_circuit.circuit().schematic(),
+                                   .layout = editable_circuit.circuit().layout(),
                                    .selection_mask = mask,
                                    .selection = selection,
                                    .settings = render_settings_,
@@ -731,10 +734,11 @@ auto RendererWidget::delete_selected_items() -> void {
 
     auto& editable_circuit = editable_circuit_.value();
 
-    auto handle = editable_circuit.selection_builder().copy_selection();
+    auto copy_handle = editable_circuit.create_selection(
+        editable_circuit.selection_builder().selection());
     editable_circuit.selection_builder().clear();
 
-    editable_circuit_.value().delete_all(std::move(handle));
+    editable_circuit_.value().delete_all(std::move(copy_handle));
     update();
 }
 
@@ -776,8 +780,9 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             auto& selection_builder = editable_circuit_.value().selection_builder();
             const auto point
                 = to_grid_fine(event->position(), render_settings_.view_config);
+            // TODO shall we create a better interface here? not via caches
             const bool has_element_under_cursor
-                = editable_circuit_.value().query_selection(point).has_value();
+                = editable_circuit_.value().caches().query_selection(point).has_value();
 
             if (has_element_under_cursor) {
                 if (event->modifiers() == Qt::NoModifier) {

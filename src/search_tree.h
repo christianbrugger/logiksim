@@ -53,8 +53,7 @@ auto operator!=(const tree_t &a, const tree_t &b) -> bool;
 
 namespace logicsim {
 
-class Layout;
-class Schematic;
+class Circuit;
 
 class SearchTree {
    public:
@@ -65,6 +64,8 @@ class SearchTree {
     using queried_segments_t = std::array<segment_t, 4>;
 
    public:
+    [[nodiscard]] auto format() const -> std::string;
+
     auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
     auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
     auto update(element_id_t new_element_id, element_id_t old_element_id,
@@ -83,7 +84,7 @@ class SearchTree {
                               });
     }
 
-    auto validate(const Layout &layout, const Schematic &schematic) const -> void;
+    auto validate(const Circuit &circuit) const -> void;
 
    private:
     tree_t tree_ {};
@@ -93,8 +94,7 @@ auto get_segment_count(SearchTree::queried_segments_t result) -> int;
 auto all_same_element_id(SearchTree::queried_segments_t result) -> bool;
 auto get_unique_element_id(SearchTree::queried_segments_t) -> element_id_t;
 
-auto add_circuit_to_cache(SearchTree &cache, const Layout &layout,
-                          const Schematic &schematic) -> void;
+auto add_circuit_to_cache(SearchTree &cache, const Circuit &circuit) -> void;
 
 }  // namespace logicsim
 

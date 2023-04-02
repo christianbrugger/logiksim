@@ -72,6 +72,37 @@ auto is_inserted(display_state_t display_state) -> bool {
            || display_state == display_state_t::new_valid;
 }
 
+auto format(InsertionMode mode) -> std::string {
+    switch (mode) {
+        using enum InsertionMode;
+
+        case insert_or_discard:
+            return "insert_or_discard";
+        case collisions:
+            return "collisions";
+        case temporary:
+            return "temporary";
+    }
+    throw_exception("Don't know how to convert insertion mode to string.");
+}
+
+auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
+    switch (display_state) {
+        using enum display_state_t;
+
+        case normal:
+            return InsertionMode::insert_or_discard;
+        case new_colliding:
+            return InsertionMode::collisions;
+        case new_valid:
+            return InsertionMode::collisions;
+        case new_temporary:
+            return InsertionMode::temporary;
+    };
+
+    throw_exception("Unknown display state.");
+};
+
 auto circuit_id_t::format() const -> std::string {
     return fmt::format("{}", value);
 }

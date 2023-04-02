@@ -96,6 +96,8 @@ auto unpack_selection(const selection_map_t::value_type& value) -> Selection&;
 
 class SelectionRegistrar {
    public:
+    auto validate(const Circuit& circuit) const -> void;
+
     [[nodiscard]] auto create_selection() const -> selection_handle_t;
     [[nodiscard]] auto create_selection(const Selection& selection) const
         -> selection_handle_t;

@@ -1,10 +1,9 @@
 
 #include "selection.h"
 
+#include "circuit.h"
 #include "geometry.h"
-#include "layout.h"
 #include "range.h"
-#include "schematic.h"
 
 namespace logicsim {
 
@@ -356,17 +355,17 @@ auto check_wire_not_in_segments(element_id_t element_id, const SegmentTree &tree
 
 }  // namespace
 
-auto Selection::validate(const Layout &layout, const Schematic &schematic) const -> void {
+auto Selection::validate(const Circuit &circuit) const -> void {
     auto element_set = detail::selection::elements_set_t {selected_elements_};
     auto segment_map = detail::selection::segment_map_t {selected_segments_};
 
     for (const auto element_id : element_set) {
-        check_wire_not_in_segments(element_id, layout.segment_tree(element_id),
+        check_wire_not_in_segments(element_id, circuit.layout().segment_tree(element_id),
                                    segment_map);
     }
 
     // elements
-    for (const auto element : schematic.elements()) {
+    for (const auto element : circuit.schematic().elements()) {
         check_and_remove_element(element_set, element);
     }
     if (!element_set.empty()) [[unlikely]] {
@@ -374,10 +373,11 @@ auto Selection::validate(const Layout &layout, const Schematic &schematic) const
     }
 
     // segments
-    for (const auto element : schematic.elements()) {
+    for (const auto element : circuit.schematic().elements()) {
         if (element.is_wire()) {
-            check_and_remove_segments(segment_map, element.element_id(),
-                                      layout.segment_tree(element.element_id()));
+            check_and_remove_segments(
+                segment_map, element.element_id(),
+                circuit.layout().segment_tree(element.element_id()));
         }
     }
     if (!segment_map.empty()) [[unlikely]] {

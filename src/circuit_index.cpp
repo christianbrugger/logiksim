@@ -16,6 +16,10 @@ auto CircuitIndex::circuit_count() const -> std::size_t {
     return schematics_.size();
 }
 
+auto CircuitIndex::borrow_circuit(circuit_id_t circuit_id) -> Circuit {
+    return Circuit {borrow_schematic(circuit_id), borrow_layout(circuit_id)};
+}
+
 auto CircuitIndex::borrow_schematic(circuit_id_t circuit_id) -> Schematic {
     auto& source = schematics_.at(circuit_id.value);
 

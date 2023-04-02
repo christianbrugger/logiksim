@@ -1,8 +1,7 @@
 
 #include "layout_calculation_type.h"
 
-#include "layout.h"
-#include "schematic.h"
+#include "circuit.h"
 
 namespace logicsim {
 
@@ -19,6 +18,11 @@ auto to_layout_calculation_data(const Schematic& schematic, const Layout& layout
         .orientation = layout.orientation(element_id),
         .element_type = element.element_type(),
     };
+}
+
+auto to_layout_calculation_data(const Circuit& circuit, element_id_t element_id)
+    -> layout_calculation_data_t {
+    return to_layout_calculation_data(circuit.schematic(), circuit.layout(), element_id);
 }
 
 }  // namespace logicsim

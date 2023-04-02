@@ -5,6 +5,7 @@
 
 namespace logicsim {
 
+class Circuit;
 class Schematic;
 class Layout;
 class SegmentTree;
@@ -19,12 +20,19 @@ struct layout_calculation_data_t {
     ElementType element_type {ElementType::placeholder};
 };
 
-constexpr auto is_placeholder(const layout_calculation_data_t& data) -> bool {
+[[nodiscard]] constexpr auto is_placeholder(const layout_calculation_data_t& data)
+    -> bool {
     return data.element_type == ElementType::placeholder;
 }
 
-auto to_layout_calculation_data(const Schematic& schematic, const Layout& layout,
-                                element_id_t element_id) -> layout_calculation_data_t;
+[[nodiscard]] auto to_layout_calculation_data(const Schematic& schematic,
+                                              const Layout& layout,
+                                              element_id_t element_id)
+    -> layout_calculation_data_t;
+
+[[nodiscard]] auto to_layout_calculation_data(const Circuit& circuit,
+                                              element_id_t element_id)
+    -> layout_calculation_data_t;
 
 }  // namespace logicsim
 

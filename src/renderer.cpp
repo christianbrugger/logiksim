@@ -833,15 +833,15 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
 auto render_editable_circuit_connection_cache(BLContext& ctx,
                                               const EditableCircuit& editable_circuit,
                                               const RenderSettings& settings) -> void {
-    for (auto [position, orientation] :
-         editable_circuit.input_positions_and_orientations()) {
+    const auto& caches = editable_circuit.caches();
+
+    for (auto [position, orientation] : caches.input_positions_and_orientations()) {
         const auto size = 1.0 / 3.0;
         render_input_marker(ctx, position, defaults::color_green, orientation, size,
                             settings);
     }
 
-    for (auto [position, orientation] :
-         editable_circuit.output_positions_and_orientations()) {
+    for (auto [position, orientation] : caches.output_positions_and_orientations()) {
         const auto size = 0.8;
         render_arrow(ctx, position, defaults::color_green, orientation, size, settings);
     }
@@ -850,12 +850,12 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
 auto render_editable_circuit_collision_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void {
-    for (auto [point, state] : editable_circuit.collision_states()) {
+    for (auto [point, state] : editable_circuit.caches().collision_states()) {
         const auto color = defaults::color_orange;
         const auto size = 0.25;
 
         switch (state) {
-            using enum CollisionCache::CacheState;
+            using enum editable_circuit::CollisionCache::CacheState;
 
             case element_body: {
                 render_point(ctx, point, PointShape::square, color, size, settings);
@@ -903,7 +903,7 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
                                              const RenderSettings& settings) -> void {
     ctx.setStrokeStyle(BLRgba32(0, 255, 0));
 
-    for (rect_fine_t&& rect : editable_circuit.selection_rects()) {
+    for (rect_fine_t&& rect : editable_circuit.caches().selection_rects()) {
         draw_standard_rect(
             ctx, rect, RectAttributes {.draw_type = DrawType::stroke, .stroke_width = 1},
             settings);

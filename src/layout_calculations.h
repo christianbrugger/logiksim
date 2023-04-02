@@ -15,6 +15,9 @@ namespace logicsim {
 [[nodiscard]] auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t;
 [[nodiscard]] auto element_selection_rect(line_t segment) -> rect_fine_t;
 
+[[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;
+[[nodiscard]] auto orientations_compatible(orientation_t a, orientation_t b) -> bool;
+
 auto require_min(std::size_t value, std::size_t count) -> void;
 auto require_equal(std::size_t value, std::size_t count) -> void;
 
@@ -104,9 +107,8 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
 
             // TODO width depends on internal state
             const auto width = 2 * 4;
-            const auto height = data.output_count == 1
-                                    ? grid_t {1}
-                                    : grid_t {2 * (data.output_count - std::size_t {1})};
+            const auto height
+                = data.output_count == 1 ? 1 : 2 * (data.output_count - std::size_t {1});
 
             for (auto i : range(1, width)) {
                 for (auto j : range(height + 1)) {

@@ -30,15 +30,15 @@ auto Circuit::layout() -> Layout& {
 };
 
 auto Circuit::extract_schematic() -> Schematic {
-    auto temp = std::move(schematic_.value());
+    auto temp = Schematic {std::move(schematic_.value())};
     schematic_ = std::nullopt;
-    return std::move(temp);
+    return temp;
 };
 
 auto Circuit::extract_layout() -> Layout {
-    auto temp = std::move(layout_.value());
+    auto temp = Layout {std::move(layout_.value())};
     layout_ = std::nullopt;
-    return std::move(temp);
+    return temp;
 };
 
 // validation

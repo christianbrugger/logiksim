@@ -69,6 +69,10 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
 
 }  // namespace detail::search_tree
 
+auto SearchTree::format() const -> std::string {
+    return fmt::format("SearchTree = {}\n", tree_);
+}
+
 auto SearchTree::insert(element_id_t element_id, layout_calculation_data_t data) -> void {
     if (is_placeholder(data)) {
         return;
@@ -196,12 +200,11 @@ auto operator!=(const tree_t& a, const tree_t& b) -> bool {
 
 }  // namespace detail::search_tree
 
-auto SearchTree::validate(const Layout& layout, const Schematic& schematic) const
-    -> void {
+auto SearchTree::validate(const Circuit& circuit) const -> void {
     using namespace detail::search_tree;
 
     auto cache = SearchTree {};
-    add_circuit_to_cache(cache, layout, schematic);
+    add_circuit_to_cache(cache, circuit);
 
     if (cache.tree_ != this->tree_) [[unlikely]] {
         throw_exception("current cache state doesn't match circuit");
@@ -230,10 +233,9 @@ auto get_unique_element_id(SearchTree::queried_segments_t result) -> element_id_
     return (first_id && all_same_element_id(result)) ? first_id : null_element;
 }
 
-auto add_circuit_to_cache(SearchTree& cache, const Layout& layout,
-                          const Schematic& schematic) -> void {
+auto add_circuit_to_cache(SearchTree& cache, const Circuit& circuit) -> void {
     iter_circuit_elements(
-        layout, schematic,
+        circuit,
         [&cache](element_id_t element_id, layout_calculation_data_t data) {
             cache.insert(element_id, data);
         },

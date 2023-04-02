@@ -160,6 +160,15 @@ auto unpack_selection(const selection_map_t::value_type& value) -> Selection& {
 
 }  // namespace detail::selection_registrar
 
+auto SelectionRegistrar::validate(const Circuit& circuit) const -> void {
+    for (const auto& item : allocated_selections_) {
+        if (item.second == nullptr) [[unlikely]] {
+            throw_exception("selection cannot be nullptr");
+        }
+        item.second->validate(circuit);
+    }
+}
+
 auto SelectionRegistrar::create_selection() const -> selection_handle_t {
     const auto key = next_selection_key_++;
 

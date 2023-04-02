@@ -240,7 +240,17 @@ enum class display_state_t : uint8_t {
 
 auto format(display_state_t state) -> std::string;
 
-auto is_inserted(display_state_t display_state) -> bool;
+[[nodiscard]] auto is_inserted(display_state_t display_state) -> bool;
+
+enum class InsertionMode {
+    insert_or_discard,
+    collisions,
+    temporary,
+};
+
+auto format(InsertionMode mode) -> std::string;
+
+[[nodiscard]] auto to_insertion_mode(display_state_t display_state) -> InsertionMode;
 
 //
 // Time Types

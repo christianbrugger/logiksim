@@ -12,22 +12,6 @@ class EditableCircuit;
 namespace editable_circuit {
 
 //
-// Action Messages
-//
-
-namespace action_message {
-
-struct DeleteElement {
-    element_id_t element_id;
-};
-
-using Message = std::variant<DeleteElement>;
-
-}  // namespace action_message
-
-using ActionMessage = action_message::Message;
-
-//
 // Info Messages
 //
 
@@ -46,38 +30,20 @@ struct ElementUpdated {
     element_id_t old_element_id;
 };
 
-/*
-class Abstract_ElementOrSegment {
-   public:
-    explicit Abstract_ElementOrSegment(element_id_t element_id) noexcept;
-    explicit Abstract_ElementOrSegment(segment_t segment) noexcept;
-
-    [[nodiscard]] auto is_element() const noexcept -> bool;
-    [[nodiscard]] auto is_segment() const noexcept -> bool;
-
-    [[nodiscard]] auto element_id() const -> element_id_t;
-    [[nodiscard]] auto segment() const -> segment_t;
-
-   private:
-    element_id_t element_id_ {null_element};
-    segment_index_t segment_index_ {null_segment_index};
-};
-*/
-
-class ElementInserted {
+struct ElementInserted {
     element_id_t element_id;
 };
 
-class ElementUninserted {
+struct ElementUninserted {
     element_id_t element_id;
 };
 
-class SegmentInserted {
-    segment_t element_id;
+struct SegmentInserted {
+    segment_t segment;
 };
 
-class SegmentUninserted {
-    segment_t element_id;
+struct SegmentUninserted {
+    segment_t segment;
 };
 
 struct SegmentMerged {
@@ -98,6 +64,7 @@ using Message = std::variant<ElementCreated, ElementDeleted, ElementUpdated,
 }  // namespace info_message
 
 using InfoMessage = info_message::Message;
+static_assert(sizeof(InfoMessage) == 24);
 
 //
 // MessageSender
@@ -107,12 +74,13 @@ class MessageSender {
    public:
     [[nodiscard]] explicit MessageSender(EditableCircuit &) noexcept;
 
-    auto submit(ActionMessage &&m) -> void;
     auto submit(InfoMessage &&m) -> void;
 
    private:
     gsl::not_null<EditableCircuit *> editable_circuit_;
 };
+
+static_assert(sizeof(MessageSender) == 8);
 
 }  // namespace editable_circuit
 

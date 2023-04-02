@@ -2,11 +2,10 @@
 #include "selection_builder.h"
 
 #include "algorithm.h"
-#include "editable_circuit.h"
 #include "format.h"
 #include "layout.h"
 #include "range.h"
-#include "schematic.h"
+#include "search_tree.h"
 #include "timer.h"
 
 namespace logicsim {
@@ -15,9 +14,11 @@ namespace logicsim {
 // Selection Builder
 //
 
-SelectionBuilder::SelectionBuilder(const EditableCircuit& editable_circuit)
-    : editable_circuit_ {&editable_circuit},
-      initial_selection_ {editable_circuit.create_selection()} {}
+SelectionBuilder::SelectionBuilder(const Layout& layout, const SearchTree& spatial_cache,
+                                   selection_handle_t initial_selection)
+    : layout_ {&layout},
+      spatial_cache_ {&spatial_cache},
+      initial_selection_ {std::move(initial_selection)} {}
 
 auto SelectionBuilder::empty() const noexcept -> bool {
     return initial_selection_->empty() && operations_.empty();
@@ -58,8 +59,7 @@ auto SelectionBuilder::pop_last() -> void {
 namespace {
 
 auto add_element_to_selection(element_id_t element_id, SelectionFunction function,
-                              Selection& selection,
-                              const EditableCircuit& editable_circuit) {
+                              Selection& selection) {
     switch (function) {
         using enum SelectionFunction;
 
@@ -81,12 +81,9 @@ auto add_element_to_selection(element_id_t element_id, SelectionFunction functio
 }
 
 auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t operation,
-                              Selection& selection,
-                              const EditableCircuit& editable_circuit) {
-    const auto line = editable_circuit.layout()
-                          .segment_tree(segment.element_id)
-                          .segment(segment.segment_index)
-                          .line;
+                              Selection& selection, const Layout& layout) {
+    const auto line
+        = layout.segment_tree(segment.element_id).segment(segment.segment_index).line;
     const auto segment_sel = get_segment_part(line, operation.rect);
 
     if (!segment_sel) {
@@ -113,18 +110,18 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
     throw_exception("Unknown function");
 }
 
-auto apply_function(Selection& selection, const EditableCircuit& editable_circuit,
-                    SelectionBuilder::operation_t operation) -> void {
+auto apply_function(Selection& selection, const SearchTree& spatial_cache,
+                    const Layout& layout, SelectionBuilder::operation_t operation)
+    -> void {
     // const auto t = Timer {"apply_function", Timer::Unit::ms, 3};
-    const auto selected_elements = editable_circuit.query_selection(operation.rect);
+    const auto selected_elements = spatial_cache.query_selection(operation.rect);
 
     for (auto&& element : selected_elements) {
         if (element.segment_index == null_segment_index) {
-            add_element_to_selection(element.element_id, operation.function, selection,
-                                     editable_circuit);
+            add_element_to_selection(element.element_id, operation.function, selection);
         } else {
             const auto segment = segment_t {element.element_id, element.segment_index};
-            add_segment_to_selection(segment, operation, selection, editable_circuit);
+            add_segment_to_selection(segment, operation, selection, layout);
         }
     }
 }
@@ -135,7 +132,7 @@ auto SelectionBuilder::calculate_selection() const -> Selection {
     auto selection = Selection {*initial_selection_};
 
     for (auto&& operation : operations_) {
-        apply_function(selection, *editable_circuit_, operation);
+        apply_function(selection, *spatial_cache_, *layout_, operation);
     }
 
     return selection;
@@ -159,7 +156,7 @@ auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
     }
 
     // TODO create algorithm to mask?
-    const auto element_count = editable_circuit_->schematic().element_count();
+    const auto element_count = layout_->element_count();
     auto mask = selection_mask_t(element_count, false);
 
     for (element_id_t element_id : selection().selected_elements()) {
@@ -169,9 +166,9 @@ auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
     return mask;
 }
 
-auto SelectionBuilder::copy_selection() const -> selection_handle_t {
-    return editable_circuit_->create_selection(selection());
-}
+// auto SelectionBuilder::copy_selection() const -> selection_handle_t {
+//     return editable_circuit_->create_selection(selection());
+// }
 
 auto SelectionBuilder::all_operations_applied() const -> bool {
     return operations_.empty();
@@ -197,22 +194,18 @@ auto SelectionBuilder::clear_cache() const -> void {
     cached_selection_.reset();
 }
 
-auto SelectionBuilder::validate(const Layout& layout, const Schematic& schematic) const
-    -> void {
-    if (editable_circuit_.get() == nullptr) [[unlikely]] {
-        throw_exception("editable_circuit is nullptr");
-    }
+auto SelectionBuilder::validate(const Circuit& circuit) const -> void {
     if (initial_selection_.get() == nullptr) [[unlikely]] {
         throw_exception("inital selection is nullptr");
     }
 
-    initial_selection_->validate(layout, schematic);
+    initial_selection_->validate(circuit);
 
     if (cached_selection_) {
-        cached_selection_->validate(layout, schematic);
+        cached_selection_->validate(circuit);
     }
 
-    calculate_selection().validate(layout, schematic);
+    calculate_selection().validate(circuit);
 }
 
 }  // namespace logicsim
