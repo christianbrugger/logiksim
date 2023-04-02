@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_SEARCH_TREE_H
 #define LOGIKSIM_SEARCH_TREE_H
 
+#include "circuit.h"
+#include "editable_circuit_messages.h"
 #include "layout_calculation_type.h"
 #include "vocabulary.h"
 
@@ -12,6 +14,7 @@
 #include <ranges>
 
 namespace logicsim {
+
 namespace detail::search_tree {
 // Boost R-Tree Documentation:
 // https://www.boost.org/doc/libs/1_81_0/libs/geometry/doc/html/geometry/spatial_indexes.html
@@ -49,11 +52,6 @@ auto operator==(const tree_t &a, const tree_t &b) -> bool;
 auto operator!=(const tree_t &a, const tree_t &b) -> bool;
 
 }  // namespace detail::search_tree
-}  // namespace logicsim
-
-namespace logicsim {
-
-class Circuit;
 
 class SearchTree {
    public:
@@ -66,13 +64,7 @@ class SearchTree {
    public:
     [[nodiscard]] auto format() const -> std::string;
 
-    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto update(element_id_t new_element_id, element_id_t old_element_id,
-                layout_calculation_data_t data) -> void;
-
-    auto insert(element_id_t element_id, line_t segment, segment_index_t index) -> void;
-    auto remove(element_id_t element_id, line_t segment, segment_index_t index) -> void;
+    auto submit(editable_circuit::InfoMessage &&message) -> void;
 
     auto query_selection(rect_fine_t rect) const -> std::vector<query_result_t>;
     auto query_line_segments(point_t point) const -> queried_segments_t;
@@ -87,6 +79,14 @@ class SearchTree {
     auto validate(const Circuit &circuit) const -> void;
 
    private:
+    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
+    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
+    auto update(element_id_t new_element_id, element_id_t old_element_id,
+                layout_calculation_data_t data) -> void;
+
+    auto insert(element_id_t element_id, line_t segment, segment_index_t index) -> void;
+    auto remove(element_id_t element_id, line_t segment, segment_index_t index) -> void;
+
     tree_t tree_ {};
 };
 
@@ -94,7 +94,29 @@ auto get_segment_count(SearchTree::queried_segments_t result) -> int;
 auto all_same_element_id(SearchTree::queried_segments_t result) -> bool;
 auto get_unique_element_id(SearchTree::queried_segments_t) -> element_id_t;
 
-auto add_circuit_to_cache(SearchTree &cache, const Circuit &circuit) -> void;
+auto add_circuit_to_cache(auto &&cache, const Circuit &circuit) -> void {
+    using namespace editable_circuit::info_message;
+    const auto &schematic = circuit.schematic();
+    const auto &layout = circuit.layout();
+
+    for (const auto element : schematic.elements()) {
+        const auto element_id = element.element_id();
+        if (is_inserted(layout.display_state(element_id))) {
+            if (element.is_element()) {
+                const auto data = to_layout_calculation_data(circuit, element_id);
+                cache.submit(ElementInserted {element_id, data});
+            }
+            if (element.is_wire()) {
+                const auto &segment_tree = layout.segment_tree(element_id);
+                for (const auto segment_index : segment_tree.indices()) {
+                    const auto segment = segment_tree.segment(segment_index);
+                    cache.submit(
+                        SegmentInserted {segment_t {element_id, segment_index}, segment});
+                }
+            }
+        }
+    }
+}
 
 }  // namespace logicsim
 

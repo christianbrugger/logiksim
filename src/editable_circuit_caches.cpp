@@ -6,16 +6,6 @@
 
 namespace logicsim::editable_circuit {
 
-auto add_circuit_to_cache(auto&& cache, const Circuit& circuit) -> void {
-    iter_circuit_elements(
-        circuit,
-        [&cache](element_id_t element_id, layout_calculation_data_t data) {
-            cache.insert(element_id, data);
-        },
-        [&cache](element_id_t element_id, segment_info_t segment,
-                 segment_index_t segment_index) { cache.insert(element_id, segment); });
-}
-
 //
 // ConnectionCache
 //
@@ -44,6 +34,9 @@ auto ConnectionCache<IsInput>::format() const -> std::string {
         return fmt::format("OutputCache = {}\n", connections_);
     }
 }
+
+template <bool IsInput>
+auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage&& message) -> void {}
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::insert(element_id_t element_id,
@@ -427,6 +420,8 @@ auto CollisionCache::format() const -> std::string {
     return "!!! NOT IMPLEMENTED !!!";
 }
 
+auto CollisionCache::submit(editable_circuit::InfoMessage&& message) -> void {}
+
 auto CollisionCache::insert(element_id_t element_id, layout_calculation_data_t data)
     -> void {
     insert_impl(map_, element_id, data);
@@ -614,10 +609,10 @@ auto CacheProvider::add_circuit(const Circuit& circuit) -> void {
     *this = CacheProvider {};
 
     // TODO consider bulk insertion, especially for spatial_cache_
-    add_circuit_to_cache(input_connections_, circuit);
-    add_circuit_to_cache(output_connections_, circuit);
-    add_circuit_to_cache(collision_cache_, circuit);
-    add_circuit_to_cache(spatial_cache_, circuit);
+    // add_circuit_to_cache(input_connections_, circuit);
+    // add_circuit_to_cache(output_connections_, circuit);
+    // add_circuit_to_cache(collision_cache_, circuit);
+    // add_circuit_to_cache(spatial_cache_, circuit);
 }
 
 auto CacheProvider::format() const -> std::string {

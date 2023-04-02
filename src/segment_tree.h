@@ -69,6 +69,7 @@ class SegmentTree {
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
+    // TODO rename to segment_info
     [[nodiscard]] auto segment(std::size_t index) const -> segment_info_t;
     [[nodiscard]] auto segment(segment_index_t index) const -> segment_info_t;
     [[nodiscard]] auto segments() const -> std::span<const segment_info_t>;

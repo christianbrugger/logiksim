@@ -274,6 +274,7 @@ set(LS_CORE_SOURCES
     src/editable_circuit_caches.h src/editable_circuit_caches.cpp
     src/editable_circuit_handlers.h src/editable_circuit_handlers.cpp
     src/editable_circuit_messages.h src/editable_circuit_messages.cpp
+    src/editable_circuit_spatial.h src/editable_circuit_spatial.cpp
     src/exceptions.h src/exceptions.cpp
     src/flat_schematic.h src/flat_schematic.cpp
     src/geometry.h src/geometry.cpp
@@ -286,7 +287,6 @@ set(LS_CORE_SOURCES
     src/renderer.h src/renderer.cpp
     src/scene.h src/scene.cpp
     src/schematic.h src/schematic.cpp
-    src/search_tree.h src/search_tree.cpp
     src/segment_tree.h src/segment_tree.cpp
     src/selection.h src/selection.cpp
     src/selection_builder.h src/selection_builder.cpp

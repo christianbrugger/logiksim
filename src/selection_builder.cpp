@@ -2,10 +2,10 @@
 #include "selection_builder.h"
 
 #include "algorithm.h"
+#include "editable_circuit_spatial.h"
 #include "format.h"
 #include "layout.h"
 #include "range.h"
-#include "search_tree.h"
 #include "timer.h"
 
 namespace logicsim {

@@ -3,8 +3,9 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_H
 
 #include "circuit.h"
+#include "editable_circuit_messages.h"
+#include "editable_circuit_spatial.h"
 #include "layout_calculation_type.h"
-#include "search_tree.h"
 #include "segment_tree.h"
 #include "vocabulary.h"
 
@@ -41,13 +42,7 @@ class ConnectionCache {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto update(element_id_t new_element_id, element_id_t old_element_id,
-                layout_calculation_data_t data) -> void;
-
-    auto insert(element_id_t element_id, segment_info_t segment) -> void;
-    auto remove(element_id_t element_id, segment_info_t segment) -> void;
+    auto submit(editable_circuit::InfoMessage&& message) -> void;
 
     [[nodiscard]] auto find(point_t position) const
         -> std::optional<std::pair<connection_t, orientation_t>>;
@@ -71,6 +66,14 @@ class ConnectionCache {
     auto validate(const Circuit& circuit) const -> void;
 
    private:
+    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
+    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
+    auto update(element_id_t new_element_id, element_id_t old_element_id,
+                layout_calculation_data_t data) -> void;
+
+    auto insert(element_id_t element_id, segment_info_t segment) -> void;
+    auto remove(element_id_t element_id, segment_info_t segment) -> void;
+
     map_type connections_ {};
 };
 
@@ -122,13 +125,7 @@ class CollisionCache {
    public:
     [[nodiscard]] auto format() const -> std::string;
 
-    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto update(element_id_t new_element_id, element_id_t old_element_id,
-                layout_calculation_data_t data) -> void;
-
-    auto insert(element_id_t element_id, segment_info_t segment) -> void;
-    auto remove(element_id_t element_id, segment_info_t segment) -> void;
+    auto submit(editable_circuit::InfoMessage&& message) -> void;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(line_t line) const -> bool;
@@ -145,6 +142,14 @@ class CollisionCache {
     auto validate(const Circuit& circuit) const -> void;
 
    private:
+    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
+    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
+    auto update(element_id_t new_element_id, element_id_t old_element_id,
+                layout_calculation_data_t data) -> void;
+
+    auto insert(element_id_t element_id, segment_info_t segment) -> void;
+    auto remove(element_id_t element_id, segment_info_t segment) -> void;
+
     [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
     [[nodiscard]] auto state_colliding(point_t position, ItemType item_type) const
         -> bool;
@@ -159,6 +164,8 @@ class CacheProvider {
 
     [[nodiscard]] auto format() const -> std::string;
     auto validate(const Circuit& circuit) -> void;
+
+    auto submit(editable_circuit::InfoMessage&& message) -> void;
 
     [[nodiscard]] auto query_selection(rect_fine_t rect) const
         -> std::vector<SearchTree::query_result_t>;

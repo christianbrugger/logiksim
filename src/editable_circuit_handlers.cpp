@@ -279,7 +279,7 @@ auto connect_connector(connector_data_t connector,
     return unused_placeholder_id;
 }
 
-[[nodiscard]] auto connect_element(State state, element_id_t& element_id)
+[[nodiscard]] auto connect_element(State state, element_id_t element_id)
     -> delete_queue_t {
     auto disconnected_placeholders = delete_queue_t {};
     auto add_if_valid = [&](std::optional<element_id_t> placeholder_id) {
@@ -323,9 +323,7 @@ auto insert_element(State state, element_id_t& element_id) {
     const auto disconnected_placeholders = connect_element(state, element_id);
     add_missing_placeholders_for_outputs(state.circuit, element_id);
 
-    state.sender.submit(info_message::ElementInserted {element_id});
-
-    // this invalidates our element_id
+    // this may change our element_id
     auto handle = _hack_element_handle(element_id);
     swap_and_delete_multiple_elements(state.circuit, state.sender,
                                       disconnected_placeholders);
@@ -346,8 +344,9 @@ auto element_change_temporary_to_colliding(State state, element_id_t& element_id
     if (state.cache.is_element_colliding(data)) {
         state.layout.set_display_state(element_id, display_state_t::new_colliding);
     } else {
-        state.layout.set_display_state(element_id, display_state_t::new_valid);
         insert_element(state, element_id);
+        state.layout.set_display_state(element_id, display_state_t::new_valid);
+        state.sender.submit(info_message::ElementInserted {element_id, data});
     }
 };
 
@@ -386,7 +385,8 @@ auto element_change_colliding_to_temporary(Circuit& circuit, MessageSender sende
     const auto display_state = layout.display_state(element_id);
 
     if (display_state == display_state_t::new_valid) {
-        sender.submit(info_message::ElementUninserted {element_id});
+        const auto data = to_layout_calculation_data(circuit, element_id);
+        sender.submit(info_message::ElementUninserted {element_id, data});
         layout.set_display_state(element_id, display_state_t::new_temporary);
 
         disconnect_inputs_and_add_placeholders(circuit, element_id);

@@ -31,11 +31,13 @@ class Circuit {
     std::optional<Layout> layout_ {};
 };
 
+// TODO remove this, as we now have the same interface
+
 // [](element_id_t element_id, layout_calculation_data_t data){..}
 // [](element_id_t element_id, segment_info_t segment, segment_index_t segment_index){..}
 template <typename ElementCallback, typename SegmentCallback>
-auto iter_circuit_elements(const Circuit& circuit, ElementCallback element_callback,
-                           SegmentCallback segment_callback) -> void {
+auto iter_inserted_circuit_items(const Circuit& circuit, ElementCallback element_callback,
+                                 SegmentCallback segment_callback) -> void {
     const auto& schematic = circuit.schematic();
     const auto& layout = circuit.layout();
 

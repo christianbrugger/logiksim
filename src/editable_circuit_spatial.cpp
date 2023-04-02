@@ -1,4 +1,4 @@
-#include "search_tree.h"
+#include "editable_circuit_spatial.h"
 
 #include "circuit.h"
 #include "format.h"
@@ -72,6 +72,8 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
 auto SearchTree::format() const -> std::string {
     return fmt::format("SearchTree = {}\n", tree_);
 }
+
+auto SearchTree::submit(editable_circuit::InfoMessage&& message) -> void {}
 
 auto SearchTree::insert(element_id_t element_id, layout_calculation_data_t data) -> void {
     if (is_placeholder(data)) {
@@ -189,8 +191,8 @@ auto to_reverse_index(const tree_t& tree) -> index_map_t {
 }
 
 auto operator==(const tree_t& a, const tree_t& b) -> bool {
-    const auto index_a = logicsim::detail::search_tree::to_reverse_index(a);
-    const auto index_b = logicsim::detail::search_tree::to_reverse_index(b);
+    const auto index_a = to_reverse_index(a);
+    const auto index_b = to_reverse_index(b);
     return index_a == index_b;
 }
 
@@ -231,18 +233,6 @@ auto all_same_element_id(SearchTree::queried_segments_t result) -> bool {
 auto get_unique_element_id(SearchTree::queried_segments_t result) -> element_id_t {
     const auto first_id = result.at(0).element_id;
     return (first_id && all_same_element_id(result)) ? first_id : null_element;
-}
-
-auto add_circuit_to_cache(SearchTree& cache, const Circuit& circuit) -> void {
-    iter_circuit_elements(
-        circuit,
-        [&cache](element_id_t element_id, layout_calculation_data_t data) {
-            cache.insert(element_id, data);
-        },
-        [&cache](element_id_t element_id, segment_info_t segment,
-                 segment_index_t segment_index) {
-            cache.insert(element_id, segment.line, segment_index);
-        });
 }
 
 }  // namespace logicsim

@@ -3,6 +3,7 @@
 
 #include "circuit.h"
 #include "editable_circuit_caches.h"
+#include "editable_circuit_messages.h"
 #include "selection.h"
 #include "selection_builder.h"
 
@@ -61,6 +62,7 @@ class EditableCircuit {
     [[nodiscard]] auto selection_builder() noexcept -> SelectionBuilder&;
 
     [[nodiscard]] auto caches() const -> const editable_circuit::CacheProvider&;
+    auto _submit(editable_circuit::InfoMessage&& message) -> void;
 
    private:
     auto get_sender() -> editable_circuit::MessageSender;

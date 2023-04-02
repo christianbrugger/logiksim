@@ -20,6 +20,8 @@ struct layout_calculation_data_t {
     ElementType element_type {ElementType::placeholder};
 };
 
+static_assert(sizeof(layout_calculation_data_t) == 40);
+
 [[nodiscard]] constexpr auto is_placeholder(const layout_calculation_data_t& data)
     -> bool {
     return data.element_type == ElementType::placeholder;

@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <variant>
 
 namespace logicsim {
 
@@ -214,6 +215,12 @@ auto EditableCircuit::selection_builder() noexcept -> SelectionBuilder& {
 
 auto EditableCircuit::caches() const -> const editable_circuit::CacheProvider& {
     return cache_provider_;
+}
+
+auto EditableCircuit::_submit(editable_circuit::InfoMessage&& message) -> void {
+    using namespace editable_circuit;
+
+    std::visit([](auto&& v) { print(v); }, message);
 }
 
 auto EditableCircuit::get_sender() -> editable_circuit::MessageSender {
