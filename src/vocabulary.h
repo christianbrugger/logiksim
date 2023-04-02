@@ -165,6 +165,10 @@ struct segment_index_t {
         return std::numeric_limits<value_type>::max();
     };
 
+    [[nodiscard]] explicit constexpr operator bool() const noexcept {
+        return value >= 0;
+    }
+
     auto operator++() noexcept -> segment_index_t & {
         ++value;
         return *this;

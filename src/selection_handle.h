@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_SELECTION_HANDLE_H
 #define LOGIKSIM_SELECTION_HANDLE_H
 
+#include "exceptions.h"
+#include "iterator_adaptor.h"
 #include "selection.h"
 #include "vocabulary.h"
 
@@ -9,7 +11,7 @@
 
 namespace logicsim {
 
-class EditableCircuit;
+class SelectionRegistrar;
 
 // TODO make Selection part of the handle, so we don't introduce allocations
 class selection_handle_t {
@@ -20,7 +22,7 @@ class selection_handle_t {
 
     selection_handle_t() = default;
     [[nodiscard]] explicit selection_handle_t(Selection& selection,
-                                              const EditableCircuit& editable_circuit,
+                                              const SelectionRegistrar& registrar,
                                               selection_key_t selection_key);
     ~selection_handle_t();
     // disallow copying
@@ -31,7 +33,7 @@ class selection_handle_t {
     auto operator=(selection_handle_t&& other) noexcept -> selection_handle_t&;
 
     // we allow explicit copy, as it is expensive
-    auto copy() -> selection_handle_t;
+    auto copy() const -> selection_handle_t;
 
     [[nodiscard]] auto has_value() const noexcept -> bool;
     [[nodiscard]] operator bool() const noexcept;
@@ -48,7 +50,7 @@ class selection_handle_t {
 
    private:
     Selection* selection_ {nullptr};
-    const EditableCircuit* editable_circuit_ {nullptr};
+    const SelectionRegistrar* registrar_ {nullptr};
     selection_key_t selection_key_ {null_selection_key};
 };
 
@@ -81,6 +83,39 @@ class element_handle_t {
 
    private:
     selection_handle_t selection_handle_ {};
+};
+
+namespace detail::selection_registrar {
+
+using selection_map_t
+    = ankerl::unordered_dense::map<selection_key_t, std::unique_ptr<Selection>>;
+
+auto unpack_selection(const selection_map_t::value_type& value) -> Selection&;
+
+}  // namespace detail::selection_registrar
+
+class SelectionRegistrar {
+   public:
+    [[nodiscard]] auto create_selection() const -> selection_handle_t;
+    [[nodiscard]] auto create_selection(const Selection& selection) const
+        -> selection_handle_t;
+    [[nodiscard]] auto element_handle() const -> element_handle_t;
+    [[nodiscard]] auto element_handle(element_id_t element_id) const -> element_handle_t;
+
+    [[nodiscard]] auto selections() const {
+        return transform_view(allocated_selections_,
+                              detail::selection_registrar::unpack_selection);
+    }
+
+   private:
+    friend selection_handle_t;
+    auto unregister_selection(selection_key_t selection_key) const -> void;
+
+    using selection_map_t = detail::selection_registrar::selection_map_t;
+
+    // we want our state to be mutable, as we are like an allocator
+    mutable selection_key_t next_selection_key_ {0};
+    mutable selection_map_t allocated_selections_ {};
 };
 
 }  // namespace logicsim

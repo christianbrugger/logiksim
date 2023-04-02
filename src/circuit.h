@@ -4,6 +4,8 @@
 #include "layout.h"
 #include "schematic.h"
 
+#include <optional>
+
 namespace logicsim {
 
 // [](element_id_t element_id, layout_calculation_data_t data){..}
@@ -30,6 +32,28 @@ auto iter_circuit_elements(const Layout& layout, const Schematic& schematic,
         }
     }
 }
+
+class Circuit {
+   public:
+    [[nodiscard]] Circuit() = default;
+    [[nodiscard]] Circuit(Schematic&& schematic, Layout&& layout);
+
+    [[nodiscard]] auto format() const -> std::string;
+    auto validate() const -> void;
+
+    [[nodiscard]] auto schematic() const -> const Schematic&;
+    [[nodiscard]] auto layout() const -> const Layout&;
+
+    [[nodiscard]] auto schematic() -> Schematic&;
+    [[nodiscard]] auto layout() -> Layout&;
+
+    [[nodiscard]] auto extract_schematic() -> Schematic;
+    [[nodiscard]] auto extract_layout() -> Layout;
+
+   private:
+    std::optional<Schematic> schematic_ {};
+    std::optional<Layout> layout_ {};
+};
 
 }  // namespace logicsim
 

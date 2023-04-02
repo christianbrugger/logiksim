@@ -1,7 +1,6 @@
 
 #include "selection_handle.h"
 
-#include "editable_circuit.h"
 #include "exceptions.h"
 
 namespace logicsim {
@@ -11,23 +10,21 @@ namespace logicsim {
 //
 
 selection_handle_t::selection_handle_t(Selection& selection,
-                                       const EditableCircuit& editable_circuit,
+                                       const SelectionRegistrar& registrar,
                                        selection_key_t selection_key)
-    : selection_ {&selection},
-      editable_circuit_ {&editable_circuit},
-      selection_key_ {selection_key} {}
+    : selection_ {&selection}, registrar_ {&registrar}, selection_key_ {selection_key} {}
 
 auto selection_handle_t::swap(selection_handle_t& other) noexcept -> void {
     using std::swap;
 
     swap(selection_, other.selection_);
-    swap(editable_circuit_, other.editable_circuit_);
+    swap(registrar_, other.registrar_);
     swap(selection_key_, other.selection_key_);
 }
 
 selection_handle_t::~selection_handle_t() {
-    if (editable_circuit_ != nullptr) {
-        editable_circuit_->delete_selection(selection_key_);
+    if (registrar_ != nullptr) {
+        registrar_->unregister_selection(selection_key_);
     }
 }
 
@@ -43,11 +40,11 @@ auto selection_handle_t::operator=(selection_handle_t&& other) noexcept
     return *this;
 }
 
-auto selection_handle_t::copy() -> selection_handle_t {
-    if (editable_circuit_ == nullptr || selection_ == nullptr) {
+auto selection_handle_t::copy() const -> selection_handle_t {
+    if (registrar_ == nullptr || selection_ == nullptr) {
         return selection_handle_t {};
     }
-    return editable_circuit_->create_selection(*selection_);
+    return registrar_->create_selection(*selection_);
 }
 
 auto selection_handle_t::reset() noexcept -> void {
@@ -146,6 +143,60 @@ auto element_handle_t::element() const -> element_id_t {
 
 element_handle_t::operator bool() const noexcept {
     return selection_handle_ && !selection_handle_->empty();
+}
+
+//
+// Selection Registrar
+//
+
+namespace detail::selection_registrar {
+
+auto unpack_selection(const selection_map_t::value_type& value) -> Selection& {
+    if (value.second == nullptr) [[unlikely]] {
+        throw_exception("selection cannot be null");
+    }
+    return *value.second;
+}
+
+}  // namespace detail::selection_registrar
+
+auto SelectionRegistrar::create_selection() const -> selection_handle_t {
+    const auto key = next_selection_key_++;
+
+    auto&& [it, inserted]
+        = allocated_selections_.emplace(key, std::make_unique<Selection>());
+
+    if (!inserted) {
+        throw_exception("unable to create new selection.");
+    }
+
+    Selection& selection = *(it->second.get());
+    return selection_handle_t {selection, *this, key};
+}
+
+auto SelectionRegistrar::create_selection(const Selection& selection) const
+    -> selection_handle_t {
+    auto handle = create_selection();
+    handle.value() = selection;
+    return handle;
+}
+
+auto SelectionRegistrar::element_handle() const -> element_handle_t {
+    return element_handle_t {create_selection()};
+}
+
+auto SelectionRegistrar::element_handle(element_id_t element_id) const
+    -> element_handle_t {
+    auto handle = element_handle_t {create_selection()};
+    handle.set_element(element_id);
+    return handle;
+}
+
+auto SelectionRegistrar::unregister_selection(selection_key_t selection_key) const
+    -> void {
+    if (!allocated_selections_.erase(selection_key)) {
+        throw_exception("unable to delete selection that should be present.");
+    }
 }
 
 }  // namespace logicsim
