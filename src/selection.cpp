@@ -340,8 +340,8 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
     }
 }
 
-auto check_element_not_in_segments(element_id_t element_id, const SegmentTree &tree,
-                                   const detail::selection::segment_map_t &segment_map)
+auto check_wire_not_in_segments(element_id_t element_id, const SegmentTree &tree,
+                                const detail::selection::segment_map_t &segment_map)
     -> void {
     for (const auto index : tree.indices()) {
         const auto key = segment_t(element_id, index);
@@ -361,8 +361,8 @@ auto Selection::validate(const Layout &layout, const Schematic &schematic) const
     auto segment_map = detail::selection::segment_map_t {selected_segments_};
 
     for (const auto element_id : element_set) {
-        check_element_not_in_segments(element_id, layout.segment_tree(element_id),
-                                      segment_map);
+        check_wire_not_in_segments(element_id, layout.segment_tree(element_id),
+                                   segment_map);
     }
 
     // elements

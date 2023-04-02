@@ -123,8 +123,8 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     layout->addWidget(radio1);
     layout->addWidget(radio2);
     layout->addWidget(radio3);
-    layout->addWidget(button5);
     layout->addWidget(button0);
+    layout->addWidget(button5);
     layout->addWidget(button1);
     layout->addWidget(button2);
     layout->addWidget(button3);

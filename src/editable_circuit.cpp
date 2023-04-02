@@ -1544,6 +1544,8 @@ auto EditableCircuit::connect_and_cache_element(element_id_t& element_id) -> voi
     element_id = handle.element();
 }
 
+// collisions
+
 auto EditableCircuit::is_representable_(layout_calculation_data_t data) const -> bool {
     if (is_placeholder(data)) {
         return true;
@@ -1722,7 +1724,7 @@ auto EditableCircuit::cache_remove(element_id_t element_id, segment_index_t segm
     spatial_cache_.remove(element_id, segment.line, segment_index);
 }
 
-// selectionis
+// selections
 
 auto EditableCircuit::create_selection() const -> selection_handle_t {
     const auto key = next_selection_key_++;
