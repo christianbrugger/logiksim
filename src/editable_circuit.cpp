@@ -1220,87 +1220,101 @@ auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
 }
 
 auto EditableCircuit::change_insertion_mode(element_id_t& element_id,
-                                            InsertionMode new_insertion_mode) -> bool {
-    if (schematic_.element(element_id).is_placeholder()) [[unlikely]] {
-        throw_exception(
-            "cannot change insertion mode of "
-            "placeholders.");
+                                            InsertionMode new_insertion_mode) -> void {
+    change_element_insertion_mode(element_id, new_insertion_mode);
+}
+
+auto EditableCircuit::element_change_temporary_to_colliding(element_id_t& element_id)
+    -> void {
+    if (layout_.display_state(element_id) != display_state_t::new_temporary)
+        [[unlikely]] {
+        throw_exception("element is not in the right state.");
+    }
+
+    const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
+
+    if (is_colliding(data)) {
+        layout_.set_display_state(element_id, display_state_t::new_colliding);
+    } else {
+        layout_.set_display_state(element_id, display_state_t::new_valid);
+        connect_and_cache_element(element_id);
+    }
+};
+
+auto EditableCircuit::element_change_colliding_to_insert(element_id_t& element_id)
+    -> void {
+    const auto display_state = layout_.display_state(element_id);
+
+    if (display_state == display_state_t::new_valid) {
+        layout_.set_display_state(element_id, display_state_t::normal);
+        return;
+    }
+
+    if (display_state == display_state_t::new_colliding) [[likely]] {
+        // we can only delete temporary elements
+        layout_.set_display_state(element_id, display_state_t::new_temporary);
+        swap_and_delete_single_element(element_id);
+        return;
+    }
+
+    throw_exception("element is not in the right state.");
+};
+
+auto EditableCircuit::element_change_insert_to_colliding(element_id_t& element_id)
+    -> void {
+    if (layout_.display_state(element_id) != display_state_t::normal) [[unlikely]] {
+        throw_exception("element is not in the right state.");
+    }
+
+    layout_.set_display_state(element_id, display_state_t::new_valid);
+};
+
+auto EditableCircuit::element_change_colliding_to_temporary(element_id_t& element_id)
+    -> void {
+    const auto display_state = layout_.display_state(element_id);
+
+    if (display_state == display_state_t::new_valid) {
+        cache_remove(element_id);
+        layout_.set_display_state(element_id, display_state_t::new_temporary);
+
+        disconnect_inputs_and_add_placeholders(element_id);
+        disconnect_outputs_and_remove_placeholders(element_id);
+        return;
+    }
+
+    if (display_state == display_state_t::new_colliding) {
+        layout_.set_display_state(element_id, display_state_t::new_temporary);
+        return;
+    }
+
+    throw_exception("element is not in the right state.");
+};
+
+auto EditableCircuit::change_element_insertion_mode(element_id_t& element_id,
+                                                    InsertionMode new_insertion_mode)
+    -> void {
+    if (!schematic_.element(element_id).is_element()) [[unlikely]] {
+        throw_exception("only works on elements");
     }
     const auto old_insertion_mode = to_insertion_mode(layout_.display_state(element_id));
 
     if (old_insertion_mode == new_insertion_mode) {
-        return true;
+        return;
     }
 
-    // transition: temporary -> collisions
     if (old_insertion_mode == InsertionMode::temporary) {
-        // check collisions
-        const auto data = to_layout_calculation_data(schematic_, layout_, element_id);
-        const bool colliding = is_colliding(data);
-
-        const auto display_state
-            = colliding ? display_state_t::new_colliding : display_state_t::new_valid;
-        layout_.set_display_state(element_id, display_state);
-
-        if (!colliding) {
-            // add to cache
-            connect_and_cache_element(element_id);
-        }
-
-        if (new_insertion_mode == InsertionMode::collisions) {
-            return true;
-        }
+        element_change_temporary_to_colliding(element_id);
     }
-
-    // transition: collisions -> insert or discard
     if (new_insertion_mode == InsertionMode::insert_or_discard) {
-        const auto display_state = layout_.display_state(element_id);
-
-        if (display_state == display_state_t::new_valid) {
-            layout_.set_display_state(element_id, display_state_t::normal);
-            return true;
-        }
-        if (display_state == display_state_t::new_colliding) {
-            // delete element
-            layout_.set_display_state(element_id, display_state_t::new_temporary);
-            swap_and_delete_single_element(element_id);
-            return false;
-        }
-
-        throw_exception("unexpected display state at this point.");
+        element_change_colliding_to_insert(element_id);
     }
 
-    // transition: insert or discard -> collisions
     if (old_insertion_mode == InsertionMode::insert_or_discard) {
-        layout_.set_display_state(element_id, display_state_t::new_valid);
-
-        if (new_insertion_mode == InsertionMode::collisions) {
-            return true;
-        }
+        element_change_insert_to_colliding(element_id);
     }
-
-    // transition: collisions -> temporary
     if (new_insertion_mode == InsertionMode::temporary) {
-        const auto display_state = layout_.display_state(element_id);
-
-        if (display_state == display_state_t::new_valid) {
-            // remove from cache
-            cache_remove(element_id);
-            layout_.set_display_state(element_id, display_state_t::new_temporary);
-
-            disconnect_inputs_and_add_placeholders(element_id);
-            disconnect_outputs_and_remove_placeholders(element_id);
-            return true;
-        }
-        if (display_state == display_state_t::new_colliding) {
-            layout_.set_display_state(element_id, display_state_t::new_temporary);
-            return true;
-        }
-
-        throw_exception("unexpected display state at this point.");
+        element_change_colliding_to_temporary(element_id);
     }
-
-    throw_exception("unknown mode change");
 }
 
 auto EditableCircuit::selection_builder() const noexcept -> const SelectionBuilder& {

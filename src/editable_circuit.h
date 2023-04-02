@@ -269,7 +269,7 @@ class EditableCircuit {
 
    private:
     auto change_insertion_mode(element_id_t& element_id, InsertionMode new_insertion_mode)
-        -> bool;
+        -> void;
 
     // line segments
     auto add_line_segment(line_t line, InsertionMode insertion_mode, Selection* selection)
@@ -293,6 +293,12 @@ class EditableCircuit {
     auto add_missing_placeholders_for_outputs(element_id_t element_id) -> void;
 
     // elements
+    auto change_element_insertion_mode(element_id_t& element_id,
+                                       InsertionMode new_insertion_mode) -> void;
+    auto element_change_temporary_to_colliding(element_id_t& element_id) -> void;
+    auto element_change_colliding_to_insert(element_id_t& element_id) -> void;
+    auto element_change_insert_to_colliding(element_id_t& element_id) -> void;
+    auto element_change_colliding_to_temporary(element_id_t& element_id) -> void;
     auto connect_and_cache_element(element_id_t& element_id) -> void;
     auto swap_and_delete_single_element(element_id_t& element_id) -> void;
     auto swap_and_delete_multiple_elements(std::span<const element_id_t> element_ids)
