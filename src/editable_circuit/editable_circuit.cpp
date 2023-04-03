@@ -11,7 +11,6 @@
 #include "layout_calculations.h"
 #include "range.h"
 #include "scene.h"
-#include "selection_handle.h"
 
 #include <fmt/core.h>
 

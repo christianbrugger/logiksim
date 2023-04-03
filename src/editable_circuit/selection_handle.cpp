@@ -1,5 +1,5 @@
 
-#include "selection_handle.h"
+#include "editable_circuit/selection_handle.h"
 
 #include "exceptions.h"
 

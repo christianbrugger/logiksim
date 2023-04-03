@@ -1,10 +1,10 @@
 #include "editable_circuit/handlers.h"
 
 #include "editable_circuit/caches.h"
+#include "editable_circuit/selection_handle.h"  // TODO remove
 #include "layout_calculations.h"
 #include "scene.h"
 #include "selection.h"
-#include "selection_handle.h"
 
 namespace logicsim {
 
@@ -32,6 +32,8 @@ auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
         swap_and_delete_single_element(circuit, sender, element_id);
     }
 }
+
+auto notify_element_deleted() {}
 
 auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
                               element_id_t new_element_id, element_id_t old_element_id) {
@@ -78,19 +80,11 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
     auto& schematic = circuit.schematic();
     auto& layout = circuit.layout();
 
-    if (schematic.element(element_id).element_type() == ElementType::wire) {
-        // TODO merge this logic into change_insertion_mode
-        for (auto&& index : layout.segment_tree(element_id).indices(element_id)) {
-            sender.submit(info_message::SegmentUninserted {index});
-        }
-        sender.submit(info_message::ElementDeleted {element_id});
-    } else {
-        if (layout.display_state(element_id) != display_state_t::new_temporary)
-            [[unlikely]] {
-            throw_exception("can only delete temporary objects");
-        }
-        sender.submit(info_message::ElementDeleted {element_id});
+    if (layout.display_state(element_id) != display_state_t::new_temporary) [[unlikely]] {
+        throw_exception("can only delete temporary objects");
     }
+
+    sender.submit(info_message::ElementDeleted {element_id});
 
     // delete in underlying
     auto last_id = schematic.swap_and_delete_element(element_id);
@@ -101,11 +95,9 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
         }
     }
 
-    // last element changed id?
     if (element_id != last_id) {
         notify_element_id_change(circuit, sender, element_id, last_id);
     }
-
     element_id = null_element;
 }
 
@@ -473,6 +465,13 @@ auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
 //
 
 /*
+
+
+auto line_uninserted_TODO() {
+    for (auto&& index : layout.segment_tree(element_id).indices(element_id)) {
+        sender.submit(info_message::SegmentUninserted {index});
+    }
+}
 
 auto WireEditor::add_connected_line(point_t p0, point_t p1, LineSegmentType
 segment_type, InsertionMode insertion_mode) -> selection_handle_t { auto

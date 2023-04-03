@@ -1,8 +1,8 @@
 #ifndef LOGIKSIM_SELECTION_MANAGER_H
 #define LOGIKSIM_SELECTION_MANAGER_H
 
+#include "editable_circuit/selection_handle.h"
 #include "selection.h"
-#include "selection_handle.h"
 #include "vocabulary.h"
 
 #include <boost/container/vector.hpp>

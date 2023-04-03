@@ -4,7 +4,6 @@
 #include "layout.h"
 #include "range.h"
 #include "schematic.h"
-#include "selection_handle.h"
 #include "simulation.h"
 
 namespace logicsim {

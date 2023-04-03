@@ -272,6 +272,7 @@ set(LS_CORE_SOURCES
     src/editable_circuit/handlers.cpp
     src/editable_circuit/messages.cpp
     src/editable_circuit/selection_builder.cpp
+    src/editable_circuit/selection_handle.cpp
     src/editable_circuit/spatial_cache.cpp
 
     src/algorithm.h src/algorithm.cpp
@@ -294,7 +295,6 @@ set(LS_CORE_SOURCES
     src/schematic.h src/schematic.cpp
     src/segment_tree.h src/segment_tree.cpp
     src/selection.h src/selection.cpp
-    src/selection_handle.h src/selection_handle.cpp
     src/simulation.h src/simulation.cpp
     src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp
