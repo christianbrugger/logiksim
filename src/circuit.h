@@ -9,6 +9,10 @@
 
 namespace logicsim {
 
+class Circuit;
+
+[[nodiscard]] auto is_inserted(const Circuit& circuit, element_id_t element_id) -> bool;
+
 class Circuit {
    public:
     [[nodiscard]] Circuit() = default;

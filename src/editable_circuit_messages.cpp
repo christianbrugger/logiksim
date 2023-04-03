@@ -33,6 +33,11 @@ auto ElementUninserted::format() const -> std::string {
     return fmt::format("ElementUninserted(element_id = {})", element_id);
 }
 
+auto InsertedElementUpdated::format() const -> std::string {
+    return fmt::format("InsertedElementUpdated(new_element_id = {}, old_element_id = {})",
+                       new_element_id, old_element_id);
+}
+
 auto SegmentInserted::format() const -> std::string {
     return fmt::format("SegmentInserted(segment = {})", segment);
 }
@@ -41,16 +46,21 @@ auto SegmentUninserted::format() const -> std::string {
     return fmt::format("SegmentUninserted(segment = {})", segment);
 }
 
+auto InsertedSegmentUpdated::format() const -> std::string {
+    return fmt::format("InsertedSegmentUpdated(new_segment = {}, old_segment = {})",
+                       new_segment, old_segment);
+}
+
 auto SegmentMerged::format() const -> std::string {
     return fmt::format("SegmentMerged(segment_from = {}, segment_to = {})", segment_from,
                        segment_to);
 }
 
 auto SegmentSplit::format() const -> std::string {
-    return fmt::format(
-        "SegmentMerged(segment_from = {}, part_from = {}, segment_to = {})", segment_from,
-        part_from, segment_to);
+    return fmt::format("SegmentSplit(segment_from = {}, part_from = {}, segment_to = {})",
+                       segment_from, part_from, segment_to);
 }
+
 }  // namespace info_message
 
 //
@@ -60,8 +70,8 @@ auto SegmentSplit::format() const -> std::string {
 MessageSender::MessageSender(EditableCircuit &editable_circuit) noexcept
     : editable_circuit_ {&editable_circuit} {}
 
-auto MessageSender::submit(InfoMessage &&message) -> void {
-    editable_circuit_->_submit(std::move(message));
+auto MessageSender::submit(InfoMessage message) -> void {
+    editable_circuit_->_submit(message);
 }
 
 }  // namespace logicsim::editable_circuit

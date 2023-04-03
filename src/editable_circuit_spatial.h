@@ -15,7 +15,7 @@
 
 namespace logicsim {
 
-namespace detail::search_tree {
+namespace detail::spatial_tree {
 // Boost R-Tree Documentation:
 // https://www.boost.org/doc/libs/1_81_0/libs/geometry/doc/html/geometry/spatial_indexes.html
 
@@ -51,20 +51,20 @@ auto to_box(rect_fine_t rect) -> tree_box_t;
 auto operator==(const tree_t &a, const tree_t &b) -> bool;
 auto operator!=(const tree_t &a, const tree_t &b) -> bool;
 
-}  // namespace detail::search_tree
+}  // namespace detail::spatial_tree
 
-class SearchTree {
+class SpatialTree {
    public:
-    using tree_t = detail::search_tree::tree_t;
-    using value_type = detail::search_tree::tree_value_t;
+    using tree_t = detail::spatial_tree::tree_t;
+    using value_type = detail::spatial_tree::tree_value_t;
 
-    using query_result_t = detail::search_tree::tree_payload_t;
+    using query_result_t = detail::spatial_tree::tree_payload_t;
     using queried_segments_t = std::array<segment_t, 4>;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
 
-    auto submit(editable_circuit::InfoMessage &&message) -> void;
+    auto submit(editable_circuit::InfoMessage message) -> void;
 
     auto query_selection(rect_fine_t rect) const -> std::vector<query_result_t>;
     auto query_line_segments(point_t point) const -> queried_segments_t;
@@ -72,7 +72,7 @@ class SearchTree {
     auto rects() const {
         return transform_view(tree_.begin(), tree_.end(),
                               [](const value_type &value) -> rect_fine_t {
-                                  return detail::search_tree::to_rect(value.first);
+                                  return detail::spatial_tree::to_rect(value.first);
                               });
     }
 
@@ -90,9 +90,9 @@ class SearchTree {
     tree_t tree_ {};
 };
 
-auto get_segment_count(SearchTree::queried_segments_t result) -> int;
-auto all_same_element_id(SearchTree::queried_segments_t result) -> bool;
-auto get_unique_element_id(SearchTree::queried_segments_t) -> element_id_t;
+auto get_segment_count(SpatialTree::queried_segments_t result) -> int;
+auto all_same_element_id(SpatialTree::queried_segments_t result) -> bool;
+auto get_unique_element_id(SpatialTree::queried_segments_t) -> element_id_t;
 
 auto add_circuit_to_cache(auto &&cache, const Circuit &circuit) -> void {
     using namespace editable_circuit::info_message;
@@ -125,36 +125,36 @@ auto add_circuit_to_cache(auto &&cache, const Circuit &circuit) -> void {
 //
 
 template <>
-struct fmt::formatter<logicsim::detail::search_tree::tree_point_t> {
+struct fmt::formatter<logicsim::detail::spatial_tree::tree_point_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::detail::search_tree::tree_point_t &obj,
+    static auto format(const logicsim::detail::spatial_tree::tree_point_t &obj,
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "[{}, {}]", obj.x(), obj.y());
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::detail::search_tree::tree_box_t> {
+struct fmt::formatter<logicsim::detail::spatial_tree::tree_box_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::detail::search_tree::tree_box_t &obj,
+    static auto format(const logicsim::detail::spatial_tree::tree_box_t &obj,
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "[{}, {}]", obj.min_corner(), obj.max_corner());
     }
 };
 
 template <>
-struct fmt::formatter<logicsim::detail::search_tree::tree_value_t> {
+struct fmt::formatter<logicsim::detail::spatial_tree::tree_value_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::detail::search_tree::tree_value_t &obj,
+    static auto format(const logicsim::detail::spatial_tree::tree_value_t &obj,
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "{}: {}", obj.first, obj.second);
     }

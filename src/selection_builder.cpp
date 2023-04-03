@@ -14,7 +14,7 @@ namespace logicsim {
 // Selection Builder
 //
 
-SelectionBuilder::SelectionBuilder(const Layout& layout, const SearchTree& spatial_cache,
+SelectionBuilder::SelectionBuilder(const Layout& layout, const SpatialTree& spatial_cache,
                                    selection_handle_t initial_selection)
     : layout_ {&layout},
       spatial_cache_ {&spatial_cache},
@@ -110,7 +110,7 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
     throw_exception("Unknown function");
 }
 
-auto apply_function(Selection& selection, const SearchTree& spatial_cache,
+auto apply_function(Selection& selection, const SpatialTree& spatial_cache,
                     const Layout& layout, SelectionBuilder::operation_t operation)
     -> void {
     // const auto t = Timer {"apply_function", Timer::Unit::ms, 3};

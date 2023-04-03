@@ -6,6 +6,14 @@
 
 namespace logicsim {
 
+auto is_inserted(const Circuit& circuit, element_id_t element_id) -> bool {
+    return is_inserted(circuit.layout(), element_id);
+}
+
+//
+// Circuit
+//
+
 Circuit::Circuit(Schematic&& schematic, Layout&& layout)
     : schematic_ {std::move(schematic)}, layout_ {std::move(layout)} {};
 

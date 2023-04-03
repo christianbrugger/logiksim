@@ -4,7 +4,10 @@
 #include "circuit.h"
 #include "layout_calculations.h"
 
-namespace logicsim::editable_circuit {
+#include <type_traits>
+#include <variant>
+
+namespace logicsim {
 
 //
 // ConnectionCache
@@ -36,13 +39,25 @@ auto ConnectionCache<IsInput>::format() const -> std::string {
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage&& message) -> void {}
+auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> void {
+    using namespace editable_circuit::info_message;
+
+    if (auto pointer = std::get_if<ElementInserted>(&message)) {
+        return handle(*pointer);
+    }
+    if (auto pointer = std::get_if<ElementInserted>(&message)) {
+        return handle(*pointer);
+    }
+    if (auto pointer = std::get_if<InsertedElementUpdated>(&message)) {
+        return handle(*pointer);
+    }
+}
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::insert(element_id_t element_id,
-                                      layout_calculation_data_t data) -> void {
+auto ConnectionCache<IsInput>::handle(
+    editable_circuit::info_message::ElementInserted message) -> void {
     // placeholders are not cached
-    if (is_placeholder(data)) {
+    if (is_placeholder(message.data)) {
         return;
     }
 
@@ -51,71 +66,71 @@ auto ConnectionCache<IsInput>::insert(element_id_t element_id,
         if (connections_.contains(position)) [[unlikely]] {
             throw_exception("cache already has an entry at this position");
         }
-        connections_[position] = {element_id, connection_id, orientation};
+        connections_[position] = {message.element_id, connection_id, orientation};
         return true;
     };
 
     if constexpr (IsInput) {
-        iter_input_location_and_id(data, add_position);
+        iter_input_location_and_id(message.data, add_position);
     } else {
-        iter_output_location_and_id(data, add_position);
+        iter_output_location_and_id(message.data, add_position);
     }
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::remove(element_id_t element_id,
-                                      layout_calculation_data_t data) -> void {
+auto ConnectionCache<IsInput>::handle(
+    editable_circuit::info_message::ElementUninserted message) -> void {
     // placeholders are not cached
-    if (is_placeholder(data)) {
+    if (is_placeholder(message.data)) {
         return;
     }
 
     const auto remove_position = [&](connection_id_t connection_id, point_t position,
                                      orientation_t orientation) {
-        const auto value = value_type {element_id, connection_id, orientation};
+        const auto value = value_type {message.element_id, connection_id, orientation};
         const auto it = get_and_verify_cache_entry(connections_, position, value);
         connections_.erase(it);
         return true;
     };
 
     if constexpr (IsInput) {
-        iter_input_location_and_id(data, remove_position);
+        iter_input_location_and_id(message.data, remove_position);
     } else {
-        iter_output_location_and_id(data, remove_position);
+        iter_output_location_and_id(message.data, remove_position);
     }
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::update(element_id_t new_element_id,
-                                      element_id_t old_element_id,
-                                      layout_calculation_data_t data) -> void {
+auto ConnectionCache<IsInput>::handle(
+    editable_circuit::info_message::InsertedElementUpdated message) -> void {
     // placeholders are not cached
-    if (is_placeholder(data)) {
+    if (is_placeholder(message.data)) {
         return;
     }
 
     const auto update_id = [&](connection_id_t connection_id, point_t position,
                                orientation_t orientation) {
-        const auto old_value = value_type {old_element_id, connection_id, orientation};
+        const auto old_value
+            = value_type {message.old_element_id, connection_id, orientation};
         const auto it = get_and_verify_cache_entry(connections_, position, old_value);
-        it->second.element_id = new_element_id;
+        it->second.element_id = message.new_element_id;
         return true;
     };
 
     if constexpr (IsInput) {
-        iter_input_location_and_id(data, update_id);
+        iter_input_location_and_id(message.data, update_id);
     } else {
-        iter_output_location_and_id(data, update_id);
+        iter_output_location_and_id(message.data, update_id);
     }
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::insert(element_id_t element_id, segment_info_t segment)
-    -> void {}
+auto ConnectionCache<IsInput>::handle(
+    editable_circuit::info_message::SegmentInserted message) -> void {}
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::remove(element_id_t element_id, segment_info_t segment)
-    -> void {}
+auto ConnectionCache<IsInput>::handle(
+    editable_circuit::info_message::SegmentUninserted message) -> void {}
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position) const
@@ -420,35 +435,59 @@ auto CollisionCache::format() const -> std::string {
     return "!!! NOT IMPLEMENTED !!!";
 }
 
-auto CollisionCache::submit(editable_circuit::InfoMessage&& message) -> void {}
+auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
+    using namespace editable_circuit::info_message;
 
-auto CollisionCache::insert(element_id_t element_id, layout_calculation_data_t data)
-    -> void {
-    insert_impl(map_, element_id, data);
-}
+    if (auto pointer = std::get_if<ElementInserted>(&message)) {
+        return handle(*pointer);
+    }
+    if (auto pointer = std::get_if<ElementInserted>(&message)) {
+        return handle(*pointer);
+    }
+    if (auto pointer = std::get_if<InsertedElementUpdated>(&message)) {
+        return handle(*pointer);
+    }
 
-auto CollisionCache::remove(element_id_t element_id, layout_calculation_data_t data)
-    -> void {
-    remove_impl(map_, element_id, data);
-}
-
-auto CollisionCache::update(element_id_t new_element_id, element_id_t old_element_id,
-                            layout_calculation_data_t data) -> void {
-    if (data.element_type == ElementType::wire) {
-        for (auto&& segment : data.segment_tree.segments()) {
-            update_impl(map_, new_element_id, old_element_id, segment);
-        }
-    } else {
-        update_impl(map_, new_element_id, old_element_id, data);
+    if (auto pointer = std::get_if<SegmentInserted>(&message)) {
+        return handle(*pointer);
+    }
+    if (auto pointer = std::get_if<SegmentUninserted>(&message)) {
+        return handle(*pointer);
+    }
+    if (auto pointer = std::get_if<InsertedSegmentUpdated>(&message)) {
+        return handle(*pointer);
     }
 }
 
-auto CollisionCache::insert(element_id_t element_id, segment_info_t segment) -> void {
-    insert_impl(map_, element_id, segment);
+auto CollisionCache::handle(editable_circuit::info_message::ElementInserted message)
+    -> void {
+    insert_impl(map_, message.element_id, message.data);
 }
 
-auto CollisionCache::remove(element_id_t element_id, segment_info_t segment) -> void {
-    remove_impl(map_, element_id, segment);
+auto CollisionCache::handle(editable_circuit::info_message::ElementUninserted message)
+    -> void {
+    remove_impl(map_, message.element_id, message.data);
+}
+
+auto CollisionCache::handle(
+    editable_circuit::info_message::InsertedElementUpdated message) -> void {
+    update_impl(map_, message.new_element_id, message.old_element_id, message.data);
+}
+
+auto CollisionCache::handle(editable_circuit::info_message::SegmentInserted message)
+    -> void {
+    insert_impl(map_, message.segment.element_id, message.segment_info);
+}
+
+auto CollisionCache::handle(editable_circuit::info_message::SegmentUninserted message)
+    -> void {
+    remove_impl(map_, message.segment.element_id, message.segment_info);
+}
+
+auto CollisionCache::handle(
+    editable_circuit::info_message::InsertedSegmentUpdated message) -> void {
+    update_impl(map_, message.new_segment.element_id, message.old_segment.element_id,
+                message.segment_info);
 }
 
 auto CollisionCache::state_colliding(point_t position, ItemType item_type) const -> bool {
@@ -631,7 +670,7 @@ auto CacheProvider::validate(const Circuit& circuit) -> void {
 }
 
 auto CacheProvider::query_selection(rect_fine_t rect) const
-    -> std::vector<SearchTree::query_result_t> {
+    -> std::vector<SpatialTree::query_result_t> {
     return spatial_cache_.query_selection(rect);
 };
 
@@ -643,8 +682,8 @@ auto CacheProvider::query_selection(point_fine_t point) const
     auto elements = std::vector<element_id_t> {};
     transform_if(
         query_result, std::back_inserter(elements),
-        [](const SearchTree::query_result_t& value) { return value.element_id; },
-        [](const SearchTree::query_result_t& value) {
+        [](const SpatialTree::query_result_t& value) { return value.element_id; },
+        [](const SpatialTree::query_result_t& value) {
             return value.segment_index == null_segment_index;
         });
 
@@ -656,6 +695,13 @@ auto CacheProvider::query_selection(point_fine_t point) const
         return elements[0];
     }
     return std::nullopt;
+}
+
+auto CacheProvider::submit(editable_circuit::InfoMessage message) -> void {
+    input_connections_.submit(message);
+    output_connections_.submit(message);
+    collision_cache_.submit(message);
+    spatial_cache_.submit(message);
 }
 
 auto CacheProvider::input_cache() const -> const ConnectionCache<true>& {
@@ -670,7 +716,7 @@ auto CacheProvider::collision_cache() const -> const CollisionCache& {
     return collision_cache_;
 }
 
-auto CacheProvider::spatial_cache() const -> const SearchTree& {
+auto CacheProvider::spatial_cache() const -> const SpatialTree& {
     return spatial_cache_;
 }
 
@@ -733,4 +779,4 @@ auto cache_update(element_id_t new_element_id, element_id_t old_element_id) -> v
 }
 */
 
-}  // namespace logicsim::editable_circuit
+}  // namespace logicsim

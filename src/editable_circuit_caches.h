@@ -9,7 +9,7 @@
 #include "segment_tree.h"
 #include "vocabulary.h"
 
-namespace logicsim::editable_circuit {
+namespace logicsim {
 
 namespace detail::connection_cache {
 // TODO use struct packing ?
@@ -42,7 +42,7 @@ class ConnectionCache {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    auto submit(editable_circuit::InfoMessage&& message) -> void;
+    auto submit(editable_circuit::InfoMessage message) -> void;
 
     [[nodiscard]] auto find(point_t position) const
         -> std::optional<std::pair<connection_t, orientation_t>>;
@@ -66,13 +66,12 @@ class ConnectionCache {
     auto validate(const Circuit& circuit) const -> void;
 
    private:
-    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto update(element_id_t new_element_id, element_id_t old_element_id,
-                layout_calculation_data_t data) -> void;
+    auto handle(editable_circuit::info_message::ElementInserted message) -> void;
+    auto handle(editable_circuit::info_message::ElementUninserted message) -> void;
+    auto handle(editable_circuit::info_message::InsertedElementUpdated message) -> void;
 
-    auto insert(element_id_t element_id, segment_info_t segment) -> void;
-    auto remove(element_id_t element_id, segment_info_t segment) -> void;
+    auto handle(editable_circuit::info_message::SegmentInserted message) -> void;
+    auto handle(editable_circuit::info_message::SegmentUninserted message) -> void;
 
     map_type connections_ {};
 };
@@ -125,7 +124,7 @@ class CollisionCache {
    public:
     [[nodiscard]] auto format() const -> std::string;
 
-    auto submit(editable_circuit::InfoMessage&& message) -> void;
+    auto submit(editable_circuit::InfoMessage message) -> void;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(line_t line) const -> bool;
@@ -142,13 +141,13 @@ class CollisionCache {
     auto validate(const Circuit& circuit) const -> void;
 
    private:
-    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto update(element_id_t new_element_id, element_id_t old_element_id,
-                layout_calculation_data_t data) -> void;
+    auto handle(editable_circuit::info_message::ElementInserted message) -> void;
+    auto handle(editable_circuit::info_message::ElementUninserted message) -> void;
+    auto handle(editable_circuit::info_message::InsertedElementUpdated message) -> void;
 
-    auto insert(element_id_t element_id, segment_info_t segment) -> void;
-    auto remove(element_id_t element_id, segment_info_t segment) -> void;
+    auto handle(editable_circuit::info_message::SegmentInserted message) -> void;
+    auto handle(editable_circuit::info_message::SegmentUninserted message) -> void;
+    auto handle(editable_circuit::info_message::InsertedSegmentUpdated message) -> void;
 
     [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
     [[nodiscard]] auto state_colliding(point_t position, ItemType item_type) const
@@ -165,10 +164,10 @@ class CacheProvider {
     [[nodiscard]] auto format() const -> std::string;
     auto validate(const Circuit& circuit) -> void;
 
-    auto submit(editable_circuit::InfoMessage&& message) -> void;
+    auto submit(editable_circuit::InfoMessage message) -> void;
 
     [[nodiscard]] auto query_selection(rect_fine_t rect) const
-        -> std::vector<SearchTree::query_result_t>;
+        -> std::vector<SpatialTree::query_result_t>;
     // TODO move where its needed?
     [[nodiscard]] auto query_selection(point_fine_t point) const
         -> std::optional<element_id_t>;
@@ -178,7 +177,7 @@ class CacheProvider {
     [[nodiscard]] auto input_cache() const -> const ConnectionCache<true>&;
     [[nodiscard]] auto output_cache() const -> const ConnectionCache<false>&;
     [[nodiscard]] auto collision_cache() const -> const CollisionCache&;
-    [[nodiscard]] auto spatial_cache() const -> const SearchTree&;
+    [[nodiscard]] auto spatial_cache() const -> const SpatialTree&;
 
    public:
     // for rendering
@@ -211,9 +210,9 @@ class CacheProvider {
     ConnectionCache<true> input_connections_ {};
     ConnectionCache<false> output_connections_ {};
     CollisionCache collision_cache_ {};
-    SearchTree spatial_cache_ {};
+    SpatialTree spatial_cache_ {};
 };
 
-}  // namespace logicsim::editable_circuit
+}  // namespace logicsim
 
 #endif

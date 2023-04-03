@@ -21,9 +21,9 @@ auto operator==(box<T> a, box<T> b) -> bool {
 }  // namespace boost::geometry::model
 
 template <>
-struct ankerl::unordered_dense::hash<logicsim::detail::search_tree::tree_payload_t> {
+struct ankerl::unordered_dense::hash<logicsim::detail::spatial_tree::tree_payload_t> {
     using is_avalanching = void;
-    using type = logicsim::detail::search_tree::tree_payload_t;
+    using type = logicsim::detail::spatial_tree::tree_payload_t;
 
     [[nodiscard]] auto operator()(const type& obj) const noexcept -> uint64_t {
         return logicsim::hash_8_byte(static_cast<uint32_t>(obj.element_id.value),
@@ -34,10 +34,10 @@ struct ankerl::unordered_dense::hash<logicsim::detail::search_tree::tree_payload
 namespace logicsim {
 
 //
-// SearchTree
+// SpatialTree
 //
 
-namespace detail::search_tree {
+namespace detail::spatial_tree {
 
 auto tree_payload_t::format() const -> std::string {
     return fmt::format("<Element {}, Segment {}>", element_id, segment_index);
@@ -67,15 +67,16 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
     return tree_box_t {p0, p1};
 }
 
-}  // namespace detail::search_tree
+}  // namespace detail::spatial_tree
 
-auto SearchTree::format() const -> std::string {
-    return fmt::format("SearchTree = {}\n", tree_);
+auto SpatialTree::format() const -> std::string {
+    return fmt::format("SpatialTree = {}\n", tree_);
 }
 
-auto SearchTree::submit(editable_circuit::InfoMessage&& message) -> void {}
+auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {}
 
-auto SearchTree::insert(element_id_t element_id, layout_calculation_data_t data) -> void {
+auto SpatialTree::insert(element_id_t element_id, layout_calculation_data_t data)
+    -> void {
     if (is_placeholder(data)) {
         return;
     }
@@ -83,11 +84,12 @@ auto SearchTree::insert(element_id_t element_id, layout_calculation_data_t data)
         throw_exception("not implemented");
     }
 
-    const auto box = detail::search_tree::get_selection_box(data);
+    const auto box = detail::spatial_tree::get_selection_box(data);
     tree_.insert({box, {element_id, null_segment_index}});
 }
 
-auto SearchTree::remove(element_id_t element_id, layout_calculation_data_t data) -> void {
+auto SpatialTree::remove(element_id_t element_id, layout_calculation_data_t data)
+    -> void {
     if (is_placeholder(data)) {
         return;
     }
@@ -95,7 +97,7 @@ auto SearchTree::remove(element_id_t element_id, layout_calculation_data_t data)
         throw_exception("not implemented");
     }
 
-    const auto box = detail::search_tree::get_selection_box(data);
+    const auto box = detail::spatial_tree::get_selection_box(data);
     const auto remove_count = tree_.remove({box, {element_id, null_segment_index}});
 
     if (remove_count != 1) [[unlikely]] {
@@ -103,8 +105,8 @@ auto SearchTree::remove(element_id_t element_id, layout_calculation_data_t data)
     }
 }
 
-auto SearchTree::update(element_id_t new_element_id, element_id_t old_element_id,
-                        layout_calculation_data_t data) -> void {
+auto SpatialTree::update(element_id_t new_element_id, element_id_t old_element_id,
+                         layout_calculation_data_t data) -> void {
     if (data.element_type == ElementType::wire) {
         for (auto i : range(data.segment_tree.segment_count())) {
             const auto segment = data.segment_tree.segment(i);
@@ -121,15 +123,15 @@ auto SearchTree::update(element_id_t new_element_id, element_id_t old_element_id
     }
 }
 
-auto SearchTree::insert(element_id_t element_id, line_t segment, segment_index_t index)
+auto SpatialTree::insert(element_id_t element_id, line_t segment, segment_index_t index)
     -> void {
-    const auto box = detail::search_tree::get_selection_box(segment);
+    const auto box = detail::spatial_tree::get_selection_box(segment);
     tree_.insert({box, {element_id, index}});
 }
 
-auto SearchTree::remove(element_id_t element_id, line_t segment, segment_index_t index)
+auto SpatialTree::remove(element_id_t element_id, line_t segment, segment_index_t index)
     -> void {
-    const auto box = detail::search_tree::get_selection_box(segment);
+    const auto box = detail::spatial_tree::get_selection_box(segment);
 
     const auto remove_count = tree_.remove({box, {element_id, index}});
     if (remove_count != 1) [[unlikely]] {
@@ -137,8 +139,8 @@ auto SearchTree::remove(element_id_t element_id, line_t segment, segment_index_t
     }
 }
 
-auto SearchTree::query_selection(rect_fine_t rect) const -> std::vector<query_result_t> {
-    using namespace detail::search_tree;
+auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_result_t> {
+    using namespace detail::spatial_tree;
 
     auto result = std::vector<query_result_t> {};
 
@@ -151,8 +153,8 @@ auto SearchTree::query_selection(rect_fine_t rect) const -> std::vector<query_re
     return result;
 }
 
-auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
-    using namespace detail::search_tree;
+auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
+    using namespace detail::spatial_tree;
 
     const auto grid_point_fine = static_cast<point_fine_t>(grid_point);
     const auto tree_point = tree_point_t {grid_point_fine.x, grid_point_fine.y};
@@ -173,7 +175,7 @@ auto SearchTree::query_line_segments(point_t grid_point) const -> queried_segmen
     return result;
 }
 
-namespace detail::search_tree {
+namespace detail::spatial_tree {
 
 using index_map_t = ankerl::unordered_dense::map<tree_payload_t, tree_box_t>;
 
@@ -200,12 +202,12 @@ auto operator!=(const tree_t& a, const tree_t& b) -> bool {
     return !(a == b);
 }
 
-}  // namespace detail::search_tree
+}  // namespace detail::spatial_tree
 
-auto SearchTree::validate(const Circuit& circuit) const -> void {
-    using namespace detail::search_tree;
+auto SpatialTree::validate(const Circuit& circuit) const -> void {
+    using namespace detail::spatial_tree;
 
-    auto cache = SearchTree {};
+    auto cache = SpatialTree {};
     add_circuit_to_cache(cache, circuit);
 
     if (cache.tree_ != this->tree_) [[unlikely]] {
@@ -213,12 +215,12 @@ auto SearchTree::validate(const Circuit& circuit) const -> void {
     }
 }
 
-auto get_segment_count(SearchTree::queried_segments_t result) -> int {
+auto get_segment_count(SpatialTree::queried_segments_t result) -> int {
     return gsl::narrow_cast<int>(std::ranges::count_if(
         result, [](segment_t segment) { return bool {segment.element_id}; }));
 }
 
-auto all_same_element_id(SearchTree::queried_segments_t result) -> bool {
+auto all_same_element_id(SpatialTree::queried_segments_t result) -> bool {
     const auto first_id = result.at(0).element_id;
 
     if (!first_id) {
@@ -230,7 +232,7 @@ auto all_same_element_id(SearchTree::queried_segments_t result) -> bool {
     });
 }
 
-auto get_unique_element_id(SearchTree::queried_segments_t result) -> element_id_t {
+auto get_unique_element_id(SpatialTree::queried_segments_t result) -> element_id_t {
     const auto first_id = result.at(0).element_id;
     return (first_id && all_same_element_id(result)) ? first_id : null_element;
 }

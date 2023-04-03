@@ -14,6 +14,10 @@
 
 namespace logicsim {
 
+class Layout;
+
+[[nodiscard]] auto is_inserted(const Layout &layout, element_id_t element_id) -> bool;
+
 class Layout {
    public:
     [[nodiscard]] explicit Layout() = default;

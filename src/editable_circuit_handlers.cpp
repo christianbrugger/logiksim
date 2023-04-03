@@ -32,6 +32,46 @@ auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
     }
 }
 
+auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
+                              element_id_t new_element_id, element_id_t old_element_id) {
+    const auto& layout = circuit.layout();
+    const auto& schematic = circuit.schematic();
+    const auto element = schematic.element(new_element_id);
+
+    if (element.is_placeholder()) {
+        return;
+    }
+
+    sender.submit(info_message::ElementUpdated {
+        .new_element_id = new_element_id,
+        .old_element_id = old_element_id,
+    });
+
+    bool inserted = is_inserted(circuit, new_element_id);
+
+    if (inserted && element.is_wire()) {
+        const auto& segment_tree = layout.segment_tree(new_element_id);
+
+        for (auto&& segment_index : segment_tree.indices()) {
+            sender.submit(info_message::InsertedSegmentUpdated {
+                .new_segment = segment_t {new_element_id, segment_index},
+                .old_segment = segment_t {old_element_id, segment_index},
+                .segment_info = segment_tree.segment(segment_index),
+            });
+        }
+    }
+
+    if (inserted && element.is_element()) {
+        const auto data = to_layout_calculation_data(circuit, new_element_id);
+
+        sender.submit(info_message::InsertedElementUpdated {
+            .new_element_id = new_element_id,
+            .old_element_id = old_element_id,
+            .data = data,
+        });
+    }
+}
+
 auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
                                     element_id_t& element_id) -> void {
     auto& schematic = circuit.schematic();
@@ -52,20 +92,17 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
     }
 
     // delete in underlying
-    auto last_id1 = schematic.swap_and_delete_element(element_id);
-    auto last_id2 = layout.swap_and_delete_element(element_id);
-    if (last_id1 != last_id2) {
-        throw_exception(
-            "Returned id's during deletion are not the "
-            "same.");
+    auto last_id = schematic.swap_and_delete_element(element_id);
+    {
+        auto last_id_2 = layout.swap_and_delete_element(element_id);
+        if (last_id_2 != last_id) {
+            throw_exception("Returned id's during deletion are not the same.");
+        }
     }
 
-    // update ids
-    if (element_id != last_id1) {
-        sender.submit(info_message::ElementUpdated {.new_element_id = element_id,
-                                                    .old_element_id = last_id1});
-        // TODO do we need this?
-        // cache_update(element_id, last_id1);
+    // last element changed id?
+    if (element_id != last_id) {
+        notify_element_id_change(circuit, sender, element_id, last_id);
     }
 
     element_id = null_element;
@@ -435,9 +472,9 @@ auto change_element_insertion_mode(State state, element_id_t& element_id,
 
 /*
 
-auto WireEditor::add_connected_line(point_t p0, point_t p1, LineSegmentType segment_type,
-                                    InsertionMode insertion_mode) -> selection_handle_t {
-    auto selection_handle = editable_circuit_.create_selection();
+auto WireEditor::add_connected_line(point_t p0, point_t p1, LineSegmentType
+segment_type, InsertionMode insertion_mode) -> selection_handle_t { auto
+selection_handle = editable_circuit_.create_selection();
 
     // TODO what with p0 == p1
 
@@ -447,20 +484,24 @@ auto WireEditor::add_connected_line(point_t p0, point_t p1, LineSegmentType segm
         case horizontal_first: {
             const auto pm = point_t {p1.x, p0.y};
             if (p0.x != pm.x) {
-                add_line_segment(line_t {p0, pm}, insertion_mode, selection_handle.get());
+                add_line_segment(line_t {p0, pm}, insertion_mode,
+selection_handle.get());
             }
             if (pm.y != p1.y) {
-                add_line_segment(line_t {pm, p1}, insertion_mode, selection_handle.get());
+                add_line_segment(line_t {pm, p1}, insertion_mode,
+selection_handle.get());
             }
             break;
         }
         case vertical_first: {
             const auto pm = point_t {p0.x, p1.y};
             if (p0.y != pm.y) {
-                add_line_segment(line_t {p0, pm}, insertion_mode, selection_handle.get());
+                add_line_segment(line_t {p0, pm}, insertion_mode,
+selection_handle.get());
             }
             if (pm.x != p1.x) {
-                add_line_segment(line_t {pm, p1}, insertion_mode, selection_handle.get());
+                add_line_segment(line_t {pm, p1}, insertion_mode,
+selection_handle.get());
             }
             break;
         }
@@ -517,7 +558,8 @@ auto sort_lines_with_endpoints_last(std::span<std::pair<line_t, segment_t>> line
     });
 }
 
-auto merge_parallel_segments(segment_info_t segment_info_0, segment_info_t segment_info_1)
+auto merge_parallel_segments(segment_info_t segment_info_0, segment_info_t
+segment_info_1)
     -> segment_info_t {
     const auto [a, b] = order_points(segment_info_0, segment_info_1);
 
@@ -572,7 +614,7 @@ auto WireEditor::merge_line_segments(element_id_t element_id, segment_index_t in
 }
 
 auto all_collision_condered(const SegmentTree& tree,
-                            SearchTree::queried_segments_t result) -> bool {
+                            SpatialTree::queried_segments_t result) -> bool {
     return std::ranges::all_of(result, [&](segment_t value) {
         return value.segment_index == null_segment_index
                || is_inserted(tree.display_state(value.segment_index));
@@ -614,8 +656,8 @@ auto WireEditor::fix_line_segments(point_t position) -> void {
 
         if (has_through_line_0) {
             const auto cross_point_type = is_horizontal(lines.at(1).first)
-                                              ? SegmentPointType::cross_point_horizontal
-                                              : SegmentPointType::cross_point_vertical;
+                                              ?
+SegmentPointType::cross_point_horizontal : SegmentPointType::cross_point_vertical;
             set_segment_point_types(
                 {
                     std::pair {lines.at(1).second, cross_point_type},
@@ -655,8 +697,8 @@ auto WireEditor::fix_line_segments(point_t position) -> void {
 
         if (has_through_line_0) {
             const auto cross_point_type = is_horizontal(lines.at(2).first)
-                                              ? SegmentPointType::cross_point_horizontal
-                                              : SegmentPointType::cross_point_vertical;
+                                              ?
+SegmentPointType::cross_point_horizontal : SegmentPointType::cross_point_vertical;
             set_segment_point_types(
                 {
                     std::pair {lines.at(1).second, SegmentPointType::shadow_point},
@@ -756,12 +798,13 @@ auto WireEditor::add_line_segment(line_t line, InsertionMode insertion_mode,
             .p1_type = SegmentPointType::shadow_point,
         };
 
-        const auto segment_index = m_tree.add_segment(segment, display_state_t::normal);
-        cache_insert(element_id, segment_index);
+        const auto segment_index = m_tree.add_segment(segment,
+display_state_t::normal); cache_insert(element_id, segment_index);
 
         if (selection != nullptr) {
             const auto segment_part = get_segment_part(segment.line);
-            selection->add_segment(segment_t {element_id, segment_index}, segment_part);
+            selection->add_segment(segment_t {element_id, segment_index},
+segment_part);
         }
     }
 

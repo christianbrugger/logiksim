@@ -108,7 +108,7 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             // TODO width depends on internal state
             const auto width = 2 * 4;
             const auto height
-                = data.output_count == 1 ? 1 : 2 * (data.output_count - std::size_t {1});
+                = data.output_count <= 1 ? 1 : 2 * (data.output_count - std::size_t {1});
 
             for (auto i : range(1, width)) {
                 for (auto j : range(height + 1)) {
@@ -121,7 +121,7 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
                 }
             }
 
-            for (auto j = 1; j < height; j += 2) {
+            for (auto j = std::size_t {1}; j < height; j += 2) {
                 const auto x = grid_t {width};
                 const auto y = grid_t {j};
                 if (!next_point(

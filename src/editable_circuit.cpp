@@ -213,13 +213,12 @@ auto EditableCircuit::selection_builder() noexcept -> SelectionBuilder& {
     return selection_builder_;
 }
 
-auto EditableCircuit::caches() const -> const editable_circuit::CacheProvider& {
+auto EditableCircuit::caches() const -> const CacheProvider& {
     return cache_provider_;
 }
 
-auto EditableCircuit::_submit(editable_circuit::InfoMessage&& message) -> void {
-    using namespace editable_circuit;
-
+auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
+    cache_provider_.submit(message);
     std::visit([](auto&& v) { print(v); }, message);
 }
 

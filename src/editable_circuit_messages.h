@@ -54,16 +54,32 @@ struct ElementUninserted {
     [[nodiscard]] auto format() const -> std::string;
 };
 
+struct InsertedElementUpdated {
+    element_id_t new_element_id;
+    element_id_t old_element_id;
+    layout_calculation_data_t data;
+
+    [[nodiscard]] auto format() const -> std::string;
+};
+
 struct SegmentInserted {
     segment_t segment;
-    segment_info_t info;
+    segment_info_t segment_info;
 
     [[nodiscard]] auto format() const -> std::string;
 };
 
 struct SegmentUninserted {
     segment_t segment;
-    segment_info_t info;
+    segment_info_t segment_info;
+
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct InsertedSegmentUpdated {
+    segment_t new_segment;
+    segment_t old_segment;
+    segment_info_t segment_info;
 
     [[nodiscard]] auto format() const -> std::string;
 };
@@ -84,8 +100,9 @@ struct SegmentSplit {
 };
 
 using Message = std::variant<ElementCreated, ElementDeleted, ElementUpdated,
-                             ElementInserted, ElementUninserted, SegmentInserted,
-                             SegmentUninserted, SegmentMerged, SegmentSplit>;
+                             ElementInserted, ElementUninserted, InsertedElementUpdated,
+                             SegmentInserted, SegmentUninserted, InsertedSegmentUpdated,
+                             SegmentMerged, SegmentSplit>;
 
 }  // namespace info_message
 
@@ -100,7 +117,7 @@ class MessageSender {
    public:
     [[nodiscard]] explicit MessageSender(EditableCircuit &) noexcept;
 
-    auto submit(InfoMessage &&message) -> void;
+    auto submit(InfoMessage message) -> void;
 
    private:
     gsl::not_null<EditableCircuit *> editable_circuit_;

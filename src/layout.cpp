@@ -58,6 +58,10 @@ auto Layout::delete_last_element() -> void {
     colors_.pop_back();
 }
 
+auto is_inserted(const Layout &layout, element_id_t element_id) -> bool {
+    return is_inserted(layout.display_state(element_id));
+}
+
 auto swap(Layout &a, Layout &b) noexcept -> void {
     a.swap(b);
 }
