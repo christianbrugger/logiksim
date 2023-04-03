@@ -41,6 +41,7 @@ struct segment_info_t {
     SegmentPointType p1_type {SegmentPointType::colliding_point};
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const segment_info_t &other) const -> bool = default;
 };
 
 static_assert(sizeof(segment_info_t) == 10);

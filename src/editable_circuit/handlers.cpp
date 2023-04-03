@@ -77,6 +77,10 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
 auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
                                     element_id_t& element_id,
                                     element_id_t* preserve_element) -> void {
+    if (!element_id) [[unlikely]] {
+        throw_exception("element id is invalid");
+    }
+
     auto& schematic = circuit.schematic();
     auto& layout = circuit.layout();
 
@@ -94,13 +98,18 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
         }
     }
 
-    if (preserve_element != nullptr && last_id == *preserve_element) {
-        *preserve_element = element_id;
-    }
-
     if (element_id != last_id) {
         notify_element_id_change(circuit, sender, element_id, last_id);
     }
+
+    if (preserve_element != nullptr) {
+        if (*preserve_element == element_id) {
+            *preserve_element = null_element;
+        } else if (*preserve_element == last_id) {
+            *preserve_element = element_id;
+        }
+    }
+
     element_id = null_element;
 }
 
@@ -182,6 +191,9 @@ auto add_placeholder_element(Circuit& circuit) -> element_id_t {
 
 auto is_logic_item_position_representable(const Circuit& circuit, element_id_t element_id,
                                           int x, int y) -> bool {
+    if (!element_id) [[unlikely]] {
+        throw_exception("element id is invalid");
+    }
     if (!is_representable(x, y)) {
         return false;
     }
@@ -195,6 +207,9 @@ auto is_logic_item_position_representable(const Circuit& circuit, element_id_t e
 
 auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
     -> void {
+    if (!element_id) [[unlikely]] {
+        throw_exception("element id is invalid");
+    }
     if (state.layout.display_state(element_id) != display_state_t::new_temporary)
         [[unlikely]] {
         throw_exception("Only temporary items can be freely moded.");
@@ -430,6 +445,9 @@ auto element_change_colliding_to_temporary(Circuit& circuit, MessageSender sende
 
 auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
                                       InsertionMode new_insertion_mode) -> void {
+    if (!element_id) [[unlikely]] {
+        throw_exception("element id is invalid");
+    }
     if (!state.schematic.element(element_id).is_logic_item()) [[unlikely]] {
         throw_exception("only works on logic elements");
     }

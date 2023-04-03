@@ -85,6 +85,8 @@ auto SegmentSplit::format() const -> std::string {
 // Message Sender
 //
 
+// TransparentReceiver
+
 TransparentReceiver::TransparentReceiver(EditableCircuit &editable_circuit)
     : editable_circuit_ {&editable_circuit} {}
 
@@ -92,24 +94,42 @@ auto TransparentReceiver::_submit(InfoMessage message) -> void {
     editable_circuit_->_submit(message);
 }
 
+// MessageRecorder
+
+auto MessageRecorder::_submit(InfoMessage message) -> void {
+    messages_.push_back(message);
+}
+
+auto MessageRecorder::messages() -> const std::vector<InfoMessage> & {
+    return messages_;
+}
+
+// Recording Reciever
+
+RecordingReceiver::RecordingReceiver(MessageRecorder &recorder) : recorder_ {&recorder} {}
+
 RecordingReceiver::RecordingReceiver(EditableCircuit &editable_circuit)
     : editable_circuit_ {&editable_circuit} {}
 
 auto RecordingReceiver::_submit(InfoMessage message) -> void {
-    messages_.push_back(message);
+    if (recorder_ != nullptr) {
+        recorder_->_submit(message);
+    }
     if (editable_circuit_ != nullptr) {
         editable_circuit_->_submit(message);
     }
 }
 
-auto RecordingReceiver::messages() -> const std::vector<InfoMessage> & {
-    return messages_;
-}
+// Message Sender
 
 MessageSender::MessageSender(MessageReceiver receiver) noexcept : receiver_ {receiver} {}
 
 auto MessageSender::submit(InfoMessage message) -> void {
     receiver_._submit(message);
+}
+
+auto MessageSender::receiver() -> MessageReceiver & {
+    return receiver_;
 }
 
 }  // namespace logicsim::editable_circuit
