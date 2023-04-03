@@ -18,7 +18,7 @@ Circuit::Circuit(Schematic&& schematic, Layout&& layout)
     : schematic_ {std::move(schematic)}, layout_ {std::move(layout)} {};
 
 auto Circuit::format() const -> std::string {
-    return fmt::format("{}\n{}\n", schematic(), layout());
+    return fmt::format("{}\n{}", schematic(), layout());
 }
 
 auto Circuit::schematic() const -> const Schematic& {

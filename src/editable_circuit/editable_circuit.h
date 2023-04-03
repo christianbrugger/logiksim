@@ -25,7 +25,6 @@ struct State;
 
 class EditableCircuit {
    public:
-    EditableCircuit();
     [[nodiscard]] EditableCircuit(Circuit&& circuit);
     [[nodiscard]] auto format() const -> std::string;
     auto validate() -> void;

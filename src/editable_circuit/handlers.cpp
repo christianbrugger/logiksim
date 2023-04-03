@@ -10,7 +10,7 @@ namespace logicsim {
 namespace editable_circuit {
 
 //
-// Deletion Handler
+// Deletion Handling
 //
 
 auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
@@ -27,7 +27,7 @@ auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
 
 auto notify_element_deleted(const Schematic& schematic, MessageSender sender,
                             element_id_t element_id) {
-    if (!schematic.element(element_id).is_placeholder()) {
+    if (schematic.element(element_id).is_placeholder()) {
         return;
     }
 
@@ -115,7 +115,7 @@ auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
 }
 
 //
-// Logic Item Handlers
+// Logic Item Handling
 //
 
 auto add_standard_logic_item(State state, Selection& selection,
@@ -456,7 +456,7 @@ auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
 }
 
 //
-// Wire Editing
+// Wire Handling
 //
 
 /*

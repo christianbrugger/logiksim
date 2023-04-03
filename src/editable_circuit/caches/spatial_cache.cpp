@@ -59,7 +59,7 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
 }  // namespace detail::spatial_tree
 
 auto SpatialTree::format() const -> std::string {
-    return fmt::format("SpatialTree = {}\n", tree_);
+    return fmt::format("SpatialTree = {}", tree_);
 }
 
 auto SpatialTree::handle(editable_circuit::info_message::LogicItemInserted message)
@@ -122,7 +122,7 @@ auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
+    if (auto pointer = std::get_if<LogicItemUninserted>(&message)) {
         handle(*pointer);
         return;
     }
@@ -216,6 +216,9 @@ auto SpatialTree::validate(const Circuit& circuit) const -> void {
     add_circuit_to_cache(cache, circuit);
 
     if (cache.tree_ != this->tree_) [[unlikely]] {
+        print(circuit);
+        print("expected state =", cache);
+        print("actual state   =", *this);
         throw_exception("current cache state doesn't match circuit");
     }
 }

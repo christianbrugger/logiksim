@@ -9,13 +9,9 @@ namespace logicsim {
 // Editable Circuit
 //
 
-EditableCircuit::EditableCircuit()
-    : circuit_ {std::nullopt},
-      selection_builder_ {Layout {}, cache_provider_.spatial_cache(),
-                          selection_registrar_.create_selection()} {}
-
 EditableCircuit::EditableCircuit(Circuit&& circuit)
     : circuit_ {std::move(circuit)},
+      cache_provider_ {circuit_.value()},
       selection_builder_ {circuit_.value().layout(), cache_provider_.spatial_cache(),
                           selection_registrar_.create_selection()} {}
 
@@ -29,8 +25,12 @@ auto EditableCircuit::circuit() const -> const Circuit& {
 
 auto EditableCircuit::extract_circuit() -> Circuit {
     auto temp = Circuit {std::move(circuit_.value())};
-    // TODO reset here
-    // *this = EditableCircuit {};
+
+    // TODO fix reset
+    circuit_ = std::nullopt;
+    // selection_builder_ = SelectionBuilder {Layout {}, cache_provider_.spatial_cache(),
+    //                                        selection_registrar_.create_selection()};
+
     return temp;
 }
 

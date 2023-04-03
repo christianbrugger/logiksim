@@ -263,7 +263,11 @@ auto Selection::handle(editable_circuit::info_message::ElementDeleted message) -
 auto Selection::handle(editable_circuit::info_message::ElementUpdated message) -> void {
     const auto count = selected_elements_.erase(message.old_element_id);
     if (count > 0) {
-        selected_elements_.insert(message.new_element_id);
+        const auto inserted = selected_elements_.insert(message.new_element_id).second;
+
+        if (!inserted) [[unlikely]] {
+            throw_exception("element already existed");
+        }
     }
 }
 

@@ -30,7 +30,7 @@ struct State {
 };
 
 //
-// Deletion Handler
+// Deletion Handling
 //
 
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
@@ -43,7 +43,7 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
                                     element_id_t* preserve_element = nullptr) -> void;
 
 //
-// Logic Item Handler
+// Logic Item Handling
 //
 
 struct StandardLogicAttributes {
@@ -67,7 +67,7 @@ auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int
     -> void;
 
 //
-// Wire Handler
+// Wire Handling
 //
 
 /*

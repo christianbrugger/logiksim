@@ -9,7 +9,8 @@ namespace logicsim {
 
 class CacheProvider {
    public:
-    auto add_circuit(const Circuit& circuit) -> void;
+    CacheProvider() = default;
+    explicit CacheProvider(const Circuit& circuit);
 
     [[nodiscard]] auto format() const -> std::string;
     auto validate(const Circuit& circuit) -> void;

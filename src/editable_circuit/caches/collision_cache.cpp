@@ -261,7 +261,7 @@ auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
+    if (auto pointer = std::get_if<LogicItemUninserted>(&message)) {
         handle(*pointer);
         return;
     }
