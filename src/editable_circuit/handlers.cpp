@@ -1,19 +1,11 @@
 #include "editable_circuit/handlers.h"
 
 #include "editable_circuit/caches.h"
-#include "editable_circuit/selection_handle.h"  // TODO remove
 #include "layout_calculations.h"
 #include "scene.h"
 #include "selection.h"
 
 namespace logicsim {
-
-auto _hack_element_handle(element_id_t element_id) -> element_handle_t {
-    if (_hack_registrar == nullptr) [[unlikely]] {
-        throw_exception("registrar not available");
-    }
-    return _hack_registrar->element_handle(element_id);
-}
 
 namespace editable_circuit {
 
@@ -246,9 +238,10 @@ auto disconnect_outputs_and_remove_placeholders(Circuit& circuit, MessageSender 
         }
     }
 
-    const auto handle = _hack_element_handle(element_id);
+    // const auto handle = _hack_element_handle(element_id);
+    throw_exception("implement");
     swap_and_delete_multiple_elements(circuit, sender, delete_queue);
-    element_id = handle.element();
+    // element_id = handle.element();
 }
 
 auto add_missing_placeholders_for_outputs(Circuit& circuit, element_id_t element_id)
@@ -355,10 +348,11 @@ auto insert_element(State state, element_id_t& element_id) {
     add_missing_placeholders_for_outputs(state.circuit, element_id);
 
     // this may change our element_id
-    auto handle = _hack_element_handle(element_id);
+    // auto handle = _hack_element_handle(element_id);
+    throw_exception("implement");
     swap_and_delete_multiple_elements(state.circuit, state.sender,
                                       disconnected_placeholders);
-    element_id = handle.element();
+    // element_id = handle.element();
 }
 
 // mode change

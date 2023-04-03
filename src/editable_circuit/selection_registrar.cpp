@@ -1,0 +1,146 @@
+
+#include "editable_circuit/selection_registrar.h"
+
+#include "exceptions.h"
+
+namespace logicsim {
+
+//
+// Selection Registrar
+//
+
+namespace detail::selection_registrar {
+
+auto unpack_selection(const selection_map_t::value_type& value) -> Selection& {
+    if (value.second == nullptr) [[unlikely]] {
+        throw_exception("selection cannot be null");
+    }
+    return *value.second;
+}
+
+}  // namespace detail::selection_registrar
+
+auto SelectionRegistrar::validate(const Circuit& circuit) const -> void {
+    for (const auto& item : allocated_selections_) {
+        if (item.second == nullptr) [[unlikely]] {
+            throw_exception("selection cannot be nullptr");
+        }
+        item.second->validate(circuit);
+    }
+}
+
+auto SelectionRegistrar::create_selection() const -> selection_handle_t {
+    const auto key = next_selection_key_++;
+
+    auto&& [it, inserted]
+        = allocated_selections_.emplace(key, std::make_unique<Selection>());
+
+    if (!inserted) {
+        throw_exception("unable to create new selection.");
+    }
+
+    Selection& selection = *(it->second.get());
+    return selection_handle_t {selection, *this, key};
+}
+
+auto SelectionRegistrar::create_selection(const Selection& selection) const
+    -> selection_handle_t {
+    auto handle = create_selection();
+    handle.value() = selection;
+    return handle;
+}
+
+auto SelectionRegistrar::unregister_selection(selection_key_t selection_key) const
+    -> void {
+    if (!allocated_selections_.erase(selection_key)) {
+        throw_exception("unable to delete selection that should be present.");
+    }
+}
+
+//
+// Selection Handle
+//
+
+selection_handle_t::selection_handle_t(Selection& selection,
+                                       const SelectionRegistrar& registrar,
+                                       selection_key_t selection_key)
+    : selection_ {&selection}, registrar_ {&registrar}, selection_key_ {selection_key} {}
+
+auto selection_handle_t::swap(selection_handle_t& other) noexcept -> void {
+    using std::swap;
+
+    swap(selection_, other.selection_);
+    swap(registrar_, other.registrar_);
+    swap(selection_key_, other.selection_key_);
+}
+
+selection_handle_t::~selection_handle_t() {
+    if (registrar_ != nullptr) {
+        registrar_->unregister_selection(selection_key_);
+    }
+}
+
+selection_handle_t::selection_handle_t(selection_handle_t&& other) noexcept {
+    swap(other);
+}
+
+auto selection_handle_t::operator=(selection_handle_t&& other) noexcept
+    -> selection_handle_t& {
+    // we add a 'copy' so our state is destroyed other at the end of this scope
+    auto temp = selection_handle_t {std::move(other)};
+    swap(temp);
+    return *this;
+}
+
+auto selection_handle_t::copy() const -> selection_handle_t {
+    if (registrar_ == nullptr || selection_ == nullptr) {
+        return selection_handle_t {};
+    }
+    return registrar_->create_selection(*selection_);
+}
+
+auto selection_handle_t::reset() noexcept -> void {
+    *this = selection_handle_t {};
+}
+
+auto selection_handle_t::value() const -> reference {
+    if (!has_value()) [[unlikely]] {
+        throw_exception("selection is not set");
+    }
+    return *selection_;
+}
+
+auto selection_handle_t::operator*() const noexcept -> reference {
+    return *selection_;
+}
+
+auto selection_handle_t::get() const -> pointer {
+    return selection_;
+}
+
+auto selection_handle_t::operator->() const noexcept -> pointer {
+    return selection_;
+}
+
+auto selection_handle_t::operator==(std::nullptr_t) const noexcept -> bool {
+    return selection_ == nullptr;
+}
+
+selection_handle_t::operator bool() const noexcept {
+    return has_value();
+}
+
+auto selection_handle_t::has_value() const noexcept -> bool {
+    return selection_ != nullptr;
+}
+
+auto swap(selection_handle_t& a, selection_handle_t& b) noexcept -> void {
+    a.swap(b);
+}
+}  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::selection_handle_t& a, logicsim::selection_handle_t& b) noexcept
+    -> void {
+    a.swap(b);
+}

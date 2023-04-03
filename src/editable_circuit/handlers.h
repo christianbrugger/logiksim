@@ -15,9 +15,6 @@ class element_handle_t;
 class SelectionRegistrar;
 class CacheProvider;
 
-inline SelectionRegistrar* _hack_registrar = {nullptr};
-auto _hack_element_handle(element_id_t element_id) -> element_handle_t;
-
 namespace editable_circuit {
 
 // contains common data for the handlers

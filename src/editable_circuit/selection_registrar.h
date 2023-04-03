@@ -12,7 +12,48 @@
 
 namespace logicsim {
 
-class SelectionRegistrar;
+class selection_handle_t;
+
+//
+// Registrar
+//
+
+namespace detail::selection_registrar {
+
+using selection_map_t
+    = ankerl::unordered_dense::map<selection_key_t, std::unique_ptr<Selection>>;
+
+auto unpack_selection(const selection_map_t::value_type& value) -> Selection&;
+
+}  // namespace detail::selection_registrar
+
+class SelectionRegistrar {
+   public:
+    auto validate(const Circuit& circuit) const -> void;
+
+    [[nodiscard]] auto create_selection() const -> selection_handle_t;
+    [[nodiscard]] auto create_selection(const Selection& selection) const
+        -> selection_handle_t;
+
+    [[nodiscard]] auto selections() const {
+        return transform_view(allocated_selections_,
+                              detail::selection_registrar::unpack_selection);
+    }
+
+   private:
+    friend selection_handle_t;
+    auto unregister_selection(selection_key_t selection_key) const -> void;
+
+    using selection_map_t = detail::selection_registrar::selection_map_t;
+
+    // we want our state to be mutable, as we are like an allocator
+    mutable selection_key_t next_selection_key_ {0};
+    mutable selection_map_t allocated_selections_ {};
+};
+
+//
+// Handle
+//
 
 // TODO make Selection part of the handle, so we don't introduce allocations
 class selection_handle_t {
@@ -69,57 +110,6 @@ static_assert(!std::is_copy_constructible_v<selection_handle_t>);
 static_assert(!std::is_copy_assignable_v<selection_handle_t>);
 static_assert(std::is_move_constructible_v<selection_handle_t>);
 static_assert(std::is_move_assignable_v<selection_handle_t>);
-
-// Keeps track of a single element
-class element_handle_t {
-   public:
-    element_handle_t() = default;
-    explicit element_handle_t(selection_handle_t selection_handle);
-
-    auto clear_element() -> void;
-    auto set_element(element_id_t element_id) -> void;
-    auto element() const -> element_id_t;
-
-    [[nodiscard]] operator bool() const noexcept;
-
-   private:
-    selection_handle_t selection_handle_ {};
-};
-
-namespace detail::selection_registrar {
-
-using selection_map_t
-    = ankerl::unordered_dense::map<selection_key_t, std::unique_ptr<Selection>>;
-
-auto unpack_selection(const selection_map_t::value_type& value) -> Selection&;
-
-}  // namespace detail::selection_registrar
-
-class SelectionRegistrar {
-   public:
-    auto validate(const Circuit& circuit) const -> void;
-
-    [[nodiscard]] auto create_selection() const -> selection_handle_t;
-    [[nodiscard]] auto create_selection(const Selection& selection) const
-        -> selection_handle_t;
-    [[nodiscard]] auto element_handle() const -> element_handle_t;
-    [[nodiscard]] auto element_handle(element_id_t element_id) const -> element_handle_t;
-
-    [[nodiscard]] auto selections() const {
-        return transform_view(allocated_selections_,
-                              detail::selection_registrar::unpack_selection);
-    }
-
-   private:
-    friend selection_handle_t;
-    auto unregister_selection(selection_key_t selection_key) const -> void;
-
-    using selection_map_t = detail::selection_registrar::selection_map_t;
-
-    // we want our state to be mutable, as we are like an allocator
-    mutable selection_key_t next_selection_key_ {0};
-    mutable selection_map_t allocated_selections_ {};
-};
 
 }  // namespace logicsim
 

@@ -5,6 +5,7 @@
 #include "editable_circuit/caches.h"
 #include "editable_circuit/messages.h"
 #include "editable_circuit/selection_builder.h"
+#include "editable_circuit/selection_registrar.h"
 
 #include <optional>
 

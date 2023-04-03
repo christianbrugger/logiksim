@@ -2,7 +2,7 @@
 #define LOGIKSIM_SELECTION_MANAGER_H
 
 #include "editable_circuit/messages.h"
-#include "editable_circuit/selection_handle.h"
+#include "editable_circuit/selection_registrar.h"
 #include "selection.h"
 #include "vocabulary.h"
 
@@ -36,6 +36,7 @@ class SelectionBuilder {
                                             const SpatialTree &spatial_cache,
                                             selection_handle_t initial_selection);
 
+    auto submit(editable_circuit::InfoMessage message) -> void;
     [[nodiscard]] auto empty() const noexcept -> bool;
 
     auto clear() -> void;
@@ -49,11 +50,11 @@ class SelectionBuilder {
     [[nodiscard]] auto all_operations_applied() const -> bool;
     auto apply_all_operations() -> void;
 
-    auto clear_cache() const -> void;
     auto validate(const Circuit &circuit) const -> void;
 
    private:
     auto calculate_selection() const -> Selection;
+    auto clear_cache() const -> void;
 
     gsl::not_null<const Layout *> layout_;
     gsl::not_null<const SpatialTree *> spatial_cache_;

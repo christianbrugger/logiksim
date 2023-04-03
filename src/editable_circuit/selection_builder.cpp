@@ -20,6 +20,16 @@ SelectionBuilder::SelectionBuilder(const Layout& layout, const SpatialTree& spat
       spatial_cache_ {&spatial_cache},
       initial_selection_ {std::move(initial_selection)} {}
 
+auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
+    using namespace editable_circuit::info_message;
+
+    if (std::holds_alternative<ElementCreated>(message)
+        || std::holds_alternative<ElementDeleted>(message)
+        || std::holds_alternative<ElementUpdated>(message)) {
+        clear_cache();
+    }
+}
+
 auto SelectionBuilder::empty() const noexcept -> bool {
     return initial_selection_->empty() && operations_.empty();
 }

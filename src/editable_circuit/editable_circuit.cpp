@@ -32,9 +32,7 @@ EditableCircuit::EditableCircuit()
 EditableCircuit::EditableCircuit(Circuit&& circuit)
     : circuit_ {std::move(circuit)},
       selection_builder_ {circuit_.value().layout(), cache_provider_.spatial_cache(),
-                          selection_registrar_.create_selection()} {
-    _hack_registrar = &selection_registrar_;
-}
+                          selection_registrar_.create_selection()} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", circuit_);
@@ -217,8 +215,10 @@ auto EditableCircuit::caches() const -> const CacheProvider& {
 }
 
 auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
-    cache_provider_.submit(message);
     std::visit([](auto&& v) { print(v); }, message);
+
+    cache_provider_.submit(message);
+    selection_builder_.submit(message);
 }
 
 auto EditableCircuit::get_sender() -> editable_circuit::MessageSender {

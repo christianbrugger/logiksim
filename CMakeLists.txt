@@ -20,9 +20,48 @@ if(POLICY CMP0069)
   set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 endif()
 
+set(LS_CORE_SOURCES
+    src/editable_circuit/caches/spatial_cache.cpp
+    src/editable_circuit/caches/collision_cache.cpp
+    src/editable_circuit/caches/connection_cache.cpp
+
+    src/editable_circuit/caches.cpp
+    src/editable_circuit/editable_circuit.cpp
+    src/editable_circuit/handlers.cpp
+    src/editable_circuit/messages.cpp
+    src/editable_circuit/selection_builder.cpp
+    src/editable_circuit/selection_registrar.cpp
+
+    src/algorithm.h src/algorithm.cpp
+    src/circuit.h src/circuit.cpp
+    src/circuit_description.h src/circuit_description.cpp
+    src/circuit_index.h src/circuit_index.cpp
+    src/circular_buffer.h
+    src/collision.h src/collision.cpp
+    src/exceptions.h src/exceptions.cpp
+    src/flat_schematic.h src/flat_schematic.cpp
+    src/geometry.h src/geometry.cpp
+    src/graph.h src/graph.cpp
+    src/layout.h src/layout.cpp
+    src/layout_calculation_type.h src/layout_calculation_type.cpp
+    src/layout_calculations.h src/layout_calculations.cpp
+    src/line_tree.h src/line_tree.cpp
+    src/random.h src/random.cpp
+    src/renderer.h src/renderer.cpp
+    src/scene.h src/scene.cpp
+    src/schematic.h src/schematic.cpp
+    src/segment_tree.h src/segment_tree.cpp
+    src/selection.h src/selection.cpp
+    src/simulation.h src/simulation.cpp
+    src/simulation_view.h src/simulation_view.cpp
+    src/timer.h src/timer.cpp
+    src/vocabulary.h src/vocabulary.cpp
+    # test
+    src/main_widget.h src/main_widget.cpp
+    src/render_widget.h src/render_widget.cpp
+)
 
 project(simulation_srp CXX)
-
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -264,47 +303,6 @@ endif()
 
 set(LS_CORE_INCLUDE_DIRS
     src
-)
-
-set(LS_CORE_SOURCES
-    src/editable_circuit/caches/spatial_cache.cpp
-    src/editable_circuit/caches/collision_cache.cpp
-    src/editable_circuit/caches/connection_cache.cpp
-
-    src/editable_circuit/caches.cpp
-    src/editable_circuit/editable_circuit.cpp
-    src/editable_circuit/handlers.cpp
-    src/editable_circuit/messages.cpp
-    src/editable_circuit/selection_builder.cpp
-    src/editable_circuit/selection_handle.cpp
-
-    src/algorithm.h src/algorithm.cpp
-    src/circuit.h src/circuit.cpp
-    src/circuit_description.h src/circuit_description.cpp
-    src/circuit_index.h src/circuit_index.cpp
-    src/circular_buffer.h
-    src/collision.h src/collision.cpp
-    src/exceptions.h src/exceptions.cpp
-    src/flat_schematic.h src/flat_schematic.cpp
-    src/geometry.h src/geometry.cpp
-    src/graph.h src/graph.cpp
-    src/layout.h src/layout.cpp
-    src/layout_calculation_type.h src/layout_calculation_type.cpp
-    src/layout_calculations.h src/layout_calculations.cpp
-    src/line_tree.h src/line_tree.cpp
-    src/random.h src/random.cpp
-    src/renderer.h src/renderer.cpp
-    src/scene.h src/scene.cpp
-    src/schematic.h src/schematic.cpp
-    src/segment_tree.h src/segment_tree.cpp
-    src/selection.h src/selection.cpp
-    src/simulation.h src/simulation.cpp
-    src/simulation_view.h src/simulation_view.cpp
-    src/timer.h src/timer.cpp
-    src/vocabulary.h src/vocabulary.cpp
-    # test
-    src/main_widget.h src/main_widget.cpp
-    src/render_widget.h src/render_widget.cpp
 )
 set(LS_CORE_LIBRARIES  
     logicsim_pch
