@@ -1,11 +1,11 @@
 #ifndef LOGIKSIM_RENDER_SCENE_H
 #define LOGIKSIM_RENDER_SCENE_H
 
+#include "editable_circuit/selection.h"
 #include "format.h"
 #include "layout.h"
 #include "scene.h"
 #include "schematic.h"
-#include "selection.h"
 #include "simulation.h"
 
 #include <blend2d.h>
@@ -17,6 +17,8 @@
 #include <variant>
 
 namespace logicsim {
+
+class Selection;
 
 //
 // primitives

@@ -70,6 +70,25 @@ struct InsertedLogicItemUpdated {
 
 // Wire Segments
 
+struct SegmentCreated {
+    segment_t segment;
+
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct SegmentDeleted {
+    segment_t segment;
+
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct SegmentUpdated {
+    segment_t new_segment;
+    segment_t old_segment;
+
+    [[nodiscard]] auto format() const -> std::string;
+};
+
 struct SegmentInserted {
     segment_t segment;
     segment_info_t segment_info;
@@ -92,6 +111,7 @@ struct InsertedSegmentUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
+// only inserted?
 struct SegmentMerged {
     segment_t segment_from;
     segment_t segment_to;
@@ -99,6 +119,7 @@ struct SegmentMerged {
     [[nodiscard]] auto format() const -> std::string;
 };
 
+// only inserted?
 struct SegmentSplit {
     segment_t segment_from;
     segment_part_t part_from;

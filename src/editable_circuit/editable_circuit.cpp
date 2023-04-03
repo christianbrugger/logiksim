@@ -218,6 +218,7 @@ auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
     std::visit([](auto&& v) { print(v); }, message);
 
     cache_provider_.submit(message);
+    selection_registrar_.submit(message);
     selection_builder_.submit(message);
 }
 
@@ -232,81 +233,5 @@ auto EditableCircuit::get_state() -> editable_circuit::State {
         cache_provider_,
     };
 }
-
-// keys
-
-/*
-auto EditableCircuit::key_insert(element_id_t element_id) -> void {
-    if (schematic_.element(element_id).is_placeholder()) {
-        return;
-    }
-    selection_builder_.clear_cache();
-}
-
-auto EditableCircuit::key_remove(element_id_t element_id) -> void {
-    const auto type = schematic_.element(element_id).element_type();
-
-    if (type == ElementType::placeholder) {
-        return;
-    }
-    selection_builder_.clear_cache();
-
-    // elements
-    for (auto&& entry : managed_selections_) {
-        auto& selection = *entry.second;
-        selection.remove_element(element_id);
-    }
-
-    // segments
-    if (type == ElementType::wire) {
-        const auto indices = layout_.segment_tree(element_id).indices();
-
-        for (auto&& entry : managed_selections_) {
-            auto& selection = *entry.second;
-
-            for (auto&& segment_index : indices) {
-                const auto segment = segment_t {element_id, segment_index};
-                selection.remove_segment(segment);
-            }
-        }
-    }
-}
-
-auto EditableCircuit::key_update(element_id_t new_element_id, element_id_t old_element_id)
-    -> void {
-    const auto type = schematic_.element(new_element_id).element_type();
-
-    if (type == ElementType::placeholder) {
-        return;
-    }
-    selection_builder_.clear_cache();
-
-    // elements
-    for (auto&& entry : managed_selections_) {
-        auto& selection = *entry.second;
-        selection.update_element_id(new_element_id, old_element_id);
-    }
-
-    // segments
-    if (type == ElementType::wire) {
-        const auto indices = layout_.segment_tree(new_element_id).indices();
-
-        for (auto&& entry : managed_selections_) {
-            auto& selection = *entry.second;
-
-            for (auto&& segment_index : indices) {
-                const auto new_segment = segment_t {new_element_id, segment_index};
-                const auto old_segment = segment_t {old_element_id, segment_index};
-                selection.update_segment_id(new_segment, old_segment);
-            }
-        }
-    }
-}
-
-auto EditableCircuit::is_element_cached(element_id_t element_id) const -> bool {
-    const auto display_state = layout_.display_state(element_id);
-    return is_inserted(display_state);
-}
-*/
 
 }  // namespace logicsim

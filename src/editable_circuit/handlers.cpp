@@ -349,6 +349,9 @@ auto insert_element(State state, element_id_t& element_id) {
 
     // this may change our element_id
     // auto handle = _hack_element_handle(element_id);
+    if (disconnected_placeholders.empty()) {
+        return;
+    }
     throw_exception("implement");
     swap_and_delete_multiple_elements(state.circuit, state.sender,
                                       disconnected_placeholders);

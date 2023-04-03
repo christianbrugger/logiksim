@@ -25,6 +25,8 @@ auto ElementUpdated::format() const -> std::string {
                        new_element_id, old_element_id);
 }
 
+// Logic Item
+
 auto LogicItemInserted::format() const -> std::string {
     return fmt::format("LogicItemInserted(element_id = {})", element_id);
 }
@@ -37,6 +39,21 @@ auto InsertedLogicItemUpdated::format() const -> std::string {
     return fmt::format(
         "InsertedLogicItemUpdated(new_element_id = {}, old_element_id = {})",
         new_element_id, old_element_id);
+}
+
+// Segments
+
+auto SegmentCreated::format() const -> std::string {
+    return fmt::format("SegmentCreated(segment = {})", segment);
+}
+
+auto SegmentDeleted::format() const -> std::string {
+    return fmt::format("SegmentDeleted(segment = {})", segment);
+}
+
+auto SegmentUpdated::format() const -> std::string {
+    return fmt::format("SegmentUpdated(new_segment = {}, old_segment = {})", new_segment,
+                       old_segment);
 }
 
 auto SegmentInserted::format() const -> std::string {

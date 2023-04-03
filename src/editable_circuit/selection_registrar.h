@@ -2,9 +2,9 @@
 #define LOGIKSIM_SELECTION_HANDLE_H
 
 #include "editable_circuit/messages.h"
+#include "editable_circuit/selection.h"
 #include "exceptions.h"
 #include "iterator_adaptor.h"
-#include "selection.h"
 #include "vocabulary.h"
 
 #include <type_traits>
@@ -12,6 +12,7 @@
 
 namespace logicsim {
 
+class Layout;
 class selection_handle_t;
 
 //
@@ -30,6 +31,7 @@ auto unpack_selection(const selection_map_t::value_type& value) -> Selection&;
 class SelectionRegistrar {
    public:
     auto validate(const Circuit& circuit) const -> void;
+    auto submit(editable_circuit::InfoMessage message) -> void;
 
     [[nodiscard]] auto create_selection() const -> selection_handle_t;
     [[nodiscard]] auto create_selection(const Selection& selection) const

@@ -69,8 +69,8 @@ class EditableCircuit {
     auto get_state() -> editable_circuit::State;
 
     std::optional<Circuit> circuit_ {std::nullopt};
-    CacheProvider cache_provider_ {};
 
+    CacheProvider cache_provider_ {};
     SelectionRegistrar selection_registrar_ {};
     SelectionBuilder selection_builder_;
 };

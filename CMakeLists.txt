@@ -29,6 +29,7 @@ set(LS_CORE_SOURCES
     src/editable_circuit/editable_circuit.cpp
     src/editable_circuit/handlers.cpp
     src/editable_circuit/messages.cpp
+    src/editable_circuit/selection.cpp
     src/editable_circuit/selection_builder.cpp
     src/editable_circuit/selection_registrar.cpp
 
@@ -51,7 +52,6 @@ set(LS_CORE_SOURCES
     src/scene.h src/scene.cpp
     src/schematic.h src/schematic.cpp
     src/segment_tree.h src/segment_tree.cpp
-    src/selection.h src/selection.cpp
     src/simulation.h src/simulation.cpp
     src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp

@@ -2,6 +2,7 @@
 #include "editable_circuit/selection_registrar.h"
 
 #include "exceptions.h"
+#include "layout.h"
 
 namespace logicsim {
 
@@ -26,6 +27,12 @@ auto SelectionRegistrar::validate(const Circuit& circuit) const -> void {
             throw_exception("selection cannot be nullptr");
         }
         item.second->validate(circuit);
+    }
+}
+
+auto SelectionRegistrar::submit(editable_circuit::InfoMessage message) -> void {
+    for (auto&& selection : selections()) {
+        selection.submit(message);
     }
 }
 

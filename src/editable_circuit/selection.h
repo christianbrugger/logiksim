@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_SELECTION_H
 #define LOGIKSIM_SELECTION_H
 
+#include "editable_circuit/messages.h"
 #include "hashing.h"
 #include "vocabulary.h"
 
@@ -9,6 +10,8 @@
 #include <folly/small_vector.h>
 
 namespace logicsim {
+
+class Circuit;
 
 namespace detail::selection {
 
@@ -31,8 +34,6 @@ auto get_segment_part(line_t line, rect_fine_t selection_rect)
     -> std::optional<segment_part_t>;
 
 auto get_selected_segment(line_t segment, segment_part_t selection) -> line_t;
-
-class Circuit;
 
 class Selection {
    public:
@@ -59,11 +60,7 @@ class Selection {
     [[nodiscard]] auto selected_segments(segment_t segment) const
         -> std::span<const segment_part_t>;
 
-    auto update_element_id(element_id_t new_element_id, element_id_t old_element_id)
-        -> void;
-    auto remove_segment(segment_t segment) -> void;
-    auto update_segment_id(segment_t new_segment, segment_t old_segment) -> void;
-
+    auto submit(editable_circuit::InfoMessage message) -> void;
     auto validate(const Circuit &circuit) const -> void;
 
    private:
