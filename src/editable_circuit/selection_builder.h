@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_SELECTION_MANAGER_H
 #define LOGIKSIM_SELECTION_MANAGER_H
 
+#include "editable_circuit/messages.h"
 #include "editable_circuit/selection_handle.h"
 #include "selection.h"
 #include "vocabulary.h"
@@ -31,7 +32,6 @@ class SelectionBuilder {
     };
 
    public:
-    // TODO take cache provider as argument instead
     [[nodiscard]] explicit SelectionBuilder(const Layout &layout,
                                             const SpatialTree &spatial_cache,
                                             selection_handle_t initial_selection);

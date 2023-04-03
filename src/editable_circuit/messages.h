@@ -6,6 +6,8 @@
 #include "segment_tree.h"
 #include "vocabulary.h"
 
+#include <gsl/gsl>
+
 #include <string>
 #include <variant>
 

@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_SELECTION_HANDLE_H
 #define LOGIKSIM_SELECTION_HANDLE_H
 
+#include "editable_circuit/messages.h"
 #include "exceptions.h"
 #include "iterator_adaptor.h"
 #include "selection.h"

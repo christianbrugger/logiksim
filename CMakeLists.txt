@@ -267,13 +267,16 @@ set(LS_CORE_INCLUDE_DIRS
 )
 
 set(LS_CORE_SOURCES
+    src/editable_circuit/caches/spatial_cache.cpp
+    src/editable_circuit/caches/collision_cache.cpp
+    src/editable_circuit/caches/connection_cache.cpp
+
     src/editable_circuit/caches.cpp
     src/editable_circuit/editable_circuit.cpp
     src/editable_circuit/handlers.cpp
     src/editable_circuit/messages.cpp
     src/editable_circuit/selection_builder.cpp
     src/editable_circuit/selection_handle.cpp
-    src/editable_circuit/spatial_cache.cpp
 
     src/algorithm.h src/algorithm.cpp
     src/circuit.h src/circuit.cpp

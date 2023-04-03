@@ -1,4 +1,4 @@
-#include "editable_circuit/spatial_cache.h"
+#include "editable_circuit/caches/spatial_cache.h"
 
 #include "circuit.h"
 #include "format.h"

@@ -2,7 +2,7 @@
 #include "editable_circuit/selection_builder.h"
 
 #include "algorithm.h"
-#include "editable_circuit/spatial_cache.h"
+#include "editable_circuit/caches/spatial_cache.h"
 #include "format.h"
 #include "layout.h"
 #include "range.h"

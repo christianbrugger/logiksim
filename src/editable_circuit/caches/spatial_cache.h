@@ -2,9 +2,8 @@
 #define LOGIKSIM_SEARCH_TREE_H
 
 #include "circuit.h"
+#include "editable_circuit/caches/helpers.h"
 #include "editable_circuit/messages.h"
-#include "layout_calculation_type.h"
-#include "vocabulary.h"
 
 #include <boost/geometry.hpp>
 
@@ -93,30 +92,6 @@ class SpatialTree {
 auto get_segment_count(SpatialTree::queried_segments_t result) -> int;
 auto all_same_element_id(SpatialTree::queried_segments_t result) -> bool;
 auto get_unique_element_id(SpatialTree::queried_segments_t) -> element_id_t;
-
-auto add_circuit_to_cache(auto &&cache, const Circuit &circuit) -> void {
-    using namespace editable_circuit::info_message;
-    const auto &schematic = circuit.schematic();
-    const auto &layout = circuit.layout();
-
-    for (const auto element : schematic.elements()) {
-        const auto element_id = element.element_id();
-        if (is_inserted(layout.display_state(element_id))) {
-            if (element.is_logic_item()) {
-                const auto data = to_layout_calculation_data(circuit, element_id);
-                cache.submit(LogicItemInserted {element_id, data});
-            }
-            if (element.is_wire()) {
-                const auto &segment_tree = layout.segment_tree(element_id);
-                for (const auto segment_index : segment_tree.indices()) {
-                    const auto segment = segment_tree.segment(segment_index);
-                    cache.submit(
-                        SegmentInserted {segment_t {element_id, segment_index}, segment});
-                }
-            }
-        }
-    }
-}
 
 }  // namespace logicsim
 
