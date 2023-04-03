@@ -1247,18 +1247,16 @@ auto add_output_placeholders(Schematic &schematic) -> void {
 auto benchmark_schematic(const int n_elements) -> Schematic {
     Schematic schematic {};
 
-    auto elem0 {schematic.add_element(ElementType::and_element, 2, 2)};
+    auto elem0 {schematic.add_element(ElementType::and_element, 2, 1)};
 
     for ([[maybe_unused]] auto count : range(n_elements - 1)) {
-        auto wire0 = schematic.add_element(ElementType::wire, 1, 1);
-        auto wire1 = schematic.add_element(ElementType::wire, 1, 1);
-        auto elem1 = schematic.add_element(ElementType::and_element, 2, 2);
+        auto wire0 = schematic.add_element(ElementType::wire, 1, 2);
+        auto elem1 = schematic.add_element(ElementType::and_element, 2, 1);
 
         elem0.output(connection_id_t {0}).connect(wire0.input(connection_id_t {0}));
-        elem0.output(connection_id_t {1}).connect(wire1.input(connection_id_t {0}));
 
         wire0.output(connection_id_t {0}).connect(elem1.input(connection_id_t {0}));
-        wire1.output(connection_id_t {0}).connect(elem1.input(connection_id_t {1}));
+        wire0.output(connection_id_t {1}).connect(elem1.input(connection_id_t {1}));
 
         elem0 = elem1;
     }

@@ -85,6 +85,7 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
 
 using selection_mask_t = boost::container::vector<bool>;
 
+// TODO better grouping
 struct render_args_t {
     const Schematic& schematic;
     const Layout& layout;

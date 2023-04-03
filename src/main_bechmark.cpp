@@ -82,7 +82,11 @@ static void BM_RenderScene_0(benchmark::State& state) {
         count += scene_count;
 
         BLContext ctx(img);
-        render_circuit(ctx, scene.schematic, scene.layout, &scene.simulation);
+        logicsim::render_circuit(ctx, logicsim::render_args_t {
+                                          .schematic = scene.schematic,
+                                          .layout = scene.layout,
+                                          .simulation = &scene.simulation,
+                                      });
         ctx.end();
 
         benchmark::DoNotOptimize(img);
