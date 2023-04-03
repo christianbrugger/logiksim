@@ -2,6 +2,7 @@
 #include "renderer.h"
 
 #include "algorithm.h"
+#include "editable_circuit/editable_circuit.h"
 #include "format.h"
 #include "layout_calculations.h"
 #include "range.h"

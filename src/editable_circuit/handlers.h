@@ -2,8 +2,7 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_HANDLERS_H
 
 #include "circuit.h"
-#include "editable_circuit_caches.h"
-#include "editable_circuit_messages.h"
+#include "editable_circuit/messages.h"
 #include "vocabulary.h"
 
 #include <span>
@@ -14,6 +13,7 @@ class Selection;
 class selection_handle_t;
 class element_handle_t;
 class SelectionRegistrar;
+class CacheProvider;
 
 inline SelectionRegistrar* _hack_registrar = {nullptr};
 auto _hack_element_handle(element_id_t element_id) -> element_handle_t;

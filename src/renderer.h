@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_RENDER_SCENE_H
 #define LOGIKSIM_RENDER_SCENE_H
 
-#include "editable_circuit.h"
 #include "format.h"
 #include "layout.h"
 #include "scene.h"
@@ -67,6 +66,8 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
 //
 // scenes
 //
+
+class EditableCircuit;
 
 auto render_background(BLContext& ctx, const RenderSettings& settings = {}) -> void;
 

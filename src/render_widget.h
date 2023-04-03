@@ -2,10 +2,9 @@
 #define LOGIKSIM_RENDER_WIDGET_H
 
 #include "circuit_index.h"
-#include "editable_circuit.h"
+#include "editable_circuit/editable_circuit.h"
 #include "renderer.h"
 #include "scene.h"
-#include "selection_builder.h"
 #include "timer.h"
 
 #include <blend2d.h>

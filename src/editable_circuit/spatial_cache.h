@@ -2,7 +2,7 @@
 #define LOGIKSIM_SEARCH_TREE_H
 
 #include "circuit.h"
-#include "editable_circuit_messages.h"
+#include "editable_circuit/messages.h"
 #include "layout_calculation_type.h"
 #include "vocabulary.h"
 

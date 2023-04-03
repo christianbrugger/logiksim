@@ -1,4 +1,4 @@
-#include "editable_circuit_messages.h"
+#include "editable_circuit/messages.h"
 
 #include "editable_circuit.h"
 #include "exceptions.h"

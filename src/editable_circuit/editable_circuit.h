@@ -2,10 +2,9 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
 #include "circuit.h"
-#include "editable_circuit_caches.h"
-#include "editable_circuit_messages.h"
-#include "selection.h"
-#include "selection_builder.h"
+#include "editable_circuit/caches.h"
+#include "editable_circuit/messages.h"
+#include "editable_circuit/selection_builder.h"
 
 #include <optional>
 

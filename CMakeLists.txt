@@ -262,19 +262,24 @@ else()
     message(NOTICE "LOGIKSIM: Disabling pre-compiled headers.")
 endif()
 
+set(LS_CORE_INCLUDE_DIRS
+    src
+)
 
 set(LS_CORE_SOURCES
+    src/editable_circuit/caches.cpp
+    src/editable_circuit/editable_circuit.cpp
+    src/editable_circuit/handlers.cpp
+    src/editable_circuit/messages.cpp
+    src/editable_circuit/selection_builder.cpp
+    src/editable_circuit/spatial_cache.cpp
+
     src/algorithm.h src/algorithm.cpp
     src/circuit.h src/circuit.cpp
     src/circuit_description.h src/circuit_description.cpp
     src/circuit_index.h src/circuit_index.cpp
     src/circular_buffer.h
     src/collision.h src/collision.cpp
-    src/editable_circuit.h src/editable_circuit.cpp
-    src/editable_circuit_caches.h src/editable_circuit_caches.cpp
-    src/editable_circuit_handlers.h src/editable_circuit_handlers.cpp
-    src/editable_circuit_messages.h src/editable_circuit_messages.cpp
-    src/editable_circuit_spatial.h src/editable_circuit_spatial.cpp
     src/exceptions.h src/exceptions.cpp
     src/flat_schematic.h src/flat_schematic.cpp
     src/geometry.h src/geometry.cpp
@@ -289,7 +294,6 @@ set(LS_CORE_SOURCES
     src/schematic.h src/schematic.cpp
     src/segment_tree.h src/segment_tree.cpp
     src/selection.h src/selection.cpp
-    src/selection_builder.h src/selection_builder.cpp
     src/selection_handle.h src/selection_handle.cpp
     src/simulation.h src/simulation.cpp
     src/simulation_view.h src/simulation_view.cpp
@@ -337,6 +341,9 @@ add_executable(${MAIN_BENCHMARK_TARGET}
     
     src/main_bechmark.cpp
 )
+target_include_directories(${MAIN_BENCHMARK_TARGET} PRIVATE
+    ${LS_CORE_INCLUDE_DIRS}
+)
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
     
@@ -353,6 +360,9 @@ add_executable(${MAIN_TARGET}
     src/main.cpp
     
 )
+target_include_directories(${MAIN_TARGET} PRIVATE
+    ${LS_CORE_INCLUDE_DIRS}
+)
 target_link_libraries(${MAIN_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
 )
@@ -365,6 +375,9 @@ add_executable(${MAIN_GUI_TARGET}
     ${LS_CORE_SOURCES}
 
     src/main_gui.cpp
+)
+target_include_directories(${MAIN_GUI_TARGET} PRIVATE
+    ${LS_CORE_INCLUDE_DIRS}
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
@@ -391,7 +404,7 @@ add_executable(${MAIN_TEST_TARGET}
     test/simulation_test.cpp
 )
 target_include_directories(${MAIN_TEST_TARGET} PRIVATE
-    src
+    ${LS_CORE_INCLUDE_DIRS}
 )
 target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     ${LS_CORE_LIBRARIES}

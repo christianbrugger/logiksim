@@ -1,5 +1,6 @@
-#include "editable_circuit_handlers.h"
+#include "editable_circuit/handlers.h"
 
+#include "editable_circuit/caches.h"
 #include "layout_calculations.h"
 #include "scene.h"
 #include "selection.h"

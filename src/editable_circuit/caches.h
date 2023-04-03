@@ -3,8 +3,8 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_H
 
 #include "circuit.h"
-#include "editable_circuit_messages.h"
-#include "editable_circuit_spatial.h"
+#include "editable_circuit/messages.h"
+#include "editable_circuit/spatial_cache.h"
 #include "layout_calculation_type.h"
 #include "segment_tree.h"
 #include "vocabulary.h"
