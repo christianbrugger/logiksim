@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHES_CONNECTION_CACHE_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_CONNECTION_CACHE_H
 
-#include "circuit.h"
 #include "editable_circuit/caches/helpers.h"
 #include "editable_circuit/messages.h"
 #include "layout_calculations.h"
@@ -9,6 +8,8 @@
 #include <ankerl/unordered_dense.h>
 
 namespace logicsim {
+
+class Circuit;
 
 namespace detail::connection_cache {
 // TODO use struct packing ?

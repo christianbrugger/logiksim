@@ -17,15 +17,16 @@ class CacheProvider;
 
 namespace editable_circuit {
 
-// contains common data for the handlers
+// contains common state for the handlers
 
 struct State {
     Circuit& circuit;
-    Schematic& schematic;
-    Layout& layout;
-
     MessageSender sender;
     const CacheProvider& cache;
+
+    // derived
+    Schematic& schematic;
+    Layout& layout;
 };
 
 //
@@ -35,9 +36,11 @@ struct State {
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
 auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
-                                       std::span<const element_id_t> element_ids) -> void;
+                                       std::span<const element_id_t> element_ids,
+                                       element_id_t* preserve_element = nullptr) -> void;
 auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
-                                    element_id_t& element_id) -> void;
+                                    element_id_t& element_id,
+                                    element_id_t* preserve_element = nullptr) -> void;
 
 //
 // Logic Item Handler

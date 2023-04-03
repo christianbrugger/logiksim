@@ -1,22 +1,7 @@
 #include "editable_circuit.h"
 
-#include "algorithm.h"
-#include "circuit.h"
-#include "circuit_index.h"
 #include "editable_circuit/handlers.h"
-#include "editable_circuit/messages.h"
 #include "exceptions.h"
-#include "geometry.h"
-#include "iterator_adaptor.h"
-#include "layout_calculations.h"
-#include "range.h"
-#include "scene.h"
-
-#include <fmt/core.h>
-
-#include <algorithm>
-#include <cassert>
-#include <variant>
 
 namespace logicsim {
 
@@ -128,7 +113,6 @@ auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
 auto EditableCircuit::new_positions_representable(const Selection& selection, int delta_x,
                                                   int delta_y) const -> bool {
     auto& circuit = circuit_.value();
-
     const auto get_position = position_calculator(circuit.layout(), delta_x, delta_y);
 
     const auto is_valid = [&](element_id_t element_id) {
@@ -227,11 +211,10 @@ auto EditableCircuit::get_sender() -> editable_circuit::MessageSender {
 }
 
 auto EditableCircuit::get_state() -> editable_circuit::State {
-    return editable_circuit::State {
-        circuit_.value(),          circuit_.value().schematic(),
-        circuit_.value().layout(), get_sender(),
-        cache_provider_,
-    };
+    auto& circuit = circuit_.value();
+
+    return editable_circuit::State {circuit, get_sender(), cache_provider_,
+                                    circuit.schematic(), circuit.layout()};
 }
 
 }  // namespace logicsim

@@ -23,7 +23,7 @@ namespace editable_circuit {
 
 namespace info_message {
 
-// Any type of circuit elements
+// All Elements except placeholders
 
 struct ElementCreated {
     element_id_t element_id;
@@ -44,7 +44,7 @@ struct ElementUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-// Logic Items
+// Only for Logic Items
 
 struct LogicItemInserted {
     element_id_t element_id;
@@ -68,7 +68,7 @@ struct InsertedLogicItemUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-// Wire Segments
+// Only for Wire Segments
 
 struct SegmentCreated {
     segment_t segment;

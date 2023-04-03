@@ -3,8 +3,6 @@
 
 #include "editable_circuit/messages.h"
 #include "editable_circuit/selection_registrar.h"
-#include "selection.h"
-#include "vocabulary.h"
 
 #include <boost/container/vector.hpp>
 #include <gsl/gsl>

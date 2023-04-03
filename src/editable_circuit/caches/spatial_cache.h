@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_SEARCH_TREE_H
 #define LOGIKSIM_SEARCH_TREE_H
 
-#include "circuit.h"
 #include "editable_circuit/caches/helpers.h"
 #include "editable_circuit/messages.h"
 
@@ -13,6 +12,8 @@
 #include <ranges>
 
 namespace logicsim {
+
+class Circuit;
 
 namespace detail::spatial_tree {
 // Boost R-Tree Documentation:

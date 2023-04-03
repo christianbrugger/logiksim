@@ -1,17 +1,6 @@
 #include "editable_circuit/caches/spatial_cache.h"
 
 #include "circuit.h"
-#include "format.h"
-#include "iterator_adaptor.h"
-#include "layout.h"
-#include "layout_calculations.h"
-#include "schematic.h"
-#include "segment_tree.h"
-
-#include <ankerl/unordered_dense.h>
-#include <fmt/core.h>
-
-#include <string>
 
 namespace boost::geometry::model {
 template <typename T>

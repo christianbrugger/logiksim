@@ -22,11 +22,8 @@ auto unpack_selection(const selection_map_t::value_type& value) -> Selection& {
 }  // namespace detail::selection_registrar
 
 auto SelectionRegistrar::validate(const Circuit& circuit) const -> void {
-    for (const auto& item : allocated_selections_) {
-        if (item.second == nullptr) [[unlikely]] {
-            throw_exception("selection cannot be nullptr");
-        }
-        item.second->validate(circuit);
+    for (auto&& selection : selections()) {
+        selection.validate(circuit);
     }
 }
 
@@ -59,7 +56,9 @@ auto SelectionRegistrar::create_selection(const Selection& selection) const
 
 auto SelectionRegistrar::unregister_selection(selection_key_t selection_key) const
     -> void {
-    if (!allocated_selections_.erase(selection_key)) {
+    const auto delted = allocated_selections_.erase(selection_key);
+
+    if (!delted) {
         throw_exception("unable to delete selection that should be present.");
     }
 }

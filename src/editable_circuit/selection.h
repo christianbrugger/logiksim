@@ -6,7 +6,6 @@
 #include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>
-#include <boost/container/vector.hpp>
 #include <folly/small_vector.h>
 
 namespace logicsim {

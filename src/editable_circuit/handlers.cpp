@@ -1,9 +1,9 @@
 #include "editable_circuit/handlers.h"
 
 #include "editable_circuit/caches.h"
+#include "editable_circuit/selection.h"
 #include "layout_calculations.h"
 #include "scene.h"
-#include "selection.h"
 
 namespace logicsim {
 
@@ -14,18 +14,25 @@ namespace editable_circuit {
 //
 
 auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
-                                       std::span<const element_id_t> element_ids)
-    -> void {
+                                       std::span<const element_id_t> element_ids,
+                                       element_id_t* preserve_element) -> void {
     // sort descending, so we don't invalidate our ids
     auto sorted_ids = delete_queue_t {element_ids.begin(), element_ids.end()};
     std::ranges::sort(sorted_ids, std::greater<> {});
 
     for (auto element_id : sorted_ids) {
-        swap_and_delete_single_element(circuit, sender, element_id);
+        swap_and_delete_single_element(circuit, sender, element_id, preserve_element);
     }
 }
 
-auto notify_element_deleted() {}
+auto notify_element_deleted(const Schematic& schematic, MessageSender sender,
+                            element_id_t element_id) {
+    if (!schematic.element(element_id).is_placeholder()) {
+        return;
+    }
+
+    sender.submit(info_message::ElementDeleted {element_id});
+}
 
 auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
                               element_id_t new_element_id, element_id_t old_element_id) {
@@ -68,15 +75,15 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
 }
 
 auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
-                                    element_id_t& element_id) -> void {
+                                    element_id_t& element_id,
+                                    element_id_t* preserve_element) -> void {
     auto& schematic = circuit.schematic();
     auto& layout = circuit.layout();
 
     if (layout.display_state(element_id) != display_state_t::new_temporary) [[unlikely]] {
         throw_exception("can only delete temporary objects");
     }
-
-    sender.submit(info_message::ElementDeleted {element_id});
+    notify_element_deleted(schematic, sender, element_id);
 
     // delete in underlying
     auto last_id = schematic.swap_and_delete_element(element_id);
@@ -87,15 +94,25 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
         }
     }
 
+    if (preserve_element != nullptr && last_id == *preserve_element) {
+        *preserve_element = element_id;
+    }
+
     if (element_id != last_id) {
         notify_element_id_change(circuit, sender, element_id, last_id);
     }
     element_id = null_element;
 }
 
-//
-// Connection Handler
-//
+auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
+                                      std::span<const element_id_t> placeholder_ids,
+                                      element_id_t* preserve_element = nullptr) {
+    for (auto placeholder_id : placeholder_ids) {
+        circuit.layout().set_display_state(placeholder_id,
+                                           display_state_t::new_temporary);
+    }
+    swap_and_delete_multiple_elements(circuit, sender, placeholder_ids, preserve_element);
+}
 
 //
 // Logic Item Handlers
@@ -178,7 +195,6 @@ auto is_logic_item_position_representable(const Circuit& circuit, element_id_t e
 
 auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
     -> void {
-    // only temporary items can be freely moved
     if (state.layout.display_state(element_id) != display_state_t::new_temporary)
         [[unlikely]] {
         throw_exception("Only temporary items can be freely moded.");
@@ -210,10 +226,6 @@ auto disconnect_inputs_and_add_placeholders(Circuit& circuit, element_id_t eleme
     -> void {
     auto& schematic = circuit.schematic();
 
-    if (schematic.element(element_id).is_placeholder()) {
-        return;
-    }
-
     for (const auto input : schematic.element(element_id).inputs()) {
         if (input.has_connected_element()) {
             add_and_connect_placeholder(circuit, input.connected_output());
@@ -225,23 +237,21 @@ auto disconnect_outputs_and_remove_placeholders(Circuit& circuit, MessageSender 
                                                 element_id_t& element_id) -> void {
     auto& schematic = circuit.schematic();
 
-    auto delete_queue = delete_queue_t {};
+    auto disconnected_placeholders = delete_queue_t {};
 
     for (auto output : schematic.element(element_id).outputs()) {
         if (output.has_connected_element()) {
             const auto connected_element = output.connected_element();
 
             if (connected_element.is_placeholder()) {
-                delete_queue.push_back(connected_element.element_id());
+                disconnected_placeholders.push_back(connected_element.element_id());
             }
             output.clear_connection();
         }
     }
 
-    // const auto handle = _hack_element_handle(element_id);
-    throw_exception("implement");
-    swap_and_delete_multiple_elements(circuit, sender, delete_queue);
-    // element_id = handle.element();
+    delete_disconnected_placeholders(circuit, sender, disconnected_placeholders,
+                                     &element_id);
 }
 
 auto add_missing_placeholders_for_outputs(Circuit& circuit, element_id_t element_id)
@@ -303,8 +313,7 @@ auto connect_connector(connector_data_t connector,
     return unused_placeholder_id;
 }
 
-[[nodiscard]] auto connect_element(State state, element_id_t element_id)
-    -> delete_queue_t {
+auto connect_element(State state, element_id_t& element_id) -> void {
     auto disconnected_placeholders = delete_queue_t {};
     auto add_if_valid = [&](std::optional<element_id_t> placeholder_id) {
         if (placeholder_id) {
@@ -319,8 +328,7 @@ auto connect_connector(connector_data_t connector,
         data, [&, element_id](connection_id_t input_id, point_t position,
                               orientation_t orientation) {
             auto input = connector_data_t {{element_id, input_id}, position, orientation};
-            // connect the input using the
-            // output_connections cache
+            // connect the input using the output_connections cache
             const auto placeholder_id
                 = connect_connector(input, state.cache.output_cache(), state.schematic);
             add_if_valid(placeholder_id);
@@ -332,30 +340,20 @@ auto connect_connector(connector_data_t connector,
                                                       point_t position,
                                                       orientation_t orientation) mutable {
         auto output = connector_data_t {{element_id, output_id}, position, orientation};
-        // connect the output using the
-        // input_connections cache
+        // connect the output using the  input_connections cache
         const auto placeholder_id
             = connect_connector(output, state.cache.input_cache(), state.schematic);
         add_if_valid(placeholder_id);
         return true;
     });
 
-    return disconnected_placeholders;
+    delete_disconnected_placeholders(state.circuit, state.sender,
+                                     disconnected_placeholders, &element_id);
 }
 
 auto insert_element(State state, element_id_t& element_id) {
-    const auto disconnected_placeholders = connect_element(state, element_id);
+    connect_element(state, element_id);
     add_missing_placeholders_for_outputs(state.circuit, element_id);
-
-    // this may change our element_id
-    // auto handle = _hack_element_handle(element_id);
-    if (disconnected_placeholders.empty()) {
-        return;
-    }
-    throw_exception("implement");
-    swap_and_delete_multiple_elements(state.circuit, state.sender,
-                                      disconnected_placeholders);
-    // element_id = handle.element();
 }
 
 // mode change

@@ -3,9 +3,7 @@
 
 #include "editable_circuit/messages.h"
 #include "editable_circuit/selection.h"
-#include "exceptions.h"
 #include "iterator_adaptor.h"
-#include "vocabulary.h"
 
 #include <type_traits>
 #include <utility>
