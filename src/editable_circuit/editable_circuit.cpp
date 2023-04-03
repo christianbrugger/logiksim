@@ -207,7 +207,7 @@ auto EditableCircuit::caches() const -> const CacheProvider& {
 }
 
 auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
-    std::visit([](auto&& v) { print(v); }, message);
+    print(message);
 
     cache_provider_.submit(message);
     selection_registrar_.submit(message);

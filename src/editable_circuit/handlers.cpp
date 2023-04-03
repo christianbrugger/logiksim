@@ -87,6 +87,7 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
     if (layout.display_state(element_id) != display_state_t::new_temporary) [[unlikely]] {
         throw_exception("can only delete temporary objects");
     }
+
     notify_element_deleted(schematic, sender, element_id);
 
     // delete in underlying

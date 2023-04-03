@@ -165,39 +165,36 @@ class TransparentReceiver {
    public:
     TransparentReceiver(EditableCircuit &editable_circuit);
 
-    auto _submit(InfoMessage message) -> void;
+    auto submit(InfoMessage message) -> void;
 
    private:
     gsl::not_null<EditableCircuit *> editable_circuit_;
 };
 
 // used for Testing
-class MessageRecorder {
+class VirtualReceiver {
    public:
-    auto _submit(InfoMessage message) -> void;
-    auto messages() -> const std::vector<InfoMessage> &;
-
-   private:
-    std::vector<InfoMessage> messages_ {};
+    virtual ~VirtualReceiver() = default;
+    virtual auto submit(InfoMessage message) -> void = 0;
 };
 
 // used for Testing
-class RecordingReceiver {
+class AdaptableReceiver {
    public:
-    RecordingReceiver(MessageRecorder &recorder);
-    RecordingReceiver(EditableCircuit &editable_circuit);
+    AdaptableReceiver(VirtualReceiver &receiver);
+    AdaptableReceiver(EditableCircuit &editable_circuit);
 
-    auto _submit(InfoMessage message) -> void;
+    auto submit(InfoMessage message) -> void;
 
    private:
-    MessageRecorder *recorder_ {nullptr};
+    VirtualReceiver *receiver_ {nullptr};
     EditableCircuit *editable_circuit_ {nullptr};
 };
 
 #ifndef LOGIKSIM_TESTING_MESSEGE_SENDER
 using MessageReceiver = TransparentReceiver;
 #else
-using MessageReceiver = RecordingReceiver;
+using MessageReceiver = AdaptableReceiver;
 #endif
 
 class MessageSender {
@@ -205,7 +202,6 @@ class MessageSender {
     [[nodiscard]] explicit MessageSender(MessageReceiver) noexcept;
 
     auto submit(InfoMessage message) -> void;
-    auto receiver() -> MessageReceiver &;
 
    private:
     MessageReceiver receiver_;

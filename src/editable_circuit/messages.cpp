@@ -90,30 +90,24 @@ auto SegmentSplit::format() const -> std::string {
 TransparentReceiver::TransparentReceiver(EditableCircuit &editable_circuit)
     : editable_circuit_ {&editable_circuit} {}
 
-auto TransparentReceiver::_submit(InfoMessage message) -> void {
+auto TransparentReceiver::submit(InfoMessage message) -> void {
     editable_circuit_->_submit(message);
-}
-
-// MessageRecorder
-
-auto MessageRecorder::_submit(InfoMessage message) -> void {
-    messages_.push_back(message);
-}
-
-auto MessageRecorder::messages() -> const std::vector<InfoMessage> & {
-    return messages_;
 }
 
 // Recording Reciever
 
-RecordingReceiver::RecordingReceiver(MessageRecorder &recorder) : recorder_ {&recorder} {}
+AdaptableReceiver::AdaptableReceiver(VirtualReceiver &receiver) : receiver_ {&receiver} {}
 
-RecordingReceiver::RecordingReceiver(EditableCircuit &editable_circuit)
+AdaptableReceiver::AdaptableReceiver(EditableCircuit &editable_circuit)
     : editable_circuit_ {&editable_circuit} {}
 
-auto RecordingReceiver::_submit(InfoMessage message) -> void {
-    if (recorder_ != nullptr) {
-        recorder_->_submit(message);
+auto AdaptableReceiver::submit(InfoMessage message) -> void {
+#ifndef LOGIKSIM_TESTING_MESSEGE_SENDER
+    throw_exception("using adaptable receiver in non-testing code");
+#endif
+
+    if (receiver_ != nullptr) {
+        receiver_->submit(message);
     }
     if (editable_circuit_ != nullptr) {
         editable_circuit_->_submit(message);
@@ -125,11 +119,7 @@ auto RecordingReceiver::_submit(InfoMessage message) -> void {
 MessageSender::MessageSender(MessageReceiver receiver) noexcept : receiver_ {receiver} {}
 
 auto MessageSender::submit(InfoMessage message) -> void {
-    receiver_._submit(message);
-}
-
-auto MessageSender::receiver() -> MessageReceiver & {
-    return receiver_;
+    receiver_.submit(message);
 }
 
 }  // namespace logicsim::editable_circuit
