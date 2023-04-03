@@ -102,9 +102,9 @@ auto add_circuit_to_cache(auto &&cache, const Circuit &circuit) -> void {
     for (const auto element : schematic.elements()) {
         const auto element_id = element.element_id();
         if (is_inserted(layout.display_state(element_id))) {
-            if (element.is_element()) {
+            if (element.is_logic_item()) {
                 const auto data = to_layout_calculation_data(circuit, element_id);
-                cache.submit(ElementInserted {element_id, data});
+                cache.submit(LogicItemInserted {element_id, data});
             }
             if (element.is_wire()) {
                 const auto &segment_tree = layout.segment_tree(element_id);

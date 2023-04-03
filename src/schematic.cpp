@@ -697,7 +697,7 @@ auto Schematic::ElementTemplate<Const>::is_wire() const -> bool {
 }
 
 template <bool Const>
-auto Schematic::ElementTemplate<Const>::is_element() const -> bool {
+auto Schematic::ElementTemplate<Const>::is_logic_item() const -> bool {
     return !(is_placeholder() || is_wire());
 }
 

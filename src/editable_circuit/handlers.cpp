@@ -62,10 +62,10 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
         }
     }
 
-    if (inserted && element.is_element()) {
+    if (inserted && element.is_logic_item()) {
         const auto data = to_layout_calculation_data(circuit, new_element_id);
 
-        sender.submit(info_message::InsertedElementUpdated {
+        sender.submit(info_message::InsertedLogicItemUpdated {
             .new_element_id = new_element_id,
             .old_element_id = old_element_id,
             .data = data,
@@ -114,12 +114,12 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
 //
 
 //
-// Element Handler
+// Logic Item Handlers
 //
 
-auto add_standard_element(State state, Selection& selection,
-                          StandardElementAttributes attributes,
-                          InsertionMode insertion_mode) -> void {
+auto add_standard_logic_item(State state, Selection& selection,
+                             StandardLogicAttributes attributes,
+                             InsertionMode insertion_mode) -> void {
     using enum ElementType;
 
     const auto type = attributes.type;
@@ -151,11 +151,11 @@ auto add_standard_element(State state, Selection& selection,
     selection.add_element(element_id);
 
     // validates our position
-    move_or_delete_element(state, element_id,            //
-                           attributes.position.x.value,  //
-                           attributes.position.y.value);
+    move_or_delete_logic_item(state, element_id,            //
+                              attributes.position.x.value,  //
+                              attributes.position.y.value);
     if (element_id) {
-        change_element_insertion_mode(state, element_id, insertion_mode);
+        change_logic_item_insertion_mode(state, element_id, insertion_mode);
     }
 }
 
@@ -179,8 +179,8 @@ auto add_placeholder_element(Circuit& circuit) -> element_id_t {
     return element_id;
 }
 
-auto is_element_position_representable(const Circuit& circuit, element_id_t element_id,
-                                       int x, int y) -> bool {
+auto is_logic_item_position_representable(const Circuit& circuit, element_id_t element_id,
+                                          int x, int y) -> bool {
     if (!is_representable(x, y)) {
         return false;
     }
@@ -192,15 +192,16 @@ auto is_element_position_representable(const Circuit& circuit, element_id_t elem
     return is_representable(data);
 }
 
-auto move_or_delete_element(State state, element_id_t& element_id, int x, int y) -> void {
+auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
+    -> void {
     // only temporary items can be freely moved
     if (state.layout.display_state(element_id) != display_state_t::new_temporary)
         [[unlikely]] {
         throw_exception("Only temporary items can be freely moded.");
     }
 
-    if (!is_element_position_representable(state.circuit, element_id, x, y)) {
-        change_element_insertion_mode(state, element_id, InsertionMode::temporary);
+    if (!is_logic_item_position_representable(state.circuit, element_id, x, y)) {
+        change_logic_item_insertion_mode(state, element_id, InsertionMode::temporary);
         swap_and_delete_single_element(state.circuit, state.sender, element_id);
         return;
     }
@@ -384,7 +385,7 @@ auto element_change_temporary_to_colliding(State state, element_id_t& element_id
     } else {
         insert_element(state, element_id);
         state.layout.set_display_state(element_id, display_state_t::new_valid);
-        state.sender.submit(info_message::ElementInserted {element_id, data});
+        state.sender.submit(info_message::LogicItemInserted {element_id, data});
     }
 };
 
@@ -424,7 +425,7 @@ auto element_change_colliding_to_temporary(Circuit& circuit, MessageSender sende
 
     if (display_state == display_state_t::new_valid) {
         const auto data = to_layout_calculation_data(circuit, element_id);
-        sender.submit(info_message::ElementUninserted {element_id, data});
+        sender.submit(info_message::LogicItemUninserted {element_id, data});
         layout.set_display_state(element_id, display_state_t::new_temporary);
 
         disconnect_inputs_and_add_placeholders(circuit, element_id);
@@ -440,10 +441,10 @@ auto element_change_colliding_to_temporary(Circuit& circuit, MessageSender sende
     throw_exception("element is not in the right state.");
 };
 
-auto change_element_insertion_mode(State state, element_id_t& element_id,
-                                   InsertionMode new_insertion_mode) -> void {
-    if (!state.schematic.element(element_id).is_element()) [[unlikely]] {
-        throw_exception("only works on elements");
+auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
+                                      InsertionMode new_insertion_mode) -> void {
+    if (!state.schematic.element(element_id).is_logic_item()) [[unlikely]] {
+        throw_exception("only works on logic elements");
     }
     const auto old_insertion_mode
         = to_insertion_mode(state.layout.display_state(element_id));

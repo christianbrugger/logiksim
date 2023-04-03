@@ -72,8 +72,8 @@ auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
     assert(!temp_element_);
 
     if (position.has_value()) {
-        temp_element_ = editable_circuit_.add_standard_element(ElementType::or_element, 3,
-                                                               *position, mode);
+        temp_element_ = editable_circuit_.add_standard_logic_item(ElementType::or_element,
+                                                                  3, *position, mode);
     }
 }
 
@@ -485,10 +485,11 @@ auto RendererWidget::load_circuit(int id) -> void {
     constexpr auto release_max = 1600;
 
     if (id == 1) {
-        editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {5, 3},
-                                              InsertionMode::insert_or_discard);
-        editable_circuit.add_standard_element(ElementType::or_element, 2, point_t {15, 6},
-                                              InsertionMode::insert_or_discard);
+        editable_circuit.add_standard_logic_item(
+            ElementType::or_element, 2, point_t {5, 3}, InsertionMode::insert_or_discard);
+        editable_circuit.add_standard_logic_item(ElementType::or_element, 2,
+                                                 point_t {15, 6},
+                                                 InsertionMode::insert_or_discard);
 
         editable_circuit.add_line_segments(
             point_t {grid_t {10}, grid_t {10}}, point_t {grid_t {15}, grid_t {12}},
@@ -497,8 +498,9 @@ auto RendererWidget::load_circuit(int id) -> void {
             point_t {grid_t {10}, grid_t {15}}, point_t {grid_t {15}, grid_t {15}},
             LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
 
-        editable_circuit.add_standard_element(ElementType::or_element, 9, point_t {20, 4},
-                                              InsertionMode::insert_or_discard);
+        editable_circuit.add_standard_logic_item(ElementType::or_element, 9,
+                                                 point_t {20, 4},
+                                                 InsertionMode::insert_or_discard);
     }
 
     if (id == 2) {
@@ -506,9 +508,9 @@ auto RendererWidget::load_circuit(int id) -> void {
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
-                editable_circuit.add_standard_element(ElementType::or_element, 3,
-                                                      point_t {grid_t {x}, grid_t {y}},
-                                                      InsertionMode::insert_or_discard);
+                editable_circuit.add_standard_logic_item(
+                    ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
+                    InsertionMode::insert_or_discard);
 
                 editable_circuit.add_line_segments(
                     point_t {grid_t {x + 2}, grid_t {y + 1}},
@@ -527,9 +529,9 @@ auto RendererWidget::load_circuit(int id) -> void {
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
-                editable_circuit.add_standard_element(ElementType::or_element, 3,
-                                                      point_t {grid_t {x}, grid_t {y}},
-                                                      InsertionMode::insert_or_discard);
+                editable_circuit.add_standard_logic_item(
+                    ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
+                    InsertionMode::insert_or_discard);
             }
         }
     }

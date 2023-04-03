@@ -38,7 +38,7 @@ EditableCircuit::EditableCircuit(Circuit&& circuit)
 }
 
 auto EditableCircuit::format() const -> std::string {
-    return fmt::format("EditableCircuit{{\\n{}}}", circuit_);
+    return fmt::format("EditableCircuit{{\n{}}}", circuit_);
 }
 
 auto EditableCircuit::circuit() const -> const Circuit& {
@@ -82,18 +82,18 @@ auto EditableCircuit::validate() -> void {
     selection_builder_.validate(circuit);
 }
 
-auto EditableCircuit::add_inverter_element(point_t position, InsertionMode insertion_mode,
-                                           orientation_t orientation)
-    -> selection_handle_t {
-    return add_standard_element(ElementType::inverter_element, 1, position,
-                                insertion_mode, orientation);
+auto EditableCircuit::add_inverter_item(point_t position, InsertionMode insertion_mode,
+                                        orientation_t orientation) -> selection_handle_t {
+    return add_standard_logic_item(ElementType::inverter_element, 1, position,
+                                   insertion_mode, orientation);
 }
 
-auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_count,
-                                           point_t position, InsertionMode insertion_mode,
-                                           orientation_t orientation)
+auto EditableCircuit::add_standard_logic_item(ElementType type, std::size_t input_count,
+                                              point_t position,
+                                              InsertionMode insertion_mode,
+                                              orientation_t orientation)
     -> selection_handle_t {
-    const auto attributes = editable_circuit::StandardElementAttributes {
+    const auto attributes = editable_circuit::StandardLogicAttributes {
         .type = type,
         .input_count = input_count,
         .position = position,
@@ -101,8 +101,8 @@ auto EditableCircuit::add_standard_element(ElementType type, std::size_t input_c
     };
 
     auto handle = selection_registrar_.create_selection();
-    editable_circuit::add_standard_element(get_state(), handle.value(), attributes,
-                                           insertion_mode);
+    editable_circuit::add_standard_logic_item(get_state(), handle.value(), attributes,
+                                              insertion_mode);
     return handle;
 }
 
@@ -136,8 +136,8 @@ auto EditableCircuit::new_positions_representable(const Selection& selection, in
 
     const auto is_valid = [&](element_id_t element_id) {
         const auto [x, y] = get_position(element_id);
-        return editable_circuit::is_element_position_representable(circuit, element_id, x,
-                                                                   y);
+        return editable_circuit::is_logic_item_position_representable(circuit, element_id,
+                                                                      x, y);
     };
     return std::ranges::all_of(selection.selected_elements(), is_valid);
 }
@@ -156,7 +156,7 @@ auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int del
         handle->remove_element(element_id);
 
         const auto [x, y] = get_position(element_id);
-        editable_circuit::move_or_delete_element(get_state(), element_id, x, y);
+        editable_circuit::move_or_delete_logic_item(get_state(), element_id, x, y);
     }
 }
 
@@ -171,8 +171,8 @@ auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
         auto element_id = *handle->selected_elements().begin();
         handle->remove_element(element_id);
 
-        editable_circuit::change_element_insertion_mode(get_state(), element_id,
-                                                        new_insertion_mode);
+        editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
+                                                           new_insertion_mode);
     }
 }
 
@@ -186,8 +186,8 @@ auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
         auto element_id = *handle->selected_elements().begin();
         handle->remove_element(element_id);
 
-        editable_circuit::change_element_insertion_mode(get_state(), element_id,
-                                                        InsertionMode::temporary);
+        editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
+                                                           InsertionMode::temporary);
         if (!element_id) {
             throw_exception("element disappeared in mode change.");
         }

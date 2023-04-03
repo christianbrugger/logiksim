@@ -21,6 +21,8 @@ namespace editable_circuit {
 
 namespace info_message {
 
+// Any type of circuit elements
+
 struct ElementCreated {
     element_id_t element_id;
 
@@ -40,27 +42,31 @@ struct ElementUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct ElementInserted {
+// Logic Items
+
+struct LogicItemInserted {
     element_id_t element_id;
     layout_calculation_data_t data;
 
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct ElementUninserted {
+struct LogicItemUninserted {
     element_id_t element_id;
     layout_calculation_data_t data;
 
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct InsertedElementUpdated {
+struct InsertedLogicItemUpdated {
     element_id_t new_element_id;
     element_id_t old_element_id;
     layout_calculation_data_t data;
 
     [[nodiscard]] auto format() const -> std::string;
 };
+
+// Wire Segments
 
 struct SegmentInserted {
     segment_t segment;
@@ -100,9 +106,9 @@ struct SegmentSplit {
 };
 
 using Message = std::variant<ElementCreated, ElementDeleted, ElementUpdated,
-                             ElementInserted, ElementUninserted, InsertedElementUpdated,
-                             SegmentInserted, SegmentUninserted, InsertedSegmentUpdated,
-                             SegmentMerged, SegmentSplit>;
+                             LogicItemInserted, LogicItemUninserted,
+                             InsertedLogicItemUpdated, SegmentInserted, SegmentUninserted,
+                             InsertedSegmentUpdated, SegmentMerged, SegmentSplit>;
 
 }  // namespace info_message
 

@@ -22,7 +22,6 @@ namespace editable_circuit {
 
 // contains common data for the handlers
 
-// TODO rename HandlerData -> State
 struct State {
     Circuit& circuit;
     Schematic& schematic;
@@ -44,27 +43,28 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
                                     element_id_t& element_id) -> void;
 
 //
-// Element Handler
+// Logic Item Handler
 //
 
-struct StandardElementAttributes {
+struct StandardLogicAttributes {
     ElementType type;
     std::size_t input_count;
     point_t position;
     orientation_t orientation = orientation_t::right;
 };
 
-auto add_standard_element(State state, Selection& selection,
-                          StandardElementAttributes attributes,
-                          InsertionMode insertion_mode) -> void;
+auto add_standard_logic_item(State state, Selection& selection,
+                             StandardLogicAttributes attributes,
+                             InsertionMode insertion_mode) -> void;
 
-auto change_element_insertion_mode(State state, element_id_t& element_id,
-                                   InsertionMode new_insertion_mode) -> void;
+auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
+                                      InsertionMode new_insertion_mode) -> void;
 
-auto is_element_position_representable(const Circuit& circuit, element_id_t element_id,
-                                       int x, int y) -> bool;
+auto is_logic_item_position_representable(const Circuit& circuit, element_id_t element_id,
+                                          int x, int y) -> bool;
 
-auto move_or_delete_element(State state, element_id_t& element_id, int x, int y) -> void;
+auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
+    -> void;
 
 //
 // Wire Handler

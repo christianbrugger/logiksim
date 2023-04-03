@@ -25,17 +25,18 @@ auto ElementUpdated::format() const -> std::string {
                        new_element_id, old_element_id);
 }
 
-auto ElementInserted::format() const -> std::string {
-    return fmt::format("ElementInserted(element_id = {})", element_id);
+auto LogicItemInserted::format() const -> std::string {
+    return fmt::format("LogicItemInserted(element_id = {})", element_id);
 }
 
-auto ElementUninserted::format() const -> std::string {
-    return fmt::format("ElementUninserted(element_id = {})", element_id);
+auto LogicItemUninserted::format() const -> std::string {
+    return fmt::format("LogicItemUninserted(element_id = {})", element_id);
 }
 
-auto InsertedElementUpdated::format() const -> std::string {
-    return fmt::format("InsertedElementUpdated(new_element_id = {}, old_element_id = {})",
-                       new_element_id, old_element_id);
+auto InsertedLogicItemUpdated::format() const -> std::string {
+    return fmt::format(
+        "InsertedLogicItemUpdated(new_element_id = {}, old_element_id = {})",
+        new_element_id, old_element_id);
 }
 
 auto SegmentInserted::format() const -> std::string {

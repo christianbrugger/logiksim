@@ -42,20 +42,20 @@ template <bool IsInput>
 auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> void {
     using namespace editable_circuit::info_message;
 
-    if (auto pointer = std::get_if<ElementInserted>(&message)) {
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
         return handle(*pointer);
     }
-    if (auto pointer = std::get_if<ElementInserted>(&message)) {
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
         return handle(*pointer);
     }
-    if (auto pointer = std::get_if<InsertedElementUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
         return handle(*pointer);
     }
 }
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::ElementInserted message) -> void {
+    editable_circuit::info_message::LogicItemInserted message) -> void {
     // placeholders are not cached
     if (is_placeholder(message.data)) {
         return;
@@ -79,7 +79,7 @@ auto ConnectionCache<IsInput>::handle(
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::ElementUninserted message) -> void {
+    editable_circuit::info_message::LogicItemUninserted message) -> void {
     // placeholders are not cached
     if (is_placeholder(message.data)) {
         return;
@@ -102,7 +102,7 @@ auto ConnectionCache<IsInput>::handle(
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::InsertedElementUpdated message) -> void {
+    editable_circuit::info_message::InsertedLogicItemUpdated message) -> void {
     // placeholders are not cached
     if (is_placeholder(message.data)) {
         return;
@@ -438,13 +438,13 @@ auto CollisionCache::format() const -> std::string {
 auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
     using namespace editable_circuit::info_message;
 
-    if (auto pointer = std::get_if<ElementInserted>(&message)) {
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
         return handle(*pointer);
     }
-    if (auto pointer = std::get_if<ElementInserted>(&message)) {
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
         return handle(*pointer);
     }
-    if (auto pointer = std::get_if<InsertedElementUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
         return handle(*pointer);
     }
 
@@ -459,18 +459,18 @@ auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
     }
 }
 
-auto CollisionCache::handle(editable_circuit::info_message::ElementInserted message)
+auto CollisionCache::handle(editable_circuit::info_message::LogicItemInserted message)
     -> void {
     insert_impl(map_, message.element_id, message.data);
 }
 
-auto CollisionCache::handle(editable_circuit::info_message::ElementUninserted message)
+auto CollisionCache::handle(editable_circuit::info_message::LogicItemUninserted message)
     -> void {
     remove_impl(map_, message.element_id, message.data);
 }
 
 auto CollisionCache::handle(
-    editable_circuit::info_message::InsertedElementUpdated message) -> void {
+    editable_circuit::info_message::InsertedLogicItemUpdated message) -> void {
     update_impl(map_, message.new_element_id, message.old_element_id, message.data);
 }
 

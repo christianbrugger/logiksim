@@ -316,7 +316,7 @@ class Schematic::ElementTemplate {
     [[nodiscard]] auto element_type() const -> ElementType;
     [[nodiscard]] auto is_placeholder() const -> bool;
     [[nodiscard]] auto is_wire() const -> bool;
-    [[nodiscard]] auto is_element() const -> bool;
+    [[nodiscard]] auto is_logic_item() const -> bool;
     [[nodiscard]] auto is_sub_circuit() const -> bool;
 
     [[nodiscard]] auto input_count() const -> std::size_t;
