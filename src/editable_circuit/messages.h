@@ -144,17 +144,49 @@ static_assert(sizeof(InfoMessage) == 56);
 // MessageSender
 //
 
-class MessageSender {
+class TransparentReceiver {
    public:
-    [[nodiscard]] explicit MessageSender(EditableCircuit &) noexcept;
+    TransparentReceiver(EditableCircuit &editable_circuit);
 
-    auto submit(InfoMessage message) -> void;
+    auto _submit(InfoMessage message) -> void;
 
    private:
     gsl::not_null<EditableCircuit *> editable_circuit_;
 };
 
+// used for Testing
+class RecordingReceiver {
+   public:
+    RecordingReceiver() = default;
+    RecordingReceiver(EditableCircuit &editable_circuit);
+
+    auto _submit(InfoMessage message) -> void;
+    auto messages() -> const std::vector<InfoMessage> &;
+
+   private:
+    EditableCircuit *editable_circuit_ {nullptr};
+    std::vector<InfoMessage> messages_ {};
+};
+
+#ifndef LOGIKSIM_TESTING_MESSEGE_SENDER
+using MessageReceiver = TransparentReceiver;
+#else
+using MessageReceiver = RecordingReceiver;
+#endif
+
+class MessageSender {
+   public:
+    [[nodiscard]] explicit MessageSender(MessageReceiver) noexcept;
+
+    auto submit(InfoMessage message) -> void;
+
+   private:
+    MessageReceiver receiver_;
+};
+
+#ifndef LOGIKSIM_TESTING_MESSEGE_SENDER
 static_assert(sizeof(MessageSender) == 8);
+#endif
 
 }  // namespace editable_circuit
 

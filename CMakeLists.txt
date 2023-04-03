@@ -53,6 +53,8 @@ set(LS_TEST_SOURCES
     test/range_test.cpp
     test/schematic_test.cpp
     test/simulation_test.cpp
+    
+    test/editable_circuit/handlers_test.cpp
 )
 
 cmake_policy(PUSH)
@@ -417,6 +419,10 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     GTest::gtest_main
 )
 target_compile_options(${MAIN_TEST_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
+target_compile_definitions(${MAIN_TEST_TARGET} PRIVATE
+    LOGIKSIM_TESTING_MESSEGE_SENDER
+)
+
 
 enable_testing()
 include(GoogleTest)
