@@ -73,69 +73,85 @@ auto SpatialTree::format() const -> std::string {
     return fmt::format("SpatialTree = {}\n", tree_);
 }
 
-auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {}
-
-auto SpatialTree::insert(element_id_t element_id, layout_calculation_data_t data)
+auto SpatialTree::handle(editable_circuit::info_message::LogicItemInserted message)
     -> void {
-    if (is_placeholder(data)) {
-        return;
-    }
-    if (data.element_type == ElementType::wire) {
-        throw_exception("not implemented");
-    }
-
-    const auto box = detail::spatial_tree::get_selection_box(data);
-    tree_.insert({box, {element_id, null_segment_index}});
+    const auto box = detail::spatial_tree::get_selection_box(message.data);
+    tree_.insert({box, {message.element_id, null_segment_index}});
 }
 
-auto SpatialTree::remove(element_id_t element_id, layout_calculation_data_t data)
+auto SpatialTree::handle(editable_circuit::info_message::LogicItemUninserted message)
     -> void {
-    if (is_placeholder(data)) {
-        return;
-    }
-    if (data.element_type == ElementType::wire) {
-        throw_exception("not implemented");
-    }
-
-    const auto box = detail::spatial_tree::get_selection_box(data);
-    const auto remove_count = tree_.remove({box, {element_id, null_segment_index}});
+    const auto box = detail::spatial_tree::get_selection_box(message.data);
+    const auto remove_count
+        = tree_.remove({box, {message.element_id, null_segment_index}});
 
     if (remove_count != 1) [[unlikely]] {
         throw_exception("Wasn't able to find element to remove.");
     }
 }
 
-auto SpatialTree::update(element_id_t new_element_id, element_id_t old_element_id,
-                         layout_calculation_data_t data) -> void {
-    if (data.element_type == ElementType::wire) {
-        for (auto i : range(data.segment_tree.segment_count())) {
-            const auto segment = data.segment_tree.segment(i);
-            const auto segment_index = gsl::narrow<segment_index_t::value_type>(i);
+auto SpatialTree::handle(editable_circuit::info_message::InsertedLogicItemUpdated message)
+    -> void {
+    using namespace editable_circuit::info_message;
 
-            // r-tree data is immutable
-            remove(old_element_id, segment.line, segment_index_t {segment_index});
-            insert(new_element_id, segment.line, segment_index_t {segment_index});
-        }
-    } else {
-        // r-tree data is immutable
-        remove(old_element_id, data);
-        insert(new_element_id, data);
+    // r-tree data is immutable
+    handle(LogicItemUninserted {message.old_element_id, message.data});
+    handle(LogicItemInserted {message.new_element_id, message.data});
+}
+
+auto SpatialTree::handle(editable_circuit::info_message::SegmentInserted message)
+    -> void {
+    const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
+    tree_.insert({box, {message.segment.element_id, message.segment.segment_index}});
+}
+
+auto SpatialTree::handle(editable_circuit::info_message::SegmentUninserted message)
+    -> void {
+    const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
+
+    const auto remove_count = tree_.remove(
+        {box, {message.segment.element_id, message.segment.segment_index}});
+
+    if (remove_count != 1) [[unlikely]] {
+        throw_exception("Wasn't able to find element to remove.");
     }
 }
 
-auto SpatialTree::insert(element_id_t element_id, line_t segment, segment_index_t index)
+auto SpatialTree::handle(editable_circuit::info_message::InsertedSegmentUpdated message)
     -> void {
-    const auto box = detail::spatial_tree::get_selection_box(segment);
-    tree_.insert({box, {element_id, index}});
+    using namespace editable_circuit::info_message;
+
+    // r-tree data is immutable
+    handle(SegmentUninserted {message.old_segment, message.segment_info});
+    handle(SegmentInserted {message.new_segment, message.segment_info});
 }
 
-auto SpatialTree::remove(element_id_t element_id, line_t segment, segment_index_t index)
-    -> void {
-    const auto box = detail::spatial_tree::get_selection_box(segment);
+auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {
+    using namespace editable_circuit::info_message;
 
-    const auto remove_count = tree_.remove({box, {element_id, index}});
-    if (remove_count != 1) [[unlikely]] {
-        throw_exception("Wasn't able to find element to remove.");
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<SegmentInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<SegmentUninserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<InsertedSegmentUpdated>(&message)) {
+        handle(*pointer);
+        return;
     }
 }
 

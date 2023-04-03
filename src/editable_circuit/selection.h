@@ -64,6 +64,12 @@ class Selection {
     auto validate(const Circuit &circuit) const -> void;
 
    private:
+    auto handle(editable_circuit::info_message::ElementDeleted message) -> void;
+    auto handle(editable_circuit::info_message::ElementUpdated message) -> void;
+
+    auto handle(editable_circuit::info_message::SegmentDeleted message) -> void;
+    auto handle(editable_circuit::info_message::SegmentUpdated message) -> void;
+
     detail::selection::elements_set_t selected_elements_ {};
     detail::selection::segment_map_t selected_segments_ {};
 };

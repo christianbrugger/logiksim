@@ -57,8 +57,6 @@ class CollisionCache {
    public:
     [[nodiscard]] auto format() const -> std::string;
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
-
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(line_t line) const -> bool;
 
@@ -71,6 +69,7 @@ class CollisionCache {
         });
     }
 
+    auto submit(editable_circuit::InfoMessage message) -> void;
     auto validate(const Circuit& circuit) const -> void;
 
    private:

@@ -250,11 +250,67 @@ auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void 
     a.swap(b);
 }
 
+namespace logicsim {
+
+//
+// Updates
+//
+
+auto Selection::handle(editable_circuit::info_message::ElementDeleted message) -> void {
+    remove_element(message.element_id);
+}
+
+auto Selection::handle(editable_circuit::info_message::ElementUpdated message) -> void {
+    const auto count = selected_elements_.erase(message.old_element_id);
+    if (count > 0) {
+        selected_elements_.insert(message.new_element_id);
+    }
+}
+
+auto Selection::handle(editable_circuit::info_message::SegmentDeleted message) -> void {
+    selected_segments_.erase(message.segment);
+}
+
+auto Selection::handle(editable_circuit::info_message::SegmentUpdated message) -> void {
+    const auto it = selected_segments_.find(message.old_segment);
+
+    if (it != selected_segments_.end()) {
+        auto parts = detail::selection::map_value_t {std::move(it->second)};
+        selected_segments_.erase(it);
+
+        const auto inserted
+            = selected_segments_.emplace(message.new_segment, std::move(parts)).second;
+
+        if (!inserted) [[unlikely]] {
+            throw_exception("line segment already existed");
+        }
+    }
+}
+
+auto Selection::submit(editable_circuit::InfoMessage message) -> void {
+    using namespace editable_circuit::info_message;
+
+    if (const auto pointer = std::get_if<ElementDeleted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (const auto pointer = std::get_if<ElementUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (const auto pointer = std::get_if<SegmentDeleted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (const auto pointer = std::get_if<SegmentUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+}
+
 //
 // validation
 //
-
-namespace logicsim {
 
 namespace {
 
@@ -327,90 +383,6 @@ auto check_wire_not_in_segments(element_id_t element_id, const SegmentTree &tree
 }
 
 }  // namespace
-
-namespace {
-
-/*
-
-
-auto Selection::remove_segment(segment_t segment) -> void {
-    selected_segments_.erase(segment);
-}
-auto Selection::update_element_id(element_id_t new_element_id,
-                              element_id_t old_element_id) -> void {
-const auto count = selected_elements_.erase(old_element_id);
-if (count > 0) {
-    selected_elements_.insert(new_element_id);
-}
-}
-
-auto Selection::remove_segment(segment_t segment) -> void {
-selected_segments_.erase(segment);
-}
-
-auto Selection::update_segment_id(segment_t new_segment, segment_t old_segment) -> void {
-const auto it = selected_segments_.find(old_segment);
-if (it != selected_segments_.end()) {
-    auto parts = detail::selection::map_value_t {std::move(it->second)};
-    selected_segments_.erase(it);
-
-    const auto inserted
-        = selected_segments_.emplace(new_segment, std::move(parts)).second;
-
-    if (!inserted) [[unlikely]] {
-        throw_exception("line segment already exists");
-    }
-}
-}
-*/
-
-auto handle(Selection &selection, editable_circuit::info_message::ElementDeleted message)
-    -> void {
-    selection.remove_element(message.element_id);
-
-    /*
-    for (auto &&segment :
-         layout.segment_tree(message.element_id).indices(message.element_id)) {
-        selection.remove_segment(segment);
-    }
-    */
-}
-
-auto handle(Selection &selection, editable_circuit::info_message::ElementUpdated message)
-    -> void {
-    //  selection.update_element_id(new_element_id, old_element_id);
-
-    /*
-    // segments
-    if (type == ElementType::wire) {
-        const auto indices = layout_.segment_tree(new_element_id).indices();
-
-        for (auto &&entry : managed_selections_) {
-            auto &selection = *entry.second;
-
-            for (auto &&segment_index : indices) {
-                const auto new_segment = segment_t {new_element_id, segment_index};
-                const auto old_segment = segment_t {old_element_id, segment_index};
-                selection.update_segment_id(new_segment, old_segment);
-            }
-        }
-    }
-    */
-}
-}  // namespace
-
-auto Selection::submit(editable_circuit::InfoMessage message) -> void {
-    using namespace editable_circuit::info_message;
-
-    if (const auto pointer = std::get_if<ElementDeleted>(&message)) {
-        handle(*this, *pointer);
-        return;
-    }
-    if (const auto pointer = std::get_if<ElementUpdated>(&message)) {
-        handle(*this, *pointer);
-        return;
-    }
-}
 
 auto Selection::validate(const Circuit &circuit) const -> void {
     auto element_set = detail::selection::elements_set_t {selected_elements_};

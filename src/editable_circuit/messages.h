@@ -128,10 +128,12 @@ struct SegmentSplit {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-using Message = std::variant<ElementCreated, ElementDeleted, ElementUpdated,
-                             LogicItemInserted, LogicItemUninserted,
-                             InsertedLogicItemUpdated, SegmentInserted, SegmentUninserted,
-                             InsertedSegmentUpdated, SegmentMerged, SegmentSplit>;
+using Message = std::variant<                                          //
+    ElementCreated, ElementDeleted, ElementUpdated,                    //
+    LogicItemInserted, LogicItemUninserted, InsertedLogicItemUpdated,  //
+    SegmentCreated, SegmentDeleted, SegmentUpdated,                    //
+    SegmentInserted, SegmentUninserted, InsertedSegmentUpdated,        //
+    SegmentMerged, SegmentSplit>;
 
 }  // namespace info_message
 

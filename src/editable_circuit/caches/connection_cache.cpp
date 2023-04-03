@@ -30,28 +30,8 @@ auto ConnectionCache<IsInput>::format() const -> std::string {
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> void {
-    using namespace editable_circuit::info_message;
-
-    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
-        return handle(*pointer);
-    }
-    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
-        return handle(*pointer);
-    }
-    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
-        return handle(*pointer);
-    }
-}
-
-template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::LogicItemInserted message) -> void {
-    // placeholders are not cached
-    if (is_placeholder(message.data)) {
-        return;
-    }
-
     const auto add_position = [&](connection_id_t connection_id, point_t position,
                                   orientation_t orientation) {
         if (connections_.contains(position)) [[unlikely]] {
@@ -71,11 +51,6 @@ auto ConnectionCache<IsInput>::handle(
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::LogicItemUninserted message) -> void {
-    // placeholders are not cached
-    if (is_placeholder(message.data)) {
-        return;
-    }
-
     const auto remove_position = [&](connection_id_t connection_id, point_t position,
                                      orientation_t orientation) {
         const auto value = value_type {message.element_id, connection_id, orientation};
@@ -94,11 +69,6 @@ auto ConnectionCache<IsInput>::handle(
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::InsertedLogicItemUpdated message) -> void {
-    // placeholders are not cached
-    if (is_placeholder(message.data)) {
-        return;
-    }
-
     const auto update_id = [&](connection_id_t connection_id, point_t position,
                                orientation_t orientation) {
         const auto old_value
@@ -122,6 +92,24 @@ auto ConnectionCache<IsInput>::handle(
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::SegmentUninserted message) -> void {}
+
+template <bool IsInput>
+auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> void {
+    using namespace editable_circuit::info_message;
+
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+}
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position) const

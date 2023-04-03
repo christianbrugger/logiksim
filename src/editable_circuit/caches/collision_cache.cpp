@@ -223,30 +223,6 @@ auto CollisionCache::format() const -> std::string {
     return "!!! NOT IMPLEMENTED !!!";
 }
 
-auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
-    using namespace editable_circuit::info_message;
-
-    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
-        return handle(*pointer);
-    }
-    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
-        return handle(*pointer);
-    }
-    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
-        return handle(*pointer);
-    }
-
-    if (auto pointer = std::get_if<SegmentInserted>(&message)) {
-        return handle(*pointer);
-    }
-    if (auto pointer = std::get_if<SegmentUninserted>(&message)) {
-        return handle(*pointer);
-    }
-    if (auto pointer = std::get_if<InsertedSegmentUpdated>(&message)) {
-        return handle(*pointer);
-    }
-}
-
 auto CollisionCache::handle(editable_circuit::info_message::LogicItemInserted message)
     -> void {
     insert_impl(map_, message.element_id, message.data);
@@ -276,6 +252,35 @@ auto CollisionCache::handle(
     editable_circuit::info_message::InsertedSegmentUpdated message) -> void {
     update_impl(map_, message.new_segment.element_id, message.old_segment.element_id,
                 message.segment_info);
+}
+
+auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
+    using namespace editable_circuit::info_message;
+
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<SegmentInserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<SegmentUninserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<InsertedSegmentUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
 }
 
 auto CollisionCache::state_colliding(point_t position, ItemType item_type) const -> bool {

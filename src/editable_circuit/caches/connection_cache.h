@@ -41,8 +41,6 @@ class ConnectionCache {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
-
     [[nodiscard]] auto find(point_t position) const
         -> std::optional<std::pair<connection_t, orientation_t>>;
     [[nodiscard]] auto find(point_t position, Schematic& schematic) const
@@ -62,6 +60,7 @@ class ConnectionCache {
         });
     }
 
+    auto submit(editable_circuit::InfoMessage message) -> void;
     auto validate(const Circuit& circuit) const -> void;
 
    private:

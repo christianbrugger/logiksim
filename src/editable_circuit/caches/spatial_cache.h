@@ -63,8 +63,6 @@ class SpatialTree {
    public:
     [[nodiscard]] auto format() const -> std::string;
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
-
     auto query_selection(rect_fine_t rect) const -> std::vector<query_result_t>;
     auto query_line_segments(point_t point) const -> queried_segments_t;
 
@@ -75,16 +73,17 @@ class SpatialTree {
                               });
     }
 
+    auto submit(editable_circuit::InfoMessage message) -> void;
     auto validate(const Circuit &circuit) const -> void;
 
    private:
-    auto insert(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto remove(element_id_t element_id, layout_calculation_data_t data) -> void;
-    auto update(element_id_t new_element_id, element_id_t old_element_id,
-                layout_calculation_data_t data) -> void;
+    auto handle(editable_circuit::info_message::LogicItemInserted message) -> void;
+    auto handle(editable_circuit::info_message::LogicItemUninserted message) -> void;
+    auto handle(editable_circuit::info_message::InsertedLogicItemUpdated message) -> void;
 
-    auto insert(element_id_t element_id, line_t segment, segment_index_t index) -> void;
-    auto remove(element_id_t element_id, line_t segment, segment_index_t index) -> void;
+    auto handle(editable_circuit::info_message::SegmentInserted message) -> void;
+    auto handle(editable_circuit::info_message::SegmentUninserted message) -> void;
+    auto handle(editable_circuit::info_message::InsertedSegmentUpdated message) -> void;
 
     tree_t tree_ {};
 };
