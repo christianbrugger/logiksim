@@ -1,25 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
 
-include(CMakePrintHelpers)
-cmake_print_variables(CMAKE_C_COMPILER)
-cmake_print_variables(CMAKE_CXX_COMPILER)
-
-cmake_policy(PUSH)
-
-if(POLICY CMP0092)
-  # Don't add -W3 warning level by default.
-  cmake_policy(SET CMP0092 NEW)
-endif()
-if(POLICY CMP0141)
-  # don't use 'MSVC_DEBUG_INFORMATION_FORMAT (BOOST bug 2022-12-14)  # TODO check 
-  cmake_policy(SET CMP0141 OLD)
-endif()
-if(POLICY CMP0069)
-  # enforce link time optimization is used when enabled
-  cmake_policy(SET CMP0069 NEW)
-  set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
-endif()
-
 set(LS_CORE_SOURCES
     src/editable_circuit/caches/spatial_cache.cpp
     src/editable_circuit/caches/collision_cache.cpp
@@ -56,16 +36,49 @@ set(LS_CORE_SOURCES
     src/simulation_view.h src/simulation_view.cpp
     src/timer.h src/timer.cpp
     src/vocabulary.h src/vocabulary.cpp
-    # test
+    
     src/main_widget.h src/main_widget.cpp
     src/render_widget.h src/render_widget.cpp
 )
+
+set(LS_TEST_SOURCES
+    test/algorithm_test.cpp
+    test/circular_buffer_test.cpp
+    test/collision_test.cpp
+    test/format_test.cpp
+    test/graph_test.cpp
+    test/iterator_adaptor_test.cpp
+    test/line_tree_test.cpp
+    test/random_test.cpp
+    test/range_test.cpp
+    test/schematic_test.cpp
+    test/simulation_test.cpp
+)
+
+cmake_policy(PUSH)
+
+if(POLICY CMP0092)
+  # Don't add -W3 warning level by default.
+  cmake_policy(SET CMP0092 NEW)
+endif()
+if(POLICY CMP0141)
+  # don't use 'MSVC_DEBUG_INFORMATION_FORMAT (BOOST bug 2022-12-14)  # TODO check 
+  cmake_policy(SET CMP0141 OLD)
+endif()
+if(POLICY CMP0069)
+  # enforce link time optimization is used when enabled
+  cmake_policy(SET CMP0069 NEW)
+  set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+endif()
 
 project(simulation_srp CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(CMakePrintHelpers)
+cmake_print_variables(CMAKE_C_COMPILER)
+cmake_print_variables(CMAKE_CXX_COMPILER)
 
 option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
@@ -391,18 +404,7 @@ target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 set(MAIN_TEST_TARGET "simulation_srp_test")
 add_executable(${MAIN_TEST_TARGET} 
     ${LS_CORE_SOURCES}
-    
-    test/algorithm_test.cpp
-    test/circular_buffer_test.cpp
-    test/collision_test.cpp
-    test/format_test.cpp
-    test/graph_test.cpp
-    test/iterator_adaptor_test.cpp
-    test/line_tree_test.cpp
-    test/random_test.cpp
-    test/range_test.cpp
-    test/schematic_test.cpp
-    test/simulation_test.cpp
+    ${LS_TEST_SOURCES}
 )
 target_include_directories(${MAIN_TEST_TARGET} PRIVATE
     ${LS_CORE_INCLUDE_DIRS}

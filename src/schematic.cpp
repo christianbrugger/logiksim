@@ -415,13 +415,29 @@ auto validate_element_connections_consistent(const Schematic::ConstElement eleme
 }
 
 auto validate_no_input_loops(const Schematic::ConstInput input) -> void {
-    if (input.connected_element_id() == input.element_id()) [[unlikely]] {
+    // clocks have an internal loop, that's allowed.
+    const auto clock_loop = [=]() {
+        return input.element().element_type() == ElementType::clock_generator
+               && input.input_index() == connection_id_t {0}
+               && input.connected_output_index() == connection_id_t {0};
+    };
+
+    if (input.connected_element_id() == input.element_id() && !clock_loop())
+        [[unlikely]] {
         throw_exception("element connects to itself, loops are not allowed.");
     }
 }
 
 auto validate_no_output_loops(const Schematic::ConstOutput output) -> void {
-    if (output.connected_element_id() == output.element_id()) [[unlikely]] {
+    // clocks have an internal loop, that's allowed.
+    const auto clock_loop = [=]() {
+        return output.element().element_type() == ElementType::clock_generator
+               && output.output_index() == connection_id_t {0}
+               && output.connected_input_index() == connection_id_t {0};
+    };
+
+    if (output.connected_element_id() == output.element_id() && !clock_loop())
+        [[unlikely]] {
         throw_exception("element connects to itself, loops are not allowed.");
     }
 }

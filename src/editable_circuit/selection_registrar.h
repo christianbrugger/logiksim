@@ -77,6 +77,8 @@ class selection_handle_t {
     // we allow explicit copy, as it is expensive
     auto copy() const -> selection_handle_t;
 
+    [[nodiscard]] auto format() const -> std::string;
+
     [[nodiscard]] auto has_value() const noexcept -> bool;
     [[nodiscard]] operator bool() const noexcept;
 

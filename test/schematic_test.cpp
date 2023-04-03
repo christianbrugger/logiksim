@@ -23,10 +23,10 @@ TEST(Schematic, EmptySchematic) {
 TEST(Schematic, SchematicSingleElement) {
     Schematic schematic;
 
-    schematic.add_element(ElementType::wire, 3, 5);
+    schematic.add_element(ElementType::wire, 1, 5);
 
     EXPECT_EQ(schematic.element_count(), 1);
-    EXPECT_EQ(schematic.input_count(), 3);
+    EXPECT_EQ(schematic.input_count(), 1);
     EXPECT_EQ(schematic.output_count(), 5);
     EXPECT_EQ(std::ranges::distance(schematic.elements()), 1);
 
@@ -35,18 +35,18 @@ TEST(Schematic, SchematicSingleElement) {
 
 TEST(Schematic, ElementProperties) {
     Schematic schematic;
-    schematic.add_element(ElementType::wire, 3, 5);
+    schematic.add_element(ElementType::and_element, 3, 1);
 
     const Schematic& schematic_const {schematic};
     const Schematic::ConstElement element {schematic_const.element(element_id_t {0})};
 
     EXPECT_EQ(element.element_id(), element_id_t {0});
-    EXPECT_EQ(element.element_type(), ElementType::wire);
+    EXPECT_EQ(element.element_type(), ElementType::and_element);
     EXPECT_EQ(element.input_count(), 3);
-    EXPECT_EQ(element.output_count(), 5);
+    EXPECT_EQ(element.output_count(), 1);
 
     EXPECT_EQ(std::ranges::distance(element.inputs()), 3);
-    EXPECT_EQ(std::ranges::distance(element.outputs()), 5);
+    EXPECT_EQ(std::ranges::distance(element.outputs()), 1);
 
     schematic.validate();
     schematic_const.validate();
@@ -55,8 +55,8 @@ TEST(Schematic, ElementProperties) {
 TEST(Schematic, EqualityOperators) {
     Schematic schematic;
 
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
-    auto inverter {schematic.add_element(ElementType::inverter_element, 3, 2)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 3)};
+    auto inverter {schematic.add_element(ElementType::inverter_element, 1, 1)};
 
     const Schematic& schematic_const {schematic};
 
@@ -80,8 +80,8 @@ TEST(Schematic, EqualityOperators) {
 TEST(Schematic, ConnectionProperties) {
     Schematic schematic;
 
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
-    auto inverter {schematic.add_element(ElementType::inverter_element, 3, 2)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 3)};
+    auto and_element {schematic.add_element(ElementType::and_element, 3, 1)};
 
     auto id_1 = connection_id_t {1};
 
@@ -90,10 +90,10 @@ TEST(Schematic, ConnectionProperties) {
     EXPECT_EQ(wire.output(id_1).element(), wire);
     EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
 
-    EXPECT_EQ(inverter.input(id_1).element_id(), inverter.element_id());
-    EXPECT_EQ(inverter.input(id_1).input_index(), connection_id_t {1});
-    EXPECT_EQ(inverter.input(id_1).element(), inverter);
-    EXPECT_EQ(inverter.input(id_1).has_connected_element(), false);
+    EXPECT_EQ(and_element.input(id_1).element_id(), and_element.element_id());
+    EXPECT_EQ(and_element.input(id_1).input_index(), connection_id_t {1});
+    EXPECT_EQ(and_element.input(id_1).element(), and_element);
+    EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
 
     schematic.validate();
 }
@@ -101,21 +101,21 @@ TEST(Schematic, ConnectionProperties) {
 TEST(Schematic, ConnectedOutput) {
     Schematic schematic;
 
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
-    auto inverter {schematic.add_element(ElementType::inverter_element, 3, 2)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 5)};
+    auto and_element {schematic.add_element(ElementType::and_element, 3, 1)};
 
     auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(inverter.input(id_1));
+    wire.output(id_1).connect(and_element.input(id_1));
 
     EXPECT_EQ(wire.output(id_1).has_connected_element(), true);
-    EXPECT_EQ(wire.output(id_1).connected_element_id(), inverter.element_id());
-    EXPECT_EQ(wire.output(id_1).connected_element(), inverter);
-    EXPECT_EQ(wire.output(id_1).connected_input(), inverter.input(id_1));
+    EXPECT_EQ(wire.output(id_1).connected_element_id(), and_element.element_id());
+    EXPECT_EQ(wire.output(id_1).connected_element(), and_element);
+    EXPECT_EQ(wire.output(id_1).connected_input(), and_element.input(id_1));
 
-    EXPECT_EQ(inverter.input(id_1).has_connected_element(), true);
-    EXPECT_EQ(inverter.input(id_1).connected_element_id(), wire.element_id());
-    EXPECT_EQ(inverter.input(id_1).connected_element(), wire);
-    EXPECT_EQ(inverter.input(id_1).connected_output(), wire.output(id_1));
+    EXPECT_EQ(and_element.input(id_1).has_connected_element(), true);
+    EXPECT_EQ(and_element.input(id_1).connected_element_id(), wire.element_id());
+    EXPECT_EQ(and_element.input(id_1).connected_element(), wire);
+    EXPECT_EQ(and_element.input(id_1).connected_output(), wire.output(id_1));
 
     schematic.validate();
 }
@@ -123,21 +123,21 @@ TEST(Schematic, ConnectedOutput) {
 TEST(Schematic, ConnectInput) {
     Schematic schematic;
 
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
-    auto inverter {schematic.add_element(ElementType::inverter_element, 3, 2)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 5)};
+    auto and_element {schematic.add_element(ElementType::and_element, 3, 1)};
 
     auto id_1 = connection_id_t {1};
-    inverter.input(id_1).connect(wire.output(id_1));
+    and_element.input(id_1).connect(wire.output(id_1));
 
     EXPECT_EQ(wire.output(id_1).has_connected_element(), true);
-    EXPECT_EQ(wire.output(id_1).connected_element_id(), inverter.element_id());
-    EXPECT_EQ(wire.output(id_1).connected_element(), inverter);
-    EXPECT_EQ(wire.output(id_1).connected_input(), inverter.input(id_1));
+    EXPECT_EQ(wire.output(id_1).connected_element_id(), and_element.element_id());
+    EXPECT_EQ(wire.output(id_1).connected_element(), and_element);
+    EXPECT_EQ(wire.output(id_1).connected_input(), and_element.input(id_1));
 
-    EXPECT_EQ(inverter.input(id_1).has_connected_element(), true);
-    EXPECT_EQ(inverter.input(id_1).connected_element_id(), wire.element_id());
-    EXPECT_EQ(inverter.input(id_1).connected_element(), wire);
-    EXPECT_EQ(inverter.input(id_1).connected_output(), wire.output(id_1));
+    EXPECT_EQ(and_element.input(id_1).has_connected_element(), true);
+    EXPECT_EQ(and_element.input(id_1).connected_element_id(), wire.element_id());
+    EXPECT_EQ(and_element.input(id_1).connected_element(), wire);
+    EXPECT_EQ(and_element.input(id_1).connected_output(), wire.output(id_1));
 
     schematic.validate();
 }
@@ -145,14 +145,14 @@ TEST(Schematic, ConnectInput) {
 TEST(Schematic, ClearedInput) {
     Schematic schematic;
 
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
-    auto inverter {schematic.add_element(ElementType::inverter_element, 3, 2)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 5)};
+    auto and_element {schematic.add_element(ElementType::and_element, 3, 1)};
 
     auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(inverter.input(id_1));
-    inverter.input(id_1).clear_connection();
+    wire.output(id_1).connect(and_element.input(id_1));
+    and_element.input(id_1).clear_connection();
 
-    EXPECT_EQ(inverter.input(id_1).has_connected_element(), false);
+    EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
     EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
 
     schematic.validate();
@@ -161,14 +161,14 @@ TEST(Schematic, ClearedInput) {
 TEST(Schematic, ClearedOutput) {
     Schematic schematic;
 
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
-    auto inverter {schematic.add_element(ElementType::inverter_element, 3, 2)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 5)};
+    auto and_element {schematic.add_element(ElementType::and_element, 3, 1)};
 
     auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(inverter.input(id_1));
+    wire.output(id_1).connect(and_element.input(id_1));
     wire.output(id_1).clear_connection();
 
-    EXPECT_EQ(inverter.input(id_1).has_connected_element(), false);
+    EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
     EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
 
     schematic.validate();
@@ -177,16 +177,17 @@ TEST(Schematic, ClearedOutput) {
 TEST(Schematic, ReconnectInput) {
     Schematic schematic;
 
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
-    auto inverter {schematic.add_element(ElementType::inverter_element, 3, 2)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 5)};
+    auto and_element {schematic.add_element(ElementType::and_element, 3, 1)};
+    auto inverter {schematic.add_element(ElementType::and_element, 1, 1)};
 
-    auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(inverter.input(id_1));
-    inverter.input(id_1).connect(inverter.output(id_1));
+    auto id_0 = connection_id_t {0};
+    wire.output(id_0).connect(and_element.input(id_0));
+    and_element.input(id_0).connect(inverter.output(id_0));
 
-    EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
-    EXPECT_EQ(inverter.input(id_1).has_connected_element(), true);
-    EXPECT_EQ(inverter.output(id_1).has_connected_element(), true);
+    EXPECT_EQ(wire.output(id_0).has_connected_element(), false);
+    EXPECT_EQ(and_element.input(id_0).has_connected_element(), true);
+    EXPECT_EQ(inverter.output(id_0).has_connected_element(), true);
 
     schematic.validate();
 }
@@ -194,23 +195,24 @@ TEST(Schematic, ReconnectInput) {
 TEST(Schematic, ReconnectOutput) {
     Schematic schematic;
 
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
-    auto inverter {schematic.add_element(ElementType::inverter_element, 3, 2)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 5)};
+    auto and_element {schematic.add_element(ElementType::and_element, 3, 1)};
+    auto or_element {schematic.add_element(ElementType::or_element, 2, 1)};
 
     auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(inverter.input(id_1));
-    wire.output(id_1).connect(wire.input(id_1));
+    wire.output(id_1).connect(and_element.input(id_1));
+    wire.output(id_1).connect(or_element.input(id_1));
 
     EXPECT_EQ(wire.output(id_1).has_connected_element(), true);
-    EXPECT_EQ(inverter.input(id_1).has_connected_element(), false);
-    EXPECT_EQ(wire.input(id_1).has_connected_element(), true);
+    EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
+    EXPECT_EQ(or_element.input(id_1).has_connected_element(), true);
 
     schematic.validate();
 }
 
 TEST(Schematic, TestPlaceholders) {
     Schematic schematic;
-    auto wire {schematic.add_element(ElementType::wire, 3, 5)};
+    auto wire {schematic.add_element(ElementType::wire, 1, 5)};
     EXPECT_EQ(schematic.element_count(), 1);
 
     add_output_placeholders(schematic);
@@ -278,19 +280,19 @@ TEST(Schematic, InputsViewEmpty) {
 
 TEST(Schematic, InputsViewFull) {
     Schematic schematic;
-    auto wire = schematic.add_element(ElementType::wire, 2, 1);
-    auto view = Schematic::InputView {wire};
+    auto and_element = schematic.add_element(ElementType::and_element, 2, 1);
+    auto view = Schematic::InputView {and_element};
 
-    ASSERT_THAT(view, testing::ElementsAre(wire.input(connection_id_t {0}),
-                                           wire.input(connection_id_t {1})));
+    ASSERT_THAT(view, testing::ElementsAre(and_element.input(connection_id_t {0}),
+                                           and_element.input(connection_id_t {1})));
     ASSERT_EQ(std::empty(view), false);
     ASSERT_EQ(std::size(view), 2);
 }
 
 TEST(Schematic, InputsViewRanges) {
     Schematic schematic;
-    auto wire = schematic.add_element(ElementType::wire, 2, 1);
-    auto view = Schematic::InputView {wire};
+    auto and_element = schematic.add_element(ElementType::and_element, 2, 1);
+    auto view = Schematic::InputView {and_element};
 
     ASSERT_EQ(std::distance(view.begin(), view.end()), 2);
     ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);

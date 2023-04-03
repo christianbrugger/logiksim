@@ -105,6 +105,13 @@ auto selection_handle_t::copy() const -> selection_handle_t {
     return registrar_->create_selection(*selection_);
 }
 
+auto selection_handle_t::format() const -> std::string {
+    if (has_value()) {
+        return fmt::format("selection_handle_t({})", value());
+    }
+    return fmt::format("selection_handle_t(nullptr)", value());
+}
+
 auto selection_handle_t::reset() noexcept -> void {
     *this = selection_handle_t {};
 }

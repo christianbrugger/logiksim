@@ -102,7 +102,9 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     // create infinite loop
     Schematic schematic;
     const auto inverter = schematic.add_element(ElementType::inverter_element, 1, 1);
-    inverter.output(connection_id_t {0}).connect(inverter.input(connection_id_t {0}));
+    const auto wire = schematic.add_element(ElementType::wire, 1, 1);
+    inverter.output(connection_id_t {0}).connect(wire.input(connection_id_t {0}));
+    wire.output(connection_id_t {0}).connect(inverter.input(connection_id_t {0}));
 
     auto simulation = get_uninitialized_simulation(schematic);
     simulation.set_output_delay(inverter.output(connection_id_t {0}), delay_t {100us});
@@ -119,9 +121,11 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     // create infinite loop
     Schematic schematic;
     const auto inverter = schematic.add_element(ElementType::inverter_element, 1, 1);
-    inverter.output(connection_id_t {0}).connect(inverter.input(connection_id_t {0}));
-    auto simulation = get_initialized_simulation(schematic);
+    const auto wire = schematic.add_element(ElementType::wire, 1, 1);
+    inverter.output(connection_id_t {0}).connect(wire.input(connection_id_t {0}));
+    wire.output(connection_id_t {0}).connect(inverter.input(connection_id_t {0}));
 
+    auto simulation = get_initialized_simulation(schematic);
     // run simulation for 5 ms
     EXPECT_EQ(simulation.time(), time_t {0us});
     const auto start = timeout_clock::now();
