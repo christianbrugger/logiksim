@@ -13,18 +13,6 @@ namespace editable_circuit {
 // Deletion Handling
 //
 
-auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
-                                       std::span<const element_id_t> element_ids,
-                                       element_id_t* preserve_element) -> void {
-    // sort descending, so we don't invalidate our ids
-    auto sorted_ids = delete_queue_t {element_ids.begin(), element_ids.end()};
-    std::ranges::sort(sorted_ids, std::greater<> {});
-
-    for (auto element_id : sorted_ids) {
-        swap_and_delete_single_element(circuit, sender, element_id, preserve_element);
-    }
-}
-
 auto notify_element_deleted(const Schematic& schematic, MessageSender sender,
                             element_id_t element_id) {
     if (schematic.element(element_id).is_placeholder()) {
@@ -74,9 +62,10 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
     }
 }
 
-auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
-                                    element_id_t& element_id,
-                                    element_id_t* preserve_element) -> void {
+auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender sender,
+                                            element_id_t& element_id,
+                                            element_id_t* preserve_element = nullptr)
+    -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
@@ -114,6 +103,47 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
     element_id = null_element;
 }
 
+auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
+                                    element_id_t& element_id,
+                                    element_id_t* preserve_element) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "swap_and_delete_single_element(element_id = {}, preserve_element = {});\n"
+            "==========================================================\n\n",
+            circuit, element_id, fmt_ptr(preserve_element));
+    }
+    swap_and_delete_single_element_private(circuit, sender, element_id, preserve_element);
+}
+
+auto swap_and_delete_multiple_elements_private(Circuit& circuit, MessageSender sender,
+                                               std::span<const element_id_t> element_ids,
+                                               element_id_t* preserve_element) -> void {
+    // sort descending, so we don't invalidate our ids
+    auto sorted_ids = delete_queue_t {element_ids.begin(), element_ids.end()};
+    std::ranges::sort(sorted_ids, std::greater<> {});
+
+    for (auto element_id : sorted_ids) {
+        swap_and_delete_single_element_private(circuit, sender, element_id,
+                                               preserve_element);
+    }
+}
+
+auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
+                                       std::span<const element_id_t> element_ids,
+                                       element_id_t* preserve_element) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "swap_and_delete_multiple_elements(element_id = {}, preserve_element = "
+            "{});\n"
+            "==========================================================\n\n",
+            circuit, element_ids, fmt_ptr(preserve_element));
+    }
+    swap_and_delete_multiple_elements_private(circuit, sender, element_ids,
+                                              preserve_element);
+}
+
 auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
                                       std::span<const element_id_t> placeholder_ids,
                                       element_id_t* preserve_element = nullptr) {
@@ -121,7 +151,8 @@ auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
         circuit.layout().set_display_state(placeholder_id,
                                            display_state_t::new_temporary);
     }
-    swap_and_delete_multiple_elements(circuit, sender, placeholder_ids, preserve_element);
+    swap_and_delete_multiple_elements_private(circuit, sender, placeholder_ids,
+                                              preserve_element);
 }
 
 //
@@ -131,47 +162,6 @@ auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
 auto StandardLogicAttributes::format() const -> std::string {
     return fmt::format("{{{}, input_count = {}, {}, {}}}", type, input_count, position,
                        orientation);
-}
-
-auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
-                             InsertionMode insertion_mode) -> element_id_t {
-    using enum ElementType;
-    const auto type = attributes.type;
-
-    if (!(type == and_element || type == or_element || type == xor_element
-          || type == inverter_element)) [[unlikely]] {
-        throw_exception("The type needs to be a standard element.");
-    }
-    if (type == inverter_element && attributes.input_count != 1) [[unlikely]] {
-        throw_exception("Inverter needs to have exactly one input.");
-    }
-    if (type != inverter_element && attributes.input_count < 2) [[unlikely]] {
-        throw_exception("Input count needs to be at least 2 for standard elements.");
-    }
-
-    // insert into underlyings
-    auto element_id = state.layout.add_logic_element(
-        point_t {0, 0}, attributes.orientation, display_state_t::new_temporary);
-    {
-        const auto element = state.schematic.add_element({
-            .element_type = attributes.type,
-            .input_count = attributes.input_count,
-            .output_count = 1,
-        });
-        if (element.element_id() != element_id) [[unlikely]] {
-            throw_exception("Added element ids don't match.");
-        }
-    }
-    state.sender.submit(info_message::ElementCreated {element_id});
-
-    // validates our position
-    move_or_delete_logic_item(state, element_id,            //
-                              attributes.position.x.value,  //
-                              attributes.position.y.value);
-    if (element_id) {
-        change_logic_item_insertion_mode(state, element_id, insertion_mode);
-    }
-    return element_id;
 }
 
 auto add_placeholder_element(Circuit& circuit) -> element_id_t {
@@ -194,8 +184,9 @@ auto add_placeholder_element(Circuit& circuit) -> element_id_t {
     return element_id;
 }
 
-auto is_logic_item_position_representable(const Circuit& circuit, element_id_t element_id,
-                                          int x, int y) -> bool {
+auto is_logic_item_position_representable_private(const Circuit& circuit,
+                                                  element_id_t element_id, int x, int y)
+    -> bool {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
@@ -210,8 +201,20 @@ auto is_logic_item_position_representable(const Circuit& circuit, element_id_t e
     return is_representable(data);
 }
 
-auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
-    -> void {
+auto is_logic_item_position_representable(const Circuit& circuit, element_id_t element_id,
+                                          int x, int y) -> bool {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "is_logic_item_position_representable(element_id = {}, x = {}, y = {});\n"
+            "==========================================================\n\n",
+            circuit, element_id, x, y);
+    }
+    return is_logic_item_position_representable_private(circuit, element_id, x, y);
+}
+
+auto move_or_delete_logic_item_private(State state, element_id_t& element_id, int x,
+                                       int y) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
@@ -220,13 +223,25 @@ auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int
         throw_exception("Only temporary items can be freely moded.");
     }
 
-    if (!is_logic_item_position_representable(state.circuit, element_id, x, y)) {
-        swap_and_delete_single_element(state.circuit, state.sender, element_id);
+    if (!is_logic_item_position_representable_private(state.circuit, element_id, x, y)) {
+        swap_and_delete_single_element_private(state.circuit, state.sender, element_id);
         return;
     }
 
     const auto position = point_t {grid_t {x}, grid_t {y}};
     state.layout.set_position(element_id, position);
+}
+
+auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
+    -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "move_or_delete_logic_item(element_id = {}, x = {}, y = {});\n"
+            "==========================================================\n\n",
+            state.circuit, element_id, x, y);
+    }
+    move_or_delete_logic_item_private(state, element_id, x, y);
 }
 
 // mode change helpers
@@ -418,7 +433,7 @@ auto element_change_colliding_to_insert(Circuit& circuit, MessageSender sender,
     if (display_state == display_state_t::new_colliding) [[likely]] {
         // we can only delete temporary elements
         layout.set_display_state(element_id, display_state_t::new_temporary);
-        swap_and_delete_single_element(circuit, sender, element_id);
+        swap_and_delete_single_element_private(circuit, sender, element_id);
         return;
     }
 
@@ -456,8 +471,8 @@ auto element_change_colliding_to_temporary(Circuit& circuit, MessageSender sende
     throw_exception("element is not in the right state.");
 };
 
-auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
-                                      InsertionMode new_mode) -> void {
+auto change_logic_item_insertion_mode_private(State state, element_id_t& element_id,
+                                              InsertionMode new_mode) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
@@ -482,6 +497,71 @@ auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
     if (new_mode == InsertionMode::temporary) {
         element_change_colliding_to_temporary(state.circuit, state.sender, element_id);
     }
+}
+
+auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
+                                      InsertionMode new_mode) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "change_logic_item_insertion_mode(element_id = {}, new_mode = {});\n"
+            "==========================================================\n\n",
+            state.circuit, element_id, new_mode);
+    }
+    change_logic_item_insertion_mode_private(state, element_id, new_mode);
+}
+
+auto add_standard_logic_item_private(State state, StandardLogicAttributes attributes,
+                                     InsertionMode insertion_mode) -> element_id_t {
+    using enum ElementType;
+    const auto type = attributes.type;
+
+    if (!(type == and_element || type == or_element || type == xor_element
+          || type == inverter_element)) [[unlikely]] {
+        throw_exception("The type needs to be a standard element.");
+    }
+    if (type == inverter_element && attributes.input_count != 1) [[unlikely]] {
+        throw_exception("Inverter needs to have exactly one input.");
+    }
+    if (type != inverter_element && attributes.input_count < 2) [[unlikely]] {
+        throw_exception("Input count needs to be at least 2 for standard elements.");
+    }
+
+    // insert into underlyings
+    auto element_id = state.layout.add_logic_element(
+        point_t {0, 0}, attributes.orientation, display_state_t::new_temporary);
+    {
+        const auto element = state.schematic.add_element({
+            .element_type = attributes.type,
+            .input_count = attributes.input_count,
+            .output_count = 1,
+        });
+        if (element.element_id() != element_id) [[unlikely]] {
+            throw_exception("Added element ids don't match.");
+        }
+    }
+    state.sender.submit(info_message::ElementCreated {element_id});
+
+    // validates our position
+    move_or_delete_logic_item_private(state, element_id,            //
+                                      attributes.position.x.value,  //
+                                      attributes.position.y.value);
+    if (element_id) {
+        change_logic_item_insertion_mode_private(state, element_id, insertion_mode);
+    }
+    return element_id;
+}
+
+auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
+                             InsertionMode insertion_mode) -> element_id_t {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "add_standard_logic_item(attributes = {}, insertion_mode = {});\n"
+            "==========================================================\n\n",
+            state.circuit, attributes, insertion_mode);
+    }
+    return add_standard_logic_item_private(state, attributes, insertion_mode);
 }
 
 //
@@ -783,7 +863,7 @@ auto WireEditor::add_line_segment(line_t line, InsertionMode insertion_mode,
         } else {
             // merge two trees
             const auto tree_copy = SegmentTree {layout_.segment_tree(colliding_id_1)};
-            editable_circuit_.swap_and_delete_single_element(colliding_id_1);
+            editable_circuit_.swap_and_delete_single_element_private(colliding_id_1);
 
             const auto element_id = tree_handle.element();
             auto&& m_tree = layout_.modifyable_segment_tree(element_id);

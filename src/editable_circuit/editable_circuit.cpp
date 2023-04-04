@@ -115,6 +115,10 @@ auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
 
 auto EditableCircuit::new_positions_representable(const Selection& selection, int delta_x,
                                                   int delta_y) const -> bool {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print(selection);
+    }
+
     auto& circuit = circuit_.value();
     const auto get_position = position_calculator(circuit.layout(), delta_x, delta_y);
 
@@ -131,9 +135,12 @@ auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int del
     if (!handle) {
         return;
     }
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print(handle);
+    }
+
     const auto get_position
         = position_calculator(circuit_.value().layout(), delta_x, delta_y);
-
     // TODO refactor to algorithm
     while (handle->selected_elements().size() > 0) {
         auto element_id = *handle->selected_elements().begin();
@@ -149,6 +156,9 @@ auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
     if (!handle) {
         return;
     }
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print(handle);
+    }
 
     // TODO refactor to algorithm
     while (handle->selected_elements().size() > 0) {
@@ -163,6 +173,9 @@ auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
 auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
     if (!handle) {
         return;
+    }
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print(handle);
     }
 
     // TODO refactor to algorithm
