@@ -11,7 +11,8 @@ Timer::Timer(std::string description, Unit unit, int precision)
 
 Timer::~Timer() {
     if (!description_.empty()) {
-        fmt::print("{}\n", *this);
+        const auto str = format();
+        fmt::print("{}\n", str);
     }
 }
 

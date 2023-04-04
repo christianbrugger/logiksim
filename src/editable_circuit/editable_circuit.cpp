@@ -2,6 +2,7 @@
 
 #include "editable_circuit/handlers.h"
 #include "exceptions.h"
+#include "timer.h"
 
 namespace logicsim {
 
@@ -89,6 +90,30 @@ auto EditableCircuit::add_standard_logic_item(ElementType type, std::size_t inpu
         handle.value().add_element(element_id);
     }
     return handle;
+}
+
+auto EditableCircuit::add_standard_logic_item2(ElementType type, std::size_t input_count,
+                                               point_t position,
+                                               InsertionMode insertion_mode,
+                                               orientation_t orientation)
+    -> element_id_t {
+    const auto attributes = editable_circuit::StandardLogicAttributes {
+        .type = type,
+        .input_count = input_count,
+        .position = position,
+        .orientation = orientation,
+    };
+    const auto element_id = editable_circuit::add_standard_logic_item(
+        get_state(), attributes, insertion_mode);
+
+    return element_id;
+}
+
+auto EditableCircuit::test_remove(element_id_t element_id) -> void {
+    // editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
+    //                                                    InsertionMode::temporary);
+    editable_circuit::swap_and_delete_single_element(circuit_.value(), get_sender(),
+                                                     element_id);
 }
 
 auto EditableCircuit::add_line_segments(point_t p0, point_t p1,

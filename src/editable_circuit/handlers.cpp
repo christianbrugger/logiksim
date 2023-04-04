@@ -392,7 +392,7 @@ auto insert_element(State state, element_id_t& element_id) {
 
 // mode change
 
-auto is_circuit_item_colliding(const Circuit& circuit, const CacheProvider cache,
+auto is_circuit_item_colliding(const Circuit& circuit, const CacheProvider& cache,
                                element_id_t element_id) {
     const auto data = to_layout_calculation_data(circuit, element_id);
     return cache.is_element_colliding(data);
