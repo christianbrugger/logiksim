@@ -454,31 +454,29 @@ auto element_change_colliding_to_temporary(Circuit& circuit, MessageSender sende
 };
 
 auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
-                                      InsertionMode new_insertion_mode) -> void {
+                                      InsertionMode new_mode) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
     if (!state.schematic.element(element_id).is_logic_item()) [[unlikely]] {
         throw_exception("only works on logic elements");
     }
-    const auto old_insertion_mode
-        = to_insertion_mode(state.layout.display_state(element_id));
 
-    if (old_insertion_mode == new_insertion_mode) {
+    const auto old_mode = to_insertion_mode(state.layout.display_state(element_id));
+    if (old_mode == new_mode) {
         return;
     }
 
-    if (old_insertion_mode == InsertionMode::temporary) {
+    if (old_mode == InsertionMode::temporary) {
         element_change_temporary_to_colliding(state, element_id);
     }
-    if (new_insertion_mode == InsertionMode::insert_or_discard) {
+    if (new_mode == InsertionMode::insert_or_discard) {
         element_change_colliding_to_insert(state.circuit, state.sender, element_id);
     }
-
-    if (old_insertion_mode == InsertionMode::insert_or_discard) {
+    if (old_mode == InsertionMode::insert_or_discard) {
         element_change_insert_to_colliding(state.layout, element_id);
     }
-    if (new_insertion_mode == InsertionMode::temporary) {
+    if (new_mode == InsertionMode::temporary) {
         element_change_colliding_to_temporary(state.circuit, state.sender, element_id);
     }
 }
