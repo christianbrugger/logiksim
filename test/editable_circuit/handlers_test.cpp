@@ -259,6 +259,52 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
 }
 
 //
+// swap_and_delete_multiple_elements
+//
+
+TEST(EditableCircuitHandler, DeleteMultipleElements) {
+    using namespace editable_circuit::info_message;
+    using enum display_state_t;
+    auto circuit = empty_circuit();
+    auto element_id_0 = add_and_element(circuit, new_temporary, 2, point_t {1, 1});
+    auto element_id_1 = add_and_element(circuit, new_temporary, 3, point_t {2, 2});
+    auto element_id_2 = add_and_element(circuit, new_temporary, 4, point_t {3, 3});  //
+    auto element_id_3 = add_and_element(circuit, new_temporary, 5, point_t {4, 4});
+
+    ASSERT_EQ(element_id_0, element_id_t {0});
+    ASSERT_EQ(element_id_1, element_id_t {1});
+    ASSERT_EQ(element_id_2, element_id_t {2});
+    ASSERT_EQ(element_id_3, element_id_t {3});
+
+    auto setup = HandlerSetup {circuit};
+    auto to_delete = {element_id_1, element_id_0, element_id_3};
+    auto preserved_id = element_id_2;
+    swap_and_delete_multiple_elements(circuit, setup.sender, to_delete, &preserved_id);
+
+    setup.validate();
+
+    // element_ids
+    ASSERT_EQ(preserved_id, element_id_t {0});
+
+    // circuit
+    assert_element_count(circuit, 1);
+    assert_element_equal(circuit, element_id_t {0}, 4, point_t {3, 3});
+
+    // messages
+    ASSERT_EQ(setup.recorder.messages().size(), 5);
+    const auto m0 = Message {ElementDeleted {element_id_t {3}}};
+    const auto m1 = Message {ElementDeleted {element_id_t {1}}};
+    const auto m2 = Message {ElementUpdated {element_id_t {1}, element_id_t {2}}};
+    const auto m3 = Message {ElementDeleted {element_id_t {0}}};
+    const auto m4 = Message {ElementUpdated {element_id_t {0}, element_id_t {1}}};
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
+    ASSERT_EQ(setup.recorder.messages().at(2), m2);
+    ASSERT_EQ(setup.recorder.messages().at(3), m3);
+    ASSERT_EQ(setup.recorder.messages().at(4), m4);
+}
+
+//
 // is_logic_item_position_representable
 //
 
@@ -590,5 +636,9 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
     const auto message1 = Message {ElementUpdated {element_id_t {0}, element_id_t {1}}};
     ASSERT_EQ(setup.recorder.messages().at(1), message1);
 }
+
+//
+// add_standard_logic_item
+//
 
 }  // namespace logicsim
