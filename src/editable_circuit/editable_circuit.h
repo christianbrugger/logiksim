@@ -43,13 +43,6 @@ class EditableCircuit {
     auto add_line_segments(point_t p0, point_t p1, LineSegmentType segment_type,
                            InsertionMode insertion_mode) -> selection_handle_t;
 
-    // TODO remove
-    auto add_standard_logic_item2(ElementType type, std::size_t input_count,
-                                  point_t position, InsertionMode insertion_mode,
-                                  orientation_t orientation = orientation_t::right)
-        -> element_id_t;
-    auto test_remove(element_id_t element_id) -> void;
-
     // changing
     auto change_insertion_mode(selection_handle_t handle,
                                InsertionMode new_insertion_mode) -> void;
