@@ -33,15 +33,15 @@ struct State {
 // Deletion Handling
 //
 
-auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
-                                    element_id_t& element_id,
-                                    element_id_t* preserve_element = nullptr) -> void;
-
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
 auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
                                        std::span<const element_id_t> element_ids,
                                        element_id_t* preserve_element = nullptr) -> void;
+
+auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
+                                    element_id_t& element_id,
+                                    element_id_t* preserve_element = nullptr) -> void;
 
 //
 // Logic Item Handling
@@ -54,9 +54,8 @@ struct StandardLogicAttributes {
     orientation_t orientation = orientation_t::right;
 };
 
-auto add_standard_logic_item(State state, Selection& selection,
-                             StandardLogicAttributes attributes,
-                             InsertionMode insertion_mode) -> void;
+auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
+                             InsertionMode insertion_mode) -> element_id_t;
 
 auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
                                       InsertionMode new_insertion_mode) -> void;

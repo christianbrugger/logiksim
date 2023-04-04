@@ -81,10 +81,13 @@ auto EditableCircuit::add_standard_logic_item(ElementType type, std::size_t inpu
         .position = position,
         .orientation = orientation,
     };
+    const auto element_id = editable_circuit::add_standard_logic_item(
+        get_state(), attributes, insertion_mode);
 
     auto handle = selection_registrar_.create_selection();
-    editable_circuit::add_standard_logic_item(get_state(), handle.value(), attributes,
-                                              insertion_mode);
+    if (element_id) {
+        handle.value().add_element(element_id);
+    }
     return handle;
 }
 

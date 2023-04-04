@@ -128,9 +128,8 @@ auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
 // Logic Item Handling
 //
 
-auto add_standard_logic_item(State state, Selection& selection,
-                             StandardLogicAttributes attributes,
-                             InsertionMode insertion_mode) -> void {
+auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
+                             InsertionMode insertion_mode) -> element_id_t {
     using enum ElementType;
 
     const auto type = attributes.type;
@@ -159,7 +158,6 @@ auto add_standard_logic_item(State state, Selection& selection,
         }
     }
     state.sender.submit(info_message::ElementCreated {element_id});
-    selection.add_element(element_id);
 
     // validates our position
     move_or_delete_logic_item(state, element_id,            //
@@ -168,6 +166,7 @@ auto add_standard_logic_item(State state, Selection& selection,
     if (element_id) {
         change_logic_item_insertion_mode(state, element_id, insertion_mode);
     }
+    return element_id;
 }
 
 auto add_placeholder_element(Circuit& circuit) -> element_id_t {
