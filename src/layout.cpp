@@ -76,21 +76,23 @@ auto std::swap(logicsim::Layout &a, logicsim::Layout &b) noexcept -> void {
 namespace logicsim {
 
 auto Layout::format() const -> std::string {
-    std::string inner {};
+    auto inner = std::string {};
+
     if (!empty()) {
         const auto transform = transform_view(
-            range(element_count()), [this](std::size_t id) -> std::string {
-                return format_element(
-                    element_id_t {gsl::narrow<element_id_t::value_type>(id)});
+            element_ids(), [this](element_id_t element_id) -> std::string {
+                return format_element(element_id);
             });
         inner = fmt::format(": [\n  {}\n]", fmt_join(transform, ",\n  "));
     }
+
     return fmt::format("<Layout with {} elements{}>", element_count(), inner);
 }
 
 auto Layout::format_element(element_id_t element_id) const -> std::string {
-    return fmt::format("<Element {}: {}, {}, {}>", element_id, position(element_id),
-                       orientation(element_id), segment_tree(element_id));
+    return fmt::format("<Element {}: {}, {}, {}, {}>", element_id, position(element_id),
+                       display_state(element_id), orientation(element_id),
+                       segment_tree(element_id));
 }
 
 auto Layout::empty() const -> bool {

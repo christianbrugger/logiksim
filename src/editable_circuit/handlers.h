@@ -52,6 +52,10 @@ struct StandardLogicAttributes {
     std::size_t input_count;
     point_t position;
     orientation_t orientation = orientation_t::right;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const StandardLogicAttributes& other) const -> bool
+        = default;
 };
 
 auto add_standard_logic_item(State state, StandardLogicAttributes attributes,

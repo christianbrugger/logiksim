@@ -164,25 +164,14 @@ auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
     if (!handle) {
         return;
     }
-    print("\n\n ENTER");
-    print("\nintial selection", handle);
 
     // TODO refactor to algorithm
     while (handle->selected_elements().size() > 0) {
-        print("\n== selection", handle);
-
         auto element_id = *handle->selected_elements().begin();
         handle->remove_element(element_id);
 
-        print("delete element_id", element_id);
-        print(circuit_);
-
         editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
                                                            InsertionMode::temporary);
-
-        print("after mode change", element_id);
-        print(circuit_);
-
         editable_circuit::swap_and_delete_single_element(circuit_.value(), get_sender(),
                                                          element_id);
     }
@@ -210,8 +199,6 @@ auto EditableCircuit::caches() const -> const CacheProvider& {
 }
 
 auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
-    print(message);
-
     cache_provider_.submit(message);
     selection_registrar_.submit(message);
     selection_builder_.submit(message);

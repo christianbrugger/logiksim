@@ -128,11 +128,16 @@ auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
 // Logic Item Handling
 //
 
+auto StandardLogicAttributes::format() const -> std::string {
+    return fmt::format("{{{}, input_count = {}, {}, {}}}", type, input_count, position,
+                       orientation);
+}
+
 auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
                              InsertionMode insertion_mode) -> element_id_t {
     using enum ElementType;
-
     const auto type = attributes.type;
+
     if (!(type == and_element || type == or_element || type == xor_element
           || type == inverter_element)) [[unlikely]] {
         throw_exception("The type needs to be a standard element.");

@@ -16,6 +16,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 namespace logicsim {
@@ -122,6 +123,21 @@ struct fmt::formatter<T, Char> {
         return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
+
+//
+// Pointers
+//
+
+namespace logicsim {
+template <typename T>
+    requires std::is_pointer_v<T>
+auto fmt_ptr(T pointer) -> std::string {
+    if (pointer == nullptr) {
+        return "nullptr";
+    }
+    return fmt::format("{}", *pointer);
+}
+}  // namespace logicsim
 
 // namespace logicsim {
 //
