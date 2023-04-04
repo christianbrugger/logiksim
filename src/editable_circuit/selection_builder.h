@@ -34,7 +34,6 @@ class SelectionBuilder {
                                             const SpatialTree &spatial_cache,
                                             selection_handle_t initial_selection);
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
     [[nodiscard]] auto empty() const noexcept -> bool;
 
     auto clear() -> void;
@@ -48,6 +47,7 @@ class SelectionBuilder {
     [[nodiscard]] auto all_operations_applied() const -> bool;
     auto apply_all_operations() -> void;
 
+    auto submit(editable_circuit::InfoMessage message) -> void;
     auto validate(const Circuit &circuit) const -> void;
 
    private:

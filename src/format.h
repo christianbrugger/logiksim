@@ -13,6 +13,7 @@
 
 #include <concepts>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -95,6 +96,24 @@ struct fmt::formatter<std::optional<T>, Char> {
             return fmt::format_to(ctx.out(), "{}", *obj);
         }
         return fmt::format_to(ctx.out(), "std::nullopt<{}>", typeid(T).name());
+    }
+};
+
+//
+// std::unique_ptr
+//
+
+template <typename T, typename Char>
+struct fmt::formatter<std::unique_ptr<T>, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const std::unique_ptr<T> &obj, fmt::format_context &ctx) {
+        if (obj) {
+            return fmt::format_to(ctx.out(), "{}", *obj);
+        }
+        return fmt::format_to(ctx.out(), "nullptr");
     }
 };
 

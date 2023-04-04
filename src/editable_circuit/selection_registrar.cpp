@@ -2,6 +2,7 @@
 #include "editable_circuit/selection_registrar.h"
 
 #include "exceptions.h"
+#include "format.h"
 #include "layout.h"
 
 namespace logicsim {
@@ -22,13 +23,18 @@ auto unpack_selection(const selection_map_t::value_type& value) -> Selection& {
 }  // namespace detail::selection_registrar
 
 auto SelectionRegistrar::validate(const Circuit& circuit) const -> void {
-    for (auto&& selection : selections()) {
+    for (const auto& selection : selections()) {
         selection.validate(circuit);
     }
 }
 
+auto SelectionRegistrar::format() const -> std::string {
+    const auto item_str = fmt_join("{}", allocated_selections_.values(), ",\n");
+    return fmt::format("SelectionRegistrar({})", item_str);
+}
+
 auto SelectionRegistrar::submit(editable_circuit::InfoMessage message) -> void {
-    for (auto&& selection : selections()) {
+    for (auto& selection : selections()) {
         selection.submit(message);
     }
 }
@@ -107,7 +113,8 @@ auto selection_handle_t::copy() const -> selection_handle_t {
 
 auto selection_handle_t::format() const -> std::string {
     if (has_value()) {
-        return fmt::format("selection_handle_t({})", value());
+        return fmt::format("selection_handle_t(selection_key = {}, {})", selection_key_,
+                           value());
     }
     return fmt::format("selection_handle_t(nullptr)", value());
 }

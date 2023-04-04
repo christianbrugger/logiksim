@@ -83,11 +83,11 @@ class TransformView {
         using iterator_concept = std::forward_iterator_tag;
         using iterator_category = std::forward_iterator_tag;
 
-        using value_type = typename std::projected<Iterator, Proj>::value_type;
+        using reference = std::indirect_result_t<Proj, Iterator>;
+        using value_type = std::remove_cvref_t<reference>;
         using difference_type = typename std::conditional_t<std::is_pointer_v<Iterator>,
                                                             std::pointer_traits<Iterator>,
                                                             Iterator>::difference_type;
-        using reference = value_type;
         using pointer = void;
 
         // needs to be default constructable, so ElementView can become a range and view
