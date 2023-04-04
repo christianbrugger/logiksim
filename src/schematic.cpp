@@ -465,7 +465,7 @@ auto is_input_output_count_valid(const Schematic::ConstElement element) -> bool 
         case and_element:
         case or_element:
         case xor_element: {
-            return element.input_count() >= 1 && element.output_count() == 1;
+            return element.input_count() >= 2 && element.output_count() == 1;
         }
 
         case clock_generator: {

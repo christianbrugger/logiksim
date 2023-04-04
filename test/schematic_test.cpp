@@ -179,7 +179,7 @@ TEST(Schematic, ReconnectInput) {
 
     auto wire {schematic.add_element(ElementType::wire, 1, 5)};
     auto and_element {schematic.add_element(ElementType::and_element, 3, 1)};
-    auto inverter {schematic.add_element(ElementType::and_element, 1, 1)};
+    auto inverter {schematic.add_element(ElementType::inverter_element, 1, 1)};
 
     auto id_0 = connection_id_t {0};
     wire.output(id_0).connect(and_element.input(id_0));

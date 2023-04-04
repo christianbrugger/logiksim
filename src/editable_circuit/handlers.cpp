@@ -217,7 +217,6 @@ auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int
     }
 
     if (!is_logic_item_position_representable(state.circuit, element_id, x, y)) {
-        change_logic_item_insertion_mode(state, element_id, InsertionMode::temporary);
         swap_and_delete_single_element(state.circuit, state.sender, element_id);
         return;
     }
@@ -374,6 +373,18 @@ auto insert_element(State state, element_id_t& element_id) {
 
 // mode change
 
+auto is_circuit_item_colliding(const Circuit& circuit, const CacheProvider cache,
+                               element_id_t element_id) {
+    const auto data = to_layout_calculation_data(circuit, element_id);
+    return cache.is_element_colliding(data);
+}
+
+auto notify_circuit_item_inserted(const Circuit& circuit, MessageSender sender,
+                                  element_id_t element_id) {
+    const auto data = to_layout_calculation_data(circuit, element_id);
+    sender.submit(info_message::LogicItemInserted {element_id, data});
+}
+
 auto element_change_temporary_to_colliding(State state, element_id_t& element_id)
     -> void {
     if (state.layout.display_state(element_id) != display_state_t::new_temporary)
@@ -381,14 +392,12 @@ auto element_change_temporary_to_colliding(State state, element_id_t& element_id
         throw_exception("element is not in the right state.");
     }
 
-    const auto data = to_layout_calculation_data(state.circuit, element_id);
-
-    if (state.cache.is_element_colliding(data)) {
+    if (is_circuit_item_colliding(state.circuit, state.cache, element_id)) {
         state.layout.set_display_state(element_id, display_state_t::new_colliding);
     } else {
         insert_element(state, element_id);
         state.layout.set_display_state(element_id, display_state_t::new_valid);
-        state.sender.submit(info_message::LogicItemInserted {element_id, data});
+        notify_circuit_item_inserted(state.circuit, state.sender, element_id);
     }
 };
 

@@ -133,7 +133,7 @@ TEST(EditableCircuitHandler, DeleteTemporaryElement) {
 
     setup.validate();
 
-    // preserving
+    // element_ids
     ASSERT_EQ(element_id, null_element);
     ASSERT_EQ(preserved_id, null_element);
 
@@ -152,8 +152,8 @@ TEST(EditableCircuitHandler, DeletePreserving1) {
     using enum display_state_t;
     auto circuit = empty_circuit();
 
-    auto element_id_0 = add_and_element(circuit, new_temporary, 1, point_t {1, 1});
-    auto element_id_1 = add_and_element(circuit, new_temporary, 2, point_t {2, 2});
+    auto element_id_0 = add_and_element(circuit, new_temporary, 2, point_t {1, 1});
+    auto element_id_1 = add_and_element(circuit, new_temporary, 3, point_t {2, 2});
 
     ASSERT_EQ(element_id_0, element_id_t {0});
     ASSERT_EQ(element_id_1, element_id_t {1});
@@ -162,13 +162,13 @@ TEST(EditableCircuitHandler, DeletePreserving1) {
     swap_and_delete_single_element(circuit, setup.sender, element_id_0, &element_id_1);
 
     setup.validate();
-    // preserving
+    // element_ids
     ASSERT_EQ(element_id_0, null_element);
     ASSERT_EQ(element_id_1, element_id_t {0});
 
     // circuit
     assert_element_count(circuit, 1);
-    assert_element_equal(circuit, element_id_t {0}, 2, point_t {2, 2});
+    assert_element_equal(circuit, element_id_t {0}, 3, point_t {2, 2});
 
     // messages
     const auto message0 = Message {ElementDeleted {element_id_t {0}}};
@@ -183,10 +183,10 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
     using enum display_state_t;
     auto circuit = empty_circuit();
 
-    auto element_id_0 = add_and_element(circuit, new_temporary, 1, point_t {1, 1});
-    auto element_id_1 = add_and_element(circuit, new_temporary, 2, point_t {2, 2});
+    auto element_id_0 = add_and_element(circuit, new_temporary, 2, point_t {1, 1});
+    auto element_id_1 = add_and_element(circuit, new_temporary, 3, point_t {2, 2});
     auto placeholder = add_placeholder(circuit);
-    auto element_id_3 = add_and_element(circuit, new_valid, 4, point_t {4, 4});
+    auto element_id_3 = add_and_element(circuit, new_valid, 5, point_t {4, 4});
     placeholder.input(connection_id_t {0})
         .connect(circuit.schematic().element(element_id_3).output(connection_id_t {0}));
 
@@ -199,14 +199,14 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
     swap_and_delete_single_element(circuit, setup.sender, element_id_1, &element_id_0);
 
     setup.validate();
-    //  preserving
+    //  element_ids
     ASSERT_EQ(element_id_0, element_id_t {0});
     ASSERT_EQ(element_id_1, null_element);
 
     // circuit
     assert_element_count(circuit, 3);
-    assert_element_equal(circuit, element_id_t {0}, 1, point_t {1, 1});
-    assert_element_equal(circuit, element_id_t {1}, 4, point_t {4, 4});
+    assert_element_equal(circuit, element_id_t {0}, 2, point_t {1, 1});
+    assert_element_equal(circuit, element_id_t {1}, 5, point_t {4, 4});
     assert_is_placeholder(circuit, element_id_t {2});
 
     // messages
@@ -215,11 +215,131 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
     const auto message1 = Message {ElementUpdated {element_id_t {1}, element_id_t {3}}};
     const auto message2
         = Message {InsertedLogicItemUpdated {element_id_t {1}, element_id_t {3}, data_1}};
-    print(setup.recorder.messages());
     ASSERT_EQ(setup.recorder.messages().size(), 3);
     ASSERT_EQ(setup.recorder.messages().at(0), message0);
     ASSERT_EQ(setup.recorder.messages().at(1), message1);
     ASSERT_EQ(setup.recorder.messages().at(2), message2);
+}
+
+//
+// is_logic_item_position_representable
+//
+
+TEST(EditableCircuitHandler, IsRepresentableAndElement) {
+    using namespace editable_circuit;
+    using enum display_state_t;
+    auto circuit = empty_circuit();
+
+    auto element_id_0 = add_and_element(circuit, new_temporary, 2, point_t {0, 0});
+
+    constexpr static auto overflow = int {grid_t::max()} + 100;
+
+    // true
+    ASSERT_EQ(is_logic_item_position_representable(circuit, element_id_0, 10, 10), true);
+    ASSERT_EQ(is_logic_item_position_representable(circuit, element_id_0, -10, -10),
+              true);
+
+    // false
+    ASSERT_EQ(is_logic_item_position_representable(circuit, element_id_0, overflow, 10),
+              false);
+    ASSERT_EQ(is_logic_item_position_representable(circuit, element_id_0, -overflow, 10),
+              false);
+    ASSERT_EQ(is_logic_item_position_representable(circuit, element_id_0, 0, overflow),
+              false);
+    ASSERT_EQ(is_logic_item_position_representable(circuit, element_id_0, 0, -overflow),
+              false);
+}
+
+//
+// move_or_delete_logic_item
+//
+
+TEST(EditableCircuitHandler, MoveLogicItemSuccess) {
+    using namespace editable_circuit::info_message;
+    using enum display_state_t;
+    auto circuit = empty_circuit();
+
+    auto element_id_0 = add_and_element(circuit, new_temporary, 2, point_t {1, 1});
+    ASSERT_EQ(element_id_0, element_id_t {0});
+
+    auto setup = HandlerSetup {circuit};
+    move_or_delete_logic_item(setup.state, element_id_0, 10, -10);
+
+    setup.validate();
+    //  element_ids
+    ASSERT_EQ(element_id_0, element_id_t {0});
+
+    // circuit
+    assert_element_count(circuit, 1);
+    assert_element_equal(circuit, element_id_t {0}, 2, point_t {10, -10});
+
+    // messages
+    ASSERT_EQ(setup.recorder.messages().size(), 0);
+}
+
+TEST(EditableCircuitHandler, MoveLogicItemDeleted) {
+    using namespace editable_circuit::info_message;
+    using enum display_state_t;
+    auto circuit = empty_circuit();
+
+    auto element_id_0 = add_and_element(circuit, new_temporary, 2, point_t {1, 1});
+    ASSERT_EQ(element_id_0, element_id_t {0});
+
+    auto setup = HandlerSetup {circuit};
+    constexpr static auto overflow = int {grid_t::max()} + 100;
+    move_or_delete_logic_item(setup.state, element_id_0, overflow, 0);
+
+    setup.validate();
+    //  element_ids
+    ASSERT_EQ(element_id_0, null_element);
+
+    // circuit
+    assert_element_count(circuit, 0);
+
+    // messages
+    ASSERT_EQ(setup.recorder.messages().size(), 1);
+    const auto message0 = Message {ElementDeleted {element_id_t {0}}};
+    ASSERT_EQ(setup.recorder.messages().at(0), message0);
+}
+
+//
+// change_logic_item_insertion_mode
+//
+
+TEST(EditableCircuitHandler, LogicItemChangeModeToCollision) {
+    using namespace editable_circuit::info_message;
+    using enum display_state_t;
+    auto circuit = empty_circuit();
+
+    auto element_id_0 = add_and_element(circuit, new_temporary, 2, point_t {1, 1});
+    ASSERT_EQ(element_id_0, element_id_t {0});
+
+    auto setup = HandlerSetup {circuit};
+    change_logic_item_insertion_mode(setup.state, element_id_0,
+                                     InsertionMode::collisions);
+
+    setup.validate();
+    //  element_ids
+    ASSERT_EQ(element_id_0, element_id_t {0});
+
+    // circuit
+    assert_element_count(circuit, 2);
+    assert_element_equal(circuit, element_id_t {0}, 2, point_t {1, 1});
+    assert_is_placeholder(circuit, element_id_t {1});
+    ASSERT_EQ(circuit.layout().display_state(element_id_t {0}), new_valid);
+    ASSERT_EQ(circuit.layout().display_state(element_id_t {1}), normal);
+
+    // placeholder connected
+    const auto id_0 = connection_id_t {0};
+    const auto and_output = circuit.schematic().element(element_id_t {0}).output(id_0);
+    const auto placeholder_in = circuit.schematic().element(element_id_t {1}).input(id_0);
+    ASSERT_EQ(and_output.connected_input(), placeholder_in);
+
+    // messages
+    ASSERT_EQ(setup.recorder.messages().size(), 1);
+    auto data_0 = to_layout_calculation_data(circuit, element_id_t {0});
+    const auto message0 = Message {LogicItemInserted {element_id_t {0}, data_0}};
+    ASSERT_EQ(setup.recorder.messages().at(0), message0);
 }
 
 }  // namespace logicsim
