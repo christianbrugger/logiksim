@@ -421,8 +421,7 @@ auto element_change_colliding_to_insert(Circuit& circuit, MessageSender sender,
     throw_exception("element is not in the right state.");
 };
 
-auto element_change_insert_to_colliding(Layout& layout, element_id_t& element_id)
-    -> void {
+auto element_change_insert_to_colliding(Layout& layout, element_id_t element_id) -> void {
     if (layout.display_state(element_id) != display_state_t::normal) [[unlikely]] {
         throw_exception("element is not in the right state.");
     }
