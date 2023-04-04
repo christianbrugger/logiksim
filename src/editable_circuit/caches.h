@@ -13,9 +13,6 @@ class CacheProvider {
     explicit CacheProvider(const Circuit& circuit);
 
     [[nodiscard]] auto format() const -> std::string;
-    auto validate(const Circuit& circuit) -> void;
-
-    auto submit(editable_circuit::InfoMessage message) -> void;
 
     [[nodiscard]] auto query_selection(rect_fine_t rect) const
         -> std::vector<SpatialTree::query_result_t>;
@@ -29,6 +26,9 @@ class CacheProvider {
     [[nodiscard]] auto output_cache() const -> const ConnectionCache<false>&;
     [[nodiscard]] auto collision_cache() const -> const CollisionCache&;
     [[nodiscard]] auto spatial_cache() const -> const SpatialTree&;
+
+    auto submit(editable_circuit::InfoMessage message) -> void;
+    auto validate(const Circuit& circuit) -> void;
 
    public:
     // for rendering

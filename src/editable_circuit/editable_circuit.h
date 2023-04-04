@@ -77,7 +77,7 @@ class EditableCircuit {
     std::optional<Circuit> circuit_ {std::nullopt};
 
     CacheProvider cache_provider_ {};
-    SelectionRegistrar selection_registrar_ {};
+    SelectionRegistrar registrar_ {};
     SelectionBuilder selection_builder_;
 };
 

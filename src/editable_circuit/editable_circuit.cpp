@@ -14,7 +14,7 @@ EditableCircuit::EditableCircuit(Circuit&& circuit)
     : circuit_ {std::move(circuit)},
       cache_provider_ {circuit_.value()},
       selection_builder_ {circuit_.value().layout(), cache_provider_.spatial_cache(),
-                          selection_registrar_.create_selection()} {}
+                          registrar_.create_selection()} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", circuit_);
@@ -30,7 +30,7 @@ auto EditableCircuit::extract_circuit() -> Circuit {
     // TODO fix reset
     circuit_ = std::nullopt;
     // selection_builder_ = SelectionBuilder {Layout {}, cache_provider_.spatial_cache(),
-    //                                        selection_registrar_.create_selection()};
+    //                                        registrar_.create_selection()};
 
     return temp;
 }
@@ -61,7 +61,7 @@ auto EditableCircuit::validate() -> void {
 
     circuit.validate();
     cache_provider_.validate(circuit);
-    selection_registrar_.validate(circuit);
+    registrar_.validate(circuit);
     selection_builder_.validate(circuit);
 }
 
@@ -85,7 +85,7 @@ auto EditableCircuit::add_standard_logic_item(ElementType type, std::size_t inpu
     const auto element_id = editable_circuit::add_standard_logic_item(
         get_state(), attributes, insertion_mode);
 
-    auto handle = selection_registrar_.create_selection();
+    auto handle = registrar_.create_selection();
     if (element_id) {
         handle.value().add_element(element_id);
     }
@@ -110,8 +110,8 @@ auto EditableCircuit::add_standard_logic_item2(ElementType type, std::size_t inp
 }
 
 auto EditableCircuit::test_remove(element_id_t element_id) -> void {
-    // editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
-    //                                                    InsertionMode::temporary);
+    editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
+                                                       InsertionMode::temporary);
     editable_circuit::swap_and_delete_single_element(circuit_.value(), get_sender(),
                                                      element_id);
 }
@@ -120,7 +120,7 @@ auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
                                         LineSegmentType segment_type,
                                         InsertionMode insertion_mode)
     -> selection_handle_t {
-    return selection_registrar_.create_selection();
+    return registrar_.create_selection();
 }
 
 namespace {
@@ -216,12 +216,12 @@ auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
 }
 
 auto EditableCircuit::create_selection() const -> selection_handle_t {
-    return selection_registrar_.create_selection();
+    return registrar_.create_selection();
 }
 
 auto EditableCircuit::create_selection(const Selection& selection) const
     -> selection_handle_t {
-    return selection_registrar_.create_selection(selection);
+    return registrar_.create_selection(selection);
 }
 
 auto EditableCircuit::selection_builder() const noexcept -> const SelectionBuilder& {
@@ -238,7 +238,7 @@ auto EditableCircuit::caches() const -> const CacheProvider& {
 
 auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
     cache_provider_.submit(message);
-    selection_registrar_.submit(message);
+    registrar_.submit(message);
     selection_builder_.submit(message);
 }
 

@@ -563,11 +563,11 @@ auto RendererWidget::load_circuit(int id) -> void {
 
         for (auto element : schematic.elements()) {
             if (element.is_wire()) {
-                auto&& tree = layout.segment_tree(element.element_id());
+                const auto& tree = layout.segment_tree(element.element_id());
                 segment_count += tree.segment_count();
             }
 
-            if (!(element.is_wire() || element.is_placeholder())) {
+            else if (element.is_logic_item()) {
                 ++element_count;
             }
         }

@@ -63,10 +63,21 @@ static void BM_Benchmark_Add_Element(benchmark::State& state) {
 
     auto ec = EditableCircuit {Circuit {Schematic {}, Layout {}}};
 
+    int x = 0;
+    int y = 0;
+
     for ([[maybe_unused]] auto _ : state) {
-        const auto handle = ec.add_standard_logic_item(
-            ElementType::and_element, 3, point_t {2, 2}, InsertionMode::temporary);
-        ec.test_remove(handle->selected_elements().front());
+        x += 5;
+        if (x >= 10000) {
+            y += 5;
+            x = 0;
+        }
+
+        auto handle
+            = ec.add_standard_logic_item(ElementType::and_element, 3, point_t {x, y},
+                                         InsertionMode::insert_or_discard);
+        // ec.test_remove(handle->selected_elements().front());
+        benchmark::DoNotOptimize(handle);
     }
 }
 
@@ -77,10 +88,21 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
 
     auto ec = EditableCircuit {Circuit {Schematic {}, Layout {}}};
 
+    int x = 0;
+    int y = 0;
+
     for ([[maybe_unused]] auto _ : state) {
-        auto handle = ec.add_standard_logic_item(
-            ElementType::and_element, 3, point_t {2, 2}, InsertionMode::temporary);
-        ec.delete_all(std::move(handle));
+        x += 5;
+        if (x >= 10000) {
+            y += 5;
+            x = 0;
+        }
+
+        auto handle
+            = ec.add_standard_logic_item(ElementType::and_element, 3, point_t {x, y},
+                                         InsertionMode::insert_or_discard);
+        // ec.delete_all(std::move(handle));
+        benchmark::DoNotOptimize(handle);
     }
 }
 
@@ -91,10 +113,21 @@ static void BM_Benchmark_Add_Element_NoHandle(benchmark::State& state) {
 
     auto ec = EditableCircuit {Circuit {Schematic {}, Layout {}}};
 
+    int x = 0;
+    int y = 0;
+
     for ([[maybe_unused]] auto _ : state) {
-        const auto element_id = ec.add_standard_logic_item2(
-            ElementType::and_element, 3, point_t {2, 2}, InsertionMode::temporary);
-        ec.test_remove(element_id);
+        x += 5;
+        if (x >= 10000) {
+            y += 5;
+            x = 0;
+        }
+
+        auto element_id
+            = ec.add_standard_logic_item2(ElementType::and_element, 3, point_t {x, y},
+                                          InsertionMode::insert_or_discard);
+        // ec.test_remove(element_id);
+        benchmark::DoNotOptimize(element_id);
     }
 }
 
