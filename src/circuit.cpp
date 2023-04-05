@@ -47,6 +47,15 @@ auto Circuit::extract_layout() -> Layout {
     auto temp = Layout {std::move(layout_.value())};
     layout_ = std::nullopt;
     return temp;
+}
+
+auto Circuit::swap_elements(element_id_t element_id_0, element_id_t element_id_1)
+    -> void {
+    auto& _schematic = schematic();
+    auto& _layout = layout();
+
+    _schematic.swap_elements(element_id_0, element_id_1);
+    _layout.swap_elements(element_id_0, element_id_1);
 };
 
 // validation
@@ -112,7 +121,30 @@ auto validate_trees_match_wires(Schematic::ConstElement element, const Layout& l
     }
 }
 
-auto validate(const Layout& layout, const Schematic& schematic) -> void {
+auto count_wires(const Schematic& schematic, const Layout& layout,
+                 display_state_t display_state) {
+    return std::ranges::count_if(layout.element_ids(), [&](element_id_t element_id) {
+        return schematic.element(element_id).is_wire()
+               && layout.display_state(element_id) == display_state;
+    });
+}
+
+// we store temporary and colliding wire segments all in one tree.
+// we never have more than one in a circuit
+auto validate_single_aggregate_trees(const Schematic& schematic, const Layout& layout)
+    -> void {
+    if (count_wires(schematic, layout, display_state_t::new_temporary) >= 1)
+        [[unlikely]] {
+        throw_exception("found more than one aggregate temporary segment tree");
+    }
+
+    if (count_wires(schematic, layout, display_state_t::new_colliding) >= 1)
+        [[unlikely]] {
+        throw_exception("found more than one aggregate temporary segment tree");
+    }
+}
+
+auto validate(const Schematic& schematic, const Layout& layout) -> void {
     // layout & schematic
     layout.validate();
     schematic.validate(Schematic::ValidationSettings {
@@ -139,10 +171,13 @@ auto validate(const Layout& layout, const Schematic& schematic) -> void {
         // wires & trees
         validate_trees_match_wires(element, layout);
     }
+
+    // wire aggregates
+    validate_single_aggregate_trees(schematic, layout);
 }
 
 auto Circuit::validate() const -> void {
-    logicsim::validate(layout(), schematic());
+    logicsim::validate(schematic(), layout());
 }
 
 }  // namespace logicsim

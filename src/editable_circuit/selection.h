@@ -16,7 +16,7 @@ namespace detail::selection {
 
 using map_key_t = segment_t;
 using policy = folly::small_vector_policy::policy_size_type<uint16_t>;
-using map_value_t = folly::small_vector<segment_part_t, 3, policy>;
+using map_value_t = folly::small_vector<part_t, 3, policy>;
 using map_pair_t = std::pair<map_key_t, map_value_t>;
 
 static_assert(sizeof(map_key_t) == 8);
@@ -26,13 +26,6 @@ static_assert(sizeof(map_pair_t) == 24);
 using elements_set_t = ankerl::unordered_dense::set<element_id_t>;
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 }  // namespace detail::selection
-
-auto get_segment_part(line_t line) -> segment_part_t;
-
-auto get_segment_part(line_t line, rect_fine_t selection_rect)
-    -> std::optional<segment_part_t>;
-
-auto get_selected_segment(line_t segment, segment_part_t selection) -> line_t;
 
 class Selection {
    public:
@@ -48,16 +41,16 @@ class Selection {
     auto remove_element(element_id_t element_id) -> void;
     auto toggle_element(element_id_t element_id) -> void;
 
-    auto add_segment(segment_t segment, segment_part_t selection) -> void;
-    auto remove_segment(segment_t segment, segment_part_t selection) -> void;
-    auto toggle_segment(segment_t segment, segment_part_t selection) -> void;
+    auto add_segment(segment_part_t segment_part) -> void;
+    auto remove_segment(segment_part_t segment_part) -> void;
+    auto toggle_segment(segment_part_t segment_part) -> void;
 
     [[nodiscard]] auto is_selected(element_id_t element_id) const -> bool;
 
     [[nodiscard]] auto selected_elements() const -> std::span<const element_id_t>;
     [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;
     [[nodiscard]] auto selected_segments(segment_t segment) const
-        -> std::span<const segment_part_t>;
+        -> std::span<const part_t>;
 
     auto submit(editable_circuit::InfoMessage message) -> void;
     auto validate(const Circuit &circuit) const -> void;

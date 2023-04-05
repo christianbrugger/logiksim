@@ -12,33 +12,33 @@ set(LS_CORE_SOURCES
     src/editable_circuit/selection.cpp
     src/editable_circuit/selection_builder.cpp
     src/editable_circuit/selection_registrar.cpp
+    src/editable_circuit/types.cpp
 
-    src/algorithm.h src/algorithm.cpp
-    src/circuit.h src/circuit.cpp
-    src/circuit_description.h src/circuit_description.cpp
-    src/circuit_index.h src/circuit_index.cpp
-    src/circular_buffer.h
-    src/collision.h src/collision.cpp
-    src/exceptions.h src/exceptions.cpp
-    src/flat_schematic.h src/flat_schematic.cpp
-    src/geometry.h src/geometry.cpp
-    src/graph.h src/graph.cpp
-    src/layout.h src/layout.cpp
-    src/layout_calculation_type.h src/layout_calculation_type.cpp
-    src/layout_calculations.h src/layout_calculations.cpp
-    src/line_tree.h src/line_tree.cpp
-    src/random.h src/random.cpp
-    src/renderer.h src/renderer.cpp
-    src/scene.h src/scene.cpp
-    src/schematic.h src/schematic.cpp
-    src/segment_tree.h src/segment_tree.cpp
-    src/simulation.h src/simulation.cpp
-    src/simulation_view.h src/simulation_view.cpp
-    src/timer.h src/timer.cpp
-    src/vocabulary.h src/vocabulary.cpp
+    src/algorithm.cpp
+    src/circuit.cpp
+    src/circuit_description.cpp
+    src/circuit_index.cpp
+    src/collision.cpp
+    src/exceptions.cpp
+    src/flat_schematic.cpp
+    src/geometry.cpp
+    src/graph.cpp
+    src/layout.cpp
+    src/layout_calculation_type.cpp
+    src/layout_calculations.cpp
+    src/line_tree.cpp
+    src/random.cpp
+    src/renderer.cpp
+    src/scene.cpp
+    src/schematic.cpp
+    src/segment_tree.cpp
+    src/simulation.cpp
+    src/simulation_view.cpp
+    src/timer.cpp
+    src/vocabulary.cpp
     
-    src/main_widget.h src/main_widget.cpp
-    src/render_widget.h src/render_widget.cpp
+    src/main_widget.cpp
+    src/render_widget.cpp
 )
 
 set(LS_TEST_SOURCES

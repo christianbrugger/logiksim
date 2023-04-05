@@ -2,6 +2,7 @@
 
 #include "editable_circuit/caches.h"
 #include "editable_circuit/selection.h"
+#include "geometry.h"
 #include "layout_calculations.h"
 #include "scene.h"
 
@@ -60,6 +61,24 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
             .data = data,
         });
     }
+}
+
+auto swap_elements(Circuit& circuit, MessageSender sender, element_id_t element_id_0,
+                   element_id_t element_id_1) -> void {
+    if (element_id_0 == element_id_1) {
+        return;
+    }
+
+    if (is_inserted(circuit, element_id_0) && is_inserted(circuit, element_id_1))
+        [[unlikely]] {
+        // we might need element delete and uninsert to prevent conflicts
+        // or we need to introduce ElementSwapped messages
+        throw_exception("not implemented");
+    }
+
+    circuit.swap_elements(element_id_0, element_id_1);
+    notify_element_id_change(circuit, sender, element_id_0, element_id_1);
+    notify_element_id_change(circuit, sender, element_id_1, element_id_0);
 }
 
 auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender sender,
@@ -577,43 +596,7 @@ auto line_uninserted_TODO() {
     }
 }
 
-auto WireEditor::add_connected_line(point_t p0, point_t p1, LineSegmentType
-segment_type, InsertionMode insertion_mode) -> selection_handle_t { auto
-selection_handle = editable_circuit_.create_selection();
 
-    // TODO what with p0 == p1
-
-    switch (segment_type) {
-        using enum LineSegmentType;
-
-        case horizontal_first: {
-            const auto pm = point_t {p1.x, p0.y};
-            if (p0.x != pm.x) {
-                add_line_segment(line_t {p0, pm}, insertion_mode,
-selection_handle.get());
-            }
-            if (pm.y != p1.y) {
-                add_line_segment(line_t {pm, p1}, insertion_mode,
-selection_handle.get());
-            }
-            break;
-        }
-        case vertical_first: {
-            const auto pm = point_t {p0.x, p1.y};
-            if (p0.y != pm.y) {
-                add_line_segment(line_t {p0, pm}, insertion_mode,
-selection_handle.get());
-            }
-            if (pm.x != p1.x) {
-                add_line_segment(line_t {pm, p1}, insertion_mode,
-selection_handle.get());
-            }
-            break;
-        }
-    }
-
-    return selection_handle;
-}
 
 auto get_segment(const Layout& layout, segment_t segment) -> segment_info_t {
     return layout.segment_tree(segment.element_id).segment(segment.segment_index);
@@ -952,5 +935,162 @@ auto WireEditor::cache_remove(element_id_t element_id, segment_index_t segment_i
 
 */
 
+// aggregates
+
+auto is_wire_aggregate(const Schematic& schematic, const Layout& layout,
+                       element_id_t element_id, display_state_t display_state) -> bool {
+    return schematic.element(element_id).is_wire()
+           && layout.display_state(element_id) == display_state;
+}
+
+auto add_new_temporary_wire_element(Circuit& circuit, MessageSender sender)
+    -> element_id_t {
+    const auto element_id
+        = circuit.layout().add_line_tree(display_state_t::new_temporary);
+    {
+        const auto element = circuit.schematic().add_element({
+            .element_type = ElementType::wire,
+            .input_count = 0,
+            .output_count = 0,
+        });
+        if (element.element_id() != element_id) [[unlikely]] {
+            throw_exception("Added element ids don't match.");
+        }
+    }
+    sender.submit(info_message::ElementCreated {element_id});
+    return element_id;
+}
+
+auto find_wire(const Circuit& circuit, display_state_t display_state) -> element_id_t {
+    const auto& layout = circuit.layout();
+    const auto& schematic = circuit.schematic();
+
+    const auto element_ids = layout.element_ids();
+
+    const auto it
+        = std::ranges::find_if(element_ids, [&](element_id_t element_id) -> bool {
+              return is_wire_aggregate(schematic, layout, element_id, display_state);
+          });
+
+    return it == element_ids.end() ? null_element : *it;
+}
+
+auto create_aggregate_tree_at(Circuit& circuit, MessageSender sender,
+                              display_state_t display_state, element_id_t target_id)
+    -> void {
+    auto element_id = find_wire(circuit, display_state_t::new_temporary);
+
+    if (!element_id) {
+        element_id = add_new_temporary_wire_element(circuit, sender);
+    }
+
+    if (element_id != target_id) {
+        swap_elements(circuit, sender, element_id, target_id);
+    }
+}
+
+constexpr inline static auto TEMPORARY_AGGREGATE_ID = element_id_t {0};
+constexpr inline static auto COLLIDING_AGGREGATE_ID = element_id_t {0};
+
+auto create_aggregate_wires(Circuit& circuit, MessageSender sender) -> void {
+    using enum display_state_t;
+    create_aggregate_tree_at(circuit, sender, new_temporary, TEMPORARY_AGGREGATE_ID);
+    create_aggregate_tree_at(circuit, sender, new_colliding, COLLIDING_AGGREGATE_ID);
+}
+
+auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
+                             display_state_t display_state) -> element_id_t {
+    using enum display_state_t;
+    const auto& layout = circuit.layout();
+    const auto& schematic = circuit.schematic();
+
+    // temporary
+    if (display_state == new_temporary) {
+        if (layout.element_count() <= TEMPORARY_AGGREGATE_ID.value
+            || !is_wire_aggregate(schematic, layout, TEMPORARY_AGGREGATE_ID,
+                                  new_temporary)) {
+            create_aggregate_wires(circuit, sender);
+        }
+        return TEMPORARY_AGGREGATE_ID;
+    }
+
+    // colliding
+    else if (display_state == new_colliding) {
+        if (layout.element_count() <= COLLIDING_AGGREGATE_ID.value
+            || !is_wire_aggregate(schematic, layout, COLLIDING_AGGREGATE_ID,
+                                  new_temporary)) {
+            create_aggregate_wires(circuit, sender);
+        }
+        return COLLIDING_AGGREGATE_ID;
+    }
+
+    throw_exception("display state has no aggregate element");
+}
+
+// adding segments
+
+auto add_temporary_line_segment(Circuit& circuit, MessageSender sender, line_t line)
+    -> segment_t {
+    const auto element_id
+        = get_or_create_aggregate(circuit, sender, display_state_t::new_temporary);
+
+    // insert new segment
+    auto& m_tree = circuit.layout().modifyable_segment_tree(element_id);
+
+    const auto segment = segment_info_t {
+        .line = line,
+        .p0_type = SegmentPointType::shadow_point,
+        .p1_type = SegmentPointType::shadow_point,
+    };
+    const auto segment_index = m_tree.add_segment(segment, display_state_t::normal);
+
+    return segment_t {element_id, segment_index};
+}
+
+auto add_line_segment(State state, line_t line) -> segment_part_t {
+    segment_t segment = add_temporary_line_segment(state.circuit, state.sender, line);
+    return segment_part_t {segment, get_segment_part(line)};
+}
+
+auto add_line_segment(State state, Selection* selection, line_t line) -> void {
+    auto segment_part = add_line_segment(state, line);
+
+    if (selection != nullptr) {
+        selection->add_segment(segment_part);
+    }
+}
+
+auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+                        InsertionMode insertion_mode, Selection* selection) -> void {
+    // TODO handle p0 == p1
+
+    switch (segment_type) {
+        using enum LineSegmentType;
+
+        case horizontal_first: {
+            const auto pm = point_t {p1.x, p0.y};
+            if (p0.x != pm.x) {
+                add_line_segment(state, selection, line_t {p0, pm});
+            }
+            if (pm.y != p1.y) {
+                add_line_segment(state, selection, line_t {pm, p1});
+            }
+            break;
+        }
+
+        case vertical_first: {
+            const auto pm = point_t {p0.x, p1.y};
+            if (p0.y != pm.y) {
+                add_line_segment(state, selection, line_t {p0, pm});
+            }
+            if (pm.x != p1.x) {
+                add_line_segment(state, selection, line_t {pm, p1});
+            }
+            break;
+        }
+    }
+}
+
 }  // namespace editable_circuit
+
 }  // namespace logicsim

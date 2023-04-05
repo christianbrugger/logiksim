@@ -76,11 +76,14 @@ auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int
 // Wire Handling
 //
 
+auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+                        InsertionMode insertion_mode, Selection* selection) -> void;
+
 /*
 auto add_connected_line(point_t p0, point_t p1, LineSegmentType segment_type,
                         InsertionMode insertion_mode) -> selection_handle_t;
 
-auto change_wire_insertion_mode(segment_t& segment, segment_part_t part,
+auto change_wire_insertion_mode(segment_t& segment, part_t part,
                                 InsertionMode new_insertion_mode) -> void;
 */
 

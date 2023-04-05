@@ -11,11 +11,6 @@
 
 namespace logicsim {
 
-enum class LineSegmentType {
-    horizontal_first,
-    vertical_first,
-};
-
 class selection_handle_t;
 
 namespace editable_circuit {

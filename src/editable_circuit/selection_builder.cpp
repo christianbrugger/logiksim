@@ -99,20 +99,21 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
     if (!segment_sel) {
         return;
     }
+    const auto segment_part = segment_part_t {segment, *segment_sel};
 
     switch (operation.function) {
         using enum SelectionFunction;
 
         case add: {
-            selection.add_segment(segment, *segment_sel);
+            selection.add_segment(segment_part);
             return;
         }
         case substract: {
-            selection.remove_segment(segment, *segment_sel);
+            selection.remove_segment(segment_part);
             return;
         }
         case toggle: {
-            selection.toggle_segment(segment, *segment_sel);
+            selection.toggle_segment(segment_part);
             return;
         }
     }

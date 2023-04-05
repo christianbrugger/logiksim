@@ -145,8 +145,13 @@ auto segment_t::format() const -> std::string {
     return fmt::format("<Element {}, Segment {}>", element_id, segment_index);
 }
 
-auto segment_part_t::format() const -> std::string {
+auto part_t::format() const -> std::string {
     return fmt::format("<part {}-{}>", begin, end);
+}
+
+auto segment_part_t::format() const -> std::string {
+    return fmt::format("<Element {}, Segment {}, part {}-{}>", segment.element_id,
+                       segment.segment_index, part.begin, part.end);
 }
 
 template <typename T>

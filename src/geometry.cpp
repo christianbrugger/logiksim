@@ -88,4 +88,60 @@ auto is_endpoint(point_t point, line_t line) -> bool {
     return line.p0 == point || line.p1 == point;
 }
 
+//
+// Segments
+//
+
+auto get_segment_part(line_t line) -> part_t {
+    const auto ordered_line = order_points(line);
+
+    if (is_horizontal(line)) {
+        return part_t {ordered_line.p0.x, ordered_line.p1.x};
+    }
+    return part_t {ordered_line.p0.y, ordered_line.p1.y};
+}
+
+auto get_segment_begin_end(line_t line, rect_fine_t rect) {
+    const auto ordered_line = order_points(line);
+
+    if (is_horizontal(line)) {
+        const auto xmin = clamp_to<grid_t::value_type>(std::floor(rect.p0.x));
+        const auto xmax = clamp_to<grid_t::value_type>(std::ceil(rect.p1.x));
+
+        const auto begin = std::clamp(ordered_line.p0.x.value, xmin, xmax);
+        const auto end = std::clamp(ordered_line.p1.x.value, xmin, xmax);
+
+        return std::make_pair(begin, end);
+    }
+
+    // vertical
+    const auto ymin = clamp_to<grid_t::value_type>(std::floor(rect.p0.y));
+    const auto ymax = clamp_to<grid_t::value_type>(std::ceil(rect.p1.y));
+
+    const auto begin = std::clamp(ordered_line.p0.y.value, ymin, ymax);
+    const auto end = std::clamp(ordered_line.p1.y.value, ymin, ymax);
+
+    return std::make_pair(begin, end);
+}
+
+auto get_segment_part(line_t line, rect_fine_t rect) -> std::optional<part_t> {
+    const auto [begin, end] = get_segment_begin_end(line, rect);
+
+    if (begin == end) {
+        return std::nullopt;
+    }
+    return part_t {begin, end};
+}
+
+auto get_selected_segment(line_t segment, part_t selection) -> line_t {
+    if (is_horizontal(segment)) {
+        const auto y = segment.p0.y;
+        return line_t {point_t {selection.begin, y}, point_t {selection.end, y}};
+    }
+
+    // vertical
+    const auto x = segment.p0.x;
+    return line_t {point_t {x, selection.begin}, point_t {x, selection.end}};
+}
+
 }  // namespace logicsim

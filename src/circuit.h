@@ -30,6 +30,8 @@ class Circuit {
     [[nodiscard]] auto extract_schematic() -> Schematic;
     [[nodiscard]] auto extract_layout() -> Layout;
 
+    auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
+
    private:
     std::optional<Schematic> schematic_ {};
     std::optional<Layout> layout_ {};

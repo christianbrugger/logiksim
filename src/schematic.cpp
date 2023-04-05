@@ -276,6 +276,11 @@ auto Schematic::swap_and_delete_element(element_id_t element_id) -> element_id_t
     return last_element_id;
 }
 
+auto Schematic::swap_elements(element_id_t element_id_0, element_id_t element_id_1)
+    -> void {
+    swap_element_data(element_id_0, element_id_1, true);
+}
+
 auto Schematic::update_swapped_connections(element_id_t new_element_id,
                                            element_id_t old_element_id) -> void {
     if (new_element_id == old_element_id) {

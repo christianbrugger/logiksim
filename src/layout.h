@@ -35,15 +35,16 @@ class Layout {
 
     auto add_placeholder(display_state_t display_state) -> element_id_t;
     // TODO rework these methods
-    auto add_line_tree(SegmentTree &&segment_tree,
-                       display_state_t display_state = display_state_t::normal)
+    auto add_line_tree(display_state_t display_state = display_state_t::normal)
         -> element_id_t;
     auto add_logic_element(point_t position,
                            orientation_t orientation = orientation_t::undirected,
                            display_state_t display_state = display_state_t::normal,
                            color_t color = defaults::color_black) -> element_id_t;
+
     // swaps the element with last one and deletes it, returns deleted id
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
+    auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
 
     // TODO remove line tree, when not needed anymore
     auto set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void;

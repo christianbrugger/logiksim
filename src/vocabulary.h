@@ -576,16 +576,26 @@ struct rect_t {
 };
 
 // TODO use offsets instead of absolute values
-struct segment_part_t {
+struct part_t {
     grid_t begin;
     grid_t end;
 
-    [[nodiscard]] explicit constexpr segment_part_t(grid_t begin_, grid_t end_)
+    [[nodiscard]] explicit constexpr part_t(grid_t begin_, grid_t end_)
         : begin {begin_}, end {end_} {
         if (!(begin_ < end_)) [[unlikely]] {
             throw_exception("begin needs to be smaller than end.");
         }
     };
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const part_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const part_t &other) const = default;
+};
+
+struct segment_part_t {
+    segment_t segment;
+    part_t part;
 
     [[nodiscard]] auto format() const -> std::string;
 

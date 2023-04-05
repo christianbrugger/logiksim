@@ -60,12 +60,12 @@ auto Selection::toggle_element(element_id_t element_id) -> void {
     }
 }
 
-auto Selection::add_segment(segment_t segment, segment_part_t parts) -> void {
-    const auto it = selected_segments_.find(segment);
+auto Selection::add_segment(segment_part_t segment_part) -> void {
+    const auto it = selected_segments_.find(segment_part.segment);
     if (it == selected_segments_.end()) {
         // insert new list
-        const auto value = detail::selection::map_value_t {parts};
-        bool inserted = selected_segments_.emplace(segment, value).second;
+        const auto value = detail::selection::map_value_t {segment_part.part};
+        bool inserted = selected_segments_.emplace(segment_part.segment, value).second;
         if (!inserted) [[unlikely]] {
             throw_exception("unable to insert value");
         }
@@ -78,7 +78,7 @@ auto Selection::add_segment(segment_t segment, segment_part_t parts) -> void {
     }
 
     // sort
-    entries.push_back(parts);
+    entries.push_back(segment_part.part);
     std::ranges::sort(entries);
 
     // merge elements
@@ -88,12 +88,12 @@ auto Selection::add_segment(segment_t segment, segment_part_t parts) -> void {
     transform_combine_while(
         entries, std::back_inserter(result),
         // make state
-        [](it_t it) -> segment_part_t { return *it; },
+        [](it_t it) -> part_t { return *it; },
         // combine while
-        [](segment_part_t state, it_t it) -> bool { return state.end >= it->begin; },
+        [](part_t state, it_t it) -> bool { return state.end >= it->begin; },
         // update state
-        [](segment_part_t state, it_t it) -> segment_part_t {
-            return segment_part_t {state.begin, std::max(state.end, it->end)};
+        [](part_t state, it_t it) -> part_t {
+            return part_t {state.begin, std::max(state.end, it->end)};
         });
 
     if (result.size() == 0) [[unlikely]] {
@@ -102,8 +102,8 @@ auto Selection::add_segment(segment_t segment, segment_part_t parts) -> void {
     entries.swap(result);
 }
 
-auto Selection::remove_segment(segment_t segment, segment_part_t removing) -> void {
-    const auto it = selected_segments_.find(segment);
+auto Selection::remove_segment(segment_part_t segment_part) -> void {
+    const auto it = selected_segments_.find(segment_part.segment);
     if (it == selected_segments_.end()) {
         return;
     }
@@ -114,7 +114,9 @@ auto Selection::remove_segment(segment_t segment, segment_part_t removing) -> vo
     }
 
     for (auto i : reverse_range(entries.size())) {
-        const auto entry = segment_part_t {entries[i]};
+        const auto removing = segment_part.part;
+        const auto entry = part_t {entries[i]};
+
         // SEE 'selection_model.md' for visual cases
 
         // no overlapp -> keep
@@ -123,7 +125,7 @@ auto Selection::remove_segment(segment_t segment, segment_part_t removing) -> vo
 
         // new completely inside -> split
         else if (entry.begin < removing.begin && entry.end > removing.end) {
-            entries[i] = segment_part_t {entry.begin, removing.begin};
+            entries[i] = part_t {entry.begin, removing.begin};
             entries.emplace_back(removing.end, entry.end);
         }
 
@@ -136,12 +138,12 @@ auto Selection::remove_segment(segment_t segment, segment_part_t removing) -> vo
         // right sided overlap -> shrink right
         else if (entry.begin < removing.begin && entry.end > removing.begin
                  && entry.end <= removing.end) {
-            entries[i] = segment_part_t {entry.begin, removing.begin};
+            entries[i] = part_t {entry.begin, removing.begin};
         }
         // left sided overlap -> shrink left
         else if (entry.begin >= removing.begin && entry.begin < removing.end
                  && entry.end > removing.end) {
-            entries[i] = segment_part_t {removing.end, entry.end};
+            entries[i] = part_t {removing.end, entry.end};
         }
 
         else {
@@ -150,13 +152,13 @@ auto Selection::remove_segment(segment_t segment, segment_part_t removing) -> vo
     }
 
     if (entries.empty()) {
-        if (!selected_segments_.erase(segment)) {
+        if (!selected_segments_.erase(segment_part.segment)) {
             throw_exception("unable to delete key");
         }
     }
 }
 
-auto Selection::toggle_segment(segment_t segment, segment_part_t selection) -> void {}
+auto Selection::toggle_segment(segment_part_t segment_part) -> void {}
 
 auto Selection::is_selected(element_id_t element_id) const -> bool {
     return selected_elements_.contains(element_id);
@@ -170,8 +172,7 @@ auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
     return selected_segments_.values();
 }
 
-auto Selection::selected_segments(segment_t segment) const
-    -> std::span<const segment_part_t> {
+auto Selection::selected_segments(segment_t segment) const -> std::span<const part_t> {
     const auto it = selected_segments_.find(segment);
     if (it == selected_segments_.end()) {
         return {};
@@ -183,60 +184,6 @@ auto Selection::selected_segments(segment_t segment) const
     }
 
     return it->second;
-}
-
-auto get_segment_begin_end(line_t line, rect_fine_t selection_rect) {
-    const auto ordered_line = order_points(line);
-
-    if (is_horizontal(line)) {
-        const auto xmin = clamp_to<grid_t::value_type>(std::floor(selection_rect.p0.x));
-        const auto xmax = clamp_to<grid_t::value_type>(std::ceil(selection_rect.p1.x));
-
-        const auto begin = std::clamp(ordered_line.p0.x.value, xmin, xmax);
-        const auto end = std::clamp(ordered_line.p1.x.value, xmin, xmax);
-
-        return std::make_pair(begin, end);
-    }
-
-    // vertical
-    const auto ymin = clamp_to<grid_t::value_type>(std::floor(selection_rect.p0.y));
-    const auto ymax = clamp_to<grid_t::value_type>(std::ceil(selection_rect.p1.y));
-
-    const auto begin = std::clamp(ordered_line.p0.y.value, ymin, ymax);
-    const auto end = std::clamp(ordered_line.p1.y.value, ymin, ymax);
-
-    return std::make_pair(begin, end);
-}
-
-auto get_segment_part(line_t line) -> segment_part_t {
-    const auto ordered_line = order_points(line);
-
-    if (is_horizontal(line)) {
-        return segment_part_t {ordered_line.p0.x, ordered_line.p1.x};
-    }
-    return segment_part_t {ordered_line.p0.y, ordered_line.p1.y};
-}
-
-auto get_segment_part(line_t line, rect_fine_t selection_rect)
-    -> std::optional<segment_part_t> {
-    const auto [begin, end] = get_segment_begin_end(line, selection_rect);
-
-    if (begin == end) {
-        return std::nullopt;
-    }
-    return segment_part_t {begin, end};
-}
-
-// TODO rename
-auto get_selected_segment(line_t segment, segment_part_t selection) -> line_t {
-    if (is_horizontal(segment)) {
-        const auto y = segment.p0.y;
-        return line_t {point_t {selection.begin, y}, point_t {selection.end, y}};
-    }
-
-    // vertical
-    const auto x = segment.p0.x;
-    return line_t {point_t {x, selection.begin}, point_t {x, selection.end}};
 }
 
 auto swap(Selection &a, Selection &b) noexcept -> void {
@@ -349,9 +296,8 @@ auto check_segment_parts_destructive(line_t line, map_value_t &parts) -> void {
 
     // overlapping or touching?
     std::ranges::sort(parts);
-    const auto part_overlapping = [](segment_part_t part0, segment_part_t part1) -> bool {
-        return part0.end >= part1.begin;
-    };
+    const auto part_overlapping
+        = [](part_t part0, part_t part1) -> bool { return part0.end >= part1.begin; };
     if (std::ranges::adjacent_find(parts, part_overlapping) != parts.end()) {
         throw_exception("some parts are overlapping");
     }

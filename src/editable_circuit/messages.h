@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_MESSAGES_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_MESSAGES_H
 
+#include "editable_circuit/types.h"
 #include "format.h"
 #include "layout_calculation_type.h"
 #include "segment_tree.h"
@@ -138,7 +139,7 @@ struct SegmentMerged {
 // only inserted?
 struct SegmentSplit {
     segment_t segment_from;
-    segment_part_t part_from;
+    part_t part_from;
     segment_t segment_to;
 
     [[nodiscard]] auto operator==(const SegmentSplit &other) const -> bool = default;

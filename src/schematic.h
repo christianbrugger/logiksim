@@ -125,6 +125,7 @@ class Schematic {
     auto add_element(NewElementData &&data) -> Element;
     // swaps the element with last one and deletes it
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
+    auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
 
     auto clear() -> void;
 
