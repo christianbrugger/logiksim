@@ -521,21 +521,65 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
     draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
 }
 
-auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& selection,
-                       const RenderSettings& settings) {
+auto draw_wire_selected_parts_shadow(BLContext& ctx, const Layout& layout, line_t line,
+                                     std::span<const part_t> parts,
+                                     const RenderSettings& settings) -> void {
+    for (auto&& part : parts) {
+        const auto selected_segment = get_selected_segment(line, part);
+        const auto selection_rect = element_selection_rect(selected_segment);
+
+        ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
+        draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+    }
+}
+
+auto draw_wire_temporary_shadow(BLContext& ctx, const SegmentTree& segment_tree,
+                                const RenderSettings& settings) {
+    for (auto& segment : segment_tree.segments()) {
+        const auto selection_rect = element_selection_rect(segment.line);
+        ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
+        draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+    }
+}
+
+auto draw_wire_colliding_shadow(BLContext& ctx, const SegmentTree& segment_tree,
+                                const RenderSettings& settings) {
+    for (auto& segment : segment_tree.segments()) {
+        const auto selection_rect = element_selection_rect(segment.line);
+        ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
+        draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+    }
+}
+
+auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout& layout,
+                       const Selection& selection, const RenderSettings& settings) {
+    for (const auto element : schematic.elements()) {
+        if (!element.is_wire()) {
+            continue;
+        }
+
+        const auto display_state = layout.display_state(element.element_id());
+        const auto& segment_tree = layout.segment_tree(element.element_id());
+
+        if (display_state == display_state_t::new_temporary) {
+            draw_wire_temporary_shadow(ctx, segment_tree, settings);
+        }
+
+        else if (display_state == display_state_t::new_colliding) {
+            draw_wire_temporary_shadow(ctx, segment_tree, settings);
+        }
+
+        else if (display_state == display_state_t::new_valid) {
+        }
+    }
+
     for (auto&& [segment, parts] : selection.selected_segments()) {
         const auto element_id = segment.element_id;
 
-        const auto line
-            = layout.segment_tree(element_id).segment(segment.segment_index).line;
-
-        for (auto&& part : parts) {
-            const auto selected_segment = get_selected_segment(line, part);
-            const auto selection_rect = element_selection_rect(selected_segment);
-
-            ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
-            draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill},
-                               settings);
+        if (layout.display_state(element_id) == display_state_t::normal) {
+            const auto line
+                = layout.segment_tree(element_id).segment(segment.segment_index).line;
+            draw_wire_selected_parts_shadow(ctx, layout, line, parts, settings);
         }
     }
 }
@@ -586,9 +630,7 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     }
 
     // wire shadow
-    if (!args.selection.empty()) {
-        draw_wire_shadows(ctx, args.layout, args.selection, args.settings);
-    }
+    draw_wire_shadows(ctx, args.schematic, args.layout, args.selection, args.settings);
 }
 
 //
