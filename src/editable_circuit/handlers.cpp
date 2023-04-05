@@ -978,10 +978,12 @@ auto find_wire(const Circuit& circuit, display_state_t display_state) -> element
 auto create_aggregate_tree_at(Circuit& circuit, MessageSender sender,
                               display_state_t display_state, element_id_t target_id)
     -> void {
-    auto element_id = find_wire(circuit, display_state_t::new_temporary);
+    auto element_id = find_wire(circuit, display_state);
 
     if (!element_id) {
         element_id = add_new_temporary_wire_element(circuit, sender);
+        print("created", element_id, display_state);
+        circuit.layout().set_display_state(element_id, display_state);
     }
 
     if (element_id != target_id) {
@@ -990,7 +992,7 @@ auto create_aggregate_tree_at(Circuit& circuit, MessageSender sender,
 }
 
 constexpr inline static auto TEMPORARY_AGGREGATE_ID = element_id_t {0};
-constexpr inline static auto COLLIDING_AGGREGATE_ID = element_id_t {0};
+constexpr inline static auto COLLIDING_AGGREGATE_ID = element_id_t {1};
 
 auto create_aggregate_wires(Circuit& circuit, MessageSender sender) -> void {
     using enum display_state_t;
@@ -1047,13 +1049,15 @@ auto add_temporary_line_segment(Circuit& circuit, MessageSender sender, line_t l
     return segment_t {element_id, segment_index};
 }
 
-auto add_line_segment(State state, line_t line) -> segment_part_t {
+auto add_line_segment(State state, line_t line, InsertionMode insertion_mode)
+    -> segment_part_t {
     segment_t segment = add_temporary_line_segment(state.circuit, state.sender, line);
     return segment_part_t {segment, get_segment_part(line)};
 }
 
-auto add_line_segment(State state, Selection* selection, line_t line) -> void {
-    auto segment_part = add_line_segment(state, line);
+auto add_line_segment(State state, Selection* selection, line_t line,
+                      InsertionMode insertion_mode) -> void {
+    auto segment_part = add_line_segment(state, line, insertion_mode);
 
     if (selection != nullptr) {
         selection->add_segment(segment_part);
@@ -1061,7 +1065,9 @@ auto add_line_segment(State state, Selection* selection, line_t line) -> void {
 }
 
 auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType segment_type,
-                        InsertionMode insertion_mode, Selection* selection) -> void {
+                        Selection* selection) -> void {
+    const auto mode = InsertionMode::temporary;
+
     // TODO handle p0 == p1
 
     switch (segment_type) {
@@ -1070,10 +1076,10 @@ auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType seg
         case horizontal_first: {
             const auto pm = point_t {p1.x, p0.y};
             if (p0.x != pm.x) {
-                add_line_segment(state, selection, line_t {p0, pm});
+                add_line_segment(state, selection, line_t {p0, pm}, mode);
             }
             if (pm.y != p1.y) {
-                add_line_segment(state, selection, line_t {pm, p1});
+                add_line_segment(state, selection, line_t {pm, p1}, mode);
             }
             break;
         }
@@ -1081,10 +1087,10 @@ auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType seg
         case vertical_first: {
             const auto pm = point_t {p0.x, p1.y};
             if (p0.y != pm.y) {
-                add_line_segment(state, selection, line_t {p0, pm});
+                add_line_segment(state, selection, line_t {p0, pm}, mode);
             }
             if (pm.x != p1.x) {
-                add_line_segment(state, selection, line_t {pm, p1});
+                add_line_segment(state, selection, line_t {pm, p1}, mode);
             }
             break;
         }

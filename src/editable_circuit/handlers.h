@@ -77,7 +77,10 @@ auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int
 //
 
 auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType segment_type,
-                        InsertionMode insertion_mode, Selection* selection) -> void;
+                        Selection* selection) -> void;
+
+auto add_line_segment(State state, line_t line, InsertionMode insertion_mode)
+    -> segment_part_t;
 
 /*
 auto add_connected_line(point_t p0, point_t p1, LineSegmentType segment_type,

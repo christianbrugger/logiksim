@@ -54,7 +54,8 @@ set(LS_TEST_SOURCES
     test/schematic_test.cpp
     test/simulation_test.cpp
     
-    test/editable_circuit/handlers_test.cpp
+    test/editable_circuit/handlers/circuit_item_test.cpp
+    test/editable_circuit/handlers/wire_test.cpp
 )
 
 cmake_policy(PUSH)

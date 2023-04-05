@@ -81,7 +81,7 @@ auto validate_placeholder_display_state(Schematic::ConstElement element,
     }
 }
 
-auto validate_trees_match_wires(Schematic::ConstElement element, const Layout& layout) {
+auto validate_wires_data(Schematic::ConstElement element, const Layout& layout) {
     const auto element_id = element.element_id();
 
     const auto& segment_tree = layout.segment_tree(element_id);
@@ -104,8 +104,9 @@ auto validate_trees_match_wires(Schematic::ConstElement element, const Layout& l
             throw_exception("wires should not have a orientation");
         }
 
-        if (segment_tree.empty()) [[unlikely]] {
-            throw_exception("found wire without elements");
+        if (segment_tree.empty() && is_inserted(layout, element.element_id()))
+            [[unlikely]] {
+            throw_exception("found inserted wire without elements");
         }
         // if (segment_tree.output_count() != element.output_count()) {
         //     throw_exception("output counts don't match");
@@ -133,13 +134,11 @@ auto count_wires(const Schematic& schematic, const Layout& layout,
 // we never have more than one in a circuit
 auto validate_single_aggregate_trees(const Schematic& schematic, const Layout& layout)
     -> void {
-    if (count_wires(schematic, layout, display_state_t::new_temporary) >= 1)
-        [[unlikely]] {
+    if (count_wires(schematic, layout, display_state_t::new_temporary) > 1) [[unlikely]] {
         throw_exception("found more than one aggregate temporary segment tree");
     }
 
-    if (count_wires(schematic, layout, display_state_t::new_colliding) >= 1)
-        [[unlikely]] {
+    if (count_wires(schematic, layout, display_state_t::new_colliding) > 1) [[unlikely]] {
         throw_exception("found more than one aggregate temporary segment tree");
     }
 }
@@ -169,7 +168,7 @@ auto validate(const Schematic& schematic, const Layout& layout) -> void {
         validate_connections(element, display_state);
         validate_placeholder_display_state(element, display_state);
         // wires & trees
-        validate_trees_match_wires(element, layout);
+        validate_wires_data(element, layout);
     }
 
     // wire aggregates

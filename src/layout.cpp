@@ -116,32 +116,32 @@ auto Layout::add_default_element() -> element_id_t {
 }
 
 auto Layout::add_placeholder(display_state_t display_state) -> element_id_t {
-    const auto id = add_default_element();
+    const auto element_id = add_default_element();
 
     display_states_.back() = display_state;
 
-    return id;
+    return element_id;
 }
 
 auto Layout::add_line_tree(display_state_t display_state) -> element_id_t {
-    const auto id = add_default_element();
+    const auto element_id = add_default_element();
 
     display_states_.back() = display_state;
 
-    return id;
+    return element_id;
 }
 
 auto Layout::add_logic_element(point_t position, orientation_t orientation,
                                display_state_t display_state, color_t color)
     -> element_id_t {
-    const auto id = add_default_element();
+    const auto element_id = add_default_element();
 
     positions_.back() = position;
     orientation_.back() = orientation;
     display_states_.back() = display_state;
     colors_.back() = color;
 
-    return id;
+    return element_id;
 }
 
 auto Layout::swap_and_delete_element(element_id_t element_id) -> element_id_t {
