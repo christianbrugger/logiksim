@@ -94,6 +94,7 @@ class SegmentTree {
 
     [[nodiscard]] auto format() const -> std::string;
     auto validate() const -> void;
+    auto validate_inserted() const -> void;
 
    private:
     auto get_next_index() const -> segment_index_t;

@@ -296,14 +296,8 @@ auto SegmentTree::format() const -> std::string {
                        segments_);
 }
 
-auto SegmentTree::validate() const -> void {
-    if (display_states_.size() != segments_.size()) [[unlikely]] {
-        throw_exception("Vector sizes don't match in segment tree.");
-    }
-    if ((has_input_ ? 1 : 0) + std::size_t {output_count_} > segments_.size() + 1)
-        [[unlikely]] {
-        throw_exception("To many inputs / outputs.");
-    }
+auto SegmentTree::validate_inserted() const -> void {
+    validate();
 
     // convert to line_tree
     const auto segments = transform_to_vector(
@@ -322,6 +316,16 @@ auto SegmentTree::validate() const -> void {
     //
     // - input & output points
     // - cross points
+}
+
+auto SegmentTree::validate() const -> void {
+    if (display_states_.size() != segments_.size()) [[unlikely]] {
+        throw_exception("Vector sizes don't match in segment tree.");
+    }
+    if ((has_input_ ? 1 : 0) + std::size_t {output_count_} > segments_.size() + 1)
+        [[unlikely]] {
+        throw_exception("To many inputs / outputs.");
+    }
 }
 
 }  // namespace logicsim

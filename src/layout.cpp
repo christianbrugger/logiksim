@@ -209,9 +209,17 @@ auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
 }
 
 auto Layout::validate() const -> void {
+    const auto validate_segment_tree = [&](element_id_t element_id) {
+        if (is_inserted(*this, element_id)) {
+            segment_tree(element_id).validate_inserted();
+        } else {
+            segment_tree(element_id).validate();
+        }
+    };
+
     // wires
-    std::ranges::for_each(segment_trees_, &SegmentTree::validate);
     std::ranges::for_each(line_trees_, &LineTree::validate);
+    std::ranges::for_each(element_ids(), validate_segment_tree);
 
     // global attributes
     if (!circuit_id_) [[unlikely]] {

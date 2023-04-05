@@ -21,7 +21,6 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
     add_line_segment(setup.state, line_t {point_t {0, 0}, {10, 0}},
                      InsertionMode::temporary);
 
-    print(circuit);
     setup.validate();
 
     // circuit
