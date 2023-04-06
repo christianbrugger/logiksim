@@ -50,14 +50,21 @@ auto order_points(segment_info_t segment) -> segment_info_t;
 auto order_points(segment_info_t segment0, segment_info_t segment1)
     -> std::tuple<segment_info_t, segment_info_t>;
 
+namespace detail::segment_tree {
+using index_t = std::make_unsigned_t<segment_index_t::value_type>;
+static_assert(sizeof(index_t) == sizeof(segment_index_t::value_type));
+
+using policy = folly::small_vector_policy::policy_size_type<index_t>;
+using parts_vector_t = folly::small_vector<part_t, 2, policy>;
+}  // namespace detail::segment_tree
+
 class SegmentTree {
    public:
-    // TODO use segment_index_t
-    using index_t = uint16_t;
+    using index_t = detail::segment_tree::index_t;
+    using parts_vector_t = detail::segment_tree::parts_vector_t;
 
    public:
     [[nodiscard]] constexpr SegmentTree() = default;
-
     auto swap(SegmentTree &other) noexcept -> void;
 
     auto add_segment(segment_info_t segment) -> segment_index_t;
@@ -66,15 +73,23 @@ class SegmentTree {
     // swaps the element with last one and deletes it
     auto swap_and_delete_segment(segment_index_t index) -> void;
 
+    // segments
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
-
     [[nodiscard]] auto segment_info(std::size_t index) const -> segment_info_t;
     [[nodiscard]] auto segment_info(segment_index_t index) const -> segment_info_t;
     [[nodiscard]] auto segment_line(std::size_t index) const -> line_t;
     [[nodiscard]] auto segment_line(segment_index_t index) const -> line_t;
     [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
 
+    // valid parts
+    auto mark_valid(segment_index_t segment_index, part_t part) -> void;
+    auto unmark_valid(segment_index_t segment_index, part_t part) -> void;
+    [[nodiscard]] auto valid_parts() const -> std::span<const parts_vector_t>;
+    [[nodiscard]] auto valid_parts(segment_index_t segment_index) const
+        -> std::span<const part_t>;
+
+    // indices
     [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
     [[nodiscard]] auto last_index() const noexcept -> segment_index_t;
     [[nodiscard]] auto indices() const noexcept -> forward_range_t<segment_index_t>;
@@ -85,10 +100,10 @@ class SegmentTree {
         });
     };
 
+    // input & outputs
     [[nodiscard]] auto has_input() const noexcept -> bool;
     [[nodiscard]] auto input_count() const noexcept -> std::size_t;
     [[nodiscard]] auto input_position() const -> point_t;
-
     [[nodiscard]] auto output_count() const noexcept -> std::size_t;
 
     [[nodiscard]] auto format() const -> std::string;
@@ -106,12 +121,11 @@ class SegmentTree {
     using segment_vector_t = folly::small_vector<segment_info_t, 2, policy>;
     static_assert(sizeof(segment_vector_t) == 22);
 
-    using parts_vector_t = folly::small_vector<part_t, 2, policy>;
     using valid_vector_t = folly::small_vector<parts_vector_t, 2, policy>;
     static_assert(sizeof(valid_vector_t) == 22);
 
     segment_vector_t segments_ {};
-    valid_vector_t valid_vector_ {};
+    valid_vector_t valid_parts_vector_ {};
 
     index_t output_count_ {0};
     // TODO do we need input position?

@@ -171,4 +171,45 @@ auto to_line(line_t line, part_t part) -> line_t {
                    point_t {x, to_grid(part.end, y)}};
 }
 
+//
+// Parts List
+//
+
+auto is_part_inside_line(part_t part, line_t line) -> bool {
+    const auto sorted_line = order_points(line);
+
+    if (is_horizontal(sorted_line)) {
+        const auto x_end = to_grid(part.end, sorted_line.p0.x);
+        return x_end <= sorted_line.p1.x;
+    }
+
+    const auto y_end = to_grid(part.end, sorted_line.p0.y);
+    return y_end <= sorted_line.p1.y;
+}
+
+auto sort_and_validate_segment_parts(std::span<part_t> parts, line_t line) -> void {
+    // part inside line
+    for (const auto part : parts) {
+        if (!is_part_inside_line(part, line)) [[unlikely]] {
+            print(part, line);
+            throw_exception("part is not part of line");
+        }
+    }
+
+    // overlapping or touching?
+    std::ranges::sort(parts);
+    const auto part_overlapping
+        = [](part_t part0, part_t part1) -> bool { return part0.end >= part1.begin; };
+    if (std::ranges::adjacent_find(parts, part_overlapping) != parts.end()) {
+        throw_exception("some parts are overlapping");
+    }
+}
+
+auto validate_segment_parts(std::span<const part_t> parts, line_t line) -> void {
+    using parts_vector_t = folly::small_vector<part_t, 4>;
+
+    auto copy = parts_vector_t {parts.begin(), parts.end()};
+    sort_and_validate_segment_parts(copy, line);
+}
+
 }  // namespace logicsim

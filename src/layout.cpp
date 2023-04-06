@@ -216,6 +216,19 @@ auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
     return segment_trees_.at(element_id.value);
 }
 
+auto validate_segment_tree_display_state(const SegmentTree &tree,
+                                         display_state_t display_state) -> void {
+    for (auto index : tree.indices()) {
+        bool any_valid_parts
+            = std::ranges::any_of(tree.valid_parts(), &SegmentTree::parts_vector_t::size);
+
+        if (any_valid_parts != (display_state == display_state_t::new_valid))
+            [[unlikely]] {
+            throw_exception("segment tree is in the wrong display state");
+        }
+    }
+}
+
 auto Layout::validate() const -> void {
     const auto validate_segment_tree = [&](element_id_t element_id) {
         if (is_inserted(*this, element_id)) {
@@ -228,6 +241,10 @@ auto Layout::validate() const -> void {
     // wires
     std::ranges::for_each(line_trees_, &LineTree::validate);
     std::ranges::for_each(element_ids(), validate_segment_tree);
+    for (const auto element_id : element_ids()) {
+        validate_segment_tree_display_state(segment_tree(element_id),
+                                            display_state(element_id));
+    }
 
     // global attributes
     if (!circuit_id_) [[unlikely]] {

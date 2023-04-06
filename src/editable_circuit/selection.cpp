@@ -77,29 +77,7 @@ auto Selection::add_segment(segment_part_t segment_part) -> void {
         throw_exception("found segment selection with zero selection entries");
     }
 
-    // sort
-    entries.push_back(segment_part.part);
-    std::ranges::sort(entries);
-
-    // merge elements
-    auto result = detail::selection::map_value_t {};
-    using it_t = detail::selection::map_value_t::iterator;
-
-    transform_combine_while(
-        entries, std::back_inserter(result),
-        // make state
-        [](it_t it) -> part_t { return *it; },
-        // combine while
-        [](part_t state, it_t it) -> bool { return state.end >= it->begin; },
-        // update state
-        [](part_t state, it_t it) -> part_t {
-            return part_t {state.begin, std::max(state.end, it->end)};
-        });
-
-    if (result.size() == 0) [[unlikely]] {
-        throw_exception("algorithm result should not be empty");
-    }
-    entries.swap(result);
+    add_part(entries, segment_part.part);
 }
 
 auto Selection::remove_segment(segment_part_t segment_part) -> void {
@@ -113,43 +91,7 @@ auto Selection::remove_segment(segment_part_t segment_part) -> void {
         throw_exception("found segment selection with zero selection entries");
     }
 
-    for (auto i : reverse_range(entries.size())) {
-        const auto removing = segment_part.part;
-        const auto entry = part_t {entries[i]};
-
-        // SEE 'selection_model.md' for visual cases
-
-        // no overlapp -> keep
-        if (entry.begin >= removing.end || entry.end <= removing.begin) {
-        }
-
-        // new completely inside -> split
-        else if (entry.begin < removing.begin && entry.end > removing.end) {
-            entries[i] = part_t {entry.begin, removing.begin};
-            entries.emplace_back(removing.end, entry.end);
-        }
-
-        // new complete overlapps -> swap & remove
-        else if (entry.begin >= removing.begin && entry.end <= removing.end) {
-            entries[i] = entries[entries.size() - 1];
-            entries.pop_back();
-        }
-
-        // right sided overlap -> shrink right
-        else if (entry.begin < removing.begin && entry.end > removing.begin
-                 && entry.end <= removing.end) {
-            entries[i] = part_t {entry.begin, removing.begin};
-        }
-        // left sided overlap -> shrink left
-        else if (entry.begin >= removing.begin && entry.begin < removing.end
-                 && entry.end > removing.end) {
-            entries[i] = part_t {removing.end, entry.end};
-        }
-
-        else {
-            throw_exception("unknown case in remove_segment");
-        }
-    }
+    remove_part(entries, segment_part.part);
 
     if (entries.empty()) {
         if (!selected_segments_.erase(segment_part.segment)) {
@@ -276,36 +218,6 @@ auto check_and_remove_element(elements_set_t &element_set,
     }
 }
 
-auto is_part_inside_line(part_t part, line_t line) -> bool {
-    const auto sorted_line = order_points(line);
-
-    if (is_horizontal(sorted_line)) {
-        const auto x_end = to_grid(part.end, sorted_line.p0.x);
-        return x_end <= sorted_line.p1.x;
-    }
-
-    const auto y_end = to_grid(part.end, sorted_line.p0.y);
-    return y_end <= sorted_line.p1.y;
-}
-
-auto check_segment_parts_destructive(line_t line, map_value_t &parts) -> void {
-    // part inside line
-    for (const auto part : parts) {
-        if (!is_part_inside_line(part, line)) [[unlikely]] {
-            print(part, line);
-            throw_exception("part is not part of line");
-        }
-    }
-
-    // overlapping or touching?
-    std::ranges::sort(parts);
-    const auto part_overlapping
-        = [](part_t part0, part_t part1) -> bool { return part0.end >= part1.begin; };
-    if (std::ranges::adjacent_find(parts, part_overlapping) != parts.end()) {
-        throw_exception("some parts are overlapping");
-    }
-}
-
 auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
                                const element_id_t element_id,
                                const SegmentTree &segment_tree) -> void {
@@ -315,7 +227,7 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
 
         if (it != segment_map.end()) {
             const auto line = segment_tree.segment_line(segment_index);
-            check_segment_parts_destructive(line, it->second);
+            sort_and_validate_segment_parts(it->second, line);
             segment_map.erase(it);
         }
     }
