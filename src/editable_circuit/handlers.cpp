@@ -1043,8 +1043,7 @@ auto add_temporary_line_segment(Circuit& circuit, MessageSender sender, line_t l
         .p0_type = SegmentPointType::shadow_point,
         .p1_type = SegmentPointType::shadow_point,
     };
-    // TODO remove display_state_t argument
-    const auto segment_index = m_tree.add_segment(segment_info, display_state_t::normal);
+    const auto segment_index = m_tree.add_segment(segment_info);
 
     // test begin
     // circuit.layout().set_display_state(element_id, display_state_t::normal);

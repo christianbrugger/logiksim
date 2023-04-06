@@ -60,11 +60,9 @@ class SegmentTree {
 
     auto swap(SegmentTree &other) noexcept -> void;
 
-    auto add_segment(segment_info_t segment, display_state_t display_state)
-        -> segment_index_t;
+    auto add_segment(segment_info_t segment) -> segment_index_t;
     auto add_tree(const SegmentTree &tree) -> segment_index_t;
-    auto update_segment(segment_index_t index, segment_info_t segment,
-                        display_state_t display_state) -> void;
+    auto update_segment(segment_index_t index, segment_info_t segment) -> void;
     // swaps the element with last one and deletes it
     auto swap_and_delete_segment(segment_index_t index) -> void;
 
@@ -76,9 +74,6 @@ class SegmentTree {
     [[nodiscard]] auto segment_line(std::size_t index) const -> line_t;
     [[nodiscard]] auto segment_line(segment_index_t index) const -> line_t;
     [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
-
-    // TODO remove
-    [[nodiscard]] auto display_state(segment_index_t index) const -> display_state_t;
 
     [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
     [[nodiscard]] auto last_index() const noexcept -> segment_index_t;
@@ -109,13 +104,14 @@ class SegmentTree {
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;
     using segment_vector_t = folly::small_vector<segment_info_t, 2, policy>;
-    using display_state_vector_t = folly::small_vector<display_state_t, 8, policy>;
-
     static_assert(sizeof(segment_vector_t) == 22);
-    static_assert(sizeof(display_state_vector_t) == 10);
+
+    using parts_vector_t = folly::small_vector<part_t, 2, policy>;
+    using valid_vector_t = folly::small_vector<parts_vector_t, 2, policy>;
+    static_assert(sizeof(valid_vector_t) == 22);
 
     segment_vector_t segments_ {};
-    display_state_vector_t display_states_ {};
+    valid_vector_t valid_vector_ {};
 
     index_t output_count_ {0};
     // TODO do we need input position?
@@ -123,7 +119,7 @@ class SegmentTree {
     bool has_input_ {false};
 };
 
-static_assert(sizeof(SegmentTree) == 40);  // 22 + 10 + 2 + 4 + 1 (+ 1)
+static_assert(sizeof(SegmentTree) == 52);  // 22 + 22 + 2 + 4 + 1 (+ 1)
 
 auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
 

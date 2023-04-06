@@ -70,7 +70,7 @@ auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
     using std::swap;
 
     segments_.swap(other.segments_);
-    display_states_.swap(other.display_states_);
+    valid_vector_.swap(other.valid_vector_);
 
     swap(output_count_, other.output_count_);
     swap(input_position_, other.input_position_);
@@ -94,9 +94,6 @@ auto SegmentTree::get_next_index() const -> segment_index_t {
 }
 
 auto SegmentTree::register_segment(segment_index_t index) -> void {
-    if (!is_inserted(display_states_.at(index.value))) {
-        return;
-    }
     const auto& segment = segments_.at(index.value);
 
     for (auto [type, point] : {
@@ -133,9 +130,6 @@ auto SegmentTree::register_segment(segment_index_t index) -> void {
 }
 
 auto SegmentTree::unregister_segment(segment_index_t index) -> void {
-    if (!is_inserted(display_states_.at(index.value))) {
-        return;
-    }
     const auto& segment = segments_.at(index.value);
 
     for (auto [type, point] : {
@@ -180,12 +174,11 @@ auto SegmentTree::unregister_segment(segment_index_t index) -> void {
 
 auto SegmentTree::delete_last_segment() -> void {}
 
-auto SegmentTree::add_segment(segment_info_t segment, display_state_t display_state)
-    -> segment_index_t {
+auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
     const auto new_index = get_next_index();
 
     segments_.push_back(segment);
-    display_states_.push_back(display_state);
+    valid_vector_.push_back(parts_vector_t {});
     register_segment(new_index);
 
     return new_index;
@@ -198,12 +191,12 @@ auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
 
     const auto last_index = this->last_index();
     segments_.at(index.value) = segments_.at(last_index.value);
-    display_states_.at(index.value) = display_states_.at(last_index.value);
+    valid_vector_.at(index.value).swap(valid_vector_.at(last_index.value));
 
     // delete
     unregister_segment(last_index);
     segments_.pop_back();
-    display_states_.pop_back();
+    valid_vector_.pop_back();
 }
 
 auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
@@ -219,17 +212,15 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
 
     output_count_ += tree.output_count_;
     segments_.insert(segments_.end(), tree.segments_.begin(), tree.segments_.end());
-    display_states_.insert(display_states_.end(), tree.display_states_.begin(),
-                           tree.display_states_.end());
+    valid_vector_.insert(valid_vector_.end(), tree.valid_vector_.begin(),
+                         tree.valid_vector_.end());
 
     return next_index;
 }
 
-auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment,
-                                 display_state_t display_state) -> void {
+auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {
     unregister_segment(index);
     segments_.at(index.value) = segment;
-    display_states_.at(index.value) = display_state;
     register_segment(index);
 }
 
@@ -259,10 +250,6 @@ auto SegmentTree::segment_line(segment_index_t index) const -> line_t {
 
 auto SegmentTree::segment_infos() const -> std::span<const segment_info_t> {
     return segments_;
-}
-
-auto SegmentTree::display_state(segment_index_t index) const -> display_state_t {
-    return display_states_.at(index.value);
 }
 
 auto SegmentTree::first_index() const noexcept -> segment_index_t {
@@ -300,8 +287,8 @@ auto SegmentTree::output_count() const noexcept -> std::size_t {
 }
 
 auto SegmentTree::format() const -> std::string {
-    return fmt::format("SegmentTree({}x{}, {})", input_count(), output_count(),
-                       segments_);
+    return fmt::format("SegmentTree({}x{}, {}, valid {})", input_count(), output_count(),
+                       segments_, valid_vector_);
 }
 
 auto SegmentTree::validate_inserted() const -> void {
@@ -327,7 +314,7 @@ auto SegmentTree::validate_inserted() const -> void {
 }
 
 auto SegmentTree::validate() const -> void {
-    if (display_states_.size() != segments_.size()) [[unlikely]] {
+    if (valid_vector_.size() != segments_.size()) [[unlikely]] {
         throw_exception("Vector sizes don't match in segment tree.");
     }
     if ((has_input_ ? 1 : 0) + std::size_t {output_count_} > segments_.size() + 1)
