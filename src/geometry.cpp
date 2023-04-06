@@ -92,26 +92,47 @@ auto is_endpoint(point_t point, line_t line) -> bool {
 // Segments
 //
 
-auto get_segment_part(line_t line) -> part_t {
-    const auto ordered_line = order_points(line);
+auto to_offset(grid_t x, grid_t reference) -> offset_t {
+    const auto value = x.value - reference.value;
 
-    if (is_horizontal(line)) {
-        return part_t {ordered_line.p0.x, ordered_line.p1.x};
-    }
-    return part_t {ordered_line.p0.y, ordered_line.p1.y};
+    static_assert(sizeof(value) > sizeof(grid_t::value_type));
+    static_assert(std::is_signed_v<decltype(value)>);
+
+    return offset_t {gsl::narrow<offset_t::value_type>(value)};
 }
 
-auto get_segment_begin_end(line_t line, rect_fine_t rect) {
+auto to_grid(offset_t offset, grid_t reference) -> grid_t {
+    const auto value = reference.value + offset.value;
+
+    static_assert(sizeof(value) > sizeof(grid_t::value_type));
+    static_assert(std::is_signed_v<decltype(value)>);
+
+    return grid_t {gsl::narrow<grid_t::value_type>(value)};
+}
+
+auto to_part(line_t line) -> part_t {
     const auto ordered_line = order_points(line);
 
     if (is_horizontal(line)) {
+        const auto end = to_offset(ordered_line.p1.x, ordered_line.p0.x);
+        return part_t {offset_t {0}, end};
+    }
+    const auto end = to_offset(ordered_line.p1.y, ordered_line.p0.y);
+    return part_t {offset_t {0}, end};
+}
+
+auto get_segment_reference_begin_end(line_t line, rect_fine_t rect) {
+    const auto ordered_line = order_points(line);
+
+    if (is_horizontal(line)) {
+        // horizontal
         const auto xmin = clamp_to<grid_t::value_type>(std::floor(rect.p0.x));
         const auto xmax = clamp_to<grid_t::value_type>(std::ceil(rect.p1.x));
 
         const auto begin = std::clamp(ordered_line.p0.x.value, xmin, xmax);
         const auto end = std::clamp(ordered_line.p1.x.value, xmin, xmax);
 
-        return std::make_pair(begin, end);
+        return std::make_tuple(ordered_line.p0.x.value, begin, end);
     }
 
     // vertical
@@ -121,27 +142,33 @@ auto get_segment_begin_end(line_t line, rect_fine_t rect) {
     const auto begin = std::clamp(ordered_line.p0.y.value, ymin, ymax);
     const auto end = std::clamp(ordered_line.p1.y.value, ymin, ymax);
 
-    return std::make_pair(begin, end);
+    return std::make_tuple(ordered_line.p0.y.value, begin, end);
 }
 
-auto get_segment_part(line_t line, rect_fine_t rect) -> std::optional<part_t> {
-    const auto [begin, end] = get_segment_begin_end(line, rect);
+auto to_part(line_t line, rect_fine_t rect) -> std::optional<part_t> {
+    const auto [reference, begin, end] = get_segment_reference_begin_end(line, rect);
 
     if (begin == end) {
         return std::nullopt;
     }
-    return part_t {begin, end};
+    return part_t {to_offset(begin, reference), to_offset(end, reference)};
 }
 
-auto get_selected_segment(line_t segment, part_t selection) -> line_t {
-    if (is_horizontal(segment)) {
-        const auto y = segment.p0.y;
-        return line_t {point_t {selection.begin, y}, point_t {selection.end, y}};
+auto to_line(line_t line, part_t part) -> line_t {
+    const auto p_reference = std::min(line.p0, line.p1);
+
+    const auto x = p_reference.x;
+    const auto y = p_reference.y;
+
+    if (is_horizontal(line)) {
+        // horizontal
+        return line_t {point_t {to_grid(part.begin, x), y},
+                       point_t {to_grid(part.end, x), y}};
     }
 
     // vertical
-    const auto x = segment.p0.x;
-    return line_t {point_t {x, selection.begin}, point_t {x, selection.end}};
+    return line_t {point_t {x, to_grid(part.begin, y)},
+                   point_t {x, to_grid(part.end, y)}};
 }
 
 }  // namespace logicsim

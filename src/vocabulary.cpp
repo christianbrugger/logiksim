@@ -199,4 +199,8 @@ auto rect_fine_t::format() const -> std::string {
     return fmt::format("RectFine({}, {})", p0, p1);
 }
 
+auto offset_t::format() const -> std::string {
+    return fmt::format("{}", value);
+}
+
 }  // namespace logicsim

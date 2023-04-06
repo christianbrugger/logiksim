@@ -276,21 +276,24 @@ auto check_and_remove_element(elements_set_t &element_set,
     }
 }
 
-auto check_segment_parts_destructive(line_t line, map_value_t &parts) -> void {
+auto is_part_inside_line(part_t part, line_t line) -> bool {
     const auto sorted_line = order_points(line);
 
-    // part of line?
+    if (is_horizontal(sorted_line)) {
+        const auto x_end = to_grid(part.end, sorted_line.p0.x);
+        return x_end <= sorted_line.p1.x;
+    }
+
+    const auto y_end = to_grid(part.end, sorted_line.p0.y);
+    return y_end <= sorted_line.p1.y;
+}
+
+auto check_segment_parts_destructive(line_t line, map_value_t &parts) -> void {
+    // part inside line
     for (const auto part : parts) {
-        if (is_horizontal(line)) {
-            if (part.begin < sorted_line.p0.x || part.end > sorted_line.p1.x)
-                [[unlikely]] {
-                throw_exception("part is not part of line");
-            }
-        } else {
-            if (part.begin < sorted_line.p0.y || part.end > sorted_line.p1.y)
-                [[unlikely]] {
-                throw_exception("part is not part of line");
-            }
+        if (!is_part_inside_line(part, line)) [[unlikely]] {
+            print(part, line);
+            throw_exception("part is not part of line");
         }
     }
 

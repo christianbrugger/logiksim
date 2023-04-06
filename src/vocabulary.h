@@ -575,12 +575,26 @@ struct rect_t {
     [[nodiscard]] constexpr auto operator==(const rect_t &other) const -> bool = default;
 };
 
-// TODO use offsets instead of absolute values
-struct part_t {
-    grid_t begin;
-    grid_t end;
+struct offset_t {
+    using value_type = std::make_unsigned_t<grid_t::value_type>;
+    value_type value;
 
-    [[nodiscard]] explicit constexpr part_t(grid_t begin_, grid_t end_)
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const offset_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const offset_t &other) const = default;
+};
+
+static_assert(sizeof(offset_t::value_type) == sizeof(grid_t::value_type));
+static_assert(std::is_trivial<offset_t>::value);
+static_assert(std::is_standard_layout<offset_t>::value);
+static_assert(std::is_nothrow_default_constructible<offset_t>::value);
+
+struct part_t {
+    offset_t begin;
+    offset_t end;
+
+    [[nodiscard]] explicit constexpr part_t(offset_t begin_, offset_t end_)
         : begin {begin_}, end {end_} {
         if (!(begin_ < end_)) [[unlikely]] {
             throw_exception("begin needs to be smaller than end.");

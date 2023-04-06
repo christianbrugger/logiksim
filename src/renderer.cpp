@@ -525,8 +525,8 @@ auto draw_wire_selected_parts_shadow(BLContext& ctx, const Layout& layout, line_
                                      std::span<const part_t> parts,
                                      const RenderSettings& settings) -> void {
     for (auto&& part : parts) {
-        const auto selected_segment = get_selected_segment(line, part);
-        const auto selection_rect = element_selection_rect(selected_segment);
+        const auto selected_line = to_line(line, part);
+        const auto selection_rect = element_selection_rect(selected_line);
 
         ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
         draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);

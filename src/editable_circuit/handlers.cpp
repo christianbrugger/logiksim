@@ -890,7 +890,7 @@ auto WireEditor::add_line_segment(line_t line, InsertionMode insertion_mode,
 display_state_t::normal); cache_insert(element_id, segment_index);
 
         if (selection != nullptr) {
-            const auto segment_part = get_segment_part(segment.line);
+            const auto segment_part = to_part(segment.line);
             selection->add_segment(segment_t {element_id, segment_index},
 segment_part);
         }
@@ -965,6 +965,10 @@ auto find_wire(const Circuit& circuit, display_state_t display_state) -> element
     const auto& layout = circuit.layout();
     const auto& schematic = circuit.schematic();
 
+    if (display_state == display_state_t::new_temporary) {
+        return null_element;
+    }
+
     const auto element_ids = layout.element_ids();
 
     const auto it
@@ -982,7 +986,6 @@ auto create_aggregate_tree_at(Circuit& circuit, MessageSender sender,
 
     if (!element_id) {
         element_id = add_new_temporary_wire_element(circuit, sender);
-        print("created", element_id, display_state);
         circuit.layout().set_display_state(element_id, display_state);
     }
 
@@ -1039,12 +1042,19 @@ auto add_temporary_line_segment(Circuit& circuit, MessageSender sender, line_t l
     // insert new segment
     auto& m_tree = circuit.layout().modifyable_segment_tree(element_id);
 
-    const auto segment = segment_info_t {
+    const auto segment_info = segment_info_t {
         .line = line,
         .p0_type = SegmentPointType::shadow_point,
         .p1_type = SegmentPointType::shadow_point,
     };
-    const auto segment_index = m_tree.add_segment(segment, display_state_t::normal);
+    // TODO remove display_state_t argument
+    const auto segment_index = m_tree.add_segment(segment_info, display_state_t::normal);
+
+    // test begin
+    circuit.layout().set_display_state(element_id, display_state_t::normal);
+    sender.submit(info_message::SegmentInserted {segment_t {element_id, segment_index},
+                                                 segment_info});
+    // test end
 
     return segment_t {element_id, segment_index};
 }
@@ -1052,7 +1062,7 @@ auto add_temporary_line_segment(Circuit& circuit, MessageSender sender, line_t l
 auto add_line_segment(State state, line_t line, InsertionMode insertion_mode)
     -> segment_part_t {
     segment_t segment = add_temporary_line_segment(state.circuit, state.sender, line);
-    return segment_part_t {segment, get_segment_part(line)};
+    return segment_part_t {segment, to_part(line)};
 }
 
 auto add_line_segment(State state, Selection* selection, line_t line,

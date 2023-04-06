@@ -98,8 +98,7 @@ auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
     -> selection_handle_t {
     auto handle = registrar_.create_selection();
 
-    editable_circuit::add_connected_line(get_state(), p0, p1,
-                                         LineSegmentType::horizontal_first, handle.get());
+    editable_circuit::add_connected_line(get_state(), p0, p1, segment_type, handle.get());
 
     return handle;
 }
