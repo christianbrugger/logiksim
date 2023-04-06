@@ -55,6 +55,27 @@ auto to_line(line_t line, part_t part) -> line_t;
 // Parts List
 //
 
+[[nodiscard]] auto is_part_inside_line(part_t part, line_t line) -> bool;
+auto sort_and_validate_segment_parts(std::span<part_t> parts, line_t line) -> void;
+auto validate_segment_parts(std::span<const part_t> parts, line_t line) -> void;
+
+[[nodiscard]] auto a_inside_b_not_touching(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_disjoint_to_b(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_inside_b_touching_one_side(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_equal_b(part_t a, part_t b) -> bool;
+
+// TODO remove this and use named methods instead?
+enum class InclusionResult {
+    fully_included,
+    not_included,
+    partially_overlapping,
+};
+[[nodiscard]] auto format(InclusionResult state) -> std::string;
+
+[[nodiscard]] auto a_part_of_b(part_t a, part_t b) -> InclusionResult;
+[[nodiscard]] auto is_part_included(std::span<const part_t> parts, part_t part)
+    -> InclusionResult;
+
 template <typename Container = std::vector<part_t>>
 auto add_part(Container &entries, part_t new_part) -> void {
     entries.push_back(new_part);
@@ -92,6 +113,7 @@ auto remove_part(Container &entries, part_t removing) -> void {
         // SEE 'selection_model.md' for visual cases
 
         // no overlapp -> keep
+        // TODO use named methods
         if (entry.begin >= removing.end || entry.end <= removing.begin) {
         }
 
@@ -124,10 +146,21 @@ auto remove_part(Container &entries, part_t removing) -> void {
     }
 }
 
-auto is_part_inside_line(part_t part, line_t line) -> bool;
-auto sort_and_validate_segment_parts(std::span<part_t> parts, line_t line) -> void;
-auto validate_segment_parts(std::span<const part_t> parts, line_t line) -> void;
-
 }  // namespace logicsim
+
+//
+// Formatters
+//
+
+template <>
+struct fmt::formatter<logicsim::InclusionResult> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::InclusionResult &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
+    }
+};
 
 #endif

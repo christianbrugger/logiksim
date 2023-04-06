@@ -18,7 +18,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
     auto &layout = circuit.layout();
 
     auto setup = HandlerSetup {circuit};
-    add_line_segment(setup.state, line_t {point_t {0, 0}, {10, 0}},
+    add_wire_segment(setup.state, line_t {point_t {0, 0}, {10, 0}},
                      InsertionMode::temporary);
 
     setup.validate();

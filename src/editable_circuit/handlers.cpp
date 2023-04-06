@@ -404,7 +404,8 @@ auto connect_element(State state, element_id_t& element_id) -> void {
                                      disconnected_placeholders, &element_id);
 }
 
-auto insert_element(State state, element_id_t& element_id) {
+auto insert_logic_item(State state, element_id_t& element_id) {
+    // we assume there will be no collision
     connect_element(state, element_id);
     add_missing_placeholders_for_outputs(state.circuit, element_id);
 }
@@ -433,7 +434,7 @@ auto element_change_temporary_to_colliding(State state, element_id_t& element_id
     if (is_circuit_item_colliding(state.circuit, state.cache, element_id)) {
         state.layout.set_display_state(element_id, display_state_t::new_colliding);
     } else {
-        insert_element(state, element_id);
+        insert_logic_item(state, element_id);
         state.layout.set_display_state(element_id, display_state_t::new_valid);
         notify_circuit_item_inserted(state.circuit, state.sender, element_id);
     }
@@ -966,9 +967,9 @@ auto find_wire(const Circuit& circuit, display_state_t display_state) -> element
     const auto& schematic = circuit.schematic();
 
     // test begin
-    if (display_state == display_state_t::new_temporary) {
-        return null_element;
-    }
+    // if (display_state == display_state_t::new_temporary) {
+    //    return null_element;
+    //}
     // test end
 
     const auto element_ids = layout.element_ids();
@@ -1029,15 +1030,12 @@ auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
         return COLLIDING_AGGREGATE_ID;
     }
 
-    throw_exception("display state has no aggregate element");
+    throw_exception("display state has no aggregate");
 }
 
-// adding segments
-
-auto add_temporary_line_segment(Circuit& circuit, MessageSender sender, line_t line)
-    -> segment_t {
-    const auto element_id
-        = get_or_create_aggregate(circuit, sender, display_state_t::new_temporary);
+auto add_line_to_aggregate(Circuit& circuit, MessageSender sender, line_t line,
+                           display_state_t aggregate_type) -> segment_part_t {
+    const auto element_id = get_or_create_aggregate(circuit, sender, aggregate_type);
 
     // insert new segment
     auto& m_tree = circuit.layout().modifyable_segment_tree(element_id);
@@ -1048,32 +1046,213 @@ auto add_temporary_line_segment(Circuit& circuit, MessageSender sender, line_t l
         .p1_type = SegmentPointType::shadow_point,
     };
     const auto segment_index = m_tree.add_segment(segment_info);
+    const auto segment = segment_t {element_id, segment_index};
 
-    // test begin
-    circuit.layout().set_display_state(element_id, display_state_t::normal);
-    sender.submit(info_message::SegmentInserted {segment_t {element_id, segment_index},
-                                                 segment_info});
-    // test end
+    // TODO do we need this message anywhere?
+    sender.submit(info_message::SegmentCreated {segment});
 
-    return segment_t {element_id, segment_index};
-}
-
-auto add_line_segment(State state, line_t line, InsertionMode insertion_mode)
-    -> segment_part_t {
-    segment_t segment = add_temporary_line_segment(state.circuit, state.sender, line);
     return segment_part_t {segment, to_part(line)};
 }
 
-auto add_line_segment(State state, Selection* selection, line_t line,
+// insertion mode changing
+
+auto is_wire_colliding(const CacheProvider& cache, line_t line) -> bool {
+    // TODO connections colliding
+    return cache.collision_cache().is_colliding(line);
+}
+
+auto get_display_states(const Layout& layout, segment_part_t segment_part)
+    -> std::pair<display_state_t, display_state_t> {
+    using enum display_state_t;
+
+    const auto& tree = layout.segment_tree(segment_part.segment.element_id);
+    const auto tree_state = layout.display_state(segment_part.segment.element_id);
+
+    // our aggregates
+    if (tree_state == new_temporary || tree_state == new_colliding) {
+        return std::make_pair(tree_state, tree_state);
+    }
+
+    const auto&& valid_parts = tree.valid_parts(segment_part.segment.segment_index);
+    const auto part_valid = is_part_included(valid_parts, segment_part.part);
+
+    switch (part_valid) {
+        using enum InclusionResult;
+
+        case fully_included:
+            return std::make_pair(new_valid, new_valid);
+
+        case not_included:
+            return std::make_pair(normal, normal);
+
+        case partially_overlapping:
+            return std::make_pair(new_valid, normal);
+    }
+
+    throw_exception("unknown InclusionResult state");
+}
+
+auto get_insertion_modes(const Layout& layout, segment_part_t segment_part)
+    -> std::pair<InsertionMode, InsertionMode> {
+    const auto display_states = get_display_states(layout, segment_part);
+
+    return std::make_pair(to_insertion_mode(display_states.first),
+                          to_insertion_mode(display_states.second));
+}
+
+auto insert_wire(State state, line_t line) -> segment_part_t {
+    // we assume there will be no collision
+    return null_segment_part;
+}
+
+// this tree simply removes the segment from the tree, which might become empty
+// the point type will revert to shadow_point
+auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
+                                   segment_part_t& segment_part) -> void {
+    // segment_part_t* preserve_part
+
+    // TODO introduce ordered line ???
+
+    const auto full_line = order_points(get_line(circuit.layout(), segment_part.segment));
+    const auto full_part = to_part(full_line);
+
+    const auto removing_part = segment_part.part;
+    const auto removing_line = order_points(to_line(full_line, removing_part));
+
+    auto& m_tree
+        = circuit.layout().modifyable_segment_tree(segment_part.segment.element_id);
+
+    // remove completely
+    if (a_equal_b(removing_part, full_part)) {
+        const auto last_segment
+            = segment_t {segment_part.segment.element_id, m_tree.last_index()};
+        m_tree.swap_and_delete_segment(segment_part.segment.segment_index);
+
+        // TODO we need to change messages to include segment_part?
+        // TODO who needs these messages and which one?
+
+        sender.submit(info_message::SegmentDeleted {segment_part.segment});
+        if (last_segment != segment_part.segment) {
+            sender.submit(
+                info_message::SegmentUpdated {segment_part.segment, last_segment});
+        }
+    }
+
+    // split segment in two
+    else if (a_inside_b_not_touching(removing_part, full_part)) {
+        const auto keep_line = full_line.p0 == removing_line.p0
+                                   ? line_t {removing_line.p1, full_line.p1}
+                                   : line_t {full_line.p0, removing_line.p0};
+    }
+
+    // shrink one side of segment
+    else if (a_inside_b_touching_one_side(removing_part, full_part)) {
+        const auto keep_line = full_line.p0 == removing_line.p0
+                                   ? line_t {removing_line.p1, full_line.p1}
+                                   : line_t {full_line.p0, removing_line.p0};
+
+        m_tree.update_segment(segment_part.segment.segment_index,
+                              segment_info_t {.line = keep_line,
+                                              .p0_type = SegmentPointType::shadow_point,
+                                              .p1_type = SegmentPointType::shadow_point});
+        // TODO which message to send?
+        // TODO inserted segment updated?
+    }
+
+    else {
+        throw_exception("segment_part does not exist in its entire length");
+    }
+
+    segment_part = null_segment_part;
+}
+
+auto mark_valid(Layout& layout, segment_part_t segment_part) {
+    auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
+    m_tree.mark_valid(segment_part.segment.segment_index, segment_part.part);
+}
+
+auto unmark_valid(Layout& layout, segment_part_t segment_part) {
+    auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
+    m_tree.unmark_valid(segment_part.segment.segment_index, segment_part.part);
+}
+
+auto wire_change_temporary_to_colliding(State state, segment_part_t& segment_part)
+    -> void {
+    const auto line = get_line(state.layout, segment_part);
+    remove_wire_segment_from_tree(state.circuit, state.sender, segment_part);
+
+    if (is_wire_colliding(state.cache, line)) {
+        segment_part = add_line_to_aggregate(state.circuit, state.sender, line,
+                                             display_state_t::new_colliding);
+    } else {
+        segment_part = insert_wire(state, line);
+        mark_valid(state.layout, segment_part);
+    }
+}
+
+auto wire_change_colliding_to_insert(Circuit& circuit, MessageSender sender,
+                                     segment_part_t segment_part) -> void {}
+
+auto wire_change_insert_to_colliding(Layout& layout, segment_part_t segment_part)
+    -> void {}
+
+auto wire_change_colliding_to_temporary(Circuit& circuit, MessageSender sender,
+                                        segment_part_t& segment_part) -> void {}
+
+auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
+                                InsertionMode new_mode) -> void {
+    if (!segment_part) [[unlikely]] {
+        throw_exception("segment part is invalid");
+    }
+    if (!state.schematic.element(segment_part.segment.element_id).is_wire())
+        [[unlikely]] {
+        throw_exception("only works on wires");
+    }
+
+    // as parts have length, the line segment can have two possible modes
+    const auto old_modes = get_insertion_modes(state.layout, segment_part);
+    print(old_modes);
+
+    if (old_modes.first == new_mode && old_modes.second == new_mode) {
+        return;
+    }
+
+    if (old_modes.first == InsertionMode::temporary
+        || old_modes.second == InsertionMode::temporary) {
+        wire_change_temporary_to_colliding(state, segment_part);
+    }
+    if (new_mode == InsertionMode::insert_or_discard) {
+        wire_change_colliding_to_insert(state.circuit, state.sender, segment_part);
+    }
+    if (old_modes.first == InsertionMode::insert_or_discard
+        || old_modes.second == InsertionMode::insert_or_discard) {
+        wire_change_insert_to_colliding(state.layout, segment_part);
+    }
+    if (new_mode == InsertionMode::temporary) {
+        wire_change_colliding_to_temporary(state.circuit, state.sender, segment_part);
+    }
+}
+
+// adding segments
+
+auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
+    -> segment_part_t {
+    auto segment_part = add_line_to_aggregate(state.circuit, state.sender, line,
+                                              display_state_t::new_temporary);
+    change_wire_insertion_mode(state, segment_part, insertion_mode);
+    return segment_part;
+}
+
+auto add_wire_segment(State state, Selection* selection, line_t line,
                       InsertionMode insertion_mode) -> void {
-    auto segment_part = add_line_segment(state, line, insertion_mode);
+    auto segment_part = add_wire_segment(state, line, insertion_mode);
 
     if (selection != nullptr) {
         selection->add_segment(segment_part);
     }
 }
 
-auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+auto add_connected_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
                         Selection* selection) -> void {
     const auto mode = InsertionMode::temporary;
 
@@ -1085,10 +1264,10 @@ auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType seg
         case horizontal_first: {
             const auto pm = point_t {p1.x, p0.y};
             if (p0.x != pm.x) {
-                add_line_segment(state, selection, line_t {p0, pm}, mode);
+                add_wire_segment(state, selection, line_t {p0, pm}, mode);
             }
             if (pm.y != p1.y) {
-                add_line_segment(state, selection, line_t {pm, p1}, mode);
+                add_wire_segment(state, selection, line_t {pm, p1}, mode);
             }
             break;
         }
@@ -1096,10 +1275,10 @@ auto add_connected_line(State state, point_t p0, point_t p1, LineSegmentType seg
         case vertical_first: {
             const auto pm = point_t {p0.x, p1.y};
             if (p0.y != pm.y) {
-                add_line_segment(state, selection, line_t {p0, pm}, mode);
+                add_wire_segment(state, selection, line_t {p0, pm}, mode);
             }
             if (pm.x != p1.x) {
-                add_line_segment(state, selection, line_t {pm, p1}, mode);
+                add_wire_segment(state, selection, line_t {pm, p1}, mode);
             }
             break;
         }

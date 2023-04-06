@@ -615,7 +615,14 @@ struct segment_part_t {
 
     [[nodiscard]] auto operator==(const segment_part_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const segment_part_t &other) const = default;
+
+    [[nodiscard]] explicit constexpr operator bool() const noexcept {
+        return bool {segment};
+    }
 };
+
+inline constexpr auto null_segment_part
+    = segment_part_t {null_segment, part_t {offset_t {0}, offset_t {1}}};
 
 }  // namespace logicsim
 

@@ -212,4 +212,59 @@ auto validate_segment_parts(std::span<const part_t> parts, line_t line) -> void 
     sort_and_validate_segment_parts(copy, line);
 }
 
+auto a_inside_b_not_touching(part_t a, part_t b) -> bool {
+    return b.begin < a.begin && b.end > a.end;
+}
+
+auto a_disjoint_to_b(part_t a, part_t b) -> bool {
+    return a.begin >= b.end || a.end <= b.begin;
+}
+
+auto a_inside_b_touching_one_side(part_t a, part_t b) -> bool {
+    return b.begin <= a.begin && b.end >= a.end  //
+           && (b.begin == a.begin ^ b.end == a.end);
+}
+
+auto a_equal_b(part_t a, part_t b) -> bool {
+    return a == b;
+}
+
+auto format(InclusionResult state) -> std::string {
+    switch (state) {
+        using enum InclusionResult;
+
+        case fully_included:
+            return "fully_included";
+        case not_included:
+            return "not_included";
+        case partially_overlapping:
+            return "partially_overlapping";
+    }
+    throw_exception("Don't know how to convert InclusionState to string.");
+}
+
+auto a_part_of_b(part_t a, part_t b) -> InclusionResult {
+    if (b.begin <= a.begin && a.end <= b.end) {
+        return InclusionResult::fully_included;
+    }
+    if (b.end <= a.begin || a.end <= b.begin) {
+        return InclusionResult::not_included;
+    }
+    return InclusionResult::partially_overlapping;
+}
+
+auto is_part_included(std::span<const part_t> parts, part_t query) -> InclusionResult {
+    using enum InclusionResult;
+
+    for (const auto part : parts) {
+        const auto result = a_part_of_b(query, part);
+        if (result == fully_included || result == partially_overlapping) {
+            // parts can not touch or overlapp, so we can return early
+            return result;
+        }
+    }
+
+    return not_included;
+}
+
 }  // namespace logicsim

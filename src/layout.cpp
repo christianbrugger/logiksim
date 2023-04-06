@@ -70,6 +70,11 @@ auto get_line(const Layout &layout, segment_t segment) -> line_t {
     return get_segment_info(layout, segment).line;
 }
 
+auto get_line(const Layout &layout, segment_part_t segment_part) -> line_t {
+    const auto full_line = get_line(layout, segment_part.segment);
+    return to_line(full_line, segment_part.part);
+}
+
 auto swap(Layout &a, Layout &b) noexcept -> void {
     a.swap(b);
 }
