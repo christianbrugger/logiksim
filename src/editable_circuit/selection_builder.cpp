@@ -14,15 +14,17 @@ namespace logicsim {
 // Selection Builder
 //
 
-SelectionBuilder::SelectionBuilder(const Layout& layout, const SpatialTree& spatial_cache,
-                                   selection_handle_t initial_selection)
-    : layout_ {&layout},
-      spatial_cache_ {&spatial_cache},
-      initial_selection_ {std::move(initial_selection)} {}
+SelectionBuilder::SelectionBuilder(const Layout& layout, const SpatialTree& spatial_cache)
+    : layout_ {&layout}, spatial_cache_ {&spatial_cache} {}
 
 auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
     using namespace editable_circuit::info_message;
 
+    // we only keep the inital selection updated
+    initial_selection_.submit(message);
+
+    // we can't update the cached selection, as elements might be added that
+    // are within the selection rects of the operations
     if (std::holds_alternative<ElementCreated>(message)
         || std::holds_alternative<ElementDeleted>(message)
         || std::holds_alternative<ElementUpdated>(message)) {
@@ -31,11 +33,11 @@ auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
 }
 
 auto SelectionBuilder::empty() const noexcept -> bool {
-    return initial_selection_->empty() && operations_.empty();
+    return initial_selection_.empty() && operations_.empty();
 }
 
 auto SelectionBuilder::clear() -> void {
-    initial_selection_->clear();
+    initial_selection_.clear();
     operations_.clear();
     cached_selection_.reset();
 }
@@ -139,7 +141,7 @@ auto apply_function(Selection& selection, const SpatialTree& spatial_cache,
 }  // namespace
 
 auto SelectionBuilder::calculate_selection() const -> Selection {
-    auto selection = Selection {*initial_selection_};
+    auto selection = Selection {initial_selection_};
 
     for (auto&& operation : operations_) {
         apply_function(selection, *spatial_cache_, *layout_, operation);
@@ -153,7 +155,7 @@ auto SelectionBuilder::selection() const -> const Selection& {
         return *cached_selection_;
     }
     if (operations_.empty()) {
-        return *initial_selection_;
+        return initial_selection_;
     }
 
     cached_selection_ = calculate_selection();
@@ -193,7 +195,7 @@ auto SelectionBuilder::apply_all_operations() -> void {
     static_cast<void>(selection());
 
     if (cached_selection_) {
-        initial_selection_->swap(*cached_selection_);
+        initial_selection_.swap(*cached_selection_);
     }
 
     operations_.clear();
@@ -205,11 +207,7 @@ auto SelectionBuilder::clear_cache() const -> void {
 }
 
 auto SelectionBuilder::validate(const Circuit& circuit) const -> void {
-    if (initial_selection_.get() == nullptr) [[unlikely]] {
-        throw_exception("inital selection is nullptr");
-    }
-
-    initial_selection_->validate(circuit);
+    initial_selection_.validate(circuit);
 
     if (cached_selection_) {
         cached_selection_->validate(circuit);

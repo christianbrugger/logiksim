@@ -965,11 +965,6 @@ auto find_wire(const Circuit& circuit, display_state_t display_state) -> element
     const auto& layout = circuit.layout();
     const auto& schematic = circuit.schematic();
 
-    // TODO remove later
-    if (display_state == display_state_t::new_temporary) {
-        return null_element;
-    }
-
     const auto element_ids = layout.element_ids();
 
     const auto it
@@ -1052,9 +1047,9 @@ auto add_temporary_line_segment(Circuit& circuit, MessageSender sender, line_t l
     const auto segment_index = m_tree.add_segment(segment_info, display_state_t::normal);
 
     // test begin
-    circuit.layout().set_display_state(element_id, display_state_t::normal);
-    sender.submit(info_message::SegmentInserted {segment_t {element_id, segment_index},
-                                                 segment_info});
+    // circuit.layout().set_display_state(element_id, display_state_t::normal);
+    // sender.submit(info_message::SegmentInserted {segment_t {element_id, segment_index},
+    //                                              segment_info});
     // test end
 
     return segment_t {element_id, segment_index};

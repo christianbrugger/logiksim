@@ -13,8 +13,7 @@ namespace logicsim {
 EditableCircuit::EditableCircuit(Circuit&& circuit)
     : circuit_ {std::move(circuit)},
       cache_provider_ {circuit_.value()},
-      selection_builder_ {circuit_.value().layout(), cache_provider_.spatial_cache(),
-                          registrar_.create_selection()} {}
+      selection_builder_ {circuit_.value().layout(), cache_provider_.spatial_cache()} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", circuit_);
@@ -27,10 +26,10 @@ auto EditableCircuit::circuit() const -> const Circuit& {
 auto EditableCircuit::extract_circuit() -> Circuit {
     auto temp = Circuit {std::move(circuit_.value())};
 
-    // TODO fix reset
+    // we don't reset the registrar, as allocations might still be out there
     circuit_ = std::nullopt;
-    // selection_builder_ = SelectionBuilder {Layout {}, cache_provider_.spatial_cache(),
-    //                                        registrar_.create_selection()};
+    cache_provider_ = CacheProvider {};
+    selection_builder_ = SelectionBuilder {Layout {}, cache_provider_.spatial_cache()};
 
     return temp;
 }

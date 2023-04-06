@@ -31,8 +31,7 @@ class SelectionBuilder {
 
    public:
     [[nodiscard]] explicit SelectionBuilder(const Layout &layout,
-                                            const SpatialTree &spatial_cache,
-                                            selection_handle_t initial_selection);
+                                            const SpatialTree &spatial_cache);
 
     [[nodiscard]] auto empty() const noexcept -> bool;
 
@@ -57,7 +56,7 @@ class SelectionBuilder {
     gsl::not_null<const Layout *> layout_;
     gsl::not_null<const SpatialTree *> spatial_cache_;
 
-    gsl::not_null<selection_handle_t> initial_selection_;
+    Selection initial_selection_ {};
     std::vector<operation_t> operations_ {};
     mutable std::optional<Selection> cached_selection_ {};
 };
