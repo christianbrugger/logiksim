@@ -73,9 +73,9 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
             x = 0;
         }
 
-        auto handle
-            = ec.add_standard_logic_item(ElementType::and_element, 3, point_t {x, y},
-                                         InsertionMode::insert_or_discard);
+        auto handle = ec.add_standard_logic_item(ElementType::and_element, 3,
+                                                 point_t {grid_t {x}, grid_t {y}},
+                                                 InsertionMode::insert_or_discard);
         // ec.delete_all(std::move(handle));
         benchmark::DoNotOptimize(handle);
     }

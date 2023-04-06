@@ -314,7 +314,7 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
         const auto it = segment_map.find(key);
 
         if (it != segment_map.end()) {
-            const auto line = segment_tree.segment(segment_index).line;
+            const auto line = segment_tree.segment_line(segment_index);
             check_segment_parts_destructive(line, it->second);
             segment_map.erase(it);
         }

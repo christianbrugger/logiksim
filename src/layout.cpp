@@ -62,6 +62,14 @@ auto is_inserted(const Layout &layout, element_id_t element_id) -> bool {
     return is_inserted(layout.display_state(element_id));
 }
 
+auto get_segment_info(const Layout &layout, segment_t segment) -> segment_info_t {
+    return layout.segment_tree(segment.element_id).segment_info(segment.segment_index);
+}
+
+auto get_line(const Layout &layout, segment_t segment) -> line_t {
+    return get_segment_info(layout, segment).line;
+}
+
 auto swap(Layout &a, Layout &b) noexcept -> void {
     a.swap(b);
 }

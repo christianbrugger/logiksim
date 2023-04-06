@@ -18,6 +18,10 @@ class Layout;
 
 [[nodiscard]] auto is_inserted(const Layout &layout, element_id_t element_id) -> bool;
 
+[[nodiscard]] auto get_segment_info(const Layout &layout, segment_t segment)
+    -> segment_info_t;
+[[nodiscard]] auto get_line(const Layout &layout, segment_t segment) -> line_t;
+
 class Layout {
    public:
     [[nodiscard]] explicit Layout() = default;

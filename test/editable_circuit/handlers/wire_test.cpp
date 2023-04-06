@@ -34,7 +34,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
         ASSERT_EQ(tree_0.segment_count(), 1);
 
         const auto line = line_t {point_t {0, 0}, {10, 0}};
-        ASSERT_EQ(tree_0.segment(0).line, line);
+        ASSERT_EQ(tree_0.segment_line(0), line);
     }
     {
         const auto id_1 = element_id_t {1};

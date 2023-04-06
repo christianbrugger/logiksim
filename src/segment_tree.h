@@ -70,10 +70,14 @@ class SegmentTree {
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
-    // TODO rename to segment_info
-    [[nodiscard]] auto segment(std::size_t index) const -> segment_info_t;
-    [[nodiscard]] auto segment(segment_index_t index) const -> segment_info_t;
-    [[nodiscard]] auto segments() const -> std::span<const segment_info_t>;
+
+    [[nodiscard]] auto segment_info(std::size_t index) const -> segment_info_t;
+    [[nodiscard]] auto segment_info(segment_index_t index) const -> segment_info_t;
+    [[nodiscard]] auto segment_line(std::size_t index) const -> line_t;
+    [[nodiscard]] auto segment_line(segment_index_t index) const -> line_t;
+    [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
+
+    // TODO remove
     [[nodiscard]] auto display_state(segment_index_t index) const -> display_state_t;
 
     [[nodiscard]] auto first_index() const noexcept -> segment_index_t;

@@ -241,15 +241,23 @@ auto SegmentTree::segment_count() const noexcept -> std::size_t {
     return segments_.size();
 }
 
-auto SegmentTree::segment(std::size_t index) const -> segment_info_t {
+auto SegmentTree::segment_info(std::size_t index) const -> segment_info_t {
     return segments_.at(index);
 }
 
-auto SegmentTree::segment(segment_index_t index) const -> segment_info_t {
+auto SegmentTree::segment_info(segment_index_t index) const -> segment_info_t {
     return segments_.at(index.value);
 }
 
-auto SegmentTree::segments() const -> std::span<const segment_info_t> {
+auto SegmentTree::segment_line(std::size_t index) const -> line_t {
+    return segment_info(index).line;
+}
+
+auto SegmentTree::segment_line(segment_index_t index) const -> line_t {
+    return segment_info(index).line;
+}
+
+auto SegmentTree::segment_infos() const -> std::span<const segment_info_t> {
     return segments_;
 }
 

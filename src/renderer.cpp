@@ -358,7 +358,7 @@ auto draw_element_tree(BLContext& ctx, Schematic::ConstElement element,
     const auto& segment_tree = layout.segment_tree(element);
     const auto cross_width = line_cross_width(settings);
 
-    for (const segment_info_t& segment : segment_tree.segments()) {
+    for (const segment_info_t& segment : segment_tree.segment_infos()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
         if (is_cross_point(segment.p0_type)) {
@@ -535,7 +535,7 @@ auto draw_wire_selected_parts_shadow(BLContext& ctx, const Layout& layout, line_
 
 auto draw_wire_temporary_shadow(BLContext& ctx, const SegmentTree& segment_tree,
                                 const RenderSettings& settings) {
-    for (auto& segment : segment_tree.segments()) {
+    for (auto& segment : segment_tree.segment_infos()) {
         const auto selection_rect = element_selection_rect(segment.line);
         ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
         draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
@@ -544,7 +544,7 @@ auto draw_wire_temporary_shadow(BLContext& ctx, const SegmentTree& segment_tree,
 
 auto draw_wire_colliding_shadow(BLContext& ctx, const SegmentTree& segment_tree,
                                 const RenderSettings& settings) {
-    for (auto& segment : segment_tree.segments()) {
+    for (auto& segment : segment_tree.segment_infos()) {
         const auto selection_rect = element_selection_rect(segment.line);
         ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
         draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
@@ -577,8 +577,7 @@ auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout&
         const auto element_id = segment.element_id;
 
         if (layout.display_state(element_id) == display_state_t::normal) {
-            const auto line
-                = layout.segment_tree(element_id).segment(segment.segment_index).line;
+            const auto line = get_line(layout, segment);
             draw_wire_selected_parts_shadow(ctx, layout, line, parts, settings);
         }
     }

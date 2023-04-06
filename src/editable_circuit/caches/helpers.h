@@ -21,10 +21,9 @@ auto add_element_to_cache(auto &&cache, const Circuit &circuit, element_id_t ele
 
     else if (element.is_wire()) {
         const auto &segment_tree = layout.segment_tree(element_id);
-        for (const auto segment_index : segment_tree.indices()) {
-            const auto segment = segment_tree.segment(segment_index);
-            cache.submit(
-                SegmentInserted {segment_t {element_id, segment_index}, segment});
+
+        for (const auto segment : segment_tree.indices(element_id)) {
+            cache.submit(SegmentInserted {segment, get_segment_info(layout, segment)});
         }
     }
 }

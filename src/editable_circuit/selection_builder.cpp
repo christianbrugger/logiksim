@@ -92,14 +92,13 @@ auto add_element_to_selection(element_id_t element_id, SelectionFunction functio
 
 auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t operation,
                               Selection& selection, const Layout& layout) {
-    const auto line
-        = layout.segment_tree(segment.element_id).segment(segment.segment_index).line;
-    const auto segment_sel = to_part(line, operation.rect);
+    const auto line = get_line(layout, segment);
+    const auto part = to_part(line, operation.rect);
 
-    if (!segment_sel) {
+    if (!part) {
         return;
     }
-    const auto segment_part = segment_part_t {segment, *segment_sel};
+    const auto segment_part = segment_part_t {segment, *part};
 
     switch (operation.function) {
         using enum SelectionFunction;

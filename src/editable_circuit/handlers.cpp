@@ -47,7 +47,7 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
             sender.submit(info_message::InsertedSegmentUpdated {
                 .new_segment = segment_t {new_element_id, segment_index},
                 .old_segment = segment_t {old_element_id, segment_index},
-                .segment_info = segment_tree.segment(segment_index),
+                .segment_info = segment_tree.segment_info(segment_index),
             });
         }
     }
@@ -965,6 +965,7 @@ auto find_wire(const Circuit& circuit, display_state_t display_state) -> element
     const auto& layout = circuit.layout();
     const auto& schematic = circuit.schematic();
 
+    // TODO remove later
     if (display_state == display_state_t::new_temporary) {
         return null_element;
     }
