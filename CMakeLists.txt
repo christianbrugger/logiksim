@@ -223,6 +223,7 @@ endif()
 set(CMAKE_AUTOMOC TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
+message(NOTICE "Qt version: ${Qt6_VERSION}")
 
 # Blend2D
 set(BLEND2D_STATIC TRUE)
