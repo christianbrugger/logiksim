@@ -7,6 +7,21 @@
 
 namespace logicsim {
 
+auto selection_key_t::format() const -> std::string {
+    return fmt::format("{}", value);
+}
+
+auto selection_key_t::operator++() noexcept -> selection_key_t& {
+    ++value;
+    return *this;
+}
+
+auto selection_key_t::operator++(int) noexcept -> selection_key_t {
+    auto tmp = *this;
+    operator++();
+    return tmp;
+}
+
 //
 // Selection Registrar
 //

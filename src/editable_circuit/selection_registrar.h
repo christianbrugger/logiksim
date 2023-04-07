@@ -13,9 +13,39 @@ namespace logicsim {
 class Layout;
 class selection_handle_t;
 
+struct selection_key_t {
+    using value_type = int64_t;
+    value_type value;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const selection_key_t& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const selection_key_t& other) const = default;
+
+    auto operator++() noexcept -> selection_key_t&;
+    auto operator++(int) noexcept -> selection_key_t;
+};
+
+static_assert(std::is_trivial_v<selection_key_t>);
+
+inline constexpr auto null_selection_key = selection_key_t {-1};
+
+}  // namespace logicsim
+
+template <>
+struct ankerl::unordered_dense::hash<logicsim::selection_key_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::selection_key_t& obj) const noexcept
+        -> uint64_t {
+        return detail::wyhash::hash(obj.value);
+    }
+};
+
 //
 // Registrar
 //
+namespace logicsim {
 
 namespace detail::selection_registrar {
 

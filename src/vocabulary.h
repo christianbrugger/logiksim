@@ -60,23 +60,6 @@ struct circuit_id_t {
 
 static_assert(std::is_trivial<circuit_id_t>::value);
 
-// global unchanging identifier of an selection
-// increments for each selection added
-struct selection_key_t {
-    using value_type = int64_t;
-    value_type value;
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto operator==(const selection_key_t &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const selection_key_t &other) const = default;
-
-    auto operator++() noexcept -> selection_key_t &;
-    auto operator++(int) noexcept -> selection_key_t;
-};
-
-static_assert(std::is_trivial<selection_key_t>::value);
-
 struct element_id_t {
     using value_type = int32_t;
     value_type value;
@@ -182,7 +165,6 @@ struct segment_index_t {
 };
 
 inline constexpr auto null_circuit = circuit_id_t {-1};
-inline constexpr auto null_selection_key = selection_key_t {-1};
 inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
 
@@ -699,16 +681,6 @@ struct ankerl::unordered_dense::hash<logicsim::point_t> {
         static_assert(sizeof(value_type) == sizeof(bit_type));
 
         return detail::wyhash::hash(std::bit_cast<bit_type>(obj));
-    }
-};
-
-template <>
-struct ankerl::unordered_dense::hash<logicsim::selection_key_t> {
-    using is_avalanching = void;
-
-    [[nodiscard]] auto operator()(const logicsim::selection_key_t &obj) const noexcept
-        -> uint64_t {
-        return detail::wyhash::hash(obj.value);
     }
 };
 
