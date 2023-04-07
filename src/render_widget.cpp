@@ -241,7 +241,7 @@ auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
         return layout.display_state(element_id) == display_state_t::new_colliding;
     };
 
-    return std::ranges::any_of(get_selection().selected_elements(), element_colliding);
+    return std::ranges::any_of(get_selection().selected_logic_items(), element_colliding);
 }
 
 //

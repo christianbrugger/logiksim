@@ -10,12 +10,12 @@ namespace logicsim {
 auto Selection::swap(Selection &other) noexcept -> void {
     using std::swap;
 
-    selected_elements_.swap(other.selected_elements_);
+    selected_logicitems_.swap(other.selected_logicitems_);
     selected_segments_.swap(other.selected_segments_);
 }
 
 auto Selection::clear() -> void {
-    selected_elements_.clear();
+    selected_logicitems_.clear();
     selected_segments_.clear();
 }
 
@@ -25,38 +25,38 @@ auto Selection::format() const -> std::string {
         "  elements = {},\n"
         "  segments = {},\n"
         ")",
-        selected_elements_.values(), selected_segments_.values());
+        selected_logicitems_.values(), selected_segments_.values());
 }
 
 auto Selection::empty() const noexcept -> bool {
-    return selected_elements_.empty() && selected_segments_.empty();
+    return selected_logicitems_.empty() && selected_segments_.empty();
 }
 
-auto Selection::add_element(element_id_t element_id) -> void {
+auto Selection::add_logicitem(element_id_t element_id) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("added element_id needs to be valid");
     }
 
-    selected_elements_.insert(element_id);
+    selected_logicitems_.insert(element_id);
 }
 
-auto Selection::remove_element(element_id_t element_id) -> void {
+auto Selection::remove_logicitem(element_id_t element_id) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("removed element_id needs to be valid");
     }
 
-    selected_elements_.erase(element_id);
+    selected_logicitems_.erase(element_id);
 }
 
-auto Selection::toggle_element(element_id_t element_id) -> void {
+auto Selection::toggle_logicitem(element_id_t element_id) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("toggled element_id needs to be valid");
     }
 
     if (is_selected(element_id)) {
-        remove_element(element_id);
+        remove_logicitem(element_id);
     } else {
-        add_element(element_id);
+        add_logicitem(element_id);
     }
 }
 
@@ -100,14 +100,12 @@ auto Selection::remove_segment(segment_part_t segment_part) -> void {
     }
 }
 
-auto Selection::toggle_segment(segment_part_t segment_part) -> void {}
-
 auto Selection::is_selected(element_id_t element_id) const -> bool {
-    return selected_elements_.contains(element_id);
+    return selected_logicitems_.contains(element_id);
 }
 
-auto Selection::selected_elements() const -> std::span<const element_id_t> {
-    return selected_elements_.values();
+auto Selection::selected_logic_items() const -> std::span<const element_id_t> {
+    return selected_logicitems_.values();
 }
 
 auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
@@ -146,13 +144,13 @@ namespace logicsim {
 //
 
 auto Selection::handle(editable_circuit::info_message::LogicItemDeleted message) -> void {
-    remove_element(message.element_id);
+    remove_logicitem(message.element_id);
 }
 
 auto Selection::handle(editable_circuit::info_message::LogicItemUpdated message) -> void {
-    const auto count = selected_elements_.erase(message.old_element_id);
+    const auto count = selected_logicitems_.erase(message.old_element_id);
     if (count > 0) {
-        const auto inserted = selected_elements_.insert(message.new_element_id).second;
+        const auto inserted = selected_logicitems_.insert(message.new_element_id).second;
 
         if (!inserted) [[unlikely]] {
             throw_exception("element already existed");
@@ -227,16 +225,16 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
 }  // namespace
 
 auto Selection::validate(const Circuit &circuit) const -> void {
-    auto element_set = detail::selection::elements_set_t {selected_elements_};
+    auto logicitems_set = detail::selection::logicitems_set_t {selected_logicitems_};
     auto segment_map = detail::selection::segment_map_t {selected_segments_};
 
     // logic items
     for (const auto element : circuit.schematic().elements()) {
         if (element.is_logic_item()) {
-            element_set.erase(element.element_id());
+            logicitems_set.erase(element.element_id());
         }
     }
-    if (!element_set.empty()) [[unlikely]] {
+    if (!logicitems_set.empty()) [[unlikely]] {
         throw_exception("selection contains elements that don't exist anymore");
     }
 

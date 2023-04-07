@@ -82,15 +82,15 @@ auto add_element_to_selection(element_id_t element_id, SelectionFunction functio
         using enum SelectionFunction;
 
         case add: {
-            selection.add_element(element_id);
+            selection.add_logicitem(element_id);
             return;
         }
         case substract: {
-            selection.remove_element(element_id);
+            selection.remove_logicitem(element_id);
             return;
         }
         case toggle: {
-            selection.toggle_element(element_id);
+            selection.toggle_logicitem(element_id);
             return;
         }
     }
@@ -120,8 +120,7 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
             return;
         }
         case toggle: {
-            selection.toggle_segment(segment_part);
-            return;
+            throw_exception("not implemented");
         }
     }
 
@@ -177,7 +176,7 @@ auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
     const auto element_count = layout_->element_count();
     auto mask = selection_mask_t(element_count, false);
 
-    for (element_id_t element_id : selection().selected_elements()) {
+    for (element_id_t element_id : selection().selected_logic_items()) {
         mask.at(element_id.value) = true;
     }
 

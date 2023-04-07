@@ -23,7 +23,7 @@ static_assert(sizeof(map_key_t) == 8);
 static_assert(sizeof(map_value_t) == 14);
 static_assert(sizeof(map_pair_t) == 24);
 
-using elements_set_t = ankerl::unordered_dense::set<element_id_t>;
+using logicitems_set_t = ankerl::unordered_dense::set<element_id_t>;
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 }  // namespace detail::selection
 
@@ -37,17 +37,16 @@ class Selection {
     [[nodiscard]] auto empty() const noexcept -> bool;
     auto clear() -> void;
 
-    auto add_element(element_id_t element_id) -> void;
-    auto remove_element(element_id_t element_id) -> void;
-    auto toggle_element(element_id_t element_id) -> void;
+    auto add_logicitem(element_id_t element_id) -> void;
+    auto remove_logicitem(element_id_t element_id) -> void;
+    auto toggle_logicitem(element_id_t element_id) -> void;
 
     auto add_segment(segment_part_t segment_part) -> void;
     auto remove_segment(segment_part_t segment_part) -> void;
-    auto toggle_segment(segment_part_t segment_part) -> void;
 
     [[nodiscard]] auto is_selected(element_id_t element_id) const -> bool;
 
-    [[nodiscard]] auto selected_elements() const -> std::span<const element_id_t>;
+    [[nodiscard]] auto selected_logic_items() const -> std::span<const element_id_t>;
     [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;
     [[nodiscard]] auto selected_segments(segment_t segment) const
         -> std::span<const part_t>;
@@ -62,7 +61,7 @@ class Selection {
     auto handle(editable_circuit::info_message::SegmentDeleted message) -> void;
     auto handle(editable_circuit::info_message::SegmentIdUpdated message) -> void;
 
-    detail::selection::elements_set_t selected_elements_ {};
+    detail::selection::logicitems_set_t selected_logicitems_ {};
     detail::selection::segment_map_t selected_segments_ {};
 };
 

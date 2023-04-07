@@ -86,7 +86,7 @@ auto EditableCircuit::add_standard_logic_item(ElementType type, std::size_t inpu
 
     auto handle = registrar_.create_selection();
     if (element_id) {
-        handle.value().add_element(element_id);
+        handle.value().add_logicitem(element_id);
     }
     return handle;
 }
@@ -131,7 +131,7 @@ auto EditableCircuit::new_positions_representable(const Selection& selection, in
         return editable_circuit::is_logic_item_position_representable(circuit, element_id,
                                                                       x, y);
     };
-    return std::ranges::all_of(selection.selected_elements(), is_valid);
+    return std::ranges::all_of(selection.selected_logic_items(), is_valid);
 }
 
 auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int delta_x,
@@ -146,9 +146,9 @@ auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int del
     const auto get_position
         = position_calculator(circuit_.value().layout(), delta_x, delta_y);
     // TODO refactor to algorithm
-    while (handle->selected_elements().size() > 0) {
-        auto element_id = *handle->selected_elements().begin();
-        handle->remove_element(element_id);
+    while (handle->selected_logic_items().size() > 0) {
+        auto element_id = *handle->selected_logic_items().begin();
+        handle->remove_logicitem(element_id);
 
         const auto [x, y] = get_position(element_id);
         editable_circuit::move_or_delete_logic_item(get_state(), element_id, x, y);
@@ -165,9 +165,9 @@ auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
     }
 
     // TODO refactor to algorithm
-    while (handle->selected_elements().size() > 0) {
-        auto element_id = *handle->selected_elements().begin();
-        handle->remove_element(element_id);
+    while (handle->selected_logic_items().size() > 0) {
+        auto element_id = *handle->selected_logic_items().begin();
+        handle->remove_logicitem(element_id);
 
         editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
                                                            new_insertion_mode);
@@ -183,9 +183,9 @@ auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
     }
 
     // TODO refactor to algorithm
-    while (handle->selected_elements().size() > 0) {
-        auto element_id = *handle->selected_elements().begin();
-        handle->remove_element(element_id);
+    while (handle->selected_logic_items().size() > 0) {
+        auto element_id = *handle->selected_logic_items().begin();
+        handle->remove_logicitem(element_id);
 
         editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
                                                            InsertionMode::temporary);
