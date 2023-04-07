@@ -18,13 +18,13 @@ auto LogicItemCreated::format() const -> std::string {
     return fmt::format("LogicItemCreated(element_id = {})", element_id);
 }
 
-auto LogicItemDeleted::format() const -> std::string {
-    return fmt::format("LogicItemDeleted(element_id = {})", element_id);
+auto LogicItemIdUpdated::format() const -> std::string {
+    return fmt::format("LogicItemIdUpdated(new_element_id = {}, old_element_id = {})",
+                       new_element_id, old_element_id);
 }
 
-auto LogicItemUpdated::format() const -> std::string {
-    return fmt::format("LogicItemUpdated(new_element_id = {}, old_element_id = {})",
-                       new_element_id, old_element_id);
+auto LogicItemDeleted::format() const -> std::string {
+    return fmt::format("LogicItemDeleted(element_id = {})", element_id);
 }
 
 // Inserted Logic Item
@@ -33,14 +33,14 @@ auto LogicItemInserted::format() const -> std::string {
     return fmt::format("LogicItemInserted(element_id = {})", element_id);
 }
 
-auto LogicItemUninserted::format() const -> std::string {
-    return fmt::format("LogicItemUninserted(element_id = {})", element_id);
+auto InsertedLogicItemIdUpdated::format() const -> std::string {
+    return fmt::format(
+        "InsertedLogicItemIdUpdated(new_element_id = {}, old_element_id = {})",
+        new_element_id, old_element_id);
 }
 
-auto InsertedLogicItemUpdated::format() const -> std::string {
-    return fmt::format(
-        "InsertedLogicItemUpdated(new_element_id = {}, old_element_id = {})",
-        new_element_id, old_element_id);
+auto LogicItemUninserted::format() const -> std::string {
+    return fmt::format("LogicItemUninserted(element_id = {})", element_id);
 }
 
 // Segments

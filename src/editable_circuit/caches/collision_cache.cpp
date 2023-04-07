@@ -234,7 +234,7 @@ auto CollisionCache::handle(editable_circuit::info_message::LogicItemUninserted 
 }
 
 auto CollisionCache::handle(
-    editable_circuit::info_message::InsertedLogicItemUpdated message) -> void {
+    editable_circuit::info_message::InsertedLogicItemIdUpdated message) -> void {
     update_impl(map_, message.new_element_id, message.old_element_id, message.data);
 }
 
@@ -265,7 +265,7 @@ auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedLogicItemIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }

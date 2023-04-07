@@ -33,18 +33,19 @@ struct LogicItemCreated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
+struct LogicItemIdUpdated {
+    element_id_t new_element_id;
+    element_id_t old_element_id;
+
+    [[nodiscard]] auto operator==(const LogicItemIdUpdated &other) const -> bool
+        = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
 struct LogicItemDeleted {
     element_id_t element_id;
 
     [[nodiscard]] auto operator==(const LogicItemDeleted &other) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-struct LogicItemUpdated {
-    element_id_t new_element_id;
-    element_id_t old_element_id;
-
-    [[nodiscard]] auto operator==(const LogicItemUpdated &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -58,21 +59,21 @@ struct LogicItemInserted {
     [[nodiscard]] auto format() const -> std::string;
 };
 
+struct InsertedLogicItemIdUpdated {
+    element_id_t new_element_id;
+    element_id_t old_element_id;
+    layout_calculation_data_t data;
+
+    [[nodiscard]] auto operator==(const InsertedLogicItemIdUpdated &other) const -> bool
+        = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
 struct LogicItemUninserted {
     element_id_t element_id;
     layout_calculation_data_t data;
 
     [[nodiscard]] auto operator==(const LogicItemUninserted &other) const -> bool
-        = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-struct InsertedLogicItemUpdated {
-    element_id_t new_element_id;
-    element_id_t old_element_id;
-    layout_calculation_data_t data;
-
-    [[nodiscard]] auto operator==(const InsertedLogicItemUpdated &other) const -> bool
         = default;
     [[nodiscard]] auto format() const -> std::string;
 };
@@ -148,8 +149,8 @@ struct SegmentUninserted {
 };
 
 using Message = std::variant<                                                //
-    LogicItemCreated, LogicItemDeleted, LogicItemUpdated,                    //
-    LogicItemInserted, LogicItemUninserted, InsertedLogicItemUpdated,        //
+    LogicItemCreated, LogicItemDeleted, LogicItemIdUpdated,                  //
+    LogicItemInserted, LogicItemUninserted, InsertedLogicItemIdUpdated,      //
     SegmentCreated, SegmentIdUpdated, SegmentPartMoved, SegmentPartDeleted,  //
     SegmentInserted, InsertedSegmentIdUpdated, InsertedPointTypesUpdated,
     SegmentUninserted>;

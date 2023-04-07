@@ -41,7 +41,7 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
     const bool inserted = is_inserted(circuit, new_element_id);
 
     if (element.is_logic_item()) {
-        sender.submit(info_message::LogicItemUpdated {
+        sender.submit(info_message::LogicItemIdUpdated {
             .new_element_id = new_element_id,
             .old_element_id = old_element_id,
         });
@@ -50,7 +50,7 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
     if (element.is_logic_item() && inserted) {
         const auto data = to_layout_calculation_data(circuit, new_element_id);
 
-        sender.submit(info_message::InsertedLogicItemUpdated {
+        sender.submit(info_message::InsertedLogicItemIdUpdated {
             .new_element_id = new_element_id,
             .old_element_id = old_element_id,
             .data = data,

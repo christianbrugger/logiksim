@@ -46,7 +46,7 @@ class MessageRecorder : public editable_circuit::VirtualReceiver {
             validate_data_field(pointer->element_id, pointer->data);
             return;
         }
-        if (const auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
+        if (const auto pointer = std::get_if<InsertedLogicItemIdUpdated>(&message)) {
             validate_data_field(pointer->new_element_id, pointer->data);
             return;
         }

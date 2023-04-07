@@ -147,7 +147,8 @@ auto Selection::handle(editable_circuit::info_message::LogicItemDeleted message)
     remove_logicitem(message.element_id);
 }
 
-auto Selection::handle(editable_circuit::info_message::LogicItemUpdated message) -> void {
+auto Selection::handle(editable_circuit::info_message::LogicItemIdUpdated message)
+    -> void {
     const auto count = selected_logicitems_.erase(message.old_element_id);
     if (count > 0) {
         const auto inserted = selected_logicitems_.insert(message.new_element_id).second;
@@ -186,7 +187,7 @@ auto Selection::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (const auto pointer = std::get_if<LogicItemUpdated>(&message)) {
+    if (const auto pointer = std::get_if<LogicItemIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }

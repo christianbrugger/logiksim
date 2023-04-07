@@ -79,8 +79,8 @@ auto SpatialTree::handle(editable_circuit::info_message::LogicItemUninserted mes
     }
 }
 
-auto SpatialTree::handle(editable_circuit::info_message::InsertedLogicItemUpdated message)
-    -> void {
+auto SpatialTree::handle(
+    editable_circuit::info_message::InsertedLogicItemIdUpdated message) -> void {
     using namespace editable_circuit::info_message;
 
     // r-tree data is immutable
@@ -126,7 +126,7 @@ auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedLogicItemIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }

@@ -68,7 +68,7 @@ auto ConnectionCache<IsInput>::handle(
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::InsertedLogicItemUpdated message) -> void {
+    editable_circuit::info_message::InsertedLogicItemIdUpdated message) -> void {
     const auto update_id = [&](connection_id_t connection_id, point_t position,
                                orientation_t orientation) {
         const auto old_value
@@ -105,7 +105,7 @@ auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> 
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<InsertedLogicItemUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedLogicItemIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }
