@@ -66,11 +66,11 @@ auto get_segment_info(const Layout &layout, segment_t segment) -> segment_info_t
     return layout.segment_tree(segment.element_id).segment_info(segment.segment_index);
 }
 
-auto get_line(const Layout &layout, segment_t segment) -> line_t {
+auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t {
     return get_segment_info(layout, segment).line;
 }
 
-auto get_line(const Layout &layout, segment_part_t segment_part) -> line_t {
+auto get_line(const Layout &layout, segment_part_t segment_part) -> ordered_line_t {
     const auto full_line = get_line(layout, segment_part.segment);
     return to_line(full_line, segment_part.part);
 }

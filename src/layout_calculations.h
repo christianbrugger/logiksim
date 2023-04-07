@@ -13,7 +13,7 @@
 namespace logicsim {
 [[nodiscard]] auto element_collision_rect(layout_calculation_data_t data) -> rect_t;
 [[nodiscard]] auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t;
-[[nodiscard]] auto element_selection_rect(line_t segment) -> rect_fine_t;
+[[nodiscard]] auto element_selection_rect(ordered_line_t line) -> rect_fine_t;
 
 [[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;
 [[nodiscard]] auto orientations_compatible(orientation_t a, orientation_t b) -> bool;

@@ -115,10 +115,10 @@ auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_
     assert(t0 < t1);
 
     if (t_select <= t0) {
-        return static_cast<point_fine_t>(p0);
+        return point_fine_t {p0};
     }
     if (t_select >= t1) {
-        return static_cast<point_fine_t>(p1);
+        return point_fine_t {p1};
     }
 
     const double alpha = static_cast<double>((t_select.value - t0.value).count())
@@ -521,8 +521,8 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
     draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
 }
 
-auto draw_wire_selected_parts_shadow(BLContext& ctx, const Layout& layout, line_t line,
-                                     std::span<const part_t> parts,
+auto draw_wire_selected_parts_shadow(BLContext& ctx, const Layout& layout,
+                                     ordered_line_t line, std::span<const part_t> parts,
                                      const RenderSettings& settings) -> void {
     for (auto&& part : parts) {
         const auto selected_line = to_line(line, part);
@@ -1017,8 +1017,7 @@ auto new_line_point(point_t origin, point_t previous, const RenderBenchmarkConfi
 
 // pick random point on line
 template <std::uniform_random_bit_generator G>
-auto pick_line_point(line_t line, G& rng) -> point_t {
-    line = order_points(line);
+auto pick_line_point(ordered_line_t line, G& rng) -> point_t {
     // return point2d_t {UDist<grid_t> {line.p0.x, line.p1.x}(rng),
     //                   UDist<grid_t> {line.p0.y, line.p1.y}(rng)};
     return point_t {get_udist(line.p0.x, line.p1.x, rng)(),
@@ -1071,7 +1070,7 @@ auto create_random_line_tree(std::size_t n_outputs, const RenderBenchmarkConfig&
         do {
             const auto segment_index = UDist<int> {0, line_tree.segment_count() - 1}(rng);
             const auto segment = line_tree.segment(segment_index);
-            const auto origin = pick_line_point(segment, rng);
+            const auto origin = pick_line_point(ordered_line_t {segment}, rng);
 
             const auto sub_tree
                 = create_line_tree_segment(origin, is_vertical(segment), config, rng);

@@ -14,11 +14,16 @@ namespace logicsim {
 auto is_horizontal(line_t line) noexcept -> bool;
 auto is_vertical(line_t line) noexcept -> bool;
 
+auto is_horizontal(ordered_line_t line) noexcept -> bool;
+auto is_vertical(ordered_line_t line) noexcept -> bool;
+
 // order points within lines
-auto order_points(line_t line) noexcept -> line_t;
+// auto order_points(line_t line) noexcept -> line_t;
 // order lines and points within lines
+// auto order_points(const line_t line0, const line_t line1) noexcept
+//    -> std::tuple<line_t, line_t>;
 auto order_points(const line_t line0, const line_t line1) noexcept
-    -> std::tuple<line_t, line_t>;
+    -> std::tuple<ordered_line_t, ordered_line_t>;
 
 // fast distance for horitonal or vertical lines
 auto distance(line_t line) -> int;
@@ -47,17 +52,18 @@ auto to_grid(offset_t offset, grid_t reference) -> grid_t;
 //
 
 // TODO rename: to_part, to_line
-auto to_part(line_t line) -> part_t;
-auto to_part(line_t line, rect_fine_t rect) -> std::optional<part_t>;
-auto to_line(line_t line, part_t part) -> line_t;
+auto to_part(ordered_line_t line) -> part_t;
+auto to_part(ordered_line_t line, rect_fine_t rect) -> std::optional<part_t>;
+auto to_line(ordered_line_t line, part_t part) -> ordered_line_t;
 
 //
 // Parts List
 //
 
-[[nodiscard]] auto is_part_inside_line(part_t part, line_t line) -> bool;
-auto sort_and_validate_segment_parts(std::span<part_t> parts, line_t line) -> void;
-auto validate_segment_parts(std::span<const part_t> parts, line_t line) -> void;
+[[nodiscard]] auto is_part_inside_line(part_t part, ordered_line_t line) -> bool;
+auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t line)
+    -> void;
+auto validate_segment_parts(std::span<const part_t> parts, ordered_line_t line) -> void;
 
 [[nodiscard]] auto a_inside_b_not_touching(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_disjoint_to_b(part_t a, part_t b) -> bool;

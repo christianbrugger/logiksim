@@ -37,8 +37,8 @@ auto get_selection_box(layout_calculation_data_t data) -> tree_box_t {
     return to_box(rect);
 }
 
-auto get_selection_box(line_t segment) -> tree_box_t {
-    const auto rect = element_selection_rect(segment);
+auto get_selection_box(ordered_line_t line) -> tree_box_t {
+    const auto rect = element_selection_rect(line);
     return to_box(rect);
 }
 
@@ -161,7 +161,7 @@ auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_r
 auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
     using namespace detail::spatial_tree;
 
-    const auto grid_point_fine = static_cast<point_fine_t>(grid_point);
+    const auto grid_point_fine = point_fine_t {grid_point};
     const auto tree_point = tree_point_t {grid_point_fine.x, grid_point_fine.y};
 
     auto result = std::array {null_segment, null_segment, null_segment, null_segment};

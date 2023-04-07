@@ -59,7 +59,7 @@ class CollisionCache {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
-    [[nodiscard]] auto is_colliding(line_t line) const -> bool;
+    [[nodiscard]] auto is_colliding(ordered_line_t line) const -> bool;
 
     [[nodiscard]] auto get_first_wire(point_t position) const -> element_id_t;
 
@@ -85,7 +85,7 @@ class CollisionCache {
     [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
     [[nodiscard]] auto state_colliding(point_t position, ItemType item_type) const
         -> bool;
-    [[nodiscard]] auto creates_loop(line_t line) const -> bool;
+    [[nodiscard]] auto creates_loop(ordered_line_t line) const -> bool;
 
     map_type map_ {};
 };

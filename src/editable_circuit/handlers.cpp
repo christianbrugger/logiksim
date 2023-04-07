@@ -1033,7 +1033,7 @@ auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
     throw_exception("display state has no aggregate");
 }
 
-auto add_line_to_aggregate(Circuit& circuit, MessageSender sender, line_t line,
+auto add_line_to_aggregate(Circuit& circuit, MessageSender sender, ordered_line_t line,
                            display_state_t aggregate_type) -> segment_part_t {
     const auto element_id = get_or_create_aggregate(circuit, sender, aggregate_type);
 
@@ -1056,7 +1056,7 @@ auto add_line_to_aggregate(Circuit& circuit, MessageSender sender, line_t line,
 
 // insertion mode changing
 
-auto is_wire_colliding(const CacheProvider& cache, line_t line) -> bool {
+auto is_wire_colliding(const CacheProvider& cache, ordered_line_t line) -> bool {
     // TODO connections colliding
     return cache.collision_cache().is_colliding(line);
 }
@@ -1100,7 +1100,7 @@ auto get_insertion_modes(const Layout& layout, segment_part_t segment_part)
                           to_insertion_mode(display_states.second));
 }
 
-auto insert_wire(State state, line_t line) -> segment_part_t {
+auto insert_wire(State state, ordered_line_t line) -> segment_part_t {
     // we assume there will be no collision
     return null_segment_part;
 }
@@ -1113,11 +1113,11 @@ auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
 
     // TODO introduce ordered line ???
 
-    const auto full_line = order_points(get_line(circuit.layout(), segment_part.segment));
+    const auto full_line = get_line(circuit.layout(), segment_part.segment);
     const auto full_part = to_part(full_line);
 
     const auto removing_part = segment_part.part;
-    const auto removing_line = order_points(to_line(full_line, removing_part));
+    const auto removing_line = to_line(full_line, removing_part);
 
     auto& m_tree
         = circuit.layout().modifyable_segment_tree(segment_part.segment.element_id);
@@ -1148,8 +1148,8 @@ auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
     // shrink one side of segment
     else if (a_inside_b_touching_one_side(removing_part, full_part)) {
         const auto keep_line = full_line.p0 == removing_line.p0
-                                   ? line_t {removing_line.p1, full_line.p1}
-                                   : line_t {full_line.p0, removing_line.p0};
+                                   ? ordered_line_t {removing_line.p1, full_line.p1}
+                                   : ordered_line_t {full_line.p0, removing_line.p0};
 
         m_tree.update_segment(segment_part.segment.segment_index,
                               segment_info_t {.line = keep_line,
@@ -1235,7 +1235,7 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
 
 // adding segments
 
-auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
+auto add_wire_segment(State state, ordered_line_t line, InsertionMode insertion_mode)
     -> segment_part_t {
     auto segment_part = add_line_to_aggregate(state.circuit, state.sender, line,
                                               display_state_t::new_temporary);
@@ -1245,7 +1245,7 @@ auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
 
 auto add_wire_segment(State state, Selection* selection, line_t line,
                       InsertionMode insertion_mode) -> void {
-    auto segment_part = add_wire_segment(state, line, insertion_mode);
+    auto segment_part = add_wire_segment(state, ordered_line_t {line}, insertion_mode);
 
     if (selection != nullptr) {
         selection->add_segment(segment_part);

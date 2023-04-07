@@ -442,9 +442,21 @@ static_assert(std::is_trivial<grid_t>::value);
 static_assert(std::is_standard_layout<grid_t>::value);
 static_assert(std::is_nothrow_default_constructible<grid_t>::value);
 
+struct point_t;
+
 struct point_fine_t {
     grid_fine_t x;
     grid_fine_t y;
+
+    point_fine_t() = default;
+
+    [[nodiscard]] explicit constexpr point_fine_t(grid_fine_t x_, grid_fine_t y_) noexcept
+        : x {x_}, y {y_} {}
+
+    [[nodiscard]] explicit constexpr point_fine_t(grid_t x_, grid_t y_) noexcept
+        : x {grid_fine_t {x_}}, y {grid_fine_t {y_}} {}
+
+    [[nodiscard]] explicit constexpr point_fine_t(point_t point) noexcept;
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -453,11 +465,11 @@ struct point_fine_t {
     [[nodiscard]] constexpr auto operator<=>(const point_fine_t &other) const = default;
 
     [[nodiscard]] constexpr auto operator+(point_fine_t other) const -> point_fine_t {
-        return {x + other.x, y + other.y};
+        return point_fine_t {x + other.x, y + other.y};
     }
 
     [[nodiscard]] constexpr auto operator-(point_fine_t other) const -> point_fine_t {
-        return {x - other.x, y - other.y};
+        return point_fine_t {x - other.x, y - other.y};
     }
 
     constexpr auto operator+=(point_fine_t other) -> point_fine_t & {
@@ -481,10 +493,6 @@ struct point_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] explicit constexpr operator point_fine_t() const noexcept {
-        return point_fine_t {static_cast<grid_fine_t>(x), static_cast<grid_fine_t>(y)};
-    }
-
     [[nodiscard]] constexpr auto operator==(const point_t &other) const -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const point_t &other) const = default;
 
@@ -499,10 +507,14 @@ struct point_t {
 
 static_assert(std::is_trivial<point_t>::value);
 
+constexpr point_fine_t::point_fine_t(point_t point) noexcept
+    : x {grid_fine_t {point.x}}, y {grid_fine_t {point.y}} {}
+
 constexpr auto is_orthogonal(point_t p0, point_t p1) noexcept -> bool {
     // xor disallows zero length lines
     return (p0.x == p1.x) ^ (p0.y == p1.y);
 }
+struct ordered_line_t;
 
 // a line is either horizontal or vertical
 struct line_t {
@@ -518,6 +530,8 @@ struct line_t {
         }
     };
 
+    [[nodiscard]] explicit constexpr line_t(ordered_line_t line);
+
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const line_t &other) const -> bool = default;
@@ -525,8 +539,42 @@ struct line_t {
 
 static_assert(std::is_trivial_v<line_t>);
 static_assert(std::is_trivially_constructible_v<line_t>);
-static_assert(std::is_trivially_copyable<line_t>::value);
-static_assert(std::is_trivially_copy_assignable<line_t>::value);
+static_assert(std::is_trivially_copyable_v<line_t>);
+static_assert(std::is_trivially_copy_assignable_v<line_t>);
+
+struct ordered_line_t {
+    point_t p0;
+    point_t p1;
+
+    ordered_line_t() = default;
+
+    [[nodiscard]] explicit constexpr ordered_line_t(point_t p0_, point_t p1_)
+        : p0 {p0_}, p1 {p1_} {
+        if (!(is_orthogonal(p0_, p1_) && p0_ < p1_)) [[unlikely]] {
+            throw_exception(
+                "line needs to be horizontal or vertical and points need to be ordered.");
+        }
+    }
+
+    [[nodiscard]] explicit constexpr ordered_line_t(line_t line) noexcept
+        : p0 {line.p0 < line.p1 ? line.p0 : line.p1},
+          p1 {line.p0 < line.p1 ? line.p1 : line.p0} {}
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] constexpr auto operator==(const ordered_line_t &other) const -> bool
+        = default;
+    [[nodiscard]] constexpr auto operator<=>(const ordered_line_t &other) const = default;
+};
+
+constexpr line_t::line_t(ordered_line_t line) : p0 {line.p0}, p1 {line.p1} {}
+
+static_assert(std::is_trivial_v<ordered_line_t>);
+static_assert(std::is_trivially_constructible_v<ordered_line_t>);
+static_assert(std::is_trivially_copyable_v<ordered_line_t>);
+static_assert(std::is_trivially_copy_assignable_v<ordered_line_t>);
+
+struct rect_t;
 
 struct rect_fine_t {
     point_fine_t p0;
@@ -542,10 +590,9 @@ struct rect_fine_t {
     };
 
     [[nodiscard]] explicit constexpr rect_fine_t(point_t p0_, point_t p1_)
-        : rect_fine_t {
-            static_cast<point_fine_t>(p0_),
-            static_cast<point_fine_t>(p1_),
-        } {};
+        : rect_fine_t {point_fine_t {p0_}, point_fine_t {p1_}} {};
+
+    [[nodiscard]] explicit constexpr rect_fine_t(rect_t rect) noexcept;
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -566,14 +613,13 @@ struct rect_t {
         }
     };
 
-    [[nodiscard]] explicit constexpr operator rect_fine_t() const noexcept {
-        return rect_fine_t {static_cast<point_fine_t>(p0), static_cast<point_fine_t>(p1)};
-    }
-
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const rect_t &other) const -> bool = default;
 };
+
+constexpr rect_fine_t::rect_fine_t(rect_t rect) noexcept
+    : p0 {point_fine_t {p0}}, p1 {point_fine_t {p1}} {}
 
 struct offset_t {
     using value_type = std::make_unsigned_t<grid_t::value_type>;

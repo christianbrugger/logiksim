@@ -94,23 +94,23 @@ auto transform(point_t position, orientation_t orientation, point_t p0, point_t 
 }
 
 auto connector_endpoint(point_t position, orientation_t orientation) -> point_fine_t {
-    const auto p0 = static_cast<point_fine_t>(position);
+    const auto p0 = point_fine_t {position};
     const auto connector_offset = 0.4;
 
     switch (orientation) {
         using enum orientation_t;
 
         case right: {
-            return {p0.x + connector_offset, p0.y};
+            return point_fine_t {p0.x + connector_offset, p0.y};
         }
         case left: {
-            return {p0.x - connector_offset, p0.y};
+            return point_fine_t {p0.x - connector_offset, p0.y};
         }
         case up: {
-            return {p0.x, p0.y - connector_offset};
+            return point_fine_t {p0.x, p0.y - connector_offset};
         }
         case down: {
-            return {p0.x, p0.y + connector_offset};
+            return point_fine_t {p0.x, p0.y + connector_offset};
         }
 
         case undirected: {
@@ -181,20 +181,19 @@ auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t {
     };
 }
 
-auto element_selection_rect(line_t segment) -> rect_fine_t {
+auto element_selection_rect(ordered_line_t line) -> rect_fine_t {
     constexpr auto width = grid_fine_t {0.3};
 
-    const auto ordered_segment = order_points(segment);
-    const auto p0 = static_cast<point_fine_t>(ordered_segment.p0);
-    const auto p1 = static_cast<point_fine_t>(ordered_segment.p1);
+    const auto p0 = point_fine_t {line.p0};
+    const auto p1 = point_fine_t {line.p1};
 
-    if (is_horizontal(segment)) {
+    if (is_horizontal(line)) {
         return rect_fine_t {
             point_fine_t {p0.x, p0.y - width},
             point_fine_t {p1.x, p1.y + width},
         };
     }
-    if (is_vertical(segment)) {
+    if (is_vertical(line)) {
         return rect_fine_t {
             point_fine_t {p0.x - width, p0.y},
             point_fine_t {p1.x + width, p1.y},

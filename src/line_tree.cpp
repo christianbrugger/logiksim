@@ -489,7 +489,7 @@ auto LineTree::validate_horizontal_follows_vertical() const -> bool {
            == segments().end();
 }
 
-auto connected_lines_colliding(line_t line0, line_t line1) -> bool {
+auto connected_lines_colliding(ordered_line_t line0, ordered_line_t line1) -> bool {
     if (line0.p1 == line1.p0) {
         return is_colliding(line0.p0, line1) || is_colliding(line1.p1, line0);
     }
@@ -500,11 +500,14 @@ auto connected_lines_colliding(line_t line0, line_t line1) -> bool {
 }
 
 auto LineTree::validate_no_internal_collisions() const -> bool {
-    auto are_colliding = [](SegmentIterator it1, SegmentIterator it2) {
-        if (it1.is_connected(it2)) {
-            return connected_lines_colliding(*it1, *it2);
+    auto are_colliding = [](SegmentIterator it0, SegmentIterator it1) {
+        const auto line0 = ordered_line_t {*it0};
+        const auto line1 = ordered_line_t {*it1};
+
+        if (it0.is_connected(it1)) {
+            return connected_lines_colliding(line0, line1);
         }
-        return line_points_colliding(*it1, *it2);
+        return line_points_colliding(line0, line1);
     };
     return !has_duplicates_quadratic_iterator(segments().begin(), segments().end(),
                                               are_colliding);

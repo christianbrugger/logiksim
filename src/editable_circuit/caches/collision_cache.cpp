@@ -55,7 +55,7 @@ auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
     using enum CollisionCache::ItemType;
 
     {
-        const auto line = order_points(segment.line);
+        const auto line = segment.line;
 
         if (is_horizontal(line)) {
             for (auto x : range(line.p0.x + grid_t {1}, line.p1.x)) {
@@ -342,14 +342,14 @@ auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
     return null_element;
 }
 
-auto CollisionCache::creates_loop(line_t line) const -> bool {
+auto CollisionCache::creates_loop(ordered_line_t line) const -> bool {
     const auto element_id_0 = get_first_wire(line.p0);
     const auto element_id_1 = get_first_wire(line.p1);
 
     return element_id_0 != null_element && element_id_0 == element_id_1;
 }
 
-auto CollisionCache::is_colliding(line_t line) const -> bool {
+auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
     if (creates_loop(line)) {
         return true;
     }

@@ -36,23 +36,9 @@ auto is_cross_point(SegmentPointType point_type) -> bool {
            || point_type == visual_cross_point;
 }
 
-auto order_points(segment_info_t segment) -> segment_info_t {
-    if (segment.line.p0 <= segment.line.p1) {
-        return segment;
-    }
-    return segment_info_t {
-        .line = line_t {segment.line.p1, segment.line.p0},
-        .p0_type = segment.p1_type,
-        .p1_type = segment.p0_type,
-    };
-}
-
-auto order_points(segment_info_t segment0, segment_info_t segment1)
+auto order_points(segment_info_t a, segment_info_t b)
     -> std::tuple<segment_info_t, segment_info_t> {
-    auto a = order_points(segment0);
-    auto b = order_points(segment1);
-
-    if (a.line.p0 <= b.line.p0) {
+    if (a.line <= b.line) {
         return std::make_tuple(a, b);
     }
     return std::make_tuple(b, a);
@@ -241,11 +227,11 @@ auto SegmentTree::segment_info(segment_index_t index) const -> segment_info_t {
     return segments_.at(index.value);
 }
 
-auto SegmentTree::segment_line(std::size_t index) const -> line_t {
+auto SegmentTree::segment_line(std::size_t index) const -> ordered_line_t {
     return segment_info(index).line;
 }
 
-auto SegmentTree::segment_line(segment_index_t index) const -> line_t {
+auto SegmentTree::segment_line(segment_index_t index) const -> ordered_line_t {
     return segment_info(index).line;
 }
 
@@ -316,7 +302,8 @@ auto SegmentTree::validate_inserted() const -> void {
 
     // convert to line_tree
     const auto segments = transform_to_vector(
-        segments_, [](const segment_info_t& segment) { return segment.line; });
+        segments_,
+        [](const segment_info_t& segment) -> line_t { return line_t {segment.line}; });
     const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
     const auto line_tree = LineTree::from_segments(segments, new_root);
     if (!line_tree.has_value()) [[unlikely]] {

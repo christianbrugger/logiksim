@@ -35,7 +35,7 @@ auto format(SegmentPointType type) -> std::string;
 auto is_cross_point(SegmentPointType point_type) -> bool;
 
 struct segment_info_t {
-    line_t line {};
+    ordered_line_t line {};
 
     SegmentPointType p0_type {SegmentPointType::colliding_point};
     SegmentPointType p1_type {SegmentPointType::colliding_point};
@@ -78,8 +78,8 @@ class SegmentTree {
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
     [[nodiscard]] auto segment_info(std::size_t index) const -> segment_info_t;
     [[nodiscard]] auto segment_info(segment_index_t index) const -> segment_info_t;
-    [[nodiscard]] auto segment_line(std::size_t index) const -> line_t;
-    [[nodiscard]] auto segment_line(segment_index_t index) const -> line_t;
+    [[nodiscard]] auto segment_line(std::size_t index) const -> ordered_line_t;
+    [[nodiscard]] auto segment_line(segment_index_t index) const -> ordered_line_t;
     [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
 
     // valid parts

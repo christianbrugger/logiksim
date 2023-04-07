@@ -71,7 +71,7 @@ auto to_grid_fine(double x, double y, const ViewConfig &config) -> point_fine_t 
     const auto scale = config.device_scale();
     const auto offset = config.offset();
 
-    return {
+    return point_fine_t {
         x / scale - offset.x,
         y / scale - offset.y,
     };
@@ -121,7 +121,7 @@ auto to_widget(point_fine_t position, const ViewConfig &config) -> QPoint {
 }
 
 auto to_widget(point_t position, const ViewConfig &config) -> QPoint {
-    return to_widget(static_cast<point_fine_t>(position), config);
+    return to_widget(point_fine_t {position}, config);
 }
 
 // to blend2d / pixel coordinates
@@ -137,7 +137,7 @@ auto to_context(point_fine_t position, const ViewConfig &config) -> BLPoint {
 }
 
 auto to_context(point_t position, const ViewConfig &config) -> BLPoint {
-    return to_context(static_cast<point_fine_t>(position), config);
+    return to_context(point_fine_t {position}, config);
 }
 
 auto to_context(double length, const ViewConfig &config) -> double {
