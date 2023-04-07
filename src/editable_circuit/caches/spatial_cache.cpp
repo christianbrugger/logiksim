@@ -118,6 +118,7 @@ auto SpatialTree::handle(editable_circuit::info_message::InsertedSegmentIdUpdate
 auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {
     using namespace editable_circuit::info_message;
 
+    // logic items
     if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
         handle(*pointer);
         return;
@@ -130,6 +131,8 @@ auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
+
+    // segments
     if (auto pointer = std::get_if<SegmentInserted>(&message)) {
         handle(*pointer);
         return;

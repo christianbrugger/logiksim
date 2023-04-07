@@ -250,7 +250,7 @@ auto CollisionCache::handle(
             return apply_function(map_, position, state, check_and_delete);
         });
     iter_collision_state_endpoints(
-        message.old_segment_info, [&](point_t position, CollisionCache::ItemType state) {
+        message.new_segment_info, [&](point_t position, CollisionCache::ItemType state) {
             return apply_function(map_, position, state, check_empty_and_assign);
         });
 }
