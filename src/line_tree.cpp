@@ -28,13 +28,13 @@ namespace logicsim {
 
 class SegmentSplitter {
    public:
-    using buffer_t = std::vector<line_t>;
+    using buffer_t = std::vector<ordered_line_t>;
 
     SegmentSplitter() {
         buffer_.reserve(16);
     }
 
-    auto split_segment(line_t segment, std::ranges::input_range auto&& points)
+    auto split_segment(ordered_line_t segment, std::ranges::input_range auto&& points)
         -> const buffer_t& {
         buffer_.clear();
         buffer_.push_back(segment);
@@ -42,11 +42,11 @@ class SegmentSplitter {
         for (auto point : points) {
             auto splittable = std::ranges::find_if(
                 buffer_,
-                [&point](line_t line) -> bool { return is_inside(point, line); });
+                [&point](ordered_line_t line) -> bool { return is_inside(point, line); });
 
             if (splittable != buffer_.end()) {
-                buffer_.push_back(line_t {point, splittable->p1});
-                *splittable = line_t {splittable->p0, point};
+                buffer_.push_back(ordered_line_t {point, splittable->p1});
+                *splittable = ordered_line_t {splittable->p0, point};
             }
         }
 
@@ -58,8 +58,9 @@ class SegmentSplitter {
 };
 
 auto split_segments(std::ranges::input_range auto&& segments,
-                    std::ranges::input_range auto&& points) -> std::vector<line_t> {
-    std::vector<line_t> result;
+                    std::ranges::input_range auto&& points)
+    -> std::vector<ordered_line_t> {
+    std::vector<ordered_line_t> result;
     result.reserve(std::size(segments) + std::size(points));
 
     auto splitter = SegmentSplitter {};
@@ -71,18 +72,20 @@ auto split_segments(std::ranges::input_range auto&& segments,
 }
 
 template <class OutputIterator, class GetterSame, class GetterDifferent>
-auto merge_segments_1d(std::span<const line_t> segments, OutputIterator result,
+auto merge_segments_1d(std::span<const ordered_line_t> segments, OutputIterator result,
                        GetterSame get_same, GetterDifferent get_different) -> void {
     // collect lines
-    auto parallel_segments = std::vector<line_t> {};
+    auto parallel_segments = std::vector<ordered_line_t> {};
     parallel_segments.reserve(segments.size());
     transform_if(
         segments, std::back_inserter(parallel_segments),
-        [&](auto line) -> line_t { return order_points(line); },
-        [&](auto line) -> bool { return get_same(line.p0) == get_same(line.p1); });
+        [&](ordered_line_t line) -> ordered_line_t { return line; },
+        [&](ordered_line_t line) -> bool {
+            return get_same(line.p0) == get_same(line.p1);
+        });
 
     // sort lists
-    std::ranges::sort(parallel_segments, [&](line_t a, line_t b) {
+    std::ranges::sort(parallel_segments, [&](ordered_line_t a, ordered_line_t b) {
         return std::tie(get_same(a.p0), get_different(a.p0))
                < std::tie(get_same(b.p0), get_different(b.p0));
     });
@@ -91,22 +94,23 @@ auto merge_segments_1d(std::span<const line_t> segments, OutputIterator result,
     transform_combine_while(
         parallel_segments, result,
         // make state
-        [](auto it) -> line_t { return *it; },
+        [](auto it) -> ordered_line_t { return *it; },
         // combine while
-        [&](line_t state, auto it) -> bool {
+        [&](ordered_line_t state, auto it) -> bool {
             return get_same(state.p0) == get_same(it->p0)
                    && get_different(state.p1) >= get_different(it->p0);
         },
         // update state
-        [&](line_t state, auto it) -> line_t {
+        [&](ordered_line_t state, auto it) -> ordered_line_t {
             get_different(state.p1)
                 = std::max(get_different(state.p1), get_different(it->p1));
             return state;
         });
 }
 
-auto merge_segments(std::span<const line_t> segments) -> std::vector<line_t> {
-    auto result = std::vector<line_t> {};
+auto merge_segments(std::span<const ordered_line_t> segments)
+    -> std::vector<ordered_line_t> {
+    auto result = std::vector<ordered_line_t> {};
     result.reserve(segments.size());
 
     auto get_x = [](point_t& point) -> grid_t& { return point.x; };
@@ -119,7 +123,8 @@ auto merge_segments(std::span<const line_t> segments) -> std::vector<line_t> {
     return result;
 }
 
-auto merge_split_segments(std::span<const line_t> segments) -> std::vector<line_t> {
+auto merge_split_segments(std::span<const ordered_line_t> segments)
+    -> std::vector<ordered_line_t> {
     // merge
     const auto segments_merged = merge_segments(segments);
     // split
@@ -171,22 +176,25 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
     return root_candidates.at(0);
 }
 
-auto to_segments(line_tree_vector_t line_trees) -> std::vector<line_t> {
-    auto segments = std::vector<line_t> {};
+auto to_segments(line_tree_vector_t line_trees) -> std::vector<ordered_line_t> {
+    auto segments = std::vector<ordered_line_t> {};
 
     const auto total_count
         = accumulate(transform_view(line_trees, &LineTree::segment_count), 0);
     segments.reserve(total_count);
 
     for (auto&& tree_reference : line_trees) {
-        std::ranges::copy(tree_reference.get().segments(), std::back_inserter(segments));
+        std::ranges::transform(tree_reference.get().segments(),
+                               std::back_inserter(segments),
+                               [](line_t line) { return ordered_line_t {line}; });
     }
 
     return segments;
 }
 
-auto from_segments_impl(std::span<const line_t> segments, std::optional<point_t> new_root,
-                        line_tree_vector_t line_trees) -> std::optional<LineTree> {
+auto from_segments_impl(std::span<const ordered_line_t> segments,
+                        std::optional<point_t> new_root, line_tree_vector_t line_trees)
+    -> std::optional<LineTree> {
     const auto merged_segments = merge_split_segments(segments);
     const auto graph = LineTree::Graph {merged_segments};
 
@@ -219,7 +227,7 @@ auto merge(line_tree_vector_t line_trees, std::optional<point_t> new_root)
 LineTree::LineTree(std::initializer_list<point_t> points)
     : LineTree {points.begin(), points.end()} {}
 
-auto LineTree::from_segments(std::span<const line_t> segments,
+auto LineTree::from_segments(std::span<const ordered_line_t> segments,
                              std::optional<point_t> new_root) -> std::optional<LineTree> {
     if (segments.size() == 0) {
         return LineTree {};
@@ -445,7 +453,7 @@ auto LineTree::initialize_data_structure() -> void {
 }
 
 auto LineTree::validate_points_or_throw() const -> void {
-    if (auto error = validate_points_error(); error.has_value()) {
+    if (auto error = validate_points_error()) {
         throw std::move(error.value());
     }
 }
@@ -489,25 +497,24 @@ auto LineTree::validate_horizontal_follows_vertical() const -> bool {
            == segments().end();
 }
 
-auto connected_lines_colliding(ordered_line_t line0, ordered_line_t line1) -> bool {
+auto connected_lines_colliding(line_t line0, line_t line1) -> bool {
     if (line0.p1 == line1.p0) {
-        return is_colliding(line0.p0, line1) || is_colliding(line1.p1, line0);
+        return is_colliding(line0.p0, ordered_line_t {line1})
+               || is_colliding(line1.p1, ordered_line_t {line0});
     }
     if (line0.p0 == line1.p0) {
-        return is_colliding(line0.p1, line1) || is_colliding(line1.p1, line0);
+        return is_colliding(line0.p1, ordered_line_t {line1})
+               || is_colliding(line1.p1, ordered_line_t {line0});
     }
     [[unlikely]] throw_exception("connected lines need to be ordered differently.");
 }
 
 auto LineTree::validate_no_internal_collisions() const -> bool {
     auto are_colliding = [](SegmentIterator it0, SegmentIterator it1) {
-        const auto line0 = ordered_line_t {*it0};
-        const auto line1 = ordered_line_t {*it1};
-
         if (it0.is_connected(it1)) {
-            return connected_lines_colliding(line0, line1);
+            return connected_lines_colliding(*it0, *it1);
         }
-        return line_points_colliding(line0, line1);
+        return line_points_colliding(ordered_line_t {*it0}, ordered_line_t {*it1});
     };
     return !has_duplicates_quadratic_iterator(segments().begin(), segments().end(),
                                               are_colliding);

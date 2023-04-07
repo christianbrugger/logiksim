@@ -302,8 +302,8 @@ auto SegmentTree::validate_inserted() const -> void {
 
     // convert to line_tree
     const auto segments = transform_to_vector(
-        segments_,
-        [](const segment_info_t& segment) -> line_t { return line_t {segment.line}; });
+        segments_, [](const segment_info_t& segment) { return segment.line; });
+
     const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
     const auto line_tree = LineTree::from_segments(segments, new_root);
     if (!line_tree.has_value()) [[unlikely]] {

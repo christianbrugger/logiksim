@@ -33,7 +33,7 @@ struct point_and_orientation_t {
     auto points = std::vector<point_and_orientation_t> {};
     points.reserve(2 * std::size(lines));
 
-    for (line_t line : lines) {
+    for (auto line : lines) {
         const auto orientation = is_horizontal(line);
 
         points.push_back({line.p0, orientation});
@@ -60,7 +60,7 @@ namespace detail {
     auto points = std::vector<point_t> {};
     points.reserve(2 * std::size(segments));
 
-    for (line_t segment : segments) {
+    for (auto segment : segments) {
         points.push_back(segment.p0);
         points.push_back(segment.p1);
     }
@@ -89,8 +89,8 @@ class AdjacencyGraph {
         : points_ {to_points_sorted_unique(segments)} {
         neighbors_.resize(points_.size());
 
-        for (line_t segment : segments) {
-            add_edge_unchecked(segment);
+        for (auto segment : segments) {
+            add_edge_unchecked(line_t {segment});
         }
 
         // to make the representation deterministic

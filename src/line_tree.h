@@ -89,7 +89,7 @@ class LineTree {
     template <std::input_iterator I, std::sentinel_for<I> S>
     explicit LineTree(I begin, S end);
 
-    [[nodiscard]] static auto from_segments(std::span<const line_t> segments,
+    [[nodiscard]] static auto from_segments(std::span<const ordered_line_t> segments,
                                             std::optional<point_t> new_root = {})
         -> std::optional<LineTree>;
 

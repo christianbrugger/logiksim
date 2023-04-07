@@ -33,7 +33,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
         ASSERT_EQ(layout.display_state(id_0), display_state_t::new_temporary);
         ASSERT_EQ(tree_0.segment_count(), 1);
 
-        const auto line = line_t {point_t {0, 0}, {10, 0}};
+        const auto line = ordered_line_t {point_t {0, 0}, {10, 0}};
         ASSERT_EQ(tree_0.segment_line(0), line);
     }
     {
