@@ -51,9 +51,9 @@ auto SegmentDeleted::format() const -> std::string {
     return fmt::format("SegmentDeleted(segment = {})", segment);
 }
 
-auto SegmentUpdated::format() const -> std::string {
-    return fmt::format("SegmentUpdated(new_segment = {}, old_segment = {})", new_segment,
-                       old_segment);
+auto SegmentIdUpdated::format() const -> std::string {
+    return fmt::format("SegmentIdUpdated(new_segment = {}, old_segment = {})",
+                       new_segment, old_segment);
 }
 
 auto SegmentInserted::format() const -> std::string {

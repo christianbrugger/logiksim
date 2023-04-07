@@ -24,7 +24,7 @@ namespace editable_circuit {
 
 namespace info_message {
 
-// Only for Logic Items
+// Logic Items
 
 struct LogicItemCreated {
     element_id_t element_id;
@@ -48,7 +48,7 @@ struct LogicItemUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-// Only for Inserted Logic Items
+// Inserted Logic Items
 
 struct LogicItemInserted {
     element_id_t element_id;
@@ -77,7 +77,7 @@ struct InsertedLogicItemUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-// Only for Wire Segments
+// Wire Segments
 
 struct SegmentCreated {
     segment_t segment;
@@ -93,13 +93,15 @@ struct SegmentDeleted {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct SegmentUpdated {
+struct SegmentIdUpdated {
     segment_t new_segment;
     segment_t old_segment;
 
-    [[nodiscard]] auto operator==(const SegmentUpdated &other) const -> bool = default;
+    [[nodiscard]] auto operator==(const SegmentIdUpdated &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
+
+// Inserted Wire Segments
 
 struct SegmentInserted {
     segment_t segment;
@@ -149,7 +151,7 @@ struct SegmentSplit {
 using Message = std::variant<                                          //
     LogicItemCreated, LogicItemDeleted, LogicItemUpdated,              //
     LogicItemInserted, LogicItemUninserted, InsertedLogicItemUpdated,  //
-    SegmentCreated, SegmentDeleted, SegmentUpdated,                    //
+    SegmentCreated, SegmentDeleted, SegmentIdUpdated,                  //
     SegmentInserted, SegmentUninserted, InsertedSegmentUpdated,        //
     SegmentMerged, SegmentSplit>;
 

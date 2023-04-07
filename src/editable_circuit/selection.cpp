@@ -164,7 +164,7 @@ auto Selection::handle(editable_circuit::info_message::SegmentDeleted message) -
     selected_segments_.erase(message.segment);
 }
 
-auto Selection::handle(editable_circuit::info_message::SegmentUpdated message) -> void {
+auto Selection::handle(editable_circuit::info_message::SegmentIdUpdated message) -> void {
     const auto it = selected_segments_.find(message.old_segment);
 
     if (it != selected_segments_.end()) {
@@ -195,7 +195,7 @@ auto Selection::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (const auto pointer = std::get_if<SegmentUpdated>(&message)) {
+    if (const auto pointer = std::get_if<SegmentIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }
@@ -208,15 +208,6 @@ auto Selection::submit(editable_circuit::InfoMessage message) -> void {
 namespace {
 
 using namespace detail::selection;
-
-auto check_and_remove_element(elements_set_t &element_set,
-                              const Schematic::ConstElement element) -> void {
-    if (!element.is_placeholder()) {
-        element_set.erase(element.element_id());
-    } else if (element_set.contains(element.element_id())) [[unlikely]] {
-        throw_exception("selection contains placeholder");
-    }
-}
 
 auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
                                const element_id_t element_id,
@@ -233,34 +224,17 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
     }
 }
 
-auto check_wire_not_in_segments(element_id_t element_id, const SegmentTree &tree,
-                                const detail::selection::segment_map_t &segment_map)
-    -> void {
-    for (const auto index : tree.indices()) {
-        const auto key = segment_t(element_id, index);
-
-        if (segment_map.contains(key)) [[unlikely]] {
-            throw_exception(
-                "segment tree should either be in elements or segments part of the "
-                "selection, but not both.");
-        }
-    }
-}
-
 }  // namespace
 
 auto Selection::validate(const Circuit &circuit) const -> void {
     auto element_set = detail::selection::elements_set_t {selected_elements_};
     auto segment_map = detail::selection::segment_map_t {selected_segments_};
 
-    for (const auto element_id : element_set) {
-        check_wire_not_in_segments(element_id, circuit.layout().segment_tree(element_id),
-                                   segment_map);
-    }
-
-    // elements
+    // logic items
     for (const auto element : circuit.schematic().elements()) {
-        check_and_remove_element(element_set, element);
+        if (element.is_logic_item()) {
+            element_set.erase(element.element_id());
+        }
     }
     if (!element_set.empty()) [[unlikely]] {
         throw_exception("selection contains elements that don't exist anymore");

@@ -30,6 +30,12 @@ auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
         || std::holds_alternative<LogicItemUpdated>(message)) {
         clear_cache();
     }
+
+    if (std::holds_alternative<SegmentCreated>(message)
+        || std::holds_alternative<SegmentDeleted>(message)
+        || std::holds_alternative<SegmentIdUpdated>(message)) {
+        clear_cache();
+    }
 }
 
 auto SelectionBuilder::empty() const noexcept -> bool {

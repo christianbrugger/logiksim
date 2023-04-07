@@ -60,7 +60,7 @@ class Selection {
     auto handle(editable_circuit::info_message::LogicItemUpdated message) -> void;
 
     auto handle(editable_circuit::info_message::SegmentDeleted message) -> void;
-    auto handle(editable_circuit::info_message::SegmentUpdated message) -> void;
+    auto handle(editable_circuit::info_message::SegmentIdUpdated message) -> void;
 
     detail::selection::elements_set_t selected_elements_ {};
     detail::selection::segment_map_t selected_segments_ {};

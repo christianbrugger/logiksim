@@ -14,13 +14,18 @@ namespace editable_circuit {
 // Deletion Handling
 //
 
+auto is_wire_with_segments(const Circuit& circuit, element_id_t element_id) -> bool {
+    const auto element = circuit.schematic().element(element_id);
+    return element.is_wire() && !circuit.layout().segment_tree(element_id).empty();
+}
+
 auto notify_element_deleted(const Schematic& schematic, MessageSender sender,
                             element_id_t element_id) {
-    if (schematic.element(element_id).is_logic_item()) {
+    const auto element = schematic.element(element_id);
+
+    if (element.is_logic_item()) {
         sender.submit(info_message::LogicItemDeleted {element_id});
     }
-
-    // TODO wire
 }
 
 auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
@@ -42,7 +47,28 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
         });
     }
 
-    if (inserted && element.is_wire()) {
+    if (element.is_logic_item() && inserted) {
+        const auto data = to_layout_calculation_data(circuit, new_element_id);
+
+        sender.submit(info_message::InsertedLogicItemUpdated {
+            .new_element_id = new_element_id,
+            .old_element_id = old_element_id,
+            .data = data,
+        });
+    }
+
+    if (element.is_wire()) {
+        const auto& segment_tree = layout.segment_tree(new_element_id);
+
+        for (auto&& segment_index : segment_tree.indices()) {
+            sender.submit(info_message::SegmentIdUpdated {
+                .new_segment = segment_t {new_element_id, segment_index},
+                .old_segment = segment_t {old_element_id, segment_index},
+            });
+        }
+    }
+
+    if (element.is_wire() && inserted) {
         const auto& segment_tree = layout.segment_tree(new_element_id);
 
         for (auto&& segment_index : segment_tree.indices()) {
@@ -52,16 +78,6 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
                 .segment_info = segment_tree.segment_info(segment_index),
             });
         }
-    }
-
-    if (inserted && element.is_logic_item()) {
-        const auto data = to_layout_calculation_data(circuit, new_element_id);
-
-        sender.submit(info_message::InsertedLogicItemUpdated {
-            .new_element_id = new_element_id,
-            .old_element_id = old_element_id,
-            .data = data,
-        });
     }
 }
 
@@ -97,6 +113,9 @@ auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender send
     if (layout.display_state(element_id) != display_state_t::new_temporary) [[unlikely]] {
         throw_exception("can only delete temporary objects");
     }
+    if (is_wire_with_segments(circuit, element_id)) [[unlikely]] {
+        throw_exception("can't delete wires with segments");
+    }
 
     notify_element_deleted(schematic, sender, element_id);
 
@@ -130,7 +149,8 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         fmt::print(
             "\n==========================================================\n{}\n"
-            "swap_and_delete_single_element(element_id = {}, preserve_element = {});\n"
+            "swap_and_delete_single_element(element_id = {}, preserve_element = "
+            "{});\n"
             "==========================================================\n\n",
             circuit, element_id, fmt_ptr(preserve_element));
     }
@@ -1136,7 +1156,7 @@ auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
         sender.submit(info_message::SegmentDeleted {segment_part.segment});
         if (last_segment != segment_part.segment) {
             sender.submit(
-                info_message::SegmentUpdated {segment_part.segment, last_segment});
+                info_message::SegmentIdUpdated {segment_part.segment, last_segment});
         }
     }
 
