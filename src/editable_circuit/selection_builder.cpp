@@ -25,9 +25,9 @@ auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
 
     // we can't update the cached selection, as elements might be added that
     // are within the selection rects of the operations
-    if (std::holds_alternative<ElementCreated>(message)
-        || std::holds_alternative<ElementDeleted>(message)
-        || std::holds_alternative<ElementUpdated>(message)) {
+    if (std::holds_alternative<LogicItemCreated>(message)
+        || std::holds_alternative<LogicItemDeleted>(message)
+        || std::holds_alternative<LogicItemUpdated>(message)) {
         clear_cache();
     }
 }

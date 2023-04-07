@@ -16,11 +16,11 @@ namespace editable_circuit {
 
 auto notify_element_deleted(const Schematic& schematic, MessageSender sender,
                             element_id_t element_id) {
-    if (schematic.element(element_id).is_placeholder()) {
-        return;
+    if (schematic.element(element_id).is_logic_item()) {
+        sender.submit(info_message::LogicItemDeleted {element_id});
     }
 
-    sender.submit(info_message::ElementDeleted {element_id});
+    // TODO wire
 }
 
 auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
@@ -33,12 +33,14 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
         return;
     }
 
-    sender.submit(info_message::ElementUpdated {
-        .new_element_id = new_element_id,
-        .old_element_id = old_element_id,
-    });
+    const bool inserted = is_inserted(circuit, new_element_id);
 
-    bool inserted = is_inserted(circuit, new_element_id);
+    if (element.is_logic_item()) {
+        sender.submit(info_message::LogicItemUpdated {
+            .new_element_id = new_element_id,
+            .old_element_id = old_element_id,
+        });
+    }
 
     if (inserted && element.is_wire()) {
         const auto& segment_tree = layout.segment_tree(new_element_id);
@@ -560,7 +562,7 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
             throw_exception("Added element ids don't match.");
         }
     }
-    state.sender.submit(info_message::ElementCreated {element_id});
+    state.sender.submit(info_message::LogicItemCreated {element_id});
 
     // validates our position
     move_or_delete_logic_item_private(state, element_id,            //
@@ -958,7 +960,7 @@ auto add_new_temporary_wire_element(Circuit& circuit, MessageSender sender)
             throw_exception("Added element ids don't match.");
         }
     }
-    sender.submit(info_message::ElementCreated {element_id});
+    sender.submit(info_message::LogicItemCreated {element_id});
     return element_id;
 }
 

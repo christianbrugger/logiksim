@@ -24,31 +24,31 @@ namespace editable_circuit {
 
 namespace info_message {
 
-// All Elements except placeholders
+// Only for Logic Items
 
-struct ElementCreated {
+struct LogicItemCreated {
     element_id_t element_id;
 
-    [[nodiscard]] auto operator==(const ElementCreated &other) const -> bool = default;
+    [[nodiscard]] auto operator==(const LogicItemCreated &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct ElementDeleted {
+struct LogicItemDeleted {
     element_id_t element_id;
 
-    [[nodiscard]] auto operator==(const ElementDeleted &other) const -> bool = default;
+    [[nodiscard]] auto operator==(const LogicItemDeleted &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct ElementUpdated {
+struct LogicItemUpdated {
     element_id_t new_element_id;
     element_id_t old_element_id;
 
-    [[nodiscard]] auto operator==(const ElementUpdated &other) const -> bool = default;
+    [[nodiscard]] auto operator==(const LogicItemUpdated &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
-// Only for Logic Items
+// Only for Inserted Logic Items
 
 struct LogicItemInserted {
     element_id_t element_id;
@@ -147,7 +147,7 @@ struct SegmentSplit {
 };
 
 using Message = std::variant<                                          //
-    ElementCreated, ElementDeleted, ElementUpdated,                    //
+    LogicItemCreated, LogicItemDeleted, LogicItemUpdated,              //
     LogicItemInserted, LogicItemUninserted, InsertedLogicItemUpdated,  //
     SegmentCreated, SegmentDeleted, SegmentUpdated,                    //
     SegmentInserted, SegmentUninserted, InsertedSegmentUpdated,        //

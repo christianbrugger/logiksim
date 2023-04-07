@@ -44,7 +44,7 @@ constexpr inline static auto tree_max_node_elements = 16;
 using tree_t = bgi::rtree<tree_value_t, bgi::rstar<tree_max_node_elements>>;
 
 auto get_selection_box(layout_calculation_data_t data) -> tree_box_t;
-auto get_selection_box(line_t segment) -> tree_box_t;
+auto get_selection_box(ordered_line_t segment) -> tree_box_t;
 auto to_rect(tree_box_t box) -> rect_fine_t;
 auto to_box(rect_fine_t rect) -> tree_box_t;
 

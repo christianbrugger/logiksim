@@ -145,11 +145,11 @@ namespace logicsim {
 // Updates
 //
 
-auto Selection::handle(editable_circuit::info_message::ElementDeleted message) -> void {
+auto Selection::handle(editable_circuit::info_message::LogicItemDeleted message) -> void {
     remove_element(message.element_id);
 }
 
-auto Selection::handle(editable_circuit::info_message::ElementUpdated message) -> void {
+auto Selection::handle(editable_circuit::info_message::LogicItemUpdated message) -> void {
     const auto count = selected_elements_.erase(message.old_element_id);
     if (count > 0) {
         const auto inserted = selected_elements_.insert(message.new_element_id).second;
@@ -183,11 +183,11 @@ auto Selection::handle(editable_circuit::info_message::SegmentUpdated message) -
 auto Selection::submit(editable_circuit::InfoMessage message) -> void {
     using namespace editable_circuit::info_message;
 
-    if (const auto pointer = std::get_if<ElementDeleted>(&message)) {
+    if (const auto pointer = std::get_if<LogicItemDeleted>(&message)) {
         handle(*pointer);
         return;
     }
-    if (const auto pointer = std::get_if<ElementUpdated>(&message)) {
+    if (const auto pointer = std::get_if<LogicItemUpdated>(&message)) {
         handle(*pointer);
         return;
     }

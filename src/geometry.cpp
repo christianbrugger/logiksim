@@ -24,12 +24,6 @@ auto is_vertical(ordered_line_t line) noexcept -> bool {
     return is_vertical(line_t {line});
 }
 
-// // order points within lines
-// auto order_points(line_t line) noexcept -> line_t {
-//     auto [p0, p1] = sorted(line.p0, line.p1);
-//     return line_t {p0, p1};
-// }
-
 // order lines and points within lines
 auto order_points(const line_t line0, const line_t line1) noexcept
     -> std::tuple<ordered_line_t, ordered_line_t> {

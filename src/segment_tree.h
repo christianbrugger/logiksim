@@ -46,7 +46,6 @@ struct segment_info_t {
 
 static_assert(sizeof(segment_info_t) == 10);
 
-auto order_points(segment_info_t segment) -> segment_info_t;
 auto order_points(segment_info_t segment0, segment_info_t segment1)
     -> std::tuple<segment_info_t, segment_info_t>;
 

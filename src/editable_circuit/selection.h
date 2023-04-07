@@ -56,8 +56,8 @@ class Selection {
     auto validate(const Circuit &circuit) const -> void;
 
    private:
-    auto handle(editable_circuit::info_message::ElementDeleted message) -> void;
-    auto handle(editable_circuit::info_message::ElementUpdated message) -> void;
+    auto handle(editable_circuit::info_message::LogicItemDeleted message) -> void;
+    auto handle(editable_circuit::info_message::LogicItemUpdated message) -> void;
 
     auto handle(editable_circuit::info_message::SegmentDeleted message) -> void;
     auto handle(editable_circuit::info_message::SegmentUpdated message) -> void;

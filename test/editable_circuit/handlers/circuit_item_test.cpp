@@ -50,7 +50,7 @@ TEST(EditableCircuitHandler, DeleteTemporaryElement) {
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 1);
     ASSERT_EQ(setup.recorder.messages().at(0),
-              Message {ElementDeleted {element_id_t {0}}});
+              Message {LogicItemDeleted {element_id_t {0}}});
 }
 
 TEST(EditableCircuitHandler, DeletePreserving1) {
@@ -77,8 +77,8 @@ TEST(EditableCircuitHandler, DeletePreserving1) {
     assert_element_equal(circuit, element_id_t {0}, 3, point_t {2, 2});
 
     // messages
-    const auto message0 = Message {ElementDeleted {element_id_t {0}}};
-    const auto message1 = Message {ElementUpdated {element_id_t {0}, element_id_t {1}}};
+    const auto message0 = Message {LogicItemDeleted {element_id_t {0}}};
+    const auto message1 = Message {LogicItemUpdated {element_id_t {0}, element_id_t {1}}};
     ASSERT_EQ(setup.recorder.messages().size(), 2);
     ASSERT_EQ(setup.recorder.messages().at(0), message0);
     ASSERT_EQ(setup.recorder.messages().at(1), message1);
@@ -116,8 +116,8 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
     assert_is_placeholder(circuit, element_id_t {2});
 
     // messages
-    const auto message0 = Message {ElementDeleted {element_id_t {1}}};
-    const auto message1 = Message {ElementUpdated {element_id_t {1}, element_id_t {3}}};
+    const auto message0 = Message {LogicItemDeleted {element_id_t {1}}};
+    const auto message1 = Message {LogicItemUpdated {element_id_t {1}, element_id_t {3}}};
     ASSERT_EQ(setup.recorder.messages().size(), 3);
     ASSERT_EQ(setup.recorder.messages().at(0), message0);
     ASSERT_EQ(setup.recorder.messages().at(1), message1);
@@ -162,11 +162,11 @@ TEST(EditableCircuitHandler, DeleteMultipleElements) {
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 5);
-    const auto m0 = Message {ElementDeleted {element_id_t {3}}};
-    const auto m1 = Message {ElementDeleted {element_id_t {1}}};
-    const auto m2 = Message {ElementUpdated {element_id_t {1}, element_id_t {2}}};
-    const auto m3 = Message {ElementDeleted {element_id_t {0}}};
-    const auto m4 = Message {ElementUpdated {element_id_t {0}, element_id_t {1}}};
+    const auto m0 = Message {LogicItemDeleted {element_id_t {3}}};
+    const auto m1 = Message {LogicItemDeleted {element_id_t {1}}};
+    const auto m2 = Message {LogicItemUpdated {element_id_t {1}, element_id_t {2}}};
+    const auto m3 = Message {LogicItemDeleted {element_id_t {0}}};
+    const auto m4 = Message {LogicItemUpdated {element_id_t {0}, element_id_t {1}}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
     ASSERT_EQ(setup.recorder.messages().at(1), m1);
     ASSERT_EQ(setup.recorder.messages().at(2), m2);
@@ -251,7 +251,7 @@ TEST(EditableCircuitHandler, MoveLogicItemDeleted) {
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 1);
-    const auto m0 = Message {ElementDeleted {element_id_t {0}}};
+    const auto m0 = Message {LogicItemDeleted {element_id_t {0}}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
 
@@ -397,7 +397,7 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToDiscard) {
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 1);
-    const auto message0 = Message {ElementDeleted {element_id_t {1}}};
+    const auto message0 = Message {LogicItemDeleted {element_id_t {1}}};
     ASSERT_EQ(setup.recorder.messages().at(0), message0);
 }
 
@@ -499,7 +499,7 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
         const auto &m = setup.recorder.messages().at(0);
         ASSERT_EQ(std::get<LogicItemUninserted>(m).element_id, element_id_t {1});
     }
-    const auto message1 = Message {ElementUpdated {element_id_t {0}, element_id_t {1}}};
+    const auto message1 = Message {LogicItemUpdated {element_id_t {0}, element_id_t {1}}};
     ASSERT_EQ(setup.recorder.messages().at(1), message1);
 }
 
@@ -536,7 +536,7 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 2);
-    const auto m0 = Message {ElementCreated {element_id_t {0}}};
+    const auto m0 = Message {LogicItemCreated {element_id_t {0}}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
     {
         const auto &m = setup.recorder.messages().at(1);

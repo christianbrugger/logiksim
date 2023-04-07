@@ -12,16 +12,16 @@ namespace logicsim::editable_circuit {
 
 namespace info_message {
 
-auto ElementCreated::format() const -> std::string {
-    return fmt::format("ElementCreated(element_id = {})", element_id);
+auto LogicItemCreated::format() const -> std::string {
+    return fmt::format("LogicItemCreated(element_id = {})", element_id);
 }
 
-auto ElementDeleted::format() const -> std::string {
-    return fmt::format("ElementDeleted(element_id = {})", element_id);
+auto LogicItemDeleted::format() const -> std::string {
+    return fmt::format("LogicItemDeleted(element_id = {})", element_id);
 }
 
-auto ElementUpdated::format() const -> std::string {
-    return fmt::format("ElementUpdated(new_element_id = {}, old_element_id = {})",
+auto LogicItemUpdated::format() const -> std::string {
+    return fmt::format("LogicItemUpdated(new_element_id = {}, old_element_id = {})",
                        new_element_id, old_element_id);
 }
 
