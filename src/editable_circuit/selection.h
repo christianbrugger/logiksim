@@ -58,8 +58,9 @@ class Selection {
     auto handle(editable_circuit::info_message::LogicItemDeleted message) -> void;
     auto handle(editable_circuit::info_message::LogicItemIdUpdated message) -> void;
 
-    auto handle(editable_circuit::info_message::SegmentPartDeleted message) -> void;
     auto handle(editable_circuit::info_message::SegmentIdUpdated message) -> void;
+    auto handle(editable_circuit::info_message::SegmentPartMoved message) -> void;
+    auto handle(editable_circuit::info_message::SegmentPartDeleted message) -> void;
 
     detail::selection::logicitems_set_t selected_logicitems_ {};
     detail::selection::segment_map_t selected_segments_ {};

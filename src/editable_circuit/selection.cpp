@@ -159,11 +159,6 @@ auto Selection::handle(editable_circuit::info_message::LogicItemIdUpdated messag
     }
 }
 
-auto Selection::handle(editable_circuit::info_message::SegmentPartDeleted message)
-    -> void {
-    remove_segment(message.segment_part);
-}
-
 auto Selection::handle(editable_circuit::info_message::SegmentIdUpdated message) -> void {
     const auto it = selected_segments_.find(message.old_segment);
 
@@ -180,9 +175,19 @@ auto Selection::handle(editable_circuit::info_message::SegmentIdUpdated message)
     }
 }
 
+auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message) -> void {
+    // TODO implement
+}
+
+auto Selection::handle(editable_circuit::info_message::SegmentPartDeleted message)
+    -> void {
+    remove_segment(message.segment_part);
+}
+
 auto Selection::submit(editable_circuit::InfoMessage message) -> void {
     using namespace editable_circuit::info_message;
 
+    // logic item
     if (const auto pointer = std::get_if<LogicItemDeleted>(&message)) {
         handle(*pointer);
         return;
@@ -191,11 +196,17 @@ auto Selection::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (const auto pointer = std::get_if<SegmentPartDeleted>(&message)) {
+
+    // segments
+    if (const auto pointer = std::get_if<SegmentIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }
-    if (const auto pointer = std::get_if<SegmentIdUpdated>(&message)) {
+    if (const auto pointer = std::get_if<SegmentPartMoved>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (const auto pointer = std::get_if<SegmentPartDeleted>(&message)) {
         handle(*pointer);
         return;
     }

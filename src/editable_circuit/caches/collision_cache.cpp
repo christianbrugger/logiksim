@@ -282,6 +282,9 @@ auto CollisionCache::handle(editable_circuit::info_message::SegmentInserted mess
 
 auto CollisionCache::handle(
     editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void {
+    if (message.new_segment.element_id == message.old_segment.element_id) {
+        return;
+    }
     update_impl(map_, message.new_segment.element_id, message.old_segment.element_id,
                 message.segment_info);
 }

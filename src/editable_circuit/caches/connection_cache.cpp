@@ -153,6 +153,10 @@ auto ConnectionCache<IsInput>::handle(
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void {
+    if (message.new_segment.element_id == message.old_segment.element_id) {
+        return;
+    }
+
     const auto update_entry = get_update_entry(map_, message.new_segment.element_id,
                                                message.old_segment.element_id);
     iter_connection_location_and_id(message.segment_info, update_entry, IsInput);
