@@ -619,7 +619,7 @@ struct rect_t {
 };
 
 constexpr rect_fine_t::rect_fine_t(rect_t rect) noexcept
-    : p0 {point_fine_t {p0}}, p1 {point_fine_t {p1}} {}
+    : p0 {point_fine_t {rect.p0}}, p1 {point_fine_t {rect.p1}} {}
 
 struct offset_t {
     using value_type = std::make_unsigned_t<grid_t::value_type>;

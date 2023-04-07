@@ -89,7 +89,7 @@ auto add_part(Container &entries, part_t new_part) -> void {
 
     // merge elements
     auto result = Container {};
-    using it_t = Container::iterator;
+    using it_t = typename Container::iterator;
 
     transform_combine_while(
         entries, std::back_inserter(result),

@@ -1143,6 +1143,7 @@ auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
         const auto keep_line = full_line.p0 == removing_line.p0
                                    ? line_t {removing_line.p1, full_line.p1}
                                    : line_t {full_line.p0, removing_line.p0};
+        print(keep_line);
     }
 
     // shrink one side of segment

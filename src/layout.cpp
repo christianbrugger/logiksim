@@ -223,14 +223,11 @@ auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
 
 auto validate_segment_tree_display_state(const SegmentTree &tree,
                                          display_state_t display_state) -> void {
-    for (auto index : tree.indices()) {
-        bool any_valid_parts
-            = std::ranges::any_of(tree.valid_parts(), &SegmentTree::parts_vector_t::size);
+    bool any_valid_parts
+        = std::ranges::any_of(tree.valid_parts(), &SegmentTree::parts_vector_t::size);
 
-        if (any_valid_parts != (display_state == display_state_t::new_valid))
-            [[unlikely]] {
-            throw_exception("segment tree is in the wrong display state");
-        }
+    if (any_valid_parts != (display_state == display_state_t::new_valid)) [[unlikely]] {
+        throw_exception("segment tree is in the wrong display state");
     }
 }
 
