@@ -133,7 +133,8 @@ struct InsertedSegmentIdUpdated {
 
 struct InsertedPointTypesUpdated {
     segment_t segment;
-    segment_info_t segment_info;
+    segment_info_t old_segment_info;
+    segment_info_t new_segment_info;
 
     [[nodiscard]] auto operator==(const InsertedPointTypesUpdated &other) const -> bool
         = default;

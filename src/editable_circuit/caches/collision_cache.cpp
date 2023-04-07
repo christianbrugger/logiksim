@@ -51,26 +51,8 @@ auto iter_collision_state(layout_calculation_data_t data, Func next_state) -> bo
 
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
-auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
+auto iter_collision_state_endpoints(segment_info_t segment, Func next_state) -> bool {
     using enum CollisionCache::ItemType;
-
-    {
-        const auto line = segment.line;
-
-        if (is_horizontal(line)) {
-            for (auto x : range(line.p0.x + grid_t {1}, line.p1.x)) {
-                if (!next_state(point_t {x, line.p0.y}, wire_horizontal)) {
-                    return false;
-                }
-            }
-        } else {
-            for (auto y : range(line.p0.y + grid_t {1}, line.p1.y)) {
-                if (!next_state(point_t {line.p0.x, y}, wire_vertical)) {
-                    return false;
-                }
-            }
-        }
-    }
 
     const auto to_state
         = [](SegmentPointType type) -> std::optional<CollisionCache::ItemType> {
@@ -112,6 +94,32 @@ auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
     }
 
     return true;
+}
+
+// next_state(point_t position, ItemType state) -> bool
+template <typename Func>
+auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
+    using enum CollisionCache::ItemType;
+
+    {
+        const auto line = segment.line;
+
+        if (is_horizontal(line)) {
+            for (auto x : range(line.p0.x + grid_t {1}, line.p1.x)) {
+                if (!next_state(point_t {x, line.p0.y}, wire_horizontal)) {
+                    return false;
+                }
+            }
+        } else {
+            for (auto y : range(line.p0.y + grid_t {1}, line.p1.y)) {
+                if (!next_state(point_t {line.p0.x, y}, wire_vertical)) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return iter_collision_state_endpoints(segment, next_state);
 }
 
 namespace {
@@ -173,15 +181,37 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
 }
 }  // namespace
 
-template <class Data>
-auto insert_impl(CollisionCache::map_type& map, element_id_t element_id, Data data)
-    -> void {
-    const auto check_empty_and_assign = [element_id](element_id_t& obj) {
+auto get_check_empty_and_assign(element_id_t element_id) {
+    return [element_id](element_id_t& obj) {
         if (obj != null_element) {
             throw_exception("collision state is not empty in insert.");
         }
         obj = element_id;
     };
+}
+
+auto get_check_and_delete(element_id_t element_id) {
+    return [element_id](element_id_t& obj) {
+        if (obj != element_id) {
+            throw_exception("exected collision state presence in remove.");
+        }
+        obj = null_element;
+    };
+}
+
+auto get_check_and_update(element_id_t new_element_id, element_id_t old_element_id) {
+    return [new_element_id, old_element_id](element_id_t& obj) {
+        if (obj != old_element_id) {
+            throw_exception("exected collision state presence in update.");
+        }
+        obj = new_element_id;
+    };
+}
+
+template <class Data>
+auto insert_impl(CollisionCache::map_type& map, element_id_t element_id, Data data)
+    -> void {
+    const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
 
     iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
         return apply_function(map, position, state, check_empty_and_assign);
@@ -191,12 +221,7 @@ auto insert_impl(CollisionCache::map_type& map, element_id_t element_id, Data da
 template <class Data>
 auto remove_impl(CollisionCache::map_type& map, element_id_t element_id, Data data)
     -> void {
-    const auto check_and_delete = [element_id](element_id_t& obj) {
-        if (obj != element_id) {
-            throw_exception("exected collision state presence in remove.");
-        }
-        obj = null_element;
-    };
+    const auto check_and_delete = get_check_and_delete(element_id);
 
     iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
         return apply_function(map, position, state, check_and_delete);
@@ -206,16 +231,28 @@ auto remove_impl(CollisionCache::map_type& map, element_id_t element_id, Data da
 template <class Data>
 auto update_impl(CollisionCache::map_type& map, element_id_t new_element_id,
                  element_id_t old_element_id, Data data) -> void {
-    const auto check_and_update = [new_element_id, old_element_id](element_id_t& obj) {
-        if (obj != old_element_id) {
-            throw_exception("exected collision state presence in update.");
-        }
-        obj = new_element_id;
-    };
+    const auto check_and_update = get_check_and_update(new_element_id, old_element_id);
 
     iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
         return apply_function(map, position, state, check_and_update);
     });
+}
+
+auto CollisionCache::handle(
+    editable_circuit::info_message::InsertedPointTypesUpdated message) -> void {
+    const auto element_id = message.segment.element_id;
+
+    const auto check_and_delete = get_check_and_delete(element_id);
+    const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
+
+    iter_collision_state_endpoints(
+        message.old_segment_info, [&](point_t position, CollisionCache::ItemType state) {
+            return apply_function(map_, position, state, check_and_delete);
+        });
+    iter_collision_state_endpoints(
+        message.old_segment_info, [&](point_t position, CollisionCache::ItemType state) {
+            return apply_function(map_, position, state, check_empty_and_assign);
+        });
 }
 
 auto CollisionCache::format() const -> std::string {
@@ -228,24 +265,19 @@ auto CollisionCache::handle(editable_circuit::info_message::LogicItemInserted me
     insert_impl(map_, message.element_id, message.data);
 }
 
-auto CollisionCache::handle(editable_circuit::info_message::LogicItemUninserted message)
-    -> void {
-    remove_impl(map_, message.element_id, message.data);
-}
-
 auto CollisionCache::handle(
     editable_circuit::info_message::InsertedLogicItemIdUpdated message) -> void {
     update_impl(map_, message.new_element_id, message.old_element_id, message.data);
 }
 
+auto CollisionCache::handle(editable_circuit::info_message::LogicItemUninserted message)
+    -> void {
+    remove_impl(map_, message.element_id, message.data);
+}
+
 auto CollisionCache::handle(editable_circuit::info_message::SegmentInserted message)
     -> void {
     insert_impl(map_, message.segment.element_id, message.segment_info);
-}
-
-auto CollisionCache::handle(editable_circuit::info_message::SegmentUninserted message)
-    -> void {
-    remove_impl(map_, message.segment.element_id, message.segment_info);
 }
 
 auto CollisionCache::handle(
@@ -254,14 +286,16 @@ auto CollisionCache::handle(
                 message.segment_info);
 }
 
+auto CollisionCache::handle(editable_circuit::info_message::SegmentUninserted message)
+    -> void {
+    remove_impl(map_, message.segment.element_id, message.segment_info);
+}
+
 auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
     using namespace editable_circuit::info_message;
 
+    // logic items
     if (auto pointer = std::get_if<LogicItemInserted>(&message)) {
-        handle(*pointer);
-        return;
-    }
-    if (auto pointer = std::get_if<LogicItemUninserted>(&message)) {
         handle(*pointer);
         return;
     }
@@ -269,15 +303,25 @@ auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
+    if (auto pointer = std::get_if<LogicItemUninserted>(&message)) {
+        handle(*pointer);
+        return;
+    }
+
+    // segments
     if (auto pointer = std::get_if<SegmentInserted>(&message)) {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<SegmentUninserted>(&message)) {
+    if (auto pointer = std::get_if<InsertedSegmentIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<InsertedSegmentIdUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedPointTypesUpdated>(&message)) {
+        handle(*pointer);
+        return;
+    }
+    if (auto pointer = std::get_if<SegmentUninserted>(&message)) {
         handle(*pointer);
         return;
     }
