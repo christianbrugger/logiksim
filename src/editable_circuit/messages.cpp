@@ -12,6 +12,8 @@ namespace logicsim::editable_circuit {
 
 namespace info_message {
 
+// Logic Item
+
 auto LogicItemCreated::format() const -> std::string {
     return fmt::format("LogicItemCreated(element_id = {})", element_id);
 }
@@ -25,7 +27,7 @@ auto LogicItemUpdated::format() const -> std::string {
                        new_element_id, old_element_id);
 }
 
-// Logic Item
+// Inserted Logic Item
 
 auto LogicItemInserted::format() const -> std::string {
     return fmt::format("LogicItemInserted(element_id = {})", element_id);
@@ -47,36 +49,38 @@ auto SegmentCreated::format() const -> std::string {
     return fmt::format("SegmentCreated(segment = {})", segment);
 }
 
-auto SegmentDeleted::format() const -> std::string {
-    return fmt::format("SegmentDeleted(segment = {})", segment);
-}
-
 auto SegmentIdUpdated::format() const -> std::string {
     return fmt::format("SegmentIdUpdated(new_segment = {}, old_segment = {})",
                        new_segment, old_segment);
 }
 
+auto SegmentPartMoved::format() const -> std::string {
+    return fmt::format(
+        "SegmentPartMoved(segment_part_source = {}, segment_part_destiantion = {})",
+        segment_part_source, segment_part_destiantion);
+}
+
+auto SegmentPartDeleted::format() const -> std::string {
+    return fmt::format("SegmentPartDeleted(segment_part = {})", segment_part);
+}
+
+// Inserted Segments
+
 auto SegmentInserted::format() const -> std::string {
     return fmt::format("SegmentInserted(segment = {})", segment);
 }
 
-auto SegmentUninserted::format() const -> std::string {
-    return fmt::format("SegmentUninserted(segment = {})", segment);
-}
-
-auto InsertedSegmentUpdated::format() const -> std::string {
-    return fmt::format("InsertedSegmentUpdated(new_segment = {}, old_segment = {})",
+auto InsertedSegmentIdUpdated::format() const -> std::string {
+    return fmt::format("InsertedSegmentIdUpdated(new_segment = {}, old_segment = {})",
                        new_segment, old_segment);
 }
 
-auto SegmentMerged::format() const -> std::string {
-    return fmt::format("SegmentMerged(segment_from = {}, segment_to = {})", segment_from,
-                       segment_to);
+auto InsertedPointTypesUpdated::format() const -> std::string {
+    return fmt::format("InsertedPointTypesUpdated(segment = {})", segment);
 }
 
-auto SegmentSplit::format() const -> std::string {
-    return fmt::format("SegmentSplit(segment_from = {}, part_from = {}, segment_to = {})",
-                       segment_from, part_from, segment_to);
+auto SegmentUninserted::format() const -> std::string {
+    return fmt::format("SegmentUninserted(segment = {})", segment);
 }
 
 }  // namespace info_message

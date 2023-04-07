@@ -249,7 +249,7 @@ auto CollisionCache::handle(editable_circuit::info_message::SegmentUninserted me
 }
 
 auto CollisionCache::handle(
-    editable_circuit::info_message::InsertedSegmentUpdated message) -> void {
+    editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void {
     update_impl(map_, message.new_segment.element_id, message.old_segment.element_id,
                 message.segment_info);
 }
@@ -277,7 +277,7 @@ auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<InsertedSegmentUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedSegmentIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }

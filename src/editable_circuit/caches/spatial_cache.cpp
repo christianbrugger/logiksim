@@ -106,7 +106,7 @@ auto SpatialTree::handle(editable_circuit::info_message::SegmentUninserted messa
     }
 }
 
-auto SpatialTree::handle(editable_circuit::info_message::InsertedSegmentUpdated message)
+auto SpatialTree::handle(editable_circuit::info_message::InsertedSegmentIdUpdated message)
     -> void {
     using namespace editable_circuit::info_message;
 
@@ -138,7 +138,7 @@ auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<InsertedSegmentUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedSegmentIdUpdated>(&message)) {
         handle(*pointer);
         return;
     }

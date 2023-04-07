@@ -72,7 +72,7 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
         const auto& segment_tree = layout.segment_tree(new_element_id);
 
         for (auto&& segment_index : segment_tree.indices()) {
-            sender.submit(info_message::InsertedSegmentUpdated {
+            sender.submit(info_message::InsertedSegmentIdUpdated {
                 .new_segment = segment_t {new_element_id, segment_index},
                 .old_segment = segment_t {old_element_id, segment_index},
                 .segment_info = segment_tree.segment_info(segment_index),
@@ -1153,7 +1153,7 @@ auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
         // TODO we need to change messages to include segment_part?
         // TODO who needs these messages and which one?
 
-        sender.submit(info_message::SegmentDeleted {segment_part.segment});
+        sender.submit(info_message::SegmentPartDeleted {segment_part});
         if (last_segment != segment_part.segment) {
             sender.submit(
                 info_message::SegmentIdUpdated {segment_part.segment, last_segment});

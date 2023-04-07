@@ -80,7 +80,7 @@ class CollisionCache {
 
     auto handle(editable_circuit::info_message::SegmentInserted message) -> void;
     auto handle(editable_circuit::info_message::SegmentUninserted message) -> void;
-    auto handle(editable_circuit::info_message::InsertedSegmentUpdated message) -> void;
+    auto handle(editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void;
 
     [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
     [[nodiscard]] auto state_colliding(point_t position, ItemType item_type) const

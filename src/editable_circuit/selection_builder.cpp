@@ -32,7 +32,7 @@ auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
     }
 
     if (std::holds_alternative<SegmentCreated>(message)
-        || std::holds_alternative<SegmentDeleted>(message)
+        || std::holds_alternative<SegmentPartDeleted>(message)
         || std::holds_alternative<SegmentIdUpdated>(message)) {
         clear_cache();
     }

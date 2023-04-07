@@ -77,19 +77,12 @@ struct InsertedLogicItemUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-// Wire Segments
+// Segments
 
 struct SegmentCreated {
     segment_t segment;
 
     [[nodiscard]] auto operator==(const SegmentCreated &other) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-struct SegmentDeleted {
-    segment_t segment;
-
-    [[nodiscard]] auto operator==(const SegmentDeleted &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -101,13 +94,48 @@ struct SegmentIdUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-// Inserted Wire Segments
+struct SegmentPartMoved {
+    segment_part_t segment_part_source;
+    segment_part_t segment_part_destiantion;
+
+    [[nodiscard]] auto operator==(const SegmentPartMoved &other) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct SegmentPartDeleted {
+    segment_part_t segment_part;
+
+    [[nodiscard]] auto operator==(const SegmentPartDeleted &other) const -> bool
+        = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+// Inserted Segments
 
 struct SegmentInserted {
     segment_t segment;
     segment_info_t segment_info;
 
     [[nodiscard]] auto operator==(const SegmentInserted &other) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct InsertedSegmentIdUpdated {
+    segment_t new_segment;
+    segment_t old_segment;
+    segment_info_t segment_info;
+
+    [[nodiscard]] auto operator==(const InsertedSegmentIdUpdated &other) const -> bool
+        = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+struct InsertedPointTypesUpdated {
+    segment_t segment;
+    segment_info_t segment_info;
+
+    [[nodiscard]] auto operator==(const InsertedPointTypesUpdated &other) const -> bool
+        = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -119,41 +147,12 @@ struct SegmentUninserted {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct InsertedSegmentUpdated {
-    segment_t new_segment;
-    segment_t old_segment;
-    segment_info_t segment_info;
-
-    [[nodiscard]] auto operator==(const InsertedSegmentUpdated &other) const -> bool
-        = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-// only inserted?
-struct SegmentMerged {
-    segment_t segment_from;
-    segment_t segment_to;
-
-    [[nodiscard]] auto operator==(const SegmentMerged &other) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-// only inserted?
-struct SegmentSplit {
-    segment_t segment_from;
-    part_t part_from;
-    segment_t segment_to;
-
-    [[nodiscard]] auto operator==(const SegmentSplit &other) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-using Message = std::variant<                                          //
-    LogicItemCreated, LogicItemDeleted, LogicItemUpdated,              //
-    LogicItemInserted, LogicItemUninserted, InsertedLogicItemUpdated,  //
-    SegmentCreated, SegmentDeleted, SegmentIdUpdated,                  //
-    SegmentInserted, SegmentUninserted, InsertedSegmentUpdated,        //
-    SegmentMerged, SegmentSplit>;
+using Message = std::variant<                                                //
+    LogicItemCreated, LogicItemDeleted, LogicItemUpdated,                    //
+    LogicItemInserted, LogicItemUninserted, InsertedLogicItemUpdated,        //
+    SegmentCreated, SegmentIdUpdated, SegmentPartMoved, SegmentPartDeleted,  //
+    SegmentInserted, InsertedSegmentIdUpdated, InsertedPointTypesUpdated,
+    SegmentUninserted>;
 
 }  // namespace info_message
 
