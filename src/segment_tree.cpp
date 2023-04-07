@@ -45,7 +45,13 @@ auto order_points(segment_info_t a, segment_info_t b)
 }
 
 auto segment_info_t::format() const -> std::string {
-    return fmt::format("Segment({} {} - {} {})", p0_type, line.p0, line.p1, p1_type);
+    const auto connection_string_0
+        = p0_connection_id ? p0_connection_id.format() + " " : "";
+    const auto connection_string_1
+        = p1_connection_id ? " " + p1_connection_id.format() : "";
+
+    return fmt::format("Segment({}{} {} - {} {}{})", connection_string_0, p0_type,
+                       line.p0, line.p1, p1_type, connection_string_1);
 }
 
 //

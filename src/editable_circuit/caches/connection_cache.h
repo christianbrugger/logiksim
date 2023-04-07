@@ -13,26 +13,28 @@ class Circuit;
 
 namespace detail::connection_cache {
 // TODO use struct packing ?
-struct value_type {
+struct connection_data_t {
     element_id_t element_id;
     connection_id_t connection_id;
     orientation_t orientation;
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const value_type& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const value_type& other) const = default;
+    [[nodiscard]] auto operator==(const connection_data_t& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const connection_data_t& other) const = default;
 };
 
-using map_type = ankerl::unordered_dense::map<point_t, value_type>;
+static_assert(sizeof(connection_data_t) == 8);
+
+using map_type = ankerl::unordered_dense::map<point_t, connection_data_t>;
 
 }  // namespace detail::connection_cache
 
 template <bool IsInput>
 class ConnectionCache {
    public:
+    using connection_data_t = detail::connection_cache::connection_data_t;
     using map_type = detail::connection_cache::map_type;
-    using value_type = detail::connection_cache::value_type;
 
    public:
     using connection_proxy
@@ -52,11 +54,11 @@ class ConnectionCache {
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
 
     [[nodiscard]] auto positions() const {
-        return std::ranges::views::keys(connections_);
+        return std::ranges::views::keys(map_);
     }
 
     [[nodiscard]] auto positions_and_orientations() const {
-        return transform_view(connections_, [](const map_type::value_type& value) {
+        return transform_view(map_, [](const map_type::value_type& value) {
             return std::make_pair(value.first, value.second.orientation);
         });
     }
@@ -66,14 +68,16 @@ class ConnectionCache {
 
    private:
     auto handle(editable_circuit::info_message::LogicItemInserted message) -> void;
-    auto handle(editable_circuit::info_message::LogicItemUninserted message) -> void;
     auto handle(editable_circuit::info_message::InsertedLogicItemIdUpdated message)
         -> void;
+    auto handle(editable_circuit::info_message::LogicItemUninserted message) -> void;
 
     auto handle(editable_circuit::info_message::SegmentInserted message) -> void;
+    auto handle(editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void;
+    auto handle(editable_circuit::info_message::InsertedEndPointsUpdated message) -> void;
     auto handle(editable_circuit::info_message::SegmentUninserted message) -> void;
 
-    map_type connections_ {};
+    map_type map_ {};
 };
 
 }  // namespace logicsim

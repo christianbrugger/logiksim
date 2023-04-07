@@ -239,7 +239,7 @@ auto update_impl(CollisionCache::map_type& map, element_id_t new_element_id,
 }
 
 auto CollisionCache::handle(
-    editable_circuit::info_message::InsertedPointTypesUpdated message) -> void {
+    editable_circuit::info_message::InsertedEndPointsUpdated message) -> void {
     const auto element_id = message.segment.element_id;
 
     const auto check_and_delete = get_check_and_delete(element_id);
@@ -317,7 +317,7 @@ auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
         handle(*pointer);
         return;
     }
-    if (auto pointer = std::get_if<InsertedPointTypesUpdated>(&message)) {
+    if (auto pointer = std::get_if<InsertedEndPointsUpdated>(&message)) {
         handle(*pointer);
         return;
     }

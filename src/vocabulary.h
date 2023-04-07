@@ -107,6 +107,10 @@ struct connection_id_t {
         return std::numeric_limits<value_type>::max();
     };
 
+    [[nodiscard]] explicit constexpr operator bool() const noexcept {
+        return value >= 0;
+    }
+
     auto operator++() noexcept -> connection_id_t & {
         ++value;
         return *this;

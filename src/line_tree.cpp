@@ -388,7 +388,8 @@ auto LineTree::output_position(std::size_t index) const -> point_t {
 
 auto LineTree::output_orientation(std::size_t index) const -> orientation_t {
     const auto segment_index = output_indices_.at(index) - 1;
-    return to_orientation(segment(segment_index));
+    const auto line = segment(segment_index);
+    return to_orientation(line.p0, line.p1);
 }
 
 auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {

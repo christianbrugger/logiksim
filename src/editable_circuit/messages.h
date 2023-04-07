@@ -131,12 +131,12 @@ struct InsertedSegmentIdUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
-struct InsertedPointTypesUpdated {
+struct InsertedEndPointsUpdated {
     segment_t segment;
-    segment_info_t old_segment_info;
     segment_info_t new_segment_info;
+    segment_info_t old_segment_info;
 
-    [[nodiscard]] auto operator==(const InsertedPointTypesUpdated &other) const -> bool
+    [[nodiscard]] auto operator==(const InsertedEndPointsUpdated &other) const -> bool
         = default;
     [[nodiscard]] auto format() const -> std::string;
 };
@@ -153,7 +153,7 @@ using Message = std::variant<                                                //
     LogicItemCreated, LogicItemDeleted, LogicItemIdUpdated,                  //
     LogicItemInserted, LogicItemUninserted, InsertedLogicItemIdUpdated,      //
     SegmentCreated, SegmentIdUpdated, SegmentPartMoved, SegmentPartDeleted,  //
-    SegmentInserted, InsertedSegmentIdUpdated, InsertedPointTypesUpdated,
+    SegmentInserted, InsertedSegmentIdUpdated, InsertedEndPointsUpdated,
     SegmentUninserted>;
 
 }  // namespace info_message

@@ -75,8 +75,8 @@ auto InsertedSegmentIdUpdated::format() const -> std::string {
                        new_segment, old_segment);
 }
 
-auto InsertedPointTypesUpdated::format() const -> std::string {
-    return fmt::format("InsertedPointTypesUpdated(segment = {})", segment);
+auto InsertedEndPointsUpdated::format() const -> std::string {
+    return fmt::format("InsertedEndPointsUpdated(segment = {})", segment);
 }
 
 auto SegmentUninserted::format() const -> std::string {

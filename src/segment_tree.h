@@ -40,11 +40,14 @@ struct segment_info_t {
     SegmentPointType p0_type {SegmentPointType::colliding_point};
     SegmentPointType p1_type {SegmentPointType::colliding_point};
 
+    connection_id_t p0_connection_id {null_connection};
+    connection_id_t p1_connection_id {null_connection};
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const segment_info_t &other) const -> bool = default;
 };
 
-static_assert(sizeof(segment_info_t) == 10);
+static_assert(sizeof(segment_info_t) == 12);
 
 auto order_points(segment_info_t segment0, segment_info_t segment1)
     -> std::tuple<segment_info_t, segment_info_t>;
@@ -118,7 +121,7 @@ class SegmentTree {
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;
     using segment_vector_t = folly::small_vector<segment_info_t, 2, policy>;
-    static_assert(sizeof(segment_vector_t) == 22);
+    static_assert(sizeof(segment_vector_t) == 26);
 
     using valid_vector_t = folly::small_vector<parts_vector_t, 2, policy>;
     static_assert(sizeof(valid_vector_t) == 22);
@@ -132,7 +135,7 @@ class SegmentTree {
     bool has_input_ {false};
 };
 
-static_assert(sizeof(SegmentTree) == 52);  // 22 + 22 + 2 + 4 + 1 (+ 1)
+static_assert(sizeof(SegmentTree) == 56);  // 26 + 22 + 2 + 4 + 1 (+ 1)
 
 auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
 

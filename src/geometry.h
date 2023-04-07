@@ -34,8 +34,8 @@ auto is_endpoint(point_t point, line_t line) -> bool;
 // orientation_t
 //
 
+// from p0 to p1
 auto to_orientation(point_t p0, point_t p1) -> orientation_t;
-auto to_orientation(line_t line) -> orientation_t;
 
 // angle in respect to left orientation
 auto to_angle(orientation_t orientation) -> double;
