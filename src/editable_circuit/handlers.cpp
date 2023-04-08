@@ -823,22 +823,13 @@ auto shadow_segment_info(const ordered_line_t line) -> segment_info_t {
 auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
                                       segment_t& source_segment,
                                       const element_id_t destination_element_id) {
-    const auto source_element_id = source_segment.element_id;
     const auto source_index = source_segment.segment_index;
 
-    if (source_element_id == destination_element_id) [[unlikely]] {
-        throw_exception("destination and source need to be different elements");
-    }
-    if (is_inserted(layout, source_element_id)) [[unlikely]] {
-        throw_exception("only can move from non-inserted segments");
-    }
-
-    auto& m_tree_source = layout.modifyable_segment_tree(source_element_id);
+    auto& m_tree_source = layout.modifyable_segment_tree(source_segment.element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
     const auto segment_info = m_tree_source.segment_info(source_index);
     const auto last_index = m_tree_source.last_index();
-
     m_tree_source.swap_and_delete_segment(source_index);
     const auto destination_index = m_tree_destination.add_segment(segment_info);
 
@@ -852,8 +843,8 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
 
     if (last_index != source_index) {
         sender.submit(info_message::SegmentIdUpdated {
-            .new_segment = segment_t {source_element_id, source_index},
-            .old_segment = segment_t {source_element_id, last_index},
+            .new_segment = source_segment,
+            .old_segment = segment_t {source_segment.element_id, last_index},
         });
     }
 
@@ -941,10 +932,9 @@ auto move_segment_between_trees(Layout& layout, MessageSender sender,
                                 segment_part_t& segment_part,
                                 const element_id_t destination_element_id) -> void {
     const auto element_id = segment_part.segment.element_id;
-    const auto segment_index = segment_part.segment.segment_index;
 
     if (is_inserted(layout, element_id)) [[unlikely]] {
-        throw_exception("only can move from non-inserted segments");
+        throw_exception("can only move from non-inserted segments");
     }
     if (element_id == destination_element_id) {
         throw_exception("target and source need to be different elements");
@@ -963,6 +953,96 @@ auto move_segment_between_trees(Layout& layout, MessageSender sender,
     } else if (a_inside_b_not_touching(moving_part, full_part)) {
         _move_splitting_segment_between_trees(layout, sender, segment_part,
                                               destination_element_id);
+    } else {
+        throw_exception("segment part is invalid");
+    }
+}
+
+auto _remove_full_segment_between_trees(Layout& layout, MessageSender sender,
+                                        segment_part_t& full_segment_part) {
+    const auto element_id = full_segment_part.segment.element_id;
+    const auto segment_index = full_segment_part.segment.segment_index;
+    auto& m_tree = layout.modifyable_segment_tree(element_id);
+
+    const auto last_index = m_tree.last_index();
+    m_tree.swap_and_delete_segment(segment_index);
+
+    if (last_index != segment_index) {
+        sender.submit(info_message::SegmentIdUpdated {
+            .new_segment = segment_t {element_id, segment_index},
+            .old_segment = segment_t {element_id, last_index},
+        });
+    }
+
+    sender.submit(info_message::SegmentPartDeleted {full_segment_part});
+    full_segment_part = null_segment_part;
+}
+
+auto _remove_touching_segment_between_trees(Layout& layout, MessageSender sender,
+                                            segment_part_t& segment_part) {
+    auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
+
+    const auto full_line = get_line(layout, segment_part.segment);
+    const auto removing_line = to_line(full_line, segment_part.part);
+
+    const auto line_kept = full_line.p0 == removing_line.p0
+                               ? ordered_line_t {removing_line.p1, full_line.p1}
+                               : ordered_line_t {full_line.p0, removing_line.p0};
+
+    m_tree.update_segment(segment_part.segment.segment_index,
+                          shadow_segment_info(line_kept));
+
+    sender.submit(info_message::SegmentPartDeleted {segment_part});
+    segment_part = null_segment_part;
+}
+
+auto _remove_splitting_segment_between_trees(Layout& layout, MessageSender sender,
+                                             segment_part_t& segment_part) {
+    auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
+
+    const auto full_line = get_line(layout, segment_part.segment);
+    const auto removing_line = to_line(full_line, segment_part.part);
+
+    const auto line_0 = ordered_line_t {full_line.p0, removing_line.p0};
+    const auto line_1 = ordered_line_t {removing_line.p1, full_line.p1};
+
+    const auto part_source = to_part(full_line, line_1);
+    const auto part_destination = to_part(line_1);
+
+    m_tree.update_segment(segment_part.segment.segment_index,
+                          shadow_segment_info(line_0));
+    const auto index_1 = m_tree.add_segment(shadow_segment_info(line_1));
+    const auto segment_1 = segment_t {segment_part.segment.element_id, index_1};
+
+    sender.submit(info_message::SegmentCreated {segment_1});
+    sender.submit(info_message::SegmentPartMoved {
+        .segment_part_destination = segment_part_t {segment_1, part_destination},
+        .segment_part_source = segment_part_t {segment_part.segment, part_source}});
+
+    sender.submit(info_message::SegmentPartDeleted {segment_part});
+    segment_part = null_segment_part;
+}
+
+/// Simply removes the segment from the tree
+//  * trees can become empty
+//  * the touched points will revert to shadow_points
+//  * will not send insert / uninsert messages
+auto remove_segment_from_tree(Layout& layout, MessageSender sender,
+                              segment_part_t& segment_part) -> void {
+    if (is_inserted(layout, segment_part.segment.element_id)) [[unlikely]] {
+        throw_exception("can only remove from non-inserted segments");
+    }
+
+    const auto removed_part = segment_part.part;
+    const auto full_line = get_line(layout, segment_part.segment);
+    const auto full_part = to_part(full_line);
+
+    if (a_equal_b(removed_part, full_part)) {
+        _remove_full_segment_between_trees(layout, sender, segment_part);
+    } else if (a_inside_b_touching_one_side(removed_part, full_part)) {
+        _remove_touching_segment_between_trees(layout, sender, segment_part);
+    } else if (a_inside_b_not_touching(removed_part, full_part)) {
+        _remove_splitting_segment_between_trees(layout, sender, segment_part);
     } else {
         throw_exception("segment part is invalid");
     }
@@ -1315,7 +1395,7 @@ auto wire_change_colliding_to_insert(Circuit& circuit, MessageSender sender,
                                      const segment_part_t segment_part) -> void {}
 
 auto wire_change_insert_to_colliding(Layout& layout, MessageSender sender,
-                                     const segment_part_t segment_part) -> void {
+                                     segment_part_t& segment_part) -> void {
     using enum display_state_t;
     const auto element_id = segment_part.segment.element_id;
     const auto display_state = layout.display_state(element_id);
@@ -1326,7 +1406,7 @@ auto wire_change_insert_to_colliding(Layout& layout, MessageSender sender,
     }
 
     else if (display_state == new_colliding) {
-        // remove_segment_from_tree(layout, sender, segment_part);
+        remove_segment_from_tree(layout, sender, segment_part);
     }
 
     else {
