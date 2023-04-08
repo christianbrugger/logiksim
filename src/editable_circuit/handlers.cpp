@@ -1310,8 +1310,8 @@ auto add_wire_segment(State state, Selection* selection, line_t line,
     }
 }
 
-auto add_connected_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
-                        Selection* selection) -> void {
+auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+              Selection* selection) -> void {
     const auto mode = InsertionMode::temporary;
 
     // TODO handle p0 == p1

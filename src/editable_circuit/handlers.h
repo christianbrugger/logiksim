@@ -80,8 +80,8 @@ auto delete_wire_segment(Circuit& circuit, MessageSender sender,
                          segment_part_t& segment_part,
                          segment_part_t* preserve_part = nullptr) -> void;
 
-auto add_connected_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
-                        Selection* selection) -> void;
+auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+              Selection* selection) -> void;
 
 auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
     -> segment_part_t;
