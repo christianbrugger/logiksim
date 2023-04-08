@@ -156,6 +156,20 @@ auto to_part(ordered_line_t line, rect_fine_t rect) -> std::optional<part_t> {
     return part_t {to_offset(begin, reference), to_offset(end, reference)};
 }
 
+auto to_part(ordered_line_t full_line, ordered_line_t sub_line) -> part_t {
+    const auto begin = full_line.p0 == sub_line.p0
+                           ? offset_t {0}
+                           : to_part(ordered_line_t {full_line.p0, sub_line.p0}).end;
+    const auto end = to_part(ordered_line_t {full_line.p0, sub_line.p1}).end;
+    const auto full_end = to_part(full_line).end;
+
+    if (end > full_end) [[unlikely]] {
+        throw_exception("sub_line needs to be within line");
+    }
+
+    return part_t {begin, end};
+}
+
 auto to_line(ordered_line_t line, part_t part) -> ordered_line_t {
     const auto x = line.p0.x;
     const auto y = line.p0.y;

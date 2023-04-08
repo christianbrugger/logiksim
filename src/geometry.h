@@ -53,11 +53,12 @@ auto to_grid(offset_t offset, grid_t reference) -> grid_t;
 //
 
 // TODO rename: to_part, to_line
-auto to_part(ordered_line_t line) -> part_t;
-auto to_part(ordered_line_t line, rect_fine_t rect) -> std::optional<part_t>;
-auto to_line(ordered_line_t line, part_t part) -> ordered_line_t;
+auto to_part(ordered_line_t full_line) -> part_t;
+auto to_part(ordered_line_t full_line, rect_fine_t rect) -> std::optional<part_t>;
+auto to_part(ordered_line_t full_line, ordered_line_t line) -> part_t;
+auto to_line(ordered_line_t full_line, part_t part) -> ordered_line_t;
 
-auto to_segment_part(segment_t segment, ordered_line_t line) -> segment_part_t;
+auto to_segment_part(segment_t segment, ordered_line_t sub_line) -> segment_part_t;
 
 auto intersect(part_t a, part_t b) -> std::optional<part_t>;
 

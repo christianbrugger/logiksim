@@ -933,7 +933,14 @@ auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment
         });
     }
 
-    // TODO SegmentPartMoved
+    const auto source_part = to_part(info_1.line);
+    const auto destination_part = to_part(info_merged.line, info_1.line);
+    sender.submit(info_message::SegmentPartMoved {
+        .segment_part_source = segment_part_t {segment_1, source_part},
+        .segment_part_destination = segment_part_t {segment_0, destination_part},
+    });
+
+    // TODO preserving
 }
 
 auto fix_and_merge_line_segments(State state, point_t position,
