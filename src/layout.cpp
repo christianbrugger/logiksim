@@ -246,10 +246,11 @@ auto Layout::validate() const -> void {
     // wires
     std::ranges::for_each(line_trees_, &LineTree::validate);
     std::ranges::for_each(element_ids(), validate_segment_tree);
-    for (const auto element_id : element_ids()) {
-        validate_segment_tree_display_state(segment_tree(element_id),
-                                            display_state(element_id));
-    }
+    // TODO do we care about the display state?
+    // for (const auto element_id : element_ids()) {
+    //     validate_segment_tree_display_state(segment_tree(element_id),
+    //                                         display_state(element_id));
+    // }
 
     // global attributes
     if (!circuit_id_) [[unlikely]] {

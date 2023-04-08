@@ -328,10 +328,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
     };
 
     auto setup = HandlerSetup {circuit};
-    print(circuit);
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
-    print(circuit);
-    return;
     setup.validate();
 
     // circuit
@@ -357,7 +354,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), normal);
+        ASSERT_EQ(layout.display_state(element_id), new_valid);
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, {10, 0}};

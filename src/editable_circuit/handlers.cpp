@@ -1233,7 +1233,8 @@ auto merge_line_segments(Layout& layout, MessageSender sender, const segment_t s
             const auto p_part = to_part(info_merged.line, p_line);
             *preserve_segment = segment_part_t {segment_t {element_id, index0}, p_part};
         }
-        if (p_index == index_last) {
+
+        else if (p_index == index_last) {
             const auto p_part = preserve_segment->part;
             *preserve_segment = segment_part_t {segment_t {element_id, index1}, p_part};
         }
