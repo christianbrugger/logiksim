@@ -241,7 +241,6 @@ auto update_impl(CollisionCache::map_type& map, element_id_t new_element_id,
 auto CollisionCache::handle(
     editable_circuit::info_message::InsertedEndPointsUpdated message) -> void {
     const auto element_id = message.segment.element_id;
-
     const auto check_and_delete = get_check_and_delete(element_id);
     const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
 

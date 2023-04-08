@@ -481,7 +481,7 @@ auto RendererWidget::load_circuit(int id) -> void {
     constexpr auto debug_build = true;
 #endif
     constexpr auto debug_max = 50;
-    constexpr auto release_max = 1600;
+    constexpr auto release_max = 1600;  //  1600;
 
     if (id == 1) {
         editable_circuit.add_standard_logic_item(
@@ -699,7 +699,6 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         // print(selection);
 
         const auto mask = editable_circuit.selection_builder().create_selection_mask();
-
         // auto simulation = Simulation {editable_circuit.schematic()};
         render_circuit(bl_ctx, render_args_t {
                                    .schematic = editable_circuit.circuit().schematic(),

@@ -67,7 +67,8 @@ auto SegmentPartDeleted::format() const -> std::string {
 // Inserted Segments
 
 auto SegmentInserted::format() const -> std::string {
-    return fmt::format("SegmentInserted(segment = {})", segment);
+    return fmt::format("SegmentInserted(segment = {}, segment_info = {})", segment,
+                       segment_info);
 }
 
 auto InsertedSegmentIdUpdated::format() const -> std::string {
@@ -76,7 +77,10 @@ auto InsertedSegmentIdUpdated::format() const -> std::string {
 }
 
 auto InsertedEndPointsUpdated::format() const -> std::string {
-    return fmt::format("InsertedEndPointsUpdated(segment = {})", segment);
+    return fmt::format(
+        "InsertedEndPointsUpdated(segment = {}, new_segment_info = {}, "
+        "old_segment_info = {})",
+        segment, new_segment_info, old_segment_info);
 }
 
 auto SegmentUninserted::format() const -> std::string {

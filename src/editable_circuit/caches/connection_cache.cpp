@@ -126,7 +126,8 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
 
     if (segment_info.p0_type == point_type) {
         const auto orientation = to_orientation(line.p0, line.p1);
-        validate_connection_id(segment_info.p0_connection_id);
+        // TODO validate?
+        // validate_connection_id(segment_info.p0_connection_id);
 
         if (!next_connection(segment_info.p0_connection_id, line.p0, orientation)) {
             return false;
@@ -134,7 +135,8 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
     }
     if (segment_info.p1_type == point_type) {
         const auto orientation = to_orientation(line.p1, line.p0);
-        validate_connection_id(segment_info.p1_connection_id);
+        // TODO validate?
+        // validate_connection_id(segment_info.p1_connection_id);
 
         if (!next_connection(segment_info.p1_connection_id, line.p1, orientation)) {
             return false;

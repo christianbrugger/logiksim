@@ -624,10 +624,9 @@ auto is_wire_aggregate(const Schematic& schematic, const Layout& layout,
            && layout.display_state(element_id) == display_state;
 }
 
-auto add_new_temporary_wire_element(Circuit& circuit, MessageSender sender)
-    -> element_id_t {
-    const auto element_id
-        = circuit.layout().add_line_tree(display_state_t::new_temporary);
+auto add_new_wire_element(Circuit& circuit, MessageSender sender,
+                          display_state_t display_state) -> element_id_t {
+    const auto element_id = circuit.layout().add_line_tree(display_state);
     {
         const auto element = circuit.schematic().add_element({
             .element_type = ElementType::wire,
@@ -665,8 +664,7 @@ auto create_aggregate_tree_at(Circuit& circuit, MessageSender sender,
     auto element_id = find_wire(circuit, display_state);
 
     if (!element_id) {
-        element_id = add_new_temporary_wire_element(circuit, sender);
-        circuit.layout().set_display_state(element_id, display_state);
+        element_id = add_new_wire_element(circuit, sender, display_state);
     }
 
     if (element_id != target_id) {
@@ -1100,26 +1098,38 @@ auto update_segment_point_types(
     Circuit& circuit, MessageSender sender,
     std::initializer_list<const std::pair<segment_t, SegmentPointType>> data,
     const point_t position) -> void {
+    if (data.size() == 0) {
+        return;
+    }
     auto& layout = circuit.layout();
 
-    for (auto [segment, point_type] : data) {
-        if (!is_inserted(circuit, segment.element_id)) [[unlikely]] {
-            throw_exception("only works for inserted wires");
-        }
-
-        auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
-        const auto old_segment_info = m_tree.segment_info(segment.segment_index);
-        const auto new_segment_info
-            = updated_segment_info(old_segment_info, position, point_type);
-
-        m_tree.update_segment(segment.segment_index, new_segment_info);
-
-        sender.submit(info_message::InsertedEndPointsUpdated {
-            .segment = segment,
-            .new_segment_info = old_segment_info,
-            .old_segment_info = new_segment_info,
-        });
+    if (!is_inserted(circuit, data.begin()->first.element_id)) [[unlikely]] {
+        throw_exception("only works for inserted wires");
     }
+
+    const auto submit_point_update = [&](bool write_shadow) {
+        for (auto [segment, point_type] : data) {
+            auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
+
+            const auto old_segment_info = m_tree.segment_info(segment.segment_index);
+            const auto new_segment_info = updated_segment_info(
+                old_segment_info, position,
+                write_shadow ? SegmentPointType::shadow_point : point_type);
+
+            m_tree.update_segment(segment.segment_index, new_segment_info);
+
+            sender.submit(info_message::InsertedEndPointsUpdated {
+                .segment = segment,
+                .new_segment_info = new_segment_info,
+                .old_segment_info = old_segment_info,
+            });
+        }
+    };
+
+    // first clear them, so caches are empty
+    submit_point_update(true);
+    // then write the new states
+    submit_point_update(false);
 }
 
 auto sort_through_lines_first(std::span<std::pair<ordered_line_t, segment_t>> lines,
@@ -1210,7 +1220,7 @@ auto merge_line_segments(Layout& layout, MessageSender sender, const segment_t s
 
         if (p_index == index0 || p_index == index1) {
             const auto p_info = p_index == index0 ? info_0 : info_1;
-            const auto p_line = to_line(info_0.line, preserve_segment->part);
+            const auto p_line = to_line(p_info.line, preserve_segment->part);
             const auto p_part = to_part(info_merged.line, p_line);
             *preserve_segment = segment_part_t {segment_t {element_id, index0}, p_part};
         }
@@ -1350,12 +1360,17 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
         merge_trees(state.circuit, state.sender, candidate_0, candidate_1);
         return candidate_0;
     }
-    return add_new_temporary_wire_element(state.circuit, state.sender);
+    return add_new_wire_element(state.circuit, state.sender, display_state_t::new_valid);
 }
 
 auto insert_wire(State state, segment_part_t& segment_part) -> void {
     const auto element_id = find_wire_for_inserting_segment(state, segment_part);
     move_segment_between_trees(state.layout, state.sender, segment_part, element_id);
+
+    state.sender.submit(info_message::SegmentInserted({
+        .segment = segment_part.segment,
+        .segment_info = get_segment_info(state.circuit, segment_part.segment),
+    }));
 
     const auto line = get_line(state.layout, segment_part);
     fix_and_merge_line_segments(state, line.p0, &segment_part);
@@ -1473,8 +1488,8 @@ auto add_wire_segment(State state, Selection* selection, line_t line,
 }
 
 auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
-              Selection* selection) -> void {
-    const auto mode = InsertionMode::temporary;
+              InsertionMode insertion_mode, Selection* selection) -> void {
+    const auto mode = insertion_mode;
 
     // TODO handle p0 == p1
 

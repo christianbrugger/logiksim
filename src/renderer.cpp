@@ -575,8 +575,7 @@ auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout&
 
     for (auto&& [segment, parts] : selection.selected_segments()) {
         const auto element_id = segment.element_id;
-
-        if (layout.display_state(element_id) == display_state_t::normal) {
+        if (layout.display_state(element_id) == display_state_t::new_valid) {
             const auto line = get_line(layout, segment);
             draw_wire_selected_parts_shadow(ctx, layout, line, parts, settings);
         }

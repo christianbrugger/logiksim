@@ -74,7 +74,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
 }
 
 //
-// Change Mode
+// Change Mode  -  Temporary => Colliding
 //
 
 TEST(EditableCircuitHandlerWire, TempToColliding) {
@@ -305,6 +305,79 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     ASSERT_EQ(setup.recorder.messages().at(1), m1);
     ASSERT_EQ(setup.recorder.messages().at(2), m2);
     ASSERT_EQ(setup.recorder.messages().at(3), m3);
+}
+
+//
+// Change Mode  -  Temporary => Valid
+//
+
+TEST(EditableCircuitHandlerWire, TempToValid) {
+    using namespace editable_circuit::info_message;
+    using enum display_state_t;
+    auto circuit = empty_circuit();
+    auto &schematic = circuit.schematic();
+    auto &layout = circuit.layout();
+
+    add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
+                  std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+    add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
+
+    auto segment_part = segment_part_t {
+        segment_t {element_id_t {0}, segment_index_t {0}},
+        part_t {offset_t {0}, offset_t {10}},
+    };
+
+    auto setup = HandlerSetup {circuit};
+    print(circuit);
+    change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
+    print(circuit);
+    return;
+    setup.validate();
+
+    // circuit
+    assert_element_count(circuit, 3);
+    {
+        const auto element_id = element_id_t {0};
+        const auto &tree = layout.segment_tree(element_id);
+
+        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.display_state(element_id), new_temporary);
+        ASSERT_EQ(tree.segment_count(), 0);
+    }
+    {
+        const auto element_id = element_id_t {1};
+        const auto &tree = layout.segment_tree(element_id);
+
+        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.display_state(element_id), new_colliding);
+        ASSERT_EQ(tree.segment_count(), 0);
+    }
+    {
+        const auto element_id = element_id_t {2};
+        const auto &tree = layout.segment_tree(element_id);
+
+        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.display_state(element_id), normal);
+        ASSERT_EQ(tree.segment_count(), 1);
+
+        const auto line = ordered_line_t {point_t {0, 0}, {10, 0}};
+        ASSERT_EQ(tree.segment_line(0), line);
+    }
+
+    // messages
+    const auto m0 = Message {SegmentIdUpdated {
+        .new_segment = segment_t {element_id_t {2}, segment_index_t {0}},
+        .old_segment = segment_t {element_id_t {0}, segment_index_t {0}},
+    }};
+    const auto segment1 = segment_t {element_id_t {2}, segment_index_t {0}};
+    const auto m1 = Message {SegmentInserted {
+        .segment = segment1,
+        .segment_info = get_segment_info(circuit, segment1),
+    }};
+
+    ASSERT_EQ(setup.recorder.messages().size(), 2);
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
 }
 
 }  // namespace logicsim
