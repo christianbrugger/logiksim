@@ -1124,63 +1124,83 @@ auto insert_wire(State state, ordered_line_t line) -> segment_part_t {
     return segment_part;
 }
 
-// this tree simply removes the segment from the tree, which might become empty
-// the point type will revert to shadow_point
-auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
+auto shadow_segment_info(ordered_line_t line) -> segment_info_t {
+    return segment_info_t {
+        .line = line,
+        .p0_type = SegmentPointType::shadow_point,
+        .p1_type = SegmentPointType::shadow_point,
+        .p0_connection_id = null_connection,
+        .p1_connection_id = null_connection,
+    };
+}
+
+/// Simply removes the segment from the tree
+//  * trees can become empty
+//  * the touched points will revert to shadow_points
+auto remove_wire_segment_from_tree(Layout& layout, MessageSender sender,
                                    segment_part_t& segment_part) -> void {
-    // segment_part_t* preserve_part
+    const auto element_id = segment_part.segment.element_id;
+    const auto segment_index = segment_part.segment.segment_index;
 
-    // TODO introduce ordered line ???
+    if (is_inserted(layout, segment_part.segment.element_id)) [[unlikely]] {
+        throw_exception("only implemented for non-inserted segments");
+    }
 
-    const auto full_line = get_line(circuit.layout(), segment_part.segment);
+    const auto full_line = get_line(layout, segment_part.segment);
     const auto full_part = to_part(full_line);
 
     const auto removing_part = segment_part.part;
     const auto removing_line = to_line(full_line, removing_part);
 
-    auto& m_tree
-        = circuit.layout().modifyable_segment_tree(segment_part.segment.element_id);
+    auto& m_tree = layout.modifyable_segment_tree(element_id);
 
     // remove completely
     if (a_equal_b(removing_part, full_part)) {
-        const auto last_segment
-            = segment_t {segment_part.segment.element_id, m_tree.last_index()};
-        m_tree.swap_and_delete_segment(segment_part.segment.segment_index);
+        const auto last_index = m_tree.last_index();
+        m_tree.swap_and_delete_segment(segment_index);
 
-        sender.submit(info_message::SegmentPartDeleted {segment_part});
-
-        if (last_segment != segment_part.segment) {
+        if (last_index != segment_index) {
             sender.submit(info_message::SegmentIdUpdated {
-                .new_segment = segment_part.segment,
-                .old_segment = last_segment,
+                .new_segment = segment_t {element_id, segment_index},
+                .old_segment = segment_t {element_id, last_index},
             });
-
-            // TODO InsertedSegmentIdUpdated
         }
+        sender.submit(info_message::SegmentPartDeleted {segment_part});
     }
 
     // shrink one side of segment
     else if (a_inside_b_touching_one_side(removing_part, full_part)) {
-        const auto keep_line = full_line.p0 == removing_line.p0
+        const auto line_kept = full_line.p0 == removing_line.p0
                                    ? ordered_line_t {removing_line.p1, full_line.p1}
                                    : ordered_line_t {full_line.p0, removing_line.p0};
 
-        m_tree.update_segment(segment_part.segment.segment_index,
-                              segment_info_t {.line = keep_line,
-                                              .p0_type = SegmentPointType::shadow_point,
-                                              .p1_type = SegmentPointType::shadow_point});
+        m_tree.update_segment(segment_index, shadow_segment_info(line_kept));
+
+        sender.submit(info_message::SegmentPartDeleted {segment_part});
     }
 
-    // split segment in two
+    // split segment in two, remove middle
     else if (a_inside_b_not_touching(removing_part, full_part)) {
-        const auto keep_line = full_line.p0 == removing_line.p0
-                                   ? line_t {removing_line.p1, full_line.p1}
-                                   : line_t {full_line.p0, removing_line.p0};
-        print(keep_line);
+        const auto line_0 = ordered_line_t {full_line.p0, removing_line.p0};
+        const auto line_1 = ordered_line_t {removing_line.p1, full_line.p1};
+
+        const auto part_source = to_part(full_line, line_1);
+        const auto part_destination = to_part(line_1);
+
+        m_tree.update_segment(segment_index, shadow_segment_info(line_0));
+        const auto index_1 = m_tree.add_segment(shadow_segment_info(line_1));
+
+        sender.submit(info_message::SegmentPartDeleted {segment_part});
+        sender.submit(info_message::SegmentCreated {segment_t {element_id, index_1}});
+        sender.submit(info_message::SegmentPartMoved {
+            .segment_part_destination
+            = segment_part_t {segment_t {element_id, index_1}, part_destination},
+            .segment_part_source
+            = segment_part_t {segment_t {element_id, segment_index}, part_source}});
     }
 
     else {
-        throw_exception("segment_part does not exist in its entire length");
+        throw_exception("segment part is invalid");
     }
 
     segment_part = null_segment_part;
@@ -1199,7 +1219,7 @@ auto unmark_valid(Layout& layout, segment_part_t segment_part) {
 auto wire_change_temporary_to_colliding(State state, segment_part_t& segment_part)
     -> void {
     const auto line = get_line(state.layout, segment_part);
-    remove_wire_segment_from_tree(state.circuit, state.sender, segment_part);
+    remove_wire_segment_from_tree(state.layout, state.sender, segment_part);
 
     if (is_wire_colliding(state.cache, line)) {
         segment_part = add_segment_to_aggregate(state.circuit, state.sender, line,
@@ -1213,8 +1233,25 @@ auto wire_change_temporary_to_colliding(State state, segment_part_t& segment_par
 auto wire_change_colliding_to_insert(Circuit& circuit, MessageSender sender,
                                      segment_part_t segment_part) -> void {}
 
-auto wire_change_insert_to_colliding(Layout& layout, segment_part_t segment_part)
-    -> void {}
+auto wire_change_insert_to_colliding(Layout& layout, MessageSender sender,
+                                     segment_part_t segment_part) -> void {
+    using enum display_state_t;
+    const auto element_id = segment_part.segment.element_id;
+    const auto display_state = layout.display_state(element_id);
+
+    if (display_state == normal || display_state == new_valid) {
+        auto& m_tree = layout.modifyable_segment_tree(element_id);
+        m_tree.unmark_valid(segment_part.segment.segment_index, segment_part.part);
+    }
+
+    else if (display_state == new_colliding) {
+        remove_wire_segment_from_tree(layout, sender, segment_part);
+    }
+
+    else {
+        throw_exception("wire needs to be in inserted or colliding state");
+    }
+}
 
 auto wire_change_colliding_to_temporary(Circuit& circuit, MessageSender sender,
                                         segment_part_t& segment_part) -> void {}
@@ -1246,7 +1283,7 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
     }
     if (old_modes.first == InsertionMode::insert_or_discard
         || old_modes.second == InsertionMode::insert_or_discard) {
-        wire_change_insert_to_colliding(state.layout, segment_part);
+        wire_change_insert_to_colliding(state.layout, state.sender, segment_part);
     }
     if (new_mode == InsertionMode::temporary) {
         wire_change_colliding_to_temporary(state.circuit, state.sender, segment_part);
