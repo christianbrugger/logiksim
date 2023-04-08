@@ -166,6 +166,10 @@ struct range_t {
         }
     }
 
+    [[nodiscard]] constexpr auto reverse() const -> range_t<T, !forward> {
+        range_t<T, !forward> {stop_, start_};
+    }
+
    private:
     static constexpr auto zero_ = range_type_zero_value<T>;
     value_type start_ {zero_};

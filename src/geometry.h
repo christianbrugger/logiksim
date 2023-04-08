@@ -29,6 +29,7 @@ auto order_points(const line_t line0, const line_t line1) noexcept
 auto distance(line_t line) -> int;
 
 auto is_endpoint(point_t point, line_t line) -> bool;
+auto is_endpoint(point_t point, ordered_line_t line) -> bool;
 
 //
 // orientation_t
@@ -56,6 +57,8 @@ auto to_part(ordered_line_t line) -> part_t;
 auto to_part(ordered_line_t line, rect_fine_t rect) -> std::optional<part_t>;
 auto to_line(ordered_line_t line, part_t part) -> ordered_line_t;
 
+auto to_segment_part(segment_t segment, ordered_line_t line) -> segment_part_t;
+
 auto intersect(part_t a, part_t b) -> std::optional<part_t>;
 
 //
@@ -67,10 +70,12 @@ auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t lin
     -> void;
 auto validate_segment_parts(std::span<const part_t> parts, ordered_line_t line) -> void;
 
+[[nodiscard]] auto a_inside_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_inside_b_not_touching(part_t a, part_t b) -> bool;
-[[nodiscard]] auto a_disjoint_to_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_inside_b_touching_one_side(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_disjoint_to_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_equal_b(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_overlapps_b(part_t a, part_t b) -> bool;
 
 // TODO remove this and use named methods instead?
 enum class InclusionResult {
@@ -80,7 +85,6 @@ enum class InclusionResult {
 };
 [[nodiscard]] auto format(InclusionResult state) -> std::string;
 
-[[nodiscard]] auto a_part_of_b(part_t a, part_t b) -> InclusionResult;
 [[nodiscard]] auto is_part_included(std::span<const part_t> parts, part_t part)
     -> InclusionResult;
 

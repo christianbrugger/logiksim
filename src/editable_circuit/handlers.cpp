@@ -843,118 +843,6 @@ SegmentPointType::cross_point_horizontal : SegmentPointType::cross_point_vertica
     throw_exception("unexpected unhandeled case");
 }
 
-auto WireEditor::add_line_segment(line_t line, InsertionMode insertion_mode,
-                                  Selection* selection) -> void {
-    if (insertion_mode != InsertionMode::insert_or_discard) {
-        throw_exception("Not implemented.");
-    }
-
-    if (is_colliding(line)) {
-        fmt::print("Collision failed\n");
-        return;
-    }
-
-    const auto colliding_id_0 = collision_cache_.get_first_wire(line.p0);
-    auto colliding_id_1 = collision_cache_.get_first_wire(line.p1);
-
-    auto tree_handle = editable_circuit_.element_handle();
-
-    if (colliding_id_0) {
-        tree_handle.set_element(colliding_id_0);
-    }
-
-    if (colliding_id_1) {
-        if (!tree_handle) {
-            tree_handle.set_element(colliding_id_1);
-        } else {
-            // merge two trees
-            const auto tree_copy = SegmentTree {layout_.segment_tree(colliding_id_1)};
-            editable_circuit_.swap_and_delete_single_element_private(colliding_id_1);
-
-            const auto element_id = tree_handle.element();
-            auto&& m_tree = layout_.modifyable_segment_tree(element_id);
-
-            auto first_index = m_tree.add_tree(tree_copy);
-            for (auto segment_index : range(first_index, ++m_tree.last_index())) {
-                cache_insert(element_id, segment_index);
-            }
-        }
-    }
-
-    if (!tree_handle) {
-        // create new empty tree
-        const auto element_id = layout_.add_line_tree(SegmentTree {});
-        {
-            const auto element = schematic_.add_element({
-                .element_type = ElementType::wire,
-                .input_count = 0,
-                .output_count = 0,
-            });
-            if (element.element_id() != element_id) [[unlikely]] {
-                throw_exception("Added element ids don't match.");
-            }
-        }
-        editable_circuit_.key_insert(element_id);
-        tree_handle.set_element(element_id);
-    }
-
-    {
-        // insert new segment with dummy endpoints
-        const auto element_id = tree_handle.element();
-        auto&& m_tree = layout_.modifyable_segment_tree(element_id);
-
-        const auto segment = segment_info_t {
-            .line = line,
-            .p0_type = SegmentPointType::shadow_point,
-            .p1_type = SegmentPointType::shadow_point,
-        };
-
-        const auto segment_index = m_tree.add_segment(segment,
-display_state_t::normal); cache_insert(element_id, segment_index);
-
-        if (selection != nullptr) {
-            const auto segment_part = to_part(segment.line);
-            selection->add_segment(segment_t {element_id, segment_index},
-segment_part);
-        }
-    }
-
-    // now fix all endpoints at given positions
-    fix_line_segments(line.p0);
-    fix_line_segments(line.p1);
-
-    // TODO insertion mode change
-
-#ifndef NDEBUG
-    layout_.segment_tree(tree_handle.element()).validate();
-#endif
-}
-
-auto WireEditor::is_colliding(line_t line) const -> bool {
-    // TODO connections colliding
-
-    return collision_cache_.is_colliding(line);
-}
-
-auto WireEditor::cache_insert(element_id_t element_id, segment_index_t segment_index)
-    -> void {
-    const auto segment = layout_.segment_tree(element_id).segment(segment_index);
-
-    input_connections_.insert(element_id, segment);
-    output_connections_.insert(element_id, segment);
-    collision_cache_.insert(element_id, segment);
-    spatial_cache_.insert(element_id, segment.line, segment_index);
-}
-
-auto WireEditor::cache_remove(element_id_t element_id, segment_index_t segment_index)
-    -> void {
-    const auto segment = layout_.segment_tree(element_id).segment(segment_index);
-
-    input_connections_.remove(element_id, segment);
-    output_connections_.remove(element_id, segment);
-    collision_cache_.remove(element_id, segment);
-    spatial_cache_.remove(element_id, segment.line, segment_index);
-}
 
 */
 
@@ -980,7 +868,6 @@ auto add_new_temporary_wire_element(Circuit& circuit, MessageSender sender)
             throw_exception("Added element ids don't match.");
         }
     }
-    sender.submit(info_message::LogicItemCreated {element_id});
     return element_id;
 }
 
@@ -1055,10 +942,8 @@ auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
     throw_exception("display state has no aggregate");
 }
 
-auto add_line_to_aggregate(Circuit& circuit, MessageSender sender, ordered_line_t line,
-                           display_state_t aggregate_type) -> segment_part_t {
-    const auto element_id = get_or_create_aggregate(circuit, sender, aggregate_type);
-
+auto add_segment_to_tree(Circuit& circuit, MessageSender sender, element_id_t element_id,
+                         ordered_line_t line) -> segment_part_t {
     // insert new segment
     auto& m_tree = circuit.layout().modifyable_segment_tree(element_id);
 
@@ -1070,10 +955,19 @@ auto add_line_to_aggregate(Circuit& circuit, MessageSender sender, ordered_line_
     const auto segment_index = m_tree.add_segment(segment_info);
     const auto segment = segment_t {element_id, segment_index};
 
-    // TODO do we need this message anywhere?
+    // messages
     sender.submit(info_message::SegmentCreated {segment});
+    if (is_inserted(circuit, element_id)) {
+        sender.submit(info_message::SegmentInserted {segment, segment_info});
+    }
 
     return segment_part_t {segment, to_part(line)};
+}
+
+auto add_segment_to_aggregate(Circuit& circuit, MessageSender sender, ordered_line_t line,
+                              display_state_t aggregate_type) -> segment_part_t {
+    const auto element_id = get_or_create_aggregate(circuit, sender, aggregate_type);
+    return add_segment_to_tree(circuit, sender, element_id, line);
 }
 
 // insertion mode changing
@@ -1122,9 +1016,245 @@ auto get_insertion_modes(const Layout& layout, segment_part_t segment_part)
                           to_insertion_mode(display_states.second));
 }
 
+auto delete_inserted_tree_segments(Circuit& circuit, MessageSender sender,
+                                   element_id_t element_id) -> void {
+    if (!is_inserted(circuit, element_id) || !is_wire(circuit, element_id)) [[unlikely]] {
+        throw_exception("can only delete from inserted wires");
+    }
+
+    auto& m_tree = circuit.layout().modifyable_segment_tree(element_id);
+
+    for (auto segment_index = m_tree.last_index(); segment_index >= segment_index_t {0};
+         --segment_index) {
+        const auto segment = segment_t {element_id, segment_index};
+        const auto segment_info = m_tree.segment_info(segment_index);
+        const auto part = to_part(segment_info.line);
+
+        m_tree.swap_and_delete_segment(segment_index);
+        sender.submit(info_message::SegmentUninserted {segment, segment_info});
+        sender.submit(info_message::SegmentPartDeleted {segment_part_t {segment, part}});
+    }
+}
+
+auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_target,
+                 element_id_t tree_deleted) -> void {
+    auto& layout = circuit.layout();
+
+    // delete first, so caches are emptied
+    const auto tree_copy = SegmentTree {layout.segment_tree(tree_deleted)};
+    delete_inserted_tree_segments(circuit, sender, tree_deleted);
+    swap_and_delete_single_element_private(circuit, sender, tree_deleted, &tree_target);
+
+    // add segments to new tree
+    auto&& m_tree = layout.modifyable_segment_tree(tree_target);
+    auto first_index = m_tree.add_tree(tree_copy);
+
+    for (auto segment_index : range(first_index, ++m_tree.last_index())) {
+        const auto segment = segment_t {tree_target, segment_index};
+        const auto segment_info = m_tree.segment_info(segment_index);
+
+        sender.submit(info_message::SegmentCreated {segment});
+        sender.submit(info_message::SegmentInserted {segment, segment_info});
+    }
+}
+
+auto updated_segment_info(segment_info_t segment_info, point_t position,
+                          SegmentPointType point_type) {
+    if (segment_info.line.p0 == position) {
+        segment_info.p0_type = point_type;
+    } else if (segment_info.line.p1 == position) {
+        segment_info.p1_type = point_type;
+    } else {
+        throw_exception("Position needs to be an endpoint of the segment.");
+    }
+    return segment_info;
+}
+
+auto update_segment_point_types(
+    Circuit& circuit, MessageSender sender,
+    std::initializer_list<const std::pair<segment_t, SegmentPointType>> data,
+    point_t position) -> void {
+    auto& layout = circuit.layout();
+
+    for (auto [segment, point_type] : data) {
+        if (!is_inserted(circuit, segment.element_id)) [[unlikely]] {
+            throw_exception("only works for inserted wires");
+        }
+
+        auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
+        const auto old_segment_info = m_tree.segment_info(segment.segment_index);
+        const auto new_segment_info
+            = updated_segment_info(old_segment_info, position, point_type);
+
+        m_tree.update_segment(segment.segment_index, new_segment_info);
+        sender.submit(info_message::InsertedEndPointsUpdated {
+            .segment = segment,
+            .new_segment_info = old_segment_info,
+            .old_segment_info = new_segment_info,
+        });
+    }
+}
+
+auto sort_through_lines_first(std::span<std::pair<ordered_line_t, segment_t>> lines,
+                              point_t point) -> void {
+    std::ranges::sort(lines, {}, [point](std::pair<ordered_line_t, segment_t> item) {
+        return is_endpoint(point, item.first);
+    });
+}
+
+auto fix_and_merge_line_segments(State state, point_t position,
+                                 segment_part_t* preserve_segment) -> void {
+    auto& layout = state.layout;
+
+    // TODO rename to segments
+    const auto segments = state.cache.spatial_cache().query_line_segments(position);
+    const auto segment_count = get_segment_count(segments);
+
+    if (segment_count == 0) [[unlikely]] {
+        throw_exception("Could not find any segments at position.");
+    }
+    if (!all_same_element_id(segments)) [[unlikely]] {
+        throw_exception("All segments need to belong to the same segment tree.");
+    }
+
+    if (segment_count == 1) {
+        update_segment_point_types(
+            state.circuit, state.sender,
+            {
+                std::pair {segments.at(0), SegmentPointType::output},
+            },
+            position);
+        return;
+    }
+
+    if (segment_count == 2) {
+        auto lines = std::array {
+            std::pair {get_line(layout, segments.at(0)), segments.at(0)},
+            std::pair {get_line(layout, segments.at(1)), segments.at(1)},
+        };
+        sort_through_lines_first(lines, position);
+        const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
+
+        if (has_through_line_0) {
+            const auto cross_point_type = is_horizontal(lines.at(1).first)
+                                              ? SegmentPointType::cross_point_horizontal
+                                              : SegmentPointType::cross_point_vertical;
+            update_segment_point_types(
+                state.circuit, state.sender,
+                {
+                    std::pair {lines.at(1).second, cross_point_type},
+                },
+                position);
+            return;
+        }
+
+        const auto horizontal_0 = is_horizontal(lines.at(0).first);
+        const auto horizontal_1 = is_horizontal(lines.at(1).first);
+        const auto parallel = horizontal_0 == horizontal_1;
+
+        if (parallel) {
+            // merge_line_segments(segments.at(0).element_id,
+            // segments.at(0).segment_index,
+            //                     segments.at(1).segment_index);
+            return;
+        }
+
+        // handle corner
+        update_segment_point_types(
+            state.circuit, state.sender,
+            {
+                std::pair {segments.at(0), SegmentPointType::colliding_point},
+                std::pair {segments.at(1), SegmentPointType::shadow_point},
+            },
+            position);
+        return;
+    }
+
+    if (segment_count == 3) {
+        auto lines = std::array {
+            std::pair {get_line(layout, segments.at(0)), segments.at(0)},
+            std::pair {get_line(layout, segments.at(1)), segments.at(1)},
+            std::pair {get_line(layout, segments.at(2)), segments.at(2)},
+        };
+        sort_through_lines_first(lines, position);
+        const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
+
+        if (has_through_line_0) {
+            const auto cross_point_type = is_horizontal(lines.at(2).first)
+                                              ? SegmentPointType::cross_point_horizontal
+                                              : SegmentPointType::cross_point_vertical;
+            update_segment_point_types(
+                state.circuit, state.sender,
+                {
+                    std::pair {lines.at(1).second, SegmentPointType::shadow_point},
+                    std::pair {lines.at(2).second, cross_point_type},
+                },
+                position);
+        } else {
+            update_segment_point_types(
+                state.circuit, state.sender,
+                {
+                    std::pair {segments.at(0), SegmentPointType::colliding_point},
+                    std::pair {segments.at(1), SegmentPointType::shadow_point},
+                    std::pair {segments.at(2), SegmentPointType::visual_cross_point},
+                },
+                position);
+        }
+        return;
+    }
+
+    if (segment_count == 4) {
+        update_segment_point_types(
+            state.circuit, state.sender,
+            {
+                std::pair {segments.at(0), SegmentPointType::colliding_point},
+                std::pair {segments.at(1), SegmentPointType::shadow_point},
+                std::pair {segments.at(2), SegmentPointType::shadow_point},
+                std::pair {segments.at(3), SegmentPointType::visual_cross_point},
+            },
+            position);
+        return;
+    }
+
+    throw_exception("unexpected unhandeled case");
+}
+
+auto add_and_merge_segment(State state, ordered_line_t line) -> segment_part_t {
+    const auto colliding_id_0 = state.cache.collision_cache().get_first_wire(line.p0);
+    const auto colliding_id_1 = state.cache.collision_cache().get_first_wire(line.p1);
+
+    auto element_id = colliding_id_0;
+
+    if (colliding_id_1) {
+        if (element_id) {
+            merge_trees(state.circuit, state.sender, element_id, colliding_id_1);
+        } else {
+            element_id = colliding_id_1;
+        }
+    }
+
+    if (!element_id) {
+        element_id = add_new_temporary_wire_element(state.circuit, state.sender);
+    }
+
+    auto segment_part
+        = add_segment_to_tree(state.circuit, state.sender, element_id, line);
+
+    // now fix all endpoints at given positions
+    fix_and_merge_line_segments(state, line.p0, &segment_part);
+    fix_and_merge_line_segments(state, line.p1, &segment_part);
+
+#ifndef NDEBUG
+    state.layout.segment_tree(element_id).validate_inserted();
+#endif
+
+    return segment_part;
+}
+
 auto insert_wire(State state, ordered_line_t line) -> segment_part_t {
-    // we assume there will be no collision
-    return null_segment_part;
+    const auto segment_part = add_and_merge_segment(state, line);
+    // TODO connect segment
+    return segment_part;
 }
 
 // this tree simply removes the segment from the tree, which might become empty
@@ -1150,24 +1280,16 @@ auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
             = segment_t {segment_part.segment.element_id, m_tree.last_index()};
         m_tree.swap_and_delete_segment(segment_part.segment.segment_index);
 
-        // TODO we need to change messages to include segment_part?
-        // TODO who needs these messages and which one?
-
         sender.submit(info_message::SegmentPartDeleted {segment_part});
+
         if (last_segment != segment_part.segment) {
             sender.submit(info_message::SegmentIdUpdated {
                 .new_segment = segment_part.segment,
                 .old_segment = last_segment,
             });
-        }
-    }
 
-    // split segment in two
-    else if (a_inside_b_not_touching(removing_part, full_part)) {
-        const auto keep_line = full_line.p0 == removing_line.p0
-                                   ? line_t {removing_line.p1, full_line.p1}
-                                   : line_t {full_line.p0, removing_line.p0};
-        print(keep_line);
+            // TODO InsertedSegmentIdUpdated
+        }
     }
 
     // shrink one side of segment
@@ -1180,8 +1302,14 @@ auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
                               segment_info_t {.line = keep_line,
                                               .p0_type = SegmentPointType::shadow_point,
                                               .p1_type = SegmentPointType::shadow_point});
-        // TODO which message to send?
-        // TODO inserted segment updated?
+    }
+
+    // split segment in two
+    else if (a_inside_b_not_touching(removing_part, full_part)) {
+        const auto keep_line = full_line.p0 == removing_line.p0
+                                   ? line_t {removing_line.p1, full_line.p1}
+                                   : line_t {full_line.p0, removing_line.p0};
+        print(keep_line);
     }
 
     else {
@@ -1207,8 +1335,8 @@ auto wire_change_temporary_to_colliding(State state, segment_part_t& segment_par
     remove_wire_segment_from_tree(state.circuit, state.sender, segment_part);
 
     if (is_wire_colliding(state.cache, line)) {
-        segment_part = add_line_to_aggregate(state.circuit, state.sender, line,
-                                             display_state_t::new_colliding);
+        segment_part = add_segment_to_aggregate(state.circuit, state.sender, line,
+                                                display_state_t::new_colliding);
     } else {
         segment_part = insert_wire(state, line);
         mark_valid(state.layout, segment_part);
@@ -1263,8 +1391,8 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
 auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
     -> segment_part_t {
     auto segment_part
-        = add_line_to_aggregate(state.circuit, state.sender, ordered_line_t {line},
-                                display_state_t::new_temporary);
+        = add_segment_to_aggregate(state.circuit, state.sender, ordered_line_t {line},
+                                   display_state_t::new_temporary);
     change_wire_insertion_mode(state, segment_part, insertion_mode);
     return segment_part;
 }

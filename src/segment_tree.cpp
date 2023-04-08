@@ -182,11 +182,16 @@ auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
     }
 
     const auto last_index = this->last_index();
-    segments_.at(index.value) = segments_.at(last_index.value);
-    valid_parts_vector_.at(index.value).swap(valid_parts_vector_.at(last_index.value));
+    unregister_segment(index);
+
+    // swap
+    if (index != last_index) {
+        segments_.at(index.value) = segments_.at(last_index.value);
+        valid_parts_vector_.at(index.value)
+            .swap(valid_parts_vector_.at(last_index.value));
+    }
 
     // delete
-    unregister_segment(last_index);
     segments_.pop_back();
     valid_parts_vector_.pop_back();
 }

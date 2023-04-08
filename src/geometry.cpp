@@ -86,6 +86,10 @@ auto is_endpoint(point_t point, line_t line) -> bool {
     return line.p0 == point || line.p1 == point;
 }
 
+auto is_endpoint(point_t point, ordered_line_t line) -> bool {
+    return is_endpoint(point, line_t {line});
+}
+
 //
 // offset_t
 //
@@ -167,6 +171,10 @@ auto to_line(ordered_line_t line, part_t part) -> ordered_line_t {
                            point_t {x, to_grid(part.end, y)}};
 }
 
+auto to_segment_part(segment_t segment, ordered_line_t line) -> segment_part_t {
+    return segment_part_t {segment, to_part(line)};
+}
+
 auto intersect(part_t a, part_t b) -> std::optional<part_t> {
     const auto begin = std::max(a.begin, b.begin);
     const auto end = std::min(a.end, b.end);
@@ -219,8 +227,12 @@ auto validate_segment_parts(std::span<const part_t> parts, ordered_line_t line) 
     sort_and_validate_segment_parts(copy, line);
 }
 
+auto a_inside_b(part_t a, part_t b) -> bool {
+    return b.begin <= a.begin && a.end <= b.end;
+}
+
 auto a_inside_b_not_touching(part_t a, part_t b) -> bool {
-    return b.begin < a.begin && b.end > a.end;
+    return b.begin < a.begin && a.end < b.end;
 }
 
 auto a_disjoint_to_b(part_t a, part_t b) -> bool {
@@ -228,12 +240,16 @@ auto a_disjoint_to_b(part_t a, part_t b) -> bool {
 }
 
 auto a_inside_b_touching_one_side(part_t a, part_t b) -> bool {
-    return b.begin <= a.begin && b.end >= a.end  //
-           && (b.begin == a.begin ^ b.end == a.end);
+    return a_inside_b(a, b) && (b.begin == a.begin ^ b.end == a.end);
 }
 
 auto a_equal_b(part_t a, part_t b) -> bool {
     return a == b;
+}
+
+auto a_overlapps_b(part_t a, part_t b) -> bool {
+    return (a.end > b.begin && a.end <= b.end)  //
+           || (b.end > a.begin && b.end <= a.end);
 }
 
 auto format(InclusionResult state) -> std::string {
@@ -250,28 +266,18 @@ auto format(InclusionResult state) -> std::string {
     throw_exception("Don't know how to convert InclusionState to string.");
 }
 
-auto a_part_of_b(part_t a, part_t b) -> InclusionResult {
-    if (b.begin <= a.begin && a.end <= b.end) {
-        return InclusionResult::fully_included;
-    }
-    if (b.end <= a.begin || a.end <= b.begin) {
-        return InclusionResult::not_included;
-    }
-    return InclusionResult::partially_overlapping;
-}
-
 auto is_part_included(std::span<const part_t> parts, part_t query) -> InclusionResult {
-    using enum InclusionResult;
-
     for (const auto part : parts) {
-        const auto result = a_part_of_b(query, part);
-        if (result == fully_included || result == partially_overlapping) {
-            // parts can not touch or overlapp, so we can return early
-            return result;
+        // parts can not touch or overlapp, so we can return early
+        if (a_inside_b(query, part)) {
+            return InclusionResult::fully_included;
+        }
+        if (a_overlapps_b(query, part)) {
+            return InclusionResult::partially_overlapping;
         }
     }
 
-    return not_included;
+    return InclusionResult::not_included;
 }
 
 }  // namespace logicsim

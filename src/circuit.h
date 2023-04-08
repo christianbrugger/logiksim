@@ -12,6 +12,11 @@ namespace logicsim {
 class Circuit;
 
 [[nodiscard]] auto is_inserted(const Circuit& circuit, element_id_t element_id) -> bool;
+[[nodiscard]] auto is_logic_item(const Circuit& circuit, element_id_t element_id) -> bool;
+[[nodiscard]] auto is_wire(const Circuit& circuit, element_id_t element_id) -> bool;
+
+[[nodiscard]] auto get_segment_info(const Circuit& circuit, segment_t segment)
+    -> segment_info_t;
 
 class Circuit {
    public:

@@ -10,6 +10,20 @@ auto is_inserted(const Circuit& circuit, element_id_t element_id) -> bool {
     return is_inserted(circuit.layout(), element_id);
 }
 
+auto is_logic_item(const Circuit& circuit, element_id_t element_id) -> bool {
+    return circuit.schematic().element(element_id).is_logic_item();
+}
+
+auto is_wire(const Circuit& circuit, element_id_t element_id) -> bool {
+    return circuit.schematic().element(element_id).is_wire();
+}
+
+auto get_segment_info(const Circuit& circuit, segment_t segment) -> segment_info_t {
+    return circuit.layout()
+        .segment_tree(segment.element_id)
+        .segment_info(segment.segment_index);
+}
+
 //
 // Circuit
 //

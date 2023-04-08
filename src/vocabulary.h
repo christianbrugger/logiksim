@@ -166,6 +166,17 @@ struct segment_index_t {
         operator++();
         return tmp;
     }
+
+    auto operator--() noexcept -> segment_index_t & {
+        --value;
+        return *this;
+    }
+
+    auto operator--(int) noexcept -> segment_index_t {
+        auto tmp = *this;
+        operator--();
+        return tmp;
+    }
 };
 
 inline constexpr auto null_circuit = circuit_id_t {-1};

@@ -22,6 +22,7 @@ class CacheProvider {
 
     [[nodiscard]] auto is_element_colliding(layout_calculation_data_t data) const -> bool;
 
+    // TODO remove these methods?
     [[nodiscard]] auto input_cache() const -> const ConnectionCache<true>&;
     [[nodiscard]] auto output_cache() const -> const ConnectionCache<false>&;
     [[nodiscard]] auto collision_cache() const -> const CollisionCache&;
