@@ -129,7 +129,7 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
         }
 
         case wire: {
-            throw_exception("wire doesn't have a collision body");
+            throw_exception("not supported");
         }
 
         case inverter_element: {
@@ -207,7 +207,7 @@ auto is_representable(layout_calculation_data_t data) -> bool {
         return true;
     }
     if (data.element_type == ElementType::wire) {
-        throw_exception("Not implemented for wires.");
+        throw_exception("Not supported for wires.");
     }
 
     const auto position = data.position;
