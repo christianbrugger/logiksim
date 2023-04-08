@@ -907,19 +907,21 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
 
     sender.submit(info_message::SegmentCreated {segment_t {source_element_id, index_1}});
 
-    const auto destination_segment_part = segment_part_t {
-        segment_t {destination_element_id, destination_index}, to_part(moving_line)};
-
-    sender.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = destination_segment_part,
-        .segment_part_source = source_segment_part,
-    });
-
     sender.submit(info_message::SegmentPartMoved {
         .segment_part_destination
         = segment_part_t {segment_t {source_element_id, index_1}, to_part(line_1)},
         .segment_part_source
         = segment_part_t {source_segment_part.segment, to_part(full_line, line_1)}});
+
+    const auto destination_segment_part = segment_part_t {
+        segment_t {destination_element_id, destination_index}, to_part(moving_line)};
+
+    sender.submit(info_message::SegmentCreated {destination_segment_part.segment});
+
+    sender.submit(info_message::SegmentPartMoved {
+        .segment_part_destination = destination_segment_part,
+        .segment_part_source = source_segment_part,
+    });
 
     source_segment_part = destination_segment_part;
 }
@@ -1429,7 +1431,6 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
 
     // as parts have length, the line segment can have two possible modes
     const auto old_modes = get_insertion_modes(state.layout, segment_part);
-    print(old_modes);
 
     if (old_modes.first == new_mode && old_modes.second == new_mode) {
         return;

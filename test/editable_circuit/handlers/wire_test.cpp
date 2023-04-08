@@ -134,10 +134,9 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
     }
 
     // messages
-    print(setup.recorder.messages());
     const auto m0 = Message {SegmentIdUpdated {
-        .new_segment = segment_t {element_id_t {0}, segment_index_t {0}},
-        .old_segment = segment_t {element_id_t {1}, segment_index_t {0}},
+        .new_segment = segment_t {element_id_t {1}, segment_index_t {0}},
+        .old_segment = segment_t {element_id_t {0}, segment_index_t {0}},
     }};
 
     ASSERT_EQ(setup.recorder.messages().size(), 1);
@@ -153,6 +152,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
 
     add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+    add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
     add_test_wire(circuit, normal, SegmentPointType::colliding_point,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
@@ -203,6 +203,19 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
     }
 
     // messages
+    const auto m0
+        = Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
+    const auto m1 = Message {SegmentPartMoved {
+        .segment_part_destination
+        = segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}},
+                          part_t {offset_t {0}, offset_t {5}}},
+        .segment_part_source
+        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
+                          part_t {offset_t {0}, offset_t {5}}},
+    }};
+    ASSERT_EQ(setup.recorder.messages().size(), 2);
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
 }
 
 TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
@@ -214,6 +227,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
 
     add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+    add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
     add_test_wire(circuit, normal, SegmentPointType::colliding_point,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
@@ -225,7 +239,6 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     auto setup = HandlerSetup {circuit};
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
 
-    print(circuit);
     setup.validate();
 
     // circuit
@@ -267,6 +280,31 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     }
 
     // messages
+    const auto m0
+        = Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {1}}}};
+    const auto m1 = Message {SegmentPartMoved {
+        .segment_part_destination
+        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {1}},
+                          part_t {offset_t {0}, offset_t {5}}},
+        .segment_part_source
+        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
+                          part_t {offset_t {5}, offset_t {10}}},
+    }};
+    const auto m2
+        = Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
+    const auto m3 = Message {SegmentPartMoved {
+        .segment_part_destination
+        = segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}},
+                          part_t {offset_t {0}, offset_t {3}}},
+        .segment_part_source
+        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
+                          part_t {offset_t {2}, offset_t {5}}},
+    }};
+    ASSERT_EQ(setup.recorder.messages().size(), 4);
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
+    ASSERT_EQ(setup.recorder.messages().at(2), m2);
+    ASSERT_EQ(setup.recorder.messages().at(3), m3);
 }
 
 }  // namespace logicsim
