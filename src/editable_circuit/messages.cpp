@@ -56,8 +56,8 @@ auto SegmentIdUpdated::format() const -> std::string {
 
 auto SegmentPartMoved::format() const -> std::string {
     return fmt::format(
-        "SegmentPartMoved(segment_part_source = {}, segment_part_destiantion = {})",
-        segment_part_source, segment_part_destiantion);
+        "SegmentPartMoved(segment_part_source = {}, segment_part_destination = {})",
+        segment_part_source, segment_part_destination);
 }
 
 auto SegmentPartDeleted::format() const -> std::string {

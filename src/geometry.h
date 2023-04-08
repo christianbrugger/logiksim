@@ -56,6 +56,8 @@ auto to_part(ordered_line_t line) -> part_t;
 auto to_part(ordered_line_t line, rect_fine_t rect) -> std::optional<part_t>;
 auto to_line(ordered_line_t line, part_t part) -> ordered_line_t;
 
+auto intersect(part_t a, part_t b) -> std::optional<part_t>;
+
 //
 // Parts List
 //
@@ -148,6 +150,18 @@ auto remove_part(Container &entries, part_t removing) -> void {
 
         else {
             throw_exception("unknown case in remove_segment");
+        }
+    }
+}
+
+template <typename Container = std::vector<part_t>>
+auto move_parts(Container &source_entries, Container &destination_entries,
+                segment_part_t segment_part_source,
+                segment_part_t segment_part_destination) -> void {
+    for (const auto part : source_entries) {
+        if (const auto res = intersect(part, segment_part_source.part)) {
+            add_part(destination_entries, *res);
+            remove_part(source_entries, *res);
         }
     }
 }

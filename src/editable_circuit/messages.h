@@ -97,7 +97,7 @@ struct SegmentIdUpdated {
 
 struct SegmentPartMoved {
     segment_part_t segment_part_source;
-    segment_part_t segment_part_destiantion;
+    segment_part_t segment_part_destination;
 
     [[nodiscard]] auto operator==(const SegmentPartMoved &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
@@ -131,6 +131,7 @@ struct InsertedSegmentIdUpdated {
     [[nodiscard]] auto format() const -> std::string;
 };
 
+// updates in meta data of endpoints, not positions
 struct InsertedEndPointsUpdated {
     segment_t segment;
     segment_info_t new_segment_info;

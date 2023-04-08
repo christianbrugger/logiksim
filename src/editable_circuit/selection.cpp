@@ -149,8 +149,8 @@ auto Selection::handle(editable_circuit::info_message::LogicItemDeleted message)
 
 auto Selection::handle(editable_circuit::info_message::LogicItemIdUpdated message)
     -> void {
-    const auto count = selected_logicitems_.erase(message.old_element_id);
-    if (count > 0) {
+    const auto found = selected_logicitems_.erase(message.old_element_id);
+    if (found) {
         const auto inserted = selected_logicitems_.insert(message.new_element_id).second;
 
         if (!inserted) [[unlikely]] {
@@ -176,7 +176,37 @@ auto Selection::handle(editable_circuit::info_message::SegmentIdUpdated message)
 }
 
 auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message) -> void {
-    // TODO implement
+    using namespace detail::selection;
+
+    // find source entries
+    const auto it_source = selected_segments_.find(message.segment_part_source.segment);
+    if (it_source == selected_segments_.end()) {
+        // nothing to copy
+        return;
+    }
+    auto &source_entries = it_source->second;
+
+    // find destination entries
+    auto destination_entries = [&]() {
+        const auto it_dest
+            = selected_segments_.find(message.segment_part_destination.segment);
+        return it_dest != selected_segments_.end() ? it_dest->second : map_value_t {};
+    }();
+
+    // move
+    move_parts(source_entries, destination_entries, message.segment_part_source,
+               message.segment_part_destination);
+
+    // delete source
+    if (source_entries.empty()) {
+        selected_segments_.erase(message.segment_part_source.segment);
+    }
+
+    // add destination
+    if (!destination_entries.empty()) {
+        selected_segments_.insert_or_assign(message.segment_part_destination.segment,
+                                            std::move(destination_entries));
+    }
 }
 
 auto Selection::handle(editable_circuit::info_message::SegmentPartDeleted message)

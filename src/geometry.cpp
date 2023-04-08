@@ -167,6 +167,16 @@ auto to_line(ordered_line_t line, part_t part) -> ordered_line_t {
                            point_t {x, to_grid(part.end, y)}};
 }
 
+auto intersect(part_t a, part_t b) -> std::optional<part_t> {
+    const auto begin = std::max(a.begin, b.begin);
+    const auto end = std::min(a.end, b.end);
+
+    if (begin != end) {
+        return part_t {begin, end};
+    }
+    return std::nullopt;
+}
+
 //
 // Parts List
 //
@@ -203,7 +213,7 @@ auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t lin
 }
 
 auto validate_segment_parts(std::span<const part_t> parts, ordered_line_t line) -> void {
-    using parts_vector_t = folly::small_vector<part_t, 4>;
+    using parts_vector_t = typename folly::small_vector<part_t, 4>;
 
     auto copy = parts_vector_t {parts.begin(), parts.end()};
     sort_and_validate_segment_parts(copy, line);
