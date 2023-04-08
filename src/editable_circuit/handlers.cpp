@@ -903,7 +903,7 @@ auto merge_parallel_segments(segment_info_t segment_info_0, segment_info_t segme
 }
 
 auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment_0,
-                         segment_t segment_1) -> void {
+                         segment_t segment_1, segment_part_t* preserve_segment) -> void {
     const auto [index0, index1]
         = sorted(segment_0.segment_index, segment_1.segment_index);
     const auto element_id = segment_0.element_id;
@@ -954,7 +954,21 @@ auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment
         .segment_part_destination = segment_part_t {segment_0, destination_part},
     });
 
-    // TODO preserving
+    // preserve
+    if (preserve_segment && preserve_segment->segment.element_id == element_id) {
+        const auto p_index = preserve_segment->segment.segment_index;
+
+        if (p_index == index0 || p_index == index1) {
+            const auto p_info = p_index == index0 ? info_0 : info_1;
+            const auto p_line = to_line(info_0.line, preserve_segment->part);
+            const auto p_part = to_part(info_merged.line, p_line);
+            *preserve_segment = segment_part_t {segment_t {element_id, index0}, p_part};
+        }
+        if (p_index == index_last) {
+            const auto p_part = preserve_segment->part;
+            *preserve_segment = segment_part_t {segment_t {element_id, index1}, p_part};
+        }
+    }
 }
 
 auto fix_and_merge_line_segments(State state, point_t position,
@@ -1009,7 +1023,7 @@ auto fix_and_merge_line_segments(State state, point_t position,
 
         if (parallel) {
             merge_line_segments(state.layout, state.sender, segments.at(0),
-                                segments.at(1));
+                                segments.at(1), preserve_segment);
             return;
         }
 
