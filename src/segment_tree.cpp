@@ -63,6 +63,10 @@ auto segment_info_t::format() const -> std::string {
 // Segment Tree
 //
 
+auto SegmentTree::clear() -> void {
+    *this = SegmentTree {};
+}
+
 auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
     using std::swap;
 
@@ -168,8 +172,6 @@ auto SegmentTree::unregister_segment(segment_index_t index) -> void {
         }
     }
 }
-
-auto SegmentTree::delete_last_segment() -> void {}
 
 auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
     const auto new_index = get_next_index();

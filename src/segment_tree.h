@@ -70,6 +70,7 @@ class SegmentTree {
     [[nodiscard]] constexpr SegmentTree() = default;
     auto swap(SegmentTree &other) noexcept -> void;
 
+    auto clear() -> void;
     auto add_segment(segment_info_t segment) -> segment_index_t;
     auto add_tree(const SegmentTree &tree) -> segment_index_t;
     auto update_segment(segment_index_t index, segment_info_t segment) -> void;
@@ -117,7 +118,6 @@ class SegmentTree {
     auto get_next_index() const -> segment_index_t;
     auto register_segment(segment_index_t index) -> void;
     auto unregister_segment(segment_index_t index) -> void;
-    auto delete_last_segment() -> void;
 
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;

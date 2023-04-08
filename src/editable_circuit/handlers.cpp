@@ -1060,9 +1060,11 @@ auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_dest
     auto& m_tree_source = layout.modifyable_segment_tree(tree_source);
     auto& m_tree_destination = layout.modifyable_segment_tree(tree_destination);
 
+    auto new_index = m_tree_destination.last_index();
+
     for (auto old_index : m_tree_source.indices()) {
         const auto segment_info = m_tree_source.segment_info(old_index);
-        const auto new_index = m_tree_destination.add_segment(segment_info);
+        ++new_index;
 
         const auto old_segment = segment_t {tree_source, old_index};
         const auto new_segment = segment_t {tree_destination, new_index};
@@ -1078,6 +1080,10 @@ auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_dest
         });
     }
 
+    m_tree_destination.add_tree(m_tree_source);
+
+    m_tree_source.clear();
+    layout.set_display_state(tree_source, display_state_t::new_temporary);
     swap_and_delete_single_element_private(circuit, sender, tree_source,
                                            &tree_destination);
 }
@@ -1116,13 +1122,15 @@ auto update_segment_point_types(
                 old_segment_info, position,
                 write_shadow ? SegmentPointType::shadow_point : point_type);
 
-            m_tree.update_segment(segment.segment_index, new_segment_info);
+            if (old_segment_info != new_segment_info) {
+                m_tree.update_segment(segment.segment_index, new_segment_info);
 
-            sender.submit(info_message::InsertedEndPointsUpdated {
-                .segment = segment,
-                .new_segment_info = new_segment_info,
-                .old_segment_info = old_segment_info,
-            });
+                sender.submit(info_message::InsertedEndPointsUpdated {
+                    .segment = segment,
+                    .new_segment_info = new_segment_info,
+                    .old_segment_info = old_segment_info,
+                });
+            }
         }
     };
 
@@ -1146,9 +1154,10 @@ auto merge_parallel_segments(const segment_info_t segment_info_0,
     if (a.line.p1 != b.line.p0) [[unlikely]] {
         throw_exception("segments need to have common shared point");
     }
-    if (is_connection(a.p1_type) || is_connection(b.p0_type)) {
-        throw_exception("cannot merge segments with connections");
-    }
+    // TODO how to handle connections?
+    // if (is_connection(a.p1_type) || is_connection(b.p0_type)) {
+    //     throw_exception("cannot merge segments with connections");
+    // }
 
     return segment_info_t {
         .line = ordered_line_t {a.line.p0, b.line.p1},
