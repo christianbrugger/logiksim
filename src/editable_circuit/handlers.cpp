@@ -610,242 +610,6 @@ auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
 // Wire Handling
 //
 
-/*
-
-
-auto line_uninserted_TODO() {
-    for (auto&& index : layout.segment_tree(element_id).indices(element_id)) {
-        sender.submit(info_message::SegmentUninserted {index});
-    }
-}
-
-
-
-auto get_segment(const Layout& layout, segment_t segment) -> segment_info_t {
-    return layout.segment_tree(segment.element_id).segment(segment.segment_index);
-}
-
-auto get_segment_line(const Layout& layout, segment_t segment) -> line_t {
-    return get_segment(layout, segment).line;
-}
-
-auto WireEditor::set_segment_point_types(
-    std::initializer_list<const std::pair<segment_t, SegmentPointType>> data,
-    point_t position) -> void {
-    // remove cache
-    for (auto&& [segment, point_type] : data) {
-        // TODO only do this for some insertion modes
-        cache_remove(segment.element_id, segment.segment_index);
-    }
-
-    // update segments
-    for (auto&& [segment, point_type] : data) {
-        auto&& m_tree = layout_.modifyable_segment_tree(segment.element_id);
-        auto new_segment = m_tree.segment(segment.segment_index);
-
-        if (new_segment.line.p0 == position) {
-            new_segment.p0_type = point_type;
-        } else if (new_segment.line.p1 == position) {
-            new_segment.p1_type = point_type;
-        } else {
-            throw_exception("Position needs to be an endpoint of the given segment.");
-        }
-
-        m_tree.update_segment(segment.segment_index, new_segment,
-                              display_state_t::normal);
-    }
-
-    // add to cache
-    for (auto&& [segment, point_type] : data) {
-        // TODO only do this for some insertion modes
-        cache_insert(segment.element_id, segment.segment_index);
-    }
-}
-
-auto sort_lines_with_endpoints_last(std::span<std::pair<line_t, segment_t>> lines,
-                                    point_t point) -> void {
-    std::ranges::sort(lines, {}, [point](std::pair<line_t, segment_t> item) {
-        return is_endpoint(point, item.first);
-    });
-}
-
-auto merge_parallel_segments(segment_info_t segment_info_0, segment_info_t
-segment_info_1)
-    -> segment_info_t {
-    const auto [a, b] = order_points(segment_info_0, segment_info_1);
-
-    if (a.line.p1 != b.line.p0) [[unlikely]] {
-        throw_exception("segments need to have common shared point");
-    }
-
-    return segment_info_t {
-        .line = line_t {a.line.p0, b.line.p1},
-        .p0_type = a.p0_type,
-        .p1_type = b.p1_type,
-    };
-}
-
-auto WireEditor::merge_line_segments(element_id_t element_id, segment_index_t index0,
-                                     segment_index_t index1) -> void {
-    if (index0 == index1) [[unlikely]] {
-        throw_exception("Cannot merge the same segments.");
-    }
-    if (index0 > index1) {
-        std::swap(index0, index1);
-    }
-
-    auto& m_tree = layout_.modifyable_segment_tree(element_id);
-    const auto last_index = m_tree.last_index();
-
-    if (!is_inserted(m_tree.display_state(index0))
-        || !is_inserted(m_tree.display_state(index1))) [[unlikely]] {
-        throw_exception("Can only merge inserted segments.");
-    }
-
-    // merged segment
-    const auto merged_segment
-        = merge_parallel_segments(m_tree.segment(index0), m_tree.segment(index1));
-
-    // remove from cache
-    cache_remove(element_id, index0);
-    cache_remove(element_id, index1);
-    if (index1 != last_index) {
-        cache_remove(element_id, last_index);
-    }
-
-    // merge
-    m_tree.update_segment(index0, merged_segment, display_state_t::normal);
-    m_tree.swap_and_delete_segment(index1);
-
-    // add back to cache
-    cache_insert(element_id, index0);
-    if (index1 != last_index) {
-        cache_insert(element_id, index1);
-    }
-}
-
-auto all_collision_condered(const SegmentTree& tree,
-                            SpatialTree::queried_segments_t result) -> bool {
-    return std::ranges::all_of(result, [&](segment_t value) {
-        return value.segment_index == null_segment_index
-               || is_inserted(tree.display_state(value.segment_index));
-    });
-}
-
-auto WireEditor::fix_line_segments(point_t position) -> void {
-    // TODO rename to segments
-    const auto segment = spatial_cache_.query_line_segments(position);
-    const auto segment_count = get_segment_count(segment);
-
-    if (segment_count == 0) [[unlikely]] {
-        throw_exception("Could not find any segments at position.");
-    }
-    if (!all_same_element_id(segment)) [[unlikely]] {
-        throw_exception("All segments need to belong to the same segment tree.");
-    }
-    if (const auto tree = layout_.segment_tree(segment.at(0).element_id);
-        !all_collision_condered(tree, segment)) {
-        throw_exception("Can only fix collision considered segments.");
-    }
-
-    if (segment_count == 1) {
-        set_segment_point_types(
-            {
-                std::pair {segment.at(0), SegmentPointType::output},
-            },
-            position);
-        return;
-    }
-
-    if (segment_count == 2) {
-        auto lines = std::array {
-            std::pair {get_segment_line(layout_, segment.at(0)), segment.at(0)},
-            std::pair {get_segment_line(layout_, segment.at(1)), segment.at(1)},
-        };
-        sort_lines_with_endpoints_last(lines, position);
-        const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
-
-        if (has_through_line_0) {
-            const auto cross_point_type = is_horizontal(lines.at(1).first)
-                                              ?
-SegmentPointType::cross_point_horizontal : SegmentPointType::cross_point_vertical;
-            set_segment_point_types(
-                {
-                    std::pair {lines.at(1).second, cross_point_type},
-                },
-                position);
-            return;
-        }
-
-        const auto horizontal_0 = is_horizontal(lines.at(0).first);
-        const auto horizontal_1 = is_horizontal(lines.at(1).first);
-        const auto parallel = horizontal_0 == horizontal_1;
-
-        if (parallel) {
-            merge_line_segments(segment.at(0).element_id, segment.at(0).segment_index,
-                                segment.at(1).segment_index);
-            return;
-        }
-
-        // handle corner
-        set_segment_point_types(
-            {
-                std::pair {segment.at(0), SegmentPointType::colliding_point},
-                std::pair {segment.at(1), SegmentPointType::shadow_point},
-            },
-            position);
-        return;
-    }
-
-    if (segment_count == 3) {
-        auto lines = std::array {
-            std::pair {get_segment_line(layout_, segment.at(0)), segment.at(0)},
-            std::pair {get_segment_line(layout_, segment.at(1)), segment.at(1)},
-            std::pair {get_segment_line(layout_, segment.at(2)), segment.at(2)},
-        };
-        sort_lines_with_endpoints_last(lines, position);
-        const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
-
-        if (has_through_line_0) {
-            const auto cross_point_type = is_horizontal(lines.at(2).first)
-                                              ?
-SegmentPointType::cross_point_horizontal : SegmentPointType::cross_point_vertical;
-            set_segment_point_types(
-                {
-                    std::pair {lines.at(1).second, SegmentPointType::shadow_point},
-                    std::pair {lines.at(2).second, cross_point_type},
-                },
-                position);
-        } else {
-            set_segment_point_types(
-                {
-                    std::pair {segment.at(0), SegmentPointType::colliding_point},
-                    std::pair {segment.at(1), SegmentPointType::shadow_point},
-                    std::pair {segment.at(2), SegmentPointType::visual_cross_point},
-                },
-                position);
-        }
-        return;
-    }
-
-    if (segment_count == 4) {
-        set_segment_point_types(
-            {
-                std::pair {segment.at(0), SegmentPointType::colliding_point},
-                std::pair {segment.at(1), SegmentPointType::shadow_point},
-                std::pair {segment.at(2), SegmentPointType::shadow_point},
-                std::pair {segment.at(3), SegmentPointType::visual_cross_point},
-            },
-            position);
-        return;
-    }
-
-    throw_exception("unexpected unhandeled case");
-}
-
-
-*/
-
 // aggregates
 
 auto is_wire_aggregate(const Schematic& schematic, const Layout& layout,
@@ -1102,6 +866,76 @@ auto sort_through_lines_first(std::span<std::pair<ordered_line_t, segment_t>> li
     });
 }
 
+auto merge_parallel_segments(segment_info_t segment_info_0, segment_info_t segment_info_1)
+    -> segment_info_t {
+    const auto [a, b] = order_points(segment_info_0, segment_info_1);
+
+    if (a.line.p1 != b.line.p0) [[unlikely]] {
+        throw_exception("segments need to have common shared point");
+    }
+    if (is_connection(a.p1_type) || is_connection(b.p0_type)) {
+        throw_exception("cannot merge segments with connections");
+    }
+
+    return segment_info_t {
+        .line = ordered_line_t {a.line.p0, b.line.p1},
+
+        .p0_type = a.p0_type,
+        .p1_type = b.p1_type,
+
+        .p0_connection_id = a.p0_connection_id,
+        .p1_connection_id = b.p1_connection_id,
+    };
+}
+
+auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment_0,
+                         segment_t segment_1) -> void {
+    const auto [index0, index1]
+        = sorted(segment_0.segment_index, segment_1.segment_index);
+    const auto element_id = segment_0.element_id;
+
+    if (segment_0.element_id != segment_1.element_id) [[unlikely]] {
+        throw_exception("Cannot merge segments of different trees.");
+    }
+    if (!is_inserted(layout, element_id)) [[unlikely]] {
+        throw_exception("Can only merge inserted segments.");
+    }
+    if (index0 == index1) [[unlikely]] {
+        throw_exception("Cannot merge the same segments.");
+    }
+
+    auto& m_tree = layout.modifyable_segment_tree(element_id);
+    const auto index_last = m_tree.last_index();
+    const auto segment_last = segment_t {element_id, index_last};
+
+    const auto info_0 = m_tree.segment_info(index0);
+    const auto info_1 = m_tree.segment_info(index1);
+    const auto info_merged = merge_parallel_segments(info_0, info_1);
+
+    // merge
+    m_tree.update_segment(index0, info_merged);
+    m_tree.swap_and_delete_segment(index1);
+
+    // messages
+    sender.submit(info_message::SegmentUninserted {segment_0, info_0});
+    sender.submit(info_message::SegmentUninserted {segment_1, info_1});
+    sender.submit(info_message::SegmentInserted {segment_0, info_merged});
+
+    if (index1 != index_last) {
+        sender.submit(info_message::SegmentIdUpdated {
+            .new_segment = segment_1,
+            .old_segment = segment_last,
+        });
+        sender.submit(info_message::InsertedSegmentIdUpdated {
+            .new_segment = segment_1,
+            .old_segment = segment_last,
+            .segment_info = m_tree.segment_info(segment_1.segment_index),
+        });
+    }
+
+    // TODO SegmentPartMoved
+}
+
 auto fix_and_merge_line_segments(State state, point_t position,
                                  segment_part_t* preserve_segment) -> void {
     auto& layout = state.layout;
@@ -1153,9 +987,8 @@ auto fix_and_merge_line_segments(State state, point_t position,
         const auto parallel = horizontal_0 == horizontal_1;
 
         if (parallel) {
-            // merge_line_segments(segments.at(0).element_id,
-            // segments.at(0).segment_index,
-            //                     segments.at(1).segment_index);
+            merge_line_segments(state.layout, state.sender, segments.at(0),
+                                segments.at(1));
             return;
         }
 

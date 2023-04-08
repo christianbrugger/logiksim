@@ -36,6 +36,11 @@ auto is_cross_point(SegmentPointType point_type) -> bool {
            || point_type == visual_cross_point;
 }
 
+auto is_connection(SegmentPointType point_type) -> bool {
+    using enum SegmentPointType;
+    return point_type == input || point_type == output;
+}
+
 auto order_points(segment_info_t a, segment_info_t b)
     -> std::tuple<segment_info_t, segment_info_t> {
     if (a.line <= b.line) {

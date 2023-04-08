@@ -33,6 +33,7 @@ enum class SegmentPointType : uint8_t {
 auto format(SegmentPointType type) -> std::string;
 
 auto is_cross_point(SegmentPointType point_type) -> bool;
+auto is_connection(SegmentPointType point_type) -> bool;
 
 struct segment_info_t {
     ordered_line_t line {};
