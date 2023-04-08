@@ -160,7 +160,7 @@ using Message = std::variant<                                                //
 }  // namespace info_message
 
 using InfoMessage = info_message::Message;
-static_assert(sizeof(InfoMessage) == 56);
+static_assert(sizeof(InfoMessage) == 48);
 
 //
 // MessageSender

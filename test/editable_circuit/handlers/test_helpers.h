@@ -23,39 +23,12 @@ class MessageRecorder : public editable_circuit::VirtualReceiver {
         : circuit_ {circuit}, cache_provider_ {cache_provider} {}
 
     inline auto submit(editable_circuit::InfoMessage message) -> void override {
-        validate_data_field(message);
-
         messages_.push_back(message);
         cache_provider_.submit(message);
     }
 
     inline auto messages() -> const std::vector<editable_circuit::InfoMessage> & {
         return messages_;
-    }
-
-    // we validate the data field here, as it contains a circuit reference and
-    // that is only valid at the time the message is received. It cannot be stored.
-    inline auto validate_data_field(editable_circuit::InfoMessage message) -> void {
-        using namespace editable_circuit::info_message;
-
-        if (const auto pointer = std::get_if<LogicItemInserted>(&message)) {
-            validate_data_field(pointer->element_id, pointer->data);
-            return;
-        }
-        if (const auto pointer = std::get_if<LogicItemUninserted>(&message)) {
-            validate_data_field(pointer->element_id, pointer->data);
-            return;
-        }
-        if (const auto pointer = std::get_if<InsertedLogicItemIdUpdated>(&message)) {
-            validate_data_field(pointer->new_element_id, pointer->data);
-            return;
-        }
-    }
-
-    inline auto validate_data_field(element_id_t element_id,
-                                    const layout_calculation_data_t &received) -> void {
-        const auto expected = to_layout_calculation_data(circuit_, element_id);
-        ASSERT_EQ(received, expected);
     }
 
    private:

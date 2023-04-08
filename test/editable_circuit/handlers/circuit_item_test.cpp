@@ -78,8 +78,10 @@ TEST(EditableCircuitHandler, DeletePreserving1) {
 
     // messages
     const auto message0 = Message {LogicItemDeleted {element_id_t {0}}};
-    const auto message1
-        = Message {LogicItemIdUpdated {element_id_t {0}, element_id_t {1}}};
+    const auto message1 = Message {LogicItemIdUpdated {
+        .new_element_id = element_id_t {0},
+        .old_element_id = element_id_t {1},
+    }};
     ASSERT_EQ(setup.recorder.messages().size(), 2);
     ASSERT_EQ(setup.recorder.messages().at(0), message0);
     ASSERT_EQ(setup.recorder.messages().at(1), message1);
@@ -118,18 +120,16 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
 
     // messages
     const auto message0 = Message {LogicItemDeleted {element_id_t {1}}};
-    const auto message1
-        = Message {LogicItemIdUpdated {element_id_t {1}, element_id_t {3}}};
+    const auto message1 = Message {LogicItemIdUpdated {
+        .new_element_id = element_id_t {1}, .old_element_id = element_id_t {3}}};
+    const auto message2 = Message {InsertedLogicItemIdUpdated {
+        .new_element_id = element_id_t {1},
+        .old_element_id = element_id_t {3},
+        .data = to_layout_calculation_data(circuit, element_id_t {1})}};
     ASSERT_EQ(setup.recorder.messages().size(), 3);
     ASSERT_EQ(setup.recorder.messages().at(0), message0);
     ASSERT_EQ(setup.recorder.messages().at(1), message1);
-    {
-        const auto &m = setup.recorder.messages().at(2);
-        ASSERT_EQ(std::get<InsertedLogicItemIdUpdated>(m).new_element_id,
-                  element_id_t {1});
-        ASSERT_EQ(std::get<InsertedLogicItemIdUpdated>(m).old_element_id,
-                  element_id_t {3});
-    }
+    ASSERT_EQ(setup.recorder.messages().at(2), message2);
 }
 
 //
@@ -168,9 +168,11 @@ TEST(EditableCircuitHandler, DeleteMultipleElements) {
     ASSERT_EQ(setup.recorder.messages().size(), 5);
     const auto m0 = Message {LogicItemDeleted {element_id_t {3}}};
     const auto m1 = Message {LogicItemDeleted {element_id_t {1}}};
-    const auto m2 = Message {LogicItemIdUpdated {element_id_t {1}, element_id_t {2}}};
+    const auto m2 = Message {LogicItemIdUpdated {.new_element_id = element_id_t {1},
+                                                 .old_element_id = element_id_t {2}}};
     const auto m3 = Message {LogicItemDeleted {element_id_t {0}}};
-    const auto m4 = Message {LogicItemIdUpdated {element_id_t {0}, element_id_t {1}}};
+    const auto m4 = Message {LogicItemIdUpdated {.new_element_id = element_id_t {0},
+                                                 .old_element_id = element_id_t {1}}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
     ASSERT_EQ(setup.recorder.messages().at(1), m1);
     ASSERT_EQ(setup.recorder.messages().at(2), m2);
@@ -294,10 +296,11 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToTempValid) {
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 1);
-    {
-        const auto &m = setup.recorder.messages().at(0);
-        ASSERT_EQ(std::get<LogicItemInserted>(m).element_id, element_id_t {0});
-    }
+
+    const auto m0 = Message {LogicItemInserted {
+        .element_id = element_id_t {0},
+        .data = to_layout_calculation_data(circuit, element_id_t {0})}};
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
 
 TEST(EditableCircuitHandler, LogicItemChangeModeToInsert) {
@@ -331,10 +334,10 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToInsert) {
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 1);
-    {
-        const auto &m = setup.recorder.messages().at(0);
-        ASSERT_EQ(std::get<LogicItemInserted>(m).element_id, element_id_t {0});
-    }
+    const auto m0 = Message {LogicItemInserted {
+        .element_id = element_id_t {0},
+        .data = to_layout_calculation_data(circuit, element_id_t {0})}};
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
 
 TEST(EditableCircuitHandler, LogicItemChangeModeToTempColliding) {
@@ -464,10 +467,10 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporary) {
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 1);
-    {
-        const auto &m = setup.recorder.messages().at(0);
-        ASSERT_EQ(std::get<LogicItemUninserted>(m).element_id, element_id_t {0});
-    }
+    const auto m0 = Message {LogicItemUninserted {
+        .element_id = element_id_t {0},
+        .data = to_layout_calculation_data(circuit, element_id_t {0})}};
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
 
 TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
@@ -484,6 +487,7 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
     assert_element_count(circuit, 2);
     assert_is_placeholder(circuit, element_id_t {0});
     ASSERT_EQ(element_id_1, element_id_t {1});
+    const auto data0 = to_layout_calculation_data(circuit, element_id_t {1});
 
     auto setup = HandlerSetup {circuit};
     change_logic_item_insertion_mode(setup.state, element_id_1, InsertionMode::temporary);
@@ -499,13 +503,13 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 2);
-    {
-        const auto &m = setup.recorder.messages().at(0);
-        ASSERT_EQ(std::get<LogicItemUninserted>(m).element_id, element_id_t {1});
-    }
-    const auto message1
-        = Message {LogicItemIdUpdated {element_id_t {0}, element_id_t {1}}};
-    ASSERT_EQ(setup.recorder.messages().at(1), message1);
+
+    const auto m0
+        = Message {LogicItemUninserted {.element_id = element_id_t {1}, .data = data0}};
+    const auto m1 = Message {LogicItemIdUpdated {.new_element_id = element_id_t {0},
+                                                 .old_element_id = element_id_t {1}}};
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
 }
 
 //
@@ -542,11 +546,11 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 2);
     const auto m0 = Message {LogicItemCreated {element_id_t {0}}};
+    const auto m1 = Message {LogicItemInserted {
+        .element_id = element_id_t {0},
+        .data = to_layout_calculation_data(circuit, element_id_t {0})}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
-    {
-        const auto &m = setup.recorder.messages().at(1);
-        ASSERT_EQ(std::get<LogicItemInserted>(m).element_id, element_id_t {0});
-    }
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
 }
 
 //

@@ -1155,8 +1155,10 @@ auto remove_wire_segment_from_tree(Circuit& circuit, MessageSender sender,
 
         sender.submit(info_message::SegmentPartDeleted {segment_part});
         if (last_segment != segment_part.segment) {
-            sender.submit(
-                info_message::SegmentIdUpdated {segment_part.segment, last_segment});
+            sender.submit(info_message::SegmentIdUpdated {
+                .new_segment = segment_part.segment,
+                .old_segment = last_segment,
+            });
         }
     }
 
