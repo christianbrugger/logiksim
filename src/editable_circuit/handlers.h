@@ -66,8 +66,9 @@ auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
 auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
                                       InsertionMode new_insertion_mode) -> void;
 
-auto is_logic_item_position_representable(const Circuit& circuit, element_id_t element_id,
-                                          int x, int y) -> bool;
+auto is_logic_item_position_representable(const Circuit& circuit,
+                                          const element_id_t element_id, int x, int y)
+    -> bool;
 
 auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
     -> void;
