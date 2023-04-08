@@ -96,8 +96,8 @@ struct SegmentIdUpdated {
 };
 
 struct SegmentPartMoved {
-    segment_part_t segment_part_source;
     segment_part_t segment_part_destination;
+    segment_part_t segment_part_source;
 
     [[nodiscard]] auto operator==(const SegmentPartMoved &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;

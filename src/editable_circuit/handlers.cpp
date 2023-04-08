@@ -803,7 +803,7 @@ auto delete_inserted_tree_segments(Circuit& circuit, MessageSender sender,
 */
 
 auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_destination,
-                 element_id_t tree_source) -> void {
+                 element_id_t& tree_source) -> void {
     auto& layout = circuit.layout();
 
     if (!is_inserted(circuit, tree_source) && !is_inserted(circuit, tree_destination))
@@ -865,6 +865,7 @@ auto update_segment_point_types(
             = updated_segment_info(old_segment_info, position, point_type);
 
         m_tree.update_segment(segment.segment_index, new_segment_info);
+
         sender.submit(info_message::InsertedEndPointsUpdated {
             .segment = segment,
             .new_segment_info = old_segment_info,
@@ -950,8 +951,8 @@ auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment
     const auto source_part = to_part(info_1.line);
     const auto destination_part = to_part(info_merged.line, info_1.line);
     sender.submit(info_message::SegmentPartMoved {
-        .segment_part_source = segment_part_t {segment_1, source_part},
         .segment_part_destination = segment_part_t {segment_0, destination_part},
+        .segment_part_source = segment_part_t {segment_1, source_part},
     });
 
     // preserve
@@ -975,7 +976,6 @@ auto fix_and_merge_line_segments(State state, point_t position,
                                  segment_part_t* preserve_segment) -> void {
     auto& layout = state.layout;
 
-    // TODO rename to segments
     const auto segments = state.cache.spatial_cache().query_line_segments(position);
     const auto segment_count = get_segment_count(segments);
 
@@ -1027,7 +1027,7 @@ auto fix_and_merge_line_segments(State state, point_t position,
             return;
         }
 
-        // handle corner
+        // this handles corners
         update_segment_point_types(
             state.circuit, state.sender,
             {
@@ -1088,27 +1088,26 @@ auto fix_and_merge_line_segments(State state, point_t position,
 }
 
 auto add_and_merge_segment(State state, ordered_line_t line) -> segment_part_t {
-    const auto colliding_id_0 = state.cache.collision_cache().get_first_wire(line.p0);
-    const auto colliding_id_1 = state.cache.collision_cache().get_first_wire(line.p1);
+    auto colliding_id_0 = state.cache.collision_cache().get_first_wire(line.p0);
+    auto colliding_id_1 = state.cache.collision_cache().get_first_wire(line.p1);
 
-    auto element_id = colliding_id_0;
-
-    if (colliding_id_1) {
-        if (element_id) {
-            merge_trees(state.circuit, state.sender, element_id, colliding_id_1);
-        } else {
-            element_id = colliding_id_1;
+    // find or merge trees to insert
+    const auto element_id = [&]() {
+        if (bool {colliding_id_0} ^ bool {colliding_id_1}) {
+            return colliding_id_0 ? colliding_id_0 : colliding_id_1;
         }
-    }
+        if (colliding_id_0 && colliding_id_1) {
+            merge_trees(state.circuit, state.sender, colliding_id_0, colliding_id_1);
+            return colliding_id_0;
+        }
+        return add_new_temporary_wire_element(state.circuit, state.sender);
+    }();
 
-    if (!element_id) {
-        element_id = add_new_temporary_wire_element(state.circuit, state.sender);
-    }
-
+    // add new segment
     auto segment_part
         = add_segment_to_tree(state.circuit, state.sender, element_id, line);
 
-    // now fix all endpoints at given positions
+    // fix endpoints
     fix_and_merge_line_segments(state, line.p0, &segment_part);
     fix_and_merge_line_segments(state, line.p1, &segment_part);
 
