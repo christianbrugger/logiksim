@@ -780,6 +780,7 @@ auto get_insertion_modes(const Layout& layout, segment_part_t segment_part)
                           to_insertion_mode(display_states.second));
 }
 
+/*
 auto delete_inserted_tree_segments(Circuit& circuit, MessageSender sender,
                                    element_id_t element_id) -> void {
     if (!is_inserted(circuit, element_id) || !is_wire(circuit, element_id)) [[unlikely]] {
@@ -799,27 +800,40 @@ auto delete_inserted_tree_segments(Circuit& circuit, MessageSender sender,
         sender.submit(info_message::SegmentPartDeleted {segment_part_t {segment, part}});
     }
 }
+*/
 
-auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_target,
-                 element_id_t tree_deleted) -> void {
+auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_destination,
+                 element_id_t tree_source) -> void {
     auto& layout = circuit.layout();
 
-    // delete first, so caches are emptied
-    const auto tree_copy = SegmentTree {layout.segment_tree(tree_deleted)};
-    delete_inserted_tree_segments(circuit, sender, tree_deleted);
-    swap_and_delete_single_element_private(circuit, sender, tree_deleted, &tree_target);
-
-    // add segments to new tree
-    auto&& m_tree = layout.modifyable_segment_tree(tree_target);
-    auto first_index = m_tree.add_tree(tree_copy);
-
-    for (auto segment_index : range(first_index, ++m_tree.last_index())) {
-        const auto segment = segment_t {tree_target, segment_index};
-        const auto segment_info = m_tree.segment_info(segment_index);
-
-        sender.submit(info_message::SegmentCreated {segment});
-        sender.submit(info_message::SegmentInserted {segment, segment_info});
+    if (!is_inserted(circuit, tree_source) && !is_inserted(circuit, tree_destination))
+        [[unlikely]] {
+        throw_exception("can only delete from inserted trees");
     }
+
+    auto& m_tree_source = layout.modifyable_segment_tree(tree_source);
+    auto& m_tree_destination = layout.modifyable_segment_tree(tree_destination);
+
+    for (auto old_index : m_tree_source.indices()) {
+        const auto segment_info = m_tree_source.segment_info(old_index);
+        const auto new_index = m_tree_destination.add_segment(segment_info);
+
+        const auto old_segment = segment_t {tree_source, old_index};
+        const auto new_segment = segment_t {tree_destination, new_index};
+
+        sender.submit(info_message::SegmentIdUpdated {
+            .new_segment = new_segment,
+            .old_segment = old_segment,
+        });
+        sender.submit(info_message::InsertedSegmentIdUpdated {
+            .new_segment = new_segment,
+            .old_segment = old_segment,
+            .segment_info = segment_info,
+        });
+    }
+
+    swap_and_delete_single_element_private(circuit, sender, tree_source,
+                                           &tree_destination);
 }
 
 auto updated_segment_info(segment_info_t segment_info, point_t position,
