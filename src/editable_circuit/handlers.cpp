@@ -1418,10 +1418,7 @@ auto wire_change_temporary_to_colliding(State state, segment_part_t& segment_par
     }
 }
 
-auto wire_change_colliding_to_insert(Circuit& circuit, MessageSender sender,
-                                     const segment_part_t segment_part) -> void {}
-
-auto wire_change_insert_to_colliding(Layout& layout, MessageSender sender,
+auto wire_change_colliding_to_insert(Layout& layout, MessageSender sender,
                                      segment_part_t& segment_part) -> void {
     using enum display_state_t;
     const auto element_id = segment_part.segment.element_id;
@@ -1440,6 +1437,9 @@ auto wire_change_insert_to_colliding(Layout& layout, MessageSender sender,
         throw_exception("wire needs to be in inserted or colliding state");
     }
 }
+
+auto wire_change_insert_to_colliding(Layout& layout, MessageSender sender,
+                                     segment_part_t& segment_part) -> void {}
 
 auto wire_change_colliding_to_temporary(Circuit& circuit, MessageSender sender,
                                         segment_part_t& segment_part) -> void {}
@@ -1466,7 +1466,7 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
         wire_change_temporary_to_colliding(state, segment_part);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
-        wire_change_colliding_to_insert(state.circuit, state.sender, segment_part);
+        wire_change_colliding_to_insert(state.layout, state.sender, segment_part);
     }
     if (old_modes.first == InsertionMode::insert_or_discard
         || old_modes.second == InsertionMode::insert_or_discard) {
