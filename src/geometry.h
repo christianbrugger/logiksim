@@ -207,6 +207,18 @@ auto copy_parts(const Container &source_entries, part_t part_destination) -> Con
 }
 
 template <typename Container = std::vector<part_t>>
+auto copy_parts(const Container &source_entries, Container &destination_entries,
+                part_t part_destination) -> void {
+    bool original_empty = destination_entries.empty();
+
+    _add_intersecting_parts(source_entries, destination_entries, part_destination);
+
+    if (!original_empty) {
+        _sort_and_merge_parts(destination_entries);
+    }
+}
+
+template <typename Container = std::vector<part_t>>
 auto _add_intersecting_parts(const Container &source_entries,
                              Container &destination_entries,
                              part_copy_definition_t parts) {

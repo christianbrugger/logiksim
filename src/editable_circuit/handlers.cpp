@@ -1157,65 +1157,40 @@ auto sort_through_lines_first(std::span<std::pair<ordered_line_t, segment_t>> li
     });
 }
 
-auto merge_parallel_segments(const segment_info_t segment_info_0,
-                             const segment_info_t segment_info_1) -> segment_info_t {
-    const auto [a, b] = order_points(segment_info_0, segment_info_1);
-
-    if (a.line.p1 != b.line.p0) [[unlikely]] {
-        throw_exception("segments need to have common shared point");
-    }
-    // TODO how to handle connections?
-    // if (is_connection(a.p1_type) || is_connection(b.p0_type)) {
-    //     throw_exception("cannot merge segments with connections");
-    // }
-
-    return segment_info_t {
-        .line = ordered_line_t {a.line.p0, b.line.p1},
-
-        .p0_type = a.p0_type,
-        .p1_type = b.p1_type,
-
-        .p0_connection_id = a.p0_connection_id,
-        .p1_connection_id = b.p1_connection_id,
-    };
-}
-
-auto merge_line_segments(Layout& layout, MessageSender sender, const segment_t segment_0,
-                         const segment_t segment_1, segment_part_t* preserve_segment)
-    -> void {
-    const auto [index0, index1]
-        = sorted(segment_0.segment_index, segment_1.segment_index);
-    const auto element_id = segment_0.element_id;
-
+auto _merge_line_segments_ordered(Layout& layout, MessageSender sender,
+                                  const segment_t segment_0, const segment_t segment_1,
+                                  segment_part_t* preserve_segment) -> void {
     if (segment_0.element_id != segment_1.element_id) [[unlikely]] {
         throw_exception("Cannot merge segments of different trees.");
     }
-    if (!is_inserted(layout, element_id)) [[unlikely]] {
+    if (!is_inserted(layout, segment_0.element_id)) [[unlikely]] {
         throw_exception("Can only merge inserted segments.");
     }
-    if (index0 == index1) [[unlikely]] {
-        throw_exception("Cannot merge the same segments.");
+    if (segment_0.segment_index >= segment_1.segment_index) [[unlikely]] {
+        throw_exception("Segment indices need to be ordered and not the same.");
     }
+
+    const auto index_0 = segment_0.segment_index;
+    const auto index_1 = segment_1.segment_index;
+    const auto element_id = segment_0.element_id;
 
     auto& m_tree = layout.modifyable_segment_tree(element_id);
     const auto index_last = m_tree.last_index();
     const auto segment_last = segment_t {element_id, index_last};
 
-    const auto info_0 = m_tree.segment_info(index0);
-    const auto info_1 = m_tree.segment_info(index1);
-    const auto info_merged = merge_parallel_segments(info_0, info_1);
+    const auto info_0 = m_tree.segment_info(index_0);
+    const auto info_1 = m_tree.segment_info(index_1);
 
     // merge
-    m_tree.update_segment(index0, info_merged);
-    m_tree.swap_and_delete_segment(index1);
-    // TODO valid
+    m_tree.swap_and_merge_segment(index_0, index_1);
+    const auto info_merged = m_tree.segment_info(index_0);
 
     // messages
     sender.submit(info_message::SegmentUninserted {segment_0, info_0});
     sender.submit(info_message::SegmentUninserted {segment_1, info_1});
     sender.submit(info_message::SegmentInserted {segment_0, info_merged});
 
-    if (index1 != index_last) {
+    if (index_1 != index_last) {
         sender.submit(info_message::SegmentIdUpdated {
             .new_segment = segment_1,
             .old_segment = segment_last,
@@ -1223,32 +1198,42 @@ auto merge_line_segments(Layout& layout, MessageSender sender, const segment_t s
         sender.submit(info_message::InsertedSegmentIdUpdated {
             .new_segment = segment_1,
             .old_segment = segment_last,
-            .segment_info = m_tree.segment_info(segment_1.segment_index),
+            .segment_info = m_tree.segment_info(index_1),
         });
     }
 
-    const auto source_part = to_part(info_1.line);
-    const auto destination_part = to_part(info_merged.line, info_1.line);
     sender.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = segment_part_t {segment_0, destination_part},
-        .segment_part_source = segment_part_t {segment_1, source_part},
+        .segment_part_destination
+        = segment_part_t {segment_0, to_part(info_merged.line, info_1.line)},
+        .segment_part_source = segment_part_t {segment_1, to_part(info_1.line)},
     });
 
     // preserve
     if (preserve_segment && preserve_segment->segment.element_id == element_id) {
         const auto p_index = preserve_segment->segment.segment_index;
 
-        if (p_index == index0 || p_index == index1) {
-            const auto p_info = p_index == index0 ? info_0 : info_1;
+        if (p_index == index_0 || p_index == index_1) {
+            const auto p_info = p_index == index_0 ? info_0 : info_1;
             const auto p_line = to_line(p_info.line, preserve_segment->part);
             const auto p_part = to_part(info_merged.line, p_line);
-            *preserve_segment = segment_part_t {segment_t {element_id, index0}, p_part};
+            *preserve_segment = segment_part_t {segment_t {element_id, index_0}, p_part};
         }
 
         else if (p_index == index_last) {
             const auto p_part = preserve_segment->part;
-            *preserve_segment = segment_part_t {segment_t {element_id, index1}, p_part};
+            *preserve_segment = segment_part_t {segment_t {element_id, index_1}, p_part};
         }
+    }
+}
+
+auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment_0,
+                         segment_t segment_1, segment_part_t* preserve_segment) -> void {
+    if (segment_0.segment_index < segment_1.segment_index) {
+        _merge_line_segments_ordered(layout, sender, segment_0, segment_1,
+                                     preserve_segment);
+    } else {
+        _merge_line_segments_ordered(layout, sender, segment_1, segment_0,
+                                     preserve_segment);
     }
 }
 

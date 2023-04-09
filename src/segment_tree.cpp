@@ -66,6 +66,25 @@ auto adjust(const segment_info_t segment_info, const part_t part) -> segment_inf
     };
 }
 
+auto merge_touching(const segment_info_t segment_info_0,
+                    const segment_info_t segment_info_1) -> segment_info_t {
+    const auto [a, b] = order_points(segment_info_0, segment_info_1);
+
+    if (a.line.p1 != b.line.p0) [[unlikely]] {
+        throw_exception("segments need to have common shared point");
+    }
+
+    return segment_info_t {
+        .line = ordered_line_t {a.line.p0, b.line.p1},
+
+        .p0_type = a.p0_type,
+        .p1_type = b.p1_type,
+
+        .p0_connection_id = a.p0_connection_id,
+        .p1_connection_id = b.p1_connection_id,
+    };
+}
+
 auto segment_info_t::format() const -> std::string {
     const auto connection_string_0
         = p0_connection_id ? p0_connection_id.format() + " " : "";
@@ -274,6 +293,30 @@ auto SegmentTree::shrink_segment(segment_index_t index, part_t part) -> void {
     // valid parts
     valid_parts_vector_.at(index.value)
         = copy_parts(valid_parts_vector_.at(index.value), part);
+}
+
+auto SegmentTree::swap_and_merge_segment(segment_index_t index,
+                                         segment_index_t index_deleted) -> void {
+    // otherwise the index changes after deletion
+    if (index >= index_deleted) [[unlikely]] {
+        throw_exception("index needs to be smaller then index_deleted");
+    }
+
+    const auto info_deleted = segment_info(index_deleted);
+    const auto info_merged = merge_touching(segment_info(index), info_deleted);
+
+    // copy valid parts
+    auto& source_entries = valid_parts_vector_.at(index_deleted.value);
+    auto& destination_entries = valid_parts_vector_.at(index.value);
+    const auto destination_part = to_part(info_merged.line, info_deleted.line);
+    copy_parts(source_entries, destination_entries, destination_part);
+
+    // first delete, so input count stays in bounds
+    swap_and_delete_segment(index_deleted);
+    // update segment
+    unregister_segment(index);
+    segments_.at(index.value) = info_merged;
+    register_segment(index);
 }
 
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)

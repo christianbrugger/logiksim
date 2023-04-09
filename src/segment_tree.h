@@ -53,6 +53,8 @@ static_assert(sizeof(segment_info_t) == 12);
 [[nodiscard]] auto order_points(segment_info_t segment0, segment_info_t segment1)
     -> std::tuple<segment_info_t, segment_info_t>;
 [[nodiscard]] auto adjust(segment_info_t segment, part_t part) -> segment_info_t;
+[[nodiscard]] auto merge_touching(const segment_info_t segment_info_0,
+                                  const segment_info_t segment_info_1) -> segment_info_t;
 
 namespace detail::segment_tree {
 using index_t = std::make_unsigned_t<segment_index_t::value_type>;
@@ -78,11 +80,14 @@ class SegmentTree {
     auto update_segment(segment_index_t index, segment_info_t segment) -> void;
     auto update_segment(segment_index_t index, segment_info_t segment,
                         part_copy_definition_t parts) -> void;
-    auto shrink_segment(segment_index_t index, part_t part) -> void;
     auto copy_segment(const SegmentTree &tree, segment_index_t index) -> segment_index_t;
     auto copy_segment(const SegmentTree &tree, segment_index_t index, part_t part)
         -> segment_index_t;
-    // swaps the element with last one and deletes it
+    auto shrink_segment(segment_index_t index, part_t part) -> void;
+    // swaps the merging segment with last one, merges and deletes it
+    auto swap_and_merge_segment(segment_index_t index, segment_index_t index_deleted)
+        -> void;
+    // swaps the segment with last one and deletes it
     auto swap_and_delete_segment(segment_index_t index) -> void;
 
     // segments
