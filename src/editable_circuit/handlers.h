@@ -77,9 +77,8 @@ auto move_or_delete_logic_item(Circuit& circuit, MessageSender sender,
 // Wire Handling
 //
 
-auto delete_wire_segment(Circuit& circuit, MessageSender sender,
-                         segment_part_t& segment_part,
-                         segment_part_t* preserve_part = nullptr) -> void;
+auto delete_wire_segment(Layout& layout, MessageSender sender,
+                         segment_part_t& segment_part) -> void;
 
 auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
               InsertionMode insertion_mode, Selection* selection) -> void;
@@ -87,11 +86,11 @@ auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
 auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
                                 InsertionMode new_insertion_mode) -> void;
 
-auto is_wire_position_representable(const Circuit& circuit, segment_part_t segment_part,
-                                    int x, int y) -> bool;
+auto is_wire_position_representable(const Layout& layout, segment_part_t segment_part,
+                                    int dx, int dy) -> bool;
 
-auto move_or_delete_wire(Circuit& circuit, MessageSender sender,
-                         segment_part_t& segment_part, int x, int y) -> void;
+auto move_or_delete_wire(Layout& layout, MessageSender sender,
+                         segment_part_t& segment_part, int dx, int dy) -> void;
 
 //
 // Low level Methods

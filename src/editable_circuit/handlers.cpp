@@ -1423,9 +1423,8 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
     }
-    if (!state.schematic.element(segment_part.segment.element_id).is_wire())
-        [[unlikely]] {
-        throw_exception("only works on wires");
+    if (!is_wire(state.circuit, segment_part.segment.element_id)) [[unlikely]] {
+        throw_exception("only works for wires");
     }
 
     // as parts have length, the line segment can have two possible modes
@@ -1501,6 +1500,73 @@ auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
             }
             break;
         }
+    }
+}
+
+auto delete_wire_segment(Layout& layout, MessageSender sender,
+                         segment_part_t& segment_part) -> void {
+    if (!segment_part) [[unlikely]] {
+        throw_exception("segment part is invalid");
+    }
+    if (layout.display_state(segment_part.segment.element_id)
+        != display_state_t::new_temporary) [[unlikely]] {
+        throw_exception("can only delete temporary segments");
+    }
+
+    remove_segment_from_tree(layout, sender, segment_part);
+}
+
+auto is_wire_position_representable(const Layout& layout, segment_part_t segment_part,
+                                    int dx, int dy) -> bool {
+    if (!segment_part) [[unlikely]] {
+        throw_exception("segment part is invalid");
+    }
+
+    const auto line = get_line(layout, segment_part);
+    return is_representable(line, dx, dy);
+}
+
+auto move_or_delete_wire(Layout& layout, MessageSender sender,
+                         segment_part_t& segment_part, int dx, int dy) -> void {
+    if (!segment_part) [[unlikely]] {
+        throw_exception("segment part is invalid");
+    }
+    if (layout.display_state(segment_part.segment.element_id)
+        != display_state_t::new_temporary) [[unlikely]] {
+        throw_exception("can only move temporary segments");
+    }
+
+    if (!is_wire_position_representable(layout, segment_part, dx, dy)) {
+        delete_wire_segment(layout, sender, segment_part);
+        return;
+    }
+
+    const auto full_line = get_line(layout, segment_part.segment);
+    const auto part_line = to_line(full_line, segment_part.part);
+
+    if (full_line != part_line) {
+        move_segment_between_trees(layout, sender, segment_part,
+                                   segment_part.segment.element_id);
+    }
+
+    // update
+    auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
+    auto info = m_tree.segment_info(segment_part.segment.segment_index);
+    info.line = ordered_line_t {
+        point_t {
+            grid_t {gsl::narrow_cast<grid_t::value_type>(part_line.p0.x.value + dx)},
+            grid_t {gsl::narrow_cast<grid_t::value_type>(part_line.p0.y.value + dy)},
+        },
+        point_t {
+            grid_t {gsl::narrow_cast<grid_t::value_type>(part_line.p1.x.value + dx)},
+            grid_t {gsl::narrow_cast<grid_t::value_type>(part_line.p1.y.value + dy)},
+        },
+    };
+    m_tree.update_segment(segment_part.segment.segment_index, info);
+
+    // messages
+    if (full_line == part_line) {  // otherwise already sent in move_segment above
+        sender.submit(info_message::SegmentCreated {segment_part.segment});
     }
 }
 

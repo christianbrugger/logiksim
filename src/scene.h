@@ -36,6 +36,9 @@ class ViewConfig {
 
 auto is_representable(int x, int y) -> bool;
 auto is_representable(double x, double y) -> bool;
+auto is_representable(point_t point, int dx, int dy) -> bool;
+auto is_representable(line_t point, int dx, int dy) -> bool;
+auto is_representable(ordered_line_t point, int dx, int dy) -> bool;
 
 // device to grid fine
 auto to_grid_fine(double x, double y, const ViewConfig& config) -> point_fine_t;

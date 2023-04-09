@@ -65,6 +65,18 @@ auto is_representable(double x, double y) -> bool {
            && (grid_t::min() <= y && y <= grid_t::max());
 }
 
+auto is_representable(point_t point, int dx, int dy) -> bool {
+    return is_representable(point.x.value + dx, point.y.value + dy);
+}
+
+auto is_representable(line_t line, int dx, int dy) -> bool {
+    return is_representable(line.p0, dx, dy) && is_representable(line.p1, dx, dy);
+}
+
+auto is_representable(ordered_line_t line, int dx, int dy) -> bool {
+    return is_representable(line_t {line}, dx, dy);
+}
+
 // device to grid fine
 
 auto to_grid_fine(double x, double y, const ViewConfig &config) -> point_fine_t {
