@@ -535,19 +535,41 @@ auto draw_wire_selected_parts_shadow(BLContext& ctx, const Layout& layout,
 
 auto draw_wire_temporary_shadow(BLContext& ctx, const SegmentTree& segment_tree,
                                 const RenderSettings& settings) {
-    for (auto& segment : segment_tree.segment_infos()) {
-        const auto selection_rect = element_selection_rect(segment.line);
-        ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
+    ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
+
+    for (const auto info : segment_tree.segment_infos()) {
+        const auto selection_rect = element_selection_rect(info.line);
         draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
     }
 }
 
 auto draw_wire_colliding_shadow(BLContext& ctx, const SegmentTree& segment_tree,
                                 const RenderSettings& settings) {
-    for (auto& segment : segment_tree.segment_infos()) {
-        const auto selection_rect = element_selection_rect(segment.line);
-        ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
+    ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
+
+    for (const auto info : segment_tree.segment_infos()) {
+        const auto selection_rect = element_selection_rect(info.line);
         draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+    }
+}
+
+auto draw_wire_valid_shadow(BLContext& ctx, const SegmentTree& segment_tree,
+                            const RenderSettings& settings) {
+    ctx.setFillStyle(BLRgba32(0, 192, 0, 96));
+
+    for (const auto index : segment_tree.indices()) {
+        const auto& parts = segment_tree.valid_parts(index);
+        if (parts.empty()) {
+            continue;
+        }
+        const auto full_line = segment_tree.segment_line(index);
+
+        for (const auto part : parts) {
+            const auto line = to_line(full_line, part);
+            const auto selection_rect = element_selection_rect(line);
+            draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill},
+                               settings);
+        }
     }
 }
 
@@ -565,17 +587,18 @@ auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout&
             draw_wire_temporary_shadow(ctx, segment_tree, settings);
         }
 
-        else if (display_state == display_state_t::new_colliding) {
-            draw_wire_temporary_shadow(ctx, segment_tree, settings);
+        else if (display_state == display_state_t::normal) {
+            draw_wire_valid_shadow(ctx, segment_tree, settings);
         }
 
-        else if (display_state == display_state_t::new_valid) {
+        else if (display_state == display_state_t::new_colliding) {
+            draw_wire_colliding_shadow(ctx, segment_tree, settings);
         }
     }
 
     for (auto&& [segment, parts] : selection.selected_segments()) {
         const auto element_id = segment.element_id;
-        if (layout.display_state(element_id) == display_state_t::new_valid) {
+        if (layout.display_state(element_id) == display_state_t::normal) {
             const auto line = get_line(layout, segment);
             draw_wire_selected_parts_shadow(ctx, layout, line, parts, settings);
         }

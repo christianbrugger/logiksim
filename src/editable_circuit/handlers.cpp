@@ -1417,10 +1417,16 @@ auto _wire_change_insert_to_colliding(Layout& layout, segment_part_t& segment_pa
 }
 
 auto _wire_change_colliding_to_temporary(Circuit& circuit, MessageSender sender,
-                                         segment_part_t& segment_part) -> void {}
+                                         segment_part_t& segment_part) -> void {
+    const auto destination_id
+        = get_or_create_aggregate(circuit, sender, display_state_t::new_temporary);
 
-auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
-                                InsertionMode new_mode) -> void {
+    // TODO move needs to handle uninsertion / insertion messages
+    move_segment_between_trees(circuit.layout(), sender, segment_part, destination_id);
+}
+
+auto change_wire_insertion_mode_private(State state, segment_part_t& segment_part,
+                                        InsertionMode new_mode) -> void {
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
     }
@@ -1451,6 +1457,18 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
     }
 }
 
+auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
+                                InsertionMode new_mode) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "change_wire_insertion_mode(segment_part = {}, new_mode = {});\n"
+            "==========================================================\n\n",
+            state.circuit, segment_part, new_mode);
+    }
+    return change_wire_insertion_mode_private(state, segment_part, new_mode);
+}
+
 // adding segments
 
 auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
@@ -1458,7 +1476,7 @@ auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
     auto segment_part
         = add_segment_to_aggregate(state.circuit, state.sender, ordered_line_t {line},
                                    display_state_t::new_temporary);
-    change_wire_insertion_mode(state, segment_part, insertion_mode);
+    change_wire_insertion_mode_private(state, segment_part, insertion_mode);
     return segment_part;
 }
 
@@ -1471,8 +1489,8 @@ auto add_wire_segment(State state, Selection* selection, line_t line,
     }
 }
 
-auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
-              InsertionMode insertion_mode, Selection* selection) -> void {
+auto add_wire_private(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+                      InsertionMode insertion_mode, Selection* selection) -> void {
     const auto mode = insertion_mode;
 
     // TODO handle p0 == p1
@@ -1504,8 +1522,22 @@ auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
     }
 }
 
-auto delete_wire_segment(Layout& layout, MessageSender sender,
-                         segment_part_t& segment_part) -> void {
+auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+              InsertionMode insertion_mode, Selection* selection) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "add_wire(p0 = {}, p1 = {}, segment_type = {}, "
+            "insertion_mode = {}, *selection = {});\n"
+            "==========================================================\n\n",
+            state.circuit, p0, p1, segment_type, insertion_mode,
+            static_cast<void*>(selection));
+    }
+    return add_wire_private(state, p0, p1, segment_type, insertion_mode, selection);
+}
+
+auto delete_wire_segment_private(Layout& layout, MessageSender sender,
+                                 segment_part_t& segment_part) -> void {
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
     }
@@ -1517,8 +1549,21 @@ auto delete_wire_segment(Layout& layout, MessageSender sender,
     remove_segment_from_tree(layout, sender, segment_part);
 }
 
-auto is_wire_position_representable(const Layout& layout, segment_part_t segment_part,
-                                    int dx, int dy) -> bool {
+auto delete_wire_segment(Layout& layout, MessageSender sender,
+                         segment_part_t& segment_part) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "delete_wire_segment(segment_part = {});\n"
+            "==========================================================\n\n",
+            layout, segment_part);
+    }
+    return delete_wire_segment_private(layout, sender, segment_part);
+}
+
+auto is_wire_position_representable_private(const Layout& layout,
+                                            const segment_part_t segment_part, int dx,
+                                            int dy) -> bool {
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
     }
@@ -1527,8 +1572,21 @@ auto is_wire_position_representable(const Layout& layout, segment_part_t segment
     return is_representable(line, dx, dy);
 }
 
-auto move_or_delete_wire(Layout& layout, MessageSender sender,
-                         segment_part_t& segment_part, int dx, int dy) -> void {
+auto is_wire_position_representable(const Layout& layout,
+                                    const segment_part_t segment_part, int dx, int dy)
+    -> bool {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "is_wire_position_representable(segment_part = {}, dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            layout, segment_part, dx, dy);
+    }
+    return is_wire_position_representable_private(layout, segment_part, dx, dy);
+}
+
+auto move_or_delete_wire_private(Layout& layout, MessageSender sender,
+                                 segment_part_t& segment_part, int dx, int dy) -> void {
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
     }
@@ -1537,9 +1595,9 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
         throw_exception("can only move temporary segments");
     }
 
-    if (!is_wire_position_representable(layout, segment_part, dx, dy)) {
+    if (!is_wire_position_representable_private(layout, segment_part, dx, dy)) {
         // delete
-        delete_wire_segment(layout, sender, segment_part);
+        remove_segment_from_tree(layout, sender, segment_part);
         return;
     }
 
@@ -1561,6 +1619,18 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
     if (full_line == part_line) {  // otherwise already sent in move_segment above
         sender.submit(info_message::SegmentCreated {segment_part.segment});
     }
+}
+
+auto move_or_delete_wire(Layout& layout, MessageSender sender,
+                         segment_part_t& segment_part, int dx, int dy) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "move_or_delete_wire(segment_part = {}, dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            layout, segment_part, dx, dy);
+    }
+    return move_or_delete_wire_private(layout, sender, segment_part, dx, dy);
 }
 
 }  // namespace editable_circuit

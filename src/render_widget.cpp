@@ -58,11 +58,9 @@ auto MouseElementInsertLogic::mouse_release(std::optional<point_t> position) -> 
 }
 
 auto MouseElementInsertLogic::remove_last_element() -> void {
-    if (!temp_element_) {
-        return;
+    if (temp_element_) {
+        editable_circuit_.delete_all(std::move(temp_element_));
     }
-
-    editable_circuit_.delete_all(std::move(temp_element_));
 }
 
 auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
@@ -83,26 +81,40 @@ auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
 MouseLineInsertLogic::MouseLineInsertLogic(Args args) noexcept
     : editable_circuit_ {args.editable_circuit} {}
 
-MouseLineInsertLogic::~MouseLineInsertLogic() {}
+MouseLineInsertLogic::~MouseLineInsertLogic() {
+    remove_last_element();
+}
 
 auto MouseLineInsertLogic::mouse_press(std::optional<point_t> position) -> void {
     first_position_ = position;
+    remove_and_insert(position, InsertionMode::collisions);
 }
 
-auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {}
+auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
+    remove_and_insert(position, InsertionMode::collisions);
+}
 
 auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> void {
-    if (position && first_position_) {
-        editable_circuit_.add_line_segments(*first_position_, *position,
-                                            LineSegmentType::horizontal_first,
-                                            InsertionMode::insert_or_discard);
+    remove_and_insert(position, InsertionMode::collisions);
+}
+
+auto MouseLineInsertLogic::remove_last_element() -> void {
+    if (temp_element_) {
+        editable_circuit_.delete_all(std::move(temp_element_));
     }
 }
 
-// auto MouseLineInsertLogic::remove_last_element() -> void {}
+auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
+                                             InsertionMode mode) -> void {
+    remove_last_element();
+    assert(!temp_element_);
 
-// auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
-//                                              InsertionMode mode) -> void {}
+    if (position && first_position_) {
+        temp_element_ = editable_circuit_.add_line_segments(
+            *first_position_, *position, LineSegmentType::horizontal_first,
+            InsertionMode::collisions);
+    }
+}
 
 //
 // Mouse Move Selection Logic

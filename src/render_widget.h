@@ -87,13 +87,13 @@ class MouseLineInsertLogic {
     auto mouse_release(std::optional<point_t> position) -> void;
 
    private:
-    // auto remove_last_element() -> void;
-    // auto remove_and_insert(std::optional<point_t> position, InsertionMode mode) ->
-    // void;
+    auto remove_last_element() -> void;
+    auto remove_and_insert(std::optional<point_t> position, InsertionMode mode) -> void;
 
    private:
     EditableCircuit& editable_circuit_;
     std::optional<point_t> first_position_ {};
+    selection_handle_t temp_element_ {};
 };
 
 class MouseMoveSelectionLogic {

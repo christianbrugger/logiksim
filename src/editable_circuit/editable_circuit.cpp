@@ -148,7 +148,7 @@ auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int del
         = position_calculator(circuit_.value().layout(), delta_x, delta_y);
     // TODO refactor to algorithm
     while (handle->selected_logic_items().size() > 0) {
-        auto element_id = *handle->selected_logic_items().begin();
+        auto element_id = handle->selected_logic_items()[0];
         handle->remove_logicitem(element_id);
 
         const auto [x, y] = get_position(element_id);
@@ -168,7 +168,7 @@ auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
 
     // TODO refactor to algorithm
     while (handle->selected_logic_items().size() > 0) {
-        auto element_id = *handle->selected_logic_items().begin();
+        auto element_id = handle->selected_logic_items()[0];
         handle->remove_logicitem(element_id);
 
         editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
@@ -184,15 +184,29 @@ auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
         print(handle);
     }
 
+    const auto state = get_state();
+
     // TODO refactor to algorithm
     while (handle->selected_logic_items().size() > 0) {
-        auto element_id = *handle->selected_logic_items().begin();
+        auto element_id = handle->selected_logic_items()[0];
         handle->remove_logicitem(element_id);
 
-        editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
+        editable_circuit::change_logic_item_insertion_mode(state, element_id,
                                                            InsertionMode::temporary);
-        editable_circuit::swap_and_delete_single_element(circuit_.value(), get_sender(),
+        editable_circuit::swap_and_delete_single_element(state.circuit, state.sender,
                                                          element_id);
+    }
+
+    while (handle->selected_segments().size() > 0) {
+        auto segment_part = segment_part_t {
+            .segment = handle->selected_segments()[0].first,
+            .part = handle->selected_segments()[0].second.at(0),
+        };
+        handle->remove_segment(segment_part);
+
+        editable_circuit::change_wire_insertion_mode(state, segment_part,
+                                                     InsertionMode::temporary);
+        editable_circuit::delete_wire_segment(state.layout, state.sender, segment_part);
     }
 }
 
