@@ -626,6 +626,15 @@ struct offset_t {
 
     [[nodiscard]] auto operator==(const offset_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const offset_t &other) const = default;
+
+    /*
+    [[nodiscard]] constexpr auto operator+(offset_t other) const -> offset_t {
+        auto result = value + other.value;
+
+        static_assert(sizeof(result) > sizeof(value));
+        return {gsl::narrow<offset_t::value_type>(result)};
+    }
+    */
 };
 
 static_assert(sizeof(offset_t::value_type) == sizeof(grid_t::value_type));

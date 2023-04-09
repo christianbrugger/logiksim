@@ -177,6 +177,10 @@ auto Selection::handle(editable_circuit::info_message::SegmentIdUpdated message)
 
 auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message) -> void {
     using namespace detail::selection;
+    if (message.segment_part_source.segment == message.segment_part_destination.segment)
+        [[unlikely]] {
+        throw_exception("source and destination need to be different");
+    }
 
     // find source entries
     const auto it_source = selected_segments_.find(message.segment_part_source.segment);
@@ -194,8 +198,8 @@ auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message)
     }();
 
     // move
-    move_parts(source_entries, destination_entries, message.segment_part_source,
-               message.segment_part_destination);
+    move_parts(source_entries, destination_entries, message.segment_part_source.part,
+               message.segment_part_destination.part);
 
     // delete source
     if (source_entries.empty()) {

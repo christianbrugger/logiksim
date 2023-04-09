@@ -36,14 +36,22 @@ auto order_points(const line_t line0, const line_t line1) noexcept
     return std::make_tuple(b, a);
 }
 
-// fast distance for horitonal or vertical lines
 auto distance(line_t line) -> int {
     auto dx = line.p1.x.value - line.p0.x.value;
     auto dy = line.p1.y.value - line.p0.y.value;
 
-    // ensure enough precision, through promotion
+    // ensure enough precision through promotion
     static_assert(sizeof(dx) > sizeof(line.p0.x.value));
-    return std::abs((dx == 0) ? dy : dx);
+    return std::abs(dx == 0 ? dy : dx);
+}
+
+auto distance(ordered_line_t line) -> int {
+    auto dx = line.p1.x.value - line.p0.x.value;
+    auto dy = line.p1.y.value - line.p0.y.value;
+
+    // ensure enough precision through promotion
+    static_assert(sizeof(dx) > sizeof(line.p0.x.value));
+    return dx == 0 ? dy : dx;
 }
 
 auto to_orientation(point_t p0, point_t p1) -> orientation_t {

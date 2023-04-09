@@ -173,16 +173,6 @@ auto SegmentTree::unregister_segment(segment_index_t index) -> void {
     }
 }
 
-auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
-    const auto new_index = get_next_index();
-
-    segments_.push_back(segment);
-    valid_parts_vector_.push_back(parts_vector_t {});
-    register_segment(new_index);
-
-    return new_index;
-}
-
 auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
     if (segments_.empty()) [[unlikely]] {
         throw_exception("Cannot delete from empty segment tree.");
@@ -223,10 +213,41 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
     return next_index;
 }
 
-auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {
+auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
+    const auto new_index = get_next_index();
+
+    segments_.push_back(segment);
+    valid_parts_vector_.push_back(parts_vector_t {});
+    register_segment(new_index);
+
+    return new_index;
+}
+
+auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment,
+                                 std::optional<part_copy_definition_t> parts) -> void {
+    if (!parts && distance(segment.line) != distance(segment_info(index).line)) {
+        throw_exception("need part copy definition, if line length is changed");
+    }
+
+    if (parts) {
+    }
+
+    // update segment
     unregister_segment(index);
     segments_.at(index.value) = segment;
     register_segment(index);
+}
+
+auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
+    -> segment_index_t {
+    const auto new_index = add_segment(tree.segment_info(index));
+    valid_parts_vector_.at(new_index.value) = tree.valid_parts_vector_.at(index.value);
+    return new_index;
+}
+
+auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
+                               part_copy_definition_t parts) -> segment_index_t {
+    return segment_index_t();
 }
 
 auto SegmentTree::empty() const noexcept -> bool {

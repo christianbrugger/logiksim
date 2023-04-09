@@ -25,8 +25,8 @@ auto is_vertical(ordered_line_t line) noexcept -> bool;
 auto order_points(const line_t line0, const line_t line1) noexcept
     -> std::tuple<ordered_line_t, ordered_line_t>;
 
-// fast distance for horitonal or vertical lines
 auto distance(line_t line) -> int;
+auto distance(ordered_line_t line) -> int;
 
 auto is_endpoint(point_t point, line_t line) -> bool;
 auto is_endpoint(point_t point, ordered_line_t line) -> bool;
@@ -90,8 +90,10 @@ enum class InclusionResult {
     -> InclusionResult;
 
 template <typename Container = std::vector<part_t>>
-auto add_part(Container &entries, part_t new_part) -> void {
-    entries.push_back(new_part);
+auto _sort_and_merge_parts(Container &entries) -> void {
+    if (entries.empty()) {
+        return;
+    }
     std::ranges::sort(entries);
 
     // merge elements
@@ -115,7 +117,12 @@ auto add_part(Container &entries, part_t new_part) -> void {
 
     using std::swap;
     swap(entries, result);
-    // entries.swap(result);
+}
+
+template <typename Container = std::vector<part_t>>
+auto add_part(Container &entries, part_t new_part) -> void {
+    entries.push_back(new_part);
+    _sort_and_merge_parts(entries);
 }
 
 template <typename Container = std::vector<part_t>>
@@ -160,15 +167,57 @@ auto remove_part(Container &entries, part_t removing) -> void {
 }
 
 template <typename Container = std::vector<part_t>>
-auto move_parts(Container &source_entries, Container &destination_entries,
-                segment_part_t segment_part_source,
-                segment_part_t segment_part_destination) -> void {
-    for (const auto part : source_entries) {
-        if (const auto res = intersect(part, segment_part_source.part)) {
-            add_part(destination_entries, *res);
-            remove_part(source_entries, *res);
+auto _add_intersecting_parts(const Container &source_entries,
+                             Container &destination_entries, part_t part_source,
+                             part_t part_destination) {
+    using V = int;
+    static_assert(sizeof(V) > sizeof(offset_t::value_type));
+
+    auto shifted = V {part_destination.begin.value} - V {part_source.begin.value};
+    auto max_end = V {part_destination.end.value};
+
+    for (const part_t part : source_entries) {
+        if (const std::optional<part_t> res = intersect(part, part_source)) {
+            const auto begin = V {res->begin.value} + shifted;
+            const auto end = std::min(V {res->end.value} + shifted, max_end);
+
+            assert(begin >= V {part_destination.begin.value});
+            assert(end <= V {part_destination.end.value});
+
+            const auto new_part
+                = part_t {offset_t {gsl::narrow_cast<offset_t::value_type>(begin)},
+                          offset_t {gsl::narrow_cast<offset_t::value_type>(end)}};
+            destination_entries.push_back(new_part);
         }
     }
+}
+
+template <typename Container = std::vector<part_t>>
+auto copy_parts(const Container &source_entries, Container &destination_entries,
+                part_t part_source, part_t part_destination) -> void {
+    bool original_empty = destination_entries.empty();
+
+    _add_intersecting_parts(source_entries, destination_entries, part_source,
+                            part_destination);
+
+    if (!original_empty) {
+        _sort_and_merge_parts(destination_entries);
+    }
+}
+
+template <typename Container = std::vector<part_t>>
+auto copy_parts(const Container &source_entries, part_t part_source,
+                part_t part_destination) -> Container {
+    auto result = Container {};
+    copy_parts(source_entries, result, part_source, part_destination);
+    return result;
+}
+
+template <typename Container = std::vector<part_t>>
+auto move_parts(Container &source_entries, Container &destination_entries,
+                part_t part_source, part_t part_destination) -> void {
+    copy_parts(source_entries, destination_entries, part_source, part_destination);
+    remove_part(source_entries, part_source);
 }
 
 }  // namespace logicsim

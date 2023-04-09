@@ -826,10 +826,10 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
     auto& m_tree_source = layout.modifyable_segment_tree(source_segment.element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
-    const auto segment_info = m_tree_source.segment_info(source_index);
+    const auto destination_index
+        = m_tree_destination.copy_segment(m_tree_source, source_index);
     const auto last_index = m_tree_source.last_index();
     m_tree_source.swap_and_delete_segment(source_index);
-    const auto destination_index = m_tree_destination.add_segment(segment_info);
 
     const auto destination_segment
         = segment_t {destination_element_id, destination_index};
@@ -864,6 +864,7 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
 
     auto& m_tree_source = layout.modifyable_segment_tree(source_element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
+    // TODO copy valid
 
     m_tree_source.update_segment(source_index, shadow_segment_info(line_kept));
     const auto destination_index
@@ -902,6 +903,7 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
     const auto index_1 = m_tree_source.add_segment(shadow_segment_info(line_1));
     const auto destination_index
         = m_tree_destination.add_segment(shadow_segment_info(moving_line));
+    // TODO copy valid
 
     sender.submit(info_message::SegmentCreated {segment_t {source_element_id, index_1}});
 
@@ -958,8 +960,8 @@ auto move_segment_between_trees(Layout& layout, MessageSender sender,
     }
 }
 
-auto _remove_full_segment_between_trees(Layout& layout, MessageSender sender,
-                                        segment_part_t& full_segment_part) {
+auto _remove_full_segment_from_tree(Layout& layout, MessageSender sender,
+                                    segment_part_t& full_segment_part) {
     const auto element_id = full_segment_part.segment.element_id;
     const auto segment_index = full_segment_part.segment.segment_index;
     auto& m_tree = layout.modifyable_segment_tree(element_id);
@@ -978,8 +980,8 @@ auto _remove_full_segment_between_trees(Layout& layout, MessageSender sender,
     full_segment_part = null_segment_part;
 }
 
-auto _remove_touching_segment_between_trees(Layout& layout, MessageSender sender,
-                                            segment_part_t& segment_part) {
+auto _remove_touching_segment_from_tree(Layout& layout, MessageSender sender,
+                                        segment_part_t& segment_part) {
     auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
 
     const auto full_line = get_line(layout, segment_part.segment);
@@ -996,8 +998,8 @@ auto _remove_touching_segment_between_trees(Layout& layout, MessageSender sender
     segment_part = null_segment_part;
 }
 
-auto _remove_splitting_segment_between_trees(Layout& layout, MessageSender sender,
-                                             segment_part_t& segment_part) {
+auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender sender,
+                                         segment_part_t& segment_part) {
     auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
 
     const auto full_line = get_line(layout, segment_part.segment);
@@ -1013,6 +1015,7 @@ auto _remove_splitting_segment_between_trees(Layout& layout, MessageSender sende
                           shadow_segment_info(line_0));
     const auto index_1 = m_tree.add_segment(shadow_segment_info(line_1));
     const auto segment_1 = segment_t {segment_part.segment.element_id, index_1};
+    // TODO copy valid
 
     sender.submit(info_message::SegmentCreated {segment_1});
     sender.submit(info_message::SegmentPartMoved {
@@ -1038,11 +1041,11 @@ auto remove_segment_from_tree(Layout& layout, MessageSender sender,
     const auto full_part = to_part(full_line);
 
     if (a_equal_b(removed_part, full_part)) {
-        _remove_full_segment_between_trees(layout, sender, segment_part);
+        _remove_full_segment_from_tree(layout, sender, segment_part);
     } else if (a_inside_b_touching_one_side(removed_part, full_part)) {
-        _remove_touching_segment_between_trees(layout, sender, segment_part);
+        _remove_touching_segment_from_tree(layout, sender, segment_part);
     } else if (a_inside_b_not_touching(removed_part, full_part)) {
-        _remove_splitting_segment_between_trees(layout, sender, segment_part);
+        _remove_splitting_segment_from_tree(layout, sender, segment_part);
     } else {
         throw_exception("segment part is invalid");
     }
