@@ -780,20 +780,76 @@ auto get_insertion_modes(const Layout& layout, const segment_part_t segment_part
                           to_insertion_mode(display_states.second));
 }
 
+// segment already moved
+auto _move_full_segment_insertion_messages(Layout& layout, MessageSender sender,
+                                           const segment_t source_segment,
+                                           const segment_t destination_segment,
+                                           const segment_t last_segment) {
+    const auto source_inserted = is_inserted(layout, source_segment.element_id);
+    const auto destination_inserted = is_inserted(layout, destination_segment.element_id);
+
+    const auto info = get_segment_info(layout, destination_segment);
+
+    // insertion / uninsertion
+    if (source_inserted && destination_inserted) {
+        sender.submit(info_message::InsertedSegmentIdUpdated({
+            .new_segment = destination_segment,
+            .old_segment = source_segment,
+            .segment_info = info,
+        }));
+    }
+    if (source_inserted && !destination_inserted) {
+        sender.submit(info_message::SegmentUninserted({
+            .segment = source_segment,
+            .segment_info = info,
+        }));
+    }
+    if (destination_inserted && !source_inserted) {
+        sender.submit(info_message::SegmentInserted({
+            .segment = destination_segment,
+            .segment_info = info,
+        }));
+    }
+
+    // another element swapped
+    if (source_inserted && last_segment != source_segment) {
+        sender.submit(info_message::InsertedSegmentIdUpdated {
+            .new_segment = source_segment,
+            .old_segment = last_segment,
+            .segment_info = get_segment_info(layout, source_segment),
+        });
+    }
+}
+
+// segment already moved
+auto _move_full_segment_id_update(Layout& layout, MessageSender sender,
+                                  const segment_t source_segment,
+                                  const segment_t destination_segment,
+                                  const segment_t last_segment) {
+    sender.submit(info_message::SegmentIdUpdated {
+        .new_segment = destination_segment,
+        .old_segment = source_segment,
+    });
+
+    // another element swapped
+    if (last_segment != source_segment) {
+        sender.submit(info_message::SegmentIdUpdated {
+            .new_segment = source_segment,
+            .old_segment = last_segment,
+        });
+    }
+}
+
 auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
                                       segment_t& source_segment,
                                       const element_id_t destination_element_id) {
     if (source_segment.element_id == destination_element_id) {
         return;
     }
-
     const auto source_index = source_segment.segment_index;
-    const auto source_inserted = is_inserted(layout, source_segment.element_id);
-    const auto destination_inserted = is_inserted(layout, destination_element_id);
 
     auto& m_tree_source = layout.modifyable_segment_tree(source_segment.element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
-    const auto source_info = m_tree_source.segment_info(source_index);
 
     // copy
     const auto destination_index
@@ -804,102 +860,75 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
     // messages
     const auto destination_segment
         = segment_t {destination_element_id, destination_index};
+    const auto last_segment = segment_t {source_segment.element_id, last_index};
 
-    sender.submit(info_message::SegmentIdUpdated {
-        .new_segment = destination_segment,
-        .old_segment = source_segment,
-    });
-
-    // insertion / uninsertion
-    if (source_inserted && destination_inserted) {
-        sender.submit(info_message::InsertedSegmentIdUpdated({
-            .new_segment = destination_segment,
-            .old_segment = source_segment,
-            .segment_info = source_info,
-        }));
-    }
-    if (source_inserted && !destination_inserted) {
-        sender.submit(info_message::SegmentUninserted({
-            .segment = source_segment,
-            .segment_info = source_info,
-        }));
-    }
-    if (destination_inserted && !source_inserted) {
-        sender.submit(info_message::SegmentInserted({
-            .segment = destination_segment,
-            .segment_info = source_info,
-        }));
-    }
-
-    if (last_index != source_index) {  // another element swapped
-        const auto last_segment = segment_t {source_segment.element_id, last_index};
-        sender.submit(info_message::SegmentIdUpdated {
-            .new_segment = source_segment,
-            .old_segment = last_segment,
-        });
-        if (source_inserted) {
-            sender.submit(info_message::InsertedSegmentIdUpdated {
-                .new_segment = source_segment,
-                .old_segment = last_segment,
-                .segment_info = get_segment_info(layout, source_segment),
-            });
-        }
-    }
+    _move_full_segment_id_update(layout, sender, source_segment, destination_segment,
+                                 last_segment);
+    _move_full_segment_insertion_messages(layout, sender, source_segment,
+                                          destination_segment, last_segment);
 
     source_segment = destination_segment;
 }
 
-auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
-                                          segment_part_t& source_segment_part,
-                                          const element_id_t destination_element_id) {
-    const auto source_element_id = source_segment_part.segment.element_id;
-    const auto source_index = source_segment_part.segment.segment_index;
-    const auto source_part = source_segment_part.part;
-    const auto source_inserted = is_inserted(layout, source_element_id);
-    const auto destination_inserted = is_inserted(layout, destination_element_id);
-
-    auto& m_tree_source = layout.modifyable_segment_tree(source_element_id);
+auto copy_segment(Layout& layout, MessageSender sender,
+                  const segment_part_t source_segment_part,
+                  const element_id_t destination_element_id) -> segment_part_t {
+    auto& m_tree_source
+        = layout.modifyable_segment_tree(source_segment_part.segment.element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
-    const auto info_orignal = m_tree_source.segment_info(source_index);
-    const auto full_part = m_tree_source.segment_part(source_index);
-    const auto part_kept = difference_touching_one_side(full_part, source_part);
+    const auto destination_index = m_tree_destination.copy_segment(
+        m_tree_source, source_segment_part.segment.segment_index,
+        source_segment_part.part);
 
-    // move
-    const auto destination_index
-        = m_tree_destination.copy_segment(m_tree_source, source_index, source_part);
-    m_tree_source.shrink_segment(source_index, part_kept);
-
-    // messages
     const auto destination_segment_part
         = segment_part_t {segment_t {destination_element_id, destination_index},
                           m_tree_destination.segment_part(destination_index)};
 
     sender.submit(info_message::SegmentCreated {destination_segment_part.segment});
 
-    sender.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = destination_segment_part,
-        .segment_part_source = source_segment_part,
-    });
-
-    // insertion / uninsertion
-    if (source_inserted) {
-        sender.submit(info_message::SegmentUninserted({
-            .segment = source_segment_part.segment,
-            .segment_info = info_orignal,
-        }));
-        sender.submit(info_message::SegmentInserted({
-            .segment = source_segment_part.segment,
-            .segment_info = get_segment_info(layout, source_segment_part.segment),
-        }));
-    }
-
-    if (destination_inserted) {
+    if (is_inserted(layout, destination_element_id)) {
         sender.submit(info_message::SegmentInserted({
             .segment = destination_segment_part.segment,
             .segment_info = get_segment_info(layout, destination_segment_part.segment),
         }));
     }
+
+    return destination_segment_part;
+}
+
+auto shrink_segment(Layout& layout, MessageSender sender, const segment_t segment,
+                    const part_t part_kept) {
+    using namespace info_message;
+    auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
+
+    const auto old_info = m_tree.segment_info(segment.segment_index);
+    m_tree.shrink_segment(segment.segment_index, part_kept);
+    const auto new_info = m_tree.segment_info(segment.segment_index);
+
+    if (is_inserted(layout, segment.element_id)) {
+        sender.submit(SegmentUninserted({.segment = segment, .segment_info = old_info}));
+        sender.submit(SegmentInserted({.segment = segment, .segment_info = new_info}));
+    }
+}
+
+auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
+                                          segment_part_t& source_segment_part,
+                                          const element_id_t destination_element_id) {
+    const auto full_part = to_part(get_line(layout, source_segment_part.segment));
+    const auto part_kept
+        = difference_touching_one_side(full_part, source_segment_part.part);
+
+    // move
+    const auto destination_segment_part
+        = copy_segment(layout, sender, source_segment_part, destination_element_id);
+    shrink_segment(layout, sender, source_segment_part.segment, part_kept);
+
+    // messages
+    sender.submit(info_message::SegmentPartMoved {
+        .segment_part_destination = destination_segment_part,
+        .segment_part_source = source_segment_part,
+    });
 
     source_segment_part = destination_segment_part;
 }
