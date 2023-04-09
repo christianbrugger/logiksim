@@ -1487,11 +1487,20 @@ auto _wire_change_insert_to_colliding(Layout& layout, segment_part_t& segment_pa
 
 auto _wire_change_colliding_to_temporary(Circuit& circuit, MessageSender sender,
                                          segment_part_t& segment_part) -> void {
+    auto& layout = circuit.layout();
+
     const auto destination_id
         = get_or_create_aggregate(circuit, sender, display_state_t::new_temporary);
 
-    // TODO move needs to handle uninsertion / insertion messages
+    auto source_id = segment_part.segment.element_id;
     move_segment_between_trees(circuit.layout(), sender, segment_part, destination_id);
+
+    // delete empty tree
+    if (layout.segment_tree(source_id).empty()) {
+        layout.set_display_state(source_id, display_state_t::new_temporary);
+        swap_and_delete_single_element_private(circuit, sender, source_id,
+                                               &segment_part.segment.element_id);
+    }
 }
 
 auto change_wire_insertion_mode_private(State state, segment_part_t& segment_part,
