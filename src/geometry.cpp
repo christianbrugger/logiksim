@@ -207,6 +207,25 @@ auto intersect(part_t a, part_t b) -> std::optional<part_t> {
     return std::nullopt;
 }
 
+auto difference_touching_one_side(part_t full_part, part_t b) -> part_t {
+    if (full_part.begin == b.begin) {
+        return part_t {b.end, full_part.end};
+    }
+
+    if (full_part.end != b.end) [[unlikely]] {
+        throw_exception("part needs to be touching one side");
+    }
+
+    return part_t {full_part.begin, b.begin};
+}
+
+auto difference_not_touching(part_t full_part, part_t b) -> std::pair<part_t, part_t> {
+    return {
+        part_t {full_part.begin, b.begin},
+        part_t {b.end, full_part.end},
+    };
+}
+
 //
 // Parts List
 //

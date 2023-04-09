@@ -78,6 +78,7 @@ class SegmentTree {
     auto update_segment(segment_index_t index, segment_info_t segment) -> void;
     auto update_segment(segment_index_t index, segment_info_t segment,
                         part_copy_definition_t parts) -> void;
+    auto shrink_segment(segment_index_t index, part_t part) -> void;
     auto copy_segment(const SegmentTree &tree, segment_index_t index) -> segment_index_t;
     auto copy_segment(const SegmentTree &tree, segment_index_t index, part_t part)
         -> segment_index_t;
@@ -91,6 +92,8 @@ class SegmentTree {
     [[nodiscard]] auto segment_info(segment_index_t index) const -> segment_info_t;
     [[nodiscard]] auto segment_line(std::size_t index) const -> ordered_line_t;
     [[nodiscard]] auto segment_line(segment_index_t index) const -> ordered_line_t;
+    [[nodiscard]] auto segment_part(std::size_t index) const -> part_t;
+    [[nodiscard]] auto segment_part(segment_index_t index) const -> part_t;
     [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
 
     // valid parts

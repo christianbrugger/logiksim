@@ -826,11 +826,13 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
     auto& m_tree_source = layout.modifyable_segment_tree(source_segment.element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
+    // copy
     const auto destination_index
         = m_tree_destination.copy_segment(m_tree_source, source_index);
     const auto last_index = m_tree_source.last_index();
     m_tree_source.swap_and_delete_segment(source_index);
 
+    // messages
     const auto destination_segment
         = segment_t {destination_element_id, destination_index};
 
@@ -854,27 +856,25 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
                                           const element_id_t destination_element_id) {
     const auto source_element_id = source_segment_part.segment.element_id;
     const auto source_index = source_segment_part.segment.segment_index;
-
-    const auto full_line = get_line(layout, source_segment_part.segment);
-    const auto moving_line = to_line(full_line, source_segment_part.part);
-
-    const auto line_kept = full_line.p0 == moving_line.p0
-                               ? ordered_line_t {moving_line.p1, full_line.p1}
-                               : ordered_line_t {full_line.p0, moving_line.p0};
+    const auto source_part = source_segment_part.part;
 
     auto& m_tree_source = layout.modifyable_segment_tree(source_element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
-    // TODO copy valid
 
-    m_tree_source.update_segment(source_index, shadow_segment_info(line_kept));
+    const auto full_part = m_tree_source.segment_part(source_index);
+    const auto part_kept = difference_touching_one_side(full_part, source_part);
+
+    // move
     const auto destination_index
-        = m_tree_destination.add_segment(shadow_segment_info(moving_line));
+        = m_tree_destination.copy_segment(m_tree_source, source_index, source_part);
+    m_tree_source.shrink_segment(source_index, part_kept);
 
-    sender.submit(info_message::SegmentCreated {
-        segment_t {destination_element_id, destination_index}});
+    // messages
+    const auto destination_segment_part
+        = segment_part_t {segment_t {destination_element_id, destination_index},
+                          m_tree_destination.segment_part(destination_index)};
 
-    const auto destination_segment_part = segment_part_t {
-        segment_t {destination_element_id, destination_index}, to_part(moving_line)};
+    sender.submit(info_message::SegmentCreated {destination_segment_part.segment});
 
     sender.submit(info_message::SegmentPartMoved {
         .segment_part_destination = destination_segment_part,
@@ -889,32 +889,33 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
                                            const element_id_t destination_element_id) {
     const auto source_element_id = source_segment_part.segment.element_id;
     const auto source_index = source_segment_part.segment.segment_index;
-
-    const auto full_line = get_line(layout, source_segment_part.segment);
-    const auto moving_line = to_line(full_line, source_segment_part.part);
+    const auto source_part = source_segment_part.part;
 
     auto& m_tree_source = layout.modifyable_segment_tree(source_element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
-    const auto line_0 = ordered_line_t {full_line.p0, moving_line.p0};
-    const auto line_1 = ordered_line_t {moving_line.p1, full_line.p1};
+    const auto full_part = m_tree_source.segment_part(source_index);
+    const auto [part0, part1] = difference_not_touching(full_part, source_part);
 
-    m_tree_source.update_segment(source_index, shadow_segment_info(line_0));
-    const auto index_1 = m_tree_source.add_segment(shadow_segment_info(line_1));
+    // move
     const auto destination_index
-        = m_tree_destination.add_segment(shadow_segment_info(moving_line));
-    // TODO copy valid
+        = m_tree_destination.copy_segment(m_tree_source, source_index, source_part);
+    const auto index1 = m_tree_source.copy_segment(m_tree_source, source_index, part1);
+    m_tree_source.shrink_segment(source_index, part0);
 
-    sender.submit(info_message::SegmentCreated {segment_t {source_element_id, index_1}});
+    // messages
+    const auto segment_part_1 = segment_part_t {segment_t {source_element_id, index1},
+                                                m_tree_source.segment_part(index1)};
+
+    sender.submit(info_message::SegmentCreated {segment_part_1.segment});
 
     sender.submit(info_message::SegmentPartMoved {
-        .segment_part_destination
-        = segment_part_t {segment_t {source_element_id, index_1}, to_part(line_1)},
-        .segment_part_source
-        = segment_part_t {source_segment_part.segment, to_part(full_line, line_1)}});
+        .segment_part_destination = segment_part_1,
+        .segment_part_source = segment_part_t {source_segment_part.segment, part1}});
 
-    const auto destination_segment_part = segment_part_t {
-        segment_t {destination_element_id, destination_index}, to_part(moving_line)};
+    const auto destination_segment_part
+        = segment_part_t {segment_t {destination_element_id, destination_index},
+                          m_tree_destination.segment_part(destination_index)};
 
     sender.submit(info_message::SegmentCreated {destination_segment_part.segment});
 
@@ -928,7 +929,7 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
 
 /// Simply moves the segment from the tree
 //  * trees can become empty
-//  * the touched lines will revert to shadow_points
+//  * inserts new endpoints as shaddow points
 //  * will not send insert / uninsert messages
 auto move_segment_between_trees(Layout& layout, MessageSender sender,
                                 segment_part_t& segment_part,
@@ -966,9 +967,11 @@ auto _remove_full_segment_from_tree(Layout& layout, MessageSender sender,
     const auto segment_index = full_segment_part.segment.segment_index;
     auto& m_tree = layout.modifyable_segment_tree(element_id);
 
+    // delete
     const auto last_index = m_tree.last_index();
     m_tree.swap_and_delete_segment(segment_index);
 
+    // messages
     if (last_index != segment_index) {
         sender.submit(info_message::SegmentIdUpdated {
             .new_segment = segment_t {element_id, segment_index},
@@ -977,58 +980,62 @@ auto _remove_full_segment_from_tree(Layout& layout, MessageSender sender,
     }
 
     sender.submit(info_message::SegmentPartDeleted {full_segment_part});
+
     full_segment_part = null_segment_part;
 }
 
 auto _remove_touching_segment_from_tree(Layout& layout, MessageSender sender,
                                         segment_part_t& segment_part) {
-    auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
+    const auto element_id = segment_part.segment.element_id;
+    const auto index = segment_part.segment.segment_index;
+    const auto part = segment_part.part;
 
-    const auto full_line = get_line(layout, segment_part.segment);
-    const auto removing_line = to_line(full_line, segment_part.part);
+    auto& m_tree = layout.modifyable_segment_tree(element_id);
 
-    const auto line_kept = full_line.p0 == removing_line.p0
-                               ? ordered_line_t {removing_line.p1, full_line.p1}
-                               : ordered_line_t {full_line.p0, removing_line.p0};
+    const auto full_part = m_tree.segment_part(index);
+    const auto part_kept = difference_touching_one_side(full_part, part);
 
-    m_tree.update_segment(segment_part.segment.segment_index,
-                          shadow_segment_info(line_kept));
+    // delete
+    m_tree.shrink_segment(index, part_kept);
 
+    // messages
     sender.submit(info_message::SegmentPartDeleted {segment_part});
     segment_part = null_segment_part;
 }
 
 auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender sender,
                                          segment_part_t& segment_part) {
+    const auto element_id = segment_part.segment.element_id;
+    const auto index = segment_part.segment.segment_index;
+    const auto part = segment_part.part;
+
     auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
 
-    const auto full_line = get_line(layout, segment_part.segment);
-    const auto removing_line = to_line(full_line, segment_part.part);
+    const auto full_part = m_tree.segment_part(index);
+    const auto [part0, part1] = difference_not_touching(full_part, part);
 
-    const auto line_0 = ordered_line_t {full_line.p0, removing_line.p0};
-    const auto line_1 = ordered_line_t {removing_line.p1, full_line.p1};
+    // delete
+    const auto index1 = m_tree.copy_segment(m_tree, index, part1);
+    m_tree.shrink_segment(index, part0);
 
-    const auto part_source = to_part(full_line, line_1);
-    const auto part_destination = to_part(line_1);
+    // messages
+    const auto segment_part_1
+        = segment_part_t {segment_t {element_id, index1}, m_tree.segment_part(index1)};
 
-    m_tree.update_segment(segment_part.segment.segment_index,
-                          shadow_segment_info(line_0));
-    const auto index_1 = m_tree.add_segment(shadow_segment_info(line_1));
-    const auto segment_1 = segment_t {segment_part.segment.element_id, index_1};
-    // TODO copy valid
+    sender.submit(info_message::SegmentCreated {segment_part_1.segment});
 
-    sender.submit(info_message::SegmentCreated {segment_1});
     sender.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = segment_part_t {segment_1, part_destination},
-        .segment_part_source = segment_part_t {segment_part.segment, part_source}});
+        .segment_part_destination = segment_part_1,
+        .segment_part_source = segment_part_t {segment_part.segment, part1}});
 
     sender.submit(info_message::SegmentPartDeleted {segment_part});
+
     segment_part = null_segment_part;
 }
 
 /// Simply removes the segment from the tree
 //  * trees can become empty
-//  * the touched points will revert to shadow_points
+//  * inserts new endpoints as shaddow points
 //  * will not send insert / uninsert messages
 auto remove_segment_from_tree(Layout& layout, MessageSender sender,
                               segment_part_t& segment_part) -> void {
@@ -1201,6 +1208,7 @@ auto merge_line_segments(Layout& layout, MessageSender sender, const segment_t s
     // merge
     m_tree.update_segment(index0, info_merged);
     m_tree.swap_and_delete_segment(index1);
+    // TODO valid
 
     // messages
     sender.submit(info_message::SegmentUninserted {segment_0, info_0});

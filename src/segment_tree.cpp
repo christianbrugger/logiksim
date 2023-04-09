@@ -263,6 +263,19 @@ auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment,
         = copy_parts(valid_parts_vector_.at(index.value), parts);
 }
 
+auto SegmentTree::shrink_segment(segment_index_t index, part_t part) -> void {
+    const auto new_info = adjust(segment_info(index), part);
+
+    // update segment
+    unregister_segment(index);
+    segments_.at(index.value) = new_info;
+    register_segment(index);
+
+    // valid parts
+    valid_parts_vector_.at(index.value)
+        = copy_parts(valid_parts_vector_.at(index.value), part);
+}
+
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
     -> segment_index_t {
     const auto new_index = add_segment(tree.segment_info(index));
@@ -303,6 +316,14 @@ auto SegmentTree::segment_line(std::size_t index) const -> ordered_line_t {
 
 auto SegmentTree::segment_line(segment_index_t index) const -> ordered_line_t {
     return segment_info(index).line;
+}
+
+auto SegmentTree::segment_part(std::size_t index) const -> part_t {
+    return to_part(segment_line(index));
+}
+
+auto SegmentTree::segment_part(segment_index_t index) const -> part_t {
+    return to_part(segment_line(index));
 }
 
 auto SegmentTree::segment_infos() const -> std::span<const segment_info_t> {
