@@ -286,7 +286,9 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     // messages
     const auto m0
         = Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {1}}}};
-    const auto m1 = Message {SegmentPartMoved {
+    const auto m1
+        = Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
+    const auto m2 = Message {SegmentPartMoved {
         .segment_part_destination
         = segment_part_t {segment_t {element_id_t {0}, segment_index_t {1}},
                           part_t {offset_t {0}, offset_t {5}}},
@@ -294,8 +296,6 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
                           part_t {offset_t {5}, offset_t {10}}},
     }};
-    const auto m2
-        = Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
     const auto m3 = Message {SegmentPartMoved {
         .segment_part_destination
         = segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}},
@@ -304,6 +304,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
                           part_t {offset_t {2}, offset_t {5}}},
     }};
+
     ASSERT_EQ(setup.recorder.messages().size(), 4);
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
     ASSERT_EQ(setup.recorder.messages().at(1), m1);
@@ -631,11 +632,11 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
 
     // messages
     const auto m0 = Message {SegmentCreated {segment_part_1_to.segment}};
-    const auto m1 = Message {SegmentPartMoved {
+    const auto m1 = Message {SegmentCreated {segment_part_2.segment}};
+    const auto m2 = Message {SegmentPartMoved {
         .segment_part_destination = segment_part_1_to,
         .segment_part_source = segment_part_1_from,
     }};
-    const auto m2 = Message {SegmentCreated {segment_part_2.segment}};
     const auto m3 = Message {SegmentPartMoved {
         .segment_part_destination = segment_part_2,
         .segment_part_source = segment_part_0,

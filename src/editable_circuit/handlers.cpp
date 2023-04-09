@@ -898,7 +898,7 @@ auto copy_segment(Layout& layout, MessageSender sender,
 }
 
 auto shrink_segment(Layout& layout, MessageSender sender, const segment_t segment,
-                    const part_t part_kept) {
+                    const part_t part_kept) -> void {
     using namespace info_message;
     auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
 
@@ -936,68 +936,29 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
 auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
                                            segment_part_t& source_segment_part,
                                            const element_id_t destination_element_id) {
-    const auto source_element_id = source_segment_part.segment.element_id;
-    const auto source_index = source_segment_part.segment.segment_index;
-    const auto source_part = source_segment_part.part;
-    const auto source_inserted = is_inserted(layout, source_element_id);
-    const auto destination_inserted = is_inserted(layout, destination_element_id);
-
-    auto& m_tree_source = layout.modifyable_segment_tree(source_element_id);
-    auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
-
-    const auto info_orignal = m_tree_source.segment_info(source_index);
-    const auto full_part = m_tree_source.segment_part(source_index);
-    const auto [part0, part1] = difference_not_touching(full_part, source_part);
+    const auto full_part = to_part(get_line(layout, source_segment_part.segment));
+    const auto [part0, part1]
+        = difference_not_touching(full_part, source_segment_part.part);
 
     // move
-    const auto index1 = m_tree_source.copy_segment(m_tree_source, source_index, part1);
-    const auto destination_index
-        = m_tree_destination.copy_segment(m_tree_source, source_index, source_part);
-    m_tree_source.shrink_segment(source_index, part0);
+    const auto source_part1 = segment_part_t {source_segment_part.segment, part1};
+
+    const auto destination_part1
+        = copy_segment(layout, sender, source_part1, source_part1.segment.element_id);
+    const auto destination_segment_part
+        = copy_segment(layout, sender, source_segment_part, destination_element_id);
+    shrink_segment(layout, sender, source_segment_part.segment, part0);
 
     // messages
-    const auto segment_part_1 = segment_part_t {segment_t {source_element_id, index1},
-                                                m_tree_source.segment_part(index1)};
-
-    sender.submit(info_message::SegmentCreated {segment_part_1.segment});
-
     sender.submit(info_message::SegmentPartMoved {
-        .segment_part_destination = segment_part_1,
-        .segment_part_source = segment_part_t {source_segment_part.segment, part1}});
-
-    const auto destination_segment_part
-        = segment_part_t {segment_t {destination_element_id, destination_index},
-                          m_tree_destination.segment_part(destination_index)};
-
-    sender.submit(info_message::SegmentCreated {destination_segment_part.segment});
+        .segment_part_destination = destination_part1,
+        .segment_part_source = source_part1,
+    });
 
     sender.submit(info_message::SegmentPartMoved {
         .segment_part_destination = destination_segment_part,
         .segment_part_source = source_segment_part,
     });
-
-    // insertion / uninsertion
-    if (source_inserted) {
-        sender.submit(info_message::SegmentUninserted({
-            .segment = source_segment_part.segment,
-            .segment_info = info_orignal,
-        }));
-        sender.submit(info_message::SegmentInserted({
-            .segment = source_segment_part.segment,
-            .segment_info = get_segment_info(layout, source_segment_part.segment),
-        }));
-        sender.submit(info_message::SegmentInserted({
-            .segment = segment_part_1.segment,
-            .segment_info = get_segment_info(layout, segment_part_1.segment),
-        }));
-    }
-
-    if (destination_inserted) {
-        sender.submit(info_message::SegmentInserted({
-            .segment = destination_segment_part.segment,
-            .segment_info = get_segment_info(layout, destination_segment_part.segment),
-        }));
-    }
 
     source_segment_part = destination_segment_part;
 }
