@@ -166,39 +166,75 @@ auto remove_part(Container &entries, part_t removing) -> void {
     }
 }
 
+//
+// part copying
+//
+
+template <typename V = offset_t::difference_type>
+auto _get_shifted_part(part_t part, V shifted, V max_end) {
+    const auto begin = V {part.begin.value} + shifted;
+    const auto end = std::min(V {part.end.value} + shifted, max_end);
+
+    return part_t {offset_t {gsl::narrow_cast<offset_t::value_type>(begin)},
+                   offset_t {gsl::narrow_cast<offset_t::value_type>(end)}};
+}
+
 template <typename Container = std::vector<part_t>>
 auto _add_intersecting_parts(const Container &source_entries,
-                             Container &destination_entries, part_t part_source,
-                             part_t part_destination) {
-    using V = int;
-    static_assert(sizeof(V) > sizeof(offset_t::value_type));
+                             Container &destination_entries, part_t part_destination) {
+    using V = offset_t::difference_type;
 
-    auto shifted = V {part_destination.begin.value} - V {part_source.begin.value};
+    auto shifted = V {part_destination.begin.value};
     auto max_end = V {part_destination.end.value};
 
     for (const part_t part : source_entries) {
-        if (const std::optional<part_t> res = intersect(part, part_source)) {
-            const auto begin = V {res->begin.value} + shifted;
-            const auto end = std::min(V {res->end.value} + shifted, max_end);
+        const auto new_part = _get_shifted_part<V>(part, shifted, max_end);
+        assert(a_inside_b(new_part, part_destination));
 
-            assert(begin >= V {part_destination.begin.value});
-            assert(end <= V {part_destination.end.value});
+        destination_entries.push_back(new_part);
+    }
+}
 
-            const auto new_part
-                = part_t {offset_t {gsl::narrow_cast<offset_t::value_type>(begin)},
-                          offset_t {gsl::narrow_cast<offset_t::value_type>(end)}};
+template <typename Container = std::vector<part_t>>
+auto copy_parts(const Container &source_entries, part_t part_destination) -> Container {
+    auto result = Container {};
+    _add_intersecting_parts(source_entries, result, part_destination);
+    return result;
+}
+
+template <typename Container = std::vector<part_t>>
+auto _add_intersecting_parts(const Container &source_entries,
+                             Container &destination_entries,
+                             part_copy_definition_t parts) {
+    using V = offset_t::difference_type;
+
+    auto shifted = V {parts.destination.begin.value} - V {parts.source.begin.value};
+    auto max_end = V {parts.destination.end.value};
+
+    for (const part_t part : source_entries) {
+        if (const std::optional<part_t> res = intersect(part, parts.source)) {
+            const auto new_part = _get_shifted_part<V>(*res, shifted, max_end);
+            assert(a_inside_b(new_part, parts.destination));
+
             destination_entries.push_back(new_part);
         }
     }
 }
 
 template <typename Container = std::vector<part_t>>
+auto copy_parts(const Container &source_entries, part_copy_definition_t parts)
+    -> Container {
+    auto result = Container {};
+    _add_intersecting_parts(source_entries, result, parts);
+    return result;
+}
+
+template <typename Container = std::vector<part_t>>
 auto copy_parts(const Container &source_entries, Container &destination_entries,
-                part_t part_source, part_t part_destination) -> void {
+                part_copy_definition_t parts) -> void {
     bool original_empty = destination_entries.empty();
 
-    _add_intersecting_parts(source_entries, destination_entries, part_source,
-                            part_destination);
+    _add_intersecting_parts(source_entries, destination_entries, parts);
 
     if (!original_empty) {
         _sort_and_merge_parts(destination_entries);
@@ -206,18 +242,10 @@ auto copy_parts(const Container &source_entries, Container &destination_entries,
 }
 
 template <typename Container = std::vector<part_t>>
-auto copy_parts(const Container &source_entries, part_t part_source,
-                part_t part_destination) -> Container {
-    auto result = Container {};
-    copy_parts(source_entries, result, part_source, part_destination);
-    return result;
-}
-
-template <typename Container = std::vector<part_t>>
 auto move_parts(Container &source_entries, Container &destination_entries,
-                part_t part_source, part_t part_destination) -> void {
-    copy_parts(source_entries, destination_entries, part_source, part_destination);
-    remove_part(source_entries, part_source);
+                part_copy_definition_t parts) -> void {
+    copy_parts(source_entries, destination_entries, parts);
+    remove_part(source_entries, parts.source);
 }
 
 }  // namespace logicsim

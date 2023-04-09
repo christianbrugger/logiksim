@@ -38,8 +38,8 @@ auto is_connection(SegmentPointType point_type) -> bool;
 struct segment_info_t {
     ordered_line_t line {};
 
-    SegmentPointType p0_type {SegmentPointType::colliding_point};
-    SegmentPointType p1_type {SegmentPointType::colliding_point};
+    SegmentPointType p0_type {SegmentPointType::shadow_point};
+    SegmentPointType p1_type {SegmentPointType::shadow_point};
 
     connection_id_t p0_connection_id {null_connection};
     connection_id_t p1_connection_id {null_connection};
@@ -52,6 +52,7 @@ static_assert(sizeof(segment_info_t) == 12);
 
 [[nodiscard]] auto order_points(segment_info_t segment0, segment_info_t segment1)
     -> std::tuple<segment_info_t, segment_info_t>;
+[[nodiscard]] auto adjust(segment_info_t segment, part_t part) -> segment_info_t;
 
 namespace detail::segment_tree {
 using index_t = std::make_unsigned_t<segment_index_t::value_type>;
@@ -60,17 +61,12 @@ static_assert(sizeof(index_t) == sizeof(segment_index_t::value_type));
 using policy = folly::small_vector_policy::policy_size_type<index_t>;
 using parts_vector_t = folly::small_vector<part_t, 2, policy>;
 
-struct part_copy_definition_t {
-    part_t source_part;
-    part_t destination_part;
-};
 }  // namespace detail::segment_tree
 
 class SegmentTree {
    public:
     using index_t = detail::segment_tree::index_t;
     using parts_vector_t = detail::segment_tree::parts_vector_t;
-    using part_copy_definition_t = detail::segment_tree::part_copy_definition_t;
 
    public:
     [[nodiscard]] constexpr SegmentTree() = default;
@@ -79,11 +75,12 @@ class SegmentTree {
     auto clear() -> void;
     auto add_segment(segment_info_t segment) -> segment_index_t;
     auto add_tree(const SegmentTree &tree) -> segment_index_t;
+    auto update_segment(segment_index_t index, segment_info_t segment) -> void;
     auto update_segment(segment_index_t index, segment_info_t segment,
-                        std::optional<part_copy_definition_t> parts = {}) -> void;
+                        part_copy_definition_t parts) -> void;
     auto copy_segment(const SegmentTree &tree, segment_index_t index) -> segment_index_t;
-    auto copy_segment(const SegmentTree &tree, segment_index_t index,
-                      part_copy_definition_t parts) -> segment_index_t;
+    auto copy_segment(const SegmentTree &tree, segment_index_t index, part_t part)
+        -> segment_index_t;
     // swaps the element with last one and deletes it
     auto swap_and_delete_segment(segment_index_t index) -> void;
 

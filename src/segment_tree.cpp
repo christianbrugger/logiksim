@@ -49,6 +49,23 @@ auto order_points(segment_info_t a, segment_info_t b)
     return std::make_tuple(b, a);
 }
 
+auto adjust(const segment_info_t segment_info, const part_t part) -> segment_info_t {
+    const auto new_line = to_line(segment_info.line, part);
+
+    const auto p0_changed = new_line.p0 != segment_info.line.p0;
+    const auto p1_changed = new_line.p1 != segment_info.line.p1;
+
+    return segment_info_t {
+        .line = new_line,
+
+        .p0_type = p0_changed ? SegmentPointType::shadow_point : segment_info.p0_type,
+        .p1_type = p1_changed ? SegmentPointType::shadow_point : segment_info.p1_type,
+
+        .p0_connection_id = p0_changed ? null_connection : segment_info.p0_connection_id,
+        .p1_connection_id = p1_changed ? null_connection : segment_info.p1_connection_id,
+    };
+}
+
 auto segment_info_t::format() const -> std::string {
     const auto connection_string_0
         = p0_connection_id ? p0_connection_id.format() + " " : "";
@@ -223,19 +240,27 @@ auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
     return new_index;
 }
 
-auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment,
-                                 std::optional<part_copy_definition_t> parts) -> void {
-    if (!parts && distance(segment.line) != distance(segment_info(index).line)) {
-        throw_exception("need part copy definition, if line length is changed");
-    }
-
-    if (parts) {
+auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {
+    if (distance(segment.line) != distance(segment_line(index))) {
+        throw_exception("line length needs to be the same");
     }
 
     // update segment
     unregister_segment(index);
     segments_.at(index.value) = segment;
     register_segment(index);
+}
+
+auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment,
+                                 part_copy_definition_t parts) -> void {
+    // update segment
+    unregister_segment(index);
+    segments_.at(index.value) = segment;
+    register_segment(index);
+
+    // valid parts
+    valid_parts_vector_.at(index.value)
+        = copy_parts(valid_parts_vector_.at(index.value), parts);
 }
 
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
@@ -246,8 +271,14 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
 }
 
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
-                               part_copy_definition_t parts) -> segment_index_t {
-    return segment_index_t();
+                               part_t part) -> segment_index_t {
+    const auto new_info = adjust(tree.segment_info(index), part);
+
+    const auto new_index = add_segment(new_info);
+    valid_parts_vector_.at(new_index.value)
+        = copy_parts(valid_parts_vector_.at(index.value), part);
+
+    return new_index;
 }
 
 auto SegmentTree::empty() const noexcept -> bool {

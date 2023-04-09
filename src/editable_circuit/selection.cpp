@@ -198,8 +198,11 @@ auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message)
     }();
 
     // move
-    move_parts(source_entries, destination_entries, message.segment_part_source.part,
-               message.segment_part_destination.part);
+    const auto parts = part_copy_definition_t {
+        .destination = message.segment_part_destination.part,
+        .source = message.segment_part_source.part,
+    };
+    move_parts(source_entries, destination_entries, parts);
 
     // delete source
     if (source_entries.empty()) {

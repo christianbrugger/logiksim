@@ -134,6 +134,11 @@ auto part_t::format() const -> std::string {
     return fmt::format("<part {}-{}>", begin, end);
 }
 
+auto part_copy_definition_t::format() const -> std::string {
+    return fmt::format("<part_copy_definition destination = {}, source = {}>",
+                       destination, source);
+}
+
 auto segment_part_t::format() const -> std::string {
     return fmt::format("<Element {}, Segment {}, part {}-{}>", segment.element_id,
                        segment.segment_index, part.begin, part.end);
