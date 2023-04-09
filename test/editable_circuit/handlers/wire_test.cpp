@@ -27,6 +27,10 @@ auto add_test_wire(Circuit &circuit, display_state_t display_state,
     }
 }
 
+auto part(offset_t::value_type begin, offset_t::value_type end) -> part_t {
+    return part_t {offset_t {begin}, offset_t {end}};
+}
+
 //
 // add_line_segment
 //
@@ -327,6 +331,8 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         part_t {offset_t {0}, offset_t {10}},
     };
 
+    const auto info_0 = get_segment_info(circuit, segment_part.segment);
+
     auto setup = HandlerSetup {circuit};
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
     setup.validate();
@@ -354,11 +360,14 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_valid);
+        ASSERT_EQ(layout.display_state(element_id), normal);
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, {10, 0}};
         ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+
+        ASSERT_EQ(tree.valid_parts(segment_index_t {0}).size(), 1);
+        ASSERT_EQ(tree.valid_parts(segment_index_t {0})[0], part(0, 10));
     }
 
     // messages
@@ -366,15 +375,276 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         .new_segment = segment_t {element_id_t {2}, segment_index_t {0}},
         .old_segment = segment_t {element_id_t {0}, segment_index_t {0}},
     }};
+
     const auto segment1 = segment_t {element_id_t {2}, segment_index_t {0}};
     const auto m1 = Message {SegmentInserted {
         .segment = segment1,
-        .segment_info = get_segment_info(circuit, segment1),
+        .segment_info = info_0,
     }};
 
+    auto info_1 = info_0;
+    info_1.p0_type = SegmentPointType::output;
+
+    auto info_2 = info_1;
+    info_2.p1_type = SegmentPointType::output;
+
+    const auto m2 = Message {InsertedEndPointsUpdated {
+        .segment = segment1,
+        .new_segment_info = info_1,
+        .old_segment_info = info_0,
+    }};
+    const auto m3 = Message {InsertedEndPointsUpdated {
+        .segment = segment1,
+        .new_segment_info = info_2,
+        .old_segment_info = info_1,
+    }};
+
+    ASSERT_EQ(setup.recorder.messages().size(), 4);
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
+    ASSERT_EQ(setup.recorder.messages().at(2), m2);
+    ASSERT_EQ(setup.recorder.messages().at(3), m3);
+}
+
+//
+// is_wire_position_representable
+//
+
+TEST(EditableCircuitHandlerWire, IsWirePositionRepresentable) {
+    using namespace editable_circuit;
+    auto layout = Layout {};
+
+    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    const auto segment_index = m_tree.add_segment(
+        segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+
+    const auto segment = segment_t {element_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part(0, 10)};
+
+    constexpr static auto overflow = int {grid_t::max()} + 100;
+
+    layout.validate();
+    ASSERT_EQ(is_wire_position_representable(layout, segment_part, 10, 10), true);
+    ASSERT_EQ(is_wire_position_representable(layout, segment_part, -10, -10), true);
+
+    ASSERT_EQ(is_wire_position_representable(layout, segment_part, overflow, 10), false);
+    ASSERT_EQ(is_wire_position_representable(layout, segment_part, -overflow, 10), false);
+    ASSERT_EQ(is_wire_position_representable(layout, segment_part, 0, overflow), false);
+}
+
+TEST(EditableCircuitHandlerWire, IsWirePositionRepresentablePart) {
+    using namespace editable_circuit;
+    auto layout = Layout {};
+
+    auto p1_x = grid_t::max();
+
+    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    const auto segment_index = m_tree.add_segment(
+        segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {p1_x, 0}}});
+
+    const auto segment = segment_t {element_id, segment_index};
+    const auto segment_part = segment_part_t {segment, part(0, 10)};
+    const auto segment_full = segment_part_t {
+        segment,
+        m_tree.segment_part(segment_index),
+    };
+
+    layout.validate();
+    ASSERT_EQ(is_wire_position_representable(layout, segment_part, -10, -10), true);
+    ASSERT_EQ(is_wire_position_representable(layout, segment_part, 10, 10), true);
+
+    ASSERT_EQ(is_wire_position_representable(layout, segment_full, -10, -10), true);
+    ASSERT_EQ(is_wire_position_representable(layout, segment_full, 10, 10), false);
+}
+
+//
+// move_or_delete_wire
+//
+
+TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMove) {
+    using namespace editable_circuit::info_message;
+    auto layout = Layout {};
+
+    const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto line_0 = ordered_line_t {point_t {100, 200}, point_t {110, 200}};
+
+    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
+
+    const auto segment_part_0
+        = segment_part_t {segment_t {element_id, segment_index}, part(0, 10)};
+
+    layout.validate();
+    auto setup = SenderSetup {};
+
+    auto segment_part = segment_part_0;
+    move_or_delete_wire(layout, setup.sender, segment_part, 100, 200);
+    layout.validate();
+
+    ASSERT_EQ(layout.element_count(), 1);
+    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::new_temporary);
+
+    ASSERT_EQ(segment_part, segment_part_0);
+
+    const auto &tree = layout.segment_tree(element_id_t {0});
+    ASSERT_EQ(tree.segment_count(), 1);
+    ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
+
+    // messages
+    const auto m0
+        = Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {0}}}};
+    ASSERT_EQ(setup.recorder.messages().size(), 1);
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+}
+
+TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
+    using namespace editable_circuit::info_message;
+    auto layout = Layout {};
+
+    const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto line_0 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
+    const auto line_1 = ordered_line_t {point_t {100, 200}, point_t {105, 200}};
+
+    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
+
+    const auto segment_part_0
+        = segment_part_t {segment_t {element_id, segment_index}, part(0, 5)};
+    const auto segment_part_1
+        = segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
+
+    layout.validate();
+    auto setup = SenderSetup {};
+
+    auto segment_part = segment_part_0;
+    move_or_delete_wire(layout, setup.sender, segment_part, 100, 200);
+    layout.validate();
+
+    ASSERT_EQ(segment_part, segment_part_1);
+    ASSERT_EQ(layout.element_count(), 1);
+    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::new_temporary);
+
+    const auto &tree = layout.segment_tree(element_id_t {0});
+    ASSERT_EQ(tree.segment_count(), 2);
+    ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.segment_line(segment_index_t {1}), line_1);
+
+    // messages
+    const auto m0 = Message {SegmentCreated {segment_part_1.segment}};
+    const auto m1 = Message {SegmentPartMoved {
+        .segment_part_destination = segment_part_1,
+        .segment_part_source = segment_part_0,
+    }};
     ASSERT_EQ(setup.recorder.messages().size(), 2);
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
     ASSERT_EQ(setup.recorder.messages().at(1), m1);
+}
+
+TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialEnd) {
+    using namespace editable_circuit::info_message;
+    auto layout = Layout {};
+
+    const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
+    const auto line_1 = ordered_line_t {point_t {105, 200}, point_t {110, 200}};
+
+    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
+
+    const auto segment_part_0
+        = segment_part_t {segment_t {element_id, segment_index}, part(5, 10)};
+    const auto segment_part_1
+        = segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
+
+    layout.validate();
+    auto setup = SenderSetup {};
+
+    auto segment_part = segment_part_0;
+    move_or_delete_wire(layout, setup.sender, segment_part, 100, 200);
+    layout.validate();
+
+    ASSERT_EQ(segment_part, segment_part_1);
+    ASSERT_EQ(layout.element_count(), 1);
+    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::new_temporary);
+
+    const auto &tree = layout.segment_tree(element_id_t {0});
+    ASSERT_EQ(tree.segment_count(), 2);
+    ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.segment_line(segment_index_t {1}), line_1);
+
+    // messages
+    const auto m0 = Message {SegmentCreated {segment_part_1.segment}};
+    const auto m1 = Message {SegmentPartMoved {
+        .segment_part_destination = segment_part_1,
+        .segment_part_source = segment_part_0,
+    }};
+    ASSERT_EQ(setup.recorder.messages().size(), 2);
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
+}
+
+TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
+    using namespace editable_circuit::info_message;
+    auto layout = Layout {};
+
+    const auto line = ordered_line_t {point_t {0, 0}, point_t {20, 0}};
+    const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
+    const auto line_1 = ordered_line_t {point_t {15, 0}, point_t {20, 0}};
+    const auto line_2 = ordered_line_t {point_t {110, 200}, point_t {115, 200}};
+
+    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
+
+    const auto segment_part_0
+        = segment_part_t {segment_t {element_id, segment_index}, part(10, 15)};
+
+    const auto segment_part_1_from
+        = segment_part_t {segment_t {element_id, segment_index_t {0}}, part(15, 20)};
+    const auto segment_part_1_to
+        = segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
+
+    const auto segment_part_2
+        = segment_part_t {segment_t {element_id, segment_index_t {2}}, part(0, 5)};
+
+    layout.validate();
+    auto setup = SenderSetup {};
+
+    auto segment_part = segment_part_0;
+    move_or_delete_wire(layout, setup.sender, segment_part, 100, 200);
+    layout.validate();
+
+    ASSERT_EQ(segment_part, segment_part_2);
+    ASSERT_EQ(layout.element_count(), 1);
+    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::new_temporary);
+
+    const auto &tree = layout.segment_tree(element_id_t {0});
+    ASSERT_EQ(tree.segment_count(), 3);
+    ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.segment_line(segment_index_t {1}), line_1);
+    ASSERT_EQ(tree.segment_line(segment_index_t {2}), line_2);
+
+    // messages
+    const auto m0 = Message {SegmentCreated {segment_part_1_to.segment}};
+    const auto m1 = Message {SegmentPartMoved {
+        .segment_part_destination = segment_part_1_to,
+        .segment_part_source = segment_part_1_from,
+    }};
+    const auto m2 = Message {SegmentCreated {segment_part_2.segment}};
+    const auto m3 = Message {SegmentPartMoved {
+        .segment_part_destination = segment_part_2,
+        .segment_part_source = segment_part_0,
+    }};
+    ASSERT_EQ(setup.recorder.messages().size(), 4);
+    ASSERT_EQ(setup.recorder.messages().at(0), m0);
+    ASSERT_EQ(setup.recorder.messages().at(1), m1);
+    ASSERT_EQ(setup.recorder.messages().at(2), m2);
+    ASSERT_EQ(setup.recorder.messages().at(3), m3);
 }
 
 }  // namespace logicsim

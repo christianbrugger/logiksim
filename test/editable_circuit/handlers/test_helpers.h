@@ -19,21 +19,29 @@ inline auto empty_circuit() -> Circuit {
 // forward message to cache and store them
 class MessageRecorder : public editable_circuit::VirtualReceiver {
    public:
-    MessageRecorder(CacheProvider &cache_provider, const Circuit &circuit)
-        : circuit_ {circuit}, cache_provider_ {cache_provider} {}
+    MessageRecorder() = default;
+
+    MessageRecorder(CacheProvider &cache_provider) : cache_provider_ {&cache_provider} {}
 
     inline auto submit(editable_circuit::InfoMessage message) -> void override {
         messages_.push_back(message);
-        cache_provider_.submit(message);
+        if (cache_provider_) {
+            cache_provider_->submit(message);
+        }
     }
 
     inline auto messages() -> const std::vector<editable_circuit::InfoMessage> & {
         return messages_;
     }
 
+    inline auto print() -> void {
+        logicsim::print();
+        logicsim::print(fmt_join("{}", messages_, "\n"));
+        logicsim::print();
+    }
+
    private:
-    const Circuit &circuit_;
-    CacheProvider &cache_provider_;
+    CacheProvider *cache_provider_ {nullptr};
     std::vector<editable_circuit::InfoMessage> messages_ {};
 };
 
@@ -47,7 +55,7 @@ struct HandlerSetup {
     HandlerSetup(Circuit &circuit)
         : circuit {circuit},
           cache {circuit},
-          recorder {cache, circuit},
+          recorder {cache},
           sender {editable_circuit::MessageSender {recorder}},
           state {circuit, sender, cache, circuit.schematic(), circuit.layout()} {
         validate();
@@ -57,6 +65,13 @@ struct HandlerSetup {
         circuit.validate();
         cache.validate(circuit);
     }
+};
+
+struct SenderSetup {
+    MessageRecorder recorder;
+    editable_circuit::MessageSender sender;
+
+    SenderSetup() : recorder {}, sender {editable_circuit::MessageSender {recorder}} {}
 };
 
 inline auto add_and_element(Circuit &circuit, display_state_t display_type,

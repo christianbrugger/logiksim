@@ -41,8 +41,7 @@ class Layout {
 
     auto add_placeholder(display_state_t display_state) -> element_id_t;
     // TODO rework these methods
-    auto add_line_tree(display_state_t display_state = display_state_t::normal)
-        -> element_id_t;
+    auto add_line_tree(display_state_t display_state) -> element_id_t;
     auto add_logic_element(point_t position,
                            orientation_t orientation = orientation_t::undirected,
                            display_state_t display_state = display_state_t::normal,

@@ -222,7 +222,7 @@ TEST(EditableCircuitHandler, MoveLogicItemSuccess) {
     ASSERT_EQ(element_id_0, element_id_t {0});
 
     auto setup = HandlerSetup {circuit};
-    move_or_delete_logic_item(setup.state, element_id_0, 10, -10);
+    move_or_delete_logic_item(circuit, setup.sender, element_id_0, 10, -10);
 
     setup.validate();
     //  element_ids
@@ -246,7 +246,7 @@ TEST(EditableCircuitHandler, MoveLogicItemDeleted) {
 
     auto setup = HandlerSetup {circuit};
     constexpr static auto overflow = int {grid_t::max()} + 100;
-    move_or_delete_logic_item(setup.state, element_id_0, overflow, 0);
+    move_or_delete_logic_item(circuit, setup.sender, element_id_0, overflow, 0);
 
     setup.validate();
     //  element_ids
@@ -581,7 +581,7 @@ TEST(EditableCircuitHandler, LogicItemCombineAddMoveDelete) {
     auto id_1 = add_xor_element(setup.state, point_t {10, 10}, insert_or_discard);
     setup.validate();
 
-    move_or_delete_logic_item(setup.state, id_0, 10, 10);
+    move_or_delete_logic_item(circuit, setup.sender, id_0, 10, 10);
     setup.validate();
 
     change_logic_item_insertion_mode(setup.state, id_0, collisions);

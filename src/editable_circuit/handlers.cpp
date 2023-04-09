@@ -864,9 +864,9 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
     const auto [part0, part1] = difference_not_touching(full_part, source_part);
 
     // move
+    const auto index1 = m_tree_source.copy_segment(m_tree_source, source_index, part1);
     const auto destination_index
         = m_tree_destination.copy_segment(m_tree_source, source_index, source_part);
-    const auto index1 = m_tree_source.copy_segment(m_tree_source, source_index, part1);
     m_tree_source.shrink_segment(source_index, part0);
 
     // messages
