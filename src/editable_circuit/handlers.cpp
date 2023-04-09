@@ -788,9 +788,12 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
     }
 
     const auto source_index = source_segment.segment_index;
+    const auto source_inserted = is_inserted(layout, source_segment.element_id);
+    const auto destination_inserted = is_inserted(layout, destination_element_id);
 
     auto& m_tree_source = layout.modifyable_segment_tree(source_segment.element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
+    const auto source_info = m_tree_source.segment_info(source_index);
 
     // copy
     const auto destination_index
@@ -807,11 +810,40 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
         .old_segment = source_segment,
     });
 
-    if (last_index != source_index) {
+    // insertion / uninsertion
+    if (source_inserted && destination_inserted) {
+        sender.submit(info_message::InsertedSegmentIdUpdated({
+            .new_segment = destination_segment,
+            .old_segment = source_segment,
+            .segment_info = source_info,
+        }));
+    }
+    if (source_inserted && !destination_inserted) {
+        sender.submit(info_message::SegmentUninserted({
+            .segment = source_segment,
+            .segment_info = source_info,
+        }));
+    }
+    if (destination_inserted && !source_inserted) {
+        sender.submit(info_message::SegmentInserted({
+            .segment = destination_segment,
+            .segment_info = source_info,
+        }));
+    }
+
+    if (last_index != source_index) {  // another element swapped
+        const auto last_segment = segment_t {source_segment.element_id, last_index};
         sender.submit(info_message::SegmentIdUpdated {
             .new_segment = source_segment,
-            .old_segment = segment_t {source_segment.element_id, last_index},
+            .old_segment = last_segment,
         });
+        if (source_inserted) {
+            sender.submit(info_message::InsertedSegmentIdUpdated {
+                .new_segment = source_segment,
+                .old_segment = last_segment,
+                .segment_info = get_segment_info(layout, source_segment),
+            });
+        }
     }
 
     source_segment = destination_segment;
@@ -823,10 +855,13 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
     const auto source_element_id = source_segment_part.segment.element_id;
     const auto source_index = source_segment_part.segment.segment_index;
     const auto source_part = source_segment_part.part;
+    const auto source_inserted = is_inserted(layout, source_element_id);
+    const auto destination_inserted = is_inserted(layout, destination_element_id);
 
     auto& m_tree_source = layout.modifyable_segment_tree(source_element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
+    const auto info_orignal = m_tree_source.segment_info(source_index);
     const auto full_part = m_tree_source.segment_part(source_index);
     const auto part_kept = difference_touching_one_side(full_part, source_part);
 
@@ -847,6 +882,25 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
         .segment_part_source = source_segment_part,
     });
 
+    // insertion / uninsertion
+    if (source_inserted) {
+        sender.submit(info_message::SegmentUninserted({
+            .segment = source_segment_part.segment,
+            .segment_info = info_orignal,
+        }));
+        sender.submit(info_message::SegmentInserted({
+            .segment = source_segment_part.segment,
+            .segment_info = get_segment_info(layout, source_segment_part.segment),
+        }));
+    }
+
+    if (destination_inserted) {
+        sender.submit(info_message::SegmentInserted({
+            .segment = destination_segment_part.segment,
+            .segment_info = get_segment_info(layout, destination_segment_part.segment),
+        }));
+    }
+
     source_segment_part = destination_segment_part;
 }
 
@@ -856,10 +910,13 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
     const auto source_element_id = source_segment_part.segment.element_id;
     const auto source_index = source_segment_part.segment.segment_index;
     const auto source_part = source_segment_part.part;
+    const auto source_inserted = is_inserted(layout, source_element_id);
+    const auto destination_inserted = is_inserted(layout, destination_element_id);
 
     auto& m_tree_source = layout.modifyable_segment_tree(source_element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
+    const auto info_orignal = m_tree_source.segment_info(source_index);
     const auto full_part = m_tree_source.segment_part(source_index);
     const auto [part0, part1] = difference_not_touching(full_part, source_part);
 
@@ -890,21 +947,37 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
         .segment_part_source = source_segment_part,
     });
 
+    // insertion / uninsertion
+    if (source_inserted) {
+        sender.submit(info_message::SegmentUninserted({
+            .segment = source_segment_part.segment,
+            .segment_info = info_orignal,
+        }));
+        sender.submit(info_message::SegmentInserted({
+            .segment = source_segment_part.segment,
+            .segment_info = get_segment_info(layout, source_segment_part.segment),
+        }));
+        sender.submit(info_message::SegmentInserted({
+            .segment = segment_part_1.segment,
+            .segment_info = get_segment_info(layout, segment_part_1.segment),
+        }));
+    }
+
+    if (destination_inserted) {
+        sender.submit(info_message::SegmentInserted({
+            .segment = destination_segment_part.segment,
+            .segment_info = get_segment_info(layout, destination_segment_part.segment),
+        }));
+    }
+
     source_segment_part = destination_segment_part;
 }
 
 //  * trees can become empty
 //  * inserts new endpoints as shaddow points
-//  * will not send insert / uninsert messages
 auto move_segment_between_trees(Layout& layout, MessageSender sender,
                                 segment_part_t& segment_part,
                                 const element_id_t destination_element_id) -> void {
-    const auto element_id = segment_part.segment.element_id;
-
-    if (is_inserted(layout, element_id)) [[unlikely]] {
-        throw_exception("can only move from non-inserted segments");
-    }
-
     const auto moving_part = segment_part.part;
     const auto full_line = get_line(layout, segment_part.segment);
     const auto full_part = to_part(full_line);
@@ -1348,10 +1421,6 @@ auto insert_wire(State state, segment_part_t& segment_part) -> void {
     const auto target_wire_id = find_wire_for_inserting_segment(state, segment_part);
 
     move_segment_between_trees(state.layout, state.sender, segment_part, target_wire_id);
-    state.sender.submit(info_message::SegmentInserted({
-        .segment = segment_part.segment,
-        .segment_info = get_segment_info(state.circuit, segment_part.segment),
-    }));
 
     const auto line = get_line(state.layout, segment_part);
     fix_and_merge_segments(state, line.p0, &segment_part);
