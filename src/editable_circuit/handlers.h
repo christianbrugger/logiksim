@@ -88,26 +88,19 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
                                 InsertionMode new_insertion_mode) -> void;
 
 //
-// Wire Handling - Low level Methods
+// Low level Methods
 //
 
-/// Moves the segment from the tree
-//  * trees can become empty
-//  * inserts new endpoints as shaddow points
-//  * will not send insert / uninsert messages
 auto move_segment_between_trees(Layout& layout, MessageSender sender,
                                 segment_part_t& segment_part,
                                 const element_id_t destination_element_id) -> void;
 
-/// Removes the segment from the tree
-//  * trees can become empty
-//  * inserts new endpoints as shaddow points
-//  * will not send insert / uninsert messages
 auto remove_segment_from_tree(Layout& layout, MessageSender sender,
                               segment_part_t& segment_part) -> void;
 
-auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_destination,
-                 element_id_t& tree_source) -> void;
+auto merge_and_delete_tree(Circuit& circuit, MessageSender sender,
+                           element_id_t& tree_destination, element_id_t& tree_source)
+    -> void;
 
 auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment_0,
                          segment_t segment_1, segment_part_t* preserve_segment) -> void;

@@ -889,6 +889,9 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
     source_segment_part = destination_segment_part;
 }
 
+//  * trees can become empty
+//  * inserts new endpoints as shaddow points
+//  * will not send insert / uninsert messages
 auto move_segment_between_trees(Layout& layout, MessageSender sender,
                                 segment_part_t& segment_part,
                                 const element_id_t destination_element_id) -> void {
@@ -991,6 +994,9 @@ auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender sender,
     segment_part = null_segment_part;
 }
 
+//  * trees can become empty
+//  * inserts new endpoints as shaddow points
+//  * will not send insert / uninsert messages
 auto remove_segment_from_tree(Layout& layout, MessageSender sender,
                               segment_part_t& segment_part) -> void {
     if (is_inserted(layout, segment_part.segment.element_id)) [[unlikely]] {
@@ -1012,8 +1018,9 @@ auto remove_segment_from_tree(Layout& layout, MessageSender sender,
     }
 }
 
-auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_destination,
-                 element_id_t& tree_source) -> void {
+auto merge_and_delete_tree(Circuit& circuit, MessageSender sender,
+                           element_id_t& tree_destination, element_id_t& tree_source)
+    -> void {
     auto& layout = circuit.layout();
 
     if (!is_inserted(circuit, tree_source) && !is_inserted(circuit, tree_destination))
@@ -1312,20 +1319,34 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
     auto candidate_0 = state.cache.collision_cache().get_first_wire(line.p0);
     auto candidate_1 = state.cache.collision_cache().get_first_wire(line.p1);
 
+    // 1 wire
     if (bool {candidate_0} ^ bool {candidate_1}) {
         return candidate_0 ? candidate_0 : candidate_1;
     }
+
+    // 2 wires
     if (candidate_0 && candidate_1) {
-        merge_trees(state.circuit, state.sender, candidate_0, candidate_1);
+        // we assume segment is part of aggregates that have ID 0 and 1
+        if (segment_part.segment.element_id > candidate_0
+            || segment_part.segment.element_id > candidate_1) {
+            throw_exception("cannot preserve segment element_id");
+        }
+
+        merge_and_delete_tree(state.circuit, state.sender, candidate_0, candidate_1);
         return candidate_0;
     }
+
+    // 0 wires
     return add_new_wire_element(state.circuit, state.sender, display_state_t::new_valid);
 }
 
 auto insert_wire(State state, segment_part_t& segment_part) -> void {
-    const auto element_id = find_wire_for_inserting_segment(state, segment_part);
-    move_segment_between_trees(state.layout, state.sender, segment_part, element_id);
+    if (is_inserted(state.layout, segment_part.segment.element_id)) {
+        throw_exception("segment is already inserted");
+    }
+    const auto target_wire_id = find_wire_for_inserting_segment(state, segment_part);
 
+    move_segment_between_trees(state.layout, state.sender, segment_part, target_wire_id);
     state.sender.submit(info_message::SegmentInserted({
         .segment = segment_part.segment,
         .segment_info = get_segment_info(state.circuit, segment_part.segment),
@@ -1338,7 +1359,7 @@ auto insert_wire(State state, segment_part_t& segment_part) -> void {
     // TODO connect segment
 
 #ifndef NDEBUG
-    state.layout.segment_tree(element_id).validate_inserted();
+    state.layout.segment_tree(target_wire_id).validate_inserted();
 #endif
 }
 
@@ -1373,11 +1394,13 @@ auto _wire_change_colliding_to_insert(Layout& layout, MessageSender sender,
     const auto element_id = segment_part.segment.element_id;
     const auto display_state = layout.display_state(element_id);
 
+    // from valid
     if (display_state == normal || display_state == new_valid) {
         auto& m_tree = layout.modifyable_segment_tree(element_id);
         m_tree.unmark_valid(segment_part.segment.segment_index, segment_part.part);
     }
 
+    // from colliding
     else if (display_state == new_colliding) {
         remove_segment_from_tree(layout, sender, segment_part);
     }
