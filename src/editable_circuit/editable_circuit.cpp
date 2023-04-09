@@ -152,7 +152,8 @@ auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int del
         handle->remove_logicitem(element_id);
 
         const auto [x, y] = get_position(element_id);
-        editable_circuit::move_or_delete_logic_item(get_state(), element_id, x, y);
+        editable_circuit::move_or_delete_logic_item(circuit_.value(), get_sender(),
+                                                    element_id, x, y);
     }
 }
 

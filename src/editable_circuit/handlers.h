@@ -70,8 +70,8 @@ auto is_logic_item_position_representable(const Circuit& circuit,
                                           const element_id_t element_id, int x, int y)
     -> bool;
 
-auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
-    -> void;
+auto move_or_delete_logic_item(Circuit& circuit, MessageSender sender,
+                               element_id_t& element_id, int x, int y) -> void;
 
 //
 // Wire Handling
@@ -86,6 +86,12 @@ auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
 
 auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
                                 InsertionMode new_insertion_mode) -> void;
+
+auto is_wire_position_representable(const Circuit& circuit, segment_part_t segment_part,
+                                    int x, int y) -> bool;
+
+auto move_or_delete_wire(Circuit& circuit, MessageSender sender,
+                         segment_part_t& segment_part, int x, int y) -> void;
 
 //
 // Low level Methods

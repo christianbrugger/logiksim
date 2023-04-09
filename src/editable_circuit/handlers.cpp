@@ -258,35 +258,35 @@ auto is_logic_item_position_representable(const Circuit& circuit,
     return is_logic_item_position_representable_private(circuit, element_id, x, y);
 }
 
-auto move_or_delete_logic_item_private(State state, element_id_t& element_id, int x,
-                                       int y) -> void {
+auto move_or_delete_logic_item_private(Circuit& circuit, MessageSender sender,
+                                       element_id_t& element_id, int x, int y) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
-    if (state.layout.display_state(element_id) != display_state_t::new_temporary)
+    if (circuit.layout().display_state(element_id) != display_state_t::new_temporary)
         [[unlikely]] {
         throw_exception("Only temporary items can be freely moded.");
     }
 
-    if (!is_logic_item_position_representable_private(state.circuit, element_id, x, y)) {
-        swap_and_delete_single_element_private(state.circuit, state.sender, element_id);
+    if (!is_logic_item_position_representable_private(circuit, element_id, x, y)) {
+        swap_and_delete_single_element_private(circuit, sender, element_id);
         return;
     }
 
     const auto position = point_t {grid_t {x}, grid_t {y}};
-    state.layout.set_position(element_id, position);
+    circuit.layout().set_position(element_id, position);
 }
 
-auto move_or_delete_logic_item(State state, element_id_t& element_id, int x, int y)
-    -> void {
+auto move_or_delete_logic_item(Circuit& circuit, MessageSender sender,
+                               element_id_t& element_id, int x, int y) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         fmt::print(
             "\n==========================================================\n{}\n"
             "move_or_delete_logic_item(element_id = {}, x = {}, y = {});\n"
             "==========================================================\n\n",
-            state.circuit, element_id, x, y);
+            circuit, element_id, x, y);
     }
-    move_or_delete_logic_item_private(state, element_id, x, y);
+    move_or_delete_logic_item_private(circuit, sender, element_id, x, y);
 }
 
 // mode change helpers
@@ -590,8 +590,8 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
     state.sender.submit(info_message::LogicItemCreated {element_id});
 
     // validates our position
-    move_or_delete_logic_item_private(state, element_id,            //
-                                      attributes.position.x.value,  //
+    move_or_delete_logic_item_private(state.circuit, state.sender, element_id,  //
+                                      attributes.position.x.value,              //
                                       attributes.position.y.value);
     if (element_id) {
         change_logic_item_insertion_mode_private(state, element_id, insertion_mode);
@@ -1337,7 +1337,7 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
     }
 
     // 0 wires
-    return add_new_wire_element(state.circuit, state.sender, display_state_t::new_valid);
+    return add_new_wire_element(state.circuit, state.sender, display_state_t::normal);
 }
 
 auto insert_wire(State state, segment_part_t& segment_part) -> void {
@@ -1410,8 +1410,10 @@ auto _wire_change_colliding_to_insert(Layout& layout, MessageSender sender,
     }
 }
 
-auto _wire_change_insert_to_colliding(Layout& layout, MessageSender sender,
-                                      segment_part_t& segment_part) -> void {}
+auto _wire_change_insert_to_colliding(Layout& layout, segment_part_t& segment_part)
+    -> void {
+    mark_valid(layout, segment_part);
+}
 
 auto _wire_change_colliding_to_temporary(Circuit& circuit, MessageSender sender,
                                          segment_part_t& segment_part) -> void {}
@@ -1442,7 +1444,7 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
     }
     if (old_modes.first == InsertionMode::insert_or_discard
         || old_modes.second == InsertionMode::insert_or_discard) {
-        _wire_change_insert_to_colliding(state.layout, state.sender, segment_part);
+        _wire_change_insert_to_colliding(state.layout, segment_part);
     }
     if (new_mode == InsertionMode::temporary) {
         _wire_change_colliding_to_temporary(state.circuit, state.sender, segment_part);

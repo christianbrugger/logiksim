@@ -227,8 +227,7 @@ auto validate_segment_tree_display_state(const SegmentTree &tree,
         bool any_valid_parts
             = std::ranges::any_of(tree.valid_parts(), &SegmentTree::parts_vector_t::size);
 
-        if (any_valid_parts != (display_state == display_state_t::new_valid))
-            [[unlikely]] {
+        if (any_valid_parts && !is_inserted(display_state)) [[unlikely]] {
             throw_exception("segment tree is in the wrong display state");
         }
     }
@@ -246,11 +245,10 @@ auto Layout::validate() const -> void {
     // wires
     std::ranges::for_each(line_trees_, &LineTree::validate);
     std::ranges::for_each(element_ids(), validate_segment_tree);
-    // TODO do we care about the display state?
-    // for (const auto element_id : element_ids()) {
-    //     validate_segment_tree_display_state(segment_tree(element_id),
-    //                                         display_state(element_id));
-    // }
+    for (const auto element_id : element_ids()) {
+        validate_segment_tree_display_state(segment_tree(element_id),
+                                            display_state(element_id));
+    }
 
     // global attributes
     if (!circuit_id_) [[unlikely]] {
