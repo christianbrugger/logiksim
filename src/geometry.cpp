@@ -98,6 +98,24 @@ auto is_endpoint(point_t point, ordered_line_t line) -> bool {
     return is_endpoint(point, line_t {line});
 }
 
+auto add_unchecked(grid_t grid, int delta) -> grid_t {
+    return grid_t {gsl::narrow_cast<grid_t::value_type>(grid.value + delta)};
+}
+
+auto add_unchecked(point_t point, int dx, int dy) -> point_t {
+    return point_t {
+        add_unchecked(point.x, dx),
+        add_unchecked(point.y, dy),
+    };
+}
+
+auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t {
+    return ordered_line_t {
+        add_unchecked(line.p0, dx, dy),
+        add_unchecked(line.p1, dy, dy),
+    };
+}
+
 //
 // offset_t
 //

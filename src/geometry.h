@@ -31,6 +31,8 @@ auto distance(ordered_line_t line) -> int;
 auto is_endpoint(point_t point, line_t line) -> bool;
 auto is_endpoint(point_t point, ordered_line_t line) -> bool;
 
+auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t;
+
 //
 // orientation_t
 //

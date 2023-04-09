@@ -783,6 +783,10 @@ auto get_insertion_modes(const Layout& layout, const segment_part_t segment_part
 auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
                                       segment_t& source_segment,
                                       const element_id_t destination_element_id) {
+    if (source_segment.element_id == destination_element_id) {
+        return;
+    }
+
     const auto source_index = source_segment.segment_index;
 
     auto& m_tree_source = layout.modifyable_segment_tree(source_segment.element_id);
@@ -899,9 +903,6 @@ auto move_segment_between_trees(Layout& layout, MessageSender sender,
 
     if (is_inserted(layout, element_id)) [[unlikely]] {
         throw_exception("can only move from non-inserted segments");
-    }
-    if (element_id == destination_element_id) {
-        throw_exception("target and source need to be different elements");
     }
 
     const auto moving_part = segment_part.part;
@@ -1537,6 +1538,7 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
     }
 
     if (!is_wire_position_representable(layout, segment_part, dx, dy)) {
+        // delete
         delete_wire_segment(layout, sender, segment_part);
         return;
     }
@@ -1549,19 +1551,10 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
                                    segment_part.segment.element_id);
     }
 
-    // update
+    // move
     auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
     auto info = m_tree.segment_info(segment_part.segment.segment_index);
-    info.line = ordered_line_t {
-        point_t {
-            grid_t {gsl::narrow_cast<grid_t::value_type>(part_line.p0.x.value + dx)},
-            grid_t {gsl::narrow_cast<grid_t::value_type>(part_line.p0.y.value + dy)},
-        },
-        point_t {
-            grid_t {gsl::narrow_cast<grid_t::value_type>(part_line.p1.x.value + dx)},
-            grid_t {gsl::narrow_cast<grid_t::value_type>(part_line.p1.y.value + dy)},
-        },
-    };
+    info.line = add_unchecked(part_line, dx, dy);
     m_tree.update_segment(segment_part.segment.segment_index, info);
 
     // messages
