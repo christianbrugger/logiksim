@@ -293,32 +293,4 @@ auto a_overlapps_b(part_t a, part_t b) -> bool {
            || (b.end > a.begin && b.end <= a.end);
 }
 
-auto format(InclusionResult state) -> std::string {
-    switch (state) {
-        using enum InclusionResult;
-
-        case fully_included:
-            return "fully_included";
-        case not_included:
-            return "not_included";
-        case partially_overlapping:
-            return "partially_overlapping";
-    }
-    throw_exception("Don't know how to convert InclusionState to string.");
-}
-
-auto is_part_included(std::span<const part_t> parts, part_t query) -> InclusionResult {
-    for (const auto part : parts) {
-        // parts can not touch or overlapp, so we can return early
-        if (a_inside_b(query, part)) {
-            return InclusionResult::fully_included;
-        }
-        if (a_overlapps_b(query, part)) {
-            return InclusionResult::partially_overlapping;
-        }
-    }
-
-    return InclusionResult::not_included;
-}
-
 }  // namespace logicsim

@@ -84,19 +84,39 @@ auto delete_wire_segment(Circuit& circuit, MessageSender sender,
 auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
               InsertionMode insertion_mode, Selection* selection) -> void;
 
-auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
-    -> segment_part_t;
-
 auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
                                 InsertionMode new_insertion_mode) -> void;
 
-/*
-auto add_connected_line(point_t p0, point_t p1, LineSegmentType segment_type,
-                        InsertionMode insertion_mode) -> selection_handle_t;
+//
+// Wire Handling - Low level Methods
+//
 
-auto change_wire_insertion_mode(segment_t& segment, part_t part,
-                                InsertionMode new_insertion_mode) -> void;
-*/
+/// Moves the segment from the tree
+//  * trees can become empty
+//  * inserts new endpoints as shaddow points
+//  * will not send insert / uninsert messages
+auto move_segment_between_trees(Layout& layout, MessageSender sender,
+                                segment_part_t& segment_part,
+                                const element_id_t destination_element_id) -> void;
+
+/// Removes the segment from the tree
+//  * trees can become empty
+//  * inserts new endpoints as shaddow points
+//  * will not send insert / uninsert messages
+auto remove_segment_from_tree(Layout& layout, MessageSender sender,
+                              segment_part_t& segment_part) -> void;
+
+auto merge_trees(Circuit& circuit, MessageSender sender, element_id_t& tree_destination,
+                 element_id_t& tree_source) -> void;
+
+auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment_0,
+                         segment_t segment_1, segment_part_t* preserve_segment) -> void;
+
+auto fix_and_merge_segments(State state, const point_t position,
+                            segment_part_t* preserve_segment) -> void;
+
+auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
+    -> segment_part_t;
 
 }  // namespace editable_circuit
 }  // namespace logicsim

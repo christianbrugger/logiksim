@@ -82,17 +82,6 @@ auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t lin
     -> void;
 auto validate_segment_parts(std::span<const part_t> parts, ordered_line_t line) -> void;
 
-// TODO remove this and use named methods instead?
-enum class InclusionResult {
-    fully_included,
-    not_included,
-    partially_overlapping,
-};
-[[nodiscard]] auto format(InclusionResult state) -> std::string;
-
-[[nodiscard]] auto is_part_included(std::span<const part_t> parts, part_t part)
-    -> InclusionResult;
-
 template <typename Container = std::vector<part_t>>
 auto _sort_and_merge_parts(Container &entries) -> void {
     if (entries.empty()) {
@@ -265,20 +254,5 @@ auto move_parts(Container &source_entries, Container &destination_entries,
 }
 
 }  // namespace logicsim
-
-//
-// Formatters
-//
-
-template <>
-struct fmt::formatter<logicsim::InclusionResult> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::InclusionResult &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
 
 #endif

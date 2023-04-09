@@ -90,9 +90,11 @@ class SpatialTree {
     tree_t tree_ {};
 };
 
-auto get_segment_count(SpatialTree::queried_segments_t result) -> int;
-auto all_same_element_id(SpatialTree::queried_segments_t result) -> bool;
-auto get_unique_element_id(SpatialTree::queried_segments_t) -> element_id_t;
+[[nodiscard]] auto get_segment_count(SpatialTree::queried_segments_t result) -> int;
+[[nodiscard]] auto all_same_element_id(SpatialTree::queried_segments_t result) -> bool;
+[[nodiscard]] auto get_segment_indices(SpatialTree::queried_segments_t result)
+    -> std::array<segment_index_t, 4>;
+[[nodiscard]] auto get_unique_element_id(SpatialTree::queried_segments_t) -> element_id_t;
 
 }  // namespace logicsim
 

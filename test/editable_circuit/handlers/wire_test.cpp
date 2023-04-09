@@ -55,7 +55,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
         ASSERT_EQ(tree_0.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, {10, 0}};
-        ASSERT_EQ(tree_0.segment_line(0), line);
+        ASSERT_EQ(tree_0.segment_line(segment_index_t {0}), line);
     }
     {
         const auto id_1 = element_id_t {1};
@@ -119,7 +119,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, {10, 0}};
-        ASSERT_EQ(tree.segment_line(0), line);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
     }
     {
         const auto element_id = element_id_t {2};
@@ -130,7 +130,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, {3, 0}};
-        ASSERT_EQ(tree.segment_line(0), line);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
     }
 
     // messages
@@ -177,7 +177,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {5, 0}, {10, 0}};
-        ASSERT_EQ(tree.segment_line(0), line);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
     }
     {
         const auto element_id = element_id_t {1};
@@ -188,7 +188,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, {5, 0}};
-        ASSERT_EQ(tree.segment_line(0), line);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
     }
     {
         const auto element_id = element_id_t {2};
@@ -199,7 +199,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, {3, 0}};
-        ASSERT_EQ(tree.segment_line(0), line);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
     }
 
     // messages
@@ -253,8 +253,8 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
 
         const auto line0 = ordered_line_t {point_t {0, 0}, {2, 0}};
         const auto line1 = ordered_line_t {point_t {5, 0}, {10, 0}};
-        ASSERT_EQ(tree.segment_line(0), line0);
-        ASSERT_EQ(tree.segment_line(1), line1);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line0);
+        ASSERT_EQ(tree.segment_line(segment_index_t {1}), line1);
     }
     {
         const auto element_id = element_id_t {1};
@@ -265,7 +265,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {2, 0}, {5, 0}};
-        ASSERT_EQ(tree.segment_line(0), line);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
     }
     {
         const auto element_id = element_id_t {2};
@@ -276,7 +276,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, {3, 0}};
-        ASSERT_EQ(tree.segment_line(0), line);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
     }
 
     // messages
@@ -358,7 +358,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, {10, 0}};
-        ASSERT_EQ(tree.segment_line(0), line);
+        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
     }
 
     // messages

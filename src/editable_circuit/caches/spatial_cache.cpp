@@ -243,9 +243,25 @@ auto all_same_element_id(SpatialTree::queried_segments_t result) -> bool {
     });
 }
 
+auto get_segment_indices(SpatialTree::queried_segments_t result)
+    -> std::array<segment_index_t, 4> {
+    static_assert(result.size() == 4);
+    return std::array {
+        result.at(0).segment_index,
+        result.at(1).segment_index,
+        result.at(2).segment_index,
+        result.at(3).segment_index,
+    };
+}
+
 auto get_unique_element_id(SpatialTree::queried_segments_t result) -> element_id_t {
-    const auto first_id = result.at(0).element_id;
-    return (first_id && all_same_element_id(result)) ? first_id : null_element;
+    if (!result.at(0).element_id) {
+        throw_exception("result has not segments");
+    }
+    if (!all_same_element_id(result)) {
+        throw_exception("result has different ids");
+    }
+    return result.at(0).element_id;
 }
 
 }  // namespace logicsim
