@@ -2,9 +2,15 @@
 
 #include "editable_circuit/caches.h"
 #include "editable_circuit/selection.h"
+#include "format.h"
 #include "geometry.h"
 #include "layout_calculations.h"
 #include "scene.h"
+
+#include <fmt/core.h>
+
+#include <algorithm>
+#include <ranges>
 
 namespace logicsim {
 
@@ -624,8 +630,8 @@ auto is_wire_aggregate(const Schematic& schematic, const Layout& layout,
            && layout.display_state(element_id) == display_state;
 }
 
-auto add_new_wire_element(Circuit& circuit, 
-                          display_state_t display_state) -> element_id_t {
+auto add_new_wire_element(Circuit& circuit, display_state_t display_state)
+    -> element_id_t {
     const auto element_id = circuit.layout().add_line_tree(display_state);
     {
         const auto element = circuit.schematic().add_element({

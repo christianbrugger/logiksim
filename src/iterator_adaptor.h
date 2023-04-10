@@ -18,6 +18,7 @@ namespace logicsim {
 // Enumerate
 //
 
+/*
 template <std::ranges::input_range T>
 constexpr auto enumerate(T &&range) {
     struct Iterator {
@@ -70,6 +71,7 @@ constexpr auto enumerate(T &&range) {
 
     return View {std::forward<T>(range)};
 }
+*/
 
 //
 // Transform View & Iterator

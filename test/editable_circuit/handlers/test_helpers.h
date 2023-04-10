@@ -52,12 +52,12 @@ struct HandlerSetup {
     editable_circuit::MessageSender sender;
     editable_circuit::State state;
 
-    HandlerSetup(Circuit &circuit)
-        : circuit {circuit},
-          cache {circuit},
+    HandlerSetup(Circuit &circuit_)
+        : circuit {circuit_},
+          cache {circuit_},
           recorder {cache},
           sender {editable_circuit::MessageSender {recorder}},
-          state {circuit, sender, cache, circuit.schematic(), circuit.layout()} {
+          state {circuit_, sender, cache, circuit.schematic(), circuit.layout()} {
         validate();
     }
 

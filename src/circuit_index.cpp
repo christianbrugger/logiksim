@@ -128,7 +128,8 @@ auto CircuitIndex::check_are_descriptions_complete() const -> void {
 }
 
 auto CircuitIndex::check_equal_size() const -> void {
-    if (!(schematics_.size() == layouts_.size() == descriptions_.size())) {
+    if (schematics_.size() != layouts_.size()
+        || schematics_.size() != descriptions_.size()) {
         throw_exception("Schematics, layouts and descriptions have different sizes.");
     }
 }

@@ -197,11 +197,10 @@ auto Schematic::add_element(ElementType type, std::size_t input_count,
 }
 
 auto Schematic::add_element(NewElementData &&data) -> Element {
-    if (data.input_count < 0 || data.input_count > connection_id_t::max()) [[unlikely]] {
+    if (data.input_count > connection_id_t::max()) [[unlikely]] {
         throw_exception("Input count needs to be positive and not too large.");
     }
-    if (data.output_count < 0 || data.output_count > connection_id_t::max())
-        [[unlikely]] {
+    if (data.output_count > connection_id_t::max()) [[unlikely]] {
         throw_exception("Output count needs to be positive and not too large.");
     }
 

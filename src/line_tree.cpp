@@ -694,7 +694,7 @@ auto LineTree::SegmentSizeIterator::operator*() const -> value_type {
 }
 
 auto LineTree::SegmentSizeIterator::operator++() noexcept -> SegmentSizeIterator& {
-    if (point_index_ + index_t {1} < line_tree_->indices_.size()
+    if (point_index_ + index_t {1} < std::ssize(line_tree_->indices_)
         && line_tree_->starts_new_subtree(point_index_ + 1)) {
         start_length_ = line_tree_->lengths_.at(length_index_++);
     } else {

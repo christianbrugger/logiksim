@@ -747,7 +747,6 @@ Simulation::HistoryView::HistoryView(const history_vector_t &history,
     const auto first_index = find_index(first_time);
     min_index_ = gsl::narrow<decltype(min_index_)>(first_index);
 
-    assert(min_index_ >= 0);
     assert(size() >= 1);
 }
 
