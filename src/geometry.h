@@ -166,12 +166,15 @@ auto remove_part(Container &entries, part_t removing) -> void {
 //
 
 template <typename V = offset_t::difference_type>
-auto _get_shifted_part(part_t part, V shifted, V max_end) {
+auto _get_shifted_part(part_t part, V shifted, V max_end) -> std::optional<part_t> {
     const auto begin = V {part.begin.value} + shifted;
     const auto end = std::min(V {part.end.value} + shifted, max_end);
 
-    return part_t {offset_t {gsl::narrow_cast<offset_t::value_type>(begin)},
-                   offset_t {gsl::narrow_cast<offset_t::value_type>(end)}};
+    if (begin < end) {
+        return part_t {offset_t {gsl::narrow_cast<offset_t::value_type>(begin)},
+                       offset_t {gsl::narrow_cast<offset_t::value_type>(end)}};
+    }
+    return std::nullopt;
 }
 
 template <typename Container = std::vector<part_t>>
@@ -183,10 +186,10 @@ auto _add_intersecting_parts(const Container &source_entries,
     auto max_end = V {part_destination.end.value};
 
     for (const part_t part : source_entries) {
-        const auto new_part = _get_shifted_part<V>(part, shifted, max_end);
-        assert(a_inside_b(new_part, part_destination));
-
-        destination_entries.push_back(new_part);
+        if (const auto new_part = _get_shifted_part<V>(part, shifted, max_end)) {
+            assert(a_inside_b(*new_part, part_destination));
+            destination_entries.push_back(*new_part);
+        }
     }
 }
 
@@ -220,10 +223,10 @@ auto _add_intersecting_parts(const Container &source_entries,
 
     for (const part_t part : source_entries) {
         if (const std::optional<part_t> res = intersect(part, parts.source)) {
-            const auto new_part = _get_shifted_part<V>(*res, shifted, max_end);
-            assert(a_inside_b(new_part, parts.destination));
-
-            destination_entries.push_back(new_part);
+            if (const auto new_part = _get_shifted_part<V>(*res, shifted, max_end)) {
+                assert(a_inside_b(*new_part, parts.destination));
+                destination_entries.push_back(*new_part);
+            }
         }
     }
 }

@@ -812,7 +812,7 @@ auto _move_full_segment_insertion_messages(Layout& layout, MessageSender sender,
     }
 
     // another element swapped
-    if (source_inserted && last_segment != source_segment) {
+    if (last_segment != source_segment && source_inserted) {
         sender.submit(info_message::InsertedSegmentIdUpdated {
             .new_segment = source_segment,
             .old_segment = last_segment,
