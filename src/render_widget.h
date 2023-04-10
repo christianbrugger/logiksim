@@ -119,6 +119,8 @@ class MouseMoveSelectionLogic {
     auto confirm() -> void;
 
    private:
+    auto move_selection(point_fine_t point) -> void;
+
     enum class State {
         waiting_for_first_click,
         move_selection,
@@ -152,7 +154,7 @@ class MouseSingleSelectionLogic {
 
     MouseSingleSelectionLogic(Args args);
 
-    auto mouse_press(point_fine_t point, Qt::KeyboardModifiers modifiers) -> void;
+    auto mouse_press(point_fine_t point) -> void;
     auto mouse_move(point_fine_t point) -> void;
     auto mouse_release(point_fine_t point) -> void;
 

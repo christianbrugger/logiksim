@@ -521,7 +521,7 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
     draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
 }
 
-auto draw_wire_selected_parts_shadow(BLContext& ctx, const Layout& layout,
+auto draw_wire_selected_parts_shadow(BLContext& ctx, 
                                      ordered_line_t line, std::span<const part_t> parts,
                                      const RenderSettings& settings) -> void {
     for (auto&& part : parts) {
@@ -600,7 +600,7 @@ auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout&
         const auto element_id = segment.element_id;
         if (layout.display_state(element_id) == display_state_t::normal) {
             const auto line = get_line(layout, segment);
-            draw_wire_selected_parts_shadow(ctx, layout, line, parts, settings);
+            draw_wire_selected_parts_shadow(ctx, line, parts, settings);
         }
     }
 }

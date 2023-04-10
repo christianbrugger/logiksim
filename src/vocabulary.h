@@ -371,10 +371,17 @@ struct grid_t {
     grid_t() = default;
 
     [[nodiscard]] constexpr grid_t(value_type v) noexcept : value {v} {};
+
     [[nodiscard]] constexpr explicit grid_t(int v) noexcept
         : value {gsl::narrow<value_type>(v)} {};
     [[nodiscard]] constexpr explicit grid_t(unsigned int v) noexcept
         : value {gsl::narrow<value_type>(v)} {};
+
+    [[nodiscard]] constexpr explicit grid_t(long v) noexcept
+        : value {gsl::narrow<value_type>(v)} {};
+    [[nodiscard]] constexpr explicit grid_t(unsigned long v) noexcept
+        : value {gsl::narrow<value_type>(v)} {};
+
     [[nodiscard]] constexpr explicit grid_t(long long v) noexcept
         : value {gsl::narrow<value_type>(v)} {};
     [[nodiscard]] constexpr explicit grid_t(unsigned long long v) noexcept
@@ -703,7 +710,7 @@ struct ankerl::unordered_dense::hash<logicsim::grid_t> {
 
     [[nodiscard]] auto operator()(const logicsim::grid_t &obj) const noexcept
         -> uint64_t {
-        return detail::wyhash::hash(obj.value);
+        return detail::wyhash::hash(static_cast<uint64_t>(obj.value));
     }
 };
 
@@ -729,7 +736,7 @@ struct ankerl::unordered_dense::hash<logicsim::element_id_t> {
 
     [[nodiscard]] auto operator()(const logicsim::element_id_t &obj) const noexcept
         -> uint64_t {
-        return detail::wyhash::hash(obj.value);
+        return detail::wyhash::hash(static_cast<uint64_t>(obj.value));
     }
 };
 

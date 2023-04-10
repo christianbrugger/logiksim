@@ -624,7 +624,7 @@ auto is_wire_aggregate(const Schematic& schematic, const Layout& layout,
            && layout.display_state(element_id) == display_state;
 }
 
-auto add_new_wire_element(Circuit& circuit, MessageSender sender,
+auto add_new_wire_element(Circuit& circuit, 
                           display_state_t display_state) -> element_id_t {
     const auto element_id = circuit.layout().add_line_tree(display_state);
     {
@@ -664,7 +664,7 @@ auto create_aggregate_tree_at(Circuit& circuit, MessageSender sender,
     auto element_id = find_wire(circuit, display_state);
 
     if (!element_id) {
-        element_id = add_new_wire_element(circuit, sender, display_state);
+        element_id = add_new_wire_element(circuit, display_state);
     }
 
     if (element_id != target_id) {
@@ -781,10 +781,10 @@ auto get_insertion_modes(const Layout& layout, const segment_part_t segment_part
 }
 
 // segment already moved
-auto _move_full_segment_insertion_messages(Layout& layout, MessageSender sender,
-                                           const segment_t source_segment,
-                                           const segment_t destination_segment,
-                                           const segment_t last_segment) {
+auto notify_segment_insertion_status_changed(Layout& layout, MessageSender sender,
+                                             const segment_t source_segment,
+                                             const segment_t destination_segment,
+                                             const segment_t last_segment) {
     const auto source_inserted = is_inserted(layout, source_segment.element_id);
     const auto destination_inserted = is_inserted(layout, destination_segment.element_id);
 
@@ -822,10 +822,9 @@ auto _move_full_segment_insertion_messages(Layout& layout, MessageSender sender,
 }
 
 // segment already moved
-auto _move_full_segment_id_update(Layout& layout, MessageSender sender,
-                                  const segment_t source_segment,
-                                  const segment_t destination_segment,
-                                  const segment_t last_segment) {
+auto notify_segment_id_changed(MessageSender sender, const segment_t source_segment,
+                               const segment_t destination_segment,
+                               const segment_t last_segment) {
     sender.submit(info_message::SegmentIdUpdated {
         .new_segment = destination_segment,
         .old_segment = source_segment,
@@ -862,10 +861,9 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
         = segment_t {destination_element_id, destination_index};
     const auto last_segment = segment_t {source_segment.element_id, last_index};
 
-    _move_full_segment_id_update(layout, sender, source_segment, destination_segment,
-                                 last_segment);
-    _move_full_segment_insertion_messages(layout, sender, source_segment,
-                                          destination_segment, last_segment);
+    notify_segment_id_changed(sender, source_segment, destination_segment, last_segment);
+    notify_segment_insertion_status_changed(layout, sender, source_segment,
+                                            destination_segment, last_segment);
 
     source_segment = destination_segment;
 }
@@ -1401,7 +1399,7 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
     }
 
     // 0 wires
-    return add_new_wire_element(state.circuit, state.sender, display_state_t::normal);
+    return add_new_wire_element(state.circuit, display_state_t::normal);
 }
 
 auto insert_wire(State state, segment_part_t& segment_part) -> void {

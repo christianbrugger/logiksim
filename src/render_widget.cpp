@@ -161,10 +161,7 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
     }
 }
 
-auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
-    if (state_ != State::move_selection) {
-        return;
-    }
+auto MouseMoveSelectionLogic::move_selection(point_fine_t point) -> void {
     if (!last_position_) {
         return;
     }
@@ -193,10 +190,18 @@ auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
     total_offsets_.second += delta_y;
 }
 
+auto MouseMoveSelectionLogic::mouse_move(point_fine_t point) -> void {
+    if (state_ != State::move_selection) {
+        return;
+    }
+    move_selection(point);
+}
+
 auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {
     if (state_ != State::move_selection) {
         return;
     }
+    move_selection(point);
 
     convert_to(InsertionMode::collisions);
     const auto collisions = calculate_any_element_colliding();
@@ -263,14 +268,14 @@ auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
 MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
     : builder_ {args.builder} {}
 
-auto MouseSingleSelectionLogic::mouse_press(point_fine_t point,
-                                            Qt::KeyboardModifiers modifiers) -> void {
+auto MouseSingleSelectionLogic::mouse_press(point_fine_t point) -> void {
     builder_.add(SelectionFunction::toggle, rect_fine_t {point, point});
 }
 
-auto MouseSingleSelectionLogic::mouse_move(point_fine_t point) -> void {}
+auto MouseSingleSelectionLogic::mouse_move(point_fine_t point [[maybe_unused]]) -> void {}
 
-auto MouseSingleSelectionLogic::mouse_release(point_fine_t point) -> void {}
+auto MouseSingleSelectionLogic::mouse_release(point_fine_t point [[maybe_unused]])
+    -> void {}
 
 //
 // Mouse Area Selection Logic
@@ -849,7 +854,7 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                         arg.mouse_press(event->position(), event->modifiers());
                     },
                     [&](MouseSingleSelectionLogic& arg) {
-                        arg.mouse_press(grid_fine_position, event->modifiers());
+                        arg.mouse_press(grid_fine_position);
                     },
                     [&](MouseMoveSelectionLogic& arg) {
                         arg.mouse_press(grid_fine_position);
@@ -1041,18 +1046,20 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
     // Enter
     else if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
         if (mouse_logic_) {
-            bool finished
-                = std::visit(overload {
-                                 [&](MouseElementInsertLogic& arg) { return false; },
-                                 [&](MouseLineInsertLogic& arg) { return false; },
-                                 [&](MouseAreaSelectionLogic& arg) { return false; },
-                                 [&](MouseSingleSelectionLogic& arg) { return false; },
-                                 [&](MouseMoveSelectionLogic& arg) {
-                                     arg.confirm();
-                                     return arg.finished();
-                                 },
-                             },
-                             *mouse_logic_);
+            bool finished = std::visit(
+                overload {
+                    [&](MouseElementInsertLogic& arg [[maybe_unused]]) { return false; },
+                    [&](MouseLineInsertLogic& arg [[maybe_unused]]) { return false; },
+                    [&](MouseAreaSelectionLogic& arg [[maybe_unused]]) { return false; },
+                    [&](MouseSingleSelectionLogic& arg [[maybe_unused]]) {
+                        return false;
+                    },
+                    [&](MouseMoveSelectionLogic& arg [[maybe_unused]]) {
+                        arg.confirm();
+                        return arg.finished();
+                    },
+                },
+                *mouse_logic_);
 
             if (finished) {
                 mouse_logic_.reset();

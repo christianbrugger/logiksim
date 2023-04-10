@@ -38,7 +38,7 @@ struct ankerl::unordered_dense::hash<logicsim::selection_key_t> {
 
     [[nodiscard]] auto operator()(const logicsim::selection_key_t& obj) const noexcept
         -> uint64_t {
-        return detail::wyhash::hash(obj.value);
+        return detail::wyhash::hash(static_cast<uint64_t>(obj.value));
     }
 };
 

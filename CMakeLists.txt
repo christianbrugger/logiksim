@@ -143,7 +143,7 @@ if (MSVC)
 else()
     # -Wthread-safety 
     list(APPEND MAIN_COMPILE_OPTIONS -Werror -W -Wall -Wextra -Wshadow 
-                             -Wstrict-aliasing -Wconversion -Wsign-conversion)
+                             -Wstrict-aliasing) # -Wconversion) # -Wsign-conversion)
 endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # clang 16 warns on brace elision, why?

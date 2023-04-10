@@ -104,17 +104,17 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
         }
     });
     connect(button0, &QPushButton::clicked, this,
-            [this](bool enabled) { render_widget_->reset_circuit(); });
+            [this](bool enabled [[maybe_unused]]) { render_widget_->reset_circuit(); });
     connect(button1, &QPushButton::clicked, this,
-            [this](bool checked) { render_widget_->load_circuit(1); });
+            [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(1); });
     connect(button2, &QPushButton::clicked, this,
-            [this](bool checked) { render_widget_->load_circuit(2); });
+            [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(2); });
     connect(button3, &QPushButton::clicked, this,
-            [this](bool checked) { render_widget_->load_circuit(3); });
+            [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(3); });
     connect(button4, &QPushButton::clicked, this,
-            [this](bool checked) { render_widget_->load_circuit(4); });
+            [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(4); });
     connect(button5, &QPushButton::clicked, this,
-            [this](bool checked) { render_widget_->reload_circuit(); });
+            [this](bool checked [[maybe_unused]]) { render_widget_->reload_circuit(); });
 
     // startup states
     radio1->setChecked(true);
