@@ -79,6 +79,9 @@ project(simulation_srp CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all) 
+# add_link_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all)
+
 include(CMakePrintHelpers)
 cmake_print_variables(CMAKE_C_COMPILER)
 cmake_print_variables(CMAKE_CXX_COMPILER)
@@ -87,6 +90,7 @@ option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
+
 
 
 # global exceptions
@@ -426,9 +430,9 @@ target_compile_definitions(${MAIN_TEST_TARGET} PRIVATE
 )
 
 
-enable_testing()
-include(GoogleTest)
-gtest_discover_tests(${MAIN_TEST_TARGET})
+# enable_testing()
+# include(GoogleTest)
+# gtest_discover_tests(${MAIN_TEST_TARGET})
 
 
 # end of file
