@@ -1,6 +1,8 @@
 .idea
 .vs
-.vscode/settings.json
+.vscode/browse.vc.db
+.vscode/browse.vc.db-shm
+.vscode/browse.vc.db-wal
 
 build/
 _build_*/
