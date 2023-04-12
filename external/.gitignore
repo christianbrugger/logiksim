@@ -6,4 +6,5 @@ folly
 ninjatracing
 llvm-project
 range-v3
+fuzztest
 
