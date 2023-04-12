@@ -54,6 +54,32 @@ TEST(Geometry, AInsideBTouchingOneSide) {
     ASSERT_EQ(a_inside_b_touching_one_side(part(1, 5), part(6, 10)), false);
 }
 
+TEST(Geometry, AInsideBTouchingBegin) {
+    ASSERT_EQ(a_inside_b_touching_begin(part(1, 5), part(0, 10)), false);
+    ASSERT_EQ(a_inside_b_touching_begin(part(1, 5), part(1, 5)), false);
+
+    ASSERT_EQ(a_inside_b_touching_begin(part(1, 5), part(0, 5)), false);
+    ASSERT_EQ(a_inside_b_touching_begin(part(1, 5), part(1, 6)), true);
+
+    ASSERT_EQ(a_inside_b_touching_begin(part(1, 5), part(4, 10)), false);
+    ASSERT_EQ(a_inside_b_touching_begin(part(1, 5), part(0, 2)), false);
+    ASSERT_EQ(a_inside_b_touching_begin(part(1, 5), part(0, 1)), false);
+    ASSERT_EQ(a_inside_b_touching_begin(part(1, 5), part(6, 10)), false);
+}
+
+TEST(Geometry, AInsideBTouchingEnd) {
+    ASSERT_EQ(a_inside_b_touching_end(part(1, 5), part(0, 10)), false);
+    ASSERT_EQ(a_inside_b_touching_end(part(1, 5), part(1, 5)), false);
+
+    ASSERT_EQ(a_inside_b_touching_end(part(1, 5), part(0, 5)), true);
+    ASSERT_EQ(a_inside_b_touching_end(part(1, 5), part(1, 6)), false);
+
+    ASSERT_EQ(a_inside_b_touching_end(part(1, 5), part(4, 10)), false);
+    ASSERT_EQ(a_inside_b_touching_end(part(1, 5), part(0, 2)), false);
+    ASSERT_EQ(a_inside_b_touching_end(part(1, 5), part(0, 1)), false);
+    ASSERT_EQ(a_inside_b_touching_end(part(1, 5), part(6, 10)), false);
+}
+
 TEST(Geometry, ADisjointToB) {
     ASSERT_EQ(a_disjoint_b(part(1, 5), part(0, 10)), false);
     ASSERT_EQ(a_disjoint_b(part(1, 5), part(1, 5)), false);
@@ -82,18 +108,46 @@ TEST(Geometry, AEqualB) {
     ASSERT_EQ(a_equal_b(part(1, 5), part(6, 10)), false);
 }
 
-TEST(Geometry, AOverlappsB) {
-    ASSERT_EQ(a_overlapps_b(part(1, 5), part(0, 10)), true);
-    ASSERT_EQ(a_overlapps_b(part(1, 5), part(1, 5)), true);
+TEST(Geometry, AOverlappsAnyOfB) {
+    ASSERT_EQ(a_overlapps_any_of_b(part(1, 5), part(0, 10)), true);
+    ASSERT_EQ(a_overlapps_any_of_b(part(1, 5), part(1, 5)), true);
 
-    ASSERT_EQ(a_overlapps_b(part(1, 5), part(0, 5)), true);
-    ASSERT_EQ(a_overlapps_b(part(1, 5), part(1, 6)), true);
+    ASSERT_EQ(a_overlapps_any_of_b(part(1, 5), part(0, 5)), true);
+    ASSERT_EQ(a_overlapps_any_of_b(part(1, 5), part(1, 6)), true);
 
-    ASSERT_EQ(a_overlapps_b(part(1, 5), part(4, 10)), true);
-    ASSERT_EQ(a_overlapps_b(part(1, 5), part(0, 2)), true);
+    ASSERT_EQ(a_overlapps_any_of_b(part(1, 5), part(4, 10)), true);
+    ASSERT_EQ(a_overlapps_any_of_b(part(1, 5), part(0, 2)), true);
 
-    ASSERT_EQ(a_overlapps_b(part(1, 5), part(0, 1)), false);
-    ASSERT_EQ(a_overlapps_b(part(1, 5), part(6, 10)), false);
+    ASSERT_EQ(a_overlapps_any_of_b(part(1, 5), part(0, 1)), false);
+    ASSERT_EQ(a_overlapps_any_of_b(part(1, 5), part(6, 10)), false);
+}
+
+TEST(Geometry, AOverlappsBBegin) {
+    ASSERT_EQ(a_overlapps_b_begin(part(1, 5), part(0, 10)), false);
+    ASSERT_EQ(a_overlapps_b_begin(part(1, 5), part(1, 5)), false);
+
+    ASSERT_EQ(a_overlapps_b_begin(part(1, 5), part(1, 6)), true);
+    ASSERT_EQ(a_overlapps_b_begin(part(1, 5), part(4, 10)), true);
+
+    ASSERT_EQ(a_overlapps_b_begin(part(1, 5), part(0, 5)), false);
+    ASSERT_EQ(a_overlapps_b_begin(part(1, 5), part(0, 2)), false);
+
+    ASSERT_EQ(a_overlapps_b_begin(part(1, 5), part(0, 1)), false);
+    ASSERT_EQ(a_overlapps_b_begin(part(1, 5), part(6, 10)), false);
+}
+
+TEST(Geometry, AOverlappBEnd) {
+    ASSERT_EQ(a_overlapps_b_end(part(1, 5), part(0, 10)), false);
+    ASSERT_EQ(a_overlapps_b_end(part(1, 5), part(1, 5)), false);
+
+    ASSERT_EQ(a_overlapps_b_end(part(1, 5), part(1, 6)), false);
+    ASSERT_EQ(a_overlapps_b_end(part(1, 5), part(4, 10)), false);
+
+    ASSERT_EQ(a_overlapps_b_end(part(1, 5), part(0, 2)), true);
+    ASSERT_EQ(a_overlapps_b_end(part(1, 5), part(0, 5)), true);
+
+    ASSERT_EQ(a_overlapps_b_end(part(1, 5), part(0, 1)), false);
+    ASSERT_EQ(a_overlapps_b_end(part(1, 5), part(6, 10)), false);
 }
 
 //

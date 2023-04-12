@@ -58,9 +58,13 @@ auto to_grid(offset_t offset, grid_t reference) -> grid_t;
 [[nodiscard]] auto a_inside_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_inside_b_not_touching(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_inside_b_touching_one_side(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_inside_b_touching_begin(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_inside_b_touching_end(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_disjoint_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_equal_b(part_t a, part_t b) -> bool;
-[[nodiscard]] auto a_overlapps_b(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_overlapps_any_of_b(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_overlapps_b_begin(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_overlapps_b_end(part_t a, part_t b) -> bool;
 
 [[nodiscard]] auto to_part(ordered_line_t full_line) -> part_t;
 [[nodiscard]] auto to_part(ordered_line_t full_line, rect_fine_t rect)
@@ -126,6 +130,8 @@ auto remove_part(Container &entries, part_t removing) -> void {
     for (auto i : reverse_range(entries.size())) {
         const auto entry = part_t {entries[i]};
 
+        // See selection_model.md
+
         // no overlapp -> keep
         if (a_disjoint_b(removing, entry)) {
         }
@@ -142,17 +148,13 @@ auto remove_part(Container &entries, part_t removing) -> void {
             entries.pop_back();
         }
 
-        // right sided overlap -> shrink right
-        // TODO use named methods
-        else if (entry.begin < removing.begin && entry.end > removing.begin
-                 && entry.end <= removing.end) {
-            entries[i] = part_t {entry.begin, removing.begin};
-        }
-        // left sided overlap -> shrink left
-        // TODO use named methods
-        else if (entry.begin >= removing.begin && entry.begin < removing.end
-                 && entry.end > removing.end) {
+        // begin overlap -> shrink begin
+        else if (a_overlapps_b_begin(removing, entry)) {
             entries[i] = part_t {removing.end, entry.end};
+        }
+        // end overlap -> shrink end
+        else if (a_overlapps_b_end(removing, entry)) {
+            entries[i] = part_t {entry.begin, removing.begin};
         }
 
         else {
