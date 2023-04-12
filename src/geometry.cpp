@@ -196,11 +196,15 @@ auto to_part(ordered_line_t full_line, ordered_line_t sub_line) -> part_t {
     return part_t {begin, end};
 }
 
-auto to_line(ordered_line_t line, part_t part) -> ordered_line_t {
-    const auto x = line.p0.x;
-    const auto y = line.p0.y;
+auto to_line(ordered_line_t full_line, part_t part) -> ordered_line_t {
+    if (!is_part_valid(part, full_line)) {
+        throw_exception("part needs to be within line");
+    }
 
-    if (is_horizontal(line)) {
+    const auto x = full_line.p0.x;
+    const auto y = full_line.p0.y;
+
+    if (is_horizontal(full_line)) {
         // horizontal
         return ordered_line_t {point_t {to_grid(part.begin, x), y},
                                point_t {to_grid(part.end, x), y}};
@@ -211,6 +215,10 @@ auto to_line(ordered_line_t line, part_t part) -> ordered_line_t {
                            point_t {x, to_grid(part.end, y)}};
 }
 
+auto is_part_valid(part_t part, ordered_line_t full_line) -> bool {
+    return part.end <= to_part(full_line).end;
+}
+
 auto to_segment_part(segment_t segment, ordered_line_t line) -> segment_part_t {
     return segment_part_t {segment, to_part(line)};
 }
@@ -219,7 +227,7 @@ auto intersect(part_t a, part_t b) -> std::optional<part_t> {
     const auto begin = std::max(a.begin, b.begin);
     const auto end = std::min(a.end, b.end);
 
-    if (begin != end) {
+    if (end > begin) {
         return part_t {begin, end};
     }
     return std::nullopt;
@@ -248,21 +256,11 @@ auto difference_not_touching(part_t full_part, part_t b) -> std::pair<part_t, pa
 // Parts List
 //
 
-auto is_part_inside_line(part_t part, ordered_line_t line) -> bool {
-    if (is_horizontal(line)) {
-        const auto x_end = to_grid(part.end, line.p0.x);
-        return x_end <= line.p1.x;
-    }
-
-    const auto y_end = to_grid(part.end, line.p0.y);
-    return y_end <= line.p1.y;
-}
-
 auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t line)
     -> void {
     // part inside line
     for (const auto part : parts) {
-        if (!is_part_inside_line(part, line)) [[unlikely]] {
+        if (!is_part_valid(part, line)) [[unlikely]] {
             throw_exception("part is not part of line");
         }
     }
@@ -271,10 +269,7 @@ auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t lin
     std::ranges::sort(parts);
     const auto part_overlapping
         = [](part_t part0, part_t part1) -> bool { return part0.end >= part1.begin; };
-    const auto any_overlapping
-        = std::ranges::adjacent_find(parts, part_overlapping) != parts.end();
-
-    if (any_overlapping) {
+    if (std::ranges::adjacent_find(parts, part_overlapping) != parts.end()) {
         throw_exception("some parts are overlapping");
     }
 }

@@ -67,14 +67,14 @@ auto to_grid(offset_t offset, grid_t reference) -> grid_t;
 [[nodiscard]] auto to_part(ordered_line_t full_line, ordered_line_t line) -> part_t;
 [[nodiscard]] auto to_line(ordered_line_t full_line, part_t part) -> ordered_line_t;
 
+[[nodiscard]] auto is_part_valid(part_t part, ordered_line_t full_line) -> bool;
+[[nodiscard]] auto to_segment_part(segment_t segment, ordered_line_t sub_line)
+    -> segment_part_t;
+
 [[nodiscard]] auto intersect(part_t a, part_t b) -> std::optional<part_t>;
 [[nodiscard]] auto difference_touching_one_side(part_t full_part, part_t b) -> part_t;
 [[nodiscard]] auto difference_not_touching(part_t full_part, part_t b)
     -> std::pair<part_t, part_t>;
-
-[[nodiscard]] auto is_part_inside_line(part_t part, ordered_line_t line) -> bool;
-[[nodiscard]] auto to_segment_part(segment_t segment, ordered_line_t sub_line)
-    -> segment_part_t;
 
 //
 // Parts List
