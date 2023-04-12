@@ -54,6 +54,10 @@ auto distance(ordered_line_t line) -> int {
     return dx == 0 ? dy : dx;
 }
 
+auto distance(part_t part) -> int {
+    return part.end.value - part.begin.value;
+}
+
 auto to_orientation(point_t p0, point_t p1) -> orientation_t {
     using enum orientation_t;
 
@@ -289,7 +293,7 @@ auto a_inside_b_not_touching(part_t a, part_t b) -> bool {
     return b.begin < a.begin && a.end < b.end;
 }
 
-auto a_disjoint_to_b(part_t a, part_t b) -> bool {
+auto a_disjoint_b(part_t a, part_t b) -> bool {
     return a.begin >= b.end || a.end <= b.begin;
 }
 

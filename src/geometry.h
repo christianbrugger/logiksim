@@ -25,6 +25,7 @@ auto is_vertical(ordered_line_t line) noexcept -> bool;
 auto order_points(const line_t line0, const line_t line1) noexcept
     -> std::tuple<ordered_line_t, ordered_line_t>;
 
+auto distance(part_t part) -> int;
 auto distance(line_t line) -> int;
 auto distance(ordered_line_t line) -> int;
 
@@ -57,7 +58,7 @@ auto to_grid(offset_t offset, grid_t reference) -> grid_t;
 [[nodiscard]] auto a_inside_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_inside_b_not_touching(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_inside_b_touching_one_side(part_t a, part_t b) -> bool;
-[[nodiscard]] auto a_disjoint_to_b(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_disjoint_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_equal_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_overlapps_b(part_t a, part_t b) -> bool;
 
@@ -125,31 +126,30 @@ auto remove_part(Container &entries, part_t removing) -> void {
     for (auto i : reverse_range(entries.size())) {
         const auto entry = part_t {entries[i]};
 
-        // SEE 'selection_model.md' for visual cases
-
         // no overlapp -> keep
-        // TODO use named methods
-        if (entry.begin >= removing.end || entry.end <= removing.begin) {
+        if (a_disjoint_b(removing, entry)) {
         }
 
         // new completely inside -> split
-        else if (entry.begin < removing.begin && entry.end > removing.end) {
+        else if (a_inside_b_not_touching(removing, entry)) {
             entries[i] = part_t {entry.begin, removing.begin};
             entries.emplace_back(removing.end, entry.end);
         }
 
         // new complete overlapps -> swap & remove
-        else if (entry.begin >= removing.begin && entry.end <= removing.end) {
+        else if (a_inside_b(entry, removing)) {
             entries[i] = entries[entries.size() - 1];
             entries.pop_back();
         }
 
         // right sided overlap -> shrink right
+        // TODO use named methods
         else if (entry.begin < removing.begin && entry.end > removing.begin
                  && entry.end <= removing.end) {
             entries[i] = part_t {entry.begin, removing.begin};
         }
         // left sided overlap -> shrink left
+        // TODO use named methods
         else if (entry.begin >= removing.begin && entry.begin < removing.end
                  && entry.end > removing.end) {
             entries[i] = part_t {removing.end, entry.end};
@@ -194,7 +194,8 @@ auto _add_intersecting_parts(const Container &source_entries,
 }
 
 template <typename Container = std::vector<part_t>>
-auto copy_parts(const Container &source_entries, part_t part_destination) -> Container {
+[[nodiscard]] auto copy_parts(const Container &source_entries, part_t part_destination)
+    -> Container {
     auto result = Container {};
     _add_intersecting_parts(source_entries, result, part_destination);
     return result;
@@ -216,6 +217,10 @@ template <typename Container = std::vector<part_t>>
 auto _add_intersecting_parts(const Container &source_entries,
                              Container &destination_entries,
                              part_copy_definition_t parts) {
+    if (distance(parts.destination) != distance(parts.source)) {
+        throw_exception("source and destination need to have the same size");
+    }
+
     using V = offset_t::difference_type;
 
     auto shifted = V {parts.destination.begin.value} - V {parts.source.begin.value};
@@ -232,8 +237,8 @@ auto _add_intersecting_parts(const Container &source_entries,
 }
 
 template <typename Container = std::vector<part_t>>
-auto copy_parts(const Container &source_entries, part_copy_definition_t parts)
-    -> Container {
+[[nodiscard]] auto copy_parts(const Container &source_entries,
+                              part_copy_definition_t parts) -> Container {
     auto result = Container {};
     _add_intersecting_parts(source_entries, result, parts);
     return result;
