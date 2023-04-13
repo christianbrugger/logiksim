@@ -53,6 +53,7 @@ set(LS_TEST_SOURCES
     test/random_test.cpp
     test/range_test.cpp
     test/schematic_test.cpp
+    test/segment_tree_test.cpp
     test/simulation_test.cpp
     
     test/editable_circuit/handlers/circuit_item_test.cpp
@@ -237,6 +238,9 @@ add_subdirectory(external/blend2d EXCLUDE_FROM_ALL SYSTEM)
 # fmt
 add_subdirectory(external/fmt EXCLUDE_FROM_ALL SYSTEM)
 
+# range-v3
+add_subdirectory(external/range-v3 EXCLUDE_FROM_ALL SYSTEM)
+
 # GSL
 add_subdirectory(external/GSL EXCLUDE_FROM_ALL SYSTEM)
 
@@ -343,6 +347,7 @@ set(LS_CORE_LIBRARIES
     absl::flat_hash_map
     unordered_dense::unordered_dense
     GSL
+    range-v3
     Blend2D::Blend2D
     
     Qt6::Core

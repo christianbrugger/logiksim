@@ -3,6 +3,9 @@
 #include "line_tree.h"
 #include "range.h"
 
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/zip.hpp>
+
 namespace logicsim {
 
 auto format(SegmentPointType type) -> std::string {
@@ -112,6 +115,52 @@ auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
     swap(output_count_, other.output_count_);
     swap(input_position_, other.input_position_);
     swap(has_input_, other.has_input_);
+}
+
+auto SegmentTree::normalize() -> void {
+    sort_segments();
+    sort_point_types();
+}
+
+auto SegmentTree::sort_segments() -> void {
+    // we sort by ordered line
+    const auto vectors = ranges::zip_view(segments_, valid_parts_vector_);
+
+    const auto proj
+        = [](std::tuple<segment_info_t, parts_vector_t> tuple) -> ordered_line_t {
+        return std::get<segment_info_t>(tuple).line;
+    };
+    std::ranges::sort(vectors, {}, proj);
+}
+
+auto SegmentTree::sort_point_types() -> void {
+    // first we sort by points only
+    using wrapped
+        = std::pair<point_t, std::pair<std::reference_wrapper<SegmentPointType>,
+                                       std::reference_wrapper<connection_id_t>>>;
+    std::vector<wrapped> refs;
+
+    std::ranges::transform(segments_, std::back_inserter(refs), [](segment_info_t& info) {
+        return std::pair {info.line.p0, std::pair {std::ref(info.p0_type),
+                                                   std::ref(info.p0_connection_id)}};
+    });
+    std::ranges::transform(segments_, std::back_inserter(refs), [](segment_info_t& info) {
+        return std::pair {info.line.p1, std::pair {std::ref(info.p1_type),
+                                                   std::ref(info.p1_connection_id)}};
+    });
+    std::ranges::sort(refs, {}, &wrapped::first);
+
+    // now we sort the SegmentPointTypes for equal points
+    // to modify the original data, we unwrapp the references
+    // we need a zip view, as it works std sorting
+    const auto data_direct = ranges::zip_view(
+        ranges::views::keys(refs),
+        ranges::views::transform(
+            refs, [](wrapped pair) -> SegmentPointType& { return pair.second.first; }),
+        ranges::views::transform(
+            refs, [](wrapped pair) -> connection_id_t& { return pair.second.second; }));
+
+    std::ranges::sort(data_direct);
 }
 
 auto swap(SegmentTree& a, SegmentTree& b) noexcept -> void {
