@@ -45,22 +45,16 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
         .line = ordered_line_t {point_t {0, 0}, point_t {5, 0}},
         .p0_type = SegmentPointType::colliding_point,
         .p1_type = static_cast<SegmentPointType>(1),
-        .p0_connection_id = connection_id_t {10},
-        .p1_connection_id = connection_id_t {1},
     };
     const auto info1 = segment_info_t {
         .line = ordered_line_t {point_t {1, 0}, point_t {5, 0}},
         .p0_type = SegmentPointType::shadow_point,
         .p1_type = static_cast<SegmentPointType>(0),
-        .p0_connection_id = connection_id_t {11},
-        .p1_connection_id = connection_id_t {2},
     };
     const auto info2 = segment_info_t {
         .line = ordered_line_t {point_t {2, 0}, point_t {5, 0}},
         .p0_type = SegmentPointType::output,
         .p1_type = static_cast<SegmentPointType>(2),
-        .p0_connection_id = connection_id_t {12},
-        .p1_connection_id = connection_id_t {3},
     };
 
     tree.add_segment(info0);
@@ -83,21 +77,5 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
     EXPECT_EQ(tree.segment_info(segment_index_t {0}).p1_type, info1.p1_type);
     EXPECT_EQ(tree.segment_info(segment_index_t {1}).p1_type, info0.p1_type);
     EXPECT_EQ(tree.segment_info(segment_index_t {2}).p1_type, info2.p1_type);
-
-    // same
-    EXPECT_EQ(tree.segment_info(segment_index_t {0}).p0_connection_id,
-              info0.p0_connection_id);
-    EXPECT_EQ(tree.segment_info(segment_index_t {1}).p0_connection_id,
-              info1.p0_connection_id);
-    EXPECT_EQ(tree.segment_info(segment_index_t {2}).p0_connection_id,
-              info2.p0_connection_id);
-
-    // changed
-    EXPECT_EQ(tree.segment_info(segment_index_t {0}).p1_connection_id,
-              info1.p1_connection_id);
-    EXPECT_EQ(tree.segment_info(segment_index_t {1}).p1_connection_id,
-              info0.p1_connection_id);
-    EXPECT_EQ(tree.segment_info(segment_index_t {2}).p1_connection_id,
-              info2.p1_connection_id);
 }
 }  // namespace logicsim

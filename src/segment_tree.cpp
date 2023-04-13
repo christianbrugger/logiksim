@@ -134,33 +134,30 @@ auto SegmentTree::sort_segments() -> void {
 }
 
 auto SegmentTree::sort_point_types() -> void {
-    // first we sort by points only
-    using wrapped
-        = std::pair<point_t, std::pair<std::reference_wrapper<SegmentPointType>,
-                                       std::reference_wrapper<connection_id_t>>>;
-    std::vector<wrapped> refs;
+    // we wrap the data so we can order it without changing the data itself
+    using wrapped = std::pair<point_t, std::reference_wrapper<SegmentPointType>>;
+    std::vector<wrapped> wrapped_data;
 
-    std::ranges::transform(segments_, std::back_inserter(refs), [](segment_info_t& info) {
-        return std::pair {info.line.p0, std::pair {std::ref(info.p0_type),
-                                                   std::ref(info.p0_connection_id)}};
-    });
-    std::ranges::transform(segments_, std::back_inserter(refs), [](segment_info_t& info) {
-        return std::pair {info.line.p1, std::pair {std::ref(info.p1_type),
-                                                   std::ref(info.p1_connection_id)}};
-    });
-    std::ranges::sort(refs, {}, &wrapped::first);
+    std::ranges::transform(segments_, std::back_inserter(wrapped_data),
+                           [](segment_info_t& info) {
+                               return wrapped {info.line.p0, info.p0_type};
+                           });
+    std::ranges::transform(segments_, std::back_inserter(wrapped_data),
+                           [](segment_info_t& info) {
+                               return wrapped {info.line.p1, info.p1_type};
+                           });
 
-    // now we sort the SegmentPointTypes for equal points
-    // to modify the original data, we unwrapp the references
-    // we need a zip view, as it works std sorting
-    const auto data_direct = ranges::zip_view(
-        ranges::views::keys(refs),
+    // the direct view is able to change the segment points itself
+    // we use a zip_view, as only it works with sorting
+    const auto direct_view = ranges::zip_view(
+        ranges::views::keys(wrapped_data),
         ranges::views::transform(
-            refs, [](wrapped pair) -> SegmentPointType& { return pair.second.first; }),
-        ranges::views::transform(
-            refs, [](wrapped pair) -> connection_id_t& { return pair.second.second; }));
+            wrapped_data, [](wrapped pair) -> SegmentPointType& { return pair.second; }));
 
-    std::ranges::sort(data_direct);
+    // sort first by points only
+    std::ranges::sort(wrapped_data, {}, &wrapped::first);
+    // sort the SegmentPointTypes for equal points
+    std::ranges::sort(direct_view);
 }
 
 auto swap(SegmentTree& a, SegmentTree& b) noexcept -> void {
