@@ -75,6 +75,8 @@ class SegmentTree {
     auto swap(SegmentTree &other) noexcept -> void;
     auto normalize() -> void;  // bring it into a form that can be compared
 
+    [[nodiscard]] auto operator==(const SegmentTree &) const -> bool = default;
+
     auto clear() -> void;
     auto add_segment(segment_info_t segment) -> segment_index_t;
     auto add_tree(const SegmentTree &tree) -> segment_index_t;

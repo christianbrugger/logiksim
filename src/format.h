@@ -119,14 +119,14 @@ struct fmt::formatter<std::reference_wrapper<T>, Char> {
 //
 
 template <typename T1, typename T2, typename Char>
-struct fmt::formatter<std::tuple<T1, T2>, Char > {
+struct fmt::formatter<std::tuple<T1, T2>, Char> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
     static auto format(const std::tuple<T1, T2> &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "std::tuple({}, {})", 
-        std::get<0>(obj), std::get<1>(obj));
+        return fmt::format_to(ctx.out(), "std::tuple({}, {})", std::get<0>(obj),
+                              std::get<1>(obj));
     }
 };
 

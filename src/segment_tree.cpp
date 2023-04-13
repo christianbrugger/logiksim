@@ -134,6 +134,9 @@ auto SegmentTree::sort_segments() -> void {
 }
 
 auto SegmentTree::sort_point_types() -> void {
+    // we don't need to touch the connection_id's, as they are only used
+    // for input and outputs which need to have unique points
+
     // we wrap the data so we can order it without changing the data itself
     using wrapped = std::pair<point_t, std::reference_wrapper<SegmentPointType>>;
     std::vector<wrapped> wrapped_data;
@@ -419,6 +422,9 @@ auto SegmentTree::first_index() const noexcept -> segment_index_t {
 }
 
 auto SegmentTree::last_index() const noexcept -> segment_index_t {
+    if (empty()) [[unlikely]] {
+        throw_exception("empty segment tree has no last index");
+    }
     const auto result = segment_count() - std::size_t {1};
     return segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(result)};
 }
