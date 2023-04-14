@@ -1,5 +1,6 @@
 #include "editable_circuit.h"
 
+#include "editable_circuit/handler_examples.h"
 #include "editable_circuit/handlers.h"
 #include "exceptions.h"
 #include "timer.h"
@@ -62,6 +63,11 @@ auto EditableCircuit::validate() -> void {
     cache_provider_.validate(circuit);
     registrar_.validate(circuit);
     selection_builder_.validate(circuit);
+}
+
+auto EditableCircuit::add_example() -> void {
+    auto rng = get_random_number_generator();
+    editable_circuit::examples::add_many_wires(rng, get_state(), false);
 }
 
 auto EditableCircuit::add_inverter_item(point_t position, InsertionMode insertion_mode,

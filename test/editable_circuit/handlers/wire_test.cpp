@@ -28,7 +28,7 @@ auto add_test_wire(Circuit &circuit, display_state_t display_state,
     }
 }
 
-auto part(offset_t::value_type begin, offset_t::value_type end) -> part_t {
+inline auto part(offset_t::value_type begin, offset_t::value_type end) -> part_t {
     return part_t {offset_t {begin}, offset_t {end}};
 }
 }  // namespace

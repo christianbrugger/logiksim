@@ -28,6 +28,7 @@ class EditableCircuit {
     [[nodiscard]] auto extract_circuit() -> Circuit;
 
     // adding
+    auto add_example() -> void;
     auto add_inverter_item(point_t position, InsertionMode insertion_mode,
                            orientation_t orientation = orientation_t::right)
         -> selection_handle_t;

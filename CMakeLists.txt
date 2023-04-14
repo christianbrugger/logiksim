@@ -7,6 +7,7 @@ set(LS_CORE_SOURCES
 
     src/editable_circuit/caches.cpp
     src/editable_circuit/editable_circuit.cpp
+    src/editable_circuit/handler_examples.cpp
     src/editable_circuit/handlers.cpp
     src/editable_circuit/messages.cpp
     src/editable_circuit/selection.cpp
@@ -57,6 +58,7 @@ set(LS_TEST_SOURCES
     test/simulation_test.cpp
     
     test/editable_circuit/handlers/circuit_item_test.cpp
+    test/editable_circuit/handlers/wire_fuzz_test.cpp
     test/editable_circuit/handlers/wire_test.cpp
 )
 

@@ -163,7 +163,7 @@ auto add_random_segment(Rng& rng, SegmentTree& tree) -> segment_index_t {
     return new_index;
 }
 
-auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2) {
+auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2, bool expected_equal = true) {
     tree1.validate();
     tree2.validate();
 
@@ -173,7 +173,7 @@ auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2) {
     tree1.validate();
     tree2.validate();
 
-    if (tree1 != tree2) {
+    if ((tree1 == tree2) != expected_equal) {
         print();
         print("Tree 1:");
         print(tree1);
@@ -349,7 +349,7 @@ TEST(SegmentTree, MarkInvalid) {
             ASSERT_EQ(tree_r1, tree_r2);
         }
         {
-            const auto [tree_r2, tree_r3] = prepare_tree_eq(tree_2, tree_3);
+            const auto [tree_r2, tree_r3] = prepare_tree_eq(tree_2, tree_3, false);
             ASSERT_NE(tree_r2, tree_r3);
         }
         {

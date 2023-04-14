@@ -501,6 +501,9 @@ auto RendererWidget::load_circuit(int id) -> void {
     constexpr auto release_max = 1600;  //  1600;
 
     if (id == 1) {
+        editable_circuit.add_example();
+
+        /*
         editable_circuit.add_standard_logic_item(
             ElementType::or_element, 2, point_t {5, 3}, InsertionMode::insert_or_discard);
         editable_circuit.add_standard_logic_item(ElementType::or_element, 2,
@@ -517,6 +520,7 @@ auto RendererWidget::load_circuit(int id) -> void {
         editable_circuit.add_standard_logic_item(ElementType::or_element, 9,
                                                  point_t {20, 4},
                                                  InsertionMode::insert_or_discard);
+        */
     }
 
     if (id == 2) {

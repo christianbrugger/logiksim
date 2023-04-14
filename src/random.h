@@ -1,50 +1,35 @@
 #ifndef LOGIKSIM_RANDOM_H
 #define LOGIKSIM_RANDOM_H
 
-#include <boost/random/uniform_int_distribution.hpp>
+#include "vocabulary.h"
 
-#include <algorithm>
-#include <iterator>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 
 namespace logicsim {
 
-/// @brief Shuffles all elements of the given container randomly.
-///
-/// Other shuffle algorithms are not portable, meaning giving the same
-/// results on all platforms. This is why we implement it ourselves:
-///   * std::shuffle
-///   * ranges::actions::shuffle uses std::uniform_int_distribution
-///   * boost::ranges::algorithm::random_shuffle uses std::shuffle
-///
-/// Algorithm Fisher-Yates shuffle, copied from std::shuffle
-///
-template <std::random_access_iterator Iterator,
-          std::uniform_random_bit_generator Generator>
-void shuffle(const Iterator first, const Iterator last, Generator &generator) {
-    if (first == last) {
-        return;
-    }
-    using diff_t = std::iter_difference_t<Iterator>;
+using Rng = boost::random::mt19937;
 
-    auto pivot = first + 1;
-    diff_t pivot_index = 1;
+auto get_random_number_generator() -> Rng;
+auto get_random_number_generator(uint32_t seed) -> Rng;
 
-    for (; pivot != last; ++pivot, ++pivot_index) {
-        boost::random::uniform_int_distribution<diff_t> distribution(0, pivot_index);
-        diff_t offset_index = distribution(generator);
-
-        if (offset_index != pivot_index) {  // avoid self-move-assignment
-            std::iter_swap(pivot, first + offset_index);
-        }
-    }
+template <typename T>
+auto uint_distribution(T min, T max) -> boost::random::uniform_int_distribution<T> {
+    return boost::random::uniform_int_distribution<T> {min, max};
 }
 
-/// @brief Shuffles all elements of the given container randomly.
-template <std::ranges::random_access_range Range,
-          std::uniform_random_bit_generator Generator>
-void shuffle(Range &range, Generator &generator) {
-    shuffle(std::ranges::begin(range), std::ranges::end(range), generator);
-}
+auto get_random_bool(Rng& rng) -> bool;
+
+auto get_random_grid(Rng& rng, grid_t::value_type min = grid_t::min(),
+                     grid_t::value_type max = grid_t::max()) -> grid_t;
+
+auto get_random_line(Rng& rng, grid_t::value_type min = grid_t::min(),
+                     grid_t::value_type max = grid_t::max()) -> ordered_line_t;
+
+auto get_random_part(Rng& rng, part_t full_part) -> part_t;
+auto get_random_part(Rng& rng, ordered_line_t line) -> part_t;
+
+auto get_random_insertion_mode(Rng& rng) -> InsertionMode;
 
 }  // namespace logicsim
 
