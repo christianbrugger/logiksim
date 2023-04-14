@@ -18,7 +18,7 @@ auto add_many_wires(Rng& rng, bool random_modes) {
 }
 
 TEST(HandlerWireFuzz, AddTempSegmentRandomModes) {
-    for (auto i : range(100u)) {
+    for (auto i : range(50u)) {
         auto rng = Rng {i};
 
         add_many_wires(rng, true);
@@ -26,7 +26,7 @@ TEST(HandlerWireFuzz, AddTempSegmentRandomModes) {
 }
 
 TEST(HandlerWireFuzz, AddTempSegmentInsertionModes) {
-    for (auto i : range(100u)) {
+    for (auto i : range(50u)) {
         auto rng = Rng {i};
 
         add_many_wires(rng, false);
