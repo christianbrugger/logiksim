@@ -329,25 +329,34 @@ auto SegmentTree::shrink_segment(segment_index_t index, part_t part) -> void {
     register_segment(index);
 
     // valid parts
+    const auto parts = part_copy_definition_t {
+        .destination = to_part(new_info.line),
+        .source = part,
+    };
     valid_parts_vector_.at(index.value)
-        = copy_parts(valid_parts_vector_.at(index.value), part);
+        = copy_parts(valid_parts_vector_.at(index.value), parts);
 }
 
 auto SegmentTree::swap_and_merge_segment(segment_index_t index,
                                          segment_index_t index_deleted) -> void {
-    // otherwise the index changes after deletion
     if (index >= index_deleted) [[unlikely]] {
-        throw_exception("index needs to be smaller then index_deleted");
+        throw_exception(
+            "index needs to be smaller then index_deleted, otherwise the index would "
+            "change after deletionion");
     }
 
-    const auto info_deleted = segment_info(index_deleted);
-    const auto info_merged = merge_touching(segment_info(index), info_deleted);
+    const auto info_orig = segment_info(index);
+    const auto info_delete = segment_info(index_deleted);
+    const auto info_merged = merge_touching(info_orig, info_delete);
 
     // copy valid parts
-    auto& source_entries = valid_parts_vector_.at(index_deleted.value);
-    auto& destination_entries = valid_parts_vector_.at(index.value);
-    const auto destination_part = to_part(info_merged.line, info_deleted.line);
-    copy_parts(source_entries, destination_entries, destination_part);
+    auto& entries_orig = valid_parts_vector_.at(index.value);
+    auto& entries_delete = valid_parts_vector_.at(index_deleted.value);
+
+    auto new_entries
+        = copy_parts(entries_orig, to_part(info_merged.line, info_orig.line));
+    copy_parts(entries_delete, new_entries, to_part(info_merged.line, info_delete.line));
+    entries_orig.swap(new_entries);
 
     // first delete, so input count stays in bounds
     swap_and_delete_segment(index_deleted);
@@ -369,8 +378,13 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
     const auto new_info = adjust(tree.segment_info(index), part);
 
     const auto new_index = add_segment(new_info);
+
+    const auto parts = part_copy_definition_t {
+        .destination = to_part(new_info.line),
+        .source = part,
+    };
     valid_parts_vector_.at(new_index.value)
-        = copy_parts(valid_parts_vector_.at(index.value), part);
+        = copy_parts(valid_parts_vector_.at(index.value), parts);
 
     return new_index;
 }
@@ -483,13 +497,32 @@ auto SegmentTree::validate_inserted() const -> void {
     // - cross points
 }
 
+auto count_point_type(const SegmentTree& tree, SegmentPointType type) -> int {
+    const auto proj = [&](segment_index_t index) {
+        const auto info = tree.segment_info(index);
+        return (info.p0_type == type ? 1 : 0) + (info.p1_type == type ? 1 : 0);
+    };
+
+    return accumulate(transform_view(tree.indices(), proj), 0);
+}
+
 auto SegmentTree::validate() const -> void {
     if (valid_parts_vector_.size() != segments_.size()) [[unlikely]] {
         throw_exception("Vector sizes don't match in segment tree.");
     }
-    if ((has_input_ ? 1 : 0) + std::size_t {output_count_}
-        > std::size_t {segments_.size()} + 1) [[unlikely]] {
+
+    // input / output count
+    int input_count = (has_input_ ? 1 : 0);
+    if (input_count + std::size_t {output_count_} > std::size_t {segments_.size()} + 1)
+        [[unlikely]] {
         throw_exception("To many inputs / outputs.");
+    }
+    if (input_count != count_point_type(*this, SegmentPointType::input)) [[unlikely]] {
+        throw_exception("Wrong input count");
+    }
+    if (int {output_count_} != count_point_type(*this, SegmentPointType::output))
+        [[unlikely]] {
+        throw_exception("Wrong output count");
     }
 
     // valid parts

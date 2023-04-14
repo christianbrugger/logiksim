@@ -58,7 +58,7 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
     };
     const auto info2 = segment_info_t {
         .line = ordered_line_t {point_t {2, 0}, point_t {5, 0}},
-        .p0_type = SegmentPointType::output,
+        .p0_type = SegmentPointType::visual_cross_point,
         .p1_type = static_cast<SegmentPointType>(2),
     };
 
@@ -91,7 +91,7 @@ auto uint_dist(T min, T max) -> boost::random::uniform_int_distribution<T> {
     return boost::random::uniform_int_distribution<T> {min, max};
 }
 
-auto random_part(Rng& rng, ordered_line_t line) -> part_t {
+auto get_random_part(Rng& rng, ordered_line_t line) -> part_t {
     const auto full_part = to_part(line);
 
     auto begin = offset_t::value_type {};
@@ -104,17 +104,31 @@ auto random_part(Rng& rng, ordered_line_t line) -> part_t {
     return part_t {offset_t {begin}, offset_t {end}};
 }
 
+auto get_bool(Rng& rng) -> bool {
+    return uint_dist(0, 1)(rng) > 0;
+}
+
+auto get_grid(Rng& rng) -> grid_t {
+    return uint_dist(grid_t::min(), grid_t::max())(rng);
+    // return grid_t {uint_dist(0, 10)(rng)};
+}
+
 auto add_random_segment(Rng& rng, SegmentTree& tree) -> void {
-    const auto grid = uint_dist(grid_t::min(), grid_t::max());
+    const auto [type0, type1] = [&]() {
+        using enum SegmentPointType;
+        if (get_bool(rng)) {
+            if (get_bool(rng)) {
+                return std::make_pair(output, shadow_point);
+            }
+            return std::make_pair(shadow_point, output);
+        }
+        return std::make_pair(shadow_point, shadow_point);
+    }();
 
-    const auto point_type = [&]() {
-        return grid(rng) > 0 ? SegmentPointType::shadow_point : SegmentPointType::output;
-    };
+    auto p0 = point_t {get_grid(rng), get_grid(rng)};
+    auto p1 = point_t {get_grid(rng), get_grid(rng)};
 
-    auto p0 = point_t {grid(rng), grid(rng)};
-    auto p1 = point_t {grid(rng), grid(rng)};
-
-    if (grid(rng) > 0) {
+    if (get_bool(rng)) {
         p0.x = p1.x;
     } else {
         p0.y = p1.y;
@@ -122,14 +136,15 @@ auto add_random_segment(Rng& rng, SegmentTree& tree) -> void {
 
     if (p0 == p1) {
         add_random_segment(rng, tree);
+        return;
     }
 
     const auto line = ordered_line_t {line_t {p0, p1}};
 
     const auto info = segment_info_t {
         .line = line,
-        .p0_type = point_type(),
-        .p1_type = point_type(),
+        .p0_type = type0,
+        .p1_type = type1,
     };
 
     auto orignal_count = tree.segment_count();
@@ -139,14 +154,21 @@ auto add_random_segment(Rng& rng, SegmentTree& tree) -> void {
     ASSERT_EQ(tree.segment_count(), orignal_count + 1);
     ASSERT_EQ(tree.segment_info(new_index), info);
 
-    const auto part = random_part(rng, line);
+    const auto part = get_random_part(rng, line);
 
     tree.mark_valid(new_index, part);
 }
 
-auto validate_tree_eq(SegmentTree tree1, SegmentTree tree2) {
+auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2) {
+    tree1.validate();
+    tree2.validate();
+
     tree1.normalize();
     tree2.normalize();
+
+    tree1.validate();
+    tree2.validate();
+
     if (tree1 != tree2) {
         print();
         print("Tree 1:");
@@ -156,14 +178,14 @@ auto validate_tree_eq(SegmentTree tree1, SegmentTree tree2) {
         print(tree2);
         print();
     }
-    ASSERT_EQ(tree1, tree2);
+    return std::make_pair(tree1, tree2);
 }
 
 auto add_n_random_segments(Rng& rng, SegmentTree& tree, unsigned int min = 0,
                            unsigned int max = 100) -> void {
     const auto n = uint_dist(min, max)(rng);
 
-    for (auto _ [[maybe_unused]] : range(n + 1)) {
+    for (auto _ [[maybe_unused]] : range(n)) {
         add_random_segment(rng, tree);
     }
 }
@@ -174,33 +196,101 @@ auto get_random_index(Rng& rng, const SegmentTree& tree) -> segment_index_t {
 }
 
 auto add_copy_remove(Rng& rng, SegmentTree& tree) -> void {
-    const auto orig_tree = SegmentTree {tree};
-
     const auto index = get_random_index(rng, tree);
 
     const auto new_index = tree.copy_segment(tree, index);
+    tree.validate();
     ASSERT_EQ(tree.segment_info(new_index), tree.segment_info(index));
 
     tree.swap_and_delete_segment(index);
-    validate_tree_eq(orig_tree, tree);
+    tree.validate();
 }
 
 auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
-    const auto orig_tree = SegmentTree {tree};
+    const auto index0 = get_random_index(rng, tree);
+    const auto full_part = to_part(tree.segment_line(index0));
+    auto part0 = get_random_part(rng, tree.segment_line(index0));
 
-    const auto index = get_random_index(rng, tree);
+    if (get_bool(rng)) {
+        if (get_bool(rng)) {
+            part0.begin = full_part.begin;
+        } else {
+            part0.end = full_part.end;
+        }
+    }
 
-    // TODO finish test
-    print(index);
+    if (part0 == full_part) {
+        return;
+    }
+    if (a_inside_b_touching_one_side(part0, full_part)) {
+        const auto part1 = difference_touching_one_side(full_part, part0);
+
+        const auto index1 = tree.copy_segment(tree, index0, part1);
+        tree.validate();
+        tree.shrink_segment(index0, part0);
+        tree.validate();
+        tree.swap_and_merge_segment(index0, index1);
+        tree.validate();
+    }
+
+    else {
+        const auto [part1, part2] = difference_not_touching(full_part, part0);
+
+        const auto index1 = tree.copy_segment(tree, index0, part1);
+        tree.validate();
+        const auto index2 = tree.copy_segment(tree, index0, part2);
+        tree.validate();
+
+        tree.shrink_segment(index0, part0);
+        tree.validate();
+
+        if (get_bool(rng)) {
+            tree.swap_and_merge_segment(index0, index2);
+            tree.validate();
+            tree.swap_and_merge_segment(index0, index1);
+            tree.validate();
+        } else {
+            tree.swap_and_merge_segment(index0, index1);
+            tree.validate();
+            tree.swap_and_merge_segment(index0, index1);
+            tree.validate();
+        }
+    }
 }
 
 TEST(SegmentTree, AddCopyRemove) {
-    for (auto i : range(2u)) {
+    for (auto i : range(100u)) {
         auto rng = Rng {i};
 
+        // make big tree
         auto tree = SegmentTree {};
         add_n_random_segments(rng, tree, 1);
+        const auto tree_orig = SegmentTree {tree};
+
+        // run test
         add_copy_remove(rng, tree);
+
+        // compare
+        const auto [tree1, tree2] = prepare_tree_eq(tree, tree_orig);
+        ASSERT_EQ(tree1, tree2);
+    }
+}
+
+TEST(SegmentTree, CopyShrinkMerge) {
+    for (auto i : range(100u)) {
+        auto rng = Rng {i};
+
+        // make big tree
+        auto tree = SegmentTree {};
+        add_n_random_segments(rng, tree, 1);
+        const auto tree_orig = SegmentTree {tree};
+
+        // run test
+        copy_shrink_merge(rng, tree);
+
+        // compare
+        const auto [tree1, tree2] = prepare_tree_eq(tree, tree_orig);
+        ASSERT_EQ(tree1, tree2);
     }
 }
 
