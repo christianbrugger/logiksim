@@ -84,7 +84,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all) 
 # add_link_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all)
 
-# add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
 
 include(CMakePrintHelpers)
 cmake_print_variables(CMAKE_C_COMPILER)
@@ -436,6 +435,12 @@ target_compile_options(${MAIN_TEST_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 target_compile_definitions(${MAIN_TEST_TARGET} PRIVATE
     LOGIKSIM_TESTING_MESSEGE_SENDER
 )
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE MATCHES Debug)
+    message(NOTICE "LOGIKSIM: Enabling Clang Coverage for Tests.")
+    target_compile_options(${MAIN_TEST_TARGET} PRIVATE -fprofile-instr-generate -fcoverage-mapping)
+    target_link_options(${MAIN_TEST_TARGET} PRIVATE -fprofile-instr-generate -fcoverage-mapping)
+endif()
 
 
 enable_testing()
