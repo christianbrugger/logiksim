@@ -294,4 +294,32 @@ TEST(SegmentTree, CopyShrinkMerge) {
     }
 }
 
+TEST(SegmentTree, MergeTree) {
+    for (auto i : range(100u)) {
+        auto rng1 = Rng {i};
+        auto rng2 = Rng {i};
+
+        // make big tree
+        auto tree1 = SegmentTree {};
+        add_n_random_segments(rng1, tree1);
+        auto tree2 = SegmentTree {};
+        add_n_random_segments(rng1, tree2);
+
+        auto tree_m1 = SegmentTree {};
+        add_n_random_segments(rng2, tree_m1);
+        add_n_random_segments(rng2, tree_m1);
+
+        const auto old_last = tree1.last_index();
+        const auto index = tree1.add_tree(tree2);
+        ASSERT_EQ(index.value, old_last.value + 1);
+
+        // compare
+        const auto [tree_r1, tree_r2] = prepare_tree_eq(tree1, tree_m1);
+        ASSERT_EQ(tree_r1, tree_r2);
+    }
+}
+
+// missing
+// - unmark_valid
+
 }  // namespace logicsim
