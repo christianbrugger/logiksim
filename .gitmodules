@@ -48,3 +48,9 @@
 	path = external/unordered_dense
 	url = https://github.com/martinus/unordered_dense
 	ignore = dirty
+
+[submodule "external/range-v3"]
+	path = external/range-v3
+	url = https://github.com/ericniebler/range-v3
+	ignore = dirty
+

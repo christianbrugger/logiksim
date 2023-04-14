@@ -84,6 +84,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # add_compile_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all) 
 # add_link_options(-fsanitize=address -fsanitize=undefined -fno-sanitize-recover=all)
 
+# add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+
 include(CMakePrintHelpers)
 cmake_print_variables(CMAKE_C_COMPILER)
 cmake_print_variables(CMAKE_CXX_COMPILER)

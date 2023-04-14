@@ -87,14 +87,16 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
 using Rng = boost::random::mt19937_64;
 
 template <typename T>
-using uint_dist = boost::random::uniform_int_distribution<T>;
+auto uint_dist(T min, T max) -> boost::random::uniform_int_distribution<T> {
+    return boost::random::uniform_int_distribution<T> {min, max};
+}
 
 auto random_part(Rng& rng, ordered_line_t line) -> part_t {
     const auto full_part = to_part(line);
 
     auto begin = offset_t::value_type {};
     auto end = offset_t::value_type {};
-    const auto part_dist = uint_dist {full_part.begin.value, full_part.end.value};
+    const auto part_dist = uint_dist(full_part.begin.value, full_part.end.value);
     while (begin >= end) {
         begin = part_dist(rng);
         end = part_dist(rng);
@@ -103,7 +105,7 @@ auto random_part(Rng& rng, ordered_line_t line) -> part_t {
 }
 
 auto add_random_segment(Rng& rng, SegmentTree& tree) -> void {
-    const auto grid = uint_dist {grid_t::min(), grid_t::max()};
+    const auto grid = uint_dist(grid_t::min(), grid_t::max());
 
     const auto point_type = [&]() {
         return grid(rng) > 0 ? SegmentPointType::shadow_point : SegmentPointType::output;
@@ -159,7 +161,7 @@ auto validate_tree_eq(SegmentTree tree1, SegmentTree tree2) {
 
 auto add_n_random_segments(Rng& rng, SegmentTree& tree, unsigned int min = 0,
                            unsigned int max = 100) -> void {
-    const auto n = uint_dist {min, max}(rng);
+    const auto n = uint_dist(min, max)(rng);
 
     for (auto _ [[maybe_unused]] : range(n + 1)) {
         add_random_segment(rng, tree);
@@ -168,7 +170,7 @@ auto add_n_random_segments(Rng& rng, SegmentTree& tree, unsigned int min = 0,
 
 auto get_random_index(Rng& rng, const SegmentTree& tree) -> segment_index_t {
     return segment_index_t {
-        uint_dist {tree.first_index().value, tree.last_index().value}(rng)};
+        uint_dist(tree.first_index().value, tree.last_index().value)(rng)};
 }
 
 auto add_copy_remove(Rng& rng, SegmentTree& tree) -> void {
@@ -189,6 +191,7 @@ auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
     const auto index = get_random_index(rng, tree);
 
     // TODO finish test
+    print(index);
 }
 
 TEST(SegmentTree, AddCopyRemove) {

@@ -3,6 +3,7 @@
 #include "line_tree.h"
 #include "range.h"
 
+#include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/zip.hpp>
 
@@ -130,7 +131,7 @@ auto SegmentTree::sort_segments() -> void {
         = [](std::tuple<segment_info_t, parts_vector_t> tuple) -> ordered_line_t {
         return std::get<segment_info_t>(tuple).line;
     };
-    std::ranges::sort(vectors, {}, proj);
+    ranges::sort(vectors, {}, proj);
 }
 
 auto SegmentTree::sort_point_types() -> void {
@@ -160,7 +161,7 @@ auto SegmentTree::sort_point_types() -> void {
     // sort first by points only
     std::ranges::sort(wrapped_data, {}, &wrapped::first);
     // sort the SegmentPointTypes for equal points
-    std::ranges::sort(direct_view);
+    ranges::sort(direct_view);
 }
 
 auto swap(SegmentTree& a, SegmentTree& b) noexcept -> void {
