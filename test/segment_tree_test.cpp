@@ -3,6 +3,7 @@
 
 #include "format.h"
 #include "geometry.h"
+#include "random.h"
 #include "range.h"
 
 #include <gmock/gmock.h>
@@ -84,40 +85,15 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
     EXPECT_EQ(tree.segment_info(segment_index_t {2}).p1_type, info2.p1_type);
 }
 
-using Rng = boost::random::mt19937_64;
-
-template <typename T>
-auto uint_dist(T min, T max) -> boost::random::uniform_int_distribution<T> {
-    return boost::random::uniform_int_distribution<T> {min, max};
-}
-
-auto get_random_part(Rng& rng, ordered_line_t line) -> part_t {
-    const auto full_part = to_part(line);
-
-    auto begin = offset_t::value_type {};
-    auto end = offset_t::value_type {};
-    const auto part_dist = uint_dist(full_part.begin.value, full_part.end.value);
-    while (begin >= end) {
-        begin = part_dist(rng);
-        end = part_dist(rng);
-    }
-    return part_t {offset_t {begin}, offset_t {end}};
-}
-
-auto get_bool(Rng& rng) -> bool {
-    return uint_dist(0, 1)(rng) > 0;
-}
-
-auto get_grid(Rng& rng) -> grid_t {
-    return uint_dist(grid_t::min(), grid_t::max())(rng);
-    // return grid_t {uint_dist(0, 10)(rng)};
-}
+//
+// Random Tests
+//
 
 auto add_random_segment(Rng& rng, SegmentTree& tree) -> segment_index_t {
     const auto [type0, type1] = [&]() {
         using enum SegmentPointType;
-        if (get_bool(rng)) {
-            if (get_bool(rng)) {
+        if (get_random_bool(rng)) {
+            if (get_random_bool(rng)) {
                 return std::make_pair(output, shadow_point);
             }
             return std::make_pair(shadow_point, output);
@@ -125,10 +101,10 @@ auto add_random_segment(Rng& rng, SegmentTree& tree) -> segment_index_t {
         return std::make_pair(shadow_point, shadow_point);
     }();
 
-    auto p0 = point_t {get_grid(rng), get_grid(rng)};
-    auto p1 = point_t {get_grid(rng), get_grid(rng)};
+    auto p0 = point_t {get_random_grid(rng), get_random_grid(rng)};
+    auto p1 = point_t {get_random_grid(rng), get_random_grid(rng)};
 
-    if (get_bool(rng)) {
+    if (get_random_bool(rng)) {
         p0.x = p1.x;
     } else {
         p0.y = p1.y;
@@ -187,7 +163,7 @@ auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2, bool expected_equal =
 
 auto add_n_random_segments(Rng& rng, SegmentTree& tree, unsigned int min = 0,
                            unsigned int max = 10) -> void {
-    const auto n = uint_dist(min, max)(rng);
+    const auto n = uint_distribution(min, max)(rng);
 
     for (auto _ [[maybe_unused]] : range(n)) {
         add_random_segment(rng, tree);
@@ -196,7 +172,7 @@ auto add_n_random_segments(Rng& rng, SegmentTree& tree, unsigned int min = 0,
 
 auto get_random_index(Rng& rng, const SegmentTree& tree) -> segment_index_t {
     return segment_index_t {
-        uint_dist(tree.first_index().value, tree.last_index().value)(rng)};
+        uint_distribution(tree.first_index().value, tree.last_index().value)(rng)};
 }
 
 auto add_copy_remove(Rng& rng, SegmentTree& tree) -> void {
@@ -217,8 +193,8 @@ auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
     const auto full_part = to_part(tree.segment_line(index0));
     auto part0 = get_random_part(rng, tree.segment_line(index0));
 
-    if (get_bool(rng)) {
-        if (get_bool(rng)) {
+    if (get_random_bool(rng)) {
+        if (get_random_bool(rng)) {
             part0.begin = full_part.begin;
         } else {
             part0.end = full_part.end;
@@ -250,7 +226,7 @@ auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
         tree.shrink_segment(index0, part0);
         tree.validate();
 
-        if (get_bool(rng)) {
+        if (get_random_bool(rng)) {
             tree.swap_and_merge_segment(index0, index2);
             tree.validate();
             tree.swap_and_merge_segment(index0, index1);
