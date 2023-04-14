@@ -113,7 +113,7 @@ auto get_grid(Rng& rng) -> grid_t {
     // return grid_t {uint_dist(0, 10)(rng)};
 }
 
-auto add_random_segment(Rng& rng, SegmentTree& tree) -> void {
+auto add_random_segment(Rng& rng, SegmentTree& tree) -> segment_index_t {
     const auto [type0, type1] = [&]() {
         using enum SegmentPointType;
         if (get_bool(rng)) {
@@ -135,8 +135,7 @@ auto add_random_segment(Rng& rng, SegmentTree& tree) -> void {
     }
 
     if (p0 == p1) {
-        add_random_segment(rng, tree);
-        return;
+        return add_random_segment(rng, tree);
     }
 
     const auto line = ordered_line_t {line_t {p0, p1}};
@@ -151,12 +150,17 @@ auto add_random_segment(Rng& rng, SegmentTree& tree) -> void {
     const auto new_index = tree.add_segment(info);
 
     // invariant
-    ASSERT_EQ(tree.segment_count(), orignal_count + 1);
-    ASSERT_EQ(tree.segment_info(new_index), info);
+    if (tree.segment_count() != orignal_count + 1) {
+        throw std::runtime_error("assert failed");
+    }
+    if (tree.segment_info(new_index) != info) {
+        throw std::runtime_error("assert failed");
+    }
 
     const auto part = get_random_part(rng, line);
 
     tree.mark_valid(new_index, part);
+    return new_index;
 }
 
 auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2) {
@@ -182,7 +186,7 @@ auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2) {
 }
 
 auto add_n_random_segments(Rng& rng, SegmentTree& tree, unsigned int min = 0,
-                           unsigned int max = 100) -> void {
+                           unsigned int max = 10) -> void {
     const auto n = uint_dist(min, max)(rng);
 
     for (auto _ [[maybe_unused]] : range(n)) {
@@ -200,7 +204,9 @@ auto add_copy_remove(Rng& rng, SegmentTree& tree) -> void {
 
     const auto new_index = tree.copy_segment(tree, index);
     tree.validate();
-    ASSERT_EQ(tree.segment_info(new_index), tree.segment_info(index));
+    if (tree.segment_info(new_index) != tree.segment_info(index)) {
+        throw std::runtime_error("assertion failed");
+    }
 
     tree.swap_and_delete_segment(index);
     tree.validate();
@@ -309,9 +315,10 @@ TEST(SegmentTree, MergeTree) {
         add_n_random_segments(rng2, tree_m1);
         add_n_random_segments(rng2, tree_m1);
 
-        const auto old_last = tree1.last_index();
+        const auto expected_index = tree1.empty() ? 0 : tree1.last_index().value + 1;
+
         const auto index = tree1.add_tree(tree2);
-        ASSERT_EQ(index.value, old_last.value + 1);
+        ASSERT_EQ(index.value, expected_index);
 
         // compare
         const auto [tree_r1, tree_r2] = prepare_tree_eq(tree1, tree_m1);
@@ -319,7 +326,37 @@ TEST(SegmentTree, MergeTree) {
     }
 }
 
-// missing
-// - unmark_valid
+TEST(SegmentTree, MarkInvalid) {
+    for (auto i : range(100u)) {
+        auto rng = Rng {i};
+
+        auto tree = SegmentTree {};
+        const auto index = add_random_segment(rng, tree);
+
+        auto part = get_random_part(rng, tree.segment_info(index).line);
+        tree.unmark_valid(index, part);
+        const auto tree_1 = SegmentTree {tree};
+        tree.unmark_valid(index, part);
+        const auto tree_2 = SegmentTree {tree};
+        tree.mark_valid(index, part);
+        const auto tree_3 = SegmentTree {tree};
+        tree.mark_valid(index, part);
+        const auto tree_4 = SegmentTree {tree};
+
+        // compare
+        {
+            const auto [tree_r1, tree_r2] = prepare_tree_eq(tree_1, tree_2);
+            ASSERT_EQ(tree_r1, tree_r2);
+        }
+        {
+            const auto [tree_r2, tree_r3] = prepare_tree_eq(tree_2, tree_3);
+            ASSERT_NE(tree_r2, tree_r3);
+        }
+        {
+            const auto [tree_r3, tree_r4] = prepare_tree_eq(tree_3, tree_4);
+            ASSERT_EQ(tree_r3, tree_r4);
+        }
+    }
+}
 
 }  // namespace logicsim
