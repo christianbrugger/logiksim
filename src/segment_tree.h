@@ -163,7 +163,7 @@ auto std::swap(logicsim::SegmentTree &a, logicsim::SegmentTree &b) noexcept -> v
 
 namespace logicsim {
 
-auto all_lines(const SegmentTree &tree) {
+inline auto all_lines(const SegmentTree &tree) {
     return transform_view(tree.segment_infos(),
                           [](segment_info_t info) { return info.line; });
 }

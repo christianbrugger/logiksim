@@ -178,8 +178,8 @@ auto select_best_root(const AdjacencyGraph<index_t>& graph,
 auto to_segments(line_tree_vector_t line_trees) -> std::vector<ordered_line_t> {
     auto segments = std::vector<ordered_line_t> {};
 
-    const auto total_count
-        = accumulate(transform_view(line_trees, &LineTree::segment_count), 0);
+    const auto total_count = accumulate(
+        transform_view(line_trees, &LineTree::segment_count), std::size_t {0});
     segments.reserve(total_count);
 
     for (auto&& tree_reference : line_trees) {
@@ -352,8 +352,8 @@ auto LineTree::input_orientation() const -> orientation_t {
     return to_orientation(points_[1], points_[0]);
 }
 
-auto LineTree::segment_count() const noexcept -> int {
-    return gsl::narrow_cast<int>(std::size(indices_));
+auto LineTree::segment_count() const noexcept -> std::size_t {
+    return std::size(indices_);
 }
 
 auto LineTree::empty() const noexcept -> bool {
@@ -481,8 +481,8 @@ auto LineTree::validate_points_error() const -> std::optional<InvalidLineTreeExc
 }
 
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
-    const auto is_segment_orthogonal = [this](int index) {
-        auto [p0, p1] = segment_points(index);
+    const auto is_segment_orthogonal = [this](std::size_t index) {
+        auto [p0, p1] = segment_points(gsl::narrow_cast<int>(index));  // TODO remove cast
         return is_orthogonal(p0, p1);
     };
     return std::ranges::all_of(range(segment_count()), is_segment_orthogonal);

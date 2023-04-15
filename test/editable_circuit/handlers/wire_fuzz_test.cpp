@@ -182,16 +182,23 @@ auto get_all_lines(const Layout& layout, display_state_t state)
     return result;
 }
 
-auto test_valid_stability(Rng& rng) {
+auto test_add_wire_states_correct(Rng& rng) {
     auto circuit = empty_circuit();
     auto setup = HandlerSetup {circuit};
 
-    const auto data = generate_insertable_line_data(rng);
+    auto data = generate_insertable_line_data(rng);
 
     // insert data with new modes
     for (const auto entry : data) {
         const auto segment_part = editable_circuit::add_wire_segment(
             setup.state, entry.line, entry.new_insertion_mode);
+
+        if (!segment_part) [[unlikely]] {
+            throw_exception("wasn't able to insert line that should be insertable");
+        }
+        if (distance(segment_part.part) != distance(entry.line)) [[unlikely]] {
+            throw_exception("returned segment has different size than given line");
+        }
     }
     setup.validate();
 
@@ -202,33 +209,20 @@ auto test_valid_stability(Rng& rng) {
              display_state_t::new_valid,
              display_state_t::normal,
          }) {
-        const auto expected_lines = get_expected_lines(data, state);
-        const auto result_lines = get_all_lines(circuit.layout(), state);
+        const auto expected_lines = merge_lines(get_expected_lines(data, state));
+        const auto result_lines = merge_lines(get_all_lines(circuit.layout(), state));
 
-        auto merged_expected = merge_lines(expected_lines);
-        auto merged_result = merge_lines(result_lines);
-
-        std::ranges::sort(merged_expected);
-        std::ranges::sort(merged_result);
-
-        if (merged_expected != merged_result) [[unlikely]] {
-            print(state);
-            print();
-            print(fmt_join("{}", merged_expected, "\n"));
-            print();
-            print(fmt_join("{}", merged_result, "\n"));
-            print();
-
+        if (expected_lines != result_lines) [[unlikely]] {
             throw std::runtime_error("expected different lines with this state");
         }
     }
 }
 
-TEST(HandlerWireFuzz, AddAsValid) {
+TEST(HandlerWireFuzz, AddWireStatesCorrect) {
     for (auto i : range(50u)) {
         auto rng = Rng {i};
 
-        test_valid_stability(rng);
+        test_add_wire_states_correct(rng);
     }
 }
 

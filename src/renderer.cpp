@@ -1090,7 +1090,8 @@ auto create_random_line_tree(std::size_t n_outputs, const RenderBenchmarkConfig&
         auto new_tree = std::optional<LineTree> {};
         // TODO flatten loop
         do {
-            const auto segment_index = UDist<int> {0, line_tree.segment_count() - 1}(rng);
+            const auto segment_index
+                = UDist<int> {0, gsl::narrow<int>(line_tree.segment_count()) - 1}(rng);
             const auto segment = line_tree.segment(segment_index);
             const auto origin = pick_line_point(ordered_line_t {segment}, rng);
 

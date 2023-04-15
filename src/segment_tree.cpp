@@ -563,8 +563,6 @@ auto validate_same_input_position(const SegmentTree& tree, const LineTree& line_
 }
 
 auto recalculate_first_input_position(const SegmentTree& tree) -> std::optional<point_t> {
-    auto res = std::optional<point_t> {};
-
     for (const auto& info : tree.segment_infos()) {
         if (info.p0_type == SegmentPointType::input) {
             return info.line.p0;
@@ -658,8 +656,8 @@ auto calculate_normal_parts(const SegmentTree& tree, segment_index_t index,
     while (it != valid_parts.end()) {
         if (begin < it->begin) {
             result.push_back(part_t {begin, it->begin});
-            begin = it->end;
         }
+        begin = it->end;
         ++it;
     }
     if (begin < full_part.end) {

@@ -113,7 +113,7 @@ class LineTree {
     [[nodiscard]] auto reroot(const point_t new_root) const -> std::optional<LineTree>;
 
     [[nodiscard]] auto empty() const noexcept -> bool;
-    [[nodiscard]] auto segment_count() const noexcept -> int;
+    [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
     [[nodiscard]] auto segment(int index) const -> line_t;
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;
