@@ -42,7 +42,7 @@ TEST(HandlerWireFuzz, AddTempSegmentInsertionModes) {
 }
 
 //
-// Add Lines Valid
+// Add Lines and Check State
 //
 
 enum class InsertionResult {
@@ -198,6 +198,9 @@ auto test_add_wire_states_correct(Rng& rng) {
         }
         if (distance(segment_part.part) != distance(entry.line)) [[unlikely]] {
             throw_exception("returned segment has different size than given line");
+        }
+        if (get_line(circuit.layout(), segment_part) != entry.line) [[unlikely]] {
+            throw_exception("the line the segment points to is different");
         }
     }
     setup.validate();
