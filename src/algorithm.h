@@ -400,12 +400,12 @@ auto depth_first_visitor(IndexType start_node, VisitedStore& visited,
 }
 
 //
-// span to vector
+// to_vector
 //
 
-template <typename T>
-constexpr auto to_vector(std::span<T> values) -> std::vector<std::decay_t<T>> {
-    return std::vector<std::decay_t<T>>(values.begin(), values.end());
+template <std::ranges::input_range R>
+constexpr auto to_vector(R&& range) {
+    return std::vector(std::begin(range), std::end(range));
 }
 
 //

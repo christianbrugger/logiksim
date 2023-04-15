@@ -59,6 +59,8 @@ using line_tree_vector_t = std::vector<std::reference_wrapper<const LineTree>>;
 auto merge(line_tree_vector_t line_trees, std::optional<point_t> new_root = {})
     -> std::optional<LineTree>;
 
+auto merge_lines(std::span<const ordered_line_t> segments) -> std::vector<ordered_line_t>;
+
 template <typename index_t>
 class AdjacencyGraph;
 

@@ -82,6 +82,35 @@ struct fmt::formatter<std::pair<T1, T2>, Char> {
 };
 
 //
+// Enum
+//
+
+namespace logicsim {
+template <typename T>
+auto format(T) -> std::string;
+}  // namespace logicsim
+
+// clang-format off
+template <typename T>
+concept HasFormatFunction = requires(T x) {
+    { logicsim::format(x) } -> std::convertible_to<std::string>;
+};
+
+// clang-format on
+
+template <typename T, typename Char>
+    requires std::is_enum_v<T> && HasFormatFunction<T>
+struct fmt::formatter<T, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const T &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", logicsim::format(obj));
+    }
+};
+
+//
 // std::optional
 //
 
@@ -149,16 +178,14 @@ struct fmt::formatter<std::unique_ptr<T>, Char> {
 };
 
 //
-// obj.format() and format(obj)
+// struct with format()
 //
 
 namespace logicsim {
 template <typename T, typename Char = char>
 concept format_obj_with_member_format_function
-    = (!format_string_type<T, Char>) && requires(T container) {
-                                            {
-                                                container.format()
-                                                } -> std::same_as<std::string>;
+    = (!format_string_type<T, Char>) && requires(T obj) {
+                                            { obj.format() } -> std::same_as<std::string>;
                                         };
 }  // namespace logicsim
 

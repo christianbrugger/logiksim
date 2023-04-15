@@ -115,7 +115,7 @@ auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment
 auto fix_and_merge_segments(State state, const point_t position,
                             segment_part_t* preserve_segment) -> void;
 
-auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
+auto add_wire_segment(State state, ordered_line_t line, InsertionMode insertion_mode)
     -> segment_part_t;
 
 }  // namespace editable_circuit

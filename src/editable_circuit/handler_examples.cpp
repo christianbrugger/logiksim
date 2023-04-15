@@ -13,7 +13,7 @@ auto add_many_wires(Rng& rng, State state, bool random_modes) -> void {
         const auto mode = random_modes ? get_random_insertion_mode(rng)
                                        : InsertionMode::insert_or_discard;
 
-        const auto segment_part = add_wire_segment(state, line_t {line}, mode);
+        const auto segment_part = add_wire_segment(state, line, mode);
 
         if (bool {segment_part}
             && distance(segment_part.part) != distance(to_part(line))) {

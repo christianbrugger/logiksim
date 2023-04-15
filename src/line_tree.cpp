@@ -57,9 +57,8 @@ class SegmentSplitter {
     buffer_t buffer_ {};
 };
 
-auto split_segments(std::ranges::input_range auto&& segments,
-                    std::ranges::input_range auto&& points)
-    -> std::vector<ordered_line_t> {
+auto split_lines(std::ranges::input_range auto&& segments,
+                 std::ranges::input_range auto&& points) -> std::vector<ordered_line_t> {
     std::vector<ordered_line_t> result;
     result.reserve(std::size(segments) + std::size(points));
 
@@ -72,8 +71,8 @@ auto split_segments(std::ranges::input_range auto&& segments,
 }
 
 template <class OutputIterator, class GetterSame, class GetterDifferent>
-auto merge_segments_1d(std::span<const ordered_line_t> segments, OutputIterator result,
-                       GetterSame get_same, GetterDifferent get_different) -> void {
+auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator result,
+                    GetterSame get_same, GetterDifferent get_different) -> void {
     // collect lines
     auto parallel_segments = std::vector<ordered_line_t> {};
     parallel_segments.reserve(segments.size());
@@ -108,7 +107,7 @@ auto merge_segments_1d(std::span<const ordered_line_t> segments, OutputIterator 
         });
 }
 
-auto merge_segments(std::span<const ordered_line_t> segments)
+auto merge_lines(std::span<const ordered_line_t> segments)
     -> std::vector<ordered_line_t> {
     auto result = std::vector<ordered_line_t> {};
     result.reserve(segments.size());
@@ -117,8 +116,8 @@ auto merge_segments(std::span<const ordered_line_t> segments)
     auto get_y = [](point_t& point) -> grid_t& { return point.y; };
 
     // vertical & horizontal
-    merge_segments_1d(segments, std::back_inserter(result), get_x, get_y);
-    merge_segments_1d(segments, std::back_inserter(result), get_y, get_x);
+    merge_lines_1d(segments, std::back_inserter(result), get_x, get_y);
+    merge_lines_1d(segments, std::back_inserter(result), get_y, get_x);
 
     return result;
 }
@@ -126,13 +125,13 @@ auto merge_segments(std::span<const ordered_line_t> segments)
 auto merge_split_segments(std::span<const ordered_line_t> segments)
     -> std::vector<ordered_line_t> {
     // merge
-    const auto segments_merged = merge_segments(segments);
+    const auto segments_merged = merge_lines(segments);
     // split
     // TODO can this be simplified?
     const auto points1 = to_points_sorted_unique(segments);
-    const auto segments_split = split_segments(segments_merged, points1);
+    const auto segments_split = split_lines(segments_merged, points1);
     const auto points2 = points_with_both_orientations(segments_split);
-    return split_segments(segments_merged, points2);
+    return split_lines(segments_merged, points2);
 }
 
 template <typename index_t>

@@ -47,6 +47,16 @@ auto get_random_line(Rng& rng, grid_t::value_type min, grid_t::value_type max)
     return ordered_line_t {line_t {p0, p1}};
 }
 
+auto get_random_lines(Rng& rng, std::size_t count, grid_t::value_type min,
+                      grid_t::value_type max) -> std::vector<ordered_line_t> {
+    auto result = std::vector<ordered_line_t> {};
+
+    for (const auto _ [[maybe_unused]] : range(count)) {
+        result.push_back(get_random_line(rng, min, max));
+    }
+    return result;
+}
+
 auto get_random_part(Rng& rng, part_t full_part) -> part_t {
     auto begin = offset_t::value_type {};
     auto end = offset_t::value_type {};

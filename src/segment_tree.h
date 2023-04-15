@@ -2,6 +2,7 @@
 #define LOGIKSIM_SEGMENT_TREE_H
 
 #include "format.h"
+#include "geometry.h"
 #include "vocabulary.h"
 
 #include <folly/small_vector.h>
@@ -159,6 +160,44 @@ auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
 
 template <>
 auto std::swap(logicsim::SegmentTree &a, logicsim::SegmentTree &b) noexcept -> void;
+
+namespace logicsim {
+
+auto all_lines(const SegmentTree &tree) {
+    return transform_view(tree.segment_infos(),
+                          [](segment_info_t info) { return info.line; });
+}
+
+inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index) {
+    const auto line = tree.segment_line(index);
+
+    return transform_view(tree.valid_parts(index), [line](part_t part) -> ordered_line_t {
+        return to_line(line, part);
+    });
+}
+
+auto calculate_normal_parts(const SegmentTree &tree, segment_index_t index,
+                            detail::segment_tree::parts_vector_t &result) -> void;
+
+inline auto calculate_normal_lines(const SegmentTree &tree) {
+    auto parts = detail::segment_tree::parts_vector_t {};
+    auto result = std::vector<ordered_line_t> {};
+
+    for (const auto index : tree.indices()) {
+        // get parts
+        parts.clear();
+        calculate_normal_parts(tree, index, parts);
+
+        // convert to lines
+        const auto line = tree.segment_line(index);
+        std::ranges::transform(
+            parts, std::back_inserter(result),
+            [line](part_t part) -> ordered_line_t { return to_line(line, part); });
+    }
+    return result;
+}
+
+}  // namespace logicsim
 
 //
 // Formatters

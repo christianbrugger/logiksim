@@ -639,4 +639,32 @@ auto SegmentTree::validate_inserted() const -> void {
     validate_same_input_position(*this, *line_tree);
 }
 
+//
+// Free functions
+//
+
+auto calculate_normal_parts(const SegmentTree& tree, segment_index_t index,
+                            detail::segment_tree::parts_vector_t& result) -> void {
+    const auto full_part = to_part(tree.segment_line(index));
+    const auto valid_parts_span = tree.valid_parts(index);
+    auto valid_parts = detail::segment_tree::parts_vector_t {valid_parts_span.begin(),
+                                                             valid_parts_span.end()};
+    std::ranges::sort(valid_parts);
+
+    // TODO abstract to algorithm
+    auto begin = full_part.begin;
+
+    auto it = valid_parts.begin();
+    while (it != valid_parts.end()) {
+        if (begin < it->begin) {
+            result.push_back(part_t {begin, it->begin});
+            begin = it->end;
+        }
+        ++it;
+    }
+    if (begin < full_part.end) {
+        result.push_back(part_t {begin, full_part.end});
+    }
+}
+
 }  // namespace logicsim

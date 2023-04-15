@@ -1555,18 +1555,17 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
 
 // adding segments
 
-auto add_wire_segment(State state, line_t line, InsertionMode insertion_mode)
+auto add_wire_segment(State state, ordered_line_t line, InsertionMode insertion_mode)
     -> segment_part_t {
-    auto segment_part
-        = add_segment_to_aggregate(state.circuit, state.sender, ordered_line_t {line},
-                                   display_state_t::new_temporary);
+    auto segment_part = add_segment_to_aggregate(state.circuit, state.sender, line,
+                                                 display_state_t::new_temporary);
     change_wire_insertion_mode_private(state, segment_part, insertion_mode);
     return segment_part;
 }
 
 auto add_wire_segment(State state, Selection* selection, line_t line,
                       InsertionMode insertion_mode) -> void {
-    auto segment_part = add_wire_segment(state, line, insertion_mode);
+    auto segment_part = add_wire_segment(state, ordered_line_t {line}, insertion_mode);
 
     if (selection != nullptr) {
         selection->add_segment(segment_part);

@@ -26,6 +26,10 @@ auto get_random_grid(Rng& rng, grid_t::value_type min = grid_t::min(),
 auto get_random_line(Rng& rng, grid_t::value_type min = grid_t::min(),
                      grid_t::value_type max = grid_t::max()) -> ordered_line_t;
 
+auto get_random_lines(Rng& rng, std::size_t count, grid_t::value_type min = grid_t::min(),
+                      grid_t::value_type max = grid_t::max())
+    -> std::vector<ordered_line_t>;
+
 auto get_random_part(Rng& rng, part_t full_part) -> part_t;
 auto get_random_part(Rng& rng, ordered_line_t line) -> part_t;
 
