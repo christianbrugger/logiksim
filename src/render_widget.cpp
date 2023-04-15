@@ -87,11 +87,11 @@ MouseLineInsertLogic::~MouseLineInsertLogic() {
 
 auto MouseLineInsertLogic::mouse_press(std::optional<point_t> position) -> void {
     first_position_ = position;
-    remove_and_insert(position, InsertionMode::collisions);
+    // remove_and_insert(position, InsertionMode::collisions);
 }
 
 auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
-    remove_and_insert(position, InsertionMode::collisions);
+    // remove_and_insert(position, InsertionMode::collisions);
 }
 
 auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> void {
@@ -502,7 +502,6 @@ auto RendererWidget::load_circuit(int id) -> void {
 
     if (id == 1) {
         editable_circuit.add_example();
-
         /*
         editable_circuit.add_standard_logic_item(
             ElementType::or_element, 2, point_t {5, 3}, InsertionMode::insert_or_discard);

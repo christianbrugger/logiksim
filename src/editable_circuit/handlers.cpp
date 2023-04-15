@@ -901,19 +901,33 @@ auto copy_segment(Layout& layout, MessageSender sender,
     return destination_segment_part;
 }
 
-auto shrink_segment(Layout& layout, MessageSender sender, const segment_t segment,
-                    const part_t part_kept) -> void {
+auto shrink_segment_begin(Layout& layout, MessageSender sender, const segment_t segment)
+    -> void {
     using namespace info_message;
-    auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
-
-    const auto old_info = m_tree.segment_info(segment.segment_index);
-    m_tree.shrink_segment(segment.segment_index, part_kept);
-    const auto new_info = m_tree.segment_info(segment.segment_index);
 
     if (is_inserted(layout, segment.element_id)) {
+        auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
+        const auto old_info = m_tree.segment_info(segment.segment_index);
         sender.submit(SegmentUninserted({.segment = segment, .segment_info = old_info}));
+    }
+}
+
+auto shrink_segment_end(Layout& layout, MessageSender sender, const segment_t segment,
+                        const part_t part_kept) -> void {
+    using namespace info_message;
+    auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
+    m_tree.shrink_segment(segment.segment_index, part_kept);
+
+    if (is_inserted(layout, segment.element_id)) {
+        const auto new_info = m_tree.segment_info(segment.segment_index);
         sender.submit(SegmentInserted({.segment = segment, .segment_info = new_info}));
     }
+}
+
+auto shrink_segment(Layout& layout, MessageSender sender, const segment_t segment,
+                    const part_t part_kept) -> void {
+    shrink_segment_begin(layout, sender, segment);
+    shrink_segment_end(layout, sender, segment, part_kept);
 }
 
 auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
@@ -924,9 +938,10 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
         = difference_touching_one_side(full_part, source_segment_part.part);
 
     // move
+    shrink_segment_begin(layout, sender, source_segment_part.segment);
     const auto destination_segment_part
         = copy_segment(layout, sender, source_segment_part, destination_element_id);
-    shrink_segment(layout, sender, source_segment_part.segment, part_kept);
+    shrink_segment_end(layout, sender, source_segment_part.segment, part_kept);
 
     // messages
     sender.submit(info_message::SegmentPartMoved {
@@ -947,11 +962,12 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
     // move
     const auto source_part1 = segment_part_t {source_segment_part.segment, part1};
 
+    shrink_segment_begin(layout, sender, source_segment_part.segment);
     const auto destination_part1
         = copy_segment(layout, sender, source_part1, source_part1.segment.element_id);
     const auto destination_segment_part
         = copy_segment(layout, sender, source_segment_part, destination_element_id);
-    shrink_segment(layout, sender, source_segment_part.segment, part0);
+    shrink_segment_end(layout, sender, source_segment_part.segment, part0);
 
     // messages
     sender.submit(info_message::SegmentPartMoved {
@@ -1266,6 +1282,17 @@ auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment
     }
 }
 
+auto split_line_segment(Layout& layout, MessageSender sender, const segment_t segment,
+                        const point_t position) -> segment_part_t {
+    const auto full_line = get_line(layout, segment);
+    const auto line_moved = ordered_line_t {position, full_line.p1};
+
+    auto move_segment_part = segment_part_t {segment, to_part(full_line, line_moved)};
+    move_segment_between_trees(layout, sender, move_segment_part, segment.element_id);
+
+    return move_segment_part;
+}
+
 auto fix_and_merge_segments(State state, const point_t position,
                             segment_part_t* preserve_segment) -> void {
     auto& layout = state.layout;
@@ -1298,15 +1325,9 @@ auto fix_and_merge_segments(State state, const point_t position,
         const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
 
         if (has_through_line_0) {
-            const auto cross_point_type = is_horizontal(lines.at(1).first)
-                                              ? SegmentPointType::cross_point_horizontal
-                                              : SegmentPointType::cross_point_vertical;
-            update_segment_point_types(
-                state.layout, state.sender, element_id,
-                {
-                    std::pair {lines.at(1).second, cross_point_type},
-                },
-                position);
+            split_line_segment(state.layout, state.sender,
+                               segment_t {element_id, lines.at(0).second}, position);
+            fix_and_merge_segments(state, position, preserve_segment);
             return;
         }
 
@@ -1341,16 +1362,7 @@ auto fix_and_merge_segments(State state, const point_t position,
         const auto has_through_line_0 = !is_endpoint(position, lines.at(0).first);
 
         if (has_through_line_0) {
-            const auto cross_point_type = is_horizontal(lines.at(2).first)
-                                              ? SegmentPointType::cross_point_horizontal
-                                              : SegmentPointType::cross_point_vertical;
-            update_segment_point_types(
-                state.layout, state.sender, element_id,
-                {
-                    std::pair {lines.at(1).second, SegmentPointType::shadow_point},
-                    std::pair {lines.at(2).second, cross_point_type},
-                },
-                position);
+            throw_exception("This is not allowed, segment should have been splitted");
         } else {
             update_segment_point_types(
                 state.layout, state.sender, element_id,
