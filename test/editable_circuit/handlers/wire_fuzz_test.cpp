@@ -61,7 +61,7 @@ auto format(InsertionResult value) -> std::string {
     throw_exception("unknown InsertionResult value");
 }
 
-auto get_insertion_result(Rng& rng, std::span<const ordered_line_t> lines) {
+auto get_insertion_result(std::span<const ordered_line_t> lines) {
     auto circuit = empty_circuit();
     auto setup = HandlerSetup {circuit};
 
@@ -113,7 +113,7 @@ auto generate_insertable_line_data(Rng& rng) {
     const auto tries = uint_distribution(5, 100)(rng);
 
     const auto lines = get_random_lines(rng, tries, 5, 10);
-    const auto insertion_results = get_insertion_result(rng, lines);
+    const auto insertion_results = get_insertion_result(lines);
 
     auto data = std::vector<TestLineData> {};
 

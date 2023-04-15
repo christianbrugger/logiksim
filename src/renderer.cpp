@@ -984,8 +984,8 @@ struct RenderBenchmarkConfig {
 
     grid_t max_segment_length {5};
 
-    int min_line_segments {1};
-    int max_line_segments {5};
+    std::size_t min_line_segments {1};
+    std::size_t max_line_segments {5};
 
     int n_outputs_min {1};
     int n_outputs_max {5};
@@ -1050,7 +1050,7 @@ template <std::uniform_random_bit_generator G>
 auto create_line_tree_segment(point_t start_point, bool horizontal,
                               const RenderBenchmarkConfig& config, G& rng) -> LineTree {
     auto segment_count_dist
-        = UDist<int> {config.min_line_segments, config.max_line_segments};
+        = UDist<std::size_t> {config.min_line_segments, config.max_line_segments};
     auto n_segments = segment_count_dist(rng);
 
     auto line_tree = std::optional<LineTree> {};
