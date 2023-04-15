@@ -689,8 +689,8 @@ auto LineTree::SegmentSizeIterator::operator*() const -> value_type {
 
     auto line = line_tree_->segment(point_index_);
     bool has_connector = line_tree_->starts_new_subtree(point_index_);
-    return sized_line2d_t {line, start_length_, start_length_ + distance(line),
-                           has_connector};
+    return sized_line_t {line, start_length_, start_length_ + distance(line),
+                         has_connector};
 }
 
 auto LineTree::SegmentSizeIterator::operator++() noexcept -> SegmentSizeIterator& {

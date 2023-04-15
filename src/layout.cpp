@@ -235,7 +235,7 @@ auto validate_segment_tree_display_state(const SegmentTree &tree,
 
 auto Layout::validate() const -> void {
     const auto validate_segment_tree = [&](element_id_t element_id) {
-        if (is_inserted(*this, element_id)) {
+        if (is_inserted(*this, element_id) && !segment_tree(element_id).empty()) {
             segment_tree(element_id).validate_inserted();
         } else {
             segment_tree(element_id).validate();

@@ -3,10 +3,10 @@
 namespace logicsim::editable_circuit::examples {
 
 auto add_many_wires(Rng& rng, State state, bool random_modes) -> void {
-    grid_t::value_type min = 5;
-    grid_t::value_type max = 10;
+    const auto min = grid_t::value_type {5};
+    const auto max = grid_t::value_type {10};
 
-    const auto tries = 100;
+    const auto tries = uint_distribution(5, 100)(rng);
 
     for (auto _ [[maybe_unused]] : range(tries)) {
         const auto line = get_random_line(rng, min, max);
@@ -17,7 +17,7 @@ auto add_many_wires(Rng& rng, State state, bool random_modes) -> void {
 
         if (bool {segment_part}
             && distance(segment_part.part) != distance(to_part(line))) {
-            throw std::runtime_error("parts have different sizes");
+            throw_exception("parts have different sizes");
         }
     }
 }

@@ -321,7 +321,7 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
     for (auto&& segment : layout.line_tree(element).sized_segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
-        if (segment.has_connector_p0) {
+        if (segment.has_cross_point_p0) {
             draw_connector_impl(ctx, segment.line.p0, false, lc_width, settings);
         }
     }
@@ -345,7 +345,7 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
                           to_time(segment.p1_length), to_time(segment.p0_length), history,
                           settings);
 
-        if (segment.has_connector_p0) {
+        if (segment.has_cross_point_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
             draw_connector_impl(ctx, segment.line.p0, wire_enabled, cross_width,
                                 settings);
@@ -521,8 +521,8 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
     draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
 }
 
-auto draw_wire_selected_parts_shadow(BLContext& ctx, 
-                                     ordered_line_t line, std::span<const part_t> parts,
+auto draw_wire_selected_parts_shadow(BLContext& ctx, ordered_line_t line,
+                                     std::span<const part_t> parts,
                                      const RenderSettings& settings) -> void {
     for (auto&& part : parts) {
         const auto selected_line = to_line(line, part);

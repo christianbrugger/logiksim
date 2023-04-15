@@ -474,36 +474,134 @@ auto SegmentTree::format() const -> std::string {
                        segments_, valid_parts_vector_);
 }
 
-auto SegmentTree::validate_inserted() const -> void {
-    validate();
-
-    // convert to line_tree
-    const auto segments = transform_to_vector(
-        segments_, [](const segment_info_t& segment) { return segment.line; });
-
-    const auto new_root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
-    const auto line_tree = LineTree::from_segments(segments, new_root);
-    if (!line_tree.has_value()) [[unlikely]] {
-        throw_exception("Invalid Segment Tree.");
+auto validate_same_segments(const SegmentTree& tree, const LineTree& line_tree) {
+    // line tree
+    if (line_tree.segment_count() != tree.segment_count()) [[unlikely]] {
+        throw_exception("line tree and segment tree have different segment count.");
     }
 
-    // TODO verify
-    // - segment p0_type & p1_type
-    //
-    // - has_input_
-    // - output_count_
-    //
-    // - input & output points
-    // - cross points
+    auto segments_1 = std::vector<ordered_line_t>(line_tree.segments().begin(),
+                                                  line_tree.segments().end());
+
+    // segment tree
+    auto segments_2 = std::vector<ordered_line_t> {};
+    std::ranges::transform(tree.segment_infos(), std::back_inserter(segments_2),
+                           [&](segment_info_t info) { return info.line; });
+
+    // compare
+    std::ranges::sort(segments_1);
+    std::ranges::sort(segments_2);
+    if (segments_1 != segments_2) {
+        throw_exception("line tree and segment tree have different segments.");
+    }
 }
 
-auto count_point_type(const SegmentTree& tree, SegmentPointType type) -> int {
-    const auto proj = [&](segment_index_t index) {
-        const auto info = tree.segment_info(index);
-        return (info.p0_type == type ? 1 : 0) + (info.p1_type == type ? 1 : 0);
-    };
+auto validate_same_cross_points(const SegmentTree& tree, const LineTree& line_tree) {
+    // line tree
+    auto cross_points_1 = std::vector<point_t> {};
+    transform_if(
+        line_tree.sized_segments(), std::back_inserter(cross_points_1),
+        [](LineTree::sized_line_t sized_line) { return sized_line.line.p0; },
+        [](LineTree::sized_line_t sized_line) { return sized_line.has_cross_point_p0; });
 
-    return accumulate(transform_view(tree.indices(), proj), 0);
+    std::ranges::sort(cross_points_1);
+    const auto duplicates = std::ranges::unique(cross_points_1);
+    cross_points_1.erase(duplicates.begin(), duplicates.end());
+
+    // segment tree
+    auto cross_points_2 = std::vector<point_t> {};
+    transform_if(
+        tree.segment_infos(), std::back_inserter(cross_points_2),
+        [](segment_info_t info) { return info.line.p0; },
+        [](segment_info_t info) { return is_cross_point(info.p0_type); });
+    transform_if(
+        tree.segment_infos(), std::back_inserter(cross_points_2),
+        [](segment_info_t info) { return info.line.p1; },
+        [](segment_info_t info) { return is_cross_point(info.p1_type); });
+
+    std::ranges::sort(cross_points_2);
+
+    // compare
+    if (cross_points_1 != cross_points_2) [[unlikely]] {
+        throw_exception("segment tree and line tree have different cross points");
+    }
+}
+
+auto validate_same_output_positions(const SegmentTree& tree, const LineTree& line_tree) {
+    // line tree
+    auto positions_1 = std::vector<point_t> {};
+    std::ranges::copy(line_tree.output_positions(), std::back_inserter(positions_1));
+    // we take an output at random as input to generate the line tree
+    if (!tree.has_input()) {
+        positions_1.push_back(line_tree.input_position());
+    }
+
+    // segment tree
+    auto positions_2 = std::vector<point_t> {};
+    transform_if(
+        tree.segment_infos(), std::back_inserter(positions_2),
+        [](segment_info_t info) { return info.line.p0; },
+        [](segment_info_t info) { return info.p0_type == SegmentPointType::output; });
+    transform_if(
+        tree.segment_infos(), std::back_inserter(positions_2),
+        [](segment_info_t info) { return info.line.p1; },
+        [](segment_info_t info) { return info.p1_type == SegmentPointType::output; });
+
+    // compare
+    std::ranges::sort(positions_1);
+    std::ranges::sort(positions_2);
+    if (positions_1 != positions_2) [[unlikely]] {
+        throw_exception("line tree and segment tree have different output positions.");
+    }
+}
+
+auto validate_same_input_position(const SegmentTree& tree, const LineTree& line_tree) {
+    if (tree.has_input() && tree.input_position() != line_tree.input_position())
+        [[unlikely]] {
+        throw_exception("line tree and segment tree have different input positions.");
+    }
+}
+
+auto recalculate_first_input_position(const SegmentTree& tree) -> std::optional<point_t> {
+    auto res = std::optional<point_t> {};
+
+    for (const auto& info : tree.segment_infos()) {
+        if (info.p0_type == SegmentPointType::input) {
+            return info.line.p0;
+        } else if (info.p1_type == SegmentPointType::input) {
+            return info.line.p1;
+        }
+    }
+
+    return std::nullopt;
+}
+
+auto count_point_type(const SegmentTree& tree, SegmentPointType type) -> std::size_t {
+    const auto proj = [&](segment_info_t info) -> int {
+        return (info.p0_type == type ? std::size_t {1} : std::size_t {0})
+               + (info.p1_type == type ? std::size_t {1} : std::size_t {0});
+    };
+    return accumulate(transform_view(tree.segment_infos(), proj), std::size_t {0});
+}
+
+auto validate_output_count(const SegmentTree& tree) -> void {
+    if (tree.output_count() != count_point_type(tree, SegmentPointType::output))
+        [[unlikely]] {
+        throw_exception("Tree input output count is wrong");
+    }
+}
+
+auto validate_input_count_and_position(const SegmentTree& tree) -> void {
+    if (tree.input_count() != count_point_type(tree, SegmentPointType::input))
+        [[unlikely]] {
+        throw_exception("Tree input count is wrong");
+    }
+    if (tree.has_input()) {
+        const auto input = recalculate_first_input_position(tree);
+        if (!input || input.value() != tree.input_position()) [[unlikely]] {
+            throw_exception("Tree has stored the wrong input");
+        }
+    }
 }
 
 auto SegmentTree::validate() const -> void {
@@ -512,23 +610,33 @@ auto SegmentTree::validate() const -> void {
     }
 
     // input / output count
-    int input_count = (has_input_ ? 1 : 0);
-    if (input_count + std::size_t {output_count_} > std::size_t {segments_.size()} + 1)
-        [[unlikely]] {
-        throw_exception("To many inputs / outputs.");
-    }
-    if (input_count != count_point_type(*this, SegmentPointType::input)) [[unlikely]] {
-        throw_exception("Wrong input count");
-    }
-    if (int {output_count_} != count_point_type(*this, SegmentPointType::output))
-        [[unlikely]] {
-        throw_exception("Wrong output count");
-    }
+    validate_input_count_and_position(*this);
+    validate_output_count(*this);
 
     // valid parts
     for (auto index : indices()) {
         validate_segment_parts(valid_parts(index), segment_line(index));
     }
+}
+
+auto SegmentTree::validate_inserted() const -> void {
+    validate();
+
+    // convert to line_tree
+    const auto segments = transform_to_vector(
+        segments_, [](const segment_info_t& segment) { return segment.line; });
+
+    const auto root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
+    const auto line_tree = LineTree::from_segments(segments, root);
+
+    if (!line_tree) [[unlikely]] {
+        throw_exception("Could not convert segment tree to line tree.");
+    }
+
+    validate_same_segments(*this, *line_tree);
+    validate_same_cross_points(*this, *line_tree);
+    validate_same_output_positions(*this, *line_tree);
+    validate_same_input_position(*this, *line_tree);
 }
 
 }  // namespace logicsim

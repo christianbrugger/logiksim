@@ -35,7 +35,7 @@ class InvalidLineTreeException : public std::exception {
 //  * validate inputs
 //  * calculate number of outputs
 //  * get lengths of each output
-//  * position of connector dots
+//  * position of cross_point dots
 //  * get position of each output
 //
 
@@ -70,7 +70,7 @@ class LineTree {
     class InternalPointIterator;
     class InternalPointView;
 
-    struct sized_line2d_t;
+    struct sized_line_t;
     class SegmentSizeIterator;
     class SegmentSizeView;
 
@@ -289,13 +289,13 @@ class LineTree::InternalPointView {
 // Size Iterator & View
 //
 
-struct LineTree::sized_line2d_t {
+struct LineTree::sized_line_t {
     line_t line;
     length_t p0_length;
     length_t p1_length;
-    bool has_connector_p0;
+    bool has_cross_point_p0;
 
-    auto operator==(const sized_line2d_t &other) const noexcept -> bool = default;
+    auto operator==(const sized_line_t &other) const noexcept -> bool = default;
 };
 
 class LineTree::SegmentSizeIterator {
@@ -303,7 +303,7 @@ class LineTree::SegmentSizeIterator {
     using iterator_concept = std::forward_iterator_tag;
     using iterator_category = std::forward_iterator_tag;
 
-    using value_type = sized_line2d_t;
+    using value_type = sized_line_t;
     using difference_type = std::ptrdiff_t;
     using pointer = void;
     using reference = value_type;
@@ -365,16 +365,16 @@ inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentSizeVi
     = true;
 
 template <>
-struct fmt::formatter<logicsim::LineTree::sized_line2d_t> {
+struct fmt::formatter<logicsim::LineTree::sized_line_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::LineTree::sized_line2d_t &obj,
+    static auto format(const logicsim::LineTree::sized_line_t &obj,
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "SizedLine({}, {}, {}, {}, {})", obj.line.p0,
                               obj.line.p1, obj.p0_length, obj.p1_length,
-                              obj.has_connector_p0);
+                              obj.has_cross_point_p0);
     }
 };
 

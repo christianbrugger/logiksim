@@ -93,7 +93,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
     add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
     add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
-    add_test_wire(circuit, normal, SegmentPointType::colliding_point,
+    add_test_wire(circuit, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
     auto segment_part = segment_part_t {
@@ -159,7 +159,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
     add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
     add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
-    add_test_wire(circuit, normal, SegmentPointType::colliding_point,
+    add_test_wire(circuit, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
     auto segment_part = segment_part_t {
@@ -234,7 +234,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
     add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
-    add_test_wire(circuit, normal, SegmentPointType::colliding_point,
+    add_test_wire(circuit, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
     auto segment_part = segment_part_t {
