@@ -1104,6 +1104,11 @@ auto merge_and_delete_tree(Circuit& circuit, MessageSender sender,
     -> void {
     auto& layout = circuit.layout();
 
+    if (tree_destination >= tree_source) [[unlikely]] {
+        // optimization
+        throw_exception("source is deleted and should have larget id");
+    }
+
     if (!is_inserted(circuit, tree_source) && !is_inserted(circuit, tree_destination))
         [[unlikely]] {
         throw_exception("only supports merging of inserted trees");
@@ -1241,6 +1246,14 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender sender,
             .new_segment = segment_1,
             .old_segment = segment_last,
             .segment_info = m_tree.segment_info(index_1),
+        });
+    }
+
+    if (to_part(info_0.line) != to_part(info_merged.line, info_0.line)) {
+        sender.submit(info_message::SegmentPartMoved {
+            .segment_part_destination
+            = segment_part_t {segment_0, to_part(info_merged.line, info_0.line)},
+            .segment_part_source = segment_part_t {segment_0, to_part(info_0.line)},
         });
     }
 
@@ -1408,6 +1421,11 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
         if (segment_part.segment.element_id > candidate_0
             || segment_part.segment.element_id > candidate_1) {
             throw_exception("cannot preserve segment element_id");
+        }
+
+        if (candidate_0 > candidate_1) {
+            using std::swap;
+            swap(candidate_0, candidate_1);
         }
 
         merge_and_delete_tree(state.circuit, state.sender, candidate_0, candidate_1);
@@ -1616,7 +1634,7 @@ auto add_wire_segment(State state, ordered_line_t line, InsertionMode insertion_
     -> segment_part_t {
     auto segment_part = add_segment_to_aggregate(state.circuit, state.sender, line,
                                                  display_state_t::temporary);
-    change_wire_insertion_mode_private(state, segment_part, insertion_mode);
+    change_wire_insertion_mode(state, segment_part, insertion_mode);  // TODO _private
     return segment_part;
 }
 

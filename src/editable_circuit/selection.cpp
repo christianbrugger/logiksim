@@ -198,7 +198,9 @@ auto Selection::handle(editable_circuit::info_message::SegmentIdUpdated message)
     }
 }
 
-auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message) -> void {
+auto handle_move_different_segment(
+    detail::selection::segment_map_t &map,
+    editable_circuit::info_message::SegmentPartMoved message) {
     using namespace detail::selection;
     if (message.segment_part_source.segment == message.segment_part_destination.segment)
         [[unlikely]] {
@@ -206,8 +208,8 @@ auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message)
     }
 
     // find source entries
-    const auto it_source = selected_segments_.find(message.segment_part_source.segment);
-    if (it_source == selected_segments_.end()) {
+    const auto it_source = map.find(message.segment_part_source.segment);
+    if (it_source == map.end()) {
         // nothing to copy
         return;
     }
@@ -215,9 +217,8 @@ auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message)
 
     // find destination entries
     auto destination_entries = [&]() {
-        const auto it_dest
-            = selected_segments_.find(message.segment_part_destination.segment);
-        return it_dest != selected_segments_.end() ? it_dest->second : map_value_t {};
+        const auto it_dest = map.find(message.segment_part_destination.segment);
+        return it_dest != map.end() ? it_dest->second : map_value_t {};
     }();
 
     // move
@@ -229,13 +230,52 @@ auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message)
 
     // delete source
     if (source_entries.empty()) {
-        selected_segments_.erase(message.segment_part_source.segment);
+        map.erase(message.segment_part_source.segment);
     }
 
     // add destination
     if (!destination_entries.empty()) {
-        selected_segments_.insert_or_assign(message.segment_part_destination.segment,
-                                            std::move(destination_entries));
+        map.insert_or_assign(message.segment_part_destination.segment,
+                             std::move(destination_entries));
+    }
+}
+
+auto handle_move_same_segment(detail::selection::segment_map_t &map,
+                              editable_circuit::info_message::SegmentPartMoved message) {
+    if (message.segment_part_source.segment != message.segment_part_destination.segment)
+        [[unlikely]] {
+        throw_exception("source and destination need to the same");
+    }
+
+    // find entries
+    const auto it = map.find(message.segment_part_source.segment);
+    if (it == map.end()) {
+        // nothing to copy
+        return;
+    }
+    auto &entries = it->second;
+
+    // move to new copy
+    const auto parts = part_copy_definition_t {
+        .destination = message.segment_part_destination.part,
+        .source = message.segment_part_source.part,
+    };
+    auto result = entries;
+    remove_part(result, parts.source);
+    copy_parts(entries, result, parts);
+
+    // insert result
+    if (result.empty()) [[unlikely]] {
+        throw_exception("result should never be empty");
+    }
+    map.insert_or_assign(message.segment_part_destination.segment, std::move(result));
+}
+
+auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message) -> void {
+    if (message.segment_part_source.segment == message.segment_part_destination.segment) {
+        handle_move_same_segment(selected_segments_, message);
+    } else {
+        handle_move_different_segment(selected_segments_, message);
     }
 }
 

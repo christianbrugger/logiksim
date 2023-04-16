@@ -86,9 +86,6 @@ auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_mo
 
     auto handle = editable_circuit.add_line_segments(p0, p1, type, mode);
 
-    // print(editable_circuit);
-    // print(handle);
-
     auto lines = get_sorted_lines(handle.value(), editable_circuit.circuit().layout());
     std::ranges::sort(lines);
     auto result = AddResult {p0, p1, type, mode, std::move(handle), lines};
@@ -102,6 +99,9 @@ auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_mo
 auto verify_selection(const AddResult &result, const Layout &layout) {
     auto lines = get_sorted_lines(result.handle.value(), layout);
     std::ranges::sort(lines);
+
+    // print(result);
+    // print("ACTUAL =", lines);
 
     if (lines != result.sorted_inserted_lines) {
         throw_exception("lines are now different than when inserted");
@@ -125,7 +125,6 @@ auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit, bool random_mod
     // print();
     // print();
     // print();
-    // print(data);
 
     for (auto &result : data) {
         verify_selection(result, editable_circuit.circuit().layout());
@@ -147,7 +146,6 @@ auto test_add_many_wires(Rng &rng, bool random_modes) {
 TEST(EditableCircuitRandom, AddRandomWiresInserted) {
     for (auto i : range(50u)) {
         auto rng = Rng {i};
-
         test_add_many_wires(rng, false);
     }
 }
