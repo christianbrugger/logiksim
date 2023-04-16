@@ -52,7 +52,9 @@ struct range_iterator_t {
         if constexpr (forward) {
             return current_;
         } else {
-            return current_ - range_type_one_value<T>;
+            auto res = current_;
+            --res;
+            return res;
         }
     }
 
@@ -167,7 +169,7 @@ struct range_t {
     }
 
     [[nodiscard]] constexpr auto reverse() const -> range_t<T, !forward> {
-        range_t<T, !forward> {stop_, start_};
+        return range_t<T, !forward> {stop_, start_};
     }
 
    private:

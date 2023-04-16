@@ -79,8 +79,6 @@ auto get_insertion_result(std::span<const ordered_line_t> lines) {
     return result;
 }
 
-// TODO rename valid, colliding, temporary, remove new_
-
 namespace {
 struct TestLineData {
     ordered_line_t line;

@@ -90,10 +90,10 @@ class AdjacencyGraph {
         neighbors_.resize(points_.size());
 
         for (auto segment : segments) {
-            add_edge_unchecked(line_t {segment});
+            add_edge_unchecked(line_t {segment.p0, segment.p1});
         }
 
-        // to make the representation deterministic
+        // to normalize the representation
         sort_adjacency();
     }
 
@@ -142,7 +142,7 @@ class AdjacencyGraph {
     // assumes both endpoints are part of graph
     auto add_edge_unchecked(line_t segment) -> void {
         if (segment.p0 == segment.p1) [[unlikely]] {
-            throw_exception("Trying to add segment with zero length.");
+            throw_exception("Cannot add segment with zero length.");
         }
 
         auto index0 = to_index_unchecked(segment.p0);
@@ -203,12 +203,18 @@ class TreeEdgeVisitor {
     explicit TreeEdgeVisitor(Func func) : func_ {std::move(func)} {}
 
     template <typename index_t>
-    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) {
+    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) const {
         std::invoke(func_, a, b, graph);
     }
 
    private:
     Func func_;
+};
+
+class EmptyVisitor {
+   public:
+    template <typename index_t>
+    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) const {}
 };
 
 template <typename index_t, typename length_t>
@@ -257,22 +263,47 @@ struct combine_visitors {
     std::tuple<Ts...> visitors;
 };
 
-enum class DFSResult {
+enum class DFSStatus {
     success,
     unfinished_loop,
     unfinished_disconnected,
 };
 
+template <>
+auto format(DFSStatus result) -> std::string;
+
+template <typename index_t>
+struct DFSResult {
+    using visited_vector_t = boost::container::vector<bool>;
+
+    visited_vector_t visited;
+    index_t n_vertex_visited;
+    DFSStatus status;
+
+    auto format() const -> std::string {
+        return fmt::format(
+            "DFSResult(\n"
+            "    visited = {}\n"
+            "    n_vertex_visited = {}\n"
+            "    status ={}\n"
+            ")",
+            visited, n_vertex_visited, status);
+    }
+};
+
 // visits all edges in the graph
 template <typename index_t, class Visitor>
-auto depth_first_search(const AdjacencyGraph<index_t>& graph, Visitor&& visitor,
-                        index_t start) -> DFSResult {
+auto depth_first_search_visited(const AdjacencyGraph<index_t>& graph, Visitor&& visitor,
+                                index_t start) -> DFSResult<index_t> {
     // memorize for loop detection
-    auto visited = boost::container::vector<bool>(graph.points().size(), false);
-    auto n_vertex_visited = index_t {1};
+    auto result = DFSResult<index_t> {
+        .visited = DFSResult<index_t>::visited_vector_t(graph.points().size(), false),
+        .n_vertex_visited = index_t {1},
+        .status = DFSStatus::success,
+    };
 
-    auto found_loop = depth_first_visitor(
-        start, visited,
+    const auto found_loop = depth_first_visitor(
+        start, result.visited,
         // discover_connections
         [&](index_t node, std::output_iterator<index_t> auto result) -> void {
             for (auto neighbor_id : reverse_range(graph.neighbors().at(node).size())) {
@@ -283,16 +314,24 @@ auto depth_first_search(const AdjacencyGraph<index_t>& graph, Visitor&& visitor,
         // visit_edge
         [&](index_t a, index_t b) -> void {
             visitor.tree_edge(a, b, graph);
-            ++n_vertex_visited;
+            ++result.n_vertex_visited;
         });
 
     if (found_loop) {
-        return DFSResult::unfinished_loop;
+        result.status = DFSStatus::unfinished_loop;
+    } else if (result.n_vertex_visited != graph.vertex_count()) {
+        result.status = DFSStatus::unfinished_disconnected;
     }
-    if (n_vertex_visited != graph.vertex_count()) {
-        return DFSResult::unfinished_disconnected;
-    }
-    return DFSResult::success;
+
+    return result;
+}
+
+// visits all edges in the graph
+template <typename index_t, class Visitor>
+auto depth_first_search(const AdjacencyGraph<index_t>& graph, Visitor&& visitor,
+                        index_t start) -> DFSStatus {
+    return depth_first_search_visited(graph, std::forward<Visitor>(visitor), start)
+        .status;
 }
 
 }  // namespace logicsim

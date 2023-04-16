@@ -363,7 +363,7 @@ auto transform_combine_while(R&& r, OutputIterator result, MakeState make_state,
 //
 //      auto visit_edge(IndexType a, IndexType b) -> void;
 //
-//  Resuts: returns true if it finds a loop.
+//  Resuts: returns true if it found a loop.
 //
 template <typename VisitedStore, typename DiscoverConnected, typename EdgeVisitor,
           typename IndexType>
@@ -376,6 +376,7 @@ auto depth_first_visitor(IndexType start_node, VisitedStore& visited,
         [=](IndexType second) { return std::make_pair(start_node, second); },
         std::back_inserter(edges_stack));
     discover_connections(start_node, result);
+    visited[start_node] = true;
 
     while (true) {
         if (edges_stack.empty()) {
@@ -385,6 +386,7 @@ auto depth_first_visitor(IndexType start_node, VisitedStore& visited,
         edges_stack.pop_back();
 
         if (visited[edge.second]) {
+            // we abort on loops
             return true;
         }
         visited[edge.second] = true;

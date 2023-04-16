@@ -23,7 +23,7 @@ TEST(Graph, DepthFirstSearchSimple) {
 
     auto found_loop = depth_first_search<index_t>(graph, visitor, 0);
 
-    EXPECT_THAT(found_loop, DFSResult::success);
+    EXPECT_THAT(found_loop, DFSStatus::success);
     ASSERT_THAT(edges.size(), 3);
 
     auto p0 = point_t {0, 0};

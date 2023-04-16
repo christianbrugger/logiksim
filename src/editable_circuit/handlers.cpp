@@ -769,10 +769,10 @@ auto get_display_states(const Layout& layout, const segment_part_t segment_part)
             return std::make_pair(valid, valid);
         }
         if (a_overlapps_any_of_b(segment_part.part, valid_part)) {
-            return std::make_pair(normal, normal);
+            return std::make_pair(valid, normal);
         }
     }
-    return std::make_pair(valid, normal);
+    return std::make_pair(normal, normal);
 }
 
 auto get_insertion_modes(const Layout& layout, const segment_part_t segment_part)
@@ -1291,14 +1291,15 @@ auto split_line_segment(Layout& layout, MessageSender sender, const segment_t se
 }
 
 auto fix_and_merge_segments(State state, const point_t position,
-                            segment_part_t* preserve_segment) -> void {
+                            segment_part_t* preserve_segment = nullptr) -> void {
     auto& layout = state.layout;
 
     const auto segments = state.cache.spatial_cache().query_line_segments(position);
     const auto segment_count = get_segment_count(segments);
 
     if (segment_count == 0) [[unlikely]] {
-        throw_exception("Could not find any segments at position.");
+        return;
+        // throw_exception("Could not find any segments at position.");
     }
     const auto element_id = get_unique_element_id(segments);
     const auto indices = get_segment_indices(segments);
@@ -1483,26 +1484,79 @@ auto _wire_change_colliding_to_insert(Layout& layout, MessageSender sender,
     }
 }
 
+auto delete_empty_tree(Circuit& circuit, MessageSender sender, element_id_t element_id,
+                       element_id_t* preserve_element = nullptr) -> bool {
+    auto& layout = circuit.layout();
+
+    if (is_inserted(layout, element_id) && layout.segment_tree(element_id).empty()) {
+        layout.set_display_state(element_id, display_state_t::temporary);
+        swap_and_delete_single_element_private(circuit, sender, element_id,
+                                               preserve_element);
+        return true;
+    }
+    return false;
+}
+
+// we assume we get a valid tree where the part between p0 and p1 has been removed
+// this method puts the segments at p1 into a new tree
+auto split_broken_tree(State state, point_t p0, point_t p1) -> element_id_t {
+    const auto p0_tree_id = state.cache.collision_cache().get_first_wire(p0);
+    const auto p1_tree_id = state.cache.collision_cache().get_first_wire(p1);
+
+    if (!p0_tree_id || !p1_tree_id || p0_tree_id != p1_tree_id) {
+        return null_element;
+    };
+
+    // create new tree
+    const auto display_state = state.layout.display_state(p0_tree_id);
+    const auto new_tree_id = add_new_wire_element(state.circuit, display_state);
+
+    // find connected segments
+    const auto& tree_from = state.layout.modifyable_segment_tree(p0_tree_id);
+    const auto mask = calculate_connected_segments_mask(tree_from, p1);
+
+    // move over segments
+    for (const auto segment_index : tree_from.indices().reverse()) {
+        if (mask[segment_index.value]) {
+            auto segment_part = segment_part_t {segment_t {p0_tree_id, segment_index},
+                                                tree_from.segment_part(segment_index)};
+            move_segment_between_trees(state.layout, state.sender, segment_part,
+                                       new_tree_id);
+        }
+    }
+
+#ifndef NDEBUG
+    tree_from.validate_inserted();
+    state.layout.segment_tree(new_tree_id).validate_inserted();
+#endif
+
+    return new_tree_id;
+}
+
 auto _wire_change_insert_to_colliding(Layout& layout, segment_part_t& segment_part)
     -> void {
     mark_valid(layout, segment_part);
 }
 
-auto _wire_change_colliding_to_temporary(Circuit& circuit, MessageSender sender,
-                                         segment_part_t& segment_part) -> void {
-    auto& layout = circuit.layout();
-
-    const auto destination_id
-        = get_or_create_aggregate(circuit, sender, display_state_t::temporary);
+auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_part)
+    -> void {
+    auto& layout = state.layout;
 
     auto source_id = segment_part.segment.element_id;
-    move_segment_between_trees(circuit.layout(), sender, segment_part, destination_id);
+    auto moved_line = get_line(layout, segment_part);
 
-    // delete empty tree
-    if (layout.segment_tree(source_id).empty()) {
-        layout.set_display_state(source_id, display_state_t::temporary);
-        swap_and_delete_single_element_private(circuit, sender, source_id,
-                                               &segment_part.segment.element_id);
+    // move to temporary
+    const auto destination_id = get_or_create_aggregate(state.circuit, state.sender,
+                                                        display_state_t::temporary);
+    move_segment_between_trees(layout, state.sender, segment_part, destination_id);
+
+    // fix remaining trees
+    if (!delete_empty_tree(state.circuit, state.sender, source_id,
+                           &segment_part.segment.element_id)) {
+        fix_and_merge_segments(state, moved_line.p0);
+        fix_and_merge_segments(state, moved_line.p1);
+
+        split_broken_tree(state, moved_line.p0, moved_line.p1);
     }
 }
 
@@ -1534,7 +1588,7 @@ auto change_wire_insertion_mode_private(State state, segment_part_t& segment_par
         _wire_change_insert_to_colliding(state.layout, segment_part);
     }
     if (new_mode == InsertionMode::temporary) {
-        _wire_change_colliding_to_temporary(state.circuit, state.sender, segment_part);
+        _wire_change_colliding_to_temporary(state, segment_part);
     }
 }
 

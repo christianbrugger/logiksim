@@ -292,7 +292,7 @@ auto LineTree::from_graph(point_t root, const Graph& graph) -> std::optional<Lin
     }
 
     auto builder = TreeBuilderVisitor {*line_tree, graph.vertex_count()};
-    if (depth_first_search(graph, builder, *root_index) == DFSResult::success) {
+    if (depth_first_search(graph, builder, *root_index) == DFSStatus::success) {
         auto last_index
             = gsl::narrow_cast<index_t>(line_tree->points_.size() - std::size_t {1});
         line_tree->output_indices_.push_back(last_index);

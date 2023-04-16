@@ -1,5 +1,6 @@
 #include "segment_tree.h"
 
+#include "graph.h"
 #include "line_tree.h"
 #include "range.h"
 
@@ -664,6 +665,28 @@ auto calculate_normal_parts(const SegmentTree& tree, segment_index_t index,
     if (begin < full_part.end) {
         result.push_back(part_t {begin, full_part.end});
     }
+}
+
+auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
+    -> boost::container::vector<bool> {
+    const auto graph = AdjacencyGraph<SegmentTree::index_t> {all_lines(tree)};
+    const auto result
+        = depth_first_search_visited(graph, EmptyVisitor {}, graph.to_index(p0).value());
+
+    if (result.status == DFSStatus::unfinished_loop) [[unlikely]] {
+        throw_exception("found an unexpected loop");
+    }
+
+    // create segment mask
+    auto mask = boost::container::vector<bool>(tree.segment_count(), false);
+    for (const auto segment_index : tree.indices()) {
+        const auto line = tree.segment_line(segment_index);
+
+        const auto p0_index = graph.to_index(line.p0).value();
+        mask[segment_index.value] = result.visited[p0_index];
+    }
+
+    return mask;
 }
 
 }  // namespace logicsim

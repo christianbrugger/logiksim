@@ -21,4 +21,19 @@ auto extract_points_with_both_orientations(std::vector<point_and_orientation_t>&
 }
 }  // namespace detail
 
+template <>
+auto format(DFSStatus result) -> std::string {
+    switch (result) {
+        using enum DFSStatus;
+
+        case success:
+            return "success";
+        case unfinished_loop:
+            return "unfinished_loop";
+        case unfinished_disconnected:
+            return "unfinished_disconnected";
+    }
+    throw_exception("unknown DFSStatus value");
+}
+
 }  // namespace logicsim

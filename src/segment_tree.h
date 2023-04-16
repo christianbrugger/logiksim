@@ -5,6 +5,7 @@
 #include "geometry.h"
 #include "vocabulary.h"
 
+#include <boost/container/vector.hpp>
 #include <folly/small_vector.h>
 
 #include <optional>
@@ -197,6 +198,9 @@ inline auto calculate_normal_lines(const SegmentTree &tree) {
     }
     return result;
 }
+
+auto calculate_connected_segments_mask(const SegmentTree &tree, point_t p0)
+    -> boost::container::vector<bool>;
 
 }  // namespace logicsim
 
