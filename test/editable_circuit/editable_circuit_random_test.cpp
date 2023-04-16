@@ -39,15 +39,23 @@ auto get_sorted_lines(const Selection &selection, const Layout &layout) {
 
 auto validate_inserted_lines(const AddResult &result) {
     // check count
-    const auto orthogonal = is_orthogonal(result.p0, result.p1);
     const auto count = result.sorted_inserted_lines.size();
+    const auto expected_count = [&] {
+        if (result.p0 == result.p1) {
+            return 0;
+        }
+        if (is_orthogonal(result.p0, result.p1)) {
+            return 1;
+        }
+        return 2;
+    }();
 
     if (result.insertion_mode == InsertionMode::insert_or_discard) {
-        if ((orthogonal && count > 1) || (!orthogonal && count > 2)) {
+        if (count > expected_count) {
             throw_exception("wrong line count");
         }
     } else {
-        if ((orthogonal && count != 1) || (!orthogonal && count != 2)) {
+        if (count != expected_count) {
             throw_exception("wrong line count");
         }
     }
@@ -78,8 +86,8 @@ auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_mo
 
     auto handle = editable_circuit.add_line_segments(p0, p1, type, mode);
 
-    print(editable_circuit);
-    print(handle);
+    // print(editable_circuit);
+    // print(handle);
 
     auto lines = get_sorted_lines(handle.value(), editable_circuit.circuit().layout());
     std::ranges::sort(lines);
@@ -104,7 +112,7 @@ auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit, bool random_mod
     -> std::vector<AddResult> {
     auto data = std::vector<AddResult> {};
 
-    const auto tries = 2;  // uint_distribution(5, 100)(rng);  // TODO re-enable
+    const auto tries = uint_distribution(5, 100)(rng);  // TODO re-enable
 
     for (auto _ [[maybe_unused]] : range(tries)) {
         auto result = add_random_line(rng, editable_circuit, random_modes);
@@ -137,13 +145,11 @@ auto test_add_many_wires(Rng &rng, bool random_modes) {
 }  // namespace
 
 TEST(EditableCircuitRandom, AddRandomWiresInserted) {
-    auto rng = Rng {11};
-    test_add_many_wires(rng, false);
+    for (auto i : range(50u)) {
+        auto rng = Rng {i};
 
-    // for (auto i : range(50u)) {
-    //     auto rng = Rng {i};
-    //     test_add_many_wires(rng, false);
-    // }
+        test_add_many_wires(rng, false);
+    }
 }
 
 TEST(EditableCircuitRandom, AddRandomWiresRandomMode) {

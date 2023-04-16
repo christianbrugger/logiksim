@@ -1540,7 +1540,6 @@ auto _wire_change_insert_to_colliding(Layout& layout, segment_part_t& segment_pa
 
 auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_part)
     -> void {
-
     auto& layout = state.layout;
 
     const auto source_id = segment_part.segment.element_id;
@@ -1557,8 +1556,9 @@ auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_pa
     move_segment_between_trees(layout, state.sender, segment_part, destination_id);
 
     // fixup remaining tree
-    if (inserted && !delete_empty_tree(state.circuit, state.sender, source_id,
-                           &segment_part.segment.element_id)) {
+    if (inserted
+        && !delete_empty_tree(state.circuit, state.sender, source_id,
+                              &segment_part.segment.element_id)) {
         fix_and_merge_segments(state, moved_line.p0);
         fix_and_merge_segments(state, moved_line.p1);
 
@@ -1624,7 +1624,7 @@ auto add_wire_segment(State state, Selection* selection, line_t line,
                       InsertionMode insertion_mode) -> void {
     auto segment_part = add_wire_segment(state, ordered_line_t {line}, insertion_mode);
 
-    if (selection != nullptr) {
+    if (selection != nullptr && segment_part) {
         selection->add_segment(segment_part);
     }
 }

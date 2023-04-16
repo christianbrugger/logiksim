@@ -9,7 +9,7 @@
 
 namespace logicsim {
 
-constexpr static inline auto DEBUG_PRINT_HANDLER_INPUTS = true;
+constexpr static inline auto DEBUG_PRINT_HANDLER_INPUTS = false;
 
 class Selection;
 class selection_handle_t;
