@@ -96,7 +96,7 @@ auto Layout::format() const -> std::string {
             element_ids(), [this](element_id_t element_id) -> std::string {
                 return format_element(element_id);
             });
-        inner = fmt::format(": [\n  {}\n]", fmt_join(transform, ",\n  "));
+        inner = fmt::format(": [\n  {}\n]", fmt_join(",\n  ", transform));
     }
 
     return fmt::format("<Layout with {} elements{}>", element_count(), inner);

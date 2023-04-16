@@ -130,7 +130,8 @@ auto Schematic::format() const -> std::string {
     std::string inner {};
     if (!empty()) {
         auto format_true = [](auto element) { return element.format(true); };
-        inner = fmt::format(": [\n  {}\n]", fmt_join(elements(), ",\n  ", format_true));
+        inner = fmt::format(": [\n  {}\n]",
+                            fmt_join(",\n  ", elements(), "{}", format_true));
     }
     return fmt::format("<Schematic with {} elements{}>", element_count(), inner);
 }

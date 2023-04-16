@@ -44,7 +44,7 @@ auto SelectionRegistrar::validate(const Circuit& circuit) const -> void {
 }
 
 auto SelectionRegistrar::format() const -> std::string {
-    const auto item_str = fmt_join("{}", allocated_selections_.values(), ",\n");
+    const auto item_str = fmt_join(",\n", allocated_selections_.values());
     return fmt::format("SelectionRegistrar({})", item_str);
 }
 

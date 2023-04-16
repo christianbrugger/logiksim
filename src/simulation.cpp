@@ -943,8 +943,8 @@ auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events
 
         fmt::print("events simulated = {}\n", simulated_event_count);
         fmt::print("input_values = {}\n",
-                   fmt_join("{:b}", simulation.input_values(), ""));
-        fmt::print("output_values = {}\n", fmt_join("{:b}", output_values, ""));
+                   fmt_join("", simulation.input_values(), "{:b}"));
+        fmt::print("output_values = {}\n", fmt_join("", output_values, "{:b}"));
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
                 auto hist = simulation.input_history(element);

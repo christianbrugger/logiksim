@@ -257,19 +257,12 @@ concept format_range_type = (!format_string_type<T, Char>) && requires(T contain
 
 template <typename T, class Proj = std::identity>
     requires logicsim::format_range_type<T>
-[[nodiscard]] constexpr auto fmt_join(std::string_view fmt, const T &obj,
-                                      std::string_view sep = ", ", Proj proj = {}) {
+[[nodiscard]] constexpr auto fmt_join(std::string_view sep, const T &obj,
+                                      std::string_view fmt = "{}", Proj proj = {}) {
     auto format_func = [&fmt, proj](const auto &item) {
         return fmt::format(fmt::runtime(fmt), std::invoke(proj, item));
     };
     return boost::join(transform_view(obj, format_func), sep);
-}
-
-template <typename T, class Proj = std::identity>
-    requires logicsim::format_range_type<T>
-[[nodiscard]] constexpr auto fmt_join(const T &obj, std::string_view sep = ", ",
-                                      Proj proj = {}) {
-    return fmt_join("{}", obj, sep, proj);
 }
 
 }  // namespace logicsim
@@ -294,7 +287,7 @@ struct fmt::formatter<T, Char> {
     }
 
     auto format(const T &obj, fmt::format_context &ctx) const {
-        auto inner = ::logicsim::fmt_join(obj);
+        auto inner = ::logicsim::fmt_join(", ", obj);
 
         if (use_brackets_) {
             return fmt::format_to(ctx.out(), fmt::runtime("[{}]"), inner);
