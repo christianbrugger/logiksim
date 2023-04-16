@@ -7,6 +7,29 @@
 
 namespace logicsim {
 
+auto has_logic_items(const Selection &selection) -> bool {
+    return !selection.selected_logic_items().empty();
+}
+
+auto get_lines(const Selection &selection, const Layout &layout)
+    -> std::vector<ordered_line_t> {
+    auto result = std::vector<ordered_line_t> {};
+
+    for (const auto &entry : selection.selected_segments()) {
+        const auto line = get_line(layout, entry.first);
+
+        for (const auto part : entry.second) {
+            result.push_back(to_line(line, part));
+        }
+    }
+
+    return result;
+}
+
+//
+// Selection
+//
+
 auto Selection::swap(Selection &other) noexcept -> void {
     using std::swap;
 

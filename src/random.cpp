@@ -28,12 +28,18 @@ auto get_random_grid(Rng& rng, grid_t::value_type min, grid_t::value_type max) -
     return uint_distribution(min, max)(rng);
 }
 
+auto get_random_point(Rng& rng, grid_t::value_type min, grid_t::value_type max)
+    -> point_t {
+    return point_t {
+        get_random_grid(rng, min, max),
+        get_random_grid(rng, min, max),
+    };
+}
+
 auto get_random_line(Rng& rng, grid_t::value_type min, grid_t::value_type max)
     -> ordered_line_t {
-    const auto get = [&]() { return get_random_grid(rng, min, max); };
-
-    auto p0 = point_t {get(), get()};
-    auto p1 = point_t {get(), get()};
+    auto p0 = get_random_point(rng, min, max);
+    auto p1 = get_random_point(rng, min, max);
 
     if (get_random_bool(rng)) {
         p0.x = p1.x;

@@ -11,6 +11,7 @@
 namespace logicsim {
 
 class Circuit;
+class Layout;
 
 namespace detail::selection {
 
@@ -26,6 +27,12 @@ static_assert(sizeof(map_pair_t) == 24);
 using logicitems_set_t = ankerl::unordered_dense::set<element_id_t>;
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 }  // namespace detail::selection
+
+class Selection;
+
+[[nodiscard]] auto has_logic_items(const Selection &selection) -> bool;
+[[nodiscard]] auto get_lines(const Selection &selection, const Layout &layout)
+    -> std::vector<ordered_line_t>;
 
 class Selection {
    public:

@@ -58,8 +58,9 @@ set(LS_TEST_SOURCES
     test/simulation_test.cpp
     
     test/editable_circuit/handlers/circuit_item_test.cpp
-    test/editable_circuit/handlers/wire_fuzz_test.cpp
+    test/editable_circuit/handlers/wire_random_test.cpp
     test/editable_circuit/handlers/wire_test.cpp
+    test/editable_circuit/editable_circuit_random_test.cpp
 )
 
 cmake_policy(PUSH)

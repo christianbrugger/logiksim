@@ -16,6 +16,7 @@ namespace logicsim {
 // Add lines simple
 //
 
+namespace {
 auto test_add_many_wires(Rng& rng, bool random_modes) {
     auto circuit = empty_circuit();
     auto setup = HandlerSetup {circuit};
@@ -24,6 +25,7 @@ auto test_add_many_wires(Rng& rng, bool random_modes) {
 
     setup.validate();
 }
+}  // namespace
 
 TEST(HandlerWireFuzz, AddTempSegmentRandomModes) {
     for (auto i : range(50u)) {
@@ -61,6 +63,7 @@ auto format(InsertionResult value) -> std::string {
     throw_exception("unknown InsertionResult value");
 }
 
+namespace {
 auto get_insertion_result(std::span<const ordered_line_t> lines) {
     auto circuit = empty_circuit();
     auto setup = HandlerSetup {circuit};
@@ -79,7 +82,6 @@ auto get_insertion_result(std::span<const ordered_line_t> lines) {
     return result;
 }
 
-namespace {
 struct TestLineData {
     ordered_line_t line;
     InsertionResult result;
@@ -91,7 +93,6 @@ struct TestLineData {
                            expected_state);
     }
 };
-}  // namespace
 
 auto get_expected_lines(std::span<const TestLineData> data, display_state_t state) {
     auto result = std::vector<ordered_line_t> {};
@@ -216,6 +217,7 @@ auto test_add_wire_states_correct(Rng& rng) {
         }
     }
 }
+}  // namespace
 
 TEST(HandlerWireFuzz, AddWireStatesCorrect) {
     for (auto i : range(50u)) {
@@ -229,6 +231,7 @@ TEST(HandlerWireFuzz, AddWireStatesCorrect) {
 // Remove lines
 //
 
+namespace {
 auto test_remove_many_wires(Rng& rng, bool random_modes) {
     auto circuit = empty_circuit();
     auto setup = HandlerSetup {circuit};
@@ -262,6 +265,7 @@ auto test_remove_many_wires(Rng& rng, bool random_modes) {
 
     setup.validate();
 }
+}  // namespace
 
 TEST(HandlerWireFuzz, RemoveManyInsertedWires) {
     for (auto i : range(50u)) {
