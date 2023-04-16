@@ -386,7 +386,7 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
         .source = part,
     };
     valid_parts_vector_.at(new_index.value)
-        = copy_parts(valid_parts_vector_.at(index.value), parts);
+        = copy_parts(tree.valid_parts_vector_.at(index.value), parts);
 
     return new_index;
 }

@@ -477,11 +477,11 @@ auto RendererWidget::reload_circuit() -> void {
     }
 
     update();
-
-#ifndef NDEBUG
     if (editable_circuit_->circuit().schematic().element_count() < 30) {
         print(editable_circuit_);
     }
+
+#ifndef NDEBUG
     editable_circuit_->validate();
 #endif
 }

@@ -297,7 +297,8 @@ auto depth_first_search_visited(const AdjacencyGraph<index_t>& graph, Visitor&& 
                                 index_t start) -> DFSResult<index_t> {
     // memorize for loop detection
     auto result = DFSResult<index_t> {
-        .visited = DFSResult<index_t>::visited_vector_t(graph.points().size(), false),
+        .visited =
+            typename DFSResult<index_t>::visited_vector_t(graph.points().size(), false),
         .n_vertex_visited = index_t {1},
         .status = DFSStatus::success,
     };

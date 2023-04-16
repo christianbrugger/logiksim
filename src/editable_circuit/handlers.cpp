@@ -1548,6 +1548,7 @@ auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_pa
     // move to temporary
     const auto destination_id = get_or_create_aggregate(state.circuit, state.sender,
                                                         display_state_t::temporary);
+    unmark_valid(layout, segment_part);
     move_segment_between_trees(layout, state.sender, segment_part, destination_id);
 
     // fix remaining trees
