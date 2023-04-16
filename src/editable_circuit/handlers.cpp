@@ -1540,19 +1540,24 @@ auto _wire_change_insert_to_colliding(Layout& layout, segment_part_t& segment_pa
 
 auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_part)
     -> void {
+
     auto& layout = state.layout;
 
-    auto source_id = segment_part.segment.element_id;
-    auto moved_line = get_line(layout, segment_part);
+    const auto source_id = segment_part.segment.element_id;
+    const auto inserted = is_inserted(layout, segment_part.segment.element_id);
+    const auto moved_line = get_line(layout, segment_part);
+
+    if (inserted) {
+        unmark_valid(layout, segment_part);
+    }
 
     // move to temporary
     const auto destination_id = get_or_create_aggregate(state.circuit, state.sender,
                                                         display_state_t::temporary);
-    unmark_valid(layout, segment_part);
     move_segment_between_trees(layout, state.sender, segment_part, destination_id);
 
-    // fix remaining trees
-    if (!delete_empty_tree(state.circuit, state.sender, source_id,
+    // fixup remaining tree
+    if (inserted && !delete_empty_tree(state.circuit, state.sender, source_id,
                            &segment_part.segment.element_id)) {
         fix_and_merge_segments(state, moved_line.p0);
         fix_and_merge_segments(state, moved_line.p1);

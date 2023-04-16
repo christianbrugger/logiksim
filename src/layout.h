@@ -24,6 +24,8 @@ class Layout;
 [[nodiscard]] auto get_line(const Layout &layout, segment_part_t segment_part)
     -> ordered_line_t;
 
+[[nodiscard]] auto has_segments(const Layout &layout) -> bool;
+
 class Layout {
    public:
     [[nodiscard]] explicit Layout() = default;

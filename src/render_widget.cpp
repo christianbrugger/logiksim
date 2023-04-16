@@ -85,15 +85,13 @@ MouseLineInsertLogic::~MouseLineInsertLogic() {
     remove_last_element();
 }
 
-auto MouseLineInsertLogic::mouse_press(std::optional<point_t> position [[maybe_unused]])
-    -> void {
+auto MouseLineInsertLogic::mouse_press(std::optional<point_t> position) -> void {
     first_position_ = position;
-    // remove_and_insert(position, InsertionMode::collisions);
+    remove_and_insert(position, InsertionMode::collisions);
 }
 
-auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position [[maybe_unused]])
-    -> void {
-    // remove_and_insert(position, InsertionMode::collisions);
+auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
+    remove_and_insert(position, InsertionMode::collisions);
 }
 
 auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> void {

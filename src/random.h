@@ -35,6 +35,15 @@ auto get_random_part(Rng& rng, ordered_line_t line) -> part_t;
 
 auto get_random_insertion_mode(Rng& rng) -> InsertionMode;
 
+// Segment Trees
+class Layout;
+class SegmentTree;
+
+// finds tree with at least one segment or returns null_element
+auto get_random_segment_tree(Rng& rng, const Layout& layout) -> element_id_t;
+auto get_random_segment(Rng& rng, const SegmentTree& tree) -> segment_index_t;
+auto get_random_segment(Rng& rng, const Layout& layout) -> segment_t;
+
 }  // namespace logicsim
 
 #endif

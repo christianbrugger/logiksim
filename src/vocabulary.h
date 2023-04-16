@@ -65,6 +65,22 @@ struct element_id_t {
     using value_type = int32_t;
     value_type value;
 
+    explicit constexpr element_id_t() = default;
+    explicit constexpr element_id_t(value_type value_) noexcept : value {value_} {};
+
+    // explicit constexpr element_id_t(int value_)
+    //     : value {gsl::narrow<value_type>(value_)} {};
+    explicit constexpr element_id_t(unsigned int value_)
+        : value {gsl::narrow<value_type>(value_)} {};
+    explicit constexpr element_id_t(long value_)
+        : value {gsl::narrow<value_type>(value_)} {};
+    explicit constexpr element_id_t(unsigned long value_)
+        : value {gsl::narrow<value_type>(value_)} {};
+    explicit constexpr element_id_t(long long value_)
+        : value {gsl::narrow<value_type>(value_)} {};
+    explicit constexpr element_id_t(unsigned long long value_)
+        : value {gsl::narrow<value_type>(value_)} {};
+
     using difference_type = range_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
 

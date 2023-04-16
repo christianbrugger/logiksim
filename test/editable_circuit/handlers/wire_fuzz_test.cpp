@@ -225,4 +225,58 @@ TEST(HandlerWireFuzz, AddWireStatesCorrect) {
     }
 }
 
+//
+// Remove lines
+//
+
+auto test_remove_many_wires(Rng& rng, bool random_modes) {
+    auto circuit = empty_circuit();
+    auto setup = HandlerSetup {circuit};
+
+    editable_circuit::examples::add_many_wires(rng, setup.state, random_modes);
+
+    while (true) {
+        const auto segment = get_random_segment(rng, circuit.layout());
+        if (!segment) {
+            break;
+        }
+        const auto part = to_part(get_line(circuit.layout(), segment));
+        auto segment_part = segment_part_t {segment, part};
+
+        change_wire_insertion_mode(setup.state, segment_part, InsertionMode::temporary);
+        if (!segment_part || segment_part.part != part) {
+            throw_exception("unexpected segment state");
+        }
+
+        delete_wire_segment(setup.circuit.layout(), setup.sender, segment_part);
+        if (segment_part) {
+            throw_exception("segment should be invalid");
+        }
+
+        setup.validate();
+    }
+
+    if (has_segments(circuit.layout())) {
+        throw_exception("circuit should be empty at this point");
+    }
+
+    setup.validate();
+}
+
+TEST(HandlerWireFuzz, RemoveManyInsertedWires) {
+    for (auto i : range(50u)) {
+        auto rng = Rng {i};
+
+        test_remove_many_wires(rng, false);
+    }
+}
+
+TEST(HandlerWireFuzz, RemoveManyWiresDifferentModes) {
+    for (auto i : range(50u)) {
+        auto rng = Rng {i};
+
+        test_remove_many_wires(rng, true);
+    }
+}
+
 }  // namespace logicsim

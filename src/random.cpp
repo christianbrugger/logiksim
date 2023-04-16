@@ -1,6 +1,7 @@
 #include "random.h"
 
 #include "geometry.h"
+#include "layout.h"
 
 #include <boost/random/seed_seq.hpp>
 
@@ -89,4 +90,48 @@ auto get_random_insertion_mode(Rng& rng) -> InsertionMode {
     throw_exception("unknown case");
 }
 
+//
+// Segment Trees
+//
+
+auto get_random_segment_tree(Rng& rng, const Layout& layout) -> element_id_t {
+    if (!has_segments(layout)) {
+        return null_element;
+    }
+    while (true) {
+        const auto element_id = element_id_t {uint_distribution(
+            std::size_t {0}, layout.element_count() - std::size_t {1})(rng)};
+
+        if (!layout.segment_tree(element_id).empty()) {
+            return element_id;
+        }
+    }
+}
+
+auto get_random_segment(Rng& rng, const SegmentTree& tree) -> segment_index_t {
+    if (tree.empty()) {
+        return null_segment_index;
+    }
+
+    return segment_index_t {
+        uint_distribution(tree.first_index().value, tree.last_index().value)(rng)};
+}
+
+auto get_random_segment(Rng& rng, const Layout& layout) -> segment_t {
+    const auto element_id = get_random_segment_tree(rng, layout);
+    if (!element_id) {
+        return null_segment;
+    }
+
+    const auto segment_index = get_random_segment(rng, layout.segment_tree(element_id));
+    if (!segment_index) [[unlikely]] {
+        throw_exception("should always return a valid index");
+    }
+
+    return segment_t {element_id, segment_index};
+}
+
+// randomly select tree
+
+// get random segment
 }  // namespace logicsim

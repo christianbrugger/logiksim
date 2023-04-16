@@ -75,6 +75,15 @@ auto get_line(const Layout &layout, segment_part_t segment_part) -> ordered_line
     return to_line(full_line, segment_part.part);
 }
 
+auto has_segments(const Layout &layout) -> bool {
+    for (const auto element_id : layout.element_ids()) {
+        if (!layout.segment_tree(element_id).empty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 auto swap(Layout &a, Layout &b) noexcept -> void {
     a.swap(b);
 }

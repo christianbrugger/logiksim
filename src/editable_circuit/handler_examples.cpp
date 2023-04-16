@@ -2,11 +2,11 @@
 
 namespace logicsim::editable_circuit::examples {
 
-auto add_many_wires(Rng& rng, State state, bool random_modes) -> void {
+auto add_many_wires(Rng& rng, State state, bool random_modes, int max_tries) -> void {
     const auto min = grid_t::value_type {5};
     const auto max = grid_t::value_type {10};
 
-    const auto tries = uint_distribution(5, 100)(rng);
+    const auto tries = std::min(max_tries, uint_distribution(5, 100)(rng));
 
     for (auto _ [[maybe_unused]] : range(tries)) {
         const auto line = get_random_line(rng, min, max);
