@@ -121,7 +121,7 @@ auto Layout::add_default_element() -> element_id_t {
     line_trees_.push_back(LineTree {});
     positions_.push_back(point_t {});
     orientation_.push_back(orientation_t::undirected);
-    display_states_.push_back(display_state_t::new_temporary);
+    display_states_.push_back(display_state_t::temporary);
     colors_.push_back(defaults::color_black);
 
     return element_id_t {

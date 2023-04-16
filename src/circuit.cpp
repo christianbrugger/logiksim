@@ -148,11 +148,11 @@ auto count_wires(const Schematic& schematic, const Layout& layout,
 // we never have more than one in a circuit
 auto validate_single_aggregate_trees(const Schematic& schematic, const Layout& layout)
     -> void {
-    if (count_wires(schematic, layout, display_state_t::new_temporary) > 1) [[unlikely]] {
+    if (count_wires(schematic, layout, display_state_t::temporary) > 1) [[unlikely]] {
         throw_exception("found more than one aggregate temporary segment tree");
     }
 
-    if (count_wires(schematic, layout, display_state_t::new_colliding) > 1) [[unlikely]] {
+    if (count_wires(schematic, layout, display_state_t::colliding) > 1) [[unlikely]] {
         throw_exception("found more than one aggregate temporary segment tree");
     }
 }

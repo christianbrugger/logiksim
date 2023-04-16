@@ -79,7 +79,7 @@ auto get_insertion_result(std::span<const ordered_line_t> lines) {
     return result;
 }
 
-// TODO rename new_valid, new_colliding, new_temporary, remove new_
+// TODO rename valid, colliding, temporary, remove new_
 
 namespace {
 struct TestLineData {
@@ -122,14 +122,14 @@ auto generate_insertable_line_data(Rng& rng) {
                     .line = line,
                     .result = result,
                     .new_insertion_mode = InsertionMode::temporary,
-                    .expected_state = display_state_t::new_temporary,
+                    .expected_state = display_state_t::temporary,
                 });
             } else {
                 data.push_back(TestLineData {
                     .line = line,
                     .result = result,
                     .new_insertion_mode = InsertionMode::collisions,
-                    .expected_state = display_state_t::new_colliding,
+                    .expected_state = display_state_t::colliding,
                 });
             }
         } else {
@@ -138,7 +138,7 @@ auto generate_insertable_line_data(Rng& rng) {
                     .line = line,
                     .result = result,
                     .new_insertion_mode = InsertionMode::collisions,
-                    .expected_state = display_state_t::new_valid,
+                    .expected_state = display_state_t::valid,
                 });
             } else {
                 data.push_back(TestLineData {
@@ -162,7 +162,7 @@ auto get_all_lines(const Layout& layout, display_state_t state)
         const auto element_state = layout.display_state(element_id);
         const auto& tree = layout.segment_tree(element_id);
 
-        if (is_inserted(element_state) && state == display_state_t::new_valid) {
+        if (is_inserted(element_state) && state == display_state_t::valid) {
             for (const auto index : tree.indices()) {
                 std::ranges::copy(all_valid_lines(tree, index),
                                   std::back_inserter(result));
@@ -205,9 +205,9 @@ auto test_add_wire_states_correct(Rng& rng) {
 
     // compare result
     for (const auto state : {
-             display_state_t::new_temporary,
-             display_state_t::new_colliding,
-             display_state_t::new_valid,
+             display_state_t::temporary,
+             display_state_t::colliding,
+             display_state_t::valid,
              display_state_t::normal,
          }) {
         const auto expected_lines = merge_lines(get_expected_lines(data, state));

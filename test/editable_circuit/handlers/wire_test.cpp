@@ -57,7 +57,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
         const auto &tree_0 = layout.segment_tree(id_0);
 
         ASSERT_EQ(schematic.element(id_0).is_wire(), true);
-        ASSERT_EQ(layout.display_state(id_0), display_state_t::new_temporary);
+        ASSERT_EQ(layout.display_state(id_0), display_state_t::temporary);
         ASSERT_EQ(tree_0.segment_count(), 1);
 
         const auto line = ordered_line_t {{0, 0}, {10, 0}};
@@ -68,7 +68,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
         const auto &tree_1 = layout.segment_tree(id_1);
 
         ASSERT_EQ(schematic.element(id_1).is_wire(), true);
-        ASSERT_EQ(layout.display_state(id_1), display_state_t::new_colliding);
+        ASSERT_EQ(layout.display_state(id_1), display_state_t::colliding);
         ASSERT_EQ(tree_1.segment_count(), 0);
     }
 
@@ -90,9 +90,9 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
     auto &schematic = circuit.schematic();
     auto &layout = circuit.layout();
 
-    add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
+    add_test_wire(circuit, temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
-    add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
+    add_test_wire(circuit, colliding, SegmentPointType::shadow_point, {});
     add_test_wire(circuit, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
@@ -113,7 +113,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_temporary);
+        ASSERT_EQ(layout.display_state(element_id), temporary);
         ASSERT_EQ(tree.segment_count(), 0);
     }
     {
@@ -121,7 +121,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_colliding);
+        ASSERT_EQ(layout.display_state(element_id), colliding);
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, {10, 0}};
@@ -156,9 +156,9 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
     auto &schematic = circuit.schematic();
     auto &layout = circuit.layout();
 
-    add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
+    add_test_wire(circuit, temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
-    add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
+    add_test_wire(circuit, colliding, SegmentPointType::shadow_point, {});
     add_test_wire(circuit, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
@@ -179,7 +179,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_temporary);
+        ASSERT_EQ(layout.display_state(element_id), temporary);
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {5, 0}, {10, 0}};
@@ -190,7 +190,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_colliding);
+        ASSERT_EQ(layout.display_state(element_id), colliding);
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, {5, 0}};
@@ -231,9 +231,9 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     auto &schematic = circuit.schematic();
     auto &layout = circuit.layout();
 
-    add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
+    add_test_wire(circuit, temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
-    add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
+    add_test_wire(circuit, colliding, SegmentPointType::shadow_point, {});
     add_test_wire(circuit, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
@@ -254,7 +254,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_temporary);
+        ASSERT_EQ(layout.display_state(element_id), temporary);
         ASSERT_EQ(tree.segment_count(), 2);
 
         const auto line0 = ordered_line_t {point_t {0, 0}, {2, 0}};
@@ -267,7 +267,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_colliding);
+        ASSERT_EQ(layout.display_state(element_id), colliding);
         ASSERT_EQ(tree.segment_count(), 1);
 
         const auto line = ordered_line_t {point_t {2, 0}, {5, 0}};
@@ -325,9 +325,9 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
     auto &schematic = circuit.schematic();
     auto &layout = circuit.layout();
 
-    add_test_wire(circuit, new_temporary, SegmentPointType::shadow_point,
+    add_test_wire(circuit, temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
-    add_test_wire(circuit, new_colliding, SegmentPointType::shadow_point, {});
+    add_test_wire(circuit, colliding, SegmentPointType::shadow_point, {});
 
     auto segment_part = segment_part_t {
         segment_t {element_id_t {0}, segment_index_t {0}},
@@ -347,7 +347,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_temporary);
+        ASSERT_EQ(layout.display_state(element_id), temporary);
         ASSERT_EQ(tree.segment_count(), 0);
     }
     {
@@ -355,7 +355,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         const auto &tree = layout.segment_tree(element_id);
 
         ASSERT_EQ(schematic.element(element_id).is_wire(), true);
-        ASSERT_EQ(layout.display_state(element_id), new_colliding);
+        ASSERT_EQ(layout.display_state(element_id), colliding);
         ASSERT_EQ(tree.segment_count(), 0);
     }
     {
@@ -417,7 +417,7 @@ TEST(EditableCircuitHandlerWire, IsWirePositionRepresentable) {
     using namespace editable_circuit;
     auto layout = Layout {};
 
-    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    const auto element_id = layout.add_line_tree(display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(
         segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
@@ -442,7 +442,7 @@ TEST(EditableCircuitHandlerWire, IsWirePositionRepresentablePart) {
 
     auto p1_x = grid_t::max();
 
-    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    const auto element_id = layout.add_line_tree(display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(
         segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {p1_x, 0}}});
@@ -473,7 +473,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMove) {
     const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
     const auto line_0 = ordered_line_t {point_t {100, 200}, point_t {110, 200}};
 
-    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    const auto element_id = layout.add_line_tree(display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
@@ -488,7 +488,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMove) {
     layout.validate();
 
     ASSERT_EQ(layout.element_count(), 1);
-    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::new_temporary);
+    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::temporary);
 
     ASSERT_EQ(segment_part, segment_part_0);
 
@@ -511,7 +511,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
     const auto line_0 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
     const auto line_1 = ordered_line_t {point_t {100, 200}, point_t {105, 200}};
 
-    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    const auto element_id = layout.add_line_tree(display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
@@ -529,7 +529,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
 
     ASSERT_EQ(segment_part, segment_part_1);
     ASSERT_EQ(layout.element_count(), 1);
-    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::new_temporary);
+    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::temporary);
 
     const auto &tree = layout.segment_tree(element_id_t {0});
     ASSERT_EQ(tree.segment_count(), 2);
@@ -555,7 +555,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialEnd) {
     const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
     const auto line_1 = ordered_line_t {point_t {105, 200}, point_t {110, 200}};
 
-    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    const auto element_id = layout.add_line_tree(display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
@@ -573,7 +573,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialEnd) {
 
     ASSERT_EQ(segment_part, segment_part_1);
     ASSERT_EQ(layout.element_count(), 1);
-    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::new_temporary);
+    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::temporary);
 
     const auto &tree = layout.segment_tree(element_id_t {0});
     ASSERT_EQ(tree.segment_count(), 2);
@@ -600,7 +600,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
     const auto line_1 = ordered_line_t {point_t {15, 0}, point_t {20, 0}};
     const auto line_2 = ordered_line_t {point_t {110, 200}, point_t {115, 200}};
 
-    const auto element_id = layout.add_line_tree(display_state_t::new_temporary);
+    const auto element_id = layout.add_line_tree(display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
@@ -624,7 +624,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
 
     ASSERT_EQ(segment_part, segment_part_2);
     ASSERT_EQ(layout.element_count(), 1);
-    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::new_temporary);
+    ASSERT_EQ(layout.display_state(element_id_t {0}), display_state_t::temporary);
 
     const auto &tree = layout.segment_tree(element_id_t {0});
     ASSERT_EQ(tree.segment_count(), 3);

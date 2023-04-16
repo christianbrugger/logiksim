@@ -59,20 +59,20 @@ auto format(display_state_t state) -> std::string {
         case normal:
             return "normal";
 
-        case new_valid:
-            return "new_valid";
-        case new_colliding:
-            return "new_colliding";
+        case valid:
+            return "valid";
+        case colliding:
+            return "colliding";
 
-        case new_temporary:
-            return "new_temporary";
+        case temporary:
+            return "temporary";
     }
     throw_exception("Don't know how to convert display_state_t to string.");
 }
 
 auto is_inserted(display_state_t display_state) -> bool {
     return display_state == display_state_t::normal
-           || display_state == display_state_t::new_valid;
+           || display_state == display_state_t::valid;
 }
 
 template <>
@@ -96,11 +96,11 @@ auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
 
         case normal:
             return InsertionMode::insert_or_discard;
-        case new_colliding:
+        case colliding:
             return InsertionMode::collisions;
-        case new_valid:
+        case valid:
             return InsertionMode::collisions;
-        case new_temporary:
+        case temporary:
             return InsertionMode::temporary;
     };
 

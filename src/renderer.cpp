@@ -375,11 +375,11 @@ auto get_alpha_value(display_state_t display_state) -> uint8_t {
         using enum display_state_t;
 
         case normal:
-        case new_valid:
+        case valid:
             return 0xFF;
-        case new_colliding:
+        case colliding:
             return 0x40;
-        case new_temporary:
+        case temporary:
             return 0x80;
     }
     throw_exception("unknown display state");
@@ -508,11 +508,11 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
 
     if (display_state == display_state_t::normal && selected) {
         ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
-    } else if (display_state == display_state_t::new_colliding) {
+    } else if (display_state == display_state_t::colliding) {
         ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
-    } else if (display_state == display_state_t::new_valid) {
+    } else if (display_state == display_state_t::valid) {
         ctx.setFillStyle(BLRgba32(0, 192, 0, 96));
-    } else if (display_state == display_state_t::new_temporary) {
+    } else if (display_state == display_state_t::temporary) {
         ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
     } else {
         throw_exception("unknown state");
@@ -583,7 +583,7 @@ auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout&
         const auto display_state = layout.display_state(element.element_id());
         const auto& segment_tree = layout.segment_tree(element.element_id());
 
-        if (display_state == display_state_t::new_temporary) {
+        if (display_state == display_state_t::temporary) {
             draw_wire_temporary_shadow(ctx, segment_tree, settings);
         }
 
@@ -591,7 +591,7 @@ auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout&
             draw_wire_valid_shadow(ctx, segment_tree, settings);
         }
 
-        else if (display_state == display_state_t::new_colliding) {
+        else if (display_state == display_state_t::colliding) {
             draw_wire_colliding_shadow(ctx, segment_tree, settings);
         }
     }

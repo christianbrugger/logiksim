@@ -45,13 +45,13 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
 
         case collisions:
             if (is_colliding) {
-                return display_state_t::new_colliding;
+                return display_state_t::colliding;
             } else {
-                return display_state_t::new_valid;
+                return display_state_t::valid;
             }
 
         case temporary:
-            return display_state_t::new_temporary;
+            return display_state_t::temporary;
     };
     throw_exception("unknown insertion mode");
 }

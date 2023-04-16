@@ -231,10 +231,10 @@ auto format(orientation_t state) -> std::string;
 enum class display_state_t : uint8_t {
     normal,
 
-    new_valid,
-    new_colliding,
+    valid,
+    colliding,
 
-    new_temporary,
+    temporary,
 };
 
 template <>
