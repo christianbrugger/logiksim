@@ -214,7 +214,7 @@ class TreeEdgeVisitor {
 class EmptyVisitor {
    public:
     template <typename index_t>
-    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) const {}
+    auto tree_edge(index_t, index_t, const AdjacencyGraph<index_t>&) const {}
 };
 
 template <typename index_t, typename length_t>
