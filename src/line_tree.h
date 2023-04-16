@@ -298,6 +298,8 @@ struct LineTree::sized_line_t {
     bool has_cross_point_p0;
 
     auto operator==(const sized_line_t &other) const noexcept -> bool = default;
+
+    auto format() const -> std::string;
 };
 
 class LineTree::SegmentSizeIterator {
@@ -365,20 +367,6 @@ inline constexpr bool std::ranges::enable_view<logicsim::LineTree::InternalPoint
 template <>
 inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentSizeView>
     = true;
-
-template <>
-struct fmt::formatter<logicsim::LineTree::sized_line_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::LineTree::sized_line_t &obj,
-                       fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "SizedLine({}, {}, {}, {}, {})", obj.line.p0,
-                              obj.line.p1, obj.p0_length, obj.p1_length,
-                              obj.has_cross_point_p0);
-    }
-};
 
 //
 // Implementation

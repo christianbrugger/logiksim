@@ -38,6 +38,7 @@ enum class ElementType : uint8_t {
     sub_circuit,
 };
 
+template <>
 auto format(ElementType type) -> std::string;
 
 struct circuit_id_t {
@@ -224,6 +225,7 @@ enum class orientation_t : uint8_t {
     undirected,
 };
 
+template <>
 auto format(orientation_t state) -> std::string;
 
 enum class display_state_t : uint8_t {
@@ -235,6 +237,7 @@ enum class display_state_t : uint8_t {
     new_temporary,
 };
 
+template <>
 auto format(display_state_t state) -> std::string;
 
 [[nodiscard]] auto is_inserted(display_state_t display_state) -> bool;
@@ -245,6 +248,7 @@ enum class InsertionMode {
     temporary,
 };
 
+template <>
 auto format(InsertionMode mode) -> std::string;
 
 [[nodiscard]] auto to_insertion_mode(display_state_t display_state) -> InsertionMode;
@@ -748,54 +752,6 @@ struct ankerl::unordered_dense::hash<logicsim::segment_t> {
         -> uint64_t {
         return logicsim::hash_8_byte(static_cast<uint32_t>(obj.element_id.value),
                                      static_cast<uint32_t>(obj.segment_index.value));
-    }
-};
-
-//
-// Formatters
-//
-
-template <>
-struct fmt::formatter<logicsim::ElementType> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::ElementType &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::InsertionMode> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::InsertionMode &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::display_state_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::display_state_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::orientation_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::orientation_t &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
     }
 };
 

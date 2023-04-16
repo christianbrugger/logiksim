@@ -31,6 +31,7 @@ enum class SegmentPointType : uint8_t {
     new_unknown,
 };
 
+template <>
 auto format(SegmentPointType type) -> std::string;
 
 auto is_cross_point(SegmentPointType point_type) -> bool;
@@ -198,20 +199,5 @@ inline auto calculate_normal_lines(const SegmentTree &tree) {
 }
 
 }  // namespace logicsim
-
-//
-// Formatters
-//
-
-template <>
-struct fmt::formatter<logicsim::SegmentPointType> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::SegmentPointType &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
 
 #endif

@@ -313,6 +313,11 @@ auto swap(LineTree& a, LineTree& b) noexcept -> void {
     a.swap(b);
 }
 
+auto LineTree::sized_line_t::format() const -> std::string {
+    return fmt::format("SizedLine({}, {}, {}, {}, {})", line.p0, line.p1, p0_length,
+                       p1_length, has_cross_point_p0);
+}
+
 }  // namespace logicsim
 
 template <>

@@ -79,7 +79,6 @@ auto get_insertion_result(std::span<const ordered_line_t> lines) {
     return result;
 }
 
-// TODO remove all enum formatters, and make them a template specialization
 // TODO swap fmt_join arguments
 // TODO rename new_valid, new_colliding, new_temporary, remove new_
 

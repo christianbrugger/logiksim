@@ -354,6 +354,7 @@ auto MouseAreaSelectionLogic::update_mouse_position(QPointF position) -> void {
 // Render Widget
 //
 
+template <>
 auto format(InteractionState state) -> std::string {
     switch (state) {
         using enum InteractionState;

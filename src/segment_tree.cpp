@@ -9,6 +9,7 @@
 
 namespace logicsim {
 
+template <>
 auto format(SegmentPointType type) -> std::string {
     switch (type) {
         using enum SegmentPointType;

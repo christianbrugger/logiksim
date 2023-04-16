@@ -200,6 +200,7 @@ enum class InteractionState {
     line_insert,
 };
 
+template <>
 auto format(InteractionState type) -> std::string;
 
 class RendererWidget : public QWidget {
@@ -286,20 +287,5 @@ class RendererWidget : public QWidget {
 };
 
 }  // namespace logicsim
-
-//
-// Formatters
-//
-
-template <>
-struct fmt::formatter<logicsim::InteractionState> {
-    static constexpr auto parse(fmt::format_parse_context& ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::InteractionState& obj, fmt::format_context& ctx) {
-        return fmt::format_to(ctx.out(), "{}", ::logicsim::format(obj));
-    }
-};
 
 #endif

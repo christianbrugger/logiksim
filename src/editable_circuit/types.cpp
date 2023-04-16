@@ -4,6 +4,7 @@
 
 namespace logicsim {
 
+template <>
 auto format(LineSegmentType type) -> std::string {
     switch (type) {
         using enum LineSegmentType;

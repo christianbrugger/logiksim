@@ -2,6 +2,7 @@
 
 namespace logicsim {
 
+template <>
 auto format(ElementType type) -> std::string {
     switch (type) {
         using enum ElementType;
@@ -30,6 +31,7 @@ auto format(ElementType type) -> std::string {
     throw_exception("Don't know how to convert ElementType to string.");
 }
 
+template <>
 auto format(orientation_t orientation) -> std::string {
     switch (orientation) {
         using enum orientation_t;
@@ -49,6 +51,7 @@ auto format(orientation_t orientation) -> std::string {
     throw_exception("Don't know how to convert orientation_t to string.");
 }
 
+template <>
 auto format(display_state_t state) -> std::string {
     switch (state) {
         using enum display_state_t;
@@ -72,6 +75,7 @@ auto is_inserted(display_state_t display_state) -> bool {
            || display_state == display_state_t::new_valid;
 }
 
+template <>
 auto format(InsertionMode mode) -> std::string {
     switch (mode) {
         using enum InsertionMode;
