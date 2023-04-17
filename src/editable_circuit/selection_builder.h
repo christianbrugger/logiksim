@@ -19,6 +19,7 @@ enum class SelectionFunction {
 
 class Layout;
 class SpatialTree;
+class CacheProvider;
 
 class SelectionBuilder {
    public:
@@ -31,7 +32,7 @@ class SelectionBuilder {
 
    public:
     [[nodiscard]] explicit SelectionBuilder(const Layout &layout,
-                                            const SpatialTree &spatial_cache);
+                                            const CacheProvider &cache_provider);
 
     [[nodiscard]] auto empty() const noexcept -> bool;
 
@@ -54,7 +55,7 @@ class SelectionBuilder {
     auto clear_cache() const -> void;
 
     gsl::not_null<const Layout *> layout_;
-    gsl::not_null<const SpatialTree *> spatial_cache_;
+    gsl::not_null<const CacheProvider *> cache_provider_;
 
     Selection initial_selection_ {};
     std::vector<operation_t> operations_ {};

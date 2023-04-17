@@ -2,6 +2,7 @@
 #include "editable_circuit/selection.h"
 
 #include "circuit.h"
+#include "editable_circuit\caches\collision_cache.h"
 #include "geometry.h"
 #include "range.h"
 
@@ -24,6 +25,16 @@ auto get_lines(const Selection &selection, const Layout &layout)
     }
 
     return result;
+}
+
+auto sanitize_selection(Selection &selection, Layout &layout, CollisionCache &cache) {
+    for (const auto &entry : selection.selected_segments()) {
+        const auto line = get_line(layout, entry.first);
+
+        for (const auto part : entry.second) {
+            print(line, part);
+        }
+    }
 }
 
 //

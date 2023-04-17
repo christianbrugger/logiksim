@@ -34,6 +34,10 @@ class Selection;
 [[nodiscard]] auto get_lines(const Selection &selection, const Layout &layout)
     -> std::vector<ordered_line_t>;
 
+class CollisionCache;
+[[nodiscard]] auto sanitize_selection(Selection &selection, Layout &layout,
+                                      CollisionCache &cache);
+
 class Selection {
    public:
     using segment_pair_t = detail::selection::map_pair_t;

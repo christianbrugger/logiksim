@@ -70,10 +70,6 @@ static_assert(wire_point_tag < element_id_t {0});
 }  // namespace collision_cache
 
 class CollisionCache {
-    // using ItemType = collision_cache::ItemType;
-    // using CacheState = collision_cache::CacheState;
-    // using collision_data_t = collision_cache::collision_data_t;
-
    public:
     using map_type
         = ankerl::unordered_dense::map<point_t, collision_cache::collision_data_t>;
@@ -83,6 +79,7 @@ class CollisionCache {
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(ordered_line_t line) const -> bool;
+    [[nodiscard]] auto is_wire_crossing(point_t point) const -> bool;
 
     [[nodiscard]] auto get_first_wire(point_t position) const -> element_id_t;
 

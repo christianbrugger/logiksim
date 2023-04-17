@@ -2,7 +2,7 @@
 #include "editable_circuit/selection_builder.h"
 
 #include "algorithm.h"
-#include "editable_circuit/caches/spatial_cache.h"
+#include "editable_circuit/caches.h"
 #include "format.h"
 #include "layout.h"
 #include "range.h"
@@ -14,8 +14,9 @@ namespace logicsim {
 // Selection Builder
 //
 
-SelectionBuilder::SelectionBuilder(const Layout& layout, const SpatialTree& spatial_cache)
-    : layout_ {&layout}, spatial_cache_ {&spatial_cache} {}
+SelectionBuilder::SelectionBuilder(const Layout& layout,
+                                   const CacheProvider& cache_provider)
+    : layout_ {&layout}, cache_provider_ {&cache_provider} {}
 
 auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
     using namespace editable_circuit::info_message;
@@ -150,7 +151,7 @@ auto SelectionBuilder::calculate_selection() const -> Selection {
     auto selection = Selection {initial_selection_};
 
     for (auto&& operation : operations_) {
-        apply_function(selection, *spatial_cache_, *layout_, operation);
+        apply_function(selection, cache_provider_->spatial_cache(), *layout_, operation);
     }
 
     return selection;

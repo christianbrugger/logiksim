@@ -502,6 +502,16 @@ auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
     return !iter_collision_state(segment, not_colliding);
 }
 
+auto CollisionCache::is_wire_crossing(point_t point) const -> bool {
+    const auto it = map_.find(point);
+
+    if (it == map_.end()) {
+        return false;
+    }
+
+    return collision_cache::is_wire_crossing(it->second);
+}
+
 auto CollisionCache::validate(const Circuit& circuit) const -> void {
     auto cache = CollisionCache {};
     add_circuit_to_cache(cache, circuit);
