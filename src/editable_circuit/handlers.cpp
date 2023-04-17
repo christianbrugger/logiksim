@@ -1237,18 +1237,6 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender sender,
     sender.submit(info_message::SegmentUninserted {segment_1, info_1});
     sender.submit(info_message::SegmentInserted {segment_0, info_merged});
 
-    if (index_1 != index_last) {
-        sender.submit(info_message::SegmentIdUpdated {
-            .new_segment = segment_1,
-            .old_segment = segment_last,
-        });
-        sender.submit(info_message::InsertedSegmentIdUpdated {
-            .new_segment = segment_1,
-            .old_segment = segment_last,
-            .segment_info = m_tree.segment_info(index_1),
-        });
-    }
-
     if (to_part(info_0.line) != to_part(info_merged.line, info_0.line)) {
         sender.submit(info_message::SegmentPartMoved {
             .segment_part_destination
@@ -1262,6 +1250,18 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender sender,
         = segment_part_t {segment_0, to_part(info_merged.line, info_1.line)},
         .segment_part_source = segment_part_t {segment_1, to_part(info_1.line)},
     });
+
+    if (index_1 != index_last) {
+        sender.submit(info_message::SegmentIdUpdated {
+            .new_segment = segment_1,
+            .old_segment = segment_last,
+        });
+        sender.submit(info_message::InsertedSegmentIdUpdated {
+            .new_segment = segment_1,
+            .old_segment = segment_last,
+            .segment_info = m_tree.segment_info(index_1),
+        });
+    }
 
     // preserve
     if (preserve_segment && preserve_segment->segment.element_id == element_id) {

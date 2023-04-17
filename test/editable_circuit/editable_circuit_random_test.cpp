@@ -42,12 +42,12 @@ auto validate_inserted_lines(const AddResult &result) {
     const auto count = result.sorted_inserted_lines.size();
     const auto expected_count = [&] {
         if (result.p0 == result.p1) {
-            return 0;
+            return std::size_t {0};
         }
         if (is_orthogonal(result.p0, result.p1)) {
-            return 1;
+            return std::size_t {1};
         }
-        return 2;
+        return std::size_t {2};
     }();
 
     if (result.insertion_mode == InsertionMode::insert_or_discard) {
@@ -98,13 +98,18 @@ auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_mo
 
 auto verify_selection(const AddResult &result, const Layout &layout) {
     auto lines = get_sorted_lines(result.handle.value(), layout);
-    std::ranges::sort(lines);
 
     // print(result);
     // print("ACTUAL =", lines);
 
     if (lines != result.sorted_inserted_lines) {
         throw_exception("lines are now different than when inserted");
+    }
+}
+
+auto verify_selections(const std::vector<AddResult> &data, const Layout &layout) {
+    for (auto &result : data) {
+        verify_selection(result, layout);
     }
 }
 
@@ -117,6 +122,11 @@ auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit, bool random_mod
     for (auto _ [[maybe_unused]] : range(tries)) {
         auto result = add_random_line(rng, editable_circuit, random_modes);
         data.emplace_back(std::move(result));
+
+        // print();
+        // print(editable_circuit.circuit());
+        // print();
+        // verify_selections(data, editable_circuit.circuit().layout());
     }
     // print();
     // print();
@@ -126,9 +136,7 @@ auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit, bool random_mod
     // print();
     // print();
 
-    for (auto &result : data) {
-        verify_selection(result, editable_circuit.circuit().layout());
-    }
+    verify_selections(data, editable_circuit.circuit().layout());
 
     return data;
 }
@@ -143,6 +151,10 @@ auto test_add_many_wires(Rng &rng, bool random_modes) {
 
 }  // namespace
 
+//  "args": [ "--gtest_filter=*AddRandomWiresInserted" ]
+
+#include <iostream>
+
 TEST(EditableCircuitRandom, AddRandomWiresInserted) {
     for (auto i : range(50u)) {
         auto rng = Rng {i};
@@ -153,7 +165,6 @@ TEST(EditableCircuitRandom, AddRandomWiresInserted) {
 TEST(EditableCircuitRandom, AddRandomWiresRandomMode) {
     for (auto i : range(50u)) {
         auto rng = Rng {i};
-
         test_add_many_wires(rng, true);
     }
 }
