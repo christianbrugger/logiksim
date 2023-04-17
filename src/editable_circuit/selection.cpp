@@ -27,13 +27,27 @@ auto get_lines(const Selection &selection, const Layout &layout)
     return result;
 }
 
-auto sanitize_selection(Selection &selection, Layout &layout, CollisionCache &cache) {
+auto sanitize_selection(Selection &selection, const Layout &layout,
+                        const CollisionCache &cache) -> void {
+    auto segments = std::vector<segment_part_t> {};
+
     for (const auto &entry : selection.selected_segments()) {
-        const auto line = get_line(layout, entry.first);
+        const auto full_line = get_line(layout, entry.first);
 
         for (const auto part : entry.second) {
-            print(line, part);
+            const auto line = to_line(full_line, part);
+
+            if (cache.is_wires_crossing(line.p0) || cache.is_wires_crossing(line.p1)) {
+                segments.push_back(segment_part_t {entry.first, part});
+            }
         }
+    }
+
+    auto duplicates = std::ranges::unique(segments);
+    segments.erase(duplicates.begin(), duplicates.end());
+
+    for (const auto segment : segments) {
+        selection.remove_segment(segment);
     }
 }
 

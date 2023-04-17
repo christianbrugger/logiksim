@@ -24,8 +24,7 @@ auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
     // we only keep the inital selection updated
     initial_selection_.submit(message);
 
-    // we can't update the cached selection, as elements might be added that
-    // are within the selection rects of the operations
+    // we don't update our cache. In some cases we can't, as new elements are created.
     if (std::holds_alternative<LogicItemCreated>(message)
         || std::holds_alternative<LogicItemIdUpdated>(message)
         || std::holds_alternative<LogicItemDeleted>(message)) {
@@ -154,6 +153,7 @@ auto SelectionBuilder::calculate_selection() const -> Selection {
         apply_function(selection, cache_provider_->spatial_cache(), *layout_, operation);
     }
 
+    sanitize_selection(selection, *layout_, cache_provider_->collision_cache());
     return selection;
 }
 

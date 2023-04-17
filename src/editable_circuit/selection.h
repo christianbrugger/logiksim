@@ -35,8 +35,8 @@ class Selection;
     -> std::vector<ordered_line_t>;
 
 class CollisionCache;
-[[nodiscard]] auto sanitize_selection(Selection &selection, Layout &layout,
-                                      CollisionCache &cache);
+[[nodiscard]] auto sanitize_selection(Selection &selection, const Layout &layout,
+                                      const CollisionCache &cache) -> void;
 
 class Selection {
    public:

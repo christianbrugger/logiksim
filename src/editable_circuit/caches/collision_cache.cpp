@@ -450,7 +450,8 @@ auto CollisionCache::state_colliding(point_t position,
                 return true;
             }
             case wire_new_unknown_point: {
-                return is_element_body(data) || is_element_wire_connection(data);
+                return is_element_body(data) || is_element_wire_connection(data)
+                       || is_wire_crossing(data);
             }
         };
     }
@@ -502,7 +503,7 @@ auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
     return !iter_collision_state(segment, not_colliding);
 }
 
-auto CollisionCache::is_wire_crossing(point_t point) const -> bool {
+auto CollisionCache::is_wires_crossing(point_t point) const -> bool {
     const auto it = map_.find(point);
 
     if (it == map_.end()) {

@@ -1630,12 +1630,24 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
 
 // adding segments
 
-auto add_wire_segment(State state, ordered_line_t line, InsertionMode insertion_mode)
-    -> segment_part_t {
+auto add_wire_segment_private(State state, ordered_line_t line,
+                              InsertionMode insertion_mode) -> segment_part_t {
     auto segment_part = add_segment_to_aggregate(state.circuit, state.sender, line,
                                                  display_state_t::temporary);
-    change_wire_insertion_mode(state, segment_part, insertion_mode);  // TODO _private
+    change_wire_insertion_mode_private(state, segment_part, insertion_mode);
     return segment_part;
+}
+
+auto add_wire_segment(State state, ordered_line_t line, InsertionMode new_mode)
+    -> segment_part_t {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "add_wire_segment(line = {}, new_mode = {});\n"
+            "==========================================================\n\n",
+            state.circuit, line, new_mode);
+    }
+    return add_wire_segment_private(state, line, new_mode);
 }
 
 auto add_wire_segment(State state, Selection* selection, line_t line,
