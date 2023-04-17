@@ -658,14 +658,39 @@ struct offset_t {
     [[nodiscard]] auto operator==(const offset_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const offset_t &other) const = default;
 
-    /*
+    auto operator++() -> offset_t & {
+        return *this = *this + offset_t {1};
+    }
+
+    auto operator++(int) -> offset_t {
+        auto tmp = *this;
+        operator++();
+        return tmp;
+    }
+
+    auto operator--() -> offset_t & {
+        return *this = *this - offset_t {1};
+    }
+
+    auto operator--(int) -> offset_t {
+        auto tmp = *this;
+        operator--();
+        return tmp;
+    }
+
     [[nodiscard]] constexpr auto operator+(offset_t other) const -> offset_t {
         auto result = value + other.value;
 
         static_assert(sizeof(result) > sizeof(value));
         return {gsl::narrow<offset_t::value_type>(result)};
     }
-    */
+
+    [[nodiscard]] constexpr auto operator-(offset_t other) const -> offset_t {
+        auto result = value - other.value;
+
+        static_assert(sizeof(result) > sizeof(value));
+        return {gsl::narrow<offset_t::value_type>(result)};
+    }
 };
 
 static_assert(sizeof(offset_t::value_type) == sizeof(grid_t::value_type));

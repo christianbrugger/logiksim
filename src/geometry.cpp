@@ -200,6 +200,32 @@ auto to_part(ordered_line_t full_line, ordered_line_t sub_line) -> part_t {
     return part_t {begin, end};
 }
 
+auto to_point(ordered_line_t full_line, offset_t offset) -> point_t {
+    if (is_horizontal(full_line)) {
+        const auto x = to_grid(offset, full_line.p0.x);
+        if (x > full_line.p1.x) [[unlikely]] {
+            throw_exception("offset is not within line");
+        }
+        return point_t {x, full_line.p0.y};
+    }
+
+    const auto y = to_grid(offset, full_line.p0.y);
+    if (y > full_line.p1.y) [[unlikely]] {
+        throw_exception("offset is not within line");
+    }
+    return point_t {full_line.p0.x, y};
+}
+
+auto to_offset(ordered_line_t full_line, point_t point) -> offset_t {
+    const auto line = ordered_line_t {full_line.p0, point};
+
+    if (line.p1 > full_line.p1) [[unlikely]] {
+        throw_exception("point is not part of full_line");
+    }
+
+    return to_part(line).end;
+}
+
 auto to_line(ordered_line_t full_line, part_t part) -> ordered_line_t {
     if (!is_part_valid(part, full_line)) {
         throw_exception("part needs to be within line");

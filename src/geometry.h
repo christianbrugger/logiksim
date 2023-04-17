@@ -70,6 +70,8 @@ auto to_grid(offset_t offset, grid_t reference) -> grid_t;
 [[nodiscard]] auto to_part(ordered_line_t full_line, rect_fine_t rect)
     -> std::optional<part_t>;
 [[nodiscard]] auto to_part(ordered_line_t full_line, ordered_line_t line) -> part_t;
+[[nodiscard]] auto to_point(ordered_line_t full_line, offset_t offset) -> point_t;
+[[nodiscard]] auto to_offset(ordered_line_t full_line, point_t point) -> offset_t;
 [[nodiscard]] auto to_line(ordered_line_t full_line, part_t part) -> ordered_line_t;
 
 [[nodiscard]] auto is_part_valid(part_t part, ordered_line_t full_line) -> bool;

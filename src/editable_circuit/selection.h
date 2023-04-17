@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_SELECTION_H
-#define LOGIKSIM_SELECTION_H
+#ifndef LOGIKSIM_EDITABLE_CIRCUIT_SELECTION_H
+#define LOGIKSIM_EDITABLE_CIRCUIT_SELECTION_H
 
 #include "editable_circuit/messages.h"
 #include "hashing.h"
@@ -34,13 +34,10 @@ class Selection;
 [[nodiscard]] auto get_lines(const Selection &selection, const Layout &layout)
     -> std::vector<ordered_line_t>;
 
-class CollisionCache;
-[[nodiscard]] auto sanitize_selection(Selection &selection, const Layout &layout,
-                                      const CollisionCache &cache) -> void;
-
 class Selection {
    public:
     using segment_pair_t = detail::selection::map_pair_t;
+    using part_vector_t = detail::selection::map_value_t;
 
     auto swap(Selection &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
@@ -54,6 +51,7 @@ class Selection {
 
     auto add_segment(segment_part_t segment_part) -> void;
     auto remove_segment(segment_part_t segment_part) -> void;
+    auto set_selection(segment_t segment, part_vector_t &&parts) -> void;
 
     [[nodiscard]] auto is_selected(element_id_t element_id) const -> bool;
 

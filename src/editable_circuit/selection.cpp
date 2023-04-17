@@ -2,7 +2,6 @@
 #include "editable_circuit/selection.h"
 
 #include "circuit.h"
-#include "editable_circuit\caches\collision_cache.h"
 #include "geometry.h"
 #include "range.h"
 
@@ -25,30 +24,6 @@ auto get_lines(const Selection &selection, const Layout &layout)
     }
 
     return result;
-}
-
-auto sanitize_selection(Selection &selection, const Layout &layout,
-                        const CollisionCache &cache) -> void {
-    auto segments = std::vector<segment_part_t> {};
-
-    for (const auto &entry : selection.selected_segments()) {
-        const auto full_line = get_line(layout, entry.first);
-
-        for (const auto part : entry.second) {
-            const auto line = to_line(full_line, part);
-
-            if (cache.is_wires_crossing(line.p0) || cache.is_wires_crossing(line.p1)) {
-                segments.push_back(segment_part_t {entry.first, part});
-            }
-        }
-    }
-
-    auto duplicates = std::ranges::unique(segments);
-    segments.erase(duplicates.begin(), duplicates.end());
-
-    for (const auto segment : segments) {
-        selection.remove_segment(segment);
-    }
 }
 
 //
@@ -146,6 +121,24 @@ auto Selection::remove_segment(segment_part_t segment_part) -> void {
             throw_exception("unable to delete key");
         }
     }
+}
+
+auto Selection::set_selection(segment_t segment, part_vector_t &&parts) -> void {
+    const auto it = selected_segments_.find(segment);
+
+    if (parts.empty()) {
+        if (it != selected_segments_.end()) {
+            selected_segments_.erase(it);
+        }
+        return;
+    }
+
+    if (it != selected_segments_.end()) {
+        it->second.swap(parts);
+        return;
+    }
+
+    selected_segments_.emplace(segment, std::move(parts));
 }
 
 auto Selection::is_selected(element_id_t element_id) const -> bool {

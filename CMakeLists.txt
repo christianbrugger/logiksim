@@ -10,6 +10,7 @@ set(LS_CORE_SOURCES
     src/editable_circuit/handler_examples.cpp
     src/editable_circuit/handlers.cpp
     src/editable_circuit/messages.cpp
+    src/editable_circuit/sanitizer.cpp
     src/editable_circuit/selection.cpp
     src/editable_circuit/selection_builder.cpp
     src/editable_circuit/selection_registrar.cpp
