@@ -4,13 +4,6 @@
 
 namespace logicsim {
 
-namespace {
-[[nodiscard]] auto has_vertical_element(CollisionCache::collision_data_t data) -> bool {
-    return data.element_id_vertical >= element_id_t {0};
-}
-
-}  // namespace
-
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
 auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
@@ -130,10 +123,16 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
     auto& data = map[position];
 
     const auto set_connection_tag = [&]() {
-        if (has_vertical_element(data)) {
+        if (data.element_id_vertical) {
             throw_exception("cannot set connection tag, second element occupied");
         }
         data.element_id_vertical = CollisionCache::connection_tag;
+    };
+    const auto set_wire_point_tag = [&]() {
+        if (data.element_id_body) {
+            throw_exception("cannot set wire_point tag, element body is occupied");
+        }
+        data.element_id_body = CollisionCache::wire_point_tag;
     };
 
     switch (state) {
@@ -162,6 +161,7 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
             break;
         }
         case wire_point: {
+            set_wire_point_tag();
             apply_func(data.element_id_horizontal);
             apply_func(data.element_id_vertical);
             break;
@@ -173,8 +173,8 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
     };
 
     // delete if empty
-    if (data.element_id_body == null_element && data.element_id_horizontal == null_element
-        && !has_vertical_element(data)) {
+    if (!data.element_id_body && !data.element_id_horizontal
+        && !data.element_id_vertical) {
         map.erase(position);
     }
     return true;
@@ -378,10 +378,10 @@ auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
     if (const auto it = map_.find(position); it != map_.end()) {
         const auto data = it->second;
 
-        if (data.element_id_horizontal != null_element) {
+        if (data.element_id_horizontal) {
             return data.element_id_horizontal;
         }
-        if (has_vertical_element(data)) {
+        if (data.element_id_vertical) {
             return data.element_id_vertical;
         }
     }
@@ -392,7 +392,7 @@ auto CollisionCache::creates_loop(ordered_line_t line) const -> bool {
     const auto element_id_0 = get_first_wire(line.p0);
     const auto element_id_1 = get_first_wire(line.p1);
 
-    return element_id_0 != null_element && element_id_0 == element_id_1;
+    return element_id_0 && element_id_0 == element_id_1;
 }
 
 auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
@@ -414,57 +414,66 @@ auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
 auto CollisionCache::to_state(collision_data_t data) -> CacheState {
     using enum CacheState;
 
-    if (data.element_id_body != null_element  //
-        && data.element_id_horizontal == null_element
+    if (data.element_id_body                           //
+        && data.element_id_horizontal == null_element  //
         && data.element_id_vertical == null_element) {
         return element_body;
     }
 
-    if (data.element_id_body != null_element  //
-        && data.element_id_horizontal == null_element
+    if (data.element_id_body                           //
+        && data.element_id_horizontal == null_element  //
         && data.element_id_vertical == connection_tag) {
         return element_connection;
     }
 
-    if (data.element_id_body == null_element           //
-        && data.element_id_horizontal != null_element  //
+    if (data.element_id_body == null_element  //
+        && data.element_id_horizontal         //
         && data.element_id_vertical == connection_tag) {
         return wire_connection;
     }
 
     if (data.element_id_body == null_element  //
-        && data.element_id_horizontal != null_element
+        && data.element_id_horizontal         //
         && data.element_id_vertical == null_element) {
         return wire_horizontal;
     }
 
     if (data.element_id_body == null_element           //
         && data.element_id_horizontal == null_element  //
-        && has_vertical_element(data)) {
+        && data.element_id_vertical) {
         return wire_vertical;
     }
 
-    if (data.element_id_body == null_element           //
-        && data.element_id_horizontal != null_element  //
-        && has_vertical_element(data)
+    if (data.element_id_body == wire_point_tag  //
+        && data.element_id_horizontal           //
+        && data.element_id_vertical             //
         && data.element_id_horizontal == data.element_id_vertical) {
         return wire_point;
     }
 
     // inferred states -> two elements
 
-    if (data.element_id_body == null_element           //
-        && data.element_id_horizontal != null_element  //
-        && has_vertical_element(data)
+    if (data.element_id_body == null_element  //
+        && data.element_id_horizontal         //
+        && data.element_id_vertical           //
         && data.element_id_horizontal != data.element_id_vertical) {
         return wire_crossing;
     }
 
-    if (data.element_id_body != null_element  //
-        && data.element_id_horizontal != null_element
+    if (data.element_id_body == null_element  //
+        && data.element_id_horizontal         //
+        && data.element_id_vertical           //
+        && data.element_id_horizontal == data.element_id_vertical) {
+        return wire_crossing;
+    }
+
+    if (data.element_id_body           //
+        && data.element_id_horizontal  //
         && data.element_id_vertical == connection_tag) {
         return element_wire_connection;
     }
+
+    throw_exception("invalid state");
 
     // return invalid state, so checking for states compiles efficiently
     return invalid_state;

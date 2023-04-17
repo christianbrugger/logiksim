@@ -48,8 +48,11 @@ class CollisionCache {
     };
 
     constexpr static inline auto connection_tag = element_id_t {-2};
+    constexpr static inline auto wire_point_tag = element_id_t {-3};
     static_assert(connection_tag != null_element);
     static_assert(connection_tag < element_id_t {0});
+    static_assert(wire_point_tag != null_element);
+    static_assert(wire_point_tag < element_id_t {0});
 
     static_assert(std::is_aggregate_v<collision_data_t>);
 
