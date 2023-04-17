@@ -199,6 +199,7 @@ auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> 
     }
 
     // segments
+    /*
     if (auto pointer = std::get_if<SegmentInserted>(&message)) {
         handle(*pointer);
         return;
@@ -215,6 +216,7 @@ auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> 
         handle(*pointer);
         return;
     }
+    */
 }
 
 template <bool IsInput>

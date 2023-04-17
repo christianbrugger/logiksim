@@ -10,53 +10,73 @@ namespace logicsim {
 
 class Circuit;
 
+namespace collision_cache {
+enum class ItemType {
+    element_body,
+    element_connection,
+    wire_connection,
+    wire_horizontal,
+    wire_vertical,
+    wire_point,
+
+    // for collisions not insertions
+    wire_new_unknown_point,
+};
+
+enum class CacheState {
+    element_body,
+    element_connection,
+    wire_connection,
+    wire_horizontal,
+    wire_vertical,
+    wire_point,
+
+    // inferred states
+    wire_crossing,
+    element_wire_connection,
+
+    invalid_state,
+};
+
+struct collision_data_t {
+    element_id_t element_id_body {null_element};
+    element_id_t element_id_horizontal {null_element};
+    element_id_t element_id_vertical {null_element};
+
+    auto operator==(const collision_data_t& other) const -> bool = default;
+};
+
+static_assert(std::is_aggregate_v<collision_data_t>);
+
+constexpr static inline auto connection_tag = element_id_t {-2};
+constexpr static inline auto wire_point_tag = element_id_t {-3};
+static_assert(connection_tag != null_element);
+static_assert(connection_tag < element_id_t {0});
+static_assert(wire_point_tag != null_element);
+static_assert(wire_point_tag < element_id_t {0});
+
+[[nodiscard]] auto is_element_body(collision_data_t data) -> bool;
+[[nodiscard]] auto is_element_connection(collision_data_t data) -> bool;
+[[nodiscard]] auto is_wire_connection(collision_data_t data) -> bool;
+[[nodiscard]] auto is_wire_horizontal(collision_data_t data) -> bool;
+[[nodiscard]] auto is_wire_vertical(collision_data_t data) -> bool;
+[[nodiscard]] auto is_wire_point(collision_data_t data) -> bool;
+// inferred states -> two elements
+[[nodiscard]] auto is_wire_crossing(collision_data_t data) -> bool;
+[[nodiscard]] auto is_element_wire_connection(collision_data_t data) -> bool;
+
+[[nodiscard]] auto to_state(collision_data_t data) -> CacheState;
+
+}  // namespace collision_cache
+
 class CollisionCache {
+    // using ItemType = collision_cache::ItemType;
+    // using CacheState = collision_cache::CacheState;
+    // using collision_data_t = collision_cache::collision_data_t;
+
    public:
-    enum class ItemType {
-        element_body,
-        element_connection,
-        wire_connection,
-        wire_horizontal,
-        wire_vertical,
-        wire_point,
-
-        // for collisions not insertions
-        wire_new_unknown_point,
-    };
-
-    enum class CacheState {
-        element_body,
-        element_connection,
-        wire_connection,
-        wire_horizontal,
-        wire_vertical,
-        wire_point,
-
-        // inferred states
-        wire_crossing,
-        element_wire_connection,
-
-        invalid_state,
-    };
-
-    struct collision_data_t {
-        element_id_t element_id_body {null_element};
-        element_id_t element_id_horizontal {null_element};
-        element_id_t element_id_vertical {null_element};
-
-        auto operator==(const collision_data_t& other) const -> bool = default;
-    };
-
-    constexpr static inline auto connection_tag = element_id_t {-2};
-    constexpr static inline auto wire_point_tag = element_id_t {-3};
-    static_assert(connection_tag != null_element);
-    static_assert(connection_tag < element_id_t {0});
-    static_assert(wire_point_tag != null_element);
-    static_assert(wire_point_tag < element_id_t {0});
-
-    static_assert(std::is_aggregate_v<collision_data_t>);
-
-    using map_type = ankerl::unordered_dense::map<point_t, collision_data_t>;
+    using map_type
+        = ankerl::unordered_dense::map<point_t, collision_cache::collision_data_t>;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
@@ -87,9 +107,8 @@ class CollisionCache {
     auto handle(editable_circuit::info_message::InsertedEndPointsUpdated message) -> void;
     auto handle(editable_circuit::info_message::SegmentUninserted message) -> void;
 
-    [[nodiscard]] static auto to_state(collision_data_t data) -> CacheState;
-    [[nodiscard]] auto state_colliding(point_t position, ItemType item_type) const
-        -> bool;
+    [[nodiscard]] auto state_colliding(point_t position,
+                                       collision_cache::ItemType item_type) const -> bool;
     [[nodiscard]] auto creates_loop(ordered_line_t line) const -> bool;
 
     map_type map_ {};

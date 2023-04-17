@@ -4,26 +4,120 @@
 
 namespace logicsim {
 
+namespace collision_cache {
+auto is_element_body(collision_data_t data) -> bool {
+    return data.element_id_body                           //
+           && data.element_id_horizontal == null_element  //
+           && data.element_id_vertical == null_element;
+}
+
+auto is_element_connection(collision_data_t data) -> bool {
+    return data.element_id_body                           //
+           && data.element_id_horizontal == null_element  //
+           && data.element_id_vertical == connection_tag;
+}
+
+auto is_wire_connection(collision_data_t data) -> bool {
+    return data.element_id_body == null_element  //
+           && data.element_id_horizontal         //
+           && data.element_id_vertical == connection_tag;
+}
+
+auto is_wire_horizontal(collision_data_t data) -> bool {
+    return data.element_id_body == null_element  //
+           && data.element_id_horizontal         //
+           && data.element_id_vertical == null_element;
+}
+
+auto is_wire_vertical(collision_data_t data) -> bool {
+    return data.element_id_body == null_element           //
+           && data.element_id_horizontal == null_element  //
+           && data.element_id_vertical;
+}
+
+auto is_wire_point(collision_data_t data) -> bool {
+    return data.element_id_body == wire_point_tag  //
+           && data.element_id_horizontal           //
+           && data.element_id_vertical             //
+           && data.element_id_horizontal == data.element_id_vertical;
+}
+
+// inferred states -> two elements
+
+auto is_wire_crossing(collision_data_t data) -> bool {
+    return data.element_id_body == null_element  //
+           && data.element_id_horizontal         //
+           && data.element_id_vertical;
+
+    // && data.element_id_horizontal != data.element_id_vertical
+    // && data.element_id_horizontal == data.element_id_vertical
+}
+
+auto is_element_wire_connection(collision_data_t data) -> bool {
+    return data.element_id_body           //
+           && data.element_id_horizontal  //
+           && data.element_id_vertical == connection_tag;
+}
+
+auto to_state(collision_data_t data) -> CacheState {
+    using enum CacheState;
+
+    if (is_element_body(data)) {
+        return element_body;
+    }
+    if (is_element_connection(data)) {
+        return element_connection;
+    }
+    if (is_wire_connection(data)) {
+        return wire_connection;
+    }
+    if (is_wire_horizontal(data)) {
+        return wire_horizontal;
+    }
+    if (is_wire_vertical(data)) {
+        return wire_vertical;
+    }
+    if (is_wire_point(data)) {
+        return wire_point;
+    }
+
+    // inferred states -> two elements
+    if (is_wire_crossing(data)) {
+        return wire_crossing;
+    }
+    if (is_element_wire_connection(data)) {
+        return element_wire_connection;
+    }
+
+    return invalid_state;
+}
+
+}  // namespace collision_cache
+
+//
+//
+//
+
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
 auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
-    if (!iter_input_location(
-            data, [=](point_t position, orientation_t _ [[maybe_unused]]) {
-                return next_state(position, CollisionCache::ItemType::element_connection);
-            })) {
-        return false;
-    }
+    using collision_cache::ItemType;
 
-    if (!iter_element_body_points(data, [=](point_t position) {
-            return next_state(position, CollisionCache::ItemType::element_body);
+    if (!iter_input_location(data, [=](point_t position, orientation_t) {
+            return next_state(position, ItemType::element_connection);
         })) {
         return false;
     }
 
-    if (!iter_output_location(
-            data, [=](point_t position, orientation_t _ [[maybe_unused]]) {
-                return next_state(position, CollisionCache::ItemType::element_connection);
-            })) {
+    if (!iter_element_body_points(data, [=](point_t position) {
+            return next_state(position, ItemType::element_body);
+        })) {
+        return false;
+    }
+
+    if (!iter_output_location(data, [=](point_t position, orientation_t) {
+            return next_state(position, ItemType::element_connection);
+        })) {
         return false;
     }
 
@@ -45,29 +139,28 @@ auto iter_collision_state(layout_calculation_data_t data, Func next_state) -> bo
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
 auto iter_collision_state_endpoints(segment_info_t segment, Func next_state) -> bool {
-    using enum CollisionCache::ItemType;
+    using collision_cache::ItemType;
 
-    const auto to_state
-        = [](SegmentPointType type) -> std::optional<CollisionCache::ItemType> {
+    const auto to_state = [](SegmentPointType type) -> std::optional<ItemType> {
         switch (type) {
             using enum SegmentPointType;
 
             case input:
             case output:
-                return wire_connection;
+                return ItemType::wire_connection;
             case colliding_point:
-                return wire_point;
+                return ItemType::wire_point;
             case cross_point_horizontal:
-                return wire_horizontal;
+                return ItemType::wire_horizontal;
             case cross_point_vertical:
-                return wire_vertical;
+                return ItemType::wire_vertical;
 
             case shadow_point:
             case visual_cross_point:
                 return std::nullopt;
 
             case new_unknown:
-                return wire_new_unknown_point;
+                return ItemType::wire_new_unknown_point;
         }
         throw_exception("unknown point type");
     };
@@ -92,7 +185,7 @@ auto iter_collision_state_endpoints(segment_info_t segment, Func next_state) -> 
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
 auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
-    using enum CollisionCache::ItemType;
+    using enum collision_cache::ItemType;
 
     {
         const auto line = segment.line;
@@ -119,24 +212,24 @@ namespace {
 // apply_func(element_id_t& obj) -> void
 template <typename Apply>
 auto apply_function(CollisionCache::map_type& map, point_t position,
-                    CollisionCache::ItemType state, Apply apply_func) -> bool {
+                    collision_cache::ItemType state, Apply apply_func) -> bool {
     auto& data = map[position];
 
     const auto set_connection_tag = [&]() {
         if (data.element_id_vertical) {
             throw_exception("cannot set connection tag, second element occupied");
         }
-        data.element_id_vertical = CollisionCache::connection_tag;
+        data.element_id_vertical = collision_cache::connection_tag;
     };
     const auto set_wire_point_tag = [&]() {
         if (data.element_id_body) {
             throw_exception("cannot set wire_point tag, element body is occupied");
         }
-        data.element_id_body = CollisionCache::wire_point_tag;
+        data.element_id_body = collision_cache::wire_point_tag;
     };
 
     switch (state) {
-        using enum CollisionCache::ItemType;
+        using enum collision_cache::ItemType;
 
         case element_body: {
             apply_func(data.element_id_body);
@@ -213,7 +306,7 @@ auto insert_impl(CollisionCache::map_type& map, element_id_t element_id, Data da
     -> void {
     const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
 
-    iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
+    iter_collision_state(data, [&](point_t position, collision_cache::ItemType state) {
         return apply_function(map, position, state, check_empty_and_assign);
     });
 }
@@ -223,7 +316,7 @@ auto remove_impl(CollisionCache::map_type& map, element_id_t element_id, Data da
     -> void {
     const auto check_and_delete = get_check_and_delete(element_id);
 
-    iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
+    iter_collision_state(data, [&](point_t position, collision_cache::ItemType state) {
         return apply_function(map, position, state, check_and_delete);
     });
 }
@@ -233,7 +326,7 @@ auto update_impl(CollisionCache::map_type& map, element_id_t new_element_id,
                  element_id_t old_element_id, Data data) -> void {
     const auto check_and_update = get_check_and_update(new_element_id, old_element_id);
 
-    iter_collision_state(data, [&](point_t position, CollisionCache::ItemType state) {
+    iter_collision_state(data, [&](point_t position, collision_cache::ItemType state) {
         return apply_function(map, position, state, check_and_update);
     });
 }
@@ -245,11 +338,11 @@ auto CollisionCache::handle(
     const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
 
     iter_collision_state_endpoints(
-        message.old_segment_info, [&](point_t position, CollisionCache::ItemType state) {
+        message.old_segment_info, [&](point_t position, collision_cache::ItemType state) {
             return apply_function(map_, position, state, check_and_delete);
         });
     iter_collision_state_endpoints(
-        message.new_segment_info, [&](point_t position, CollisionCache::ItemType state) {
+        message.new_segment_info, [&](point_t position, collision_cache::ItemType state) {
             return apply_function(map_, position, state, check_empty_and_assign);
         });
 }
@@ -329,39 +422,35 @@ auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
     }
 }
 
-auto CollisionCache::state_colliding(point_t position, ItemType item_type) const -> bool {
+auto CollisionCache::state_colliding(point_t position,
+                                     collision_cache::ItemType item_type) const -> bool {
     if (const auto it = map_.find(position); it != map_.end()) {
         const auto data = it->second;
 
         switch (item_type) {
-            using enum CollisionCache::ItemType;
+            using namespace collision_cache;
+            using enum collision_cache::ItemType;
 
             case element_body: {
                 return true;
             }
             case element_connection: {
-                return to_state(data) != CacheState::wire_connection;
+                return !is_wire_connection(data);
             }
             case wire_connection: {
-                return to_state(data) != CacheState::element_connection;
+                return !is_element_connection(data);
             }
             case wire_horizontal: {
-                return to_state(data) != CacheState::wire_vertical;
+                return !is_wire_vertical(data);
             }
             case wire_vertical: {
-                return to_state(data) != CacheState::wire_horizontal;
+                return !is_wire_horizontal(data);
             }
             case wire_point: {
                 return true;
             }
-            case ItemType::wire_new_unknown_point: {
-                const auto state = to_state(data);
-                // disallow element body
-                return state != CacheState::element_connection
-                       && state != CacheState::wire_connection
-                       && state != CacheState::wire_horizontal
-                       && state != CacheState::wire_vertical
-                       && state != CacheState::wire_point;
+            case wire_new_unknown_point: {
+                return is_element_body(data) || is_element_wire_connection(data);
             }
         };
     }
@@ -369,9 +458,10 @@ auto CollisionCache::state_colliding(point_t position, ItemType item_type) const
 };
 
 auto CollisionCache::is_colliding(layout_calculation_data_t data) const -> bool {
-    return !iter_collision_state(data, [&](point_t position, ItemType state) {
+    const auto not_colliding = [&](point_t position, collision_cache::ItemType state) {
         return !state_colliding(position, state);
-    });
+    };
+    return !iter_collision_state(data, not_colliding);
 }
 
 auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
@@ -406,77 +496,10 @@ auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
         .p1_type = SegmentPointType::new_unknown,
     };
 
-    return !iter_collision_state(segment, [&](point_t position, ItemType state) {
+    const auto not_colliding = [&](point_t position, collision_cache::ItemType state) {
         return !state_colliding(position, state);
-    });
-}
-
-auto CollisionCache::to_state(collision_data_t data) -> CacheState {
-    using enum CacheState;
-
-    if (data.element_id_body                           //
-        && data.element_id_horizontal == null_element  //
-        && data.element_id_vertical == null_element) {
-        return element_body;
-    }
-
-    if (data.element_id_body                           //
-        && data.element_id_horizontal == null_element  //
-        && data.element_id_vertical == connection_tag) {
-        return element_connection;
-    }
-
-    if (data.element_id_body == null_element  //
-        && data.element_id_horizontal         //
-        && data.element_id_vertical == connection_tag) {
-        return wire_connection;
-    }
-
-    if (data.element_id_body == null_element  //
-        && data.element_id_horizontal         //
-        && data.element_id_vertical == null_element) {
-        return wire_horizontal;
-    }
-
-    if (data.element_id_body == null_element           //
-        && data.element_id_horizontal == null_element  //
-        && data.element_id_vertical) {
-        return wire_vertical;
-    }
-
-    if (data.element_id_body == wire_point_tag  //
-        && data.element_id_horizontal           //
-        && data.element_id_vertical             //
-        && data.element_id_horizontal == data.element_id_vertical) {
-        return wire_point;
-    }
-
-    // inferred states -> two elements
-
-    if (data.element_id_body == null_element  //
-        && data.element_id_horizontal         //
-        && data.element_id_vertical           //
-        && data.element_id_horizontal != data.element_id_vertical) {
-        return wire_crossing;
-    }
-
-    if (data.element_id_body == null_element  //
-        && data.element_id_horizontal         //
-        && data.element_id_vertical           //
-        && data.element_id_horizontal == data.element_id_vertical) {
-        return wire_crossing;
-    }
-
-    if (data.element_id_body           //
-        && data.element_id_horizontal  //
-        && data.element_id_vertical == connection_tag) {
-        return element_wire_connection;
-    }
-
-    throw_exception("invalid state");
-
-    // return invalid state, so checking for states compiles efficiently
-    return invalid_state;
+    };
+    return !iter_collision_state(segment, not_colliding);
 }
 
 auto CollisionCache::validate(const Circuit& circuit) const -> void {
