@@ -92,7 +92,7 @@ auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t lin
 auto validate_segment_parts(std::span<const part_t> parts, ordered_line_t line) -> void;
 
 template <typename Container = std::vector<part_t>>
-auto _sort_and_merge_parts(Container &entries) -> void {
+auto sort_and_merge_parts(Container &entries) -> void {
     if (entries.empty()) {
         return;
     }
@@ -124,7 +124,7 @@ auto _sort_and_merge_parts(Container &entries) -> void {
 template <typename Container = std::vector<part_t>>
 auto add_part(Container &entries, part_t new_part) -> void {
     entries.push_back(new_part);
-    _sort_and_merge_parts(entries);
+    sort_and_merge_parts(entries);
 }
 
 template <typename Container = std::vector<part_t>>
@@ -213,7 +213,7 @@ auto copy_parts(const Container &source_entries, Container &destination_entries,
     _add_intersecting_parts(source_entries, destination_entries, part_destination);
 
     if (!original_empty) {
-        _sort_and_merge_parts(destination_entries);
+        sort_and_merge_parts(destination_entries);
     }
 }
 
@@ -256,7 +256,7 @@ auto copy_parts(const Container &source_entries, Container &destination_entries,
     _add_intersecting_parts(source_entries, destination_entries, parts);
 
     if (!original_empty) {
-        _sort_and_merge_parts(destination_entries);
+        sort_and_merge_parts(destination_entries);
     }
 }
 

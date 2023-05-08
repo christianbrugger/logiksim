@@ -152,9 +152,17 @@ auto SelectionBuilder::calculate_selection() const -> Selection {
 
     for (auto&& operation : operations_) {
         apply_function(selection, cache_provider_->spatial_cache(), *layout_, operation);
+
+        if (operation.function == SelectionFunction::add) {
+            sanitize_selection(selection, *layout_, cache_provider_->collision_cache(),
+                               SanitizeMode::expand);
+        }
+        if (operation.function == SelectionFunction::substract) {
+            sanitize_selection(selection, *layout_, cache_provider_->collision_cache(),
+                               SanitizeMode::shrink);
+        }
     }
 
-    sanitize_selection(selection, *layout_, cache_provider_->collision_cache());
     return selection;
 }
 

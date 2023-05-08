@@ -14,6 +14,17 @@
 
 namespace logicsim {
 
+template <>
+auto format(SanitizeMode mode) -> std::string {
+    switch (mode) {
+        case SanitizeMode::shrink:
+            return "shrink";
+        case SanitizeMode::expand:
+            return "expand";
+    }
+    throw_exception("unknown SanitizeMode");
+}
+
 namespace {
 
 class CrossingCache {
@@ -365,11 +376,77 @@ auto find_best_sanitized_parts(std::span<const part_t> parts, const CrossingCach
     // the completely selected or unselected segment is always valid
     throw_exception("we should always find one");
 }
+
+auto find_lower(offset_t offset, const CrossingCache &cache, offset_t limit) -> offset_t {
+    while (offset > limit) {
+        if (!cache.is_colliding(--offset)) {
+            return offset;
+        }
+    }
+    return offset;
+}
+
+auto find_higher(offset_t offset, const CrossingCache &cache, offset_t limit)
+    -> offset_t {
+    while (offset < limit) {
+        if (!cache.is_colliding(++offset)) {
+            return offset;
+        }
+    }
+    return offset;
+}
+
+auto find_best_sanitized_parts_fast(std::span<const part_t> parts,
+                                    const CrossingCache &cache, const SanitizeMode mode)
+    -> part_vector_t {
+    const auto max_offset = cache.max_offset();
+
+    auto new_parts = part_vector_t {};
+
+    for (const auto &part : parts) {
+        const auto begin_colliding = cache.is_colliding(part.begin);
+        const auto end_colliding = cache.is_colliding(part.end);
+
+        auto new_offsets = [mode, &cache, part, begin_colliding, end_colliding,
+                            max_offset]() {
+            if (mode == SanitizeMode::expand) {
+                return std::pair<offset_t, offset_t> {
+                    begin_colliding ? find_lower(part.begin, cache, offset_t {0})
+                                    : part.begin,
+                    end_colliding ? find_higher(part.end, cache, max_offset) : part.end,
+                };
+            }
+            return std::pair<offset_t, offset_t> {
+                begin_colliding ? find_higher(part.begin, cache, part.end) : part.begin,
+                end_colliding ? find_lower(part.end, cache, part.begin) : part.end,
+            };
+        }();
+
+        if (new_offsets.first < new_offsets.second) {
+            if (cache.is_colliding(new_offsets.first)) {
+                throw_exception("first collides");
+            }
+            if (cache.is_colliding(new_offsets.second)) {
+                throw_exception("second collides");
+            }
+
+            new_parts.push_back(part_t {new_offsets.first, new_offsets.second});
+        }
+    }
+    if (mode == SanitizeMode::expand) {
+        sort_and_merge_parts(new_parts);
+    }
+    fmt::print("parts = {}, new_parts = {}\n", parts, new_parts);
+    return new_parts;
+}
+
 }  // namespace
 
 auto sanitize_selection(Selection &selection, const Layout &layout,
-                        const CollisionCache &cache) -> void {
+                        const CollisionCache &cache, SanitizeMode mode) -> void {
     auto crossing_cache = CrossingCache {cache};
+
+    std::vector<segment_t> to_delete {};
 
     for (const auto &entry : selection.selected_segments()) {
         const auto segment = entry.first;
@@ -377,9 +454,18 @@ auto sanitize_selection(Selection &selection, const Layout &layout,
 
         crossing_cache.set_line(full_line);
         if (is_colliding(entry.second, crossing_cache)) {
-            selection.set_selection(
-                segment, find_best_sanitized_parts(entry.second, crossing_cache));
+            auto new_segments
+                = find_best_sanitized_parts_fast(entry.second, crossing_cache, mode);
+            if (new_segments.empty()) {
+                to_delete.push_back(segment);
+            } else {
+                selection.set_selection(segment, std::move(new_segments));
+            }
         }
+    }
+
+    for (auto &segment : to_delete) {
+        selection.set_selection(segment, {});
     }
 }
 
