@@ -20,9 +20,6 @@ auto format(SanitizeMode mode) -> std::string;
 auto sanitize_selection(Selection &selection, const Layout &layout,
                         const CollisionCache &cache, SanitizeMode mode) -> void;
 
-auto sanitize_selection_simple(Selection &selection, const Layout &layout,
-                               const CollisionCache &cache) -> void;
-
 }  // namespace logicsim
 
 #endif
