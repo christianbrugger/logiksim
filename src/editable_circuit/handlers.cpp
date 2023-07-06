@@ -736,6 +736,21 @@ auto add_segment_to_tree(Circuit& circuit, MessageSender sender,
     return segment_part_t {segment, to_part(line)};
 }
 
+auto reset_segment_endpoints(Circuit& circuit, const segment_t segment) {
+    if (is_inserted(circuit, segment.element_id)) [[unlikely]] {
+        throw_exception("cannot reset endpoints of inserted wire segment");
+    }
+    auto& m_tree = circuit.layout().modifyable_segment_tree(segment.element_id);
+
+    const auto new_info = segment_info_t {
+        .line = m_tree.segment_line(segment.segment_index),
+        .p0_type = SegmentPointType::shadow_point,
+        .p1_type = SegmentPointType::shadow_point,
+    };
+
+    m_tree.update_segment(segment.segment_index, new_info);
+}
+
 auto add_segment_to_aggregate(Circuit& circuit, MessageSender sender,
                               const ordered_line_t line,
                               const display_state_t aggregate_type) -> segment_part_t {
@@ -1503,16 +1518,15 @@ auto _wire_change_colliding_to_insert(Layout& layout, MessageSender sender,
 }
 
 auto delete_empty_tree(Circuit& circuit, MessageSender sender, element_id_t element_id,
-                       element_id_t* preserve_element = nullptr) -> bool {
+                       element_id_t* preserve_element = nullptr) {
     auto& layout = circuit.layout();
 
-    if (is_inserted(layout, element_id) && layout.segment_tree(element_id).empty()) {
-        layout.set_display_state(element_id, display_state_t::temporary);
-        swap_and_delete_single_element_private(circuit, sender, element_id,
-                                               preserve_element);
-        return true;
+    if (!is_inserted(layout, element_id) || !layout.segment_tree(element_id).empty()) {
+        throw_exception("can only delete empty inserted segment trees");
     }
-    return false;
+
+    layout.set_display_state(element_id, display_state_t::temporary);
+    swap_and_delete_single_element_private(circuit, sender, element_id, preserve_element);
 }
 
 // we assume we get a valid tree where the part between p0 and p1 has been removed
@@ -1561,10 +1575,10 @@ auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_pa
     auto& layout = state.layout;
 
     const auto source_id = segment_part.segment.element_id;
-    const auto inserted = is_inserted(layout, segment_part.segment.element_id);
+    const auto was_inserted = is_inserted(layout, segment_part.segment.element_id);
     const auto moved_line = get_line(layout, segment_part);
 
-    if (inserted) {
+    if (was_inserted) {
         unmark_valid(layout, segment_part);
     }
 
@@ -1573,14 +1587,17 @@ auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_pa
                                                         display_state_t::temporary);
     move_segment_between_trees(layout, state.sender, segment_part, destination_id);
 
-    // fixup remaining tree
-    if (inserted
-        && !delete_empty_tree(state.circuit, state.sender, source_id,
-                              &segment_part.segment.element_id)) {
-        fix_and_merge_segments(state, moved_line.p0);
-        fix_and_merge_segments(state, moved_line.p1);
+    if (was_inserted) {
+        if (layout.segment_tree(source_id).empty()) {
+            delete_empty_tree(state.circuit, state.sender, source_id,
+                              &segment_part.segment.element_id);
+        } else {
+            fix_and_merge_segments(state, moved_line.p0);
+            fix_and_merge_segments(state, moved_line.p1);
 
-        split_broken_tree(state, moved_line.p0, moved_line.p1);
+            split_broken_tree(state, moved_line.p0, moved_line.p1);
+        }
+        reset_segment_endpoints(state.circuit, segment_part.segment);
     }
 }
 
@@ -1594,6 +1611,7 @@ auto change_wire_insertion_mode_private(State state, segment_part_t& segment_par
     }
 
     // as parts have length, the line segment can have two possible modes
+    // a part could be in state valid (insert_or_discard) and another in state normal
     const auto old_modes = get_insertion_modes(state.layout, segment_part);
 
     if (old_modes.first == new_mode && old_modes.second == new_mode) {

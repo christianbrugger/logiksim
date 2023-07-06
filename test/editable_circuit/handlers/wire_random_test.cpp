@@ -1,6 +1,7 @@
 #include "./test_helpers.h"
 #include "editable_circuit/handler_examples.h"
 #include "editable_circuit/handlers.h"
+#include "editable_circuit/sanitizer.h"
 #include "format.h"
 #include "line_tree.h"
 #include "timer.h"
@@ -280,6 +281,58 @@ TEST(HandlerWireFuzz, RemoveManyWiresDifferentModes) {
         auto rng = Rng {i};
 
         test_remove_many_wires(rng, true);
+    }
+}
+
+//
+// Remove wires partially
+//
+
+namespace {
+auto test_remove_partial_wires(Rng& rng, bool random_modes) {
+    auto circuit = empty_circuit();
+    auto setup = HandlerSetup {circuit};
+
+    editable_circuit::examples::add_many_wires(rng, setup.state, random_modes);
+
+    while (true) {
+        auto segment_part = get_random_segment_part(rng, circuit.layout());
+        if (!segment_part) {
+            break;
+        }
+        segment_part = sanitize_part(segment_part, circuit.layout(),
+                                     setup.cache.collision_cache(), SanitizeMode::expand);
+        if (!segment_part) {
+            throw_exception("invalid segment part");
+        }
+
+        const auto orig_distance = distance(segment_part.part);
+        change_wire_insertion_mode(setup.state, segment_part, InsertionMode::temporary);
+        if (!segment_part || orig_distance != distance(segment_part.part)) {
+            throw_exception("invalid segment part");
+        }
+
+        delete_wire_segment(setup.circuit.layout(), setup.sender, segment_part);
+        if (segment_part) {
+            throw_exception("segment should be invalid");
+        }
+
+        setup.validate();
+    }
+
+    if (has_segments(circuit.layout())) {
+        throw_exception("circuit should be empty at this point");
+    }
+
+    setup.validate();
+}
+}  // namespace
+
+TEST(HandlerWireFuzz, RemovePartialInsertedWires) {
+    for (auto i : range(50u)) {
+        auto rng = Rng {i};
+
+        test_remove_partial_wires(rng, false);
     }
 }
 

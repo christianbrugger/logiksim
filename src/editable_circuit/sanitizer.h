@@ -8,6 +8,7 @@ namespace logicsim {
 class CollisionCache;
 class Selection;
 class Layout;
+struct segment_part_t;
 
 enum class SanitizeMode {
     expand,
@@ -16,6 +17,9 @@ enum class SanitizeMode {
 
 template <>
 auto format(SanitizeMode mode) -> std::string;
+
+auto sanitize_part(segment_part_t segment_part, const Layout &layout,
+                   const CollisionCache &cache, SanitizeMode mode) -> segment_part_t;
 
 auto sanitize_selection(Selection &selection, const Layout &layout,
                         const CollisionCache &cache, SanitizeMode mode) -> void;

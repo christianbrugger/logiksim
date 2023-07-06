@@ -152,6 +152,7 @@ auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int del
 
     const auto get_position
         = position_calculator(circuit_.value().layout(), delta_x, delta_y);
+
     // TODO refactor to algorithm
     while (handle->selected_logic_items().size() > 0) {
         auto element_id = handle->selected_logic_items()[0];
@@ -160,6 +161,17 @@ auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int del
         const auto [x, y] = get_position(element_id);
         editable_circuit::move_or_delete_logic_item(circuit_.value(), get_sender(),
                                                     element_id, x, y);
+    }
+
+    while (handle->selected_segments().size() > 0) {
+        auto segment_part = segment_part_t {
+            .segment = handle->selected_segments()[0].first,
+            .part = handle->selected_segments()[0].second.at(0),
+        };
+        handle->remove_segment(segment_part);
+
+        editable_circuit::move_or_delete_wire(circuit_.value().layout(), get_sender(),
+                                              segment_part, delta_x, delta_y);
     }
 }
 
@@ -172,13 +184,26 @@ auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
         print(handle);
     }
 
+    const auto state = get_state();
+
     // TODO refactor to algorithm
     while (handle->selected_logic_items().size() > 0) {
         auto element_id = handle->selected_logic_items()[0];
         handle->remove_logicitem(element_id);
 
-        editable_circuit::change_logic_item_insertion_mode(get_state(), element_id,
+        editable_circuit::change_logic_item_insertion_mode(state, element_id,
                                                            new_insertion_mode);
+    }
+
+    while (handle->selected_segments().size() > 0) {
+        auto segment_part = segment_part_t {
+            .segment = handle->selected_segments()[0].first,
+            .part = handle->selected_segments()[0].second.at(0),
+        };
+        handle->remove_segment(segment_part);
+
+        editable_circuit::change_wire_insertion_mode(state, segment_part,
+                                                     new_insertion_mode);
     }
 }
 

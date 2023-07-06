@@ -47,7 +47,7 @@ class CrossingCache {
 
    private:
     const CollisionCache &collision_cache_;
-    ordered_line_t full_line_;
+    const ordered_line_t full_line_;
 };
 
 using part_vector_t = Selection::part_vector_t;
@@ -80,32 +80,39 @@ auto find_higher(offset_t offset, const CrossingCache &cache, offset_t limit)
     return offset;
 }
 
-auto find_best_sanitized_parts_fast(std::span<const part_t> parts,
-                                    const CrossingCache &cache, const SanitizeMode mode)
-    -> part_vector_t {
-    auto new_parts = part_vector_t {};
-
-    for (const auto &part : parts) {
+auto find_sanitized_part(const part_t part, const CrossingCache &cache,
+                         const SanitizeMode mode) -> std::optional<part_t> {
+    const auto new_offsets = [mode, &cache, part]() {
         const auto begin_colliding = cache.is_colliding(part.begin);
         const auto end_colliding = cache.is_colliding(part.end);
 
-        auto new_offsets = [mode, &cache, part, begin_colliding, end_colliding]() {
-            if (mode == SanitizeMode::expand) {
-                return std::pair<offset_t, offset_t> {
-                    begin_colliding ? find_lower(part.begin, cache, offset_t {0})
-                                    : part.begin,
-                    end_colliding ? find_higher(part.end, cache, cache.max_offset())
-                                  : part.end,
-                };
-            }
+        if (mode == SanitizeMode::expand) {
             return std::pair<offset_t, offset_t> {
-                begin_colliding ? find_higher(part.begin, cache, part.end) : part.begin,
-                end_colliding ? find_lower(part.end, cache, part.begin) : part.end,
+                begin_colliding ? find_lower(part.begin, cache, offset_t {0})
+                                : part.begin,
+                end_colliding ? find_higher(part.end, cache, cache.max_offset())
+                              : part.end,
             };
-        }();
+        }
+        return std::pair<offset_t, offset_t> {
+            begin_colliding ? find_higher(part.begin, cache, part.end) : part.begin,
+            end_colliding ? find_lower(part.end, cache, part.begin) : part.end,
+        };
+    }();
 
-        if (new_offsets.first < new_offsets.second) {
-            new_parts.push_back(part_t {new_offsets.first, new_offsets.second});
+    if (new_offsets.first < new_offsets.second) {
+        return part_t {new_offsets.first, new_offsets.second};
+    }
+    return std::nullopt;
+}
+
+auto find_sanitized_parts(std::span<const part_t> parts, const CrossingCache &cache,
+                          const SanitizeMode mode) -> part_vector_t {
+    auto new_parts = part_vector_t {};
+
+    for (const auto &part : parts) {
+        if (const auto new_part = find_sanitized_part(part, cache, mode)) {
+            new_parts.push_back(new_part.value());
         }
     }
     if (mode == SanitizeMode::expand) {
@@ -115,6 +122,18 @@ auto find_best_sanitized_parts_fast(std::span<const part_t> parts,
 }
 
 }  // namespace
+
+auto sanitize_part(segment_part_t segment_part, const Layout &layout,
+                   const CollisionCache &cache, SanitizeMode mode) -> segment_part_t {
+    const auto full_line = get_line(layout, segment_part.segment);
+    const auto crossing_cache = CrossingCache {cache, full_line};
+
+    if (const auto new_part
+        = find_sanitized_part(segment_part.part, crossing_cache, mode)) {
+        return segment_part_t {segment_part.segment, new_part.value()};
+    }
+    return null_segment_part;
+}
 
 auto sanitize_selection(Selection &selection, const Layout &layout,
                         const CollisionCache &cache, SanitizeMode mode) -> void {
@@ -126,8 +145,7 @@ auto sanitize_selection(Selection &selection, const Layout &layout,
         const auto crossing_cache = CrossingCache {cache, full_line};
 
         if (is_colliding(entry.second, crossing_cache)) {
-            auto new_segments
-                = find_best_sanitized_parts_fast(entry.second, crossing_cache, mode);
+            auto new_segments = find_sanitized_parts(entry.second, crossing_cache, mode);
             if (new_segments.empty()) {
                 to_delete.push_back(segment);
             } else {

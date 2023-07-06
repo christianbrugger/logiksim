@@ -45,6 +45,7 @@ class SegmentTree;
 auto get_random_segment_tree(Rng& rng, const Layout& layout) -> element_id_t;
 auto get_random_segment(Rng& rng, const SegmentTree& tree) -> segment_index_t;
 auto get_random_segment(Rng& rng, const Layout& layout) -> segment_t;
+auto get_random_segment_part(Rng& rng, const Layout& layout) -> segment_part_t;
 
 }  // namespace logicsim
 

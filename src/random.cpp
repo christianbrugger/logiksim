@@ -137,6 +137,16 @@ auto get_random_segment(Rng& rng, const Layout& layout) -> segment_t {
     return segment_t {element_id, segment_index};
 }
 
+auto get_random_segment_part(Rng& rng, const Layout& layout) -> segment_part_t {
+    auto segment = get_random_segment(rng, layout);
+    if (!segment) {
+        return null_segment_part;
+    }
+
+    auto part = get_random_part(rng, get_line(layout, segment));
+    return segment_part_t {segment, part};
+}
+
 // randomly select tree
 
 // get random segment
