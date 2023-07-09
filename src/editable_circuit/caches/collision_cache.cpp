@@ -35,10 +35,17 @@ auto is_wire_vertical(collision_data_t data) -> bool {
            && data.element_id_vertical;
 }
 
-auto is_wire_point(collision_data_t data) -> bool {
-    return data.element_id_body == wire_point_tag  //
-           && data.element_id_horizontal           //
-           && data.element_id_vertical             //
+auto is_wire_corner_point(collision_data_t data) -> bool {
+    return data.element_id_body == wire_corner_point_tag  //
+           && data.element_id_horizontal                  //
+           && data.element_id_vertical                    //
+           && data.element_id_horizontal == data.element_id_vertical;
+}
+
+auto is_wire_cross_point(collision_data_t data) -> bool {
+    return data.element_id_body == wire_cross_point_tag  //
+           && data.element_id_horizontal                 //
+           && data.element_id_vertical                   //
            && data.element_id_horizontal == data.element_id_vertical;
 }
 
@@ -77,8 +84,11 @@ auto to_state(collision_data_t data) -> CacheState {
     if (is_wire_vertical(data)) {
         return wire_vertical;
     }
-    if (is_wire_point(data)) {
-        return wire_point;
+    if (is_wire_corner_point(data)) {
+        return wire_corner_point;
+    }
+    if (is_wire_cross_point(data)) {
+        return wire_cross_point;
     }
 
     // inferred states -> two elements
@@ -90,6 +100,11 @@ auto to_state(collision_data_t data) -> CacheState {
     }
 
     return invalid_state;
+}
+
+auto collision_data_t::format() const -> std::string {
+    return fmt::format("<collision_data: {}, {}, {}>", element_id_body,
+                       element_id_horizontal, element_id_vertical);
 }
 
 }  // namespace collision_cache
@@ -148,15 +163,12 @@ auto iter_collision_state_endpoints(segment_info_t segment, Func next_state) -> 
             case input:
             case output:
                 return ItemType::wire_connection;
-            case colliding_point:
-                return ItemType::wire_point;
-            case cross_point_horizontal:
-                return ItemType::wire_horizontal;
-            case cross_point_vertical:
-                return ItemType::wire_vertical;
+            case corner_point:
+                return ItemType::wire_corner_point;
+            case cross_point:
+                return ItemType::wire_cross_point;
 
             case shadow_point:
-            case visual_cross_point:
                 return std::nullopt;
 
             case new_unknown:
@@ -221,11 +233,19 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
         }
         data.element_id_vertical = collision_cache::connection_tag;
     };
-    const auto set_wire_point_tag = [&]() {
-        if (data.element_id_body) {
-            throw_exception("cannot set wire_point tag, element body is occupied");
+    const auto set_wire_corner_point_tag = [&]() {
+        if (data.element_id_body != null_element
+            && data.element_id_body != collision_cache::wire_corner_point_tag) {
+            throw_exception("cannot set wire_corner_point tag, element body is occupied");
         }
-        data.element_id_body = collision_cache::wire_point_tag;
+        data.element_id_body = collision_cache::wire_corner_point_tag;
+    };
+    const auto set_wire_cross_point_tag = [&]() {
+        if (data.element_id_body != null_element
+            && data.element_id_body != collision_cache::wire_cross_point_tag) {
+            throw_exception("cannot set wire_corner_point tag, element body is occupied");
+        }
+        data.element_id_body = collision_cache::wire_cross_point_tag;
     };
 
     switch (state) {
@@ -253,8 +273,14 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
             apply_func(data.element_id_vertical);
             break;
         }
-        case wire_point: {
-            set_wire_point_tag();
+        case wire_corner_point: {
+            set_wire_corner_point_tag();
+            apply_func(data.element_id_horizontal);
+            apply_func(data.element_id_vertical);
+            break;
+        }
+        case wire_cross_point: {
+            set_wire_cross_point_tag();
             apply_func(data.element_id_horizontal);
             apply_func(data.element_id_vertical);
             break;
@@ -446,7 +472,10 @@ auto CollisionCache::state_colliding(point_t position,
             case wire_vertical: {
                 return !is_wire_horizontal(data);
             }
-            case wire_point: {
+            case wire_corner_point: {
+                return true;
+            }
+            case wire_cross_point: {
                 return true;
             }
             case wire_new_unknown_point: {
@@ -511,6 +540,16 @@ auto CollisionCache::is_wires_crossing(point_t point) const -> bool {
     }
 
     return collision_cache::is_wire_crossing(it->second);
+}
+
+auto CollisionCache::is_wire_cross_point(point_t point) const -> bool {
+    const auto it = map_.find(point);
+
+    if (it == map_.end()) {
+        return false;
+    }
+
+    return collision_cache::is_wire_cross_point(it->second);
 }
 
 auto CollisionCache::validate(const Circuit& circuit) const -> void {

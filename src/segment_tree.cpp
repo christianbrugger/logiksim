@@ -19,17 +19,13 @@ auto format(SegmentPointType type) -> std::string {
             return "input";
         case output:
             return "output";
-        case colliding_point:
-            return "colliding_point";
-        case cross_point_horizontal:
-            return "cross_point_horizontal";
-        case cross_point_vertical:
-            return "cross_point_vertical";
+        case corner_point:
+            return "corner_point";
+        case cross_point:
+            return "cross_point";
 
         case shadow_point:
             return "shadow_point";
-        case visual_cross_point:
-            return "visual_cross_point";
         case new_unknown:
             return "new_unknown";
     }
@@ -38,8 +34,7 @@ auto format(SegmentPointType type) -> std::string {
 
 auto is_cross_point(SegmentPointType point_type) -> bool {
     using enum SegmentPointType;
-    return point_type == cross_point_horizontal || point_type == cross_point_vertical
-           || point_type == visual_cross_point;
+    return point_type == cross_point;
 }
 
 auto is_connection(SegmentPointType point_type) -> bool {
@@ -206,11 +201,9 @@ auto SegmentTree::register_segment(segment_index_t index) -> void {
                 break;
             }
 
-            case colliding_point:
-            case cross_point_horizontal:
-            case cross_point_vertical:
+            case corner_point:
+            case cross_point:
             case shadow_point:
-            case visual_cross_point:
             case new_unknown: {
                 break;
             }
@@ -249,11 +242,9 @@ auto SegmentTree::unregister_segment(segment_index_t index) -> void {
                 break;
             }
 
-            case colliding_point:
-            case cross_point_horizontal:
-            case cross_point_vertical:
+            case corner_point:
+            case cross_point:
             case shadow_point:
-            case visual_cross_point:
             case new_unknown: {
                 break;
             }

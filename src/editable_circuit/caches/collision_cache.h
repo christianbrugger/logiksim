@@ -17,7 +17,8 @@ enum class ItemType {
     wire_connection,
     wire_horizontal,
     wire_vertical,
-    wire_point,
+    wire_corner_point,
+    wire_cross_point,
 
     // for collisions not insertions
     wire_new_unknown_point,
@@ -29,7 +30,8 @@ enum class CacheState {
     wire_connection,
     wire_horizontal,
     wire_vertical,
-    wire_point,
+    wire_corner_point,
+    wire_cross_point,
 
     // inferred states
     wire_crossing,
@@ -44,23 +46,29 @@ struct collision_data_t {
     element_id_t element_id_vertical {null_element};
 
     auto operator==(const collision_data_t& other) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::is_aggregate_v<collision_data_t>);
 
 constexpr static inline auto connection_tag = element_id_t {-2};
-constexpr static inline auto wire_point_tag = element_id_t {-3};
+constexpr static inline auto wire_corner_point_tag = element_id_t {-3};
+constexpr static inline auto wire_cross_point_tag = element_id_t {-4};
+
 static_assert(connection_tag != null_element);
 static_assert(connection_tag < element_id_t {0});
-static_assert(wire_point_tag != null_element);
-static_assert(wire_point_tag < element_id_t {0});
+static_assert(wire_corner_point_tag != null_element);
+static_assert(wire_corner_point_tag < element_id_t {0});
+static_assert(wire_cross_point_tag != null_element);
+static_assert(wire_cross_point_tag < element_id_t {0});
 
 [[nodiscard]] auto is_element_body(collision_data_t data) -> bool;
 [[nodiscard]] auto is_element_connection(collision_data_t data) -> bool;
 [[nodiscard]] auto is_wire_connection(collision_data_t data) -> bool;
 [[nodiscard]] auto is_wire_horizontal(collision_data_t data) -> bool;
 [[nodiscard]] auto is_wire_vertical(collision_data_t data) -> bool;
-[[nodiscard]] auto is_wire_point(collision_data_t data) -> bool;
+[[nodiscard]] auto is_wire_corner_point(collision_data_t data) -> bool;
+[[nodiscard]] auto is_wire_cross_point(collision_data_t data) -> bool;
 // inferred states -> two elements
 [[nodiscard]] auto is_wire_crossing(collision_data_t data) -> bool;
 [[nodiscard]] auto is_element_wire_connection(collision_data_t data) -> bool;
@@ -80,6 +88,7 @@ class CollisionCache {
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(ordered_line_t line) const -> bool;
     [[nodiscard]] auto is_wires_crossing(point_t point) const -> bool;
+    [[nodiscard]] auto is_wire_cross_point(point_t point) const -> bool;
 
     [[nodiscard]] auto get_first_wire(point_t position) const -> element_id_t;
 

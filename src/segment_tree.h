@@ -21,12 +21,10 @@ enum class SegmentPointType : uint8_t {
     // has collision
     input,
     output,
-    colliding_point,
-    cross_point_horizontal,  // TODO remmove
-    cross_point_vertical,    // TODO remove
+    corner_point,
+    cross_point,
 
     // no collision
-    visual_cross_point,
     shadow_point,
     // unknown state
     new_unknown,

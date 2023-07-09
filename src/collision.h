@@ -5,7 +5,7 @@
 
 namespace logicsim {
 
-// is the point inside the line
+// is the point inside the line, excluding endpoints
 auto is_inside(point_t point, ordered_line_t line) noexcept -> bool;
 
 // is the point colliding with the line

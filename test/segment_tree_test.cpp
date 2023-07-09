@@ -19,8 +19,8 @@ TEST(SegmentTree, NormalizeSegmentOrder) {
 
     const auto info0 = segment_info_t {
         .line = ordered_line_t {point_t {0, 0}, point_t {5, 0}},
-        .p0_type = SegmentPointType::colliding_point,
-        .p1_type = SegmentPointType::colliding_point,
+        .p0_type = SegmentPointType::corner_point,
+        .p1_type = SegmentPointType::corner_point,
     };
     const auto info1 = segment_info_t {
         .line = ordered_line_t {point_t {1, 0}, point_t {6, 0}},
@@ -49,7 +49,7 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
 
     const auto info0 = segment_info_t {
         .line = ordered_line_t {point_t {0, 0}, point_t {5, 0}},
-        .p0_type = SegmentPointType::colliding_point,
+        .p0_type = SegmentPointType::cross_point,
         .p1_type = static_cast<SegmentPointType>(1),
     };
     const auto info1 = segment_info_t {
@@ -59,7 +59,7 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
     };
     const auto info2 = segment_info_t {
         .line = ordered_line_t {point_t {2, 0}, point_t {5, 0}},
-        .p0_type = SegmentPointType::visual_cross_point,
+        .p0_type = SegmentPointType::shadow_point,
         .p1_type = static_cast<SegmentPointType>(2),
     };
 

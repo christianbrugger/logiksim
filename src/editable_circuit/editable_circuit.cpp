@@ -109,136 +109,28 @@ auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
     return handle;
 }
 
-namespace {
-
-auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
-    return [delta_x, delta_y, &layout](element_id_t element_id) {
-        const auto& element_position = layout.position(element_id);
-
-        const int x = element_position.x.value + delta_x;
-        const int y = element_position.y.value + delta_y;
-
-        return std::make_pair(x, y);
-    };
-};
-
-}  // namespace
+namespace {}  // namespace
 
 auto EditableCircuit::new_positions_representable(const Selection& selection, int delta_x,
                                                   int delta_y) const -> bool {
-    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print(selection);
-    }
-
-    auto& circuit = circuit_.value();
-    const auto get_position = position_calculator(circuit.layout(), delta_x, delta_y);
-
-    const auto is_valid = [&](element_id_t element_id) {
-        const auto [x, y] = get_position(element_id);
-        return editable_circuit::is_logic_item_position_representable(circuit, element_id,
-                                                                      x, y);
-    };
-    return std::ranges::all_of(selection.selected_logic_items(), is_valid);
+    return editable_circuit::new_positions_representable(selection, circuit_.value(),
+                                                         delta_x, delta_y);
 }
 
 auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int delta_x,
                                               int delta_y) -> void {
-    if (!handle) {
-        return;
-    }
-    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print(handle);
-    }
-
-    const auto get_position
-        = position_calculator(circuit_.value().layout(), delta_x, delta_y);
-
-    // TODO refactor to algorithm
-    while (handle->selected_logic_items().size() > 0) {
-        auto element_id = handle->selected_logic_items()[0];
-        handle->remove_logicitem(element_id);
-
-        const auto [x, y] = get_position(element_id);
-        editable_circuit::move_or_delete_logic_item(circuit_.value(), get_sender(),
-                                                    element_id, x, y);
-    }
-
-    while (handle->selected_segments().size() > 0) {
-        auto segment_part = segment_part_t {
-            .segment = handle->selected_segments()[0].first,
-            .part = handle->selected_segments()[0].second.at(0),
-        };
-        handle->remove_segment(segment_part);
-
-        editable_circuit::move_or_delete_wire(circuit_.value().layout(), get_sender(),
-                                              segment_part, delta_x, delta_y);
-    }
+    editable_circuit::move_or_delete_elements(std::move(handle), circuit_.value(),
+                                              get_sender(), delta_x, delta_y);
 }
 
 auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
                                             InsertionMode new_insertion_mode) -> void {
-    if (!handle) {
-        return;
-    }
-    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print(handle);
-    }
-
-    const auto state = get_state();
-
-    // TODO refactor to algorithm
-    while (handle->selected_logic_items().size() > 0) {
-        auto element_id = handle->selected_logic_items()[0];
-        handle->remove_logicitem(element_id);
-
-        editable_circuit::change_logic_item_insertion_mode(state, element_id,
-                                                           new_insertion_mode);
-    }
-
-    while (handle->selected_segments().size() > 0) {
-        auto segment_part = segment_part_t {
-            .segment = handle->selected_segments()[0].first,
-            .part = handle->selected_segments()[0].second.at(0),
-        };
-        handle->remove_segment(segment_part);
-
-        editable_circuit::change_wire_insertion_mode(state, segment_part,
-                                                     new_insertion_mode);
-    }
+    editable_circuit::change_insertion_mode(std::move(handle), get_state(),
+                                            new_insertion_mode);
 }
 
 auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
-    if (!handle) {
-        return;
-    }
-    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print(handle);
-    }
-
-    const auto state = get_state();
-
-    // TODO refactor to algorithm
-    while (handle->selected_logic_items().size() > 0) {
-        auto element_id = handle->selected_logic_items()[0];
-        handle->remove_logicitem(element_id);
-
-        editable_circuit::change_logic_item_insertion_mode(state, element_id,
-                                                           InsertionMode::temporary);
-        editable_circuit::swap_and_delete_single_element(state.circuit, state.sender,
-                                                         element_id);
-    }
-
-    while (handle->selected_segments().size() > 0) {
-        auto segment_part = segment_part_t {
-            .segment = handle->selected_segments()[0].first,
-            .part = handle->selected_segments()[0].second.at(0),
-        };
-        handle->remove_segment(segment_part);
-
-        editable_circuit::change_wire_insertion_mode(state, segment_part,
-                                                     InsertionMode::temporary);
-        editable_circuit::delete_wire_segment(state.layout, state.sender, segment_part);
-    }
+    editable_circuit::delete_all(std::move(handle), get_state());
 }
 
 auto EditableCircuit::create_selection() const -> selection_handle_t {

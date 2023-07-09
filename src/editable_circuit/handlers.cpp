@@ -1,7 +1,9 @@
 #include "editable_circuit/handlers.h"
 
+#include "collision.h"
 #include "editable_circuit/caches.h"
 #include "editable_circuit/selection.h"
+#include "editable_circuit/selection_registrar.h"
 #include "format.h"
 #include "geometry.h"
 #include "layout_calculations.h"
@@ -1371,7 +1373,7 @@ auto fix_and_merge_segments(State state, const point_t position,
         update_segment_point_types(
             state.layout, state.sender, element_id,
             {
-                std::pair {indices.at(0), SegmentPointType::colliding_point},
+                std::pair {indices.at(0), SegmentPointType::corner_point},
                 std::pair {indices.at(1), SegmentPointType::shadow_point},
             },
             position);
@@ -1393,9 +1395,9 @@ auto fix_and_merge_segments(State state, const point_t position,
             update_segment_point_types(
                 state.layout, state.sender, element_id,
                 {
-                    std::pair {indices.at(0), SegmentPointType::colliding_point},
+                    std::pair {indices.at(0), SegmentPointType::cross_point},
                     std::pair {indices.at(1), SegmentPointType::shadow_point},
-                    std::pair {indices.at(2), SegmentPointType::visual_cross_point},
+                    std::pair {indices.at(2), SegmentPointType::shadow_point},
                 },
                 position);
         }
@@ -1406,10 +1408,10 @@ auto fix_and_merge_segments(State state, const point_t position,
         update_segment_point_types(
             state.layout, state.sender, element_id,
             {
-                std::pair {indices.at(0), SegmentPointType::colliding_point},
+                std::pair {indices.at(0), SegmentPointType::cross_point},
                 std::pair {indices.at(1), SegmentPointType::shadow_point},
                 std::pair {indices.at(2), SegmentPointType::shadow_point},
-                std::pair {indices.at(3), SegmentPointType::visual_cross_point},
+                std::pair {indices.at(3), SegmentPointType::shadow_point},
             },
             position);
         return;
@@ -1457,6 +1459,7 @@ auto insert_wire(State state, segment_part_t& segment_part) -> void {
     }
     const auto target_wire_id = find_wire_for_inserting_segment(state, segment_part);
 
+    reset_segment_endpoints(state.circuit, segment_part.segment);
     move_segment_between_trees(state.layout, state.sender, segment_part, target_wire_id);
 
     const auto line = get_line(state.layout, segment_part);
@@ -1652,7 +1655,9 @@ auto add_wire_segment_private(State state, ordered_line_t line,
                               InsertionMode insertion_mode) -> segment_part_t {
     auto segment_part = add_segment_to_aggregate(state.circuit, state.sender, line,
                                                  display_state_t::temporary);
+
     change_wire_insertion_mode_private(state, segment_part, insertion_mode);
+
     return segment_part;
 }
 
@@ -1819,6 +1824,160 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
             layout, segment_part, dx, dy);
     }
     return move_or_delete_wire_private(layout, sender, segment_part, dx, dy);
+}
+
+//
+// Handle Methods
+//
+
+auto change_insertion_mode(selection_handle_t handle, State state,
+                           InsertionMode new_insertion_mode) -> void {
+    if (!handle) {
+        return;
+    }
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print(handle);
+    }
+
+    while (handle->selected_logic_items().size() > 0) {
+        auto element_id = handle->selected_logic_items()[0];
+        handle->remove_logicitem(element_id);
+
+        change_logic_item_insertion_mode(state, element_id, new_insertion_mode);
+    }
+
+    // when we remove segments of cross points, the other segments might be
+    // merged. We store those points, so we later split them again when
+    // they are moved into the temporary aggregate
+    std::vector<point_t> cross_points {};
+    auto add_unique = [&cross_points](point_t point) {
+        if (std::ranges::find(cross_points, point) == cross_points.end()) {
+            cross_points.push_back(point);
+        }
+        std::ranges::sort(cross_points, std::greater<point_t>());
+    };
+
+    while (handle->selected_segments().size() > 0) {
+        auto segment_part = segment_part_t {
+            .segment = handle->selected_segments()[0].first,
+            .part = handle->selected_segments()[0].second.at(0),
+        };
+        handle->remove_segment(segment_part);
+
+        bool uninserted = new_insertion_mode == InsertionMode::temporary
+                          && is_inserted(state.layout, segment_part.segment.element_id);
+        if (uninserted) {
+            const auto line = get_line(state.layout, segment_part);
+
+            if (state.cache.collision_cache().is_wire_cross_point(line.p0)) {
+                add_unique(line.p0);
+            }
+            if (state.cache.collision_cache().is_wire_cross_point(line.p1)) {
+                add_unique(line.p1);
+            }
+        }
+
+        change_wire_insertion_mode(state, segment_part, new_insertion_mode);
+
+        if (uninserted && !cross_points.empty()) {
+            const auto segment = segment_part.segment;
+            const auto line = get_line(state.layout, segment);
+
+            for (auto point : cross_points) {
+                if (is_inside(point, line)) {
+                    // splitting puts the second half into a new segment
+                    // so for this to work with multiple point, cross_points
+                    // need to be sorted in descendant order
+                    split_line_segment(state.layout, state.sender, segment, point);
+                }
+            }
+        }
+    }
+}
+
+auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
+    return [delta_x, delta_y, &layout](element_id_t element_id) {
+        const auto& element_position = layout.position(element_id);
+
+        const int x = element_position.x.value + delta_x;
+        const int y = element_position.y.value + delta_y;
+
+        return std::make_pair(x, y);
+    };
+};
+
+auto new_positions_representable(const Selection& selection, const Circuit& circuit,
+                                 int delta_x, int delta_y) -> bool {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print(selection);
+    }
+
+    const auto get_position = position_calculator(circuit.layout(), delta_x, delta_y);
+
+    const auto is_valid = [&](element_id_t element_id) {
+        const auto [x, y] = get_position(element_id);
+        return is_logic_item_position_representable(circuit, element_id, x, y);
+    };
+    return std::ranges::all_of(selection.selected_logic_items(), is_valid);
+}
+
+auto move_or_delete_elements(selection_handle_t handle, Circuit& circuit,
+                             MessageSender sender, int delta_x, int delta_y) -> void {
+    if (!handle) {
+        return;
+    }
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print(handle);
+    }
+    auto& layout = circuit.layout();
+
+    const auto get_position = position_calculator(layout, delta_x, delta_y);
+
+    while (handle->selected_logic_items().size() > 0) {
+        auto element_id = handle->selected_logic_items()[0];
+        handle->remove_logicitem(element_id);
+
+        const auto [x, y] = get_position(element_id);
+        move_or_delete_logic_item(circuit, sender, element_id, x, y);
+    }
+
+    while (handle->selected_segments().size() > 0) {
+        auto segment_part = segment_part_t {
+            .segment = handle->selected_segments()[0].first,
+            .part = handle->selected_segments()[0].second.at(0),
+        };
+        handle->remove_segment(segment_part);
+
+        move_or_delete_wire(layout, sender, segment_part, delta_x, delta_y);
+    }
+}
+
+auto delete_all(selection_handle_t handle, State state) -> void {
+    if (!handle) {
+        return;
+    }
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print(handle);
+    }
+
+    while (handle->selected_logic_items().size() > 0) {
+        auto element_id = handle->selected_logic_items()[0];
+        handle->remove_logicitem(element_id);
+
+        change_logic_item_insertion_mode(state, element_id, InsertionMode::temporary);
+        swap_and_delete_single_element(state.circuit, state.sender, element_id);
+    }
+
+    while (handle->selected_segments().size() > 0) {
+        auto segment_part = segment_part_t {
+            .segment = handle->selected_segments()[0].first,
+            .part = handle->selected_segments()[0].second.at(0),
+        };
+        handle->remove_segment(segment_part);
+
+        change_wire_insertion_mode(state, segment_part, InsertionMode::temporary);
+        delete_wire_segment(state.layout, state.sender, segment_part);
+    }
 }
 
 }  // namespace editable_circuit

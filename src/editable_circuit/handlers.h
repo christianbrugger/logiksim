@@ -95,7 +95,7 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
                          segment_part_t& segment_part, int dx, int dy) -> void;
 
 //
-// Low level Methods
+// Wire - Low level Methods
 //
 
 auto move_segment_between_trees(Layout& layout, MessageSender sender,
@@ -117,6 +117,21 @@ auto fix_and_merge_segments(State state, const point_t position,
 
 auto add_wire_segment(State state, ordered_line_t line, InsertionMode insertion_mode)
     -> segment_part_t;
+
+//
+// Handle Methods
+//
+
+auto change_insertion_mode(selection_handle_t handle, State state,
+                           InsertionMode new_insertion_mode) -> void;
+
+auto new_positions_representable(const Selection& selection, const Circuit& circuit,
+                                 int delta_x, int delta_y) -> bool;
+
+auto move_or_delete_elements(selection_handle_t handle, Circuit& circuit,
+                             MessageSender sender, int delta_x, int delta_y) -> void;
+
+auto delete_all(selection_handle_t handle, State state) -> void;
 
 }  // namespace editable_circuit
 }  // namespace logicsim

@@ -942,8 +942,12 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
                 render_point(ctx, point, PointShape::vertical, color, size, settings);
                 break;
             }
-            case wire_point: {
+            case wire_corner_point: {
                 render_point(ctx, point, PointShape::diamond, color, size, settings);
+                break;
+            }
+            case wire_cross_point: {
+                render_point(ctx, point, PointShape::cross, color, size, settings);
                 break;
             }
             case wire_crossing: {
