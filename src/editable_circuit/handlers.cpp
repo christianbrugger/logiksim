@@ -1060,14 +1060,14 @@ auto _remove_full_segment_from_tree(Layout& layout, MessageSender sender,
     m_tree.swap_and_delete_segment(segment_index);
 
     // messages
+    sender.submit(info_message::SegmentPartDeleted {full_segment_part});
+
     if (last_index != segment_index) {
         sender.submit(info_message::SegmentIdUpdated {
             .new_segment = segment_t {element_id, segment_index},
             .old_segment = segment_t {element_id, last_index},
         });
     }
-
-    sender.submit(info_message::SegmentPartDeleted {full_segment_part});
 
     full_segment_part = null_segment_part;
 }
@@ -1876,7 +1876,7 @@ auto change_insertion_mode(selection_handle_t handle, State state,
         return;
     }
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print(handle);
+        print("\n\n========= change_insertion_mode ==========\n", handle);
     }
 
     while (handle->selected_logic_items().size() > 0) {
@@ -1964,7 +1964,7 @@ auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
 auto new_positions_representable(const Selection& selection, const Circuit& circuit,
                                  int delta_x, int delta_y) -> bool {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print(selection);
+        print("\n\n========= new_positions_representable ==========\n", selection);
     }
 
     const auto get_position = position_calculator(circuit.layout(), delta_x, delta_y);
@@ -1982,7 +1982,7 @@ auto move_or_delete_elements(selection_handle_t handle, Circuit& circuit,
         return;
     }
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print(handle);
+        print("\n\n========= move_or_delete_elements ==========\n", handle);
     }
     auto& layout = circuit.layout();
 
@@ -2012,7 +2012,7 @@ auto delete_all(selection_handle_t handle, State state) -> void {
         return;
     }
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print(handle);
+        print("\n\n========= delete_all ==========\n", handle);
     }
 
     while (handle->selected_logic_items().size() > 0) {
