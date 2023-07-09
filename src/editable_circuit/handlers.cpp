@@ -1895,11 +1895,9 @@ auto change_insertion_mode(selection_handle_t handle, State state,
 
             if (state.cache.collision_cache().is_wire_cross_point(line.p0)) {
                 p0 = line.p0;
-                // add_unique(line.p0);
             }
             if (state.cache.collision_cache().is_wire_cross_point(line.p1)) {
                 p1 = line.p1;
-                // add_unique(line.p1);
             }
         }
 

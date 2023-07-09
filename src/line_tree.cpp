@@ -45,8 +45,11 @@ class SegmentSplitter {
                 [&point](ordered_line_t line) -> bool { return is_inside(point, line); });
 
             if (splittable != buffer_.end()) {
-                buffer_.push_back(ordered_line_t {point, splittable->p1});
-                *splittable = ordered_line_t {splittable->p0, point};
+                const auto p0 = splittable->p0;
+                const auto p1 = splittable->p1;
+
+                *splittable = ordered_line_t {p0, point};
+                buffer_.push_back(ordered_line_t {point, p1});
             }
         }
 
