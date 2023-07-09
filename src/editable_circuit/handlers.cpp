@@ -753,6 +753,27 @@ auto reset_segment_endpoints(Circuit& circuit, const segment_t segment) {
     m_tree.update_segment(segment.segment_index, new_info);
 }
 
+auto set_segment_crosspoint(Circuit& circuit, const segment_t segment, point_t point) {
+    if (is_inserted(circuit, segment.element_id)) [[unlikely]] {
+        throw_exception("cannot set endpoints of inserted wire segment");
+    }
+    auto& m_tree = circuit.layout().modifyable_segment_tree(segment.element_id);
+
+    auto info = m_tree.segment_info(segment.segment_index);
+
+    if (info.line.p0 == point) {
+        info.p0_type = SegmentPointType::cross_point;
+        info.p0_connection_id = null_connection;
+    } else if (info.line.p1 == point) {
+        info.p1_type = SegmentPointType::cross_point;
+        info.p1_connection_id = null_connection;
+    } else [[unlikely]] {
+        throw_exception("point is not part of line.");
+    }
+
+    m_tree.update_segment(segment.segment_index, info);
+}
+
 auto add_segment_to_aggregate(Circuit& circuit, MessageSender sender,
                               const ordered_line_t line,
                               const display_state_t aggregate_type) -> segment_part_t {
@@ -1853,8 +1874,8 @@ auto change_insertion_mode(selection_handle_t handle, State state,
     auto add_unique = [&cross_points](point_t point) {
         if (std::ranges::find(cross_points, point) == cross_points.end()) {
             cross_points.push_back(point);
+            std::ranges::sort(cross_points, std::greater<point_t>());
         }
-        std::ranges::sort(cross_points, std::greater<point_t>());
     };
 
     while (handle->selected_segments().size() > 0) {
@@ -1864,16 +1885,21 @@ auto change_insertion_mode(selection_handle_t handle, State state,
         };
         handle->remove_segment(segment_part);
 
+        auto p0 = std::optional<point_t> {};
+        auto p1 = std::optional<point_t> {};
+
         bool uninserted = new_insertion_mode == InsertionMode::temporary
                           && is_inserted(state.layout, segment_part.segment.element_id);
         if (uninserted) {
             const auto line = get_line(state.layout, segment_part);
 
             if (state.cache.collision_cache().is_wire_cross_point(line.p0)) {
-                add_unique(line.p0);
+                p0 = line.p0;
+                // add_unique(line.p0);
             }
             if (state.cache.collision_cache().is_wire_cross_point(line.p1)) {
-                add_unique(line.p1);
+                p1 = line.p1;
+                // add_unique(line.p1);
             }
         }
 
@@ -1889,8 +1915,20 @@ auto change_insertion_mode(selection_handle_t handle, State state,
                     // so for this to work with multiple point, cross_points
                     // need to be sorted in descendant order
                     split_line_segment(state.layout, state.sender, segment, point);
+                    set_segment_crosspoint(state.circuit, segment, point);
+                } else if (point == line.p0) {
+                    set_segment_crosspoint(state.circuit, segment, line.p0);
+                } else if (point == line.p1) {
+                    set_segment_crosspoint(state.circuit, segment, line.p1);
                 }
             }
+        }
+
+        if (p0.has_value()) {
+            add_unique(p0.value());
+        }
+        if (p1.has_value()) {
+            add_unique(p1.value());
         }
     }
 }
