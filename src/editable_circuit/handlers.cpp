@@ -948,7 +948,7 @@ auto shrink_segment_begin(Layout& layout, MessageSender sender, const segment_t 
 }
 
 auto shrink_segment_end(Layout& layout, MessageSender sender, const segment_t segment,
-                        const part_t part_kept) -> void {
+                        const part_t part_kept) -> segment_part_t {
     using namespace info_message;
     auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
     m_tree.shrink_segment(segment.segment_index, part_kept);
@@ -957,12 +957,11 @@ auto shrink_segment_end(Layout& layout, MessageSender sender, const segment_t se
         const auto new_info = m_tree.segment_info(segment.segment_index);
         sender.submit(SegmentInserted({.segment = segment, .segment_info = new_info}));
     }
-}
 
-auto shrink_segment(Layout& layout, MessageSender sender, const segment_t segment,
-                    const part_t part_kept) -> void {
-    shrink_segment_begin(layout, sender, segment);
-    shrink_segment_end(layout, sender, segment, part_kept);
+    return segment_part_t {
+        .segment = segment,
+        .part = m_tree.segment_part(segment.segment_index),
+    };
 }
 
 auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
@@ -976,13 +975,22 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
     shrink_segment_begin(layout, sender, source_segment_part.segment);
     const auto destination_segment_part
         = copy_segment(layout, sender, source_segment_part, destination_element_id);
-    shrink_segment_end(layout, sender, source_segment_part.segment, part_kept);
+    const auto leftover_segment_part
+        = shrink_segment_end(layout, sender, source_segment_part.segment, part_kept);
 
     // messages
     sender.submit(info_message::SegmentPartMoved {
         .segment_part_destination = destination_segment_part,
         .segment_part_source = source_segment_part,
     });
+
+    if (part_kept.begin != full_part.begin) {
+        sender.submit(info_message::SegmentPartMoved {
+            .segment_part_destination = leftover_segment_part,
+            .segment_part_source
+            = segment_part_t {.segment = source_segment_part.segment, .part = part_kept},
+        });
+    }
 
     source_segment_part = destination_segment_part;
 }
@@ -1080,6 +1088,17 @@ auto _remove_touching_segment_from_tree(Layout& layout, MessageSender sender,
 
     // messages
     sender.submit(info_message::SegmentPartDeleted {segment_part});
+
+    if (part_kept.begin != full_part.begin) {
+        sender.submit(info_message::SegmentPartMoved {
+            .segment_part_destination
+            = segment_part_t {.segment = segment_part.segment,
+                              .part = m_tree.segment_part(index)},
+            .segment_part_source
+            = segment_part_t {.segment = segment_part.segment, .part = part_kept},
+        });
+    }
+
     segment_part = null_segment_part;
 }
 
