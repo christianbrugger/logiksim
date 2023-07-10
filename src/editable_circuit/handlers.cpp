@@ -2,12 +2,14 @@
 
 #include "collision.h"
 #include "editable_circuit/caches.h"
+#include "editable_circuit/caches/cross_point_cache.h"
 #include "editable_circuit/selection.h"
 #include "editable_circuit/selection_registrar.h"
 #include "format.h"
 #include "geometry.h"
 #include "layout_calculations.h"
 #include "scene.h"
+#include "timer.h"
 
 #include <fmt/core.h>
 
@@ -1872,6 +1874,7 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
 
 auto change_insertion_mode(selection_handle_t handle, State state,
                            InsertionMode new_insertion_mode) -> void {
+    auto t = Timer {fmt::format("change_insertion_mode {}", new_insertion_mode)};
     if (!handle) {
         return;
     }
@@ -1889,13 +1892,8 @@ auto change_insertion_mode(selection_handle_t handle, State state,
     // when we remove segments of cross points, the other segments might be
     // merged. We store those points, so we later split them again when
     // they are moved into the temporary aggregate
-    std::vector<point_t> cross_points {};
-    auto add_unique = [&cross_points](point_t point) {
-        if (std::ranges::find(cross_points, point) == cross_points.end()) {
-            cross_points.push_back(point);
-            std::ranges::sort(cross_points, std::greater<point_t>());
-        }
-    };
+    auto cross_points = CrossPointCache {};
+    auto query_result = std::vector<point_t> {};
 
     while (handle->selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
@@ -1922,30 +1920,31 @@ auto change_insertion_mode(selection_handle_t handle, State state,
 
         change_wire_insertion_mode(state, segment_part, new_insertion_mode);
 
-        if (uninserted && !cross_points.empty()) {
+        if (uninserted) {
             const auto segment = segment_part.segment;
             const auto line = get_line(state.layout, segment);
 
-            for (auto point : cross_points) {
+            cross_points.query_intersects(line, query_result);
+            std::ranges::sort(query_result, std::greater<point_t>());
+            query_result.erase(std::ranges::unique(query_result).begin(),
+                               query_result.end());
+
+            // splitting puts the second half into a new segment
+            // so for this to work with multiple point, cross_points
+            // need to be sorted in descendant order
+            for (auto point : query_result) {
                 if (is_inside(point, line)) {
-                    // splitting puts the second half into a new segment
-                    // so for this to work with multiple point, cross_points
-                    // need to be sorted in descendant order
                     split_line_segment(state.layout, state.sender, segment, point);
-                    set_segment_crosspoint(state.circuit, segment, point);
-                } else if (point == line.p0) {
-                    set_segment_crosspoint(state.circuit, segment, line.p0);
-                } else if (point == line.p1) {
-                    set_segment_crosspoint(state.circuit, segment, line.p1);
                 }
+                set_segment_crosspoint(state.circuit, segment, point);
             }
         }
 
         if (p0.has_value()) {
-            add_unique(p0.value());
+            cross_points.add_cross_point(p0.value());
         }
         if (p1.has_value()) {
-            add_unique(p1.value());
+            cross_points.add_cross_point(p1.value());
         }
     }
 }

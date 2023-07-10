@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
 
 set(LS_CORE_SOURCES
-    src/editable_circuit/caches/spatial_cache.cpp
     src/editable_circuit/caches/collision_cache.cpp
     src/editable_circuit/caches/connection_cache.cpp
+    src/editable_circuit/caches/cross_point_cache.cpp
+    src/editable_circuit/caches/spatial_cache.cpp
 
     src/editable_circuit/caches.cpp
     src/editable_circuit/editable_circuit.cpp

@@ -3,6 +3,7 @@
 
 #include "editable_circuit/caches/helpers.h"
 #include "editable_circuit/messages.h"
+#include "vocabulary.h"
 
 #include <boost/geometry.hpp>
 
