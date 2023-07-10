@@ -154,7 +154,7 @@ struct connection_t {
 };
 
 struct segment_index_t {
-    using value_type = int16_t;
+    using value_type = int32_t;
     value_type value;
 
     using difference_type = range_difference_t<value_type>;

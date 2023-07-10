@@ -61,8 +61,9 @@ namespace detail::segment_tree {
 using index_t = std::make_unsigned_t<segment_index_t::value_type>;
 static_assert(sizeof(index_t) == sizeof(segment_index_t::value_type));
 
-using policy = folly::small_vector_policy::policy_size_type<index_t>;
+using policy = folly::small_vector_policy::policy_size_type<uint16_t>;  // index_t
 using parts_vector_t = folly::small_vector<part_t, 2, policy>;
+static_assert(sizeof(parts_vector_t) == 10);  // 2 * 4 + 2
 
 }  // namespace detail::segment_tree
 
@@ -138,10 +139,10 @@ class SegmentTree {
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;
     using segment_vector_t = folly::small_vector<segment_info_t, 2, policy>;
-    static_assert(sizeof(segment_vector_t) == 26);
+    static_assert(sizeof(segment_vector_t) == 28);  // 2 * 12 + 4
 
     using valid_vector_t = folly::small_vector<parts_vector_t, 2, policy>;
-    static_assert(sizeof(valid_vector_t) == 22);
+    static_assert(sizeof(valid_vector_t) == 24);  // 2 * 10 + 4
 
     segment_vector_t segments_ {};
     valid_vector_t valid_parts_vector_ {};
@@ -152,7 +153,7 @@ class SegmentTree {
     bool has_input_ {false};
 };
 
-static_assert(sizeof(SegmentTree) == 56);  // 26 + 22 + 2 + 4 + 1 (+ 1)
+static_assert(sizeof(SegmentTree) == 64);  // 28 + 24 + 4 + 4 + 1 (+ 1)
 
 auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
 
