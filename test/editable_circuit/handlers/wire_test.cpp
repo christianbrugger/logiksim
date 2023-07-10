@@ -162,10 +162,8 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
     add_test_wire(circuit, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
-    auto segment_part = segment_part_t {
-        segment_t {element_id_t {0}, segment_index_t {0}},
-        part_t {offset_t {0}, offset_t {5}},
-    };
+    auto segment_part
+        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(0, 5)};
 
     auto setup = HandlerSetup {circuit};
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
@@ -213,15 +211,20 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         = Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
     const auto m1 = Message {SegmentPartMoved {
         .segment_part_destination
-        = segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}},
-                          part_t {offset_t {0}, offset_t {5}}},
+        = segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}}, part(0, 5)},
         .segment_part_source
-        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
-                          part_t {offset_t {0}, offset_t {5}}},
+        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(0, 5)},
     }};
-    ASSERT_EQ(setup.recorder.messages().size(), 2);
+    const auto m2 = Message {SegmentPartMoved {
+        .segment_part_destination
+        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(0, 5)},
+        .segment_part_source
+        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(5, 10)},
+    }};
+    ASSERT_EQ(setup.recorder.messages().size(), 3);
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
     ASSERT_EQ(setup.recorder.messages().at(1), m1);
+    ASSERT_EQ(setup.recorder.messages().at(2), m2);
 }
 
 TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
@@ -542,9 +545,16 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
         .segment_part_destination = segment_part_1,
         .segment_part_source = segment_part_0,
     }};
-    ASSERT_EQ(setup.recorder.messages().size(), 2);
+    const auto m2 = Message {SegmentPartMoved {
+        .segment_part_destination
+        = segment_part_t {segment_t {element_id, segment_index}, part(0, 5)},
+        .segment_part_source
+        = segment_part_t {segment_t {element_id, segment_index}, part(5, 10)},
+    }};
+    ASSERT_EQ(setup.recorder.messages().size(), 3);
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
     ASSERT_EQ(setup.recorder.messages().at(1), m1);
+    ASSERT_EQ(setup.recorder.messages().at(2), m2);
 }
 
 TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialEnd) {

@@ -1874,7 +1874,6 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
 
 auto change_insertion_mode(selection_handle_t handle, State state,
                            InsertionMode new_insertion_mode) -> void {
-    auto t = Timer {fmt::format("change_insertion_mode {}", new_insertion_mode)};
     if (!handle) {
         return;
     }
