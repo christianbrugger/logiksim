@@ -54,16 +54,14 @@ class Layout {
 
     // TODO delete all of these
     auto add_default_element() -> element_id_t;
-    auto add_placeholder(display_state_t display_state) -> element_id_t;
-    auto add_line_tree(display_state_t display_state) -> element_id_t;
     auto add_logic_element(point_t position,
                            orientation_t orientation = orientation_t::undirected,
                            display_state_t display_state = display_state_t::normal,
                            color_t color = defaults::color_black) -> element_id_t;
 
     struct ElementData {
-        ElementType element_type {ElementType::unused};
         display_state_t display_state {display_state_t::temporary};
+        ElementType element_type {ElementType::unused};
 
         std::size_t input_count {0};
         std::size_t output_count {0};

@@ -170,22 +170,6 @@ auto Layout::add_default_element() -> element_id_t {
         gsl::narrow_cast<element_id_t::value_type>(positions_.size() - std::size_t {1})};
 }
 
-auto Layout::add_placeholder(display_state_t display_state) -> element_id_t {
-    const auto element_id = add_default_element();
-
-    display_states_.back() = display_state;
-
-    return element_id;
-}
-
-auto Layout::add_line_tree(display_state_t display_state) -> element_id_t {
-    const auto element_id = add_default_element();
-
-    display_states_.back() = display_state;
-
-    return element_id;
-}
-
 auto Layout::add_logic_element(point_t position, orientation_t orientation,
                                display_state_t display_state, color_t color)
     -> element_id_t {

@@ -14,7 +14,8 @@ auto add_test_wire(Circuit &circuit, display_state_t display_state,
 
     const auto element_id = schematic.add_element(
         Schematic::ElementData {.element_type = ElementType::wire});
-    layout.add_line_tree(display_state);
+    layout.add_element(
+        {.display_state = display_state, .element_type = ElementType::wire});
 
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     for (const auto line : lines) {
@@ -26,6 +27,12 @@ auto add_test_wire(Circuit &circuit, display_state_t display_state,
             .p1_connection_id = null_connection,
         });
     }
+}
+
+auto add_test_wire(Layout &layout, display_state_t display_state) -> element_id_t {
+    return layout
+        .add_element({.display_state = display_state, .element_type = ElementType::wire})
+        .element_id();
 }
 
 inline auto part(offset_t::value_type begin, offset_t::value_type end) -> part_t {
@@ -420,7 +427,7 @@ TEST(EditableCircuitHandlerWire, IsWirePositionRepresentable) {
     using namespace editable_circuit;
     auto layout = Layout {};
 
-    const auto element_id = layout.add_line_tree(display_state_t::temporary);
+    const auto element_id = add_test_wire(layout, display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(
         segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
@@ -445,7 +452,7 @@ TEST(EditableCircuitHandlerWire, IsWirePositionRepresentablePart) {
 
     auto p1_x = grid_t::max();
 
-    const auto element_id = layout.add_line_tree(display_state_t::temporary);
+    const auto element_id = add_test_wire(layout, display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(
         segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {p1_x, 0}}});
@@ -476,7 +483,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMove) {
     const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
     const auto line_0 = ordered_line_t {point_t {100, 200}, point_t {110, 200}};
 
-    const auto element_id = layout.add_line_tree(display_state_t::temporary);
+    const auto element_id = add_test_wire(layout, display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
@@ -514,7 +521,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
     const auto line_0 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
     const auto line_1 = ordered_line_t {point_t {100, 200}, point_t {105, 200}};
 
-    const auto element_id = layout.add_line_tree(display_state_t::temporary);
+    const auto element_id = add_test_wire(layout, display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
@@ -565,7 +572,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialEnd) {
     const auto line_0 = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
     const auto line_1 = ordered_line_t {point_t {105, 200}, point_t {110, 200}};
 
-    const auto element_id = layout.add_line_tree(display_state_t::temporary);
+    const auto element_id = add_test_wire(layout, display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
@@ -610,7 +617,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
     const auto line_1 = ordered_line_t {point_t {15, 0}, point_t {20, 0}};
     const auto line_2 = ordered_line_t {point_t {110, 200}, point_t {115, 200}};
 
-    const auto element_id = layout.add_line_tree(display_state_t::temporary);
+    const auto element_id = add_test_wire(layout, display_state_t::temporary);
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 

@@ -36,8 +36,8 @@ TEST(Layout, ElementProperties) {
     Layout layout;
 
     layout.add_element(Layout::ElementData {
-        .element_type = ElementType::and_element,
         .display_state = display_state_t::normal,
+        .element_type = ElementType::and_element,
 
         .input_count = 3,
         .output_count = 1,

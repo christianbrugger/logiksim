@@ -92,7 +92,12 @@ inline auto add_placeholder(Circuit &circuit) -> Schematic::Element {
         .input_count = 1,
         .output_count = 0,
     });
-    circuit.layout().add_placeholder(display_state_t::normal);
+    circuit.layout().add_element({
+        .display_state = display_state_t::normal,
+        .element_type = ElementType::placeholder,
+        .input_count = 1,
+        .output_count = 0,
+    });
     return element;
 }
 

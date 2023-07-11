@@ -1138,7 +1138,8 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     // create layout
     auto& layout = scene.layout = Layout {};
     for (auto _ [[maybe_unused]] : range(schematic.element_count())) {
-        layout.add_default_element();
+        // default element
+        layout.add_element(Layout::ElementData {});
     }
 
     // add line trees
