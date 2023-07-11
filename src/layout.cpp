@@ -8,8 +8,8 @@
 namespace logicsim {
 
 Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
-    if (circuit_id < null_circuit) [[unlikely]] {
-        throw_exception("Schematic id of layout cannot be negative.");
+    if (!circuit_id) [[unlikely]] {
+        throw_exception("Schematic id needs to be valid.");
     }
 }
 
