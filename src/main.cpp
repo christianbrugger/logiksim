@@ -104,6 +104,16 @@ auto add_unused_element(Schematic& schematic) -> Schematic::Element {
 }
 
 auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
+    auto input_cache = ConnectionCache<true>();
+    auto output_cache = ConnectionCache<false>();
+    {
+        const auto t = Timer {"Fill Caches", Timer::Unit::ms, 2};
+        add_circuit_to_cache(input_cache, circuit);
+        add_circuit_to_cache(output_cache, circuit);
+    }
+
+    // start
+
     const auto t0 = Timer {"Convert", Timer::Unit::ms, 2};
 
     const auto& schematic = circuit.schematic();
@@ -186,13 +196,6 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
     }
 
     // Connect Wires
-    auto input_cache = ConnectionCache<true>();
-    auto output_cache = ConnectionCache<false>();
-    {
-        const auto t = Timer {"  Fill Caches", Timer::Unit::ms, 2};
-        add_circuit_to_cache(input_cache, circuit);
-        add_circuit_to_cache(output_cache, circuit);
-    }
     {
         const auto t = Timer {"  Connect Wires", Timer::Unit::ms, 2};
         for (auto element : generated.schematic.elements()) {
@@ -239,8 +242,10 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
         for (auto element : generated.schematic.elements()) {
             if (element.is_logic_item()) {
                 for (auto output : element.outputs()) {
-                    auto placeholder = add_placeholder_element(generated.schematic);
-                    placeholder.input(connection_id_t {0}).connect(output);
+                    if (!output.has_connected_element()) {
+                        auto placeholder = add_placeholder_element(generated.schematic);
+                        placeholder.input(connection_id_t {0}).connect(output);
+                    }
                 }
             }
         }
