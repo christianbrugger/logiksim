@@ -14,8 +14,10 @@ auto add_test_wire(Circuit &circuit, display_state_t display_state,
 
     const auto element_id = schematic.add_element(
         Schematic::ElementData {.element_type = ElementType::wire});
-    layout.add_element(
-        {.display_state = display_state, .element_type = ElementType::wire});
+    layout.add_element({
+        .display_state = display_state,
+        .element_type = ElementType::wire,
+    });
 
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     for (const auto line : lines) {
@@ -31,7 +33,10 @@ auto add_test_wire(Circuit &circuit, display_state_t display_state,
 
 auto add_test_wire(Layout &layout, display_state_t display_state) -> element_id_t {
     return layout
-        .add_element({.display_state = display_state, .element_type = ElementType::wire})
+        .add_element({
+            .display_state = display_state,
+            .element_type = ElementType::wire,
+        })
         .element_id();
 }
 

@@ -52,13 +52,6 @@ class Layout {
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
 
-    // TODO delete all of these
-    auto add_default_element() -> element_id_t;
-    auto add_logic_element(point_t position,
-                           orientation_t orientation = orientation_t::undirected,
-                           display_state_t display_state = display_state_t::normal,
-                           color_t color = defaults::color_black) -> element_id_t;
-
     struct ElementData {
         display_state_t display_state {display_state_t::temporary};
         ElementType element_type {ElementType::unused};

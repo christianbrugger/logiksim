@@ -82,8 +82,15 @@ inline auto add_and_element(Circuit &circuit, display_state_t display_type,
         .input_count = input_count,
         .output_count = 1,
     });
-    return circuit.layout().add_logic_element(position, orientation_t::right,
-                                              display_type);
+    return circuit.layout().add_element({
+        .display_state = display_type,
+        .element_type = ElementType::and_element,
+
+        .input_count = input_count,
+        .output_count = 1,
+        .position = position,
+        .orientation = orientation_t::right,
+    });
 }
 
 inline auto add_placeholder(Circuit &circuit) -> Schematic::Element {
@@ -95,6 +102,7 @@ inline auto add_placeholder(Circuit &circuit) -> Schematic::Element {
     circuit.layout().add_element({
         .display_state = display_state_t::normal,
         .element_type = ElementType::placeholder,
+
         .input_count = 1,
         .output_count = 0,
     });

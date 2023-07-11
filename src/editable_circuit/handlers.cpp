@@ -225,6 +225,7 @@ auto add_placeholder_element(Circuit& circuit) -> element_id_t {
                                 .add_element(Layout::ElementData {
                                     .display_state = display_state_t::normal,
                                     .element_type = ElementType::placeholder,
+
                                     .input_count = 1,
                                     .output_count = 0,
                                 })
@@ -587,8 +588,17 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
     }
 
     // insert into underlyings
-    auto element_id = state.layout.add_logic_element(
-        point_t {0, 0}, attributes.orientation, display_state_t::temporary);
+    auto element_id = state.layout
+                          .add_element({
+                              .display_state = display_state_t::temporary,
+                              .element_type = attributes.type,
+
+                              .input_count = attributes.input_count,
+                              .output_count = 1,
+                              .position = point_t {0, 0},
+                              .orientation = attributes.orientation,
+                          })
+                          .element_id();
     {
         const auto element = state.schematic.add_element({
             .element_type = attributes.type,
@@ -642,6 +652,7 @@ auto add_new_wire_element(Circuit& circuit, display_state_t display_state)
                                 .add_element(Layout::ElementData {
                                     .display_state = display_state,
                                     .element_type = ElementType::wire,
+
                                     .input_count = 0,
                                     .output_count = 0,
                                 })

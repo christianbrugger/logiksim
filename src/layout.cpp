@@ -147,42 +147,6 @@ auto Layout::is_element_id_valid(element_id_t element_id) const noexcept -> bool
     return element_id.value >= 0 && element_id.value < size;
 }
 
-auto Layout::add_default_element() -> element_id_t {
-    if (element_count() + 1 >= element_id_t::max()) [[unlikely]] {
-        throw_exception("Reached maximum number of elements.");
-    }
-
-    element_types_.push_back(ElementType::unused);
-    sub_circuit_ids_.push_back(null_circuit);
-    input_counts_.push_back(connection_size_t {0});
-    output_counts_.push_back(connection_size_t {0});
-    input_inverters_.push_back(logic_small_vector_t {});
-    output_inverters_.push_back(logic_small_vector_t {});
-
-    segment_trees_.push_back(SegmentTree {});
-    line_trees_.push_back(LineTree {});
-    positions_.push_back(point_t {});
-    orientation_.push_back(orientation_t::undirected);
-    display_states_.push_back(display_state_t::temporary);
-    colors_.push_back(defaults::color_black);
-
-    return element_id_t {
-        gsl::narrow_cast<element_id_t::value_type>(positions_.size() - std::size_t {1})};
-}
-
-auto Layout::add_logic_element(point_t position, orientation_t orientation,
-                               display_state_t display_state, color_t color)
-    -> element_id_t {
-    const auto element_id = add_default_element();
-
-    positions_.back() = position;
-    orientation_.back() = orientation;
-    display_states_.back() = display_state;
-    colors_.back() = color;
-
-    return element_id;
-}
-
 auto Layout::add_element(ElementData &&data) -> layout::Element {
     if (data.input_count > connection_id_t::max()) [[unlikely]] {
         throw_exception("Input count needs to be positive and not too large.");
