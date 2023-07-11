@@ -163,8 +163,7 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
                     .output_count = element.output_count(),
 
                     .circuit_id = element.sub_circuit_id(),
-                    .input_inverters
-                    = Schematic::logic_small_vector_t(element.input_count(), false),
+                    .input_inverters = logic_small_vector_t(element.input_count(), false),
                     .output_delays = std::vector<delay_t>(
                         element.output_count(), Schematic::defaults::standard_delay),
                     .history_length = Schematic::defaults::no_history,
@@ -183,7 +182,7 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
                     .output_count = line_tree.output_count(),
 
                     .circuit_id = null_circuit,
-                    .input_inverters = Schematic::logic_small_vector_t(1, false),
+                    .input_inverters = logic_small_vector_t(1, false),
                     .output_delays = std::move(delays),
                     .history_length = tree_max_delay,
                 });

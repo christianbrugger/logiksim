@@ -1127,7 +1127,11 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     auto& schematic = scene.schematic;
     for (auto _ [[maybe_unused]] : range(n_lines)) {
         UDist<int> output_dist {config.n_outputs_min, config.n_outputs_max};
-        schematic.add_element(ElementType::wire, 1, output_dist(rng));
+        schematic.add_element(Schematic::ElementData {
+            .element_type = ElementType::wire,
+            .input_count = 1,
+            .output_count = gsl::narrow<std::size_t>(output_dist(rng)),
+        });
     }
     add_output_placeholders(schematic);
 

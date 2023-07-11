@@ -194,12 +194,6 @@ auto Schematic::output(connection_t connection) const -> ConstOutput {
     return element(connection.element_id).output(connection.connection_id);
 }
 
-auto Schematic::add_element(ElementType type, std::size_t input_count,
-                            std::size_t output_count) -> Element {
-    return add_element(
-        {.element_type = type, .input_count = input_count, .output_count = output_count});
-}
-
 auto Schematic::add_element(ElementData &&data) -> Element {
     if (data.input_count > connection_id_t::max()) [[unlikely]] {
         throw_exception("Input count needs to be positive and not too large.");
@@ -1217,7 +1211,11 @@ namespace logicsim {
 
 auto add_placeholder(Schematic::Output output) -> void {
     if (!output.has_connected_element()) {
-        auto placeholder {output.schematic().add_element(ElementType::placeholder, 1, 0)};
+        auto placeholder = output.schematic().add_element(Schematic::ElementData {
+            .element_type = ElementType::placeholder,
+            .input_count = 1,
+            .output_count = 0,
+        });
         output.connect(placeholder.input(connection_id_t {0}));
     }
 }
@@ -1241,11 +1239,23 @@ auto add_output_placeholders(Schematic &schematic) -> void {
 auto benchmark_schematic(const int n_elements) -> Schematic {
     Schematic schematic {};
 
-    auto elem0 {schematic.add_element(ElementType::and_element, 2, 1)};
+    auto elem0 = schematic.add_element(Schematic::ElementData {
+        .element_type = ElementType::and_element,
+        .input_count = 2,
+        .output_count = 1,
+    });
 
     for ([[maybe_unused]] auto count : range(n_elements - 1)) {
-        auto wire0 = schematic.add_element(ElementType::wire, 1, 2);
-        auto elem1 = schematic.add_element(ElementType::and_element, 2, 1);
+        auto wire0 = schematic.add_element(Schematic::ElementData {
+            .element_type = ElementType::wire,
+            .input_count = 1,
+            .output_count = 2,
+        });
+        auto elem1 = schematic.add_element(Schematic::ElementData {
+            .element_type = ElementType::and_element,
+            .input_count = 2,
+            .output_count = 1,
+        });
 
         elem0.output(connection_id_t {0}).connect(wire0.input(connection_id_t {0}));
 
@@ -1278,7 +1288,11 @@ void add_random_element(Schematic &schematic, G &rng) {
     const auto output_count
         = element_type == ElementType::wire ? connection_dist(rng) : 1;
 
-    schematic.add_element(element_type, input_count, output_count);
+    schematic.add_element(Schematic::ElementData {
+        .element_type = element_type,
+        .input_count = gsl::narrow<std::size_t>(input_count),
+        .output_count = gsl::narrow<std::size_t>(output_count),
+    });
 }
 
 template <std::uniform_random_bit_generator G>

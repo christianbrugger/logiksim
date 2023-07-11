@@ -112,9 +112,6 @@ class Schematic {
         delay_t history_length = defaults::no_history;
     };
 
-    // TODO remove when not needed anymore
-    auto add_element(ElementType type, std::size_t input_count, std::size_t output_count)
-        -> Element;
     auto add_element(ElementData &&data) -> Element;
     // swaps the element with last one and deletes it
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
