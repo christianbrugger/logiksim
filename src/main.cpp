@@ -82,7 +82,7 @@ auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
     constexpr static auto connector_delay
         = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
 
-    return schematic.add_element(Schematic::NewElementData {
+    return schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::placeholder,
         .input_count = 1,
         .output_count = 0,
@@ -91,7 +91,7 @@ auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
 }
 
 auto add_unused_element(Schematic& schematic) -> Schematic::Element {
-    return schematic.add_element(Schematic::NewElementData {
+    return schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::unused,
         .input_count = 0,
         .output_count = 0,
@@ -157,7 +157,7 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
             }
 
             else if (element.is_logic_item()) {
-                generated.schematic.add_element(Schematic::NewElementData {
+                generated.schematic.add_element(Schematic::ElementData {
                     .element_type = element.element_type(),
                     .input_count = element.input_count(),
                     .output_count = element.output_count(),
@@ -177,7 +177,7 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
                 auto delays = calculate_output_delays(line_tree);
                 const auto tree_max_delay = std::ranges::max(delays);
 
-                generated.schematic.add_element(Schematic::NewElementData {
+                generated.schematic.add_element(Schematic::ElementData {
                     .element_type = element.element_type(),
                     .input_count = 1,
                     .output_count = line_tree.output_count(),

@@ -52,6 +52,7 @@ set(LS_TEST_SOURCES
     test/geometry_test.cpp
     test/graph_test.cpp
     test/iterator_adaptor_test.cpp
+    test/layout_test.cpp
     test/line_tree_test.cpp
     test/random_test.cpp
     test/range_test.cpp

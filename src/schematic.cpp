@@ -200,7 +200,7 @@ auto Schematic::add_element(ElementType type, std::size_t input_count,
         {.element_type = type, .input_count = input_count, .output_count = output_count});
 }
 
-auto Schematic::add_element(NewElementData &&data) -> Element {
+auto Schematic::add_element(ElementData &&data) -> Element {
     if (data.input_count > connection_id_t::max()) [[unlikely]] {
         throw_exception("Input count needs to be positive and not too large.");
     }
@@ -231,11 +231,11 @@ auto Schematic::add_element(NewElementData &&data) -> Element {
     if (data.input_inverters.size() == 0) {
         input_inverters_.emplace_back(data.input_count, false);
     } else {
-        if (std::size(data.input_inverters) != data.input_count) [[unlikely]] {
+        if (data.input_inverters.size() != data.input_count) [[unlikely]] {
             throw_exception("Need as many values for input_inverters as inputs.");
         }
-        input_inverters_.emplace_back(std::begin(data.input_inverters),
-                                      std::end(data.input_inverters));
+        input_inverters_.emplace_back(data.input_inverters.begin(),
+                                      data.input_inverters.end());
     }
     if (data.output_delays.size() == 0) {
         output_delays_.emplace_back(data.output_count, defaults::standard_delay);
@@ -248,7 +248,7 @@ auto Schematic::add_element(NewElementData &&data) -> Element {
     }
     history_lengths_.push_back(data.history_length);
 
-    //
+    // return element
     auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
         element_types_.size() - std::size_t {1})};
 

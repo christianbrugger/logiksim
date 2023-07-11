@@ -142,7 +142,16 @@ auto Layout::element_count() const -> std::size_t {
     return positions_.size();
 }
 
+auto Layout::is_element_id_valid(element_id_t element_id) const noexcept -> bool {
+    auto size = gsl::narrow_cast<element_id_t::value_type>(element_count());
+    return element_id.value >= 0 && element_id.value < size;
+}
+
 auto Layout::add_default_element() -> element_id_t {
+    if (element_count() + 1 >= element_id_t::max()) [[unlikely]] {
+        throw_exception("Reached maximum number of elements.");
+    }
+
     element_types_.push_back(ElementType::unused);
     sub_circuit_ids_.push_back(null_circuit);
     input_counts_.push_back(connection_size_t {0});
@@ -190,6 +199,38 @@ auto Layout::add_logic_element(point_t position, orientation_t orientation,
     return element_id;
 }
 
+auto Layout::add_element(ElementData &&data) -> layout::Element {
+    if (data.input_count > connection_id_t::max()) [[unlikely]] {
+        throw_exception("Input count needs to be positive and not too large.");
+    }
+    if (data.output_count > connection_id_t::max()) [[unlikely]] {
+        throw_exception("Output count needs to be positive and not too large.");
+    }
+
+    if (element_count() + 1 >= element_id_t::max()) [[unlikely]] {
+        throw_exception("Reached maximum number of elements.");
+    }
+
+    // extend vectors
+    element_types_.push_back(data.element_type);
+    sub_circuit_ids_.push_back(data.circuit_id);
+    input_counts_.push_back(gsl::narrow_cast<connection_size_t>(data.input_count));
+    output_counts_.push_back(gsl::narrow_cast<connection_size_t>(data.output_count));
+    input_inverters_.emplace_back(data.input_count, false);
+    output_inverters_.emplace_back(data.output_count, false);
+
+    segment_trees_.emplace_back();
+    line_trees_.emplace_back();
+    positions_.push_back(data.position);
+    orientation_.push_back(data.orientation);
+    display_states_.push_back(data.display_state);
+    colors_.push_back(data.color);
+
+    auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
+        element_types_.size() - std::size_t {1})};
+    return element(element_id);
+}
+
 auto Layout::swap_and_delete_element(element_id_t element_id) -> element_id_t {
     const auto last_element_id = element_id_t {
         gsl::narrow_cast<element_id_t::value_type>(element_count() - std::size_t {1})};
@@ -220,6 +261,20 @@ auto Layout::element_ids() const noexcept -> forward_range_t<element_id_t> {
     const auto count
         = element_id_t {gsl::narrow_cast<element_id_t::value_type>(element_count())};
     return range(count);
+}
+
+auto Layout::element(element_id_t element_id) -> layout::Element {
+    if (!is_element_id_valid(element_id)) [[unlikely]] {
+        throw_exception("Element id is invalid");
+    }
+    return layout::Element {*this, element_id};
+}
+
+auto Layout::element(element_id_t element_id) const -> layout::ConstElement {
+    if (!is_element_id_valid(element_id)) [[unlikely]] {
+        throw_exception("Element id is invalid");
+    }
+    return layout::ConstElement {*this, element_id};
 }
 
 auto Layout::circuit_id() const noexcept -> circuit_id_t {
@@ -314,5 +369,153 @@ auto Layout::validate() const -> void {
         throw_exception("invalid circuit id");
     }
 }
+
+//
+// Layout
+//
+
+namespace layout {
+template <bool Const>
+inline ElementTemplate<Const>::ElementTemplate(LayoutType &layout,
+                                               element_id_t element_id) noexcept
+    : layout_(&layout), element_id_(element_id) {}
+
+template <bool Const>
+template <bool ConstOther>
+ElementTemplate<Const>::ElementTemplate(ElementTemplate<ConstOther> element) noexcept
+    requires Const && (!ConstOther)
+    : layout_(element.layout_), element_id_(element.element_id_) {}
+
+template <bool Const>
+ElementTemplate<Const>::operator element_id_t() const noexcept {
+    return element_id_;
+}
+
+template <bool Const>
+template <bool ConstOther>
+auto ElementTemplate<Const>::operator==(ElementTemplate<ConstOther> other) const noexcept
+    -> bool {
+    return layout_ == other.layout_ && element_id_ == other.element_id_;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::layout() const noexcept -> LayoutType & {
+    return *layout_;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::element_id() const noexcept -> element_id_t {
+    return element_id_;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::sub_circuit_id() const -> circuit_id_t {
+    return layout_->sub_circuit_id(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::element_type() const -> ElementType {
+    return layout_->element_type(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::is_unused() const -> bool {
+    return element_type() == ElementType::unused;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::is_placeholder() const -> bool {
+    return element_type() == ElementType::placeholder;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::is_wire() const -> bool {
+    return element_type() == ElementType::wire;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::is_logic_item() const -> bool {
+    return !(is_unused() || is_placeholder() || is_wire());
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::is_sub_circuit() const -> bool {
+    return element_type() == ElementType::sub_circuit;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::input_count() const -> std::size_t {
+    return layout_->input_count(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::output_count() const -> std::size_t {
+    return layout_->output_count(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::input_inverters() const -> const logic_small_vector_t & {
+    return layout_->input_inverters(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::output_inverters() const -> const logic_small_vector_t & {
+    return layout_->output_inverters(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::segment_tree() const -> const SegmentTree & {
+    return layout_->segment_tree(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::line_tree() const -> const LineTree & {
+    return layout_->line_tree(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::position() const -> point_t {
+    return layout_->position(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::orientation() const -> orientation_t {
+    return layout_->orientation(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::display_state() const -> display_state_t {
+    return layout_->display_state(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::color() const -> color_t {
+    return layout_->color(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::modifyable_segment_tree() const -> SegmentTree &
+    requires(!Const)
+{
+    return layout_->modifyable_segment_tree(element_id_);
+}
+
+// Template Instanciations
+
+template class ElementTemplate<true>;
+template class ElementTemplate<false>;
+
+template ElementTemplate<true>::ElementTemplate(ElementTemplate<false>) noexcept;
+
+template auto ElementTemplate<false>::operator==<false>(
+    ElementTemplate<false>) const noexcept -> bool;
+template auto ElementTemplate<false>::operator==<true>(
+    ElementTemplate<true>) const noexcept -> bool;
+template auto ElementTemplate<true>::operator==<false>(
+    ElementTemplate<false>) const noexcept -> bool;
+template auto ElementTemplate<true>::operator==<true>(
+    ElementTemplate<true>) const noexcept -> bool;
+
+}  // namespace layout
 
 }  // namespace logicsim

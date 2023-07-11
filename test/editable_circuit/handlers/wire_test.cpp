@@ -13,7 +13,7 @@ auto add_test_wire(Circuit &circuit, display_state_t display_state,
     auto &layout = circuit.layout();
 
     const auto element_id = schematic.add_element(
-        Schematic::NewElementData {.element_type = ElementType::wire});
+        Schematic::ElementData {.element_type = ElementType::wire});
     layout.add_line_tree(display_state);
 
     auto &m_tree = layout.modifyable_segment_tree(element_id);

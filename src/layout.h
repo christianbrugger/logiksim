@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_LAYOUT_H
 #define LOGIKSIM_LAYOUT_H
 
+#include "iterator_adaptor.h"
 #include "line_tree.h"
 #include "range.h"
 #include "segment_tree.h"
@@ -26,7 +27,18 @@ class Layout;
 
 [[nodiscard]] auto has_segments(const Layout &layout) -> bool;
 
+namespace layout {
+template <bool Const>
+class ElementTemplate;
+
+using Element = ElementTemplate<false>;
+using ConstElement = ElementTemplate<true>;
+}  // namespace layout
+
 class Layout {
+    template <bool Const>
+    friend class layout::ElementTemplate;
+
    public:
     [[nodiscard]] explicit Layout() = default;
     [[nodiscard]] explicit Layout(circuit_id_t circuit_id);
@@ -37,17 +49,34 @@ class Layout {
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto element_count() const -> std::size_t;
+    [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
+        -> bool;
 
-    // TODO make add_default_element private when not needed anymore
+    // TODO delete all of these
     auto add_default_element() -> element_id_t;
-
     auto add_placeholder(display_state_t display_state) -> element_id_t;
-    // TODO rework these methods
     auto add_line_tree(display_state_t display_state) -> element_id_t;
     auto add_logic_element(point_t position,
                            orientation_t orientation = orientation_t::undirected,
                            display_state_t display_state = display_state_t::normal,
                            color_t color = defaults::color_black) -> element_id_t;
+
+    struct ElementData {
+        ElementType element_type {ElementType::unused};
+        display_state_t display_state {display_state_t::temporary};
+
+        std::size_t input_count {0};
+        std::size_t output_count {0};
+        point_t position {point_t {0, 0}};
+        orientation_t orientation {orientation_t::undirected};
+        color_t color {defaults::color_black};
+
+        circuit_id_t circuit_id {null_circuit};
+        // logic_small_vector_t input_inverters {};
+        // logic_small_vector_t output_inverters {};
+    };
+
+    auto add_element(ElementData &&data) -> layout::Element;
 
     // swaps the element with last one and deletes it, returns deleted id
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
@@ -59,9 +88,13 @@ class Layout {
     auto set_display_state(element_id_t element_id, display_state_t display_state)
         -> void;
 
+    [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;
 
-    [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
+    [[nodiscard]] auto element(element_id_t element_id) -> layout::Element;
+    [[nodiscard]] auto element(element_id_t element_id) const -> layout::ConstElement;
+    [[nodiscard]] inline auto elements();
+    [[nodiscard]] inline auto elements() const;
 
     [[nodiscard]] auto element_type(element_id_t element_id) const -> ElementType;
     [[nodiscard]] auto sub_circuit_id(element_id_t element_id) const -> circuit_id_t;
@@ -113,5 +146,78 @@ auto swap(Layout &a, Layout &b) noexcept -> void;
 
 template <>
 auto std::swap(logicsim::Layout &a, logicsim::Layout &b) noexcept -> void;
+
+namespace logicsim {
+
+namespace layout {
+
+template <bool Const>
+class ElementTemplate {
+    using LayoutType = std::conditional_t<Const, const Layout, Layout>;
+
+    friend ElementTemplate<!Const>;
+    friend LayoutType;
+
+    explicit ElementTemplate(LayoutType &layout, element_id_t element_id) noexcept;
+
+   public:
+    /// This constructor is not regarded as a copy constructor,
+    //   we preserve trivially copyable
+    template <bool ConstOther>
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    ElementTemplate(ElementTemplate<ConstOther> element) noexcept
+        requires Const && (!ConstOther);
+
+    [[nodiscard]] operator element_id_t() const noexcept;
+
+    template <bool ConstOther>
+    auto operator==(ElementTemplate<ConstOther> other) const noexcept -> bool;
+
+    [[nodiscard]] auto layout() const noexcept -> LayoutType &;
+    [[nodiscard]] auto element_id() const noexcept -> element_id_t;
+    [[nodiscard]] auto sub_circuit_id() const -> circuit_id_t;
+
+    [[nodiscard]] auto element_type() const -> ElementType;
+    [[nodiscard]] auto is_unused() const -> bool;
+    [[nodiscard]] auto is_placeholder() const -> bool;
+    [[nodiscard]] auto is_wire() const -> bool;
+    [[nodiscard]] auto is_logic_item() const -> bool;
+    [[nodiscard]] auto is_sub_circuit() const -> bool;
+
+    [[nodiscard]] auto input_count() const -> std::size_t;
+    [[nodiscard]] auto output_count() const -> std::size_t;
+    [[nodiscard]] auto input_inverters() const -> const logic_small_vector_t &;
+    [[nodiscard]] auto output_inverters() const -> const logic_small_vector_t &;
+
+    [[nodiscard]] auto segment_tree() const -> const SegmentTree &;
+    [[nodiscard]] auto line_tree() const -> const LineTree &;
+    [[nodiscard]] auto position() const -> point_t;
+    [[nodiscard]] auto orientation() const -> orientation_t;
+    [[nodiscard]] auto display_state() const -> display_state_t;
+    [[nodiscard]] auto color() const -> color_t;
+
+    [[nodiscard]] auto modifyable_segment_tree() const -> SegmentTree &
+        requires(!Const);
+
+   private:
+    gsl::not_null<LayoutType *> layout_;
+    element_id_t element_id_;
+};
+
+}  // namespace layout
+
+inline auto Layout::elements() {
+    return transform_view(element_ids(), [&](element_id_t element_id) {
+        return this->element(element_id);
+    });
+}
+
+inline auto Layout::elements() const {
+    return transform_view(element_ids(), [&](element_id_t element_id) {
+        return this->element(element_id);
+    });
+}
+
+}  // namespace logicsim
 
 #endif

@@ -77,7 +77,7 @@ struct SenderSetup {
 inline auto add_and_element(Circuit &circuit, display_state_t display_type,
                             std::size_t input_count = 3,
                             point_t position = point_t {0, 0}) -> element_id_t {
-    circuit.schematic().add_element(Schematic::NewElementData {
+    circuit.schematic().add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
         .input_count = input_count,
         .output_count = 1,
@@ -87,7 +87,7 @@ inline auto add_and_element(Circuit &circuit, display_state_t display_type,
 }
 
 inline auto add_placeholder(Circuit &circuit) -> Schematic::Element {
-    const auto element = circuit.schematic().add_element(Schematic::NewElementData {
+    const auto element = circuit.schematic().add_element(Schematic::ElementData {
         .element_type = ElementType::placeholder,
         .input_count = 1,
         .output_count = 0,

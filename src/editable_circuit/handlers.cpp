@@ -223,7 +223,7 @@ auto add_placeholder_element(Circuit& circuit) -> element_id_t {
 
     const auto element_id = circuit.layout().add_placeholder(display_state_t::normal);
     {
-        const auto element = circuit.schematic().add_element(Schematic::NewElementData {
+        const auto element = circuit.schematic().add_element(Schematic::ElementData {
             .element_type = ElementType::placeholder,
             .input_count = 1,
             .output_count = 0,

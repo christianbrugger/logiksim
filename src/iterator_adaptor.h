@@ -123,7 +123,9 @@ class TransformView {
         }
 
         [[nodiscard]] auto operator-(const TransformIterator &right) const
-            noexcept(noexcept(this->iterator_ - right.iterator_)) -> difference_type {
+            noexcept(noexcept(this->iterator_ - right.iterator_)) -> difference_type
+            requires requires(Iterator it_) { it_ - it_; }
+        {
             return this->iterator_ - right.iterator_;
         }
 

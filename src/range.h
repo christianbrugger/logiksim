@@ -91,7 +91,9 @@ struct range_iterator_t {
     }
 
     [[nodiscard]] auto operator-(const range_iterator_t<T, forward>& right) const
-        noexcept(noexcept(this->current_ - right.current_)) -> difference_type {
+        noexcept(noexcept(this->current_ - right.current_)) -> difference_type
+        requires requires(T v_) { v_ - v_; }
+    {
         if constexpr (forward) {
             return this->current_ - right.current_;
         }

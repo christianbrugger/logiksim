@@ -20,8 +20,6 @@
 namespace logicsim {
 
 class Schematic {
-    struct ElementData;
-
    public:
     template <bool Const>
     class ElementTemplate;
@@ -103,7 +101,7 @@ class Schematic {
     [[nodiscard]] auto output(connection_t connection) -> Output;
     [[nodiscard]] auto output(connection_t connection) const -> ConstOutput;
 
-    struct NewElementData {
+    struct ElementData {
         ElementType element_type {ElementType::inverter_element};
         std::size_t input_count {0};
         std::size_t output_count {0};
@@ -117,7 +115,7 @@ class Schematic {
     // TODO remove when not needed anymore
     auto add_element(ElementType type, std::size_t input_count, std::size_t output_count)
         -> Element;
-    auto add_element(NewElementData &&data) -> Element;
+    auto add_element(ElementData &&data) -> Element;
     // swaps the element with last one and deletes it
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
     auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
@@ -260,7 +258,6 @@ namespace logicsim {
 template <bool Const>
 class Schematic::ElementTemplate {
     using SchematicType = std::conditional_t<Const, const Schematic, Schematic>;
-    using ElementDataType = std::conditional_t<Const, const ElementData, ElementData>;
 
     friend ElementTemplate<!Const>;
     friend Schematic;
@@ -268,7 +265,7 @@ class Schematic::ElementTemplate {
 
    public:
     /// This constructor is not regarded as a copy constructor,
-    //   so we preserve trivially copyable
+    //   we preserve trivially copyable
     template <bool ConstOther>
     // NOLINTNEXTLINE(google-explicit-constructor)
     ElementTemplate(ElementTemplate<ConstOther> element) noexcept
