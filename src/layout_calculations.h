@@ -40,6 +40,7 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
         using enum ElementType;
 
         // without a body
+        case unused:
         case placeholder:
         case wire:
         case inverter_element: {
@@ -146,6 +147,10 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
 
     switch (data.element_type) {
         using enum ElementType;
+
+        case unused: {
+            throw_exception("not supported");
+        }
 
         case placeholder: {
             require_equal(data.input_count, 1);
@@ -254,6 +259,10 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
 
     switch (data.element_type) {
         using enum ElementType;
+
+        case unused: {
+            throw_exception("not supported");
+        }
 
         case placeholder: {
             require_equal(data.output_count, 0);

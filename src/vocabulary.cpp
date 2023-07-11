@@ -7,6 +7,8 @@ auto format(ElementType type) -> std::string {
     switch (type) {
         using enum ElementType;
 
+        case unused:
+            return "Unused";
         case placeholder:
             return "Placeholder";
         case wire:

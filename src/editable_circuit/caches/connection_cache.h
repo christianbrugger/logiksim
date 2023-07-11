@@ -52,6 +52,8 @@ class ConnectionCache {
         -> std::optional<std::pair<const_connection_proxy, orientation_t>>;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
+    [[nodiscard]] auto is_colliding(point_t position, orientation_t orientation) const
+        -> bool;
 
     [[nodiscard]] auto positions() const {
         return std::ranges::views::keys(map_);

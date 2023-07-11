@@ -157,6 +157,7 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
     switch (type) {
         using enum ElementType;
 
+        case unused:
         case placeholder:
         case wire:
         case inverter_element:

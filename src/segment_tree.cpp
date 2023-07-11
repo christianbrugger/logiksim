@@ -612,13 +612,7 @@ auto SegmentTree::validate() const -> void {
 
 auto SegmentTree::validate_inserted() const -> void {
     validate();
-
-    // convert to line_tree
-    const auto segments = transform_to_vector(
-        segments_, [](const segment_info_t& segment) { return segment.line; });
-
-    const auto root = has_input_ ? std::make_optional(input_position_) : std::nullopt;
-    const auto line_tree = LineTree::from_segments(segments, root);
+    const auto line_tree = LineTree::from_segment_tree(*this);
 
     if (!line_tree) [[unlikely]] {
         throw_exception("Could not convert segment tree to line tree.");

@@ -457,6 +457,9 @@ auto is_input_output_count_valid(const Schematic::ConstElement element) -> bool 
     switch (element.element_type()) {
         using enum ElementType;
 
+        case unused: {
+            return element.input_count() == 0 && element.output_count() == 0;
+        }
         case placeholder: {
             return element.input_count() == 1 && element.output_count() == 0;
         }
@@ -708,6 +711,11 @@ auto Schematic::ElementTemplate<Const>::element_type() const -> ElementType {
 }
 
 template <bool Const>
+auto Schematic::ElementTemplate<Const>::is_unused() const -> bool {
+    return element_type() == ElementType::unused;
+}
+
+template <bool Const>
 auto Schematic::ElementTemplate<Const>::is_placeholder() const -> bool {
     return element_type() == ElementType::placeholder;
 }
@@ -719,7 +727,7 @@ auto Schematic::ElementTemplate<Const>::is_wire() const -> bool {
 
 template <bool Const>
 auto Schematic::ElementTemplate<Const>::is_logic_item() const -> bool {
-    return !(is_placeholder() || is_wire());
+    return !(is_unused() || is_placeholder() || is_wire());
 }
 
 template <bool Const>

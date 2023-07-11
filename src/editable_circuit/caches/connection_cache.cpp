@@ -125,7 +125,7 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
     const auto line = segment_info.line;
 
     if (segment_info.p0_type == point_type) {
-        const auto orientation = to_orientation(line.p0, line.p1);
+        const auto orientation = to_orientation(line.p1, line.p0);
         // TODO validate?
         // validate_connection_id(segment_info.p0_connection_id);
 
@@ -134,7 +134,7 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
         }
     }
     if (segment_info.p1_type == point_type) {
-        const auto orientation = to_orientation(line.p1, line.p0);
+        const auto orientation = to_orientation(line.p0, line.p1);
         // TODO validate?
         // validate_connection_id(segment_info.p1_connection_id);
 
@@ -233,6 +233,9 @@ auto ConnectionCache<IsInput>::find(point_t position) const
 template <bool IsInput>
 auto to_connection_entry(auto&& schematic,
                          std::optional<std::pair<connection_t, orientation_t>> entry) {
+    if (!entry || !entry->first.element_id || !entry->first.connection_id) {
+        throw_exception("entry is not a valid connection");
+    }
     return std::make_optional(
         std::make_pair(to_connection<IsInput>(schematic, entry->first), entry->second));
 }
@@ -284,6 +287,15 @@ auto ConnectionCache<IsInput>::is_colliding(layout_calculation_data_t data) cons
         return !(iter_output_location(data, same_type_not_colliding)
                  && iter_input_location(data, different_type_compatible));
     }
+}
+
+template <bool IsInput>
+auto ConnectionCache<IsInput>::is_colliding(point_t position,
+                                            orientation_t orientation) const -> bool {
+    if (const auto it = map_.find(position); it != map_.end()) {
+        return !orientations_compatible(orientation, it->second.orientation);
+    }
+    return false;
 }
 
 template <bool IsInput>

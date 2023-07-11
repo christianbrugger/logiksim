@@ -148,7 +148,7 @@ class SegmentTree {
     valid_vector_t valid_parts_vector_ {};
 
     index_t output_count_ {0};
-    // TODO do we need input position? -> yes for quick conversion
+    // TODO do we need input position? -> yes for conversion
     point_t input_position_ {};
     bool has_input_ {false};
 };

@@ -155,7 +155,7 @@ class Schematic {
         connection_id_t index {null_connection};
     };
 
-    // TODO add packing
+    // TODO delete this
     struct ElementData {
         // TODO use connection_id_t as counter
         folly::small_vector<ConnectionData, 3> input_data;
@@ -175,7 +175,7 @@ class Schematic {
     using connection_vector_t = folly::small_vector<ConnectionData, 3>;
     static_assert(sizeof(connection_vector_t) == 32);
 
-    // TODO use separate vectors, then delete
+    // TODO delete this
     std::vector<ElementData> element_data_store_ {};
 
     std::vector<ElementType> element_types_ {};
@@ -315,6 +315,7 @@ class Schematic::ElementTemplate {
     [[nodiscard]] auto sub_circuit_id() const -> circuit_id_t;
 
     [[nodiscard]] auto element_type() const -> ElementType;
+    [[nodiscard]] auto is_unused() const -> bool;
     [[nodiscard]] auto is_placeholder() const -> bool;
     [[nodiscard]] auto is_wire() const -> bool;
     [[nodiscard]] auto is_logic_item() const -> bool;

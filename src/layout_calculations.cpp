@@ -124,6 +124,9 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
     switch (data.element_type) {
         using enum ElementType;
 
+        case unused: {
+            throw_exception("unused doesn't have a collision body");
+        }
         case placeholder: {
             throw_exception("placeholder doesn't have a collision body");
         }

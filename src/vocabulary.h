@@ -23,7 +23,8 @@ namespace logicsim {
 //
 
 enum class ElementType : uint8_t {
-    placeholder,  // has no logic
+    unused,       // has no inputs and no logic
+    placeholder,  // has no logic                 // TODO rename to ???
     wire,
 
     inverter_element,

@@ -8,6 +8,7 @@
 #include "format.h"
 #include "graph.h"
 #include "range.h"
+#include "segment_tree.h"
 
 #include <boost/container/small_vector.hpp>
 #include <gsl/gsl>
@@ -303,6 +304,19 @@ auto LineTree::from_graph(point_t root, const Graph& graph) -> std::optional<Lin
     }
 
     return std::nullopt;
+}
+
+auto LineTree::from_segment_tree(const SegmentTree& segment_tree)
+    -> std::optional<LineTree> {
+    // convert to line_tree
+    const auto segments
+        = transform_to_vector(segment_tree.segment_infos(),
+                              [](const segment_info_t& segment) { return segment.line; });
+
+    const auto root = segment_tree.has_input()
+                          ? std::make_optional(segment_tree.input_position())
+                          : std::nullopt;
+    return LineTree::from_segments(segments, root);
 }
 
 auto LineTree::swap(LineTree& other) noexcept -> void {

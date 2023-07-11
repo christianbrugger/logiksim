@@ -381,17 +381,13 @@ auto connect_connector(connector_data_t connector,
 
         if (found_connection.has_connected_element()) {
             if (!found_connection.connected_element().is_placeholder()) [[unlikely]] {
-                throw_exception(
-                    "Connection is already connected at "
-                    "this location.");
+                throw_exception("Connection is already connected at this location.");
             }
             // mark placeholder for deletion
             unused_placeholder_id = found_connection.connected_element_id();
         }
         if (!orientations_compatible(connector.orientation, found_orientation)) {
-            throw_exception(
-                "Connection have incompatible "
-                "orientations.");
+            throw_exception("Connection have incompatible orientations.");
         }
 
         // make connection in schematic
