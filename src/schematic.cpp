@@ -23,11 +23,7 @@ namespace logicsim {
 // Schematic
 //
 
-Schematic::Schematic(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
-    if (!circuit_id) [[unlikely]] {
-        throw_exception("Schematic id needs to be valid.");
-    }
-}
+Schematic::Schematic(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {}
 
 auto Schematic::clear() -> void {
     input_connections_.clear();

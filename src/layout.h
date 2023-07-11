@@ -62,6 +62,16 @@ class Layout {
     [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;
 
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
+
+    [[nodiscard]] auto element_type(element_id_t element_id) const -> ElementType;
+    [[nodiscard]] auto sub_circuit_id(element_id_t element_id) const -> circuit_id_t;
+    [[nodiscard]] auto input_count(element_id_t element_id) const -> std::size_t;
+    [[nodiscard]] auto output_count(element_id_t element_id) const -> std::size_t;
+    [[nodiscard]] auto input_inverters(element_id_t element_id) const
+        -> const logic_small_vector_t &;
+    [[nodiscard]] auto output_inverters(element_id_t element_id) const
+        -> const logic_small_vector_t &;
+
     [[nodiscard]] auto segment_tree(element_id_t element_id) const -> const SegmentTree &;
     [[nodiscard]] auto line_tree(element_id_t element_id) const -> const LineTree &;
     [[nodiscard]] auto position(element_id_t element_id) const -> point_t;
@@ -76,6 +86,16 @@ class Layout {
    private:
     auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
     auto delete_last_element() -> void;
+
+    using connection_size_t = std::make_unsigned<connection_id_t::value_type>::type;
+    static_assert(sizeof(connection_size_t) == sizeof(connection_id_t));
+
+    std::vector<ElementType> element_types_ {};
+    std::vector<circuit_id_t> sub_circuit_ids_ {};
+    std::vector<connection_size_t> input_counts_ {};
+    std::vector<connection_size_t> output_counts_ {};
+    std::vector<logic_small_vector_t> input_inverters_ {};
+    std::vector<logic_small_vector_t> output_inverters_ {};
 
     std::vector<SegmentTree> segment_trees_ {};
     std::vector<LineTree> line_trees_ {};

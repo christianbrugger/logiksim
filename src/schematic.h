@@ -103,11 +103,6 @@ class Schematic {
     [[nodiscard]] auto output(connection_t connection) -> Output;
     [[nodiscard]] auto output(connection_t connection) const -> ConstOutput;
 
-    // TODO consider making public, or putting it somewhere else
-    using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
-    using logic_small_vector_t = folly::small_vector<bool, 20, policy>;
-    static_assert(sizeof(logic_small_vector_t) == 24);
-
     struct NewElementData {
         ElementType element_type {ElementType::inverter_element};
         std::size_t input_count {0};
@@ -145,6 +140,7 @@ class Schematic {
     auto delete_last_element(bool clear_connections) -> void;
 
     // output_delays type
+    using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
     using output_delays_t = folly::small_vector<delay_t, 5, policy>;
     static_assert(sizeof(output_delays_t) == 24);
 

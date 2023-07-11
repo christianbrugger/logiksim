@@ -7,14 +7,17 @@
 
 namespace logicsim {
 
-Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
-    if (!circuit_id) [[unlikely]] {
-        throw_exception("Schematic id needs to be valid.");
-    }
-}
+Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {}
 
 auto Layout::swap(Layout &other) noexcept -> void {
     using std::swap;
+
+    element_types_.swap(other.element_types_);
+    sub_circuit_ids_.swap(other.sub_circuit_ids_);
+    input_counts_.swap(other.input_counts_);
+    output_counts_.swap(other.output_counts_);
+    input_inverters_.swap(other.input_inverters_);
+    output_inverters_.swap(other.output_inverters_);
 
     segment_trees_.swap(other.segment_trees_);
     line_trees_.swap(other.line_trees_);
@@ -37,6 +40,13 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
         swap(container.at(element_id_1.value), container.at(element_id_2.value));
     };
 
+    swap_ids(element_types_);
+    swap_ids(sub_circuit_ids_);
+    swap_ids(input_counts_);
+    swap_ids(output_counts_);
+    swap_ids(input_inverters_);
+    swap_ids(output_inverters_);
+
     swap_ids(segment_trees_);
     swap_ids(line_trees_);
     swap_ids(positions_);
@@ -49,6 +59,13 @@ auto Layout::delete_last_element() -> void {
     if (empty()) {
         throw_exception("Cannot delete last element of empty schematics.");
     }
+
+    element_types_.pop_back();
+    sub_circuit_ids_.pop_back();
+    input_counts_.pop_back();
+    output_counts_.pop_back();
+    input_inverters_.pop_back();
+    output_inverters_.pop_back();
 
     segment_trees_.pop_back();
     line_trees_.pop_back();
@@ -126,6 +143,13 @@ auto Layout::element_count() const -> std::size_t {
 }
 
 auto Layout::add_default_element() -> element_id_t {
+    element_types_.push_back(ElementType::unused);
+    sub_circuit_ids_.push_back(null_circuit);
+    input_counts_.push_back(connection_size_t {0});
+    output_counts_.push_back(connection_size_t {0});
+    input_inverters_.push_back(logic_small_vector_t {});
+    output_inverters_.push_back(logic_small_vector_t {});
+
     segment_trees_.push_back(SegmentTree {});
     line_trees_.push_back(LineTree {});
     positions_.push_back(point_t {});
@@ -200,6 +224,32 @@ auto Layout::element_ids() const noexcept -> forward_range_t<element_id_t> {
 
 auto Layout::circuit_id() const noexcept -> circuit_id_t {
     return circuit_id_;
+}
+
+auto Layout::element_type(element_id_t element_id) const -> ElementType {
+    return element_types_.at(element_id.value);
+}
+
+auto Layout::sub_circuit_id(element_id_t element_id) const -> circuit_id_t {
+    return sub_circuit_ids_.at(element_id.value);
+}
+
+auto Layout::input_count(element_id_t element_id) const -> std::size_t {
+    return input_counts_.at(element_id.value);
+}
+
+auto Layout::output_count(element_id_t element_id) const -> std::size_t {
+    return output_counts_.at(element_id.value);
+}
+
+auto Layout::input_inverters(element_id_t element_id) const
+    -> const logic_small_vector_t & {
+    return input_inverters_.at(element_id.value);
+}
+
+auto Layout::output_inverters(element_id_t element_id) const
+    -> const logic_small_vector_t & {
+    return output_inverters_.at(element_id.value);
 }
 
 auto Layout::segment_tree(element_id_t element_id) const -> const SegmentTree & {

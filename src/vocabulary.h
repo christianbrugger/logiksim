@@ -333,6 +333,14 @@ struct delay_t {
 };
 
 //
+// Simulation / Logic Types
+//
+
+using logic_small_vector_policy = folly::small_vector_policy::policy_size_type<uint32_t>;
+using logic_small_vector_t = folly::small_vector<bool, 20, logic_small_vector_policy>;
+static_assert(sizeof(logic_small_vector_t) == 24);
+
+//
 // Styling Types
 //
 
