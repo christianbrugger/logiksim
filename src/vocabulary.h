@@ -143,7 +143,6 @@ struct connection_id_t {
 
 static_assert(std::is_trivial<connection_id_t>::value);
 
-// TODO use struct packing?
 struct connection_t {
     element_id_t element_id;
     connection_id_t connection_id;

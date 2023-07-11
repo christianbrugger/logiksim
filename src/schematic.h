@@ -21,7 +21,6 @@ namespace logicsim {
 
 class Schematic {
     struct ElementData;
-    struct ConnectionData;
 
    public:
     template <bool Const>
@@ -140,43 +139,20 @@ class Schematic {
     void validate(ValidationSettings settings = validate_basic) const;
 
    private:
-    static auto validate_connection_data_(Schematic::ConnectionData connection_data)
-        -> void;
     auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2,
                            bool update_connections) -> void;
     auto update_swapped_connections(element_id_t new_element_id,
                                     element_id_t old_element_id) -> void;
     auto delete_last_element(bool clear_connections) -> void;
 
-    // TODO add packing
-    // TODO use vocabulary type?
-    struct ConnectionData {
-        element_id_t element_id {null_element};
-        connection_id_t index {null_connection};
-    };
-
-    // TODO delete this
-    struct ElementData {
-        // TODO use connection_id_t as counter
-        folly::small_vector<ConnectionData, 3> input_data;
-        folly::small_vector<ConnectionData, 3> output_data;
-
-        ElementType type;
-    };
-
-    static_assert(sizeof(ConnectionData) == 8);
-    static_assert(sizeof(ElementData) == 65);
-
     // output_delays type
     using output_delays_t = folly::small_vector<delay_t, 5, policy>;
     static_assert(sizeof(output_delays_t) == 24);
 
     // TODO use connection_id_t as counter
-    using connection_vector_t = folly::small_vector<ConnectionData, 3>;
+    using connection_vector_t = folly::small_vector<connection_t, 3>;
+    static_assert(sizeof(connection_t) == 8);
     static_assert(sizeof(connection_vector_t) == 32);
-
-    // TODO delete this
-    std::vector<ElementData> element_data_store_ {};
 
     std::vector<ElementType> element_types_ {};
     std::vector<circuit_id_t> sub_circuit_ids_ {};
@@ -334,8 +310,6 @@ class Schematic::ElementTemplate {
         requires(!Const);
 
    private:
-    [[nodiscard]] auto element_data_() const -> ElementDataType &;
-
     gsl::not_null<SchematicType *> schematic_;
     element_id_t element_id_;
 };
@@ -409,7 +383,7 @@ template <bool Const>
 class Schematic::InputTemplate {
     using SchematicType = std::conditional_t<Const, const Schematic, Schematic>;
     using ConnectionDataType
-        = std::conditional_t<Const, const ConnectionData, ConnectionData>;
+        = std::conditional_t<Const, const connection_t, connection_t>;
 
     /// This constructor is not regarded as a copy constructor,
     //   so we preserve trivially copyable
@@ -463,7 +437,7 @@ class Schematic::OutputTemplate {
    private:
     using SchematicType = std::conditional_t<Const, const Schematic, Schematic>;
     using ConnectionDataType
-        = std::conditional_t<Const, const ConnectionData, ConnectionData>;
+        = std::conditional_t<Const, const connection_t, connection_t>;
 
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;

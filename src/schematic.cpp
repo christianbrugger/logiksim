@@ -29,10 +29,21 @@ Schematic::Schematic(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {
     }
 }
 
+auto Schematic::clear() -> void {
+    input_connections_.clear();
+    output_connections_.clear();
+    sub_circuit_ids_.clear();
+    element_types_.clear();
+    input_inverters_.clear();
+    output_delays_.clear();
+    history_lengths_.clear();
+
+    input_count_ = 0;
+    output_count_ = 0;
+}
+
 auto Schematic::swap(Schematic &other) noexcept -> void {
     using std::swap;
-
-    element_data_store_.swap(other.element_data_store_);
 
     input_connections_.swap(other.input_connections_);
     output_connections_.swap(other.output_connections_);
@@ -58,8 +69,6 @@ auto Schematic::swap_element_data(element_id_t element_id_1, element_id_t elemen
         swap(container.at(element_id_1.value), container.at(element_id_2.value));
     };
 
-    swap_ids(element_data_store_);
-
     swap_ids(input_connections_);
     swap_ids(output_connections_);
     swap_ids(sub_circuit_ids_);
@@ -75,8 +84,7 @@ auto Schematic::swap_element_data(element_id_t element_id_1, element_id_t elemen
 }
 
 auto Schematic::delete_last_element(bool clear_connections) -> void {
-    if (element_data_store_.empty()     //
-        || input_connections_.empty()   //
+    if (input_connections_.empty()      //
         || output_connections_.empty()  //
         || sub_circuit_ids_.empty()     //
         || element_types_.empty()       //
@@ -93,17 +101,16 @@ auto Schematic::delete_last_element(bool clear_connections) -> void {
         element(last_id).clear_all_connection();
     }
 
-    const auto &data = element_data_store_.back();
-    if (input_count_ < data.input_data.size() || output_count_ < data.output_data.size())
+    const auto last_input_count = input_connections_.back().size();
+    const auto last_output_count = output_connections_.back().size();
+    if (input_count_ < last_input_count || output_count_ < last_output_count)
         [[unlikely]] {
         throw_exception("input or output count underflows");
     }
-    input_count_ -= data.input_data.size();
-    output_count_ -= data.output_data.size();
+    input_count_ -= last_input_count;
+    output_count_ -= last_output_count;
 
     // delete
-    element_data_store_.pop_back();
-
     input_connections_.pop_back();
     output_connections_.pop_back();
     sub_circuit_ids_.pop_back();
@@ -141,11 +148,11 @@ auto Schematic::circuit_id() const noexcept -> circuit_id_t {
 }
 
 auto Schematic::element_count() const noexcept -> std::size_t {
-    return element_data_store_.size();
+    return element_types_.size();
 }
 
 auto Schematic::empty() const noexcept -> bool {
-    return element_data_store_.empty();
+    return element_types_.empty();
 }
 
 auto Schematic::is_element_id_valid(element_id_t element_id) const noexcept -> bool {
@@ -206,7 +213,7 @@ auto Schematic::add_element(NewElementData &&data) -> Element {
     }
 
     // make sure we can represent all ids
-    if (element_data_store_.size() + 1 >= element_id_t::max()) [[unlikely]] {
+    if (element_types_.size() + 1 >= element_id_t::max()) [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
     if (input_count_ >= std::numeric_limits<decltype(input_count_)>::max()
@@ -218,17 +225,13 @@ auto Schematic::add_element(NewElementData &&data) -> Element {
         throw_exception("Reached maximum number of outputs.");
     }
 
-    element_data_store_.push_back({
-        .input_data = {},
-        .output_data = {},
-        .type = data.element_type,
-    });
-
     // extend vectors
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.circuit_id);
-    input_connections_.emplace_back(data.input_count, ConnectionData {});
-    output_connections_.emplace_back(data.output_count, ConnectionData {});
+    input_connections_.emplace_back(data.input_count,
+                                    connection_t {null_element, null_connection});
+    output_connections_.emplace_back(data.output_count,
+                                     connection_t {null_element, null_connection});
     if (data.input_inverters.size() == 0) {
         input_inverters_.emplace_back(data.input_count, false);
     } else {
@@ -251,9 +254,7 @@ auto Schematic::add_element(NewElementData &&data) -> Element {
 
     //
     auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
-        element_data_store_.size() - std::size_t {1})};
-    element_data_store_.at(element_id.value).input_data.resize(data.input_count);
-    element_data_store_.at(element_id.value).output_data.resize(data.output_count);
+        element_types_.size() - std::size_t {1})};
 
     input_count_ += data.input_count;
     output_count_ += data.output_count;
@@ -319,12 +320,6 @@ auto Schematic::update_swapped_connections(element_id_t new_element_id,
             }
         }
     }
-}
-
-auto Schematic::clear() -> void {
-    element_data_store_.clear();
-    input_count_ = 0;
-    output_count_ = 0;
 }
 
 auto Schematic::input_count() const noexcept -> std::size_t {
@@ -496,22 +491,20 @@ auto is_input_output_count_valid(const Schematic::ConstElement element) -> bool 
     throw_exception("invalid element");
 }
 
-auto validate_input_output_count(const Schematic::ConstElement element) {
+auto validate_input_output_count(const Schematic::ConstElement element) -> void {
     if (!is_input_output_count_valid(element)) [[unlikely]] {
         throw_exception("element has wrong input or output count.");
     }
 }
 
-// TODO make free method when we remove ConnectionData
-auto Schematic::validate_connection_data_(const Schematic::ConnectionData connection_data)
-    -> void {
+auto validate_connection_data(const connection_t connection_data) -> void {
     if (connection_data.element_id != null_element
-        && connection_data.index == null_connection) [[unlikely]] {
+        && connection_data.connection_id == null_connection) [[unlikely]] {
         throw_exception("Connection to an element cannot have null_connection.");
     }
 
     if (connection_data.element_id == null_element
-        && connection_data.index != null_connection) [[unlikely]] {
+        && connection_data.connection_id != null_connection) [[unlikely]] {
         throw_exception("Connection with null_element requires null_connection.");
     }
 }
@@ -525,9 +518,11 @@ auto validate_sub_circuit_ids(const Schematic::ConstElement element) -> void {
 auto Schematic::validate(ValidationSettings settings) const -> void {
     // connections
     std::ranges::for_each(elements(), validate_input_output_count);
-    for (const auto &data : element_data_store_) {
-        std::ranges::for_each(data.input_data, Schematic::validate_connection_data_);
-        std::ranges::for_each(data.output_data, Schematic::validate_connection_data_);
+    for (const auto &data : input_connections_) {
+        std::ranges::for_each(data, validate_connection_data);
+    }
+    for (const auto &data : output_connections_) {
+        std::ranges::for_each(data, validate_connection_data);
     }
 
     std::ranges::for_each(elements(), validate_element_connections_consistent);
@@ -707,7 +702,7 @@ auto Schematic::ElementTemplate<Const>::sub_circuit_id() const -> circuit_id_t {
 
 template <bool Const>
 auto Schematic::ElementTemplate<Const>::element_type() const -> ElementType {
-    return element_data_().type;
+    return schematic_->element_types_.at(element_id_.value);
 }
 
 template <bool Const>
@@ -737,12 +732,12 @@ auto Schematic::ElementTemplate<Const>::is_sub_circuit() const -> bool {
 
 template <bool Const>
 auto Schematic::ElementTemplate<Const>::input_count() const -> std::size_t {
-    return element_data_().input_data.size();
+    return schematic_->input_connections_.at(element_id_.value).size();
 }
 
 template <bool Const>
 auto Schematic::ElementTemplate<Const>::output_count() const -> std::size_t {
-    return element_data_().output_data.size();
+    return schematic_->output_connections_.at(element_id_.value).size();
 }
 
 template <bool Const>
@@ -775,11 +770,6 @@ void Schematic::ElementTemplate<Const>::clear_all_connection() const
 {
     std::ranges::for_each(inputs(), &Input::clear_connection);
     std::ranges::for_each(outputs(), &Output::clear_connection);
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::element_data_() const -> ElementDataType & {
-    return schematic_->element_data_store_.at(element_id_.value);
 }
 
 // Template Instanciations
@@ -979,7 +969,7 @@ auto Schematic::InputTemplate<Const>::connected_element_id() const -> element_id
 
 template <bool Const>
 auto Schematic::InputTemplate<Const>::connected_output_index() const -> connection_id_t {
-    return connection_data_().index;
+    return connection_data_().connection_id;
 }
 
 template <bool Const>
@@ -1000,14 +990,14 @@ void Schematic::InputTemplate<Const>::clear_connection() const
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data {
-            schematic_->element_data_store_.at(connection_data.element_id.value)
-                .output_data.at(connection_data.index.value)};
+            schematic_->output_connections_.at(connection_data.element_id.value)
+                .at(connection_data.connection_id.value)};
 
         destination_connection_data.element_id = null_element;
-        destination_connection_data.index = null_connection;
+        destination_connection_data.connection_id = null_connection;
 
         connection_data.element_id = null_element;
-        connection_data.index = null_connection;
+        connection_data.connection_id = null_connection;
     }
 }
 
@@ -1023,23 +1013,21 @@ void Schematic::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output)
 
     // get data before we modify anything, for exception safety
     auto &destination_connection_data
-        = schematic_->element_data_store_.at(output.element_id().value)
-              .output_data.at(output.output_index().value);
+        = schematic_->output_connections_.at(output.element_id().value)
+              .at(output.output_index().value);
 
     auto &connection_data {connection_data_()};
 
     connection_data.element_id = output.element_id();
-    connection_data.index = output.output_index();
+    connection_data.connection_id = output.output_index();
 
     destination_connection_data.element_id = element_id();
-    destination_connection_data.index = input_index();
+    destination_connection_data.connection_id = input_index();
 }
 
 template <bool Const>
 auto Schematic::InputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
-    // return schematic_->input_data_store_.at(input_id_);
-    return schematic_->element_data_store_.at(element_id_.value)
-        .input_data.at(input_index_.value);
+    return schematic_->input_connections_.at(element_id_.value).at(input_index_.value);
 }
 
 // Template Instanciations
@@ -1143,7 +1131,7 @@ auto Schematic::OutputTemplate<Const>::connected_element_id() const -> element_i
 
 template <bool Const>
 auto Schematic::OutputTemplate<Const>::connected_input_index() const -> connection_id_t {
-    return connection_data_().index;
+    return connection_data_().connection_id;
 }
 
 template <bool Const>
@@ -1164,14 +1152,14 @@ void Schematic::OutputTemplate<Const>::clear_connection() const
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data
-            = schematic_->element_data_store_.at(connection_data.element_id.value)
-                  .input_data.at(connection_data.index.value);
+            = schematic_->input_connections_.at(connection_data.element_id.value)
+                  .at(connection_data.connection_id.value);
 
         destination_connection_data.element_id = null_element;
-        destination_connection_data.index = null_connection;
+        destination_connection_data.connection_id = null_connection;
 
         connection_data.element_id = null_element;
-        connection_data.index = null_connection;
+        connection_data.connection_id = null_connection;
     }
 }
 
@@ -1188,22 +1176,19 @@ void Schematic::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) 
     // get data before we modify anything, for exception safety
     auto &connection_data {connection_data_()};
     auto &destination_connection_data
-        = schematic_->element_data_store_.at(input.element_id().value)
-              .input_data.at(input.input_index().value);
-    // schematic_->input_data_store_.at(input.input_id());
+        = schematic_->input_connections_.at(input.element_id().value)
+              .at(input.input_index().value);
 
     connection_data.element_id = input.element_id();
-    connection_data.index = input.input_index();
+    connection_data.connection_id = input.input_index();
 
     destination_connection_data.element_id = element_id();
-    destination_connection_data.index = output_index();
+    destination_connection_data.connection_id = output_index();
 }
 
 template <bool Const>
 auto Schematic::OutputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
-    // return schematic_->output_data_store_.at(output_id_);
-    return schematic_->element_data_store_.at(element_id_.value)
-        .output_data.at(output_index_.value);
+    return schematic_->output_connections_.at(element_id_.value).at(output_index_.value);
 }
 
 // Template Instanciations
