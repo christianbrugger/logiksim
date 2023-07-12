@@ -4,6 +4,7 @@
 #include "layout.h"
 #include "range.h"
 #include "schematic.h"
+#include "schematic_generation.h"
 #include "simulation.h"
 
 namespace logicsim {
@@ -252,7 +253,7 @@ auto MouseMoveSelectionLogic::restore_original_positions() -> void {
 }
 
 auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
-    const auto& layout = editable_circuit_.circuit().layout();
+    const auto& layout = editable_circuit_.layout();
 
     const auto element_colliding = [&](element_id_t element_id) {
         return layout.display_state(element_id) == display_state_t::colliding;
@@ -451,7 +452,8 @@ auto RendererWidget::reset_circuit() -> void {
     reset_interaction_state();
 
     circuit_index_ = CircuitIndex {};
-    editable_circuit_.emplace(circuit_index_.borrow_circuit(circuit_id_));
+    editable_circuit_.emplace(
+        circuit_index_.borrow_circuit(circuit_id_).extract_layout());
     update();
 
 #ifndef NDEBUG
@@ -468,14 +470,14 @@ auto RendererWidget::reload_circuit() -> void {
     {
         const auto t = Timer {"reload", Timer::Unit::ms, 3};
 
-        auto circuit = editable_circuit_->extract_circuit();
+        auto layout = editable_circuit_->extract_layout();
 
         editable_circuit_.reset();
-        editable_circuit_.emplace(std::move(circuit));
+        editable_circuit_.emplace(std::move(layout));
     }
 
     update();
-    if (editable_circuit_->circuit().schematic().element_count() < 30) {
+    if (editable_circuit_->layout().element_count() < 30) {
         print(editable_circuit_);
     }
 
@@ -576,13 +578,12 @@ auto RendererWidget::load_circuit(int id) -> void {
     // count & print
     {
         const auto timer_str = timer.format();
-        const auto& schematic = editable_circuit.circuit().schematic();
-        const auto& layout = editable_circuit.circuit().layout();
+        const auto& layout = editable_circuit.layout();
 
         auto element_count = std::size_t {0};
         auto segment_count = std::size_t {0};
 
-        for (auto element : schematic.elements()) {
+        for (auto element : layout.elements()) {
             if (element.is_wire()) {
                 const auto& tree = layout.segment_tree(element.element_id());
                 segment_count += tree.segment_count();
@@ -593,7 +594,7 @@ auto RendererWidget::load_circuit(int id) -> void {
             }
         }
 
-        if (schematic.element_count() < 10) {
+        if (layout.element_count() < 10) {
             print(editable_circuit);
         }
         fmt::print("Added {} elements and {} wire segments in {}.\n", element_count,
@@ -717,13 +718,16 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
     if (do_render_circuit_) {
         const auto& selection = editable_circuit.selection_builder().selection();
-        // print(selection);
-
         const auto mask = editable_circuit.selection_builder().create_selection_mask();
+
+        // TODO don't generate schematic here
+        // TODO rewrite render circuit so its not needed
+        const auto schematic = generate_schematic(editable_circuit.layout());
+
         // auto simulation = Simulation {editable_circuit.schematic()};
         render_circuit(bl_ctx, render_args_t {
-                                   .schematic = editable_circuit.circuit().schematic(),
-                                   .layout = editable_circuit.circuit().layout(),
+                                   .schematic = schematic,
+                                   .layout = editable_circuit.layout(),
                                    .selection_mask = mask,
                                    .selection = selection,
                                    .settings = render_settings_,

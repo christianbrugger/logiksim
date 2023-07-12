@@ -90,13 +90,11 @@ auto notify_element_id_change(const Layout& layout, MessageSender sender,
     }
 }
 
-auto swap_elements(Circuit& circuit, MessageSender sender,
-                   const element_id_t element_id_0, const element_id_t element_id_1)
-    -> void {
+auto swap_elements(Layout& layout, MessageSender sender, const element_id_t element_id_0,
+                   const element_id_t element_id_1) -> void {
     if (element_id_0 == element_id_1) {
         return;
     }
-    auto& layout = circuit.layout();
 
     if (is_inserted(layout, element_id_0) && is_inserted(layout, element_id_1))
         [[unlikely]] {
@@ -105,20 +103,18 @@ auto swap_elements(Circuit& circuit, MessageSender sender,
         throw_exception("not implemented");
     }
 
-    circuit.swap_elements(element_id_0, element_id_1);
+    layout.swap_elements(element_id_0, element_id_1);
     notify_element_id_change(layout, sender, element_id_0, element_id_1);
     notify_element_id_change(layout, sender, element_id_1, element_id_0);
 }
 
-auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender sender,
+auto swap_and_delete_single_element_private(Layout& layout, MessageSender sender,
                                             element_id_t& element_id,
                                             element_id_t* preserve_element = nullptr)
     -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
-
-    auto& layout = circuit.layout();
 
     if (layout.display_state(element_id) != display_state_t::temporary) [[unlikely]] {
         throw_exception("can only delete temporary objects");
@@ -130,13 +126,7 @@ auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender send
     notify_element_deleted(layout, sender, element_id);
 
     // delete in underlying
-    auto last_id = circuit.schematic().swap_and_delete_element(element_id);
-    {
-        auto last_id_2 = layout.swap_and_delete_element(element_id);
-        if (last_id_2 != last_id) {
-            throw_exception("Returned id's during deletion are not the same.");
-        }
-    }
+    auto last_id = layout.swap_and_delete_element(element_id);
 
     if (element_id != last_id) {
         notify_element_id_change(layout, sender, element_id, last_id);
@@ -153,7 +143,7 @@ auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender send
     element_id = null_element;
 }
 
-auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
+auto swap_and_delete_single_element(Layout& layout, MessageSender sender,
                                     element_id_t& element_id,
                                     element_id_t* preserve_element) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
@@ -162,12 +152,12 @@ auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
             "swap_and_delete_single_element(element_id = {}, preserve_element = "
             "{});\n"
             "==========================================================\n\n",
-            circuit, element_id, fmt_ptr(preserve_element));
+            layout, element_id, fmt_ptr(preserve_element));
     }
-    swap_and_delete_single_element_private(circuit, sender, element_id, preserve_element);
+    swap_and_delete_single_element_private(layout, sender, element_id, preserve_element);
 }
 
-auto swap_and_delete_multiple_elements_private(Circuit& circuit, MessageSender sender,
+auto swap_and_delete_multiple_elements_private(Layout& layout, MessageSender sender,
                                                std::span<const element_id_t> element_ids,
                                                element_id_t* preserve_element) -> void {
     // sort descending, so we don't invalidate our ids
@@ -175,12 +165,12 @@ auto swap_and_delete_multiple_elements_private(Circuit& circuit, MessageSender s
     std::ranges::sort(sorted_ids, std::greater<> {});
 
     for (auto element_id : sorted_ids) {
-        swap_and_delete_single_element_private(circuit, sender, element_id,
+        swap_and_delete_single_element_private(layout, sender, element_id,
                                                preserve_element);
     }
 }
 
-auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
+auto swap_and_delete_multiple_elements(Layout& layout, MessageSender sender,
                                        std::span<const element_id_t> element_ids,
                                        element_id_t* preserve_element) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
@@ -189,9 +179,9 @@ auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
             "swap_and_delete_multiple_elements(element_id = {}, preserve_element = "
             "{});\n"
             "==========================================================\n\n",
-            circuit, element_ids, fmt_ptr(preserve_element));
+            layout, element_ids, fmt_ptr(preserve_element));
     }
-    swap_and_delete_multiple_elements_private(circuit, sender, element_ids,
+    swap_and_delete_multiple_elements_private(layout, sender, element_ids,
                                               preserve_element);
 }
 
@@ -204,7 +194,7 @@ auto StandardLogicAttributes::format() const -> std::string {
                        orientation);
 }
 
-auto is_logic_item_position_representable_private(const Circuit& circuit,
+auto is_logic_item_position_representable_private(const Layout& layout,
                                                   const element_id_t element_id, int x,
                                                   int y) -> bool {
     if (!element_id) [[unlikely]] {
@@ -215,13 +205,13 @@ auto is_logic_item_position_representable_private(const Circuit& circuit,
     }
     const auto position = point_t {grid_t {x}, grid_t {y}};
 
-    auto data = to_layout_calculation_data(circuit.layout(), element_id);
+    auto data = to_layout_calculation_data(layout, element_id);
     data.position = position;
 
     return is_representable(data);
 }
 
-auto is_logic_item_position_representable(const Circuit& circuit,
+auto is_logic_item_position_representable(const Layout& layout,
                                           const element_id_t element_id, int x, int y)
     -> bool {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
@@ -229,40 +219,39 @@ auto is_logic_item_position_representable(const Circuit& circuit,
             "\n==========================================================\n{}\n"
             "is_logic_item_position_representable(element_id = {}, x = {}, y = {});\n"
             "==========================================================\n\n",
-            circuit, element_id, x, y);
+            layout, element_id, x, y);
     }
-    return is_logic_item_position_representable_private(circuit, element_id, x, y);
+    return is_logic_item_position_representable_private(layout, element_id, x, y);
 }
 
-auto move_or_delete_logic_item_private(Circuit& circuit, MessageSender sender,
+auto move_or_delete_logic_item_private(Layout& layout, MessageSender sender,
                                        element_id_t& element_id, int x, int y) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
-    if (circuit.layout().display_state(element_id) != display_state_t::temporary)
-        [[unlikely]] {
+    if (layout.display_state(element_id) != display_state_t::temporary) [[unlikely]] {
         throw_exception("Only temporary items can be freely moded.");
     }
 
-    if (!is_logic_item_position_representable_private(circuit, element_id, x, y)) {
-        swap_and_delete_single_element_private(circuit, sender, element_id);
+    if (!is_logic_item_position_representable_private(layout, element_id, x, y)) {
+        swap_and_delete_single_element_private(layout, sender, element_id);
         return;
     }
 
     const auto position = point_t {grid_t {x}, grid_t {y}};
-    circuit.layout().set_position(element_id, position);
+    layout.set_position(element_id, position);
 }
 
-auto move_or_delete_logic_item(Circuit& circuit, MessageSender sender,
+auto move_or_delete_logic_item(Layout& layout, MessageSender sender,
                                element_id_t& element_id, int x, int y) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         fmt::print(
             "\n==========================================================\n{}\n"
             "move_or_delete_logic_item(element_id = {}, x = {}, y = {});\n"
             "==========================================================\n\n",
-            circuit, element_id, x, y);
+            layout, element_id, x, y);
     }
-    move_or_delete_logic_item_private(circuit, sender, element_id, x, y);
+    move_or_delete_logic_item_private(layout, sender, element_id, x, y);
 }
 
 // mode change helpers
@@ -274,15 +263,15 @@ auto insert_logic_item(State state, element_id_t& element_id) {
 
 // mode change
 
-auto is_circuit_item_colliding(const Circuit& circuit, const CacheProvider& cache,
+auto is_circuit_item_colliding(const Layout& layout, const CacheProvider& cache,
                                const element_id_t element_id) {
-    const auto data = to_layout_calculation_data(circuit.layout(), element_id);
+    const auto data = to_layout_calculation_data(layout, element_id);
     return cache.is_element_colliding(data);
 }
 
-auto notify_circuit_item_inserted(const Circuit& circuit, MessageSender sender,
+auto notify_circuit_item_inserted(const Layout& layout, MessageSender sender,
                                   const element_id_t element_id) {
-    const auto data = to_layout_calculation_data(circuit.layout(), element_id);
+    const auto data = to_layout_calculation_data(layout, element_id);
     sender.submit(info_message::LogicItemInserted {element_id, data});
 }
 
@@ -293,18 +282,17 @@ auto _element_change_temporary_to_colliding(State state, element_id_t& element_i
         throw_exception("element is not in the right state.");
     }
 
-    if (is_circuit_item_colliding(state.circuit, state.cache, element_id)) {
+    if (is_circuit_item_colliding(state.layout, state.cache, element_id)) {
         state.layout.set_display_state(element_id, display_state_t::colliding);
     } else {
         insert_logic_item(state, element_id);
         state.layout.set_display_state(element_id, display_state_t::valid);
-        notify_circuit_item_inserted(state.circuit, state.sender, element_id);
+        notify_circuit_item_inserted(state.layout, state.sender, element_id);
     }
 };
 
-auto _element_change_colliding_to_insert(Circuit& circuit, MessageSender sender,
+auto _element_change_colliding_to_insert(Layout& layout, MessageSender sender,
                                          element_id_t& element_id) -> void {
-    auto& layout = circuit.layout();
     const auto display_state = layout.display_state(element_id);
 
     if (display_state == display_state_t::valid) {
@@ -315,7 +303,7 @@ auto _element_change_colliding_to_insert(Circuit& circuit, MessageSender sender,
     if (display_state == display_state_t::colliding) [[likely]] {
         // we can only delete temporary elements
         layout.set_display_state(element_id, display_state_t::temporary);
-        swap_and_delete_single_element_private(circuit, sender, element_id);
+        swap_and_delete_single_element_private(layout, sender, element_id);
         return;
     }
 
@@ -331,9 +319,8 @@ auto _element_change_insert_to_colliding(Layout& layout, const element_id_t elem
     layout.set_display_state(element_id, display_state_t::valid);
 };
 
-auto _element_change_colliding_to_temporary(Circuit& circuit, MessageSender sender,
+auto _element_change_colliding_to_temporary(Layout& layout, MessageSender sender,
                                             element_id_t& element_id) -> void {
-    auto& layout = circuit.layout();
     const auto display_state = layout.display_state(element_id);
 
     if (display_state == display_state_t::valid) {
@@ -371,13 +358,13 @@ auto change_logic_item_insertion_mode_private(State state, element_id_t& element
         _element_change_temporary_to_colliding(state, element_id);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
-        _element_change_colliding_to_insert(state.circuit, state.sender, element_id);
+        _element_change_colliding_to_insert(state.layout, state.sender, element_id);
     }
     if (old_mode == InsertionMode::insert_or_discard) {
         _element_change_insert_to_colliding(state.layout, element_id);
     }
     if (new_mode == InsertionMode::temporary) {
-        _element_change_colliding_to_temporary(state.circuit, state.sender, element_id);
+        _element_change_colliding_to_temporary(state.layout, state.sender, element_id);
     }
 }
 
@@ -388,7 +375,7 @@ auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
             "\n==========================================================\n{}\n"
             "change_logic_item_insertion_mode(element_id = {}, new_mode = {});\n"
             "==========================================================\n\n",
-            state.circuit, element_id, new_mode);
+            state.layout, element_id, new_mode);
     }
     change_logic_item_insertion_mode_private(state, element_id, new_mode);
 }
@@ -421,21 +408,11 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
                               .orientation = attributes.orientation,
                           })
                           .element_id();
-    {
-        const auto element = state.schematic.add_element({
-            .element_type = attributes.type,
-            .input_count = attributes.input_count,
-            .output_count = 1,
-        });
-        if (element.element_id() != element_id) [[unlikely]] {
-            throw_exception("Added element ids don't match.");
-        }
-    }
     state.sender.submit(info_message::LogicItemCreated {element_id});
 
     // validates our position
-    move_or_delete_logic_item_private(state.circuit, state.sender, element_id,  //
-                                      attributes.position.x.value,              //
+    move_or_delete_logic_item_private(state.layout, state.sender, element_id,  //
+                                      attributes.position.x.value,             //
                                       attributes.position.y.value);
     if (element_id) {
         change_logic_item_insertion_mode_private(state, element_id, insertion_mode);
@@ -450,7 +427,7 @@ auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
             "\n==========================================================\n{}\n"
             "add_standard_logic_item(attributes = {}, insertion_mode = {});\n"
             "==========================================================\n\n",
-            state.circuit, attributes, insertion_mode);
+            state.layout, attributes, insertion_mode);
     }
     return add_standard_logic_item_private(state, attributes, insertion_mode);
 }
@@ -467,39 +444,19 @@ auto is_wire_aggregate(const Layout& layout, const element_id_t element_id,
     return element.is_wire() && element.display_state() == display_state;
 }
 
-auto add_new_wire_element(Circuit& circuit, display_state_t display_state)
-    -> element_id_t {
-    const auto element_id = circuit.layout()
-                                .add_element(Layout::ElementData {
-                                    .display_state = display_state,
-                                    .element_type = ElementType::wire,
-
-                                    .input_count = 0,
-                                    .output_count = 0,
-                                })
-                                .element_id();
-    {
-        const auto element = circuit.schematic().add_element({
+auto add_new_wire_element(Layout& layout, display_state_t display_state) -> element_id_t {
+    return layout
+        .add_element(Layout::ElementData {
+            .display_state = display_state,
             .element_type = ElementType::wire,
+
             .input_count = 0,
             .output_count = 0,
-        });
-        if (element.element_id() != element_id) [[unlikely]] {
-            throw_exception("Added element ids don't match.");
-        }
-    }
-    return element_id;
+        })
+        .element_id();
 }
 
-auto find_wire(const Circuit& circuit, display_state_t display_state) -> element_id_t {
-    const auto& layout = circuit.layout();
-
-    // test begin
-    // if (display_state == display_state_t::temporary) {
-    //    return null_element;
-    //}
-    // test end
-
+auto find_wire(const Layout& layout, display_state_t display_state) -> element_id_t {
     const auto element_ids = layout.element_ids();
     const auto it
         = std::ranges::find_if(element_ids, [&](element_id_t element_id) -> bool {
@@ -508,39 +465,38 @@ auto find_wire(const Circuit& circuit, display_state_t display_state) -> element
     return it == element_ids.end() ? null_element : *it;
 }
 
-auto create_aggregate_tree_at(Circuit& circuit, MessageSender sender,
+auto create_aggregate_tree_at(Layout& layout, MessageSender sender,
                               display_state_t display_state, const element_id_t target_id)
     -> void {
-    auto element_id = find_wire(circuit, display_state);
+    auto element_id = find_wire(layout, display_state);
 
     if (!element_id) {
-        element_id = add_new_wire_element(circuit, display_state);
+        element_id = add_new_wire_element(layout, display_state);
     }
 
     if (element_id != target_id) {
-        swap_elements(circuit, sender, element_id, target_id);
+        swap_elements(layout, sender, element_id, target_id);
     }
 }
 
 constexpr inline static auto TEMPORARY_AGGREGATE_ID = element_id_t {0};
 constexpr inline static auto COLLIDING_AGGREGATE_ID = element_id_t {1};
 
-auto create_aggregate_wires(Circuit& circuit, MessageSender sender) -> void {
+auto create_aggregate_wires(Layout& layout, MessageSender sender) -> void {
     using enum display_state_t;
-    create_aggregate_tree_at(circuit, sender, temporary, TEMPORARY_AGGREGATE_ID);
-    create_aggregate_tree_at(circuit, sender, colliding, COLLIDING_AGGREGATE_ID);
+    create_aggregate_tree_at(layout, sender, temporary, TEMPORARY_AGGREGATE_ID);
+    create_aggregate_tree_at(layout, sender, colliding, COLLIDING_AGGREGATE_ID);
 }
 
-auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
+auto get_or_create_aggregate(Layout& layout, MessageSender sender,
                              display_state_t display_state) -> element_id_t {
     using enum display_state_t;
-    const auto& layout = circuit.layout();
 
     // temporary
     if (display_state == temporary) {
         if (layout.element_count() <= TEMPORARY_AGGREGATE_ID.value
             || !is_wire_aggregate(layout, TEMPORARY_AGGREGATE_ID, temporary)) {
-            create_aggregate_wires(circuit, sender);
+            create_aggregate_wires(layout, sender);
         }
         return TEMPORARY_AGGREGATE_ID;
     }
@@ -549,7 +505,7 @@ auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
     else if (display_state == colliding) {
         if (layout.element_count() <= COLLIDING_AGGREGATE_ID.value
             || !is_wire_aggregate(layout, COLLIDING_AGGREGATE_ID, temporary)) {
-            create_aggregate_wires(circuit, sender);
+            create_aggregate_wires(layout, sender);
         }
         return COLLIDING_AGGREGATE_ID;
     }
@@ -557,11 +513,11 @@ auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
     throw_exception("display state has no aggregate");
 }
 
-auto add_segment_to_tree(Circuit& circuit, MessageSender sender,
+auto add_segment_to_tree(Layout& layout, MessageSender sender,
                          const element_id_t element_id, ordered_line_t line)
     -> segment_part_t {
     // insert new segment
-    auto& m_tree = circuit.layout().modifyable_segment_tree(element_id);
+    auto& m_tree = layout.modifyable_segment_tree(element_id);
 
     const auto segment_info = segment_info_t {
         .line = line,
@@ -573,18 +529,18 @@ auto add_segment_to_tree(Circuit& circuit, MessageSender sender,
 
     // messages
     sender.submit(info_message::SegmentCreated {segment});
-    if (is_inserted(circuit, element_id)) {
+    if (is_inserted(layout, element_id)) {
         sender.submit(info_message::SegmentInserted {segment, segment_info});
     }
 
     return segment_part_t {segment, to_part(line)};
 }
 
-auto reset_segment_endpoints(Circuit& circuit, const segment_t segment) {
-    if (is_inserted(circuit, segment.element_id)) [[unlikely]] {
+auto reset_segment_endpoints(Layout& layout, const segment_t segment) {
+    if (is_inserted(layout, segment.element_id)) [[unlikely]] {
         throw_exception("cannot reset endpoints of inserted wire segment");
     }
-    auto& m_tree = circuit.layout().modifyable_segment_tree(segment.element_id);
+    auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
 
     const auto new_info = segment_info_t {
         .line = m_tree.segment_line(segment.segment_index),
@@ -595,11 +551,11 @@ auto reset_segment_endpoints(Circuit& circuit, const segment_t segment) {
     m_tree.update_segment(segment.segment_index, new_info);
 }
 
-auto set_segment_crosspoint(Circuit& circuit, const segment_t segment, point_t point) {
-    if (is_inserted(circuit, segment.element_id)) [[unlikely]] {
+auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t point) {
+    if (is_inserted(layout, segment.element_id)) [[unlikely]] {
         throw_exception("cannot set endpoints of inserted wire segment");
     }
-    auto& m_tree = circuit.layout().modifyable_segment_tree(segment.element_id);
+    auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
 
     auto info = m_tree.segment_info(segment.segment_index);
 
@@ -616,11 +572,11 @@ auto set_segment_crosspoint(Circuit& circuit, const segment_t segment, point_t p
     m_tree.update_segment(segment.segment_index, info);
 }
 
-auto add_segment_to_aggregate(Circuit& circuit, MessageSender sender,
+auto add_segment_to_aggregate(Layout& layout, MessageSender sender,
                               const ordered_line_t line,
                               const display_state_t aggregate_type) -> segment_part_t {
-    const auto element_id = get_or_create_aggregate(circuit, sender, aggregate_type);
-    return add_segment_to_tree(circuit, sender, element_id, line);
+    const auto element_id = get_or_create_aggregate(layout, sender, aggregate_type);
+    return add_segment_to_tree(layout, sender, element_id, line);
 }
 
 // insertion mode changing
@@ -998,17 +954,15 @@ auto remove_segment_from_tree(Layout& layout, MessageSender sender,
     }
 }
 
-auto merge_and_delete_tree(Circuit& circuit, MessageSender sender,
+auto merge_and_delete_tree(Layout& layout, MessageSender sender,
                            element_id_t& tree_destination, element_id_t& tree_source)
     -> void {
-    auto& layout = circuit.layout();
-
     if (tree_destination >= tree_source) [[unlikely]] {
         // optimization
         throw_exception("source is deleted and should have larget id");
     }
 
-    if (!is_inserted(circuit, tree_source) && !is_inserted(circuit, tree_destination))
+    if (!is_inserted(layout, tree_source) && !is_inserted(layout, tree_destination))
         [[unlikely]] {
         throw_exception("only supports merging of inserted trees");
     }
@@ -1040,7 +994,7 @@ auto merge_and_delete_tree(Circuit& circuit, MessageSender sender,
 
     m_tree_source.clear();
     layout.set_display_state(tree_source, display_state_t::temporary);
-    swap_and_delete_single_element_private(circuit, sender, tree_source,
+    swap_and_delete_single_element_private(layout, sender, tree_source,
                                            &tree_destination);
 }
 
@@ -1327,12 +1281,12 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
             swap(candidate_0, candidate_1);
         }
 
-        merge_and_delete_tree(state.circuit, state.sender, candidate_0, candidate_1);
+        merge_and_delete_tree(state.layout, state.sender, candidate_0, candidate_1);
         return candidate_0;
     }
 
     // 0 wires
-    return add_new_wire_element(state.circuit, display_state_t::normal);
+    return add_new_wire_element(state.layout, display_state_t::normal);
 }
 
 auto insert_wire(State state, segment_part_t& segment_part) -> void {
@@ -1341,7 +1295,7 @@ auto insert_wire(State state, segment_part_t& segment_part) -> void {
     }
     const auto target_wire_id = find_wire_for_inserting_segment(state, segment_part);
 
-    reset_segment_endpoints(state.circuit, segment_part.segment);
+    reset_segment_endpoints(state.layout, segment_part.segment);
     move_segment_between_trees(state.layout, state.sender, segment_part, target_wire_id);
 
     const auto line = get_line(state.layout, segment_part);
@@ -1371,7 +1325,7 @@ auto _wire_change_temporary_to_colliding(State state, segment_part_t& segment_pa
     bool colliding = is_wire_colliding(state.cache, line);
 
     if (colliding) {
-        const auto destination = get_or_create_aggregate(state.circuit, state.sender,
+        const auto destination = get_or_create_aggregate(state.layout, state.sender,
                                                          display_state_t::colliding);
         move_segment_between_trees(state.layout, state.sender, segment_part, destination);
     } else {
@@ -1402,16 +1356,14 @@ auto _wire_change_colliding_to_insert(Layout& layout, MessageSender sender,
     }
 }
 
-auto delete_empty_tree(Circuit& circuit, MessageSender sender, element_id_t element_id,
+auto delete_empty_tree(Layout& layout, MessageSender sender, element_id_t element_id,
                        element_id_t* preserve_element = nullptr) {
-    auto& layout = circuit.layout();
-
     if (!is_inserted(layout, element_id) || !layout.segment_tree(element_id).empty()) {
         throw_exception("can only delete empty inserted segment trees");
     }
 
     layout.set_display_state(element_id, display_state_t::temporary);
-    swap_and_delete_single_element_private(circuit, sender, element_id, preserve_element);
+    swap_and_delete_single_element_private(layout, sender, element_id, preserve_element);
 }
 
 // we assume we get a valid tree where the part between p0 and p1 has been removed
@@ -1426,7 +1378,7 @@ auto split_broken_tree(State state, point_t p0, point_t p1) -> element_id_t {
 
     // create new tree
     const auto display_state = state.layout.display_state(p0_tree_id);
-    const auto new_tree_id = add_new_wire_element(state.circuit, display_state);
+    const auto new_tree_id = add_new_wire_element(state.layout, display_state);
 
     // find connected segments
     const auto& tree_from = state.layout.modifyable_segment_tree(p0_tree_id);
@@ -1468,13 +1420,13 @@ auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_pa
     }
 
     // move to temporary
-    const auto destination_id = get_or_create_aggregate(state.circuit, state.sender,
-                                                        display_state_t::temporary);
+    const auto destination_id
+        = get_or_create_aggregate(state.layout, state.sender, display_state_t::temporary);
     move_segment_between_trees(layout, state.sender, segment_part, destination_id);
 
     if (was_inserted) {
         if (layout.segment_tree(source_id).empty()) {
-            delete_empty_tree(state.circuit, state.sender, source_id,
+            delete_empty_tree(state.layout, state.sender, source_id,
                               &segment_part.segment.element_id);
         } else {
             fix_and_merge_segments(state, moved_line.p0);
@@ -1482,7 +1434,7 @@ auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_pa
 
             split_broken_tree(state, moved_line.p0, moved_line.p1);
         }
-        reset_segment_endpoints(state.circuit, segment_part.segment);
+        reset_segment_endpoints(state.layout, segment_part.segment);
     }
 }
 
@@ -1491,7 +1443,7 @@ auto change_wire_insertion_mode_private(State state, segment_part_t& segment_par
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
     }
-    if (!is_wire(state.circuit, segment_part.segment.element_id)) [[unlikely]] {
+    if (!state.layout.element(segment_part.segment.element_id).is_wire()) [[unlikely]] {
         throw_exception("only works for wires");
     }
 
@@ -1526,7 +1478,7 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
             "\n==========================================================\n{}\n"
             "change_wire_insertion_mode(segment_part = {}, new_mode = {});\n"
             "==========================================================\n\n",
-            state.circuit, segment_part, new_mode);
+            state.layout, segment_part, new_mode);
     }
     return change_wire_insertion_mode_private(state, segment_part, new_mode);
 }
@@ -1535,7 +1487,7 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
 
 auto add_wire_segment_private(State state, ordered_line_t line,
                               InsertionMode insertion_mode) -> segment_part_t {
-    auto segment_part = add_segment_to_aggregate(state.circuit, state.sender, line,
+    auto segment_part = add_segment_to_aggregate(state.layout, state.sender, line,
                                                  display_state_t::temporary);
 
     change_wire_insertion_mode_private(state, segment_part, insertion_mode);
@@ -1550,7 +1502,7 @@ auto add_wire_segment(State state, ordered_line_t line, InsertionMode new_mode)
             "\n==========================================================\n{}\n"
             "add_wire_segment(line = {}, new_mode = {});\n"
             "==========================================================\n\n",
-            state.circuit, line, new_mode);
+            state.layout, line, new_mode);
     }
     return add_wire_segment_private(state, line, new_mode);
 }
@@ -1605,7 +1557,7 @@ auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
             "add_wire(p0 = {}, p1 = {}, segment_type = {}, "
             "insertion_mode = {}, *selection = {});\n"
             "==========================================================\n\n",
-            state.circuit, p0, p1, segment_type, insertion_mode,
+            state.layout, p0, p1, segment_type, insertion_mode,
             static_cast<void*>(selection));
     }
     return add_wire_private(state, p0, p1, segment_type, insertion_mode, selection);
@@ -1775,7 +1727,7 @@ auto change_insertion_mode(selection_handle_t handle, State state,
                 if (is_inside(point, line)) {
                     split_line_segment(state.layout, state.sender, segment, point);
                 }
-                set_segment_crosspoint(state.circuit, segment, point);
+                set_segment_crosspoint(state.layout, segment, point);
             }
         }
 
@@ -1799,22 +1751,22 @@ auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
     };
 };
 
-auto new_positions_representable(const Selection& selection, const Circuit& circuit,
+auto new_positions_representable(const Selection& selection, const Layout& layout,
                                  int delta_x, int delta_y) -> bool {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print("\n\n========= new_positions_representable ==========\n", selection);
     }
 
-    const auto get_position = position_calculator(circuit.layout(), delta_x, delta_y);
+    const auto get_position = position_calculator(layout, delta_x, delta_y);
 
     const auto is_valid = [&](element_id_t element_id) {
         const auto [x, y] = get_position(element_id);
-        return is_logic_item_position_representable(circuit, element_id, x, y);
+        return is_logic_item_position_representable(layout, element_id, x, y);
     };
     return std::ranges::all_of(selection.selected_logic_items(), is_valid);
 }
 
-auto move_or_delete_elements(selection_handle_t handle, Circuit& circuit,
+auto move_or_delete_elements(selection_handle_t handle, Layout& layout,
                              MessageSender sender, int delta_x, int delta_y) -> void {
     if (!handle) {
         return;
@@ -1822,7 +1774,6 @@ auto move_or_delete_elements(selection_handle_t handle, Circuit& circuit,
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print("\n\n========= move_or_delete_elements ==========\n", handle);
     }
-    auto& layout = circuit.layout();
 
     const auto get_position = position_calculator(layout, delta_x, delta_y);
 
@@ -1831,7 +1782,7 @@ auto move_or_delete_elements(selection_handle_t handle, Circuit& circuit,
         handle->remove_logicitem(element_id);
 
         const auto [x, y] = get_position(element_id);
-        move_or_delete_logic_item(circuit, sender, element_id, x, y);
+        move_or_delete_logic_item(layout, sender, element_id, x, y);
     }
 
     while (handle->selected_segments().size() > 0) {
@@ -1858,7 +1809,7 @@ auto delete_all(selection_handle_t handle, State state) -> void {
         handle->remove_logicitem(element_id);
 
         change_logic_item_insertion_mode(state, element_id, InsertionMode::temporary);
-        swap_and_delete_single_element(state.circuit, state.sender, element_id);
+        swap_and_delete_single_element(state.layout, state.sender, element_id);
     }
 
     while (handle->selected_segments().size() > 0) {

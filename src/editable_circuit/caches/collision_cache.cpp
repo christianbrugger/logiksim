@@ -552,9 +552,9 @@ auto CollisionCache::is_wire_cross_point(point_t point) const -> bool {
     return collision_cache::is_wire_cross_point(it->second);
 }
 
-auto CollisionCache::validate(const Circuit& circuit) const -> void {
+auto CollisionCache::validate(const Layout& layout) const -> void {
     auto cache = CollisionCache {};
-    add_layout_to_cache(cache, circuit.layout());
+    add_layout_to_cache(cache, layout);
 
     if (cache.map_ != this->map_) [[unlikely]] {
         throw_exception("current cache state doesn't match circuit");

@@ -11,24 +11,24 @@ namespace logicsim {
 // Editable Circuit
 //
 
-EditableCircuit::EditableCircuit(Circuit&& circuit)
-    : circuit_ {std::move(circuit)},
-      cache_provider_ {circuit_.value()},
-      selection_builder_ {circuit_.value().layout(), cache_provider_} {}
+EditableCircuit::EditableCircuit(Layout&& layout)
+    : layout_ {std::move(layout)},
+      cache_provider_ {layout_.value()},
+      selection_builder_ {layout_.value(), cache_provider_} {}
 
 auto EditableCircuit::format() const -> std::string {
-    return fmt::format("EditableCircuit{{\n{}}}", circuit_);
+    return fmt::format("EditableCircuit{{\n{}}}", layout_);
 }
 
-auto EditableCircuit::circuit() const -> const Circuit& {
-    return circuit_.value();
+auto EditableCircuit::layout() const -> const Layout& {
+    return layout_.value();
 }
 
-auto EditableCircuit::extract_circuit() -> Circuit {
-    auto temp = Circuit {std::move(circuit_.value())};
+auto EditableCircuit::extract_layout() -> Layout {
+    auto temp = Layout {std::move(layout_.value())};
 
     // we don't reset the registrar, as allocations might still be out there
-    circuit_ = std::nullopt;
+    layout_ = std::nullopt;
     cache_provider_ = CacheProvider {};
     selection_builder_ = SelectionBuilder {Layout {}, cache_provider_};
 
@@ -57,12 +57,12 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
 }
 
 auto EditableCircuit::validate() -> void {
-    const auto& circuit = circuit_.value();
+    const auto& layout = layout_.value();
 
-    circuit.validate();
-    cache_provider_.validate(circuit);
-    registrar_.validate(circuit);
-    selection_builder_.validate(circuit);
+    layout.validate();
+    cache_provider_.validate(layout);
+    registrar_.validate(layout);
+    selection_builder_.validate(layout);
 }
 
 auto EditableCircuit::add_example() -> void {
@@ -113,13 +113,13 @@ namespace {}  // namespace
 
 auto EditableCircuit::new_positions_representable(const Selection& selection, int delta_x,
                                                   int delta_y) const -> bool {
-    return editable_circuit::new_positions_representable(selection, circuit_.value(),
+    return editable_circuit::new_positions_representable(selection, layout_.value(),
                                                          delta_x, delta_y);
 }
 
 auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int delta_x,
                                               int delta_y) -> void {
-    editable_circuit::move_or_delete_elements(std::move(handle), circuit_.value(),
+    editable_circuit::move_or_delete_elements(std::move(handle), layout_.value(),
                                               get_sender(), delta_x, delta_y);
 }
 
@@ -165,10 +165,7 @@ auto EditableCircuit::get_sender() -> editable_circuit::MessageSender {
 }
 
 auto EditableCircuit::get_state() -> editable_circuit::State {
-    auto& circuit = circuit_.value();
-
-    return editable_circuit::State {circuit, get_sender(), cache_provider_,
-                                    circuit.schematic(), circuit.layout()};
+    return editable_circuit::State {layout_.value(), get_sender(), cache_provider_};
 }
 
 }  // namespace logicsim

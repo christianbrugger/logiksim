@@ -197,16 +197,13 @@ auto insert_logic_item(State state, element_id_t& element_id) {
 
 //////////
 
-auto print_circuit_stats(const Circuit& circuit) {
-    const auto& schematic = circuit.schematic();
-    const auto& layout = circuit.layout();
-
+auto print_layout_stats(const Layout& layout) {
     auto element_count = std::size_t {0};
     auto segment_count = std::size_t {0};
 
-    for (auto element : schematic.elements()) {
+    for (auto element : layout.elements()) {
         if (element.is_wire()) {
-            const auto& tree = layout.segment_tree(element.element_id());
+            const auto& tree = element.segment_tree();
             segment_count += tree.segment_count();
         }
 
@@ -215,14 +212,14 @@ auto print_circuit_stats(const Circuit& circuit) {
         }
     }
 
-    if (schematic.element_count() < 10) {
-        print(circuit);
+    if (layout.element_count() < 10) {
+        print(layout);
     }
-    fmt::print("Circuit with {} elements and {} wire segments.\n", element_count,
+    fmt::print("Layout with {} elements and {} wire segments.\n", element_count,
                segment_count);
 }
 
-auto generate_circuit() -> Circuit {
+auto generate_layout() -> Layout {
     const auto timer = Timer {"Generate", Timer::Unit::ms, 2};
 
 #ifdef NDEBUG
@@ -235,7 +232,7 @@ auto generate_circuit() -> Circuit {
 
     constexpr auto max_value = debug_build ? debug_max : release_max;
 
-    auto editable_circuit = EditableCircuit {Circuit {Schematic {}, Layout {}}};
+    auto editable_circuit = EditableCircuit {Layout {}};
 
     for (auto x : range(5, max_value, 5)) {
         for (auto y : range(5, max_value, 5)) {
@@ -255,7 +252,7 @@ auto generate_circuit() -> Circuit {
         }
     }
 
-    return editable_circuit.extract_circuit();
+    return editable_circuit.extract_layout();
 }
 
 struct GeneratedSchematic {
@@ -288,10 +285,7 @@ auto add_unused_element(Schematic& schematic) -> Schematic::Element {
     });
 }
 
-auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
-    const auto& schematic = circuit.schematic();
-    const auto& layout = circuit.layout();
-
+auto convert_layout(const Layout& layout) -> GeneratedSchematic {
     auto input_cache = ConnectionCache<true>();
     auto output_cache = ConnectionCache<false>();
     {
@@ -310,19 +304,16 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
     {
         const auto t = Timer {"  Generate Line Trees", Timer::Unit::ms, 2};
 
-        generated.line_trees.resize(schematic.element_count());
+        generated.line_trees.resize(layout.element_count());
 
-        for (const auto element_id : layout.element_ids()) {
-            const auto element = schematic.element(element_id);
-
-            if (layout.display_state(element_id) != display_state_t::normal) {
+        for (const auto element : layout.elements()) {
+            if (element.display_state() != display_state_t::normal) {
                 continue;
             }
 
             if (element.is_wire()) {
-                auto& line_tree = generated.line_trees.at(element_id.value);
-                line_tree = LineTree::from_segment_tree(layout.segment_tree(element_id))
-                                .value();
+                auto& line_tree = generated.line_trees.at(element.element_id().value);
+                line_tree = LineTree::from_segment_tree(element.segment_tree()).value();
                 if (line_tree.empty()) {
                     throw_exception("line tree cannot be empty");
                 }
@@ -334,10 +325,8 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
     {
         const auto t = Timer {"  Add Schematic Elements", Timer::Unit::ms, 2};
 
-        for (const auto element_id : layout.element_ids()) {
-            const auto element = schematic.element(element_id);
-
-            if (layout.display_state(element_id) != display_state_t::normal) {
+        for (const auto element : layout.elements()) {
+            if (element.display_state() != display_state_t::normal) {
                 add_unused_element(generated.schematic);
             }
 
@@ -356,7 +345,8 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
             }
 
             else if (element.is_wire()) {
-                const auto& line_tree = generated.line_trees.at(element_id.value);
+                const auto& line_tree
+                    = generated.line_trees.at(element.element_id().value);
 
                 auto delays = calculate_output_delays(line_tree);
                 const auto tree_max_delay = std::ranges::max(delays);
@@ -439,14 +429,14 @@ auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
 }
 
 auto benchmark_conversion() -> void {
-    const auto circuit = generate_circuit();
+    const auto layout = generate_layout();
 
-    const auto converted = convert_circuit(circuit);
+    const auto converted = convert_layout(layout);
 
     print();
-    print_circuit_stats(circuit);
+    print_layout_stats(layout);
     print();
-    print("Circuit   Element Count:", circuit.schematic().element_count());
+    print("Layout    Element Count:", layout.element_count());
     print("Generated Element Count:", converted.schematic.element_count());
 
     // print();

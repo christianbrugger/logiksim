@@ -61,7 +61,7 @@ class SelectionRegistrar {
     [[nodiscard]] auto format() const -> std::string;
 
     auto submit(editable_circuit::InfoMessage message) -> void;
-    auto validate(const Circuit& circuit) const -> void;
+    auto validate(const Layout& layout) const -> void;
 
     [[nodiscard]] auto create_selection() const -> selection_handle_t;
     [[nodiscard]] auto create_selection(const Selection& selection) const

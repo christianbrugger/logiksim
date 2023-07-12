@@ -1,8 +1,8 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_HANDLERS_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_HANDLERS_H
 
-#include "circuit.h"
 #include "editable_circuit/messages.h"
+#include "layout.h"
 #include "vocabulary.h"
 
 #include <span>
@@ -22,13 +22,9 @@ namespace editable_circuit {
 // contains common state for the handlers
 
 struct State {
-    Circuit& circuit;
+    Layout& layout;
     MessageSender sender;
     const CacheProvider& cache;
-
-    // derived
-    Schematic& schematic;
-    Layout& layout;
 };
 
 //
@@ -37,11 +33,11 @@ struct State {
 
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
-auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
+auto swap_and_delete_multiple_elements(Layout& layout, MessageSender sender,
                                        std::span<const element_id_t> element_ids,
                                        element_id_t* preserve_element = nullptr) -> void;
 
-auto swap_and_delete_single_element(Circuit& circuit, MessageSender sender,
+auto swap_and_delete_single_element(Layout& layout, MessageSender sender,
                                     element_id_t& element_id,
                                     element_id_t* preserve_element = nullptr) -> void;
 
@@ -67,12 +63,12 @@ auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
                                       InsertionMode new_insertion_mode) -> void;
 
 // TODO move to dx, dy
-auto is_logic_item_position_representable(const Circuit& circuit,
+auto is_logic_item_position_representable(const Layout& Layout,
                                           const element_id_t element_id, int x, int y)
     -> bool;
 
 // TODO move to dx, dy
-auto move_or_delete_logic_item(Circuit& circuit, MessageSender sender,
+auto move_or_delete_logic_item(Layout& Layout, MessageSender sender,
                                element_id_t& element_id, int x, int y) -> void;
 
 //
@@ -105,7 +101,7 @@ auto move_segment_between_trees(Layout& layout, MessageSender sender,
 auto remove_segment_from_tree(Layout& layout, MessageSender sender,
                               segment_part_t& segment_part) -> void;
 
-auto merge_and_delete_tree(Circuit& circuit, MessageSender sender,
+auto merge_and_delete_tree(Layout& Layout, MessageSender sender,
                            element_id_t& tree_destination, element_id_t& tree_source)
     -> void;
 
@@ -125,10 +121,10 @@ auto add_wire_segment(State state, ordered_line_t line, InsertionMode insertion_
 auto change_insertion_mode(selection_handle_t handle, State state,
                            InsertionMode new_insertion_mode) -> void;
 
-auto new_positions_representable(const Selection& selection, const Circuit& circuit,
+auto new_positions_representable(const Selection& selection, const Layout& Layout,
                                  int delta_x, int delta_y) -> bool;
 
-auto move_or_delete_elements(selection_handle_t handle, Circuit& circuit,
+auto move_or_delete_elements(selection_handle_t handle, Layout& Layout,
                              MessageSender sender, int delta_x, int delta_y) -> void;
 
 auto delete_all(selection_handle_t handle, State state) -> void;

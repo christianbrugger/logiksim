@@ -299,9 +299,9 @@ auto ConnectionCache<IsInput>::is_colliding(point_t position,
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::validate(const Circuit& circuit) const -> void {
+auto ConnectionCache<IsInput>::validate(const Layout& layout) const -> void {
     auto cache = ConnectionCache<IsInput> {};
-    add_layout_to_cache(cache, circuit.layout());
+    add_layout_to_cache(cache, layout);
 
     if (cache.map_ != this->map_) [[unlikely]] {
         throw_exception("current cache state doesn't match circuit");

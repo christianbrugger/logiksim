@@ -10,7 +10,6 @@
 
 namespace logicsim {
 
-class Circuit;
 class Layout;
 
 namespace detail::selection {
@@ -61,7 +60,7 @@ class Selection {
         -> std::span<const part_t>;
 
     auto submit(editable_circuit::InfoMessage message) -> void;
-    auto validate(const Circuit &circuit) const -> void;
+    auto validate(const Layout &layout) const -> void;
 
    private:
     auto handle(editable_circuit::info_message::LogicItemDeleted message) -> void;

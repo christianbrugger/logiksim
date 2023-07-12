@@ -222,14 +222,14 @@ auto SelectionBuilder::clear_cache() const -> void {
     cached_selection_.reset();
 }
 
-auto SelectionBuilder::validate(const Circuit& circuit) const -> void {
-    initial_selection_.validate(circuit);
+auto SelectionBuilder::validate(const Layout& layout) const -> void {
+    initial_selection_.validate(layout);
 
     if (cached_selection_) {
-        cached_selection_->validate(circuit);
+        cached_selection_->validate(layout);
     }
 
-    calculate_selection().validate(circuit);
+    calculate_selection().validate(layout);
 }
 
 }  // namespace logicsim

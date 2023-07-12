@@ -37,9 +37,9 @@ auto unpack_selection(const selection_map_t::value_type& value) -> Selection& {
 
 }  // namespace detail::selection_registrar
 
-auto SelectionRegistrar::validate(const Circuit& circuit) const -> void {
+auto SelectionRegistrar::validate(const Layout& layout) const -> void {
     for (const auto& selection : selections()) {
-        selection.validate(circuit);
+        selection.validate(layout);
     }
 }
 

@@ -355,12 +355,12 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
 
 }  // namespace
 
-auto Selection::validate(const Circuit &circuit) const -> void {
+auto Selection::validate(const Layout &layout) const -> void {
     auto logicitems_set = detail::selection::logicitems_set_t {selected_logicitems_};
     auto segment_map = detail::selection::segment_map_t {selected_segments_};
 
     // logic items
-    for (const auto element : circuit.schematic().elements()) {
+    for (const auto element : layout.elements()) {
         if (element.is_logic_item()) {
             logicitems_set.erase(element.element_id());
         }
@@ -370,11 +370,10 @@ auto Selection::validate(const Circuit &circuit) const -> void {
     }
 
     // segments
-    for (const auto element : circuit.schematic().elements()) {
+    for (const auto element : layout.elements()) {
         if (element.is_wire()) {
-            check_and_remove_segments(
-                segment_map, element.element_id(),
-                circuit.layout().segment_tree(element.element_id()));
+            check_and_remove_segments(segment_map, element.element_id(),
+                                      element.segment_tree());
         }
     }
     if (!segment_map.empty()) [[unlikely]] {

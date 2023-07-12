@@ -66,7 +66,7 @@ class ConnectionCache {
     }
 
     auto submit(editable_circuit::InfoMessage message) -> void;
-    auto validate(const Circuit& circuit) const -> void;
+    auto validate(const Layout& layout) const -> void;
 
    private:
     auto handle(editable_circuit::info_message::LogicItemInserted message) -> void;

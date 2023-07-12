@@ -10,7 +10,7 @@ namespace logicsim {
 class CacheProvider {
    public:
     CacheProvider() = default;
-    explicit CacheProvider(const Circuit& circuit);
+    explicit CacheProvider(const Layout& layout);
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -29,7 +29,7 @@ class CacheProvider {
     [[nodiscard]] auto spatial_cache() const -> const SpatialTree&;
 
     auto submit(editable_circuit::InfoMessage message) -> void;
-    auto validate(const Circuit& circuit) -> void;
+    auto validate(const Layout& layout) -> void;
 
    public:
     // for rendering

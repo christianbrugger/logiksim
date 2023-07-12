@@ -491,7 +491,8 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
                          const RenderSettings& settings) -> void {
     const auto type = element.element_type();
 
-    if (type == ElementType::placeholder || type == ElementType::wire) {
+    if (type == ElementType::unused || type == ElementType::placeholder
+        || type == ElementType::wire) {
         return;
     }
 
@@ -613,7 +614,8 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     for (auto element : args.schematic.elements()) {
         if (!is_selected(element)) {
             if (const auto type = element.element_type();
-                type != ElementType::placeholder && type != ElementType::wire) {
+                type != ElementType::unused && type != ElementType::placeholder
+                && type != ElementType::wire) {
                 draw_standard_element(ctx, element, args.layout, args.simulation, false,
                                       args.settings);
             }
@@ -635,7 +637,8 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     for (auto element : args.schematic.elements()) {
         if (is_selected(element)) {
             if (const auto type = element.element_type();
-                type != ElementType::placeholder && type != ElementType::wire) {
+                type != ElementType::unused && type != ElementType::placeholder
+                && type != ElementType::wire) {
                 draw_standard_element(ctx, element, args.layout, args.simulation, true,
                                       args.settings);
             }
@@ -1135,9 +1138,12 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
 
     // create layout
     auto& layout = scene.layout = Layout {};
-    for (auto _ [[maybe_unused]] : range(schematic.element_count())) {
-        // default element
-        layout.add_element(Layout::ElementData {});
+    for (auto element : schematic.elements()) {
+        layout.add_element(Layout::ElementData {
+            .element_type = element.element_type(),
+            .input_count = element.input_count(),
+            .output_count = element.output_count(),
+        });
     }
 
     // add line trees

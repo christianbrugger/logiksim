@@ -122,7 +122,7 @@ class Layout {
     std::vector<logic_small_vector_t> output_inverters_ {};
 
     std::vector<SegmentTree> segment_trees_ {};
-    std::vector<LineTree> line_trees_ {};
+    mutable std::vector<LineTree> line_trees_ {};
     std::vector<point_t> positions_ {};
     std::vector<orientation_t> orientation_ {};
     std::vector<display_state_t> display_states_ {};

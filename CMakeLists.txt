@@ -34,6 +34,7 @@ set(LS_CORE_SOURCES
     src/renderer.cpp
     src/scene.cpp
     src/schematic.cpp
+    src/schematic_generation.cpp
     src/segment_tree.cpp
     src/simulation.cpp
     src/simulation_view.cpp

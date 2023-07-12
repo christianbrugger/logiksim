@@ -61,7 +61,7 @@ BENCHMARK(BM_Benchmark_Reuse_Selection);  // NOLINT
 static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
     using namespace logicsim;
 
-    auto ec = EditableCircuit {Circuit {Schematic {}, Layout {}}};
+    auto ec = EditableCircuit {Layout {}};
 
     int x = 0;
     int y = 0;

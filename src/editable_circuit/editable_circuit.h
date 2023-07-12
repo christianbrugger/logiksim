@@ -1,11 +1,11 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
-#include "circuit.h"
 #include "editable_circuit/caches.h"
 #include "editable_circuit/messages.h"
 #include "editable_circuit/selection_builder.h"
 #include "editable_circuit/selection_registrar.h"
+#include "layout.h"
 
 #include <optional>
 
@@ -20,12 +20,12 @@ struct State;
 
 class EditableCircuit {
    public:
-    [[nodiscard]] EditableCircuit(Circuit&& circuit);
+    [[nodiscard]] EditableCircuit(Layout&& layout);
     [[nodiscard]] auto format() const -> std::string;
     auto validate() -> void;
 
-    [[nodiscard]] auto circuit() const -> const Circuit&;
-    [[nodiscard]] auto extract_circuit() -> Circuit;
+    [[nodiscard]] auto layout() const -> const Layout&;
+    [[nodiscard]] auto extract_layout() -> Layout;
 
     // adding
     auto add_example() -> void;
@@ -63,7 +63,7 @@ class EditableCircuit {
     auto get_sender() -> editable_circuit::MessageSender;
     auto get_state() -> editable_circuit::State;
 
-    std::optional<Circuit> circuit_ {std::nullopt};
+    std::optional<Layout> layout_ {std::nullopt};
 
     CacheProvider cache_provider_ {};
     SelectionRegistrar registrar_ {};

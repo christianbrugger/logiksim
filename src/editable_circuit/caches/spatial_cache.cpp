@@ -212,14 +212,14 @@ auto operator!=(const tree_t& a, const tree_t& b) -> bool {
 
 }  // namespace detail::spatial_tree
 
-auto SpatialTree::validate(const Circuit& circuit) const -> void {
+auto SpatialTree::validate(const Layout& layout) const -> void {
     using namespace detail::spatial_tree;
 
     auto cache = SpatialTree {};
-    add_layout_to_cache(cache, circuit.layout());
+    add_layout_to_cache(cache, layout);
 
     if (cache.tree_ != this->tree_) [[unlikely]] {
-        print(circuit);
+        print(layout);
         print("expected state =", cache);
         print("actual state   =", *this);
         throw_exception("current cache state doesn't match circuit");
