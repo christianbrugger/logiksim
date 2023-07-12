@@ -11,7 +11,8 @@ namespace logicsim {
 
 namespace detail::connection_cache {
 inline auto connection_data_t::format() const -> std::string {
-    return fmt::format("<Element {}-{} {}>", connection_id, element_id, orientation);
+    return fmt::format("<Element {}-{}-{} {}>", connection_id, segment_index, element_id,
+                       orientation);
 }
 }  // namespace detail::connection_cache
 
@@ -38,39 +39,46 @@ auto ConnectionCache<IsInput>::format() const -> std::string {
     }
 }
 
-auto get_add_entry(detail::connection_cache::map_type& map, element_id_t element_id) {
-    return [&map, element_id](connection_id_t connection_id, point_t position,
-                              orientation_t orientation) -> bool {
-        if (map.contains(position)) [[unlikely]] {
-            throw_exception("cache already has an entry at this position");
-        }
-        map[position] = {element_id, connection_id, orientation};
-        return true;
-    };
+auto get_add_entry(detail::connection_cache::map_type& map, element_id_t element_id,
+                   segment_index_t segment_index = null_segment_index) {
+    return
+        [&map, element_id, segment_index](connection_id_t connection_id, point_t position,
+                                          orientation_t orientation) -> bool {
+            if (map.contains(position)) [[unlikely]] {
+                throw_exception("cache already has an entry at this position");
+            }
+            map[position] = {element_id, segment_index, connection_id, orientation};
+            return true;
+        };
 }
 
 auto get_update_entry(detail::connection_cache::map_type& map,
-                      element_id_t new_element_id, element_id_t old_element_id) {
-    return [&map, new_element_id, old_element_id](connection_id_t connection_id,
-                                                  point_t position,
-                                                  orientation_t orientation) -> bool {
+                      element_id_t new_element_id, element_id_t old_element_id,
+                      segment_index_t new_segment_index = null_segment_index,
+                      segment_index_t old_segment_index = null_segment_index) {
+    return [&map, new_element_id, old_element_id, new_segment_index, old_segment_index](
+               connection_id_t connection_id, point_t position,
+               orientation_t orientation) -> bool {
         const auto old_value = detail::connection_cache::connection_data_t {
-            old_element_id, connection_id, orientation};
+            old_element_id, old_segment_index, connection_id, orientation};
         const auto it = get_and_verify_cache_entry(map, position, old_value);
         it->second.element_id = new_element_id;
+        it->second.segment_index = new_segment_index;
         return true;
     };
 }
 
-auto get_remove_entry(detail::connection_cache::map_type& map, element_id_t element_id) {
-    return [&map, element_id](connection_id_t connection_id, point_t position,
-                              orientation_t orientation) -> bool {
-        const auto value = detail::connection_cache::connection_data_t {
-            element_id, connection_id, orientation};
-        const auto it = get_and_verify_cache_entry(map, position, value);
-        map.erase(it);
-        return true;
-    };
+auto get_remove_entry(detail::connection_cache::map_type& map, element_id_t element_id,
+                      segment_index_t segment_index = null_segment_index) {
+    return
+        [&map, element_id, segment_index](connection_id_t connection_id, point_t position,
+                                          orientation_t orientation) -> bool {
+            const auto value = detail::connection_cache::connection_data_t {
+                element_id, segment_index, connection_id, orientation};
+            const auto it = get_and_verify_cache_entry(map, position, value);
+            map.erase(it);
+            return true;
+        };
 }
 
 template <bool IsInput>
@@ -110,12 +118,6 @@ auto ConnectionCache<IsInput>::handle(
     }
 }
 
-auto validate_connection_id(connection_id_t connection_id) {
-    if (!connection_id) [[unlikely]] {
-        throw_exception("connection id cannot be null");
-    }
-}
-
 // next_connection(connection_id_t input_id, point_t position,
 //                 orientation_t orientation) -> bool;
 template <typename Func>
@@ -126,8 +128,6 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
 
     if (segment_info.p0_type == point_type) {
         const auto orientation = to_orientation(line.p1, line.p0);
-        // TODO validate?
-        // validate_connection_id(segment_info.p0_connection_id);
 
         if (!next_connection(segment_info.p0_connection_id, line.p0, orientation)) {
             return false;
@@ -135,8 +135,6 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
     }
     if (segment_info.p1_type == point_type) {
         const auto orientation = to_orientation(line.p0, line.p1);
-        // TODO validate?
-        // validate_connection_id(segment_info.p1_connection_id);
 
         if (!next_connection(segment_info.p1_connection_id, line.p1, orientation)) {
             return false;
@@ -148,7 +146,8 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::SegmentInserted message) -> void {
-    const auto add_entry = get_add_entry(map_, message.segment.element_id);
+    const auto add_entry
+        = get_add_entry(map_, message.segment.element_id, message.segment.segment_index);
     iter_connection_location_and_id(message.segment_info, add_entry, IsInput);
 }
 
@@ -159,8 +158,9 @@ auto ConnectionCache<IsInput>::handle(
         return;
     }
 
-    const auto update_entry = get_update_entry(map_, message.new_segment.element_id,
-                                               message.old_segment.element_id);
+    const auto update_entry = get_update_entry(
+        map_, message.new_segment.element_id, message.old_segment.element_id,
+        message.new_segment.segment_index, message.old_segment.segment_index);
     iter_connection_location_and_id(message.segment_info, update_entry, IsInput);
 }
 
@@ -176,7 +176,8 @@ auto ConnectionCache<IsInput>::handle(
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::SegmentUninserted message) -> void {
-    const auto remove_entry = get_remove_entry(map_, message.segment.element_id);
+    const auto remove_entry = get_remove_entry(map_, message.segment.element_id,
+                                               message.segment.segment_index);
     iter_connection_location_and_id(message.segment_info, remove_entry, IsInput);
 }
 
@@ -198,8 +199,8 @@ auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> 
         return;
     }
 
-    // segments
     /*
+    // segments
     if (auto pointer = std::get_if<SegmentInserted>(&message)) {
         handle(*pointer);
         return;

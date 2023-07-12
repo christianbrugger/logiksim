@@ -12,9 +12,10 @@ namespace logicsim {
 class Circuit;
 
 namespace detail::connection_cache {
-// TODO use struct packing ?
+
 struct connection_data_t {
     element_id_t element_id;
+    segment_index_t segment_index;
     connection_id_t connection_id;
     orientation_t orientation;
 
@@ -24,7 +25,7 @@ struct connection_data_t {
     [[nodiscard]] auto operator<=>(const connection_data_t& other) const = default;
 };
 
-static_assert(sizeof(connection_data_t) == 8);
+static_assert(sizeof(connection_data_t) == 12);
 
 using map_type = ankerl::unordered_dense::map<point_t, connection_data_t>;
 
