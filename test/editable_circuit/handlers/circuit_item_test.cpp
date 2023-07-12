@@ -120,7 +120,7 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
     const auto message2 = Message {InsertedLogicItemIdUpdated {
         .new_element_id = element_id_t {1},
         .old_element_id = element_id_t {2},
-        .data = to_layout_calculation_data(circuit, element_id_t {1})}};
+        .data = to_layout_calculation_data(circuit.layout(), element_id_t {1})}};
     ASSERT_EQ(setup.recorder.messages().size(), 3);
     ASSERT_EQ(setup.recorder.messages().at(0), message0);
     ASSERT_EQ(setup.recorder.messages().at(1), message1);
@@ -286,7 +286,7 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToTempValid) {
 
     const auto m0 = Message {LogicItemInserted {
         .element_id = element_id_t {0},
-        .data = to_layout_calculation_data(circuit, element_id_t {0})}};
+        .data = to_layout_calculation_data(circuit.layout(), element_id_t {0})}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
 
@@ -315,7 +315,7 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToInsert) {
     ASSERT_EQ(setup.recorder.messages().size(), 1);
     const auto m0 = Message {LogicItemInserted {
         .element_id = element_id_t {0},
-        .data = to_layout_calculation_data(circuit, element_id_t {0})}};
+        .data = to_layout_calculation_data(circuit.layout(), element_id_t {0})}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
 
@@ -434,7 +434,7 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporary) {
     ASSERT_EQ(setup.recorder.messages().size(), 1);
     const auto m0 = Message {LogicItemUninserted {
         .element_id = element_id_t {0},
-        .data = to_layout_calculation_data(circuit, element_id_t {0})}};
+        .data = to_layout_calculation_data(circuit.layout(), element_id_t {0})}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
 
@@ -447,7 +447,7 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
 
     assert_element_count(circuit, 1);
     ASSERT_EQ(element_id_0, element_id_t {0});
-    const auto data0 = to_layout_calculation_data(circuit, element_id_t {0});
+    const auto data0 = to_layout_calculation_data(circuit.layout(), element_id_t {0});
 
     auto setup = HandlerSetup {circuit};
     change_logic_item_insertion_mode(setup.state, element_id_0, InsertionMode::temporary);
@@ -503,7 +503,7 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
     const auto m0 = Message {LogicItemCreated {element_id_t {0}}};
     const auto m1 = Message {LogicItemInserted {
         .element_id = element_id_t {0},
-        .data = to_layout_calculation_data(circuit, element_id_t {0})}};
+        .data = to_layout_calculation_data(circuit.layout(), element_id_t {0})}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
     ASSERT_EQ(setup.recorder.messages().at(1), m1);
 }

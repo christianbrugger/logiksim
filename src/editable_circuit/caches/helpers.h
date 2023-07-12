@@ -6,16 +6,13 @@
 
 namespace logicsim {
 
-auto add_element_to_cache(auto &&cache, const Circuit &circuit, element_id_t element_id)
+auto add_element_to_cache(auto &&cache, const Layout &layout, element_id_t element_id)
     -> void {
     using namespace editable_circuit::info_message;
-    const auto &schematic = circuit.schematic();
-    const auto &layout = circuit.layout();
-
-    const auto element = schematic.element(element_id);
+    const auto element = layout.element(element_id);
 
     if (element.is_logic_item()) {
-        const auto data = to_layout_calculation_data(circuit, element_id);
+        const auto data = to_layout_calculation_data(layout, element_id);
         cache.submit(LogicItemInserted {element_id, data});
     }
 
@@ -28,12 +25,10 @@ auto add_element_to_cache(auto &&cache, const Circuit &circuit, element_id_t ele
     }
 }
 
-auto add_circuit_to_cache(auto &&cache, const Circuit &circuit) -> void {
-    const auto &layout = circuit.layout();
-
+auto add_layout_to_cache(auto &&cache, const Layout &layout) -> void {
     for (const auto element_id : layout.element_ids()) {
         if (is_inserted(layout.display_state(element_id))) {
-            add_element_to_cache(cache, circuit, element_id);
+            add_element_to_cache(cache, layout, element_id);
         }
     }
 }

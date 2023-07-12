@@ -403,8 +403,7 @@ auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orien
 auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
                      const Layout& layout, const Simulation* simulation,
                      const RenderSettings& settings) -> void {
-    const auto layout_data
-        = to_layout_calculation_data(element.schematic(), layout, element.element_id());
+    const auto layout_data = to_layout_calculation_data(layout, element.element_id());
 
     if (simulation == nullptr) {
         const auto display_state = layout.display_state(element.element_id());
@@ -502,8 +501,7 @@ auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
         return;
     }
 
-    const auto data
-        = to_layout_calculation_data(element.schematic(), layout, element.element_id());
+    const auto data = to_layout_calculation_data(layout, element.element_id());
     const auto selection_rect = element_selection_rect(data);
 
     if (display_state == display_state_t::normal && selected) {

@@ -15,6 +15,17 @@ namespace logicsim {
 ///////////
 
 /*
+
+auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
+                                      std::span<const element_id_t> placeholder_ids,
+                                      element_id_t* preserve_element = nullptr) {
+    for (auto placeholder_id : placeholder_ids) {
+        circuit.layout().set_display_state(placeholder_id, display_state_t::temporary);
+    }
+    swap_and_delete_multiple_elements_private(circuit, sender, placeholder_ids,
+                                              preserve_element);
+}
+
 auto add_placeholder_element(Circuit& circuit) -> element_id_t {
     constexpr static auto connector_delay
         = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
@@ -278,20 +289,20 @@ auto add_unused_element(Schematic& schematic) -> Schematic::Element {
 }
 
 auto convert_circuit(const Circuit& circuit) -> GeneratedSchematic {
+    const auto& schematic = circuit.schematic();
+    const auto& layout = circuit.layout();
+
     auto input_cache = ConnectionCache<true>();
     auto output_cache = ConnectionCache<false>();
     {
         const auto t = Timer {"Fill Caches", Timer::Unit::ms, 2};
-        add_circuit_to_cache(input_cache, circuit);
-        add_circuit_to_cache(output_cache, circuit);
+        add_layout_to_cache(input_cache, layout);
+        add_layout_to_cache(output_cache, layout);
     }
 
     // start
 
     const auto t0 = Timer {"Convert", Timer::Unit::ms, 2};
-
-    const auto& schematic = circuit.schematic();
-    const auto& layout = circuit.layout();
 
     auto generated = GeneratedSchematic {};
 

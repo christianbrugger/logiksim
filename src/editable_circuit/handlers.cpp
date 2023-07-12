@@ -24,33 +24,30 @@ namespace editable_circuit {
 // Deletion Handling
 //
 
-auto is_wire_with_segments(const Circuit& circuit, const element_id_t element_id)
-    -> bool {
-    const auto element = circuit.schematic().element(element_id);
-    return element.is_wire() && !circuit.layout().segment_tree(element_id).empty();
+auto is_wire_with_segments(const Layout& layout, const element_id_t element_id) -> bool {
+    const auto element = layout.element(element_id);
+    return element.is_wire() && !element.segment_tree().empty();
 }
 
-auto notify_element_deleted(const Schematic& schematic, MessageSender sender,
+auto notify_element_deleted(const Layout& layout, MessageSender sender,
                             element_id_t element_id) {
-    const auto element = schematic.element(element_id);
+    const auto element = layout.element(element_id);
 
     if (element.is_logic_item()) {
         sender.submit(info_message::LogicItemDeleted {element_id});
     }
 }
 
-auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
+auto notify_element_id_change(const Layout& layout, MessageSender sender,
                               const element_id_t new_element_id,
                               const element_id_t old_element_id) {
-    const auto& layout = circuit.layout();
-    const auto& schematic = circuit.schematic();
-    const auto element = schematic.element(new_element_id);
+    const auto element = layout.element(new_element_id);
 
     if (element.is_placeholder()) {
         return;
     }
 
-    const bool inserted = is_inserted(circuit, new_element_id);
+    const bool inserted = is_inserted(layout, new_element_id);
 
     if (element.is_logic_item()) {
         sender.submit(info_message::LogicItemIdUpdated {
@@ -60,7 +57,7 @@ auto notify_element_id_change(const Circuit& circuit, MessageSender sender,
     }
 
     if (element.is_logic_item() && inserted) {
-        const auto data = to_layout_calculation_data(circuit, new_element_id);
+        const auto data = to_layout_calculation_data(layout, new_element_id);
 
         sender.submit(info_message::InsertedLogicItemIdUpdated {
             .new_element_id = new_element_id,
@@ -99,8 +96,9 @@ auto swap_elements(Circuit& circuit, MessageSender sender,
     if (element_id_0 == element_id_1) {
         return;
     }
+    auto& layout = circuit.layout();
 
-    if (is_inserted(circuit, element_id_0) && is_inserted(circuit, element_id_1))
+    if (is_inserted(layout, element_id_0) && is_inserted(layout, element_id_1))
         [[unlikely]] {
         // we might need element delete and uninsert to prevent conflicts
         // or we need to introduce ElementSwapped messages
@@ -108,8 +106,8 @@ auto swap_elements(Circuit& circuit, MessageSender sender,
     }
 
     circuit.swap_elements(element_id_0, element_id_1);
-    notify_element_id_change(circuit, sender, element_id_0, element_id_1);
-    notify_element_id_change(circuit, sender, element_id_1, element_id_0);
+    notify_element_id_change(layout, sender, element_id_0, element_id_1);
+    notify_element_id_change(layout, sender, element_id_1, element_id_0);
 }
 
 auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender sender,
@@ -120,20 +118,19 @@ auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender send
         throw_exception("element id is invalid");
     }
 
-    auto& schematic = circuit.schematic();
     auto& layout = circuit.layout();
 
     if (layout.display_state(element_id) != display_state_t::temporary) [[unlikely]] {
         throw_exception("can only delete temporary objects");
     }
-    if (is_wire_with_segments(circuit, element_id)) [[unlikely]] {
+    if (is_wire_with_segments(layout, element_id)) [[unlikely]] {
         throw_exception("can't delete wires with segments");
     }
 
-    notify_element_deleted(schematic, sender, element_id);
+    notify_element_deleted(layout, sender, element_id);
 
     // delete in underlying
-    auto last_id = schematic.swap_and_delete_element(element_id);
+    auto last_id = circuit.schematic().swap_and_delete_element(element_id);
     {
         auto last_id_2 = layout.swap_and_delete_element(element_id);
         if (last_id_2 != last_id) {
@@ -142,7 +139,7 @@ auto swap_and_delete_single_element_private(Circuit& circuit, MessageSender send
     }
 
     if (element_id != last_id) {
-        notify_element_id_change(circuit, sender, element_id, last_id);
+        notify_element_id_change(layout, sender, element_id, last_id);
     }
 
     if (preserve_element != nullptr) {
@@ -198,16 +195,6 @@ auto swap_and_delete_multiple_elements(Circuit& circuit, MessageSender sender,
                                               preserve_element);
 }
 
-auto delete_disconnected_placeholders(Circuit& circuit, MessageSender sender,
-                                      std::span<const element_id_t> placeholder_ids,
-                                      element_id_t* preserve_element = nullptr) {
-    for (auto placeholder_id : placeholder_ids) {
-        circuit.layout().set_display_state(placeholder_id, display_state_t::temporary);
-    }
-    swap_and_delete_multiple_elements_private(circuit, sender, placeholder_ids,
-                                              preserve_element);
-}
-
 //
 // Logic Item Handling
 //
@@ -228,7 +215,7 @@ auto is_logic_item_position_representable_private(const Circuit& circuit,
     }
     const auto position = point_t {grid_t {x}, grid_t {y}};
 
-    auto data = to_layout_calculation_data(circuit, element_id);
+    auto data = to_layout_calculation_data(circuit.layout(), element_id);
     data.position = position;
 
     return is_representable(data);
@@ -289,13 +276,13 @@ auto insert_logic_item(State state, element_id_t& element_id) {
 
 auto is_circuit_item_colliding(const Circuit& circuit, const CacheProvider& cache,
                                const element_id_t element_id) {
-    const auto data = to_layout_calculation_data(circuit, element_id);
+    const auto data = to_layout_calculation_data(circuit.layout(), element_id);
     return cache.is_element_colliding(data);
 }
 
 auto notify_circuit_item_inserted(const Circuit& circuit, MessageSender sender,
                                   const element_id_t element_id) {
-    const auto data = to_layout_calculation_data(circuit, element_id);
+    const auto data = to_layout_calculation_data(circuit.layout(), element_id);
     sender.submit(info_message::LogicItemInserted {element_id, data});
 }
 
@@ -350,7 +337,7 @@ auto _element_change_colliding_to_temporary(Circuit& circuit, MessageSender send
     const auto display_state = layout.display_state(element_id);
 
     if (display_state == display_state_t::valid) {
-        const auto data = to_layout_calculation_data(circuit, element_id);
+        const auto data = to_layout_calculation_data(layout, element_id);
         sender.submit(info_message::LogicItemUninserted {element_id, data});
         layout.set_display_state(element_id, display_state_t::temporary);
 
@@ -371,7 +358,7 @@ auto change_logic_item_insertion_mode_private(State state, element_id_t& element
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
-    if (!state.schematic.element(element_id).is_logic_item()) [[unlikely]] {
+    if (!state.layout.element(element_id).is_logic_item()) [[unlikely]] {
         throw_exception("only works on logic elements");
     }
 
@@ -474,11 +461,10 @@ auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
 
 // aggregates
 
-auto is_wire_aggregate(const Schematic& schematic, const Layout& layout,
-                       const element_id_t element_id, display_state_t display_state)
-    -> bool {
-    return schematic.element(element_id).is_wire()
-           && layout.display_state(element_id) == display_state;
+auto is_wire_aggregate(const Layout& layout, const element_id_t element_id,
+                       display_state_t display_state) -> bool {
+    const auto element = layout.element(element_id);
+    return element.is_wire() && element.display_state() == display_state;
 }
 
 auto add_new_wire_element(Circuit& circuit, display_state_t display_state)
@@ -507,7 +493,6 @@ auto add_new_wire_element(Circuit& circuit, display_state_t display_state)
 
 auto find_wire(const Circuit& circuit, display_state_t display_state) -> element_id_t {
     const auto& layout = circuit.layout();
-    const auto& schematic = circuit.schematic();
 
     // test begin
     // if (display_state == display_state_t::temporary) {
@@ -518,7 +503,7 @@ auto find_wire(const Circuit& circuit, display_state_t display_state) -> element
     const auto element_ids = layout.element_ids();
     const auto it
         = std::ranges::find_if(element_ids, [&](element_id_t element_id) -> bool {
-              return is_wire_aggregate(schematic, layout, element_id, display_state);
+              return is_wire_aggregate(layout, element_id, display_state);
           });
     return it == element_ids.end() ? null_element : *it;
 }
@@ -550,12 +535,11 @@ auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
                              display_state_t display_state) -> element_id_t {
     using enum display_state_t;
     const auto& layout = circuit.layout();
-    const auto& schematic = circuit.schematic();
 
     // temporary
     if (display_state == temporary) {
         if (layout.element_count() <= TEMPORARY_AGGREGATE_ID.value
-            || !is_wire_aggregate(schematic, layout, TEMPORARY_AGGREGATE_ID, temporary)) {
+            || !is_wire_aggregate(layout, TEMPORARY_AGGREGATE_ID, temporary)) {
             create_aggregate_wires(circuit, sender);
         }
         return TEMPORARY_AGGREGATE_ID;
@@ -564,7 +548,7 @@ auto get_or_create_aggregate(Circuit& circuit, MessageSender sender,
     // colliding
     else if (display_state == colliding) {
         if (layout.element_count() <= COLLIDING_AGGREGATE_ID.value
-            || !is_wire_aggregate(schematic, layout, COLLIDING_AGGREGATE_ID, temporary)) {
+            || !is_wire_aggregate(layout, COLLIDING_AGGREGATE_ID, temporary)) {
             create_aggregate_wires(circuit, sender);
         }
         return COLLIDING_AGGREGATE_ID;

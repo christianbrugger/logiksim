@@ -216,7 +216,7 @@ auto SpatialTree::validate(const Circuit& circuit) const -> void {
     using namespace detail::spatial_tree;
 
     auto cache = SpatialTree {};
-    add_circuit_to_cache(cache, circuit);
+    add_layout_to_cache(cache, circuit.layout());
 
     if (cache.tree_ != this->tree_) [[unlikely]] {
         print(circuit);

@@ -29,12 +29,7 @@ static_assert(sizeof(layout_calculation_data_t) == 32);
     return data.element_type == ElementType::placeholder;
 }
 
-[[nodiscard]] auto to_layout_calculation_data(const Schematic& schematic,
-                                              const Layout& layout,
-                                              element_id_t element_id)
-    -> layout_calculation_data_t;
-
-[[nodiscard]] auto to_layout_calculation_data(const Circuit& circuit,
+[[nodiscard]] auto to_layout_calculation_data(const Layout& layout,
                                               element_id_t element_id)
     -> layout_calculation_data_t;
 

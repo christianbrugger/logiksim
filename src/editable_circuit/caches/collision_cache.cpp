@@ -554,7 +554,7 @@ auto CollisionCache::is_wire_cross_point(point_t point) const -> bool {
 
 auto CollisionCache::validate(const Circuit& circuit) const -> void {
     auto cache = CollisionCache {};
-    add_circuit_to_cache(cache, circuit);
+    add_layout_to_cache(cache, circuit.layout());
 
     if (cache.map_ != this->map_) [[unlikely]] {
         throw_exception("current cache state doesn't match circuit");

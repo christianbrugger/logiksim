@@ -5,23 +5,18 @@
 
 namespace logicsim {
 
-auto to_layout_calculation_data(const Schematic& schematic, const Layout& layout,
-                                element_id_t element_id) -> layout_calculation_data_t {
-    const auto element = schematic.element(element_id);
+auto to_layout_calculation_data(const Layout& layout, element_id_t element_id)
+    -> layout_calculation_data_t {
+    const auto element = layout.element(element_id);
 
     return layout_calculation_data_t {
         .input_count = element.input_count(),
         .output_count = element.output_count(),
         .internal_state_count = 0,  // TODO get count fromm schematic when implemented
-        .position = layout.position(element_id),
-        .orientation = layout.orientation(element_id),
+        .position = element.position(),
+        .orientation = element.orientation(),
         .element_type = element.element_type(),
     };
-}
-
-auto to_layout_calculation_data(const Circuit& circuit, element_id_t element_id)
-    -> layout_calculation_data_t {
-    return to_layout_calculation_data(circuit.schematic(), circuit.layout(), element_id);
 }
 
 }  // namespace logicsim

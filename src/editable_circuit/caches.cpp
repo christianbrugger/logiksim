@@ -9,10 +9,11 @@ namespace logicsim {
 
 CacheProvider::CacheProvider(const Circuit& circuit) {
     // TODO consider bulk insertion, especially for spatial_cache_
-    add_circuit_to_cache(input_connections_, circuit);
-    add_circuit_to_cache(output_connections_, circuit);
-    add_circuit_to_cache(collision_cache_, circuit);
-    add_circuit_to_cache(spatial_cache_, circuit);
+    const auto& layout = circuit.layout();
+    add_layout_to_cache(input_connections_, layout);
+    add_layout_to_cache(output_connections_, layout);
+    add_layout_to_cache(collision_cache_, layout);
+    add_layout_to_cache(spatial_cache_, layout);
 }
 
 auto CacheProvider::format() const -> std::string {
