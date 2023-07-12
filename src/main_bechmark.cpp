@@ -147,8 +147,8 @@ static void BM_RenderScene_0(benchmark::State& state) {
 
         BLContext ctx(img);
         logicsim::render_circuit(ctx, logicsim::render_args_t {
-                                          .schematic = scene.schematic,
                                           .layout = scene.layout,
+                                          .schematic = &scene.schematic,
                                           .simulation = &scene.simulation,
                                       });
         ctx.end();

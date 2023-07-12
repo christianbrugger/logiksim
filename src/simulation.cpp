@@ -192,6 +192,14 @@ Simulation::Simulation(const Schematic &schematic)
     }
 }
 
+auto Simulation::get_state(element_id_t element_id) -> ElementState & {
+    return states_.at(element_id.value);
+}
+
+auto Simulation::get_state(element_id_t element_id) const -> const ElementState & {
+    return states_.at(element_id.value);
+}
+
 auto Simulation::get_state(ElementOrConnection auto obj) -> ElementState & {
     return states_.at(obj.element_id().value);
 }
@@ -598,6 +606,11 @@ auto Simulation::clean_history(history_vector_t &history, delay_t history_length
            && history.front().value < time().value - history_length.value) {
         history.pop_front();
     }
+}
+
+auto Simulation::input_value(element_id_t element_id, connection_id_t index) const
+    -> bool {
+    return get_state(element_id).input_values.at(index.value);
 }
 
 auto Simulation::input_value(const Schematic::ConstInput input) const -> bool {

@@ -87,8 +87,8 @@ using selection_mask_t = boost::container::vector<bool>;
 
 // TODO better grouping, group RenderSettings and BLContext, Circuit struct
 struct render_args_t {
-    const Schematic& schematic;
     const Layout& layout;
+    const Schematic* schematic {nullptr};
     const Simulation* simulation {nullptr};
     const selection_mask_t& selection_mask {};
     const Selection& selection {};

@@ -720,13 +720,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         const auto& selection = editable_circuit.selection_builder().selection();
         const auto mask = editable_circuit.selection_builder().create_selection_mask();
 
-        // TODO don't generate schematic here
-        // TODO rewrite render circuit so its not needed
-        const auto schematic = generate_schematic(editable_circuit.layout());
-
-        // auto simulation = Simulation {editable_circuit.schematic()};
         render_circuit(bl_ctx, render_args_t {
-                                   .schematic = schematic,
                                    .layout = editable_circuit.layout(),
                                    .selection_mask = mask,
                                    .selection = selection,

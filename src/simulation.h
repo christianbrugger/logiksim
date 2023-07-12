@@ -146,6 +146,8 @@ class Simulation {
              int64_t max_events = defaults::no_max_events) -> int64_t;
 
     // input values
+    [[nodiscard]] auto input_value(element_id_t element_id, connection_id_t index) const
+        -> bool;
     [[nodiscard]] auto input_value(Schematic::ConstInput input) const -> bool;
     [[nodiscard]] auto input_values(Schematic::ConstElement element) const
         -> logic_small_vector_t;
@@ -207,6 +209,8 @@ class Simulation {
     auto record_input_history(Schematic::ConstInput input, bool new_value) -> void;
     auto clean_history(history_vector_t &history, delay_t history_length) -> void;
 
+    [[nodiscard]] auto get_state(element_id_t element_id) -> ElementState &;
+    [[nodiscard]] auto get_state(element_id_t element_id) const -> const ElementState &;
     [[nodiscard]] auto get_state(ElementOrConnection auto item) -> ElementState &;
     [[nodiscard]] auto get_state(ElementOrConnection auto item) const
         -> const ElementState &;

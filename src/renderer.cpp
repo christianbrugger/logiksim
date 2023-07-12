@@ -4,6 +4,7 @@
 #include "algorithm.h"
 #include "editable_circuit/editable_circuit.h"
 #include "format.h"
+#include "layout.h"
 #include "layout_calculations.h"
 #include "range.h"
 #include "timer.h"
@@ -311,11 +312,12 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
     }
 }
 
-auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
+// TODO remove, not unused
+auto draw_wire(BLContext& ctx, layout::ConstElement element,
                const RenderSettings& settings) -> void {
     const auto lc_width = line_cross_width(settings);
 
-    for (auto&& segment : layout.line_tree(element).sized_segments()) {
+    for (auto&& segment : element.line_tree().sized_segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
         if (segment.has_cross_point_p0) {
@@ -350,12 +352,11 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
     }
 }
 
-auto draw_element_tree(BLContext& ctx, Schematic::ConstElement element,
-                       const Layout& layout, const RenderSettings& settings) {
-    const auto& segment_tree = layout.segment_tree(element);
+auto draw_element_tree(BLContext& ctx, layout::ConstElement element,
+                       const RenderSettings& settings) {
     const auto cross_width = line_cross_width(settings);
 
-    for (const segment_info_t& segment : segment_tree.segment_infos()) {
+    for (const segment_info_t& segment : element.segment_tree().segment_infos()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
         if (is_cross_point(segment.p0_type)) {
@@ -399,52 +400,49 @@ auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orien
     stroke_line_impl(ctx, BLLine {p0.x, p0.y, p1.x, p1.y}, color, width);
 }
 
-auto draw_connectors(BLContext& ctx, Schematic::ConstElement element,
-                     const Layout& layout, const Simulation* simulation,
-                     const RenderSettings& settings) -> void {
-    const auto layout_data = to_layout_calculation_data(layout, element.element_id());
+auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
+                                const RenderSettings& settings) -> void {
+    const auto layout_data = to_layout_calculation_data(element.layout(), element);
+    const auto display_state = element.display_state();
 
-    if (simulation == nullptr) {
-        const auto display_state = layout.display_state(element.element_id());
+    iter_input_location(layout_data, [&](point_t position, orientation_t orientation) {
+        draw_single_connector(ctx, position, orientation, false, display_state, settings);
+        return true;
+    });
 
-        iter_input_location(layout_data,
-                            [&](point_t position, orientation_t orientation) {
-                                draw_single_connector(ctx, position, orientation, false,
-                                                      display_state, settings);
-                                return true;
-                            });
-
-        iter_output_location(layout_data,
-                             [&](point_t position, orientation_t orientation) {
-                                 draw_single_connector(ctx, position, orientation, false,
-                                                       display_state, settings);
-                                 return true;
-                             });
-    } else {
-        iter_input_location_and_id(
-            layout_data,
-            [&](connection_id_t input_id, point_t position, orientation_t orientation) {
-                const auto enabled = simulation->input_value(element.input(input_id));
-                draw_single_connector(ctx, position, orientation, enabled,
-                                      display_state_t::normal, settings);
-                return true;
-            });
-
-        iter_output_location_and_id(
-            layout_data,
-            [&](connection_id_t output_id, point_t position, orientation_t orientation) {
-                const auto enabled = simulation->output_value(element.output(output_id));
-                draw_single_connector(ctx, position, orientation, enabled,
-                                      display_state_t::normal, settings);
-                return true;
-            });
-    }
+    iter_output_location(layout_data, [&](point_t position, orientation_t orientation) {
+        draw_single_connector(ctx, position, orientation, false, display_state, settings);
+        return true;
+    });
 }
 
-auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
-                           const Layout& layout, const Simulation* simulation,
-                           bool selected, const RenderSettings& settings) -> void {
-    const auto position = layout.position(element);
+auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
+                                const Layout& layout, const Simulation& simulation,
+                                const RenderSettings& settings) -> void {
+    const auto layout_data = to_layout_calculation_data(layout, element.element_id());
+
+    iter_input_location_and_id(
+        layout_data,
+        [&](connection_id_t input_id, point_t position, orientation_t orientation) {
+            const auto enabled = simulation.input_value(element.input(input_id));
+            draw_single_connector(ctx, position, orientation, enabled,
+                                  display_state_t::normal, settings);
+            return true;
+        });
+
+    iter_output_location_and_id(
+        layout_data,
+        [&](connection_id_t output_id, point_t position, orientation_t orientation) {
+            const auto enabled = simulation.output_value(element.output(output_id));
+            draw_single_connector(ctx, position, orientation, enabled,
+                                  display_state_t::normal, settings);
+            return true;
+        });
+}
+
+auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
+                                bool selected, const RenderSettings& settings) -> void {
+    const auto position = element.position();
     const auto element_height = std::max(element.input_count(), element.output_count());
 
     const auto extra_space = 0.4;
@@ -460,7 +458,7 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
         },
     };
 
-    const auto display_state = layout.display_state(element.element_id());
+    const auto display_state = element.display_state();
     const auto alpha = get_alpha_value(display_state);
 
     const auto fill_color = [&] {
@@ -481,27 +479,34 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
     ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
 
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
-
-    draw_connectors(ctx, element, layout, simulation, settings);
 }
 
-auto draw_element_shadow(BLContext& ctx, Schematic::ConstElement element,
-                         const Layout& layout, bool selected,
-                         const RenderSettings& settings) -> void {
-    const auto type = element.element_type();
+auto draw_standard_element(BLContext& ctx, layout::ConstElement element, bool selected,
+                           const RenderSettings& settings) -> void {
+    draw_standard_element_body(ctx, element, selected, settings);
+    draw_logic_item_connectors(ctx, element, settings);
+}
 
-    if (type == ElementType::unused || type == ElementType::placeholder
-        || type == ElementType::wire) {
+auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
+                           const Layout& layout, const Simulation& simulation,
+                           bool selected, const RenderSettings& settings) -> void {
+    draw_standard_element_body(ctx, layout.element(element), selected, settings);
+    draw_logic_item_connectors(ctx, element, layout, simulation, settings);
+}
+
+auto draw_element_shadow(BLContext& ctx, layout::ConstElement element, bool selected,
+                         const RenderSettings& settings) -> void {
+    if (!element.is_logic_item()) {
         return;
     }
 
-    const auto display_state = layout.display_state(element.element_id());
+    const auto display_state = element.display_state();
 
     if (display_state == display_state_t::normal && !selected) {
         return;
     }
 
-    const auto data = to_layout_calculation_data(layout, element.element_id());
+    const auto data = to_layout_calculation_data(element.layout(), element);
     const auto selection_rect = element_selection_rect(data);
 
     if (display_state == display_state_t::normal && selected) {
@@ -571,15 +576,15 @@ auto draw_wire_valid_shadow(BLContext& ctx, const SegmentTree& segment_tree,
     }
 }
 
-auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout& layout,
-                       const Selection& selection, const RenderSettings& settings) {
-    for (const auto element : schematic.elements()) {
+auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& selection,
+                       const RenderSettings& settings) {
+    for (const auto element : layout.elements()) {
         if (!element.is_wire()) {
             continue;
         }
 
-        const auto display_state = layout.display_state(element.element_id());
-        const auto& segment_tree = layout.segment_tree(element.element_id());
+        const auto display_state = element.display_state();
+        const auto& segment_tree = element.segment_tree();
 
         if (display_state == display_state_t::temporary) {
             draw_wire_temporary_shadow(ctx, segment_tree, settings);
@@ -595,8 +600,7 @@ auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout&
     }
 
     for (auto&& [segment, parts] : selection.selected_segments()) {
-        const auto element_id = segment.element_id;
-        if (layout.display_state(element_id) == display_state_t::normal) {
+        if (layout.display_state(segment.element_id) == display_state_t::normal) {
             const auto line = get_line(layout, segment);
             draw_wire_selected_parts_shadow(ctx, line, parts, settings);
         }
@@ -604,54 +608,66 @@ auto draw_wire_shadows(BLContext& ctx, const Schematic& schematic, const Layout&
 }
 
 auto render_circuit(BLContext& ctx, render_args_t args) -> void {
-    const auto is_selected = [&](Schematic::ConstElement element) {
-        const auto id = element.element_id().value;
+    const auto is_selected = [&](element_id_t element_id) {
+        const auto id = element_id.value;
         return id < std::ssize(args.selection_mask) ? args.selection_mask[id] : false;
     };
 
     // unselected elements
-    for (auto element : args.schematic.elements()) {
-        if (!is_selected(element)) {
-            if (const auto type = element.element_type();
-                type != ElementType::unused && type != ElementType::placeholder
-                && type != ElementType::wire) {
-                draw_standard_element(ctx, element, args.layout, args.simulation, false,
+    if (args.simulation == nullptr || args.schematic == nullptr) {
+        for (auto element : args.layout.elements()) {
+            if (!is_selected(element) && element.is_logic_item()) {
+                draw_standard_element(ctx, element, false, args.settings);
+            }
+        }
+    } else {
+        for (auto element : args.schematic->elements()) {
+            if (!is_selected(element) && element.is_logic_item()) {
+                draw_standard_element(ctx, element, args.layout, *args.simulation, false,
                                       args.settings);
             }
         }
     }
 
     // wires
-    for (auto element : args.schematic.elements()) {
-        if (element.element_type() == ElementType::wire) {
-            if (args.simulation == nullptr) {
-                draw_element_tree(ctx, element, args.layout, args.settings);
-            } else {
+    if (args.simulation == nullptr || args.schematic == nullptr) {
+        for (auto element : args.layout.elements()) {
+            if (element.element_type() == ElementType::wire) {
+                draw_element_tree(ctx, element, args.settings);
+            }
+        }
+    } else {
+        for (auto element : args.schematic->elements()) {
+            if (element.element_type() == ElementType::wire) {
                 draw_wire(ctx, element, args.layout, *args.simulation, args.settings);
             }
         }
     }
 
     // selected elements
-    for (auto element : args.schematic.elements()) {
-        if (is_selected(element)) {
-            if (const auto type = element.element_type();
-                type != ElementType::unused && type != ElementType::placeholder
-                && type != ElementType::wire) {
-                draw_standard_element(ctx, element, args.layout, args.simulation, true,
+    if (args.simulation == nullptr || args.schematic == nullptr) {
+        for (auto element : args.layout.elements()) {
+            if (is_selected(element) && element.is_logic_item()) {
+                draw_standard_element(ctx, element, true, args.settings);
+            }
+        }
+    } else {
+        for (auto element : args.schematic->elements()) {
+            if (is_selected(element) && element.is_logic_item()) {
+                draw_standard_element(ctx, element, args.layout, *args.simulation, true,
                                       args.settings);
             }
         }
     }
 
     // shadow
-    for (auto element : args.schematic.elements()) {
+    for (auto element : args.layout.elements()) {
         bool selected = is_selected(element);
-        draw_element_shadow(ctx, element, args.layout, selected, args.settings);
+        draw_element_shadow(ctx, element, selected, args.settings);
     }
 
     // wire shadow
-    draw_wire_shadows(ctx, args.schematic, args.layout, args.selection, args.settings);
+    draw_wire_shadows(ctx, args.layout, args.selection, args.settings);
 }
 
 //
@@ -1217,8 +1233,8 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
         render_circuit(ctx, render_args_t {
-                                .schematic = scene.schematic,
                                 .layout = scene.layout,
+                                .schematic = &scene.schematic,
                                 .simulation = &scene.simulation,
                             });
     }
