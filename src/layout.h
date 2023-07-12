@@ -45,7 +45,6 @@ class Layout {
 
     auto swap(Layout &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto format_element(element_id_t element_id) const -> std::string;
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto element_count() const -> std::size_t;
@@ -163,6 +162,8 @@ class ElementTemplate {
 
     template <bool ConstOther>
     auto operator==(ElementTemplate<ConstOther> other) const noexcept -> bool;
+
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto layout() const noexcept -> LayoutType &;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;

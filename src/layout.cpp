@@ -118,20 +118,11 @@ auto Layout::format() const -> std::string {
     auto inner = std::string {};
 
     if (!empty()) {
-        const auto transform = transform_view(
-            element_ids(), [this](element_id_t element_id) -> std::string {
-                return format_element(element_id);
-            });
-        inner = fmt::format(": [\n  {}\n]", fmt_join(",\n  ", transform));
+        const auto lines = fmt_join(",\n  ", elements());
+        inner = fmt::format(": [\n  {}\n]", lines);
     }
 
     return fmt::format("<Layout with {} elements{}>", element_count(), inner);
-}
-
-auto Layout::format_element(element_id_t element_id) const -> std::string {
-    return fmt::format("<Element {}: {}, {}, {}, {}>", element_id, position(element_id),
-                       display_state(element_id), orientation(element_id),
-                       segment_tree(element_id));
 }
 
 auto Layout::empty() const -> bool {
@@ -359,6 +350,19 @@ template <bool ConstOther>
 auto ElementTemplate<Const>::operator==(ElementTemplate<ConstOther> other) const noexcept
     -> bool {
     return layout_ == other.layout_ && element_id_ == other.element_id_;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::format() const -> std::string {
+    const auto info = [&]() {
+        if (is_wire()) {
+            return fmt::format("{}-{}", display_state(), segment_tree());
+        }
+        return fmt::format("{}x{} {}, {}, {}, {}", input_count(), output_count(),
+                           element_type(), display_state(), position(), orientation());
+    };
+
+    return fmt::format("<Element {}: {}>", element_id(), info());
 }
 
 template <bool Const>

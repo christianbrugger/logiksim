@@ -799,6 +799,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             auto& selection_builder = editable_circuit_.value().selection_builder();
             const auto point
                 = to_grid_fine(event->position(), render_settings_.view_config);
+
             // TODO shall we create a better interface here? not via caches
             const bool has_element_under_cursor
                 = editable_circuit_.value().caches().query_selection(point).has_value();
