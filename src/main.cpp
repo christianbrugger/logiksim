@@ -453,7 +453,6 @@ auto main() -> int {
 
     benchmark_conversion();
 
-    /*
     try {
         auto timer = Timer {"Benchmark", Timer::Unit::ms, 3};
         // auto count = benchmark_simulation(6, 10, true);
@@ -467,6 +466,6 @@ auto main() -> int {
         std::cerr << exc.what() << '\n';
         return -1;
     }
-    */
+
     return 0;
 }

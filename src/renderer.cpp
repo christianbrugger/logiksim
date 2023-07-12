@@ -149,9 +149,8 @@ auto get_image_data(BLContext& ctx) -> BLImageData {
     return data;
 }
 
-// TODO rename
-auto draw_connector_fast(BLContext& ctx, const point_t point, bool enabled, int width,
-                         const RenderSettings& settings) -> void {
+auto draw_line_cross_point_fast(BLContext& ctx, const point_t point, bool enabled,
+                                int width, const RenderSettings& settings) -> void {
     const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
 
     // TODO refactor getting data & width
@@ -177,9 +176,8 @@ auto draw_connector_fast(BLContext& ctx, const point_t point, bool enabled, int 
     }
 }
 
-// TODO rename
-auto draw_connector_blend2d(BLContext& ctx, const point_t point, bool enabled, int width,
-                            const RenderSettings& settings) {
+auto draw_line_cross_point_blend2d(BLContext& ctx, const point_t point, bool enabled,
+                                   int width, const RenderSettings& settings) {
     if (width < 1) {
         return;
     }
@@ -271,11 +269,10 @@ auto stroke_line_blend2d(BLContext& ctx, const BLLine& line, BLRgba32 color, int
     }
 }
 
-// TODO rename
-auto draw_connector_impl(BLContext& ctx, const point_t point, bool enabled, int width,
-                         const RenderSettings& settings) {
-    // draw_connector_fast(ctx, point, enabled, width, settings);
-    draw_connector_blend2d(ctx, point, enabled, width, settings);
+auto draw_line_cross_point_impl(BLContext& ctx, const point_t point, bool enabled,
+                                int width, const RenderSettings& settings) {
+    // draw_line_cross_point_fast(ctx, point, enabled, width, settings);
+    draw_line_cross_point_blend2d(ctx, point, enabled, width, settings);
 }
 
 auto stroke_line_impl(BLContext& ctx, const BLLine& line, BLRgba32 color, int width)
@@ -322,7 +319,7 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
         if (segment.has_cross_point_p0) {
-            draw_connector_impl(ctx, segment.line.p0, false, lc_width, settings);
+            draw_line_cross_point_impl(ctx, segment.line.p0, false, lc_width, settings);
         }
     }
 }
@@ -347,8 +344,8 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
 
         if (segment.has_cross_point_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
-            draw_connector_impl(ctx, segment.line.p0, wire_enabled, cross_width,
-                                settings);
+            draw_line_cross_point_impl(ctx, segment.line.p0, wire_enabled, cross_width,
+                                       settings);
         }
     }
 }
@@ -362,10 +359,12 @@ auto draw_element_tree(BLContext& ctx, Schematic::ConstElement element,
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
         if (is_cross_point(segment.p0_type)) {
-            draw_connector_impl(ctx, segment.line.p0, false, cross_width, settings);
+            draw_line_cross_point_impl(ctx, segment.line.p0, false, cross_width,
+                                       settings);
         }
         if (is_cross_point(segment.p1_type)) {
-            draw_connector_impl(ctx, segment.line.p1, false, cross_width, settings);
+            draw_line_cross_point_impl(ctx, segment.line.p1, false, cross_width,
+                                       settings);
         }
     }
 }
