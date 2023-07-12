@@ -72,8 +72,9 @@ auto SegmentInserted::format() const -> std::string {
 }
 
 auto InsertedSegmentIdUpdated::format() const -> std::string {
-    return fmt::format("InsertedSegmentIdUpdated(new_segment = {}, old_segment = {})",
-                       new_segment, old_segment);
+    return fmt::format(
+        "InsertedSegmentIdUpdated(new_segment = {}, old_segment = {}, segment_info = {})",
+        new_segment, old_segment, segment_info);
 }
 
 auto InsertedEndPointsUpdated::format() const -> std::string {
@@ -84,7 +85,8 @@ auto InsertedEndPointsUpdated::format() const -> std::string {
 }
 
 auto SegmentUninserted::format() const -> std::string {
-    return fmt::format("SegmentUninserted(segment = {})", segment);
+    return fmt::format("SegmentUninserted(segment = {}, segment_info = {})", segment,
+                       segment_info);
 }
 
 }  // namespace info_message

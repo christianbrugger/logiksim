@@ -11,7 +11,7 @@ namespace logicsim {
 
 namespace detail::connection_cache {
 inline auto connection_data_t::format() const -> std::string {
-    return fmt::format("<Element {}-{}-{} {}>", connection_id, segment_index, element_id,
+    return fmt::format("<{}, {}, {}, {}>", element_id, segment_index, connection_id,
                        orientation);
 }
 }  // namespace detail::connection_cache
@@ -33,9 +33,9 @@ auto get_and_verify_cache_entry(detail::connection_cache::map_type& map, point_t
 template <bool IsInput>
 auto ConnectionCache<IsInput>::format() const -> std::string {
     if constexpr (IsInput) {
-        return fmt::format("InputCache = {}\n", map_);
+        return fmt::format("InputCache = {}", map_);
     } else {
-        return fmt::format("OutputCache = {}\n", map_);
+        return fmt::format("OutputCache = {}", map_);
     }
 }
 
@@ -154,7 +154,7 @@ auto ConnectionCache<IsInput>::handle(
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void {
-    if (message.new_segment.element_id == message.old_segment.element_id) {
+    if (message.new_segment == message.old_segment) {
         return;
     }
 
@@ -199,7 +199,6 @@ auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> 
         return;
     }
 
-    /*
     // segments
     if (auto pointer = std::get_if<SegmentInserted>(&message)) {
         handle(*pointer);
@@ -217,7 +216,6 @@ auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> 
         handle(*pointer);
         return;
     }
-    */
 }
 
 template <bool IsInput>
