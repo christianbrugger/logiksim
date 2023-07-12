@@ -156,7 +156,9 @@ class TransformView {
     }
 
     [[nodiscard]] auto size() const noexcept(noexcept(end_ - begin_)) ->
-        typename iterator::difference_type {
+        typename iterator::difference_type
+        requires requires(Iterator it_) { it_ - it_; }
+    {
         return end_ - begin_;
     }
 

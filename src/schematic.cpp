@@ -365,10 +365,9 @@ auto validate_placeholder_connected(const Schematic::ConstElement element) -> vo
 
 auto validate_has_no_placeholders(const Schematic::ConstElement element) -> void {
     const auto is_placeholder = [](const Schematic::ConstOutput output) {
-        return !output.has_connected_element()
-               || !output.connected_element().is_placeholder();
+        return output.has_connected_element()
+               && output.connected_element().is_placeholder();
     };
-
     if (std::ranges::any_of(element.outputs(), is_placeholder)) {
         throw_exception("element should not have output placeholders");
     }

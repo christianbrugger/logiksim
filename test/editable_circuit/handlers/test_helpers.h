@@ -93,34 +93,6 @@ inline auto add_and_element(Circuit &circuit, display_state_t display_type,
     });
 }
 
-inline auto add_placeholder(Circuit &circuit) -> Schematic::Element {
-    const auto element = circuit.schematic().add_element(Schematic::ElementData {
-        .element_type = ElementType::placeholder,
-        .input_count = 1,
-        .output_count = 0,
-    });
-    circuit.layout().add_element({
-        .display_state = display_state_t::normal,
-        .element_type = ElementType::placeholder,
-
-        .input_count = 1,
-        .output_count = 0,
-    });
-    return element;
-}
-
-inline auto add_placeholder(Circuit &circuit, Schematic::Output output) -> element_id_t {
-    const auto element = add_placeholder(circuit);
-    element.input(connection_id_t {0}).connect(output);
-    return element.element_id();
-}
-
-inline auto add_placeholders(Circuit &circuit, element_id_t element_id) -> void {
-    for (auto output : circuit.schematic().element(element_id).outputs()) {
-        add_placeholder(circuit, output);
-    }
-}
-
 inline auto assert_element_count(const Circuit &circuit, std::size_t count) -> void {
     ASSERT_EQ(circuit.schematic().element_count(), count);
     ASSERT_EQ(circuit.layout().element_count(), count);
@@ -131,12 +103,6 @@ inline auto assert_element_equal(const Circuit &circuit, element_id_t element_id
                                  point_t position = point_t {0, 0}) -> void {
     ASSERT_EQ(circuit.schematic().element(element_id).input_count(), input_count);
     ASSERT_EQ(circuit.layout().position(element_id), position);
-}
-
-inline auto assert_is_placeholder(const Circuit &circuit, element_id_t element_id)
-    -> void {
-    ASSERT_EQ(circuit.schematic().element(element_id).is_placeholder(), true);
-    ASSERT_EQ(circuit.layout().display_state(element_id), display_state_t::normal);
 }
 
 }  // namespace logicsim

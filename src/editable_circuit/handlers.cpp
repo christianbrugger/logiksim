@@ -217,34 +217,6 @@ auto StandardLogicAttributes::format() const -> std::string {
                        orientation);
 }
 
-auto add_placeholder_element(Circuit& circuit) -> element_id_t {
-    constexpr static auto connector_delay
-        = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
-
-    const auto element_id = circuit.layout()
-                                .add_element(Layout::ElementData {
-                                    .display_state = display_state_t::normal,
-                                    .element_type = ElementType::placeholder,
-
-                                    .input_count = 1,
-                                    .output_count = 0,
-                                })
-                                .element_id();
-    {
-        const auto element = circuit.schematic().add_element(Schematic::ElementData {
-            .element_type = ElementType::placeholder,
-            .input_count = 1,
-            .output_count = 0,
-            .history_length = connector_delay,
-        });
-        if (element.element_id() != element_id) [[unlikely]] {
-            throw_exception("Added element ids don't match.");
-        }
-    }
-
-    return element_id;
-}
-
 auto is_logic_item_position_representable_private(const Circuit& circuit,
                                                   const element_id_t element_id, int x,
                                                   int y) -> bool {
@@ -308,145 +280,9 @@ auto move_or_delete_logic_item(Circuit& circuit, MessageSender sender,
 
 // mode change helpers
 
-auto add_and_connect_placeholder(Circuit& circuit, Schematic::Output output)
-    -> element_id_t {
-    const auto placeholder_id = add_placeholder_element(circuit);
-    const auto input
-        = circuit.schematic().element(placeholder_id).input(connection_id_t {0});
-    output.connect(input);
-
-    return placeholder_id;
-}
-
-auto disconnect_inputs_and_add_placeholders(Circuit& circuit,
-                                            const element_id_t element_id) -> void {
-    auto& schematic = circuit.schematic();
-
-    for (const auto input : schematic.element(element_id).inputs()) {
-        if (input.has_connected_element()) {
-            add_and_connect_placeholder(circuit, input.connected_output());
-        }
-    }
-}
-
-auto disconnect_outputs_and_remove_placeholders(Circuit& circuit, MessageSender sender,
-                                                element_id_t& element_id) -> void {
-    auto& schematic = circuit.schematic();
-
-    auto disconnected_placeholders = delete_queue_t {};
-
-    for (auto output : schematic.element(element_id).outputs()) {
-        if (output.has_connected_element()) {
-            const auto connected_element = output.connected_element();
-
-            if (connected_element.is_placeholder()) {
-                disconnected_placeholders.push_back(connected_element.element_id());
-            }
-            output.clear_connection();
-        }
-    }
-
-    delete_disconnected_placeholders(circuit, sender, disconnected_placeholders,
-                                     &element_id);
-}
-
-auto add_missing_placeholders_for_outputs(Circuit& circuit, const element_id_t element_id)
-    -> void {
-    for (const auto output : circuit.schematic().element(element_id).outputs()) {
-        if (!output.has_connected_element()) {
-            add_and_connect_placeholder(circuit, output);
-        }
-    }
-}
-
-namespace {
-struct connector_data_t {
-    // element_id and connection_id
-    connection_t connection_data;
-    // position of the connector
-    point_t position;
-    // orientation of the connector
-    orientation_t orientation;
-};
-}  // namespace
-
-template <bool IsInput>
-auto connect_connector(connector_data_t connector,
-                       const ConnectionCache<IsInput>& connection_cache,
-                       Schematic& schematic) -> std::optional<element_id_t> {
-    auto unused_placeholder_id = std::optional<element_id_t> {};
-    auto connection = to_connection<!IsInput>(schematic, connector.connection_data);
-
-    // pre-conditions
-    if (connection.has_connected_element()) [[unlikely]] {
-        throw_exception("Connections needs to be unconnected.");
-    }
-
-    // find connection at position
-    if (const auto entry = connection_cache.find(connector.position, schematic)) {
-        const auto found_connection = entry->first;
-        const auto found_orientation = entry->second;
-
-        if (found_connection.has_connected_element()) {
-            if (!found_connection.connected_element().is_placeholder()) [[unlikely]] {
-                throw_exception("Connection is already connected at this location.");
-            }
-            // mark placeholder for deletion
-            unused_placeholder_id = found_connection.connected_element_id();
-        }
-        if (!orientations_compatible(connector.orientation, found_orientation)) {
-            throw_exception("Connection have incompatible orientations.");
-        }
-
-        // make connection in schematic
-        connection.connect(found_connection);
-    }
-
-    return unused_placeholder_id;
-}
-
-auto connect_element(State state, element_id_t& element_id) -> void {
-    auto disconnected_placeholders = delete_queue_t {};
-    auto add_if_valid = [&](std::optional<element_id_t> placeholder_id) {
-        if (placeholder_id) {
-            disconnected_placeholders.push_back(*placeholder_id);
-        }
-    };
-
-    const auto data = to_layout_calculation_data(state.circuit, element_id);
-
-    // inputs
-    iter_input_location_and_id(
-        data, [&, element_id](connection_id_t input_id, point_t position,
-                              orientation_t orientation) {
-            auto input = connector_data_t {{element_id, input_id}, position, orientation};
-            // connect the input using the output_connections cache
-            const auto placeholder_id
-                = connect_connector(input, state.cache.output_cache(), state.schematic);
-            add_if_valid(placeholder_id);
-            return true;
-        });
-
-    // outputs
-    iter_output_location_and_id(data, [&, element_id](connection_id_t output_id,
-                                                      point_t position,
-                                                      orientation_t orientation) mutable {
-        auto output = connector_data_t {{element_id, output_id}, position, orientation};
-        // connect the output using the  input_connections cache
-        const auto placeholder_id
-            = connect_connector(output, state.cache.input_cache(), state.schematic);
-        add_if_valid(placeholder_id);
-        return true;
-    });
-
-    delete_disconnected_placeholders(state.circuit, state.sender,
-                                     disconnected_placeholders, &element_id);
-}
-
 auto insert_logic_item(State state, element_id_t& element_id) {
     // we assume there will be no collision
-    connect_element(state, element_id);
-    add_missing_placeholders_for_outputs(state.circuit, element_id);
+    // connect_element(state, element_id);
 }
 
 // mode change
@@ -518,8 +354,7 @@ auto _element_change_colliding_to_temporary(Circuit& circuit, MessageSender send
         sender.submit(info_message::LogicItemUninserted {element_id, data});
         layout.set_display_state(element_id, display_state_t::temporary);
 
-        disconnect_inputs_and_add_placeholders(circuit, element_id);
-        disconnect_outputs_and_remove_placeholders(circuit, sender, element_id);
+        // TODO uninsert
         return;
     }
 

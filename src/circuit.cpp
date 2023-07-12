@@ -77,11 +77,7 @@ auto Circuit::swap_elements(element_id_t element_id_0, element_id_t element_id_1
 auto validate_connections(Schematic::ConstElement element,
                           display_state_t display_state) {
     if (is_inserted(display_state)) {
-        if (element.is_wire()) {
-            validate_has_no_placeholders(element);
-        } else {
-            validate_all_outputs_connected(element);
-        }
+        validate_has_no_placeholders(element);
     } else {
         validate_all_inputs_disconnected(element);
         validate_all_outputs_disconnected(element);
@@ -157,6 +153,25 @@ auto validate_single_aggregate_trees(const Schematic& schematic, const Layout& l
     }
 }
 
+auto validate_duplicate_data(const Schematic& schematic, const Layout& layout) -> void {
+    for (auto elem1 : schematic.elements()) {
+        auto elem2 = layout.element(elem1.element_id());
+
+        if (elem1.element_type() != elem2.element_type()) {
+            throw_exception("element_type missmatch");
+        }
+        if (elem1.input_count() != elem2.input_count()) {
+            throw_exception("input_count missmatch");
+        }
+        if (elem1.output_count() != elem2.output_count()) {
+            throw_exception("output_count missmatch");
+        }
+        if (elem1.sub_circuit_id() != elem2.sub_circuit_id()) {
+            throw_exception("sub_circuit_id missmatch");
+        }
+    }
+}
+
 auto validate(const Schematic& schematic, const Layout& layout) -> void {
     // layout & schematic
     layout.validate();
@@ -172,6 +187,9 @@ auto validate(const Schematic& schematic, const Layout& layout) -> void {
     if (layout.element_count() != schematic.element_count()) [[unlikely]] {
         throw_exception("layout and elements need to have same element count");
     }
+
+    // duplication
+    validate_duplicate_data(schematic, layout);
 
     // elements consistent
     for (const auto element : schematic.elements()) {

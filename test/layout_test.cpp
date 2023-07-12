@@ -56,7 +56,8 @@ TEST(Layout, ElementProperties) {
 
     EXPECT_EQ(element.input_count(), 3);
     EXPECT_EQ(element.output_count(), 1);
-    EXPECT_EQ(element.position(), point_t(2, 3));
+    auto p = point_t {2, 3};
+    EXPECT_EQ(element.position(), p);
     EXPECT_EQ(element.orientation(), orientation_t::right);
     EXPECT_EQ(element.color(), defaults::color_green);
 
