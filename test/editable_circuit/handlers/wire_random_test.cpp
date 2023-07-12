@@ -19,8 +19,8 @@ namespace logicsim {
 
 namespace {
 auto test_add_many_wires(Rng& rng, bool random_modes) {
-    auto circuit = empty_circuit();
-    auto setup = HandlerSetup {circuit};
+    auto layout = Layout {};
+    auto setup = HandlerSetup {layout};
 
     editable_circuit::examples::add_many_wires(rng, setup.state, random_modes);
 
@@ -66,8 +66,8 @@ auto format(InsertionResult value) -> std::string {
 
 namespace {
 auto get_insertion_result(std::span<const ordered_line_t> lines) {
-    auto circuit = empty_circuit();
-    auto setup = HandlerSetup {circuit};
+    auto layout = Layout {};
+    auto setup = HandlerSetup {layout};
 
     auto result = std::vector<InsertionResult> {};
 
@@ -181,8 +181,8 @@ auto get_all_lines(const Layout& layout, display_state_t state)
 }
 
 auto test_add_wire_states_correct(Rng& rng) {
-    auto circuit = empty_circuit();
-    auto setup = HandlerSetup {circuit};
+    auto layout = Layout {};
+    auto setup = HandlerSetup {layout};
 
     auto data = generate_insertable_line_data(rng);
 
@@ -197,7 +197,7 @@ auto test_add_wire_states_correct(Rng& rng) {
         if (distance(segment_part.part) != distance(entry.line)) [[unlikely]] {
             throw_exception("returned segment has different size than given line");
         }
-        if (get_line(circuit.layout(), segment_part) != entry.line) [[unlikely]] {
+        if (get_line(layout, segment_part) != entry.line) [[unlikely]] {
             throw_exception("the line the segment points to is different");
         }
     }
@@ -211,7 +211,7 @@ auto test_add_wire_states_correct(Rng& rng) {
              display_state_t::normal,
          }) {
         const auto expected_lines = merge_lines(get_expected_lines(data, state));
-        const auto result_lines = merge_lines(get_all_lines(circuit.layout(), state));
+        const auto result_lines = merge_lines(get_all_lines(layout, state));
 
         if (expected_lines != result_lines) [[unlikely]] {
             throw std::runtime_error("expected different lines with this state");
@@ -234,17 +234,17 @@ TEST(HandlerWireFuzz, AddWireStatesCorrect) {
 
 namespace {
 auto test_remove_many_wires(Rng& rng, bool random_modes) {
-    auto circuit = empty_circuit();
-    auto setup = HandlerSetup {circuit};
+    auto layout = Layout {};
+    auto setup = HandlerSetup {layout};
 
     editable_circuit::examples::add_many_wires(rng, setup.state, random_modes);
 
     while (true) {
-        const auto segment = get_random_segment(rng, circuit.layout());
+        const auto segment = get_random_segment(rng, layout);
         if (!segment) {
             break;
         }
-        const auto part = to_part(get_line(circuit.layout(), segment));
+        const auto part = to_part(get_line(layout, segment));
         auto segment_part = segment_part_t {segment, part};
 
         change_wire_insertion_mode(setup.state, segment_part, InsertionMode::temporary);
@@ -252,7 +252,7 @@ auto test_remove_many_wires(Rng& rng, bool random_modes) {
             throw_exception("unexpected segment state");
         }
 
-        delete_wire_segment(setup.circuit.layout(), setup.sender, segment_part);
+        delete_wire_segment(setup.layout, setup.sender, segment_part);
         if (segment_part) {
             throw_exception("segment should be invalid");
         }
@@ -260,8 +260,8 @@ auto test_remove_many_wires(Rng& rng, bool random_modes) {
         setup.validate();
     }
 
-    if (has_segments(circuit.layout())) {
-        throw_exception("circuit should be empty at this point");
+    if (has_segments(layout)) {
+        throw_exception("layout should be empty at this point");
     }
 
     setup.validate();
@@ -290,18 +290,18 @@ TEST(HandlerWireFuzz, RemoveManyWiresDifferentModes) {
 
 namespace {
 auto test_remove_partial_wires(Rng& rng, bool random_modes) {
-    auto circuit = empty_circuit();
-    auto setup = HandlerSetup {circuit};
+    auto layout = Layout {};
+    auto setup = HandlerSetup {layout};
 
     editable_circuit::examples::add_many_wires(rng, setup.state, random_modes);
 
     while (true) {
-        auto segment_part = get_random_segment_part(rng, circuit.layout());
+        auto segment_part = get_random_segment_part(rng, layout);
         if (!segment_part) {
             break;
         }
-        segment_part = sanitize_part(segment_part, circuit.layout(),
-                                     setup.cache.collision_cache(), SanitizeMode::expand);
+        segment_part = sanitize_part(segment_part, layout, setup.cache.collision_cache(),
+                                     SanitizeMode::expand);
         if (!segment_part) {
             throw_exception("invalid segment part");
         }
@@ -312,7 +312,7 @@ auto test_remove_partial_wires(Rng& rng, bool random_modes) {
             throw_exception("invalid segment part");
         }
 
-        delete_wire_segment(setup.circuit.layout(), setup.sender, segment_part);
+        delete_wire_segment(setup.layout, setup.sender, segment_part);
         if (segment_part) {
             throw_exception("segment should be invalid");
         }
@@ -320,8 +320,8 @@ auto test_remove_partial_wires(Rng& rng, bool random_modes) {
         setup.validate();
     }
 
-    if (has_segments(circuit.layout())) {
-        throw_exception("circuit should be empty at this point");
+    if (has_segments(layout)) {
+        throw_exception("layout should be empty at this point");
     }
 
     setup.validate();

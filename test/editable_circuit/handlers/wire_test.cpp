@@ -7,14 +7,9 @@
 namespace logicsim {
 
 namespace {
-auto add_test_wire(Circuit &circuit, display_state_t display_state,
+auto add_test_wire(Layout &layout, display_state_t display_state,
                    SegmentPointType point_type, std::span<const ordered_line_t> lines) {
-    auto &schematic = circuit.schematic();
-    auto &layout = circuit.layout();
-
-    const auto element_id = schematic.add_element(
-        Schematic::ElementData {.element_type = ElementType::wire});
-    layout.add_element({
+    const auto element_id = layout.add_element({
         .display_state = display_state,
         .element_type = ElementType::wire,
     });
@@ -52,23 +47,21 @@ inline auto part(offset_t::value_type begin, offset_t::value_type end) -> part_t
 TEST(EditableCircuitHandlerWire, AddTempSegment) {
     using namespace editable_circuit::info_message;
     using enum display_state_t;
-    auto circuit = empty_circuit();
-    auto &schematic = circuit.schematic();
-    auto &layout = circuit.layout();
+    auto layout = Layout {};
 
-    auto setup = HandlerSetup {circuit};
+    auto setup = HandlerSetup {layout};
     add_wire_segment(setup.state, ordered_line_t {{0, 0}, {10, 0}},
                      InsertionMode::temporary);
 
     setup.validate();
 
-    // circuit
-    assert_element_count(circuit, 2);
+    // layout
+    assert_element_count(layout, 2);
     {
         const auto id_0 = element_id_t {0};
         const auto &tree_0 = layout.segment_tree(id_0);
 
-        ASSERT_EQ(schematic.element(id_0).is_wire(), true);
+        ASSERT_EQ(layout.element(id_0).is_wire(), true);
         ASSERT_EQ(layout.display_state(id_0), display_state_t::temporary);
         ASSERT_EQ(tree_0.segment_count(), 1);
 
@@ -79,7 +72,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
         const auto id_1 = element_id_t {1};
         const auto &tree_1 = layout.segment_tree(id_1);
 
-        ASSERT_EQ(schematic.element(id_1).is_wire(), true);
+        ASSERT_EQ(layout.element(id_1).is_wire(), true);
         ASSERT_EQ(layout.display_state(id_1), display_state_t::colliding);
         ASSERT_EQ(tree_1.segment_count(), 0);
     }
@@ -98,14 +91,12 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
 TEST(EditableCircuitHandlerWire, TempToColliding) {
     using namespace editable_circuit::info_message;
     using enum display_state_t;
-    auto circuit = empty_circuit();
-    auto &schematic = circuit.schematic();
-    auto &layout = circuit.layout();
+    auto layout = Layout {};
 
-    add_test_wire(circuit, temporary, SegmentPointType::shadow_point,
+    add_test_wire(layout, temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
-    add_test_wire(circuit, colliding, SegmentPointType::shadow_point, {});
-    add_test_wire(circuit, normal, SegmentPointType::output,
+    add_test_wire(layout, colliding, SegmentPointType::shadow_point, {});
+    add_test_wire(layout, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
     auto segment_part = segment_part_t {
@@ -113,18 +104,18 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         part_t {offset_t {0}, offset_t {10}},
     };
 
-    auto setup = HandlerSetup {circuit};
+    auto setup = HandlerSetup {layout};
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
 
     setup.validate();
 
-    // circuit
-    assert_element_count(circuit, 3);
+    // layout
+    assert_element_count(layout, 3);
     {
         const auto element_id = element_id_t {0};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), temporary);
         ASSERT_EQ(tree.segment_count(), 0);
     }
@@ -132,7 +123,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         const auto element_id = element_id_t {1};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), colliding);
         ASSERT_EQ(tree.segment_count(), 1);
 
@@ -143,7 +134,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         const auto element_id = element_id_t {2};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), normal);
         ASSERT_EQ(tree.segment_count(), 1);
 
@@ -164,31 +155,29 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
 TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
     using namespace editable_circuit::info_message;
     using enum display_state_t;
-    auto circuit = empty_circuit();
-    auto &schematic = circuit.schematic();
-    auto &layout = circuit.layout();
+    auto layout = Layout {};
 
-    add_test_wire(circuit, temporary, SegmentPointType::shadow_point,
+    add_test_wire(layout, temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
-    add_test_wire(circuit, colliding, SegmentPointType::shadow_point, {});
-    add_test_wire(circuit, normal, SegmentPointType::output,
+    add_test_wire(layout, colliding, SegmentPointType::shadow_point, {});
+    add_test_wire(layout, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
     auto segment_part
         = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(0, 5)};
 
-    auto setup = HandlerSetup {circuit};
+    auto setup = HandlerSetup {layout};
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
 
     setup.validate();
 
-    // circuit
-    assert_element_count(circuit, 3);
+    // layout
+    assert_element_count(layout, 3);
     {
         const auto element_id = element_id_t {0};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), temporary);
         ASSERT_EQ(tree.segment_count(), 1);
 
@@ -199,7 +188,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         const auto element_id = element_id_t {1};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), colliding);
         ASSERT_EQ(tree.segment_count(), 1);
 
@@ -210,7 +199,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         const auto element_id = element_id_t {2};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), normal);
         ASSERT_EQ(tree.segment_count(), 1);
 
@@ -242,14 +231,12 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
 TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     using namespace editable_circuit::info_message;
     using enum display_state_t;
-    auto circuit = empty_circuit();
-    auto &schematic = circuit.schematic();
-    auto &layout = circuit.layout();
+    auto layout = Layout {};
 
-    add_test_wire(circuit, temporary, SegmentPointType::shadow_point,
+    add_test_wire(layout, temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
-    add_test_wire(circuit, colliding, SegmentPointType::shadow_point, {});
-    add_test_wire(circuit, normal, SegmentPointType::output,
+    add_test_wire(layout, colliding, SegmentPointType::shadow_point, {});
+    add_test_wire(layout, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
     auto segment_part = segment_part_t {
@@ -257,18 +244,18 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         part_t {offset_t {2}, offset_t {5}},
     };
 
-    auto setup = HandlerSetup {circuit};
+    auto setup = HandlerSetup {layout};
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
 
     setup.validate();
 
-    // circuit
-    assert_element_count(circuit, 3);
+    // layout
+    assert_element_count(layout, 3);
     {
         const auto element_id = element_id_t {0};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), temporary);
         ASSERT_EQ(tree.segment_count(), 2);
 
@@ -281,7 +268,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         const auto element_id = element_id_t {1};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), colliding);
         ASSERT_EQ(tree.segment_count(), 1);
 
@@ -292,7 +279,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         const auto element_id = element_id_t {2};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), normal);
         ASSERT_EQ(tree.segment_count(), 1);
 
@@ -336,32 +323,30 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
 TEST(EditableCircuitHandlerWire, TempToValid) {
     using namespace editable_circuit::info_message;
     using enum display_state_t;
-    auto circuit = empty_circuit();
-    auto &schematic = circuit.schematic();
-    auto &layout = circuit.layout();
+    auto layout = Layout {};
 
-    add_test_wire(circuit, temporary, SegmentPointType::shadow_point,
+    add_test_wire(layout, temporary, SegmentPointType::shadow_point,
                   std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
-    add_test_wire(circuit, colliding, SegmentPointType::shadow_point, {});
+    add_test_wire(layout, colliding, SegmentPointType::shadow_point, {});
 
     auto segment_part = segment_part_t {
         segment_t {element_id_t {0}, segment_index_t {0}},
         part_t {offset_t {0}, offset_t {10}},
     };
 
-    const auto info_0 = get_segment_info(circuit, segment_part.segment);
+    const auto info_0 = get_segment_info(layout, segment_part.segment);
 
-    auto setup = HandlerSetup {circuit};
+    auto setup = HandlerSetup {layout};
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
     setup.validate();
 
-    // circuit
-    assert_element_count(circuit, 3);
+    // layout
+    assert_element_count(layout, 3);
     {
         const auto element_id = element_id_t {0};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), temporary);
         ASSERT_EQ(tree.segment_count(), 0);
     }
@@ -369,7 +354,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         const auto element_id = element_id_t {1};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), colliding);
         ASSERT_EQ(tree.segment_count(), 0);
     }
@@ -377,7 +362,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         const auto element_id = element_id_t {2};
         const auto &tree = layout.segment_tree(element_id);
 
-        ASSERT_EQ(schematic.element(element_id).is_wire(), true);
+        ASSERT_EQ(layout.element(element_id).is_wire(), true);
         ASSERT_EQ(layout.display_state(element_id), normal);
         ASSERT_EQ(tree.segment_count(), 1);
 

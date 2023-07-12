@@ -86,7 +86,7 @@ auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_mo
 
     auto handle = editable_circuit.add_line_segments(p0, p1, type, mode);
 
-    auto lines = get_sorted_lines(handle.value(), editable_circuit.circuit().layout());
+    auto lines = get_sorted_lines(handle.value(), editable_circuit.layout());
     std::ranges::sort(lines);
     auto result = AddResult {p0, p1, type, mode, std::move(handle), lines};
 
@@ -136,13 +136,13 @@ auto add_many_wires(Rng &rng, EditableCircuit &editable_circuit, bool random_mod
     // print();
     // print();
 
-    verify_selections(data, editable_circuit.circuit().layout());
+    verify_selections(data, editable_circuit.layout());
 
     return data;
 }
 
 auto test_add_many_wires(Rng &rng, bool random_modes) {
-    auto editable_circuit = EditableCircuit {Circuit {Schematic {}, Layout {}}};
+    auto editable_circuit = EditableCircuit {Layout {}};
 
     add_many_wires(rng, editable_circuit, random_modes);
 
