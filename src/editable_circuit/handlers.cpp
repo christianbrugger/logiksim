@@ -561,10 +561,8 @@ auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t poi
 
     if (info.line.p0 == point) {
         info.p0_type = SegmentPointType::cross_point;
-        info.p0_connection_id = null_connection;
     } else if (info.line.p1 == point) {
         info.p1_type = SegmentPointType::cross_point;
-        info.p1_connection_id = null_connection;
     } else [[unlikely]] {
         throw_exception("point is not part of line.");
     }

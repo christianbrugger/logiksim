@@ -42,14 +42,11 @@ struct segment_info_t {
     SegmentPointType p0_type {SegmentPointType::shadow_point};
     SegmentPointType p1_type {SegmentPointType::shadow_point};
 
-    connection_id_t p0_connection_id {null_connection};
-    connection_id_t p1_connection_id {null_connection};
-
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const segment_info_t &other) const -> bool = default;
 };
 
-static_assert(sizeof(segment_info_t) == 12);
+static_assert(sizeof(segment_info_t) == 10);
 
 [[nodiscard]] auto order_points(segment_info_t segment0, segment_info_t segment1)
     -> std::tuple<segment_info_t, segment_info_t>;
@@ -139,7 +136,7 @@ class SegmentTree {
    private:
     using policy = folly::small_vector_policy::policy_size_type<index_t>;
     using segment_vector_t = folly::small_vector<segment_info_t, 2, policy>;
-    static_assert(sizeof(segment_vector_t) == 28);  // 2 * 12 + 4
+    static_assert(sizeof(segment_vector_t) == 24);  // 2 * 10 + 4
 
     using valid_vector_t = folly::small_vector<parts_vector_t, 2, policy>;
     static_assert(sizeof(valid_vector_t) == 24);  // 2 * 10 + 4
@@ -148,12 +145,12 @@ class SegmentTree {
     valid_vector_t valid_parts_vector_ {};
 
     index_t output_count_ {0};
-    // TODO do we need input position? -> yes for conversion
+    // optional has bad memory size, so we do it ourselves
     point_t input_position_ {};
     bool has_input_ {false};
 };
 
-static_assert(sizeof(SegmentTree) == 64);  // 28 + 24 + 4 + 4 + 1 (+ 1)
+static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 4 + 1 (+ 3)
 
 auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
 

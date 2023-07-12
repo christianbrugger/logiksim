@@ -61,9 +61,6 @@ auto adjust(const segment_info_t segment_info, const part_t part) -> segment_inf
 
         .p0_type = p0_changed ? SegmentPointType::shadow_point : segment_info.p0_type,
         .p1_type = p1_changed ? SegmentPointType::shadow_point : segment_info.p1_type,
-
-        .p0_connection_id = p0_changed ? null_connection : segment_info.p0_connection_id,
-        .p1_connection_id = p1_changed ? null_connection : segment_info.p1_connection_id,
     };
 }
 
@@ -80,20 +77,11 @@ auto merge_touching(const segment_info_t segment_info_0,
 
         .p0_type = a.p0_type,
         .p1_type = b.p1_type,
-
-        .p0_connection_id = a.p0_connection_id,
-        .p1_connection_id = b.p1_connection_id,
     };
 }
 
 auto segment_info_t::format() const -> std::string {
-    const auto connection_string_0
-        = p0_connection_id ? p0_connection_id.format() + " " : "";
-    const auto connection_string_1
-        = p1_connection_id ? " " + p1_connection_id.format() : "";
-
-    return fmt::format("Segment({}{} {} - {} {}{})", connection_string_0, p0_type,
-                       line.p0, line.p1, p1_type, connection_string_1);
+    return fmt::format("Segment({} {} - {} {})", p0_type, line.p0, line.p1, p1_type);
 }
 
 //
