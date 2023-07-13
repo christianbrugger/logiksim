@@ -86,10 +86,8 @@ auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cac
     bool all_good
         = iter_output_location(data, [&](point_t position, orientation_t orientation) {
               if (const auto entry = cache.output_cache().find(position)) {
-                  if (!entry->is_wire_segment()) {
-                      return false;
-                  }
-                  if (!orientations_compatible(orientation, entry->orientation)) {
+                  if (!entry->is_wire_segment()
+                      || !orientations_compatible(orientation, entry->orientation)) {
                       return false;
                   }
                   candidates.push_back({position, entry->segment()});
@@ -401,13 +399,32 @@ auto move_or_delete_logic_item(Layout& layout, MessageSender sender,
 //
 // logic item mode change
 //
+
+auto any_circuit_item_inputs_colliding(const Layout& layout, const CacheProvider& cache,
+                                       layout_calculation_data_t data) -> bool {
+    const auto compatible = [&](point_t position, orientation_t orientation) -> bool {
+        if (const auto entry = cache.output_cache().find(position)) {
+            return entry->is_wire_segment()
+                   && orientations_compatible(orientation, entry->orientation);
+        }
+        return true;
+    };
+
+    return !iter_input_location(data, compatible);
+}
+
+auto any_circuit_item_outputs_colliding(const Layout& layout, const CacheProvider& cache,
+                                        layout_calculation_data_t data) -> bool {
+    return find_convertible_wire_inputs(layout, cache, data).any_collisions;
+}
+
 auto is_circuit_item_colliding(const Layout& layout, const CacheProvider& cache,
                                const element_id_t element_id) {
     const auto data = to_layout_calculation_data(layout, element_id);
 
     return cache.collision_cache().is_colliding(data)
-           || cache.input_cache().is_colliding(data)
-           || find_convertible_wire_inputs(layout, cache, data).any_collisions;
+           || any_circuit_item_inputs_colliding(layout, cache, data)
+           || any_circuit_item_outputs_colliding(layout, cache, data);
 }
 
 auto insert_logic_item_wire_conversion(State state, const element_id_t element_id) {
