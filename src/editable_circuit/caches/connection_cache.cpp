@@ -264,7 +264,8 @@ auto find_impl(const ConnectionCache<IsInput>& cache, point_t position,
     }
 
     // nullopt with correct type
-    using entry_result_t = decltype(to_connection_entry<IsInput>(schematic, {}));
+    using entry_result_t = decltype(to_connection_entry<IsInput>(
+        schematic, std::declval<detail::connection_cache::connection_data_t>()));
     return std::optional<entry_result_t> {};
 }
 

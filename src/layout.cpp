@@ -84,6 +84,18 @@ auto get_segment_info(const Layout &layout, segment_t segment) -> segment_info_t
     return layout.segment_tree(segment.element_id).segment_info(segment.segment_index);
 }
 
+auto get_segment_point_type(const Layout &layout, segment_t segment, point_t position)
+    -> SegmentPointType {
+    const auto info = get_segment_info(layout, segment);
+
+    if (info.line.p0 == position) {
+        return info.p0_type;
+    } else if (info.line.p1 == position) {
+        return info.p1_type;
+    };
+    throw_exception("Position needs to be an endpoint of the segment.");
+}
+
 auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t {
     return get_segment_info(layout, segment).line;
 }

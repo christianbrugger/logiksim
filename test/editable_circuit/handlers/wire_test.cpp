@@ -20,8 +20,6 @@ auto add_test_wire(Layout &layout, display_state_t display_state,
             .line = line,
             .p0_type = point_type,
             .p1_type = point_type,
-            .p0_connection_id = null_connection,
-            .p1_connection_id = null_connection,
         });
     }
 }

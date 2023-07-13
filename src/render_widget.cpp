@@ -70,8 +70,8 @@ auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
     assert(!temp_element_);
 
     if (position.has_value()) {
-        temp_element_ = editable_circuit_.add_standard_logic_item(
-            ElementType::flipflop_jk, 5, *position, mode);
+        temp_element_ = editable_circuit_.add_standard_logic_item(ElementType::or_element,
+                                                                  2, *position, mode);
     }
 }
 

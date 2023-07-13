@@ -556,10 +556,10 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
     using enum ElementType;
     const auto type = attributes.type;
 
-    // if (!(type == and_element || type == or_element || type == xor_element
-    //       || type == inverter_element)) [[unlikely]] {
-    //     throw_exception("The type needs to be a standard element.");
-    // }
+    if (!(type == and_element || type == or_element || type == xor_element
+          || type == inverter_element)) [[unlikely]] {
+        throw_exception("The type needs to be a standard element.");
+    }
     if (type == inverter_element && attributes.input_count != 1) [[unlikely]] {
         throw_exception("Inverter needs to have exactly one input.");
     }
@@ -574,7 +574,7 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
                               .element_type = attributes.type,
 
                               .input_count = attributes.input_count,
-                              .output_count = 2,
+                              .output_count = 1,
                               .position = point_t {0, 0},
                               .orientation = attributes.orientation,
                           })
@@ -1405,12 +1405,16 @@ auto fix_and_merge_segments(State state, const point_t position,
     const auto indices = get_segment_indices(segments);
 
     if (segment_count == 1) {
-        update_segment_point_types(
-            state.layout, state.sender, element_id,
-            {
-                std::pair {indices.at(0), SegmentPointType::output},
-            },
-            position);
+        const auto new_type = get_segment_point_type(layout, segments.at(0), position)
+                                      == SegmentPointType::input
+                                  ? SegmentPointType::input
+                                  : SegmentPointType::output;
+
+        update_segment_point_types(state.layout, state.sender, element_id,
+                                   {
+                                       std::pair {indices.at(0), new_type},
+                                   },
+                                   position);
 
         return;
     }
@@ -1524,6 +1528,30 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
     return add_new_wire_element(state.layout, display_state_t::normal);
 }
 
+auto discover_wire_inputs(Layout& layout, const CacheProvider& cache, segment_t segment) {
+    const auto line = get_line(layout, segment);
+
+    // find LogicItem outputs
+    if (const auto entry = cache.output_cache().find(line.p0)) {
+        if (entry->is_connection()) {
+            auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
+            auto info = m_tree.segment_info(segment.segment_index);
+
+            info.p0_type = SegmentPointType::input;
+            m_tree.update_segment(segment.segment_index, info);
+        }
+    }
+    if (const auto entry = cache.output_cache().find(line.p1)) {
+        if (entry->is_connection()) {
+            auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
+            auto info = m_tree.segment_info(segment.segment_index);
+
+            info.p1_type = SegmentPointType::input;
+            m_tree.update_segment(segment.segment_index, info);
+        }
+    }
+}
+
 auto insert_wire(State state, segment_part_t& segment_part) -> void {
     if (is_inserted(state.layout, segment_part.segment.element_id)) {
         throw_exception("segment is already inserted");
@@ -1531,13 +1559,12 @@ auto insert_wire(State state, segment_part_t& segment_part) -> void {
     const auto target_wire_id = find_wire_for_inserting_segment(state, segment_part);
 
     reset_segment_endpoints(state.layout, segment_part.segment);
+    discover_wire_inputs(state.layout, state.cache, segment_part.segment);
     move_segment_between_trees(state.layout, state.sender, segment_part, target_wire_id);
 
     const auto line = get_line(state.layout, segment_part);
     fix_and_merge_segments(state, line.p0, &segment_part);
     fix_and_merge_segments(state, line.p1, &segment_part);
-
-    // TODO connect segment
 
 #ifndef NDEBUG
     state.layout.segment_tree(target_wire_id).validate_inserted();

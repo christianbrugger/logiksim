@@ -22,6 +22,8 @@ class Layout;
 
 [[nodiscard]] auto get_segment_info(const Layout &layout, segment_t segment)
     -> segment_info_t;
+[[nodiscard]] auto get_segment_point_type(const Layout &layout, segment_t segment,
+                                          point_t position) -> SegmentPointType;
 [[nodiscard]] auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t;
 [[nodiscard]] auto get_line(const Layout &layout, segment_part_t segment_part)
     -> ordered_line_t;
