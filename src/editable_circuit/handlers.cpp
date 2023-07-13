@@ -105,13 +105,14 @@ auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cac
     return {.convertible_inputs = std::move(candidates), .any_collisions = false};
 }
 
-auto assert_is_output(SegmentPointType type) -> void {
-    if (type != SegmentPointType::output) [[unlikely]] {
-        throw_exception("expected output");
+auto assert_equal_type(SegmentPointType type, SegmentPointType expected) -> void {
+    if (type != expected) [[unlikely]] {
+        throw_exception("type is not of expected type");
     }
 }
 
-auto convert_to_input(Layout& layout, MessageSender sender, wire_connection_t output) {
+auto convert_from_to(Layout& layout, MessageSender sender, wire_connection_t output,
+                     SegmentPointType from_type, SegmentPointType to_type) {
     const auto element = layout.element(output.segment.element_id);
 
     if (!element.is_wire() || !element.is_inserted()) [[unlikely]] {
@@ -123,12 +124,16 @@ auto convert_to_input(Layout& layout, MessageSender sender, wire_connection_t ou
     auto new_info = old_info;
 
     if (new_info.line.p0 == output.position) {
-        assert_is_output(new_info.p0_type);
-        new_info.p0_type = SegmentPointType::input;
-    } else if (new_info.line.p1 == output.position) {
-        assert_is_output(new_info.p1_type);
-        new_info.p1_type = SegmentPointType::input;
-    } else [[unlikely]] {
+        assert_equal_type(new_info.p0_type, from_type);
+        new_info.p0_type = to_type;
+    }
+
+    else if (new_info.line.p1 == output.position) {
+        assert_equal_type(new_info.p1_type, from_type);
+        new_info.p1_type = to_type;
+    }
+
+    else [[unlikely]] {
         throw_exception("connector position is not part of segment line");
     }
 
@@ -139,6 +144,16 @@ auto convert_to_input(Layout& layout, MessageSender sender, wire_connection_t ou
         .new_segment_info = new_info,
         .old_segment_info = old_info,
     });
+}
+
+auto convert_to_input(Layout& layout, MessageSender sender, wire_connection_t output) {
+    convert_from_to(layout, sender, output, SegmentPointType::output,
+                    SegmentPointType::input);
+}
+
+auto convert_to_output(Layout& layout, MessageSender sender, wire_connection_t output) {
+    convert_from_to(layout, sender, output, SegmentPointType::input,
+                    SegmentPointType::output);
 }
 
 auto convert_to_inputs(Layout& layout, MessageSender sender, wire_connections_t outputs) {
@@ -395,7 +410,7 @@ auto is_circuit_item_colliding(const Layout& layout, const CacheProvider& cache,
            || find_convertible_wire_inputs(layout, cache, data).any_collisions;
 }
 
-auto insert_logic_item(State state, element_id_t& element_id) {
+auto insert_logic_item_wire_conversion(State state, const element_id_t element_id) {
     const auto element = state.layout.element(element_id);
     const auto data = element.to_layout_calculation_data();
 
@@ -409,13 +424,31 @@ auto insert_logic_item(State state, element_id_t& element_id) {
     convert_to_inputs(state.layout, state.sender, result.convertible_inputs);
 }
 
+auto uninsert_logic_item_wire_conversion(State state, element_id_t element_id) -> void {
+    const auto data = to_layout_calculation_data(state.layout, element_id);
+
+    iter_output_location(data, [&](point_t position, orientation_t orientation) {
+        if (const auto entry = state.cache.input_cache().find(position)) {
+            const auto connection = wire_connection_t {position, entry->segment()};
+            convert_to_output(state.layout, state.sender, connection);
+        }
+        return true;
+    });
+}
+
 auto notify_logic_item_inserted(const Layout& layout, MessageSender sender,
                                 const element_id_t element_id) {
     const auto data = to_layout_calculation_data(layout, element_id);
     sender.submit(info_message::LogicItemInserted {element_id, data});
 }
 
-auto _element_change_temporary_to_colliding(State state, element_id_t& element_id)
+auto notify_logic_item_uninserted(const Layout& layout, MessageSender sender,
+                                  const element_id_t element_id) {
+    const auto data = to_layout_calculation_data(layout, element_id);
+    sender.submit(info_message::LogicItemUninserted {element_id, data});
+}
+
+auto _element_change_temporary_to_colliding(State state, const element_id_t element_id)
     -> void {
     if (state.layout.display_state(element_id) != display_state_t::temporary)
         [[unlikely]] {
@@ -425,7 +458,7 @@ auto _element_change_temporary_to_colliding(State state, element_id_t& element_i
     if (is_circuit_item_colliding(state.layout, state.cache, element_id)) {
         state.layout.set_display_state(element_id, display_state_t::colliding);
     } else {
-        insert_logic_item(state, element_id);
+        insert_logic_item_wire_conversion(state, element_id);
         state.layout.set_display_state(element_id, display_state_t::valid);
         notify_logic_item_inserted(state.layout, state.sender, element_id);
     }
@@ -459,21 +492,19 @@ auto _element_change_insert_to_colliding(Layout& layout, const element_id_t elem
     layout.set_display_state(element_id, display_state_t::valid);
 };
 
-auto _element_change_colliding_to_temporary(Layout& layout, MessageSender sender,
-                                            element_id_t& element_id) -> void {
-    const auto display_state = layout.display_state(element_id);
+auto _element_change_colliding_to_temporary(State state, const element_id_t element_id)
+    -> void {
+    const auto display_state = state.layout.display_state(element_id);
 
     if (display_state == display_state_t::valid) {
-        const auto data = to_layout_calculation_data(layout, element_id);
-        sender.submit(info_message::LogicItemUninserted {element_id, data});
-        layout.set_display_state(element_id, display_state_t::temporary);
-
-        // TODO uninsert
+        notify_logic_item_uninserted(state.layout, state.sender, element_id);
+        state.layout.set_display_state(element_id, display_state_t::temporary);
+        uninsert_logic_item_wire_conversion(state, element_id);
         return;
     }
 
     if (display_state == display_state_t::colliding) {
-        layout.set_display_state(element_id, display_state_t::temporary);
+        state.layout.set_display_state(element_id, display_state_t::temporary);
         return;
     }
 
@@ -504,7 +535,7 @@ auto change_logic_item_insertion_mode_private(State state, element_id_t& element
         _element_change_insert_to_colliding(state.layout, element_id);
     }
     if (new_mode == InsertionMode::temporary) {
-        _element_change_colliding_to_temporary(state.layout, state.sender, element_id);
+        _element_change_colliding_to_temporary(state, element_id);
     }
 }
 
@@ -717,7 +748,9 @@ auto add_segment_to_aggregate(Layout& layout, MessageSender sender,
     return add_segment_to_tree(layout, sender, element_id, line);
 }
 
-// insertion mode changing
+//
+// wire insertion mode changing
+//
 
 auto is_wire_colliding(const CacheProvider& cache, const ordered_line_t line) -> bool {
     // TODO connections colliding
