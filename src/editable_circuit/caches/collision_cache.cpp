@@ -508,18 +508,7 @@ auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
     return null_element;
 }
 
-auto CollisionCache::creates_loop(ordered_line_t line) const -> bool {
-    const auto element_id_0 = get_first_wire(line.p0);
-    const auto element_id_1 = get_first_wire(line.p1);
-
-    return element_id_0 && element_id_0 == element_id_1;
-}
-
 auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
-    if (creates_loop(line)) {
-        return true;
-    }
-
     const auto segment = segment_info_t {
         .line = line,
         .p0_type = SegmentPointType::new_unknown,

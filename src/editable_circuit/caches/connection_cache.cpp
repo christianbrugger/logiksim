@@ -149,14 +149,14 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
     const auto line = segment_info.line;
 
     if (segment_info.p0_type == point_type) {
-        const auto orientation = to_orientation(line.p1, line.p0);
+        const auto orientation = to_orientation_p0(line);
 
         if (!next_connection(null_connection, line.p0, orientation)) {
             return false;
         }
     }
     if (segment_info.p1_type == point_type) {
-        const auto orientation = to_orientation(line.p0, line.p1);
+        const auto orientation = to_orientation_p1(line);
 
         if (!next_connection(null_connection, line.p1, orientation)) {
             return false;

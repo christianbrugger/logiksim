@@ -40,6 +40,8 @@ auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t;
 
 // from p0 to p1
 auto to_orientation(point_t p0, point_t p1) -> orientation_t;
+auto to_orientation_p0(ordered_line_t line) -> orientation_t;
+auto to_orientation_p1(ordered_line_t line) -> orientation_t;
 
 // angle in respect to left orientation
 auto to_angle(orientation_t orientation) -> double;

@@ -752,9 +752,72 @@ auto add_segment_to_aggregate(Layout& layout, MessageSender sender,
 // wire insertion mode changing
 //
 
-auto is_wire_colliding(const CacheProvider& cache, const ordered_line_t line) -> bool {
-    // TODO connections colliding
-    return cache.collision_cache().is_colliding(line);
+auto wire_endpoints_colliding(const Layout& layout, const CacheProvider& cache,
+                              ordered_line_t line) -> bool {
+    const auto wire_id_0 = cache.collision_cache().get_first_wire(line.p0);
+    const auto wire_id_1 = cache.collision_cache().get_first_wire(line.p1);
+
+    // loop check
+    if (wire_id_0 && wire_id_0 == wire_id_1) {
+        return true;
+    }
+
+    // count existing inputs
+    auto input_count = 0;
+    if (wire_id_0 && layout.element(wire_id_0).segment_tree().has_input()) {
+        ++input_count;
+    }
+    if (wire_id_1 && layout.element(wire_id_1).segment_tree().has_input()) {
+        ++input_count;
+    }
+    if (input_count > 1) {
+        return true;
+    }
+
+    // check for LogicItem Outputs  (requires additional inputs)
+    if (!wire_id_0) {
+        if (const auto entry = cache.output_cache().find(line.p0)) {
+            if (!orientations_compatible(entry->orientation, to_orientation_p0(line))) {
+                return true;
+            }
+            ++input_count;
+        }
+    }
+    if (!wire_id_1) {
+        if (const auto entry = cache.output_cache().find(line.p1)) {
+            if (!orientations_compatible(entry->orientation, to_orientation_p1(line))) {
+                return true;
+            }
+            ++input_count;
+        }
+    }
+    if (input_count > 1) {
+        return true;
+    }
+
+    // check for LogicItem Inputs
+    if (!wire_id_0) {
+        if (const auto entry = cache.input_cache().find(line.p0)) {
+            if (!orientations_compatible(entry->orientation, to_orientation_p0(line))) {
+                return true;
+            }
+        }
+    }
+    if (!wire_id_1) {
+        if (const auto entry = cache.input_cache().find(line.p1)) {
+            if (!orientations_compatible(entry->orientation, to_orientation_p1(line))) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+auto is_wire_colliding(const Layout& layout, const CacheProvider& cache,
+                       const ordered_line_t line) -> bool {
+    return wire_endpoints_colliding(layout, cache, line)
+           || cache.collision_cache().is_colliding(line);
 }
 
 auto get_display_states(const Layout& layout, const segment_part_t segment_part)
@@ -1494,7 +1557,7 @@ auto unmark_valid(Layout& layout, const segment_part_t segment_part) {
 auto _wire_change_temporary_to_colliding(State state, segment_part_t& segment_part)
     -> void {
     const auto line = get_line(state.layout, segment_part);
-    bool colliding = is_wire_colliding(state.cache, line);
+    bool colliding = is_wire_colliding(state.layout, state.cache, line);
 
     if (colliding) {
         const auto destination = get_or_create_aggregate(state.layout, state.sender,
@@ -1538,8 +1601,8 @@ auto delete_empty_tree(Layout& layout, MessageSender sender, element_id_t elemen
     swap_and_delete_single_element_private(layout, sender, element_id, preserve_element);
 }
 
-// we assume we get a valid tree where the part between p0 and p1 has been removed
-// this method puts the segments at p1 into a new tree
+// we assume we get a valid tree where the part between p0 and p1
+// has been removed this method puts the segments at p1 into a new tree
 auto split_broken_tree(State state, point_t p0, point_t p1) -> element_id_t {
     const auto p0_tree_id = state.cache.collision_cache().get_first_wire(p0);
     const auto p1_tree_id = state.cache.collision_cache().get_first_wire(p1);

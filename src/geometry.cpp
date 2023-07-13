@@ -77,6 +77,14 @@ auto to_orientation(point_t p0, point_t p1) -> orientation_t {
     throw_exception("unexpected case");
 }
 
+auto to_orientation_p0(ordered_line_t line) -> orientation_t {
+    return to_orientation(line.p1, line.p0);
+}
+
+auto to_orientation_p1(ordered_line_t line) -> orientation_t {
+    return to_orientation(line.p0, line.p1);
+}
+
 auto to_angle(orientation_t orientation) -> double {
     switch (orientation) {
         using enum orientation_t;
