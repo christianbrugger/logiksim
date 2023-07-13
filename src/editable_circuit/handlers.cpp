@@ -21,6 +21,135 @@ namespace logicsim {
 namespace editable_circuit {
 
 //
+// Wire Input Conversions
+//
+
+namespace {
+
+struct wire_connection_t {
+    point_t position;
+    segment_t segment;
+
+    auto format() const -> std::string {
+        return fmt::format("({}, {})", position, segment);
+    }
+};
+
+using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
+using wire_connections_t = folly::small_vector<wire_connection_t, 3, policy>;
+
+static_assert(sizeof(wire_connection_t) == 12);
+static_assert(sizeof(wire_connections_t) == 40);
+
+auto has_duplicate_element_ids(wire_connections_t connections) -> bool {
+    auto to_element_id = [](wire_connection_t input) { return input.segment.element_id; };
+
+    std::ranges::sort(connections, std::ranges::less {}, to_element_id);
+
+    return std::ranges::adjacent_find(connections, std::ranges::equal_to {},
+                                      to_element_id)
+           != connections.end();
+}
+
+auto is_convertible_to_input(const Layout& layout, element_id_t element_id) -> bool {
+    const auto element = layout.element(element_id);
+
+    if (!element.is_wire()) [[unlikely]] {
+        throw_exception("only works for wires");
+    }
+
+    return !element.segment_tree().has_input();
+}
+
+auto all_convertible_to_input(const Layout& layout, wire_connections_t connections)
+    -> bool {
+    return std::ranges::all_of(connections, [&](wire_connection_t input) {
+        return is_convertible_to_input(layout, input.segment.element_id);
+    });
+}
+
+struct convertible_inputs_result_t {
+    wire_connections_t convertible_inputs {};
+    bool any_collisions {false};
+
+    auto format() const -> std::string {
+        return fmt::format("<any_collisions = {}, convertible_inputs = {}>",
+                           any_collisions, convertible_inputs);
+    }
+};
+
+auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cache,
+                                  layout_calculation_data_t data)
+    -> convertible_inputs_result_t {
+    auto candidates = wire_connections_t {};
+
+    bool all_good
+        = iter_output_location(data, [&](point_t position, orientation_t orientation) {
+              if (const auto entry = cache.output_cache().find(position)) {
+                  if (!entry->is_wire_segment()) {
+                      return false;
+                  }
+                  if (!orientations_compatible(orientation, entry->orientation)) {
+                      return false;
+                  }
+                  candidates.push_back({position, entry->segment()});
+              }
+              return true;
+          });
+
+    if (!all_good || has_duplicate_element_ids(candidates)
+        || !all_convertible_to_input(layout, candidates)) {
+        return {.convertible_inputs = {}, .any_collisions = true};
+    }
+
+    return {.convertible_inputs = std::move(candidates), .any_collisions = false};
+}
+
+auto assert_is_output(SegmentPointType type) -> void {
+    if (type != SegmentPointType::output) [[unlikely]] {
+        throw_exception("expected output");
+    }
+}
+
+auto convert_to_input(Layout& layout, MessageSender sender, wire_connection_t output) {
+    const auto element = layout.element(output.segment.element_id);
+
+    if (!element.is_wire() || !element.is_inserted()) [[unlikely]] {
+        throw_exception("can only convert inserted wires");
+    }
+
+    auto& m_tree = element.modifyable_segment_tree();
+    const auto old_info = m_tree.segment_info(output.segment.segment_index);
+    auto new_info = old_info;
+
+    if (new_info.line.p0 == output.position) {
+        assert_is_output(new_info.p0_type);
+        new_info.p0_type = SegmentPointType::input;
+    } else if (new_info.line.p1 == output.position) {
+        assert_is_output(new_info.p1_type);
+        new_info.p1_type = SegmentPointType::input;
+    } else [[unlikely]] {
+        throw_exception("connector position is not part of segment line");
+    }
+
+    m_tree.update_segment(output.segment.segment_index, new_info);
+
+    sender.submit(info_message::InsertedEndPointsUpdated {
+        .segment = output.segment,
+        .new_segment_info = new_info,
+        .old_segment_info = old_info,
+    });
+}
+
+auto convert_to_inputs(Layout& layout, MessageSender sender, wire_connections_t outputs) {
+    for (auto output : outputs) {
+        convert_to_input(layout, sender, output);
+    }
+}
+
+}  // namespace
+
+//
 // Deletion Handling
 //
 
@@ -254,120 +383,34 @@ auto move_or_delete_logic_item(Layout& layout, MessageSender sender,
     move_or_delete_logic_item_private(layout, sender, element_id, x, y);
 }
 
-// mode change helpers
-
-auto insert_logic_item(State state, element_id_t& element_id) {
-    // we assume there will be no collision
-    // connect_element(state, element_id);
-}
-
-// mode change
-
-namespace {
-
-// TODO rename
-struct wire_input_t {
-    point_t position;
-    segment_t segment;
-
-    auto format() const -> std::string {
-        return fmt::format("({}, {})", position, segment);
-    }
-};
-
-using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
-using wire_inputs_t = folly::small_vector<wire_input_t, 3, policy>;
-
-static_assert(sizeof(wire_input_t) == 12);
-static_assert(sizeof(wire_inputs_t) == 40);
-
-auto has_duplicate_element_ids(wire_inputs_t inputs) -> bool {
-    auto to_element_id = [](wire_input_t input) { return input.segment.element_id; };
-
-    std::ranges::sort(inputs, std::ranges::less {}, to_element_id);
-
-    return std::ranges::adjacent_find(inputs, std::ranges::equal_to {}, to_element_id)
-           != inputs.end();
-}
-
-auto is_wire_convertible(const Layout& layout, element_id_t element_id) -> bool {
-    const auto element = layout.element(element_id);
-
-    if (!element.is_wire()) [[unlikely]] {
-        throw_exception("only works for wires");
-    }
-
-    return !element.segment_tree().has_input();
-}
-
-auto all_wires_convertible(const Layout& layout, wire_inputs_t inputs) -> bool {
-    return std::ranges::all_of(inputs, [&](wire_input_t input) {
-        return is_wire_convertible(layout, input.segment.element_id);
-    });
-}
-
-struct convertible_inputs_result_t {
-    wire_inputs_t convertible_inputs {};
-    bool any_collisions {false};
-
-    auto format() const -> std::string {
-        return fmt::format("<any_collisions = {}, convertible_inputs = {}>",
-                           any_collisions, convertible_inputs);
-    }
-};
-
-auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cache,
-                                  layout_calculation_data_t data)
-    -> convertible_inputs_result_t {
-    auto candidates = wire_inputs_t {};
-
-    bool all_good
-        = iter_output_location(data, [&](point_t position, orientation_t orientation) {
-              if (const auto entry = cache.output_cache().find(position)) {
-                  if (!entry->is_wire_segment()) {
-                      return false;
-                  }
-                  if (!orientations_compatible(orientation, entry->orientation)) {
-                      return false;
-                  }
-                  candidates.push_back({position, entry->segment()});
-              }
-              return true;
-          });
-
-    if (!all_good || has_duplicate_element_ids(candidates)
-        || !all_wires_convertible(layout, candidates)) {
-        return {.convertible_inputs = {}, .any_collisions = true};
-    }
-
-    return {.convertible_inputs = std::move(candidates), .any_collisions = false};
-}
-}  // namespace
-
+//
+// logic item mode change
+//
 auto is_circuit_item_colliding(const Layout& layout, const CacheProvider& cache,
                                const element_id_t element_id) {
     const auto data = to_layout_calculation_data(layout, element_id);
 
-    if (cache.collision_cache().is_colliding(data)
-        || cache.input_cache().is_colliding(data)) {
-        return true;
-    }
-
-    auto result = find_convertible_wire_inputs(layout, cache, data);
-    print(result);
-
-    if (result.any_collisions) {
-        return true;
-    }
-    if (!result.convertible_inputs.empty()) {
-        return true;
-    }
-
-    return false;
+    return cache.collision_cache().is_colliding(data)
+           || cache.input_cache().is_colliding(data)
+           || find_convertible_wire_inputs(layout, cache, data).any_collisions;
 }
 
-auto notify_circuit_item_inserted(const Layout& layout, MessageSender sender,
-                                  const element_id_t element_id) {
+auto insert_logic_item(State state, element_id_t& element_id) {
+    const auto element = state.layout.element(element_id);
+    const auto data = element.to_layout_calculation_data();
+
+    auto result = find_convertible_wire_inputs(state.layout, state.cache, data);
+
+    // we assume there will be no collision at this point
+    if (result.any_collisions) [[unlikely]] {
+        throw_exception("inserted logic item is colliding");
+    }
+
+    convert_to_inputs(state.layout, state.sender, result.convertible_inputs);
+}
+
+auto notify_logic_item_inserted(const Layout& layout, MessageSender sender,
+                                const element_id_t element_id) {
     const auto data = to_layout_calculation_data(layout, element_id);
     sender.submit(info_message::LogicItemInserted {element_id, data});
 }
@@ -384,7 +427,7 @@ auto _element_change_temporary_to_colliding(State state, element_id_t& element_i
     } else {
         insert_logic_item(state, element_id);
         state.layout.set_display_state(element_id, display_state_t::valid);
-        notify_circuit_item_inserted(state.layout, state.sender, element_id);
+        notify_logic_item_inserted(state.layout, state.sender, element_id);
     }
 };
 
@@ -1272,6 +1315,7 @@ auto fix_and_merge_segments(State state, const point_t position,
                 std::pair {indices.at(0), SegmentPointType::output},
             },
             position);
+
         return;
     }
 
