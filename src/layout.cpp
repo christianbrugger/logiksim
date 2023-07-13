@@ -3,6 +3,7 @@
 
 #include "exceptions.h"
 #include "iterator_adaptor.h"
+#include "layout_calculation_type.h"
 #include "range.h"
 
 namespace logicsim {
@@ -366,6 +367,12 @@ auto ElementTemplate<Const>::format() const -> std::string {
 }
 
 template <bool Const>
+auto ElementTemplate<Const>::to_layout_calculation_data() const
+    -> layout_calculation_data_t {
+    return logicsim::to_layout_calculation_data(layout(), element_id());
+}
+
+template <bool Const>
 auto ElementTemplate<Const>::layout() const noexcept -> LayoutType & {
     return *layout_;
 }
@@ -453,6 +460,11 @@ auto ElementTemplate<Const>::orientation() const -> orientation_t {
 template <bool Const>
 auto ElementTemplate<Const>::display_state() const -> display_state_t {
     return layout_->display_state(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::is_inserted() const -> bool {
+    return logicsim::is_inserted(this->display_state());
 }
 
 template <bool Const>

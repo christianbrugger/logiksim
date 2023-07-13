@@ -263,10 +263,107 @@ auto insert_logic_item(State state, element_id_t& element_id) {
 
 // mode change
 
+namespace {
+
+// TODO rename
+struct wire_input_t {
+    point_t position;
+    segment_t segment;
+
+    auto format() const -> std::string {
+        return fmt::format("({}, {})", position, segment);
+    }
+};
+
+using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
+using wire_inputs_t = folly::small_vector<wire_input_t, 3, policy>;
+
+static_assert(sizeof(wire_input_t) == 12);
+static_assert(sizeof(wire_inputs_t) == 40);
+
+auto has_duplicate_element_ids(wire_inputs_t inputs) -> bool {
+    auto to_element_id = [](wire_input_t input) { return input.segment.element_id; };
+
+    std::ranges::sort(inputs, std::ranges::less {}, to_element_id);
+
+    return std::ranges::adjacent_find(inputs, std::ranges::equal_to {}, to_element_id)
+           != inputs.end();
+}
+
+auto is_wire_convertible(const Layout& layout, element_id_t element_id) -> bool {
+    const auto element = layout.element(element_id);
+
+    if (!element.is_wire()) [[unlikely]] {
+        throw_exception("only works for wires");
+    }
+
+    return !element.segment_tree().has_input();
+}
+
+auto all_wires_convertible(const Layout& layout, wire_inputs_t inputs) -> bool {
+    return std::ranges::all_of(inputs, [&](wire_input_t input) {
+        return is_wire_convertible(layout, input.segment.element_id);
+    });
+}
+
+struct convertible_inputs_result_t {
+    wire_inputs_t convertible_inputs {};
+    bool any_collisions {false};
+
+    auto format() const -> std::string {
+        return fmt::format("<any_collisions = {}, convertible_inputs = {}>",
+                           any_collisions, convertible_inputs);
+    }
+};
+
+auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cache,
+                                  layout_calculation_data_t data)
+    -> convertible_inputs_result_t {
+    auto candidates = wire_inputs_t {};
+
+    bool all_good
+        = iter_output_location(data, [&](point_t position, orientation_t orientation) {
+              if (const auto entry = cache.output_cache().find(position)) {
+                  if (!entry->is_wire_segment()) {
+                      return false;
+                  }
+                  if (!orientations_compatible(orientation, entry->orientation)) {
+                      return false;
+                  }
+                  candidates.push_back({position, entry->segment()});
+              }
+              return true;
+          });
+
+    if (!all_good || has_duplicate_element_ids(candidates)
+        || !all_wires_convertible(layout, candidates)) {
+        return {.convertible_inputs = {}, .any_collisions = true};
+    }
+
+    return {.convertible_inputs = std::move(candidates), .any_collisions = false};
+}
+}  // namespace
+
 auto is_circuit_item_colliding(const Layout& layout, const CacheProvider& cache,
                                const element_id_t element_id) {
     const auto data = to_layout_calculation_data(layout, element_id);
-    return cache.is_element_colliding(data);
+
+    if (cache.collision_cache().is_colliding(data)
+        || cache.input_cache().is_colliding(data)) {
+        return true;
+    }
+
+    auto result = find_convertible_wire_inputs(layout, cache, data);
+    print(result);
+
+    if (result.any_collisions) {
+        return true;
+    }
+    if (!result.convertible_inputs.empty()) {
+        return true;
+    }
+
+    return false;
 }
 
 auto notify_circuit_item_inserted(const Layout& layout, MessageSender sender,
@@ -385,10 +482,10 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
     using enum ElementType;
     const auto type = attributes.type;
 
-    if (!(type == and_element || type == or_element || type == xor_element
-          || type == inverter_element)) [[unlikely]] {
-        throw_exception("The type needs to be a standard element.");
-    }
+    // if (!(type == and_element || type == or_element || type == xor_element
+    //       || type == inverter_element)) [[unlikely]] {
+    //     throw_exception("The type needs to be a standard element.");
+    // }
     if (type == inverter_element && attributes.input_count != 1) [[unlikely]] {
         throw_exception("Inverter needs to have exactly one input.");
     }
@@ -403,7 +500,7 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
                               .element_type = attributes.type,
 
                               .input_count = attributes.input_count,
-                              .output_count = 1,
+                              .output_count = 2,
                               .position = point_t {0, 0},
                               .orientation = attributes.orientation,
                           })

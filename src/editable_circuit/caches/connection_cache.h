@@ -21,6 +21,12 @@ struct connection_data_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
+    [[nodiscard]] auto is_connection() const -> bool;
+    [[nodiscard]] auto is_wire_segment() const -> bool;
+
+    [[nodiscard]] auto connection() const -> connection_t;
+    [[nodiscard]] auto segment() const -> segment_t;
+
     [[nodiscard]] auto operator==(const connection_data_t& other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const connection_data_t& other) const = default;
 };
@@ -45,8 +51,7 @@ class ConnectionCache {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto find(point_t position) const
-        -> std::optional<std::pair<connection_t, orientation_t>>;
+    [[nodiscard]] auto find(point_t position) const -> std::optional<connection_data_t>;
     [[nodiscard]] auto find(point_t position, Schematic& schematic) const
         -> std::optional<std::pair<connection_proxy, orientation_t>>;
     [[nodiscard]] auto find(point_t position, const Schematic& schematic) const

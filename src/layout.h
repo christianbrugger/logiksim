@@ -2,6 +2,7 @@
 #define LOGIKSIM_LAYOUT_H
 
 #include "iterator_adaptor.h"
+#include "layout_calculation_type.h"
 #include "line_tree.h"
 #include "range.h"
 #include "segment_tree.h"
@@ -164,6 +165,7 @@ class ElementTemplate {
     auto operator==(ElementTemplate<ConstOther> other) const noexcept -> bool;
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto to_layout_calculation_data() const -> layout_calculation_data_t;
 
     [[nodiscard]] auto layout() const noexcept -> LayoutType &;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
@@ -176,6 +178,9 @@ class ElementTemplate {
     [[nodiscard]] auto is_logic_item() const -> bool;
     [[nodiscard]] auto is_sub_circuit() const -> bool;
 
+    [[nodiscard]] auto display_state() const -> display_state_t;
+    [[nodiscard]] auto is_inserted() const -> bool;
+
     [[nodiscard]] auto input_count() const -> std::size_t;
     [[nodiscard]] auto output_count() const -> std::size_t;
     [[nodiscard]] auto input_inverters() const -> const logic_small_vector_t &;
@@ -185,7 +190,6 @@ class ElementTemplate {
     [[nodiscard]] auto line_tree() const -> const LineTree &;
     [[nodiscard]] auto position() const -> point_t;
     [[nodiscard]] auto orientation() const -> orientation_t;
-    [[nodiscard]] auto display_state() const -> display_state_t;
     [[nodiscard]] auto color() const -> color_t;
 
     [[nodiscard]] auto modifyable_segment_tree() const -> SegmentTree &

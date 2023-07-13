@@ -20,8 +20,6 @@ class CacheProvider {
     [[nodiscard]] auto query_selection(point_fine_t point) const
         -> std::optional<element_id_t>;
 
-    [[nodiscard]] auto is_element_colliding(layout_calculation_data_t data) const -> bool;
-
     // TODO remove these methods?
     [[nodiscard]] auto input_cache() const -> const ConnectionCache<true>&;
     [[nodiscard]] auto output_cache() const -> const ConnectionCache<false>&;

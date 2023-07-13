@@ -91,8 +91,8 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
     auto input_cache = ConnectionCache<true>();
     auto output_cache = ConnectionCache<false>();
     {
-        add_layout_to_cache(input_cache, layout);
-        add_layout_to_cache(output_cache, layout);
+        add_logic_items_to_cache(input_cache, layout);
+        add_logic_items_to_cache(output_cache, layout);
     }
 
     // connect wires to elements

@@ -10,9 +10,31 @@ namespace logicsim {
 //
 
 namespace detail::connection_cache {
-inline auto connection_data_t::format() const -> std::string {
+auto connection_data_t::format() const -> std::string {
     return fmt::format("<{}, {}, {}, {}>", element_id, segment_index, connection_id,
                        orientation);
+}
+
+auto connection_data_t::is_connection() const -> bool {
+    return element_id && connection_id && !segment_index;
+}
+
+auto connection_data_t::is_wire_segment() const -> bool {
+    return element_id && !connection_id && segment_index;
+}
+
+auto connection_cache::connection_data_t::connection() const -> connection_t {
+    if (!is_connection()) {
+        throw_exception("entry is not a valid connection");
+    }
+    return connection_t {element_id, connection_id};
+}
+
+auto connection_cache::connection_data_t::segment() const -> segment_t {
+    if (!is_wire_segment()) {
+        throw_exception("entry is not a valid wire segment");
+    }
+    return segment_t {element_id, segment_index};
 }
 }  // namespace detail::connection_cache
 
@@ -220,33 +242,30 @@ auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> 
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::find(point_t position) const
-    -> std::optional<std::pair<connection_t, orientation_t>> {
+    -> std::optional<connection_data_t> {
     if (const auto it = map_.find(position); it != map_.end()) {
-        return std::make_pair(
-            connection_t {it->second.element_id, it->second.connection_id},
-            it->second.orientation);
+        return it->second;
     }
     return std::nullopt;
 }
 
 template <bool IsInput>
 auto to_connection_entry(auto&& schematic,
-                         std::optional<std::pair<connection_t, orientation_t>> entry) {
-    if (!entry || !entry->first.element_id || !entry->first.connection_id) {
-        throw_exception("entry is not a valid connection");
-    }
-    return std::make_optional(
-        std::make_pair(to_connection<IsInput>(schematic, entry->first), entry->second));
+                         detail::connection_cache::connection_data_t entry) {
+    const auto connection = to_connection<IsInput>(schematic, entry.connection());
+    return std::make_pair(connection, entry.orientation);
 }
 
 template <bool IsInput>
 auto find_impl(const ConnectionCache<IsInput>& cache, point_t position,
                auto&& schematic) {
     if (auto entry = cache.find(position)) {
-        return to_connection_entry<IsInput>(schematic, entry);
+        return std::optional {to_connection_entry<IsInput>(schematic, entry.value())};
     }
+
     // nullopt with correct type
-    return decltype(to_connection_entry<IsInput>(schematic, {})) {};
+    using entry_result_t = decltype(to_connection_entry<IsInput>(schematic, {}));
+    return std::optional<entry_result_t> {};
 }
 
 template <bool IsInput>

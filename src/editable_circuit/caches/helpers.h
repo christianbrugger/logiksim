@@ -6,29 +6,41 @@
 
 namespace logicsim {
 
-auto add_element_to_cache(auto &&cache, const Layout &layout, element_id_t element_id)
-    -> void {
-    using namespace editable_circuit::info_message;
-    const auto element = layout.element(element_id);
+auto add_logic_item_to_cache(auto &&cache, layout::ConstElement element) -> void {
+    const auto data = element.to_layout_calculation_data();
+    cache.submit(editable_circuit::info_message::LogicItemInserted {element, data});
+}
 
-    if (element.is_logic_item()) {
-        const auto data = to_layout_calculation_data(layout, element_id);
-        cache.submit(LogicItemInserted {element_id, data});
+auto add_wire_to_cache(auto &&cache, layout::ConstElement element) -> void {
+    const auto &segment_tree = element.segment_tree();
+
+    for (const auto segment_index : segment_tree.indices()) {
+        cache.submit(editable_circuit::info_message::SegmentInserted {
+            .segment = {element, segment_index},
+            .segment_info = segment_tree.segment_info(segment_index)});
     }
+}
 
-    else if (element.is_wire()) {
-        const auto &segment_tree = layout.segment_tree(element_id);
-
-        for (const auto segment : segment_tree.indices(element_id)) {
-            cache.submit(SegmentInserted {segment, get_segment_info(layout, segment)});
-        }
+auto add_element_to_cache(auto &&cache, layout::ConstElement element) -> void {
+    if (element.is_logic_item()) {
+        add_logic_item_to_cache(cache, element);
+    } else if (element.is_wire()) {
+        add_wire_to_cache(cache, element);
     }
 }
 
 auto add_layout_to_cache(auto &&cache, const Layout &layout) -> void {
-    for (const auto element_id : layout.element_ids()) {
-        if (is_inserted(layout.display_state(element_id))) {
-            add_element_to_cache(cache, layout, element_id);
+    for (const auto element : layout.elements()) {
+        if (element.is_inserted()) {
+            add_element_to_cache(cache, element);
+        }
+    }
+}
+
+auto add_logic_items_to_cache(auto &&cache, const Layout &layout) -> void {
+    for (const auto element : layout.elements()) {
+        if (element.is_inserted() && element.is_logic_item()) {
+            add_logic_item_to_cache(cache, element);
         }
     }
 }
