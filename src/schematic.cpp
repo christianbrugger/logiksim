@@ -460,6 +460,9 @@ auto is_input_output_count_valid(const Schematic::ConstElement element) -> bool 
             return element.input_count() >= 2 && element.output_count() == 1;
         }
 
+        case button: {
+            return element.input_count() == 0 && element.output_count() == 1;
+        }
         case clock_generator: {
             return element.input_count() == 2 && element.output_count() == 2;
         }
@@ -685,11 +688,6 @@ auto Schematic::ElementTemplate<Const>::element_id() const noexcept -> element_i
 }
 
 template <bool Const>
-auto Schematic::ElementTemplate<Const>::sub_circuit_id() const -> circuit_id_t {
-    return schematic_->sub_circuit_ids_.at(element_id_.value);
-}
-
-template <bool Const>
 auto Schematic::ElementTemplate<Const>::element_type() const -> ElementType {
     return schematic_->element_types_.at(element_id_.value);
 }
@@ -717,6 +715,27 @@ auto Schematic::ElementTemplate<Const>::is_logic_item() const -> bool {
 template <bool Const>
 auto Schematic::ElementTemplate<Const>::is_sub_circuit() const -> bool {
     return element_type() == ElementType::sub_circuit;
+}
+
+template <bool Const>
+auto Schematic::ElementTemplate<Const>::sub_circuit_id() const -> circuit_id_t {
+    return schematic_->sub_circuit_ids_.at(element_id_.value);
+}
+
+template <bool Const>
+auto Schematic::ElementTemplate<Const>::input_inverters() const
+    -> const logic_small_vector_t & {
+    return schematic_->input_inverters_.at(element_id_.value);
+}
+
+template <bool Const>
+auto Schematic::ElementTemplate<Const>::output_delays() const -> const output_delays_t & {
+    return schematic_->output_delays_.at(element_id_.value);
+}
+
+template <bool Const>
+auto Schematic::ElementTemplate<Const>::history_length() const -> delay_t {
+    return schematic_->history_lengths_.at(element_id_.value);
 }
 
 template <bool Const>

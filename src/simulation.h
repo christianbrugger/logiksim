@@ -162,8 +162,8 @@ class Simulation {
     [[nodiscard]] auto output_values(bool raise_missing = true) const -> logic_vector_t;
 
     // inverters
-    [[nodiscard]] auto has_input_inverter(Schematic::ConstInput input) const -> bool;
-    [[nodiscard]] auto has_input_inverters(Schematic::ConstElement element) const
+    [[nodiscard]] auto input_inverter(Schematic::ConstInput input) const -> bool;
+    [[nodiscard]] auto input_inverters(Schematic::ConstElement element) const
         -> logic_small_vector_t;
     auto set_input_inverter(Schematic::ConstInput input, bool value) -> void;
     auto set_input_inverters(Schematic::ConstElement element, logic_small_vector_t values)
@@ -171,11 +171,13 @@ class Simulation {
 
     // delays
     auto set_output_delay(Schematic::ConstOutput output, delay_t delay) -> void;
-    auto set_output_delays(Schematic::ConstElement element, std::vector<delay_t> delays)
-        -> void;
+    auto set_output_delays(Schematic::ConstElement element,
+                           std::span<const delay_t> delays) -> void;
     [[nodiscard]] auto output_delay(Schematic::ConstOutput output) const -> delay_t;
 
     // internal states
+    auto set_internal_state(Schematic::ConstElement element, std::size_t index,
+                            bool value) -> void;
     [[nodiscard]] auto internal_state(Schematic::ConstElement element) const
         -> const logic_small_vector_t &;
 

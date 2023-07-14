@@ -148,6 +148,10 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             return transform(data.position, data.orientation, {0, 0}, {2, y2});
         }
 
+        case button: {
+            return rect_t {data.position, data.position};
+        }
+
         case clock_generator: {
             return transform(data.position, data.orientation, {0, 0}, {3, 2});
         }

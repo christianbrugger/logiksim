@@ -32,6 +32,10 @@ auto add_unused_element(Schematic& schematic) -> Schematic::Element {
 }
 
 auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void {
+    const auto delay = element.element_type() == ElementType::button
+                           ? Schematic::defaults::button_delay
+                           : Schematic::defaults::standard_delay;
+
     schematic.add_element(Schematic::ElementData {
         .element_type = element.element_type(),
         .input_count = element.input_count(),
@@ -39,8 +43,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
 
         .circuit_id = element.sub_circuit_id(),
         // .input_inverters = logic_small_vector_t(element.input_count(), false),
-        .output_delays = std::vector<delay_t>(element.output_count(),
-                                              Schematic::defaults::standard_delay),
+        .output_delays = std::vector<delay_t>(element.output_count(), delay),
         .history_length = Schematic::defaults::no_history,
     });
 }
@@ -74,13 +77,17 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
 
 auto add_layout_elements(Schematic& schematic, const Layout& layout) -> void {
     for (const auto element : layout.elements()) {
-        if (element.display_state() != display_state_t::normal) {
-            add_unused_element(schematic);
-        } else if (element.is_logic_item()) {
+        bool inserted = element.is_inserted();
+
+        if (inserted && element.is_logic_item()) {
             add_logic_item(schematic, element);
-        } else if (element.is_wire()) {
+        }
+
+        else if (inserted && element.is_wire()) {
             add_wire(schematic, element);
-        } else {
+        }
+
+        else {
             add_unused_element(schematic);
         }
     }

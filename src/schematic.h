@@ -70,6 +70,7 @@ class Schematic {
     using ConstOutputIterator = OutputIteratorTemplate<true>;
 
     struct defaults {
+        constexpr static delay_t button_delay {1us};
         constexpr static delay_t standard_delay {100us};
         constexpr static delay_t wire_delay_per_distance {10us};
         constexpr static delay_t no_history {0ns};
@@ -277,7 +278,6 @@ class Schematic::ElementTemplate {
 
     [[nodiscard]] auto schematic() const noexcept -> SchematicType &;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
-    [[nodiscard]] auto sub_circuit_id() const -> circuit_id_t;
 
     [[nodiscard]] auto element_type() const -> ElementType;
     [[nodiscard]] auto is_unused() const -> bool;
@@ -285,6 +285,11 @@ class Schematic::ElementTemplate {
     [[nodiscard]] auto is_wire() const -> bool;
     [[nodiscard]] auto is_logic_item() const -> bool;
     [[nodiscard]] auto is_sub_circuit() const -> bool;
+
+    [[nodiscard]] auto sub_circuit_id() const -> circuit_id_t;
+    [[nodiscard]] auto input_inverters() const -> const logic_small_vector_t &;
+    [[nodiscard]] auto output_delays() const -> const output_delays_t &;
+    [[nodiscard]] auto history_length() const -> delay_t;
 
     [[nodiscard]] auto input_count() const -> std::size_t;
     [[nodiscard]] auto output_count() const -> std::size_t;

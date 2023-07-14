@@ -73,6 +73,11 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             return true;
         }
 
+        case button: {
+            // has no body
+            return true;
+        }
+
         case clock_generator: {
             require_equal(data.input_count, 2);
 
@@ -183,6 +188,11 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             return true;
         }
 
+        case button: {
+            require_equal(data.input_count, 0);
+            return true;
+        }
+
         case clock_generator: {
             require_equal(data.input_count, 2);
 
@@ -289,6 +299,12 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
             return next_output(
                 transform(data.position, data.orientation, point_t {2, output_offset}),
                 transform(data.orientation, orientation_t::right));
+        }
+
+        case button: {
+            require_equal(data.output_count, 1);
+
+            return next_output(data.position, data.orientation);
         }
 
         case clock_generator: {

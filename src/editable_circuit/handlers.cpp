@@ -574,13 +574,20 @@ auto add_standard_logic_item_private(State state, StandardLogicAttributes attrib
     const auto type = attributes.type;
 
     if (!(type == and_element || type == or_element || type == xor_element
-          || type == inverter_element)) [[unlikely]] {
+          || type == inverter_element || type == button)) [[unlikely]] {
         throw_exception("The type needs to be a standard element.");
     }
+
+    // validate input count
+    // TODO use input count validation from schematics
     if (type == inverter_element && attributes.input_count != 1) [[unlikely]] {
         throw_exception("Inverter needs to have exactly one input.");
     }
-    if (type != inverter_element && attributes.input_count < 2) [[unlikely]] {
+    if (type == button && attributes.input_count != 0) [[unlikely]] {
+        throw_exception("Buttons needs to have zero inputs.");
+    }
+    if (type != inverter_element && type != button && attributes.input_count < 2)
+        [[unlikely]] {
         throw_exception("Input count needs to be at least 2 for standard elements.");
     }
 

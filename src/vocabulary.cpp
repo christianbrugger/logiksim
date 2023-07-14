@@ -13,6 +13,7 @@ auto format(ElementType type) -> std::string {
             return "Placeholder";
         case wire:
             return "Wire";
+
         case inverter_element:
             return "Inverter";
         case and_element:
@@ -21,6 +22,9 @@ auto format(ElementType type) -> std::string {
             return "OrElement";
         case xor_element:
             return "XorElement";
+
+        case button:
+            return "Button";
         case clock_generator:
             return "ClockGenerator";
         case flipflop_jk:

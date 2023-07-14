@@ -39,7 +39,7 @@ auto MouseDragLogic::mouse_release(QPointF position) -> void {
 //
 
 MouseElementInsertLogic::MouseElementInsertLogic(Args args) noexcept
-    : editable_circuit_ {args.editable_circuit} {}
+    : editable_circuit_ {args.editable_circuit}, element_type_ {args.element_type} {}
 
 MouseElementInsertLogic::~MouseElementInsertLogic() {
     remove_last_element();
@@ -70,8 +70,13 @@ auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
     assert(!temp_element_);
 
     if (position.has_value()) {
-        temp_element_ = editable_circuit_.add_standard_logic_item(ElementType::or_element,
-                                                                  2, *position, mode);
+        if (element_type_ == ElementType::button) {
+            temp_element_ = editable_circuit_.add_standard_logic_item(
+                element_type_, 0, *position, mode, orientation_t::undirected);
+        } else {
+            temp_element_ = editable_circuit_.add_standard_logic_item(
+                element_type_, 2, *position, mode, orientation_t::right);
+        }
     }
 }
 
@@ -432,6 +437,10 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
 #endif
 }
 
+auto RendererWidget::set_element_type(ElementType type) -> void {
+    element_type_ = type;
+}
+
 auto RendererWidget::reset_interaction_state() -> void {
     mouse_logic_.reset();
     if (editable_circuit_) {
@@ -720,8 +729,32 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         const auto& selection = editable_circuit.selection_builder().selection();
         const auto mask = editable_circuit.selection_builder().create_selection_mask();
 
+        print(editable_circuit.layout());
+        const auto schematic = generate_schematic(editable_circuit.layout());
+        print(schematic);
+
+        auto simulation = Simulation {schematic};
+        simulation.print_events = true;
+
+        for (auto element : schematic.elements()) {
+            if (element.output_count() > 0) {
+                simulation.set_output_delays(element, element.output_delays());
+                simulation.set_history_length(element, element.history_length());
+            }
+        }
+        for (auto element : schematic.elements()) {
+            if (element.element_type() == ElementType::button) {
+                simulation.set_internal_state(element, 0, true);
+            }
+        }
+
+        simulation.initialize();
+        simulation.run(1000us);
+
         render_circuit(bl_ctx, render_args_t {
                                    .layout = editable_circuit.layout(),
+                                   .schematic = &schematic,
+                                   .simulation = &simulation,
                                    .selection_mask = mask,
                                    .selection = selection,
                                    .settings = render_settings_,
@@ -784,6 +817,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
         if (interaction_state_ == InteractionState::element_insert) {
             mouse_logic_.emplace(MouseElementInsertLogic::Args {
                 .editable_circuit = editable_circuit_.value(),
+                .element_type = element_type_,
             });
             return;
         }

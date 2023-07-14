@@ -312,7 +312,6 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
     }
 }
 
-// TODO remove, not unused
 auto draw_wire(BLContext& ctx, layout::ConstElement element,
                const RenderSettings& settings) -> void {
     const auto lc_width = line_cross_width(settings);
@@ -639,7 +638,11 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     } else {
         for (auto element : args.schematic->elements()) {
             if (element.element_type() == ElementType::wire) {
-                draw_wire(ctx, element, args.layout, *args.simulation, args.settings);
+                if (element.input_count() == 0) {
+                    draw_element_tree(ctx, args.layout.element(element), args.settings);
+                } else {
+                    draw_wire(ctx, element, args.layout, *args.simulation, args.settings);
+                }
             }
         }
     }
@@ -910,6 +913,14 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
 // Editable Circuit
 //
 
+auto render_undirected_output(BLContext& ctx, point_t position, double size,
+                              const RenderSettings& settings) {
+    render_point(ctx, position, PointShape::cross, defaults::color_green, size / 4,
+                 settings);
+    render_point(ctx, position, PointShape::plus, defaults::color_green, size / 3,
+                 settings);
+}
+
 auto render_editable_circuit_connection_cache(BLContext& ctx,
                                               const EditableCircuit& editable_circuit,
                                               const RenderSettings& settings) -> void {
@@ -923,7 +934,12 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
 
     for (auto [position, orientation] : caches.output_positions_and_orientations()) {
         const auto size = 0.8;
-        render_arrow(ctx, position, defaults::color_green, orientation, size, settings);
+        if (orientation == orientation_t::undirected) {
+            render_undirected_output(ctx, position, size, settings);
+        } else {
+            render_arrow(ctx, position, defaults::color_green, orientation, size,
+                         settings);
+        }
     }
 }
 

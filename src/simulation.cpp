@@ -160,11 +160,15 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case unused:
         case placeholder:
         case wire:
+
         case inverter_element:
         case and_element:
         case or_element:
         case xor_element:
             return 0;
+
+        case button:
+            return 1;
         case clock_generator:
         case flipflop_jk:
             return 1;
@@ -317,6 +321,10 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
     switch (type) {
         using enum ElementType;
 
+        case button: {
+            return {state.at(0)};
+        }
+
         case clock_generator: {
             bool enabled = state.at(0);
             return {enabled, enabled};
@@ -453,7 +461,7 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     apply_events(element, events);
     auto new_inputs = input_values(element);
 
-    const auto inverters = has_input_inverters(element);
+    const auto inverters = input_inverters(element);
     if (std::ranges::any_of(inverters, std::identity {})) {
         invert_inputs(old_inputs, inverters);
         invert_inputs(new_inputs, inverters);
@@ -549,8 +557,11 @@ auto Simulation::initialize() -> void {
     for (auto &&element : schematic_->elements()) {
         auto element_type = element.element_type();
 
-        // short-circuit placeholders, as they don't have logic
-        if (element_type == ElementType::placeholder) {
+        if (element.is_wire()) {
+            continue;
+        }
+
+        if (element.output_count() == 0) {
             continue;
         }
 
@@ -564,7 +575,7 @@ auto Simulation::initialize() -> void {
 
         } else {
             auto curr_inputs = input_values(element);
-            invert_inputs(curr_inputs, has_input_inverters(element));
+            invert_inputs(curr_inputs, input_inverters(element));
             const auto new_outputs = calculate_outputs_from_inputs(
                 curr_inputs, element.output_count(), element_type);
 
@@ -663,12 +674,11 @@ auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t
     return result;
 }
 
-[[nodiscard]] auto Simulation::has_input_inverter(Schematic::ConstInput input) const
-    -> bool {
+[[nodiscard]] auto Simulation::input_inverter(Schematic::ConstInput input) const -> bool {
     return get_state(input).input_inverters.at(input.input_index().value);
 }
 
-[[nodiscard]] auto Simulation::has_input_inverters(Schematic::ConstElement element) const
+[[nodiscard]] auto Simulation::input_inverters(Schematic::ConstElement element) const
     -> logic_small_vector_t {
     return get_state(element).input_inverters;
 }
@@ -708,7 +718,7 @@ auto Simulation::set_output_delay(const Schematic::ConstOutput output,
 }
 
 auto Simulation::set_output_delays(Schematic::ConstElement element,
-                                   std::vector<delay_t> delays) -> void {
+                                   std::span<const delay_t> delays) -> void {
     if (element.output_count() != std::size(delays)) [[unlikely]] {
         throw_exception("Need as many delays as outputs in the vector.");
     }
@@ -719,6 +729,11 @@ auto Simulation::set_output_delays(Schematic::ConstElement element,
     }
 }
 
+auto Simulation::set_internal_state(Schematic::ConstElement element, std::size_t index,
+                                    bool value) -> void {
+    get_state(element).internal_state.at(index) = value;
+}
+
 auto Simulation::internal_state(Schematic::ConstElement element) const
     -> const logic_small_vector_t & {
     return get_state(element).internal_state;
@@ -726,6 +741,11 @@ auto Simulation::internal_state(Schematic::ConstElement element) const
 
 auto Simulation::input_history(Schematic::ConstElement element) const -> HistoryView {
     const auto &state = get_state(element);
+
+    if (state.input_values.empty()) {
+        throw_exception("element without inputs has no input history");
+    }
+
     return HistoryView {
         state.first_input_history,
         this->time(),
