@@ -203,7 +203,7 @@ class SimulationInteractionLogic {
     };
 
     SimulationInteractionLogic(Args args);
-    // ~SimulationInteractionLogic();
+    ~SimulationInteractionLogic();
 
     SimulationInteractionLogic(const SimulationInteractionLogic&) = delete;
     SimulationInteractionLogic(SimulationInteractionLogic&&) = delete;
@@ -247,6 +247,7 @@ class RendererWidget : public QWidget {
     // TODO create element attribute struct to define element type
     auto set_interaction_state(InteractionState state) -> void;
     auto set_element_type(ElementType type) -> void;
+    auto set_time_rate(time_rate_t time_rate) -> void;
 
     auto fps() const -> double;
     auto pixel_scale() const -> double;
@@ -290,6 +291,7 @@ class RendererWidget : public QWidget {
     QTimer benchmark_timer_;
     QTimer simulation_timer_;
     constexpr static int simulation_timer_interval_ms_ = 16;  // ms
+    time_rate_t time_rate_ {50us};
 
     // new circuit
     circuit_id_t circuit_id_ {0};

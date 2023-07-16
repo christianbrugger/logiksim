@@ -16,6 +16,7 @@ class MainWidget : public QWidget {
    private:
     auto build_render_buttons() -> QWidget*;
     auto build_mode_buttons() -> QWidget*;
+    auto build_time_rate_slider() -> QWidget*;
 
     void update_title();
 

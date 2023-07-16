@@ -354,8 +354,14 @@ auto MouseAreaSelectionLogic::update_mouse_position(QPointF position) -> void {
     builder_.update_last(grid_rect);
 }
 
+//
+// Simulation Interaction Logic
+//
+
 SimulationInteractionLogic::SimulationInteractionLogic(Args args)
     : simulation_ {args.simulation} {}
+
+SimulationInteractionLogic::~SimulationInteractionLogic() {}
 
 auto SimulationInteractionLogic::mouse_press(std::optional<point_t> point) -> void {
     if (point) {
@@ -453,6 +459,14 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
 
 auto RendererWidget::set_element_type(ElementType type) -> void {
     element_type_ = type;
+}
+
+auto RendererWidget::set_time_rate(time_rate_t time_rate) -> void {
+    time_rate_ = time_rate;
+
+    if (simulation_) {
+        simulation_->set_time_rate(time_rate);
+    }
 }
 
 auto RendererWidget::reset_interaction_state() -> void {
@@ -646,7 +660,8 @@ Q_SLOT void RendererWidget::on_simulation_timeout() {
         return;
     }
     if (!simulation_) {
-        simulation_.emplace(editable_circuit_->layout());
+        auto t = Timer {"Generate simulation", Timer::Unit::ms, 3};
+        simulation_.emplace(editable_circuit_->layout(), time_rate_);
     }
 
     const auto timeout

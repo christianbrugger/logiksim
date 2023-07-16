@@ -47,7 +47,8 @@ class InteractiveSimulation {
     };
 
    public:
-    InteractiveSimulation(const Layout& layout);
+    InteractiveSimulation(const Layout& layout,
+                          time_rate_t time_rate = time_rate_t {50us});
 
     [[nodiscard]] auto schematic() const -> const Schematic&;
     [[nodiscard]] auto simulation() const -> const Simulation&;
@@ -67,11 +68,10 @@ class InteractiveSimulation {
     Schematic schematic_;
     Simulation simulation_;
     detail::interactive_simulation::InteractionCache interaction_cache_;
+    time_rate_t time_rate_;
 
     time_t simulation_time_reference_ {};
     realtime_t realtime_reference_ {};
-
-    time_rate_t time_rate_ {50us};
 };
 
 }  // namespace logicsim

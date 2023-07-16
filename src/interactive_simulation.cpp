@@ -37,11 +37,11 @@ auto InteractionCache::find(point_t position) const -> std::optional<element_id_
 
 }  // namespace detail::interactive_simulation
 
-InteractiveSimulation::InteractiveSimulation(const Layout& layout)
+InteractiveSimulation::InteractiveSimulation(const Layout& layout, time_rate_t time_rate)
     : schematic_ {generate_schematic(layout)},
       simulation_ {schematic_},
       interaction_cache_ {layout},
-
+      time_rate_ {time_rate},
       simulation_time_reference_ {simulation_.time()},
       realtime_reference_ {timer_t::now()} {
     // TODO remove when not needed anymore

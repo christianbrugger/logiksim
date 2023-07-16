@@ -2,20 +2,20 @@
 
 #include <QCheckBox>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QSlider>
 #include <QVBoxLayout>
 
 namespace logicsim {
 
 MainWidget::MainWidget(QWidget* parent)
     : QWidget(parent), render_widget_ {new RendererWidget(this)} {
-    const auto render_panel = build_render_buttons();
-    const auto mode_panel = build_mode_buttons();
-
     const auto layout = new QVBoxLayout(this);
-    layout->addWidget(render_panel);
-    layout->addWidget(mode_panel);
+    layout->addWidget(build_render_buttons());
+    layout->addWidget(build_mode_buttons());
+    layout->addWidget(build_time_rate_slider());
     layout->addWidget(render_widget_, 1);
 
     layout->setContentsMargins(0, 0, 0, 0);
@@ -147,6 +147,27 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     layout->addWidget(button3);
     layout->addWidget(button4);
     layout->addStretch(1);
+
+    const auto panel = new QWidget();
+    panel->setLayout(layout);
+    return panel;
+}
+
+auto MainWidget::build_time_rate_slider() -> QWidget* {
+    const auto slider = new QSlider(Qt::Orientation::Horizontal);
+    const auto label = new QLabel();
+
+    connect(slider, &QSlider::valueChanged, this,
+            [this, label](int value [[maybe_unused]]) {
+                const auto rate = time_rate_t {10us * value};
+                render_widget_->set_time_rate(rate);
+
+                label->setText(QString::fromStdString(fmt::format("{}", rate)));
+            });
+
+    const auto layout = new QHBoxLayout();
+    layout->addWidget(slider);
+    layout->addWidget(label);
 
     const auto panel = new QWidget();
     panel->setLayout(layout);
