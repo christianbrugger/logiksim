@@ -3,6 +3,7 @@
 
 #include "circuit_index.h"
 #include "editable_circuit/editable_circuit.h"
+#include "interactive_simulation.h"
 #include "renderer.h"
 #include "scene.h"
 #include "timer.h"
@@ -200,6 +201,7 @@ enum class InteractionState {
     select,
     element_insert,
     line_insert,
+    simulation,
 };
 
 template <>
@@ -208,8 +210,6 @@ auto format(InteractionState type) -> std::string;
 class RendererWidget : public QWidget {
     // TODO use Q_OBJECT because of Q_SLOT
     // Q_OBJECT
-
-    using animation_clock = std::chrono::steady_clock;
 
    public:
     RendererWidget(QWidget* parent = nullptr);
@@ -234,7 +234,8 @@ class RendererWidget : public QWidget {
     auto reload_circuit() -> void;
 
    private:
-    Q_SLOT void on_timeout();
+    Q_SLOT auto on_benchmark_timeout() -> void;
+    Q_SLOT auto on_simulation_timeout() -> void;
     void init();
     auto reset_interaction_state() -> void;
 
@@ -244,7 +245,7 @@ class RendererWidget : public QWidget {
 
    protected:
     void resizeEvent(QResizeEvent* event) override;
-    void paintEvent([[maybe_unused]] QPaintEvent* event) override;
+    void paintEvent(QPaintEvent* event) override;
 
     auto mousePressEvent(QMouseEvent* event) -> void override;
     auto mouseMoveEvent(QMouseEvent* event) -> void override;
@@ -263,8 +264,9 @@ class RendererWidget : public QWidget {
     BLContextCreateInfo bl_info {};
     BLContext bl_ctx {};
 
-    QTimer timer_;
-    animation_clock::time_point animation_start_;
+    QTimer benchmark_timer_;
+    QTimer simulation_timer_;
+    constexpr static int simulation_timer_interval_ms_ = 16;  // ms
 
     // new circuit
     circuit_id_t circuit_id_ {0};
@@ -272,6 +274,9 @@ class RendererWidget : public QWidget {
     std::optional<EditableCircuit> editable_circuit_ {};
     std::optional<SelectionBuilder> selection_builder_ {};
     RenderSettings render_settings_ {};
+
+    // simulation
+    std::optional<InteractiveSimulation> simulation_;
 
     // mouse logic
     InteractionState interaction_state_ {InteractionState::not_interactive};

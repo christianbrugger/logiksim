@@ -378,7 +378,6 @@ auto format(InteractionState state) -> std::string {
 RendererWidget::RendererWidget(QWidget* parent)
     : QWidget(parent),
       last_pixel_ratio_ {devicePixelRatioF()},
-      animation_start_ {animation_clock::now()},
       mouse_drag_logic_ {MouseDragLogic::Args {render_settings_.view_config}} {
     setAutoFillBackground(false);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
@@ -387,7 +386,11 @@ RendererWidget::RendererWidget(QWidget* parent)
     // accept focus so keyboard signals gets fired
     setFocusPolicy(Qt::StrongFocus);
 
-    connect(&timer_, &QTimer::timeout, this, &RendererWidget::on_timeout);
+    connect(&benchmark_timer_, &QTimer::timeout, this,
+            &RendererWidget::on_benchmark_timeout);
+    connect(&simulation_timer_, &QTimer::timeout, this,
+            &RendererWidget::on_simulation_timeout);
+    simulation_timer_.setInterval(simulation_timer_interval_ms_);
 
     render_settings_.view_config.set_device_scale(18);
     reset_circuit();
@@ -397,9 +400,9 @@ auto RendererWidget::set_do_benchmark(bool value) -> void {
     do_benchmark_ = value;
 
     if (value) {
-        timer_.start();
+        benchmark_timer_.start();
     } else {
-        timer_.stop();
+        benchmark_timer_.stop();
     }
 
     update();
@@ -443,9 +446,17 @@ auto RendererWidget::set_element_type(ElementType type) -> void {
 
 auto RendererWidget::reset_interaction_state() -> void {
     mouse_logic_.reset();
+    simulation_.reset();
     if (editable_circuit_) {
         editable_circuit_->selection_builder().clear();
     }
+
+    if (interaction_state_ == InteractionState::simulation) {
+        simulation_timer_.start();
+    } else {
+        simulation_timer_.stop();
+    }
+
     update();
 };
 
@@ -615,8 +626,26 @@ auto RendererWidget::load_circuit(int id) -> void {
 #endif
 }
 
-Q_SLOT void RendererWidget::on_timeout() {
+Q_SLOT void RendererWidget::on_benchmark_timeout() {
     this->update();
+}
+
+Q_SLOT void RendererWidget::on_simulation_timeout() {
+    if (!editable_circuit_) {
+        return;
+    }
+    if (!simulation_) {
+        simulation_.emplace(editable_circuit_->layout());
+    }
+
+    const auto timeout
+        = timeout_t {std::chrono::milliseconds(simulation_timer_interval_ms_)};
+    simulation_->run(timeout);
+
+    // TODO how do we know simulation end is reached?
+    // if (event_count > 0) {
+    this->update();
+    //}
 }
 
 auto RendererWidget::pixel_size() const -> QSize {
@@ -663,103 +692,32 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         init();
     }
 
-    // build circuit
-    auto& editable_circuit = editable_circuit_.value();
-
-    // old behaviour
-
-    /*
-    const double animation_seconds
-        = std::chrono::duration<double>(animation_clock::now() - animation_start_)
-              .count();
-    const double animation_frame = fmod(animation_seconds / 5.0, 1.0);
-
-    Schematic schematic;
-
-    const auto elem0 = schematic.add_element(ElementType::or_element, 2, 1);
-    const auto line0 = schematic.add_element(ElementType::wire, 1, 2);
-    elem0.output(connection_id_t {0}).connect(line0.input(connection_id_t {0}));
-    line0.output(connection_id_t {0}).connect(elem0.input(connection_id_t {1}));
-
-    add_output_placeholders(schematic);
-    auto simulation = Simulation {schematic};
-    simulation.print_events = true;
-
-    simulation.set_output_delay(elem0.output(connection_id_t {0}), delay_t
-    {10us}); simulation.set_output_delay(line0.output(connection_id_t {0}),
-    delay_t {40us}); simulation.set_output_delay(line0.output(connection_id_t
-    {0}), delay_t {60us}); simulation.set_history_length(line0, delay_t {60us});
-
-    simulation.initialize();
-    simulation.submit_event(elem0.input(connection_id_t {0}), 100us, true);
-    simulation.submit_event(elem0.input(connection_id_t {0}), 105us, false);
-    simulation.submit_event(elem0.input(connection_id_t {0}), 110us, true);
-    simulation.submit_event(elem0.input(connection_id_t {0}), 500us, false);
-
-    // TODO use gsl narrow
-    auto end_time_ns = static_cast<uint64_t>(90'000 + animation_frame * 120'000);
-    const auto end_time [[maybe_unused]] = end_time_ns * 1ns;
-    // simulation.run(end_time);
-
-    simulation.run(125us);
-    // simulation.run(130us);
-    // simulation.run(600us);
-    timer_.stop();
-
-    // create layout
-    auto layout = Layout {};
-    for (auto _ [[maybe_unused]] : range(schematic.element_count())) {
-        layout.add_default_element();
-    }
-    layout.set_position(elem0, point_t {5, 3});
-
-    auto tree1 = LineTree({point_t {10, 10}, point_t {10, 12}, point_t {8, 12}});
-    auto tree2 = LineTree({point_t {10, 12}, point_t {12, 12}, point_t {12, 14}});
-    auto line_tree = merge({tree1, tree2}).value_or(LineTree {});
-    layout.set_line_tree(line0, std::move(line_tree));
-
-    // int w = qt_image.width();
-    // int h = qt_image.height();
-    */
     bl_ctx.begin(bl_image, bl_info);
+    const auto& editable_circuit = editable_circuit_.value();
 
     render_background(bl_ctx, render_settings_);
 
-    if (do_render_circuit_) {
+    if (do_render_circuit_ && simulation_) {
+        render_circuit(bl_ctx, render_args_t {
+                                   .layout = editable_circuit.layout(),
+                                   .schematic = &simulation_->schematic(),
+                                   .simulation = &simulation_->simulation(),
+                                   .settings = render_settings_,
+                               });
+    }
+
+    if (do_render_circuit_ && !simulation_) {
         const auto& selection = editable_circuit.selection_builder().selection();
         const auto mask = editable_circuit.selection_builder().create_selection_mask();
 
-        print(editable_circuit.layout());
-        const auto schematic = generate_schematic(editable_circuit.layout());
-        print(schematic);
-
-        auto simulation = Simulation {schematic};
-        simulation.print_events = true;
-
-        for (auto element : schematic.elements()) {
-            if (element.output_count() > 0) {
-                simulation.set_output_delays(element, element.output_delays());
-                simulation.set_history_length(element, element.history_length());
-            }
-        }
-        for (auto element : schematic.elements()) {
-            if (element.element_type() == ElementType::button) {
-                simulation.set_internal_state(element, 0, true);
-            }
-        }
-
-        simulation.initialize();
-        simulation.run(1000us);
-
         render_circuit(bl_ctx, render_args_t {
                                    .layout = editable_circuit.layout(),
-                                   .schematic = &schematic,
-                                   .simulation = &simulation,
                                    .selection_mask = mask,
                                    .selection = selection,
                                    .settings = render_settings_,
                                });
     }
+
     if (do_render_collision_cache_) {
         render_editable_circuit_collision_cache(bl_ctx, editable_circuit,
                                                 render_settings_);

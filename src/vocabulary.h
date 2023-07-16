@@ -279,6 +279,7 @@ auto format(InsertionMode mode) -> std::string;
 // false-positive: literal suffix identifiers are reserved
 #pragma warning(disable : 4455)
 #endif
+using std::literals::chrono_literals::operator""ms;
 using std::literals::chrono_literals::operator""us;
 using std::literals::chrono_literals::operator""ns;
 #ifdef _MSC_VER
@@ -331,6 +332,15 @@ struct delay_t {
 
     [[nodiscard]] auto operator==(const delay_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const delay_t &other) const = default;
+};
+
+struct time_rate_t {
+    time_t rate_per_second;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const time_rate_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const time_rate_t &other) const = default;
 };
 
 //

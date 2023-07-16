@@ -528,14 +528,13 @@ auto Simulation::run(const time_t::value_type simulation_time, const timeout_t t
                                     : time_t {queue_.time().value + simulation_time};
     int64_t event_count = 0;
 
-    // TODO refactor loop
     while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
         auto event_group = queue_.pop_event_group();
         event_count += std::ssize(event_group);
 
         process_event_group(std::move(event_group));
 
-        // at least one group
+        // we check timeout after we process at least one group
         if (timer.reached_timeout() || (event_count >= max_events)) [[unlikely]] {
             return event_count;
         }

@@ -11,8 +11,10 @@
 namespace logicsim {
 
 class Timer {
+   public:
     using timer_t = std::chrono::steady_clock;
     using timepoint_t = timer_t::time_point;
+    using delta_t = std::chrono::duration<double>;
 
    public:
     enum class Unit { s, us, ms };
@@ -20,7 +22,7 @@ class Timer {
     explicit Timer(std::string description = "", Unit unit = Unit::s, int precision = 2);
     ~Timer();
 
-    [[nodiscard]] auto delta() const -> std::chrono::duration<double>;
+    [[nodiscard]] auto delta() const -> delta_t;
     [[nodiscard]] auto format() const -> std::string;
 
    private:

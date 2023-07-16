@@ -26,6 +26,7 @@ set(LS_CORE_SOURCES
     src/flat_schematic.cpp
     src/geometry.cpp
     src/graph.cpp
+    src/interactive_simulation.cpp
     src/layout.cpp
     src/layout_calculation_type.cpp
     src/layout_calculations.cpp

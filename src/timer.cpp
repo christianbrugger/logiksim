@@ -17,7 +17,7 @@ Timer::~Timer() {
 }
 
 auto Timer::delta() const -> std::chrono::duration<double> {
-    return std::chrono::duration<double> {timer_t::now() - start_};
+    return delta_t {timer_t::now() - start_};
 }
 
 auto Timer::format() const -> std::string {

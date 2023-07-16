@@ -78,6 +78,7 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     const auto radio2 = new QRadioButton("Element Inse&rt");
     const auto radio3 = new QRadioButton("Button Insert");
     const auto radio4 = new QRadioButton("Line Inser&t");
+    const auto radio5 = new QRadioButton("Simulate");
 
     const auto button0 = new QPushButton("Clear");
     const auto button1 = new QPushButton("Simple");
@@ -112,6 +113,11 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
             render_widget_->set_interaction_state(InteractionState::line_insert);
         }
     });
+    connect(radio5, &QRadioButton::toggled, this, [this](bool enabled) {
+        if (enabled) {
+            render_widget_->set_interaction_state(InteractionState::simulation);
+        }
+    });
     connect(button0, &QPushButton::clicked, this,
             [this](bool enabled [[maybe_unused]]) { render_widget_->reset_circuit(); });
     connect(button1, &QPushButton::clicked, this,
@@ -133,6 +139,7 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     layout->addWidget(radio2);
     layout->addWidget(radio3);
     layout->addWidget(radio4);
+    layout->addWidget(radio5);
     layout->addWidget(button0);
     layout->addWidget(button5);
     layout->addWidget(button1);

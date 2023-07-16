@@ -493,6 +493,78 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
     draw_logic_item_connectors(ctx, element, layout, simulation, settings);
 }
 
+//
+// Button
+//
+
+auto draw_button_body(BLContext& ctx, layout::ConstElement element, bool selected,
+                      bool enabled, const RenderSettings& settings) -> void {
+    const auto position = element.position();
+    const auto extra_space = 0.4;
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value - extra_space,
+            position.y.value - extra_space,
+        },
+        point_fine_t {
+            position.x.value + extra_space,
+            position.y.value + extra_space,
+        },
+    };
+
+    const auto display_state = element.display_state();
+    const auto alpha = get_alpha_value(display_state);
+
+    const auto fill_color = [&] {
+        if (display_state == display_state_t::normal) {
+            if (selected) {
+                return BLRgba32(224, 224, 224, alpha);
+            }
+            return BLRgba32(255, 255, 128, alpha);
+        }
+        return BLRgba32(192, 192, 192, alpha);
+    }();
+
+    ctx.setFillStyle(fill_color);
+    ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
+
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+}
+
+auto draw_button(BLContext& ctx, layout::ConstElement element, bool selected,
+                 const RenderSettings& settings) -> void {
+    draw_button_body(ctx, element, selected, false, settings);
+}
+
+auto draw_button(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
+                 const Simulation& simulation, bool selected,
+                 const RenderSettings& settings) -> void {
+    bool enabled = simulation.internal_state(element).at(0);
+    draw_button_body(ctx, layout.element(element), selected, enabled, settings);
+}
+
+//
+// Logic Item
+//
+
+auto draw_logic_item(BLContext& ctx, layout::ConstElement element, bool selected,
+                     const RenderSettings& settings) -> void {
+    if (element.element_type() == ElementType::button) {
+        return draw_button(ctx, element, selected, settings);
+    }
+    draw_standard_element(ctx, element, selected, settings);
+}
+
+auto draw_logic_item(BLContext& ctx, Schematic::ConstElement element,
+                     const Layout& layout, const Simulation& simulation, bool selected,
+                     const RenderSettings& settings) -> void {
+    if (element.element_type() == ElementType::button) {
+        return draw_button(ctx, element, layout, simulation, selected, settings);
+    }
+    draw_standard_element(ctx, element, layout, simulation, selected, settings);
+}
+
 auto draw_element_shadow(BLContext& ctx, layout::ConstElement element, bool selected,
                          const RenderSettings& settings) -> void {
     if (!element.is_logic_item()) {
@@ -616,14 +688,14 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     if (args.simulation == nullptr || args.schematic == nullptr) {
         for (auto element : args.layout.elements()) {
             if (!is_selected(element) && element.is_logic_item()) {
-                draw_standard_element(ctx, element, false, args.settings);
+                draw_logic_item(ctx, element, false, args.settings);
             }
         }
     } else {
         for (auto element : args.schematic->elements()) {
             if (!is_selected(element) && element.is_logic_item()) {
-                draw_standard_element(ctx, element, args.layout, *args.simulation, false,
-                                      args.settings);
+                draw_logic_item(ctx, element, args.layout, *args.simulation, false,
+                                args.settings);
             }
         }
     }
@@ -651,14 +723,14 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     if (args.simulation == nullptr || args.schematic == nullptr) {
         for (auto element : args.layout.elements()) {
             if (is_selected(element) && element.is_logic_item()) {
-                draw_standard_element(ctx, element, true, args.settings);
+                draw_logic_item(ctx, element, true, args.settings);
             }
         }
     } else {
         for (auto element : args.schematic->elements()) {
             if (is_selected(element) && element.is_logic_item()) {
-                draw_standard_element(ctx, element, args.layout, *args.simulation, true,
-                                      args.settings);
+                draw_logic_item(ctx, element, args.layout, *args.simulation, true,
+                                args.settings);
             }
         }
     }
