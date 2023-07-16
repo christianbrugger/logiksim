@@ -27,8 +27,12 @@ class InteractionCache {
    public:
     InteractionCache(const Layout& layout);
 
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto find(point_t position) const -> std::optional<element_id_t>;
+
    private:
-    map_type map_;
+    map_type map_ {};
 };
 
 }  // namespace detail::interactive_simulation
@@ -53,6 +57,8 @@ class InteractiveSimulation {
     [[nodiscard]] auto time() const -> time_t;
 
     auto run(timeout_t timeout = defaults::default_timeout) -> int64_t;
+
+    auto mouse_press(point_t position) -> void;
 
    private:
     [[nodiscard]] auto expected_simulation_time() const -> time_t;

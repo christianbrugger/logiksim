@@ -730,12 +730,28 @@ auto Simulation::set_output_delays(Schematic::ConstElement element,
 
 auto Simulation::set_internal_state(Schematic::ConstElement element, std::size_t index,
                                     bool value) -> void {
-    get_state(element).internal_state.at(index) = value;
+    auto &state = get_state(element).internal_state.at(index);
+
+    if (!is_initialized_) {
+        state = value;
+    } else {
+        const auto old_outputs = output_values(element);
+        state = value;
+        const auto new_outputs = calculate_outputs_from_state(
+            internal_state(element), element.output_count(), element.element_type());
+
+        submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+    }
 }
 
 auto Simulation::internal_state(Schematic::ConstElement element) const
     -> const logic_small_vector_t & {
     return get_state(element).internal_state;
+}
+
+auto Simulation::internal_state(Schematic::ConstElement element, std::size_t index) const
+    -> bool {
+    return internal_state(element).at(index);
 }
 
 auto Simulation::input_history(Schematic::ConstElement element) const -> HistoryView {

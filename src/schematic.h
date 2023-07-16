@@ -71,7 +71,7 @@ class Schematic {
 
     struct defaults {
         constexpr static delay_t button_delay {1us};
-        constexpr static delay_t standard_delay {100us};
+        constexpr static delay_t standard_delay {30us};
         constexpr static delay_t wire_delay_per_distance {10us};
         constexpr static delay_t no_history {0ns};
     };

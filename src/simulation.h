@@ -180,6 +180,8 @@ class Simulation {
                             bool value) -> void;
     [[nodiscard]] auto internal_state(Schematic::ConstElement element) const
         -> const logic_small_vector_t &;
+    [[nodiscard]] auto internal_state(Schematic::ConstElement element,
+                                      std::size_t index) const -> bool;
 
     // history
     class HistoryView;
@@ -217,6 +219,8 @@ class Simulation {
     [[nodiscard]] auto get_state(ElementOrConnection auto item) const
         -> const ElementState &;
 
+    // TODO use schematic values instead of local ones, then delete
+    // TODO use vectors instead of struct
     struct ElementState {
         logic_small_vector_t input_values {};
         logic_small_vector_t input_inverters {};

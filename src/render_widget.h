@@ -196,6 +196,29 @@ class MouseAreaSelectionLogic {
     bool keep_last_selection_ {false};
 };
 
+class SimulationInteractionLogic {
+   public:
+    struct Args {
+        InteractiveSimulation& simulation;
+    };
+
+    SimulationInteractionLogic(Args args);
+    // ~SimulationInteractionLogic();
+
+    SimulationInteractionLogic(const SimulationInteractionLogic&) = delete;
+    SimulationInteractionLogic(SimulationInteractionLogic&&) = delete;
+    auto operator=(const SimulationInteractionLogic&)
+        -> SimulationInteractionLogic& = delete;
+    auto operator=(SimulationInteractionLogic&&) -> SimulationInteractionLogic& = delete;
+
+    auto mouse_press(std::optional<point_t> point) -> void;
+    // auto mouse_move(std::optional<point_t> point) -> void;
+    // auto mouse_release(std::optional<point_t> point) -> void;
+
+   private:
+    InteractiveSimulation& simulation_;
+};
+
 enum class InteractionState {
     not_interactive,
     select,
@@ -284,7 +307,7 @@ class RendererWidget : public QWidget {
     MouseDragLogic mouse_drag_logic_;
     std::optional<std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
                                MouseSingleSelectionLogic, MouseAreaSelectionLogic,
-                               MouseMoveSelectionLogic>>
+                               MouseMoveSelectionLogic, SimulationInteractionLogic>>
         mouse_logic_ {};
 
     // states

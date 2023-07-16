@@ -115,7 +115,6 @@ class CollisionCache {
 
     [[nodiscard]] auto state_colliding(point_t position,
                                        collision_cache::ItemType item_type) const -> bool;
-    [[nodiscard]] auto creates_loop(ordered_line_t line) const -> bool;
 
     map_type map_ {};
 };

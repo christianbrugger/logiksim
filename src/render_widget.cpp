@@ -75,7 +75,7 @@ auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
                 element_type_, 0, *position, mode, orientation_t::undirected);
         } else {
             temp_element_ = editable_circuit_.add_standard_logic_item(
-                element_type_, 2, *position, mode, orientation_t::right);
+                element_type_, 3, *position, mode, orientation_t::right);
         }
     }
 }
@@ -354,6 +354,15 @@ auto MouseAreaSelectionLogic::update_mouse_position(QPointF position) -> void {
     builder_.update_last(grid_rect);
 }
 
+SimulationInteractionLogic::SimulationInteractionLogic(Args args)
+    : simulation_ {args.simulation} {}
+
+auto SimulationInteractionLogic::mouse_press(std::optional<point_t> point) -> void {
+    if (point) {
+        simulation_.mouse_press(point.value());
+    }
+}
+
 //
 // Render Widget
 //
@@ -371,6 +380,8 @@ auto format(InteractionState state) -> std::string {
             return "element_insert";
         case line_insert:
             return "line_insert";
+        case simulation:
+            return "simulation";
     }
     throw_exception("Don't know how to convert InteractionState to string.");
 }
@@ -818,6 +829,12 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             });
             return;
         }
+
+        if (interaction_state_ == InteractionState::simulation && simulation_) {
+            mouse_logic_.emplace(SimulationInteractionLogic::Args {
+                .simulation = simulation_.value(),
+            });
+        }
     }
 }
 
@@ -854,6 +871,9 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                     [&](MouseMoveSelectionLogic& arg) {
                         arg.mouse_press(grid_fine_position);
                     },
+                    [&](SimulationInteractionLogic& arg) {
+                        arg.mouse_press(grid_position);
+                    },
                 },
                 *mouse_logic_);
             update();
@@ -889,6 +909,7 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
                     arg.mouse_move(grid_fine_position);
                 },
                 [&](MouseMoveSelectionLogic& arg) { arg.mouse_move(grid_fine_position); },
+                [&](SimulationInteractionLogic& arg [[maybe_unused]]) {},
             },
             *mouse_logic_);
 
@@ -916,29 +937,31 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
         const auto grid_fine_position
             = to_grid_fine(event->position(), render_settings_.view_config);
 
-        bool finished = std::visit(overload {
-                                       [&](MouseElementInsertLogic& arg) {
-                                           arg.mouse_release(grid_position);
-                                           return true;
-                                       },
-                                       [&](MouseLineInsertLogic& arg) {
-                                           arg.mouse_release(grid_position);
-                                           return true;
-                                       },
-                                       [&](MouseAreaSelectionLogic& arg) {
-                                           arg.mouse_release(event->position());
-                                           return true;
-                                       },
-                                       [&](MouseSingleSelectionLogic& arg) {
-                                           arg.mouse_release(grid_fine_position);
-                                           return true;
-                                       },
-                                       [&](MouseMoveSelectionLogic& arg) {
-                                           arg.mouse_release(grid_fine_position);
-                                           return arg.finished();
-                                       },
-                                   },
-                                   *mouse_logic_);
+        bool finished = std::visit(
+            overload {
+                [&](MouseElementInsertLogic& arg) {
+                    arg.mouse_release(grid_position);
+                    return true;
+                },
+                [&](MouseLineInsertLogic& arg) {
+                    arg.mouse_release(grid_position);
+                    return true;
+                },
+                [&](MouseAreaSelectionLogic& arg) {
+                    arg.mouse_release(event->position());
+                    return true;
+                },
+                [&](MouseSingleSelectionLogic& arg) {
+                    arg.mouse_release(grid_fine_position);
+                    return true;
+                },
+                [&](MouseMoveSelectionLogic& arg) {
+                    arg.mouse_release(grid_fine_position);
+                    return arg.finished();
+                },
+                [&](SimulationInteractionLogic& arg [[maybe_unused]]) { return true; },
+            },
+            *mouse_logic_);
 
         if (finished) {
             mouse_logic_.reset();
@@ -1052,6 +1075,9 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
                     [&](MouseMoveSelectionLogic& arg [[maybe_unused]]) {
                         arg.confirm();
                         return arg.finished();
+                    },
+                    [&](SimulationInteractionLogic& arg [[maybe_unused]]) {
+                        return false;
                     },
                 },
                 *mouse_logic_);

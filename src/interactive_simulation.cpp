@@ -7,7 +7,7 @@ namespace logicsim {
 namespace detail::interactive_simulation {
 
 auto iteraction_data_t::format() const -> std::string {
-    return fmt::format("<{}>", element_id);
+    return fmt::format("{}", element_id);
 }
 
 InteractionCache::InteractionCache(const Layout& layout) {
@@ -24,6 +24,17 @@ InteractionCache::InteractionCache(const Layout& layout) {
     }
 }
 
+auto InteractionCache::format() const -> std::string {
+    return fmt::format("<InteractionCache: {}>", map_);
+}
+
+auto InteractionCache::find(point_t position) const -> std::optional<element_id_t> {
+    if (const auto it = map_.find(position); it != map_.end()) {
+        return it->second.element_id;
+    }
+    return std::nullopt;
+}
+
 }  // namespace detail::interactive_simulation
 
 InteractiveSimulation::InteractiveSimulation(const Layout& layout)
@@ -38,11 +49,6 @@ InteractiveSimulation::InteractiveSimulation(const Layout& layout)
         if (element.output_count() > 0) {
             simulation_.set_output_delays(element, element.output_delays());
             simulation_.set_history_length(element, element.history_length());
-        }
-    }
-    for (auto element : schematic_.elements()) {
-        if (element.element_type() == ElementType::button) {
-            simulation_.set_internal_state(element, 0, true);
         }
     }
 
@@ -85,6 +91,18 @@ auto InteractiveSimulation::run(timeout_t timeout) -> int64_t {
         return simulation_.run(time_to_simulate, timeout);
     }
     return 0;
+}
+
+auto InteractiveSimulation::mouse_press(point_t position) -> void {
+    const auto element_id = interaction_cache_.find(position);
+
+    if (element_id) {
+        const auto element = schematic_.element(element_id.value());
+        const auto index = std::size_t {0};
+
+        const auto value = simulation_.internal_state(element, index);
+        simulation_.set_internal_state(element, index, !value);
+    }
 }
 
 auto InteractiveSimulation::expected_simulation_time() const -> time_t {
