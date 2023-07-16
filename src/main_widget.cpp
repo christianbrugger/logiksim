@@ -159,11 +159,15 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
 
     connect(slider, &QSlider::valueChanged, this,
             [this, label](int value [[maybe_unused]]) {
-                const auto rate = time_rate_t {10us * value};
+                const auto rate = time_rate_t {1ns * value};
                 render_widget_->set_time_rate(rate);
 
                 label->setText(QString::fromStdString(fmt::format("{}", rate)));
             });
+
+    slider->setMinimum(0);
+    slider->setMaximum(1'000'000);
+    slider->setValue(50'000);
 
     const auto layout = new QHBoxLayout();
     layout->addWidget(slider);
