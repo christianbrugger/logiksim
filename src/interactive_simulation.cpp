@@ -83,14 +83,20 @@ auto InteractiveSimulation::time() const -> time_t {
     return simulation_.time();
 }
 
-auto InteractiveSimulation::run(timeout_t timeout) -> int64_t {
-    const auto time_to_simulate
-        = expected_simulation_time().value - simulation_.time().value;
+auto InteractiveSimulation::run(timeout_t timeout) -> void {
+    const auto expected_time = expected_simulation_time();
+    const auto time_to_simulate = expected_time.value - simulation_.time().value;
 
-    if (time_to_simulate > 0us) {
-        return simulation_.run(time_to_simulate, timeout);
+    if (time_to_simulate <= 0us) {
+        return;
     }
-    return 0;
+
+    simulation_.run(time_to_simulate, timeout);
+
+    if (expected_time > simulation_.time()) {
+        realtime_reference_ = timer_t::now();
+        simulation_time_reference_ = simulation_.time();
+    }
 }
 
 auto InteractiveSimulation::mouse_press(point_t position) -> void {

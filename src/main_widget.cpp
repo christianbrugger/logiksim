@@ -153,21 +153,38 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     return panel;
 }
 
+// auto to_scale = []() {};
+auto from_slider_scale(int value) -> time_rate_t {
+    const double value_ns = std::pow(10.0, value / double {100'000.0});
+    return time_rate_t {1us * gsl::narrow<int64_t>(std::round(value_ns))};
+};
+
+auto to_slider_scale(time_rate_t rate) -> int {
+    const auto value_log
+        = std::log10(rate.rate_per_second.value.count() / 1000.0) * 100'000;
+    return std::clamp(gsl::narrow<int>(std::round(value_log)), int {0}, int {900'000});
+};
+
 auto MainWidget::build_time_rate_slider() -> QWidget* {
     const auto slider = new QSlider(Qt::Orientation::Horizontal);
     const auto label = new QLabel();
 
     connect(slider, &QSlider::valueChanged, this,
             [this, label](int value [[maybe_unused]]) {
-                const auto rate = time_rate_t {1ns * value};
+                const auto rate = from_slider_scale(value);
                 render_widget_->set_time_rate(rate);
 
                 label->setText(QString::fromStdString(fmt::format("{}", rate)));
             });
 
     slider->setMinimum(0);
-    slider->setMaximum(1'000'000);
-    slider->setValue(50'000);
+    slider->setMaximum(900'000);
+    // slider->setValue(50'000);
+    slider->setValue(to_slider_scale(time_rate_t {50us}));
+
+    slider->setTickInterval(300'000);
+    slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
+    label->setMinimumWidth(100);
 
     const auto layout = new QHBoxLayout();
     layout->addWidget(slider);
