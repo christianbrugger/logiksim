@@ -93,6 +93,7 @@ auto InteractiveSimulation::run(timeout_t timeout) -> void {
 
     simulation_.run(time_to_simulate, timeout);
 
+    // in case simulation is too slow, allow us to catch up
     if (expected_time > simulation_.time()) {
         realtime_reference_ = timer_t::now();
         simulation_time_reference_ = simulation_.time();
@@ -108,6 +109,7 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
 
         const auto value = simulation_.internal_state(element, index);
         simulation_.set_internal_state(element, index, !value);
+        simulation_.run_infinitesimal();
     }
 }
 

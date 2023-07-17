@@ -154,6 +154,8 @@ auto segment_part_t::format() const -> std::string {
                        segment.segment_index, part.begin, part.end);
 }
 
+namespace {
+
 template <typename T>
 auto format_microsecond_time(T time_value) {
     if (-1us < time_value && time_value < 1us) {
@@ -162,6 +164,31 @@ auto format_microsecond_time(T time_value) {
     auto time_us = std::chrono::duration<double, std::micro> {time_value};
     return fmt::format("{:L}us", time_us.count());
 }
+
+template <typename T>
+auto format_time(T time_value) {
+    using namespace std::chrono_literals;
+
+    if (-1us < time_value && time_value < 1us) {
+        auto time_ns = std::chrono::duration<double, std::nano> {time_value};
+        return fmt::format("{:.3g}ns", time_ns.count());
+    }
+
+    if (-1ms < time_value && time_value < 1ms) {
+        auto time_us = std::chrono::duration<double, std::micro> {time_value};
+        return fmt::format("{:.3g}us", time_us.count());
+    }
+
+    if (-1s < time_value && time_value < 1s) {
+        auto time_ms = std::chrono::duration<double, std::milli> {time_value};
+        return fmt::format("{:.3g}ms", time_ms.count());
+    }
+
+    auto time_s = std::chrono::duration<double, std::ratio<1>> {time_value};
+    return fmt::format("{:.2f}s", time_s.count());
+}
+
+}  // namespace
 
 auto time_t::format() const -> std::string {
     return format_microsecond_time(value);
@@ -172,7 +199,7 @@ auto delay_t::format() const -> std::string {
 }
 
 auto time_rate_t::format() const -> std::string {
-    return fmt::format("{}/s", rate_per_second);
+    return fmt::format("{}/s", format_time(rate_per_second.value));
 }
 
 auto color_t::format() const -> std::string {

@@ -144,6 +144,11 @@ class Simulation {
     auto run(time_t::value_type simulation_time = defaults::infinite_simulation_time,
              timeout_t timeout = defaults::no_timeout,
              int64_t max_events = defaults::no_max_events) -> int64_t;
+    // After any events are submitted or function is called that submits events, like
+    // set_internal_state, the simulation needs to be advanced in a small way.
+    // Otherwise there might be two events at the same time for the same input leading
+    // to a runtime error.
+    auto run_infinitesimal() -> int64_t;
 
     // input values
     [[nodiscard]] auto input_value(element_id_t element_id, connection_id_t index) const

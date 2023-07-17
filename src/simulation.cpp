@@ -546,6 +546,10 @@ auto Simulation::run(const time_t::value_type simulation_time, const timeout_t t
     return event_count;
 }
 
+auto Simulation::run_infinitesimal() -> int64_t {
+    return run(time_t::epsilon().value);
+}
+
 auto Simulation::initialize() -> void {
     if (!queue_.empty()) [[unlikely]] {
         throw_exception("Cannot initialize simulation with scheduled events.");
@@ -735,7 +739,8 @@ auto Simulation::set_internal_state(Schematic::ConstElement element, std::size_t
     if (!is_initialized_) {
         state = value;
     } else {
-        const auto old_outputs = output_values(element);
+        const auto old_outputs = calculate_outputs_from_state(
+            internal_state(element), element.output_count(), element.element_type());
         state = value;
         const auto new_outputs = calculate_outputs_from_state(
             internal_state(element), element.output_count(), element.element_type());
