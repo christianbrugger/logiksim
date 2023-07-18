@@ -120,6 +120,65 @@ auto connector_endpoint(point_t position, orientation_t orientation) -> point_fi
     throw_exception("unknown orientation");
 }
 
+auto is_input_output_count_valid(ElementType element_type, std::size_t input_count,
+                                 std::size_t output_count) -> bool {
+    switch (element_type) {
+        using enum ElementType;
+
+        case unused: {
+            return input_count == 0 && output_count == 0;
+        }
+        case placeholder: {
+            return input_count == 1 && output_count == 0;
+        }
+        case wire: {
+            return input_count <= 1 && output_count >= 1;
+        }
+
+        case inverter_element: {
+            return input_count == 1 && output_count == 1;
+        }
+        case and_element:
+        case or_element:
+        case xor_element: {
+            return input_count >= 2 && output_count == 1;
+        }
+
+        case button: {
+            return input_count == 0 && output_count == 1;
+        }
+        case clock_generator: {
+            return input_count == 2 && output_count == 2;
+        }
+        case flipflop_jk: {
+            return input_count == 5 && output_count == 2;
+        }
+        case shift_register: {
+            return input_count >= 2 && output_count >= 1
+                   && input_count == output_count + 1;
+        }
+
+        case sub_circuit: {
+            return input_count > 0 || output_count > 0;
+        }
+    }
+
+    throw_exception("invalid element");
+}
+
+[[nodiscard]] auto is_orientation_valid(ElementType element_type,
+                                        orientation_t orientation) -> bool {
+    if (element_type == ElementType::unused || element_type == ElementType::placeholder) {
+        return true;
+    }
+
+    if (element_type == ElementType::button) {
+        return orientation == orientation_t::undirected;
+    }
+
+    return orientation != orientation_t::undirected;
+}
+
 auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
     switch (data.element_type) {
         using enum ElementType;

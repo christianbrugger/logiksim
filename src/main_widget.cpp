@@ -6,9 +6,36 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSlider>
+#include <QSpinBox>
 #include <QVBoxLayout>
 
 namespace logicsim {
+class ElementButton : public QPushButton {
+    // TODO use Q_OBJECT
+    // Q_OBJECT
+   public:
+    explicit ElementButton(const QString& text, QWidget* parent = nullptr)
+        : QPushButton(text, parent) {}
+
+    auto sizeHint() const -> QSize override {
+        const auto text = "NAND";
+        const auto margin = 10;
+
+        const auto metric = fontMetrics();
+        const auto size = metric.size(Qt::TextShowMnemonic, text);
+        const auto extend = std::max(size.height(), size.width()) + margin;
+
+        return QSize(extend, extend);
+    }
+
+    QSize minimumSizeHint() const override {
+        return sizeHint();
+    }
+};
+
+//
+// MainWidget
+//
 
 MainWidget::MainWidget(QWidget* parent)
     : QWidget(parent), render_widget_ {new RendererWidget(this)} {
@@ -16,8 +43,14 @@ MainWidget::MainWidget(QWidget* parent)
     layout->addWidget(build_render_buttons());
     layout->addWidget(build_mode_buttons());
     layout->addWidget(build_time_rate_slider());
-    layout->addWidget(render_widget_, 1);
 
+    const auto hlayout = new QHBoxLayout();
+    layout->addLayout(hlayout, 1);
+    hlayout->addWidget(build_element_buttons(), 0);
+    hlayout->addWidget(render_widget_, 1);
+
+    hlayout->setContentsMargins(0, 0, 0, 0);
+    hlayout->setSpacing(0);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     setLayout(layout);
@@ -76,9 +109,8 @@ auto MainWidget::build_render_buttons() -> QWidget* {
 auto MainWidget::build_mode_buttons() -> QWidget* {
     const auto radio1 = new QRadioButton("&Select");
     const auto radio2 = new QRadioButton("Element Inse&rt");
-    const auto radio3 = new QRadioButton("Button Insert");
-    const auto radio4 = new QRadioButton("Line Inser&t");
-    const auto radio5 = new QRadioButton("Simulate");
+    const auto radio3 = new QRadioButton("Line Inser&t");
+    const auto radio4 = new QRadioButton("Simulate");
 
     const auto button0 = new QPushButton("Clear");
     const auto button1 = new QPushButton("Simple");
@@ -98,22 +130,15 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     });
     connect(radio2, &QRadioButton::toggled, this, [this](bool enabled) {
         if (enabled) {
-            render_widget_->set_element_type(ElementType::xor_element);
             render_widget_->set_interaction_state(InteractionState::element_insert);
         }
     });
     connect(radio3, &QRadioButton::toggled, this, [this](bool enabled) {
         if (enabled) {
-            render_widget_->set_element_type(ElementType::button);
-            render_widget_->set_interaction_state(InteractionState::element_insert);
-        }
-    });
-    connect(radio4, &QRadioButton::toggled, this, [this](bool enabled) {
-        if (enabled) {
             render_widget_->set_interaction_state(InteractionState::line_insert);
         }
     });
-    connect(radio5, &QRadioButton::toggled, this, [this](bool enabled) {
+    connect(radio4, &QRadioButton::toggled, this, [this](bool enabled) {
         if (enabled) {
             render_widget_->set_interaction_state(InteractionState::simulation);
         }
@@ -139,7 +164,6 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     layout->addWidget(radio2);
     layout->addWidget(radio3);
     layout->addWidget(radio4);
-    layout->addWidget(radio5);
     layout->addWidget(button0);
     layout->addWidget(button5);
     layout->addWidget(button1);
@@ -204,6 +228,130 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
     const auto panel = new QWidget();
     panel->setLayout(layout);
     return panel;
+}
+
+auto MainWidget::element_button(QString label, LogicItemDefinition definition)
+    -> QWidget* {
+    const auto button = new ElementButton(label);
+
+    connect(button, &QPushButton::clicked, this, [this, definition]() {
+        element_definition_ = definition;
+        update_selected_logic_item();
+    });
+
+    return button;
+}
+
+auto MainWidget::build_element_buttons() -> QWidget* {
+    const auto layout = new QGridLayout();
+    int row = -1;
+
+    // input count
+    const auto input_count = new QSpinBox();
+    connect(input_count, &QSpinBox::valueChanged, this, [this](int value) {
+        this->input_count_ = value;
+        update_selected_logic_item();
+    });
+
+    input_count->setValue(gsl::narrow<int>(input_count_));
+    input_count->setMinimum(2);
+    input_count->setMaximum(connection_id_t::max());
+
+    layout->addWidget(input_count, ++row, 0);
+    layout->addWidget(element_button("BTN",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::button,
+                                         .input_count = 0,
+                                         .orientation = orientation_t::undirected,
+                                     }),
+                      ++row, 0);
+
+    layout->addWidget(element_button("AND",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::and_element,
+                                         .input_count = 3,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+    layout->addWidget(element_button("OR",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::or_element,
+                                         .input_count = 3,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+    layout->addWidget(element_button("XOR",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::xor_element,
+                                         .input_count = 3,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+
+    layout->addWidget(element_button("NAND",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::and_element,
+                                         .input_count = 3,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+    layout->addWidget(element_button("NOR",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::or_element,
+                                         .input_count = 3,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+    layout->addWidget(element_button("INV",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::inverter_element,
+                                         .input_count = 1,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+
+    layout->addWidget(element_button("JK-FF",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::flipflop_jk,
+                                         .input_count = 5,
+                                         .output_count = 2,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+    layout->addWidget(element_button("CLK",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::clock_generator,
+                                         .input_count = 2,
+                                         .output_count = 2,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+    layout->addWidget(element_button("REG",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::shift_register,
+                                         .input_count = 3,
+                                         .output_count = 2,
+                                         .orientation = orientation_t::right,
+                                     }),
+                      ++row, 0);
+
+    layout->setRowStretch(++row, 1);
+
+    const auto panel = new QWidget();
+    panel->setLayout(layout);
+    return panel;
+}
+
+auto MainWidget::update_selected_logic_item() -> void {
+    auto definition = element_definition_;
+
+    if (definition.element_type == ElementType::and_element
+        || definition.element_type == ElementType::or_element
+        || definition.element_type == ElementType::xor_element) {
+        definition.input_count = input_count_;
+    }
+
+    render_widget_->set_element_definition(definition);
 }
 
 void MainWidget::update_title() {

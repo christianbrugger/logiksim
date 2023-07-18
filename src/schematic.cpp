@@ -5,6 +5,7 @@
 #include "exceptions.h"
 #include "format.h"
 #include "iterator_adaptor.h"
+#include "layout_calculations.h"
 #include "line_tree.h"
 #include "random.h"
 #include "range.h"
@@ -437,54 +438,9 @@ auto validate_element_connections_no_loops(const Schematic::ConstElement element
     std::ranges::for_each(element.outputs(), validate_no_output_loops);
 }
 
-auto is_input_output_count_valid(const Schematic::ConstElement element) -> bool {
-    switch (element.element_type()) {
-        using enum ElementType;
-
-        case unused: {
-            return element.input_count() == 0 && element.output_count() == 0;
-        }
-        case placeholder: {
-            return element.input_count() == 1 && element.output_count() == 0;
-        }
-        case wire: {
-            return element.input_count() <= 1;
-        }
-
-        case inverter_element: {
-            return element.input_count() == 1 && element.output_count() == 1;
-        }
-        case and_element:
-        case or_element:
-        case xor_element: {
-            return element.input_count() >= 2 && element.output_count() == 1;
-        }
-
-        case button: {
-            return element.input_count() == 0 && element.output_count() == 1;
-        }
-        case clock_generator: {
-            return element.input_count() == 2 && element.output_count() == 2;
-        }
-        case flipflop_jk: {
-            return element.input_count() == 5 && element.output_count() == 2;
-        }
-        case shift_register: {
-            // TODO consider internal state
-            return element.input_count() >= 2 && element.output_count() >= 1
-                   && element.input_count() == element.output_count() + 1;
-        }
-
-        case sub_circuit: {
-            return element.input_count() > 0 || element.output_count() > 0;
-        }
-    }
-
-    throw_exception("invalid element");
-}
-
 auto validate_input_output_count(const Schematic::ConstElement element) -> void {
-    if (!is_input_output_count_valid(element)) [[unlikely]] {
+    if (!is_input_output_count_valid(element.element_type(), element.input_count(),
+                                     element.output_count())) [[unlikely]] {
         throw_exception("element has wrong input or output count.");
     }
 }

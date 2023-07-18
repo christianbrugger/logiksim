@@ -39,7 +39,8 @@ auto MouseDragLogic::mouse_release(QPointF position) -> void {
 //
 
 MouseElementInsertLogic::MouseElementInsertLogic(Args args) noexcept
-    : editable_circuit_ {args.editable_circuit}, element_type_ {args.element_type} {}
+    : editable_circuit_ {args.editable_circuit},
+      element_definition_ {args.element_definition} {}
 
 MouseElementInsertLogic::~MouseElementInsertLogic() {
     remove_last_element();
@@ -69,14 +70,9 @@ auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
     remove_last_element();
     assert(!temp_element_);
 
-    if (position.has_value()) {
-        if (element_type_ == ElementType::button) {
-            temp_element_ = editable_circuit_.add_standard_logic_item(
-                element_type_, 0, *position, mode, orientation_t::undirected);
-        } else {
-            temp_element_ = editable_circuit_.add_standard_logic_item(
-                element_type_, 3, *position, mode, orientation_t::right);
-        }
+    if (position) {
+        temp_element_ = editable_circuit_.add_logic_item(element_definition_,
+                                                         position.value(), mode);
     }
 }
 
@@ -457,8 +453,8 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
 #endif
 }
 
-auto RendererWidget::set_element_type(ElementType type) -> void {
-    element_type_ = type;
+auto RendererWidget::set_element_definition(LogicItemDefinition definition) -> void {
+    element_definition_ = definition;
 }
 
 auto RendererWidget::set_time_rate(time_rate_t time_rate) -> void {
@@ -572,12 +568,18 @@ auto RendererWidget::load_circuit(int id) -> void {
 
     if (id == 2) {
         constexpr auto max_value = debug_build ? debug_max : release_max;
+        const auto definition = LogicItemDefinition {
+            .element_type = ElementType::or_element,
+            .input_count = 3,
+            .output_count = 1,
+            .orientation = orientation_t::right,
+        };
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
-                editable_circuit.add_standard_logic_item(
-                    ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
-                    InsertionMode::insert_or_discard);
+                editable_circuit.add_logic_item(definition,
+                                                point_t {grid_t {x}, grid_t {y}},
+                                                InsertionMode::insert_or_discard);
 
                 editable_circuit.add_line_segments(
                     point_t {grid_t {x + 2}, grid_t {y + 1}},
@@ -593,12 +595,18 @@ auto RendererWidget::load_circuit(int id) -> void {
     }
     if (id == 3) {
         constexpr auto max_value = debug_build ? debug_max : release_max;
+        const auto definition = LogicItemDefinition {
+            .element_type = ElementType::or_element,
+            .input_count = 3,
+            .output_count = 1,
+            .orientation = orientation_t::right,
+        };
 
         for (auto x : range(5, max_value, 5)) {
             for (auto y : range(5, max_value, 5)) {
-                editable_circuit.add_standard_logic_item(
-                    ElementType::or_element, 3, point_t {grid_t {x}, grid_t {y}},
-                    InsertionMode::insert_or_discard);
+                editable_circuit.add_logic_item(definition,
+                                                point_t {grid_t {x}, grid_t {y}},
+                                                InsertionMode::insert_or_discard);
             }
         }
     }
@@ -801,7 +809,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
         if (interaction_state_ == InteractionState::element_insert) {
             mouse_logic_.emplace(MouseElementInsertLogic::Args {
                 .editable_circuit = editable_circuit_.value(),
-                .element_type = element_type_,
+                .element_definition = element_definition_,
             });
             return;
         }

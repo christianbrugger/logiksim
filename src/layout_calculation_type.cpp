@@ -18,5 +18,4 @@ auto to_layout_calculation_data(const Layout& layout, element_id_t element_id)
         .element_type = element.element_type(),
     };
 }
-
 }  // namespace logicsim

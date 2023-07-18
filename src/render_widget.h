@@ -46,7 +46,7 @@ class MouseElementInsertLogic {
    public:
     struct Args {
         EditableCircuit& editable_circuit;
-        ElementType element_type;
+        LogicItemDefinition element_definition;
     };
 
     MouseElementInsertLogic(Args args) noexcept;
@@ -67,8 +67,9 @@ class MouseElementInsertLogic {
 
    private:
     EditableCircuit& editable_circuit_;
+    LogicItemDefinition element_definition_;
+
     selection_handle_t temp_element_ {};
-    ElementType element_type_;
 };
 
 class MouseLineInsertLogic {
@@ -246,7 +247,7 @@ class RendererWidget : public QWidget {
     // TODO make InteractionState a Variant
     // TODO create element attribute struct to define element type
     auto set_interaction_state(InteractionState state) -> void;
-    auto set_element_type(ElementType type) -> void;
+    auto set_element_definition(LogicItemDefinition definition) -> void;
     auto set_time_rate(time_rate_t time_rate) -> void;
 
     auto fps() const -> double;
@@ -305,7 +306,7 @@ class RendererWidget : public QWidget {
 
     // mouse logic
     InteractionState interaction_state_ {InteractionState::not_interactive};
-    ElementType element_type_ {ElementType::or_element};
+    LogicItemDefinition element_definition_ {};
     MouseDragLogic mouse_drag_logic_;
     std::optional<std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
                                MouseSingleSelectionLogic, MouseAreaSelectionLogic,

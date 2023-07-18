@@ -331,11 +331,6 @@ auto swap_and_delete_multiple_elements(Layout& layout, MessageSender sender,
 // Logic Item Handling
 //
 
-auto StandardLogicAttributes::format() const -> std::string {
-    return fmt::format("{{{}, input_count = {}, {}, {}}}", type, input_count, position,
-                       orientation);
-}
-
 auto is_logic_item_position_representable_private(const Layout& layout,
                                                   const element_id_t element_id, int x,
                                                   int y) -> bool {
@@ -568,63 +563,46 @@ auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
     change_logic_item_insertion_mode_private(state, element_id, new_mode);
 }
 
-auto add_standard_logic_item_private(State state, StandardLogicAttributes attributes,
-                                     InsertionMode insertion_mode) -> element_id_t {
-    using enum ElementType;
-    const auto type = attributes.type;
-
-    if (!(type == and_element || type == or_element || type == xor_element
-          || type == inverter_element || type == button)) [[unlikely]] {
-        throw_exception("The type needs to be a standard element.");
-    }
-
-    // validate input count
-    // TODO use input count validation from schematics
-    if (type == inverter_element && attributes.input_count != 1) [[unlikely]] {
-        throw_exception("Inverter needs to have exactly one input.");
-    }
-    if (type == button && attributes.input_count != 0) [[unlikely]] {
-        throw_exception("Buttons needs to have zero inputs.");
-    }
-    if (type != inverter_element && type != button && attributes.input_count < 2)
-        [[unlikely]] {
-        throw_exception("Input count needs to be at least 2 for standard elements.");
+auto add_logic_item_private(State state, LogicItemDefinition definition, point_t position,
+                            InsertionMode insertion_mode) -> element_id_t {
+    if (!definition.is_valid()) [[unlikely]] {
+        throw_exception("Invalid Logic Item Definition");
     }
 
     // insert into underlyings
     auto element_id = state.layout
                           .add_element({
                               .display_state = display_state_t::temporary,
-                              .element_type = attributes.type,
+                              .element_type = definition.element_type,
 
-                              .input_count = attributes.input_count,
-                              .output_count = 1,
+                              .input_count = definition.input_count,
+                              .output_count = definition.output_count,
                               .position = point_t {0, 0},
-                              .orientation = attributes.orientation,
+                              .orientation = definition.orientation,
                           })
                           .element_id();
     state.sender.submit(info_message::LogicItemCreated {element_id});
 
     // validates our position
     move_or_delete_logic_item_private(state.layout, state.sender, element_id,  //
-                                      attributes.position.x.value,             //
-                                      attributes.position.y.value);
+                                      position.x.value,                        //
+                                      position.y.value);
     if (element_id) {
         change_logic_item_insertion_mode_private(state, element_id, insertion_mode);
     }
     return element_id;
 }
 
-auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
-                             InsertionMode insertion_mode) -> element_id_t {
+auto add_logic_item(State state, LogicItemDefinition definition, point_t position,
+                    InsertionMode insertion_mode) -> element_id_t {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         fmt::print(
             "\n==========================================================\n{}\n"
-            "add_standard_logic_item(attributes = {}, insertion_mode = {});\n"
+            "add_logic_item(definition = {}, position = {}, insertion_mode = {});\n"
             "==========================================================\n\n",
-            state.layout, attributes, insertion_mode);
+            state.layout, definition, position, insertion_mode);
     }
-    return add_standard_logic_item_private(state, attributes, insertion_mode);
+    return add_logic_item_private(state, definition, position, insertion_mode);
 }
 
 //

@@ -45,19 +45,8 @@ auto swap_and_delete_single_element(Layout& layout, MessageSender sender,
 // Logic Item Handling
 //
 
-struct StandardLogicAttributes {
-    ElementType type;
-    std::size_t input_count;
-    point_t position;
-    orientation_t orientation = orientation_t::right;
-
-    [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const StandardLogicAttributes& other) const -> bool
-        = default;
-};
-
-auto add_standard_logic_item(State state, StandardLogicAttributes attributes,
-                             InsertionMode insertion_mode) -> element_id_t;
+auto add_logic_item(State state, LogicItemDefinition definition, point_t position,
+                    InsertionMode insertion_mode) -> element_id_t;
 
 auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
                                       InsertionMode new_insertion_mode) -> void;

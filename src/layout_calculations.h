@@ -11,6 +11,12 @@
 #include <vector>
 
 namespace logicsim {
+[[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
+                                               std::size_t input_count,
+                                               std::size_t output_count) -> bool;
+[[nodiscard]] auto is_orientation_valid(ElementType element_type,
+                                        orientation_t orientation) -> bool;
+
 [[nodiscard]] auto element_collision_rect(layout_calculation_data_t data) -> rect_t;
 [[nodiscard]] auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t;
 [[nodiscard]] auto element_selection_rect(ordered_line_t line) -> rect_fine_t;

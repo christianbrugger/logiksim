@@ -236,9 +236,14 @@ auto generate_layout() -> Layout {
 
     for (auto x : range(5, max_value, 5)) {
         for (auto y : range(5, max_value, 5)) {
-            editable_circuit.add_standard_logic_item(ElementType::or_element, 3,
-                                                     point_t {grid_t {x}, grid_t {y}},
-                                                     InsertionMode::insert_or_discard);
+            const auto definition = LogicItemDefinition {
+                .element_type = ElementType::or_element,
+                .input_count = 3,
+                .output_count = 1,
+            };
+
+            editable_circuit.add_logic_item(definition, point_t {grid_t {x}, grid_t {y}},
+                                            InsertionMode::insert_or_discard);
 
             editable_circuit.add_line_segments(point_t {grid_t {x + 2}, grid_t {y + 1}},
                                                point_t {grid_t {x + 4}, grid_t {y - 1}},

@@ -70,25 +70,10 @@ auto EditableCircuit::add_example() -> void {
     editable_circuit::examples::add_many_wires(rng, get_state(), false);
 }
 
-auto EditableCircuit::add_inverter_item(point_t position, InsertionMode insertion_mode,
-                                        orientation_t orientation) -> selection_handle_t {
-    return add_standard_logic_item(ElementType::inverter_element, 1, position,
-                                   insertion_mode, orientation);
-}
-
-auto EditableCircuit::add_standard_logic_item(ElementType type, std::size_t input_count,
-                                              point_t position,
-                                              InsertionMode insertion_mode,
-                                              orientation_t orientation)
-    -> selection_handle_t {
-    const auto attributes = editable_circuit::StandardLogicAttributes {
-        .type = type,
-        .input_count = input_count,
-        .position = position,
-        .orientation = orientation,
-    };
-    const auto element_id = editable_circuit::add_standard_logic_item(
-        get_state(), attributes, insertion_mode);
+auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
+                                     InsertionMode insertion_mode) -> selection_handle_t {
+    const auto element_id = editable_circuit::add_logic_item(get_state(), definition,
+                                                             position, insertion_mode);
 
     auto handle = registrar_.create_selection();
     if (element_id) {

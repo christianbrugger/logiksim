@@ -477,14 +477,14 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
 
     auto setup = HandlerSetup {layout};
 
-    const auto attributes = editable_circuit::StandardLogicAttributes {
-        .type = ElementType::xor_element,
+    const auto definition = LogicItemDefinition {
+        .element_type = ElementType::xor_element,
         .input_count = 7,
-        .position = point_t {2, 3},
+        .output_count = 1,
         .orientation = orientation_t::right,
     };
-    const auto element_id = add_standard_logic_item(setup.state, attributes,
-                                                    InsertionMode::insert_or_discard);
+    const auto element_id = add_logic_item(setup.state, definition, point_t {2, 3},
+                                           InsertionMode::insert_or_discard);
 
     setup.validate();
     //  element_ids
@@ -511,13 +511,13 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
 
 auto add_xor_element(editable_circuit::State &state, point_t position,
                      InsertionMode insertion_mode) -> element_id_t {
-    const auto attributes = editable_circuit::StandardLogicAttributes {
-        .type = ElementType::xor_element,
+    const auto definition = LogicItemDefinition {
+        .element_type = ElementType::xor_element,
         .input_count = 3,
-        .position = position,
+        .output_count = 1,
         .orientation = orientation_t::right,
     };
-    return add_standard_logic_item(state, attributes, insertion_mode);
+    return add_logic_item(state, definition, position, insertion_mode);
 }
 
 TEST(EditableCircuitHandler, LogicItemCombineAddMoveDelete) {

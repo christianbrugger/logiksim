@@ -106,8 +106,8 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
     if (element_id) {
         const auto element = schematic_.element(element_id.value());
         const auto index = std::size_t {0};
-
         const auto value = simulation_.internal_state(element, index);
+
         simulation_.set_internal_state(element, index, !value);
         simulation_.run_infinitesimal();
     }
