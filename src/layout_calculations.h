@@ -11,6 +11,8 @@
 #include <vector>
 
 namespace logicsim {
+[[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
+
 [[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
                                                std::size_t input_count,
                                                std::size_t output_count) -> bool;

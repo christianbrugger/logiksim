@@ -568,6 +568,9 @@ auto add_logic_item_private(State state, LogicItemDefinition definition, point_t
     if (!definition.is_valid()) [[unlikely]] {
         throw_exception("Invalid Logic Item Definition");
     }
+    if (!is_logic_item(definition.element_type)) [[unlikely]] {
+        throw_exception("Definition is not a logic item");
+    }
 
     // insert into underlyings
     auto element_id = state.layout

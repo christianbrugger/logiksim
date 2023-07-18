@@ -107,44 +107,14 @@ auto MainWidget::build_render_buttons() -> QWidget* {
 }
 
 auto MainWidget::build_mode_buttons() -> QWidget* {
-    const auto radio1 = new QRadioButton("&Select");
-    const auto radio2 = new QRadioButton("Element Inse&rt");
-    const auto radio3 = new QRadioButton("Line Inser&t");
-    const auto radio4 = new QRadioButton("Simulate");
-
-    const auto button0 = new QPushButton("Clear");
+    const auto button0 = new QPushButton("Reload");
     const auto button1 = new QPushButton("Simple");
     const auto button2 = new QPushButton("Elements + Wires");
     const auto button3 = new QPushButton("Elements");
     const auto button4 = new QPushButton("Wires");
-    const auto button5 = new QPushButton("Reload");
 
-    radio1->setShortcut(QKeySequence(Qt::ALT | Qt::Key_S));
-    radio2->setShortcut(QKeySequence(Qt::ALT | Qt::Key_R));
-    radio3->setShortcut(QKeySequence(Qt::ALT | Qt::Key_T));
-
-    connect(radio1, &QRadioButton::toggled, this, [this](bool enabled) {
-        if (enabled) {
-            render_widget_->set_interaction_state(InteractionState::select);
-        }
-    });
-    connect(radio2, &QRadioButton::toggled, this, [this](bool enabled) {
-        if (enabled) {
-            render_widget_->set_interaction_state(InteractionState::element_insert);
-        }
-    });
-    connect(radio3, &QRadioButton::toggled, this, [this](bool enabled) {
-        if (enabled) {
-            render_widget_->set_interaction_state(InteractionState::line_insert);
-        }
-    });
-    connect(radio4, &QRadioButton::toggled, this, [this](bool enabled) {
-        if (enabled) {
-            render_widget_->set_interaction_state(InteractionState::simulation);
-        }
-    });
     connect(button0, &QPushButton::clicked, this,
-            [this](bool enabled [[maybe_unused]]) { render_widget_->reset_circuit(); });
+            [this](bool checked [[maybe_unused]]) { render_widget_->reload_circuit(); });
     connect(button1, &QPushButton::clicked, this,
             [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(1); });
     connect(button2, &QPushButton::clicked, this,
@@ -153,19 +123,9 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
             [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(3); });
     connect(button4, &QPushButton::clicked, this,
             [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(4); });
-    connect(button5, &QPushButton::clicked, this,
-            [this](bool checked [[maybe_unused]]) { render_widget_->reload_circuit(); });
-
-    // startup states
-    radio1->setChecked(true);
 
     const auto layout = new QHBoxLayout();
-    layout->addWidget(radio1);
-    layout->addWidget(radio2);
-    layout->addWidget(radio3);
-    layout->addWidget(radio4);
     layout->addWidget(button0);
-    layout->addWidget(button5);
     layout->addWidget(button1);
     layout->addWidget(button2);
     layout->addWidget(button3);
@@ -202,6 +162,12 @@ auto to_slider_scale(time_rate_t rate) -> int {
 }  // namespace
 
 auto MainWidget::build_time_rate_slider() -> QWidget* {
+    const auto button = new QPushButton("Simulate");
+    connect(button, &QPushButton::clicked, this, [this]() {
+        render_widget_->set_interaction_state(InteractionState::simulation);
+    });
+    button->setShortcut(QKeySequence(Qt::Key_F5));
+
     const auto slider = new QSlider(Qt::Orientation::Horizontal);
     const auto label = new QLabel();
 
@@ -222,6 +188,7 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
     label->setMinimumWidth(50);
 
     const auto layout = new QHBoxLayout();
+    layout->addWidget(button);
     layout->addWidget(slider);
     layout->addWidget(label);
 
@@ -237,6 +204,12 @@ auto MainWidget::element_button(QString label, LogicItemDefinition definition)
     connect(button, &QPushButton::clicked, this, [this, definition]() {
         element_definition_ = definition;
         update_selected_logic_item();
+
+        if (element_definition_.element_type == ElementType::wire) {
+            render_widget_->set_interaction_state(InteractionState::line_insert);
+        } else {
+            render_widget_->set_interaction_state(InteractionState::element_insert);
+        }
     });
 
     return button;
@@ -248,6 +221,8 @@ auto MainWidget::build_element_buttons() -> QWidget* {
 
     // input count
     const auto input_count = new QSpinBox();
+    layout->addWidget(input_count, ++row, 0);
+
     connect(input_count, &QSpinBox::valueChanged, this, [this](int value) {
         this->input_count_ = value;
         update_selected_logic_item();
@@ -257,7 +232,14 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     input_count->setMinimum(2);
     input_count->setMaximum(connection_id_t::max());
 
-    layout->addWidget(input_count, ++row, 0);
+    layout->addWidget(element_button("Wire",
+                                     LogicItemDefinition {
+                                         .element_type = ElementType::wire,
+                                         .input_count = 0,
+                                         .orientation = orientation_t::undirected,
+                                     }),
+                      ++row, 0);
+
     layout->addWidget(element_button("BTN",
                                      LogicItemDefinition {
                                          .element_type = ElementType::button,

@@ -5,6 +5,11 @@
 
 namespace logicsim {
 
+auto is_logic_item(ElementType element_type) -> bool {
+    using enum ElementType;
+    return element_type != unused && element_type != placeholder && element_type != wire;
+}
+
 auto require_min(std::size_t value, std::size_t count) -> void {
     if (value < count) [[unlikely]] {
         throw_exception("Object has not enough elements.");

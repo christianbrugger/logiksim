@@ -263,6 +263,7 @@ class RendererWidget : public QWidget {
     Q_SLOT auto on_simulation_timeout() -> void;
     void init();
     auto reset_interaction_state() -> void;
+    auto set_default_interaction_state() -> void;
 
     auto delete_selected_items() -> void;
     auto select_all_items() -> void;

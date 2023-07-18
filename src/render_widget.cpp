@@ -786,6 +786,13 @@ auto RendererWidget::delete_selected_items() -> void {
     update();
 }
 
+auto RendererWidget::set_default_interaction_state() -> void {
+    if (interaction_state_ == InteractionState::element_insert
+        || interaction_state_ == InteractionState::line_insert) {
+        set_interaction_state(InteractionState::select);
+    }
+}
+
 auto RendererWidget::select_all_items() -> void {
     if (interaction_state_ != InteractionState::select) {
         return;
@@ -899,6 +906,14 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                     },
                 },
                 *mouse_logic_);
+            update();
+        }
+    }
+
+    else if (event->button() == Qt::RightButton) {
+        if (!mouse_logic_) {
+            set_default_interaction_state();
+            editable_circuit_.value().selection_builder().clear();
             update();
         }
     }
@@ -1073,6 +1088,7 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
             mouse_logic_.reset();
         } else {
             editable_circuit_.value().selection_builder().clear();
+            set_default_interaction_state();
         }
         update();
         event->accept();

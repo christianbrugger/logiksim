@@ -4,6 +4,7 @@
 #include "exceptions.h"
 #include "iterator_adaptor.h"
 #include "layout_calculation_type.h"
+#include "layout_calculations.h"
 #include "range.h"
 
 namespace logicsim {
@@ -421,7 +422,7 @@ auto ElementTemplate<Const>::is_wire() const -> bool {
 
 template <bool Const>
 auto ElementTemplate<Const>::is_logic_item() const -> bool {
-    return !(is_unused() || is_placeholder() || is_wire());
+    return ::logicsim::is_logic_item(element_type());
 }
 
 template <bool Const>
