@@ -217,7 +217,8 @@ Simulation::Simulation(const Schematic &schematic)
 
         state.input_values.resize(element.input_count(), false);
         state.input_inverters.resize(element.input_count(), false);
-        state.output_delays.resize(element.output_count(), defaults::standard_delay);
+        state.output_delays.resize(element.output_count(),
+                                   Schematic::defaults::standard_delay);
         state.internal_state.resize(internal_state_size(element.element_type()), false);
     }
 }

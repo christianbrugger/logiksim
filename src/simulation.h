@@ -108,17 +108,13 @@ class Simulation {
     static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
-    // TODO remove, now part of editable circuit
-    constexpr static delay_t wire_delay_per_distance {10us};
-
     struct defaults {
-        constexpr static delay_t standard_delay {100us};
-
         constexpr static auto no_timeout = timeout_t::max();
         constexpr static auto infinite_simulation_time = time_t::value_type::max();
         constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max()
                                                 - connection_id_t::max()};
 
+        // TODO remove, now part of editable circuit
         constexpr static delay_t no_history {0ns};
     };
 

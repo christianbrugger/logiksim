@@ -334,7 +334,7 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
     const auto to_time = [time = simulation.time()](LineTree::length_t length_) {
         return time_t {time.value
                        - static_cast<int64_t>(length_)
-                             * Simulation::wire_delay_per_distance.value};
+                             * Schematic::defaults::wire_delay_per_distance.value};
     };
 
     const auto history = simulation.input_history(element);
@@ -725,7 +725,8 @@ auto draw_logic_item(BLContext& ctx, Schematic::ConstElement element,
         case and_element:
         case or_element:
         case xor_element:
-            draw_standard_element(ctx, element, layout, simulation, selected, settings);
+            return draw_standard_element(ctx, element, layout, simulation, selected,
+                                         settings);
 
         case button:
             return draw_button(ctx, element, layout, simulation, selected, settings);
@@ -739,7 +740,8 @@ auto draw_logic_item(BLContext& ctx, Schematic::ConstElement element,
             return draw_shift_register(ctx, element, layout, simulation, selected,
                                        settings);
         case sub_circuit:
-            draw_standard_element(ctx, element, layout, simulation, selected, settings);
+            return draw_standard_element(ctx, element, layout, simulation, selected,
+                                         settings);
     }
     throw_exception("not supported");
 }
@@ -1467,7 +1469,8 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             assert(lengths.size() == element.output_count());
             auto delays
                 = transform_to_vector(lengths, [](LineTree::length_t length) -> delay_t {
-                      return delay_t {Simulation::wire_delay_per_distance.value * length};
+                      return delay_t {Schematic::defaults::wire_delay_per_distance.value
+                                      * length};
                   });
             simulation.set_output_delays(element, delays);
 

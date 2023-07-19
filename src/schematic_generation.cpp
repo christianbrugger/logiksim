@@ -39,7 +39,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
             case button:
                 return Schematic::defaults::button_delay;
             case clock_generator:
-                return delay_t {1ms};
+                return Schematic::defaults::clock_generator_delay;
             default:
                 return Schematic::defaults::standard_delay;
         }
