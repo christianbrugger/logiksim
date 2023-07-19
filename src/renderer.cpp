@@ -440,34 +440,12 @@ auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
         });
 }
 
-auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
-                                bool selected, const RenderSettings& settings) -> void {
-    const auto position = element.position();
-    const auto element_height = std::max(element.input_count(), element.output_count());
-
-    const auto extra_space = 0.4;
-
-    const auto rect = rect_fine_t {
-        point_fine_t {
-            position.x.value * 1.0,
-            position.y.value - extra_space,
-        },
-        point_fine_t {
-            position.x.value + 2.0,
-            position.y.value + extra_space + element_height - 1,
-        },
-    };
-
-    const auto display_state = element.display_state();
+auto set_body_draw_styles(BLContext& ctx, display_state_t display_state, bool selected) {
     const auto alpha = get_alpha_value(display_state);
 
     const auto fill_color = [&] {
         if (display_state == display_state_t::normal) {
             if (selected) {
-                // return BLRgba32(128, 128, 64, alpha);
-                // return BLRgba32(255, 255, 128, alpha);
-
-                // return BLRgba32(192, 192, 192, alpha);
                 return BLRgba32(224, 224, 224, alpha);
             }
             return BLRgba32(255, 255, 128, alpha);
@@ -477,7 +455,27 @@ auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
 
     ctx.setFillStyle(fill_color);
     ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
+}
 
+constexpr static double BODY_OVERDRAW = 0.4;  // grid values
+
+auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
+                                bool selected, const RenderSettings& settings) -> void {
+    const auto position = element.position();
+    const auto element_height = std::max(element.input_count(), element.output_count());
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value * 1.0,
+            position.y.value - BODY_OVERDRAW,
+        },
+        point_fine_t {
+            position.x.value + 2.0,
+            position.y.value + BODY_OVERDRAW + element_height - 1,
+        },
+    };
+
+    set_body_draw_styles(ctx, element.display_state(), selected);
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 }
 
@@ -501,35 +499,19 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
 auto draw_button_body(BLContext& ctx, layout::ConstElement element, bool selected,
                       bool enabled, const RenderSettings& settings) -> void {
     const auto position = element.position();
-    const auto extra_space = 0.4;
 
     const auto rect = rect_fine_t {
         point_fine_t {
-            position.x.value - extra_space,
-            position.y.value - extra_space,
+            position.x.value - BODY_OVERDRAW,
+            position.y.value - BODY_OVERDRAW,
         },
         point_fine_t {
-            position.x.value + extra_space,
-            position.y.value + extra_space,
+            position.x.value + BODY_OVERDRAW,
+            position.y.value + BODY_OVERDRAW,
         },
     };
 
-    const auto display_state = element.display_state();
-    const auto alpha = get_alpha_value(display_state);
-
-    const auto fill_color = [&] {
-        if (display_state == display_state_t::normal) {
-            if (selected) {
-                return BLRgba32(224, 224, 224, alpha);
-            }
-            return BLRgba32(255, 255, 128, alpha);
-        }
-        return BLRgba32(192, 192, 192, alpha);
-    }();
-
-    ctx.setFillStyle(fill_color);
-    ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
-
+    set_body_draw_styles(ctx, element.display_state(), selected);
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 }
 
@@ -546,24 +528,220 @@ auto draw_button(BLContext& ctx, Schematic::ConstElement element, const Layout& 
 }
 
 //
+// Inverter
+//
+
+auto draw_inverter_body(BLContext& ctx, layout::ConstElement element, bool selected,
+                        const RenderSettings& settings) -> void {
+    const auto position = element.position();
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value + 0.0,
+            position.y.value - BODY_OVERDRAW,
+        },
+        point_fine_t {
+            position.x.value + 1.0,
+            position.y.value + BODY_OVERDRAW,
+        },
+    };
+
+    set_body_draw_styles(ctx, element.display_state(), selected);
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+}
+
+auto draw_inverter(BLContext& ctx, layout::ConstElement element, bool selected,
+                   const RenderSettings& settings) -> void {
+    draw_inverter_body(ctx, element, selected, settings);
+    draw_logic_item_connectors(ctx, element, settings);
+}
+
+auto draw_inverter(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
+                   const Simulation& simulation, bool selected,
+                   const RenderSettings& settings) -> void {
+    draw_inverter_body(ctx, layout.element(element), selected, settings);
+    draw_logic_item_connectors(ctx, element, layout, simulation, settings);
+}
+
+//
+// Clock Generator
+//
+
+auto draw_clock_generator_body(BLContext& ctx, layout::ConstElement element,
+                               bool selected, const RenderSettings& settings) -> void {
+    const auto position = element.position();
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value + 0.0,
+            position.y.value - BODY_OVERDRAW,
+        },
+        point_fine_t {
+            position.x.value + 3.0,
+            position.y.value + 2.0 + BODY_OVERDRAW,
+        },
+    };
+
+    set_body_draw_styles(ctx, element.display_state(), selected);
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+}
+
+auto draw_clock_generator(BLContext& ctx, layout::ConstElement element, bool selected,
+                          const RenderSettings& settings) -> void {
+    draw_clock_generator_body(ctx, element, selected, settings);
+    draw_logic_item_connectors(ctx, element, settings);
+}
+
+auto draw_clock_generator(BLContext& ctx, Schematic::ConstElement element,
+                          const Layout& layout, const Simulation& simulation,
+                          bool selected, const RenderSettings& settings) -> void {
+    draw_clock_generator_body(ctx, layout.element(element), selected, settings);
+    draw_logic_item_connectors(ctx, element, layout, simulation, settings);
+}
+
+//
+// JK-FlipFlop
+//
+
+auto draw_flipflop_jk_body(BLContext& ctx, layout::ConstElement element, bool selected,
+                           const RenderSettings& settings) -> void {
+    const auto position = element.position();
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value + 0.0,
+            position.y.value - BODY_OVERDRAW,
+        },
+        point_fine_t {
+            position.x.value + 4.0,
+            position.y.value + 2.0 + BODY_OVERDRAW,
+        },
+    };
+
+    set_body_draw_styles(ctx, element.display_state(), selected);
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+}
+
+auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element, bool selected,
+                      const RenderSettings& settings) -> void {
+    draw_flipflop_jk_body(ctx, element, selected, settings);
+    draw_logic_item_connectors(ctx, element, settings);
+}
+
+auto draw_flipflop_jk(BLContext& ctx, Schematic::ConstElement element,
+                      const Layout& layout, const Simulation& simulation, bool selected,
+                      const RenderSettings& settings) -> void {
+    draw_flipflop_jk_body(ctx, layout.element(element), selected, settings);
+    draw_logic_item_connectors(ctx, element, layout, simulation, settings);
+}
+
+//
+// Shift Register
+//
+
+auto draw_shift_register_body(BLContext& ctx, layout::ConstElement element, bool selected,
+                              const RenderSettings& settings) -> void {
+    const auto position = element.position();
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value + 0.0,
+            position.y.value - BODY_OVERDRAW,
+        },
+        point_fine_t {
+            position.x.value + 8.0,
+            position.y.value + 2.0 + BODY_OVERDRAW,
+        },
+    };
+
+    set_body_draw_styles(ctx, element.display_state(), selected);
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+}
+
+auto draw_shift_register(BLContext& ctx, layout::ConstElement element, bool selected,
+                         const RenderSettings& settings) -> void {
+    draw_shift_register_body(ctx, element, selected, settings);
+    draw_logic_item_connectors(ctx, element, settings);
+}
+
+auto draw_shift_register(BLContext& ctx, Schematic::ConstElement element,
+                         const Layout& layout, const Simulation& simulation,
+                         bool selected, const RenderSettings& settings) -> void {
+    draw_shift_register_body(ctx, layout.element(element), selected, settings);
+    draw_logic_item_connectors(ctx, element, layout, simulation, settings);
+}
+
+//
 // Logic Item
 //
 
 auto draw_logic_item(BLContext& ctx, layout::ConstElement element, bool selected,
                      const RenderSettings& settings) -> void {
-    if (element.element_type() == ElementType::button) {
-        return draw_button(ctx, element, selected, settings);
+    switch (element.element_type()) {
+        using enum ElementType;
+
+        case unused:
+        case placeholder:
+        case wire:
+            throw_exception("not supported");
+
+        case inverter_element:
+            return draw_inverter(ctx, element, selected, settings);
+
+        case and_element:
+        case or_element:
+        case xor_element:
+            return draw_standard_element(ctx, element, selected, settings);
+
+        case button:
+            return draw_button(ctx, element, selected, settings);
+
+        case clock_generator:
+            return draw_clock_generator(ctx, element, selected, settings);
+        case flipflop_jk:
+            return draw_flipflop_jk(ctx, element, selected, settings);
+        case shift_register:
+            return draw_shift_register(ctx, element, selected, settings);
+        case sub_circuit:
+            return draw_standard_element(ctx, element, selected, settings);
     }
-    draw_standard_element(ctx, element, selected, settings);
+    throw_exception("not supported");
 }
 
 auto draw_logic_item(BLContext& ctx, Schematic::ConstElement element,
                      const Layout& layout, const Simulation& simulation, bool selected,
                      const RenderSettings& settings) -> void {
-    if (element.element_type() == ElementType::button) {
-        return draw_button(ctx, element, layout, simulation, selected, settings);
+    switch (element.element_type()) {
+        using enum ElementType;
+
+        case unused:
+        case placeholder:
+        case wire:
+            throw_exception("not supported");
+
+        case inverter_element:
+            return draw_inverter(ctx, element, layout, simulation, selected, settings);
+
+        case and_element:
+        case or_element:
+        case xor_element:
+            draw_standard_element(ctx, element, layout, simulation, selected, settings);
+
+        case button:
+            return draw_button(ctx, element, layout, simulation, selected, settings);
+
+        case clock_generator:
+            return draw_clock_generator(ctx, element, layout, simulation, selected,
+                                        settings);
+        case flipflop_jk:
+            return draw_flipflop_jk(ctx, element, layout, simulation, selected, settings);
+        case shift_register:
+            return draw_shift_register(ctx, element, layout, simulation, selected,
+                                       settings);
+        case sub_circuit:
+            draw_standard_element(ctx, element, layout, simulation, selected, settings);
     }
-    draw_standard_element(ctx, element, layout, simulation, selected, settings);
+    throw_exception("not supported");
 }
 
 auto draw_element_shadow(BLContext& ctx, layout::ConstElement element, bool selected,
@@ -829,9 +1007,9 @@ auto draw_background_pattern_checker(BLContext& ctx, point_fine_t a0, point_fine
 }
 
 auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
-    const auto a0 = to_grid_fine(0, 0, settings.view_config);
-    const auto a1
-        = to_grid_fine(ctx.targetWidth(), ctx.targetHeight(), settings.view_config);
+    const auto a0 = from_context_fine(BLPoint {0, 0}, settings.view_config);
+    const auto a1 = from_context_fine(BLPoint {ctx.targetWidth(), ctx.targetHeight()},
+                                      settings.view_config);
 
     constexpr static auto grid_definition = {
         std::tuple {1, monochrome(0xF0), 1},    //
