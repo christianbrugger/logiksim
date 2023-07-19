@@ -135,6 +135,7 @@ class Simulation {
 
     // Initialize logic elements in the simulation
     auto initialize() -> void;
+    [[nodiscard]] auto is_initialized() const -> bool;
 
     /// @brief Run the simulation by changing the given simulations state
     /// @param simulation_time   simulate for this time or, when run_until_steady,
@@ -144,13 +145,11 @@ class Simulation {
     auto run(time_t::value_type simulation_time = defaults::infinite_simulation_time,
              timeout_t timeout = defaults::no_timeout,
              int64_t max_events = defaults::no_max_events) -> int64_t;
-    // After any events are submitted or function is called that submits events, like
-    // set_internal_state, the simulation needs to be advanced in a small way.
-    // Otherwise there might be two events at the same time for the same input leading
-    // to a runtime error.
+    // Runs simulation for a very short time
     auto run_infinitesimal() -> int64_t;
 
     // input values
+    auto set_input_value(Schematic::ConstInput input, bool value) -> void;
     [[nodiscard]] auto input_value(element_id_t element_id, connection_id_t index) const
         -> bool;
     [[nodiscard]] auto input_value(Schematic::ConstInput input) const -> bool;
@@ -211,9 +210,7 @@ class Simulation {
                       const logic_small_vector_t &output_values) -> void;
     auto apply_events(Schematic::ConstElement element, const event_group_t &group)
         -> void;
-    auto set_input(Schematic::ConstInput input, bool value) -> void;
-    // auto set_internal_state(Schematic::ConstElement element,
-    //                         const logic_small_vector_t &state) -> void;
+    auto set_input_internal(Schematic::ConstInput input, bool value) -> void;
 
     auto record_input_history(Schematic::ConstInput input, bool new_value) -> void;
     auto clean_history(history_vector_t &history, delay_t history_length) -> void;
@@ -326,6 +323,9 @@ class Simulation::HistoryIterator {
     // from 0 to history.size() + 1
     std::size_t index_ {};
 };
+
+auto set_default_inputs(Simulation &simulation) -> void;
+
 }  // namespace logicsim
 
 static_assert(std::forward_iterator<logicsim::Simulation::HistoryIterator>);

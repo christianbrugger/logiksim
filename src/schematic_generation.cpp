@@ -32,9 +32,19 @@ auto add_unused_element(Schematic& schematic) -> Schematic::Element {
 }
 
 auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void {
-    const auto delay = element.element_type() == ElementType::button
-                           ? Schematic::defaults::button_delay
-                           : Schematic::defaults::standard_delay;
+    const auto delay = [&]() {
+        switch (element.element_type()) {
+            using enum ElementType;
+
+            case button:
+                return Schematic::defaults::button_delay;
+            case clock_generator:
+                return delay_t {1ms};
+            default:
+                return Schematic::defaults::standard_delay;
+        }
+        throw_exception("invalid");
+    }();
 
     schematic.add_element(Schematic::ElementData {
         .element_type = element.element_type(),
@@ -104,6 +114,13 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
 
     // connect wires to elements
     for (auto element : schematic.elements()) {
+        // connect clock generators internal
+        if (element.element_type() == ElementType::clock_generator) {
+            element.input(connection_id_t {0})
+                .connect(element.output(connection_id_t {0}));
+        }
+
+        // connect wires
         const auto& line_tree = layout.line_tree(element.element_id());
 
         if (line_tree.empty()) {

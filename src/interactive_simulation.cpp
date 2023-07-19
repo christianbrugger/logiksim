@@ -37,6 +37,10 @@ auto InteractionCache::find(point_t position) const -> std::optional<element_id_
 
 }  // namespace detail::interactive_simulation
 
+//
+// Interactive Simulation
+//
+
 InteractiveSimulation::InteractiveSimulation(const Layout& layout, time_rate_t time_rate)
     : schematic_ {generate_schematic(layout)},
       simulation_ {schematic_},
@@ -53,6 +57,7 @@ InteractiveSimulation::InteractiveSimulation(const Layout& layout, time_rate_t t
     }
 
     // keep this
+    set_default_inputs(simulation_);
     simulation_.initialize();
 }
 
@@ -109,7 +114,6 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
         const auto value = simulation_.internal_state(element, index);
 
         simulation_.set_internal_state(element, index, !value);
-        simulation_.run_infinitesimal();
     }
 }
 

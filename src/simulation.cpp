@@ -100,6 +100,32 @@ void validate(const event_group_t &events) {
     }
 }
 
+auto set_default_inputs(Simulation &simulation) -> void {
+    if (simulation.is_initialized()) [[unlikely]] {
+        throw_exception("cannot set inputs for initialized simulation");
+    }
+
+    for (const auto element : simulation.schematic().elements()) {
+        // enable unconnected clocks
+        if (element.element_type() == ElementType::clock_generator) {
+            const auto input = element.input(connection_id_t {1});
+            if (!input.has_connected_element()) {
+                simulation.set_input_value(input, true);
+            }
+        }
+
+        // enable j&k of unconnected flipflops
+        if (element.element_type() == ElementType::flipflop_jk) {
+            const auto input_1 = element.input(connection_id_t {1});
+            const auto input_2 = element.input(connection_id_t {2});
+            if (!input_1.has_connected_element() && !input_2.has_connected_element()) {
+                simulation.set_input_value(input_1, true);
+                simulation.set_input_value(input_2, true);
+            }
+        }
+    }
+}
+
 //
 // SimulationQueue
 //
@@ -387,7 +413,7 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
 auto Simulation::apply_events(const Schematic::ConstElement element,
                               const event_group_t &group) -> void {
     for (const auto &event : group) {
-        set_input(element.input(event.input_index), event.value);
+        set_input_internal(element.input(event.input_index), event.value);
     }
 }
 
@@ -568,12 +594,19 @@ auto Simulation::initialize() -> void {
             continue;
         }
 
-        const auto old_outputs {output_values(element)};
+        const auto old_outputs = output_values(element);
 
         if (has_internal_state(element_type)) {
+            const auto new_inputs = input_values(element);
+            if (std::ranges::any_of(new_inputs, std::identity {})) {
+                const auto old_inputs = logic_small_vector_t(new_inputs.size(), false);
+                auto &internal_state = get_state(element).internal_state;
+                update_internal_state(old_inputs, new_inputs, element_type,
+                                      internal_state);
+            }
+
             const auto new_outputs = calculate_outputs_from_state(
                 internal_state(element), element.output_count(), element_type);
-
             submit_events_for_changed_outputs(element, old_outputs, new_outputs);
 
         } else {
@@ -587,6 +620,10 @@ auto Simulation::initialize() -> void {
     }
 
     is_initialized_ = true;
+}
+
+auto Simulation::is_initialized() const -> bool {
+    return is_initialized_;
 }
 
 auto Simulation::record_input_history(const Schematic::ConstInput input,
@@ -646,7 +683,8 @@ auto Simulation::input_values() const -> const logic_vector_t {
     return result;
 }
 
-auto Simulation::set_input(const Schematic::ConstInput input, bool value) -> void {
+auto Simulation::set_input_internal(const Schematic::ConstInput input, bool value)
+    -> void {
     record_input_history(input, value);
     get_state(input).input_values.at(input.input_index().value) = value;
 }
@@ -732,6 +770,19 @@ auto Simulation::set_output_delays(Schematic::ConstElement element,
     }
 }
 
+auto Simulation::set_input_value(Schematic::ConstInput input, bool value) -> void {
+    auto &input_value = get_state(input).input_values.at(input.input_index().value);
+
+    if (!is_initialized_) {
+        input_value = value;
+    } else {
+        if (input_value != value) {
+            submit_event(input, time_t::epsilon().value, value);
+            run_infinitesimal();
+        }
+    }
+}
+
 auto Simulation::set_internal_state(Schematic::ConstElement element, std::size_t index,
                                     bool value) -> void {
     auto &state = get_state(element).internal_state.at(index);
@@ -746,6 +797,7 @@ auto Simulation::set_internal_state(Schematic::ConstElement element, std::size_t
             internal_state(element), element.output_count(), element.element_type());
 
         submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+        run_infinitesimal();
     }
 }
 
