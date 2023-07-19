@@ -911,11 +911,13 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
     }
 
     else if (event->button() == Qt::RightButton) {
-        if (!mouse_logic_) {
-            set_default_interaction_state();
+        if (mouse_logic_) {
+            mouse_logic_.reset();
+        } else {
             editable_circuit_.value().selection_builder().clear();
-            update();
+            set_default_interaction_state();
         }
+        update();
     }
 
 #ifndef NDEBUG
