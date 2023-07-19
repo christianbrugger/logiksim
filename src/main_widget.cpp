@@ -292,30 +292,30 @@ auto MainWidget::build_element_buttons() -> QWidget* {
                                      }),
                       ++row, 0);
 
-    layout->addWidget(element_button("JK-FF",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::flipflop_jk,
-                                         .input_count = 5,
-                                         .output_count = 2,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
-    layout->addWidget(element_button("CLK",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::clock_generator,
-                                         .input_count = 2,
-                                         .output_count = 2,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
-    layout->addWidget(element_button("REG",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::shift_register,
-                                         .input_count = 3,
-                                         .output_count = 2,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
+    // layout->addWidget(element_button("JK-FF",
+    //                                  LogicItemDefinition {
+    //                                      .element_type = ElementType::flipflop_jk,
+    //                                      .input_count = 5,
+    //                                      .output_count = 2,
+    //                                      .orientation = orientation_t::right,
+    //                                  }),
+    //                   ++row, 0);
+    // layout->addWidget(element_button("CLK",
+    //                                  LogicItemDefinition {
+    //                                      .element_type = ElementType::clock_generator,
+    //                                      .input_count = 2,
+    //                                      .output_count = 2,
+    //                                      .orientation = orientation_t::right,
+    //                                  }),
+    //                   ++row, 0);
+    // layout->addWidget(element_button("REG",
+    //                                  LogicItemDefinition {
+    //                                      .element_type = ElementType::shift_register,
+    //                                      .input_count = 3,
+    //                                      .output_count = 2,
+    //                                      .orientation = orientation_t::right,
+    //                                  }),
+    //                   ++row, 0);
 
     layout->setRowStretch(++row, 1);
 
