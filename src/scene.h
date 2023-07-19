@@ -61,6 +61,9 @@ auto to_context(point_fine_t position, const ViewConfig& config) -> BLPoint;
 auto to_context(grid_t length, const ViewConfig& config) -> double;
 auto to_context(double length, const ViewConfig& config) -> double;
 
+// from blend2d / pixel coordinates
+auto from_context_fine(BLPoint point, const ViewConfig& config) -> point_fine_t;
+
 }  // namespace logicsim
 
 #endif

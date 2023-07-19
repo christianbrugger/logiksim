@@ -8,6 +8,29 @@
 
 namespace logicsim {
 
+//
+// grid_t
+//
+
+auto to_rounded(grid_fine_t v) -> grid_t {
+    return grid_t {gsl::narrow_cast<grid_t::value_type>(std::clamp(
+        round_fast(v), grid_fine_t {grid_t::min()}, grid_fine_t {grid_t::max()}))};
+}
+
+auto to_floored(grid_fine_t v) -> grid_t {
+    return grid_t {gsl::narrow_cast<grid_t::value_type>(std::clamp(
+        std::floor(v), grid_fine_t {grid_t::min()}, grid_fine_t {grid_t::max()}))};
+}
+
+auto to_truncated(grid_fine_t v) -> grid_t {
+    return grid_t {gsl::narrow_cast<grid_t::value_type>(std::clamp(
+        std::ceil(v), grid_fine_t {grid_t::min()}, grid_fine_t {grid_t::max()}))};
+}
+
+//
+// line_t
+//
+
 auto is_horizontal(line_t line) noexcept -> bool {
     return line.p0.y == line.p1.y;
 }
@@ -125,6 +148,23 @@ auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t {
     return ordered_line_t {
         add_unchecked(line.p0, dx, dy),
         add_unchecked(line.p1, dx, dy),
+    };
+}
+
+//
+// rect_t
+//
+
+auto to_enclosing_rect(rect_fine_t rect) -> rect_t {
+    return rect_t {
+        point_t {
+            to_floored(rect.p0.x),
+            to_floored(rect.p0.y),
+        },
+        point_t {
+            to_truncated(rect.p1.x),
+            to_truncated(rect.p1.y),
+        },
     };
 }
 

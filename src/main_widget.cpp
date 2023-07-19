@@ -60,6 +60,7 @@ MainWidget::MainWidget(QWidget* parent)
     timer_.setInterval(100);
     timer_.start();
 
+    render_widget_->set_interaction_state(InteractionState::select);
     resize(800, 600);
 }
 

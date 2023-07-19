@@ -662,4 +662,30 @@ auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
     return mask;
 }
 
+auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {
+    if (tree.empty()) [[unlikely]] {
+        throw_exception("empty segment tree has no bounding rect");
+    }
+
+    auto p_min = point_t {grid_t::max(), grid_t::max()};
+    auto p_max = point_t {grid_t::min(), grid_t::min()};
+
+    for (const auto& info : tree.segment_infos()) {
+        if (info.line.p0.x < p_min.x) {
+            p_min.x = info.line.p0.x;
+        }
+        if (info.line.p0.y < p_min.y) {
+            p_min.y = info.line.p0.y;
+        }
+
+        if (info.line.p1.x > p_max.x) {
+            p_max.x = info.line.p1.x;
+        }
+        if (info.line.p1.y > p_max.y) {
+            p_max.y = info.line.p1.y;
+        }
+    }
+    return rect_t {p_min, p_max};
+}
+
 }  // namespace logicsim

@@ -273,6 +273,13 @@ auto element_selection_rect(ordered_line_t line) -> rect_fine_t {
     return rect_fine_t {p0, p1};
 }
 
+auto element_bounding_rect(layout_calculation_data_t data) -> rect_t {
+    if (is_logic_item(data.element_type)) {
+        return to_enclosing_rect(element_selection_rect(data));
+    }
+    throw_exception("Not supported for other types");
+}
+
 auto is_representable(layout_calculation_data_t data) -> bool {
     if (is_placeholder(data)) {
         return true;

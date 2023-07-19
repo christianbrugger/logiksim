@@ -161,4 +161,16 @@ auto to_context(grid_t length, const ViewConfig &config) -> double {
     return to_context(length.value, config);
 }
 
+// from blend2d / pixel coordinates
+
+auto from_context_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
+    const auto scale = config.pixel_scale();
+    const auto offset = config.offset();
+
+    return point_fine_t {
+        point.x / scale - offset.x,
+        point.y / scale - offset.y,
+    };
+}
+
 }  // namespace logicsim

@@ -6,6 +6,7 @@
 #include "layout_calculation_type.h"
 #include "layout_calculations.h"
 #include "range.h"
+#include "timer.h"
 
 namespace logicsim {
 
@@ -27,6 +28,8 @@ auto Layout::swap(Layout &other) noexcept -> void {
     orientation_.swap(other.orientation_);
     display_states_.swap(other.display_states_);
     colors_.swap(other.colors_);
+
+    bounding_rects_.swap(other.bounding_rects_);
 
     swap(circuit_id_, other.circuit_id_);
 }
@@ -55,6 +58,8 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
     swap_ids(orientation_);
     swap_ids(display_states_);
     swap_ids(colors_);
+
+    swap_ids(bounding_rects_);
 }
 
 auto Layout::delete_last_element() -> void {
@@ -75,6 +80,28 @@ auto Layout::delete_last_element() -> void {
     orientation_.pop_back();
     display_states_.pop_back();
     colors_.pop_back();
+
+    bounding_rects_.pop_back();
+}
+
+auto Layout::update_bounding_rect(element_id_t element_id) const -> void {
+    const auto element = this->element(element_id);
+    auto &rect = bounding_rects_.at(element_id.value);
+
+    if (element.is_logic_item()) {
+        const auto data = element.to_layout_calculation_data();
+        rect = element_bounding_rect(data);
+    }
+
+    else if (element.is_wire()) {
+        const auto &tree = segment_tree(element_id);
+
+        if (tree.empty()) {
+            rect = empty_bounding_rect;
+        } else {
+            rect = calculate_bounding_rect(tree);
+        }
+    }
 }
 
 auto is_inserted(const Layout &layout, element_id_t element_id) -> bool {
@@ -164,6 +191,9 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
         throw_exception("Reached maximum number of elements.");
     }
 
+    const auto element_id = element_id_t {
+        gsl::narrow_cast<element_id_t::value_type>(element_types_.size())};
+
     // extend vectors
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.circuit_id);
@@ -179,8 +209,9 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
     display_states_.push_back(data.display_state);
     colors_.push_back(data.color);
 
-    auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
-        element_types_.size() - std::size_t {1})};
+    bounding_rects_.push_back(empty_bounding_rect);
+
+    update_bounding_rect(element_id);
     return element(element_id);
 }
 
@@ -203,6 +234,7 @@ auto Layout::set_line_tree(element_id_t element_id, LineTree &&line_tree) -> voi
 
 auto Layout::set_position(element_id_t element_id, point_t position) -> void {
     positions_.at(element_id.value) = position;
+    update_bounding_rect(element_id);
 }
 
 auto Layout::set_display_state(element_id_t element_id, display_state_t display_state)
@@ -296,9 +328,18 @@ auto Layout::color(element_id_t element_id) const -> color_t {
     return colors_.at(element_id.value);
 }
 
+auto Layout::bounding_rect(element_id_t element_id) const -> rect_t {
+    if (bounding_rects_.at(element_id.value) == empty_bounding_rect) {
+        update_bounding_rect(element_id);
+    }
+    return bounding_rects_.at(element_id.value);
+}
+
 auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
     // reset line tree
     line_trees_.at(element_id.value) = LineTree {};
+    // reset bounding rect
+    bounding_rects_.at(element_id.value) = empty_bounding_rect;
 
     return segment_trees_.at(element_id.value);
 }
@@ -339,7 +380,7 @@ auto Layout::validate() const -> void {
 }
 
 //
-// Layout
+// Element Template
 //
 
 namespace layout {
@@ -483,6 +524,11 @@ auto ElementTemplate<Const>::is_inserted() const -> bool {
 template <bool Const>
 auto ElementTemplate<Const>::color() const -> color_t {
     return layout_->color(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::bounding_rect() const -> rect_t {
+    return layout_->bounding_rect(element_id_);
 }
 
 template <bool Const>

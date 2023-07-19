@@ -2,6 +2,7 @@
 #include "renderer.h"
 
 #include "algorithm.h"
+#include "collision.h"
 #include "editable_circuit/editable_circuit.h"
 #include "format.h"
 #include "layout.h"
@@ -648,9 +649,13 @@ auto draw_wire_valid_shadow(BLContext& ctx, const SegmentTree& segment_tree,
 }
 
 auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& selection,
+                       const visibility_mask_t& visibility, rect_t scene_rect,
                        const RenderSettings& settings) {
+    const auto is_visible
+        = [&](element_id_t element_id) { return visibility.at(element_id.value); };
+
     for (const auto element : layout.elements()) {
-        if (!element.is_wire()) {
+        if (!element.is_wire() || !is_visible(element)) {
             continue;
         }
 
@@ -671,7 +676,8 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& se
     }
 
     for (auto&& [segment, parts] : selection.selected_segments()) {
-        if (layout.display_state(segment.element_id) == display_state_t::normal) {
+        if (is_visible(segment.element_id)
+            && layout.display_state(segment.element_id) == display_state_t::normal) {
             const auto line = get_line(layout, segment);
             draw_wire_selected_parts_shadow(ctx, line, parts, settings);
         }
@@ -679,21 +685,41 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& se
 }
 
 auto render_circuit(BLContext& ctx, render_args_t args) -> void {
+    auto visibility = visibility_mask_t(args.layout.element_count(), false);
+
+    auto scene_rect = to_enclosing_rect(rect_fine_t {
+        from_context_fine(BLPoint {0, 0}, args.settings.view_config),
+        from_context_fine(BLPoint {ctx.targetWidth(), ctx.targetHeight()},
+                          args.settings.view_config),
+    });
+
+    {
+        // auto t = Timer("collisions", Timer::Unit::ms, 2);
+
+        for (const auto element : args.layout.elements()) {
+            const auto index = element.element_id().value;
+            visibility.at(index) = is_colliding(element.bounding_rect(), scene_rect);
+        }
+    }
+
+    // auto t = Timer("render", Timer::Unit::ms, 2);
     const auto is_selected = [&](element_id_t element_id) {
         const auto id = element_id.value;
         return id < std::ssize(args.selection_mask) ? args.selection_mask[id] : false;
     };
+    const auto is_visible
+        = [&](element_id_t element_id) { return visibility.at(element_id.value); };
 
     // unselected elements
     if (args.simulation == nullptr || args.schematic == nullptr) {
         for (auto element : args.layout.elements()) {
-            if (!is_selected(element) && element.is_logic_item()) {
+            if (!is_selected(element) && element.is_logic_item() && is_visible(element)) {
                 draw_logic_item(ctx, element, false, args.settings);
             }
         }
     } else {
         for (auto element : args.schematic->elements()) {
-            if (!is_selected(element) && element.is_logic_item()) {
+            if (!is_selected(element) && element.is_logic_item() && is_visible(element)) {
                 draw_logic_item(ctx, element, args.layout, *args.simulation, false,
                                 args.settings);
             }
@@ -703,13 +729,13 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     // wires
     if (args.simulation == nullptr || args.schematic == nullptr) {
         for (auto element : args.layout.elements()) {
-            if (element.element_type() == ElementType::wire) {
+            if (element.element_type() == ElementType::wire && is_visible(element)) {
                 draw_element_tree(ctx, element, args.settings);
             }
         }
     } else {
         for (auto element : args.schematic->elements()) {
-            if (element.element_type() == ElementType::wire) {
+            if (element.element_type() == ElementType::wire && is_visible(element)) {
                 if (element.input_count() == 0) {
                     draw_element_tree(ctx, args.layout.element(element), args.settings);
                 } else {
@@ -722,13 +748,13 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     // selected elements
     if (args.simulation == nullptr || args.schematic == nullptr) {
         for (auto element : args.layout.elements()) {
-            if (is_selected(element) && element.is_logic_item()) {
+            if (is_selected(element) && element.is_logic_item() && is_visible(element)) {
                 draw_logic_item(ctx, element, true, args.settings);
             }
         }
     } else {
         for (auto element : args.schematic->elements()) {
-            if (is_selected(element) && element.is_logic_item()) {
+            if (is_selected(element) && element.is_logic_item() && is_visible(element)) {
                 draw_logic_item(ctx, element, args.layout, *args.simulation, true,
                                 args.settings);
             }
@@ -737,12 +763,15 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
 
     // shadow
     for (auto element : args.layout.elements()) {
-        bool selected = is_selected(element);
-        draw_element_shadow(ctx, element, selected, args.settings);
+        if (is_visible(element)) {
+            bool selected = is_selected(element);
+            draw_element_shadow(ctx, element, selected, args.settings);
+        }
     }
 
     // wire shadow
-    draw_wire_shadows(ctx, args.layout, args.selection, args.settings);
+    draw_wire_shadows(ctx, args.layout, args.selection, visibility, scene_rect,
+                      args.settings);
 }
 
 //

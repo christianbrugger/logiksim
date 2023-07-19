@@ -104,6 +104,7 @@ class Layout {
     [[nodiscard]] auto orientation(element_id_t element_id) const -> orientation_t;
     [[nodiscard]] auto display_state(element_id_t element_id) const -> display_state_t;
     [[nodiscard]] auto color(element_id_t element_id) const -> color_t;
+    [[nodiscard]] auto bounding_rect(element_id_t element_id) const -> rect_t;
 
     [[nodiscard]] auto modifyable_segment_tree(element_id_t element_id) -> SegmentTree &;
 
@@ -112,6 +113,9 @@ class Layout {
    private:
     auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
     auto delete_last_element() -> void;
+    auto update_bounding_rect(element_id_t element_id) const -> void;
+
+    constexpr static auto empty_bounding_rect = rect_t {point_t {0, 0}, point_t {0, 0}};
 
     using connection_size_t = std::make_unsigned<connection_id_t::value_type>::type;
     static_assert(sizeof(connection_size_t) == sizeof(connection_id_t));
@@ -129,6 +133,8 @@ class Layout {
     std::vector<orientation_t> orientation_ {};
     std::vector<display_state_t> display_states_ {};
     std::vector<color_t> colors_ {};
+
+    mutable std::vector<rect_t> bounding_rects_ {};
 
     circuit_id_t circuit_id_ {0};
 };
@@ -193,6 +199,8 @@ class ElementTemplate {
     [[nodiscard]] auto position() const -> point_t;
     [[nodiscard]] auto orientation() const -> orientation_t;
     [[nodiscard]] auto color() const -> color_t;
+
+    [[nodiscard]] auto bounding_rect() const -> rect_t;
 
     [[nodiscard]] auto modifyable_segment_tree() const -> SegmentTree &
         requires(!Const);

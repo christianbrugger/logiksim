@@ -8,6 +8,14 @@
 namespace logicsim {
 
 //
+// grid_t
+//
+
+auto to_rounded(grid_fine_t v) -> grid_t;
+auto to_floored(grid_fine_t v) -> grid_t;
+auto to_truncated(grid_fine_t v) -> grid_t;
+
+//
 // line_t
 //
 
@@ -33,6 +41,12 @@ auto is_endpoint(point_t point, line_t line) -> bool;
 auto is_endpoint(point_t point, ordered_line_t line) -> bool;
 
 auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t;
+
+//
+// rect_t
+//
+
+auto to_enclosing_rect(rect_fine_t rect) -> rect_t;
 
 //
 // orientation_t

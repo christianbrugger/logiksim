@@ -27,4 +27,34 @@ auto line_points_colliding(ordered_line_t line0, ordered_line_t line1) noexcept 
            || is_colliding(line1.p0, line0) || is_colliding(line1.p1, line0);
 }
 
+auto is_colliding(rect_fine_t a, rect_fine_t b) noexcept -> bool {
+    // check for no overlap in the x-axis
+    if (a.p1.x < b.p0.x || a.p0.x > b.p1.x) {
+        return false;
+    }
+
+    // check for no overlap in the y-axis
+    if (a.p1.y < b.p0.y || a.p0.y > b.p1.y) {
+        return false;
+    }
+
+    // the rectangles are intersecting
+    return true;
+}
+
+auto is_colliding(rect_t a, rect_t b) noexcept -> bool {
+    // check for no overlap in the x-axis
+    if (a.p1.x < b.p0.x || a.p0.x > b.p1.x) {
+        return false;
+    }
+
+    // check for no overlap in the y-axis
+    if (a.p1.y < b.p0.y || a.p0.y > b.p1.y) {
+        return false;
+    }
+
+    // the rectangles are intersecting
+    return true;
+}
+
 }  // namespace logicsim
