@@ -106,6 +106,15 @@ auto set_default_inputs(Simulation &simulation) -> void {
     }
 
     for (const auto element : simulation.schematic().elements()) {
+        // enable and inputs
+        if (element.element_type() == ElementType::and_element) {
+            for (auto input : element.inputs()) {
+                if (!input.has_connected_element()) {
+                    simulation.set_input_value(input, true);
+                }
+            }
+        }
+
         // enable unconnected clocks
         if (element.element_type() == ElementType::clock_generator) {
             const auto input = element.input(connection_id_t {1});

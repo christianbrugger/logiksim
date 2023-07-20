@@ -864,14 +864,20 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& se
     }
 }
 
+auto get_scene_rect_fine(const BLContext& ctx, ViewConfig view_config) {
+    return rect_fine_t {
+        from_context_fine(BLPoint {0, 0}, view_config),
+        from_context_fine(BLPoint {ctx.targetWidth(), ctx.targetHeight()}, view_config),
+    };
+}
+
+auto get_scene_rect(const BLContext& ctx, ViewConfig view_config) {
+    return to_enclosing_rect(get_scene_rect_fine(ctx, view_config));
+}
+
 auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     auto visibility = visibility_mask_t(args.layout.element_count(), false);
-
-    auto scene_rect = to_enclosing_rect(rect_fine_t {
-        from_context_fine(BLPoint {0, 0}, args.settings.view_config),
-        from_context_fine(BLPoint {ctx.targetWidth(), ctx.targetHeight()},
-                          args.settings.view_config),
-    });
+    auto scene_rect = get_scene_rect(ctx, args.settings.view_config);
 
     {
         // auto t = Timer("collisions", Timer::Unit::ms, 2);
@@ -973,8 +979,8 @@ constexpr auto monochrome(uint8_t value) -> BLRgba32 {
     return BLRgba32 {0xFF000000u + value * 0x1u + value * 0x100u + value * 0x10000u};
 }
 
-auto draw_background_pattern_checker(BLContext& ctx, point_fine_t a0, point_fine_t a1,
-                                     int delta, BLRgba32 color, int width,
+auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int delta,
+                                     BLRgba32 color, int width,
                                      const RenderSettings& settings) {
     const auto clamp_to_grid = [](double v_) {
         return gsl::narrow_cast<grid_t::value_type>(
@@ -982,12 +988,12 @@ auto draw_background_pattern_checker(BLContext& ctx, point_fine_t a0, point_fine
     };
 
     const auto g0 = point_t {
-        clamp_to_grid(std::floor(a0.x / delta) * delta),
-        clamp_to_grid(std::floor(a0.y / delta) * delta),
+        clamp_to_grid(std::floor(scene_rect.p0.x / delta) * delta),
+        clamp_to_grid(std::floor(scene_rect.p0.y / delta) * delta),
     };
     const auto g1 = point_t {
-        clamp_to_grid(std::ceil(a1.x / delta) * delta),
-        clamp_to_grid(std::ceil(a1.y / delta) * delta),
+        clamp_to_grid(std::ceil(scene_rect.p1.x / delta) * delta),
+        clamp_to_grid(std::ceil(scene_rect.p1.y / delta) * delta),
     };
 
     const auto p0 = to_context(g0, settings.view_config);
@@ -1009,9 +1015,7 @@ auto draw_background_pattern_checker(BLContext& ctx, point_fine_t a0, point_fine
 }
 
 auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
-    const auto a0 = from_context_fine(BLPoint {0, 0}, settings.view_config);
-    const auto a1 = from_context_fine(BLPoint {ctx.targetWidth(), ctx.targetHeight()},
-                                      settings.view_config);
+    auto scene_rect = get_scene_rect_fine(ctx, settings.view_config);
 
     constexpr static auto grid_definition = {
         std::tuple {1, monochrome(0xF0), 1},    //
@@ -1028,7 +1032,7 @@ auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
             // we substract a little, as we want 150% scaling to round down
             const auto epsilon = 0.01;
             const auto draw_width = std::max(1, round_to<int>(draw_width_f - epsilon));
-            draw_background_pattern_checker(ctx, a0, a1, delta, color, draw_width,
+            draw_background_pattern_checker(ctx, scene_rect, delta, color, draw_width,
                                             settings);
         }
     }
@@ -1205,15 +1209,24 @@ auto render_undirected_output(BLContext& ctx, point_t position, double size,
 auto render_editable_circuit_connection_cache(BLContext& ctx,
                                               const EditableCircuit& editable_circuit,
                                               const RenderSettings& settings) -> void {
+    const auto scene_rect = get_scene_rect(ctx, settings.view_config);
     const auto& caches = editable_circuit.caches();
 
     for (auto [position, orientation] : caches.input_positions_and_orientations()) {
+        if (!is_colliding(position, scene_rect)) {
+            continue;
+        }
+
         const auto size = 1.0 / 3.0;
         render_input_marker(ctx, position, defaults::color_green, orientation, size,
                             settings);
     }
 
     for (auto [position, orientation] : caches.output_positions_and_orientations()) {
+        if (!is_colliding(position, scene_rect)) {
+            continue;
+        }
+
         const auto size = 0.8;
         if (orientation == orientation_t::undirected) {
             render_undirected_output(ctx, position, size, settings);
@@ -1227,9 +1240,15 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
 auto render_editable_circuit_collision_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void {
+    constexpr static auto color = defaults::color_orange;
+    constexpr static auto size = 0.25;
+
+    const auto scene_rect = get_scene_rect(ctx, settings.view_config);
+
     for (auto [point, state] : editable_circuit.caches().collision_states()) {
-        const auto color = defaults::color_orange;
-        const auto size = 0.25;
+        if (!is_colliding(point, scene_rect)) {
+            continue;
+        }
 
         switch (state) {
             using enum collision_cache::CacheState;
@@ -1282,9 +1301,14 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
 auto render_editable_circuit_selection_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void {
+    const auto scene_rect = get_scene_rect_fine(ctx, settings.view_config);
     ctx.setStrokeStyle(BLRgba32(0, 255, 0));
 
     for (rect_fine_t&& rect : editable_circuit.caches().selection_rects()) {
+        if (!is_colliding(rect, scene_rect)) {
+            continue;
+        }
+
         draw_standard_rect(
             ctx, rect, RectAttributes {.draw_type = DrawType::stroke, .stroke_width = 1},
             settings);
