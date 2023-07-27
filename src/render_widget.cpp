@@ -9,6 +9,132 @@
 
 namespace logicsim {
 
+template <>
+auto format(InteractionState state) -> std::string {
+    switch (state) {
+        using enum InteractionState;
+
+        case not_interactive:
+            return "not_interactive";
+        case selection:
+            return "selection";
+        case simulation:
+            return "simulation";
+
+        case insert_wire:
+            return "insert_wire";
+        case insert_button:
+            return "insert_button";
+        case insert_and_element:
+            return "insert_and_element";
+        case insert_or_element:
+            return "insert_or_element";
+        case insert_xor_element:
+            return "insert_xor_element";
+        case insert_nand_element:
+            return "insert_nand_element";
+        case insert_nor_element:
+            return "insert_nor_element";
+        case insert_inverter_element:
+            return "insert_inverter_element";
+        case insert_flipflop_jk:
+            return "insert_flipflop_jk";
+        case insert_clock_generator:
+            return "insert_clock_generator";
+        case insert_shift_register:
+            return "insert_shift_register";
+    }
+    throw_exception("Don't know how to convert InteractionState to string.");
+}
+
+auto is_inserting_state(InteractionState state) -> bool {
+    using enum InteractionState;
+    return state != not_interactive && state != selection && state != simulation;
+}
+
+auto to_logic_item_definition(InteractionState state, std::size_t default_input_count)
+    -> LogicItemDefinition {
+    switch (state) {
+        using enum InteractionState;
+
+        case not_interactive:
+        case selection:
+        case simulation:
+            throw_exception("non-inserting states don't have a definition");
+
+        case insert_wire:
+            return LogicItemDefinition {
+                .element_type = ElementType::wire,
+                .input_count = 0,
+                .orientation = orientation_t::undirected,
+            };
+        case insert_button:
+            return LogicItemDefinition {
+                .element_type = ElementType::button,
+                .input_count = 0,
+                .orientation = orientation_t::undirected,
+            };
+        case insert_and_element:
+            return LogicItemDefinition {
+                .element_type = ElementType::and_element,
+                .input_count = default_input_count,
+                .orientation = orientation_t::right,
+            };
+        case insert_or_element:
+            return LogicItemDefinition {
+                .element_type = ElementType::or_element,
+                .input_count = default_input_count,
+                .orientation = orientation_t::right,
+            };
+        case insert_xor_element:
+            return LogicItemDefinition {
+                .element_type = ElementType::xor_element,
+                .input_count = default_input_count,
+                .orientation = orientation_t::right,
+            };
+        case insert_nand_element:
+            return LogicItemDefinition {
+                .element_type = ElementType::and_element,
+                .input_count = default_input_count,
+                .orientation = orientation_t::right,
+            };
+        case insert_nor_element:
+            return LogicItemDefinition {
+                .element_type = ElementType::or_element,
+                .input_count = default_input_count,
+                .orientation = orientation_t::right,
+            };
+        case insert_inverter_element:
+            return LogicItemDefinition {
+                .element_type = ElementType::inverter_element,
+                .input_count = 1,
+                .orientation = orientation_t::right,
+            };
+        case insert_flipflop_jk:
+            return LogicItemDefinition {
+                .element_type = ElementType::flipflop_jk,
+                .input_count = 5,
+                .output_count = 2,
+                .orientation = orientation_t::right,
+            };
+        case insert_clock_generator:
+            return LogicItemDefinition {
+                .element_type = ElementType::clock_generator,
+                .input_count = 2,
+                .output_count = 2,
+                .orientation = orientation_t::right,
+            };
+        case insert_shift_register:
+            return LogicItemDefinition {
+                .element_type = ElementType::shift_register,
+                .input_count = 3,
+                .output_count = 2,
+                .orientation = orientation_t::right,
+            };
+    }
+    throw_exception("Don't know how to convert InteractionState to definition.");
+}
+
 //
 // Mouse Drag Logic
 //
@@ -369,25 +495,6 @@ auto SimulationInteractionLogic::mouse_press(std::optional<point_t> point) -> vo
 // Render Widget
 //
 
-template <>
-auto format(InteractionState state) -> std::string {
-    switch (state) {
-        using enum InteractionState;
-
-        case not_interactive:
-            return "not_interactive";
-        case select:
-            return "select";
-        case element_insert:
-            return "element_insert";
-        case line_insert:
-            return "line_insert";
-        case simulation:
-            return "simulation";
-    }
-    throw_exception("Don't know how to convert InteractionState to string.");
-}
-
 RendererWidget::RendererWidget(QWidget* parent)
     : QWidget(parent),
       last_pixel_ratio_ {devicePixelRatioF()},
@@ -453,8 +560,8 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
 #endif
 }
 
-auto RendererWidget::set_element_definition(LogicItemDefinition definition) -> void {
-    element_definition_ = definition;
+auto RendererWidget::set_default_input_count(std::size_t count) -> void {
+    default_input_count_ = count;
 }
 
 auto RendererWidget::set_time_rate(time_rate_t time_rate) -> void {
@@ -463,6 +570,18 @@ auto RendererWidget::set_time_rate(time_rate_t time_rate) -> void {
     if (simulation_) {
         simulation_->set_time_rate(time_rate);
     }
+}
+
+auto RendererWidget::interaction_state() -> InteractionState {
+    return interaction_state_;
+}
+
+auto RendererWidget::default_input_count() -> std::size_t {
+    return default_input_count_;
+}
+
+auto RendererWidget::time_rate() -> time_rate_t {
+    return time_rate_;
 }
 
 auto RendererWidget::reset_interaction_state() -> void {
@@ -786,15 +905,8 @@ auto RendererWidget::delete_selected_items() -> void {
     update();
 }
 
-auto RendererWidget::set_default_interaction_state() -> void {
-    if (interaction_state_ == InteractionState::element_insert
-        || interaction_state_ == InteractionState::line_insert) {
-        set_interaction_state(InteractionState::select);
-    }
-}
-
 auto RendererWidget::select_all_items() -> void {
-    if (interaction_state_ != InteractionState::select) {
+    if (interaction_state_ != InteractionState::selection) {
         return;
     }
     auto& selection_builder = editable_circuit_.value().selection_builder();
@@ -813,22 +925,22 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
         return;
     }
     if (event->button() == Qt::LeftButton) {
-        if (interaction_state_ == InteractionState::element_insert) {
+        if (is_inserting_state(interaction_state_)) {
+            if (interaction_state_ == InteractionState::insert_wire) {
+                mouse_logic_.emplace(MouseLineInsertLogic::Args {
+                    .editable_circuit = editable_circuit_.value(),
+                });
+                return;
+            }
             mouse_logic_.emplace(MouseElementInsertLogic::Args {
                 .editable_circuit = editable_circuit_.value(),
-                .element_definition = element_definition_,
+                .element_definition
+                = to_logic_item_definition(interaction_state_, default_input_count_),
             });
             return;
         }
 
-        if (interaction_state_ == InteractionState::line_insert) {
-            mouse_logic_.emplace(MouseLineInsertLogic::Args {
-                .editable_circuit = editable_circuit_.value(),
-            });
-            return;
-        }
-
-        if (interaction_state_ == InteractionState::select) {
+        if (interaction_state_ == InteractionState::selection) {
             auto& selection_builder = editable_circuit_.value().selection_builder();
             const auto point
                 = to_grid_fine(event->position(), render_settings_.view_config);
@@ -915,7 +1027,9 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
             mouse_logic_.reset();
         } else {
             editable_circuit_.value().selection_builder().clear();
-            set_default_interaction_state();
+            if (is_inserting_state(interaction_state_)) {
+                set_interaction_state(InteractionState::selection);
+            }
         }
         update();
     }
@@ -1090,7 +1204,9 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
             mouse_logic_.reset();
         } else {
             editable_circuit_.value().selection_builder().clear();
-            set_default_interaction_state();
+            if (is_inserting_state(interaction_state_)) {
+                set_interaction_state(InteractionState::selection);
+            }
         }
         update();
         event->accept();

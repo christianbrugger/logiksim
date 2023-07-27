@@ -25,6 +25,33 @@
 
 namespace logicsim {
 
+enum class InteractionState {
+    not_interactive,
+    selection,
+    simulation,
+
+    insert_wire,
+    insert_button,
+    insert_and_element,
+    insert_or_element,
+    insert_xor_element,
+    insert_nand_element,
+    insert_nor_element,
+    insert_inverter_element,
+    insert_flipflop_jk,
+    insert_clock_generator,
+    insert_shift_register,
+};
+
+template <>
+auto format(InteractionState type) -> std::string;
+
+[[nodiscard]] auto is_inserting_state(InteractionState state) -> bool;
+
+[[nodiscard]] auto to_logic_item_definition(InteractionState state,
+                                            std::size_t default_input_count = 3)
+    -> LogicItemDefinition;
+
 class MouseDragLogic {
    public:
     struct Args {
@@ -220,17 +247,6 @@ class SimulationInteractionLogic {
     InteractiveSimulation& simulation_;
 };
 
-enum class InteractionState {
-    not_interactive,
-    select,
-    element_insert,
-    line_insert,
-    simulation,
-};
-
-template <>
-auto format(InteractionState type) -> std::string;
-
 class RendererWidget : public QWidget {
     // TODO use Q_OBJECT because of Q_SLOT
     // Q_OBJECT
@@ -244,11 +260,12 @@ class RendererWidget : public QWidget {
     auto set_do_render_connection_cache(bool value) -> void;
     auto set_do_render_selection_cache(bool value) -> void;
 
-    // TODO make InteractionState a Variant
-    // TODO create element attribute struct to define element type
     auto set_interaction_state(InteractionState state) -> void;
-    auto set_element_definition(LogicItemDefinition definition) -> void;
+    auto set_default_input_count(std::size_t count) -> void;
     auto set_time_rate(time_rate_t time_rate) -> void;
+    [[nodiscard]] auto interaction_state() -> InteractionState;
+    [[nodiscard]] auto default_input_count() -> std::size_t;
+    [[nodiscard]] auto time_rate() -> time_rate_t;
 
     auto fps() const -> double;
     auto pixel_scale() const -> double;
@@ -263,7 +280,6 @@ class RendererWidget : public QWidget {
     Q_SLOT auto on_simulation_timeout() -> void;
     void init();
     auto reset_interaction_state() -> void;
-    auto set_default_interaction_state() -> void;
 
     auto delete_selected_items() -> void;
     auto select_all_items() -> void;
@@ -307,7 +323,7 @@ class RendererWidget : public QWidget {
 
     // mouse logic
     InteractionState interaction_state_ {InteractionState::not_interactive};
-    LogicItemDefinition element_definition_ {};
+    std::size_t default_input_count_ {3};
     MouseDragLogic mouse_drag_logic_;
     std::optional<std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
                                MouseSingleSelectionLogic, MouseAreaSelectionLogic,

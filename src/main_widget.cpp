@@ -60,7 +60,7 @@ MainWidget::MainWidget(QWidget* parent)
     timer_.setInterval(100);
     timer_.start();
 
-    render_widget_->set_interaction_state(InteractionState::select);
+    render_widget_->set_interaction_state(InteractionState::selection);
     resize(800, 600);
 }
 
@@ -169,6 +169,8 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
         render_widget_->set_interaction_state(InteractionState::simulation);
     });
     button->setShortcut(QKeySequence(Qt::Key_F5));
+    button->setCheckable(true);
+    // button->setChecked(true);
 
     const auto slider = new QSlider(Qt::Orientation::Horizontal);
     const auto label = new QLabel();
@@ -199,20 +201,12 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
     return panel;
 }
 
-auto MainWidget::element_button(QString label, LogicItemDefinition definition)
-    -> QWidget* {
+auto MainWidget::element_button(QString label, InteractionState state) -> QWidget* {
     const auto button = new ElementButton(label);
+    button->setCheckable(true);
 
-    connect(button, &QPushButton::clicked, this, [this, definition]() {
-        element_definition_ = definition;
-        update_selected_logic_item();
-
-        if (element_definition_.element_type == ElementType::wire) {
-            render_widget_->set_interaction_state(InteractionState::line_insert);
-        } else {
-            render_widget_->set_interaction_state(InteractionState::element_insert);
-        }
-    });
+    connect(button, &QPushButton::clicked, this,
+            [this, state]() { render_widget_->set_interaction_state(state); });
 
     return button;
 }
@@ -225,117 +219,37 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     const auto input_count = new QSpinBox();
     layout->addWidget(input_count, ++row, 0);
 
-    connect(input_count, &QSpinBox::valueChanged, this, [this](int value) {
-        this->input_count_ = value;
-        update_selected_logic_item();
-    });
+    connect(input_count, &QSpinBox::valueChanged, this,
+            [this](int value) { render_widget_->set_default_input_count(value); });
 
-    input_count->setValue(gsl::narrow<int>(input_count_));
+    input_count->setValue(gsl::narrow<int>(render_widget_->default_input_count()));
     input_count->setMinimum(2);
     input_count->setMaximum(connection_id_t::max());
 
-    layout->addWidget(element_button("Wire",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::wire,
-                                         .input_count = 0,
-                                         .orientation = orientation_t::undirected,
-                                     }),
-                      ++row, 0);
+    {
+        using enum InteractionState;
+        layout->addWidget(element_button("Wire", insert_wire), ++row, 0);
 
-    layout->addWidget(element_button("BTN",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::button,
-                                         .input_count = 0,
-                                         .orientation = orientation_t::undirected,
-                                     }),
-                      ++row, 0);
+        layout->addWidget(element_button("BTN", insert_button), ++row, 0);
 
-    layout->addWidget(element_button("AND",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::and_element,
-                                         .input_count = 3,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
-    layout->addWidget(element_button("OR",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::or_element,
-                                         .input_count = 3,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
-    layout->addWidget(element_button("XOR",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::xor_element,
-                                         .input_count = 3,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
+        layout->addWidget(element_button("AND", insert_and_element), ++row, 0);
+        layout->addWidget(element_button("OR", insert_or_element), ++row, 0);
+        layout->addWidget(element_button("XOR", insert_xor_element), ++row, 0);
 
-    layout->addWidget(element_button("NAND",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::and_element,
-                                         .input_count = 3,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
-    layout->addWidget(element_button("NOR",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::or_element,
-                                         .input_count = 3,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
-    layout->addWidget(element_button("INV",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::inverter_element,
-                                         .input_count = 1,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
+        layout->addWidget(element_button("NAND", insert_nand_element), ++row, 0);
+        layout->addWidget(element_button("NOR", insert_nor_element), ++row, 0);
+        layout->addWidget(element_button("INV", insert_inverter_element), ++row, 0);
 
-    layout->addWidget(element_button("JK-FF",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::flipflop_jk,
-                                         .input_count = 5,
-                                         .output_count = 2,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
-    layout->addWidget(element_button("CLK",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::clock_generator,
-                                         .input_count = 2,
-                                         .output_count = 2,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
-    layout->addWidget(element_button("REG",
-                                     LogicItemDefinition {
-                                         .element_type = ElementType::shift_register,
-                                         .input_count = 3,
-                                         .output_count = 2,
-                                         .orientation = orientation_t::right,
-                                     }),
-                      ++row, 0);
+        layout->addWidget(element_button("JK-FF", insert_flipflop_jk), ++row, 0);
+        layout->addWidget(element_button("CLK", insert_clock_generator), ++row, 0);
+        layout->addWidget(element_button("REG", insert_shift_register), ++row, 0);
+    }
 
     layout->setRowStretch(++row, 1);
 
     const auto panel = new QWidget();
     panel->setLayout(layout);
     return panel;
-}
-
-auto MainWidget::update_selected_logic_item() -> void {
-    auto definition = element_definition_;
-
-    if (definition.element_type == ElementType::and_element
-        || definition.element_type == ElementType::or_element
-        || definition.element_type == ElementType::xor_element) {
-        definition.input_count = input_count_;
-    }
-
-    render_widget_->set_element_definition(definition);
 }
 
 void MainWidget::update_title() {
