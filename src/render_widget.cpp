@@ -549,16 +549,18 @@ auto RendererWidget::set_do_render_selection_cache(bool value) -> void {
 }
 
 auto RendererWidget::set_interaction_state(InteractionState state) -> void {
-    if (interaction_state_ == state) {
-        return;
+    if (interaction_state_ != state) {
+        interaction_state_ = state;
+        reset_interaction_state();
     }
-    interaction_state_ = state;
-    reset_interaction_state();
+    emit interaction_state_changed(state);
 
 #ifndef NDEBUG
     editable_circuit_->validate();
 #endif
 }
+
+// void RendererWidget::interaction_state_changed(InteractionState new_state) {}
 
 auto RendererWidget::set_default_input_count(std::size_t count) -> void {
     default_input_count_ = count;

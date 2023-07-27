@@ -60,6 +60,9 @@ MainWidget::MainWidget(QWidget* parent)
     timer_.setInterval(100);
     timer_.start();
 
+    connect(render_widget_, &RendererWidget::interaction_state_changed, this,
+            &MainWidget::on_interaction_state_changed);
+
     render_widget_->set_interaction_state(InteractionState::selection);
     resize(800, 600);
 }
@@ -165,12 +168,16 @@ auto to_slider_scale(time_rate_t rate) -> int {
 
 auto MainWidget::build_time_rate_slider() -> QWidget* {
     const auto button = new QPushButton("Simulate");
-    connect(button, &QPushButton::clicked, this, [this]() {
-        render_widget_->set_interaction_state(InteractionState::simulation);
+    connect(button, &QPushButton::clicked, this, [this](bool checked) {
+        if (checked) {
+            render_widget_->set_interaction_state(InteractionState::simulation);
+        } else {
+            render_widget_->set_interaction_state(InteractionState::selection);
+        }
     });
     button->setShortcut(QKeySequence(Qt::Key_F5));
     button->setCheckable(true);
-    // button->setChecked(true);
+    button_map_[InteractionState::simulation] = button;
 
     const auto slider = new QSlider(Qt::Orientation::Horizontal);
     const auto label = new QLabel();
@@ -204,6 +211,7 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
 auto MainWidget::element_button(QString label, InteractionState state) -> QWidget* {
     const auto button = new ElementButton(label);
     button->setCheckable(true);
+    button_map_[state] = button;
 
     connect(button, &QPushButton::clicked, this,
             [this, state]() { render_widget_->set_interaction_state(state); });
@@ -229,7 +237,6 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     {
         using enum InteractionState;
         layout->addWidget(element_button("Wire", insert_wire), ++row, 0);
-
         layout->addWidget(element_button("BTN", insert_button), ++row, 0);
 
         layout->addWidget(element_button("AND", insert_and_element), ++row, 0);
@@ -252,7 +259,7 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     return panel;
 }
 
-void MainWidget::update_title() {
+auto MainWidget::update_title() -> void {
     const auto fps = render_widget_->fps();
     const auto scale = render_widget_->pixel_scale();
     const auto size = render_widget_->pixel_size();
@@ -263,6 +270,14 @@ void MainWidget::update_title() {
     QString title = QString::fromUtf8(text);
     if (title != windowTitle()) {
         setWindowTitle(title);
+    }
+}
+
+auto MainWidget::on_interaction_state_changed(InteractionState new_state) -> void {
+    for (auto&& [state, button] : button_map_) {
+        if (button != nullptr) {
+            button->setChecked(new_state == state);
+        }
     }
 }
 

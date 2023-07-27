@@ -1,8 +1,10 @@
 
 #include "render_widget.h"
 
+#include <ankerl/unordered_dense.h>
 #include <gsl/gsl>
 
+#include <QAbstractButton>
 #include <QString>
 #include <QWidget>
 
@@ -22,11 +24,17 @@ class MainWidget : public QWidget {
 
     [[nodiscard]] auto element_button(QString label, InteractionState state) -> QWidget*;
 
-    void update_title();
+    Q_SLOT auto update_title() -> void;
+    Q_SLOT auto on_interaction_state_changed(InteractionState new_state) -> void;
 
    private:
-    QTimer timer_;
     gsl::not_null<RendererWidget*> render_widget_;
+
+    QTimer timer_ {};
+
+    using button_map_type
+        = ankerl::unordered_dense::map<InteractionState, QAbstractButton*>;
+    button_map_type button_map_ {};
 };
 
 }  // namespace logicsim

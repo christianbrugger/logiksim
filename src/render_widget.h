@@ -249,7 +249,7 @@ class SimulationInteractionLogic {
 
 class RendererWidget : public QWidget {
     // TODO use Q_OBJECT because of Q_SLOT
-    // Q_OBJECT
+    Q_OBJECT
 
    public:
     RendererWidget(QWidget* parent = nullptr);
@@ -275,9 +275,11 @@ class RendererWidget : public QWidget {
     auto load_circuit(int id) -> void;
     auto reload_circuit() -> void;
 
+    Q_SIGNAL void interaction_state_changed(InteractionState new_state);
+
    private:
-    Q_SLOT auto on_benchmark_timeout() -> void;
-    Q_SLOT auto on_simulation_timeout() -> void;
+    Q_SLOT void on_benchmark_timeout();
+    Q_SLOT void on_simulation_timeout();
     void init();
     auto reset_interaction_state() -> void;
 
