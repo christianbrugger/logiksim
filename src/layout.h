@@ -65,8 +65,8 @@ class Layout {
         color_t color {defaults::color_black};
 
         circuit_id_t circuit_id {null_circuit};
-        // logic_small_vector_t input_inverters {};
-        // logic_small_vector_t output_inverters {};
+        logic_small_vector_t input_inverters {};
+        logic_small_vector_t output_inverters {};
     };
 
     auto add_element(ElementData &&data) -> layout::Element;
@@ -193,6 +193,8 @@ class ElementTemplate {
     [[nodiscard]] auto output_count() const -> std::size_t;
     [[nodiscard]] auto input_inverters() const -> const logic_small_vector_t &;
     [[nodiscard]] auto output_inverters() const -> const logic_small_vector_t &;
+    [[nodiscard]] auto input_inverted(connection_id_t index) const -> bool;
+    [[nodiscard]] auto output_inverted(connection_id_t index) const -> bool;
 
     [[nodiscard]] auto segment_tree() const -> const SegmentTree &;
     [[nodiscard]] auto line_tree() const -> const LineTree &;

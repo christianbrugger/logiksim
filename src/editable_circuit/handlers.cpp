@@ -582,6 +582,9 @@ auto add_logic_item_private(State state, LogicItemDefinition definition, point_t
                               .output_count = definition.output_count,
                               .position = point_t {0, 0},
                               .orientation = definition.orientation,
+
+                              .input_inverters = definition.input_inverters,
+                              .output_inverters = definition.output_inverters,
                           })
                           .element_id();
     state.sender.submit(info_message::LogicItemCreated {element_id});

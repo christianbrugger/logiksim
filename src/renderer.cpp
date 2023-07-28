@@ -385,9 +385,29 @@ auto get_alpha_value(display_state_t display_state) -> uint8_t {
     throw_exception("unknown display state");
 }
 
-auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orientation,
-                           bool enabled, display_state_t display_state,
-                           const RenderSettings& settings) -> void {
+auto draw_single_connector_inverted(BLContext& ctx, point_t position,
+                                    orientation_t orientation, bool enabled,
+                                    display_state_t display_state,
+                                    const RenderSettings& settings) {
+    const auto radius = 0.2;
+    const auto centerpoint = connector_point(position, orientation, grid_fine_t {radius});
+
+    const auto alpha = get_alpha_value(display_state);
+    const auto color = enabled ? BLRgba32(255, 0, 0, alpha) : BLRgba32(0, 0, 0, alpha);
+    const auto width = stroke_width(settings);
+
+    const auto pc = to_context(centerpoint, settings.view_config);
+    const auto r = radius * settings.view_config.pixel_scale();
+
+    ctx.setStrokeStyle(color);
+    ctx.setStrokeWidth(width);
+    ctx.strokeCircle(BLCircle {pc.x, pc.y, r});
+}
+
+auto draw_single_connector_normal(BLContext& ctx, point_t position,
+                                  orientation_t orientation, bool enabled,
+                                  display_state_t display_state,
+                                  const RenderSettings& settings) -> void {
     const auto endpoint = connector_endpoint(position, orientation);
 
     const auto p0 = to_context(position, settings.view_config);
@@ -400,20 +420,40 @@ auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orien
     stroke_line_impl(ctx, BLLine {p0.x, p0.y, p1.x, p1.y}, color, width);
 }
 
+auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orientation,
+                           bool enabled, bool inverted, display_state_t display_state,
+                           const RenderSettings& settings) -> void {
+    if (inverted) {
+        draw_single_connector_inverted(ctx, position, orientation, enabled, display_state,
+                                       settings);
+    } else {
+        draw_single_connector_normal(ctx, position, orientation, enabled, display_state,
+                                     settings);
+    }
+}
+
 auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
                                 const RenderSettings& settings) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
     const auto display_state = element.display_state();
 
-    iter_input_location(layout_data, [&](point_t position, orientation_t orientation) {
-        draw_single_connector(ctx, position, orientation, false, display_state, settings);
-        return true;
-    });
+    iter_input_location_and_id(
+        layout_data,
+        [&](connection_id_t input_id, point_t position, orientation_t orientation) {
+            const auto inverted = element.input_inverted(input_id);
+            draw_single_connector(ctx, position, orientation, false, inverted,
+                                  display_state, settings);
+            return true;
+        });
 
-    iter_output_location(layout_data, [&](point_t position, orientation_t orientation) {
-        draw_single_connector(ctx, position, orientation, false, display_state, settings);
-        return true;
-    });
+    iter_output_location_and_id(
+        layout_data,
+        [&](connection_id_t output_id, point_t position, orientation_t orientation) {
+            const auto inverted = element.output_inverted(output_id);
+            draw_single_connector(ctx, position, orientation, false, inverted,
+                                  display_state, settings);
+            return true;
+        });
 }
 
 auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
@@ -425,7 +465,8 @@ auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
         layout_data,
         [&](connection_id_t input_id, point_t position, orientation_t orientation) {
             const auto enabled = simulation.input_value(element.input(input_id));
-            draw_single_connector(ctx, position, orientation, enabled,
+            const auto inverted = layout.element(element).input_inverted(input_id);
+            draw_single_connector(ctx, position, orientation, enabled, inverted,
                                   display_state_t::normal, settings);
             return true;
         });
@@ -434,7 +475,8 @@ auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
         layout_data,
         [&](connection_id_t output_id, point_t position, orientation_t orientation) {
             const auto enabled = simulation.output_value(element.output(output_id));
-            draw_single_connector(ctx, position, orientation, enabled,
+            const auto inverted = layout.element(element).output_inverted(output_id);
+            draw_single_connector(ctx, position, orientation, enabled, inverted,
                                   display_state_t::normal, settings);
             return true;
         });
@@ -457,7 +499,8 @@ auto set_body_draw_styles(BLContext& ctx, display_state_t display_state, bool se
     ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
 }
 
-constexpr static double BODY_OVERDRAW = 0.4;  // grid values
+constexpr static double BODY_OVERDRAW = 0.4;    // grid values
+constexpr static double BUTTON_OVERDRAW = 0.5;  // grid values
 
 auto to_label(layout::ConstElement element) -> std::string {
     switch (element.element_type()) {
@@ -504,7 +547,8 @@ auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
             position.y.value + (element_height - 1.0) / 2.0,
         };
 
-        ctx.setFillStyle(BLRgba32(defaults::color_black.value));
+        const auto alpha = get_alpha_value(element.display_state());
+        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
         settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
                                 label, HorizontalAlignment::center,
                                 VerticalAlignment::center);
@@ -534,12 +578,12 @@ auto draw_button_body(BLContext& ctx, layout::ConstElement element, bool selecte
 
     const auto rect = rect_fine_t {
         point_fine_t {
-            position.x.value - BODY_OVERDRAW,
-            position.y.value - BODY_OVERDRAW,
+            position.x.value - BUTTON_OVERDRAW,
+            position.y.value - BUTTON_OVERDRAW,
         },
         point_fine_t {
-            position.x.value + BODY_OVERDRAW,
-            position.y.value + BODY_OVERDRAW,
+            position.x.value + BUTTON_OVERDRAW,
+            position.y.value + BUTTON_OVERDRAW,
         },
     };
 
@@ -547,9 +591,25 @@ auto draw_button_body(BLContext& ctx, layout::ConstElement element, bool selecte
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 }
 
+auto draw_binary_value(BLContext& ctx, point_t position, bool enabled,
+                       display_state_t display_state, const RenderSettings& settings) {
+    const auto label = enabled ? std::string {"1"} : std::string {"0"};
+    const auto size = 0.8 * settings.view_config.pixel_scale();
+
+    if (size > 3.0) {
+        const auto alpha = get_alpha_value(display_state);
+        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+
+        settings.text.draw_text(ctx, to_context(position, settings.view_config), size,
+                                label, HorizontalAlignment::center,
+                                VerticalAlignment::center);
+    }
+}
+
 auto draw_button(BLContext& ctx, layout::ConstElement element, bool selected,
                  const RenderSettings& settings) -> void {
     draw_button_body(ctx, element, selected, false, settings);
+    draw_binary_value(ctx, element.position(), false, element.display_state(), settings);
 }
 
 auto draw_button(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
@@ -557,6 +617,8 @@ auto draw_button(BLContext& ctx, Schematic::ConstElement element, const Layout& 
                  const RenderSettings& settings) -> void {
     bool enabled = simulation.internal_state(element).at(0);
     draw_button_body(ctx, layout.element(element), selected, enabled, settings);
+    draw_binary_value(ctx, layout.position(element), enabled, display_state_t::normal,
+                      settings);
 }
 
 //

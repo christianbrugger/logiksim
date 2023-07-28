@@ -97,18 +97,21 @@ auto to_logic_item_definition(InteractionState state, std::size_t default_input_
                 .element_type = ElementType::and_element,
                 .input_count = default_input_count,
                 .orientation = orientation_t::right,
+                .output_inverters = logic_small_vector_t {true},
             };
         case insert_nor_element:
             return LogicItemDefinition {
                 .element_type = ElementType::or_element,
                 .input_count = default_input_count,
                 .orientation = orientation_t::right,
+                .output_inverters = logic_small_vector_t {true},
             };
         case insert_inverter_element:
             return LogicItemDefinition {
                 .element_type = ElementType::inverter_element,
                 .input_count = 1,
                 .orientation = orientation_t::right,
+                .output_inverters = logic_small_vector_t {true},
             };
         case insert_flipflop_jk:
             return LogicItemDefinition {

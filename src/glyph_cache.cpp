@@ -48,7 +48,9 @@ auto glyph_key_t::format() const -> std::string {
 
 GlyphCache::GlyphCache() {
     // TODO store text file in different location & make it configurable
-    const auto error = font_face_.createFromFile("Roboto-Regular.ttf");
+    // const auto error = font_face_.createFromFile("Roboto-Regular.ttf");
+    const auto error = font_face_.createFromFile("NotoSans-Regular.ttf");
+
     if (error) {
         // TODO create custom exception that can be handeled
         throw_exception("Could not find font face file");

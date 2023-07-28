@@ -125,6 +125,33 @@ auto connector_endpoint(point_t position, orientation_t orientation) -> point_fi
     throw_exception("unknown orientation");
 }
 
+auto connector_point(point_t position, orientation_t orientation, grid_fine_t offset)
+    -> point_fine_t {
+    const auto p0 = point_fine_t {position};
+
+    switch (orientation) {
+        using enum orientation_t;
+
+        case right: {
+            return point_fine_t {p0.x + offset, p0.y};
+        }
+        case left: {
+            return point_fine_t {p0.x - offset, p0.y};
+        }
+        case up: {
+            return point_fine_t {p0.x, p0.y - offset};
+        }
+        case down: {
+            return point_fine_t {p0.x, p0.y + offset};
+        }
+
+        case undirected: {
+            return p0;
+        }
+    };
+    throw_exception("unknown orientation");
+}
+
 auto is_input_output_count_valid(ElementType element_type, std::size_t input_count,
                                  std::size_t output_count) -> bool {
     switch (element_type) {

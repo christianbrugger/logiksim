@@ -40,6 +40,9 @@ namespace detail {
 
 auto connector_endpoint(point_t position, orientation_t orientation) -> point_fine_t;
 
+auto connector_point(point_t position, orientation_t orientation, grid_fine_t offset)
+    -> point_fine_t;
+
 /// next_point(point_t position) -> bool;
 template <typename Func>
 auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -> bool {

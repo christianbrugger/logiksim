@@ -199,8 +199,23 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
     sub_circuit_ids_.push_back(data.circuit_id);
     input_counts_.push_back(gsl::narrow_cast<connection_size_t>(data.input_count));
     output_counts_.push_back(gsl::narrow_cast<connection_size_t>(data.output_count));
-    input_inverters_.emplace_back(data.input_count, false);
-    output_inverters_.emplace_back(data.output_count, false);
+
+    if (data.input_inverters.empty()) {
+        input_inverters_.emplace_back(data.input_count, false);
+    } else {
+        if (data.input_inverters.size() != data.input_count) [[unlikely]] {
+            throw_exception("number of input inverters need to match input count");
+        }
+        input_inverters_.emplace_back(data.input_inverters);
+    }
+    if (data.output_inverters.empty()) {
+        output_inverters_.emplace_back(data.output_count, false);
+    } else {
+        if (data.output_inverters.size() != data.output_count) [[unlikely]] {
+            throw_exception("number of output inverters need to match output count");
+        }
+        output_inverters_.emplace_back(data.output_inverters);
+    }
 
     segment_trees_.emplace_back();
     line_trees_.emplace_back();
@@ -489,6 +504,16 @@ auto ElementTemplate<Const>::input_inverters() const -> const logic_small_vector
 template <bool Const>
 auto ElementTemplate<Const>::output_inverters() const -> const logic_small_vector_t & {
     return layout_->output_inverters(element_id_);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::input_inverted(connection_id_t index) const -> bool {
+    return input_inverters().at(index.value);
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::output_inverted(connection_id_t index) const -> bool {
+    return output_inverters().at(index.value);
 }
 
 template <bool Const>
