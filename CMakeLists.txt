@@ -25,6 +25,7 @@ set(LS_CORE_SOURCES
     src/exceptions.cpp
     src/flat_schematic.cpp
     src/geometry.cpp
+    src/glyph_cache.cpp
     src/graph.cpp
     src/interactive_simulation.cpp
     src/layout.cpp

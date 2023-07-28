@@ -3,6 +3,7 @@
 
 #include "editable_circuit/selection.h"
 #include "format.h"
+#include "glyph_cache.h"
 #include "layout.h"
 #include "scene.h"
 #include "schematic.h"
@@ -26,6 +27,7 @@ class Selection;
 
 struct RenderSettings {
     ViewConfig view_config {};
+    GlyphCache text {};
 
     int background_grid_min_distance {10};  // device pixels
 

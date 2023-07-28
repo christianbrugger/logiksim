@@ -459,6 +459,22 @@ auto set_body_draw_styles(BLContext& ctx, display_state_t display_state, bool se
 
 constexpr static double BODY_OVERDRAW = 0.4;  // grid values
 
+auto to_label(layout::ConstElement element) -> std::string {
+    switch (element.element_type()) {
+        using enum ElementType;
+
+        case and_element:
+            return "&";
+        case or_element:
+            return ">1";
+        case xor_element:
+            return "=1";
+
+        default:
+            return "";
+    }
+}
+
 auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
                                 bool selected, const RenderSettings& settings) -> void {
     const auto position = element.position();
@@ -477,6 +493,22 @@ auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
 
     set_body_draw_styles(ctx, element.display_state(), selected);
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+
+    // text
+    const auto label = to_label(element);
+    const auto size = 1.0 * settings.view_config.pixel_scale();
+
+    if (!label.empty() && size > 3.0) {
+        const auto center = point_fine_t {
+            position.x.value + 1.0,
+            position.y.value + (element_height - 1.0) / 2.0,
+        };
+
+        ctx.setFillStyle(BLRgba32(defaults::color_black.value));
+        settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
+                                label, HorizontalAlignment::center,
+                                VerticalAlignment::center);
+    }
 }
 
 auto draw_standard_element(BLContext& ctx, layout::ConstElement element, bool selected,
