@@ -54,9 +54,11 @@ InteractiveSimulation::InteractiveSimulation(const Layout& layout, time_rate_t t
             simulation_.set_output_delays(element, element.output_delays());
             simulation_.set_history_length(element, element.history_length());
         }
+        simulation_.set_input_inverters(element, element.input_inverters());
     }
 
     // keep this
+    set_default_outputs(simulation_);
     set_default_inputs(simulation_);
     simulation_.initialize();
 }

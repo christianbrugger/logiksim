@@ -78,7 +78,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
             .output_count = line_tree.output_count(),
 
             .circuit_id = null_circuit,
-            // .input_inverters = logic_small_vector_t(1, false),
+            .input_inverters = element.input_inverters(),
             .output_delays = std::move(delays),
             .history_length = tree_max_delay,
         });
@@ -170,6 +170,22 @@ auto add_missing_placeholders(Schematic& schematic, const Layout& layout) -> voi
     }
 }
 
+auto set_output_inverters(Schematic& schematic, layout::ConstElement element) -> void {
+    for (auto output : schematic.element(element).outputs()) {
+        if (element.output_inverted(output.output_index())) {
+            output.connected_input().set_inverted(true);
+        }
+    }
+}
+
+auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
+    for (const auto element : layout.elements()) {
+        if (element.is_inserted() && element.is_logic_item()) {
+            set_output_inverters(schematic, element);
+        }
+    }
+}
+
 }  // namespace
 
 auto generate_schematic(const Layout& layout) -> Schematic {
@@ -178,6 +194,7 @@ auto generate_schematic(const Layout& layout) -> Schematic {
     add_layout_elements(schematic, layout);
     create_connections(schematic, layout);
     add_missing_placeholders(schematic, layout);
+    set_output_inverters(schematic, layout);
 
     return schematic;
 }

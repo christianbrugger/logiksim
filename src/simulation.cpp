@@ -100,13 +100,30 @@ void validate(const event_group_t &events) {
     }
 }
 
+auto set_default_outputs(Simulation &simulation) -> void {
+    if (simulation.is_initialized()) [[unlikely]] {
+        throw_exception("cannot set outputs for initialized simulation");
+    }
+
+    for (const auto element : simulation.schematic().elements()) {
+        if (element.is_logic_item()) {
+            for (auto output : element.outputs()) {
+                if (output.has_connected_element()) {
+                    simulation.set_output_value(output, false);
+                }
+            }
+        }
+    }
+}
+
 auto set_default_inputs(Simulation &simulation) -> void {
     if (simulation.is_initialized()) [[unlikely]] {
         throw_exception("cannot set inputs for initialized simulation");
     }
 
     for (const auto element : simulation.schematic().elements()) {
-        // enable and inputs
+        /*
+        // and-elements
         if (element.element_type() == ElementType::and_element) {
             for (auto input : element.inputs()) {
                 if (!input.has_connected_element()) {
@@ -114,6 +131,7 @@ auto set_default_inputs(Simulation &simulation) -> void {
                 }
             }
         }
+        */
 
         // enable unconnected clocks
         if (element.element_type() == ElementType::clock_generator) {
@@ -604,7 +622,10 @@ auto Simulation::initialize() -> void {
             continue;
         }
 
-        const auto old_outputs = output_values(element);
+        // existing outputs without inverters
+        const auto old_outputs = transform_to_container<logic_small_vector_t>(
+            element.outputs(),
+            [this](auto output) { return input_value(output.connected_input()); });
 
         if (has_internal_state(element_type)) {
             const auto new_inputs = input_values(element);
@@ -699,27 +720,33 @@ auto Simulation::set_input_internal(const Schematic::ConstInput input, bool valu
     get_state(input).input_values.at(input.input_index().value) = value;
 }
 
-auto Simulation::output_value(const Schematic::ConstOutput output,
-                              const bool raise_missing) const -> bool {
-    if (raise_missing || output.has_connected_element()) {
-        return input_value(output.connected_input());
+auto Simulation::set_output_value(Schematic::ConstOutput output, bool value) -> void {
+    if (is_initialized_) {
+        throw_exception("can only set outputs at the start of the simulation");
     }
-    return false;
+
+    const auto input = output.connected_input();
+
+    auto &input_value = get_state(input).input_values.at(input.input_index().value);
+    input_value = value ^ input_inverter(input);
 }
 
-auto Simulation::output_values(const Schematic::ConstElement element,
-                               const bool raise_missing) const -> logic_small_vector_t {
+auto Simulation::output_value(const Schematic::ConstOutput output) const -> bool {
+    const auto input = output.connected_input();
+    return input_value(input) ^ input_inverter(input);
+}
+
+auto Simulation::output_values(const Schematic::ConstElement element) const
+    -> logic_small_vector_t {
     return transform_to_container<logic_small_vector_t>(
-        element.outputs(),
-        [=, this](auto output) { return output_value(output, raise_missing); });
+        element.outputs(), [=, this](auto output) { return output_value(output); });
 }
 
-auto Simulation::output_values(const bool raise_missing) const -> logic_vector_t {
+auto Simulation::output_values() const -> logic_vector_t {
     logic_vector_t result(schematic_->output_count());
 
     for (auto element : schematic_->elements()) {
-        std::ranges::copy(output_values(element, raise_missing),
-                          std::back_inserter(result));
+        std::ranges::copy(output_values(element), std::back_inserter(result));
     }
 
     return result;
@@ -781,6 +808,10 @@ auto Simulation::set_output_delays(Schematic::ConstElement element,
 }
 
 auto Simulation::set_input_value(Schematic::ConstInput input, bool value) -> void {
+    if (input.has_connected_element()) [[unlikely]] {
+        throw_exception("cannot input-value for connected inputs");
+    }
+
     auto &input_value = get_state(input).input_values.at(input.input_index().value);
 
     if (!is_initialized_) {
@@ -831,7 +862,7 @@ auto Simulation::input_history(Schematic::ConstElement element) const -> History
     return HistoryView {
         state.first_input_history,
         this->time(),
-        state.input_values.at(0),
+        static_cast<bool>(state.input_values.at(0) ^ state.input_inverters.at(0)),
         state.history_length,
     };
 }

@@ -420,6 +420,10 @@ class Schematic::InputTemplate {
     void connect(OutputTemplate<ConstOther> output) const
         requires(!Const);
 
+    [[nodiscard]] auto is_inverted() const -> bool;
+    void set_inverted(bool value) const
+        requires(!Const);
+
    private:
     [[nodiscard]] auto connection_data_() const -> ConnectionDataType &;
 

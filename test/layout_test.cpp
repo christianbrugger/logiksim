@@ -73,11 +73,13 @@ TEST(Layout, EqualityOperators) {
         .element_type = ElementType::and_element,
         .input_count = 2,
         .output_count = 1,
+        .orientation = orientation_t::right,
     });
     auto element_1 = layout.add_element(Layout::ElementData {
         .element_type = ElementType::and_element,
         .input_count = 2,
         .output_count = 1,
+        .orientation = orientation_t::right,
     });
 
     EXPECT_NE(element_0, element_1);
@@ -96,6 +98,7 @@ TEST(Layout, ElementConversions) {
         .element_type = ElementType::and_element,
         .input_count = 2,
         .output_count = 1,
+        .orientation = orientation_t::right,
     });
 
     const auto element_const = layout::ConstElement {element};
@@ -130,11 +133,13 @@ TEST(Layout, ElementViewSome) {
         .element_type = ElementType::and_element,
         .input_count = 2,
         .output_count = 1,
+        .orientation = orientation_t::right,
     });
     auto inverter = layout.add_element(Layout::ElementData {
         .element_type = ElementType::inverter_element,
         .input_count = 1,
         .output_count = 1,
+        .orientation = orientation_t::right,
     });
 
     auto view = layout.elements();

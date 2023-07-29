@@ -154,12 +154,11 @@ class Simulation {
     [[nodiscard]] auto input_values() const -> const logic_vector_t;
 
     // infers the output values
-    [[nodiscard]] auto output_value(Schematic::ConstOutput output,
-                                    bool raise_missing = true) const -> bool;
-    [[nodiscard]] auto output_values(Schematic::ConstElement element,
-                                     bool raise_missing = true) const
+    auto set_output_value(Schematic::ConstOutput output, bool value) -> void;
+    [[nodiscard]] auto output_value(Schematic::ConstOutput output) const -> bool;
+    [[nodiscard]] auto output_values(Schematic::ConstElement element) const
         -> logic_small_vector_t;
-    [[nodiscard]] auto output_values(bool raise_missing = true) const -> logic_vector_t;
+    [[nodiscard]] auto output_values() const -> logic_vector_t;
 
     // inverters
     [[nodiscard]] auto input_inverter(Schematic::ConstInput input) const -> bool;
@@ -320,6 +319,7 @@ class Simulation::HistoryIterator {
     std::size_t index_ {};
 };
 
+auto set_default_outputs(Simulation &simulation) -> void;
 auto set_default_inputs(Simulation &simulation) -> void;
 
 }  // namespace logicsim

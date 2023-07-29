@@ -229,8 +229,7 @@ auto Schematic::add_element(ElementData &&data) -> Element {
         if (data.input_inverters.size() != data.input_count) [[unlikely]] {
             throw_exception("Need as many values for input_inverters as inputs.");
         }
-        input_inverters_.emplace_back(data.input_inverters.begin(),
-                                      data.input_inverters.end());
+        input_inverters_.emplace_back(data.input_inverters);
     }
     if (data.output_delays.size() == 0) {
         output_delays_.emplace_back(data.output_count, defaults::standard_delay);
@@ -992,6 +991,18 @@ void Schematic::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output)
 template <bool Const>
 auto Schematic::InputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
     return schematic_->input_connections_.at(element_id_.value).at(input_index_.value);
+}
+
+template <bool Const>
+auto Schematic::InputTemplate<Const>::is_inverted() const -> bool {
+    return schematic_->input_inverters_.at(element_id_.value).at(input_index_.value);
+}
+
+template <bool Const>
+void Schematic::InputTemplate<Const>::set_inverted(bool value) const
+    requires(!Const)
+{
+    schematic_->input_inverters_.at(element_id_.value).at(input_index_.value) = value;
 }
 
 // Template Instanciations
