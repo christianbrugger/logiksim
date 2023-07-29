@@ -565,67 +565,64 @@ TEST(SimulationTest, TestShiftRegister) {
     auto simulation = get_uninitialized_simulation(schematic);
     simulation.initialize();
 
+    const auto get_relevant_state = [&]() {
+        const auto& state = simulation.internal_state(shift_register);
+        return logic_small_vector_t(state.begin() + 2, state.end());
+    };
+
     simulation.run();
     // initial state
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
-    ASSERT_THAT(simulation.internal_state(shift_register),
-                testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
+    ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
 
     // insert first element
     simulation.submit_events(shift_register, 1ms, {true, true, false});
     simulation.submit_events(shift_register, 2ms, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
-    ASSERT_THAT(simulation.internal_state(shift_register),
-                testing::ElementsAre(1, 0, 0, 0, 0, 0, 0, 0));
+    ASSERT_THAT(get_relevant_state(), testing::ElementsAre(1, 0, 0, 0, 0, 0, 0, 0));
 
     // insert second element
     simulation.submit_events(shift_register, 1ms, {true, false, true});
     simulation.submit_events(shift_register, 2ms, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
-    ASSERT_THAT(simulation.internal_state(shift_register),
-                testing::ElementsAre(0, 1, 1, 0, 0, 0, 0, 0));
+    ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 1, 1, 0, 0, 0, 0, 0));
 
     // insert third element
     simulation.submit_events(shift_register, 1ms, {true, true, true});
     simulation.submit_events(shift_register, 2ms, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
-    ASSERT_THAT(simulation.internal_state(shift_register),
-                testing::ElementsAre(1, 1, 0, 1, 1, 0, 0, 0));
+    ASSERT_THAT(get_relevant_state(), testing::ElementsAre(1, 1, 0, 1, 1, 0, 0, 0));
 
     // insert forth element  &  receive first element
     simulation.submit_events(shift_register, 1ms, {true, false, false});
     simulation.submit_events(shift_register, 2ms, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(1, 0));
-    ASSERT_THAT(simulation.internal_state(shift_register),
-                testing::ElementsAre(0, 0, 1, 1, 0, 1, 1, 0));
+    ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 1, 1, 0, 1, 1, 0));
 
     // receive second element
     simulation.submit_events(shift_register, 1ms, {true, false, false});
     simulation.submit_events(shift_register, 2ms, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 1));
-    ASSERT_THAT(simulation.internal_state(shift_register),
-                testing::ElementsAre(0, 0, 0, 0, 1, 1, 0, 1));
+    ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 0, 0, 1, 1, 0, 1));
 
     // receive third element
     simulation.submit_events(shift_register, 1ms, {true, false, false});
     simulation.submit_events(shift_register, 2ms, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(1, 1));
-    ASSERT_THAT(simulation.internal_state(shift_register),
-                testing::ElementsAre(0, 0, 0, 0, 0, 0, 1, 1));
+    ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 0, 0, 0, 0, 1, 1));
 
     // receive fourth element
     simulation.submit_events(shift_register, 1ms, {true, false, false});
     simulation.submit_events(shift_register, 2ms, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
-    ASSERT_THAT(simulation.internal_state(shift_register),
-                testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
+    ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
 }
 
 //

@@ -226,7 +226,7 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case flipflop_jk:
             return 2;
         case shift_register:
-            return 8;
+            return 10;
         case sub_circuit:
             return 0;
     }
@@ -359,18 +359,20 @@ auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
         }
 
         case shift_register: {
-            // rising edge
+            auto n_inputs = std::ssize(new_input) - 1;
+            if (std::ssize(state) < n_inputs) [[unlikely]] {
+                throw_exception(
+                    "need at least as many internal states "
+                    "as inputs for shift register");
+            }
+
+            // rising edge - store new value
             if (new_input.at(0) && !old_input.at(0)) {
-                auto n_inputs = std::ssize(new_input) - 1;
-
-                if (std::ssize(state) < n_inputs) [[unlikely]] {
-                    throw_exception(
-                        "need at least as many internal states "
-                        "as inputs for shift register");
-                }
-
-                std::shift_right(state.begin(), state.end(), n_inputs);
                 std::copy(std::next(new_input.begin()), new_input.end(), state.begin());
+            }
+            // falling edge - shift register
+            if (!new_input.at(0) && old_input.at(0)) {
+                std::shift_right(state.begin(), state.end(), n_inputs);
             }
             return;
         }
