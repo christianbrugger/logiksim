@@ -385,6 +385,23 @@ auto get_alpha_value(display_state_t display_state) -> uint8_t {
     throw_exception("unknown display state");
 }
 
+auto set_body_draw_styles(BLContext& ctx, display_state_t display_state, bool selected) {
+    const auto alpha = get_alpha_value(display_state);
+
+    const auto fill_color = [&] {
+        if (display_state == display_state_t::normal) {
+            if (selected) {
+                return BLRgba32(224, 224, 224, alpha);
+            }
+            return BLRgba32(255, 255, 128, alpha);
+        }
+        return BLRgba32(192, 192, 192, alpha);
+    }();
+
+    ctx.setFillStyle(fill_color);
+    ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
+}
+
 auto draw_single_connector_inverted(BLContext& ctx, point_t position,
                                     orientation_t orientation, bool enabled,
                                     display_state_t display_state,
@@ -395,13 +412,17 @@ auto draw_single_connector_inverted(BLContext& ctx, point_t position,
     const auto alpha = get_alpha_value(display_state);
     const auto color = enabled ? BLRgba32(255, 0, 0, alpha) : BLRgba32(0, 0, 0, alpha);
     const auto width = stroke_width(settings);
+    const auto offset = stroke_offset(width);
 
-    const auto pc = to_context(centerpoint, settings.view_config);
     const auto r = radius * settings.view_config.pixel_scale();
+    const auto pc = to_context(centerpoint, settings.view_config);
+
+    ctx.setFillStyle(BLRgba32(defaults::color_white.value));
+    ctx.fillCircle(BLCircle {pc.x + offset, pc.y + offset, r});
 
     ctx.setStrokeStyle(color);
     ctx.setStrokeWidth(width);
-    ctx.strokeCircle(BLCircle {pc.x, pc.y, r});
+    ctx.strokeCircle(BLCircle {pc.x + offset, pc.y + offset, r});
 }
 
 auto draw_single_connector_normal(BLContext& ctx, point_t position,
@@ -464,39 +485,29 @@ auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
     iter_input_location_and_id(
         layout_data,
         [&](connection_id_t input_id, point_t position, orientation_t orientation) {
-            const auto enabled = simulation.input_value(element.input(input_id));
             const auto inverted = layout.element(element).input_inverted(input_id);
-            draw_single_connector(ctx, position, orientation, enabled, inverted,
-                                  display_state_t::normal, settings);
+
+            if (inverted || !element.input(input_id).has_connected_element()) {
+                const auto enabled = simulation.input_value(element.input(input_id));
+                draw_single_connector(ctx, position, orientation, enabled, inverted,
+                                      display_state_t::normal, settings);
+            }
+
             return true;
         });
 
     iter_output_location_and_id(
         layout_data,
         [&](connection_id_t output_id, point_t position, orientation_t orientation) {
-            const auto enabled = simulation.output_value(element.output(output_id));
             const auto inverted = layout.element(element).output_inverted(output_id);
-            draw_single_connector(ctx, position, orientation, enabled, inverted,
-                                  display_state_t::normal, settings);
+
+            if (inverted || !element.output(output_id).has_connected_element()) {
+                const auto enabled = simulation.output_value(element.output(output_id));
+                draw_single_connector(ctx, position, orientation, enabled, inverted,
+                                      display_state_t::normal, settings);
+            }
             return true;
         });
-}
-
-auto set_body_draw_styles(BLContext& ctx, display_state_t display_state, bool selected) {
-    const auto alpha = get_alpha_value(display_state);
-
-    const auto fill_color = [&] {
-        if (display_state == display_state_t::normal) {
-            if (selected) {
-                return BLRgba32(224, 224, 224, alpha);
-            }
-            return BLRgba32(255, 255, 128, alpha);
-        }
-        return BLRgba32(192, 192, 192, alpha);
-    }();
-
-    ctx.setFillStyle(fill_color);
-    ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
 }
 
 constexpr static double BODY_OVERDRAW = 0.4;    // grid values
@@ -539,7 +550,7 @@ auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
 
     // text
     const auto label = to_label(element);
-    const auto size = 1.0 * settings.view_config.pixel_scale();
+    const auto size = 0.9 * settings.view_config.pixel_scale();
 
     if (!label.empty() && size > 3.0) {
         const auto center = point_fine_t {
@@ -594,7 +605,7 @@ auto draw_button_body(BLContext& ctx, layout::ConstElement element, bool selecte
 auto draw_binary_value(BLContext& ctx, point_t position, bool enabled,
                        display_state_t display_state, const RenderSettings& settings) {
     const auto label = enabled ? std::string {"1"} : std::string {"0"};
-    const auto size = 0.8 * settings.view_config.pixel_scale();
+    const auto size = 0.7 * settings.view_config.pixel_scale();
 
     if (size > 3.0) {
         const auto alpha = get_alpha_value(display_state);
@@ -643,7 +654,7 @@ auto draw_buffer_body(BLContext& ctx, layout::ConstElement element, bool selecte
     set_body_draw_styles(ctx, element.display_state(), selected);
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 
-    const auto size = 0.7 * settings.view_config.pixel_scale();
+    const auto size = 0.6 * settings.view_config.pixel_scale();
     if (size > 3.0) {
         const auto alpha = get_alpha_value(element.display_state());
         ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
@@ -984,37 +995,18 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     auto scene_rect = get_scene_rect(ctx, args.settings.view_config);
 
     {
-        // auto t = Timer("collisions", Timer::Unit::ms, 2);
-
         for (const auto element : args.layout.elements()) {
             const auto index = element.element_id().value;
             visibility.at(index) = is_colliding(element.bounding_rect(), scene_rect);
         }
     }
 
-    // auto t = Timer("render", Timer::Unit::ms, 2);
     const auto is_selected = [&](element_id_t element_id) {
         const auto id = element_id.value;
         return id < std::ssize(args.selection_mask) ? args.selection_mask[id] : false;
     };
     const auto is_visible
         = [&](element_id_t element_id) { return visibility.at(element_id.value); };
-
-    // unselected elements
-    if (args.simulation == nullptr || args.schematic == nullptr) {
-        for (auto element : args.layout.elements()) {
-            if (!is_selected(element) && element.is_logic_item() && is_visible(element)) {
-                draw_logic_item(ctx, element, false, args.settings);
-            }
-        }
-    } else {
-        for (auto element : args.schematic->elements()) {
-            if (!is_selected(element) && element.is_logic_item() && is_visible(element)) {
-                draw_logic_item(ctx, element, args.layout, *args.simulation, false,
-                                args.settings);
-            }
-        }
-    }
 
     // wires
     if (args.simulation == nullptr || args.schematic == nullptr) {
@@ -1031,6 +1023,22 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
                 } else {
                     draw_wire(ctx, element, args.layout, *args.simulation, args.settings);
                 }
+            }
+        }
+    }
+
+    // unselected elements
+    if (args.simulation == nullptr || args.schematic == nullptr) {
+        for (auto element : args.layout.elements()) {
+            if (!is_selected(element) && element.is_logic_item() && is_visible(element)) {
+                draw_logic_item(ctx, element, false, args.settings);
+            }
+        }
+    } else {
+        for (auto element : args.schematic->elements()) {
+            if (!is_selected(element) && element.is_logic_item() && is_visible(element)) {
+                draw_logic_item(ctx, element, args.layout, *args.simulation, false,
+                                args.settings);
             }
         }
     }
