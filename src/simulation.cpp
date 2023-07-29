@@ -224,7 +224,7 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
             return 1;
         case clock_generator:
         case flipflop_jk:
-            return 1;
+            return 2;
         case shift_register:
             return 8;
         case sub_circuit:
@@ -340,17 +340,20 @@ auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
 
             if (input_reset) {
                 state.at(0) = false;
+                state.at(1) = false;
             } else if (input_set) {
                 state.at(0) = true;
+                state.at(1) = true;
             } else if (new_input.at(0) && !old_input.at(0)) {  // rising edge
-
                 if (input_j && input_k) {
-                    state.at(0) = !state.at(0);
+                    state.at(0) = !state.at(1);
                 } else if (input_j && !input_k) {
                     state.at(0) = true;
                 } else if (!input_j && input_k) {
                     state.at(0) = false;
                 }
+            } else if (!new_input.at(0) && old_input.at(0)) {  // faling edge
+                state.at(1) = state.at(0);
             }
             return;
         }
@@ -394,7 +397,7 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
         }
 
         case flipflop_jk: {
-            bool enabled = state.at(0);
+            bool enabled = state.at(1);
             return {enabled, !enabled};
         }
 

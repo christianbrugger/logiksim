@@ -338,10 +338,12 @@ TEST(SimulationTest, JKFlipFlop) {
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 
+    // clk, j, k, set, reset
+
     // switch to j state
     simulation.submit_events(flipflop, 1ms, {true, true, false, false, false});
     simulation.run();
-    ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
+    ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
     simulation.submit_events(flipflop, 1ms, {false, true, false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
@@ -349,7 +351,7 @@ TEST(SimulationTest, JKFlipFlop) {
     // switch to k state
     simulation.submit_events(flipflop, 1ms, {true, false, true, false, false});
     simulation.run();
-    ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
+    ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
     simulation.submit_events(flipflop, 1ms, {false, false, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
