@@ -54,3 +54,7 @@
 	url = https://github.com/ericniebler/range-v3
 	ignore = dirty
 
+[submodule "external/glaze"]
+	path = external/glaze
+	url = https://github.com/stephenberry/glaze
+	ignore = dirty

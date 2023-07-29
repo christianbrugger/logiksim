@@ -5,6 +5,7 @@
 #include "range.h"
 #include "schematic.h"
 #include "schematic_generation.h"
+#include "serialize.h"
 #include "simulation.h"
 
 namespace logicsim {
@@ -640,6 +641,8 @@ auto RendererWidget::reload_circuit() -> void {
         editable_circuit_.reset();
         editable_circuit_.emplace(std::move(layout));
     }
+
+    serialize_json(editable_circuit_->layout());
 
     update();
     if (editable_circuit_->layout().element_count() < 30) {

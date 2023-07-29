@@ -38,6 +38,7 @@ set(LS_CORE_SOURCES
     src/schematic.cpp
     src/schematic_generation.cpp
     src/segment_tree.cpp
+    src/serialize.cpp
     src/simulation.cpp
     src/simulation_view.cpp
     src/timer.cpp
@@ -274,6 +275,9 @@ target_compile_definitions(folly PUBLIC FOLLY_NO_CONFIG)
 # unordered_dense (ankerl)
 add_subdirectory(external/unordered_dense EXCLUDE_FROM_ALL SYSTEM)
 
+# glaze
+add_subdirectory(external/glaze EXCLUDE_FROM_ALL SYSTEM)
+
 
 
 ###################################################
@@ -309,6 +313,7 @@ if (LS_ENABLE_PCH)
         <boost/random/uniform_int_distribution.hpp>
         <fmt/core.h>
         <folly/small_vector.h>
+        <glaze/glaze.hpp>
         <gsl/gsl>
     
         <algorithm>
@@ -359,6 +364,7 @@ set(LS_CORE_LIBRARIES
     GSL
     range-v3
     Blend2D::Blend2D
+    glaze::glaze
     
     Qt6::Core
     Qt6::Widgets
