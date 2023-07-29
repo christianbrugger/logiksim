@@ -214,7 +214,7 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case placeholder:
         case wire:
 
-        case inverter_element:
+        case buffer_element:
         case and_element:
         case or_element:
         case xor_element:
@@ -247,6 +247,15 @@ Simulation::Simulation(const Schematic &schematic)
         state.output_delays.resize(element.output_count(),
                                    Schematic::defaults::standard_delay);
         state.internal_state.resize(internal_state_size(element.element_type()), false);
+    }
+
+    // TODO remove when not needed anymore
+    for (auto element : schematic_->elements()) {
+        if (element.output_count() > 0) {
+            set_output_delays(element, element.output_delays());
+            set_history_length(element, element.history_length());
+        }
+        set_input_inverters(element, element.input_inverters());
     }
 }
 
@@ -420,8 +429,8 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
         case wire:
             return {Simulation::logic_small_vector_t(output_count, input.at(0))};
 
-        case inverter_element:
-            return {!input.at(0)};
+        case buffer_element:
+            return {input.at(0)};
 
         case and_element:
             return {std::ranges::all_of(input, std::identity {})};

@@ -105,7 +105,7 @@ class Schematic {
     [[nodiscard]] auto output(connection_t connection) const -> ConstOutput;
 
     struct ElementData {
-        ElementType element_type {ElementType::inverter_element};
+        ElementType element_type {ElementType::unused};
         std::size_t input_count {0};
         std::size_t output_count {0};
 

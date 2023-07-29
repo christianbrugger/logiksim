@@ -622,11 +622,11 @@ auto draw_button(BLContext& ctx, Schematic::ConstElement element, const Layout& 
 }
 
 //
-// Inverter
+// Buffer Element
 //
 
-auto draw_inverter_body(BLContext& ctx, layout::ConstElement element, bool selected,
-                        const RenderSettings& settings) -> void {
+auto draw_buffer_body(BLContext& ctx, layout::ConstElement element, bool selected,
+                      const RenderSettings& settings) -> void {
     const auto position = element.position();
 
     const auto rect = rect_fine_t {
@@ -642,18 +642,28 @@ auto draw_inverter_body(BLContext& ctx, layout::ConstElement element, bool selec
 
     set_body_draw_styles(ctx, element.display_state(), selected);
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+
+    const auto size = 0.7 * settings.view_config.pixel_scale();
+    if (size > 3.0) {
+        const auto alpha = get_alpha_value(element.display_state());
+        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+
+        const auto p = point_fine_t {position.x.value + 0.5, position.y.value + 0.0};
+        settings.text.draw_text(ctx, to_context(p, settings.view_config), size, "1",
+                                HorizontalAlignment::center, VerticalAlignment::center);
+    }
 }
 
-auto draw_inverter(BLContext& ctx, layout::ConstElement element, bool selected,
-                   const RenderSettings& settings) -> void {
-    draw_inverter_body(ctx, element, selected, settings);
+auto draw_buffer(BLContext& ctx, layout::ConstElement element, bool selected,
+                 const RenderSettings& settings) -> void {
+    draw_buffer_body(ctx, element, selected, settings);
     draw_logic_item_connectors(ctx, element, settings);
 }
 
-auto draw_inverter(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
-                   const Simulation& simulation, bool selected,
-                   const RenderSettings& settings) -> void {
-    draw_inverter_body(ctx, layout.element(element), selected, settings);
+auto draw_buffer(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
+                 const Simulation& simulation, bool selected,
+                 const RenderSettings& settings) -> void {
+    draw_buffer_body(ctx, layout.element(element), selected, settings);
     draw_logic_item_connectors(ctx, element, layout, simulation, settings);
 }
 
@@ -779,8 +789,8 @@ auto draw_logic_item(BLContext& ctx, layout::ConstElement element, bool selected
         case wire:
             throw_exception("not supported");
 
-        case inverter_element:
-            return draw_inverter(ctx, element, selected, settings);
+        case buffer_element:
+            return draw_buffer(ctx, element, selected, settings);
 
         case and_element:
         case or_element:
@@ -813,8 +823,8 @@ auto draw_logic_item(BLContext& ctx, Schematic::ConstElement element,
         case wire:
             throw_exception("not supported");
 
-        case inverter_element:
-            return draw_inverter(ctx, element, layout, simulation, selected, settings);
+        case buffer_element:
+            return draw_buffer(ctx, element, layout, simulation, selected, settings);
 
         case and_element:
         case or_element:

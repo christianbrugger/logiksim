@@ -27,7 +27,7 @@ enum class ElementType : uint8_t {
     placeholder,  // has no logic                 // TODO rename to ???
     wire,
 
-    inverter_element,  // buffer
+    buffer_element,
     and_element,
     or_element,
     xor_element,

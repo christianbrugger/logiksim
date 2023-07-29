@@ -77,9 +77,10 @@ TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
 TEST(SimulationTest, InitializeSimulation) {
     Schematic schematic;
     auto inverter = schematic.add_element(Schematic::ElementData {
-        .element_type = ElementType::inverter_element,
+        .element_type = ElementType::buffer_element,
         .input_count = 1,
         .output_count = 1,
+        .input_inverters = logic_small_vector_t {true},
     });
 
     auto simulation = get_initialized_simulation(schematic);
@@ -106,9 +107,10 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     // create infinite loop
     Schematic schematic;
     auto inverter = schematic.add_element(Schematic::ElementData {
-        .element_type = ElementType::inverter_element,
+        .element_type = ElementType::buffer_element,
         .input_count = 1,
         .output_count = 1,
+        .input_inverters = logic_small_vector_t {true},
     });
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
@@ -133,9 +135,10 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     // create infinite loop
     Schematic schematic;
     auto inverter = schematic.add_element(Schematic::ElementData {
-        .element_type = ElementType::inverter_element,
+        .element_type = ElementType::buffer_element,
         .input_count = 1,
         .output_count = 1,
+        .input_inverters = logic_small_vector_t {true},
     });
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,

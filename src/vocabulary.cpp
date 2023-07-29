@@ -14,8 +14,8 @@ auto format(ElementType type) -> std::string {
         case wire:
             return "Wire";
 
-        case inverter_element:
-            return "Inverter";
+        case buffer_element:
+            return "Buffer";
         case and_element:
             return "AndElement";
         case or_element:

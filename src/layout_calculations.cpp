@@ -167,7 +167,7 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
             return input_count <= 1 && output_count >= 1;
         }
 
-        case inverter_element: {
+        case buffer_element: {
             return input_count == 1 && output_count == 1;
         }
         case and_element:
@@ -226,7 +226,7 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             throw_exception("not supported");
         }
 
-        case inverter_element: {
+        case buffer_element: {
             return transform(data.position, data.orientation, {0, 0}, {1, 0});
         }
 

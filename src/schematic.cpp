@@ -1262,10 +1262,10 @@ void add_random_element(Schematic &schematic, G &rng) {
         = boost::random::uniform_int_distribution<int> {1, max_connections};
     auto element_dist = boost::random::uniform_int_distribution<int8_t> {0, 2};
 
-    const auto element_type
-        = element_dist(rng) == 0 ? ElementType::xor_element
-                                 : (element_dist(rng) == 1 ? ElementType::inverter_element
-                                                           : ElementType ::wire);
+    const auto element_type = element_dist(rng) == 0
+                                  ? ElementType::xor_element
+                                  : (element_dist(rng) == 1 ? ElementType::buffer_element
+                                                            : ElementType::wire);
 
     const auto input_count
         = element_type == ElementType::xor_element ? connection_dist(rng) : 1;
@@ -1277,6 +1277,9 @@ void add_random_element(Schematic &schematic, G &rng) {
         .element_type = element_type,
         .input_count = gsl::narrow<std::size_t>(input_count),
         .output_count = gsl::narrow<std::size_t>(output_count),
+        .input_inverters = element_type == ElementType::buffer_element
+                               ? logic_small_vector_t {true}
+                               : logic_small_vector_t {},
     });
 }
 

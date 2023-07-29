@@ -136,7 +136,7 @@ TEST(Layout, ElementViewSome) {
         .orientation = orientation_t::right,
     });
     auto inverter = layout.add_element(Layout::ElementData {
-        .element_type = ElementType::inverter_element,
+        .element_type = ElementType::buffer_element,
         .input_count = 1,
         .output_count = 1,
         .orientation = orientation_t::right,

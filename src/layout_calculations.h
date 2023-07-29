@@ -55,7 +55,7 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
         case unused:
         case placeholder:
         case wire:
-        case inverter_element: {
+        case buffer_element: {
             return true;
         }
 
@@ -178,7 +178,7 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             throw_exception("not supported");
         }
 
-        case inverter_element: {
+        case buffer_element: {
             require_equal(data.input_count, 1);
             return next_input(data.position,
                               transform(data.orientation, orientation_t::left));
@@ -295,7 +295,7 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
             throw_exception("not supported");
         }
 
-        case inverter_element: {
+        case buffer_element: {
             require_equal(data.output_count, 1);
             return next_output(transform(data.position, data.orientation, point_t {1, 0}),
                                transform(data.orientation, orientation_t::right));

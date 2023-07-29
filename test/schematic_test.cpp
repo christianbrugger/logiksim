@@ -69,7 +69,7 @@ TEST(Schematic, EqualityOperators) {
         .output_count = 3,
     });
     auto inverter = schematic.add_element(Schematic::ElementData {
-        .element_type = ElementType::inverter_element,
+        .element_type = ElementType::buffer_element,
         .input_count = 1,
         .output_count = 1,
     });
@@ -244,7 +244,7 @@ TEST(Schematic, ReconnectInput) {
         .output_count = 1,
     });
     auto inverter = schematic.add_element(Schematic::ElementData {
-        .element_type = ElementType::inverter_element,
+        .element_type = ElementType::buffer_element,
         .input_count = 1,
         .output_count = 1,
     });
@@ -333,7 +333,7 @@ TEST(Schematic, ElementViewFull) {
         .output_count = 1,
     });
     auto inverter = schematic.add_element(Schematic::ElementData {
-        .element_type = ElementType::inverter_element,
+        .element_type = ElementType::buffer_element,
         .input_count = 1,
         .output_count = 1,
     });
@@ -353,7 +353,7 @@ TEST(Schematic, ElementViewRanges) {
         .output_count = 1,
     });
     schematic.add_element(Schematic::ElementData {
-        .element_type = ElementType::inverter_element,
+        .element_type = ElementType::buffer_element,
         .input_count = 1,
         .output_count = 1,
     });

@@ -108,7 +108,7 @@ auto to_logic_item_definition(InteractionState state, std::size_t default_input_
             };
         case insert_inverter_element:
             return LogicItemDefinition {
-                .element_type = ElementType::inverter_element,
+                .element_type = ElementType::buffer_element,
                 .input_count = 1,
                 .orientation = orientation_t::right,
                 .output_inverters = logic_small_vector_t {true},
