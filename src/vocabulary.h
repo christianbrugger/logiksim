@@ -383,6 +383,9 @@ struct color_t {
 namespace defaults {
 constexpr static inline auto color_black = ::logicsim::color_t {0xFF000000};
 constexpr static inline auto color_white = ::logicsim::color_t {0xFFFFFFFF};
+constexpr static inline auto color_light_gray = ::logicsim::color_t {0xFFD3D3D3};
+constexpr static inline auto color_gray_90 = ::logicsim::color_t {0xFFE5E5E5};
+
 constexpr static inline auto color_red = ::logicsim::color_t {0xFFFF0000};
 constexpr static inline auto color_green = ::logicsim::color_t {0xFF009900};
 constexpr static inline auto color_lime = ::logicsim::color_t {0xFF00FF00};

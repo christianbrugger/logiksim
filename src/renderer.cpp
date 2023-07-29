@@ -414,9 +414,8 @@ auto draw_single_connector_inverted(BLContext& ctx, point_t position,
     const auto offset = stroke_offset(width);
 
     const auto r = radius * settings.view_config.pixel_scale();
-
     const auto p = to_context(position, settings.view_config);
-    const auto p_center = connector_point(p, orientation, r);
+    const auto p_center = connector_point(p, orientation, r + width);
 
     ctx.setFillStyle(BLRgba32(defaults::color_white.value));
     ctx.fillCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
@@ -600,6 +599,10 @@ auto draw_button_body(BLContext& ctx, layout::ConstElement element, bool selecte
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
+
+    const auto alpha = get_alpha_value(element.display_state());
+    ctx.setFillStyle(BLRgba32(229, 229, 229, alpha));
+
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 }
 
@@ -1012,7 +1015,8 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     // wires
     if (args.simulation == nullptr || args.schematic == nullptr) {
         for (auto element : args.layout.elements()) {
-            if (element.element_type() == ElementType::wire && is_visible(element)) {
+            if (element.element_type() == ElementType::wire && element.is_inserted()
+                && is_visible(element)) {
                 draw_element_tree(ctx, element, args.settings);
             }
         }
@@ -1040,6 +1044,16 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
             if (!is_selected(element) && element.is_logic_item() && is_visible(element)) {
                 draw_logic_item(ctx, element, args.layout, *args.simulation, false,
                                 args.settings);
+            }
+        }
+    }
+
+    // draw uninserted wires
+    if (args.simulation == nullptr || args.schematic == nullptr) {
+        for (auto element : args.layout.elements()) {
+            if (!element.is_inserted() && element.element_type() == ElementType::wire
+                && is_visible(element)) {
+                draw_element_tree(ctx, element, args.settings);
             }
         }
     }
