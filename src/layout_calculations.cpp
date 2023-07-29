@@ -152,6 +152,31 @@ auto connector_point(point_t position, orientation_t orientation, grid_fine_t of
     throw_exception("unknown orientation");
 }
 
+auto connector_point(BLPoint position, orientation_t orientation, double offset)
+    -> BLPoint {
+    switch (orientation) {
+        using enum orientation_t;
+
+        case right: {
+            return BLPoint {position.x + offset, position.y};
+        }
+        case left: {
+            return BLPoint {position.x - offset, position.y};
+        }
+        case up: {
+            return BLPoint {position.x, position.y - offset};
+        }
+        case down: {
+            return BLPoint {position.x, position.y + offset};
+        }
+
+        case undirected: {
+            return position;
+        }
+    };
+    throw_exception("unknown orientation");
+}
+
 auto is_input_output_count_valid(ElementType element_type, std::size_t input_count,
                                  std::size_t output_count) -> bool {
     switch (element_type) {

@@ -407,7 +407,6 @@ auto draw_single_connector_inverted(BLContext& ctx, point_t position,
                                     display_state_t display_state,
                                     const RenderSettings& settings) {
     const auto radius = 0.2;
-    const auto centerpoint = connector_point(position, orientation, grid_fine_t {radius});
 
     const auto alpha = get_alpha_value(display_state);
     const auto color = enabled ? BLRgba32(255, 0, 0, alpha) : BLRgba32(0, 0, 0, alpha);
@@ -415,14 +414,16 @@ auto draw_single_connector_inverted(BLContext& ctx, point_t position,
     const auto offset = stroke_offset(width);
 
     const auto r = radius * settings.view_config.pixel_scale();
-    const auto pc = to_context(centerpoint, settings.view_config);
+
+    const auto p = to_context(position, settings.view_config);
+    const auto p_center = connector_point(p, orientation, r);
 
     ctx.setFillStyle(BLRgba32(defaults::color_white.value));
-    ctx.fillCircle(BLCircle {pc.x + offset, pc.y + offset, r});
+    ctx.fillCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
 
     ctx.setStrokeStyle(color);
     ctx.setStrokeWidth(width);
-    ctx.strokeCircle(BLCircle {pc.x + offset, pc.y + offset, r});
+    ctx.strokeCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
 }
 
 auto draw_single_connector_normal(BLContext& ctx, point_t position,
