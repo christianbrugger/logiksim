@@ -52,7 +52,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
         .output_count = element.output_count(),
 
         .circuit_id = element.sub_circuit_id(),
-        // .input_inverters = logic_small_vector_t(element.input_count(), false),
+        .input_inverters = element.input_inverters(),
         .output_delays = std::vector<delay_t>(element.output_count(), delay),
         .history_length = Schematic::defaults::no_history,
     });
@@ -78,7 +78,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
             .output_count = line_tree.output_count(),
 
             .circuit_id = null_circuit,
-            .input_inverters = element.input_inverters(),
+            // .input_inverters = element.input_inverters(),
             .output_delays = std::move(delays),
             .history_length = tree_max_delay,
         });
