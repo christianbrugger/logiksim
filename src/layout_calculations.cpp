@@ -179,6 +179,13 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
 
 auto is_input_output_count_valid(ElementType element_type, std::size_t input_count,
                                  std::size_t output_count) -> bool {
+    if (input_count > connection_id_t::max()) {
+        return false;
+    }
+    if (output_count > connection_id_t::max()) {
+        return false;
+    }
+
     switch (element_type) {
         using enum ElementType;
 

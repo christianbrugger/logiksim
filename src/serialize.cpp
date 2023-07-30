@@ -156,9 +156,49 @@ struct SerializedLogicItem {
             "output_count", &T::output_count,          //
             "input_inverters", &T::input_inverters,    //
             "output_inverters", &T::output_inverters,  //
-            "positions", &T::position,                 //
+            "position", &T::position,                  //
             "orientation", &T::orientation);
     };
+
+    auto to_definition() const -> std::optional<LogicItemDefinition> {
+        if (!is_logic_item(element_type)) {
+            return std::nullopt;
+        }
+        if (!is_input_output_count_valid(element_type, input_count, output_count)) {
+            return std::nullopt;
+        }
+
+        if (input_inverters.size() != input_count) {
+            return std::nullopt;
+        }
+        if (output_inverters.size() != output_count) {
+            return std::nullopt;
+        }
+
+        if (!is_orientation_valid(element_type, orientation)) {
+            return std::nullopt;
+        }
+
+        const auto data = layout_calculation_data_t {
+            .input_count = input_count,
+            .output_count = output_count,
+            .position = position,
+            .orientation = orientation,
+            .element_type = element_type,
+        };
+        if (!is_representable(data)) {
+            return std::nullopt;
+        }
+
+        return LogicItemDefinition {
+            .element_type = element_type,
+            .input_count = input_count,
+            .output_count = output_count,
+            .orientation = orientation,
+            .input_inverters = input_inverters,
+            .output_inverters = output_inverters,
+        };
+    }
 };
 
 struct SerializedLayout {
@@ -245,7 +285,11 @@ auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayo
     // peak version
     auto version = glz::get_as_json<int, "/version">(json_text);
     if (!version.has_value()) {
-        print("Error parsing version", glz::format_error(version.error(), json_text));
+        try {
+            print(glz::format_error(version.error(), json_text));
+        } catch (std::runtime_error&) {
+            print("error parsing json");
+        }
         return std::nullopt;
     }
     if (version.value() != CURRENT_VERSION) {
@@ -257,7 +301,11 @@ auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayo
     auto result = std::optional<SerializedLayout> {SerializedLayout {}};
     const auto error = glz::read_json<SerializedLayout>(result.value(), json_text);
     if (error) {
-        print(glz::format_error(error, json_text));
+        try {
+            print(glz::format_error(error, json_text));
+        } catch (std::runtime_error&) {
+            print("error parsing json");
+        }
         return std::nullopt;
     }
 
@@ -273,7 +321,10 @@ auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
 
     // logic items
     for (const auto& item : data.value().logic_items) {
-        print(item.element_type);
+        if (const auto definition = item.to_definition()) {
+            editable_circuit.add_logic_item(definition.value(), item.position,
+                                            insertion_mode);
+        }
     }
 
     // wire segments
