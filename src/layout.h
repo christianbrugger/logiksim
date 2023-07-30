@@ -115,6 +115,8 @@ class Layout {
     auto delete_last_element() -> void;
     auto update_bounding_rect(element_id_t element_id) const -> void;
 
+    // TODO make private again after we finished with serialization experiments
+   public:
     constexpr static auto empty_bounding_rect = rect_t {point_t {0, 0}, point_t {0, 0}};
 
     using connection_size_t = std::make_unsigned<connection_id_t::value_type>::type;

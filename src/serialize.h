@@ -7,6 +7,6 @@ namespace logicsim {
 
 auto serialize_json(const Layout &layout) -> void;
 
-}
+}  // namespace logicsim
 
 #endif

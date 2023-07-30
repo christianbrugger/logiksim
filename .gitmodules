@@ -58,3 +58,8 @@
 	path = external/glaze
 	url = https://github.com/stephenberry/glaze
 	ignore = dirty
+	
+[submodule "external/zlib"]
+	path = external/zlib
+	url = https://github.com/madler/zlib
+	ignore = dirt

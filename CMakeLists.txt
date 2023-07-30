@@ -213,11 +213,18 @@ add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 # Google Test
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
+# Zlib
+add_subdirectory(external/zlib EXCLUDE_FROM_ALL SYSTEM)
+set (ZLIB_USE_STATIC_LIBS ON)
+
 # Boost
+set(BOOST_IOSTREAMS_ENABLE_ZLIB ON)
+
 set(BOOST_INCLUDE_LIBRARIES 
     algorithm 
     container 
     geometry
+    iostreams
     mpl 
     random 
     stacktrace
@@ -351,6 +358,7 @@ set(LS_CORE_LIBRARIES
     Boost::algorithm
     Boost::container 
     Boost::geometry
+    Boost::iostreams
     Boost::mpl
     Boost::random
     boost_stacktrace 
@@ -365,6 +373,7 @@ set(LS_CORE_LIBRARIES
     range-v3
     Blend2D::Blend2D
     glaze::glaze
+    zlibstatic
     
     Qt6::Core
     Qt6::Widgets
