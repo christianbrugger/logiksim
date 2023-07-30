@@ -299,4 +299,15 @@ struct fmt::formatter<T, Char> {
     bool use_brackets_ {true};
 };
 
+namespace logicsim {
+
+// string -> hex
+
+[[nodiscard]] inline auto to_hex(std::string text) -> std::string {
+    const auto r = std::ranges::subrange(text.begin(), text.end());
+    return fmt_join("", r, "{:x}", [](char c) { return static_cast<uint8_t>(c); });
+}
+
+}  // namespace logicsim
+
 #endif

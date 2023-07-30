@@ -70,6 +70,9 @@ auto delete_wire_segment(Layout& layout, MessageSender sender,
 auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
               InsertionMode insertion_mode, Selection* selection) -> void;
 
+auto add_wire_segment(State state, Selection* selection, line_t line,
+                      InsertionMode insertion_mode) -> void;
+
 auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
                                 InsertionMode new_insertion_mode) -> void;
 

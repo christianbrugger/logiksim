@@ -1,21 +1,21 @@
 //
 // Load clipboard data in python with:
-// 
+//
 //     import json; import gzip; import base64;
-// 
+//
 //     json.loads(gzip.decompress(base64.b64decode(s)))
 //
 // Load savefiles in python with:
-// 
+//
 //     import json; import gzip;
-//     
+//
 //     json.loads(gzip.decompress(open("data.json.gz", 'rb').read()))
 //
 
-
 #include "serialize.h"
 
-#include "editable_circuit\selection.h"
+#include "editable_circuit/editable_circuit.h"
+#include "editable_circuit/selection.h"
 #include "layout.h"
 #include "timer.h"
 
@@ -26,6 +26,48 @@
 
 #include <fstream>
 #include <iostream>
+
+namespace logicsim {
+
+constexpr static inline auto CURRENT_VERSION = 100;
+
+auto gzip_compress(const std::string& input) -> std::string {
+    auto output = std::ostringstream {};
+    {
+        auto filter_stream = boost::iostreams::filtering_ostream {};
+        filter_stream.push(boost::iostreams::gzip_compressor());
+        filter_stream.push(output);
+        filter_stream.write(input.data(), input.size());
+        filter_stream.flush();
+    }
+    return output.str();
+}
+
+auto gzip_decompress(const std::string& input) -> std::string {
+    auto output = std::ostringstream {};
+    {
+        auto filter_stream = boost::iostreams::filtering_ostream {};
+        filter_stream.push(boost::iostreams::gzip_decompressor());
+        filter_stream.push(output);
+        filter_stream.write(input.data(), input.size());
+        filter_stream.flush();
+    }
+    return output.str();
+}
+
+auto base64_encode(const std::string& data) -> std::string {
+    return cppcodec::base64_rfc4648::encode(data);
+}
+
+auto base64_decode(const std::string& data) -> std::string {
+    try {
+        return cppcodec::base64_rfc4648::decode<std::string>(data);
+    } catch (cppcodec::parse_error&) {
+    }
+    return "";
+}
+
+}  // namespace logicsim
 
 template <>
 struct glz::meta<logicsim::ElementType> {
@@ -77,15 +119,24 @@ struct glz::meta<logicsim::point_t> {
     static constexpr auto value = array(&T::x, &T::y);
 };
 
-template <>
-struct glz::meta<logicsim::ordered_line_t> {
-    using T = logicsim::ordered_line_t;
-
-    static constexpr auto value = array(&T::p0, &T::p1);
-    // static constexpr auto value = object("p0", &T::p0, "p1", &T::p1);
-};
-
 namespace logicsim {
+
+struct SerializedLine {
+    point_t p0;
+    point_t p1;
+
+    struct glaze {
+        using T = SerializedLine;
+        static constexpr auto value = glz::array(&T::p0, &T::p1);
+    };
+
+    auto to_line() const -> std::optional<line_t> {
+        if (is_orthogonal(p0, p1)) [[likely]] {
+            return line_t {p0, p1};
+        }
+        return std::nullopt;
+    }
+};
 
 struct SerializedLogicItem {
     ElementType element_type;
@@ -111,10 +162,10 @@ struct SerializedLogicItem {
 };
 
 struct SerializedLayout {
-    int version {100};
+    int version {CURRENT_VERSION};
 
     std::vector<SerializedLogicItem> logic_items;
-    std::vector<ordered_line_t> wire_segments;
+    std::vector<SerializedLine> wire_segments;
 
     struct glaze {
         using T = SerializedLayout;
@@ -125,38 +176,6 @@ struct SerializedLayout {
             "wire_segments", &T::wire_segments);
     };
 };
-
-auto gzip_compress(const std::string& input) -> std::string {
-    auto output = std::ostringstream {};
-    {
-        auto filter_stream = boost::iostreams::filtering_ostream {};
-        filter_stream.push(boost::iostreams::gzip_compressor());
-        filter_stream.push(output);
-        filter_stream.write(input.data(), input.size());
-        filter_stream.flush();
-    }
-    return output.str();
-}
-
-auto gzip_decompress(const std::string& input) -> std::string {
-    auto output = std::ostringstream {};
-    {
-        auto filter_stream = boost::iostreams::filtering_ostream {};
-        filter_stream.push(boost::iostreams::gzip_decompressor());
-        filter_stream.push(output);
-        filter_stream.write(input.data(), input.size());
-        filter_stream.flush();
-    }
-    return output.str();
-}
-
-auto base64_encode(const std::string& data) -> std::string {
-    return cppcodec::base64_rfc4648::encode(data);
-}
-
-auto base64_decode(const std::string& data) -> std::string {
-    return cppcodec::base64_rfc4648::decode<std::string>(data);
-}
 
 auto add_element(SerializedLayout& data, const layout::ConstElement element) -> void {
     if (element.is_logic_item()) {
@@ -173,7 +192,7 @@ auto add_element(SerializedLayout& data, const layout::ConstElement element) -> 
 
     else if (element.is_wire()) {
         for (const auto& info : element.segment_tree().segment_infos()) {
-            data.wire_segments.push_back(info.line);
+            data.wire_segments.push_back(SerializedLine {info.line.p0, info.line.p1});
         }
     }
 }
@@ -201,7 +220,7 @@ auto serialize_selected(const Layout& layout, const Selection& selection) -> std
         for (const auto& part : parts) {
             const auto line
                 = get_line(layout, segment_part_t {.segment = segment, .part = part});
-            data.wire_segments.push_back(line);
+            data.wire_segments.push_back(SerializedLine {line.p0, line.p1});
         }
     }
 
@@ -214,6 +233,55 @@ auto save_layout(const Layout& layout, std::string filename) -> void {
     auto file = std::ofstream(filename, std::ios::binary);
     file.write(data.data(), data.size());
     file.close();
+}
+
+auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayout> {
+    // unip
+    const auto json_text = gzip_decompress(binary);
+    if (json_text.empty()) {
+        return std::nullopt;
+    }
+
+    // peak version
+    auto version = glz::get_as_json<int, "/version">(json_text);
+    if (!version.has_value()) {
+        print("Error parsing version", glz::format_error(version.error(), json_text));
+        return std::nullopt;
+    }
+    if (version.value() != CURRENT_VERSION) {
+        print("Error wrong version. Expected", CURRENT_VERSION, "got", version.value());
+        return std::nullopt;
+    }
+
+    // parse json
+    auto result = std::optional<SerializedLayout> {SerializedLayout {}};
+    const auto error = glz::read_json<SerializedLayout>(result.value(), json_text);
+    if (error) {
+        print(glz::format_error(error, json_text));
+        return std::nullopt;
+    }
+
+    return result;
+}
+
+auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
+                InsertionMode insertion_mode) -> void {
+    const auto data = unserialize_data(binary);
+    if (!data) {
+        return;
+    }
+
+    // logic items
+    for (const auto& item : data.value().logic_items) {
+        print(item.element_type);
+    }
+
+    // wire segments
+    for (const auto& entry : data.value().wire_segments) {
+        if (const auto line = entry.to_line()) {
+            editable_circuit.add_line_segment(line.value(), insertion_mode);
+        }
+    }
 }
 
 }  // namespace logicsim

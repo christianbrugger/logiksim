@@ -1238,6 +1238,15 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
         event->accept();
     }
 
+    // CTRL + V
+    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_V) {
+        const auto text = QApplication::clipboard()->text().toStdString();
+        const auto binary = base64_decode(text);
+
+        add_layout(binary, editable_circuit_.value(), InsertionMode::insert_or_discard);
+        update();
+    }
+
     // Enter
     else if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
         if (mouse_logic_) {

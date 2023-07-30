@@ -82,6 +82,15 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
     return handle;
 }
 
+auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
+    -> selection_handle_t {
+    auto handle = registrar_.create_selection();
+
+    add_wire_segment(get_state(), handle.get(), line, insertion_mode);
+
+    return handle;
+}
+
 auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
                                         LineSegmentType segment_type,
                                         InsertionMode insertion_mode)
