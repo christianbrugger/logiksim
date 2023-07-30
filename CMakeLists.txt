@@ -285,6 +285,9 @@ add_subdirectory(external/unordered_dense EXCLUDE_FROM_ALL SYSTEM)
 # glaze
 add_subdirectory(external/glaze EXCLUDE_FROM_ALL SYSTEM)
 
+# cppcodec / base64
+add_subdirectory(external/cppcodec EXCLUDE_FROM_ALL SYSTEM)
+
 
 
 ###################################################
@@ -320,7 +323,6 @@ if (LS_ENABLE_PCH)
         <boost/random/uniform_int_distribution.hpp>
         <fmt/core.h>
         <folly/small_vector.h>
-        <glaze/glaze.hpp>
         <gsl/gsl>
     
         <algorithm>
@@ -364,6 +366,7 @@ set(LS_CORE_LIBRARIES
     boost_stacktrace 
     Boost::unordered
     
+    cppcodec
     fmt::fmt
     folly
     absl::base

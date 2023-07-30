@@ -25,7 +25,7 @@ auto Layout::swap(Layout &other) noexcept -> void {
     segment_trees_.swap(other.segment_trees_);
     line_trees_.swap(other.line_trees_);
     positions_.swap(other.positions_);
-    orientation_.swap(other.orientation_);
+    orientations_.swap(other.orientations_);
     display_states_.swap(other.display_states_);
     colors_.swap(other.colors_);
 
@@ -55,7 +55,7 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
     swap_ids(segment_trees_);
     swap_ids(line_trees_);
     swap_ids(positions_);
-    swap_ids(orientation_);
+    swap_ids(orientations_);
     swap_ids(display_states_);
     swap_ids(colors_);
 
@@ -77,7 +77,7 @@ auto Layout::delete_last_element() -> void {
     segment_trees_.pop_back();
     line_trees_.pop_back();
     positions_.pop_back();
-    orientation_.pop_back();
+    orientations_.pop_back();
     display_states_.pop_back();
     colors_.pop_back();
 
@@ -220,7 +220,7 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
     segment_trees_.emplace_back();
     line_trees_.emplace_back();
     positions_.push_back(data.position);
-    orientation_.push_back(data.orientation);
+    orientations_.push_back(data.orientation);
     display_states_.push_back(data.display_state);
     colors_.push_back(data.color);
 
@@ -332,7 +332,7 @@ auto Layout::position(element_id_t element_id) const -> point_t {
 }
 
 auto Layout::orientation(element_id_t element_id) const -> orientation_t {
-    return orientation_.at(element_id.value);
+    return orientations_.at(element_id.value);
 }
 
 auto Layout::display_state(element_id_t element_id) const -> display_state_t {

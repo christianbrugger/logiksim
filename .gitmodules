@@ -62,4 +62,9 @@
 [submodule "external/zlib"]
 	path = external/zlib
 	url = https://github.com/madler/zlib
-	ignore = dirt
+	ignore = dirty
+
+[submodule "external/cppcodec"]
+	path = external/cppcodec
+	url = https://github.com/tplgy/cppcodec
+	ignore = dirty

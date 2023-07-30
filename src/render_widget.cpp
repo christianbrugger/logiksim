@@ -8,6 +8,9 @@
 #include "serialize.h"
 #include "simulation.h"
 
+#include <QApplication>
+#include <QClipboard>
+
 namespace logicsim {
 
 template <>
@@ -642,7 +645,7 @@ auto RendererWidget::reload_circuit() -> void {
         editable_circuit_.emplace(std::move(layout));
     }
 
-    serialize_json(editable_circuit_->layout());
+    save_layout(editable_circuit_->layout());
 
     update();
     if (editable_circuit_->layout().element_count() < 30) {
@@ -1223,6 +1226,15 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
     // CTRL + A
     else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_A) {
         select_all_items();
+        event->accept();
+    }
+
+    // CTRL + C
+    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_C) {
+        const auto value = base64_encode(serialize_selected(
+            editable_circuit_.value().layout(),
+            editable_circuit_.value().selection_builder().selection()));
+        QApplication::clipboard()->setText(QString::fromStdString(value));
         event->accept();
     }
 

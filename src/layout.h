@@ -115,8 +115,7 @@ class Layout {
     auto delete_last_element() -> void;
     auto update_bounding_rect(element_id_t element_id) const -> void;
 
-    // TODO make private again after we finished with serialization experiments
-   public:
+   private:
     constexpr static auto empty_bounding_rect = rect_t {point_t {0, 0}, point_t {0, 0}};
 
     using connection_size_t = std::make_unsigned<connection_id_t::value_type>::type;
@@ -132,7 +131,7 @@ class Layout {
     std::vector<SegmentTree> segment_trees_ {};
     mutable std::vector<LineTree> line_trees_ {};
     std::vector<point_t> positions_ {};
-    std::vector<orientation_t> orientation_ {};
+    std::vector<orientation_t> orientations_ {};
     std::vector<display_state_t> display_states_ {};
     std::vector<color_t> colors_ {};
 
