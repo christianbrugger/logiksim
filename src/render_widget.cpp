@@ -931,6 +931,26 @@ auto RendererWidget::select_all_items() -> void {
     update();
 }
 
+auto RendererWidget::copy_selected_items() -> void {
+    const auto& layout = editable_circuit_.value().layout();
+    const auto& selection = editable_circuit_.value().selection_builder().selection();
+
+    if (!selection.empty()) {
+        const auto value = base64_encode(serialize_selected(layout, selection));
+        QApplication::clipboard()->setText(QString::fromStdString(value));
+    }
+}
+
+auto RendererWidget::paste_clipboard_items() -> void {
+    editable_circuit_.value().selection_builder().clear();
+
+    const auto text = QApplication::clipboard()->text().toStdString();
+    const auto binary = base64_decode(text);
+    add_layout(binary, editable_circuit_.value(), InsertionMode::insert_or_discard);
+
+    update();
+}
+
 auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
@@ -1231,20 +1251,14 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
 
     // CTRL + C
     else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_C) {
-        const auto value = base64_encode(serialize_selected(
-            editable_circuit_.value().layout(),
-            editable_circuit_.value().selection_builder().selection()));
-        QApplication::clipboard()->setText(QString::fromStdString(value));
+        copy_selected_items();
         event->accept();
     }
 
     // CTRL + V
     else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_V) {
-        const auto text = QApplication::clipboard()->text().toStdString();
-        const auto binary = base64_decode(text);
-
-        add_layout(binary, editable_circuit_.value(), InsertionMode::insert_or_discard);
-        update();
+        paste_clipboard_items();
+        event->accept();
     }
 
     // Enter

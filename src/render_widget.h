@@ -285,6 +285,9 @@ class RendererWidget : public QWidget {
 
     auto delete_selected_items() -> void;
     auto select_all_items() -> void;
+    auto copy_selected_items() -> void;
+    auto paste_clipboard_items() -> void;
+
     auto set_new_mouse_logic(QMouseEvent* event) -> void;
 
    protected:
