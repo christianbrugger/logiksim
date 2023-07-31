@@ -72,16 +72,21 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
         auto delays = calculate_output_delays(line_tree);
         const auto tree_max_delay = std::ranges::max(delays);
 
-        schematic.add_element(Schematic::ElementData {
-            .element_type = element.element_type(),
-            .input_count = 1,
-            .output_count = line_tree.output_count(),
+        // TODO: temporarily disable wires with to many outputs
+        if (line_tree.output_count() > connection_id_t::max()) {
+            add_unused_element(schematic);
+        } else {
+            schematic.add_element(Schematic::ElementData {
+                .element_type = element.element_type(),
+                .input_count = 1,
+                .output_count = line_tree.output_count(),
 
-            .circuit_id = null_circuit,
-            // .input_inverters = element.input_inverters(),
-            .output_delays = std::move(delays),
-            .history_length = tree_max_delay,
-        });
+                .circuit_id = null_circuit,
+                // .input_inverters = element.input_inverters(),
+                .output_delays = std::move(delays),
+                .history_length = tree_max_delay,
+            });
+        }
     }
 }
 
@@ -112,17 +117,19 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
         add_logic_items_to_cache(output_cache, layout);
     }
 
-    // connect wires to elements
     for (auto element : schematic.elements()) {
         // connect clock generators internal
         if (element.element_type() == ElementType::clock_generator) {
             element.input(connection_id_t {0})
                 .connect(element.output(connection_id_t {0}));
+            continue;
         }
 
-        // connect wires
+        // connect wires to elements
+        if (element.element_type() != ElementType::wire) {
+            continue;
+        }
         const auto& line_tree = layout.line_tree(element.element_id());
-
         if (line_tree.empty()) {
             continue;
         }

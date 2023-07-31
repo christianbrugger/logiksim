@@ -956,7 +956,7 @@ auto RendererWidget::get_mouse_position() -> point_t {
 }
 
 auto RendererWidget::copy_selected_items() -> void {
-    const auto t = Timer {"copy", Timer::Unit::ms, 3};
+    const auto t = Timer {"", Timer::Unit::ms, 3};
 
     const auto& layout = editable_circuit_.value().layout();
     const auto& selection = editable_circuit_.value().selection_builder().selection();
@@ -966,6 +966,9 @@ auto RendererWidget::copy_selected_items() -> void {
         const auto value = base64_encode(serialize_selected(layout, selection, position));
         QApplication::clipboard()->setText(QString::fromStdString(value));
     }
+
+    print("Copied", selection.selected_logic_items().size(), "logic items and",
+          selection.selected_segments().size(), "segments in", t);
 }
 
 auto RendererWidget::paste_clipboard_items() -> void {
@@ -973,7 +976,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
         || interaction_state_ == InteractionState::not_interactive) {
         return;
     }
-    const auto t = Timer {"paste", Timer::Unit::ms, 3};
+    const auto t = Timer {"", Timer::Unit::ms, 3};
 
     const auto text = QApplication::clipboard()->text().toStdString();
     const auto binary = base64_decode(text);
@@ -1001,6 +1004,10 @@ auto RendererWidget::paste_clipboard_items() -> void {
         editable_circuit.change_insertion_mode(std::move(handle),
                                                InsertionMode::insert_or_discard);
     }
+
+    const auto& selection = editable_circuit.selection_builder().selection();
+    print("Pasted", selection.selected_logic_items().size(), "logic items and",
+          selection.selected_segments().size(), "segments in", t);
 }
 
 auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {

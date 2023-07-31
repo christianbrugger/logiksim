@@ -378,7 +378,7 @@ auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
     const auto delta = calculate_move_delta(data->save_position, load_position);
 
     // logic items
-    for (const auto& item : data.value().logic_items) {
+    for (const auto& item : data->logic_items) {
         if (const auto definition = item.to_definition(delta)) {
             editable_circuit.add_logic_item(definition->definition, definition->position,
                                             insertion_mode, handle);
@@ -386,7 +386,7 @@ auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
     }
 
     // wire segments
-    for (const auto& entry : data.value().wire_segments) {
+    for (const auto& entry : data->wire_segments) {
         if (const auto line = entry.to_line(delta)) {
             editable_circuit.add_line_segment(line.value(), insertion_mode, handle);
         }

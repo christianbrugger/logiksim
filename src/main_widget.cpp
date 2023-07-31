@@ -144,10 +144,9 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
 namespace {
 
 constexpr static int SLIDER_MIN_VALUE = 0;
-constexpr static int SLIDER_MAX_VALUE = 600'000;
+constexpr static int SLIDER_MAX_VALUE = 700'000;
 constexpr static auto SLIDER_START_VALUE = time_rate_t {2ms};
 
-// auto to_scale = []() {};
 auto from_slider_scale(int value) -> time_rate_t {
     if (value == SLIDER_MIN_VALUE) {
         return time_rate_t {0us};
