@@ -133,6 +133,7 @@ class MouseMoveSelectionLogic {
         SelectionBuilder& builder;
         EditableCircuit& editable_circuit;
         bool has_colliding {false};
+        bool delete_on_cancel {false};
     };
 
     MouseMoveSelectionLogic(Args args);
@@ -167,9 +168,11 @@ class MouseMoveSelectionLogic {
     auto convert_to(InsertionMode mode) -> void;
     auto restore_original_positions() -> void;
     [[nodiscard]] auto calculate_any_element_colliding() -> bool;
+    auto delete_selection() -> void;
 
     SelectionBuilder& builder_;
     EditableCircuit& editable_circuit_;
+    bool delete_on_cancel_;
 
     std::optional<point_fine_t> last_position_ {};
     std::pair<int, int> total_offsets_ {};

@@ -257,7 +257,9 @@ auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
 //
 
 MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
-    : builder_ {args.builder}, editable_circuit_ {args.editable_circuit} {
+    : builder_ {args.builder},
+      editable_circuit_ {args.editable_circuit},
+      delete_on_cancel_ {args.delete_on_cancel} {
     if (args.has_colliding) {
         state_ = State::waiting_for_confirmation;
         insertion_mode_ = InsertionMode::collisions;
@@ -266,7 +268,11 @@ MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
 
 MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
     if (!finished()) {
-        restore_original_positions();
+        if (delete_on_cancel_) {
+            delete_selection();
+        } else {
+            restore_original_positions();
+        }
     }
     convert_to(InsertionMode::insert_or_discard);
 
@@ -394,6 +400,12 @@ auto MouseMoveSelectionLogic::restore_original_positions() -> void {
 
 auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
     return anything_colliding(get_selection(), editable_circuit_.layout());
+}
+
+auto MouseMoveSelectionLogic::delete_selection() -> void {
+    auto handle = copy_selection();
+    builder_.clear();
+    editable_circuit_.delete_all(std::move(handle));
 }
 
 //
@@ -999,6 +1011,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
             .builder = editable_circuit.selection_builder(),
             .editable_circuit = editable_circuit,
             .has_colliding = true,
+            .delete_on_cancel = true,
         });
     } else {
         editable_circuit.change_insertion_mode(std::move(handle),
