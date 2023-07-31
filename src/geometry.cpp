@@ -144,6 +144,13 @@ auto add_unchecked(point_t point, int dx, int dy) -> point_t {
     };
 }
 
+auto add_unchecked(line_t line, int dx, int dy) -> line_t {
+    return line_t {
+        add_unchecked(line.p0, dx, dy),
+        add_unchecked(line.p1, dx, dy),
+    };
+}
+
 auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t {
     return ordered_line_t {
         add_unchecked(line.p0, dx, dy),

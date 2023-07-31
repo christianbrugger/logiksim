@@ -10,6 +10,7 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QCursor>
 
 namespace logicsim {
 
@@ -931,6 +932,29 @@ auto RendererWidget::select_all_items() -> void {
     update();
 }
 
+auto RendererWidget::get_mouse_position() -> point_t {
+    if (const auto position
+        = to_grid(this->mapFromGlobal(QCursor::pos()), render_settings_.view_config)) {
+        return position.value();
+    }
+
+    const auto w = this->width();
+    const auto h = this->height();
+
+    if (const auto position
+        = to_grid(QPoint(w / 2, h / 2), render_settings_.view_config)) {
+        return position.value();
+    }
+    if (const auto position = to_grid(QPoint(0, 0), render_settings_.view_config)) {
+        return position.value();
+    }
+    if (const auto position = to_grid(QPoint(w, h), render_settings_.view_config)) {
+        return position.value();
+    }
+
+    return point_t {0, 0};
+}
+
 auto RendererWidget::copy_selected_items() -> void {
     const auto t = Timer {"copy", Timer::Unit::ms, 3};
 
@@ -938,7 +962,8 @@ auto RendererWidget::copy_selected_items() -> void {
     const auto& selection = editable_circuit_.value().selection_builder().selection();
 
     if (!selection.empty()) {
-        const auto value = base64_encode(serialize_selected(layout, selection));
+        const auto position = get_mouse_position();
+        const auto value = base64_encode(serialize_selected(layout, selection, position));
         QApplication::clipboard()->setText(QString::fromStdString(value));
     }
 }
@@ -953,8 +978,9 @@ auto RendererWidget::paste_clipboard_items() -> void {
     const auto text = QApplication::clipboard()->text().toStdString();
     const auto binary = base64_decode(text);
 
-    auto handle
-        = add_layout(binary, editable_circuit_.value(), InsertionMode::collisions);
+    const auto position = get_mouse_position();
+    auto handle = add_layout(binary, editable_circuit_.value(), InsertionMode::collisions,
+                             position);
     if (!handle) {
         return;
     }

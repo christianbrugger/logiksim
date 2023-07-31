@@ -40,6 +40,9 @@ auto distance(ordered_line_t line) -> int;
 auto is_endpoint(point_t point, line_t line) -> bool;
 auto is_endpoint(point_t point, ordered_line_t line) -> bool;
 
+auto add_unchecked(grid_t grid, int delta) -> grid_t;
+auto add_unchecked(point_t point, int dx, int dy) -> point_t;
+auto add_unchecked(line_t line, int dx, int dy) -> line_t;
 auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t;
 
 //
