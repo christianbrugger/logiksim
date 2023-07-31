@@ -76,6 +76,11 @@ auto SelectionBuilder::pop_last() -> void {
     cached_selection_.reset();
 }
 
+auto SelectionBuilder::set_selection(Selection selection) -> void {
+    clear();
+    initial_selection_.swap(selection);
+}
+
 namespace {
 
 auto add_element_to_selection(element_id_t element_id, SelectionFunction function,

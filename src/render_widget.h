@@ -132,6 +132,7 @@ class MouseMoveSelectionLogic {
     struct Args {
         SelectionBuilder& builder;
         EditableCircuit& editable_circuit;
+        bool has_colliding {false};
     };
 
     MouseMoveSelectionLogic(Args args);

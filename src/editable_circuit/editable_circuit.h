@@ -29,13 +29,23 @@ class EditableCircuit {
 
     // adding
     auto add_example() -> void;
+
     auto add_logic_item(LogicItemDefinition definition, point_t position,
                         InsertionMode insertion_mode) -> selection_handle_t;
+    auto add_logic_item(LogicItemDefinition definition, point_t position,
+                        InsertionMode insertion_mode, const selection_handle_t& handle)
+        -> void;
 
     auto add_line_segment(line_t line, InsertionMode insertion_mode)
         -> selection_handle_t;
+    auto add_line_segment(line_t line, InsertionMode insertion_mode,
+                          const selection_handle_t& handle) -> void;
+
     auto add_line_segments(point_t p0, point_t p1, LineSegmentType segment_type,
                            InsertionMode insertion_mode) -> selection_handle_t;
+    auto add_line_segments(point_t p0, point_t p1, LineSegmentType segment_type,
+                           InsertionMode insertion_mode, const selection_handle_t& handle)
+        -> void;
 
     // changing
     auto change_insertion_mode(selection_handle_t handle,

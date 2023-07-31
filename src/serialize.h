@@ -11,6 +11,7 @@ namespace logicsim {
 class Layout;
 class Selection;
 class EditableCircuit;
+class selection_handle_t;
 
 using binary_t = std::vector<uint8_t>;
 
@@ -24,7 +25,7 @@ using binary_t = std::vector<uint8_t>;
 auto save_layout(const Layout& layout, std::string filename = "data.json.gz") -> void;
 
 auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
-                InsertionMode insertion_mode) -> void;
+                InsertionMode insertion_mode) -> selection_handle_t;
 
 }  // namespace logicsim
 

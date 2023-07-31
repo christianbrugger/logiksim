@@ -40,6 +40,7 @@ class SelectionBuilder {
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
+    auto set_selection(Selection selection) -> void;
 
     [[nodiscard]] auto selection() const -> const Selection &;
     [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;

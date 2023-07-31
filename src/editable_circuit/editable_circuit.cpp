@@ -82,6 +82,17 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
     return handle;
 }
 
+auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
+                                     InsertionMode insertion_mode,
+                                     const selection_handle_t& handle) -> void {
+    const auto element_id = editable_circuit::add_logic_item(get_state(), definition,
+                                                             position, insertion_mode);
+
+    if (element_id) {
+        handle.value().add_logicitem(element_id);
+    }
+}
+
 auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
     -> selection_handle_t {
     auto handle = registrar_.create_selection();
@@ -89,6 +100,11 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
     add_wire_segment(get_state(), handle.get(), line, insertion_mode);
 
     return handle;
+}
+
+auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode,
+                                       const selection_handle_t& handle) -> void {
+    add_wire_segment(get_state(), handle.get(), line, insertion_mode);
 }
 
 auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
@@ -101,6 +117,14 @@ auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
                                handle.get());
 
     return handle;
+}
+
+auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
+                                        LineSegmentType segment_type,
+                                        InsertionMode insertion_mode,
+                                        const selection_handle_t& handle) -> void {
+    editable_circuit::add_wire(get_state(), p0, p1, segment_type, insertion_mode,
+                               handle.get());
 }
 
 namespace {}  // namespace

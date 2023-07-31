@@ -256,11 +256,15 @@ auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
 //
 
 MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
-    : builder_ {args.builder}, editable_circuit_ {args.editable_circuit} {}
+    : builder_ {args.builder}, editable_circuit_ {args.editable_circuit} {
+    if (args.has_colliding) {
+        state_ = State::waiting_for_confirmation;
+        insertion_mode_ = InsertionMode::collisions;
+    }
+}
 
 MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
     if (!finished()) {
-        convert_to(InsertionMode::temporary);
         restore_original_positions();
     }
     convert_to(InsertionMode::insert_or_discard);
@@ -382,18 +386,13 @@ auto MouseMoveSelectionLogic::restore_original_positions() -> void {
         return;
     }
 
+    convert_to(InsertionMode::temporary);
     editable_circuit_.move_or_delete_elements(copy_selection(), -total_offsets_.first,
                                               -total_offsets_.second);
 }
 
 auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
-    const auto& layout = editable_circuit_.layout();
-
-    const auto element_colliding = [&](element_id_t element_id) {
-        return layout.display_state(element_id) == display_state_t::colliding;
-    };
-
-    return std::ranges::any_of(get_selection().selected_logic_items(), element_colliding);
+    return anything_colliding(get_selection(), editable_circuit_.layout());
 }
 
 //
@@ -917,7 +916,8 @@ auto RendererWidget::delete_selected_items() -> void {
 }
 
 auto RendererWidget::select_all_items() -> void {
-    if (interaction_state_ != InteractionState::selection) {
+    if (interaction_state_ == InteractionState::simulation
+        || interaction_state_ == InteractionState::not_interactive) {
         return;
     }
     auto& selection_builder = editable_circuit_.value().selection_builder();
@@ -932,6 +932,8 @@ auto RendererWidget::select_all_items() -> void {
 }
 
 auto RendererWidget::copy_selected_items() -> void {
+    const auto t = Timer {"copy", Timer::Unit::ms, 3};
+
     const auto& layout = editable_circuit_.value().layout();
     const auto& selection = editable_circuit_.value().selection_builder().selection();
 
@@ -942,13 +944,37 @@ auto RendererWidget::copy_selected_items() -> void {
 }
 
 auto RendererWidget::paste_clipboard_items() -> void {
-    editable_circuit_.value().selection_builder().clear();
+    if (interaction_state_ == InteractionState::simulation
+        || interaction_state_ == InteractionState::not_interactive) {
+        return;
+    }
+    const auto t = Timer {"paste", Timer::Unit::ms, 3};
 
     const auto text = QApplication::clipboard()->text().toStdString();
     const auto binary = base64_decode(text);
-    add_layout(binary, editable_circuit_.value(), InsertionMode::insert_or_discard);
 
-    update();
+    auto handle
+        = add_layout(binary, editable_circuit_.value(), InsertionMode::collisions);
+    if (!handle) {
+        return;
+    }
+
+    set_interaction_state(InteractionState::selection);
+    reset_interaction_state();
+
+    auto& editable_circuit = editable_circuit_.value();
+    editable_circuit.selection_builder().set_selection(*handle.get());
+
+    if (anything_colliding(*handle.get(), editable_circuit.layout())) {
+        mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
+            .builder = editable_circuit.selection_builder(),
+            .editable_circuit = editable_circuit,
+            .has_colliding = true,
+        });
+    } else {
+        editable_circuit.change_insertion_mode(std::move(handle),
+                                               InsertionMode::insert_or_discard);
+    }
 }
 
 auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {

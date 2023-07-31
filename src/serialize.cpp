@@ -313,26 +313,30 @@ auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayo
 }
 
 auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
-                InsertionMode insertion_mode) -> void {
+                InsertionMode insertion_mode) -> selection_handle_t {
     const auto data = unserialize_data(binary);
     if (!data) {
-        return;
+        return selection_handle_t {};
     }
+
+    auto handle = editable_circuit.create_selection();
 
     // logic items
     for (const auto& item : data.value().logic_items) {
         if (const auto definition = item.to_definition()) {
             editable_circuit.add_logic_item(definition.value(), item.position,
-                                            insertion_mode);
+                                            insertion_mode, handle);
         }
     }
 
     // wire segments
     for (const auto& entry : data.value().wire_segments) {
         if (const auto line = entry.to_line()) {
-            editable_circuit.add_line_segment(line.value(), insertion_mode);
+            editable_circuit.add_line_segment(line.value(), insertion_mode, handle);
         }
     }
+
+    return handle;
 }
 
 }  // namespace logicsim

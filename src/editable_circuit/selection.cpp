@@ -26,6 +26,22 @@ auto get_lines(const Selection &selection, const Layout &layout)
     return result;
 }
 
+auto anything_colliding(const Selection &selection, const Layout &layout) -> bool {
+    for (const auto element_id : selection.selected_logic_items()) {
+        if (layout.display_state(element_id) == display_state_t::colliding) {
+            return true;
+        }
+    }
+
+    for (const auto &[segment, _] : selection.selected_segments()) {
+        if (layout.display_state(segment.element_id) == display_state_t::colliding) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 //
 // Selection
 //
