@@ -992,6 +992,12 @@ auto RendererWidget::paste_clipboard_items() -> void {
 
     const auto text = QApplication::clipboard()->text().toStdString();
     const auto binary = base64_decode(text);
+    if (binary.empty()) {
+        return;
+    }
+
+    set_interaction_state(InteractionState::selection);
+    reset_interaction_state();
 
     const auto position = get_mouse_position();
     auto handle = add_layout(binary, editable_circuit_.value(), InsertionMode::collisions,
@@ -999,9 +1005,6 @@ auto RendererWidget::paste_clipboard_items() -> void {
     if (!handle) {
         return;
     }
-
-    set_interaction_state(InteractionState::selection);
-    reset_interaction_state();
 
     auto& editable_circuit = editable_circuit_.value();
     editable_circuit.selection_builder().set_selection(*handle.get());
@@ -1295,6 +1298,11 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
 }
 
 auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
+    if (event->isAutoRepeat()) {
+        QWidget::keyPressEvent(event);
+        return;
+    }
+
     // Delete
     if (event->key() == Qt::Key_Delete) {
         delete_selected_items();
