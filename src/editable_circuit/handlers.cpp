@@ -949,12 +949,40 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
     source_segment = destination_segment;
 }
 
+namespace detail::move_segment {
+
 auto copy_segment(Layout& layout, MessageSender sender,
                   const segment_part_t source_segment_part,
                   const element_id_t destination_element_id) -> segment_part_t {
     auto& m_tree_source
         = layout.modifyable_segment_tree(source_segment_part.segment.element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
+
+    bool set_input_p0 = false;
+    bool set_input_p1 = false;
+    // handle inputs being copied within the same tree
+    {
+        if (destination_element_id == source_segment_part.segment.element_id) {
+            auto info
+                = m_tree_source.segment_info(source_segment_part.segment.segment_index);
+            const auto full_part = to_part(info.line);
+
+            if (full_part.begin == source_segment_part.part.begin
+                && info.p0_type == SegmentPointType::input) {
+                info.p0_type = SegmentPointType::shadow_point;
+                m_tree_source.update_segment(source_segment_part.segment.segment_index,
+                                             info);
+                set_input_p0 = true;
+            }
+            if (full_part.end == source_segment_part.part.end
+                && info.p1_type == SegmentPointType::input) {
+                info.p1_type = SegmentPointType::shadow_point;
+                m_tree_source.update_segment(source_segment_part.segment.segment_index,
+                                             info);
+                set_input_p1 = true;
+            }
+        }
+    }
 
     const auto destination_index = m_tree_destination.copy_segment(
         m_tree_source, source_segment_part.segment.segment_index,
@@ -963,6 +991,19 @@ auto copy_segment(Layout& layout, MessageSender sender,
     const auto destination_segment_part
         = segment_part_t {segment_t {destination_element_id, destination_index},
                           m_tree_destination.segment_part(destination_index)};
+
+    {
+        if (set_input_p0) {
+            auto info = m_tree_destination.segment_info(destination_index);
+            info.p0_type = SegmentPointType::input;
+            m_tree_destination.update_segment(destination_index, info);
+        }
+        if (set_input_p1) {
+            auto info = m_tree_destination.segment_info(destination_index);
+            info.p1_type = SegmentPointType::input;
+            m_tree_destination.update_segment(destination_index, info);
+        }
+    }
 
     sender.submit(info_message::SegmentCreated {destination_segment_part.segment});
 
@@ -1004,6 +1045,8 @@ auto shrink_segment_end(Layout& layout, MessageSender sender, const segment_t se
     };
 }
 
+}  // namespace detail::move_segment
+
 auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
                                           segment_part_t& source_segment_part,
                                           const element_id_t destination_element_id) {
@@ -1012,11 +1055,12 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
         = difference_touching_one_side(full_part, source_segment_part.part);
 
     // move
-    shrink_segment_begin(layout, sender, source_segment_part.segment);
-    const auto destination_segment_part
-        = copy_segment(layout, sender, source_segment_part, destination_element_id);
-    const auto leftover_segment_part
-        = shrink_segment_end(layout, sender, source_segment_part.segment, part_kept);
+    detail::move_segment::shrink_segment_begin(layout, sender,
+                                               source_segment_part.segment);
+    const auto destination_segment_part = detail::move_segment::copy_segment(
+        layout, sender, source_segment_part, destination_element_id);
+    const auto leftover_segment_part = detail::move_segment::shrink_segment_end(
+        layout, sender, source_segment_part.segment, part_kept);
 
     // messages
     sender.submit(info_message::SegmentPartMoved {
@@ -1045,12 +1089,14 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
     // move
     const auto source_part1 = segment_part_t {source_segment_part.segment, part1};
 
-    shrink_segment_begin(layout, sender, source_segment_part.segment);
-    const auto destination_part1
-        = copy_segment(layout, sender, source_part1, source_part1.segment.element_id);
-    const auto destination_segment_part
-        = copy_segment(layout, sender, source_segment_part, destination_element_id);
-    shrink_segment_end(layout, sender, source_segment_part.segment, part0);
+    detail::move_segment::shrink_segment_begin(layout, sender,
+                                               source_segment_part.segment);
+    const auto destination_part1 = detail::move_segment::copy_segment(
+        layout, sender, source_part1, source_part1.segment.element_id);
+    const auto destination_segment_part = detail::move_segment::copy_segment(
+        layout, sender, source_segment_part, destination_element_id);
+    detail::move_segment::shrink_segment_end(layout, sender, source_segment_part.segment,
+                                             part0);
 
     // messages
     sender.submit(info_message::SegmentPartMoved {

@@ -336,4 +336,35 @@ TEST(HandlerWireFuzz, RemovePartialInsertedWires) {
     }
 }
 
+//
+// Add lines and buttons
+//
+
+namespace {
+auto test_add_wires_buttons(Rng& rng, bool random_modes) {
+    auto layout = Layout {};
+    auto setup = HandlerSetup {layout};
+
+    editable_circuit::examples::add_many_wires_and_buttons(rng, setup.state,
+                                                           random_modes);
+
+    setup.validate();
+}
+}  // namespace
+
+TEST(HandlerWireFuzz, AddWiresAndButtonsRandomModes) {
+    for (auto i : range(50u)) {
+        auto rng = Rng {i};
+
+        test_add_wires_buttons(rng, true);
+    }
+}
+
+TEST(HandlerWireFuzz, AddWiresAndButtonsNormal) {
+    for (auto i : range(50u)) {
+        auto rng = Rng {i};
+        test_add_wires_buttons(rng, false);
+    }
+}
+
 }  // namespace logicsim

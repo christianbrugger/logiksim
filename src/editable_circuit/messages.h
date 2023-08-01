@@ -18,6 +18,9 @@ class EditableCircuit;
 
 namespace editable_circuit {
 
+constexpr static inline auto DEBUG_PRINT_HANDLER_INPUTS = false;
+constexpr static inline auto DEBUG_PRINT_MESSAGES = false;
+
 //
 // Info Messages
 //

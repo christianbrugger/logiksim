@@ -19,6 +19,7 @@ auto uint_distribution(T min, T max) -> boost::random::uniform_int_distribution<
 }
 
 auto get_random_bool(Rng& rng) -> bool;
+auto get_random_bool(Rng& rng, double percentage) -> bool;
 
 auto get_random_grid(Rng& rng, grid_t::value_type min = grid_t::min(),
                      grid_t::value_type max = grid_t::max()) -> grid_t;

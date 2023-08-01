@@ -1,10 +1,12 @@
 #include "random.h"
 
+#include "algorithm.h"
 #include "geometry.h"
 #include "layout.h"
 
 #include <boost/random/seed_seq.hpp>
 
+#include <cmath>
 #include <random>
 
 namespace logicsim {
@@ -22,6 +24,20 @@ auto get_random_number_generator(uint32_t seed) -> Rng {
 
 auto get_random_bool(Rng& rng) -> bool {
     return uint_distribution(0, 1)(rng) > 0;
+}
+
+auto get_random_bool(Rng& rng, double percentage) -> bool {
+    if (percentage < 0.0 || percentage > 1.0) {
+        throw_exception("percentage needs to be between 0 and 1");
+    }
+
+    // mantissa size
+    constexpr static auto max_value = uint64_t {9007199254740992};  // 2 ** 53
+
+    const auto max_double = gsl::narrow<double>(max_value);
+    const auto threshold = gsl::narrow<uint64_t>(round_fast(max_double * percentage));
+
+    return uint_distribution(uint64_t {0}, max_value)(rng) <= threshold;
 }
 
 auto get_random_grid(Rng& rng, grid_t::value_type min, grid_t::value_type max) -> grid_t {

@@ -67,7 +67,7 @@ auto EditableCircuit::validate() -> void {
 
 auto EditableCircuit::add_example() -> void {
     auto rng = get_random_number_generator();
-    editable_circuit::examples::add_many_wires(rng, get_state(), false);
+    editable_circuit::examples::add_many_wires_and_buttons(rng, get_state(), false);
 }
 
 auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,

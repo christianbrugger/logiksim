@@ -129,7 +129,9 @@ auto AdaptableReceiver::submit(InfoMessage message) -> void {
 MessageSender::MessageSender(MessageReceiver receiver) noexcept : receiver_ {receiver} {}
 
 auto MessageSender::submit(InfoMessage message) -> void {
-    // print(message);
+    if constexpr (DEBUG_PRINT_MESSAGES) {
+        print(message);
+    }
     receiver_.submit(message);
 }
 
