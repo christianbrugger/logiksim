@@ -221,6 +221,15 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
             return input_count >= 2 && output_count >= 1
                    && input_count == output_count + 1;
         }
+        case latch_d: {
+            return input_count == 2 && output_count == 1;
+        }
+        case flipflop_d: {
+            return input_count == 4 && output_count == 1;
+        }
+        case flipflop_ms_d: {
+            return input_count == 4 && output_count == 1;
+        }
 
         case sub_circuit: {
             return input_count > 0 || output_count > 0;
@@ -291,6 +300,15 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             const auto y2 = data.output_count == 1 ? grid_t {1}
                                                    : grid_t {2 * (data.output_count - 1)};
             return transform(data.position, data.orientation, {0, 0}, {x2, y2});
+        }
+        case latch_d: {
+            return transform(data.position, data.orientation, {0, 0}, {2, 1});
+        }
+        case flipflop_d: {
+            return transform(data.position, data.orientation, {0, 0}, {3, 2});
+        }
+        case flipflop_ms_d: {
+            return transform(data.position, data.orientation, {0, 0}, {4, 2});
         }
 
         case sub_circuit: {

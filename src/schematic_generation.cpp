@@ -7,19 +7,19 @@ namespace logicsim {
 namespace {
 
 auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
-    constexpr static auto connector_delay
-        = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
+    // constexpr static auto connector_delay
+    //    = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
 
     return schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::placeholder,
         .input_count = 1,
         .output_count = 0,
-        .history_length = connector_delay,
+        .history_length = Schematic::defaults::no_history,
     });
 }
 
-auto add_unused_element(Schematic& schematic) -> Schematic::Element {
-    return schematic.add_element(Schematic::ElementData {
+auto add_unused_element(Schematic& schematic) -> void {
+    schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::unused,
         .input_count = 0,
         .output_count = 0,

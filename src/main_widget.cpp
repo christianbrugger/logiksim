@@ -42,6 +42,7 @@ MainWidget::MainWidget(QWidget* parent)
     const auto layout = new QVBoxLayout(this);
     layout->addWidget(build_render_buttons());
     layout->addWidget(build_mode_buttons());
+    layout->addWidget(build_delay_slider());
     layout->addWidget(build_time_rate_slider());
 
     const auto hlayout = new QHBoxLayout();
@@ -141,7 +142,58 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     return panel;
 }
 
-namespace {
+namespace detail::delay_slider {
+
+constexpr static int SLIDER_MIN_VALUE = 0;
+constexpr static int SLIDER_MAX_VALUE = 400'000;
+constexpr static auto SLIDER_START_VALUE = delay_t {1us};
+
+auto from_slider_scale(int value) -> delay_t {
+    const double value_ns = std::pow(10.0, value / double {100'000.0});
+    return delay_t {1ns * gsl::narrow<int64_t>(std::round(value_ns))};
+};
+
+auto to_slider_scale(delay_t delay) -> int {
+    const auto value_log = std::log10(delay.value.count()) * 100'000;
+    return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
+                      SLIDER_MAX_VALUE);
+};
+
+}  // namespace detail::delay_slider
+
+auto MainWidget::build_delay_slider() -> QWidget* {
+    using namespace detail::delay_slider;
+
+    const auto slider = new QSlider(Qt::Orientation::Horizontal);
+    const auto label = new QLabel();
+
+    connect(slider, &QSlider::valueChanged, this, [label](int value) {
+        const auto delay = from_slider_scale(value);
+        Schematic::defaults::wire_delay_per_distance = delay;
+
+        label->setText(QString::fromStdString(fmt::format("{}", delay)));
+    });
+
+    slider->setMinimum(SLIDER_MIN_VALUE);
+    slider->setMaximum(SLIDER_MAX_VALUE);
+    slider->setValue(to_slider_scale(SLIDER_START_VALUE));
+
+    slider->setTickInterval(100'000);
+    slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
+    label->setMinimumWidth(50);
+
+    const auto layout = new QHBoxLayout();
+    layout->addWidget(slider);
+    layout->addWidget(label);
+
+    const auto panel = new QWidget();
+    panel->setLayout(layout);
+
+    delay_slider_ = slider;
+    return panel;
+}
+
+namespace detail::time_slider {
 
 constexpr static int SLIDER_MIN_VALUE = 0;
 constexpr static int SLIDER_MAX_VALUE = 700'000;
@@ -163,9 +215,11 @@ auto to_slider_scale(time_rate_t rate) -> int {
                       SLIDER_MAX_VALUE);
 };
 
-}  // namespace
+}  // namespace detail::time_slider
 
 auto MainWidget::build_time_rate_slider() -> QWidget* {
+    using namespace detail::time_slider;
+
     const auto button = new QPushButton("Simulate");
     connect(button, &QPushButton::clicked, this, [this](bool checked) {
         if (checked) {
@@ -181,13 +235,12 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
     const auto slider = new QSlider(Qt::Orientation::Horizontal);
     const auto label = new QLabel();
 
-    connect(slider, &QSlider::valueChanged, this,
-            [this, label](int value [[maybe_unused]]) {
-                const auto rate = from_slider_scale(value);
-                render_widget_->set_time_rate(rate);
+    connect(slider, &QSlider::valueChanged, this, [this, label](int value) {
+        const auto rate = from_slider_scale(value);
+        render_widget_->set_time_rate(rate);
 
-                label->setText(QString::fromStdString(fmt::format("{}", rate)));
-            });
+        label->setText(QString::fromStdString(fmt::format("{}", rate)));
+    });
 
     slider->setMinimum(SLIDER_MIN_VALUE);
     slider->setMaximum(SLIDER_MAX_VALUE);
@@ -218,13 +271,21 @@ auto MainWidget::element_button(QString label, InteractionState state) -> QWidge
     return button;
 }
 
+auto line_separator() -> QWidget* {
+    const auto line = new QFrame();
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    return line;
+}
+
 auto MainWidget::build_element_buttons() -> QWidget* {
     const auto layout = new QGridLayout();
     int row = -1;
 
     // input count
     const auto input_count = new QSpinBox();
-    layout->addWidget(input_count, ++row, 0);
+    layout->addWidget(input_count, ++row, 0, 1, 2);
+    layout->addWidget(line_separator(), ++row, 0, 1, 2);
 
     connect(input_count, &QSpinBox::valueChanged, this,
             [this](int value) { render_widget_->set_default_input_count(value); });
@@ -235,20 +296,27 @@ auto MainWidget::build_element_buttons() -> QWidget* {
 
     {
         using enum InteractionState;
-        layout->addWidget(element_button("Wire", insert_wire), ++row, 0);
         layout->addWidget(element_button("BTN", insert_button), ++row, 0);
+        layout->addWidget(element_button("Wire", insert_wire), row, 1);
+        layout->addWidget(line_separator(), ++row, 0, 1, 2);
 
         layout->addWidget(element_button("AND", insert_and_element), ++row, 0);
+        layout->addWidget(element_button("NAND", insert_nand_element), row, 1);
         layout->addWidget(element_button("OR", insert_or_element), ++row, 0);
+        layout->addWidget(element_button("NOR", insert_nor_element), row, 1);
+        layout->addWidget(element_button("BUF", insert_buffer_element), ++row, 0);
+        layout->addWidget(element_button("INV", insert_inverter_element), row, 1);
         layout->addWidget(element_button("XOR", insert_xor_element), ++row, 0);
+        layout->addWidget(line_separator(), ++row, 0, 1, 2);
 
-        layout->addWidget(element_button("NAND", insert_nand_element), ++row, 0);
-        layout->addWidget(element_button("NOR", insert_nor_element), ++row, 0);
-        layout->addWidget(element_button("INV", insert_inverter_element), ++row, 0);
+        layout->addWidget(element_button("Latch", insert_latch_d), ++row, 0);
+        layout->addWidget(element_button("FF", insert_flipflop_d), row, 1);
+        layout->addWidget(element_button("MS-FF", insert_flipflop_ms_d), ++row, 0);
+        layout->addWidget(element_button("JK-FF", insert_flipflop_jk), row, 1);
+        layout->addWidget(line_separator(), ++row, 0, 1, 2);
 
-        layout->addWidget(element_button("JK-FF", insert_flipflop_jk), ++row, 0);
         layout->addWidget(element_button("CLK", insert_clock_generator), ++row, 0);
-        layout->addWidget(element_button("REG", insert_shift_register), ++row, 0);
+        layout->addWidget(element_button("REG", insert_shift_register), row, 1);
     }
 
     layout->setRowStretch(++row, 1);
@@ -273,10 +341,16 @@ auto MainWidget::update_title() -> void {
 }
 
 auto MainWidget::on_interaction_state_changed(InteractionState new_state) -> void {
+    // buttons
     for (auto&& [state, button] : button_map_) {
         if (button != nullptr) {
             button->setChecked(new_state == state);
         }
+    }
+
+    // delay slider
+    if (delay_slider_ != nullptr) {
+        delay_slider_->setEnabled(new_state != InteractionState::simulation);
     }
 }
 

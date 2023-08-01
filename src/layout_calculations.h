@@ -93,8 +93,6 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
         }
 
         case clock_generator: {
-            require_equal(data.input_count, 2);
-
             using p = point_t;
             auto points = std::array {p {0, 0}, p {1, 0}, p {2, 0}, p {3, 0},
                                       p {0, 1}, p {0, 2}, p {1, 2}, p {3, 2}};
@@ -108,11 +106,11 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             return true;
         }
         case flipflop_jk: {
-            require_equal(data.input_count, 5);
-
             using p = point_t;
-            auto points = std::array {p {1, 0}, p {3, 0}, p {1, 1}, p {2, 1},
-                                      p {3, 1}, p {4, 1}, p {1, 2}, p {3, 2}};
+            auto points = std::array {p {1, 0}, p {1, 1}, p {1, 2},  //
+                                      p {2, 1},                      //
+                                      p {3, 0}, p {3, 1}, p {3, 2},  //
+                                      p {4, 1}};
 
             for (auto &&point : points) {
                 if (!next_point(transform(data.position, data.orientation, point))) {
@@ -149,6 +147,51 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
                     return false;
                 }
             }
+            return true;
+        }
+
+        case latch_d: {
+            using p = point_t;
+            auto points = std::array {p {1, 0}, p {1, 1}, p {2, 1}};
+
+            for (auto &&point : points) {
+                if (!next_point(transform(data.position, data.orientation, point))) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        case flipflop_d: {
+            using p = point_t;
+            auto points = std::array {p {0, 2},                      //
+                                      p {1, 1},                      //
+                                      p {2, 0}, p {2, 1}, p {2, 2},  //
+                                      p {3, 1}, p {3, 2}};
+
+            for (auto &&point : points) {
+                if (!next_point(transform(data.position, data.orientation, point))) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        case flipflop_ms_d: {
+            using p = point_t;
+            auto points = std::array {p {0, 2},                      //
+                                      p {1, 0}, p {1, 1}, p {1, 2},  //
+                                      p {2, 1},                      //
+                                      p {3, 0}, p {3, 1}, p {3, 2},  //
+                                      p {4, 1}, p {4, 2}};
+
+            for (auto &&point : points) {
+                if (!next_point(transform(data.position, data.orientation, point))) {
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -268,6 +311,66 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
 
             return true;
         }
+        case latch_d: {
+            require_min(data.input_count, 2);
+
+            auto points = std::array {
+                // clock
+                std::make_pair(point_t {0, 1}, orientation_t::left),
+                // data
+                std::make_pair(point_t {0, 0}, orientation_t::left),
+            };
+
+            for (auto &&[point, orientation] : points) {
+                if (!next_input(transform(data.position, data.orientation, point),
+                                transform(data.orientation, orientation))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case flipflop_d: {
+            require_min(data.input_count, 4);
+
+            auto points = std::array {
+                // clock
+                std::make_pair(point_t {0, 1}, orientation_t::left),
+                // data
+                std::make_pair(point_t {0, 0}, orientation_t::left),
+                // set & reset
+                std::make_pair(point_t {1, 0}, orientation_t::up),
+                std::make_pair(point_t {1, 2}, orientation_t::down),
+            };
+
+            for (auto &&[point, orientation] : points) {
+                if (!next_input(transform(data.position, data.orientation, point),
+                                transform(data.orientation, orientation))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case flipflop_ms_d: {
+            require_min(data.input_count, 4);
+
+            auto points = std::array {
+                // clock
+                std::make_pair(point_t {0, 1}, orientation_t::left),
+                // data
+                std::make_pair(point_t {0, 0}, orientation_t::left),
+                // set & reset
+                std::make_pair(point_t {2, 0}, orientation_t::up),
+                std::make_pair(point_t {2, 2}, orientation_t::down),
+            };
+
+            for (auto &&[point, orientation] : points) {
+                if (!next_input(transform(data.position, data.orientation, point),
+                                transform(data.orientation, orientation))) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         case sub_circuit: {
             throw_exception("not implemented");
@@ -373,6 +476,28 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
                 }
             }
             return true;
+        }
+        case latch_d: {
+            require_equal(data.output_count, 1);
+
+            // data
+            return next_output(transform(data.position, data.orientation, point_t {2, 0}),
+                               transform(data.orientation, orientation_t::right));
+        }
+
+        case flipflop_d: {
+            require_equal(data.output_count, 1);
+
+            // data
+            return next_output(transform(data.position, data.orientation, point_t {3, 0}),
+                               transform(data.orientation, orientation_t::right));
+        }
+        case flipflop_ms_d: {
+            require_equal(data.output_count, 1);
+
+            // data
+            return next_output(transform(data.position, data.orientation, point_t {4, 0}),
+                               transform(data.orientation, orientation_t::right));
         }
 
         case sub_circuit: {

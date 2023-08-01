@@ -227,6 +227,13 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
             return 2;
         case shift_register:
             return 10;
+        case latch_d:
+            return 1;
+        case flipflop_d:
+            return 1;
+        case flipflop_ms_d:
+            return 2;
+
         case sub_circuit:
             return 0;
     }
@@ -377,6 +384,50 @@ auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
             return;
         }
 
+        case latch_d: {
+            bool input_clk = new_input.at(0);
+            bool input_d = new_input.at(1);
+
+            if (input_clk) {
+                state.at(0) = input_d;
+            }
+            return;
+        }
+
+        case flipflop_d: {
+            bool input_d = new_input.at(1);
+            bool input_set = new_input.at(2);
+            bool input_reset = new_input.at(3);
+
+            if (input_reset) {
+                state.at(0) = false;
+            } else if (input_set) {
+                state.at(0) = true;
+            } else if (new_input.at(0) && !old_input.at(0)) {  // rising edge
+                state.at(0) = input_d;
+            }
+            return;
+        }
+
+        case flipflop_ms_d: {
+            bool input_d = new_input.at(1);
+            bool input_set = new_input.at(2);
+            bool input_reset = new_input.at(3);
+
+            if (input_reset) {
+                state.at(0) = false;
+                state.at(1) = false;
+            } else if (input_set) {
+                state.at(0) = true;
+                state.at(1) = true;
+            } else if (new_input.at(0) && !old_input.at(0)) {  // rising edge
+                state.at(0) = input_d;
+            } else if (!new_input.at(0) && old_input.at(0)) {  // faling edge
+                state.at(1) = state.at(0);
+            }
+            return;
+        }
+
         default:
             [[unlikely]] throw_exception(
                 "Unexpected type encountered in calculate_new_state.");
@@ -394,12 +445,12 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
         }
 
         case clock_generator: {
-            bool enabled = state.at(0);
+            const bool enabled = state.at(0);
             return {enabled, enabled};
         }
 
         case flipflop_jk: {
-            bool enabled = state.at(1);
+            const bool enabled = state.at(1);
             return {enabled, !enabled};
         }
 
@@ -410,6 +461,21 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
             }
             return Simulation::logic_small_vector_t(std::prev(state.end(), output_count),
                                                     state.end());
+        }
+
+        case latch_d: {
+            const bool data = state.at(0);
+            return {data};
+        }
+
+        case flipflop_d: {
+            const bool data = state.at(0);
+            return {data};
+        }
+
+        case flipflop_ms_d: {
+            const bool data = state.at(1);
+            return {data};
         }
 
         default:

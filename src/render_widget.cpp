@@ -30,6 +30,7 @@ auto format(InteractionState state) -> std::string {
             return "insert_wire";
         case insert_button:
             return "insert_button";
+
         case insert_and_element:
             return "insert_and_element";
         case insert_or_element:
@@ -40,10 +41,18 @@ auto format(InteractionState state) -> std::string {
             return "insert_nand_element";
         case insert_nor_element:
             return "insert_nor_element";
+
+        case insert_buffer_element:
+            return "insert_buffer_element";
         case insert_inverter_element:
             return "insert_inverter_element";
         case insert_flipflop_jk:
             return "insert_flipflop_jk";
+        case insert_latch_d:
+            return "insert_latch_d";
+        case insert_flipflop_d:
+            return "insert_flipflop_d";
+
         case insert_clock_generator:
             return "insert_clock_generator";
         case insert_shift_register:
@@ -79,6 +88,7 @@ auto to_logic_item_definition(InteractionState state, std::size_t default_input_
                 .input_count = 0,
                 .orientation = orientation_t::undirected,
             };
+
         case insert_and_element:
             return LogicItemDefinition {
                 .element_type = ElementType::and_element,
@@ -111,6 +121,13 @@ auto to_logic_item_definition(InteractionState state, std::size_t default_input_
                 .orientation = orientation_t::right,
                 .output_inverters = logic_small_vector_t {true},
             };
+
+        case insert_buffer_element:
+            return LogicItemDefinition {
+                .element_type = ElementType::buffer_element,
+                .input_count = 1,
+                .orientation = orientation_t::right,
+            };
         case insert_inverter_element:
             return LogicItemDefinition {
                 .element_type = ElementType::buffer_element,
@@ -118,6 +135,7 @@ auto to_logic_item_definition(InteractionState state, std::size_t default_input_
                 .orientation = orientation_t::right,
                 .output_inverters = logic_small_vector_t {true},
             };
+
         case insert_flipflop_jk:
             return LogicItemDefinition {
                 .element_type = ElementType::flipflop_jk,
@@ -125,6 +143,28 @@ auto to_logic_item_definition(InteractionState state, std::size_t default_input_
                 .output_count = 2,
                 .orientation = orientation_t::right,
             };
+        case insert_latch_d:
+            return LogicItemDefinition {
+                .element_type = ElementType::latch_d,
+                .input_count = 2,
+                .output_count = 1,
+                .orientation = orientation_t::right,
+            };
+        case insert_flipflop_d:
+            return LogicItemDefinition {
+                .element_type = ElementType::flipflop_d,
+                .input_count = 4,
+                .output_count = 1,
+                .orientation = orientation_t::right,
+            };
+        case insert_flipflop_ms_d:
+            return LogicItemDefinition {
+                .element_type = ElementType::flipflop_ms_d,
+                .input_count = 4,
+                .output_count = 1,
+                .orientation = orientation_t::right,
+            };
+
         case insert_clock_generator:
             return LogicItemDefinition {
                 .element_type = ElementType::clock_generator,

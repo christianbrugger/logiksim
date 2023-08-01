@@ -99,10 +99,13 @@ struct glz::meta<logicsim::ElementType> {
         "or_element", or_element,          //
         "xor_element", xor_element,        //
 
-        "button", button,                    //
-        "clock_generator", clock_generator,  //
-        "flipflop_jk", flipflop_jk,          //
-        "shift_register", shift_register,    //
+        "button", button,                          //
+        "clock_generator", clock_generator,        //
+        "flipflop_jk", flipflop_jk,                //
+        "shift_register", shift_register,          //
+        "latch_d", latch_d,                        //
+        "flipflop_d", flipflop_d,                  //
+        "flipflop_master_slave_d", flipflop_ms_d,  //
 
         "sub_circuit", sub_circuit  //
     );

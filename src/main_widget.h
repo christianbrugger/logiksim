@@ -4,9 +4,11 @@
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>
 
-#include <QAbstractButton>
 #include <QString>
 #include <QWidget>
+
+class QSlider;
+class QAbstractButton;
 
 namespace logicsim {
 
@@ -19,6 +21,7 @@ class MainWidget : public QWidget {
    private:
     [[nodiscard]] auto build_render_buttons() -> QWidget*;
     [[nodiscard]] auto build_mode_buttons() -> QWidget*;
+    [[nodiscard]] auto build_delay_slider() -> QWidget*;
     [[nodiscard]] auto build_time_rate_slider() -> QWidget*;
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
 
@@ -35,6 +38,7 @@ class MainWidget : public QWidget {
     using button_map_type
         = ankerl::unordered_dense::map<InteractionState, QAbstractButton*>;
     button_map_type button_map_ {};
+    QSlider* delay_slider_ {};
 };
 
 }  // namespace logicsim

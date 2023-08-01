@@ -31,6 +31,14 @@ auto format(ElementType type) -> std::string {
             return "JK-FlipFlop";
         case shift_register:
             return "ShiftRegister";
+
+        case latch_d:
+            return "D-Latch";
+        case flipflop_d:
+            return "D-FlipFlop";
+        case flipflop_ms_d:
+            return "MS-D-FlipFlop";
+
         case sub_circuit:
             return "SubCircuit";
     }

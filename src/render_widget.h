@@ -32,13 +32,20 @@ enum class InteractionState {
 
     insert_wire,
     insert_button,
+
     insert_and_element,
     insert_or_element,
     insert_xor_element,
     insert_nand_element,
     insert_nor_element,
+
+    insert_buffer_element,
     insert_inverter_element,
     insert_flipflop_jk,
+    insert_latch_d,
+    insert_flipflop_d,
+    insert_flipflop_ms_d,
+
     insert_clock_generator,
     insert_shift_register,
 };

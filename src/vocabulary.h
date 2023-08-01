@@ -36,6 +36,9 @@ enum class ElementType : uint8_t {
     clock_generator,
     flipflop_jk,
     shift_register,
+    latch_d,
+    flipflop_d,
+    flipflop_ms_d,  // master slave
 
     sub_circuit,
 };

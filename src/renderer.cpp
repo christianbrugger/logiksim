@@ -747,6 +747,23 @@ auto draw_flipflop_jk_body(BLContext& ctx, layout::ConstElement element, bool se
 
     set_body_draw_styles(ctx, element.display_state(), selected);
     draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+
+    // text
+    const auto label = std::string {"JK-FF"};
+    const auto size = 0.9 * settings.view_config.pixel_scale();
+
+    if (size > 3.0) {
+        const auto center = point_fine_t {
+            position.x.value + 2.0,
+            position.y.value + 1.0,
+        };
+
+        const auto alpha = get_alpha_value(element.display_state());
+        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
+                                label, HorizontalAlignment::center,
+                                VerticalAlignment::center);
+    }
 }
 
 auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element, bool selected,
@@ -838,6 +855,165 @@ auto draw_shift_register(BLContext& ctx, Schematic::ConstElement element,
 }
 
 //
+// D-Latch
+//
+
+auto draw_latch_d_body(BLContext& ctx, layout::ConstElement element, bool selected,
+                       const RenderSettings& settings) -> void {
+    const auto position = element.position();
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value + 0.0,
+            position.y.value - BODY_OVERDRAW,
+        },
+        point_fine_t {
+            position.x.value + 2.0,
+            position.y.value + 1.0 + BODY_OVERDRAW,
+        },
+    };
+
+    set_body_draw_styles(ctx, element.display_state(), selected);
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+
+    // text
+    const auto label = std::string {"L"};
+    const auto size = 0.9 * settings.view_config.pixel_scale();
+
+    if (size > 3.0) {
+        const auto center = point_fine_t {
+            position.x.value + 1.0,
+            position.y.value + 0.5,
+        };
+
+        const auto alpha = get_alpha_value(element.display_state());
+        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
+                                label, HorizontalAlignment::center,
+                                VerticalAlignment::center);
+    }
+}
+
+auto draw_latch_d(BLContext& ctx, layout::ConstElement element, bool selected,
+                  const RenderSettings& settings) -> void {
+    draw_latch_d_body(ctx, element, selected, settings);
+    draw_logic_item_connectors(ctx, element, settings);
+}
+
+auto draw_latch_d(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
+                  const Simulation& simulation, bool selected,
+                  const RenderSettings& settings) -> void {
+    draw_latch_d_body(ctx, layout.element(element), selected, settings);
+    draw_logic_item_connectors(ctx, element, layout, simulation, settings);
+}
+
+//
+// D-FlipFlop
+//
+
+auto draw_flipflop_d_body(BLContext& ctx, layout::ConstElement element, bool selected,
+                          const RenderSettings& settings) -> void {
+    const auto position = element.position();
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value + 0.0,
+            position.y.value - BODY_OVERDRAW,
+        },
+        point_fine_t {
+            position.x.value + 3.0,
+            position.y.value + 2.0 + BODY_OVERDRAW,
+        },
+    };
+
+    set_body_draw_styles(ctx, element.display_state(), selected);
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+
+    // text
+    const auto label = std::string {"FF"};
+    const auto size = 0.9 * settings.view_config.pixel_scale();
+
+    if (size > 3.0) {
+        const auto center = point_fine_t {
+            position.x.value + 1.5,
+            position.y.value + 1.0,
+        };
+
+        const auto alpha = get_alpha_value(element.display_state());
+        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
+                                label, HorizontalAlignment::center,
+                                VerticalAlignment::center);
+    }
+}
+
+auto draw_flipflop_d(BLContext& ctx, layout::ConstElement element, bool selected,
+                     const RenderSettings& settings) -> void {
+    draw_flipflop_d_body(ctx, element, selected, settings);
+    draw_logic_item_connectors(ctx, element, settings);
+}
+
+auto draw_flipflop_d(BLContext& ctx, Schematic::ConstElement element,
+                     const Layout& layout, const Simulation& simulation, bool selected,
+                     const RenderSettings& settings) -> void {
+    draw_flipflop_d_body(ctx, layout.element(element), selected, settings);
+    draw_logic_item_connectors(ctx, element, layout, simulation, settings);
+}
+
+//
+// MS-D-FlipFlop
+//
+
+auto draw_flipflop_ms_d_body(BLContext& ctx, layout::ConstElement element, bool selected,
+                             const RenderSettings& settings) -> void {
+    const auto position = element.position();
+
+    const auto rect = rect_fine_t {
+        point_fine_t {
+            position.x.value + 0.0,
+            position.y.value - BODY_OVERDRAW,
+        },
+        point_fine_t {
+            position.x.value + 4.0,
+            position.y.value + 2.0 + BODY_OVERDRAW,
+        },
+    };
+
+    set_body_draw_styles(ctx, element.display_state(), selected);
+    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+
+    // text
+    const auto label = std::string {"MS-FF"};
+    const auto size = 0.9 * settings.view_config.pixel_scale();
+
+    if (size > 3.0) {
+        const auto center = point_fine_t {
+            position.x.value + 2.0,
+            position.y.value + 1.0,
+        };
+
+        const auto alpha = get_alpha_value(element.display_state());
+        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
+                                label, HorizontalAlignment::center,
+                                VerticalAlignment::center);
+    }
+}
+
+auto draw_flipflop_ms_d(BLContext& ctx, layout::ConstElement element, bool selected,
+                        const RenderSettings& settings) -> void {
+    draw_flipflop_ms_d_body(ctx, element, selected, settings);
+    draw_logic_item_connectors(ctx, element, settings);
+}
+
+auto draw_flipflop_ms_d(BLContext& ctx, Schematic::ConstElement element,
+                        const Layout& layout, const Simulation& simulation, bool selected,
+                        const RenderSettings& settings) -> void {
+    draw_flipflop_ms_d_body(ctx, layout.element(element), selected, settings);
+    draw_logic_item_connectors(ctx, element, layout, simulation, settings);
+}
+
+//
 // Logic Item
 //
 
@@ -868,6 +1044,13 @@ auto draw_logic_item(BLContext& ctx, layout::ConstElement element, bool selected
             return draw_flipflop_jk(ctx, element, selected, settings);
         case shift_register:
             return draw_shift_register(ctx, element, selected, settings);
+        case latch_d:
+            return draw_latch_d(ctx, element, selected, settings);
+        case flipflop_d:
+            return draw_flipflop_d(ctx, element, selected, settings);
+        case flipflop_ms_d:
+            return draw_flipflop_ms_d(ctx, element, selected, settings);
+
         case sub_circuit:
             return draw_standard_element(ctx, element, selected, settings);
     }
@@ -905,6 +1088,14 @@ auto draw_logic_item(BLContext& ctx, Schematic::ConstElement element,
         case shift_register:
             return draw_shift_register(ctx, element, layout, simulation, selected,
                                        settings);
+        case latch_d:
+            return draw_latch_d(ctx, element, layout, simulation, selected, settings);
+        case flipflop_d:
+            return draw_flipflop_d(ctx, element, layout, simulation, selected, settings);
+        case flipflop_ms_d:
+            return draw_flipflop_ms_d(ctx, element, layout, simulation, selected,
+                                      settings);
+
         case sub_circuit:
             return draw_standard_element(ctx, element, layout, simulation, selected,
                                          settings);
