@@ -205,7 +205,13 @@ class ElementTemplate {
 
     [[nodiscard]] auto bounding_rect() const -> rect_t;
 
+    // modification
     [[nodiscard]] auto modifyable_segment_tree() const -> SegmentTree &
+        requires(!Const);
+    [[nodiscard]] auto set_input_inverter(connection_id_t index, bool value) const -> void
+        requires(!Const);
+    [[nodiscard]] auto set_output_inverter(connection_id_t index, bool value) const
+        -> void
         requires(!Const);
 
    private:

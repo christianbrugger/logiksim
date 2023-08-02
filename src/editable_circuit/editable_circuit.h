@@ -57,6 +57,8 @@ class EditableCircuit {
         -> void;
     auto delete_all(selection_handle_t selection) -> void;
 
+    auto toggle_inverter(point_t point) -> void;
+
     // selections
     [[nodiscard]] auto create_selection() const -> selection_handle_t;
     [[nodiscard]] auto create_selection(const Selection& selection) const

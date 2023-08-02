@@ -563,6 +563,22 @@ auto ElementTemplate<Const>::modifyable_segment_tree() const -> SegmentTree &
     return layout_->modifyable_segment_tree(element_id_);
 }
 
+template <bool Const>
+auto ElementTemplate<Const>::set_input_inverter(connection_id_t index, bool value) const
+    -> void
+    requires(!Const)
+{
+    layout_->input_inverters_.at(element_id_.value).at(index.value) = value;
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::set_output_inverter(connection_id_t index, bool value) const
+    -> void
+    requires(!Const)
+{
+    layout_->output_inverters_.at(element_id_.value).at(index.value) = value;
+}
+
 // Template Instanciations
 
 template class ElementTemplate<true>;
