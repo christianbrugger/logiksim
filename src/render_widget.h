@@ -151,7 +151,7 @@ class MouseMoveSelectionLogic {
     auto operator=(const MouseMoveSelectionLogic&) -> MouseMoveSelectionLogic& = delete;
     auto operator=(MouseMoveSelectionLogic&&) -> MouseMoveSelectionLogic& = delete;
 
-    auto mouse_press(point_fine_t point) -> void;
+    auto mouse_press(point_fine_t point, bool double_click) -> void;
     auto mouse_move(point_fine_t point) -> void;
     auto mouse_release(point_fine_t point) -> void;
 
@@ -263,6 +263,11 @@ class RendererWidget : public QWidget {
     Q_OBJECT
 
    public:
+    using MouseLogic = std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
+                                    MouseSingleSelectionLogic, MouseAreaSelectionLogic,
+                                    MouseMoveSelectionLogic, SimulationInteractionLogic>;
+
+   public:
     RendererWidget(QWidget* parent = nullptr);
 
     auto set_do_benchmark(bool value) -> void;
@@ -342,10 +347,7 @@ class RendererWidget : public QWidget {
     InteractionState interaction_state_ {InteractionState::not_interactive};
     std::size_t default_input_count_ {3};
     MouseDragLogic mouse_drag_logic_;
-    std::optional<std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
-                               MouseSingleSelectionLogic, MouseAreaSelectionLogic,
-                               MouseMoveSelectionLogic, SimulationInteractionLogic>>
-        mouse_logic_ {};
+    std::optional<MouseLogic> mouse_logic_ {};
 
     // states
     bool do_benchmark_ {false};

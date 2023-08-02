@@ -326,6 +326,7 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
 }
 
 namespace {
+
 auto anything_selected(const Selection& selection, const Layout& layout,
                        std::span<const SpatialTree::query_result_t> items,
                        point_fine_t point) -> bool {
@@ -344,26 +345,32 @@ auto anything_selected(const Selection& selection, const Layout& layout,
     return false;
 }
 
-auto to_selection(const Layout& layout,
-                  std::span<const SpatialTree::query_result_t> items) -> Selection {
-    auto selection = Selection {};
-
+auto add_to_selection(Selection& selection, const Layout& layout,
+                      std::span<const SpatialTree::query_result_t> items,
+                      bool complete_tree) -> void {
     for (const auto& item : items) {
         if (!item.segment_index) {
             selection.add_logicitem(item.element_id);
         } else {
-            const auto segment = segment_t {item.element_id, item.segment_index};
-            const auto part = to_part(get_line(layout, segment));
-            selection.add_segment(segment_part_t {segment, part});
+            if (complete_tree) {
+                const auto& tree = layout.segment_tree(item.element_id);
+                for (const auto& segment_index : tree.indices()) {
+                    const auto segment = segment_t {item.element_id, segment_index};
+                    const auto part = to_part(tree.segment_line(segment_index));
+                    selection.add_segment(segment_part_t {segment, part});
+                }
+            } else {
+                const auto segment = segment_t {item.element_id, item.segment_index};
+                const auto part = to_part(get_line(layout, segment));
+                selection.add_segment(segment_part_t {segment, part});
+            }
         }
     }
-
-    return selection;
 }
 
 }  // namespace
 
-auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
+auto MouseMoveSelectionLogic::mouse_press(point_fine_t point, bool double_click) -> void {
     if (state_ == State::waiting_for_first_click) {
         const auto items = editable_circuit_.caches().spatial_cache().query_selection(
             rect_fine_t {point, point});
@@ -376,7 +383,15 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
 
         if (!anything_selected(builder_.selection(), editable_circuit_.layout(), items,
                                point)) {
-            builder_.set_selection(to_selection(editable_circuit_.layout(), items));
+            auto selection = Selection {};
+            add_to_selection(selection, editable_circuit_.layout(), items, false);
+            builder_.set_selection(selection);
+        }
+
+        if (double_click) {
+            auto selection = Selection {builder_.selection()};
+            add_to_selection(selection, editable_circuit_.layout(), items, true);
+            builder_.set_selection(selection);
         }
     }
 
@@ -1193,7 +1208,8 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                         arg.mouse_press(grid_fine_position);
                     },
                     [&](MouseMoveSelectionLogic& arg) {
-                        arg.mouse_press(grid_fine_position);
+                        auto double_click = event->type() == QEvent::MouseButtonDblClick;
+                        arg.mouse_press(grid_fine_position, double_click);
                     },
                     [&](SimulationInteractionLogic& arg) {
                         arg.mouse_press(grid_position);
@@ -1225,6 +1241,7 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+
     if (event->buttons() & Qt::MiddleButton) {
         mouse_drag_logic_.mouse_move(event->position());
         update();
