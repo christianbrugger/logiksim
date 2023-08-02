@@ -32,6 +32,11 @@ auto is_colliding(point_t point, rect_t rect) noexcept -> bool {
            && rect.p0.y <= point.y && point.y <= rect.p1.y;
 }
 
+auto is_colliding(point_fine_t point, rect_fine_t rect) noexcept -> bool {
+    return rect.p0.x <= point.x && point.x <= rect.p1.x  //
+           && rect.p0.y <= point.y && point.y <= rect.p1.y;
+}
+
 auto is_colliding(rect_fine_t a, rect_fine_t b) noexcept -> bool {
     // check for no overlap in the x-axis
     if (a.p1.x < b.p0.x || a.p0.x > b.p1.x) {

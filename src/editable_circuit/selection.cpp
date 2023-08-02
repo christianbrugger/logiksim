@@ -2,6 +2,7 @@
 #include "editable_circuit/selection.h"
 
 #include "circuit.h"
+#include "collision.h"
 #include "geometry.h"
 #include "range.h"
 
@@ -35,6 +36,22 @@ auto anything_colliding(const Selection &selection, const Layout &layout) -> boo
 
     for (const auto &[segment, _] : selection.selected_segments()) {
         if (layout.display_state(segment.element_id) == display_state_t::colliding) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+auto is_selected(const Selection &selection, const Layout &layout, segment_t segment,
+                 point_fine_t point) -> bool {
+    const auto full_line = get_line(layout, segment);
+
+    for (const auto part : selection.selected_segments(segment)) {
+        const auto line = to_line(full_line, part);
+        const auto rect = element_selection_rect(line);
+
+        if (is_colliding(point, rect)) {
             return true;
         }
     }
@@ -159,6 +176,10 @@ auto Selection::set_selection(segment_t segment, part_vector_t &&parts) -> void 
 
 auto Selection::is_selected(element_id_t element_id) const -> bool {
     return selected_logicitems_.contains(element_id);
+}
+
+auto Selection::is_selected(segment_t segment) const -> bool {
+    return selected_segments_.contains(segment);
 }
 
 auto Selection::selected_logic_items() const -> std::span<const element_id_t> {

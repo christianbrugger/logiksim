@@ -161,6 +161,12 @@ auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_r
     return result;
 }
 
+auto SpatialTree::has_element(point_fine_t point) const -> bool {
+    using namespace detail::spatial_tree;
+
+    return tree_.qbegin(bgi::intersects(tree_point_t {point.x, point.y})) != tree_.qend();
+}
+
 auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
     using namespace detail::spatial_tree;
 

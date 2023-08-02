@@ -35,6 +35,9 @@ class Selection;
 [[nodiscard]] auto anything_colliding(const Selection &selection, const Layout &layout)
     -> bool;
 
+[[nodiscard]] auto is_selected(const Selection &selection, const Layout &layout,
+                               segment_t segment, point_fine_t point) -> bool;
+
 class Selection {
    public:
     using segment_pair_t = detail::selection::map_pair_t;
@@ -55,6 +58,7 @@ class Selection {
     auto set_selection(segment_t segment, part_vector_t &&parts) -> void;
 
     [[nodiscard]] auto is_selected(element_id_t element_id) const -> bool;
+    [[nodiscard]] auto is_selected(segment_t segment) const -> bool;
 
     [[nodiscard]] auto selected_logic_items() const -> std::span<const element_id_t>;
     [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;

@@ -325,22 +325,58 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
     }
 }
 
+namespace {
+auto anything_selected(const Selection& selection, const Layout& layout,
+                       std::span<const SpatialTree::query_result_t> items,
+                       point_fine_t point) -> bool {
+    for (const auto& item : items) {
+        if (!item.segment_index) {
+            if (selection.is_selected(item.element_id)) {
+                return true;
+            }
+        } else {
+            const auto segment = segment_t {item.element_id, item.segment_index};
+            if (is_selected(selection, layout, segment, point)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+auto to_selection(const Layout& layout,
+                  std::span<const SpatialTree::query_result_t> items) -> Selection {
+    auto selection = Selection {};
+
+    for (const auto& item : items) {
+        if (!item.segment_index) {
+            selection.add_logicitem(item.element_id);
+        } else {
+            const auto segment = segment_t {item.element_id, item.segment_index};
+            const auto part = to_part(get_line(layout, segment));
+            selection.add_segment(segment_part_t {segment, part});
+        }
+    }
+
+    return selection;
+}
+
+}  // namespace
+
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point) -> void {
     if (state_ == State::waiting_for_first_click) {
-        // select element under mouse
+        const auto items = editable_circuit_.caches().spatial_cache().query_selection(
+            rect_fine_t {point, point});
 
-        // TODO create better abstraction / name
-        const auto element_under_cursor
-            = editable_circuit_.caches().query_selection(point);
-        if (!element_under_cursor.has_value()) {
+        if (items.empty()) {
             builder_.clear();
+            state_ = State::finished;
             return;
         }
-        const auto is_selected = builder_.selection().is_selected(*element_under_cursor);
 
-        if (!is_selected) {
-            builder_.clear();
-            builder_.add(SelectionFunction::add, rect_fine_t {point, point});
+        if (!anything_selected(builder_.selection(), editable_circuit_.layout(), items,
+                               point)) {
+            builder_.set_selection(to_selection(editable_circuit_.layout(), items));
         }
     }
 
@@ -1095,11 +1131,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             const auto point
                 = to_grid_fine(event->position(), render_settings_.view_config);
 
-            // TODO shall we create a better interface here? not via caches
-            const bool has_element_under_cursor
-                = editable_circuit_.value().caches().query_selection(point).has_value();
-
-            if (has_element_under_cursor) {
+            if (editable_circuit_->caches().spatial_cache().has_element(point)) {
                 if (event->modifiers() == Qt::NoModifier) {
                     mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
                         .builder = selection_builder,

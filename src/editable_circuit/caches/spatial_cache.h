@@ -66,6 +66,9 @@ class SpatialTree {
     [[nodiscard]] auto format() const -> std::string;
 
     auto query_selection(rect_fine_t rect) const -> std::vector<query_result_t>;
+    auto has_element(point_fine_t point) const -> bool;
+
+    // TODO remove?
     auto query_line_segments(point_t point) const -> queried_segments_t;
 
     auto rects() const {

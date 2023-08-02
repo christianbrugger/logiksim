@@ -30,34 +30,6 @@ auto CacheProvider::validate(const Layout& layout) -> void {
     output_connections_.validate(layout);
 }
 
-auto CacheProvider::query_selection(rect_fine_t rect) const
-    -> std::vector<SpatialTree::query_result_t> {
-    return spatial_cache_.query_selection(rect);
-};
-
-auto CacheProvider::query_selection(point_fine_t point) const
-    -> std::optional<element_id_t> {
-    auto query_result = spatial_cache_.query_selection(rect_fine_t {point, point});
-
-    // TODO rethink this, maybe use find?
-    auto elements = std::vector<element_id_t> {};
-    transform_if(
-        query_result, std::back_inserter(elements),
-        [](const SpatialTree::query_result_t& value) { return value.element_id; },
-        [](const SpatialTree::query_result_t& value) {
-            return value.segment_index == null_segment_index;
-        });
-
-    if (elements.size() > 1) [[unlikely]] {
-        throw_exception("Two elements at the same position");
-    }
-
-    if (elements.size() == 1) {
-        return elements[0];
-    }
-    return std::nullopt;
-}
-
 auto CacheProvider::submit(editable_circuit::InfoMessage message) -> void {
     input_connections_.submit(message);
     output_connections_.submit(message);

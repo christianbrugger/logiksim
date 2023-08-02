@@ -14,13 +14,6 @@ class CacheProvider {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto query_selection(rect_fine_t rect) const
-        -> std::vector<SpatialTree::query_result_t>;
-    // TODO move where its needed?
-    [[nodiscard]] auto query_selection(point_fine_t point) const
-        -> std::optional<element_id_t>;
-
-    // TODO remove these methods?
     [[nodiscard]] auto input_cache() const -> const ConnectionCache<true>&;
     [[nodiscard]] auto output_cache() const -> const ConnectionCache<false>&;
     [[nodiscard]] auto collision_cache() const -> const CollisionCache&;
