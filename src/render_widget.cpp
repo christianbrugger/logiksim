@@ -328,6 +328,24 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
 
 namespace {
 
+auto all_selected(const Selection& selection, const Layout& layout,
+                  std::span<const SpatialTree::query_result_t> items, point_fine_t point)
+    -> bool {
+    for (const auto& item : items) {
+        if (!item.segment_index) {
+            if (!selection.is_selected(item.element_id)) {
+                return false;
+            }
+        } else {
+            const auto segment = segment_t {item.element_id, item.segment_index};
+            if (!is_selected(selection, layout, segment, point)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 auto anything_selected(const Selection& selection, const Layout& layout,
                        std::span<const SpatialTree::query_result_t> items,
                        point_fine_t point) -> bool {
@@ -507,24 +525,77 @@ MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
 
 namespace {
 
+auto add_selection(Selection& selection, const Layout& layout,
+                   std::span<const SpatialTree::query_result_t> items, point_fine_t point)
+    -> void {
+    for (const auto& item : items) {
+        if (!item.segment_index) {
+            selection.add_logicitem(item.element_id);
+
+        } else {
+            const auto segment = segment_t {item.element_id, item.segment_index};
+            add_segment_part(selection, layout, segment, point);
+        }
+    }
+}
+
+auto remove_selection(Selection& selection, const Layout& layout,
+                      std::span<const SpatialTree::query_result_t> items,
+                      point_fine_t point) -> void {
+    for (const auto& item : items) {
+        if (!item.segment_index) {
+            selection.remove_logicitem(item.element_id);
+
+        } else {
+            const auto segment = segment_t {item.element_id, item.segment_index};
+            remove_segment_part(selection, layout, segment, point);
+        }
+    }
+}
+
 auto toggle_selection(Selection& selection, const Layout& layout,
                       std::span<const SpatialTree::query_result_t> items,
-                      point_fine_t point, bool whole_tree) -> void {
+                      point_fine_t point) -> void {
     for (const auto& item : items) {
         if (!item.segment_index) {
             selection.toggle_logicitem(item.element_id);
 
         } else {
             const auto segment = segment_t {item.element_id, item.segment_index};
+            toggle_segment_part(selection, layout, segment, point);
+        }
+    }
+}
 
-            if (!whole_tree) {
-                toggle_segment_part(selection, layout, segment, point);
+auto add_whole_trees(Selection& selection, const Layout& layout,
+                     std::span<const SpatialTree::query_result_t> items) -> void {
+    for (const auto& item : items) {
+        if (item.segment_index) {
+            add_segment_tree(selection, item.element_id, layout);
+        }
+    }
+}
+
+auto remove_whole_trees(Selection& selection, const Layout& layout,
+                        std::span<const SpatialTree::query_result_t> items) -> void {
+    for (const auto& item : items) {
+        if (item.segment_index) {
+            remove_segment_tree(selection, item.element_id, layout);
+        }
+    }
+}
+
+auto toggle_whole_trees(Selection& selection, const Layout& layout,
+                        std::span<const SpatialTree::query_result_t> items,
+                        point_fine_t point) -> void {
+    for (const auto& item : items) {
+        if (item.segment_index) {
+            const auto segment = segment_t {item.element_id, item.segment_index};
+
+            if (is_selected(selection, layout, segment, point)) {
+                add_segment_tree(selection, segment.element_id, layout);
             } else {
-                if (is_selected(selection, layout, segment, point)) {
-                    add_segment_tree(selection, segment.element_id, layout);
-                } else {
-                    remove_segment_tree(selection, segment.element_id, layout);
-                }
+                remove_segment_tree(selection, segment.element_id, layout);
             }
         }
     }
@@ -535,6 +606,7 @@ auto toggle_selection(Selection& selection, const Layout& layout,
 auto MouseSingleSelectionLogic::mouse_press(point_fine_t point, bool double_click)
     -> void {
     // builder_.add(SelectionFunction::toggle, rect_fine_t {point, point});
+    const auto& layout = editable_circuit_.layout();
 
     const auto items = editable_circuit_.caches().spatial_cache().query_selection(
         rect_fine_t {point, point});
@@ -543,9 +615,22 @@ auto MouseSingleSelectionLogic::mouse_press(point_fine_t point, bool double_clic
         return;
     }
 
-    auto whole_tree = double_click;
     auto selection = Selection {builder_.selection()};
-    toggle_selection(selection, editable_circuit_.layout(), items, point, whole_tree);
+
+    if (!double_click) {
+        if (!all_selected(selection, layout, items, point)) {
+            add_selection(selection, layout, items, point);
+        } else {
+            remove_selection(selection, layout, items, point);
+        }
+    } else {
+        if (!all_selected(selection, layout, items, point)) {
+            remove_whole_trees(selection, layout, items);
+        } else {
+            add_whole_trees(selection, layout, items);
+        }
+    }
+
     builder_.set_selection(selection);
 }
 

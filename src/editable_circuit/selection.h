@@ -124,6 +124,12 @@ auto remove_segment(Selection &selection, segment_t segment, const Layout &layou
 auto remove_segment_tree(Selection &selection, element_id_t element_id,
                          const Layout &layout) -> void;
 
+auto add_segment_part(Selection &selection, const Layout &layout, segment_t segment,
+                      point_fine_t point) -> void;
+
+auto remove_segment_part(Selection &selection, const Layout &layout, segment_t segment,
+                         point_fine_t point) -> void;
+
 auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t segment,
                          point_fine_t point) -> void;
 

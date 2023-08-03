@@ -455,6 +455,33 @@ auto remove_segment_tree(Selection &selection, element_id_t element_id,
     }
 }
 
+auto add_segment_part(Selection &selection, const Layout &layout, segment_t segment,
+                      point_fine_t point) -> void {
+    const auto full_line = get_line(layout, segment);
+    const auto parts = selection.selected_segments(segment);
+
+    iter_parts(to_part(full_line), parts, [&](part_t part, bool selected) {
+        const auto line = to_line(full_line, part);
+        const auto rect = element_selection_rect(line);
+        if (is_colliding(point, rect)) {
+            selection.add_segment(segment_part_t {segment, part});
+        }
+    });
+}
+
+auto remove_segment_part(Selection &selection, const Layout &layout, segment_t segment,
+                         point_fine_t point) -> void {
+    const auto full_line = get_line(layout, segment);
+
+    for (auto part : selection.selected_segments(segment)) {
+        const auto line = to_line(full_line, part);
+        const auto rect = element_selection_rect(line);
+        if (is_colliding(point, rect)) {
+            selection.remove_segment(segment_part_t {segment, part});
+        }
+    }
+}
+
 auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t segment,
                          point_fine_t point) -> void {
     const auto full_line = get_line(layout, segment);
