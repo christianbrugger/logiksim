@@ -192,16 +192,18 @@ class MouseSingleSelectionLogic {
    public:
     struct Args {
         SelectionBuilder& builder;
+        EditableCircuit& editable_circuit;
     };
 
     MouseSingleSelectionLogic(Args args);
 
-    auto mouse_press(point_fine_t point) -> void;
+    auto mouse_press(point_fine_t point, bool double_click) -> void;
     auto mouse_move(point_fine_t point) -> void;
     auto mouse_release(point_fine_t point) -> void;
 
    private:
     SelectionBuilder& builder_;
+    EditableCircuit& editable_circuit_;
 };
 
 class MouseAreaSelectionLogic {

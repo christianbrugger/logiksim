@@ -1,5 +1,6 @@
 #include "render_widget.h"
 
+#include "collision.h"
 #include "exceptions.h"
 #include "layout.h"
 #include "range.h"
@@ -346,23 +347,17 @@ auto anything_selected(const Selection& selection, const Layout& layout,
 }
 
 auto add_to_selection(Selection& selection, const Layout& layout,
-                      std::span<const SpatialTree::query_result_t> items,
-                      bool complete_tree) -> void {
+                      std::span<const SpatialTree::query_result_t> items, bool whole_tree)
+    -> void {
     for (const auto& item : items) {
         if (!item.segment_index) {
             selection.add_logicitem(item.element_id);
         } else {
-            if (complete_tree) {
-                const auto& tree = layout.segment_tree(item.element_id);
-                for (const auto& segment_index : tree.indices()) {
-                    const auto segment = segment_t {item.element_id, segment_index};
-                    const auto part = to_part(tree.segment_line(segment_index));
-                    selection.add_segment(segment_part_t {segment, part});
-                }
+            if (whole_tree) {
+                add_segment_tree(selection, item.element_id, layout);
             } else {
                 const auto segment = segment_t {item.element_id, item.segment_index};
-                const auto part = to_part(get_line(layout, segment));
-                selection.add_segment(segment_part_t {segment, part});
+                add_segment(selection, segment, layout);
             }
         }
     }
@@ -508,10 +503,50 @@ auto MouseMoveSelectionLogic::delete_selection() -> void {
 //
 
 MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
-    : builder_ {args.builder} {}
+    : editable_circuit_ {args.editable_circuit}, builder_ {args.builder} {}
 
-auto MouseSingleSelectionLogic::mouse_press(point_fine_t point) -> void {
-    builder_.add(SelectionFunction::toggle, rect_fine_t {point, point});
+namespace {
+
+auto toggle_selection(Selection& selection, const Layout& layout,
+                      std::span<const SpatialTree::query_result_t> items,
+                      point_fine_t point, bool whole_tree) -> void {
+    for (const auto& item : items) {
+        if (!item.segment_index) {
+            selection.toggle_logicitem(item.element_id);
+
+        } else {
+            const auto segment = segment_t {item.element_id, item.segment_index};
+
+            if (!whole_tree) {
+                toggle_segment_part(selection, layout, segment, point);
+            } else {
+                if (is_selected(selection, layout, segment, point)) {
+                    add_segment_tree(selection, segment.element_id, layout);
+                } else {
+                    remove_segment_tree(selection, segment.element_id, layout);
+                }
+            }
+        }
+    }
+}
+
+}  // namespace
+
+auto MouseSingleSelectionLogic::mouse_press(point_fine_t point, bool double_click)
+    -> void {
+    // builder_.add(SelectionFunction::toggle, rect_fine_t {point, point});
+
+    const auto items = editable_circuit_.caches().spatial_cache().query_selection(
+        rect_fine_t {point, point});
+
+    if (items.empty()) {
+        return;
+    }
+
+    auto whole_tree = double_click;
+    auto selection = Selection {builder_.selection()};
+    toggle_selection(selection, editable_circuit_.layout(), items, point, whole_tree);
+    builder_.set_selection(selection);
 }
 
 auto MouseSingleSelectionLogic::mouse_move(point_fine_t point [[maybe_unused]]) -> void {}
@@ -1157,6 +1192,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
 
                 mouse_logic_.emplace(MouseSingleSelectionLogic::Args {
                     .builder = selection_builder,
+                    .editable_circuit = editable_circuit_.value(),
                 });
                 return;
             }
@@ -1196,6 +1232,7 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                 = to_grid(event->position(), render_settings_.view_config);
             const auto grid_fine_position
                 = to_grid_fine(event->position(), render_settings_.view_config);
+            auto double_click = event->type() == QEvent::MouseButtonDblClick;
 
             std::visit(
                 overload {
@@ -1205,10 +1242,9 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                         arg.mouse_press(event->position(), event->modifiers());
                     },
                     [&](MouseSingleSelectionLogic& arg) {
-                        arg.mouse_press(grid_fine_position);
+                        arg.mouse_press(grid_fine_position, double_click);
                     },
                     [&](MouseMoveSelectionLogic& arg) {
-                        auto double_click = event->type() == QEvent::MouseButtonDblClick;
                         arg.mouse_press(grid_fine_position, double_click);
                     },
                     [&](SimulationInteractionLogic& arg) {

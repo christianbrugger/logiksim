@@ -418,4 +418,59 @@ auto Selection::validate(const Layout &layout) const -> void {
     }
 }
 
+// Section
+
+auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void {
+    const auto part = to_part(get_line(layout, segment));
+    selection.add_segment(segment_part_t {segment, part});
+}
+
+auto add_segment_tree(Selection &selection, element_id_t element_id, const Layout &layout)
+    -> void {
+    if (!layout.element(element_id).is_wire()) {
+        throw_exception("element needs to be wire");
+    }
+
+    const auto &tree = layout.segment_tree(element_id);
+    for (const auto &segment_index : tree.indices()) {
+        add_segment(selection, segment_t {element_id, segment_index}, layout);
+    }
+}
+
+auto remove_segment(Selection &selection, segment_t segment, const Layout &layout)
+    -> void {
+    const auto part = to_part(get_line(layout, segment));
+    selection.remove_segment(segment_part_t {segment, part});
+}
+
+auto remove_segment_tree(Selection &selection, element_id_t element_id,
+                         const Layout &layout) -> void {
+    if (!layout.element(element_id).is_wire()) {
+        throw_exception("element needs to be wire");
+    }
+
+    const auto &tree = layout.segment_tree(element_id);
+    for (const auto &segment_index : tree.indices()) {
+        remove_segment(selection, segment_t {element_id, segment_index}, layout);
+    }
+}
+
+auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t segment,
+                         point_fine_t point) -> void {
+    const auto full_line = get_line(layout, segment);
+    const auto parts = selection.selected_segments(segment);
+
+    iter_parts(to_part(full_line), parts, [&](part_t part, bool selected) {
+        const auto line = to_line(full_line, part);
+        const auto rect = element_selection_rect(line);
+        if (is_colliding(point, rect)) {
+            if (selected) {
+                selection.remove_segment(segment_part_t {segment, part});
+            } else {
+                selection.add_segment(segment_part_t {segment, part});
+            }
+        }
+    });
+}
+
 }  // namespace logicsim

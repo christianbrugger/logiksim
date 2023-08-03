@@ -87,4 +87,46 @@ auto swap(Selection &a, Selection &b) noexcept -> void;
 template <>
 auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void;
 
+namespace logicsim {
+
+// [&](part_t part, bool selected){}
+template <typename Func>
+auto iter_parts(part_t full_part, Selection::part_vector_t parts, Func func) {
+    offset_t pivot = full_part.begin;
+    std::ranges::sort(parts);
+
+    for (auto part : parts) {
+        if (pivot != part.begin) {
+            func(part_t {pivot, part.begin}, false);
+        }
+        func(part, true);
+        pivot = part.end;
+    }
+
+    if (pivot != full_part.end) {
+        func(part_t {pivot, full_part.end}, false);
+    }
+}
+
+// [&](part_t part, bool selected){}
+template <typename Func>
+auto iter_parts(part_t full_part, std::span<const part_t> const_parts, Func func) {
+    iter_parts(full_part,
+               Selection::part_vector_t {const_parts.begin(), const_parts.end()}, func);
+}
+
+auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void;
+auto add_segment_tree(Selection &selection, element_id_t element_id, const Layout &layout)
+    -> void;
+
+auto remove_segment(Selection &selection, segment_t segment, const Layout &layout)
+    -> void;
+auto remove_segment_tree(Selection &selection, element_id_t element_id,
+                         const Layout &layout) -> void;
+
+auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t segment,
+                         point_fine_t point) -> void;
+
+}  // namespace logicsim
+
 #endif
