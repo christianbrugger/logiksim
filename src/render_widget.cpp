@@ -53,6 +53,8 @@ auto format(InteractionState state) -> std::string {
             return "insert_latch_d";
         case insert_flipflop_d:
             return "insert_flipflop_d";
+        case insert_flipflop_ms_d:
+            return "insert_flipflop_ms_d";
 
         case insert_clock_generator:
             return "insert_clock_generator";
@@ -521,7 +523,7 @@ auto MouseMoveSelectionLogic::delete_selection() -> void {
 //
 
 MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
-    : editable_circuit_ {args.editable_circuit}, builder_ {args.builder} {}
+    : builder_ {args.builder}, editable_circuit_ {args.editable_circuit} {}
 
 namespace {
 
@@ -553,20 +555,6 @@ auto remove_selection(Selection& selection, const Layout& layout,
     }
 }
 
-auto toggle_selection(Selection& selection, const Layout& layout,
-                      std::span<const SpatialTree::query_result_t> items,
-                      point_fine_t point) -> void {
-    for (const auto& item : items) {
-        if (!item.segment_index) {
-            selection.toggle_logicitem(item.element_id);
-
-        } else {
-            const auto segment = segment_t {item.element_id, item.segment_index};
-            toggle_segment_part(selection, layout, segment, point);
-        }
-    }
-}
-
 auto add_whole_trees(Selection& selection, const Layout& layout,
                      std::span<const SpatialTree::query_result_t> items) -> void {
     for (const auto& item : items) {
@@ -581,22 +569,6 @@ auto remove_whole_trees(Selection& selection, const Layout& layout,
     for (const auto& item : items) {
         if (item.segment_index) {
             remove_segment_tree(selection, item.element_id, layout);
-        }
-    }
-}
-
-auto toggle_whole_trees(Selection& selection, const Layout& layout,
-                        std::span<const SpatialTree::query_result_t> items,
-                        point_fine_t point) -> void {
-    for (const auto& item : items) {
-        if (item.segment_index) {
-            const auto segment = segment_t {item.element_id, item.segment_index};
-
-            if (is_selected(selection, layout, segment, point)) {
-                add_segment_tree(selection, segment.element_id, layout);
-            } else {
-                remove_segment_tree(selection, segment.element_id, layout);
-            }
         }
     }
 }

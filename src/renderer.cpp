@@ -313,21 +313,23 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
     }
 }
 
-auto draw_wire(BLContext& ctx, layout::ConstElement element,
-               const RenderSettings& settings) -> void {
+auto draw_wire_no_history(BLContext& ctx, layout::ConstElement element, bool wire_enabled,
+                          const RenderSettings& settings) -> void {
     const auto lc_width = line_cross_width(settings);
 
     for (auto&& segment : element.line_tree().sized_segments()) {
-        draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
+        draw_line_segment(ctx, segment.line.p1, segment.line.p0, wire_enabled, settings);
 
         if (segment.has_cross_point_p0) {
-            draw_line_cross_point_impl(ctx, segment.line.p0, false, lc_width, settings);
+            draw_line_cross_point_impl(ctx, segment.line.p0, wire_enabled, lc_width,
+                                       settings);
         }
     }
 }
 
-auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
-               const Simulation& simulation, const RenderSettings& settings) -> void {
+auto draw_wire_with_history(BLContext& ctx, Schematic::ConstElement element,
+                            const Layout& layout, const Simulation& simulation,
+                            const RenderSettings& settings) -> void {
     const auto cross_width = line_cross_width(settings);
 
     // TODO move to some class
@@ -349,6 +351,17 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
             draw_line_cross_point_impl(ctx, segment.line.p0, wire_enabled, cross_width,
                                        settings);
         }
+    }
+}
+
+auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
+               const Simulation& simulation, const RenderSettings& settings) -> void {
+    if (element.history_length() == delay_t {0ns}) {
+        auto enabled = simulation.input_value(element.input(connection_id_t {0}))
+                       ^ element.input_inverters().at(0);
+        draw_wire_no_history(ctx, layout.element(element), enabled, settings);
+    } else {
+        draw_wire_with_history(ctx, element, layout, simulation, settings);
     }
 }
 

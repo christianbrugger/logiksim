@@ -70,7 +70,7 @@ class Schematic {
     using ConstOutputIterator = OutputIteratorTemplate<true>;
 
     struct defaults {
-        constexpr static delay_t button_delay {10ns};
+        constexpr static delay_t button_delay {delay_t::epsilon()};
         constexpr static delay_t standard_delay {3us};
         constexpr static delay_t clock_generator_delay {1ms};
         // TODO make constexpr again after testing delays

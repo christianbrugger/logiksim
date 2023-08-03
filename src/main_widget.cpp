@@ -159,19 +159,34 @@ auto to_slider_scale(delay_t delay) -> int {
                       SLIDER_MAX_VALUE);
 };
 
+auto to_text(delay_t delay) -> QString {
+    if (delay > delay_t {0ns}) {
+        return QString::fromStdString(fmt::format("{}/unit", delay));
+    }
+    return QString::fromStdString("1ns flat");
+}
+
 }  // namespace detail::delay_slider
 
 auto MainWidget::build_delay_slider() -> QWidget* {
     using namespace detail::delay_slider;
 
+    const auto checkbox = new QCheckBox("Ignore");
     const auto slider = new QSlider(Qt::Orientation::Horizontal);
     const auto label = new QLabel();
 
     connect(slider, &QSlider::valueChanged, this, [label](int value) {
         const auto delay = from_slider_scale(value);
-        Schematic::defaults::wire_delay_per_distance = delay;
 
-        label->setText(QString::fromStdString(fmt::format("{}", delay)));
+        Schematic::defaults::wire_delay_per_distance = delay;
+        label->setText(to_text(delay));
+    });
+    connect(checkbox, &QCheckBox::stateChanged, this, [slider, label](int ignore) {
+        slider->setEnabled(!ignore);
+        const auto delay = ignore ? delay_t {0ns} : from_slider_scale(slider->value());
+
+        Schematic::defaults::wire_delay_per_distance = delay;
+        label->setText(to_text(delay));
     });
 
     slider->setMinimum(SLIDER_MIN_VALUE);
@@ -180,9 +195,10 @@ auto MainWidget::build_delay_slider() -> QWidget* {
 
     slider->setTickInterval(100'000);
     slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
-    label->setMinimumWidth(50);
+    label->setMinimumWidth(70);
 
     const auto layout = new QHBoxLayout();
+    layout->addWidget(checkbox);
     layout->addWidget(slider);
     layout->addWidget(label);
 
@@ -190,6 +206,8 @@ auto MainWidget::build_delay_slider() -> QWidget* {
     panel->setLayout(layout);
 
     delay_slider_ = slider;
+    delay_panel_ = panel;
+
     return panel;
 }
 
@@ -248,7 +266,7 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
 
     slider->setTickInterval(100'000);
     slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
-    label->setMinimumWidth(50);
+    label->setMinimumWidth(70);
 
     const auto layout = new QHBoxLayout();
     layout->addWidget(button);
@@ -349,8 +367,8 @@ auto MainWidget::on_interaction_state_changed(InteractionState new_state) -> voi
     }
 
     // delay slider
-    if (delay_slider_ != nullptr) {
-        delay_slider_->setEnabled(new_state != InteractionState::simulation);
+    if (delay_panel_ != nullptr) {
+        delay_panel_->setEnabled(new_state != InteractionState::simulation);
     }
 }
 

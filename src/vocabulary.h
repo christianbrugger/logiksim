@@ -319,7 +319,8 @@ struct time_t {
 static_assert(std::is_trivial<time_t>::value);
 
 struct delay_t {
-    std::chrono::duration<int32_t, std::nano> value {};
+    using value_type = std::chrono::duration<int32_t, std::nano>;
+    value_type value {};
 
     [[nodiscard]] constexpr explicit delay_t() noexcept = default;
 
@@ -329,6 +330,10 @@ struct delay_t {
         if (value != delay) {
             throw_exception("delay cannot be represented.");
         }
+    };
+
+    [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t {
+        return delay_t {++value_type::zero()};
     };
 
     [[nodiscard]] auto format() const -> std::string;

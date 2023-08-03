@@ -203,7 +203,8 @@ auto time_t::format() const -> std::string {
 }
 
 auto delay_t::format() const -> std::string {
-    return format_microsecond_time(value);
+    // return format_microsecond_time(value);
+    return format_time(value);
 }
 
 auto time_rate_t::format() const -> std::string {

@@ -38,6 +38,8 @@ class MainWidget : public QWidget {
     using button_map_type
         = ankerl::unordered_dense::map<InteractionState, QAbstractButton*>;
     button_map_type button_map_ {};
+
+    QWidget* delay_panel_ {};
     QSlider* delay_slider_ {};
 };
 
