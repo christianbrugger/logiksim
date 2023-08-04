@@ -119,6 +119,12 @@ auto move_or_delete_elements(selection_handle_t handle, Layout& Layout,
 
 auto delete_all(selection_handle_t handle, State state) -> void;
 
+//
+// Wire Mode Change Helpers
+//
+
+auto add_temporary_crosspoints(Layout& layout, const Selection& selection) -> void;
+
 }  // namespace editable_circuit
 }  // namespace logicsim
 

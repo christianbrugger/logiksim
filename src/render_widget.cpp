@@ -496,6 +496,10 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
     }
     insertion_mode_ = mode;
     editable_circuit_.change_insertion_mode(copy_selection(), mode);
+
+    if (mode == InsertionMode::temporary) {
+        editable_circuit_.add_temporary_crosspoints(get_selection());
+    }
 }
 
 auto MouseMoveSelectionLogic::restore_original_positions() -> void {

@@ -11,6 +11,7 @@
 #include "scene.h"
 #include "timer.h"
 
+#include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
 
 #include <algorithm>
@@ -1996,11 +1997,13 @@ auto change_insertion_mode(selection_handle_t handle, State state,
         change_logic_item_insertion_mode(state, element_id, new_insertion_mode);
     }
 
+    /*
     // when we remove segments of cross points, the other segments might be
     // merged. We store those points, so we later split them again when
     // they are moved into the temporary aggregate
     auto cross_points = CrossPointCache {};
     auto query_result = std::vector<point_t> {};
+    */
 
     while (handle->selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
@@ -2009,6 +2012,7 @@ auto change_insertion_mode(selection_handle_t handle, State state,
         };
         handle->remove_segment(segment_part);
 
+        /*
         auto p0 = std::optional<point_t> {};
         auto p1 = std::optional<point_t> {};
 
@@ -2023,10 +2027,11 @@ auto change_insertion_mode(selection_handle_t handle, State state,
             if (state.cache.collision_cache().is_wire_cross_point(line.p1)) {
                 p1 = line.p1;
             }
-        }
+        }*/
 
         change_wire_insertion_mode(state, segment_part, new_insertion_mode);
 
+        /*
         if (uninserted) {
             const auto segment = segment_part.segment;
             const auto line = get_line(state.layout, segment);
@@ -2053,6 +2058,7 @@ auto change_insertion_mode(selection_handle_t handle, State state,
         if (p1.has_value()) {
             cross_points.add_cross_point(p1.value());
         }
+        */
     }
 }
 
@@ -2138,6 +2144,79 @@ auto delete_all(selection_handle_t handle, State state) -> void {
         change_wire_insertion_mode(state, segment_part, InsertionMode::temporary);
         delete_wire_segment(state.layout, state.sender, segment_part);
     }
+}
+
+//
+// Wire Mode Change Helpers
+//
+
+class SegmentEndpointMap {
+   private:
+    // orientation: right, left, up, down
+    using value_t = std::array<segment_t, 4>;
+    using map_t = ankerl::unordered_dense::map<point_t, value_t>;
+
+   public:
+    auto add_segment(segment_t segment, ordered_line_t line) -> void {
+        add_point(line.p0, segment, to_orientation_p0(line));
+        add_point(line.p1, segment, to_orientation_p1(line));
+    }
+
+    // [](point_t point, segment_t segment) {}
+    template <typename Func>
+    auto iter_crosspoints(Func callback) {
+        for (const auto& [point, segments] : map_.values()) {
+            const auto count = std::ranges::count_if(
+                segments, [](segment_t value) { return value != null_segment; });
+
+            if (count >= 3) {
+                const auto segment = segments.at(0) ? segments.at(0) : segments.at(1);
+                assert(segment != null_segment);
+
+                callback(point, segment);
+            }
+        }
+    }
+
+   private:
+    auto add_point(point_t point, segment_t segment, orientation_t orientation) -> void {
+        const auto index
+            = static_cast<std::underlying_type<orientation_t>::type>(orientation);
+
+        const auto it = map_.find(point);
+
+        if (it != map_.end()) {
+            if (it->second.at(index) != null_segment) [[unlikely]] {
+                throw_exception("entry already exists in SegmentEndpointMap");
+            }
+            it->second.at(index) = segment;
+        } else {
+            auto value = value_t {null_segment, null_segment, null_segment, null_segment};
+            value.at(index) = segment;
+            map_.emplace(point, value);
+        }
+    }
+
+   private:
+    map_t map_ {};
+};
+
+auto add_temporary_crosspoints(Layout& layout, const Selection& selection) -> void {
+    auto map = SegmentEndpointMap {};
+
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        const auto full_line = get_line(layout, segment);
+
+        if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
+            throw_exception("selection cannot contain partially selected lines");
+        }
+
+        map.add_segment(segment, full_line);
+    }
+
+    map.iter_crosspoints([&layout](point_t point, segment_t segment) {
+        set_segment_crosspoint(layout, segment, point);
+    });
 }
 
 }  // namespace editable_circuit

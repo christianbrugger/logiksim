@@ -59,6 +59,9 @@ class EditableCircuit {
 
     auto toggle_inverter(point_t point) -> void;
 
+    // Wire Mode Change Helpers
+    auto add_temporary_crosspoints(const Selection& selection) -> void;
+
     // selections
     [[nodiscard]] auto create_selection() const -> selection_handle_t;
     [[nodiscard]] auto create_selection(const Selection& selection) const

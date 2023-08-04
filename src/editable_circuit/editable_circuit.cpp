@@ -169,6 +169,10 @@ auto EditableCircuit::toggle_inverter(point_t point) -> void {
     }
 }
 
+auto EditableCircuit::add_temporary_crosspoints(const Selection& selection) -> void {
+    editable_circuit::add_temporary_crosspoints(layout_.value(), selection);
+}
+
 auto EditableCircuit::create_selection() const -> selection_handle_t {
     return registrar_.create_selection();
 }
