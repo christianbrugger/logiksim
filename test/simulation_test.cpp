@@ -645,7 +645,7 @@ TEST(SimulationTest, TestShiftRegister) {
 TEST(SimulationTest, HistoryViewSize) {
     auto time = time_t {100us};
     auto history_length = delay_t {7us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -656,7 +656,7 @@ TEST(SimulationTest, HistoryViewSize) {
 TEST(SimulationTest, HistoryViewSizeExact) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -667,7 +667,7 @@ TEST(SimulationTest, HistoryViewSizeExact) {
 TEST(SimulationTest, HistoryViewSizeLast) {
     auto time = time_t {100us};
     auto history_length = delay_t {20us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -678,7 +678,7 @@ TEST(SimulationTest, HistoryViewSizeLast) {
 TEST(SimulationTest, HistoryViewSizeEmpty) {
     auto time = time_t {10us};
     auto history_length = delay_t {20us};
-    auto history = Simulation::history_vector_t {};
+    auto history = Simulation::history_buffer_t {};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -689,7 +689,7 @@ TEST(SimulationTest, HistoryViewSizeEmpty) {
 TEST(SimulationTest, HistoryViewSizeNegative) {
     auto time = time_t {10us};
     auto history_length = delay_t {20us};
-    auto history = Simulation::history_vector_t {time_t {5us}, time_t {7us}};
+    auto history = Simulation::history_buffer_t {time_t {5us}, time_t {7us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -702,7 +702,7 @@ TEST(SimulationTest, HistoryViewSizeNegative) {
 TEST(SimulationTest, HistoryViewBeginEndExact) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
     constexpr auto epsilon = time_t::epsilon().value;
 
@@ -732,7 +732,7 @@ TEST(SimulationTest, HistoryViewBeginEndExact) {
 TEST(SimulationTest, HistoryViewBeginEndFull) {
     auto time = time_t {100us};
     auto history_length = delay_t {50us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
     constexpr auto epsilon = time_t::epsilon().value;
 
@@ -770,7 +770,7 @@ TEST(SimulationTest, HistoryViewBeginEndFull) {
 TEST(SimulationTest, HistoryViewFromExact) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -786,7 +786,7 @@ TEST(SimulationTest, HistoryViewFromExact) {
 TEST(SimulationTest, HistoryViewFrom) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -802,7 +802,7 @@ TEST(SimulationTest, HistoryViewFrom) {
 TEST(SimulationTest, HistoryViewFromSecond) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
     constexpr auto epsilon = time_t::epsilon().value;
 
@@ -819,7 +819,7 @@ TEST(SimulationTest, HistoryViewFromSecond) {
 TEST(SimulationTest, HistoryViewFromSmall) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -832,7 +832,7 @@ TEST(SimulationTest, HistoryViewFromSmall) {
 TEST(SimulationTest, HistoryViewUntil) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -846,7 +846,7 @@ TEST(SimulationTest, HistoryViewUntil) {
 TEST(SimulationTest, HistoryViewUntilExact) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
     constexpr auto epsilon = time_t::epsilon().value;
 
@@ -862,7 +862,7 @@ TEST(SimulationTest, HistoryViewUntilExact) {
 TEST(SimulationTest, HistoryViewFromUntilBounds) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
 
     auto view = Simulation::HistoryView {history, time, last_value, history_length};
@@ -886,7 +886,7 @@ TEST(SimulationTest, HistoryViewFromUntilBounds) {
 TEST(SimulationTest, HistoryViewValueFull) {
     auto time = time_t {100us};
     auto history_length = delay_t {50us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
     constexpr auto epsilon = time_t::epsilon().value;
 
@@ -908,7 +908,7 @@ TEST(SimulationTest, HistoryViewValueFull) {
 TEST(SimulationTest, HistoryViewValuePartialHistory) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
-    auto history = Simulation::history_vector_t {time_t {90us}, time_t {95us}};
+    auto history = Simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
     constexpr auto epsilon = time_t::epsilon().value;
 

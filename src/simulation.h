@@ -95,8 +95,8 @@ class Simulation {
     /// Represents multiple logic values
     using logic_vector_t = boost::container::vector<bool>;
 
-    using history_vector_t = circular_buffer<time_t, 2, uint32_t>;
-    static_assert(sizeof(history_vector_t) == 28);
+    using history_buffer_t = circular_buffer<time_t, 2, uint32_t>;
+    static_assert(sizeof(history_buffer_t) == 28);
 
     // 8 bytes still fit into a small_vector with 32 byte size.
     // using logic_small_vector_t = boost::container::small_vector<bool, 8>;
@@ -176,7 +176,7 @@ class Simulation {
    private:
     class Timer;
 
-    auto check_state_valid() const -> void;
+    auto check_counts_valid() const -> void;
 
     auto submit_events_for_changed_outputs(const Schematic::ConstElement element,
                                            const logic_small_vector_t &old_outputs,
@@ -190,28 +190,15 @@ class Simulation {
     auto set_input_internal(Schematic::ConstInput input, bool value) -> void;
 
     auto record_input_history(Schematic::ConstInput input, bool new_value) -> void;
-    auto clean_history(history_vector_t &history, delay_t history_length) -> void;
-
-    [[nodiscard]] auto get_state(element_id_t element_id) -> ElementState &;
-    [[nodiscard]] auto get_state(element_id_t element_id) const -> const ElementState &;
-    [[nodiscard]] auto get_state(ElementOrConnection auto item) -> ElementState &;
-    [[nodiscard]] auto get_state(ElementOrConnection auto item) const
-        -> const ElementState &;
-
-    // TODO use vectors instead of struct
-    struct ElementState {
-        logic_small_vector_t input_values {};
-        logic_small_vector_t internal_state {};
-
-        history_vector_t first_input_history {};
-    };
-
-    static_assert(sizeof(ElementState) == 76);
+    auto clean_history(history_buffer_t &history, delay_t history_length) -> void;
 
     gsl::not_null<const Schematic *> schematic_;
-    std::vector<ElementState> states_ {};
     SimulationQueue queue_ {};
     bool is_initialized_ {false};
+
+    std::vector<logic_small_vector_t> input_values_ {};
+    std::vector<logic_small_vector_t> internal_states_ {};
+    std::vector<history_buffer_t> first_input_histories_ {};
 };
 
 class Simulation::HistoryView {
@@ -226,7 +213,7 @@ class Simulation::HistoryView {
 
    public:
     [[nodiscard]] explicit HistoryView() = default;
-    [[nodiscard]] explicit HistoryView(const history_vector_t &history,
+    [[nodiscard]] explicit HistoryView(const history_buffer_t &history,
                                        time_t simulation_time, bool last_value,
                                        delay_t history_length);
 
@@ -250,9 +237,9 @@ class Simulation::HistoryView {
                                 bool substract_epsilon = false) const -> time_t;
 
    private:
-    const history_vector_t *history_ {nullptr};
+    const history_buffer_t *history_ {nullptr};
     time_t simulation_time_ {};
-    history_vector_t::internal_size_t min_index_ {};
+    history_buffer_t::internal_size_t min_index_ {};
     bool last_value_ {};
 };
 
