@@ -2,6 +2,7 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
 #include "editable_circuit/caches.h"
+#include "editable_circuit/caches/split_point_cache.h"
 #include "editable_circuit/messages.h"
 #include "editable_circuit/selection_builder.h"
 #include "editable_circuit/selection_registrar.h"
@@ -60,7 +61,12 @@ class EditableCircuit {
     auto toggle_inverter(point_t point) -> void;
 
     // Wire Mode Change Helpers
-    auto add_temporary_crosspoints(const Selection& selection) -> void;
+    auto add_temporary_crosspoints(const Selection& selection) -> std::vector<point_t>;
+
+    auto capture_inserted_splitpoints(const Selection& selection) -> std::vector<point_t>;
+
+    auto split_temporary_segments(std::span<const point_t> split_points,
+                                  const Selection& selection) -> void;
 
     // selections
     [[nodiscard]] auto create_selection() const -> selection_handle_t;
@@ -82,6 +88,9 @@ class EditableCircuit {
     SelectionRegistrar registrar_ {};
     SelectionBuilder selection_builder_;
 };
+
+auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)
+    -> std::vector<point_t>;
 
 }  // namespace logicsim
 

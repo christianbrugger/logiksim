@@ -141,6 +141,7 @@ class MouseMoveSelectionLogic {
         EditableCircuit& editable_circuit;
         bool has_colliding {false};
         bool delete_on_cancel {false};
+        std::optional<std::vector<point_t>> split_points {};
     };
 
     MouseMoveSelectionLogic(Args args);
@@ -184,6 +185,7 @@ class MouseMoveSelectionLogic {
     std::optional<point_fine_t> last_position_ {};
     std::pair<int, int> total_offsets_ {};
     InsertionMode insertion_mode_ {InsertionMode::insert_or_discard};
+    std::optional<std::vector<point_t>> split_points_ {};
 
     State state_ {State::waiting_for_first_click};
 };

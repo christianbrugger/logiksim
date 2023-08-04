@@ -14,6 +14,7 @@ class selection_handle_t;
 class element_handle_t;
 class SelectionRegistrar;
 class CacheProvider;
+class SplitPointCache;
 
 namespace editable_circuit {
 
@@ -123,7 +124,15 @@ auto delete_all(selection_handle_t handle, State state) -> void;
 // Wire Mode Change Helpers
 //
 
-auto add_temporary_crosspoints(Layout& layout, const Selection& selection) -> void;
+auto add_temporary_crosspoints(Layout& layout, const Selection& selection)
+    -> std::vector<point_t>;
+
+auto capture_inserted_splitpoints(Layout& layout, const CacheProvider& cache,
+                                  const Selection& selection) -> std::vector<point_t>;
+
+auto split_temporary_segments(Layout& layout, MessageSender sender,
+                              std::span<const point_t> split_points,
+                              const Selection& selection) -> void;
 
 }  // namespace editable_circuit
 }  // namespace logicsim

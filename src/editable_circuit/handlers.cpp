@@ -2,7 +2,7 @@
 
 #include "collision.h"
 #include "editable_circuit/caches.h"
-#include "editable_circuit/caches/cross_point_cache.h"
+#include "editable_circuit/caches/split_point_cache.h"
 #include "editable_circuit/selection.h"
 #include "editable_circuit/selection_registrar.h"
 #include "format.h"
@@ -1997,14 +1997,6 @@ auto change_insertion_mode(selection_handle_t handle, State state,
         change_logic_item_insertion_mode(state, element_id, new_insertion_mode);
     }
 
-    /*
-    // when we remove segments of cross points, the other segments might be
-    // merged. We store those points, so we later split them again when
-    // they are moved into the temporary aggregate
-    auto cross_points = CrossPointCache {};
-    auto query_result = std::vector<point_t> {};
-    */
-
     while (handle->selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
             .segment = handle->selected_segments()[0].first,
@@ -2012,53 +2004,7 @@ auto change_insertion_mode(selection_handle_t handle, State state,
         };
         handle->remove_segment(segment_part);
 
-        /*
-        auto p0 = std::optional<point_t> {};
-        auto p1 = std::optional<point_t> {};
-
-        bool uninserted = new_insertion_mode == InsertionMode::temporary
-                          && is_inserted(state.layout, segment_part.segment.element_id);
-        if (uninserted) {
-            const auto line = get_line(state.layout, segment_part);
-
-            if (state.cache.collision_cache().is_wire_cross_point(line.p0)) {
-                p0 = line.p0;
-            }
-            if (state.cache.collision_cache().is_wire_cross_point(line.p1)) {
-                p1 = line.p1;
-            }
-        }*/
-
         change_wire_insertion_mode(state, segment_part, new_insertion_mode);
-
-        /*
-        if (uninserted) {
-            const auto segment = segment_part.segment;
-            const auto line = get_line(state.layout, segment);
-
-            cross_points.query_intersects(line, query_result);
-            std::ranges::sort(query_result, std::greater<point_t>());
-            query_result.erase(std::ranges::unique(query_result).begin(),
-                               query_result.end());
-
-            // splitting puts the second half into a new segment
-            // so for this to work with multiple point, cross_points
-            // need to be sorted in descendant order
-            for (auto point : query_result) {
-                if (is_inside(point, line)) {
-                    split_line_segment(state.layout, state.sender, segment, point);
-                }
-                set_segment_crosspoint(state.layout, segment, point);
-            }
-        }
-
-        if (p0.has_value()) {
-            cross_points.add_cross_point(p0.value());
-        }
-        if (p1.has_value()) {
-            cross_points.add_cross_point(p1.value());
-        }
-        */
     }
 }
 
@@ -2189,10 +2135,12 @@ class SegmentEndpointMap {
             if (it->second.at(index) != null_segment) [[unlikely]] {
                 throw_exception("entry already exists in SegmentEndpointMap");
             }
+
             it->second.at(index) = segment;
         } else {
             auto value = value_t {null_segment, null_segment, null_segment, null_segment};
             value.at(index) = segment;
+
             map_.emplace(point, value);
         }
     }
@@ -2201,7 +2149,8 @@ class SegmentEndpointMap {
     map_t map_ {};
 };
 
-auto add_temporary_crosspoints(Layout& layout, const Selection& selection) -> void {
+auto add_temporary_crosspoints(Layout& layout, const Selection& selection)
+    -> std::vector<point_t> {
     auto map = SegmentEndpointMap {};
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -2214,9 +2163,76 @@ auto add_temporary_crosspoints(Layout& layout, const Selection& selection) -> vo
         map.add_segment(segment, full_line);
     }
 
-    map.iter_crosspoints([&layout](point_t point, segment_t segment) {
+    auto result = std::vector<point_t> {};
+    map.iter_crosspoints([&](point_t point, segment_t segment) {
+        result.push_back(point);
         set_segment_crosspoint(layout, segment, point);
     });
+
+    return result;
+}
+
+auto capture_inserted_splitpoints(Layout& layout, const CacheProvider& cache,
+                                  const Selection& selection) -> std::vector<point_t> {
+    auto split_points = std::vector<point_t> {};
+
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        for (const auto& part : parts) {
+            const auto line = get_line(layout, segment_part_t {segment, part});
+
+            if (cache.collision_cache().is_wire_cross_point(line.p0)) {
+                split_points.push_back(line.p0);
+            }
+            if (cache.collision_cache().is_wire_cross_point(line.p1)) {
+                split_points.push_back(line.p1);
+            }
+        }
+    }
+
+    std::ranges::sort(split_points);
+    split_points.erase(std::ranges::unique(split_points).begin(), split_points.end());
+
+    return split_points;
+}
+
+auto split_temporary_segments(Layout& layout, MessageSender sender,
+                              std::span<const point_t> split_points,
+                              const Selection& selection) -> void {
+    const auto cache = SplitPointCache {split_points};
+    auto query_result = std::vector<point_t> {};
+
+    const auto segments = transform_to_vector(
+        selection.selected_segments(), [&](Selection::segment_pair_t value) {
+            const auto& [segment, parts] = value;
+
+            const auto full_line = get_line(layout, segment);
+
+            if (layout.display_state(segment.element_id) != display_state_t::temporary) {
+                throw_exception("can only split temporary segments");
+            }
+            if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
+                throw_exception("selection cannot contain partially selected lines");
+            }
+
+            return segment;
+        });
+
+    for (const auto& segment : segments) {
+        const auto full_line = get_line(layout, segment);
+
+        cache.query_intersects(full_line, query_result);
+        std::ranges::sort(query_result, std::greater<point_t>());
+        query_result.erase(std::ranges::unique(query_result).begin(), query_result.end());
+
+        // splitting puts the second half into a new segment
+        // so for this to work with multiple point, cross_points
+        // need to be sorted in descendant order
+        for (const auto& point : query_result) {
+            if (is_inside(point, full_line)) {
+                split_line_segment(layout, sender, segment, point);
+            }
+        }
+    }
 }
 
 }  // namespace editable_circuit

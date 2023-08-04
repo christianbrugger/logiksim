@@ -306,7 +306,8 @@ auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
 MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
     : builder_ {args.builder},
       editable_circuit_ {args.editable_circuit},
-      delete_on_cancel_ {args.delete_on_cancel} {
+      delete_on_cancel_ {args.delete_on_cancel},
+      split_points_ {std::move(args.split_points)} {
     if (args.has_colliding) {
         state_ = State::waiting_for_confirmation;
         insertion_mode_ = InsertionMode::collisions;
@@ -437,6 +438,9 @@ auto MouseMoveSelectionLogic::move_selection(point_fine_t point) -> void {
 
     convert_to(InsertionMode::temporary);
     editable_circuit_.move_or_delete_elements(copy_selection(), delta_x, delta_y);
+    if (split_points_) {
+        split_points_ = move_or_delete_points(split_points_.value(), delta_x, delta_y);
+    }
 
     last_position_ = point_fine_t {
         last_position_->x + delta_x,
@@ -494,9 +498,18 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
     if (insertion_mode_ == mode) {
         return;
     }
+    if (mode == InsertionMode::temporary && !split_points_) {
+        split_points_.emplace(
+            editable_circuit_.capture_inserted_splitpoints(get_selection()));
+    }
+
     insertion_mode_ = mode;
     editable_circuit_.change_insertion_mode(copy_selection(), mode);
 
+    if (mode == InsertionMode::temporary && split_points_) {
+        editable_circuit_.split_temporary_segments(split_points_.value(),
+                                                   get_selection());
+    }
     if (mode == InsertionMode::temporary) {
         editable_circuit_.add_temporary_crosspoints(get_selection());
     }
@@ -1192,6 +1205,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
         return;
     }
     const auto t = Timer {"", Timer::Unit::ms, 3};
+    auto& editable_circuit = editable_circuit_.value();
 
     const auto text = QApplication::clipboard()->text().toStdString();
     const auto binary = base64_decode(text);
@@ -1203,13 +1217,15 @@ auto RendererWidget::paste_clipboard_items() -> void {
     reset_interaction_state();
 
     const auto position = get_mouse_position();
-    auto handle = add_layout(binary, editable_circuit_.value(), InsertionMode::collisions,
-                             position);
+    auto handle
+        = add_layout(binary, editable_circuit, InsertionMode::temporary, position);
     if (!handle) {
         return;
     }
+    auto split_points = editable_circuit.add_temporary_crosspoints(*handle);
+    editable_circuit.change_insertion_mode(editable_circuit.create_selection(*handle),
+                                           InsertionMode::collisions);
 
-    auto& editable_circuit = editable_circuit_.value();
     editable_circuit.selection_builder().set_selection(*handle.get());
 
     if (anything_colliding(*handle.get(), editable_circuit.layout())) {
@@ -1218,6 +1234,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
             .editable_circuit = editable_circuit,
             .has_colliding = true,
             .delete_on_cancel = true,
+            .split_points = std::move(split_points),
         });
     } else {
         editable_circuit.change_insertion_mode(std::move(handle),

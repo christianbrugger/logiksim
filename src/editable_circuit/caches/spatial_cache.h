@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_SEARCH_TREE_H
-#define LOGIKSIM_SEARCH_TREE_H
+#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHES_SPATIAL_CACHE_H
+#define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_SPATIAL_CACHE_H
 
 #include "editable_circuit/caches/helpers.h"
 #include "editable_circuit/messages.h"

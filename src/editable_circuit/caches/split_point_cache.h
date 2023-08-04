@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_CROSS_POINT_CACHE_H
-#define LOGIKSIM_CROSS_POINT_CACHE_H
+#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHES_SPLIT_POINT_CACHE_H
+#define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_SPLIT_POINT_CACHE_H
 
 #include "vocabulary.h"
 
@@ -7,7 +7,7 @@
 
 namespace logicsim {
 
-namespace detail::cross_point_cache {
+namespace detail::split_point_cache {
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
@@ -21,17 +21,22 @@ using tree_t = bgi::rtree<tree_point_t, bgi::rstar<tree_max_node_elements>>;
 
 auto to_tree_point(point_t point) -> tree_point_t;
 auto to_tree_line(ordered_line_t line) -> tree_line_t;
-}  // namespace detail::cross_point_cache
+}  // namespace detail::split_point_cache
 
-class CrossPointCache {
+class SplitPointCache {
    public:
-    using tree_t = detail::cross_point_cache::tree_t;
+    using tree_t = detail::split_point_cache::tree_t;
+
+    explicit SplitPointCache() = default;
+    explicit SplitPointCache(std::span<const point_t> points);
 
     auto format() const -> std::string;
 
-    auto add_cross_point(point_t point) -> void;
-    auto query_is_inside(ordered_line_t line, std::vector<point_t> &result) -> void;
-    auto query_intersects(ordered_line_t line, std::vector<point_t> &result) -> void;
+    auto add_split_point(point_t point) -> void;
+
+    auto query_is_inside(ordered_line_t line, std::vector<point_t> &result) const -> void;
+    auto query_intersects(ordered_line_t line, std::vector<point_t> &result) const
+        -> void;
 
    private:
     tree_t tree_ {};
@@ -44,12 +49,12 @@ class CrossPointCache {
 //
 
 template <>
-struct fmt::formatter<logicsim::detail::cross_point_cache::tree_point_t> {
+struct fmt::formatter<logicsim::detail::split_point_cache::tree_point_t> {
     static constexpr auto parse(fmt::format_parse_context &ctx) {
         return ctx.begin();
     }
 
-    static auto format(const logicsim::detail::cross_point_cache::tree_point_t &obj,
+    static auto format(const logicsim::detail::split_point_cache::tree_point_t &obj,
                        fmt::format_context &ctx) {
         return fmt::format_to(ctx.out(), "[{}, {}]", obj.x(), obj.y());
     }

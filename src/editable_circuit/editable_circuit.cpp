@@ -3,6 +3,7 @@
 #include "editable_circuit/handler_examples.h"
 #include "editable_circuit/handlers.h"
 #include "exceptions.h"
+#include "scene.h"
 #include "timer.h"
 
 namespace logicsim {
@@ -169,8 +170,21 @@ auto EditableCircuit::toggle_inverter(point_t point) -> void {
     }
 }
 
-auto EditableCircuit::add_temporary_crosspoints(const Selection& selection) -> void {
-    editable_circuit::add_temporary_crosspoints(layout_.value(), selection);
+auto EditableCircuit::add_temporary_crosspoints(const Selection& selection)
+    -> std::vector<point_t> {
+    return editable_circuit::add_temporary_crosspoints(layout_.value(), selection);
+}
+
+auto EditableCircuit::capture_inserted_splitpoints(const Selection& selection)
+    -> std::vector<point_t> {
+    return editable_circuit::capture_inserted_splitpoints(layout_.value(),
+                                                          cache_provider_, selection);
+}
+
+auto EditableCircuit::split_temporary_segments(std::span<const point_t> split_points,
+                                               const Selection& selection) -> void {
+    editable_circuit::split_temporary_segments(layout_.value(), get_sender(),
+                                               split_points, selection);
 }
 
 auto EditableCircuit::create_selection() const -> selection_handle_t {
@@ -206,6 +220,20 @@ auto EditableCircuit::get_sender() -> editable_circuit::MessageSender {
 
 auto EditableCircuit::get_state() -> editable_circuit::State {
     return editable_circuit::State {layout_.value(), get_sender(), cache_provider_};
+}
+
+auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)
+    -> std::vector<point_t> {
+    auto result = std::vector<point_t> {};
+    result.reserve(points.size());
+
+    for (const auto& point : points) {
+        if (is_representable(point, delta_x, delta_y)) {
+            result.push_back(add_unchecked(point, delta_x, delta_y));
+        }
+    }
+
+    return result;
 }
 
 }  // namespace logicsim
