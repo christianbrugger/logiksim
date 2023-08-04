@@ -780,6 +780,13 @@ auto RendererWidget::set_time_rate(time_rate_t time_rate) -> void {
     }
 }
 
+auto RendererWidget::set_wire_delay_per_distance(delay_t value) -> void {
+    if (interaction_state_ == InteractionState::simulation) [[unlikely]] {
+        throw_exception("cannot set wire delay during active simulation");
+    }
+    wire_delay_per_distance_ = value;
+}
+
 auto RendererWidget::interaction_state() -> InteractionState {
     return interaction_state_;
 }
@@ -788,8 +795,12 @@ auto RendererWidget::default_input_count() -> std::size_t {
     return default_input_count_;
 }
 
-auto RendererWidget::time_rate() -> time_rate_t {
+auto RendererWidget::time_rate() const -> time_rate_t {
     return time_rate_;
+}
+
+auto RendererWidget::wire_delay_per_distance() const -> delay_t {
+    return wire_delay_per_distance_;
 }
 
 auto RendererWidget::reset_interaction_state() -> void {
@@ -998,7 +1009,8 @@ Q_SLOT void RendererWidget::on_simulation_timeout() {
     }
     if (!simulation_) {
         auto t = Timer {"Generate simulation", Timer::Unit::ms, 3};
-        simulation_.emplace(editable_circuit_->layout(), time_rate_);
+        simulation_.emplace(editable_circuit_->layout(), time_rate_,
+                            wire_delay_per_distance_);
     }
 
     const auto timeout

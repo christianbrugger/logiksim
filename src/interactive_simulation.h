@@ -47,8 +47,8 @@ class InteractiveSimulation {
     };
 
    public:
-    InteractiveSimulation(const Layout& layout,
-                          time_rate_t time_rate = time_rate_t {50us});
+    InteractiveSimulation(const Layout& layout, time_rate_t time_rate,
+                          delay_t wire_delay_per_distance);
 
     [[nodiscard]] auto schematic() const -> const Schematic&;
     [[nodiscard]] auto simulation() const -> const Simulation&;

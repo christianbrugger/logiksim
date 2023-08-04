@@ -266,8 +266,7 @@ struct GeneratedSchematic {
 };
 
 auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
-    const auto connector_delay
-        = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
+    const auto connector_delay = delay_t {schematic.wire_delay_per_distance().value / 2};
 
     return schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::placeholder,
@@ -353,7 +352,8 @@ auto convert_layout(const Layout& layout) -> GeneratedSchematic {
                 const auto& line_tree
                     = generated.line_trees.at(element.element_id().value);
 
-                auto delays = calculate_output_delays(line_tree);
+                auto delays = calculate_output_delays(
+                    line_tree, generated.schematic.wire_delay_per_distance());
                 const auto tree_max_delay = std::ranges::max(delays);
 
                 generated.schematic.add_element(Schematic::ElementData {

@@ -146,7 +146,7 @@ namespace detail::delay_slider {
 
 constexpr static int SLIDER_MIN_VALUE = 0;
 constexpr static int SLIDER_MAX_VALUE = 400'000;
-constexpr static auto SLIDER_START_VALUE = delay_t {1us};
+constexpr static auto SLIDER_START_VALUE = Schematic::defaults::wire_delay_per_distance;
 
 auto from_slider_scale(int value) -> delay_t {
     const double value_ns = std::pow(10.0, value / double {100'000.0});
@@ -175,17 +175,17 @@ auto MainWidget::build_delay_slider() -> QWidget* {
     const auto slider = new QSlider(Qt::Orientation::Horizontal);
     const auto label = new QLabel();
 
-    connect(slider, &QSlider::valueChanged, this, [label](int value) {
+    connect(slider, &QSlider::valueChanged, this, [&, label](int value) {
         const auto delay = from_slider_scale(value);
 
-        Schematic::defaults::wire_delay_per_distance = delay;
+        render_widget_->set_wire_delay_per_distance(delay);
         label->setText(to_text(delay));
     });
-    connect(checkbox, &QCheckBox::stateChanged, this, [slider, label](int ignore) {
+    connect(checkbox, &QCheckBox::stateChanged, this, [&, slider, label](int ignore) {
         slider->setEnabled(!ignore);
         const auto delay = ignore ? delay_t {0ns} : from_slider_scale(slider->value());
 
-        Schematic::defaults::wire_delay_per_distance = delay;
+        render_widget_->set_wire_delay_per_distance(delay);
         label->setText(to_text(delay));
     });
 

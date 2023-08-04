@@ -281,9 +281,11 @@ class RendererWidget : public QWidget {
     auto set_interaction_state(InteractionState state) -> void;
     auto set_default_input_count(std::size_t count) -> void;
     auto set_time_rate(time_rate_t time_rate) -> void;
+    auto set_wire_delay_per_distance(delay_t value) -> void;
     [[nodiscard]] auto interaction_state() -> InteractionState;
     [[nodiscard]] auto default_input_count() -> std::size_t;
-    [[nodiscard]] auto time_rate() -> time_rate_t;
+    [[nodiscard]] auto time_rate() const -> time_rate_t;
+    [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
     auto fps() const -> double;
     auto pixel_scale() const -> double;
@@ -334,6 +336,7 @@ class RendererWidget : public QWidget {
     QTimer simulation_timer_;
     constexpr static int simulation_timer_interval_ms_ = 16;  // ms
     time_rate_t time_rate_ {50us};
+    delay_t wire_delay_per_distance_ {Schematic::defaults::wire_delay_per_distance};
 
     // new circuit
     circuit_id_t circuit_id_ {0};

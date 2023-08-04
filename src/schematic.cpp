@@ -26,6 +26,12 @@ namespace logicsim {
 
 Schematic::Schematic(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {}
 
+Schematic::Schematic(delay_t wire_delay_per_distance)
+    : wire_delay_per_distance_ {wire_delay_per_distance} {}
+
+Schematic::Schematic(circuit_id_t circuit_id, delay_t wire_delay_per_distance)
+    : circuit_id_ {circuit_id}, wire_delay_per_distance_ {wire_delay_per_distance} {}
+
 auto Schematic::clear() -> void {
     input_connections_.clear();
     output_connections_.clear();
@@ -193,6 +199,10 @@ auto Schematic::output(connection_t connection) -> Output {
 
 auto Schematic::output(connection_t connection) const -> ConstOutput {
     return element(connection.element_id).output(connection.connection_id);
+}
+
+auto Schematic::wire_delay_per_distance() const -> delay_t {
+    return wire_delay_per_distance_;
 }
 
 auto Schematic::add_element(ElementData &&data) -> Element {
@@ -1209,11 +1219,12 @@ auto add_element_placeholders(Schematic::Element element) -> void {
     std::ranges::for_each(element.outputs(), add_placeholder);
 }
 
-auto calculate_output_delays(const LineTree &line_tree) -> std::vector<delay_t> {
+auto calculate_output_delays(const LineTree &line_tree, delay_t wire_delay_per_distance)
+    -> std::vector<delay_t> {
     auto lengths = line_tree.calculate_output_lengths();
-    return transform_to_vector(lengths, [](LineTree::length_t length) -> delay_t {
+    return transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
         // TODO handle overflow
-        return delay_t {Schematic::defaults::wire_delay_per_distance.value * length};
+        return delay_t {wire_delay_per_distance.value * length};
     });
 }
 

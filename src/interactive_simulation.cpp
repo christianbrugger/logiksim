@@ -41,8 +41,9 @@ auto InteractionCache::find(point_t position) const -> std::optional<element_id_
 // Interactive Simulation
 //
 
-InteractiveSimulation::InteractiveSimulation(const Layout& layout, time_rate_t time_rate)
-    : schematic_ {generate_schematic(layout)},
+InteractiveSimulation::InteractiveSimulation(const Layout& layout, time_rate_t time_rate,
+                                             delay_t wire_delay_per_distance)
+    : schematic_ {generate_schematic(layout, wire_delay_per_distance)},
       simulation_ {schematic_},
       interaction_cache_ {layout},
       time_rate_ {time_rate},

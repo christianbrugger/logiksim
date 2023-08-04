@@ -69,11 +69,12 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
         });
 
     } else {
-        auto ignore_delay = Schematic::defaults::wire_delay_per_distance == delay_t {0ns};
+        auto ignore_delay = schematic.wire_delay_per_distance() == delay_t {0ns};
 
         auto delays = ignore_delay ? std::vector<delay_t>(line_tree.output_count(),
                                                           delay_t::epsilon())
-                                   : calculate_output_delays(line_tree);
+                                   : calculate_output_delays(
+                                       line_tree, schematic.wire_delay_per_distance());
         const auto tree_max_delay
             = ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
 
@@ -199,8 +200,8 @@ auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
 
 }  // namespace
 
-auto generate_schematic(const Layout& layout) -> Schematic {
-    auto schematic = Schematic {layout.circuit_id()};
+auto generate_schematic(const Layout& layout, delay_t wire_delay_per_unit) -> Schematic {
+    auto schematic = Schematic {layout.circuit_id(), wire_delay_per_unit};
 
     add_layout_elements(schematic, layout);
     create_connections(schematic, layout);

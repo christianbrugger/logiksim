@@ -6,7 +6,8 @@
 
 namespace logicsim {
 
-[[nodiscard]] auto generate_schematic(const Layout& layout) -> Schematic;
+[[nodiscard]] auto generate_schematic(const Layout& layout, delay_t wire_delay_per_unit)
+    -> Schematic;
 
 }
 

@@ -73,14 +73,15 @@ class Schematic {
         constexpr static delay_t button_delay {delay_t::epsilon()};
         constexpr static delay_t standard_delay {3us};
         constexpr static delay_t clock_generator_delay {1ms};
-        // TODO make constexpr again after testing delays
-        inline static delay_t wire_delay_per_distance {1us};
+        constexpr static delay_t wire_delay_per_distance {1us};
 
         constexpr static delay_t no_history {0ns};
     };
 
     explicit constexpr Schematic() = default;
     explicit Schematic(circuit_id_t circuit_id);
+    explicit Schematic(delay_t wire_delay_per_distance);
+    explicit Schematic(circuit_id_t circuit_id, delay_t wire_delay_per_distance);
 
     auto clear() -> void;
     auto swap(Schematic &other) noexcept -> void;
@@ -104,6 +105,8 @@ class Schematic {
     [[nodiscard]] auto input(connection_t connection) const -> ConstInput;
     [[nodiscard]] auto output(connection_t connection) -> Output;
     [[nodiscard]] auto output(connection_t connection) const -> ConstOutput;
+
+    [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
     struct ElementData {
         ElementType element_type {ElementType::unused};
@@ -159,6 +162,8 @@ class Schematic {
     std::size_t input_count_ {0};
     std::size_t output_count_ {0};
     circuit_id_t circuit_id_ {0};
+
+    delay_t wire_delay_per_distance_ {defaults::wire_delay_per_distance};
 };
 
 auto swap(Schematic &a, Schematic &b) noexcept -> void;
@@ -499,7 +504,8 @@ auto validate_all_inputs_disconnected(const Schematic::ConstElement element) -> 
 auto validate_all_outputs_disconnected(const Schematic::ConstElement element) -> void;
 
 class LineTree;
-auto calculate_output_delays(const LineTree &line_tree) -> std::vector<delay_t>;
+auto calculate_output_delays(const LineTree &line_tree, delay_t wire_delay_per_distance)
+    -> std::vector<delay_t>;
 
 void add_output_placeholders(Schematic &schematic);
 

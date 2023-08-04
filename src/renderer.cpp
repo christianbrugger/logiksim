@@ -333,10 +333,10 @@ auto draw_wire_with_history(BLContext& ctx, Schematic::ConstElement element,
     const auto cross_width = line_cross_width(settings);
 
     // TODO move to some class
-    const auto to_time = [time = simulation.time()](LineTree::length_t length_) {
-        return time_t {time.value
-                       - static_cast<int64_t>(length_)
-                             * Schematic::defaults::wire_delay_per_distance.value};
+    const auto to_time = [time = simulation.time(),
+                          delay = element.schematic().wire_delay_per_distance()](
+                             LineTree::length_t length_) {
+        return time_t {time.value - static_cast<int64_t>(length_) * delay.value};
     };
 
     const auto history = simulation.input_history(element);
@@ -1870,9 +1870,8 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             auto lengths = line_tree.calculate_output_lengths();
             assert(lengths.size() == element.output_count());
             auto delays
-                = transform_to_vector(lengths, [](LineTree::length_t length) -> delay_t {
-                      return delay_t {Schematic::defaults::wire_delay_per_distance.value
-                                      * length};
+                = transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
+                      return delay_t {schematic.wire_delay_per_distance().value * length};
                   });
             simulation.set_output_delays(element, delays);
 
