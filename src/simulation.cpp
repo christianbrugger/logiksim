@@ -250,19 +250,7 @@ Simulation::Simulation(const Schematic &schematic)
         auto &state = get_state(element);
 
         state.input_values.resize(element.input_count(), false);
-        state.input_inverters.resize(element.input_count(), false);
-        state.output_delays.resize(element.output_count(),
-                                   Schematic::defaults::standard_delay);
         state.internal_state.resize(internal_state_size(element.element_type()), false);
-    }
-
-    // TODO remove when not needed anymore
-    for (auto element : schematic_->elements()) {
-        if (element.output_count() > 0) {
-            set_output_delays(element, element.output_delays());
-            set_history_length(element, element.history_length());
-        }
-        set_input_inverters(element, element.input_inverters());
     }
 }
 
@@ -314,10 +302,9 @@ auto Simulation::check_state_valid() const -> void {
     }
 }
 
-auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
-                           const Simulation::logic_small_vector_t &new_input,
-                           const ElementType type,
-                           Simulation::logic_small_vector_t &state) {
+auto update_internal_state(const logic_small_vector_t &old_input,
+                           const logic_small_vector_t &new_input, const ElementType type,
+                           logic_small_vector_t &state) {
     switch (type) {
         using enum ElementType;
 
@@ -434,9 +421,9 @@ auto update_internal_state(const Simulation::logic_small_vector_t &old_input,
     }
 }
 
-auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
+auto calculate_outputs_from_state(const logic_small_vector_t &state,
                                   std::size_t output_count, const ElementType type)
-    -> Simulation::logic_small_vector_t {
+    -> logic_small_vector_t {
     switch (type) {
         using enum ElementType;
 
@@ -459,8 +446,8 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
                 throw_exception(
                     "need at least output count internal state for shift register");
             }
-            return Simulation::logic_small_vector_t(std::prev(state.end(), output_count),
-                                                    state.end());
+            return logic_small_vector_t(std::prev(state.end(), output_count),
+                                        state.end());
         }
 
         case latch_d: {
@@ -484,9 +471,9 @@ auto calculate_outputs_from_state(const Simulation::logic_small_vector_t &state,
     }
 }
 
-auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input,
+auto calculate_outputs_from_inputs(const logic_small_vector_t &input,
                                    std::size_t output_count, const ElementType type)
-    -> Simulation::logic_small_vector_t {
+    -> logic_small_vector_t {
     if (input.empty()) [[unlikely]] {
         throw_exception("Input size cannot be zero.");
     }
@@ -498,7 +485,7 @@ auto calculate_outputs_from_inputs(const Simulation::logic_small_vector_t &input
         using enum ElementType;
 
         case wire:
-            return {Simulation::logic_small_vector_t(output_count, input.at(0))};
+            return logic_small_vector_t(output_count, input.at(0));
 
         case buffer_element:
             return {input.at(0)};
@@ -525,8 +512,8 @@ auto Simulation::apply_events(const Schematic::ConstElement element,
     }
 }
 
-auto get_changed_outputs(const Simulation::logic_small_vector_t &old_outputs,
-                         const Simulation::logic_small_vector_t &new_outputs)
+auto get_changed_outputs(const logic_small_vector_t &old_outputs,
+                         const logic_small_vector_t &new_outputs)
     -> Simulation::con_index_small_vector_t {
     if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]] {
         throw_exception("old_outputs and new_outputs need to have the same size.");
@@ -545,7 +532,7 @@ auto get_changed_outputs(const Simulation::logic_small_vector_t &old_outputs,
 void Simulation::create_event(const Schematic::ConstOutput output,
                               const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
-        const auto delay = output_delay(output);
+        const auto delay = output.delay();
         queue_.submit_event({.time = time_t {queue_.time().value + delay.value},
                              .element_id = output.connected_element_id(),
                              .input_index = output.connected_input_index(),
@@ -562,8 +549,8 @@ auto Simulation::submit_events_for_changed_outputs(
     }
 }
 
-auto invert_inputs(Simulation::logic_small_vector_t &values,
-                   const Simulation::logic_small_vector_t &inverters) -> void {
+auto invert_inputs(logic_small_vector_t &values, const logic_small_vector_t &inverters)
+    -> void {
     if (std::size(values) != std::size(inverters)) [[unlikely]] {
         throw_exception("Inputs and inverters need to have same size.");
     }
@@ -595,7 +582,7 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     apply_events(element, events);
     auto new_inputs = input_values(element);
 
-    const auto inverters = input_inverters(element);
+    const auto inverters = element.input_inverters();
     if (std::ranges::any_of(inverters, std::identity {})) {
         invert_inputs(old_inputs, inverters);
         invert_inputs(new_inputs, inverters);
@@ -722,7 +709,7 @@ auto Simulation::initialize() -> void {
 
         } else {
             auto curr_inputs = input_values(element);
-            invert_inputs(curr_inputs, input_inverters(element));
+            invert_inputs(curr_inputs, element.input_inverters());
             const auto new_outputs = calculate_outputs_from_inputs(
                 curr_inputs, element.output_count(), element_type);
 
@@ -744,7 +731,9 @@ auto Simulation::record_input_history(const Schematic::ConstInput input,
         return;
     }
     auto &state = get_state(input);
-    if (state.history_length <= delay_t {0ns}) {
+    const auto history_length = input.element().history_length();
+
+    if (history_length <= delay_t {0ns}) {
         return;
     }
     if (new_value == input_value(input)) {
@@ -756,7 +745,7 @@ auto Simulation::record_input_history(const Schematic::ConstInput input,
     }
 
     // remove old values
-    clean_history(history, state.history_length);
+    clean_history(history, history_length);
 
     // add new entry
     history.push_back(time());
@@ -808,12 +797,12 @@ auto Simulation::set_output_value(Schematic::ConstOutput output, bool value) -> 
     const auto input = output.connected_input();
 
     auto &input_value = get_state(input).input_values.at(input.input_index().value);
-    input_value = value ^ input_inverter(input);
+    input_value = value ^ input.is_inverted();
 }
 
 auto Simulation::output_value(const Schematic::ConstOutput output) const -> bool {
     const auto input = output.connected_input();
-    return input_value(input) ^ input_inverter(input);
+    return input_value(input) ^ input.is_inverted();
 }
 
 auto Simulation::output_values(const Schematic::ConstElement element) const
@@ -830,61 +819,6 @@ auto Simulation::output_values() const -> logic_vector_t {
     }
 
     return result;
-}
-
-[[nodiscard]] auto Simulation::input_inverter(Schematic::ConstInput input) const -> bool {
-    return get_state(input).input_inverters.at(input.input_index().value);
-}
-
-[[nodiscard]] auto Simulation::input_inverters(Schematic::ConstElement element) const
-    -> logic_small_vector_t {
-    return get_state(element).input_inverters;
-}
-
-auto Simulation::set_input_inverter(Schematic::ConstInput input, bool value) -> void {
-    if (!queue_.empty()) {
-        throw_exception("Cannot set input inverters for state with scheduled events.");
-    }
-    is_initialized_ = false;
-
-    get_state(input).input_inverters.at(input.input_index().value) = value;
-}
-
-auto Simulation::set_input_inverters(Schematic::ConstElement element,
-                                     logic_small_vector_t values) -> void {
-    if (!queue_.empty()) {
-        throw_exception("Cannot set input inverters for state with scheduled events.");
-    }
-    is_initialized_ = false;
-
-    if (std::size(values) != element.input_count()) {
-        throw_exception("Need as many values for has_inverters as inputs.");
-    }
-    get_state(element).input_inverters.assign(std::begin(values), std::end(values));
-}
-
-auto Simulation::output_delay(const Schematic::ConstOutput output) const -> delay_t {
-    return get_state(output).output_delays.at(output.output_index().value);
-}
-
-auto Simulation::set_output_delay(const Schematic::ConstOutput output,
-                                  const delay_t delay) -> void {
-    if (!queue_.empty()) {
-        throw_exception("Cannot set output delay for state with scheduled events.");
-    }
-    get_state(output).output_delays.at(output.output_index().value) = delay;
-}
-
-auto Simulation::set_output_delays(Schematic::ConstElement element,
-                                   std::span<const delay_t> delays) -> void {
-    if (element.output_count() != std::size(delays)) [[unlikely]] {
-        throw_exception("Need as many delays as outputs in the vector.");
-    }
-    for (auto index : range(element.output_count())) {
-        set_output_delay(element.output(connection_id_t {
-                             gsl::narrow_cast<connection_id_t::value_type>(index)}),
-                         delays[index]);
-    }
 }
 
 auto Simulation::set_input_value(Schematic::ConstInput input, bool value) -> void {
@@ -942,21 +876,9 @@ auto Simulation::input_history(Schematic::ConstElement element) const -> History
     return HistoryView {
         state.first_input_history,
         this->time(),
-        static_cast<bool>(state.input_values.at(0) ^ state.input_inverters.at(0)),
-        state.history_length,
+        static_cast<bool>(state.input_values.at(0) ^ element.input_inverters().at(0)),
+        element.history_length(),
     };
-}
-
-auto Simulation::history_length(const Schematic::ConstElement element) const -> delay_t {
-    return get_state(element).history_length;
-}
-
-auto Simulation::set_history_length(const Schematic::ConstElement element,
-                                    const delay_t history_length) -> void {
-    if (history_length < delay_t {0ns}) [[unlikely]] {
-        throw_exception("Max history cannot be negative.");
-    }
-    get_state(element).history_length = history_length;
 }
 
 //
@@ -1127,7 +1049,7 @@ void _generate_random_events(G &rng, Simulation &simulation) {
 }
 
 template <std::uniform_random_bit_generator G>
-auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events,
+auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
                           const bool do_print) -> int64_t {
     Simulation simulation {schematic};
     simulation.print_events = do_print;
@@ -1137,16 +1059,15 @@ auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events
         for (const auto output : element.outputs()) {
             auto delay_dist
                 = boost::random::uniform_int_distribution<time_t::rep> {5, 500};
-            simulation.set_output_delay(output, delay_t {1us * delay_dist(rng)});
+            output.set_delay(delay_t {1us * delay_dist(rng)});
         }
     }
 
     // set history for wires
     for (const auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
-            const auto delay
-                = simulation.output_delay(element.output(connection_id_t {0}));
-            simulation.set_history_length(element, delay_t {delay.value * 10});
+            const auto delay = element.output(connection_id_t {0}).delay();
+            element.set_history_length(delay_t {delay.value * 10});
         }
     }
 
@@ -1184,9 +1105,8 @@ auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events
     return simulated_event_count;
 }
 
-template auto benchmark_simulation(boost::random::mt19937 &rng,
-                                   const Schematic &schematic, const int n_events,
-                                   const bool do_print) -> int64_t;
+template auto benchmark_simulation(boost::random::mt19937 &rng, Schematic &schematic,
+                                   const int n_events, const bool do_print) -> int64_t;
 
 auto benchmark_simulation(const int n_elements, const int n_events, const bool do_print)
     -> int64_t {

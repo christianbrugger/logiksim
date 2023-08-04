@@ -1838,7 +1838,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     const auto config = RenderBenchmarkConfig();
     auto tree_length_sum = int64_t {0};
 
-    // create schematics
+    // create initial schematics
     auto& schematic = scene.schematic;
     for (auto _ [[maybe_unused]] : range(n_lines)) {
         UDist<int> output_dist {config.n_outputs_min, config.n_outputs_max};
@@ -1873,11 +1873,11 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
                 = transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
                       return delay_t {schematic.wire_delay_per_distance().value * length};
                   });
-            simulation.set_output_delays(element, delays);
+            element.set_output_delays(delays);
 
             // history
             auto tree_max_delay = std::ranges::max(delays);
-            simulation.set_history_length(element, delay_t {tree_max_delay.value});
+            element.set_history_length(delay_t {tree_max_delay.value});
 
             tree_length_sum += calculate_tree_length(line_tree);
             layout.set_line_tree(element, std::move(line_tree));
@@ -1891,7 +1891,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     delay_t max_delay {0us};
     for (auto element : schematic.elements()) {
         for (auto output : element.outputs()) {
-            max_delay = std::max(max_delay, simulation.output_delay(output));
+            max_delay = std::max(max_delay, output.delay());
         }
     }
     auto max_time {max_delay.value};

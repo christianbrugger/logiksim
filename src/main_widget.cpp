@@ -171,7 +171,7 @@ auto to_text(delay_t delay) -> QString {
 auto MainWidget::build_delay_slider() -> QWidget* {
     using namespace detail::delay_slider;
 
-    const auto checkbox = new QCheckBox("Ignore");
+    const auto checkbox = new QCheckBox("Zero");
     const auto slider = new QSlider(Qt::Orientation::Horizontal);
     const auto label = new QLabel();
 

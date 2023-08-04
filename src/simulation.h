@@ -96,6 +96,7 @@ class Simulation {
     using logic_vector_t = boost::container::vector<bool>;
 
     using history_vector_t = circular_buffer<time_t, 2, uint32_t>;
+    static_assert(sizeof(history_vector_t) == 28);
 
     // 8 bytes still fit into a small_vector with 32 byte size.
     // using logic_small_vector_t = boost::container::small_vector<bool, 8>;
@@ -103,9 +104,7 @@ class Simulation {
     // 8>;
 
     using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
-    using logic_small_vector_t = folly::small_vector<bool, 20, policy>;
     using con_index_small_vector_t = folly::small_vector<connection_id_t, 20, policy>;
-    static_assert(sizeof(logic_small_vector_t) == 24);
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
     struct defaults {
@@ -160,20 +159,6 @@ class Simulation {
         -> logic_small_vector_t;
     [[nodiscard]] auto output_values() const -> logic_vector_t;
 
-    // inverters
-    [[nodiscard]] auto input_inverter(Schematic::ConstInput input) const -> bool;
-    [[nodiscard]] auto input_inverters(Schematic::ConstElement element) const
-        -> logic_small_vector_t;
-    auto set_input_inverter(Schematic::ConstInput input, bool value) -> void;
-    auto set_input_inverters(Schematic::ConstElement element, logic_small_vector_t values)
-        -> void;
-
-    // delays
-    auto set_output_delay(Schematic::ConstOutput output, delay_t delay) -> void;
-    auto set_output_delays(Schematic::ConstElement element,
-                           std::span<const delay_t> delays) -> void;
-    [[nodiscard]] auto output_delay(Schematic::ConstOutput output) const -> delay_t;
-
     // internal states
     auto set_internal_state(Schematic::ConstElement element, std::size_t index,
                             bool value) -> void;
@@ -186,9 +171,6 @@ class Simulation {
     class HistoryView;
     class HistoryIterator;
     struct history_entry_t;
-    auto set_history_length(Schematic::ConstElement element, delay_t history_length)
-        -> void;
-    auto history_length(Schematic::ConstElement element) const -> delay_t;
     auto input_history(Schematic::ConstElement element) const -> HistoryView;
 
    private:
@@ -216,24 +198,15 @@ class Simulation {
     [[nodiscard]] auto get_state(ElementOrConnection auto item) const
         -> const ElementState &;
 
-    // TODO use schematic values instead of local ones, then delete
     // TODO use vectors instead of struct
     struct ElementState {
         logic_small_vector_t input_values {};
-        logic_small_vector_t input_inverters {};
         logic_small_vector_t internal_state {};
 
-        using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
-        folly::small_vector<delay_t, 5, policy> output_delays {};
-
         history_vector_t first_input_history {};
-        delay_t history_length {defaults::no_history};
-
-        static_assert(sizeof(first_input_history) == 28);
-        static_assert(sizeof(output_delays) == 24);
     };
 
-    static_assert(sizeof(ElementState) == 128);
+    static_assert(sizeof(ElementState) == 76);
 
     gsl::not_null<const Schematic *> schematic_;
     std::vector<ElementState> states_ {};
@@ -336,7 +309,7 @@ namespace logicsim {
 constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 
 template <std::uniform_random_bit_generator G>
-auto benchmark_simulation(G &rng, const Schematic &schematic, const int n_events,
+auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
                           const bool do_print) -> int64_t;
 auto benchmark_simulation(int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
                           int n_events = BENCHMARK_DEFAULT_EVENTS, bool do_print = false)

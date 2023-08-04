@@ -745,6 +745,25 @@ void Schematic::ElementTemplate<Const>::clear_all_connection() const
     std::ranges::for_each(outputs(), &Output::clear_connection);
 }
 
+template <bool Const>
+auto Schematic::ElementTemplate<Const>::set_history_length(delay_t value) const -> void
+    requires(!Const)
+{
+    schematic_->history_lengths_.at(element_id_.value) = value;
+}
+
+template <bool Const>
+auto Schematic::ElementTemplate<Const>::set_output_delays(
+    std::vector<delay_t> delays) const -> void
+    requires(!Const)
+{
+    if (std::size(delays) != output_count()) [[unlikely]] {
+        throw_exception("Need as many delays as outputs.");
+    }
+    schematic_->output_delays_.at(element_id_.value)
+        = output_delays_t {std::begin(delays), std::end(delays)};
+}
+
 // Template Instanciations
 
 template class Schematic::ElementTemplate<true>;
@@ -1169,6 +1188,18 @@ void Schematic::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) 
 
     destination_connection_data.element_id = element_id();
     destination_connection_data.connection_id = output_index();
+}
+
+template <bool Const>
+auto Schematic::OutputTemplate<Const>::delay() const -> const delay_t {
+    return schematic_->output_delays_.at(element_id_.value).at(output_index_.value);
+}
+
+template <bool Const>
+auto Schematic::OutputTemplate<Const>::set_delay(delay_t value) const -> void
+    requires(!Const)
+{
+    schematic_->output_delays_.at(element_id_.value).at(output_index_.value) = value;
 }
 
 template <bool Const>

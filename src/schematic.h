@@ -311,6 +311,11 @@ class Schematic::ElementTemplate {
     auto clear_all_connection() const -> void
         requires(!Const);
 
+    auto set_history_length(delay_t value) const -> void
+        requires(!Const);
+    auto set_output_delays(std::vector<delay_t> delays) const -> void
+        requires(!Const);
+
    private:
     gsl::not_null<SchematicType *> schematic_;
     element_id_t element_id_;
@@ -480,6 +485,10 @@ class Schematic::OutputTemplate {
         requires(!Const);
     template <bool ConstOther>
     void connect(InputTemplate<ConstOther> input) const
+        requires(!Const);
+
+    [[nodiscard]] auto delay() const -> const delay_t;
+    auto set_delay(delay_t value) const -> void
         requires(!Const);
 
    private:
