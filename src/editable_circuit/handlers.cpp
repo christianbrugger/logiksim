@@ -1645,6 +1645,7 @@ auto _wire_change_temporary_to_colliding(State state, segment_part_t& segment_pa
         const auto destination = get_or_create_aggregate(state.layout, state.sender,
                                                          display_state_t::colliding);
         move_segment_between_trees(state.layout, state.sender, segment_part, destination);
+        reset_segment_endpoints(state.layout, segment_part.segment);
     } else {
         insert_wire(state, segment_part);
         mark_valid(state.layout, segment_part);
