@@ -266,7 +266,7 @@ struct GeneratedSchematic {
 };
 
 auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
-    constexpr static auto connector_delay
+    const auto connector_delay
         = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
 
     return schematic.add_element(Schematic::ElementData {

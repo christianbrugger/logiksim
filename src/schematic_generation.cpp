@@ -77,8 +77,6 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
         const auto tree_max_delay
             = ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
 
-        print(tree_max_delay);
-
         // TODO: temporarily disable wires with to many outputs
         if (line_tree.output_count() > connection_id_t::max()) {
             add_unused_element(schematic);
@@ -89,7 +87,6 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
                 .output_count = line_tree.output_count(),
 
                 .circuit_id = null_circuit,
-                // .input_inverters = element.input_inverters(),
                 .output_delays = std::move(delays),
                 .history_length = tree_max_delay,
             });
