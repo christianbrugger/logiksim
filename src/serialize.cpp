@@ -19,246 +19,83 @@
 #include "geometry.h"
 #include "layout.h"
 #include "scene.h"
+#include "serialize_detail.h"
 #include "timer.h"
 
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <cppcodec/base64_rfc4648.hpp>
-#include <glaze/glaze.hpp>
-
-#include <fstream>
-#include <iostream>
-
-namespace logicsim {
-
-constexpr static inline auto CURRENT_VERSION = 100;
-
-namespace {
+namespace logicsim::serialize {
 
 struct move_delta_t {
     int x;
     int y;
 };
 
-struct LogicItemData {
-    LogicItemDefinition definition;
-    point_t position;
-};
-
-}  // namespace
-
-auto gzip_compress(const std::string& input) -> std::string {
-    auto output = std::ostringstream {};
-    {
-        auto filter_stream = boost::iostreams::filtering_ostream {};
-        filter_stream.push(boost::iostreams::gzip_compressor());
-        filter_stream.push(output);
-        filter_stream.write(input.data(), input.size());
-        filter_stream.flush();
+auto to_line(const SerializedLine& obj, move_delta_t delta = {})
+    -> std::optional<line_t> {
+    if (!is_orthogonal(obj.p0, obj.p1)) [[unlikely]] {
+        return std::nullopt;
     }
-    return output.str();
-}
 
-auto gzip_decompress(const std::string& input) -> std::string {
-    auto output = std::ostringstream {};
-    {
-        auto filter_stream = boost::iostreams::filtering_ostream {};
-        filter_stream.push(boost::iostreams::gzip_decompressor());
-        filter_stream.push(output);
-        filter_stream.write(input.data(), input.size());
-        filter_stream.flush();
+    if (!is_representable(line_t {obj.p0, obj.p1}, delta.x, delta.y)) {
+        return std::nullopt;
     }
-    return output.str();
+
+    return add_unchecked(line_t {obj.p0, obj.p1}, delta.x, delta.y);
 }
 
-auto base64_encode(const std::string& data) -> std::string {
-    return cppcodec::base64_rfc4648::encode(data);
-}
-
-auto base64_decode(const std::string& data) -> std::string {
-    try {
-        return cppcodec::base64_rfc4648::decode<std::string>(data);
-    } catch (cppcodec::parse_error&) {
+auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
+    -> std::optional<LogicItemData> {
+    // element type
+    if (!is_logic_item(obj.element_type)) {
+        return std::nullopt;
     }
-    return "";
-}
+    // input & output counts
+    if (!is_input_output_count_valid(obj.element_type, obj.input_count,
+                                     obj.output_count)) {
+        return std::nullopt;
+    }
 
-}  // namespace logicsim
+    // inverters
+    if (obj.input_inverters.size() != obj.input_count) {
+        return std::nullopt;
+    }
+    if (obj.output_inverters.size() != obj.output_count) {
+        return std::nullopt;
+    }
 
-template <>
-struct glz::meta<logicsim::ElementType> {
-    using enum logicsim::ElementType;
+    // orientation
+    if (!is_orientation_valid(obj.element_type, obj.orientation)) {
+        return std::nullopt;
+    }
 
-    static constexpr auto value = enumerate(  //
-        "unused", unused,                     //
-        "placeholder", placeholder,           //
-        "wire", wire,                         //
+    // position
+    if (!is_representable(obj.position, delta.x, delta.y)) {
+        return std::nullopt;
+    }
+    const auto moved_position = add_unchecked(obj.position, delta.x, delta.y);
 
-        "buffer_element", buffer_element,  //
-        "and_element", and_element,        //
-        "or_element", or_element,          //
-        "xor_element", xor_element,        //
-
-        "button", button,                          //
-        "clock_generator", clock_generator,        //
-        "flipflop_jk", flipflop_jk,                //
-        "shift_register", shift_register,          //
-        "latch_d", latch_d,                        //
-        "flipflop_d", flipflop_d,                  //
-        "flipflop_master_slave_d", flipflop_ms_d,  //
-
-        "sub_circuit", sub_circuit  //
-    );
-};
-
-template <>
-struct glz::meta<logicsim::orientation_t> {
-    using enum logicsim::orientation_t;
-
-    static constexpr auto value = enumerate(  //
-        "right", right,                       //
-        "left", left,                         //
-        "up", up,                             //
-        "down", down,                         //
-        "undirected", undirected              //
-    );
-};
-
-template <>
-struct glz::meta<logicsim::grid_t> {
-    using T = logicsim::grid_t;
-
-    static constexpr auto value = &T::value;
-};
-
-template <>
-struct glz::meta<logicsim::point_t> {
-    using T = logicsim::point_t;
-
-    static constexpr auto value = array(&T::x, &T::y);
-};
-
-namespace logicsim {
-
-struct SerializedLine {
-    point_t p0;
-    point_t p1;
-
-    struct glaze {
-        using T = SerializedLine;
-        static constexpr auto value = glz::array(&T::p0, &T::p1);
+    const auto data = layout_calculation_data_t {
+        .input_count = obj.input_count,
+        .output_count = obj.output_count,
+        .position = moved_position,
+        .orientation = obj.orientation,
+        .element_type = obj.element_type,
     };
-
-    auto to_line(move_delta_t delta = {}) const -> std::optional<line_t> {
-        if (!is_orthogonal(p0, p1)) [[unlikely]] {
-            return std::nullopt;
-        }
-
-        if (!is_representable(line_t {p0, p1}, delta.x, delta.y)) {
-            return std::nullopt;
-        }
-
-        return add_unchecked(line_t {p0, p1}, delta.x, delta.y);
+    if (!is_representable(data)) {
+        return std::nullopt;
     }
-};
 
-struct SerializedLogicItem {
-    ElementType element_type;
-    std::size_t input_count;
-    std::size_t output_count;
-
-    logic_small_vector_t input_inverters;
-    logic_small_vector_t output_inverters;
-
-    point_t position;
-    orientation_t orientation;
-
-    struct glaze {
-        using T = SerializedLogicItem;
-
-        static constexpr auto value = glz::object(  //
-            "element_type", &T::element_type,       //
-            "input_count", &T::input_count,         //
-
-            "output_count", &T::output_count,          //
-            "input_inverters", &T::input_inverters,    //
-            "output_inverters", &T::output_inverters,  //
-
-            "position", &T::position,  //
-            "orientation", &T::orientation);
-    };
-
-    auto to_definition(move_delta_t delta = {}) const -> std::optional<LogicItemData> {
-        // element type
-        if (!is_logic_item(element_type)) {
-            return std::nullopt;
-        }
-        // input & output counts
-        if (!is_input_output_count_valid(element_type, input_count, output_count)) {
-            return std::nullopt;
-        }
-
-        // inverters
-        if (input_inverters.size() != input_count) {
-            return std::nullopt;
-        }
-        if (output_inverters.size() != output_count) {
-            return std::nullopt;
-        }
-
-        // orientation
-        if (!is_orientation_valid(element_type, orientation)) {
-            return std::nullopt;
-        }
-
-        // position
-        if (!is_representable(position, delta.x, delta.y)) {
-            return std::nullopt;
-        }
-        const auto moved_position = add_unchecked(position, delta.x, delta.y);
-
-        const auto data = layout_calculation_data_t {
-            .input_count = input_count,
-            .output_count = output_count,
-            .position = moved_position,
-            .orientation = orientation,
-            .element_type = element_type,
-        };
-        if (!is_representable(data)) {
-            return std::nullopt;
-        }
-
-        return LogicItemData {
+    return LogicItemData {
             .definition = LogicItemDefinition {
-                .element_type = element_type,
-                .input_count = input_count,
-                .output_count = output_count,
-                .orientation = orientation,
-                .input_inverters = input_inverters,
-                .output_inverters = output_inverters,
+                .element_type = obj.element_type,
+                .input_count = obj.input_count,
+                .output_count = obj.output_count,
+                .orientation = obj.orientation,
+                .input_inverters = obj.input_inverters,
+                .output_inverters = obj.output_inverters,
             },
             .position = moved_position,
         };
-    }
-};
-
-struct SerializedLayout {
-    int version {CURRENT_VERSION};
-    point_t save_position {0, 0};
-
-    std::vector<SerializedLogicItem> logic_items {};
-    std::vector<SerializedLine> wire_segments {};
-
-    struct glaze {
-        using T = SerializedLayout;
-
-        static constexpr auto value = glz::object(  //
-            "version", &T::version,                 //
-            "save_position", &T::save_position,     //
-            "logic_items", &T::logic_items,         //
-            "wire_segments", &T::wire_segments);
-    };
-};
+}
 
 auto add_element(SerializedLayout& data, const layout::ConstElement element) -> void {
     if (element.is_logic_item()) {
@@ -280,44 +117,47 @@ auto add_element(SerializedLayout& data, const layout::ConstElement element) -> 
     }
 }
 
+}  // namespace logicsim::serialize
+
+namespace logicsim {
+
 auto serialize_inserted(const Layout& layout) -> std::string {
-    auto data = SerializedLayout {};
+    auto data = serialize::SerializedLayout {};
 
     for (const auto element : layout.elements()) {
         if (element.is_inserted()) {
-            add_element(data, element);
+            serialize::add_element(data, element);
         }
     }
 
-    return gzip_compress(glz::write_json(data));
+    return gzip_compress(json_dumps(data));
 }
 
 auto serialize_selected(const Layout& layout, const Selection& selection,
                         point_t save_position) -> std::string {
-    auto data = SerializedLayout {.save_position = save_position};
+    auto data = serialize::SerializedLayout {.save_position = save_position};
 
     for (const auto element_id : selection.selected_logic_items()) {
-        add_element(data, layout.element(element_id));
+        serialize::add_element(data, layout.element(element_id));
     }
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
         for (const auto& part : parts) {
             const auto line
                 = get_line(layout, segment_part_t {.segment = segment, .part = part});
-            data.wire_segments.push_back(SerializedLine {line.p0, line.p1});
+            data.wire_segments.push_back(serialize::SerializedLine {line.p0, line.p1});
         }
     }
 
-    return gzip_compress(glz::write_json(data));
+    return gzip_compress(json_dumps(data));
 }
 
 auto save_layout(const Layout& layout, std::string filename) -> void {
-    const auto data = serialize_inserted(layout);
-
-    auto file = std::ofstream(filename, std::ios::binary);
-    file.write(data.data(), data.size());
-    file.close();
+    const auto binary = serialize_inserted(layout);
+    save_file(filename, binary);
 }
+
+namespace serialize {
 
 auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayout> {
     // unip
@@ -326,37 +166,8 @@ auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayo
         return std::nullopt;
     }
 
-    // peak version
-    auto version = glz::get_as_json<int, "/version">(json_text);
-    if (!version.has_value()) {
-        try {
-            print(glz::format_error(version.error(), json_text));
-        } catch (std::runtime_error&) {
-            print("error parsing json");
-        }
-        return std::nullopt;
-    }
-    if (version.value() != CURRENT_VERSION) {
-        print("Error wrong version. Expected", CURRENT_VERSION, "got", version.value());
-        return std::nullopt;
-    }
-
-    // parse json
-    auto result = std::optional<SerializedLayout> {SerializedLayout {}};
-    const auto error = glz::read_json<SerializedLayout>(result.value(), json_text);
-    if (error) {
-        try {
-            print(glz::format_error(error, json_text));
-        } catch (std::runtime_error&) {
-            print("error parsing json");
-        }
-        return std::nullopt;
-    }
-
-    return result;
+    return json_loads(json_text);
 }
-
-namespace {
 
 auto calculate_move_delta(point_t save_position, std::optional<point_t> load_position)
     -> move_delta_t {
@@ -367,22 +178,23 @@ auto calculate_move_delta(point_t save_position, std::optional<point_t> load_pos
             load_position->y.value - save_position.y.value};
 }
 
-}  // namespace
+}  // namespace serialize
 
 auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
                 InsertionMode insertion_mode, std::optional<point_t> load_position)
     -> selection_handle_t {
-    const auto data = unserialize_data(binary);
+    const auto data = serialize::unserialize_data(binary);
     if (!data) {
         return selection_handle_t {};
     }
 
     auto handle = editable_circuit.create_selection();
-    const auto delta = calculate_move_delta(data->save_position, load_position);
+    const auto delta
+        = serialize::calculate_move_delta(data->save_position, load_position);
 
     // logic items
     for (const auto& item : data->logic_items) {
-        if (const auto definition = item.to_definition(delta)) {
+        if (const auto definition = to_definition(item, delta)) {
             editable_circuit.add_logic_item(definition->definition, definition->position,
                                             insertion_mode, handle);
         }
@@ -390,7 +202,7 @@ auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
 
     // wire segments
     for (const auto& entry : data->wire_segments) {
-        if (const auto line = entry.to_line(delta)) {
+        if (const auto line = to_line(entry, delta)) {
             editable_circuit.add_line_segment(line.value(), insertion_mode, handle);
         }
     }

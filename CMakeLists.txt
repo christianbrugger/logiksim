@@ -39,6 +39,7 @@ set(LS_CORE_SOURCES
     src/schematic_generation.cpp
     src/segment_tree.cpp
     src/serialize.cpp
+    src/serialize_detail.cpp
     src/simulation.cpp
     src/simulation_view.cpp
     src/timer.cpp
@@ -325,6 +326,8 @@ if (LS_ENABLE_PCH)
         <fmt/core.h>
         <folly/small_vector.h>
         <gsl/gsl>
+
+        <QWidget>
     
         <algorithm>
         <chrono>
