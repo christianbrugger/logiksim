@@ -2,6 +2,7 @@
 #include "editable_circuit/selection.h"
 
 #include "collision.h"
+#include "editable_circuit/messages.h"
 #include "geometry.h"
 #include "layout.h"
 #include "layout_calculations.h"

@@ -1,8 +1,7 @@
 #ifndef LOGIKSIM_SELECTION_HANDLE_H
 #define LOGIKSIM_SELECTION_HANDLE_H
 
-#include "editable_circuit/messages.h"
-#include "editable_circuit/selection.h"
+#include "editable_circuit/messages_forward.h"
 #include "iterator_adaptor.h"
 
 #include <type_traits>
@@ -12,6 +11,7 @@ namespace logicsim {
 
 class Layout;
 class selection_handle_t;
+class Selection;
 
 struct selection_key_t {
     using value_type = int64_t;

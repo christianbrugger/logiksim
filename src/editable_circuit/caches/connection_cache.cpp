@@ -1,5 +1,7 @@
 #include "editable_circuit/caches/connection_cache.h"
 
+#include "editable_circuit/caches/helpers.h"
+#include "editable_circuit/messages.h"
 #include "geometry.h"
 #include "layout_calculations.h"
 

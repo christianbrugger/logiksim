@@ -1,6 +1,8 @@
 
 #include "editable_circuit/caches.h"
 
+#include "editable_circuit/caches/helpers.h"
+
 namespace logicsim {
 
 //

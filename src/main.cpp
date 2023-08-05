@@ -1,6 +1,8 @@
 
 #include "editable_circuit/caches/connection_cache.h"
+#include "editable_circuit/caches/helpers.h"
 #include "editable_circuit/editable_circuit.h"
+#include "layout_calculations.h"
 #include "renderer.h"
 #include "simulation.h"
 #include "timer.h"

@@ -3,6 +3,7 @@
 
 #include "algorithm.h"
 #include "editable_circuit/caches.h"
+#include "editable_circuit/messages.h"
 #include "editable_circuit/sanitizer.h"
 #include "format.h"
 #include "layout.h"

@@ -2,17 +2,16 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
 #include "editable_circuit/caches.h"
-#include "editable_circuit/caches/split_point_cache.h"
-#include "editable_circuit/messages.h"
 #include "editable_circuit/selection_builder.h"
 #include "editable_circuit/selection_registrar.h"
+#include "editable_circuit/types.h"
 #include "layout.h"
 
 #include <optional>
 
 namespace logicsim {
 
-class selection_handle_t;
+class SelectionRegistrar;
 
 namespace editable_circuit {
 class MessageSender;
@@ -84,10 +83,11 @@ class EditableCircuit {
     auto get_sender() -> editable_circuit::MessageSender;
     auto get_state() -> editable_circuit::State;
 
-    std::optional<Layout> layout_ {std::nullopt};
+    std::optional<Layout> layout_ {};
 
-    CacheProvider cache_provider_ {};
-    SelectionRegistrar registrar_ {};
+    gsl::not_null<std::unique_ptr<CacheProvider>> cache_provider_;
+    gsl::not_null<std::unique_ptr<SelectionRegistrar>> registrar_;
+
     SelectionBuilder selection_builder_;
 };
 

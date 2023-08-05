@@ -1,6 +1,8 @@
 
 #include "editable_circuit/selection_registrar.h"
 
+#include "editable_circuit/messages.h"
+#include "editable_circuit/selection.h"
 #include "exceptions.h"
 #include "format.h"
 #include "layout.h"

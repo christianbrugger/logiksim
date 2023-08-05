@@ -1,20 +1,15 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHES_SPATIAL_CACHE_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_SPATIAL_CACHE_H
 
-#include "editable_circuit/caches/helpers.h"
-#include "editable_circuit/messages.h"
+#include "editable_circuit/messages_forward.h"
 #include "vocabulary.h"
 
 #include <boost/geometry.hpp>
 
-#include <array>
-#include <memory>
-#include <optional>
-#include <ranges>
-
 namespace logicsim {
 
-class Circuit;
+class Layout;
+struct layout_calculation_data_t;
 
 namespace detail::spatial_tree {
 // Boost R-Tree Documentation:

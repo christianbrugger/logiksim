@@ -1,13 +1,11 @@
 #ifndef LOGIKSIM_SELECTION_MANAGER_H
 #define LOGIKSIM_SELECTION_MANAGER_H
 
-#include "editable_circuit/messages.h"
-#include "editable_circuit/selection_registrar.h"
+#include "editable_circuit/messages_forward.h"
+#include "editable_circuit/selection.h"
 
 #include <boost/container/vector.hpp>
 #include <gsl/gsl>
-
-#include <functional>
 
 namespace logicsim {
 

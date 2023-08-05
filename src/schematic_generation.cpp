@@ -1,6 +1,8 @@
 #include "schematic_generation.h"
 
 #include "editable_circuit/caches/connection_cache.h"
+#include "editable_circuit/caches/helpers.h"
+#include "layout_calculations.h"
 
 namespace logicsim {
 

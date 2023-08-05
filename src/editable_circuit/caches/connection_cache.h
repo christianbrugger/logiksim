@@ -1,15 +1,15 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHES_CONNECTION_CACHE_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_CONNECTION_CACHE_H
 
-#include "editable_circuit/caches/helpers.h"
-#include "editable_circuit/messages.h"
-#include "layout_calculations.h"
+#include "editable_circuit/messages_forward.h"
+#include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>
 
 namespace logicsim {
 
-class Circuit;
+class Layout;
+struct layout_calculation_data_t;
 
 namespace detail::connection_cache {
 

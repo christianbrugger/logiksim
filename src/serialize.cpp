@@ -18,6 +18,7 @@
 #include "editable_circuit/selection.h"
 #include "geometry.h"
 #include "layout.h"
+#include "layout_calculations.h"
 #include "scene.h"
 #include "serialize_detail.h"
 #include "timer.h"
