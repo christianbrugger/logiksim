@@ -44,18 +44,9 @@ class ConnectionCache {
     using map_type = detail::connection_cache::map_type;
 
    public:
-    using connection_proxy
-        = std::conditional_t<IsInput, Schematic::Input, Schematic::Output>;
-    using const_connection_proxy
-        = std::conditional_t<IsInput, Schematic::ConstInput, Schematic::ConstOutput>;
-
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto find(point_t position) const -> std::optional<connection_data_t>;
-    [[nodiscard]] auto find(point_t position, Schematic& schematic) const
-        -> std::optional<std::pair<connection_proxy, orientation_t>>;
-    [[nodiscard]] auto find(point_t position, const Schematic& schematic) const
-        -> std::optional<std::pair<const_connection_proxy, orientation_t>>;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(point_t position, orientation_t orientation) const

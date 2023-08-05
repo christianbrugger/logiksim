@@ -1,6 +1,6 @@
 #include "editable_circuit/caches/split_point_cache.h"
 
-#include "circuit.h"
+#include "layout.h"
 
 namespace logicsim {
 

@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_RENDER_WIDGET_H
 #define LOGIKSIM_RENDER_WIDGET_H
 
-#include "circuit_index.h"
 #include "editable_circuit/editable_circuit.h"
 #include "interactive_simulation.h"
 #include "render_widget_types.h"
@@ -306,8 +305,6 @@ class RendererWidget : public RendererWidgetBase {
     delay_t wire_delay_per_distance_ {Schematic::defaults::wire_delay_per_distance};
 
     // new circuit
-    circuit_id_t circuit_id_ {0};
-    CircuitIndex circuit_index_ {};
     std::optional<EditableCircuit> editable_circuit_ {};
     std::optional<SelectionBuilder> selection_builder_ {};
     RenderSettings render_settings_ {};

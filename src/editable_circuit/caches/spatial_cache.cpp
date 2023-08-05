@@ -1,6 +1,7 @@
 #include "editable_circuit/caches/spatial_cache.h"
 
-#include "circuit.h"
+#include "layout.h"
+#include "layout_calculations.h"
 
 namespace boost::geometry::model {
 template <typename T>

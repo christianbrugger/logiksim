@@ -386,30 +386,29 @@ auto convert_layout(const Layout& layout) -> GeneratedSchematic {
 
             // connect input
             {
-                auto output
-                    = output_cache.find(line_tree.input_position(), generated.schematic);
-                if (output.has_value()) {
-                    if (!orientations_compatible(output.value().second,
+                if (const auto entry = output_cache.find(line_tree.input_position())) {
+                    if (!orientations_compatible(entry->orientation,
                                                  line_tree.input_orientation())) {
                         throw_exception("input orientation not compatible");
                     }
-                    output.value().first.connect(element.input(connection_id_t {0}));
+                    const auto output = generated.schematic.output(entry->connection());
+                    output.connect(element.input(connection_id_t {0}));
                 }
             }
 
             // connect outputs
             for (auto output : element.outputs()) {
                 const auto output_index = output.output_index().value;
-                auto input = input_cache.find(line_tree.output_position(output_index),
-                                              generated.schematic);
+                const auto position = line_tree.output_position(output_index);
 
-                if (input.has_value()) {
+                if (const auto entry = input_cache.find(position)) {
                     if (!orientations_compatible(
-                            input.value().second,
+                            entry->orientation,
                             line_tree.output_orientation(output_index))) {
                         throw_exception("input orientation not compatible");
                     }
-                    input.value().first.connect(output);
+                    const auto input = generated.schematic.input(entry->connection());
+                    input.connect(output);
                 }
             }
         }

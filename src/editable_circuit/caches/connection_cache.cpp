@@ -250,38 +250,6 @@ auto ConnectionCache<IsInput>::find(point_t position) const
 }
 
 template <bool IsInput>
-auto to_connection_entry(auto&& schematic,
-                         detail::connection_cache::connection_data_t entry) {
-    const auto connection = to_connection<IsInput>(schematic, entry.connection());
-    return std::make_pair(connection, entry.orientation);
-}
-
-template <bool IsInput>
-auto find_impl(const ConnectionCache<IsInput>& cache, point_t position,
-               auto&& schematic) {
-    if (auto entry = cache.find(position)) {
-        return std::optional {to_connection_entry<IsInput>(schematic, entry.value())};
-    }
-
-    // nullopt with correct type
-    using entry_result_t = decltype(to_connection_entry<IsInput>(
-        schematic, std::declval<detail::connection_cache::connection_data_t>()));
-    return std::optional<entry_result_t> {};
-}
-
-template <bool IsInput>
-auto ConnectionCache<IsInput>::find(point_t position, Schematic& schematic) const
-    -> std::optional<std::pair<connection_proxy, orientation_t>> {
-    return find_impl(*this, position, schematic);
-}
-
-template <bool IsInput>
-auto ConnectionCache<IsInput>::find(point_t position, const Schematic& schematic) const
-    -> std::optional<std::pair<const_connection_proxy, orientation_t>> {
-    return find_impl(*this, position, schematic);
-}
-
-template <bool IsInput>
 auto ConnectionCache<IsInput>::is_colliding(layout_calculation_data_t data) const
     -> bool {
     // make sure inputs/outputs don't collide with inputs/outputs

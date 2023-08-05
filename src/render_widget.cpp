@@ -674,9 +674,7 @@ auto RendererWidget::pixel_scale() const -> double {
 auto RendererWidget::reset_circuit() -> void {
     reset_interaction_state();
 
-    circuit_index_ = CircuitIndex {};
-    editable_circuit_.emplace(
-        circuit_index_.borrow_circuit(circuit_id_).extract_layout());
+    editable_circuit_.emplace(Layout {});
     update();
 
 #ifndef NDEBUG

@@ -1,7 +1,7 @@
 
 #include "layout_calculation_type.h"
 
-#include "circuit.h"
+#include "layout.h"
 
 namespace logicsim {
 
