@@ -306,10 +306,10 @@ auto depth_first_search_visited(const AdjacencyGraph<index_t>& graph, Visitor&& 
     const auto found_loop = depth_first_visitor(
         start, result.visited,
         // discover_connections
-        [&](index_t node, std::output_iterator<index_t> auto result) -> void {
+        [&](index_t node, std::output_iterator<index_t> auto output) -> void {
             for (auto neighbor_id : reverse_range(graph.neighbors().at(node).size())) {
-                *result = graph.neighbors()[node][neighbor_id];
-                ++result;
+                *output = graph.neighbors()[node][neighbor_id];
+                ++output;
             }
         },
         // visit_edge

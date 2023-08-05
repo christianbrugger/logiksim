@@ -23,7 +23,7 @@ auto Timer::delta() const -> std::chrono::duration<double> {
 auto Timer::format() const -> std::string {
     double seconds = delta().count();
 
-    std::string unit_str = "s";
+    auto unit_str = std::string {"s"};
     switch (unit_) {
         case Unit::s:
             break;

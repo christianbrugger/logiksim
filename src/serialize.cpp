@@ -246,8 +246,8 @@ struct SerializedLayout {
     int version {CURRENT_VERSION};
     point_t save_position {0, 0};
 
-    std::vector<SerializedLogicItem> logic_items;
-    std::vector<SerializedLine> wire_segments;
+    std::vector<SerializedLogicItem> logic_items {};
+    std::vector<SerializedLine> wire_segments {};
 
     struct glaze {
         using T = SerializedLayout;
