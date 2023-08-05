@@ -22,7 +22,6 @@
 	path = external/boost
 	url = https://github.com/boostorg/boost
 	ignore = dirty
-	fetchRecurseSubmodules = true
 
 [submodule "external/fmt"]
 	path = external/fmt
