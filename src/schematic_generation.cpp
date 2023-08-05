@@ -169,7 +169,7 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
     }
 }
 
-auto add_missing_placeholders(Schematic& schematic, const Layout& layout) -> void {
+auto add_missing_placeholders(Schematic& schematic) -> void {
     for (auto element : schematic.elements()) {
         if (element.is_logic_item()) {
             for (auto output : element.outputs()) {
@@ -205,7 +205,7 @@ auto generate_schematic(const Layout& layout, delay_t wire_delay_per_unit) -> Sc
 
     add_layout_elements(schematic, layout);
     create_connections(schematic, layout);
-    add_missing_placeholders(schematic, layout);
+    add_missing_placeholders(schematic);
     set_output_inverters(schematic, layout);
 
     return schematic;

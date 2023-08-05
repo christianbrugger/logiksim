@@ -600,7 +600,7 @@ auto draw_standard_element(BLContext& ctx, Schematic::ConstElement element,
 //
 
 auto draw_button_body(BLContext& ctx, layout::ConstElement element, bool selected,
-                      bool enabled, const RenderSettings& settings) -> void {
+                      const RenderSettings& settings) -> void {
     const auto position = element.position();
 
     const auto rect = rect_fine_t {
@@ -644,7 +644,7 @@ auto draw_binary_value(BLContext& ctx, point_t position, bool enabled,
 
 auto draw_button(BLContext& ctx, layout::ConstElement element, bool selected,
                  const RenderSettings& settings) -> void {
-    draw_button_body(ctx, element, selected, false, settings);
+    draw_button_body(ctx, element, selected, settings);
     draw_binary_value(ctx, element.position(), false, element.display_state(), settings);
 }
 
@@ -652,7 +652,7 @@ auto draw_button(BLContext& ctx, Schematic::ConstElement element, const Layout& 
                  const Simulation& simulation, bool selected,
                  const RenderSettings& settings) -> void {
     bool enabled = simulation.internal_state(element).at(0);
-    draw_button_body(ctx, layout.element(element), selected, enabled, settings);
+    draw_button_body(ctx, layout.element(element), selected, settings);
     draw_binary_value(ctx, layout.position(element), enabled, display_state_t::normal,
                       settings);
 }
@@ -1199,7 +1199,7 @@ auto draw_wire_valid_shadow(BLContext& ctx, const SegmentTree& segment_tree,
 }
 
 auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& selection,
-                       const visibility_mask_t& visibility, rect_t scene_rect,
+                       const visibility_mask_t& visibility,
                        const RenderSettings& settings) {
     const auto is_visible
         = [&](element_id_t element_id) { return visibility.at(element_id.value); };
@@ -1334,8 +1334,7 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     }
 
     // wire shadow
-    draw_wire_shadows(ctx, args.layout, args.selection, visibility, scene_rect,
-                      args.settings);
+    draw_wire_shadows(ctx, args.layout, args.selection, visibility, args.settings);
 }
 
 //
