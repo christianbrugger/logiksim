@@ -511,7 +511,7 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
                                                    get_selection());
     }
     if (mode == InsertionMode::temporary) {
-        editable_circuit_.add_temporary_crosspoints(get_selection());
+        editable_circuit_.regularize_temporary_selection(get_selection());
     }
 }
 
@@ -1222,7 +1222,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
     if (!handle) {
         return;
     }
-    auto split_points = editable_circuit.add_temporary_crosspoints(*handle);
+    auto split_points = editable_circuit.regularize_temporary_selection(*handle);
     editable_circuit.change_insertion_mode(editable_circuit.create_selection(*handle),
                                            InsertionMode::collisions);
 

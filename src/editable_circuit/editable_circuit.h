@@ -61,7 +61,9 @@ class EditableCircuit {
     auto toggle_inverter(point_t point) -> void;
 
     // Wire Mode Change Helpers
-    auto add_temporary_crosspoints(const Selection& selection) -> std::vector<point_t>;
+    // adds crosspoints, merges wire segments and returns splitpoints
+    auto regularize_temporary_selection(const Selection& selection)
+        -> std::vector<point_t>;
 
     auto capture_inserted_splitpoints(const Selection& selection) -> std::vector<point_t>;
 

@@ -459,16 +459,27 @@ constexpr auto transform_to_container(std::ranges::input_range auto&& range,
 // sorted
 //
 
-template <class T>
-constexpr auto sorted_ref(T& a, T& b) noexcept(noexcept(a <= b)) -> std::tuple<T&, T&> {
-    if (a <= b) {
+template <class T, class Comp = std::ranges::less>
+constexpr auto sort_inplace(T& a, T& b, Comp comp = {}) noexcept(noexcept(comp(a, b)))
+    -> void {
+    if (!comp(a, b)) {
+        using namespace std;
+        swap(a, b);
+    }
+}
+
+template <class T, class Comp = std::ranges::less>
+[[nodiscard]] constexpr auto sorted_ref(T& a, T& b,
+                                        Comp comp = {}) noexcept(noexcept(comp(a, b)))
+    -> std::tuple<T&, T&> {
+    if (comp(a, b)) {
         return std::tie(a, b);
     }
     return std::tie(b, a);
 }
 
 template <class T>
-constexpr auto sorted(T&& a, T&& b) noexcept(noexcept(a <= b))
+[[nodiscard]] constexpr auto sorted(T&& a, T&& b) noexcept(noexcept(a <= b))
     -> std::tuple<std::remove_cvref_t<T>, std::remove_cvref_t<T>> {
     if (a <= b) {
         return std::make_tuple(std::forward<T>(a), std::forward<T>(b));

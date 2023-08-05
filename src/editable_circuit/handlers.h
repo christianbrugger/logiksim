@@ -124,8 +124,8 @@ auto delete_all(selection_handle_t handle, State state) -> void;
 // Wire Mode Change Helpers
 //
 
-auto add_temporary_crosspoints(Layout& layout, const Selection& selection)
-    -> std::vector<point_t>;
+auto regularize_temporary_selection(Layout& layout, MessageSender sender,
+                                    const Selection& selection) -> std::vector<point_t>;
 
 auto capture_inserted_splitpoints(Layout& layout, const CacheProvider& cache,
                                   const Selection& selection) -> std::vector<point_t>;

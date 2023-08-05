@@ -170,9 +170,10 @@ auto EditableCircuit::toggle_inverter(point_t point) -> void {
     }
 }
 
-auto EditableCircuit::add_temporary_crosspoints(const Selection& selection)
+auto EditableCircuit::regularize_temporary_selection(const Selection& selection)
     -> std::vector<point_t> {
-    return editable_circuit::add_temporary_crosspoints(layout_.value(), selection);
+    return editable_circuit::regularize_temporary_selection(layout_.value(), get_sender(),
+                                                            selection);
 }
 
 auto EditableCircuit::capture_inserted_splitpoints(const Selection& selection)
