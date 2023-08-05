@@ -4,6 +4,7 @@
 #include "circuit_index.h"
 #include "editable_circuit/editable_circuit.h"
 #include "interactive_simulation.h"
+#include "render_widget_types.h"
 #include "renderer.h"
 #include "scene.h"
 #include "timer.h"
@@ -24,40 +25,6 @@
 #include <variant>
 
 namespace logicsim {
-
-enum class InteractionState {
-    not_interactive,
-    selection,
-    simulation,
-
-    insert_wire,
-    insert_button,
-
-    insert_and_element,
-    insert_or_element,
-    insert_xor_element,
-    insert_nand_element,
-    insert_nor_element,
-
-    insert_buffer_element,
-    insert_inverter_element,
-    insert_flipflop_jk,
-    insert_latch_d,
-    insert_flipflop_d,
-    insert_flipflop_ms_d,
-
-    insert_clock_generator,
-    insert_shift_register,
-};
-
-template <>
-auto format(InteractionState type) -> std::string;
-
-[[nodiscard]] auto is_inserting_state(InteractionState state) -> bool;
-
-[[nodiscard]] auto to_logic_item_definition(InteractionState state,
-                                            std::size_t default_input_count = 3)
-    -> LogicItemDefinition;
 
 class MouseDragLogic {
    public:
@@ -262,9 +229,9 @@ class SimulationInteractionLogic {
     InteractiveSimulation& simulation_;
 };
 
-class RendererWidget : public QWidget {
+class RendererWidget : public RendererWidgetBase {
     // TODO use Q_OBJECT because of Q_SLOT
-    Q_OBJECT
+    // Q_OBJECT
 
    public:
     using MouseLogic = std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
@@ -296,8 +263,6 @@ class RendererWidget : public QWidget {
     auto reset_circuit() -> void;
     auto load_circuit(int id) -> void;
     auto reload_circuit() -> void;
-
-    Q_SIGNAL void interaction_state_changed(InteractionState new_state);
 
    private:
     Q_SLOT void on_benchmark_timeout();

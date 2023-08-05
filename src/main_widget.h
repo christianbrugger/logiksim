@@ -1,20 +1,33 @@
 
-#include "render_widget.h"
+
+#include "render_widget_types.h"
 
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>
 
-#include <QString>
+#include <QPushButton>
+#include <QTimer>
 #include <QWidget>
 
+class QString;
 class QSlider;
 class QAbstractButton;
 
 namespace logicsim {
 
+class RendererWidget;
+
+class ElementButton : public QPushButton {
+    Q_OBJECT
+   public:
+    explicit ElementButton(const QString& text, QWidget* parent = nullptr);
+    auto sizeHint() const -> QSize override;
+    auto minimumSizeHint() const -> QSize override;
+};
+
 class MainWidget : public QWidget {
-    // TODO use Q_OBJECT because of Q_SLOT
-    // Q_OBJECT
+    Q_OBJECT
+
    public:
     MainWidget(QWidget* parent = nullptr);
 
@@ -27,8 +40,8 @@ class MainWidget : public QWidget {
 
     [[nodiscard]] auto element_button(QString label, InteractionState state) -> QWidget*;
 
-    Q_SLOT auto update_title() -> void;
-    Q_SLOT auto on_interaction_state_changed(InteractionState new_state) -> void;
+    Q_SLOT void update_title();
+    Q_SLOT void on_interaction_state_changed(InteractionState new_state);
 
    private:
     gsl::not_null<RendererWidget*> render_widget_;

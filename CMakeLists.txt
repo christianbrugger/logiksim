@@ -46,6 +46,7 @@ set(LS_CORE_SOURCES
     
     src/main_widget.cpp
     src/render_widget.cpp
+    src/render_widget_types.cpp
 )
 
 set(LS_TEST_SOURCES

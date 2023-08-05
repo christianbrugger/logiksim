@@ -1,5 +1,7 @@
 #include "main_widget.h"
 
+#include "render_widget.h"
+
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -7,31 +9,28 @@
 #include <QRadioButton>
 #include <QSlider>
 #include <QSpinBox>
+#include <QString>
 #include <QVBoxLayout>
 
 namespace logicsim {
-class ElementButton : public QPushButton {
-    // TODO use Q_OBJECT
-    // Q_OBJECT
-   public:
-    explicit ElementButton(const QString& text, QWidget* parent = nullptr)
-        : QPushButton(text, parent) {}
 
-    auto sizeHint() const -> QSize override {
-        const auto text = "NAND";
-        const auto margin = 10;
+ElementButton::ElementButton(const QString& text, QWidget* parent)
+    : QPushButton(text, parent) {}
 
-        const auto metric = fontMetrics();
-        const auto size = metric.size(Qt::TextShowMnemonic, text);
-        const auto extend = std::max(size.height(), size.width()) + margin;
+auto ElementButton::sizeHint() const -> QSize {
+    const auto text = "NAND";
+    const auto margin = 10;
 
-        return QSize(extend, extend);
-    }
+    const auto metric = fontMetrics();
+    const auto size = metric.size(Qt::TextShowMnemonic, text);
+    const auto extend = std::max(size.height(), size.width()) + margin;
 
-    QSize minimumSizeHint() const override {
-        return sizeHint();
-    }
-};
+    return QSize(extend, extend);
+}
+
+auto ElementButton::minimumSizeHint() const -> QSize {
+    return sizeHint();
+}
 
 //
 // MainWidget
@@ -61,7 +60,7 @@ MainWidget::MainWidget(QWidget* parent)
     timer_.setInterval(100);
     timer_.start();
 
-    connect(render_widget_, &RendererWidget::interaction_state_changed, this,
+    connect(render_widget_, &RendererWidgetBase::interaction_state_changed, this,
             &MainWidget::on_interaction_state_changed);
 
     render_widget_->set_interaction_state(InteractionState::selection);
@@ -344,7 +343,7 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     return panel;
 }
 
-auto MainWidget::update_title() -> void {
+void MainWidget::update_title() {
     const auto fps = render_widget_->fps();
     const auto scale = render_widget_->pixel_scale();
     const auto size = render_widget_->pixel_size();
@@ -358,7 +357,7 @@ auto MainWidget::update_title() -> void {
     }
 }
 
-auto MainWidget::on_interaction_state_changed(InteractionState new_state) -> void {
+void MainWidget::on_interaction_state_changed(InteractionState new_state) {
     // buttons
     for (auto&& [state, button] : button_map_) {
         if (button != nullptr) {
