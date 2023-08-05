@@ -1151,6 +1151,9 @@ auto RendererWidget::select_all_items() -> void {
     }
     auto& selection_builder = editable_circuit_.value().selection_builder();
 
+    set_interaction_state(InteractionState::selection);
+    reset_interaction_state();
+
     const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
                                    point_fine_t {grid_t::max(), grid_t::max()}};
 
