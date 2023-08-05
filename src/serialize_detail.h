@@ -1,17 +1,11 @@
 #ifndef LOGIKSIM_SERIALIZE_DETAIL_H
 #define LOGIKSIM_SERIALIZE_DETAIL_H
 
-#include "editable_circuit\types.h"
 #include "vocabulary.h"
 
 namespace logicsim::serialize {
 
 constexpr static inline auto CURRENT_VERSION = 100;
-
-struct LogicItemData {
-    LogicItemDefinition definition;
-    point_t position;
-};
 
 struct SerializedLine {
     point_t p0;

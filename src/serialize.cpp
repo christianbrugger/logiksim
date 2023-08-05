@@ -29,6 +29,11 @@ struct move_delta_t {
     int y;
 };
 
+struct LogicItemData {
+    LogicItemDefinition definition;
+    point_t position;
+};
+
 auto to_line(const SerializedLine& obj, move_delta_t delta = {})
     -> std::optional<line_t> {
     if (!is_orthogonal(obj.p0, obj.p1)) [[unlikely]] {
