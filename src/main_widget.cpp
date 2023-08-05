@@ -65,7 +65,7 @@ MainWidget::MainWidget(QWidget* parent)
             &MainWidget::on_interaction_state_changed);
 
     render_widget_->set_interaction_state(InteractionState::selection);
-    resize(800, 600);
+    resize(914, 700);
 }
 
 auto MainWidget::build_render_buttons() -> QWidget* {

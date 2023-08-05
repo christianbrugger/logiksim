@@ -1560,6 +1560,13 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
         event->accept();
     }
 
+    // CTRL + X
+    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_X) {
+        copy_selected_items();
+        delete_selected_items();
+        event->accept();
+    }
+
     // Enter
     else if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
         if (mouse_logic_) {
