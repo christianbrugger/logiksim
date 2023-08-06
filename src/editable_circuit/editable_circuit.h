@@ -85,8 +85,8 @@ class EditableCircuit {
 
     std::optional<Layout> layout_ {};
 
-    gsl::not_null<std::unique_ptr<CacheProvider>> cache_provider_;
-    gsl::not_null<std::unique_ptr<SelectionRegistrar>> registrar_;
+    CacheProvider cache_provider_;
+    SelectionRegistrar registrar_ {};
 
     SelectionBuilder selection_builder_;
 };

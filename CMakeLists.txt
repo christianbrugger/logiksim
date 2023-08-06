@@ -51,6 +51,12 @@ set(LS_CORE_SOURCES
     src/render_widget_types.cpp
 )
 
+# any file that contains Q_OBJECT
+set(MOC_FILES
+    src/main_widget.h 
+    src/render_widget_types.h
+)
+
 set(LS_TEST_SOURCES
     test/algorithm_test.cpp
     test/circular_buffer_test.cpp
@@ -247,10 +253,12 @@ endif()
 
 
 # Qt 6
-set(CMAKE_AUTOMOC TRUE)
+set(CMAKE_AUTOMOC FALSE)  # takes too much time, not parallelized
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 message(NOTICE "Qt version: ${Qt6_VERSION}")
+
+QT6_WRAP_CPP (MOC_SOURCES ${MOC_FILES})
 
 # Blend2D
 set(BLEND2D_STATIC TRUE)
@@ -310,9 +318,9 @@ endif()
 
 
 
+
 # Main Library
 
-#        <boost/geometry.hpp>
 add_library(logicsim_pch INTERFACE)
 if (LS_ENABLE_PCH)
     message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
@@ -322,12 +330,13 @@ if (LS_ENABLE_PCH)
         <boost/algorithm/string/join.hpp>
         <boost/container/small_vector.hpp>
         <boost/container/vector.hpp>
+        <boost/geometry.hpp>
         <boost/random/mersenne_twister.hpp>
         <boost/random/uniform_int_distribution.hpp>
         <fmt/core.h>
         <folly/small_vector.h>
         <gsl/gsl>
-
+        
         <QWidget>
     
         <algorithm>
@@ -399,6 +408,7 @@ set(LS_CORE_LIBRARIES
 set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET} 
     ${LS_CORE_SOURCES}
+    ${MOC_SOURCES}
     
     src/main_bechmark.cpp
 )
@@ -417,6 +427,7 @@ target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 set(MAIN_TARGET "simulation_srp_main")
 add_executable(${MAIN_TARGET} 
     ${LS_CORE_SOURCES}
+    ${MOC_SOURCES}
     
     src/main.cpp
     
@@ -434,6 +445,7 @@ target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET} 
     ${LS_CORE_SOURCES}
+    ${MOC_SOURCES}
 
     src/main_gui.cpp
 )
@@ -451,6 +463,7 @@ target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 set(MAIN_TEST_TARGET "simulation_srp_test")
 add_executable(${MAIN_TEST_TARGET} 
     ${LS_CORE_SOURCES}
+    ${MOC_SOURCES}
     ${LS_TEST_SOURCES}
 )
 target_include_directories(${MAIN_TEST_TARGET} PRIVATE
