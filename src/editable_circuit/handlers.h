@@ -67,7 +67,7 @@ auto move_or_delete_logic_item(Layout& Layout, MessageSender sender,
 auto delete_wire_segment(Layout& layout, MessageSender sender,
                          segment_part_t& segment_part) -> void;
 
-auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+auto add_wire(State state, point_t p0, point_t p1, LineInsertionType segment_type,
               InsertionMode insertion_mode, Selection* selection) -> void;
 
 auto add_wire_segment(State state, Selection* selection, line_t line,

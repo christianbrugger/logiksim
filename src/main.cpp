@@ -249,12 +249,12 @@ auto generate_layout() -> Layout {
 
             editable_circuit.add_line_segments(point_t {grid_t {x + 2}, grid_t {y + 1}},
                                                point_t {grid_t {x + 4}, grid_t {y - 1}},
-                                               LineSegmentType::horizontal_first,
+                                               LineInsertionType::horizontal_first,
                                                InsertionMode::insert_or_discard);
 
             editable_circuit.add_line_segments(point_t {grid_t {x + 3}, grid_t {y + 1}},
                                                point_t {grid_t {x + 5}, grid_t {y + 2}},
-                                               LineSegmentType::vertical_first,
+                                               LineInsertionType::vertical_first,
                                                InsertionMode::insert_or_discard);
         }
     }

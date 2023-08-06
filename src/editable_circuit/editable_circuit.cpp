@@ -111,7 +111,7 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 }
 
 auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
-                                        LineSegmentType segment_type,
+                                        LineInsertionType segment_type,
                                         InsertionMode insertion_mode)
     -> selection_handle_t {
     auto handle = registrar_.create_selection();
@@ -123,7 +123,7 @@ auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
 }
 
 auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
-                                        LineSegmentType segment_type,
+                                        LineInsertionType segment_type,
                                         InsertionMode insertion_mode,
                                         const selection_handle_t& handle) -> void {
     editable_circuit::add_wire(get_state(), p0, p1, segment_type, insertion_mode,

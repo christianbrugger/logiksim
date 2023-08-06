@@ -295,6 +295,12 @@ auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_ena
     const auto width = stroke_width(settings);
 
     stroke_line_impl(ctx, BLLine(x0, y0, x1, y1), BLRgba32(color), width);
+
+    // if constexpr (std::is_same_v<decltype(p0), point_t>) {
+    //     render_point(ctx, p0, PointShape::circle, defaults::color_orange, 0.2,
+    //     settings); render_point(ctx, p1, PointShape::cross, defaults::color_orange,
+    //     0.2, settings);
+    // }
 }
 
 auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,

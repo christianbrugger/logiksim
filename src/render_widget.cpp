@@ -102,6 +102,19 @@ auto MouseLineInsertLogic::mouse_press(std::optional<point_t> position) -> void 
 }
 
 auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
+    if (position && first_position_) {
+        if (position == first_position_) {
+            insertion_type_.reset();
+        }
+
+        if (position != first_position_
+            && (!insertion_type_ || is_orthogonal(*position, *first_position_))) {
+            insertion_type_ = is_horizontal(line_t {*position, *first_position_})
+                                  ? LineInsertionType::horizontal_first
+                                  : LineInsertionType::vertical_first;
+        }
+    }
+
     remove_and_insert(position, InsertionMode::collisions);
 }
 
@@ -126,17 +139,19 @@ auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
     remove_last_element();
     assert(!temp_element_);
 
-    if (position && first_position_ && position.value() != first_position_.value()) {
-        temp_element_ = editable_circuit_.add_line_segments(
-            *first_position_, *position, LineSegmentType::horizontal_first,
-            InsertionMode::temporary);
+    if (!position || !first_position_ || !insertion_type_
+        || position.value() == first_position_.value()) {
+        return;
+    }
 
-        if (mode != InsertionMode::temporary) {
-            editable_circuit_.split_temporary_segments(
-                editable_circuit_.capture_new_splitpoints(*temp_element_),
-                *temp_element_);
-            editable_circuit_.change_insertion_mode(temp_element_.copy(), mode);
-        }
+    // do insert
+    temp_element_ = editable_circuit_.add_line_segments(
+        *first_position_, *position, *insertion_type_, InsertionMode::temporary);
+
+    if (mode != InsertionMode::temporary) {
+        editable_circuit_.split_temporary_segments(
+            editable_circuit_.capture_new_splitpoints(*temp_element_), *temp_element_);
+        editable_circuit_.change_insertion_mode(temp_element_.copy(), mode);
     }
 }
 
@@ -752,10 +767,10 @@ auto RendererWidget::load_circuit(int id) -> void {
 
         editable_circuit.add_line_segments(
             point_t {grid_t {10}, grid_t {10}}, point_t {grid_t {15}, grid_t {12}},
-            LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
+            LineInsertionType::horizontal_first, InsertionMode::insert_or_discard);
         editable_circuit.add_line_segments(
             point_t {grid_t {10}, grid_t {15}}, point_t {grid_t {15}, grid_t {15}},
-            LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
+            LineInsertionType::vertical_first, InsertionMode::insert_or_discard);
 
         editable_circuit.add_standard_logic_item(ElementType::or_element, 9,
                                                  point_t {20, 4},
@@ -781,12 +796,13 @@ auto RendererWidget::load_circuit(int id) -> void {
                 editable_circuit.add_line_segments(
                     point_t {grid_t {x + 2}, grid_t {y + 1}},
                     point_t {grid_t {x + 4}, grid_t {y - 1}},
-                    LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
+                    LineInsertionType::horizontal_first,
+                    InsertionMode::insert_or_discard);
 
                 editable_circuit.add_line_segments(
                     point_t {grid_t {x + 3}, grid_t {y + 1}},
                     point_t {grid_t {x + 5}, grid_t {y + 2}},
-                    LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
+                    LineInsertionType::vertical_first, InsertionMode::insert_or_discard);
             }
         }
     }
@@ -815,12 +831,13 @@ auto RendererWidget::load_circuit(int id) -> void {
                 editable_circuit.add_line_segments(
                     point_t {grid_t {x + 2}, grid_t {y + 1}},
                     point_t {grid_t {x + 4}, grid_t {y - 1}},
-                    LineSegmentType::horizontal_first, InsertionMode::insert_or_discard);
+                    LineInsertionType::horizontal_first,
+                    InsertionMode::insert_or_discard);
 
                 editable_circuit.add_line_segments(
                     point_t {grid_t {x + 3}, grid_t {y + 1}},
                     point_t {grid_t {x + 5}, grid_t {y + 2}},
-                    LineSegmentType::vertical_first, InsertionMode::insert_or_discard);
+                    LineInsertionType::vertical_first, InsertionMode::insert_or_discard);
             }
         }
     }

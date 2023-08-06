@@ -1836,14 +1836,14 @@ auto add_wire_segment(State state, Selection* selection, line_t line,
     }
 }
 
-auto add_wire_private(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+auto add_wire_private(State state, point_t p0, point_t p1, LineInsertionType segment_type,
                       InsertionMode insertion_mode, Selection* selection) -> void {
     const auto mode = insertion_mode;
 
     // TODO handle p0 == p1
 
     switch (segment_type) {
-        using enum LineSegmentType;
+        using enum LineInsertionType;
 
         case horizontal_first: {
             const auto pm = point_t {p1.x, p0.y};
@@ -1869,7 +1869,7 @@ auto add_wire_private(State state, point_t p0, point_t p1, LineSegmentType segme
     }
 }
 
-auto add_wire(State state, point_t p0, point_t p1, LineSegmentType segment_type,
+auto add_wire(State state, point_t p0, point_t p1, LineInsertionType segment_type,
               InsertionMode insertion_mode, Selection* selection) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         fmt::print(
@@ -2456,7 +2456,8 @@ auto capture_new_splitpoints(const Layout& layout, const CacheProvider& cache,
     const auto add_candidate = [&](point_t point) {
         const auto state = cache.collision_cache().query(point);
         if (collision_cache::is_wire_corner_point(state)
-            || collision_cache::is_wire_connection(state)) {
+            || collision_cache::is_wire_connection(state)
+            || collision_cache::is_wire_cross_point(state)) {
             result.push_back(point);
         }
     };

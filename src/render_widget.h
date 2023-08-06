@@ -98,6 +98,7 @@ class MouseLineInsertLogic {
     EditableCircuit& editable_circuit_;
     std::optional<point_t> first_position_ {};
     selection_handle_t temp_element_ {};
+    std::optional<LineInsertionType> insertion_type_ {};
 };
 
 class MouseMoveSelectionLogic {

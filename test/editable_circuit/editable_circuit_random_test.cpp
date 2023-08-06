@@ -13,7 +13,7 @@ namespace {
 struct AddResult {
     point_t p0;
     point_t p1;
-    LineSegmentType line_segment_type;
+    LineInsertionType line_segment_type;
     InsertionMode insertion_mode;
     selection_handle_t handle;
     std::vector<ordered_line_t> sorted_inserted_lines;
@@ -79,8 +79,8 @@ auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_mo
     const auto p0 = get_random_point(rng, min, max);
     const auto p1 = get_random_point(rng, min, max);
 
-    const auto type = get_random_bool(rng) ? LineSegmentType::horizontal_first
-                                           : LineSegmentType::vertical_first;
+    const auto type = get_random_bool(rng) ? LineInsertionType::horizontal_first
+                                           : LineInsertionType::vertical_first;
     const auto mode = random_modes ? get_random_insertion_mode(rng)
                                    : InsertionMode::insert_or_discard;
 

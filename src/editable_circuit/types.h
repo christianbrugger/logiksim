@@ -6,13 +6,13 @@
 
 namespace logicsim {
 
-enum class LineSegmentType {
+enum class LineInsertionType {
     horizontal_first,
     vertical_first,
 };
 
 template <>
-[[nodiscard]] auto format(LineSegmentType type) -> std::string;
+[[nodiscard]] auto format(LineInsertionType type) -> std::string;
 
 struct LogicItemDefinition {
     ElementType element_type {ElementType::or_element};
