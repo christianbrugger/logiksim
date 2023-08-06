@@ -5,6 +5,39 @@
 #include "layout.h"
 #include "layout_calculations.h"
 
+#include <boost/geometry.hpp>
+
+namespace logicsim::detail::spatial_tree {
+// Boost R-Tree Documentation:
+// https://www.boost.org/doc/libs/1_81_0/libs/geometry/doc/html/geometry/spatial_indexes.html
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+using tree_point_t = bg::model::d2::point_xy<grid_fine_t>;
+using tree_box_t = bg::model::box<tree_point_t>;
+using tree_value_t = std::pair<tree_box_t, tree_payload_t>;
+
+static_assert(sizeof(tree_box_t) == 32);
+static_assert(sizeof(tree_value_t) == 40);
+
+constexpr inline static auto tree_max_node_elements = 16;
+using tree_t = bgi::rtree<tree_value_t, bgi::rstar<tree_max_node_elements>>;
+
+auto get_selection_box(layout_calculation_data_t data) -> tree_box_t;
+auto get_selection_box(ordered_line_t segment) -> tree_box_t;
+auto to_rect(tree_box_t box) -> rect_fine_t;
+auto to_box(rect_fine_t rect) -> tree_box_t;
+
+auto operator==(const tree_t& a, const tree_t& b) -> bool;
+auto operator!=(const tree_t& a, const tree_t& b) -> bool;
+
+struct tree_container {
+    tree_t value;
+};
+
+}  // namespace logicsim::detail::spatial_tree
+
 namespace boost::geometry::model {
 template <typename T>
 auto operator==(box<T> a, box<T> b) -> bool {
@@ -20,6 +53,46 @@ struct ankerl::unordered_dense::hash<logicsim::detail::spatial_tree::tree_payloa
     [[nodiscard]] auto operator()(const type& obj) const noexcept -> uint64_t {
         return logicsim::hash_8_byte(static_cast<uint32_t>(obj.element_id.value),
                                      static_cast<uint32_t>(obj.segment_index.value));
+    }
+};
+
+//
+// Formatters
+//
+
+template <>
+struct fmt::formatter<logicsim::detail::spatial_tree::tree_point_t> {
+    static constexpr auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::detail::spatial_tree::tree_point_t& obj,
+                       fmt::format_context& ctx) {
+        return fmt::format_to(ctx.out(), "[{}, {}]", obj.x(), obj.y());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::detail::spatial_tree::tree_box_t> {
+    static constexpr auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::detail::spatial_tree::tree_box_t& obj,
+                       fmt::format_context& ctx) {
+        return fmt::format_to(ctx.out(), "[{}, {}]", obj.min_corner(), obj.max_corner());
+    }
+};
+
+template <>
+struct fmt::formatter<logicsim::detail::spatial_tree::tree_value_t> {
+    static constexpr auto parse(fmt::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const logicsim::detail::spatial_tree::tree_value_t& obj,
+                       fmt::format_context& ctx) {
+        return fmt::format_to(ctx.out(), "{}: {}", obj.first, obj.second);
     }
 };
 
@@ -61,21 +134,31 @@ auto to_box(rect_fine_t rect) -> tree_box_t {
 
 }  // namespace detail::spatial_tree
 
+SpatialTree::SpatialTree()
+    : tree_ {std::make_unique<detail::spatial_tree::tree_container>()} {}
+
+SpatialTree::~SpatialTree() = default;
+
+SpatialTree::SpatialTree(SpatialTree&&) = default;
+
+auto SpatialTree::operator=(SpatialTree&&) -> SpatialTree& = default;
+
 auto SpatialTree::format() const -> std::string {
-    return fmt::format("SpatialTree = {}", tree_);
+    auto it = tree_->value.begin();
+    return fmt::format("SpatialTree = {}", tree_->value);
 }
 
 auto SpatialTree::handle(editable_circuit::info_message::LogicItemInserted message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.data);
-    tree_.insert({box, {message.element_id, null_segment_index}});
+    tree_->value.insert({box, {message.element_id, null_segment_index}});
 }
 
 auto SpatialTree::handle(editable_circuit::info_message::LogicItemUninserted message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.data);
     const auto remove_count
-        = tree_.remove({box, {message.element_id, null_segment_index}});
+        = tree_->value.remove({box, {message.element_id, null_segment_index}});
 
     if (remove_count != 1) [[unlikely]] {
         throw_exception("Wasn't able to find element to remove.");
@@ -94,14 +177,15 @@ auto SpatialTree::handle(
 auto SpatialTree::handle(editable_circuit::info_message::SegmentInserted message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
-    tree_.insert({box, {message.segment.element_id, message.segment.segment_index}});
+    tree_->value.insert(
+        {box, {message.segment.element_id, message.segment.segment_index}});
 }
 
 auto SpatialTree::handle(editable_circuit::info_message::SegmentUninserted message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
 
-    const auto remove_count = tree_.remove(
+    const auto remove_count = tree_->value.remove(
         {box, {message.segment.element_id, message.segment.segment_index}});
 
     if (remove_count != 1) [[unlikely]] {
@@ -159,7 +243,7 @@ auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_r
         = [&result](const tree_value_t& value) { result.push_back(value.second); };
 
     // intersects or covered_by
-    tree_.query(bgi::intersects(to_box(rect)), output_callable(inserter));
+    tree_->value.query(bgi::intersects(to_box(rect)), output_callable(inserter));
 
     return result;
 }
@@ -167,7 +251,8 @@ auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_r
 auto SpatialTree::has_element(point_fine_t point) const -> bool {
     using namespace detail::spatial_tree;
 
-    return tree_.qbegin(bgi::intersects(tree_point_t {point.x, point.y})) != tree_.qend();
+    return tree_->value.qbegin(bgi::intersects(tree_point_t {point.x, point.y}))
+           != tree_->value.qend();
 }
 
 auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
@@ -188,7 +273,18 @@ auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segme
                   = segment_t {value.second.element_id, value.second.segment_index};
           };
 
-    tree_.query(bgi::intersects(tree_point), output_callable(inserter));
+    tree_->value.query(bgi::intersects(tree_point), output_callable(inserter));
+    return result;
+}
+
+auto SpatialTree::rects() const -> std::vector<rect_fine_t> {
+    auto result = std::vector<rect_fine_t> {};
+    result.reserve(tree_->value.size());
+
+    for (auto& value : tree_->value) {
+        result.push_back(detail::spatial_tree::to_rect(value.first));
+    }
+
     return result;
 }
 
@@ -227,7 +323,7 @@ auto SpatialTree::validate(const Layout& layout) const -> void {
     auto cache = SpatialTree {};
     add_layout_to_cache(cache, layout);
 
-    if (cache.tree_ != this->tree_) [[unlikely]] {
+    if (cache.tree_->value != this->tree_->value) [[unlikely]] {
         print(layout);
         print("expected state =", cache);
         print("actual state   =", *this);

@@ -4,7 +4,14 @@
 #include "editable_circuit/messages_forward.h"
 #include "vocabulary.h"
 
-#include <boost/geometry.hpp>
+#include <gsl/gsl>
+
+namespace boost::geometry::model::d2 {
+template <typename CoordinateType, typename CoordinateSystem>
+class point_xy;
+}
+
+namespace boost::geometry::index {}
 
 namespace logicsim {
 
@@ -12,13 +19,7 @@ class Layout;
 struct layout_calculation_data_t;
 
 namespace detail::spatial_tree {
-// Boost R-Tree Documentation:
-// https://www.boost.org/doc/libs/1_81_0/libs/geometry/doc/html/geometry/spatial_indexes.html
 
-namespace bg = boost::geometry;
-namespace bgi = boost::geometry::index;
-
-// TODO create new type? used elsehwere?
 struct tree_payload_t {
     element_id_t element_id {null_element};
     segment_index_t segment_index {null_segment_index};
@@ -29,35 +30,21 @@ struct tree_payload_t {
     [[nodiscard]] auto operator<=>(const tree_payload_t &other) const = default;
 };
 
-using tree_point_t = bg::model::d2::point_xy<grid_fine_t>;
-using tree_box_t = bg::model::box<tree_point_t>;
-using tree_value_t = std::pair<tree_box_t, tree_payload_t>;
-
-static_assert(sizeof(tree_box_t) == 32);
-static_assert(sizeof(tree_value_t) == 40);
-
-constexpr inline static auto tree_max_node_elements = 16;
-using tree_t = bgi::rtree<tree_value_t, bgi::rstar<tree_max_node_elements>>;
-
-auto get_selection_box(layout_calculation_data_t data) -> tree_box_t;
-auto get_selection_box(ordered_line_t segment) -> tree_box_t;
-auto to_rect(tree_box_t box) -> rect_fine_t;
-auto to_box(rect_fine_t rect) -> tree_box_t;
-
-auto operator==(const tree_t &a, const tree_t &b) -> bool;
-auto operator!=(const tree_t &a, const tree_t &b) -> bool;
+struct tree_container;
 
 }  // namespace detail::spatial_tree
 
 class SpatialTree {
    public:
-    using tree_t = detail::spatial_tree::tree_t;
-    using value_type = detail::spatial_tree::tree_value_t;
-
     using query_result_t = detail::spatial_tree::tree_payload_t;
     using queried_segments_t = std::array<segment_t, 4>;
 
    public:
+    explicit SpatialTree();
+    ~SpatialTree();
+    SpatialTree(SpatialTree &&);
+    auto operator=(SpatialTree &&) -> SpatialTree &;
+
     [[nodiscard]] auto format() const -> std::string;
 
     auto query_selection(rect_fine_t rect) const -> std::vector<query_result_t>;
@@ -66,12 +53,7 @@ class SpatialTree {
     // TODO remove?
     auto query_line_segments(point_t point) const -> queried_segments_t;
 
-    auto rects() const {
-        return transform_view(tree_.begin(), tree_.end(),
-                              [](const value_type &value) -> rect_fine_t {
-                                  return detail::spatial_tree::to_rect(value.first);
-                              });
-    }
+    auto rects() const -> std::vector<rect_fine_t>;
 
     auto submit(editable_circuit::InfoMessage message) -> void;
     auto validate(const Layout &layout) const -> void;
@@ -86,7 +68,7 @@ class SpatialTree {
     auto handle(editable_circuit::info_message::SegmentUninserted message) -> void;
     auto handle(editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void;
 
-    tree_t tree_ {};
+    std::unique_ptr<detail::spatial_tree::tree_container> tree_;
 };
 
 [[nodiscard]] auto get_segment_count(SpatialTree::queried_segments_t result) -> int;
@@ -96,45 +78,5 @@ class SpatialTree {
 [[nodiscard]] auto get_unique_element_id(SpatialTree::queried_segments_t) -> element_id_t;
 
 }  // namespace logicsim
-
-//
-// Formatters
-//
-
-template <>
-struct fmt::formatter<logicsim::detail::spatial_tree::tree_point_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::detail::spatial_tree::tree_point_t &obj,
-                       fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "[{}, {}]", obj.x(), obj.y());
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::detail::spatial_tree::tree_box_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::detail::spatial_tree::tree_box_t &obj,
-                       fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "[{}, {}]", obj.min_corner(), obj.max_corner());
-    }
-};
-
-template <>
-struct fmt::formatter<logicsim::detail::spatial_tree::tree_value_t> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const logicsim::detail::spatial_tree::tree_value_t &obj,
-                       fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}: {}", obj.first, obj.second);
-    }
-};
 
 #endif

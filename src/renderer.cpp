@@ -1681,7 +1681,7 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
     const auto scene_rect = get_scene_rect_fine(ctx, settings.view_config);
     ctx.setStrokeStyle(BLRgba32(0, 255, 0));
 
-    for (rect_fine_t&& rect : editable_circuit.caches().selection_rects()) {
+    for (const rect_fine_t& rect : editable_circuit.caches().selection_rects()) {
         if (!is_colliding(rect, scene_rect)) {
             continue;
         }

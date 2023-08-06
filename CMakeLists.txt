@@ -38,6 +38,7 @@ set(LS_CORE_SOURCES
     src/schematic.cpp
     src/schematic_generation.cpp
     src/segment_tree.cpp
+    src/segment_tree_types.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
     src/simulation.cpp
@@ -311,6 +312,7 @@ endif()
 
 # Main Library
 
+#        <boost/geometry.hpp>
 add_library(logicsim_pch INTERFACE)
 if (LS_ENABLE_PCH)
     message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
@@ -320,7 +322,6 @@ if (LS_ENABLE_PCH)
         <boost/algorithm/string/join.hpp>
         <boost/container/small_vector.hpp>
         <boost/container/vector.hpp>
-        <boost/geometry.hpp>
         <boost/random/mersenne_twister.hpp>
         <boost/random/uniform_int_distribution.hpp>
         <fmt/core.h>

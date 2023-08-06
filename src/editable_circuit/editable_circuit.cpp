@@ -33,7 +33,13 @@ auto EditableCircuit::extract_layout() -> Layout {
 
     // we don't reset the registrar, as allocations might still be out there
     layout_ = std::nullopt;
-    *cache_provider_ = CacheProvider {};
+    // TODO !!!
+    // *cache_provider_ = CacheProvider();
+    {
+        using std::swap;
+        auto other = CacheProvider {};
+        swap(*cache_provider_, other);
+    }
     selection_builder_ = SelectionBuilder {Layout {}, *cache_provider_};
 
     return temp;

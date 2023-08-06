@@ -1,10 +1,9 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_MESSAGES_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_MESSAGES_H
 
-#include "editable_circuit/types.h"
 #include "format.h"
 #include "layout_calculation_type.h"
-#include "segment_tree.h"
+#include "segment_tree_types.h"
 #include "vocabulary.h"
 
 #include <gsl/gsl>

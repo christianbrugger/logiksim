@@ -56,6 +56,10 @@ class CacheProvider {
     SpatialTree spatial_cache_ {};
 };
 
+static_assert(std::is_move_constructible_v<CollisionCache>);
+static_assert(std::is_move_constructible_v<SpatialTree>);
+static_assert(std::is_move_constructible_v<CacheProvider>);
+
 }  // namespace logicsim
 
 #endif
