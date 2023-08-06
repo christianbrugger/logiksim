@@ -176,10 +176,11 @@ auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
     editable_circuit::toggle_inserted_wire_crosspoint(get_state(), point);
 }
 
-auto EditableCircuit::regularize_temporary_selection(const Selection& selection)
+auto EditableCircuit::regularize_temporary_selection(
+    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t> {
     return editable_circuit::regularize_temporary_selection(layout_.value(), get_sender(),
-                                                            selection);
+                                                            selection, true_cross_points);
 }
 
 auto EditableCircuit::capture_inserted_cross_points(const Selection& selection) const

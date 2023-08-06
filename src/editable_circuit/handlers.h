@@ -128,7 +128,9 @@ auto delete_all(selection_handle_t handle, State state) -> void;
 //
 
 auto regularize_temporary_selection(Layout& layout, MessageSender sender,
-                                    const Selection& selection) -> std::vector<point_t>;
+                                    const Selection& selection,
+                                    std::optional<std::vector<point_t>> true_cross_points)
+    -> std::vector<point_t>;
 
 auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& cache,
                                    const Selection& selection) -> std::vector<point_t>;

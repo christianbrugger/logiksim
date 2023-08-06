@@ -366,11 +366,8 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode new_mode) -> void {
     insertion_mode_ = new_mode;
     editable_circuit_.change_insertion_mode(copy_selection(), new_mode);
 
-    if (new_mode == InsertionMode::temporary && cross_points_) {
-        editable_circuit_.split_temporary_segments(*cross_points_, get_selection());
-    }
     if (new_mode == InsertionMode::temporary) {
-        editable_circuit_.regularize_temporary_selection(get_selection());
+        editable_circuit_.regularize_temporary_selection(get_selection(), cross_points_);
     }
 }
 

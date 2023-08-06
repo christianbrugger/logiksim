@@ -1436,6 +1436,41 @@ auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment
     }
 }
 
+auto merge_all_line_segments(Layout& layout, MessageSender sender,
+                             std::vector<std::pair<segment_t, segment_t>>& pairs) {
+    // merging deletes the segment with highest segment index,
+    // so for this to work with multiple segments
+    // we need to be sort them in descendant order
+    for (auto& pair : pairs) {
+        sort_inplace(pair.first, pair.second, std::ranges::greater {});
+    }
+    std::ranges::sort(pairs, std::ranges::greater {});
+
+    // Sorted pairs example:
+    //  (<Element 0, Segment 6>, <Element 0, Segment 5>)
+    //  (<Element 0, Segment 5>, <Element 0, Segment 3>)
+    //  (<Element 0, Segment 4>, <Element 0, Segment 2>)
+    //  (<Element 0, Segment 4>, <Element 0, Segment 0>)  <-- 4 needs to become 2
+    //  (<Element 0, Segment 3>, <Element 0, Segment 1>)
+    //  (<Element 0, Segment 2>, <Element 0, Segment 1>)
+    //                                                    <-- move here & become 1
+
+    for (auto it = pairs.begin(); it != pairs.end(); ++it) {
+        merge_line_segments(layout, sender, it->first, it->second, nullptr);
+
+        const auto other = std::ranges::lower_bound(
+            std::next(it), pairs.end(), it->first, std::ranges::greater {},
+            [](std::pair<segment_t, segment_t> pair) { return pair.first; });
+
+        if (other != pairs.end() && other->first == it->first) {
+            other->first = it->second;
+
+            sort_inplace(other->first, other->second, std::ranges::greater {});
+            std::ranges::sort(std::next(it), pairs.end(), std::ranges::greater {});
+        }
+    }
+}
+
 auto split_line_segment(Layout& layout, MessageSender sender, const segment_t segment,
                         const point_t position) -> segment_part_t {
     const auto full_line = get_line(layout, segment);
@@ -2233,17 +2268,28 @@ class SegmentEndpointMap {
 
     using mergable_t = std::pair<segment_t, segment_t>;
 
+   public:
+    [[nodiscard]] static auto index(const orientation_t orientation) {
+        return static_cast<std::underlying_type<orientation_t>::type>(orientation);
+    }
+
+    [[nodiscard]] static auto get(const value_t& segments,
+                                  const orientation_t orientation) {
+        return segments.at(index(orientation));
+    }
+
+    [[nodiscard]] static auto has(const value_t& segments,
+                                  const orientation_t orientation) {
+        return get(segments, orientation) != null_segment;
+    }
+
    private:
     [[nodiscard]] static auto count_points(const value_t& segments) {
         return std::ranges::count_if(
             segments, [](segment_t value) { return value != null_segment; });
     }
 
-    [[nodiscard]] static auto to_index(const orientation_t orientation) {
-        return static_cast<std::underlying_type<orientation_t>::type>(orientation);
-    }
-
-    [[nodiscard]] static auto mergable_segments(const value_t& segments)
+    [[nodiscard]] static auto to_adcacent_segment(const value_t& segments)
         -> std::optional<mergable_t> {
         using enum orientation_t;
 
@@ -2251,12 +2297,10 @@ class SegmentEndpointMap {
             return std::nullopt;
         }
 
-        const auto to_segment = [&](orientation_t orientation) {
-            return segments.at(to_index(orientation));
-        };
-        const auto has_segment = [&](orientation_t orientation) {
-            return to_segment(orientation) != null_segment;
-        };
+        const auto to_segment
+            = [&](orientation_t orientation) { return get(segments, orientation); };
+        const auto has_segment
+            = [&](orientation_t orientation) { return has(segments, orientation); };
 
         if (has_segment(left) && has_segment(right)) {
             return mergable_t {to_segment(left), to_segment(right)};
@@ -2275,25 +2319,24 @@ class SegmentEndpointMap {
         add_point(line.p1, segment, to_orientation_p1(line));
     }
 
-    // [](point_t point, segment_t segment) {}
+    // [](point_t point, std::array<segment_t,4> segments, int count) {}
     template <typename Func>
     auto iter_crosspoints(Func callback) const -> void {
         for (const auto& [point, segments] : map_.values()) {
-            if (count_points(segments) >= 3) {
-                const auto segment = segments.at(0) ? segments.at(0) : segments.at(1);
-                assert(segment != null_segment);
+            const auto count = count_points(segments);
 
-                callback(point, segment);
+            if (count >= 3) {
+                callback(point, segments, count);
             }
         }
     }
 
-    [[nodiscard]] auto get_mergable_segments() const -> std::vector<mergable_t> {
+    [[nodiscard]] auto adjacent_segments() const -> std::vector<mergable_t> {
         auto result = std::vector<mergable_t> {};
 
         for (const auto& [point, segments] : map_.values()) {
-            if (const auto mergable = mergable_segments(segments)) {
-                result.push_back(mergable.value());
+            if (const auto adjacent = to_adcacent_segment(segments)) {
+                result.push_back(*adjacent);
             }
         }
 
@@ -2302,7 +2345,7 @@ class SegmentEndpointMap {
 
    private:
     auto add_point(point_t point, segment_t segment, orientation_t orientation) -> void {
-        const auto index = to_index(orientation);
+        const auto index = this->index(orientation);
 
         const auto it = map_.find(point);
 
@@ -2324,8 +2367,8 @@ class SegmentEndpointMap {
     map_t map_ {};
 };
 
-auto regularize_temporary_selection(Layout& layout, MessageSender sender,
-                                    const Selection& selection) -> std::vector<point_t> {
+auto build_endpoint_map(const Layout& layout, const Selection& selection)
+    -> SegmentEndpointMap {
     auto map = SegmentEndpointMap {};
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -2341,47 +2384,45 @@ auto regularize_temporary_selection(Layout& layout, MessageSender sender,
         map.add_segment(segment, full_line);
     }
 
-    // set crosspoints
+    return map;
+}
+
+auto regularize_temporary_selection(Layout& layout, MessageSender sender,
+                                    const Selection& selection,
+                                    std::optional<std::vector<point_t>> true_cross_points)
+    -> std::vector<point_t> {
+    if (true_cross_points) {
+        split_temporary_segments(layout, sender, *true_cross_points, selection);
+        std::ranges::sort(*true_cross_points);
+    }
+
+    const auto map = build_endpoint_map(layout, selection);
+    auto mergable_segments = map.adjacent_segments();
     auto cross_points = std::vector<point_t> {};
-    map.iter_crosspoints([&](point_t point, segment_t segment) {
-        cross_points.push_back(point);
-        set_segment_crosspoint(layout, segment, point);
-    });
 
-    // merge segments
-    auto pairs = map.get_mergable_segments();
+    map.iter_crosspoints(
+        [&](point_t point, std::array<segment_t, 4> segments, int count) {
+            if (count == 3 || !true_cross_points
+                || std::ranges::binary_search(*true_cross_points, point)) {
+                cross_points.push_back(point);
 
-    // merging deletes the segment with highest segment index,
-    // so for this to work with multiple segments
-    // we need to be sort them in descendant order
-    for (auto& pair : pairs) {
-        sort_inplace(pair.first, pair.second, std::ranges::greater {});
-    }
-    std::ranges::sort(pairs, std::ranges::greater {});
+                const auto segment = segments.at(0) ? segments.at(0) : segments.at(1);
+                set_segment_crosspoint(layout, segment, point);
+            } else {
+                using enum orientation_t;
 
-    // Sorted pairs example:
-    //  (<Element 0, Segment 6>, <Element 0, Segment 5>)
-    //  (<Element 0, Segment 5>, <Element 0, Segment 3>)
-    //  (<Element 0, Segment 4>, <Element 0, Segment 2>)
-    //  (<Element 0, Segment 4>, <Element 0, Segment 0>)  <-- 4 needs to become 2
-    //  (<Element 0, Segment 3>, <Element 0, Segment 1>)
-    //  (<Element 0, Segment 2>, <Element 0, Segment 1>)
-    //                                                    <-- move here & become 1
+                mergable_segments.push_back({
+                    SegmentEndpointMap::get(segments, left),
+                    SegmentEndpointMap::get(segments, right),
+                });
+                mergable_segments.push_back({
+                    SegmentEndpointMap::get(segments, up),
+                    SegmentEndpointMap::get(segments, down),
+                });
+            }
+        });
 
-    for (auto it = pairs.begin(); it != pairs.end(); ++it) {
-        merge_line_segments(layout, sender, it->first, it->second, nullptr);
-
-        const auto other = std::ranges::lower_bound(
-            std::next(it), pairs.end(), it->first, std::ranges::greater {},
-            [](SegmentEndpointMap::mergable_t pair) { return pair.first; });
-
-        if (other != pairs.end() && other->first == it->first) {
-            other->first = it->second;
-
-            sort_inplace(other->first, other->second, std::ranges::greater {});
-            std::ranges::sort(std::next(it), pairs.end(), std::ranges::greater {});
-        }
-    }
+    merge_all_line_segments(layout, sender, mergable_segments);
 
     return cross_points;
 }
