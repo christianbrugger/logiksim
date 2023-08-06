@@ -182,10 +182,10 @@ auto EditableCircuit::regularize_temporary_selection(const Selection& selection)
                                                             selection);
 }
 
-auto EditableCircuit::capture_inserted_splitpoints(const Selection& selection) const
+auto EditableCircuit::capture_inserted_cross_points(const Selection& selection) const
     -> std::vector<point_t> {
-    return editable_circuit::capture_inserted_splitpoints(layout_.value(),
-                                                          cache_provider_, selection);
+    return editable_circuit::capture_inserted_cross_points(layout_.value(),
+                                                           cache_provider_, selection);
 }
 
 auto EditableCircuit::split_temporary_segments(std::span<const point_t> split_points,

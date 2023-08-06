@@ -2367,27 +2367,27 @@ auto regularize_temporary_selection(Layout& layout, MessageSender sender,
     return cross_points;
 }
 
-auto capture_inserted_splitpoints(const Layout& layout, const CacheProvider& cache,
-                                  const Selection& selection) -> std::vector<point_t> {
-    auto split_points = std::vector<point_t> {};
+auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& cache,
+                                   const Selection& selection) -> std::vector<point_t> {
+    auto cross_points = std::vector<point_t> {};
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
         for (const auto& part : parts) {
             const auto line = get_line(layout, segment_part_t {segment, part});
 
             if (cache.collision_cache().is_wire_cross_point(line.p0)) {
-                split_points.push_back(line.p0);
+                cross_points.push_back(line.p0);
             }
             if (cache.collision_cache().is_wire_cross_point(line.p1)) {
-                split_points.push_back(line.p1);
+                cross_points.push_back(line.p1);
             }
         }
     }
 
-    std::ranges::sort(split_points);
-    split_points.erase(std::ranges::unique(split_points).begin(), split_points.end());
+    std::ranges::sort(cross_points);
+    cross_points.erase(std::ranges::unique(cross_points).begin(), cross_points.end());
 
-    return split_points;
+    return cross_points;
 }
 
 auto split_temporary_segments(Layout& layout, MessageSender sender,

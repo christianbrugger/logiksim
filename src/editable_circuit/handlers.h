@@ -130,8 +130,8 @@ auto delete_all(selection_handle_t handle, State state) -> void;
 auto regularize_temporary_selection(Layout& layout, MessageSender sender,
                                     const Selection& selection) -> std::vector<point_t>;
 
-auto capture_inserted_splitpoints(const Layout& layout, const CacheProvider& cache,
-                                  const Selection& selection) -> std::vector<point_t>;
+auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& cache,
+                                   const Selection& selection) -> std::vector<point_t>;
 
 auto split_temporary_segments(Layout& layout, MessageSender sender,
                               std::span<const point_t> split_points,

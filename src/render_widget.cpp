@@ -148,7 +148,7 @@ MouseMoveSelectionLogic::MouseMoveSelectionLogic(Args args)
     : builder_ {args.builder},
       editable_circuit_ {args.editable_circuit},
       delete_on_cancel_ {args.delete_on_cancel},
-      split_points_ {std::move(args.split_points)} {
+      cross_points_ {std::move(args.cross_points)} {
     if (args.has_colliding) {
         state_ = State::waiting_for_confirmation;
         insertion_mode_ = InsertionMode::collisions;
@@ -279,8 +279,8 @@ auto MouseMoveSelectionLogic::move_selection(point_fine_t point) -> void {
 
     convert_to(InsertionMode::temporary);
     editable_circuit_.move_or_delete_elements(copy_selection(), delta_x, delta_y);
-    if (split_points_) {
-        split_points_ = move_or_delete_points(split_points_.value(), delta_x, delta_y);
+    if (cross_points_) {
+        cross_points_ = move_or_delete_points(cross_points_.value(), delta_x, delta_y);
     }
 
     last_position_ = point_fine_t {
@@ -335,23 +335,26 @@ auto MouseMoveSelectionLogic::copy_selection() -> selection_handle_t {
     return editable_circuit_.create_selection(get_selection());
 }
 
-auto MouseMoveSelectionLogic::convert_to(InsertionMode mode) -> void {
-    if (insertion_mode_ == mode) {
+auto MouseMoveSelectionLogic::convert_to(InsertionMode new_mode) -> void {
+    if (insertion_mode_ == new_mode) {
         return;
     }
-    if (mode == InsertionMode::temporary && !split_points_) {
-        split_points_.emplace(
-            editable_circuit_.capture_inserted_splitpoints(get_selection()));
+    if (insertion_mode_ == InsertionMode::insert_or_discard && !cross_points_) {
+        cross_points_.emplace(
+            editable_circuit_.capture_inserted_cross_points(get_selection()));
+    }
+    if (insertion_mode_ == InsertionMode::temporary) {
+        editable_circuit_.split_temporary_segments(
+            editable_circuit_.capture_new_splitpoints(get_selection()), get_selection());
     }
 
-    insertion_mode_ = mode;
-    editable_circuit_.change_insertion_mode(copy_selection(), mode);
+    insertion_mode_ = new_mode;
+    editable_circuit_.change_insertion_mode(copy_selection(), new_mode);
 
-    if (mode == InsertionMode::temporary && split_points_) {
-        editable_circuit_.split_temporary_segments(split_points_.value(),
-                                                   get_selection());
+    if (new_mode == InsertionMode::temporary && cross_points_) {
+        editable_circuit_.split_temporary_segments(*cross_points_, get_selection());
     }
-    if (mode == InsertionMode::temporary) {
+    if (new_mode == InsertionMode::temporary) {
         editable_circuit_.regularize_temporary_selection(get_selection());
     }
 }
@@ -1063,7 +1066,10 @@ auto RendererWidget::paste_clipboard_items() -> void {
     if (!handle) {
         return;
     }
-    auto split_points = editable_circuit.regularize_temporary_selection(*handle);
+    auto cross_points = editable_circuit.regularize_temporary_selection(*handle);
+
+    editable_circuit.split_temporary_segments(
+        editable_circuit.capture_new_splitpoints(*handle), *handle);
     editable_circuit.change_insertion_mode(editable_circuit.create_selection(*handle),
                                            InsertionMode::collisions);
 
@@ -1075,7 +1081,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
             .editable_circuit = editable_circuit,
             .has_colliding = true,
             .delete_on_cancel = true,
-            .split_points = std::move(split_points),
+            .cross_points = std::move(cross_points),
         });
     } else {
         editable_circuit.change_insertion_mode(std::move(handle),
