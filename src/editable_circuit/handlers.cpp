@@ -1980,6 +1980,116 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
     return move_or_delete_wire_private(layout, sender, segment_part, dx, dy);
 }
 
+auto delete_all_inserterd_wires(State state, point_t point) -> void {
+    // segment ids change during deletion, so we need to query after each deletion
+    while (true) {
+        const auto segments = state.cache.spatial_cache().query_line_segments(point);
+
+        if (!segments.at(0)) {
+            return;
+        }
+        if (!is_inserted(state.layout, segments.at(0).element_id)) [[unlikely]] {
+            throw_exception("only works on inserted elements");
+        }
+
+        const auto line = get_line(state.layout, segments.at(0));
+        auto segment_part = segment_part_t {segments.at(0), to_part(line)};
+
+        change_wire_insertion_mode_private(state, segment_part, InsertionMode::temporary);
+        delete_wire_segment(state.layout, state.sender, segment_part);
+    }
+}
+
+auto remove_wire_crosspoint(State state, point_t point) -> void {
+    auto& layout = state.layout;
+
+    const auto segments = state.cache.spatial_cache().query_line_segments(point);
+    const auto segment_count = get_segment_count(segments);
+
+    if (segment_count != 4) {
+        return;
+    }
+    if (!all_same_element_id(segments)) [[unlikely]] {
+        throw_exception("expected query result to of one segment tree");
+    }
+
+    auto lines = std::array {
+        get_line(layout, segments.at(0)),
+        get_line(layout, segments.at(1)),
+        get_line(layout, segments.at(2)),
+        get_line(layout, segments.at(3)),
+    };
+    std::ranges::sort(lines);
+    const auto new_line_0 = line_t {lines.at(0).p0, lines.at(3).p1};
+    const auto new_line_1 = line_t {lines.at(1).p0, lines.at(2).p1};
+
+    delete_all_inserterd_wires(state, point);
+    add_wire_segment(state, nullptr, new_line_0, InsertionMode::insert_or_discard);
+    add_wire_segment(state, nullptr, new_line_1, InsertionMode::insert_or_discard);
+}
+
+auto add_wire_crosspoint(State state, point_t point) -> void {
+    auto& layout = state.layout;
+
+    const auto segments = state.cache.spatial_cache().query_line_segments(point);
+    const auto segment_count = get_segment_count(segments);
+
+    if (segment_count != 2) {
+        return;
+    }
+
+    const auto element_id_0 = segments.at(0).element_id;
+    const auto element_id_1 = segments.at(1).element_id;
+
+    if (element_id_0 == element_id_1) {
+        return;
+    }
+    if (layout.segment_tree(element_id_0).input_count()
+            + layout.segment_tree(element_id_1).input_count()
+        > 1) {
+        return;
+    }
+
+    if (!is_inserted(layout, element_id_0) || !is_inserted(layout, element_id_1))
+        [[unlikely]] {
+        throw_exception("only works on inserted elements");
+    }
+
+    const auto line0 = get_line(layout, segments.at(0));
+    const auto line1 = get_line(layout, segments.at(1));
+
+    delete_all_inserterd_wires(state, point);
+
+    add_wire_segment(state, nullptr, line_t {line0.p0, point},
+                     InsertionMode::insert_or_discard);
+    add_wire_segment(state, nullptr, line_t {line0.p1, point},
+                     InsertionMode::insert_or_discard);
+    add_wire_segment(state, nullptr, line_t {line1.p0, point},
+                     InsertionMode::insert_or_discard);
+    add_wire_segment(state, nullptr, line_t {line1.p1, point},
+                     InsertionMode::insert_or_discard);
+}
+
+auto toggle_inserted_wire_crosspoint_private(State state, point_t point) -> void {
+    if (state.cache.collision_cache().is_wires_crossing(point)) {
+        return add_wire_crosspoint(state, point);
+    }
+    if (state.cache.collision_cache().is_wire_cross_point(point)) {
+        return remove_wire_crosspoint(state, point);
+    }
+}
+
+auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "toggle_inserted_wire_crosspoint(point = {});\n"
+            "==========================================================\n\n",
+            state.layout, point);
+    }
+    return toggle_inserted_wire_crosspoint_private(state, point);
+}
+
 //
 // Handle Methods
 //

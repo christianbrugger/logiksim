@@ -59,6 +59,8 @@ class EditableCircuit {
 
     auto toggle_inverter(point_t point) -> void;
 
+    auto toggle_wire_crosspoint(point_t point) -> void;
+
     // Wire Mode Change Helpers
     // adds crosspoints, merges wire segments and returns splitpoints
     auto regularize_temporary_selection(const Selection& selection)

@@ -360,6 +360,11 @@ if (LS_ENABLE_PCH)
         <utility>
         <variant>
         <vector>
+        
+        "src/algorithm.h"
+        "src/exceptions.h"
+        "src/iterator_adaptor.h"
+        "src/format.h"
     )
 else()
     message(NOTICE "LOGIKSIM: Disabling pre-compiled headers.")

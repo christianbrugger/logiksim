@@ -61,7 +61,7 @@ auto move_or_delete_logic_item(Layout& Layout, MessageSender sender,
                                element_id_t& element_id, int x, int y) -> void;
 
 //
-// Wire Handling
+// Wire - High level Methods
 //
 
 auto delete_wire_segment(Layout& layout, MessageSender sender,
@@ -81,6 +81,8 @@ auto is_wire_position_representable(const Layout& layout, segment_part_t segment
 
 auto move_or_delete_wire(Layout& layout, MessageSender sender,
                          segment_part_t& segment_part, int dx, int dy) -> void;
+
+auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void;
 
 //
 // Wire - Low level Methods

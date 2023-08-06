@@ -108,6 +108,7 @@ auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
 auto MouseLineInsertLogic::mouse_release(std::optional<point_t> position) -> void {
     if (position && first_position_ && position == first_position_) {
         editable_circuit_.toggle_inverter(*position);
+        editable_circuit_.toggle_wire_crosspoint(*position);
     }
 
     remove_and_insert(position, InsertionMode::insert_or_discard);
