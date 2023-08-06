@@ -2,13 +2,13 @@
 #define LOGIKSIM_LAYOUT_CALCULATIONS_H
 
 #include "exceptions.h"
-#include "iterator_adaptor.h"
 #include "layout_calculation_type.h"
-#include "range.h"
 #include "vocabulary.h"
 
 #include <array>
 #include <vector>
+
+struct BLPoint;
 
 namespace logicsim {
 [[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;

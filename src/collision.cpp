@@ -1,6 +1,8 @@
 
 #include "collision.h"
 
+#include "geometry.h"
+
 namespace logicsim {
 
 auto is_inside(point_t point, ordered_line_t line) noexcept -> bool {

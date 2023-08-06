@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_INTERACTIVE_SIMULATION_H
 #define LOGIKSIM_INTERACTIVE_SIMULATION_H
 
-#include "layout.h"
 #include "schematic.h"
 #include "simulation.h"
 #include "timer.h"
@@ -10,6 +9,8 @@
 #include <ankerl/unordered_dense.h>
 
 namespace logicsim {
+
+class Layout;
 
 namespace detail::interactive_simulation {
 

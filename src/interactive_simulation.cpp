@@ -1,5 +1,6 @@
 #include "interactive_simulation.h"
 
+#include "layout.h"
 #include "schematic_generation.h"
 
 namespace logicsim {

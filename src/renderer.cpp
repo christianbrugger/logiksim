@@ -4,6 +4,7 @@
 #include "algorithm.h"
 #include "collision.h"
 #include "editable_circuit/editable_circuit.h"
+#include "editable_circuit/selection.h"
 #include "format.h"
 #include "layout.h"
 #include "layout_calculations.h"
@@ -1934,6 +1935,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
                                 .layout = scene.layout,
                                 .schematic = &scene.schematic,
                                 .simulation = &scene.simulation,
+                                .selection = {},
                             });
     }
     ctx.end();

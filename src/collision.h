@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_COLLISION_H
 #define LOGIKSIM_COLLISION_H
 
-#include "geometry.h"
+#include "vocabulary.h"
 
 namespace logicsim {
 

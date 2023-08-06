@@ -4,7 +4,6 @@
 #include "iterator_adaptor.h"
 #include "layout_calculation_type.h"
 #include "line_tree.h"
-#include "range.h"
 #include "segment_tree.h"
 #include "vocabulary.h"
 

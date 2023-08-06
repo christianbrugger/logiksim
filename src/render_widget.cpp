@@ -6,6 +6,7 @@
 #include "exceptions.h"
 #include "layout.h"
 #include "range.h"
+#include "renderer.h"
 #include "schematic.h"
 #include "schematic_generation.h"
 #include "serialize.h"
@@ -921,6 +922,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
                                    .layout = editable_circuit.layout(),
                                    .schematic = &simulation_->schematic(),
                                    .simulation = &simulation_->simulation(),
+                                   .selection = {},
                                    .settings = render_settings_,
                                });
     }

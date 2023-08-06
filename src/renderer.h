@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_RENDER_SCENE_H
 #define LOGIKSIM_RENDER_SCENE_H
 
-#include "editable_circuit/selection.h"
 #include "format.h"
 #include "glyph_cache.h"
 #include "layout.h"
@@ -94,7 +93,7 @@ struct render_args_t {
     const Schematic* schematic {nullptr};
     const Simulation* simulation {nullptr};
     const selection_mask_t& selection_mask {};
-    const Selection& selection {};
+    const Selection& selection;
     const RenderSettings& settings {};
 };
 

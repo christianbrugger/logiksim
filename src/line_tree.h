@@ -2,8 +2,8 @@
 #define LOGIKSIM_LINETREE_H
 
 #include "format.h"
-#include "geometry.h"
 #include "iterator_adaptor.h"
+#include "vocabulary.h"
 
 #include <fmt/core.h>
 #include <folly/small_vector.h>
