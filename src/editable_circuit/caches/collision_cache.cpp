@@ -543,6 +543,16 @@ auto CollisionCache::is_wire_cross_point(point_t point) const -> bool {
     return collision_cache::is_wire_cross_point(it->second);
 }
 
+auto CollisionCache::query(point_t point) const -> collision_cache::collision_data_t {
+    const auto it = map_.find(point);
+
+    if (it == map_.end()) {
+        return collision_cache::collision_data_t {};
+    }
+
+    return it->second;
+}
+
 auto CollisionCache::validate(const Layout& layout) const -> void {
     auto cache = CollisionCache {};
     add_layout_to_cache(cache, layout);

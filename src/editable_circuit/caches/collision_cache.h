@@ -91,6 +91,8 @@ class CollisionCache {
     [[nodiscard]] auto is_wires_crossing(point_t point) const -> bool;
     [[nodiscard]] auto is_wire_cross_point(point_t point) const -> bool;
 
+    [[nodiscard]] auto query(point_t point) const -> collision_cache::collision_data_t;
+
     [[nodiscard]] auto get_first_wire(point_t position) const -> element_id_t;
 
     // std::tuple<point_t, CollisionState>

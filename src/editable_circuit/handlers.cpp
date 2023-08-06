@@ -2020,12 +2020,12 @@ auto remove_wire_crosspoint(State state, point_t point) -> void {
         get_line(layout, segments.at(3)),
     };
     std::ranges::sort(lines);
-    const auto new_line_0 = line_t {lines.at(0).p0, lines.at(3).p1};
-    const auto new_line_1 = line_t {lines.at(1).p0, lines.at(2).p1};
+    const auto new_line_0 = ordered_line_t {lines.at(0).p0, lines.at(3).p1};
+    const auto new_line_1 = ordered_line_t {lines.at(1).p0, lines.at(2).p1};
 
     delete_all_inserterd_wires(state, point);
-    add_wire_segment(state, nullptr, new_line_0, InsertionMode::insert_or_discard);
-    add_wire_segment(state, nullptr, new_line_1, InsertionMode::insert_or_discard);
+    add_wire_segment(state, new_line_0, InsertionMode::insert_or_discard);
+    add_wire_segment(state, new_line_1, InsertionMode::insert_or_discard);
 }
 
 auto add_wire_crosspoint(State state, point_t point) -> void {
@@ -2060,14 +2060,11 @@ auto add_wire_crosspoint(State state, point_t point) -> void {
 
     delete_all_inserterd_wires(state, point);
 
-    add_wire_segment(state, nullptr, line_t {line0.p0, point},
-                     InsertionMode::insert_or_discard);
-    add_wire_segment(state, nullptr, line_t {line0.p1, point},
-                     InsertionMode::insert_or_discard);
-    add_wire_segment(state, nullptr, line_t {line1.p0, point},
-                     InsertionMode::insert_or_discard);
-    add_wire_segment(state, nullptr, line_t {line1.p1, point},
-                     InsertionMode::insert_or_discard);
+    const auto mode = InsertionMode::insert_or_discard;
+    add_wire_segment(state, ordered_line_t {line0.p0, point}, mode);
+    add_wire_segment(state, ordered_line_t {point, line0.p1}, mode);
+    add_wire_segment(state, ordered_line_t {line1.p0, point}, mode);
+    add_wire_segment(state, ordered_line_t {point, line1.p1}, mode);
 }
 
 auto toggle_inserted_wire_crosspoint_private(State state, point_t point) -> void {
@@ -2370,7 +2367,7 @@ auto regularize_temporary_selection(Layout& layout, MessageSender sender,
     return cross_points;
 }
 
-auto capture_inserted_splitpoints(Layout& layout, const CacheProvider& cache,
+auto capture_inserted_splitpoints(const Layout& layout, const CacheProvider& cache,
                                   const Selection& selection) -> std::vector<point_t> {
     auto split_points = std::vector<point_t> {};
 
@@ -2431,6 +2428,42 @@ auto split_temporary_segments(Layout& layout, MessageSender sender,
             }
         }
     }
+}
+
+auto capture_new_splitpoints(const Layout& layout, const CacheProvider& cache,
+                             const Selection& selection) -> std::vector<point_t> {
+    auto result = std::vector<point_t> {};
+
+    const auto add_candidate = [&](point_t point) {
+        const auto state = cache.collision_cache().query(point);
+        if (collision_cache::is_wire_corner_point(state)
+            || collision_cache::is_wire_connection(state)) {
+            result.push_back(point);
+        }
+    };
+
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        const auto full_line = get_line(layout, segment);
+
+        if (layout.display_state(segment.element_id) != display_state_t::temporary) {
+            throw_exception("can only find new splitpoints for temporary segments");
+        }
+        if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
+            throw_exception("selection cannot contain partially selected lines");
+        }
+
+        if (is_horizontal(full_line)) {
+            for (auto x : range(full_line.p0.x + 1, full_line.p1.x)) {
+                add_candidate(point_t {x, full_line.p0.y});
+            }
+        } else {
+            for (auto y : range(full_line.p0.y + 1, full_line.p1.y)) {
+                add_candidate(point_t {full_line.p0.x, y});
+            }
+        }
+    }
+
+    return result;
 }
 
 }  // namespace editable_circuit

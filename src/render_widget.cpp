@@ -126,9 +126,17 @@ auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
     remove_last_element();
     assert(!temp_element_);
 
-    if (position && first_position_) {
+    if (position && first_position_ && position.value() != first_position_.value()) {
         temp_element_ = editable_circuit_.add_line_segments(
-            *first_position_, *position, LineSegmentType::horizontal_first, mode);
+            *first_position_, *position, LineSegmentType::horizontal_first,
+            InsertionMode::temporary);
+
+        if (mode != InsertionMode::temporary) {
+            editable_circuit_.split_temporary_segments(
+                editable_circuit_.capture_new_splitpoints(*temp_element_),
+                *temp_element_);
+            editable_circuit_.change_insertion_mode(temp_element_.copy(), mode);
+        }
     }
 }
 

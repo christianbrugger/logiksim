@@ -66,10 +66,14 @@ class EditableCircuit {
     auto regularize_temporary_selection(const Selection& selection)
         -> std::vector<point_t>;
 
-    auto capture_inserted_splitpoints(const Selection& selection) -> std::vector<point_t>;
+    auto capture_inserted_splitpoints(const Selection& selection) const
+        -> std::vector<point_t>;
 
     auto split_temporary_segments(std::span<const point_t> split_points,
                                   const Selection& selection) -> void;
+
+    auto capture_new_splitpoints(const Selection& selection) const
+        -> std::vector<point_t>;
 
     // selections
     [[nodiscard]] auto create_selection() const -> selection_handle_t;
