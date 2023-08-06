@@ -2129,6 +2129,23 @@ auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
     };
 };
 
+auto new_wire_positions_representable(const Selection& selection, const Layout& layout,
+                                      int delta_x, int delta_y) -> bool {
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        const auto full_line = get_line(layout, segment);
+
+        for (const auto& part : parts) {
+            const auto line = to_line(full_line, part);
+
+            if (!is_representable(line, delta_x, delta_y)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 auto new_positions_representable(const Selection& selection, const Layout& layout,
                                  int delta_x, int delta_y) -> bool {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
@@ -2137,11 +2154,13 @@ auto new_positions_representable(const Selection& selection, const Layout& layou
 
     const auto get_position = position_calculator(layout, delta_x, delta_y);
 
-    const auto is_valid = [&](element_id_t element_id) {
+    const auto logic_item_valid = [&](element_id_t element_id) {
         const auto [x, y] = get_position(element_id);
         return is_logic_item_position_representable(layout, element_id, x, y);
     };
-    return std::ranges::all_of(selection.selected_logic_items(), is_valid);
+
+    return std::ranges::all_of(selection.selected_logic_items(), logic_item_valid)
+           && new_wire_positions_representable(selection, layout, delta_x, delta_y);
 }
 
 auto move_or_delete_elements(selection_handle_t handle, Layout& layout,
