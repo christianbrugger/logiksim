@@ -45,6 +45,7 @@ class SegmentTree {
     auto normalize() -> void;  // bring it into a form that can be compared
 
     [[nodiscard]] auto operator==(const SegmentTree &) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const SegmentTree &) const = default;
 
     auto clear() -> void;
     auto add_segment(segment_info_t segment) -> segment_index_t;

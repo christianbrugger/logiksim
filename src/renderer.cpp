@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <numbers>
 #include <numeric>
 #include <utility>
@@ -1353,6 +1354,8 @@ auto render_circuit(render_args_t args, int width, int height, std::string filen
     render_circuit(ctx, args);
 
     ctx.end();
+
+    std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
     img.writeToFile(filename.c_str());
 }
 

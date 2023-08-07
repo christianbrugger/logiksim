@@ -12,6 +12,8 @@
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>
 
+#include <tuple>
+
 namespace logicsim {
 
 Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {}
@@ -86,6 +88,33 @@ auto Layout::delete_last_element() -> void {
     colors_.pop_back();
 
     bounding_rects_.pop_back();
+}
+
+auto Layout::normalize() -> void {
+    // reset all caches
+    line_trees_ = std::vector<LineTree>(line_trees_.size(), LineTree {});
+    bounding_rects_ = std::vector<rect_t>(bounding_rects_.size(), empty_bounding_rect);
+
+    // normallize all members
+    for (auto &tree : segment_trees_) {
+        tree.normalize();
+    }
+
+    // sort our data (except caches)
+    const auto vectors = ranges::zip_view(element_types_,     //
+                                          sub_circuit_ids_,   //
+                                          input_counts_,      //
+                                          output_counts_,     //
+                                          input_inverters_,   //
+                                          output_inverters_,  //
+                                                              //
+                                          segment_trees_,     //
+                                          positions_,         //
+                                          orientations_,      //
+                                          display_states_,    //
+                                          colors_);
+
+    ranges::sort(vectors);
 }
 
 auto Layout::update_bounding_rect(element_id_t element_id) const -> void {
@@ -194,31 +223,6 @@ auto Layout::format() const -> std::string {
     }
 
     return fmt::format("<Layout with {} elements{}>", element_count(), inner);
-}
-
-auto Layout::normalize() -> void {
-    // reset all caches
-    line_trees_ = std::vector<LineTree>(line_trees_.size(), LineTree {});
-    bounding_rects_ = std::vector<rect_t>(bounding_rects_.size(), empty_bounding_rect);
-
-    // normallize all members
-    for (auto &tree : segment_trees_) {
-        tree.normalize();
-    }
-
-    // sort our data (except caches)
-    // const auto vectors
-    //    = ranges::zip_view(display_states_, positions_, element_types_,
-    //    sub_circuit_ids_,
-    //                       input_counts_, output_counts_, input_inverters_,
-    //                       output_inverters_, segment_trees_, orientations_, colors_);
-
-    //// const auto proj
-    ////     = [](std::tuple<segment_info_t, parts_vector_t> tuple) -> ordered_line_t {
-    ////     return std::get<segment_info_t>(tuple).line;
-    ////};
-    // const auto proj = [](const auto &tuple) { return std::get<0>(tuple); };
-    // ranges::sort(vectors, {}, proj);
 }
 
 auto Layout::empty() const -> bool {

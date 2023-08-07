@@ -33,6 +33,7 @@ struct segment_info_t {
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const segment_info_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const segment_info_t &other) const = default;
 };
 
 static_assert(sizeof(segment_info_t) == 10);

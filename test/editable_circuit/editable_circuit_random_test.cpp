@@ -215,16 +215,15 @@ class TrackedSelection {
     std::optional<std::vector<point_t>> cross_points_;
 };
 
-/*
 namespace {
-auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng) {
+auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render = false) {
     auto editable_circuit = EditableCircuit {Layout {}};
     auto &builder = editable_circuit.selection_builder();
 
     editable_circuit.add_example();
     editable_circuit.validate();
 
-    const auto expected_layout = moved_layout(editable_circuit.layout(), 10, 10).value();
+    auto expected_layout = moved_layout(editable_circuit.layout(), 10, 10).value();
 
     // First move
     builder.add(SelectionFunction::add,
@@ -258,14 +257,27 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng) {
     tracker_2.convert_to(InsertionMode::insert_or_discard);
     editable_circuit.validate();
 
-    // print(expected_layout == editable_circuit.layout());
+    // delete example
+    editable_circuit.delete_all(editable_circuit.create_selection(builder.selection()));
 
-    render_circuit(
-        render_args_t {
-            .layout = editable_circuit.layout(),
-            .selection = {},
-        },
-        400, 400, fmt::format("test_out/test_move_{:04d}.png", seed));
+    auto final_layout = Layout {editable_circuit.layout()};
+    expected_layout.normalize();
+    final_layout.normalize();
+
+    if (final_layout != expected_layout) {
+        throw_exception("final layouts are not the same");
+    }
+
+    if (do_render) {
+        render_circuit(
+            render_args_t {
+                .layout = editable_circuit.layout(),
+                .selection_mask = selection_mask_t {},
+                .selection = Selection {},
+                .settings = RenderSettings {},
+            },
+            400, 400, fmt::format("test_move/{:04d}.png", seed));
+    }
 };
 }  // namespace
 
@@ -276,6 +288,5 @@ TEST(EditableCircuitRandom, MoveWiresBackAndForth) {
         test_move_wires_back_and_forth(i, rng);
     }
 }
-*/
 
 }  // namespace logicsim

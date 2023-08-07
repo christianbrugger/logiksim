@@ -345,6 +345,7 @@ if (LS_ENABLE_PCH)
         <concepts>
         <cstdint>
         <exception>
+        <filesystem>
         <iostream>
         <iterator>
         <optional>

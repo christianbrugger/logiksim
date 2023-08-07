@@ -370,6 +370,7 @@ struct color_t {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const color_t &other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const color_t &other) const = default;
 
     [[nodiscard]] constexpr auto r() const noexcept -> int {
         return (value >> 16) & 0xFFu;
