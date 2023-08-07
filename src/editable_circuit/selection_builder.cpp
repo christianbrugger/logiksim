@@ -184,22 +184,6 @@ auto SelectionBuilder::selection() const -> const Selection& {
     return *cached_selection_;
 }
 
-auto SelectionBuilder::create_selection_mask() const -> selection_mask_t {
-    if (empty()) {
-        return {};
-    }
-
-    // TODO create algorithm to mask?
-    const auto element_count = layout_->element_count();
-    auto mask = selection_mask_t(element_count, false);
-
-    for (element_id_t element_id : selection().selected_logic_items()) {
-        mask.at(element_id.value) = true;
-    }
-
-    return mask;
-}
-
 // auto SelectionBuilder::copy_selection() const -> selection_handle_t {
 //     return editable_circuit_->create_selection(selection());
 // }

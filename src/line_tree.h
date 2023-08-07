@@ -113,6 +113,8 @@ class LineTree {
 
     auto swap(LineTree &other) noexcept -> void;
 
+    [[nodiscard]] auto operator==(const LineTree &) const -> bool = default;
+
     // return tree with new root, if possible
     [[nodiscard]] auto reroot(const point_t new_root) const -> std::optional<LineTree>;
 

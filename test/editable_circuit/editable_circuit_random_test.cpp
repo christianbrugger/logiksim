@@ -2,6 +2,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "geometry.h"
 #include "random.h"
+#include "renderer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -168,5 +169,113 @@ TEST(EditableCircuitRandom, AddRandomWiresRandomMode) {
         test_add_many_wires(rng, true);
     }
 }
+
+//
+// Move back and forth
+//
+
+class TrackedSelection {
+   public:
+    TrackedSelection(EditableCircuit &editable_circuit, selection_handle_t handle,
+                     InsertionMode starting_mode,
+                     std::optional<std::vector<point_t>> cross_points = {})
+        : editable_circuit_(editable_circuit),
+          handle_(std::move(handle)),
+          insertion_mode_(starting_mode),
+          cross_points_ {std::move(cross_points)} {}
+
+    auto convert_to(InsertionMode new_mode) -> void {
+        if (insertion_mode_ == new_mode) {
+            return;
+        }
+        if (insertion_mode_ == InsertionMode::insert_or_discard && !cross_points_) {
+            cross_points_.emplace(
+                editable_circuit_.capture_inserted_cross_points(*handle_));
+        }
+        if (insertion_mode_ == InsertionMode::temporary) {
+            editable_circuit_.split_before_insert(*handle_);
+        }
+
+        insertion_mode_ = new_mode;
+        editable_circuit_.change_insertion_mode(handle_.copy(), new_mode);
+
+        if (new_mode == InsertionMode::temporary) {
+            editable_circuit_.regularize_temporary_selection(*handle_, cross_points_);
+        }
+    }
+
+    auto move_or_delete(int delta_x, int delta_y) -> void {
+        editable_circuit_.move_or_delete_elements(handle_.copy(), delta_x, delta_y);
+    }
+
+   private:
+    EditableCircuit &editable_circuit_;
+    selection_handle_t handle_;
+    InsertionMode insertion_mode_;
+    std::optional<std::vector<point_t>> cross_points_;
+};
+
+/*
+namespace {
+auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng) {
+    auto editable_circuit = EditableCircuit {Layout {}};
+    auto &builder = editable_circuit.selection_builder();
+
+    editable_circuit.add_example();
+    editable_circuit.validate();
+
+    const auto expected_layout = moved_layout(editable_circuit.layout(), 10, 10).value();
+
+    // First move
+    builder.add(SelectionFunction::add,
+                rect_fine_t {point_fine_t {5, 5}, point_fine_t {7, 7}});
+    auto tracker_1 = TrackedSelection {
+        editable_circuit, editable_circuit.create_selection(builder.selection()),
+        InsertionMode::insert_or_discard};
+    tracker_1.convert_to(InsertionMode::temporary);
+    tracker_1.move_or_delete(10, 10);
+    tracker_1.convert_to(InsertionMode::insert_or_discard);
+    editable_circuit.validate();
+
+    // Mark rest as temporary
+    builder.clear();
+    builder.add(SelectionFunction::add,
+                rect_fine_t {point_fine_t {5, 5}, point_fine_t {10, 10}});
+    auto tracker_2 = TrackedSelection {
+        editable_circuit, editable_circuit.create_selection(builder.selection()),
+        InsertionMode::insert_or_discard};
+    tracker_2.convert_to(InsertionMode::temporary);
+    editable_circuit.validate();
+
+    // Add example and colliding
+    editable_circuit.add_example();
+    tracker_2.convert_to(InsertionMode::collisions);
+    editable_circuit.validate();
+
+    // Move second part
+    tracker_2.convert_to(InsertionMode::temporary);
+    tracker_2.move_or_delete(10, 10);
+    tracker_2.convert_to(InsertionMode::insert_or_discard);
+    editable_circuit.validate();
+
+    // print(expected_layout == editable_circuit.layout());
+
+    render_circuit(
+        render_args_t {
+            .layout = editable_circuit.layout(),
+            .selection = {},
+        },
+        400, 400, fmt::format("test_out/test_move_{:04d}.png", seed));
+};
+}  // namespace
+
+TEST(EditableCircuitRandom, MoveWiresBackAndForth) {
+    for (auto i : range(50u)) {
+        auto rng = Rng {i};
+
+        test_move_wires_back_and_forth(i, rng);
+    }
+}
+*/
 
 }  // namespace logicsim

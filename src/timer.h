@@ -19,7 +19,7 @@ class Timer {
    public:
     enum class Unit { s, us, ms };
 
-    explicit Timer(std::string description = "", Unit unit = Unit::s, int precision = 2);
+    explicit Timer(std::string description = "", Unit unit = Unit::ms, int precision = 3);
     ~Timer();
 
     [[nodiscard]] auto delta() const -> delta_t;

@@ -77,20 +77,17 @@ auto SegmentTree::normalize() -> void {
 }
 
 auto SegmentTree::sort_segments() -> void {
-    // we sort by ordered line
+    // we sort by line
     const auto vectors = ranges::zip_view(segments_, valid_parts_vector_);
 
     const auto proj
-        = [](std::tuple<segment_info_t, parts_vector_t> tuple) -> ordered_line_t {
+        = [](const std::tuple<segment_info_t, parts_vector_t>& tuple) -> ordered_line_t {
         return std::get<segment_info_t>(tuple).line;
     };
     ranges::sort(vectors, {}, proj);
 }
 
 auto SegmentTree::sort_point_types() -> void {
-    // we don't need to touch the connection_id's, as they are only used
-    // for input and outputs which need to have unique points
-
     // we wrap the data so we can order it without changing the data itself
     using wrapped = std::pair<point_t, std::reference_wrapper<SegmentPointType>>;
     std::vector<wrapped> wrapped_data;

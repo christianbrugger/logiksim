@@ -87,6 +87,9 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
 using selection_mask_t = boost::container::vector<bool>;
 using visibility_mask_t = boost::container::vector<bool>;
 
+auto create_selection_mask(const Layout& layout, const Selection& selection)
+    -> selection_mask_t;
+
 // TODO better grouping, group RenderSettings and BLContext, Circuit struct
 struct render_args_t {
     const Layout& layout;
@@ -98,6 +101,9 @@ struct render_args_t {
 };
 
 auto render_circuit(BLContext& ctx, render_args_t args) -> void;
+
+auto render_circuit(render_args_t args, int width, int height, std::string filename)
+    -> void;
 
 struct BenchmarkScene {
    public:

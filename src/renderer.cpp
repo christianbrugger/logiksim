@@ -1344,6 +1344,18 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     draw_wire_shadows(ctx, args.layout, args.selection, visibility, args.settings);
 }
 
+auto render_circuit(render_args_t args, int width, int height, std::string filename)
+    -> void {
+    auto img = BLImage {width, height, BL_FORMAT_PRGB32};
+    auto ctx = BLContext {img};
+
+    render_background(ctx, args.settings);
+    render_circuit(ctx, args);
+
+    ctx.end();
+    img.writeToFile(filename.c_str());
+}
+
 //
 // Background
 //
@@ -1697,6 +1709,20 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
             ctx, rect, RectAttributes {.draw_type = DrawType::stroke, .stroke_width = 1},
             settings);
     }
+}
+
+auto create_selection_mask(const Layout& layout, const Selection& selection)
+    -> selection_mask_t {
+    if (selection.selected_logic_items().empty()) {
+        return {};
+    }
+
+    auto mask = selection_mask_t(layout.element_count(), false);
+    for (element_id_t element_id : selection.selected_logic_items()) {
+        mask.at(element_id.value) = true;
+    }
+
+    return mask;
 }
 
 //

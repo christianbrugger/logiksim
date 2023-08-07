@@ -6,7 +6,11 @@
 #include "layout_calculation_type.h"
 #include "layout_calculations.h"
 #include "range.h"
+#include "scene.h"
 #include "timer.h"
+
+#include <range/v3/algorithm/sort.hpp>
+#include <range/v3/view/zip.hpp>
 
 namespace logicsim {
 
@@ -142,6 +146,32 @@ auto has_segments(const Layout &layout) -> bool {
     return false;
 }
 
+auto moved_layout(Layout layout, int delta_x, int delta_y) -> std::optional<Layout> {
+    for (auto element : layout.elements()) {
+        if (element.is_logic_item()) {
+            if (!is_representable(element.position(), delta_x, delta_y)) {
+                return std::nullopt;
+            }
+            layout.set_position(element,
+                                add_unchecked(element.position(), delta_x, delta_y));
+        } else if (element.is_wire()) {
+            auto &tree = element.modifyable_segment_tree();
+            for (const auto segment_index : tree.indices()) {
+                auto info = tree.segment_info(segment_index);
+
+                if (!is_representable(info.line, delta_x, delta_y)) {
+                    return std::nullopt;
+                }
+
+                info.line = add_unchecked(info.line, delta_x, delta_y);
+                tree.update_segment(segment_index, info);
+            }
+        }
+    }
+
+    return std::optional {std::move(layout)};
+}
+
 auto swap(Layout &a, Layout &b) noexcept -> void {
     a.swap(b);
 }
@@ -164,6 +194,31 @@ auto Layout::format() const -> std::string {
     }
 
     return fmt::format("<Layout with {} elements{}>", element_count(), inner);
+}
+
+auto Layout::normalize() -> void {
+    // reset all caches
+    line_trees_ = std::vector<LineTree>(line_trees_.size(), LineTree {});
+    bounding_rects_ = std::vector<rect_t>(bounding_rects_.size(), empty_bounding_rect);
+
+    // normallize all members
+    for (auto &tree : segment_trees_) {
+        tree.normalize();
+    }
+
+    // sort our data (except caches)
+    // const auto vectors
+    //    = ranges::zip_view(display_states_, positions_, element_types_,
+    //    sub_circuit_ids_,
+    //                       input_counts_, output_counts_, input_inverters_,
+    //                       output_inverters_, segment_trees_, orientations_, colors_);
+
+    //// const auto proj
+    ////     = [](std::tuple<segment_info_t, parts_vector_t> tuple) -> ordered_line_t {
+    ////     return std::get<segment_info_t>(tuple).line;
+    ////};
+    // const auto proj = [](const auto &tuple) { return std::get<0>(tuple); };
+    // ranges::sort(vectors, {}, proj);
 }
 
 auto Layout::empty() const -> bool {
@@ -223,10 +278,8 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
     orientations_.push_back(data.orientation);
     display_states_.push_back(data.display_state);
     colors_.push_back(data.color);
-
     bounding_rects_.push_back(empty_bounding_rect);
 
-    update_bounding_rect(element_id);
     return element(element_id);
 }
 
@@ -249,7 +302,7 @@ auto Layout::set_line_tree(element_id_t element_id, LineTree &&line_tree) -> voi
 
 auto Layout::set_position(element_id_t element_id, point_t position) -> void {
     positions_.at(element_id.value) = position;
-    update_bounding_rect(element_id);
+    bounding_rects_.at(element_id.value) = empty_bounding_rect;
 }
 
 auto Layout::set_display_state(element_id_t element_id, display_state_t display_state)
@@ -372,6 +425,7 @@ auto validate_segment_tree_display_state(const SegmentTree &tree,
 }
 
 auto Layout::validate() const -> void {
+    // wires
     const auto validate_segment_tree = [&](element_id_t element_id) {
         if (is_inserted(*this, element_id) && !segment_tree(element_id).empty()) {
             segment_tree(element_id).validate_inserted();
@@ -379,11 +433,9 @@ auto Layout::validate() const -> void {
             segment_tree(element_id).validate();
         }
     };
-
-    // wires
-    std::ranges::for_each(line_trees_, &LineTree::validate);
-    std::ranges::for_each(element_ids(), validate_segment_tree);
     for (const auto element_id : element_ids()) {
+        line_tree(element_id).validate();
+        validate_segment_tree(element_id);
         validate_segment_tree_display_state(segment_tree(element_id),
                                             display_state(element_id));
     }

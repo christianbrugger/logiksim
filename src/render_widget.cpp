@@ -149,8 +149,7 @@ auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
         *first_position_, *position, *insertion_type_, InsertionMode::temporary);
 
     if (mode != InsertionMode::temporary) {
-        editable_circuit_.split_temporary_segments(
-            editable_circuit_.capture_new_splitpoints(*temp_element_), *temp_element_);
+        editable_circuit_.split_before_insert(*temp_element_);
         editable_circuit_.change_insertion_mode(temp_element_.copy(), mode);
     }
 }
@@ -359,8 +358,7 @@ auto MouseMoveSelectionLogic::convert_to(InsertionMode new_mode) -> void {
             editable_circuit_.capture_inserted_cross_points(get_selection()));
     }
     if (insertion_mode_ == InsertionMode::temporary) {
-        editable_circuit_.split_temporary_segments(
-            editable_circuit_.capture_new_splitpoints(get_selection()), get_selection());
+        editable_circuit_.split_before_insert(get_selection());
     }
 
     insertion_mode_ = new_mode;
@@ -955,7 +953,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
     if (do_render_circuit_ && !simulation_) {
         const auto& selection = editable_circuit.selection_builder().selection();
-        const auto mask = editable_circuit.selection_builder().create_selection_mask();
+        const auto mask = create_selection_mask(editable_circuit.layout(), selection);
 
         render_circuit(bl_ctx, render_args_t {
                                    .layout = editable_circuit.layout(),
@@ -1082,8 +1080,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
     }
     auto cross_points = editable_circuit.regularize_temporary_selection(*handle);
 
-    editable_circuit.split_temporary_segments(
-        editable_circuit.capture_new_splitpoints(*handle), *handle);
+    editable_circuit.split_before_insert(*handle);
     editable_circuit.change_insertion_mode(editable_circuit.create_selection(*handle),
                                            InsertionMode::collisions);
 

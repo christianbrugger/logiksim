@@ -21,8 +21,6 @@ class CacheProvider;
 
 class SelectionBuilder {
    public:
-    using selection_mask_t = boost::container::vector<bool>;
-
     struct operation_t {
         SelectionFunction function;
         rect_fine_t rect;
@@ -41,7 +39,6 @@ class SelectionBuilder {
     auto set_selection(Selection selection) -> void;
 
     [[nodiscard]] auto selection() const -> const Selection &;
-    [[nodiscard]] auto create_selection_mask() const -> selection_mask_t;
 
     [[nodiscard]] auto all_operations_applied() const -> bool;
     auto apply_all_operations() -> void;

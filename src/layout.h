@@ -29,6 +29,9 @@ class Layout;
 
 [[nodiscard]] auto has_segments(const Layout &layout) -> bool;
 
+[[nodiscard]] auto moved_layout(Layout layout, int delta_x, int delta_y)
+    -> std::optional<Layout>;
+
 namespace layout {
 template <bool Const>
 class ElementTemplate;
@@ -47,6 +50,9 @@ class Layout {
 
     auto swap(Layout &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
+    auto normalize() -> void;  // bring it into a form that can be compared
+
+    [[nodiscard]] auto operator==(const Layout &) const -> bool = default;
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto element_count() const -> std::size_t;
