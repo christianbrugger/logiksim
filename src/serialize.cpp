@@ -194,7 +194,7 @@ auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
         return selection_handle_t {};
     }
 
-    auto handle = editable_circuit.create_selection();
+    auto handle = editable_circuit.get_handle();
     const auto delta
         = serialize::calculate_move_delta(data->save_position, load_position);
 

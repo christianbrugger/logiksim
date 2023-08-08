@@ -3,6 +3,7 @@
 #include "geometry.h"
 #include "random.h"
 #include "renderer.h"
+#include "timer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -228,9 +229,9 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     // First move
     builder.add(SelectionFunction::add,
                 rect_fine_t {point_fine_t {5, 5}, point_fine_t {7, 7}});
-    auto tracker_1 = TrackedSelection {
-        editable_circuit, editable_circuit.create_selection(builder.selection()),
-        InsertionMode::insert_or_discard};
+    auto tracker_1 = TrackedSelection {editable_circuit,
+                                       editable_circuit.get_handle(builder.selection()),
+                                       InsertionMode::insert_or_discard};
     tracker_1.convert_to(InsertionMode::temporary);
     tracker_1.move_or_delete(10, 10);
     tracker_1.convert_to(InsertionMode::insert_or_discard);
@@ -240,9 +241,9 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     builder.clear();
     builder.add(SelectionFunction::add,
                 rect_fine_t {point_fine_t {5, 5}, point_fine_t {10, 10}});
-    auto tracker_2 = TrackedSelection {
-        editable_circuit, editable_circuit.create_selection(builder.selection()),
-        InsertionMode::insert_or_discard};
+    auto tracker_2 = TrackedSelection {editable_circuit,
+                                       editable_circuit.get_handle(builder.selection()),
+                                       InsertionMode::insert_or_discard};
     tracker_2.convert_to(InsertionMode::temporary);
     editable_circuit.validate();
 
@@ -258,7 +259,7 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     editable_circuit.validate();
 
     // delete example
-    editable_circuit.delete_all(editable_circuit.create_selection(builder.selection()));
+    editable_circuit.delete_all(editable_circuit.get_handle(builder.selection()));
 
     auto final_layout = Layout {editable_circuit.layout()};
     expected_layout.normalize();

@@ -75,9 +75,8 @@ class EditableCircuit {
     auto split_before_insert(const Selection& selection) -> void;
 
     // selections
-    [[nodiscard]] auto create_selection() const -> selection_handle_t;
-    [[nodiscard]] auto create_selection(const Selection& selection) const
-        -> selection_handle_t;
+    [[nodiscard]] auto get_handle() const -> selection_handle_t;
+    [[nodiscard]] auto get_handle(const Selection& selection) const -> selection_handle_t;
     [[nodiscard]] auto selection_builder() const noexcept -> const SelectionBuilder&;
     [[nodiscard]] auto selection_builder() noexcept -> SelectionBuilder&;
 

@@ -346,7 +346,7 @@ auto MouseMoveSelectionLogic::get_selection() -> const Selection& {
 }
 
 auto MouseMoveSelectionLogic::copy_selection() -> selection_handle_t {
-    return editable_circuit_.create_selection(get_selection());
+    return editable_circuit_.get_handle(get_selection());
 }
 
 auto MouseMoveSelectionLogic::convert_to(InsertionMode new_mode) -> void {
@@ -989,8 +989,8 @@ auto RendererWidget::delete_selected_items() -> void {
 
     auto& editable_circuit = editable_circuit_.value();
 
-    auto copy_handle = editable_circuit.create_selection(
-        editable_circuit.selection_builder().selection());
+    auto copy_handle
+        = editable_circuit.get_handle(editable_circuit.selection_builder().selection());
     editable_circuit.selection_builder().clear();
 
     editable_circuit_.value().delete_all(std::move(copy_handle));
@@ -1081,7 +1081,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
     auto cross_points = editable_circuit.regularize_temporary_selection(*handle);
 
     editable_circuit.split_before_insert(*handle);
-    editable_circuit.change_insertion_mode(editable_circuit.create_selection(*handle),
+    editable_circuit.change_insertion_mode(editable_circuit.get_handle(*handle),
                                            InsertionMode::collisions);
 
     editable_circuit.selection_builder().set_selection(*handle.get());

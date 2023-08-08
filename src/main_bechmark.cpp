@@ -29,7 +29,7 @@ static void BM_Benchmark_New_Selection(benchmark::State& state) {
     const auto registrar = SelectionRegistrar {};
 
     for ([[maybe_unused]] auto _ : state) {
-        auto handle = registrar.create_selection();
+        auto handle = registrar.get_handle();
         handle.value().add_logicitem(element_id);
 
         benchmark::ClobberMemory();
@@ -45,7 +45,7 @@ static void BM_Benchmark_Reuse_Selection(benchmark::State& state) {
 
     const auto element_id = element_id_t {0};
     const auto registrar = SelectionRegistrar {};
-    auto handle = registrar.create_selection();
+    auto handle = registrar.get_handle();
 
     for ([[maybe_unused]] auto _ : state) {
         handle.value().add_logicitem(element_id);

@@ -184,10 +184,6 @@ auto SelectionBuilder::selection() const -> const Selection& {
     return *cached_selection_;
 }
 
-// auto SelectionBuilder::copy_selection() const -> selection_handle_t {
-//     return editable_circuit_->create_selection(selection());
-// }
-
 auto SelectionBuilder::all_operations_applied() const -> bool {
     return operations_.empty();
 }

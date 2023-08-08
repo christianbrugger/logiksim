@@ -56,7 +56,7 @@ auto SelectionRegistrar::submit(editable_circuit::InfoMessage message) -> void {
     }
 }
 
-auto SelectionRegistrar::create_selection() const -> selection_handle_t {
+auto SelectionRegistrar::get_handle() const -> selection_handle_t {
     const auto key = next_selection_key_++;
 
     auto&& [it, inserted]
@@ -70,9 +70,9 @@ auto SelectionRegistrar::create_selection() const -> selection_handle_t {
     return selection_handle_t {selection, *this, key};
 }
 
-auto SelectionRegistrar::create_selection(const Selection& selection) const
+auto SelectionRegistrar::get_handle(const Selection& selection) const
     -> selection_handle_t {
-    auto handle = create_selection();
+    auto handle = get_handle();
     handle.value() = selection;
     return handle;
 }
@@ -125,7 +125,7 @@ auto selection_handle_t::copy() const -> selection_handle_t {
     if (registrar_ == nullptr || selection_ == nullptr) {
         return selection_handle_t {};
     }
-    return registrar_->create_selection(*selection_);
+    return registrar_->get_handle(*selection_);
 }
 
 auto selection_handle_t::format() const -> std::string {

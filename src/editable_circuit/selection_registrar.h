@@ -63,9 +63,8 @@ class SelectionRegistrar {
     auto submit(editable_circuit::InfoMessage message) -> void;
     auto validate(const Layout& layout) const -> void;
 
-    [[nodiscard]] auto create_selection() const -> selection_handle_t;
-    [[nodiscard]] auto create_selection(const Selection& selection) const
-        -> selection_handle_t;
+    [[nodiscard]] auto get_handle() const -> selection_handle_t;
+    [[nodiscard]] auto get_handle(const Selection& selection) const -> selection_handle_t;
 
     [[nodiscard]] auto selections() const {
         return transform_view(allocated_selections_,

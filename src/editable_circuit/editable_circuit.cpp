@@ -78,7 +78,7 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
     const auto element_id = editable_circuit::add_logic_item(get_state(), definition,
                                                              position, insertion_mode);
 
-    auto handle = registrar_.create_selection();
+    auto handle = registrar_.get_handle();
     if (element_id) {
         handle.value().add_logicitem(element_id);
     }
@@ -98,7 +98,7 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
 
 auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
     -> selection_handle_t {
-    auto handle = registrar_.create_selection();
+    auto handle = registrar_.get_handle();
 
     add_wire_segment(get_state(), handle.get(), line, insertion_mode);
 
@@ -114,7 +114,7 @@ auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
                                         LineInsertionType segment_type,
                                         InsertionMode insertion_mode)
     -> selection_handle_t {
-    auto handle = registrar_.create_selection();
+    auto handle = registrar_.get_handle();
 
     editable_circuit::add_wire(get_state(), p0, p1, segment_type, insertion_mode,
                                handle.get());
@@ -197,13 +197,12 @@ auto EditableCircuit::split_before_insert(const Selection& selection) -> void {
                                                std::move(split_points), selection);
 }
 
-auto EditableCircuit::create_selection() const -> selection_handle_t {
-    return registrar_.create_selection();
+auto EditableCircuit::get_handle() const -> selection_handle_t {
+    return registrar_.get_handle();
 }
 
-auto EditableCircuit::create_selection(const Selection& selection) const
-    -> selection_handle_t {
-    return registrar_.create_selection(selection);
+auto EditableCircuit::get_handle(const Selection& selection) const -> selection_handle_t {
+    return registrar_.get_handle(selection);
 }
 
 auto EditableCircuit::selection_builder() const noexcept -> const SelectionBuilder& {
