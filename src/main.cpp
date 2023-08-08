@@ -8,6 +8,7 @@
 #include "timer.h"
 
 #include <fmt/core.h>
+#include <gsl/gsl>
 
 #include <exception>
 #include <iostream>
@@ -19,7 +20,7 @@ namespace logicsim {
 //////////
 
 auto generate_layout() -> Layout {
-    constexpr auto max_value = 50;
+    constexpr auto max_value = 300;
     auto editable_circuit = EditableCircuit {Layout {}};
 
     for (auto x : range(5, max_value, 5)) {
@@ -48,34 +49,144 @@ auto generate_layout() -> Layout {
     return editable_circuit.extract_layout();
 }
 
-auto benchmark_layered_drawing() -> void {
-    const auto layout = generate_layout();
+auto render_single_layer(BLImage& img, const Layout& layout,
+                         const RenderSettings& settings, unsigned int threads) -> void {
+    const auto info = BLContextCreateInfo {.threadCount = threads};
+    auto ctx = BLContext {img, info};
 
+    render_background(ctx, settings);
+    render_circuit(ctx, render_args_t {
+                            .layout = layout,
+                            .selection = Selection {},
+                            .settings = settings,
+                        });
+    ctx.end();
+}
+
+auto benchmark_single_layer(const Layout& layout, int width, int height,
+                            unsigned int threads) -> BLImage {
+    auto img = BLImage {width, height, BL_FORMAT_PRGB32};
+    const auto settings = RenderSettings {};
+
+    for (auto _ [[maybe_unused]] : range(10)) {
+        const auto t = Timer("single");
+        for (auto __ [[maybe_unused]] : range(10)) {
+            render_single_layer(img, layout, settings, threads);
+        }
+    }
+
+    return img;
+}
+
+//
+// multi layer
+//
+
+auto render_multi_layer(std::vector<BLImage>& images, const Layout& layout,
+                        const RenderSettings& settings, unsigned int threads) -> void {
+    const auto info = BLContextCreateInfo {.threadCount = threads};
+
+    auto contexts = std::vector<BLContext> {};
+    for (auto& img : images) {
+        contexts.emplace_back(BLContext {img, info});
+    }
+
+    for (auto& ctx : std::ranges::subrange(contexts.begin() + 2, contexts.end())) {
+        ctx.clearAll();
+    }
+    render_background(contexts.at(1), settings);
+    render_circuit(contexts.at(2), render_args_t {
+                                       .layout = layout,
+                                       .selection = Selection {},
+                                       .settings = settings,
+                                   });
+
+    // finish rendering all layers
+    for (auto& ctx : std::ranges::subrange(contexts.begin() + 1, contexts.end())) {
+        ctx.end();
+    }
+    // compose layers
+    for (auto& img : std::ranges::subrange(images.begin() + 1, images.end())) {
+        contexts.at(0).blitImage(
+            BLRect {
+                0,
+                0,
+                gsl::narrow<double>(img.width()),
+                gsl::narrow<double>(img.height()),
+            },
+            img);
+    }
+    contexts.at(0).end();
+}
+
+auto benchmark_multi_layer(const Layout& layout, int width, int height,
+                           unsigned int threads) -> std::vector<BLImage> {
+    const auto settings = RenderSettings {};
+    const auto n = 4;
+
+    auto images = std::vector<BLImage> {};
+    for (auto _ [[maybe_unused]] : range(n)) {
+        images.emplace_back(BLImage {width, height, BL_FORMAT_PRGB32});
+    }
+
+    for (auto _ [[maybe_unused]] : range(10)) {
+        const auto t = Timer("multi");
+        for (auto __ [[maybe_unused]] : range(10)) {
+            render_multi_layer(images, layout, settings, threads);
+        }
+    }
+
+    return images;
+}
+
+auto benchmark_layered_drawing() -> void {
+    const int width = 3840;
+    const int height = 2160;
+    // const int width = 1920;
+    // const int height = 1080;
+
+    const unsigned int threads = 4;
+
+    const auto layout = generate_layout();
     print(layout.format_stats());
+
+    auto img_single = benchmark_single_layer(layout, width, height, threads);
+    print();
+    auto img_multi = benchmark_multi_layer(layout, width, height, threads);
+
+    // write all images
+    img_single.writeToFile(std::string {"main_single_layer.png"}.c_str());
+    for (auto index : range(img_multi.size())) {
+        img_multi.at(index).writeToFile(
+            fmt::format("main_multi_layer_{}.png", index).c_str());
+    }
 }
 
 }  // namespace logicsim
 
 auto main() -> int {
     using namespace logicsim;
+    bool do_run = false;
 
     /// TODO consider: ios_base::sync_with_stdio(false);
     /// SL.io.10 in https://isocpp.github.io/CppCoreGuidelines/
 
     benchmark_layered_drawing();
 
-    try {
-        auto timer = Timer {"Benchmark", Timer::Unit::ms, 3};
-        // auto count = benchmark_simulation(6, 10, true);
-        // auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
-        //                                            BENCHMARK_DEFAULT_EVENTS, true);
+    if (do_run) {
+        try {
+            auto timer = Timer {"Benchmark", Timer::Unit::ms, 3};
+            // auto count = benchmark_simulation(6, 10, true);
+            // auto count = logicsim::benchmark_simulation(BENCHMARK_DEFAULT_ELEMENTS,
+            //                                            BENCHMARK_DEFAULT_EVENTS, true);
 
-        auto count = logicsim::benchmark_line_renderer(100, true);
-        fmt::print("count = {}\n", count);
+            auto count = logicsim::benchmark_line_renderer(100, true);
+            fmt::print("count = {}\n", count);
 
-    } catch (const std::exception& exc) {
-        std::cerr << exc.what() << '\n';
-        return -1;
+        } catch (const std::exception& exc) {
+            std::cerr << exc.what() << '\n';
+            return -1;
+        }
     }
 
     return 0;
