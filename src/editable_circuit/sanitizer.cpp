@@ -128,8 +128,8 @@ auto sanitize_part(segment_part_t segment_part, const Layout &layout,
     const auto full_line = get_line(layout, segment_part.segment);
     const auto crossing_cache = CrossingCache {cache, full_line};
 
-    if (const auto new_part
-        = find_sanitized_part(segment_part.part, crossing_cache, mode)) {
+    if (const auto new_part =
+            find_sanitized_part(segment_part.part, crossing_cache, mode)) {
         return segment_part_t {segment_part.segment, new_part.value()};
     }
     return null_segment_part;

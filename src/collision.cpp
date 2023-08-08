@@ -25,8 +25,8 @@ auto is_colliding(point_t point, ordered_line_t line) noexcept -> bool {
 }
 
 auto line_points_colliding(ordered_line_t line0, ordered_line_t line1) noexcept -> bool {
-    return is_colliding(line0.p0, line1) || is_colliding(line0.p1, line1)
-           || is_colliding(line1.p0, line0) || is_colliding(line1.p1, line0);
+    return is_colliding(line0.p0, line1) || is_colliding(line0.p1, line1) ||
+           is_colliding(line1.p0, line0) || is_colliding(line1.p1, line0);
 }
 
 auto is_colliding(point_t point, rect_t rect) noexcept -> bool {

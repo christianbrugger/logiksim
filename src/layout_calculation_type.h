@@ -18,8 +18,8 @@ struct layout_calculation_data_t {
     orientation_t orientation {orientation_t::undirected};
     ElementType element_type {ElementType::placeholder};
 
-    [[nodiscard]] auto operator==(const layout_calculation_data_t& other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const layout_calculation_data_t& other) const
+        -> bool = default;
 };
 
 static_assert(sizeof(layout_calculation_data_t) == 32);

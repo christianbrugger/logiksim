@@ -69,11 +69,10 @@ constexpr bool contains(R&& r, const T& value, Proj proj = {}) {
 // copy adjacent if
 //
 
-template <
-    std::forward_iterator I, std::sentinel_for<I> S, std::weakly_incrementable O,
-    class Proj = std::identity,
-    std::indirect_binary_predicate<std::projected<I, Proj>, std::projected<I, Proj>> Pred
-    = std::ranges::equal_to>
+template <std::forward_iterator I, std::sentinel_for<I> S, std::weakly_incrementable O,
+          class Proj = std::identity,
+          std::indirect_binary_predicate<std::projected<I, Proj>, std::projected<I, Proj>>
+              Pred = std::ranges::equal_to>
     requires std::indirectly_writable<O, std::indirect_result_t<Proj&, I>>
 constexpr auto copy_adjacent_if(I first, S last, O result, Pred pred = {}, Proj proj = {})
     -> void {
@@ -133,10 +132,10 @@ auto round_to(double value) -> result_type {
 
 template <typename result_type = double>
 auto clamp_to(double value) -> result_type {
-    constexpr static double max
-        = gsl::narrow<double>(std::numeric_limits<result_type>::max());
-    constexpr static double min
-        = gsl::narrow<double>(std::numeric_limits<result_type>::lowest());
+    constexpr static double max =
+        gsl::narrow<double>(std::numeric_limits<result_type>::max());
+    constexpr static double min =
+        gsl::narrow<double>(std::numeric_limits<result_type>::lowest());
 
     // we don't handle NaN for now, as not needed
     if (value >= max) {
@@ -243,10 +242,9 @@ auto distance_fast(std::ranges::input_range auto&& range) {
 //
 // std::indirect_unary_predicate<std::projected<I, Proj>> Pred
 
-template <
-    std::input_iterator I, std::sentinel_for<I> S, class Proj = std::identity,
-    std::indirect_binary_predicate<std::projected<I, Proj>, std::projected<I, Proj>> Pred
-    = std::ranges::equal_to>
+template <std::input_iterator I, std::sentinel_for<I> S, class Proj = std::identity,
+          std::indirect_binary_predicate<std::projected<I, Proj>, std::projected<I, Proj>>
+              Pred = std::ranges::equal_to>
 constexpr auto adjacent_count_if(I first, S last, Pred pred = {}, Proj proj = {})
     -> std::iter_difference_t<I> {
     static_assert(std::input_iterator<I>);
@@ -272,8 +270,7 @@ constexpr auto adjacent_count_if(I first, S last, Pred pred = {}, Proj proj = {}
 template <std::ranges::forward_range R, class Proj = std::identity,
           std::indirect_binary_predicate<std::projected<std::ranges::iterator_t<R>, Proj>,
                                          std::projected<std::ranges::iterator_t<R>, Proj>>
-              Pred
-          = std::ranges::equal_to>
+              Pred = std::ranges::equal_to>
 constexpr auto adjacent_count_if(R&& r, Pred pred = {}, Proj proj = {}) {
     return adjacent_count_if(std::ranges::begin(r), std::ranges::end(r), std::ref(pred),
                              std::ref(proj));

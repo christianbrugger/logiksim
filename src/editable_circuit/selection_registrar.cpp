@@ -59,8 +59,8 @@ auto SelectionRegistrar::submit(editable_circuit::InfoMessage message) -> void {
 auto SelectionRegistrar::get_handle() const -> selection_handle_t {
     const auto key = next_selection_key_++;
 
-    auto&& [it, inserted]
-        = allocated_selections_.emplace(key, std::make_unique<Selection>());
+    auto&& [it, inserted] =
+        allocated_selections_.emplace(key, std::make_unique<Selection>());
 
     if (!inserted) {
         throw_exception("unable to create new selection.");

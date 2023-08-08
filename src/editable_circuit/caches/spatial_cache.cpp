@@ -157,8 +157,8 @@ auto SpatialTree::handle(editable_circuit::info_message::LogicItemInserted messa
 auto SpatialTree::handle(editable_circuit::info_message::LogicItemUninserted message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.data);
-    const auto remove_count
-        = tree_->value.remove({box, {message.element_id, null_segment_index}});
+    const auto remove_count =
+        tree_->value.remove({box, {message.element_id, null_segment_index}});
 
     if (remove_count != 1) [[unlikely]] {
         throw_exception("Wasn't able to find element to remove.");
@@ -239,8 +239,9 @@ auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_r
 
     auto result = std::vector<query_result_t> {};
 
-    const auto inserter
-        = [&result](const tree_value_t& value) { result.push_back(value.second); };
+    const auto inserter = [&result](const tree_value_t& value) {
+        result.push_back(value.second);
+    };
 
     // intersects or covered_by
     tree_->value.query(bgi::intersects(to_box(rect)), output_callable(inserter));
@@ -251,8 +252,8 @@ auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_r
 auto SpatialTree::has_element(point_fine_t point) const -> bool {
     using namespace detail::spatial_tree;
 
-    return tree_->value.qbegin(bgi::intersects(tree_point_t {point.x, point.y}))
-           != tree_->value.qend();
+    return tree_->value.qbegin(bgi::intersects(tree_point_t {point.x, point.y})) !=
+           tree_->value.qend();
 }
 
 auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
@@ -263,15 +264,15 @@ auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segme
 
     auto result = std::array {null_segment, null_segment, null_segment, null_segment};
 
-    const auto inserter
-        = [&result, index = std::size_t {0}](const tree_value_t& value) mutable {
-              if (value.second.segment_index == null_segment_index) {
-                  // we only return segments
-                  return;
-              }
-              result.at(index++)
-                  = segment_t {value.second.element_id, value.second.segment_index};
-          };
+    const auto inserter = [&result,
+                           index = std::size_t {0}](const tree_value_t& value) mutable {
+        if (value.second.segment_index == null_segment_index) {
+            // we only return segments
+            return;
+        }
+        result.at(index++) =
+            segment_t {value.second.element_id, value.second.segment_index};
+    };
 
     tree_->value.query(bgi::intersects(tree_point), output_callable(inserter));
     return result;

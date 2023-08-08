@@ -49,8 +49,8 @@ namespace logicsim {
 
 namespace detail::selection_registrar {
 
-using selection_map_t
-    = ankerl::unordered_dense::map<selection_key_t, std::unique_ptr<Selection>>;
+using selection_map_t =
+    ankerl::unordered_dense::map<selection_key_t, std::unique_ptr<Selection>>;
 
 auto unpack_selection(const selection_map_t::value_type& value) -> Selection&;
 

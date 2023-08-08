@@ -187,9 +187,9 @@ auto to_connection(T &&schematic, connection_t connection_data)
 }
 
 template <class T>
-concept ElementOrConnection = std::convertible_to<T, Schematic::ConstElement>
-                              || std::convertible_to<T, Schematic::ConstInput>
-                              || std::convertible_to<T, Schematic::ConstOutput>;
+concept ElementOrConnection = std::convertible_to<T, Schematic::ConstElement> ||
+                              std::convertible_to<T, Schematic::ConstInput> ||
+                              std::convertible_to<T, Schematic::ConstOutput>;
 
 template <bool Const>
 class Schematic::ElementIteratorTemplate {
@@ -251,13 +251,12 @@ class Schematic::ElementViewTemplate {
 
 template <bool Const>
 inline constexpr bool
-    std::ranges::enable_view<logicsim::Schematic::ElementViewTemplate<Const>>
-    = true;
+    std::ranges::enable_view<logicsim::Schematic::ElementViewTemplate<Const>> = true;
 
 template <bool Const>
 inline constexpr bool
-    std::ranges::enable_borrowed_range<logicsim::Schematic::ElementViewTemplate<Const>>
-    = true;
+    std::ranges::enable_borrowed_range<logicsim::Schematic::ElementViewTemplate<Const>> =
+        true;
 
 namespace logicsim {
 
@@ -375,22 +374,20 @@ class Schematic::ConnectionViewTemplate {
 }  // namespace logicsim
 
 template <bool Const, bool IsInput>
-inline constexpr bool
-    std::ranges::enable_view<logicsim::Schematic::ConnectionViewTemplate<Const, IsInput>>
-    = true;
+inline constexpr bool std::ranges::enable_view<
+    logicsim::Schematic::ConnectionViewTemplate<Const, IsInput>> = true;
 
 template <bool Const, bool IsInput>
 inline constexpr bool std::ranges::enable_borrowed_range<
-    logicsim::Schematic::ConnectionViewTemplate<Const, IsInput>>
-    = true;
+    logicsim::Schematic::ConnectionViewTemplate<Const, IsInput>> = true;
 
 namespace logicsim {
 
 template <bool Const>
 class Schematic::InputTemplate {
     using SchematicType = std::conditional_t<Const, const Schematic, Schematic>;
-    using ConnectionDataType
-        = std::conditional_t<Const, const connection_t, connection_t>;
+    using ConnectionDataType =
+        std::conditional_t<Const, const connection_t, connection_t>;
 
     /// This constructor is not regarded as a copy constructor,
     //   so we preserve trivially copyable
@@ -447,8 +444,8 @@ template <bool Const>
 class Schematic::OutputTemplate {
    private:
     using SchematicType = std::conditional_t<Const, const Schematic, Schematic>;
-    using ConnectionDataType
-        = std::conditional_t<Const, const connection_t, connection_t>;
+    using ConnectionDataType =
+        std::conditional_t<Const, const connection_t, connection_t>;
 
     friend OutputTemplate<!Const>;
     friend ElementTemplate<Const>;

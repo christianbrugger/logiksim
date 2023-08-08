@@ -125,8 +125,8 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
 
             // TODO width depends on internal state
             const auto width = 2 * 4;
-            const auto height
-                = data.output_count <= 1 ? 1 : 2 * (data.output_count - std::size_t {1});
+            const auto height =
+                data.output_count <= 1 ? 1 : 2 * (data.output_count - std::size_t {1});
 
             for (auto i : range(1, width)) {
                 for (auto j : range(height + 1)) {

@@ -73,12 +73,12 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
     } else {
         auto ignore_delay = schematic.wire_delay_per_distance() == delay_t {0ns};
 
-        auto delays = ignore_delay ? std::vector<delay_t>(line_tree.output_count(),
-                                                          delay_t::epsilon())
-                                   : calculate_output_delays(
-                                       line_tree, schematic.wire_delay_per_distance());
-        const auto tree_max_delay
-            = ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
+        auto delays =
+            ignore_delay
+                ? std::vector<delay_t>(line_tree.output_count(), delay_t::epsilon())
+                : calculate_output_delays(line_tree, schematic.wire_delay_per_distance());
+        const auto tree_max_delay =
+            ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
 
         // TODO: temporarily disable wires with to many outputs
         if (line_tree.output_count() > connection_id_t::max()) {

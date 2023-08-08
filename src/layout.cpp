@@ -250,8 +250,8 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
         throw_exception("Reached maximum number of elements.");
     }
 
-    const auto element_id = element_id_t {
-        gsl::narrow_cast<element_id_t::value_type>(element_types_.size())};
+    const auto element_id =
+        element_id_t {gsl::narrow_cast<element_id_t::value_type>(element_types_.size())};
 
     // extend vectors
     element_types_.push_back(data.element_type);
@@ -315,8 +315,8 @@ auto Layout::set_display_state(element_id_t element_id, display_state_t display_
 }
 
 auto Layout::element_ids() const noexcept -> forward_range_t<element_id_t> {
-    const auto count
-        = element_id_t {gsl::narrow_cast<element_id_t::value_type>(element_count())};
+    const auto count =
+        element_id_t {gsl::narrow_cast<element_id_t::value_type>(element_count())};
     return range(count);
 }
 
@@ -372,8 +372,8 @@ auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
     auto &line_tree = line_trees_.at(element_id.value);
     auto element = this->element(element_id);
 
-    if (line_tree.empty() && element.display_state() == display_state_t::normal
-        && element.is_wire() && element.segment_tree().has_input()) {
+    if (line_tree.empty() && element.display_state() == display_state_t::normal &&
+        element.is_wire() && element.segment_tree().has_input()) {
         line_tree = LineTree::from_segment_tree(element.segment_tree()).value();
 
         if (line_tree.empty()) {
@@ -419,8 +419,8 @@ auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
 auto validate_segment_tree_display_state(const SegmentTree &tree,
                                          display_state_t display_state) -> void {
     if (!tree.empty()) {
-        bool any_valid_parts
-            = std::ranges::any_of(tree.valid_parts(), &SegmentTree::parts_vector_t::size);
+        bool any_valid_parts =
+            std::ranges::any_of(tree.valid_parts(), &SegmentTree::parts_vector_t::size);
 
         if (any_valid_parts && !is_inserted(display_state)) [[unlikely]] {
             throw_exception("segment tree is in the wrong display state");
@@ -642,14 +642,14 @@ template class ElementTemplate<false>;
 
 template ElementTemplate<true>::ElementTemplate(ElementTemplate<false>) noexcept;
 
-template auto ElementTemplate<false>::operator==<false>(
-    ElementTemplate<false>) const noexcept -> bool;
-template auto ElementTemplate<false>::operator==<true>(
-    ElementTemplate<true>) const noexcept -> bool;
-template auto ElementTemplate<true>::operator==<false>(
-    ElementTemplate<false>) const noexcept -> bool;
-template auto ElementTemplate<true>::operator==<true>(
-    ElementTemplate<true>) const noexcept -> bool;
+template auto ElementTemplate<false>::operator==
+    <false>(ElementTemplate<false>) const noexcept -> bool;
+template auto ElementTemplate<false>::operator==
+    <true>(ElementTemplate<true>) const noexcept -> bool;
+template auto ElementTemplate<true>::operator==
+    <false>(ElementTemplate<false>) const noexcept -> bool;
+template auto ElementTemplate<true>::operator==
+    <true>(ElementTemplate<true>) const noexcept -> bool;
 
 }  // namespace layout
 

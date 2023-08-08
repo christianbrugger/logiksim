@@ -516,8 +516,8 @@ struct point_fine_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] constexpr auto operator==(const point_fine_t &other) const -> bool
-        = default;
+    [[nodiscard]] constexpr auto operator==(const point_fine_t &other) const
+        -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const point_fine_t &other) const = default;
 
     [[nodiscard]] constexpr auto operator+(point_fine_t other) const -> point_fine_t {
@@ -618,8 +618,8 @@ struct ordered_line_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] constexpr auto operator==(const ordered_line_t &other) const -> bool
-        = default;
+    [[nodiscard]] constexpr auto operator==(const ordered_line_t &other) const
+        -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const ordered_line_t &other) const = default;
 };
 
@@ -652,8 +652,8 @@ struct rect_fine_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] constexpr auto operator==(const rect_fine_t &other) const -> bool
-        = default;
+    [[nodiscard]] constexpr auto operator==(const rect_fine_t &other) const
+        -> bool = default;
 };
 
 struct rect_t {
@@ -682,8 +682,8 @@ struct offset_t {
     value_type value;
 
     using difference_type = range_difference_t<value_type>;
-    static_assert(sizeof(difference_type) > sizeof(value_type)
-                  && std::is_signed_v<difference_type>);
+    static_assert(sizeof(difference_type) > sizeof(value_type) &&
+                  std::is_signed_v<difference_type>);
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -753,8 +753,8 @@ struct part_copy_definition_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const part_copy_definition_t &other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const part_copy_definition_t &other) const
+        -> bool = default;
     [[nodiscard]] auto operator<=>(const part_copy_definition_t &other) const = default;
 };
 
@@ -772,8 +772,8 @@ struct segment_part_t {
     }
 };
 
-inline constexpr auto null_segment_part
-    = segment_part_t {null_segment, part_t {offset_t {0}, offset_t {1}}};
+inline constexpr auto null_segment_part =
+    segment_part_t {null_segment, part_t {offset_t {0}, offset_t {1}}};
 
 }  // namespace logicsim
 

@@ -4,8 +4,8 @@ namespace logicsim::editable_circuit::examples {
 
 auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, bool random_modes) {
     const auto line = get_random_line(rng, min.value, max.value);
-    const auto mode = random_modes ? get_random_insertion_mode(rng)
-                                   : InsertionMode::insert_or_discard;
+    const auto mode =
+        random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 
     const auto segment_part = add_wire_segment(state, line, mode);
 
@@ -16,8 +16,8 @@ auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, bool random_
 
 auto add_random_button(Rng& rng, State state, grid_t min, grid_t max, bool random_modes) {
     const auto position = get_random_point(rng, min.value, max.value);
-    const auto mode = random_modes ? get_random_insertion_mode(rng)
-                                   : InsertionMode::insert_or_discard;
+    const auto mode =
+        random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 
     add_logic_item(state,
                    LogicItemDefinition {

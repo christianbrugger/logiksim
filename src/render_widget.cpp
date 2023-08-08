@@ -80,8 +80,8 @@ auto MouseElementInsertLogic::remove_and_insert(std::optional<point_t> position,
     assert(!temp_element_);
 
     if (position) {
-        temp_element_ = editable_circuit_.add_logic_item(element_definition_,
-                                                         position.value(), mode);
+        temp_element_ =
+            editable_circuit_.add_logic_item(element_definition_, position.value(), mode);
     }
 }
 
@@ -107,8 +107,8 @@ auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
             insertion_type_.reset();
         }
 
-        if (position != first_position_
-            && (!insertion_type_ || is_orthogonal(*position, *first_position_))) {
+        if (position != first_position_ &&
+            (!insertion_type_ || is_orthogonal(*position, *first_position_))) {
             insertion_type_ = is_horizontal(line_t {*position, *first_position_})
                                   ? LineInsertionType::horizontal_first
                                   : LineInsertionType::vertical_first;
@@ -139,8 +139,8 @@ auto MouseLineInsertLogic::remove_and_insert(std::optional<point_t> position,
     remove_last_element();
     assert(!temp_element_);
 
-    if (!position || !first_position_ || !insertion_type_
-        || position.value() == first_position_.value()) {
+    if (!position || !first_position_ || !insertion_type_ ||
+        position.value() == first_position_.value()) {
         return;
     }
 
@@ -266,8 +266,8 @@ auto MouseMoveSelectionLogic::mouse_press(point_fine_t point, bool double_click)
         }
     }
 
-    if (state_ == State::waiting_for_first_click
-        || state_ == State::waiting_for_confirmation) {
+    if (state_ == State::waiting_for_first_click ||
+        state_ == State::waiting_for_confirmation) {
         state_ = State::move_selection;
         last_position_ = point;
     }
@@ -882,8 +882,8 @@ Q_SLOT void RendererWidget::on_simulation_timeout() {
                             wire_delay_per_distance_);
     }
 
-    const auto timeout
-        = timeout_t {std::chrono::milliseconds(simulation_timer_interval_ms_)};
+    const auto timeout =
+        timeout_t {std::chrono::milliseconds(simulation_timer_interval_ms_)};
     simulation_->run(timeout);
 
     // TODO how do we know simulation end is reached?
@@ -989,8 +989,8 @@ auto RendererWidget::delete_selected_items() -> void {
 
     auto& editable_circuit = editable_circuit_.value();
 
-    auto copy_handle
-        = editable_circuit.get_handle(editable_circuit.selection_builder().selection());
+    auto copy_handle =
+        editable_circuit.get_handle(editable_circuit.selection_builder().selection());
     editable_circuit.selection_builder().clear();
 
     editable_circuit_.value().delete_all(std::move(copy_handle));
@@ -998,8 +998,8 @@ auto RendererWidget::delete_selected_items() -> void {
 }
 
 auto RendererWidget::select_all_items() -> void {
-    if (interaction_state_ == InteractionState::simulation
-        || interaction_state_ == InteractionState::not_interactive) {
+    if (interaction_state_ == InteractionState::simulation ||
+        interaction_state_ == InteractionState::not_interactive) {
         return;
     }
     auto& selection_builder = editable_circuit_.value().selection_builder();
@@ -1017,16 +1017,16 @@ auto RendererWidget::select_all_items() -> void {
 }
 
 auto RendererWidget::get_mouse_position() -> point_t {
-    if (const auto position
-        = to_grid(this->mapFromGlobal(QCursor::pos()), render_settings_.view_config)) {
+    if (const auto position =
+            to_grid(this->mapFromGlobal(QCursor::pos()), render_settings_.view_config)) {
         return position.value();
     }
 
     const auto w = this->width();
     const auto h = this->height();
 
-    if (const auto position
-        = to_grid(QPoint(w / 2, h / 2), render_settings_.view_config)) {
+    if (const auto position =
+            to_grid(QPoint(w / 2, h / 2), render_settings_.view_config)) {
         return position.value();
     }
     if (const auto position = to_grid(QPoint(0, 0), render_settings_.view_config)) {
@@ -1056,8 +1056,8 @@ auto RendererWidget::copy_selected_items() -> void {
 }
 
 auto RendererWidget::paste_clipboard_items() -> void {
-    if (interaction_state_ == InteractionState::simulation
-        || interaction_state_ == InteractionState::not_interactive) {
+    if (interaction_state_ == InteractionState::simulation ||
+        interaction_state_ == InteractionState::not_interactive) {
         return;
     }
     const auto t = Timer {"", Timer::Unit::ms, 3};
@@ -1073,8 +1073,8 @@ auto RendererWidget::paste_clipboard_items() -> void {
     reset_interaction_state();
 
     const auto position = get_mouse_position();
-    auto handle
-        = add_layout(binary, editable_circuit, InsertionMode::temporary, position);
+    auto handle =
+        add_layout(binary, editable_circuit, InsertionMode::temporary, position);
     if (!handle) {
         return;
     }
@@ -1118,16 +1118,16 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             }
             mouse_logic_.emplace(MouseElementInsertLogic::Args {
                 .editable_circuit = editable_circuit_.value(),
-                .element_definition
-                = to_logic_item_definition(interaction_state_, default_input_count_),
+                .element_definition =
+                    to_logic_item_definition(interaction_state_, default_input_count_),
             });
             return;
         }
 
         if (interaction_state_ == InteractionState::selection) {
             auto& selection_builder = editable_circuit_.value().selection_builder();
-            const auto point
-                = to_grid_fine(event->position(), render_settings_.view_config);
+            const auto point =
+                to_grid_fine(event->position(), render_settings_.view_config);
 
             if (editable_circuit_->caches().spatial_cache().has_element(point)) {
                 if (event->modifiers() == Qt::NoModifier) {
@@ -1176,10 +1176,10 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
             set_new_mouse_logic(event);
         }
         if (mouse_logic_) {
-            const auto grid_position
-                = to_grid(event->position(), render_settings_.view_config);
-            const auto grid_fine_position
-                = to_grid_fine(event->position(), render_settings_.view_config);
+            const auto grid_position =
+                to_grid(event->position(), render_settings_.view_config);
+            const auto grid_fine_position =
+                to_grid_fine(event->position(), render_settings_.view_config);
             auto double_click = event->type() == QEvent::MouseButtonDblClick;
 
             std::visit(
@@ -1232,10 +1232,10 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
     }
 
     if (mouse_logic_) {
-        const auto grid_position
-            = to_grid(event->position(), render_settings_.view_config);
-        const auto grid_fine_position
-            = to_grid_fine(event->position(), render_settings_.view_config);
+        const auto grid_position =
+            to_grid(event->position(), render_settings_.view_config);
+        const auto grid_fine_position =
+            to_grid_fine(event->position(), render_settings_.view_config);
 
         std::visit(
             overload {
@@ -1269,10 +1269,10 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
     }
 
     else if (event->button() == Qt::LeftButton && mouse_logic_) {
-        const auto grid_position
-            = to_grid(event->position(), render_settings_.view_config);
-        const auto grid_fine_position
-            = to_grid_fine(event->position(), render_settings_.view_config);
+        const auto grid_position =
+            to_grid(event->position(), render_settings_.view_config);
+        const auto grid_fine_position =
+            to_grid_fine(event->position(), render_settings_.view_config);
 
         bool finished = std::visit(
             overload {
@@ -1349,10 +1349,10 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
             });
         } else {
             view_config.set_offset(point_fine_t {
-                view_config.offset().x
-                    + standard_scroll_grid * event->angleDelta().x() / standard_delta,
-                view_config.offset().y
-                    + standard_scroll_grid * event->angleDelta().y() / standard_delta,
+                view_config.offset().x +
+                    standard_scroll_grid * event->angleDelta().x() / standard_delta,
+                view_config.offset().y +
+                    standard_scroll_grid * event->angleDelta().y() / standard_delta,
             });
         }
         update();
@@ -1361,10 +1361,10 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
     // sideway scroll
     else if (event->modifiers() == Qt::ShiftModifier) {
         view_config.set_offset(point_fine_t {
-            view_config.offset().x
-                + standard_scroll_grid * event->angleDelta().y() / standard_delta,
-            view_config.offset().y
-                + standard_scroll_grid * event->angleDelta().x() / standard_delta,
+            view_config.offset().x +
+                standard_scroll_grid * event->angleDelta().y() / standard_delta,
+            view_config.offset().y +
+                standard_scroll_grid * event->angleDelta().x() / standard_delta,
         });
         update();
     }

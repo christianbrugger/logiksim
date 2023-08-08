@@ -127,8 +127,8 @@ static void BM_Simulation_0(benchmark::State& state) {
         benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();
     }
-    state.counters["Events"]
-        = benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
+    state.counters["Events"] =
+        benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
 }
 
 BENCHMARK(BM_Simulation_0);  // NOLINT
@@ -162,8 +162,8 @@ static void BM_RenderScene_0(benchmark::State& state) {
         benchmark::ClobberMemory();
     }
 
-    state.counters["Events"]
-        = benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
+    state.counters["Events"] =
+        benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
 }
 
 BENCHMARK(BM_RenderScene_0);  // NOLINT

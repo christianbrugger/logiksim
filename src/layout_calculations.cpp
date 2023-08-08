@@ -218,8 +218,8 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
             return input_count == 5 && output_count == 2;
         }
         case shift_register: {
-            return input_count >= 2 && output_count >= 1
-                   && input_count == output_count + 1;
+            return input_count >= 2 && output_count >= 1 &&
+                   input_count == output_count + 1;
         }
         case latch_d: {
             return input_count == 2 && output_count == 1;
@@ -370,16 +370,16 @@ auto is_representable(layout_calculation_data_t data) -> bool {
     const auto rect = element_collision_rect(data);
 
     return is_representable(position.x.value + rect.p0.x.value,
-                            position.y.value + rect.p0.y.value)
-           && is_representable(position.x.value + rect.p1.x.value,
-                               position.y.value + rect.p1.y.value);
+                            position.y.value + rect.p0.y.value) &&
+           is_representable(position.x.value + rect.p1.x.value,
+                            position.y.value + rect.p1.y.value);
 }
 
 auto orientations_compatible(orientation_t a, orientation_t b) -> bool {
     using enum orientation_t;
-    return (a == left && b == right) || (a == right && b == left)
-           || (a == up && b == down) || (a == down && b == up) || (a == undirected)
-           || (b == undirected);
+    return (a == left && b == right) || (a == right && b == left) ||
+           (a == up && b == down) || (a == down && b == up) || (a == undirected) ||
+           (b == undirected);
 }
 
 }  // namespace logicsim

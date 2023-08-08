@@ -186,13 +186,12 @@ template <class Proj>
 }  // namespace logicsim
 
 template <typename Iterator, class Proj>
-inline constexpr bool std::ranges::enable_view<logicsim::TransformView<Iterator, Proj>>
-    = true;
+inline constexpr bool std::ranges::enable_view<logicsim::TransformView<Iterator, Proj>> =
+    true;
 
 template <typename Iterator, class Proj>
 inline constexpr bool
-    std::ranges::enable_borrowed_range<logicsim::TransformView<Iterator, Proj>>
-    = true;
+    std::ranges::enable_borrowed_range<logicsim::TransformView<Iterator, Proj>> = true;
 
 namespace logicsim {
 

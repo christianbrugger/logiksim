@@ -24,8 +24,8 @@ struct point_and_orientation_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const point_and_orientation_t& other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const point_and_orientation_t& other) const
+        -> bool = default;
     [[nodiscard]] auto operator<=>(const point_and_orientation_t& other) const = default;
 };
 
@@ -156,8 +156,8 @@ class AdjacencyGraph {
             throw_exception("Duplicate segments when building graph.");
         }
 
-        if (adjacency0.size() == adjacency0.capacity()
-            || adjacency1.size() == adjacency1.capacity()) [[unlikely]] {
+        if (adjacency0.size() == adjacency0.capacity() ||
+            adjacency1.size() == adjacency1.capacity()) [[unlikely]] {
             throw_exception(
                 "Point has too many neighbors when building adjacency graph.");
         }

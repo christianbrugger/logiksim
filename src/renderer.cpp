@@ -53,13 +53,13 @@ auto draw_standard_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attribu
     const auto w = w_ == 0 ? 1.0 : w_;
     const auto h = h_ == 0 ? 1.0 : h_;
 
-    if (attributes.draw_type == DrawType::fill
-        || attributes.draw_type == DrawType::fill_and_stroke) {
+    if (attributes.draw_type == DrawType::fill ||
+        attributes.draw_type == DrawType::fill_and_stroke) {
         ctx.fillRect(x0, y0, w, h);
     }
 
-    if (attributes.draw_type == DrawType::stroke
-        || attributes.draw_type == DrawType::fill_and_stroke) {
+    if (attributes.draw_type == DrawType::stroke ||
+        attributes.draw_type == DrawType::fill_and_stroke) {
         const auto width = attributes.stroke_width == -1 ? stroke_width(settings)
                                                          : attributes.stroke_width;
         const auto offset = stroke_offset(width);
@@ -125,8 +125,8 @@ auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_
         return point_fine_t {p1};
     }
 
-    const double alpha = static_cast<double>((t_select.value - t0.value).count())
-                         / static_cast<double>((t1.value - t0.value).count());
+    const double alpha = static_cast<double>((t_select.value - t0.value).count()) /
+                         static_cast<double>((t1.value - t0.value).count());
 
     if (is_horizontal(line_t {p0, p1})) {
         return point_fine_t {interpolate_1d(p0.x, p1.x, alpha),
@@ -313,10 +313,10 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
     const auto it_until = history.until(time_until);
 
     for (const auto& entry : std::ranges::subrange(it_from, it_until)) {
-        const auto p_start = interpolate_line_1d(p_from, p_until, time_from, time_until,
-                                                 entry.first_time);
-        const auto p_end = interpolate_line_1d(p_from, p_until, time_from, time_until,
-                                               entry.last_time);
+        const auto p_start =
+            interpolate_line_1d(p_from, p_until, time_from, time_until, entry.first_time);
+        const auto p_end =
+            interpolate_line_1d(p_from, p_until, time_from, time_until, entry.last_time);
         draw_line_segment(ctx, p_start, p_end, entry.value, settings);
     }
 }
@@ -365,8 +365,8 @@ auto draw_wire_with_history(BLContext& ctx, Schematic::ConstElement element,
 auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& layout,
                const Simulation& simulation, const RenderSettings& settings) -> void {
     if (element.history_length() == delay_t {0ns}) {
-        auto enabled = simulation.input_value(element.input(connection_id_t {0}))
-                       ^ element.input_inverters().at(0);
+        auto enabled = simulation.input_value(element.input(connection_id_t {0})) ^
+                       element.input_inverters().at(0);
         draw_wire_no_history(ctx, layout.element(element), enabled, settings);
     } else {
         draw_wire_with_history(ctx, element, layout, simulation, settings);
@@ -524,8 +524,8 @@ auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
             const auto inverted = layout.element(element).output_inverted(output_id);
             const auto output = element.output(output_id);
 
-            if (inverted || !output.has_connected_element()
-                || output.connected_element().is_placeholder()) {
+            if (inverted || !output.has_connected_element() ||
+                output.connected_element().is_placeholder()) {
                 const auto enabled = simulation.output_value(output);
                 draw_single_connector(ctx, position, orientation, enabled, inverted,
                                       display_state_t::normal, settings);
@@ -1209,8 +1209,9 @@ auto draw_wire_valid_shadow(BLContext& ctx, const SegmentTree& segment_tree,
 auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& selection,
                        const visibility_mask_t& visibility,
                        const RenderSettings& settings) {
-    const auto is_visible
-        = [&](element_id_t element_id) { return visibility.at(element_id.value); };
+    const auto is_visible = [&](element_id_t element_id) {
+        return visibility.at(element_id.value);
+    };
 
     for (const auto element : layout.elements()) {
         if (!element.is_wire() || !is_visible(element)) {
@@ -1234,8 +1235,8 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& se
     }
 
     for (auto&& [segment, parts] : selection.selected_segments()) {
-        if (is_visible(segment.element_id)
-            && layout.display_state(segment.element_id) == display_state_t::normal) {
+        if (is_visible(segment.element_id) &&
+            layout.display_state(segment.element_id) == display_state_t::normal) {
             const auto line = get_line(layout, segment);
             draw_wire_selected_parts_shadow(ctx, line, parts, settings);
         }
@@ -1268,14 +1269,15 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
         const auto id = element_id.value;
         return id < std::ssize(args.selection_mask) ? args.selection_mask[id] : false;
     };
-    const auto is_visible
-        = [&](element_id_t element_id) { return visibility.at(element_id.value); };
+    const auto is_visible = [&](element_id_t element_id) {
+        return visibility.at(element_id.value);
+    };
 
     // wires
     if (args.simulation == nullptr || args.schematic == nullptr) {
         for (auto element : args.layout.elements()) {
-            if (element.element_type() == ElementType::wire && element.is_inserted()
-                && is_visible(element)) {
+            if (element.element_type() == ElementType::wire && element.is_inserted() &&
+                is_visible(element)) {
                 draw_element_tree(ctx, element, args.settings);
             }
         }
@@ -1310,8 +1312,8 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     // draw uninserted wires
     if (args.simulation == nullptr || args.schematic == nullptr) {
         for (auto element : args.layout.elements()) {
-            if (!element.is_inserted() && element.element_type() == ElementType::wire
-                && is_visible(element)) {
+            if (!element.is_inserted() && element.element_type() == ElementType::wire &&
+                is_visible(element)) {
                 draw_element_tree(ctx, element, args.settings);
             }
         }
@@ -1364,10 +1366,10 @@ auto render_circuit(render_args_t args, int width, int height, std::string filen
 //
 
 auto draw_grid_space_limit(BLContext& ctx, const RenderSettings& settings) {
-    const auto p0
-        = to_context(point_t {grid_t::min(), grid_t::min()}, settings.view_config);
-    const auto p1
-        = to_context(point_t {grid_t::max(), grid_t::max()}, settings.view_config);
+    const auto p0 =
+        to_context(point_t {grid_t::min(), grid_t::min()}, settings.view_config);
+    const auto p1 =
+        to_context(point_t {grid_t::max(), grid_t::max()}, settings.view_config);
 
     ctx.setStrokeStyle(BLRgba32(0xFF808080u));
     ctx.setStrokeWidth(std::max(5.0, to_context(5.0, settings.view_config)));
@@ -1425,8 +1427,8 @@ auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
     };
 
     for (auto&& [delta, color, width] : grid_definition) {
-        if (delta * settings.view_config.device_scale()
-            >= settings.background_grid_min_distance) {
+        if (delta * settings.view_config.device_scale() >=
+            settings.background_grid_min_distance) {
             const auto draw_width_f = width * settings.view_config.device_pixel_ratio();
             // we substract a little, as we want 150% scaling to round down
             const auto epsilon = 0.01;
@@ -1766,9 +1768,9 @@ auto random_segment_value(grid_t last, const RenderBenchmarkConfig& config, G& r
     //     std::max(config.min_grid, last - config.max_segment_length),
     //     std::min(config.max_grid, last + config.max_segment_length)};
 
-    auto grid_dist
-        = get_udist(std::max(config.min_grid, last - config.max_segment_length),
-                    std::min(config.max_grid, last + config.max_segment_length), rng);
+    auto grid_dist =
+        get_udist(std::max(config.min_grid, last - config.max_segment_length),
+                  std::min(config.max_grid, last + config.max_segment_length), rng);
 
     grid_t res;
     while ((res = grid_dist()) == last) {
@@ -1803,8 +1805,8 @@ auto pick_line_point(ordered_line_t line, G& rng) -> point_t {
 template <std::uniform_random_bit_generator G>
 auto create_line_tree_segment(point_t start_point, bool horizontal,
                               const RenderBenchmarkConfig& config, G& rng) -> LineTree {
-    auto segment_count_dist
-        = UDist<std::size_t> {config.min_line_segments, config.max_line_segments};
+    auto segment_count_dist =
+        UDist<std::size_t> {config.min_line_segments, config.max_line_segments};
     auto n_segments = segment_count_dist(rng);
 
     auto line_tree = std::optional<LineTree> {};
@@ -1844,13 +1846,13 @@ auto create_random_line_tree(std::size_t n_outputs, const RenderBenchmarkConfig&
         auto new_tree = std::optional<LineTree> {};
         // TODO flatten loop
         do {
-            const auto segment_index
-                = UDist<int> {0, gsl::narrow<int>(line_tree.segment_count()) - 1}(rng);
+            const auto segment_index =
+                UDist<int> {0, gsl::narrow<int>(line_tree.segment_count()) - 1}(rng);
             const auto segment = line_tree.segment(segment_index);
             const auto origin = pick_line_point(ordered_line_t {segment}, rng);
 
-            const auto sub_tree
-                = create_line_tree_segment(origin, is_vertical(segment), config, rng);
+            const auto sub_tree =
+                create_line_tree_segment(origin, is_vertical(segment), config, rng);
             new_tree = merge({line_tree, sub_tree});
         } while (!new_tree.has_value());
 
@@ -1904,10 +1906,10 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             // delays
             auto lengths = line_tree.calculate_output_lengths();
             assert(lengths.size() == element.output_count());
-            auto delays
-                = transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
-                      return delay_t {schematic.wire_delay_per_distance().value * length};
-                  });
+            auto delays =
+                transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
+                    return delay_t {schematic.wire_delay_per_distance().value * length};
+                });
             element.set_output_delays(delays);
 
             // history
@@ -1934,8 +1936,8 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     // add events
     for (auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
-            auto spacing_dist_us
-                = UDist<int> {config.min_event_spacing_us, config.max_event_spacing_us};
+            auto spacing_dist_us =
+                UDist<int> {config.min_event_spacing_us, config.max_event_spacing_us};
             bool next_value = true;
             auto next_time = spacing_dist_us(rng) * 1us;
 

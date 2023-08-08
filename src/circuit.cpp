@@ -135,8 +135,8 @@ auto validate_wires_data(Schematic::ConstElement element, const Layout& layout) 
 auto count_wires(const Schematic& schematic, const Layout& layout,
                  display_state_t display_state) {
     return std::ranges::count_if(layout.element_ids(), [&](element_id_t element_id) {
-        return schematic.element(element_id).is_wire()
-               && layout.display_state(element_id) == display_state;
+        return schematic.element(element_id).is_wire() &&
+               layout.display_state(element_id) == display_state;
     });
 }
 

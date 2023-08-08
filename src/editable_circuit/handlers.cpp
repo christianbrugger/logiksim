@@ -48,8 +48,7 @@ auto has_duplicate_element_ids(wire_connections_t connections) -> bool {
     std::ranges::sort(connections, std::ranges::less {}, to_element_id);
 
     return std::ranges::adjacent_find(connections, std::ranges::equal_to {},
-                                      to_element_id)
-           != connections.end();
+                                      to_element_id) != connections.end();
 }
 
 auto is_convertible_to_input(const Layout& layout, element_id_t element_id) -> bool {
@@ -84,20 +83,20 @@ auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cac
     -> convertible_inputs_result_t {
     auto candidates = wire_connections_t {};
 
-    bool all_good
-        = iter_output_location(data, [&](point_t position, orientation_t orientation) {
-              if (const auto entry = cache.output_cache().find(position)) {
-                  if (!entry->is_wire_segment()
-                      || !orientations_compatible(orientation, entry->orientation)) {
-                      return false;
-                  }
-                  candidates.push_back({position, entry->segment()});
-              }
-              return true;
-          });
+    bool all_good =
+        iter_output_location(data, [&](point_t position, orientation_t orientation) {
+            if (const auto entry = cache.output_cache().find(position)) {
+                if (!entry->is_wire_segment() ||
+                    !orientations_compatible(orientation, entry->orientation)) {
+                    return false;
+                }
+                candidates.push_back({position, entry->segment()});
+            }
+            return true;
+        });
 
-    if (!all_good || has_duplicate_element_ids(candidates)
-        || !all_convertible_to_input(layout, candidates)) {
+    if (!all_good || has_duplicate_element_ids(candidates) ||
+        !all_convertible_to_input(layout, candidates)) {
         return {.convertible_inputs = {}, .any_collisions = true};
     }
 
@@ -400,8 +399,8 @@ auto any_circuit_item_inputs_colliding(const CacheProvider& cache,
                                        layout_calculation_data_t data) -> bool {
     const auto compatible = [&](point_t position, orientation_t orientation) -> bool {
         if (const auto entry = cache.output_cache().find(position)) {
-            return entry->is_wire_segment()
-                   && orientations_compatible(orientation, entry->orientation);
+            return entry->is_wire_segment() &&
+                   orientations_compatible(orientation, entry->orientation);
         }
         return true;
     };
@@ -418,9 +417,9 @@ auto is_circuit_item_colliding(const Layout& layout, const CacheProvider& cache,
                                const element_id_t element_id) {
     const auto data = to_layout_calculation_data(layout, element_id);
 
-    return cache.collision_cache().is_colliding(data)
-           || any_circuit_item_inputs_colliding(cache, data)
-           || any_circuit_item_outputs_colliding(layout, cache, data);
+    return cache.collision_cache().is_colliding(data) ||
+           any_circuit_item_inputs_colliding(cache, data) ||
+           any_circuit_item_outputs_colliding(layout, cache, data);
 }
 
 auto insert_logic_item_wire_conversion(State state, const element_id_t element_id) {
@@ -638,10 +637,10 @@ auto add_new_wire_element(Layout& layout, display_state_t display_state) -> elem
 
 auto find_wire(const Layout& layout, display_state_t display_state) -> element_id_t {
     const auto element_ids = layout.element_ids();
-    const auto it
-        = std::ranges::find_if(element_ids, [&](element_id_t element_id) -> bool {
-              return is_wire_aggregate(layout, element_id, display_state);
-          });
+    const auto it =
+        std::ranges::find_if(element_ids, [&](element_id_t element_id) -> bool {
+            return is_wire_aggregate(layout, element_id, display_state);
+        });
     return it == element_ids.end() ? null_element : *it;
 }
 
@@ -674,8 +673,8 @@ auto get_or_create_aggregate(Layout& layout, MessageSender sender,
 
     // temporary
     if (display_state == temporary) {
-        if (layout.element_count() <= TEMPORARY_AGGREGATE_ID.value
-            || !is_wire_aggregate(layout, TEMPORARY_AGGREGATE_ID, temporary)) {
+        if (layout.element_count() <= TEMPORARY_AGGREGATE_ID.value ||
+            !is_wire_aggregate(layout, TEMPORARY_AGGREGATE_ID, temporary)) {
             create_aggregate_wires(layout, sender);
         }
         return TEMPORARY_AGGREGATE_ID;
@@ -683,8 +682,8 @@ auto get_or_create_aggregate(Layout& layout, MessageSender sender,
 
     // colliding
     else if (display_state == colliding) {
-        if (layout.element_count() <= COLLIDING_AGGREGATE_ID.value
-            || !is_wire_aggregate(layout, COLLIDING_AGGREGATE_ID, temporary)) {
+        if (layout.element_count() <= COLLIDING_AGGREGATE_ID.value ||
+            !is_wire_aggregate(layout, COLLIDING_AGGREGATE_ID, temporary)) {
             create_aggregate_wires(layout, sender);
         }
         return COLLIDING_AGGREGATE_ID;
@@ -825,8 +824,8 @@ auto wire_endpoints_colliding(const Layout& layout, const CacheProvider& cache,
 
 auto is_wire_colliding(const Layout& layout, const CacheProvider& cache,
                        const ordered_line_t line) -> bool {
-    return wire_endpoints_colliding(layout, cache, line)
-           || cache.collision_cache().is_colliding(line);
+    return wire_endpoints_colliding(layout, cache, line) ||
+           cache.collision_cache().is_colliding(line);
 }
 
 auto get_display_states(const Layout& layout, const segment_part_t segment_part)
@@ -933,14 +932,14 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
     // copy
-    const auto destination_index
-        = m_tree_destination.copy_segment(m_tree_source, source_index);
+    const auto destination_index =
+        m_tree_destination.copy_segment(m_tree_source, source_index);
     const auto last_index = m_tree_source.last_index();
     m_tree_source.swap_and_delete_segment(source_index);
 
     // messages
-    const auto destination_segment
-        = segment_t {destination_element_id, destination_index};
+    const auto destination_segment =
+        segment_t {destination_element_id, destination_index};
     const auto last_segment = segment_t {source_segment.element_id, last_index};
 
     notify_segment_id_changed(sender, source_segment, destination_segment, last_segment);
@@ -955,8 +954,8 @@ namespace detail::move_segment {
 auto copy_segment(Layout& layout, MessageSender sender,
                   const segment_part_t source_segment_part,
                   const element_id_t destination_element_id) -> segment_part_t {
-    auto& m_tree_source
-        = layout.modifyable_segment_tree(source_segment_part.segment.element_id);
+    auto& m_tree_source =
+        layout.modifyable_segment_tree(source_segment_part.segment.element_id);
     auto& m_tree_destination = layout.modifyable_segment_tree(destination_element_id);
 
     bool set_input_p0 = false;
@@ -964,19 +963,19 @@ auto copy_segment(Layout& layout, MessageSender sender,
     // handle inputs being copied within the same tree
     {
         if (destination_element_id == source_segment_part.segment.element_id) {
-            auto info
-                = m_tree_source.segment_info(source_segment_part.segment.segment_index);
+            auto info =
+                m_tree_source.segment_info(source_segment_part.segment.segment_index);
             const auto full_part = to_part(info.line);
 
-            if (full_part.begin == source_segment_part.part.begin
-                && info.p0_type == SegmentPointType::input) {
+            if (full_part.begin == source_segment_part.part.begin &&
+                info.p0_type == SegmentPointType::input) {
                 info.p0_type = SegmentPointType::shadow_point;
                 m_tree_source.update_segment(source_segment_part.segment.segment_index,
                                              info);
                 set_input_p0 = true;
             }
-            if (full_part.end == source_segment_part.part.end
-                && info.p1_type == SegmentPointType::input) {
+            if (full_part.end == source_segment_part.part.end &&
+                info.p1_type == SegmentPointType::input) {
                 info.p1_type = SegmentPointType::shadow_point;
                 m_tree_source.update_segment(source_segment_part.segment.segment_index,
                                              info);
@@ -989,9 +988,9 @@ auto copy_segment(Layout& layout, MessageSender sender,
         m_tree_source, source_segment_part.segment.segment_index,
         source_segment_part.part);
 
-    const auto destination_segment_part
-        = segment_part_t {segment_t {destination_element_id, destination_index},
-                          m_tree_destination.segment_part(destination_index)};
+    const auto destination_segment_part =
+        segment_part_t {segment_t {destination_element_id, destination_index},
+                        m_tree_destination.segment_part(destination_index)};
 
     {
         if (set_input_p0) {
@@ -1052,8 +1051,8 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
                                           segment_part_t& source_segment_part,
                                           const element_id_t destination_element_id) {
     const auto full_part = to_part(get_line(layout, source_segment_part.segment));
-    const auto part_kept
-        = difference_touching_one_side(full_part, source_segment_part.part);
+    const auto part_kept =
+        difference_touching_one_side(full_part, source_segment_part.part);
 
     // move
     detail::move_segment::shrink_segment_begin(layout, sender,
@@ -1072,8 +1071,8 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
     if (part_kept.begin != full_part.begin) {
         sender.submit(info_message::SegmentPartMoved {
             .segment_part_destination = leftover_segment_part,
-            .segment_part_source
-            = segment_part_t {.segment = source_segment_part.segment, .part = part_kept},
+            .segment_part_source = segment_part_t {.segment = source_segment_part.segment,
+                                                   .part = part_kept},
         });
     }
 
@@ -1084,8 +1083,8 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
                                            segment_part_t& source_segment_part,
                                            const element_id_t destination_element_id) {
     const auto full_part = to_part(get_line(layout, source_segment_part.segment));
-    const auto [part0, part1]
-        = difference_not_touching(full_part, source_segment_part.part);
+    const auto [part0, part1] =
+        difference_not_touching(full_part, source_segment_part.part);
 
     // move
     const auto source_part1 = segment_part_t {source_segment_part.segment, part1};
@@ -1178,11 +1177,11 @@ auto _remove_touching_segment_from_tree(Layout& layout, MessageSender sender,
 
     if (part_kept.begin != full_part.begin) {
         sender.submit(info_message::SegmentPartMoved {
-            .segment_part_destination
-            = segment_part_t {.segment = segment_part.segment,
-                              .part = m_tree.segment_part(index)},
-            .segment_part_source
-            = segment_part_t {.segment = segment_part.segment, .part = part_kept},
+            .segment_part_destination =
+                segment_part_t {.segment = segment_part.segment,
+                                .part = m_tree.segment_part(index)},
+            .segment_part_source =
+                segment_part_t {.segment = segment_part.segment, .part = part_kept},
         });
     }
 
@@ -1205,8 +1204,8 @@ auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender sender,
     m_tree.shrink_segment(index, part0);
 
     // messages
-    const auto segment_part_1
-        = segment_part_t {segment_t {element_id, index1}, m_tree.segment_part(index1)};
+    const auto segment_part_1 =
+        segment_part_t {segment_t {element_id, index1}, m_tree.segment_part(index1)};
 
     sender.submit(info_message::SegmentCreated {segment_part_1.segment});
 
@@ -1299,8 +1298,8 @@ auto updated_segment_info(segment_info_t segment_info, const point_t position,
     return segment_info;
 }
 
-using point_update_t
-    = std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;
+using point_update_t =
+    std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;
 
 auto update_segment_point_types(Layout& layout, MessageSender sender,
                                 element_id_t element_id, point_update_t data,
@@ -1381,15 +1380,15 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender sender,
 
     if (to_part(info_0.line) != to_part(info_merged.line, info_0.line)) {
         sender.submit(info_message::SegmentPartMoved {
-            .segment_part_destination
-            = segment_part_t {segment_0, to_part(info_merged.line, info_0.line)},
+            .segment_part_destination =
+                segment_part_t {segment_0, to_part(info_merged.line, info_0.line)},
             .segment_part_source = segment_part_t {segment_0, to_part(info_0.line)},
         });
     }
 
     sender.submit(info_message::SegmentPartMoved {
-        .segment_part_destination
-        = segment_part_t {segment_0, to_part(info_merged.line, info_1.line)},
+        .segment_part_destination =
+            segment_part_t {segment_0, to_part(info_merged.line, info_1.line)},
         .segment_part_source = segment_part_t {segment_1, to_part(info_1.line)},
     });
 
@@ -1497,8 +1496,8 @@ auto fix_and_merge_segments(State state, const point_t position,
     const auto indices = get_segment_indices(segments);
 
     if (segment_count == 1) {
-        const auto new_type = get_segment_point_type(layout, segments.at(0), position)
-                                      == SegmentPointType::input
+        const auto new_type = get_segment_point_type(layout, segments.at(0), position) ==
+                                      SegmentPointType::input
                                   ? SegmentPointType::input
                                   : SegmentPointType::output;
 
@@ -1602,8 +1601,8 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
     // 2 wires
     if (candidate_0 && candidate_1) {
         // we assume segment is part of aggregates that have ID 0 and 1
-        if (segment_part.segment.element_id > candidate_0
-            || segment_part.segment.element_id > candidate_1) {
+        if (segment_part.segment.element_id > candidate_0 ||
+            segment_part.segment.element_id > candidate_1) {
             throw_exception("cannot preserve segment element_id");
         }
 
@@ -1775,8 +1774,8 @@ auto _wire_change_colliding_to_temporary(State state, segment_part_t& segment_pa
     }
 
     // move to temporary
-    const auto destination_id
-        = get_or_create_aggregate(state.layout, state.sender, display_state_t::temporary);
+    const auto destination_id =
+        get_or_create_aggregate(state.layout, state.sender, display_state_t::temporary);
     move_segment_between_trees(layout, state.sender, segment_part, destination_id);
 
     if (was_inserted) {
@@ -1810,15 +1809,15 @@ auto change_wire_insertion_mode_private(State state, segment_part_t& segment_par
         return;
     }
 
-    if (old_modes.first == InsertionMode::temporary
-        || old_modes.second == InsertionMode::temporary) {
+    if (old_modes.first == InsertionMode::temporary ||
+        old_modes.second == InsertionMode::temporary) {
         _wire_change_temporary_to_colliding(state, segment_part);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
         _wire_change_colliding_to_insert(state.layout, state.sender, segment_part);
     }
-    if (old_modes.first == InsertionMode::insert_or_discard
-        || old_modes.second == InsertionMode::insert_or_discard) {
+    if (old_modes.first == InsertionMode::insert_or_discard ||
+        old_modes.second == InsertionMode::insert_or_discard) {
         _wire_change_insert_to_colliding(state.layout, segment_part);
     }
     if (new_mode == InsertionMode::temporary) {
@@ -1923,8 +1922,8 @@ auto delete_wire_segment_private(Layout& layout, MessageSender sender,
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
     }
-    if (layout.display_state(segment_part.segment.element_id)
-        != display_state_t::temporary) [[unlikely]] {
+    if (layout.display_state(segment_part.segment.element_id) !=
+        display_state_t::temporary) [[unlikely]] {
         throw_exception("can only delete temporary segments");
     }
 
@@ -1972,8 +1971,8 @@ auto move_or_delete_wire_private(Layout& layout, MessageSender sender,
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
     }
-    if (layout.display_state(segment_part.segment.element_id)
-        != display_state_t::temporary) [[unlikely]] {
+    if (layout.display_state(segment_part.segment.element_id) !=
+        display_state_t::temporary) [[unlikely]] {
         throw_exception("can only move temporary segments");
     }
 
@@ -2079,9 +2078,9 @@ auto add_wire_crosspoint(State state, point_t point) -> void {
     if (element_id_0 == element_id_1) {
         return;
     }
-    if (layout.segment_tree(element_id_0).input_count()
-            + layout.segment_tree(element_id_1).input_count()
-        > 1) {
+    if (layout.segment_tree(element_id_0).input_count() +
+            layout.segment_tree(element_id_1).input_count() >
+        1) {
         return;
     }
 
@@ -2194,8 +2193,8 @@ auto new_positions_representable(const Selection& selection, const Layout& layou
         return is_logic_item_position_representable(layout, element_id, x, y);
     };
 
-    return std::ranges::all_of(selection.selected_logic_items(), logic_item_valid)
-           && new_wire_positions_representable(selection, layout, delta_x, delta_y);
+    return std::ranges::all_of(selection.selected_logic_items(), logic_item_valid) &&
+           new_wire_positions_representable(selection, layout, delta_x, delta_y);
 }
 
 auto move_or_delete_elements(selection_handle_t handle, Layout& layout,
@@ -2297,10 +2296,12 @@ class SegmentEndpointMap {
             return std::nullopt;
         }
 
-        const auto to_segment
-            = [&](orientation_t orientation) { return get(segments, orientation); };
-        const auto has_segment
-            = [&](orientation_t orientation) { return has(segments, orientation); };
+        const auto to_segment = [&](orientation_t orientation) {
+            return get(segments, orientation);
+        };
+        const auto has_segment = [&](orientation_t orientation) {
+            return has(segments, orientation);
+        };
 
         if (has_segment(left) && has_segment(right)) {
             return mergable_t {to_segment(left), to_segment(right)};
@@ -2402,8 +2403,8 @@ auto regularize_temporary_selection(Layout& layout, MessageSender sender,
 
     map.iter_crosspoints(
         [&](point_t point, std::array<segment_t, 4> segments, int count) {
-            if (count == 3 || !true_cross_points
-                || std::ranges::binary_search(*true_cross_points, point)) {
+            if (count == 3 || !true_cross_points ||
+                std::ranges::binary_search(*true_cross_points, point)) {
                 cross_points.push_back(point);
 
                 const auto segment = segments.at(0) ? segments.at(0) : segments.at(1);
@@ -2496,9 +2497,9 @@ auto capture_new_splitpoints(const Layout& layout, const CacheProvider& cache,
 
     const auto add_candidate = [&](point_t point) {
         const auto state = cache.collision_cache().query(point);
-        if (collision_cache::is_wire_corner_point(state)
-            || collision_cache::is_wire_connection(state)
-            || collision_cache::is_wire_cross_point(state)) {
+        if (collision_cache::is_wire_corner_point(state) ||
+            collision_cache::is_wire_connection(state) ||
+            collision_cache::is_wire_cross_point(state)) {
             result.push_back(point);
         }
     };

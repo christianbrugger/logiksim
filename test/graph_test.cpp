@@ -16,10 +16,10 @@ TEST(Graph, DepthFirstSearchSimple) {
     auto graph = AdjacencyGraph<index_t>(segments);
 
     auto edges = std::vector<std::pair<index_t, index_t>> {};
-    auto visitor
-        = TreeEdgeVisitor([&](index_t a, index_t b, auto graph_ [[maybe_unused]]) {
-              edges.push_back({a, b});
-          });
+    auto visitor =
+        TreeEdgeVisitor([&](index_t a, index_t b, auto graph_ [[maybe_unused]]) {
+            edges.push_back({a, b});
+        });
 
     auto found_loop = depth_first_search<index_t>(graph, visitor, 0);
 

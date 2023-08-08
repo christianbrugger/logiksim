@@ -76,8 +76,8 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
     }
 
     // messages
-    const auto m0
-        = Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {0}}}};
+    const auto m0 =
+        Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {0}}}};
     ASSERT_EQ(setup.recorder.messages().size(), 1);
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
@@ -161,8 +161,8 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
     add_test_wire(layout, normal, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
 
-    auto segment_part
-        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(0, 5)};
+    auto segment_part =
+        segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(0, 5)};
 
     auto setup = HandlerSetup {layout};
     change_wire_insertion_mode(setup.state, segment_part, InsertionMode::collisions);
@@ -206,19 +206,23 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
     }
 
     // messages
-    const auto m0
-        = Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
+    const auto m0 =
+        Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
     const auto m1 = Message {SegmentPartMoved {
-        .segment_part_destination
-        = segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}}, part(0, 5)},
-        .segment_part_source
-        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(0, 5)},
+        .segment_part_destination =
+            segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}},
+                            part(0, 5)},
+        .segment_part_source =
+            segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
+                            part(0, 5)},
     }};
     const auto m2 = Message {SegmentPartMoved {
-        .segment_part_destination
-        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(0, 5)},
-        .segment_part_source
-        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}}, part(5, 10)},
+        .segment_part_destination =
+            segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
+                            part(0, 5)},
+        .segment_part_source =
+            segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
+                            part(5, 10)},
     }};
     ASSERT_EQ(setup.recorder.messages().size(), 3);
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
@@ -286,25 +290,25 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     }
 
     // messages
-    const auto m0
-        = Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {1}}}};
-    const auto m1
-        = Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
+    const auto m0 =
+        Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {1}}}};
+    const auto m1 =
+        Message {SegmentCreated {segment_t {element_id_t {1}, segment_index_t {0}}}};
     const auto m2 = Message {SegmentPartMoved {
-        .segment_part_destination
-        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {1}},
-                          part_t {offset_t {0}, offset_t {5}}},
-        .segment_part_source
-        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
-                          part_t {offset_t {5}, offset_t {10}}},
+        .segment_part_destination =
+            segment_part_t {segment_t {element_id_t {0}, segment_index_t {1}},
+                            part_t {offset_t {0}, offset_t {5}}},
+        .segment_part_source =
+            segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
+                            part_t {offset_t {5}, offset_t {10}}},
     }};
     const auto m3 = Message {SegmentPartMoved {
-        .segment_part_destination
-        = segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}},
-                          part_t {offset_t {0}, offset_t {3}}},
-        .segment_part_source
-        = segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
-                          part_t {offset_t {2}, offset_t {5}}},
+        .segment_part_destination =
+            segment_part_t {segment_t {element_id_t {1}, segment_index_t {0}},
+                            part_t {offset_t {0}, offset_t {3}}},
+        .segment_part_source =
+            segment_part_t {segment_t {element_id_t {0}, segment_index_t {0}},
+                            part_t {offset_t {2}, offset_t {5}}},
     }};
 
     ASSERT_EQ(setup.recorder.messages().size(), 4);
@@ -475,8 +479,8 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMove) {
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
-    const auto segment_part_0
-        = segment_part_t {segment_t {element_id, segment_index}, part(0, 10)};
+    const auto segment_part_0 =
+        segment_part_t {segment_t {element_id, segment_index}, part(0, 10)};
 
     layout.validate();
     auto setup = SenderSetup {};
@@ -495,8 +499,8 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMove) {
     ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
 
     // messages
-    const auto m0
-        = Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {0}}}};
+    const auto m0 =
+        Message {SegmentCreated {segment_t {element_id_t {0}, segment_index_t {0}}}};
     ASSERT_EQ(setup.recorder.messages().size(), 1);
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
@@ -513,10 +517,10 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
-    const auto segment_part_0
-        = segment_part_t {segment_t {element_id, segment_index}, part(0, 5)};
-    const auto segment_part_1
-        = segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
+    const auto segment_part_0 =
+        segment_part_t {segment_t {element_id, segment_index}, part(0, 5)};
+    const auto segment_part_1 =
+        segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
 
     layout.validate();
     auto setup = SenderSetup {};
@@ -541,10 +545,10 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
         .segment_part_source = segment_part_0,
     }};
     const auto m2 = Message {SegmentPartMoved {
-        .segment_part_destination
-        = segment_part_t {segment_t {element_id, segment_index}, part(0, 5)},
-        .segment_part_source
-        = segment_part_t {segment_t {element_id, segment_index}, part(5, 10)},
+        .segment_part_destination =
+            segment_part_t {segment_t {element_id, segment_index}, part(0, 5)},
+        .segment_part_source =
+            segment_part_t {segment_t {element_id, segment_index}, part(5, 10)},
     }};
     ASSERT_EQ(setup.recorder.messages().size(), 3);
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
@@ -564,10 +568,10 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialEnd) {
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
-    const auto segment_part_0
-        = segment_part_t {segment_t {element_id, segment_index}, part(5, 10)};
-    const auto segment_part_1
-        = segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
+    const auto segment_part_0 =
+        segment_part_t {segment_t {element_id, segment_index}, part(5, 10)};
+    const auto segment_part_1 =
+        segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
 
     layout.validate();
     auto setup = SenderSetup {};
@@ -609,16 +613,16 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
-    const auto segment_part_0
-        = segment_part_t {segment_t {element_id, segment_index}, part(10, 15)};
+    const auto segment_part_0 =
+        segment_part_t {segment_t {element_id, segment_index}, part(10, 15)};
 
-    const auto segment_part_1_from
-        = segment_part_t {segment_t {element_id, segment_index_t {0}}, part(15, 20)};
-    const auto segment_part_1_to
-        = segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
+    const auto segment_part_1_from =
+        segment_part_t {segment_t {element_id, segment_index_t {0}}, part(15, 20)};
+    const auto segment_part_1_to =
+        segment_part_t {segment_t {element_id, segment_index_t {1}}, part(0, 5)};
 
-    const auto segment_part_2
-        = segment_part_t {segment_t {element_id, segment_index_t {2}}, part(0, 5)};
+    const auto segment_part_2 =
+        segment_part_t {segment_t {element_id, segment_index_t {2}}, part(0, 5)};
 
     layout.validate();
     auto setup = SenderSetup {};

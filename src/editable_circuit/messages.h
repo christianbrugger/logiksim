@@ -39,8 +39,8 @@ struct LogicItemIdUpdated {
     element_id_t new_element_id;
     element_id_t old_element_id;
 
-    [[nodiscard]] auto operator==(const LogicItemIdUpdated &other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const LogicItemIdUpdated &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -66,8 +66,8 @@ struct InsertedLogicItemIdUpdated {
     element_id_t old_element_id;
     layout_calculation_data_t data;
 
-    [[nodiscard]] auto operator==(const InsertedLogicItemIdUpdated &other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const InsertedLogicItemIdUpdated &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -75,8 +75,8 @@ struct LogicItemUninserted {
     element_id_t element_id;
     layout_calculation_data_t data;
 
-    [[nodiscard]] auto operator==(const LogicItemUninserted &other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const LogicItemUninserted &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -108,8 +108,8 @@ struct SegmentPartMoved {
 struct SegmentPartDeleted {
     segment_part_t segment_part;
 
-    [[nodiscard]] auto operator==(const SegmentPartDeleted &other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const SegmentPartDeleted &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -128,8 +128,8 @@ struct InsertedSegmentIdUpdated {
     segment_t old_segment;
     segment_info_t segment_info;
 
-    [[nodiscard]] auto operator==(const InsertedSegmentIdUpdated &other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const InsertedSegmentIdUpdated &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
@@ -139,8 +139,8 @@ struct InsertedEndPointsUpdated {
     segment_info_t new_segment_info;
     segment_info_t old_segment_info;
 
-    [[nodiscard]] auto operator==(const InsertedEndPointsUpdated &other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const InsertedEndPointsUpdated &other) const
+        -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 

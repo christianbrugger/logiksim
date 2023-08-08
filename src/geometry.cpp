@@ -352,8 +352,9 @@ auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t lin
 
     // parts overlapping or touching?
     std::ranges::sort(parts);
-    const auto part_overlapping
-        = [](part_t part0, part_t part1) -> bool { return part0.end >= part1.begin; };
+    const auto part_overlapping = [](part_t part0, part_t part1) -> bool {
+        return part0.end >= part1.begin;
+    };
     if (std::ranges::adjacent_find(parts, part_overlapping) != parts.end()) {
         throw_exception("some parts are overlapping");
     }

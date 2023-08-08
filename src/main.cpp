@@ -351,8 +351,8 @@ auto convert_layout(const Layout& layout) -> GeneratedSchematic {
             }
 
             else if (element.is_wire()) {
-                const auto& line_tree
-                    = generated.line_trees.at(element.element_id().value);
+                const auto& line_tree =
+                    generated.line_trees.at(element.element_id().value);
 
                 auto delays = calculate_output_delays(
                     line_tree, generated.schematic.wire_delay_per_distance());

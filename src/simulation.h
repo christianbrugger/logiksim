@@ -110,8 +110,8 @@ class Simulation {
     struct defaults {
         constexpr static auto no_timeout = timeout_t::max();
         constexpr static auto infinite_simulation_time = time_t::value_type::max();
-        constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max()
-                                                - connection_id_t::max()};
+        constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
+                                                connection_id_t::max()};
 
         // TODO remove, now part of editable circuit
         constexpr static delay_t no_history {0ns};

@@ -120,8 +120,8 @@ auto ConnectionCache<IsInput>::handle(
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::InsertedLogicItemIdUpdated message) -> void {
-    const auto update_entry
-        = get_update_entry(map_, message.new_element_id, message.old_element_id);
+    const auto update_entry =
+        get_update_entry(map_, message.new_element_id, message.old_element_id);
 
     if constexpr (IsInput) {
         iter_input_location_and_id(message.data, update_entry);
@@ -170,8 +170,8 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::SegmentInserted message) -> void {
-    const auto add_entry
-        = get_add_entry(map_, message.segment.element_id, message.segment.segment_index);
+    const auto add_entry =
+        get_add_entry(map_, message.segment.element_id, message.segment.segment_index);
     iter_connection_location_and_id(message.segment_info, add_entry, IsInput);
 }
 
@@ -200,8 +200,8 @@ auto ConnectionCache<IsInput>::handle(
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
     editable_circuit::info_message::SegmentUninserted message) -> void {
-    const auto remove_entry = get_remove_entry(map_, message.segment.element_id,
-                                               message.segment.segment_index);
+    const auto remove_entry =
+        get_remove_entry(map_, message.segment.element_id, message.segment.segment_index);
     iter_connection_location_and_id(message.segment_info, remove_entry, IsInput);
 }
 
@@ -255,14 +255,14 @@ template <bool IsInput>
 auto ConnectionCache<IsInput>::is_colliding(layout_calculation_data_t data) const
     -> bool {
     // make sure inputs/outputs don't collide with inputs/outputs
-    const auto same_type_not_colliding
-        = [&](point_t position, orientation_t _ [[maybe_unused]]) -> bool {
+    const auto same_type_not_colliding = [&](point_t position,
+                                             orientation_t _ [[maybe_unused]]) -> bool {
         return !map_.contains(position);
     };
 
     // make sure inputs match with output orientations, if present
-    const auto different_type_compatible
-        = [&](point_t position, orientation_t orientation) -> bool {
+    const auto different_type_compatible = [&](point_t position,
+                                               orientation_t orientation) -> bool {
         if (const auto it = map_.find(position); it != map_.end()) {
             return orientations_compatible(orientation, it->second.orientation);
         }
@@ -270,11 +270,11 @@ auto ConnectionCache<IsInput>::is_colliding(layout_calculation_data_t data) cons
     };
 
     if constexpr (IsInput) {
-        return !(iter_input_location(data, same_type_not_colliding)
-                 && iter_output_location(data, different_type_compatible));
+        return !(iter_input_location(data, same_type_not_colliding) &&
+                 iter_output_location(data, different_type_compatible));
     } else {
-        return !(iter_output_location(data, same_type_not_colliding)
-                 && iter_input_location(data, different_type_compatible));
+        return !(iter_output_location(data, same_type_not_colliding) &&
+                 iter_input_location(data, different_type_compatible));
     }
 }
 

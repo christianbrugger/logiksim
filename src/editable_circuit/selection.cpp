@@ -246,8 +246,8 @@ auto Selection::handle(editable_circuit::info_message::SegmentIdUpdated message)
         auto parts = detail::selection::map_value_t {std::move(it->second)};
         selected_segments_.erase(it);
 
-        const auto inserted
-            = selected_segments_.emplace(message.new_segment, std::move(parts)).second;
+        const auto inserted =
+            selected_segments_.emplace(message.new_segment, std::move(parts)).second;
 
         if (!inserted) [[unlikely]] {
             throw_exception("line segment already existed");

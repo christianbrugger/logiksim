@@ -48,8 +48,8 @@ class MainWidget : public QWidget {
 
     QTimer timer_ {};
 
-    using button_map_type
-        = ankerl::unordered_dense::map<InteractionState, QAbstractButton*>;
+    using button_map_type =
+        ankerl::unordered_dense::map<InteractionState, QAbstractButton*>;
     button_map_type button_map_ {};
 
     QWidget* delay_panel_ {};

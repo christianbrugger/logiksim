@@ -25,8 +25,8 @@ struct LogicItemDefinition {
     [[nodiscard]] auto is_valid() const -> bool;
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const LogicItemDefinition& other) const -> bool
-        = default;
+    [[nodiscard]] auto operator==(const LogicItemDefinition& other) const
+        -> bool = default;
 };
 
 }  // namespace logicsim

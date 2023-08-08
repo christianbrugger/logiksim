@@ -80,8 +80,8 @@ static_assert(wire_cross_point_tag < element_id_t {0});
 
 class CollisionCache {
    public:
-    using map_type
-        = ankerl::unordered_dense::map<point_t, collision_cache::collision_data_t>;
+    using map_type =
+        ankerl::unordered_dense::map<point_t, collision_cache::collision_data_t>;
 
    public:
     [[nodiscard]] auto format() const -> std::string;

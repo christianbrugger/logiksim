@@ -23,9 +23,9 @@
 namespace logicsim {
 
 template <typename T, typename Char = char>
-concept format_string_type = std::same_as<T, fmt::basic_string_view<Char>>
-                             || std::same_as<T, std::basic_string<Char>>
-                             || std::same_as<T, std::basic_string_view<Char>>;
+concept format_string_type = std::same_as<T, fmt::basic_string_view<Char>> ||
+                             std::same_as<T, std::basic_string<Char>> ||
+                             std::same_as<T, std::basic_string_view<Char>>;
 
 //
 // print
@@ -183,10 +183,12 @@ struct fmt::formatter<std::unique_ptr<T>, Char> {
 
 namespace logicsim {
 template <typename T, typename Char = char>
-concept format_obj_with_member_format_function
-    = (!format_string_type<T, Char>) && requires(T obj) {
-                                            { obj.format() } -> std::same_as<std::string>;
-                                        };
+concept format_obj_with_member_format_function = (!format_string_type<T, Char>) &&
+                                                 requires(T obj) {
+                                                     {
+                                                         obj.format()
+                                                         } -> std::same_as<std::string>;
+                                                 };
 }  // namespace logicsim
 
 template <typename T, typename Char>

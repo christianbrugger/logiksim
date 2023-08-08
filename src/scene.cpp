@@ -56,13 +56,13 @@ auto ViewConfig::update_pixel_scale() -> void {
 //
 
 auto is_representable(int x, int y) -> bool {
-    return (grid_t::min() <= x && x <= grid_t::max())
-           && (grid_t::min() <= y && y <= grid_t::max());
+    return (grid_t::min() <= x && x <= grid_t::max()) &&
+           (grid_t::min() <= y && y <= grid_t::max());
 }
 
 auto is_representable(double x, double y) -> bool {
-    return (grid_t::min() <= x && x <= grid_t::max())
-           && (grid_t::min() <= y && y <= grid_t::max());
+    return (grid_t::min() <= x && x <= grid_t::max()) &&
+           (grid_t::min() <= y && y <= grid_t::max());
 }
 
 auto is_representable(point_t point, int dx, int dy) -> bool {

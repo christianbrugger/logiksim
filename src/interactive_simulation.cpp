@@ -112,13 +112,13 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
 }
 
 auto InteractiveSimulation::expected_simulation_time() const -> time_t {
-    const auto realtime_delta
-        = std::chrono::duration<double> {timer_t::now() - realtime_reference_};
-    const auto time_delta_double
-        = realtime_delta / 1000ms * time_rate_.rate_per_second.value;
+    const auto realtime_delta =
+        std::chrono::duration<double> {timer_t::now() - realtime_reference_};
+    const auto time_delta_double =
+        realtime_delta / 1000ms * time_rate_.rate_per_second.value;
 
-    const auto time_delta_int
-        = std::chrono::duration_cast<time_t::value_type>(time_delta_double);
+    const auto time_delta_int =
+        std::chrono::duration_cast<time_t::value_type>(time_delta_double);
     return time_t {simulation_time_reference_.value + time_delta_int};
 }
 

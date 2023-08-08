@@ -24,10 +24,10 @@ inline constexpr T range_type_one_value = T {1};
 
 // if T is not integral define difference_type in your custom type
 template <class T>
-using range_difference_t
-    = std::conditional_t<std::is_integral_v<T>,
-                         std::conditional_t<sizeof(T) < sizeof(int), int, long long>,
-                         std::iter_difference_t<T>>;
+using range_difference_t =
+    std::conditional_t<std::is_integral_v<T>,
+                       std::conditional_t<sizeof(T) < sizeof(int), int, long long>,
+                       std::iter_difference_t<T>>;
 
 namespace detail {
 
@@ -69,8 +69,8 @@ struct range_iterator_t {
     }
 
     // Postfix increment
-    constexpr auto operator++(int) noexcept(noexcept(++current_)
-                                            && std::is_nothrow_copy_constructible_v<T>)
+    constexpr auto operator++(int) noexcept(noexcept(++current_) &&
+                                            std::is_nothrow_copy_constructible_v<T>)
         -> range_iterator_t {
         auto tmp = *this;
         ++(*this);
@@ -79,8 +79,8 @@ struct range_iterator_t {
 
     [[nodiscard]] friend constexpr auto operator==(
         const range_iterator_t<T, forward>& left,
-        const range_iterator_t<T, forward>& right) noexcept(noexcept(left.current_
-                                                                     == right.current_))
+        const range_iterator_t<T, forward>& right) noexcept(noexcept(left.current_ ==
+                                                                     right.current_))
         -> bool {
         // this way we generate an empty range when last < first
         if constexpr (forward) {
@@ -234,8 +234,8 @@ struct range_iterator_step_t {
     }
 
     // Postfix increment
-    constexpr auto operator++(int) noexcept(noexcept(++current_)
-                                            && std::is_nothrow_copy_constructible_v<T>)
+    constexpr auto operator++(int) noexcept(noexcept(++current_) &&
+                                            std::is_nothrow_copy_constructible_v<T>)
         -> range_iterator_step_t {
         auto tmp = *this;
         current_ += step_;
@@ -316,9 +316,9 @@ template <typename T>
 using reverse_range_t = detail::range_t<T, false>;
 
 template <typename T>
-concept range_value_type = std::weakly_incrementable<T> && std::equality_comparable<T>
-                           && std::totally_ordered<T>
-                           && std::input_iterator<detail::range_iterator_t<T, true>>;
+concept range_value_type =
+    std::weakly_incrementable<T> && std::equality_comparable<T> &&
+    std::totally_ordered<T> && std::input_iterator<detail::range_iterator_t<T, true>>;
 
 template <range_value_type T, bool forward = true>
 [[nodiscard]] constexpr auto range(T stop) noexcept(
@@ -356,21 +356,19 @@ template <range_value_type T>
 }  // namespace logicsim
 
 template <typename T, bool forward>
-inline constexpr bool std::ranges::enable_view<logicsim::detail::range_t<T, forward>>
-    = true;
+inline constexpr bool std::ranges::enable_view<logicsim::detail::range_t<T, forward>> =
+    true;
 
 template <typename T, bool forward>
 inline constexpr bool
-    std::ranges::enable_borrowed_range<logicsim::detail::range_t<T, forward>>
-    = true;
+    std::ranges::enable_borrowed_range<logicsim::detail::range_t<T, forward>> = true;
 
 template <typename T>
 inline constexpr bool std::ranges::enable_view<logicsim::detail::range_step_t<T>> = true;
 
 template <typename T>
 inline constexpr bool
-    std::ranges::enable_borrowed_range<logicsim::detail::range_step_t<T>>
-    = true;
+    std::ranges::enable_borrowed_range<logicsim::detail::range_step_t<T>> = true;
 
 //
 // formatters

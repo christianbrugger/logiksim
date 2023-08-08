@@ -91,8 +91,9 @@ void validate(const event_group_t &events) {
             throw_exception("All events in the group need to have the same time.");
         }
 
-        const auto to_index
-            = [](const SimulationEvent &event) { return event.input_index; };
+        const auto to_index = [](const SimulationEvent &event) {
+            return event.input_index;
+        };
         if (has_duplicates_quadratic(events, to_index)) {
             throw_exception(
                 "Cannot have two events for the same input at the same time.");
@@ -279,11 +280,11 @@ auto Simulation::submit_events(Schematic::ConstElement element, time_t::value_ty
 }
 
 auto Simulation::check_counts_valid() const -> void {
-    const auto n_elements
-        = static_cast<logic_vector_t::size_type>(schematic_->element_count());
+    const auto n_elements =
+        static_cast<logic_vector_t::size_type>(schematic_->element_count());
 
-    if (input_values_.size() != n_elements || internal_states_.size() != n_elements
-        || first_input_histories_.size() != n_elements) [[unlikely]] {
+    if (input_values_.size() != n_elements || internal_states_.size() != n_elements ||
+        first_input_histories_.size() != n_elements) [[unlikely]] {
         throw_exception("size of vector match schematic element count.");
     }
 }
@@ -553,8 +554,8 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
         return;
     }
     validate(events);
-    const auto element
-        = Schematic::ConstElement {schematic_->element(events.front().element_id)};
+    const auto element =
+        Schematic::ConstElement {schematic_->element(events.front().element_id)};
     const auto element_type = element.element_type();
 
     // short-circuit placeholders, as they don't have logic
@@ -603,8 +604,8 @@ class Simulation::Timer {
         : timeout_(timeout), start_time_(timeout_clock::now()) {};
 
     [[nodiscard]] auto reached_timeout() const noexcept -> bool {
-        return (timeout_ != defaults::no_timeout)
-               && (std::chrono::steady_clock::now() - start_time_) > timeout_;
+        return (timeout_ != defaults::no_timeout) &&
+               (std::chrono::steady_clock::now() - start_time_) > timeout_;
     }
 
    private:
@@ -737,8 +738,8 @@ auto Simulation::record_input_history(const Schematic::ConstInput input,
 
 auto Simulation::clean_history(history_buffer_t &history, delay_t history_length)
     -> void {
-    while (!history.empty()
-           && history.front().value < time().value - history_length.value) {
+    while (!history.empty() &&
+           history.front().value < time().value - history_length.value) {
         history.pop_front();
     }
 }
@@ -781,8 +782,8 @@ auto Simulation::set_output_value(Schematic::ConstOutput output, bool value) -> 
 
     const auto input = output.connected_input();
 
-    auto &input_value
-        = input_values_.at(input.element_id().value).at(input.input_index().value);
+    auto &input_value =
+        input_values_.at(input.element_id().value).at(input.input_index().value);
     input_value = value ^ input.is_inverted();
 }
 
@@ -811,8 +812,8 @@ auto Simulation::set_input_value(Schematic::ConstInput input, bool value) -> voi
     if (input.has_connected_element()) [[unlikely]] {
         throw_exception("cannot input-value for connected inputs");
     }
-    auto &input_value
-        = input_values_.at(input.element_id().value).at(input.input_index().value);
+    auto &input_value =
+        input_values_.at(input.element_id().value).at(input.input_index().value);
 
     if (!is_initialized_) {
         input_value = value;
@@ -853,8 +854,8 @@ auto Simulation::internal_state(Schematic::ConstElement element, std::size_t ind
 }
 
 auto Simulation::input_history(Schematic::ConstElement element) const -> HistoryView {
-    const auto last_value = static_cast<bool>(input_values(element).at(0)
-                                              ^ element.input_inverters().at(0));
+    const auto last_value =
+        static_cast<bool>(input_values(element).at(0) ^ element.input_inverters().at(0));
 
     return HistoryView {
         first_input_histories_.at(element.element_id().value),
@@ -944,9 +945,9 @@ auto Simulation::HistoryView::get_value(std::size_t history_index) const -> bool
 auto Simulation::HistoryView::find_index(time_t value) const -> std::size_t {
     require_history();
 
-    const auto it
-        = std::ranges::lower_bound(history_->begin() + min_index_, history_->end(), value,
-                                   std::ranges::less_equal {});
+    const auto it =
+        std::ranges::lower_bound(history_->begin() + min_index_, history_->end(), value,
+                                 std::ranges::less_equal {});
     const auto index = it - history_->begin();
 
     assert(index >= min_index_);
@@ -1010,8 +1011,8 @@ auto Simulation::HistoryIterator::operator==(const HistoryIterator &right) const
 
 auto Simulation::HistoryIterator::operator-(const HistoryIterator &right) const noexcept
     -> difference_type {
-    return static_cast<std::ptrdiff_t>(index_)
-           - static_cast<std::ptrdiff_t>(right.index_);
+    return static_cast<std::ptrdiff_t>(index_) -
+           static_cast<std::ptrdiff_t>(right.index_);
 }
 
 //
@@ -1040,8 +1041,8 @@ auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
     // set custom delays
     for (const auto element : schematic.elements()) {
         for (const auto output : element.outputs()) {
-            auto delay_dist
-                = boost::random::uniform_int_distribution<time_t::rep> {5, 500};
+            auto delay_dist =
+                boost::random::uniform_int_distribution<time_t::rep> {5, 500};
             output.set_delay(delay_t {1us * delay_dist(rng)});
         }
     }

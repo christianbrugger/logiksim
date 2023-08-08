@@ -66,8 +66,9 @@ class EditableCircuit {
     // adds crosspoints, merges wire segments and
     // returns splitpoints
     auto regularize_temporary_selection(
-        const Selection& selection, std::optional<std::vector<point_t>> true_cross_points
-                                    = {}) -> std::vector<point_t>;
+        const Selection& selection,
+        std::optional<std::vector<point_t>> true_cross_points = {})
+        -> std::vector<point_t>;
 
     auto capture_inserted_cross_points(const Selection& selection) const
         -> std::vector<point_t>;

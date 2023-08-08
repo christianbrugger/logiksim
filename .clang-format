@@ -13,7 +13,7 @@ SpaceBeforeCpp11BracedList: true
 Standard: c++20
 
 SeparateDefinitionBlocks: Always
-BreakBeforeBinaryOperators: All
+# BreakBeforeBinaryOperators: NonAssignment 
 AllowShortFunctionsOnASingleLine: Empty
 
 IncludeBlocks: Regroup
@@ -32,3 +32,8 @@ IncludeCategories:
   Priority: 1
   SortPriority: 0
 
+
+# Use GIT BASH and run:
+#  FL="$(find "." | grep -E ".*(\.ino|\.cpp|\.c|\.h|\.hpp|\.hh)$")" && echo $FL
+#  clang-format -i ...
+# 

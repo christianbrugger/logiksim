@@ -21,8 +21,8 @@ auto format(LineInsertionType type) -> std::string {
 }
 
 auto LogicItemDefinition::is_valid() const -> bool {
-    return is_input_output_count_valid(element_type, input_count, output_count)
-           && is_orientation_valid(element_type, orientation);
+    return is_input_output_count_valid(element_type, input_count, output_count) &&
+           is_orientation_valid(element_type, orientation);
 }
 
 auto LogicItemDefinition::format() const -> std::string {

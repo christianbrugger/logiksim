@@ -54,10 +54,10 @@ struct ankerl::unordered_dense::hash<logicsim::glyph_cache::glyph_key_t> {
 
     [[nodiscard]] auto operator()(
         const logicsim::glyph_cache::glyph_key_t &obj) const noexcept -> uint64_t {
-        const uint64_t numerics
-            = (uint64_t {std::bit_cast<uint32_t>(obj.font_size)} << 32)
-              + (static_cast<uint64_t>(obj.horizontal_alignment) << 16)
-              + static_cast<uint64_t>(obj.vertical_alignment);
+        const uint64_t numerics =
+            (uint64_t {std::bit_cast<uint32_t>(obj.font_size)} << 32) +
+            (static_cast<uint64_t>(obj.horizontal_alignment) << 16) +
+            static_cast<uint64_t>(obj.vertical_alignment);
 
         const uint64_t v0 = ankerl::unordered_dense::hash<uint64_t> {}(numerics);
         const uint64_t v1 = ankerl::unordered_dense::hash<std::string> {}(obj.text);
@@ -76,11 +76,10 @@ class GlyphCache {
    public:
     GlyphCache();
 
-    auto draw_text(BLContext &ctx, const BLPoint &position, float font_size,
-                   const std::string &text,
-                   HorizontalAlignment horizontal_alignment = HorizontalAlignment::left,
-                   VerticalAlignment vertical_alignment
-                   = VerticalAlignment::baseline) const -> void;
+    auto draw_text(
+        BLContext &ctx, const BLPoint &position, float font_size, const std::string &text,
+        HorizontalAlignment horizontal_alignment = HorizontalAlignment::left,
+        VerticalAlignment vertical_alignment = VerticalAlignment::baseline) const -> void;
 
    private:
     [[nodiscard]] auto get_font(float font_size) const -> const BLFont &;

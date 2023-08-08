@@ -461,8 +461,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 1);
 
-    const auto m0
-        = Message {LogicItemUninserted {.element_id = element_id_t {0}, .data = data0}};
+    const auto m0 =
+        Message {LogicItemUninserted {.element_id = element_id_t {0}, .data = data0}};
     ASSERT_EQ(setup.recorder.messages().at(0), m0);
 }
 

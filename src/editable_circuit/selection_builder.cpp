@@ -27,16 +27,16 @@ auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
     initial_selection_.submit(message);
 
     // we don't update our cache. In some cases we can't, as new elements are created.
-    if (std::holds_alternative<LogicItemCreated>(message)
-        || std::holds_alternative<LogicItemIdUpdated>(message)
-        || std::holds_alternative<LogicItemDeleted>(message)) {
+    if (std::holds_alternative<LogicItemCreated>(message) ||
+        std::holds_alternative<LogicItemIdUpdated>(message) ||
+        std::holds_alternative<LogicItemDeleted>(message)) {
         clear_cache();
     }
 
-    if (std::holds_alternative<SegmentCreated>(message)
-        || std::holds_alternative<SegmentIdUpdated>(message)
-        || std::holds_alternative<SegmentPartMoved>(message)
-        || std::holds_alternative<SegmentPartDeleted>(message)) {
+    if (std::holds_alternative<SegmentCreated>(message) ||
+        std::holds_alternative<SegmentIdUpdated>(message) ||
+        std::holds_alternative<SegmentPartMoved>(message) ||
+        std::holds_alternative<SegmentPartDeleted>(message)) {
         clear_cache();
     }
 }

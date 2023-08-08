@@ -239,8 +239,8 @@ template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeT
 template <bool Const>
 class circular_buffer<Value, RequestedMaxInline, InternalSizeType>::Iterator {
     using container_base_t = circular_buffer<Value, RequestedMaxInline, InternalSizeType>;
-    using container_t
-        = std::conditional_t<Const, const container_base_t, container_base_t>;
+    using container_t =
+        std::conditional_t<Const, const container_base_t, container_base_t>;
 
     container_t* container_ {};
     std::size_t index_ {};
@@ -333,7 +333,6 @@ class circular_buffer<Value, RequestedMaxInline, InternalSizeType>::Iterator {
 
 template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
 inline constexpr bool std::ranges::enable_view<
-    logicsim::circular_buffer<Value, RequestedMaxInline, InternalSizeType>>
-    = true;
+    logicsim::circular_buffer<Value, RequestedMaxInline, InternalSizeType>> = true;
 
 #endif

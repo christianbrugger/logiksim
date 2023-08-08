@@ -140,8 +140,8 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, float font_s
                            HorizontalAlignment horizontal_alignment,
                            VerticalAlignment vertical_alignment) const -> void {
     const auto& font = get_font(font_size);
-    const auto& glyph_entry
-        = get_glyph_entry(font_size, text, horizontal_alignment, vertical_alignment);
+    const auto& glyph_entry =
+        get_glyph_entry(font_size, text, horizontal_alignment, vertical_alignment);
 
     ctx.fillGlyphRun(position - glyph_entry.offset, font,
                      glyph_entry.glyph_buffer.glyphRun());

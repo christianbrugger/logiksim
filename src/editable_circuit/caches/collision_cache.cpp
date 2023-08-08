@@ -236,15 +236,15 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
         data.element_id_vertical = collision_cache::connection_tag;
     };
     const auto set_wire_corner_point_tag = [&]() {
-        if (data.element_id_body != null_element
-            && data.element_id_body != collision_cache::wire_corner_point_tag) {
+        if (data.element_id_body != null_element &&
+            data.element_id_body != collision_cache::wire_corner_point_tag) {
             throw_exception("cannot set wire_corner_point tag, element body is occupied");
         }
         data.element_id_body = collision_cache::wire_corner_point_tag;
     };
     const auto set_wire_cross_point_tag = [&]() {
-        if (data.element_id_body != null_element
-            && data.element_id_body != collision_cache::wire_cross_point_tag) {
+        if (data.element_id_body != null_element &&
+            data.element_id_body != collision_cache::wire_cross_point_tag) {
             throw_exception("cannot set wire_corner_point tag, element body is occupied");
         }
         data.element_id_body = collision_cache::wire_cross_point_tag;
@@ -294,8 +294,8 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
     };
 
     // delete if empty
-    if (!data.element_id_body && !data.element_id_horizontal
-        && !data.element_id_vertical) {
+    if (!data.element_id_body && !data.element_id_horizontal &&
+        !data.element_id_vertical) {
         map.erase(position);
     }
     return true;
@@ -481,8 +481,8 @@ auto CollisionCache::state_colliding(point_t position,
                 return true;
             }
             case wire_new_unknown_point: {
-                return is_element_body(data) || is_element_wire_connection(data)
-                       || is_wire_crossing(data);
+                return is_element_body(data) || is_element_wire_connection(data) ||
+                       is_wire_crossing(data);
             }
         };
     }

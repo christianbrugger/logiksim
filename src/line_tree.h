@@ -367,12 +367,12 @@ template <>
 inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentView> = true;
 
 template <>
-inline constexpr bool std::ranges::enable_view<logicsim::LineTree::InternalPointIterator>
-    = true;
+inline constexpr bool
+    std::ranges::enable_view<logicsim::LineTree::InternalPointIterator> = true;
 
 template <>
-inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentSizeView>
-    = true;
+inline constexpr bool std::ranges::enable_view<logicsim::LineTree::SegmentSizeView> =
+    true;
 
 //
 // Implementation

@@ -80,8 +80,8 @@ auto SegmentTree::sort_segments() -> void {
     // we sort by line
     const auto vectors = ranges::zip_view(segments_, valid_parts_vector_);
 
-    const auto proj
-        = [](const std::tuple<segment_info_t, parts_vector_t>& tuple) -> ordered_line_t {
+    const auto proj =
+        [](const std::tuple<segment_info_t, parts_vector_t>& tuple) -> ordered_line_t {
         return std::get<segment_info_t>(tuple).line;
     };
     ranges::sort(vectors, {}, proj);
@@ -279,8 +279,8 @@ auto SegmentTree::shrink_segment(segment_index_t index, part_t part) -> void {
         .destination = to_part(new_info.line),
         .source = part,
     };
-    valid_parts_vector_.at(index.value)
-        = copy_parts(valid_parts_vector_.at(index.value), parts);
+    valid_parts_vector_.at(index.value) =
+        copy_parts(valid_parts_vector_.at(index.value), parts);
 }
 
 auto SegmentTree::swap_and_merge_segment(segment_index_t index,
@@ -299,8 +299,8 @@ auto SegmentTree::swap_and_merge_segment(segment_index_t index,
     auto& entries_orig = valid_parts_vector_.at(index.value);
     auto& entries_delete = valid_parts_vector_.at(index_deleted.value);
 
-    auto new_entries
-        = copy_parts(entries_orig, to_part(info_merged.line, info_orig.line));
+    auto new_entries =
+        copy_parts(entries_orig, to_part(info_merged.line, info_orig.line));
     copy_parts(entries_delete, new_entries, to_part(info_merged.line, info_delete.line));
     entries_orig.swap(new_entries);
 
@@ -329,8 +329,8 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
         .destination = to_part(new_info.line),
         .source = part,
     };
-    valid_parts_vector_.at(new_index.value)
-        = copy_parts(tree.valid_parts_vector_.at(index.value), parts);
+    valid_parts_vector_.at(new_index.value) =
+        copy_parts(tree.valid_parts_vector_.at(index.value), parts);
 
     return new_index;
 }
@@ -391,8 +391,8 @@ auto SegmentTree::last_index() const noexcept -> segment_index_t {
 }
 
 auto SegmentTree::indices() const noexcept -> forward_range_t<segment_index_t> {
-    const auto count = segment_index_t {
-        gsl::narrow_cast<segment_index_t::value_type>(segment_count())};
+    const auto count =
+        segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(segment_count())};
     return range(count);
 }
 
@@ -522,8 +522,8 @@ auto recalculate_first_input_position(const SegmentTree& tree) -> std::optional<
 
 auto count_point_type(const SegmentTree& tree, SegmentPointType type) -> std::size_t {
     const auto proj = [&](segment_info_t info) -> int {
-        return (info.p0_type == type ? std::size_t {1} : std::size_t {0})
-               + (info.p1_type == type ? std::size_t {1} : std::size_t {0});
+        return (info.p0_type == type ? std::size_t {1} : std::size_t {0}) +
+               (info.p1_type == type ? std::size_t {1} : std::size_t {0});
     };
     return accumulate(transform_view(tree.segment_infos(), proj), std::size_t {0});
 }
@@ -608,8 +608,8 @@ auto calculate_normal_parts(const SegmentTree& tree, segment_index_t index,
 auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
     -> boost::container::vector<bool> {
     const auto graph = AdjacencyGraph<SegmentTree::index_t> {all_lines(tree)};
-    const auto result
-        = depth_first_search_visited(graph, EmptyVisitor {}, graph.to_index(p0).value());
+    const auto result =
+        depth_first_search_visited(graph, EmptyVisitor {}, graph.to_index(p0).value());
 
     if (result.status == DFSStatus::unfinished_loop) [[unlikely]] {
         throw_exception("found an unexpected loop");

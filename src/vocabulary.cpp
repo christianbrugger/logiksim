@@ -85,8 +85,8 @@ auto format(display_state_t state) -> std::string {
 }
 
 auto is_inserted(display_state_t display_state) -> bool {
-    return display_state == display_state_t::normal
-           || display_state == display_state_t::valid;
+    return display_state == display_state_t::normal ||
+           display_state == display_state_t::valid;
 }
 
 template <>

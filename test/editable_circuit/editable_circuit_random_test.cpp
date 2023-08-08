@@ -83,8 +83,8 @@ auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_mo
 
     const auto type = get_random_bool(rng) ? LineInsertionType::horizontal_first
                                            : LineInsertionType::vertical_first;
-    const auto mode = random_modes ? get_random_insertion_mode(rng)
-                                   : InsertionMode::insert_or_discard;
+    const auto mode =
+        random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 
     auto handle = editable_circuit.add_line_segments(p0, p1, type, mode);
 

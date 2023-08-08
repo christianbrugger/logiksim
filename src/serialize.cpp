@@ -91,7 +91,8 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
     }
 
     return LogicItemData {
-            .definition = LogicItemDefinition {
+        .definition =
+            LogicItemDefinition {
                 .element_type = obj.element_type,
                 .input_count = obj.input_count,
                 .output_count = obj.output_count,
@@ -99,8 +100,8 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
                 .input_inverters = obj.input_inverters,
                 .output_inverters = obj.output_inverters,
             },
-            .position = moved_position,
-        };
+        .position = moved_position,
+    };
 }
 
 auto add_element(SerializedLayout& data, const layout::ConstElement element) -> void {
@@ -149,8 +150,8 @@ auto serialize_selected(const Layout& layout, const Selection& selection,
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
         for (const auto& part : parts) {
-            const auto line
-                = get_line(layout, segment_part_t {.segment = segment, .part = part});
+            const auto line =
+                get_line(layout, segment_part_t {.segment = segment, .part = part});
             data.wire_segments.push_back(serialize::SerializedLine {line.p0, line.p1});
         }
     }
@@ -195,8 +196,8 @@ auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
     }
 
     auto handle = editable_circuit.get_handle();
-    const auto delta
-        = serialize::calculate_move_delta(data->save_position, load_position);
+    const auto delta =
+        serialize::calculate_move_delta(data->save_position, load_position);
 
     // logic items
     for (const auto& item : data->logic_items) {

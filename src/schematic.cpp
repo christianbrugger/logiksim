@@ -140,8 +140,8 @@ auto Schematic::format() const -> std::string {
     std::string inner {};
     if (!empty()) {
         auto format_true = [](auto element) { return element.format(true); };
-        inner = fmt::format(": [\n  {}\n]",
-                            fmt_join(",\n  ", elements(), "{}", format_true));
+        inner =
+            fmt::format(": [\n  {}\n]", fmt_join(",\n  ", elements(), "{}", format_true));
     }
     return fmt::format("<Schematic with {} elements{}>", element_count(), inner);
 }
@@ -217,12 +217,12 @@ auto Schematic::add_element(ElementData &&data) -> Element {
     if (element_types_.size() + 1 >= element_id_t::max()) [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
-    if (input_count_ >= std::numeric_limits<decltype(input_count_)>::max()
-                            - data.input_count) [[unlikely]] {
+    if (input_count_ >= std::numeric_limits<decltype(input_count_)>::max() -
+                            data.input_count) [[unlikely]] {
         throw_exception("Reached maximum number of inputs.");
     }
-    if (output_count_ >= std::numeric_limits<decltype(input_count_)>::max()
-                             - data.output_count) [[unlikely]] {
+    if (output_count_ >= std::numeric_limits<decltype(input_count_)>::max() -
+                             data.output_count) [[unlikely]] {
         throw_exception("Reached maximum number of outputs.");
     }
 
@@ -375,8 +375,8 @@ auto validate_placeholder_connected(const Schematic::ConstElement element) -> vo
 
 auto validate_has_no_placeholders(const Schematic::ConstElement element) -> void {
     const auto is_placeholder = [](const Schematic::ConstOutput output) {
-        return output.has_connected_element()
-               && output.connected_element().is_placeholder();
+        return output.has_connected_element() &&
+               output.connected_element().is_placeholder();
     };
     if (std::ranges::any_of(element.outputs(), is_placeholder)) {
         throw_exception("element should not have output placeholders");
@@ -416,9 +416,9 @@ auto validate_element_connections_consistent(const Schematic::ConstElement eleme
 auto validate_no_input_loops(const Schematic::ConstInput input) -> void {
     // clocks have an internal loop, that's allowed.
     const auto clock_loop = [=]() {
-        return input.element().element_type() == ElementType::clock_generator
-               && input.input_index() == connection_id_t {0}
-               && input.connected_output_index() == connection_id_t {0};
+        return input.element().element_type() == ElementType::clock_generator &&
+               input.input_index() == connection_id_t {0} &&
+               input.connected_output_index() == connection_id_t {0};
     };
 
     if (input.connected_element_id() == input.element_id() && !clock_loop())
@@ -430,9 +430,9 @@ auto validate_no_input_loops(const Schematic::ConstInput input) -> void {
 auto validate_no_output_loops(const Schematic::ConstOutput output) -> void {
     // clocks have an internal loop, that's allowed.
     const auto clock_loop = [=]() {
-        return output.element().element_type() == ElementType::clock_generator
-               && output.output_index() == connection_id_t {0}
-               && output.connected_input_index() == connection_id_t {0};
+        return output.element().element_type() == ElementType::clock_generator &&
+               output.output_index() == connection_id_t {0} &&
+               output.connected_input_index() == connection_id_t {0};
     };
 
     if (output.connected_element_id() == output.element_id() && !clock_loop())
@@ -455,13 +455,13 @@ auto validate_input_output_count(const Schematic::ConstElement element) -> void 
 }
 
 auto validate_connection_data(const connection_t connection_data) -> void {
-    if (connection_data.element_id != null_element
-        && connection_data.connection_id == null_connection) [[unlikely]] {
+    if (connection_data.element_id != null_element &&
+        connection_data.connection_id == null_connection) [[unlikely]] {
         throw_exception("Connection to an element cannot have null_connection.");
     }
 
-    if (connection_data.element_id == null_element
-        && connection_data.connection_id != null_connection) [[unlikely]] {
+    if (connection_data.element_id == null_element &&
+        connection_data.connection_id != null_connection) [[unlikely]] {
         throw_exception("Connection with null_element requires null_connection.");
     }
 }
@@ -760,8 +760,8 @@ auto Schematic::ElementTemplate<Const>::set_output_delays(
     if (std::size(delays) != output_count()) [[unlikely]] {
         throw_exception("Need as many delays as outputs.");
     }
-    schematic_->output_delays_.at(element_id_.value)
-        = output_delays_t {std::begin(delays), std::end(delays)};
+    schematic_->output_delays_.at(element_id_.value) =
+        output_delays_t {std::begin(delays), std::end(delays)};
 }
 
 // Template Instanciations
@@ -772,14 +772,14 @@ template class Schematic::ElementTemplate<false>;
 template Schematic::ElementTemplate<true>::ElementTemplate(
     ElementTemplate<false>) noexcept;
 
-template auto Schematic::ElementTemplate<false>::operator==<false>(
-    ElementTemplate<false>) const noexcept -> bool;
-template auto Schematic::ElementTemplate<false>::operator==<true>(
-    ElementTemplate<true>) const noexcept -> bool;
-template auto Schematic::ElementTemplate<true>::operator==<false>(
-    ElementTemplate<false>) const noexcept -> bool;
-template auto Schematic::ElementTemplate<true>::operator==<true>(
-    ElementTemplate<true>) const noexcept -> bool;
+template auto Schematic::ElementTemplate<false>::operator==
+    <false>(ElementTemplate<false>) const noexcept -> bool;
+template auto Schematic::ElementTemplate<false>::operator==
+    <true>(ElementTemplate<true>) const noexcept -> bool;
+template auto Schematic::ElementTemplate<true>::operator==
+    <false>(ElementTemplate<false>) const noexcept -> bool;
+template auto Schematic::ElementTemplate<true>::operator==
+    <true>(ElementTemplate<true>) const noexcept -> bool;
 
 //
 // Connection Iterator
@@ -903,8 +903,8 @@ template <bool Const>
 template <bool ConstOther>
 auto Schematic::InputTemplate<Const>::operator==(
     InputTemplate<ConstOther> other) const noexcept -> bool {
-    return schematic_ == other.schematic_ && element_id_ == other.element_id_
-           && input_index_ == other.input_index_;
+    return schematic_ == other.schematic_ && element_id_ == other.element_id_ &&
+           input_index_ == other.input_index_;
 }
 
 template <bool Const>
@@ -1004,9 +1004,9 @@ void Schematic::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output)
     assert(!output.has_connected_element());
 
     // get data before we modify anything, for exception safety
-    auto &destination_connection_data
-        = schematic_->output_connections_.at(output.element_id().value)
-              .at(output.output_index().value);
+    auto &destination_connection_data =
+        schematic_->output_connections_.at(output.element_id().value)
+            .at(output.output_index().value);
 
     auto &connection_data {connection_data_()};
 
@@ -1041,14 +1041,14 @@ template class Schematic::InputTemplate<false>;
 
 template Schematic::InputTemplate<true>::InputTemplate(InputTemplate<false>) noexcept;
 
-template auto Schematic::InputTemplate<false>::operator==<false>(
-    InputTemplate<false>) const noexcept -> bool;
-template auto Schematic::InputTemplate<false>::operator==<true>(
-    InputTemplate<true>) const noexcept -> bool;
-template auto Schematic::InputTemplate<true>::operator==<false>(
-    InputTemplate<false>) const noexcept -> bool;
-template auto Schematic::InputTemplate<true>::operator==<true>(
-    InputTemplate<true>) const noexcept -> bool;
+template auto Schematic::InputTemplate<false>::operator==
+    <false>(InputTemplate<false>) const noexcept -> bool;
+template auto Schematic::InputTemplate<false>::operator==
+    <true>(InputTemplate<true>) const noexcept -> bool;
+template auto Schematic::InputTemplate<true>::operator==
+    <false>(InputTemplate<false>) const noexcept -> bool;
+template auto Schematic::InputTemplate<true>::operator==
+    <true>(InputTemplate<true>) const noexcept -> bool;
 
 template void Schematic::InputTemplate<false>::connect<false>(
     OutputTemplate<false>) const;
@@ -1077,8 +1077,8 @@ template <bool Const>
 template <bool ConstOther>
 auto Schematic::OutputTemplate<Const>::operator==(
     Schematic::OutputTemplate<ConstOther> other) const noexcept -> bool {
-    return schematic_ == other.schematic_ && element_id_ == other.element_id_
-           && output_index_ == other.output_index_;
+    return schematic_ == other.schematic_ && element_id_ == other.element_id_ &&
+           output_index_ == other.output_index_;
 }
 
 template <bool Const>
@@ -1155,9 +1155,9 @@ void Schematic::OutputTemplate<Const>::clear_connection() const
 {
     auto &connection_data {connection_data_()};
     if (connection_data.element_id != null_element) {
-        auto &destination_connection_data
-            = schematic_->input_connections_.at(connection_data.element_id.value)
-                  .at(connection_data.connection_id.value);
+        auto &destination_connection_data =
+            schematic_->input_connections_.at(connection_data.element_id.value)
+                .at(connection_data.connection_id.value);
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.connection_id = null_connection;
@@ -1179,9 +1179,9 @@ void Schematic::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) 
 
     // get data before we modify anything, for exception safety
     auto &connection_data {connection_data_()};
-    auto &destination_connection_data
-        = schematic_->input_connections_.at(input.element_id().value)
-              .at(input.input_index().value);
+    auto &destination_connection_data =
+        schematic_->input_connections_.at(input.element_id().value)
+            .at(input.input_index().value);
 
     connection_data.element_id = input.element_id();
     connection_data.connection_id = input.input_index();
@@ -1214,14 +1214,14 @@ template class Schematic::OutputTemplate<false>;
 
 template Schematic::OutputTemplate<true>::OutputTemplate(OutputTemplate<false>) noexcept;
 
-template auto Schematic::OutputTemplate<false>::operator==<false>(
-    OutputTemplate<false>) const noexcept -> bool;
-template auto Schematic::OutputTemplate<false>::operator==<true>(
-    OutputTemplate<true>) const noexcept -> bool;
-template auto Schematic::OutputTemplate<true>::operator==<false>(
-    OutputTemplate<false>) const noexcept -> bool;
-template auto Schematic::OutputTemplate<true>::operator==<true>(
-    OutputTemplate<true>) const noexcept -> bool;
+template auto Schematic::OutputTemplate<false>::operator==
+    <false>(OutputTemplate<false>) const noexcept -> bool;
+template auto Schematic::OutputTemplate<false>::operator==
+    <true>(OutputTemplate<true>) const noexcept -> bool;
+template auto Schematic::OutputTemplate<true>::operator==
+    <false>(OutputTemplate<false>) const noexcept -> bool;
+template auto Schematic::OutputTemplate<true>::operator==
+    <true>(OutputTemplate<true>) const noexcept -> bool;
 
 template void Schematic::OutputTemplate<false>::connect<false>(
     InputTemplate<false>) const;
@@ -1300,20 +1300,20 @@ namespace details {
 template <std::uniform_random_bit_generator G>
 void add_random_element(Schematic &schematic, G &rng) {
     static constexpr auto max_connections = 8;
-    auto connection_dist
-        = boost::random::uniform_int_distribution<int> {1, max_connections};
+    auto connection_dist =
+        boost::random::uniform_int_distribution<int> {1, max_connections};
     auto element_dist = boost::random::uniform_int_distribution<int8_t> {0, 2};
 
-    const auto element_type = element_dist(rng) == 0
-                                  ? ElementType::xor_element
-                                  : (element_dist(rng) == 1 ? ElementType::buffer_element
-                                                            : ElementType::wire);
+    const auto element_type =
+        element_dist(rng) == 0
+            ? ElementType::xor_element
+            : (element_dist(rng) == 1 ? ElementType::buffer_element : ElementType::wire);
 
-    const auto input_count
-        = element_type == ElementType::xor_element ? connection_dist(rng) : 1;
+    const auto input_count =
+        element_type == ElementType::xor_element ? connection_dist(rng) : 1;
 
-    const auto output_count
-        = element_type == ElementType::wire ? connection_dist(rng) : 1;
+    const auto output_count =
+        element_type == ElementType::wire ? connection_dist(rng) : 1;
 
     schematic.add_element(Schematic::ElementData {
         .element_type = element_type,
@@ -1362,10 +1362,10 @@ void create_random_connections(Schematic &schematic, G &rng, double connection_r
     shuffle(all_inputs, rng);
     shuffle(all_outputs, rng);
 
-    auto n_max_connections
-        = gsl::narrow<double>(std::min(std::size(all_inputs), std::size(all_outputs)));
-    auto n_connections
-        = gsl::narrow<std::size_t>(std::round(connection_ratio * n_max_connections));
+    auto n_max_connections =
+        gsl::narrow<double>(std::min(std::size(all_inputs), std::size(all_outputs)));
+    auto n_connections =
+        gsl::narrow<std::size_t>(std::round(connection_ratio * n_max_connections));
 
     for (auto index : range(n_connections)) {
         all_inputs.at(index).connect(all_outputs.at(index));
