@@ -225,6 +225,25 @@ auto Layout::format() const -> std::string {
     return fmt::format("<Layout with {} elements{}>", element_count(), inner);
 }
 
+auto Layout::format_stats() const -> std::string {
+    auto element_count = std::size_t {0};
+    auto segment_count = std::size_t {0};
+
+    for (auto element : elements()) {
+        if (element.is_wire()) {
+            const auto &tree = element.segment_tree();
+            segment_count += tree.segment_count();
+        }
+
+        else if (element.is_logic_item()) {
+            ++element_count;
+        }
+    }
+
+    return fmt::format("Layout with {} elements and {} wire segments.\n", element_count,
+                       segment_count);
+}
+
 auto Layout::empty() const -> bool {
     return positions_.empty();
 }

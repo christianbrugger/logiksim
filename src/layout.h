@@ -50,6 +50,7 @@ class Layout {
 
     auto swap(Layout &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto format_stats() const -> std::string;
     auto normalize() -> void;  // bring it into a form that can be compared
 
     [[nodiscard]] auto operator==(const Layout &) const -> bool = default;
