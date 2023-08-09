@@ -55,11 +55,11 @@ auto render_single_layer(BLImage& img, const Layout& layout,
     auto ctx = BLContext {img, info};
 
     render_background(ctx, settings);
-    render_circuit(ctx, render_args_t {
-                            .layout = layout,
-                            .selection = Selection {},
-                            .settings = settings,
-                        });
+    // render_circuit(ctx, render_args_t {
+    //                         .layout = layout,
+    //                         .selection = Selection {},
+    //                         .settings = settings,
+    //                     });
     ctx.end();
 }
 

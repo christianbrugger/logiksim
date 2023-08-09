@@ -570,6 +570,12 @@ constexpr auto is_orthogonal(point_t p0, point_t p1) noexcept -> bool {
     // xor disallows zero length lines
     return (p0.x == p1.x) ^ (p0.y == p1.y);
 }
+
+constexpr auto is_orthogonal(point_fine_t p0, point_fine_t p1) noexcept -> bool {
+    // xor disallows zero length lines
+    return (p0.x == p1.x) ^ (p0.y == p1.y);
+}
+
 struct ordered_line_t;
 
 // a line is either horizontal or vertical
@@ -629,6 +635,40 @@ static_assert(std::is_trivial_v<ordered_line_t>);
 static_assert(std::is_trivially_constructible_v<ordered_line_t>);
 static_assert(std::is_trivially_copyable_v<ordered_line_t>);
 static_assert(std::is_trivially_copy_assignable_v<ordered_line_t>);
+
+struct line_fine_t {
+    point_fine_t p0;
+    point_fine_t p1;
+
+    line_fine_t() = default;
+
+    [[nodiscard]] explicit constexpr line_fine_t(point_fine_t p0_, point_fine_t p1_)
+        : p0 {p0_}, p1 {p1_} {
+        if (!is_orthogonal(p0_, p1_)) [[unlikely]] {
+            throw_exception("line needs to be horizontal or vertical.");
+        }
+    };
+
+    [[nodiscard]] constexpr line_fine_t(line_t line) noexcept
+        : p0 {point_fine_t {line.p0}}, p1 {point_fine_t {line.p1}} {}
+
+    [[nodiscard]] constexpr line_fine_t(ordered_line_t line) noexcept
+        : p0 {point_fine_t {line.p0}}, p1 {point_fine_t {line.p1}} {}
+
+    [[nodiscard]] explicit constexpr line_fine_t(point_t p0_, point_t p1_)
+        : line_fine_t {point_fine_t {p0_}, point_fine_t {p1_}} {};
+
+    [[nodiscard]] explicit constexpr line_fine_t(point_fine_t p0_, point_t p1_)
+        : line_fine_t {p0_, point_fine_t {p1_}} {};
+
+    [[nodiscard]] explicit constexpr line_fine_t(point_t p0_, point_fine_t p1_)
+        : line_fine_t {point_fine_t {p0_}, p1_} {};
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] constexpr auto operator==(const line_fine_t &other) const
+        -> bool = default;
+};
 
 struct rect_t;
 

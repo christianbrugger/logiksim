@@ -24,19 +24,6 @@
 
 namespace logicsim {
 
-template <typename PointType>
-auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_enabled,
-                       const RenderSettings& settings) -> void {
-    const auto color = wire_enabled ? defaults::color_red : defaults::color_black;
-    draw_line(ctx, p0, p1, {color}, settings);
-
-    // if constexpr (std::is_same_v<decltype(p0), point_t>) {
-    //     render_point(ctx, p0, PointShape::circle, defaults::color_orange, 0.2,
-    //     settings); render_point(ctx, p1, PointShape::cross, defaults::color_orange,
-    //     0.2, settings);
-    // }
-}
-
 auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,
                        time_t time_until, const Simulation::HistoryView& history,
                        const RenderSettings& settings) -> void {
@@ -50,14 +37,18 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
             interpolate_line_1d(p_from, p_until, time_from, time_until, entry.first_time);
         const auto p_end =
             interpolate_line_1d(p_from, p_until, time_from, time_until, entry.last_time);
-        draw_line_segment(ctx, p_start, p_end, entry.value, settings);
+
+        // TODO !!! why do we need this? fix history.from, history.until?
+        if (p_start != p_end) {
+            draw_line_segment(ctx, line_fine_t {p_start, p_end}, entry.value, settings);
+        }
     }
 }
 
 auto draw_wire_no_history(BLContext& ctx, layout::ConstElement element, bool wire_enabled,
                           const RenderSettings& settings) -> void {
     for (auto&& segment : element.line_tree().sized_segments()) {
-        draw_line_segment(ctx, segment.line.p1, segment.line.p0, wire_enabled, settings);
+        draw_line_segment(ctx, segment.line, wire_enabled, settings);
 
         if (segment.has_cross_point_p0) {
             draw_line_cross_point(ctx, segment.line.p0, wire_enabled, settings);
@@ -102,7 +93,7 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
 auto draw_element_tree(BLContext& ctx, layout::ConstElement element,
                        const RenderSettings& settings) {
     for (const segment_info_t& segment : element.segment_tree().segment_infos()) {
-        draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
+        draw_line_segment(ctx, segment.line, false, settings);
 
         if (is_cross_point(segment.p0_type)) {
             draw_line_cross_point(ctx, segment.line.p0, false, settings);
@@ -174,15 +165,11 @@ auto draw_single_connector_normal(BLContext& ctx, point_t position,
                                   const RenderSettings& settings) -> void {
     const auto endpoint = connector_endpoint(position, orientation);
 
-    const auto p0 = to_context(position, settings.view_config);
-    const auto p1 = to_context(endpoint, settings.view_config);
-
     const auto alpha = get_alpha_value(display_state);
     const auto color_bl = enabled ? BLRgba32(255, 0, 0, alpha) : BLRgba32(0, 0, 0, alpha);
     const auto color = color_t {color_bl.value};
 
-    const auto width = settings.view_config.stroke_width();
-    draw_line(ctx, BLLine {p0.x, p0.y, p1.x, p1.y}, {color, width}, settings);
+    draw_line(ctx, line_fine_t {position, endpoint}, {color}, settings);
 }
 
 auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orientation,
@@ -1119,6 +1106,18 @@ auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int
         clamp_to_grid(std::ceil(scene_rect.p1.y / delta) * delta),
     };
 
+    /*
+    for (int x = g0.x.value; x <= g1.x.value; x += delta) {
+        const auto x_grid = grid_t {x};
+        draw_line(ctx, line_t {{x_grid, g0.y}, {x_grid, g1.y}}, {color, width}, settings);
+    }
+    for (int y = g0.y.value; y <= g1.y.value; y += delta) {
+        const auto y_grid = grid_t {y};
+        draw_line(ctx, line_t {{g0.x, y_grid}, {g1.x, y_grid}}, {color, width}, settings);
+    }
+    */
+
+    // this version is a bit faster
     const auto p0 = to_context(g0, settings.view_config);
     const auto p1 = to_context(g1, settings.view_config);
 
@@ -1128,12 +1127,12 @@ auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int
     // vertical
     for (int x = g0.x.value; x <= g1.x.value; x += delta) {
         const auto cx = round_fast((x + offset.x) * scale);
-        draw_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width}, settings);
+        draw_orthogonal_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width}, settings);
     }
     // horizontal
     for (int y = g0.y.value; y <= g1.y.value; y += delta) {
         const auto cy = round_fast((y + offset.y) * scale);
-        draw_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width}, settings);
+        draw_orthogonal_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width}, settings);
     }
 }
 

@@ -7,6 +7,9 @@
 
 namespace logicsim {
 
+auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
+                          const RenderSettings& settings) -> void;
+
 namespace {
 
 auto resolve_stroke_width(int stroke_width, const RenderSettings& settings) -> int {
@@ -95,8 +98,8 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
             const auto d = to_context(size, settings.view_config);
             const auto attrs = LineAttributes {color_, stroke_width};
 
-            draw_line(ctx, BLLine {x, y + d, x, y - d}, attrs, settings);
-            draw_line(ctx, BLLine {x - d, y, x + d, y}, attrs, settings);
+            draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs, settings);
+            draw_orthogonal_line(ctx, BLLine {x - d, y, x + d, y}, attrs, settings);
             return;
         }
         case square: {
@@ -142,7 +145,7 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
             const auto d = to_context(size, settings.view_config);
             const auto attrs = LineAttributes {color_, stroke_width};
 
-            draw_line(ctx, BLLine {x - d, y, x + d, y}, attrs, settings);
+            draw_orthogonal_line(ctx, BLLine {x - d, y, x + d, y}, attrs, settings);
             return;
         }
         case vertical: {
@@ -150,7 +153,7 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
             const auto d = to_context(size, settings.view_config);
             const auto attrs = LineAttributes {color_, stroke_width};
 
-            draw_line(ctx, BLLine {x, y + d, x, y - d}, attrs, settings);
+            draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs, settings);
             return;
         }
     }
@@ -185,32 +188,8 @@ auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t or
 // Line
 //
 
-auto draw_line(BLContext& ctx, const ordered_line_t& line, LineAttributes attributes,
-               const RenderSettings& settings) -> void {
-    draw_line(ctx, line.p0, line.p1, attributes, settings);
-}
-
-auto draw_line(BLContext& ctx, const line_t& line, LineAttributes attributes,
-               const RenderSettings& settings) -> void {
-    draw_line(ctx, line.p0, line.p1, attributes, settings);
-}
-
-auto draw_line(BLContext& ctx, point_t p0, point_t p1, LineAttributes attributes,
-               const RenderSettings& settings) -> void {
-    draw_line(ctx, static_cast<point_fine_t>(p0), static_cast<point_fine_t>(p1),
-              attributes, settings);
-}
-
-auto draw_line(BLContext& ctx, point_fine_t p0, point_fine_t p1,
-               LineAttributes attributes, const RenderSettings& settings) -> void {
-    const auto [x0, y0] = to_context(p0, settings.view_config);
-    const auto [x1, y1] = to_context(p1, settings.view_config);
-
-    draw_line(ctx, BLLine(x0, y0, x1, y1), attributes, settings);
-}
-
-auto draw_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
-               const RenderSettings& settings) -> void {
+auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
+                          const RenderSettings& settings) -> void {
     const auto width = resolve_stroke_width(attributes.stroke_width, settings);
 
     if (width < 1) {
@@ -243,6 +222,24 @@ auto draw_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
 
         ctx.fillRect(line.x0 - offset, y0, width, h);
     }
+}
+
+auto draw_line(BLContext& ctx, const ordered_line_t& line, LineAttributes attributes,
+               const RenderSettings& settings) -> void {
+    draw_line(ctx, line_fine_t {line}, attributes, settings);
+}
+
+auto draw_line(BLContext& ctx, const line_t& line, LineAttributes attributes,
+               const RenderSettings& settings) -> void {
+    draw_line(ctx, line_fine_t {line}, attributes, settings);
+}
+
+auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attributes,
+               const RenderSettings& settings) -> void {
+    const auto [x0, y0] = to_context(line.p0, settings.view_config);
+    const auto [x1, y1] = to_context(line.p1, settings.view_config);
+
+    draw_orthogonal_line(ctx, BLLine(x0, y0, x1, y1), attributes, settings);
 }
 
 //
@@ -298,6 +295,20 @@ auto draw_line_cross_point(BLContext& ctx, const point_t point, bool enabled,
 
     ctx.setFillStyle(BLRgba32 {color.value});
     ctx.fillRect(x - offset, y - offset, size, size);
+}
+
+auto draw_line_segment(BLContext& ctx, line_t line, bool enabled,
+                       const RenderSettings& settings) -> void {
+    draw_line_segment(ctx, line_fine_t {line}, enabled, settings);
+
+    render_point(ctx, line.p0, PointShape::circle, defaults::color_orange, 0.2, settings);
+    render_point(ctx, line.p1, PointShape::cross, defaults::color_orange, 0.2, settings);
+}
+
+auto draw_line_segment(BLContext& ctx, line_fine_t line, bool enabled,
+                       const RenderSettings& settings) -> void {
+    const auto color = enabled ? defaults::color_red : defaults::color_black;
+    draw_line(ctx, line, {color}, settings);
 }
 
 }  // namespace logicsim

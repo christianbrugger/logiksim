@@ -235,6 +235,10 @@ auto ordered_line_t::format() const -> std::string {
     return fmt::format("OrderedLine({}, {})", p0, p1);
 }
 
+auto line_fine_t::format() const -> std::string {
+    return fmt::format("LineFine({}, {})", p0, p1);
+}
+
 auto rect_t::format() const -> std::string {
     return fmt::format("Rect({}, {})", p0, p1);
 }

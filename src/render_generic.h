@@ -83,7 +83,7 @@ auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t or
                   double size, const RenderSettings& settings) -> void;
 
 //
-// Line
+// Orthogonal Line
 //
 
 struct LineAttributes {
@@ -91,19 +91,16 @@ struct LineAttributes {
     int stroke_width {defaults::view_config_width};
 };
 
+auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
+                          const RenderSettings& settings) -> void;
+
 auto draw_line(BLContext& ctx, const ordered_line_t& line, LineAttributes attributes,
                const RenderSettings& settings) -> void;
 
 auto draw_line(BLContext& ctx, const line_t& line, LineAttributes attributes,
                const RenderSettings& settings) -> void;
 
-auto draw_line(BLContext& ctx, point_t p0, point_t p1, LineAttributes attributes,
-               const RenderSettings& settings) -> void;
-
-auto draw_line(BLContext& ctx, point_fine_t p0, point_fine_t p1,
-               LineAttributes attributes, const RenderSettings& settings) -> void;
-
-auto draw_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
+auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attributes,
                const RenderSettings& settings) -> void;
 
 //
@@ -124,6 +121,12 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
 
 auto draw_line_cross_point(BLContext& ctx, const point_t point, bool enabled,
                            const RenderSettings& settings) -> void;
+
+auto draw_line_segment(BLContext& ctx, line_t line, bool enabled,
+                       const RenderSettings& settings) -> void;
+
+auto draw_line_segment(BLContext& ctx, line_fine_t line, bool enabled,
+                       const RenderSettings& settings) -> void;
 
 }  // namespace logicsim
 
