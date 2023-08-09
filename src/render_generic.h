@@ -22,10 +22,9 @@ struct LayersCache {
     mutable std::vector<segment_info_t> uninserted_wires;
     mutable std::vector<element_id_t> uninserted_above;
 
-    // selected
+    // selected & temporary
     mutable std::vector<element_id_t> selected_logic_items;
     mutable std::vector<ordered_line_t> selected_wires;
-    // temporary
     mutable std::vector<ordered_line_t> temporary_wires;
     // valid
     mutable std::vector<element_id_t> valid_logic_items;

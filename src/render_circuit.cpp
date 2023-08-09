@@ -23,7 +23,8 @@ auto format(shadow_t orientation) -> std::string {
 }
 
 auto render_above(ElementType type) -> bool {
-    return type == ElementType::button;
+    // TODO only buttons
+    return true;   // type == ElementType::button;
 }
 
 auto add_valid_wire_parts(const layout::ConstElement wire,
@@ -195,7 +196,7 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
     return defaults::color_blue;
 }
 
-auto draw_element_shadow(BLContext& ctx, layout::ConstElement element,
+auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
                          shadow_t shadow_type, bool selected,
                          const RenderSettings& settings) -> void {
     const auto data = to_layout_calculation_data(element.layout(), element);
@@ -211,7 +212,7 @@ auto draw_logic_item_shadows(BLContext& ctx, const Layout& layout,
                              std::span<const element_id_t> elements, shadow_t shadow_type,
                              const RenderSettings& settings) -> void {
     for (const auto element_id : elements) {
-        draw_element_shadow(ctx, layout.element(element_id), shadow_type, false,
+        draw_logic_item_shadow(ctx, layout.element(element_id), shadow_type, false,
                             settings);
     }
 }
@@ -244,6 +245,8 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout,
 auto render_layers(BLContext& ctx, const Layout& layout, const Selection* selection,
                    const LayersCache& layers, const RenderSettings& settings) -> void {
     // TODO draw with alpha here anything ???
+    // TODO draw line inverters / connectors above wires
+    // TODO draw uninserted wires in shadow
 
     draw_logic_items(ctx, layout, layers.normal_below, settings);
     draw_wires(ctx, layout, layers.normal_wires, settings);
@@ -255,11 +258,10 @@ auto render_layers(BLContext& ctx, const Layout& layout, const Selection* select
 
     // TODO draw to second layer
 
-    // selected
+    // selected & temporary
     draw_logic_item_shadows(ctx, layout, layers.selected_logic_items, shadow_t::selected,
                             settings);
     draw_wire_shadows(ctx, layers.selected_wires, shadow_t::selected, settings);
-    // temporary
     draw_wire_shadows(ctx, layers.temporary_wires, shadow_t::selected, settings);
     // valid
     draw_logic_item_shadows(ctx, layout, layers.valid_logic_items, shadow_t::valid,
