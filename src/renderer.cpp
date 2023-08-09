@@ -6,6 +6,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "format.h"
+#include "geometry.h"
 #include "layout.h"
 #include "layout_calculations.h"
 #include "range.h"
@@ -23,279 +24,11 @@
 
 namespace logicsim {
 
-auto RenderSettings::format() const -> std::string {
-    return fmt::format(
-        "RenderSettings(\n"
-        "  view_config = {},\n"
-        "  background_grid_min_distance = {})",
-        view_config, background_grid_min_distance);
-}
-
-enum class DrawType {
-    fill,
-    stroke,
-    fill_and_stroke,
-};
-
-struct RectAttributes {
-    DrawType draw_type {DrawType::fill_and_stroke};
-    int stroke_width {-1};
-};
-
-auto draw_standard_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-                        const RenderSettings& settings) -> void {
-    const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
-    const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
-
-    const auto w_ = x1 - x0;
-    const auto h_ = y1 - y0;
-
-    const auto w = w_ == 0 ? 1.0 : w_;
-    const auto h = h_ == 0 ? 1.0 : h_;
-
-    if (attributes.draw_type == DrawType::fill ||
-        attributes.draw_type == DrawType::fill_and_stroke) {
-        ctx.fillRect(x0, y0, w, h);
-    }
-
-    if (attributes.draw_type == DrawType::stroke ||
-        attributes.draw_type == DrawType::fill_and_stroke) {
-        const auto width = attributes.stroke_width == -1 ? stroke_width(settings)
-                                                         : attributes.stroke_width;
-        const auto offset = stroke_offset(width);
-
-        ctx.setStrokeWidth(width);
-        ctx.strokeRect(x0 + offset, y0 + offset, w, h);
-    }
-}
-
-auto stroke_width(const RenderSettings& settings) -> int {
-    constexpr static auto stepping = 16;  // 12
-    const auto scale = settings.view_config.pixel_scale();
-
-    return std::max(1, static_cast<int>(scale / stepping));
-}
-
-auto line_cross_width(const RenderSettings& settings) -> int {
-    constexpr static auto stepping = 8;
-    const auto scale = settings.view_config.pixel_scale();
-
-    return std::max(1, static_cast<int>(scale / stepping));
-}
-
-auto stroke_offset(int stroke_width) -> double {
-    // To allign our strokes to the pixel grid, we need to offset odd strokes
-    // otherwise they are drawn between pixels and get blurry
-    if (stroke_width % 2 == 0) {
-        return 0;
-    }
-    return 0.5;
-}
-
-auto stroke_offset(const RenderSettings& settings) -> double {
-    return stroke_offset(stroke_width(settings));
-}
-
-class new_context {
-   public:
-    explicit new_context(BLContext& ctx) : ctx_(ctx) {
-        ctx_.save();
-    }
-
-    ~new_context() {
-        ctx_.restore();
-    };
-
-   private:
-    BLContext& ctx_;
-};
-
-auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
-    return v0.value + (v1.value - v0.value) * ratio;
-}
-
-auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_select)
-    -> point_fine_t {
-    assert(t0 < t1);
-
-    if (t_select <= t0) {
-        return point_fine_t {p0};
-    }
-    if (t_select >= t1) {
-        return point_fine_t {p1};
-    }
-
-    const double alpha = static_cast<double>((t_select.value - t0.value).count()) /
-                         static_cast<double>((t1.value - t0.value).count());
-
-    if (is_horizontal(line_t {p0, p1})) {
-        return point_fine_t {interpolate_1d(p0.x, p1.x, alpha),
-                             static_cast<double>(p0.y)};
-    }
-    return point_fine_t {static_cast<double>(p0.x), interpolate_1d(p0.y, p1.y, alpha)};
-}
-
-auto get_image_data(BLContext& ctx) -> BLImageData {
-    auto image = ctx.targetImage();
-    if (image == nullptr) [[unlikely]] {
-        throw_exception("context has no image attached");
-    }
-
-    BLImageData data {};
-    auto res = image->getData(&data);
-
-    if (res != BL_SUCCESS) [[unlikely]] {
-        throw_exception("could not get image data");
-    }
-    if (data.format != BL_FORMAT_PRGB32) [[unlikely]] {
-        throw_exception("unsupported format");
-    }
-    return data;
-}
-
-auto draw_line_cross_point_fast(BLContext& ctx, const point_t point, bool enabled,
-                                int width, const RenderSettings& settings) -> void {
-    const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
-
-    // TODO refactor getting data & width
-    BLImageData data = get_image_data(ctx);
-    auto& image = *ctx.targetImage();
-    auto* array = static_cast<uint32_t*>(data.pixelData);
-
-    const auto w = image.width();
-    const auto h = image.height();
-
-    const auto p_ctx = to_context(point, settings.view_config);
-
-    const auto x = static_cast<int>(p_ctx.x);
-    const auto y = static_cast<int>(p_ctx.y);
-
-    const int s = width;
-    for (int xi : range(x - s, x + s + 1)) {
-        for (int yj : range(y - s, y + s + 1)) {
-            if (xi >= 0 && xi < w && yj >= 0 && yj < h) {
-                array[xi + w * yj] = color;
-            }
-        }
-    }
-}
-
-auto draw_line_cross_point_blend2d(BLContext& ctx, const point_t point, bool enabled,
-                                   int width, const RenderSettings& settings) {
-    if (width < 1) {
-        return;
-    }
-
-    const auto p_ctx = to_context(point, settings.view_config);
-
-    const int wire_width = stroke_width(settings);
-    const int wire_offset = (wire_width - 1) / 2;
-
-    const int size = 2 * width + wire_width;
-    const int offset = wire_offset + width;
-
-    const uint32_t color = enabled ? 0xFFFF0000u : 0xFF000000u;
-    ctx.setFillStyle(BLRgba32 {color});
-    ctx.fillRect(p_ctx.x - offset, p_ctx.y - offset, size, size);
-}
-
-auto stroke_line_fast(BLContext& ctx, const BLLine& line, BLRgba32 color) -> void {
-    // TODO refactor getting data & width
-    BLImageData data = get_image_data(ctx);
-    auto& image = *ctx.targetImage();
-    auto* array = static_cast<uint32_t*>(data.pixelData);
-
-    const auto w = image.width();
-    const auto h = image.height();
-
-    if (line.x0 == line.x1) {
-        auto x = static_cast<int>(round_fast(line.x0));
-        auto y0 = static_cast<int>(round_fast(line.y0));
-        auto y1 = static_cast<int>(round_fast(line.y1));
-
-        if (y0 > y1) {
-            std::swap(y0, y1);
-        }
-
-        for (auto y : range(y0, y1 + 1)) {
-            if (x >= 0 && x < w && y >= 0 && y < h) {
-                array[x + w * y] = color.value;
-            }
-        }
-    } else {
-        auto x0 = static_cast<int>(round_fast(line.x0));
-        auto x1 = static_cast<int>(round_fast(line.x1));
-        auto y = static_cast<int>(round_fast(line.y0));
-
-        if (x0 > x1) {
-            std::swap(x0, x1);
-        }
-
-        for (auto x : range(x0, x1 + 1)) {
-            if (x >= 0 && x < w && y >= 0 && y < h) {
-                array[x + w * y] = color.value;
-            }
-        }
-    }
-}
-
-auto stroke_line_blend2d(BLContext& ctx, const BLLine& line, BLRgba32 color, int width)
-    -> void {
-    if (width < 1) {
-        return;
-    }
-    ctx.setFillStyle(color);
-
-    const int offset = (width - 1) / 2;
-
-    if (line.y0 == line.y1) {
-        auto x0 = line.x0;
-        auto x1 = line.x1;
-
-        if (x0 > x1) {
-            std::swap(x0, x1);
-        }
-
-        auto w = x1 - x0 + 1;
-
-        ctx.fillRect(x0, line.y0 - offset, w, width);
-    } else {
-        auto y0 = line.y0;
-        auto y1 = line.y1;
-
-        if (y0 > y1) {
-            std::swap(y0, y1);
-        }
-
-        auto h = y1 - y0 + 1;
-
-        ctx.fillRect(line.x0 - offset, y0, width, h);
-    }
-}
-
-auto draw_line_cross_point_impl(BLContext& ctx, const point_t point, bool enabled,
-                                int width, const RenderSettings& settings) {
-    // draw_line_cross_point_fast(ctx, point, enabled, width, settings);
-    draw_line_cross_point_blend2d(ctx, point, enabled, width, settings);
-}
-
-auto stroke_line_impl(BLContext& ctx, const BLLine& line, BLRgba32 color, int width)
-    -> void {
-    // stroke_line_fast(ctx, line, color);
-    stroke_line_blend2d(ctx, line, color, width);
-}
-
 template <typename PointType>
 auto draw_line_segment(BLContext& ctx, PointType p0, PointType p1, bool wire_enabled,
                        const RenderSettings& settings) -> void {
-    const uint32_t color = wire_enabled ? 0xFFFF0000u : 0xFF000000u;
-
-    const auto [x0, y0] = to_context(p0, settings.view_config);
-    const auto [x1, y1] = to_context(p1, settings.view_config);
-
-    const auto width = stroke_width(settings);
-
-    stroke_line_impl(ctx, BLLine(x0, y0, x1, y1), BLRgba32(color), width);
+    const auto color = wire_enabled ? defaults::color_red : defaults::color_black;
+    draw_line(ctx, p0, p1, {color}, settings);
 
     // if constexpr (std::is_same_v<decltype(p0), point_t>) {
     //     render_point(ctx, p0, PointShape::circle, defaults::color_orange, 0.2,
@@ -323,14 +56,11 @@ auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t t
 
 auto draw_wire_no_history(BLContext& ctx, layout::ConstElement element, bool wire_enabled,
                           const RenderSettings& settings) -> void {
-    const auto lc_width = line_cross_width(settings);
-
     for (auto&& segment : element.line_tree().sized_segments()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, wire_enabled, settings);
 
         if (segment.has_cross_point_p0) {
-            draw_line_cross_point_impl(ctx, segment.line.p0, wire_enabled, lc_width,
-                                       settings);
+            draw_line_cross_point(ctx, segment.line.p0, wire_enabled, settings);
         }
     }
 }
@@ -338,9 +68,6 @@ auto draw_wire_no_history(BLContext& ctx, layout::ConstElement element, bool wir
 auto draw_wire_with_history(BLContext& ctx, Schematic::ConstElement element,
                             const Layout& layout, const Simulation& simulation,
                             const RenderSettings& settings) -> void {
-    const auto cross_width = line_cross_width(settings);
-
-    // TODO move to some class
     const auto to_time = [time = simulation.time(),
                           delay = element.schematic().wire_delay_per_distance()](
                              LineTree::length_t length_) {
@@ -356,8 +83,7 @@ auto draw_wire_with_history(BLContext& ctx, Schematic::ConstElement element,
 
         if (segment.has_cross_point_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
-            draw_line_cross_point_impl(ctx, segment.line.p0, wire_enabled, cross_width,
-                                       settings);
+            draw_line_cross_point(ctx, segment.line.p0, wire_enabled, settings);
         }
     }
 }
@@ -375,18 +101,14 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
 
 auto draw_element_tree(BLContext& ctx, layout::ConstElement element,
                        const RenderSettings& settings) {
-    const auto cross_width = line_cross_width(settings);
-
     for (const segment_info_t& segment : element.segment_tree().segment_infos()) {
         draw_line_segment(ctx, segment.line.p1, segment.line.p0, false, settings);
 
         if (is_cross_point(segment.p0_type)) {
-            draw_line_cross_point_impl(ctx, segment.line.p0, false, cross_width,
-                                       settings);
+            draw_line_cross_point(ctx, segment.line.p0, false, settings);
         }
         if (is_cross_point(segment.p1_type)) {
-            draw_line_cross_point_impl(ctx, segment.line.p1, false, cross_width,
-                                       settings);
+            draw_line_cross_point(ctx, segment.line.p1, false, settings);
         }
     }
 }
@@ -431,7 +153,7 @@ auto draw_single_connector_inverted(BLContext& ctx, point_t position,
 
     const auto alpha = get_alpha_value(display_state);
     const auto color = enabled ? BLRgba32(255, 0, 0, alpha) : BLRgba32(0, 0, 0, alpha);
-    const auto width = stroke_width(settings);
+    const auto width = settings.view_config.stroke_width();
     const auto offset = stroke_offset(width);
 
     const auto r = radius * settings.view_config.pixel_scale();
@@ -456,10 +178,11 @@ auto draw_single_connector_normal(BLContext& ctx, point_t position,
     const auto p1 = to_context(endpoint, settings.view_config);
 
     const auto alpha = get_alpha_value(display_state);
-    const auto color = enabled ? BLRgba32(255, 0, 0, alpha) : BLRgba32(0, 0, 0, alpha);
+    const auto color_bl = enabled ? BLRgba32(255, 0, 0, alpha) : BLRgba32(0, 0, 0, alpha);
+    const auto color = color_t {color_bl.value};
 
-    const auto width = stroke_width(settings);
-    stroke_line_impl(ctx, BLLine {p0.x, p0.y, p1.x, p1.y}, color, width);
+    const auto width = settings.view_config.stroke_width();
+    draw_line(ctx, BLLine {p0.x, p0.y, p1.x, p1.y}, {color, width}, settings);
 }
 
 auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orientation,
@@ -570,7 +293,7 @@ auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 
     // text
     const auto label = to_label(element);
@@ -627,7 +350,7 @@ auto draw_button_body(BLContext& ctx, layout::ConstElement element, bool selecte
     const auto alpha = get_alpha_value(element.display_state());
     ctx.setFillStyle(BLRgba32(229, 229, 229, alpha));
 
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 }
 
 auto draw_binary_value(BLContext& ctx, point_fine_t position, bool enabled,
@@ -685,7 +408,7 @@ auto draw_buffer_body(BLContext& ctx, layout::ConstElement element, bool selecte
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 
     const auto size = 0.6 * settings.view_config.pixel_scale();
     if (size > 3.0) {
@@ -731,7 +454,7 @@ auto draw_clock_generator_body(BLContext& ctx, layout::ConstElement element,
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 }
 
 auto draw_clock_generator(BLContext& ctx, layout::ConstElement element, bool selected,
@@ -767,7 +490,7 @@ auto draw_flipflop_jk_body(BLContext& ctx, layout::ConstElement element, bool se
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 
     // text
     const auto label = std::string {"JK-FF"};
@@ -820,7 +543,7 @@ auto draw_shift_register_body(BLContext& ctx, layout::ConstElement element, bool
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 }
 
 auto draw_shift_register_state(BLContext& ctx, layout::ConstElement element,
@@ -895,7 +618,7 @@ auto draw_latch_d_body(BLContext& ctx, layout::ConstElement element, bool select
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 
     // text
     const auto label = std::string {"L"};
@@ -948,7 +671,7 @@ auto draw_flipflop_d_body(BLContext& ctx, layout::ConstElement element, bool sel
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 
     // text
     const auto label = std::string {"FF"};
@@ -1001,7 +724,7 @@ auto draw_flipflop_ms_d_body(BLContext& ctx, layout::ConstElement element, bool 
     };
 
     set_body_draw_styles(ctx, element.display_state(), selected);
-    draw_standard_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
+    draw_rect(ctx, rect, {.draw_type = DrawType::fill_and_stroke}, settings);
 
     // text
     const auto label = std::string {"MS-FF"};
@@ -1151,7 +874,7 @@ auto draw_element_shadow(BLContext& ctx, layout::ConstElement element, bool sele
         throw_exception("unknown state");
     }
 
-    draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+    draw_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
 }
 
 auto draw_wire_selected_parts_shadow(BLContext& ctx, ordered_line_t line,
@@ -1162,7 +885,7 @@ auto draw_wire_selected_parts_shadow(BLContext& ctx, ordered_line_t line,
         const auto selection_rect = element_selection_rect(selected_line);
 
         ctx.setFillStyle(BLRgba32(0, 128, 255, 96));
-        draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+        draw_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
     }
 }
 
@@ -1172,7 +895,7 @@ auto draw_wire_temporary_shadow(BLContext& ctx, const SegmentTree& segment_tree,
 
     for (const auto info : segment_tree.segment_infos()) {
         const auto selection_rect = element_selection_rect(info.line);
-        draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+        draw_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
     }
 }
 
@@ -1182,7 +905,7 @@ auto draw_wire_colliding_shadow(BLContext& ctx, const SegmentTree& segment_tree,
 
     for (const auto info : segment_tree.segment_infos()) {
         const auto selection_rect = element_selection_rect(info.line);
-        draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+        draw_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
     }
 }
 
@@ -1200,8 +923,7 @@ auto draw_wire_valid_shadow(BLContext& ctx, const SegmentTree& segment_tree,
         for (const auto part : parts) {
             const auto line = to_line(full_line, part);
             const auto selection_rect = element_selection_rect(line);
-            draw_standard_rect(ctx, selection_rect, {.draw_type = DrawType::fill},
-                               settings);
+            draw_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
         }
     }
 }
@@ -1376,12 +1098,12 @@ auto draw_grid_space_limit(BLContext& ctx, const RenderSettings& settings) {
     ctx.strokeRect(p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y);
 }
 
-constexpr auto monochrome(uint8_t value) -> BLRgba32 {
-    return BLRgba32 {0xFF000000u + value * 0x1u + value * 0x100u + value * 0x10000u};
+constexpr auto monochrome(uint8_t value) -> color_t {
+    return color_t {0xFF000000u + value * 0x1u + value * 0x100u + value * 0x10000u};
 }
 
 auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int delta,
-                                     BLRgba32 color, int width,
+                                     color_t color, int width,
                                      const RenderSettings& settings) {
     const auto clamp_to_grid = [](double v_) {
         return gsl::narrow_cast<grid_t::value_type>(
@@ -1406,12 +1128,12 @@ auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int
     // vertical
     for (int x = g0.x.value; x <= g1.x.value; x += delta) {
         const auto cx = round_fast((x + offset.x) * scale);
-        stroke_line_impl(ctx, BLLine {cx, p0.y, cx, p1.y}, color, width);
+        draw_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width}, settings);
     }
     // horizontal
     for (int y = g0.y.value; y <= g1.y.value; y += delta) {
         const auto cy = round_fast((y + offset.y) * scale);
-        stroke_line_impl(ctx, BLLine {p0.x, cy, p1.x, cy}, color, width);
+        draw_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width}, settings);
     }
 }
 
@@ -1451,132 +1173,10 @@ auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
 // Primitives
 //
 
-auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
-                  double size, const RenderSettings& settings) -> void {
-    constexpr auto stroke_width = 1;
-    const auto color = BLRgba32(color_.value);
-
-    switch (shape) {
-        using enum PointShape;
-
-        case circle: {
-            const auto center = to_context(point, settings.view_config);
-            const auto r = to_context(size, settings.view_config);
-
-            ctx.setStrokeWidth(stroke_width);
-            ctx.setStrokeStyle(color);
-            ctx.strokeCircle(BLCircle {center.x, center.y, r});
-            return;
-        }
-        case full_circle: {
-            const auto center = to_context(point, settings.view_config);
-            const auto r = to_context(size, settings.view_config);
-
-            ctx.setFillStyle(color);
-            ctx.fillCircle(BLCircle {center.x, center.y, r});
-            return;
-        }
-        case cross: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
-
-            ctx.setStrokeWidth(stroke_width);
-            ctx.setStrokeStyle(color);
-
-            ctx.strokeLine(BLLine {x - d, y - d, x + d, y + d});
-            ctx.strokeLine(BLLine {x - d, y + d, x + d, y - d});
-            return;
-        }
-        case plus: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
-
-            stroke_line_impl(ctx, BLLine {x, y + d, x, y - d}, color, stroke_width);
-            stroke_line_impl(ctx, BLLine {x - d, y, x + d, y}, color, stroke_width);
-            return;
-        }
-        case square: {
-            ctx.setStrokeStyle(color);
-            draw_standard_rect(
-                ctx,
-                rect_fine_t {
-                    point_fine_t {point.x.value - size, point.y.value - size},
-                    point_fine_t {point.x.value + size, point.y.value + size},
-                },
-                RectAttributes {.draw_type = DrawType::stroke,
-                                .stroke_width = stroke_width},
-                settings);
-
-            return;
-        }
-        case full_square: {
-            ctx.setFillStyle(color);
-            draw_standard_rect(
-                ctx,
-                rect_fine_t {
-                    point_fine_t {point.x.value - size, point.y.value - size},
-                    point_fine_t {point.x.value + size, point.y.value + size},
-                },
-                RectAttributes {.draw_type = DrawType::fill,
-                                .stroke_width = stroke_width},
-                settings);
-            return;
-        }
-        case diamond: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
-
-            const auto poly = std::array {BLPoint {x, y - d}, BLPoint {x + d, y},
-                                          BLPoint {x, y + d}, BLPoint {x - d, y}};
-            const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
-
-            ctx.setStrokeWidth(stroke_width);
-            ctx.setStrokeStyle(color);
-            ctx.strokePolygon(BLArrayView<BLPoint>(view));
-            return;
-        }
-        case horizontal: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
-
-            stroke_line_impl(ctx, BLLine {x - d, y, x + d, y}, color, stroke_width);
-            return;
-        }
-        case vertical: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
-
-            stroke_line_impl(ctx, BLLine {x, y + d, x, y - d}, color, stroke_width);
-            return;
-        }
-    }
-
-    throw_exception("unknown shape type.");
-}
-
-auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
-                  double size, const RenderSettings& settings) -> void {
-    auto _ = new_context {ctx};
-
-    ctx.setStrokeWidth(1);
-    ctx.setStrokeStyle(BLRgba32(color.value));
-
-    const auto [x, y] = to_context(point, settings.view_config);
-    const auto d = to_context(size, settings.view_config);
-    const auto angle = to_angle(orientation);
-
-    ctx.translate(BLPoint {x, y});
-    ctx.rotate(angle);
-
-    ctx.strokeLine(BLLine(0, 0, d, 0));
-    ctx.strokeLine(BLLine(0, 0, d * 0.5, +d * 0.25));
-    ctx.strokeLine(BLLine(0, 0, d * 0.5, -d * 0.25));
-}
-
 auto render_input_marker(BLContext& ctx, point_t point, color_t color,
                          orientation_t orientation, double size,
                          const RenderSettings& settings) -> void {
-    auto _ = new_context {ctx};
+    auto _ = ContextGuard {ctx};
 
     ctx.setStrokeWidth(1);
     ctx.setStrokeStyle(BLRgba32(color.value));
@@ -1710,9 +1310,9 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
             continue;
         }
 
-        draw_standard_rect(
-            ctx, rect, RectAttributes {.draw_type = DrawType::stroke, .stroke_width = 1},
-            settings);
+        draw_rect(ctx, rect,
+                  RectAttributes {.draw_type = DrawType::stroke, .stroke_width = 1},
+                  settings);
     }
 }
 

@@ -91,11 +91,11 @@ auto render_multi_layer(std::vector<BLImage>& images, const Layout& layout,
         contexts.emplace_back(BLContext {img, info});
     }
 
-    for (auto& ctx : std::ranges::subrange(contexts.begin() + 2, contexts.end())) {
+    for (auto& ctx : std::ranges::subrange(contexts.begin() + 1, contexts.end())) {
         ctx.clearAll();
     }
-    render_background(contexts.at(1), settings);
-    render_circuit(contexts.at(2), render_args_t {
+    render_background(contexts.at(0), settings);
+    render_circuit(contexts.at(1), render_args_t {
                                        .layout = layout,
                                        .selection = Selection {},
                                        .settings = settings,
@@ -122,7 +122,7 @@ auto render_multi_layer(std::vector<BLImage>& images, const Layout& layout,
 auto benchmark_multi_layer(const Layout& layout, int width, int height,
                            unsigned int threads) -> std::vector<BLImage> {
     const auto settings = RenderSettings {};
-    const auto n = 4;
+    const auto n = 2;
 
     auto images = std::vector<BLImage> {};
     for (auto _ [[maybe_unused]] : range(n)) {

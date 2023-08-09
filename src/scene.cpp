@@ -2,10 +2,15 @@
 
 #include <gsl/gsl>
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 
 namespace logicsim {
+
+ViewConfig::ViewConfig() {
+    update();
+}
 
 auto ViewConfig::format() const -> std::string {
     return fmt::format(
@@ -39,16 +44,41 @@ auto ViewConfig::set_offset(point_fine_t offset) -> void {
 
 auto ViewConfig::set_device_scale(double device_scale) -> void {
     device_scale_ = device_scale;
-    update_pixel_scale();
+    update();
 }
 
 auto ViewConfig::set_device_pixel_ratio(double device_pixel_ratio) -> void {
     device_pixel_ratio_ = device_pixel_ratio;
-    update_pixel_scale();
+    update();
 }
 
-auto ViewConfig::update_pixel_scale() -> void {
-    pixel_scale_ = device_scale_ * device_pixel_ratio_;
+auto ViewConfig::stroke_width() const noexcept -> int {
+    return stroke_width_;
+}
+
+auto ViewConfig::line_cross_width() const noexcept -> int {
+    return line_cross_width_;
+}
+
+auto ViewConfig::update() -> void {
+    // pixel scale
+    {
+        pixel_scale_ = device_scale_ * device_pixel_ratio_;  //
+    }
+
+    // stroke width
+    {
+        constexpr static auto stepping = 16;  // 12
+        const auto scale = pixel_scale();
+        stroke_width_ = std::max(1, static_cast<int>(scale / stepping));
+    }
+
+    // line cross width
+    {
+        constexpr static auto stepping = 8;
+        const auto scale = pixel_scale();
+        line_cross_width_ = std::max(1, static_cast<int>(scale / stepping));
+    }
 }
 
 //

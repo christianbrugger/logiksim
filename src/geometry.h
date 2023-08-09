@@ -71,6 +71,14 @@ auto to_offset(grid_t x, grid_t reference) -> offset_t;
 auto to_grid(offset_t offset, grid_t reference) -> grid_t;
 
 //
+// interpolation
+//
+
+auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double;
+auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_select)
+    -> point_fine_t;
+
+//
 // part_t
 //
 

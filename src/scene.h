@@ -14,24 +14,33 @@ namespace logicsim {
 
 class ViewConfig {
    public:
+    ViewConfig();
+
     auto format() const -> std::string;
 
-    auto offset() const noexcept -> point_fine_t;
-    auto pixel_scale() const noexcept -> double;
-    auto device_scale() const noexcept -> double;
-    auto device_pixel_ratio() const noexcept -> double;
+    [[nodiscard]] auto offset() const noexcept -> point_fine_t;
+    [[nodiscard]] auto pixel_scale() const noexcept -> double;
+    [[nodiscard]] auto device_scale() const noexcept -> double;
+    [[nodiscard]] auto device_pixel_ratio() const noexcept -> double;
 
     auto set_offset(point_fine_t offset) -> void;
     auto set_device_scale(double device_scale) -> void;
     auto set_device_pixel_ratio(double device_pixel_ratio) -> void;
 
+    [[nodiscard]] auto stroke_width() const noexcept -> int;
+    [[nodiscard]] auto line_cross_width() const noexcept -> int;
+
    private:
-    auto update_pixel_scale() -> void;
+    auto update() -> void;
 
     point_fine_t offset_ {};  // in fine grid points
     double device_pixel_ratio_ {1.};
     double device_scale_ {12.};
-    double pixel_scale_ {12.};  // updated internally
+
+    // updated internally
+    double pixel_scale_ {};
+    int stroke_width_ {};
+    int line_cross_width_ {};
 };
 
 [[nodiscard]] auto is_representable(int x, int y) -> bool;
