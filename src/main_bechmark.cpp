@@ -154,7 +154,6 @@ static void BM_RenderScene_0(benchmark::State& state) {
                                           .layout = scene.layout,
                                           .schematic = &scene.schematic,
                                           .simulation = &scene.simulation,
-                                          .selection = {},
                                       });
         ctx.end();
 

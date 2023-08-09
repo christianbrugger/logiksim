@@ -3,8 +3,9 @@
 #include "exceptions.h"
 #include "geometry.h"
 
-#include <array>
 #include <blend2d.h>
+
+#include <array>
 
 namespace logicsim {
 
@@ -20,6 +21,62 @@ auto resolve_stroke_width(int stroke_width, const RenderSettings& settings) -> i
 }
 
 }  // namespace
+
+auto LayersCache::format() const -> std::string {
+    return fmt::format(
+        "LayersCache("
+        "\n  normal_below = {}"
+        "\n  normal_wires = {}"
+        "\n  normal_above = {}"
+        "\n"
+        "\n  uninserted_below = {}"
+        "\n  uninserted_wires = {}"
+        "\n  uninserted_above = {}"
+        "\n"
+        "\n  selected_logic_items = {}"
+        "\n  selected_wires = {}"
+        "\n  temporary_wires = {}"
+        "\n  valid_logic_items = {}"
+        "\n  valid_wires = {}"
+        "\n  colliding_logic_items = {}"
+        "\n  colliding_wires = {}"
+        "\n)",
+
+        normal_below,  //
+        normal_wires,  //
+        normal_above,  //
+
+        uninserted_below,  //
+        uninserted_wires,  //
+        uninserted_above,  //
+
+        selected_logic_items,   //
+        selected_wires,    //
+        temporary_wires,        //
+        valid_logic_items,      //
+        valid_wires,       //
+        colliding_logic_items,  //
+        colliding_wires         //
+    );
+}
+
+auto LayersCache::clear() const -> void {
+    normal_below.clear();
+    normal_wires.clear();
+    normal_above.clear();
+
+    uninserted_below.clear();
+    uninserted_wires.clear();
+    uninserted_above.clear();
+
+    selected_logic_items.clear();
+    selected_wires.clear();
+    temporary_wires.clear();
+    valid_logic_items.clear();
+    valid_wires.clear();
+    colliding_logic_items.clear();
+    colliding_wires.clear();
+}
 
 auto RenderSettings::format() const -> std::string {
     return fmt::format(
@@ -52,6 +109,17 @@ auto stroke_offset(int stroke_width) -> double {
         return 0;
     }
     return 0.5;
+}
+
+auto get_scene_rect_fine(const BLContext& ctx, ViewConfig view_config) -> rect_fine_t {
+    return rect_fine_t {
+        from_context_fine(BLPoint {0, 0}, view_config),
+        from_context_fine(BLPoint {ctx.targetWidth(), ctx.targetHeight()}, view_config),
+    };
+}
+
+auto get_scene_rect(const BLContext& ctx, ViewConfig view_config) -> rect_t {
+    return to_enclosing_rect(get_scene_rect_fine(ctx, view_config));
 }
 
 //
@@ -311,5 +379,4 @@ auto draw_line_segment(BLContext& ctx, line_fine_t line, bool enabled,
     const auto color = enabled ? defaults::color_red : defaults::color_black;
     draw_line(ctx, line, {color}, settings);
 }
-
 }  // namespace logicsim

@@ -33,6 +33,27 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
                          const RenderSettings& settings) -> void;
 
 //
+// Temporary Circuit Items
+//
+
+// TODO remove selected
+auto draw_logic_item(BLContext& ctx, layout::ConstElement element, bool selected,
+                     const RenderSettings& settings) -> void;
+
+auto draw_segment_tree(BLContext& ctx, layout::ConstElement element,
+                       const RenderSettings& settings) -> void;
+
+auto draw_element_shadow(BLContext& ctx, layout::ConstElement element, bool selected,
+                         const RenderSettings& settings) -> void;
+
+auto draw_wire_selected_parts_shadow(BLContext& ctx, ordered_line_t line,
+                                     std::span<const part_t> parts,
+                                     const RenderSettings& settings) -> void;
+
+auto draw_wire_colliding_shadow(BLContext& ctx, const SegmentTree& segment_tree,
+                                const RenderSettings& settings) -> void;
+
+//
 // scenes
 //
 
@@ -61,8 +82,7 @@ struct render_args_t {
     const Layout& layout;
     const Schematic* schematic {nullptr};
     const Simulation* simulation {nullptr};
-    const selection_mask_t& selection_mask {};
-    const Selection& selection;
+    const Selection* selection {nullptr};
     const RenderSettings& settings {};
 };
 

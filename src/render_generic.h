@@ -1,18 +1,48 @@
 #ifndef LOGIKSIM_RENDER_GENERIC_H
 #define LOGIKSIM_RENDER_GENERIC_H
 
+#include "format.h"
 #include "glyph_cache.h"
 #include "scene.h"
 #include "vocabulary.h"
+#include "segment_tree_types.h"
 
 class BLContext;
 
 namespace logicsim {
 
+struct LayersCache {
+    // inserted
+    mutable std::vector<element_id_t> normal_below;
+    mutable std::vector<element_id_t> normal_wires;
+    mutable std::vector<element_id_t> normal_above;
+
+    // uninserted
+    mutable std::vector<element_id_t> uninserted_below;
+    mutable std::vector<segment_info_t> uninserted_wires;
+    mutable std::vector<element_id_t> uninserted_above;
+
+    // selected
+    mutable std::vector<element_id_t> selected_logic_items;
+    mutable std::vector<ordered_line_t> selected_wires;
+    // temporary
+    mutable std::vector<ordered_line_t> temporary_wires;
+    // valid
+    mutable std::vector<element_id_t> valid_logic_items;
+    mutable std::vector<ordered_line_t> valid_wires;
+    // colliding
+    mutable std::vector<element_id_t> colliding_logic_items;
+    mutable std::vector<ordered_line_t> colliding_wires;
+
+    auto format() const -> std::string;
+    auto clear() const -> void;
+};
+
 // TODO maybe make glyph cache a pointer
 struct RenderSettings {
     ViewConfig view_config {};
     GlyphCache text {};
+    LayersCache layers {};
 
     int background_grid_min_distance {10};  // device pixels
 
@@ -33,7 +63,7 @@ class ContextGuard {
 };
 
 //
-// Generic Types
+// Generic Types & Methods
 //
 
 namespace defaults {
@@ -47,6 +77,9 @@ enum class DrawType {
 };
 
 auto stroke_offset(int stoke_width) -> double;
+
+auto get_scene_rect_fine(const BLContext& ctx, ViewConfig view_config) -> rect_fine_t;
+auto get_scene_rect(const BLContext& ctx, ViewConfig view_config) -> rect_t;
 
 //
 // Point
@@ -79,6 +112,7 @@ auto render_points(BLContext& ctx, std::ranges::input_range auto&& points,
 // Arrow
 //
 
+// TODO !!! fix naming render vs draw
 auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
                   double size, const RenderSettings& settings) -> void;
 
@@ -107,6 +141,7 @@ auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attribute
 // Rect
 //
 
+// TODO add colors to rect somehow
 struct RectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
     int stroke_width {defaults::view_config_width};

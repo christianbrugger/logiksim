@@ -45,6 +45,11 @@ auto format(ElementType type) -> std::string {
     throw_exception("Don't know how to convert ElementType to string.");
 }
 
+auto is_logic_item(ElementType element_type) -> bool {
+    using enum ElementType;
+    return element_type != unused && element_type != placeholder && element_type != wire;
+}
+
 template <>
 auto format(orientation_t orientation) -> std::string {
     switch (orientation) {

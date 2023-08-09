@@ -273,8 +273,6 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
         render_circuit(
             render_args_t {
                 .layout = editable_circuit.layout(),
-                .selection_mask = selection_mask_t {},
-                .selection = Selection {},
                 .settings = RenderSettings {},
             },
             400, 400, fmt::format("test_move/{:04d}.png", seed));

@@ -46,6 +46,8 @@ enum class ElementType : uint8_t {
 template <>
 auto format(ElementType type) -> std::string;
 
+[[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
+
 struct circuit_id_t {
     using value_type = int16_t;
     value_type value;
@@ -683,7 +685,7 @@ struct rect_fine_t {
         if (p0_.x > p1_.x || p0_.y > p1_.y) [[unlikely]] {
             throw_exception("point in rect_t need to be ordered");
         }
-    };
+    }
 
     [[nodiscard]] explicit constexpr rect_fine_t(point_t p0_, point_t p1_)
         : rect_fine_t {point_fine_t {p0_}, point_fine_t {p1_}} {};

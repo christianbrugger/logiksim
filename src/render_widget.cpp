@@ -6,6 +6,7 @@
 #include "exceptions.h"
 #include "layout.h"
 #include "range.h"
+#include "render_circuit.h"
 #include "renderer.h"
 #include "schematic.h"
 #include "schematic_generation.h"
@@ -953,14 +954,17 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
     if (do_render_circuit_ && !simulation_) {
         const auto& selection = editable_circuit.selection_builder().selection();
-        const auto mask = create_selection_mask(editable_circuit.layout(), selection);
 
-        render_circuit(bl_ctx, render_args_t {
-                                   .layout = editable_circuit.layout(),
-                                   .selection_mask = mask,
-                                   .selection = selection,
-                                   .settings = render_settings_,
-                               });
+        // render_circuit(bl_ctx, render_args_t {
+        //                            .layout = editable_circuit.layout(),
+        //                            .selection = &selection,
+        //                            .settings = render_settings_,
+        //                        });
+        render_circuit_2(bl_ctx, render_args_t {
+                                     .layout = editable_circuit.layout(),
+                                     .selection = &selection,
+                                     .settings = render_settings_,
+                                 });
     }
 
     if (do_render_collision_cache_) {

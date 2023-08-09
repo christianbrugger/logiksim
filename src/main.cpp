@@ -97,7 +97,6 @@ auto render_multi_layer(std::vector<BLImage>& images, const Layout& layout,
     render_background(contexts.at(0), settings);
     render_circuit(contexts.at(1), render_args_t {
                                        .layout = layout,
-                                       .selection = Selection {},
                                        .settings = settings,
                                    });
 

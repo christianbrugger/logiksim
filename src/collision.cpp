@@ -39,6 +39,34 @@ auto is_colliding(point_fine_t point, rect_fine_t rect) noexcept -> bool {
            && rect.p0.y <= point.y && point.y <= rect.p1.y;
 }
 
+auto is_colliding(ordered_line_t line, rect_t rect) noexcept -> bool {
+    // check for no overlap in the x-axis
+    if (line.p1.x < rect.p0.x || line.p0.x > rect.p1.x) {
+        return false;
+    }
+
+    // check for no overlap in the y-axis
+    if (line.p1.y < rect.p0.y || line.p0.y > rect.p1.y) {
+        return false;
+    }
+
+    return true;
+}
+
+auto is_colliding(ordered_line_t line, rect_fine_t rect) noexcept -> bool {
+    // check for no overlap in the x-axis
+    if (line.p1.x < rect.p0.x || line.p0.x > rect.p1.x) {
+        return false;
+    }
+
+    // check for no overlap in the y-axis
+    if (line.p1.y < rect.p0.y || line.p0.y > rect.p1.y) {
+        return false;
+    }
+
+    return true;
+}
+
 auto is_colliding(rect_fine_t a, rect_fine_t b) noexcept -> bool {
     // check for no overlap in the x-axis
     if (a.p1.x < b.p0.x || a.p0.x > b.p1.x) {
@@ -50,7 +78,6 @@ auto is_colliding(rect_fine_t a, rect_fine_t b) noexcept -> bool {
         return false;
     }
 
-    // the rectangles are intersecting
     return true;
 }
 
@@ -65,7 +92,6 @@ auto is_colliding(rect_t a, rect_t b) noexcept -> bool {
         return false;
     }
 
-    // the rectangles are intersecting
     return true;
 }
 

@@ -90,8 +90,8 @@ auto draw_wire(BLContext& ctx, Schematic::ConstElement element, const Layout& la
     }
 }
 
-auto draw_element_tree(BLContext& ctx, layout::ConstElement element,
-                       const RenderSettings& settings) {
+auto draw_segment_tree(BLContext& ctx, layout::ConstElement element,
+                       const RenderSettings& settings) -> void {
     for (const segment_info_t& segment : element.segment_tree().segment_infos()) {
         draw_line_segment(ctx, segment.line, false, settings);
 
@@ -136,10 +136,9 @@ auto set_body_draw_styles(BLContext& ctx, display_state_t display_state, bool se
     ctx.setStrokeStyle(BLRgba32(0, 0, 0, alpha));
 }
 
-auto draw_single_connector_inverted(BLContext& ctx, point_t position,
-                                    orientation_t orientation, bool enabled,
-                                    display_state_t display_state,
-                                    const RenderSettings& settings) {
+auto draw_connector_inverted(BLContext& ctx, point_t position, orientation_t orientation,
+                             bool enabled, display_state_t display_state,
+                             const RenderSettings& settings) {
     const auto radius = 0.2;
 
     const auto alpha = get_alpha_value(display_state);
@@ -159,10 +158,9 @@ auto draw_single_connector_inverted(BLContext& ctx, point_t position,
     ctx.strokeCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
 }
 
-auto draw_single_connector_normal(BLContext& ctx, point_t position,
-                                  orientation_t orientation, bool enabled,
-                                  display_state_t display_state,
-                                  const RenderSettings& settings) -> void {
+auto draw_connector_normal(BLContext& ctx, point_t position, orientation_t orientation,
+                           bool enabled, display_state_t display_state,
+                           const RenderSettings& settings) -> void {
     const auto endpoint = connector_endpoint(position, orientation);
 
     const auto alpha = get_alpha_value(display_state);
@@ -172,15 +170,15 @@ auto draw_single_connector_normal(BLContext& ctx, point_t position,
     draw_line(ctx, line_fine_t {position, endpoint}, {color}, settings);
 }
 
-auto draw_single_connector(BLContext& ctx, point_t position, orientation_t orientation,
-                           bool enabled, bool inverted, display_state_t display_state,
-                           const RenderSettings& settings) -> void {
+auto draw_connector(BLContext& ctx, point_t position, orientation_t orientation,
+                    bool enabled, bool inverted, display_state_t display_state,
+                    const RenderSettings& settings) -> void {
     if (inverted) {
-        draw_single_connector_inverted(ctx, position, orientation, enabled, display_state,
-                                       settings);
+        draw_connector_inverted(ctx, position, orientation, enabled, display_state,
+                                settings);
     } else {
-        draw_single_connector_normal(ctx, position, orientation, enabled, display_state,
-                                     settings);
+        draw_connector_normal(ctx, position, orientation, enabled, display_state,
+                              settings);
     }
 }
 
@@ -193,8 +191,8 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
         layout_data,
         [&](connection_id_t input_id, point_t position, orientation_t orientation) {
             const auto inverted = element.input_inverted(input_id);
-            draw_single_connector(ctx, position, orientation, false, inverted,
-                                  display_state, settings);
+            draw_connector(ctx, position, orientation, false, inverted, display_state,
+                           settings);
             return true;
         });
 
@@ -202,8 +200,8 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
         layout_data,
         [&](connection_id_t output_id, point_t position, orientation_t orientation) {
             const auto inverted = element.output_inverted(output_id);
-            draw_single_connector(ctx, position, orientation, false, inverted,
-                                  display_state, settings);
+            draw_connector(ctx, position, orientation, false, inverted, display_state,
+                           settings);
             return true;
         });
 }
@@ -221,8 +219,8 @@ auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
 
             if (inverted || !input.has_connected_element()) {
                 const auto enabled = simulation.input_value(input);
-                draw_single_connector(ctx, position, orientation, enabled, inverted,
-                                      display_state_t::normal, settings);
+                draw_connector(ctx, position, orientation, enabled, inverted,
+                               display_state_t::normal, settings);
             }
 
             return true;
@@ -237,8 +235,8 @@ auto draw_logic_item_connectors(BLContext& ctx, Schematic::ConstElement element,
             if (inverted || !output.has_connected_element() ||
                 output.connected_element().is_placeholder()) {
                 const auto enabled = simulation.output_value(output);
-                draw_single_connector(ctx, position, orientation, enabled, inverted,
-                                      display_state_t::normal, settings);
+                draw_connector(ctx, position, orientation, enabled, inverted,
+                               display_state_t::normal, settings);
             }
             return true;
         });
@@ -887,7 +885,7 @@ auto draw_wire_temporary_shadow(BLContext& ctx, const SegmentTree& segment_tree,
 }
 
 auto draw_wire_colliding_shadow(BLContext& ctx, const SegmentTree& segment_tree,
-                                const RenderSettings& settings) {
+                                const RenderSettings& settings) -> void {
     ctx.setFillStyle(BLRgba32(255, 0, 0, 96));
 
     for (const auto info : segment_tree.segment_infos()) {
@@ -952,17 +950,6 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& se
     }
 }
 
-auto get_scene_rect_fine(const BLContext& ctx, ViewConfig view_config) {
-    return rect_fine_t {
-        from_context_fine(BLPoint {0, 0}, view_config),
-        from_context_fine(BLPoint {ctx.targetWidth(), ctx.targetHeight()}, view_config),
-    };
-}
-
-auto get_scene_rect(const BLContext& ctx, ViewConfig view_config) {
-    return to_enclosing_rect(get_scene_rect_fine(ctx, view_config));
-}
-
 auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     auto visibility = visibility_mask_t(args.layout.element_count(), false);
     auto scene_rect = get_scene_rect(ctx, args.settings.view_config);
@@ -974,9 +961,11 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
         }
     }
 
+    const auto& selection = args.selection != nullptr ? *args.selection : Selection {};
+    const auto selection_mask = create_selection_mask(args.layout, selection);
     const auto is_selected = [&](element_id_t element_id) {
         const auto id = element_id.value;
-        return id < std::ssize(args.selection_mask) ? args.selection_mask[id] : false;
+        return id < std::ssize(selection_mask) ? selection_mask[id] : false;
     };
     const auto is_visible = [&](element_id_t element_id) {
         return visibility.at(element_id.value);
@@ -987,14 +976,14 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
         for (auto element : args.layout.elements()) {
             if (element.element_type() == ElementType::wire && element.is_inserted() &&
                 is_visible(element)) {
-                draw_element_tree(ctx, element, args.settings);
+                draw_segment_tree(ctx, element, args.settings);
             }
         }
     } else {
         for (auto element : args.schematic->elements()) {
             if (element.element_type() == ElementType::wire && is_visible(element)) {
                 if (element.input_count() == 0) {
-                    draw_element_tree(ctx, args.layout.element(element), args.settings);
+                    draw_segment_tree(ctx, args.layout.element(element), args.settings);
                 } else {
                     draw_wire(ctx, element, args.layout, *args.simulation, args.settings);
                 }
@@ -1023,7 +1012,7 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
         for (auto element : args.layout.elements()) {
             if (!element.is_inserted() && element.element_type() == ElementType::wire &&
                 is_visible(element)) {
-                draw_element_tree(ctx, element, args.settings);
+                draw_segment_tree(ctx, element, args.settings);
             }
         }
     }
@@ -1053,7 +1042,7 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     }
 
     // wire shadow
-    draw_wire_shadows(ctx, args.layout, args.selection, visibility, args.settings);
+    draw_wire_shadows(ctx, args.layout, selection, visibility, args.settings);
 }
 
 auto render_circuit(render_args_t args, int width, int height, std::string filename)
@@ -1169,7 +1158,7 @@ auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
 }
 
 //
-// Primitives
+// Caches
 //
 
 auto render_input_marker(BLContext& ctx, point_t point, color_t color,
@@ -1193,10 +1182,6 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
     ctx.strokeLine(BLLine {-d, -d, 0, -d});
     ctx.strokeLine(BLLine {-d, +d, 0, +d});
 }
-
-//
-// Editable Circuit
-//
 
 auto render_undirected_output(BLContext& ctx, point_t position, double size,
                               const RenderSettings& settings) {

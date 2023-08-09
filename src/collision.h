@@ -17,6 +17,10 @@ namespace logicsim {
 
 [[nodiscard]] auto is_colliding(point_t point, rect_t rect) noexcept -> bool;
 [[nodiscard]] auto is_colliding(point_fine_t point, rect_fine_t rect) noexcept -> bool;
+
+[[nodiscard]] auto is_colliding(ordered_line_t line, rect_t rect) noexcept -> bool;
+[[nodiscard]] auto is_colliding(ordered_line_t line, rect_fine_t rect) noexcept -> bool;
+
 [[nodiscard]] auto is_colliding(rect_fine_t a, rect_fine_t b) noexcept -> bool;
 [[nodiscard]] auto is_colliding(rect_t a, rect_t b) noexcept -> bool;
 
