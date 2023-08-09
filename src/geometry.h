@@ -19,6 +19,9 @@ auto to_truncated(grid_fine_t v) -> grid_t;
 // line_t
 //
 
+auto is_horizontal(point_t p0, point_t p1) noexcept -> bool;
+auto is_vertical(point_t p0, point_t p1) noexcept -> bool;
+
 auto is_horizontal(line_t line) noexcept -> bool;
 auto is_vertical(line_t line) noexcept -> bool;
 

@@ -3,6 +3,7 @@
 #include "exceptions.h"
 #include "geometry.h"
 
+#include <array>
 #include <blend2d.h>
 
 namespace logicsim {
