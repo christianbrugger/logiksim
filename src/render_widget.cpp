@@ -919,9 +919,32 @@ Q_SLOT void RendererWidget::on_simulation_timeout() {
     //}
 }
 
-auto RendererWidget::pixel_size() const -> QSize {
-    double ratio = devicePixelRatioF();
-    return QSize(width() * ratio, height() * ratio);
+auto round_logical_to_device(QPointF p, double pixel_ratio,
+                             std::optional<QRect> clip = {}) -> QPoint {
+    auto dx = gsl::narrow<int>(std::floor(p.x() * pixel_ratio + 0.5));
+    auto dy = gsl::narrow<int>(std::floor(p.y() * pixel_ratio + 0.5));
+
+    if (clip && false) {
+        dx = std::clamp(dx, clip->x(), clip->x() + clip->width());
+        dy = std::clamp(dy, clip->y(), clip->y() + clip->height());
+    }
+
+    return QPoint {dx, dy};
+}
+
+auto round_logical_to_device(QRectF rect, double pixel_ratio,
+                             std::optional<QRect> clip = {}) -> QRect {
+    const auto p0_logic = QPoint(rect.x(), rect.y());
+    const auto p1_logic = QPoint(rect.x() + rect.width(), rect.y() + rect.height());
+
+    const auto p0 = round_logical_to_device(p0_logic, pixel_ratio, clip);
+    const auto p1 = round_logical_to_device(p1_logic, pixel_ratio, clip);
+
+    return QRect(p0.x(), p0.y(), p1.x() - p0.x(), p1.y() - p0.y());
+}
+
+auto RendererWidget::size_device() const -> QSize {
+    return round_logical_to_device(this->geometry(), devicePixelRatioF()).size();
 }
 
 // Use the Qt backend store image directly for best performance
@@ -949,19 +972,18 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
         return false;
     }
 
-    // calculate sizes
-    const auto to_pixel = [&](int value_) -> int {
-        return gsl::narrow<int>(round_fast(value_ * image->devicePixelRatioF()));
-    };
-    const auto& rect = this->geometry();
-    const auto x = to_pixel(rect.x());
-    const auto y = to_pixel(rect.y());
-    const auto width = to_pixel(rect.width());
-    const auto height = to_pixel(rect.height());
+    const auto rect = round_logical_to_device(this->geometry(),
+                                              image->devicePixelRatioF(), image->rect());
+
+    // print(geometry().x() * image->devicePixelRatioF(),                         //
+    //       geometry().y() * image->devicePixelRatioF(),                         //
+    //       (geometry().x() + geometry().width()) * image->devicePixelRatioF(),  //
+    //       (geometry().y() + geometry().height()) * image->devicePixelRatioF()  //
+    //);
 
     // get pointer
-    auto pixels_direct = image->constScanLine(y);
-    auto pixels = image->scanLine(y);
+    auto pixels_direct = image->constScanLine(rect.y());
+    auto pixels = image->scanLine(rect.y());
 
     if (pixels == nullptr) {
         print("WARNING: can't use backing store, as image data pointer is null.");
@@ -975,9 +997,9 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
 
     // shift by x
     static_assert(sizeof(*pixels) == 1);
-    pixels += x * (image->depth() / 8);
+    pixels += rect.x() * (image->depth() / 8);
 
-    bl_image.createFromData(width, height, BL_FORMAT_PRGB32, pixels,
+    bl_image.createFromData(rect.width(), rect.height(), BL_FORMAT_PRGB32, pixels,
                             image->bytesPerLine());
     qt_image = QImage {};
 
@@ -987,7 +1009,7 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
 
 // We render into our own buffer image. A bit slower, but portable.
 auto RendererWidget::_init_surface_from_buffer_image() -> void {
-    auto window_size = pixel_size();
+    auto window_size = size_device();
 
     qt_image = QImage(window_size.width(), window_size.height(),
                       QImage::Format_ARGB32_Premultiplied);
@@ -1090,6 +1112,12 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         render_editable_circuit_selection_cache(bl_ctx, editable_circuit,
                                                 render_settings_);
     }
+
+    // bl_ctx.setFillStyle(BLRgba32(defaults::color_black.value));
+    // bl_ctx.fillRect(BLRect {0, 0, 1, 100});
+    // bl_ctx.fillRect(BLRect {bl_image.width() - 1.0, 0, 1, 100});
+    // bl_ctx.fillRect(BLRect {0, 0, 100, 1});
+    // bl_ctx.fillRect(BLRect {0, bl_image.height() - 1.0, 100, 1});
 
     bl_ctx.end();
 

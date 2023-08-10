@@ -264,7 +264,7 @@ class RendererWidget : public RendererWidgetBase {
 
     auto fps() const -> double;
     auto pixel_scale() const -> double;
-    auto pixel_size() const -> QSize;
+    auto size_device() const -> QSize;
 
     auto reset_circuit() -> void;
     auto load_circuit(int id) -> void;
