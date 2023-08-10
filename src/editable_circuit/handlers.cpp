@@ -332,37 +332,39 @@ auto swap_and_delete_multiple_elements(Layout& layout, MessageSender sender,
 //
 
 auto is_logic_item_position_representable_private(const Layout& layout,
-                                                  const element_id_t element_id, int x,
-                                                  int y) -> bool {
+                                                  const element_id_t element_id, int dx,
+                                                  int dy) -> bool {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
-    if (!is_representable(x, y)) {
+
+    const auto position = layout.position(element_id);
+
+    if (!is_representable(position, dx, dy)) {
         return false;
     }
-    const auto position = point_t {grid_t {x}, grid_t {y}};
 
     auto data = to_layout_calculation_data(layout, element_id);
-    data.position = position;
+    data.position = add_unchecked(position, dx, dy);
 
     return is_representable(data);
 }
 
 auto is_logic_item_position_representable(const Layout& layout,
-                                          const element_id_t element_id, int x, int y)
+                                          const element_id_t element_id, int dx, int dy)
     -> bool {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         fmt::print(
             "\n==========================================================\n{}\n"
-            "is_logic_item_position_representable(element_id = {}, x = {}, y = {});\n"
+            "is_logic_item_position_representable(element_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
-            layout, element_id, x, y);
+            layout, element_id, dx, dy);
     }
-    return is_logic_item_position_representable_private(layout, element_id, x, y);
+    return is_logic_item_position_representable_private(layout, element_id, dx, dy);
 }
 
 auto move_or_delete_logic_item_private(Layout& layout, MessageSender sender,
-                                       element_id_t& element_id, int x, int y) -> void {
+                                       element_id_t& element_id, int dx, int dy) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
@@ -370,25 +372,43 @@ auto move_or_delete_logic_item_private(Layout& layout, MessageSender sender,
         throw_exception("Only temporary items can be freely moded.");
     }
 
-    if (!is_logic_item_position_representable_private(layout, element_id, x, y)) {
+    if (!is_logic_item_position_representable_private(layout, element_id, dx, dy)) {
         swap_and_delete_single_element_private(layout, sender, element_id);
         return;
     }
 
-    const auto position = point_t {grid_t {x}, grid_t {y}};
+    const auto position = add_unchecked(layout.position(element_id), dx, dy);
     layout.set_position(element_id, position);
 }
 
 auto move_or_delete_logic_item(Layout& layout, MessageSender sender,
-                               element_id_t& element_id, int x, int y) -> void {
+                               element_id_t& element_id, int dx, int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         fmt::print(
             "\n==========================================================\n{}\n"
-            "move_or_delete_logic_item(element_id = {}, x = {}, y = {});\n"
+            "move_or_delete_logic_item(element_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
-            layout, element_id, x, y);
+            layout, element_id, dx, dy);
     }
-    move_or_delete_logic_item_private(layout, sender, element_id, x, y);
+    move_or_delete_logic_item_private(layout, sender, element_id, dx, dy);
+}
+
+auto move_logic_item_unchecked_private(Layout& layout, element_id_t element_id, int dx,
+                                       int dy) -> void {
+    const auto position = add_unchecked(layout.position(element_id), dx, dy);
+    layout.set_position(element_id, position);
+}
+
+auto move_logic_item_unchecked(Layout& layout, element_id_t element_id, int dx, int dy)
+    -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "move_logic_item_unchecked(element_id = {}, dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            layout, element_id, dx, dy);
+    }
+    move_logic_item_unchecked_private(layout, element_id, dx, dy);
 }
 
 //
@@ -1996,6 +2016,9 @@ auto move_or_delete_wire_private(Layout& layout, MessageSender sender,
     info.line = add_unchecked(part_line, dx, dy);
     m_tree.update_segment(segment_part.segment.segment_index, info);
 
+    // TODO bug missing moved messages for selection updates,
+    //      maybe use a pre-build method for this?
+
     // messages
     if (full_line == part_line) {  // otherwise already sent in move_segment above
         sender.submit(info_message::SegmentCreated {segment_part.segment});
@@ -2012,6 +2035,34 @@ auto move_or_delete_wire(Layout& layout, MessageSender sender,
             layout, segment_part, dx, dy);
     }
     return move_or_delete_wire_private(layout, sender, segment_part, dx, dy);
+}
+
+auto move_wire_unchecked_private(Layout& layout, segment_t segment,
+                                 part_t verify_full_part, int dx, int dy) -> void {
+    // move
+    auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
+
+    auto info = m_tree.segment_info(segment.segment_index);
+    info.line = add_unchecked(info.line, dx, dy);
+
+    if (to_part(info.line) != verify_full_part) {
+        throw_exception("need to select full line part");
+    }
+
+    m_tree.update_segment(segment.segment_index, info);
+}
+
+auto move_wire_unchecked(Layout& layout, segment_t segment, part_t verify_full_part,
+                         int dx, int dy) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "move_or_delete_wire(segment = {}, verify_full_part = {}, "
+            "dx = {}, dy = {});\n"
+            "==========================================================\n\n",
+            layout, segment, verify_full_part, dx, dy);
+    }
+    move_wire_unchecked_private(layout, segment, verify_full_part, dx, dy);
 }
 
 auto delete_all_inserterd_wires(State state, point_t point) -> void {
@@ -2152,17 +2203,6 @@ auto change_insertion_mode(selection_handle_t handle, State state,
     }
 }
 
-auto position_calculator(const Layout& layout, int delta_x, int delta_y) {
-    return [delta_x, delta_y, &layout](element_id_t element_id) {
-        const auto& element_position = layout.position(element_id);
-
-        const int x = element_position.x.value + delta_x;
-        const int y = element_position.y.value + delta_y;
-
-        return std::make_pair(x, y);
-    };
-};
-
 auto new_wire_positions_representable(const Selection& selection, const Layout& layout,
                                       int delta_x, int delta_y) -> bool {
     for (const auto& [segment, parts] : selection.selected_segments()) {
@@ -2186,11 +2226,8 @@ auto new_positions_representable(const Selection& selection, const Layout& layou
         print("\n\n========= new_positions_representable ==========\n", selection);
     }
 
-    const auto get_position = position_calculator(layout, delta_x, delta_y);
-
     const auto logic_item_valid = [&](element_id_t element_id) {
-        const auto [x, y] = get_position(element_id);
-        return is_logic_item_position_representable(layout, element_id, x, y);
+        return is_logic_item_position_representable(layout, element_id, delta_x, delta_y);
     };
 
     return std::ranges::all_of(selection.selected_logic_items(), logic_item_valid) &&
@@ -2206,14 +2243,11 @@ auto move_or_delete_elements(selection_handle_t handle, Layout& layout,
         print("\n\n========= move_or_delete_elements ==========\n", handle);
     }
 
-    const auto get_position = position_calculator(layout, delta_x, delta_y);
-
     while (handle->selected_logic_items().size() > 0) {
         auto element_id = handle->selected_logic_items()[0];
         handle->remove_logicitem(element_id);
 
-        const auto [x, y] = get_position(element_id);
-        move_or_delete_logic_item(layout, sender, element_id, x, y);
+        move_or_delete_logic_item(layout, sender, element_id, delta_x, delta_y);
     }
 
     while (handle->selected_segments().size() > 0) {
@@ -2224,6 +2258,33 @@ auto move_or_delete_elements(selection_handle_t handle, Layout& layout,
         handle->remove_segment(segment_part);
 
         move_or_delete_wire(layout, sender, segment_part, delta_x, delta_y);
+    }
+}
+
+auto move_unchecked(const Selection& selection, Layout& layout, int delta_x, int delta_y)
+    -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print("\n\n========= move_unchecked ==========\n", selection);
+    }
+
+    for (const auto& element_id : selection.selected_logic_items()) {
+        if (layout.display_state(element_id) != display_state_t::temporary) [[unlikely]] {
+            throw_exception("selected logic items need to be temporary");
+        }
+
+        move_logic_item_unchecked(layout, element_id, delta_x, delta_y);
+    }
+
+    for (const auto& [segment, parts] : selection.selected_segments()) {
+        if (parts.size() != 1) [[unlikely]] {
+            throw_exception("Method assumes segments are fully selected");
+        }
+        if (layout.display_state(segment.element_id) != display_state_t::temporary)
+            [[unlikely]] {
+            throw_exception("selected wires need to be temporary");
+        }
+
+        move_wire_unchecked(layout, segment, parts.front(), delta_x, delta_y);
     }
 }
 

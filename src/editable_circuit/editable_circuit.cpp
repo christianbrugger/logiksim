@@ -138,8 +138,8 @@ auto EditableCircuit::new_positions_representable(const Selection& selection, in
                                                          delta_x, delta_y);
 }
 
-auto EditableCircuit::move_or_delete_elements(selection_handle_t handle, int delta_x,
-                                              int delta_y) -> void {
+auto EditableCircuit::move_or_delete(selection_handle_t handle, int delta_x, int delta_y)
+    -> void {
     editable_circuit::move_or_delete_elements(std::move(handle), layout_.value(),
                                               get_sender(), delta_x, delta_y);
 }
@@ -148,6 +148,11 @@ auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
                                             InsertionMode new_insertion_mode) -> void {
     editable_circuit::change_insertion_mode(std::move(handle), get_state(),
                                             new_insertion_mode);
+}
+
+auto EditableCircuit::move_unchecked(const Selection& selection, int delta_x, int delta_y)
+    -> void {
+    editable_circuit::move_unchecked(selection, layout_.value(), delta_x, delta_y);
 }
 
 auto EditableCircuit::delete_all(selection_handle_t handle) -> void {

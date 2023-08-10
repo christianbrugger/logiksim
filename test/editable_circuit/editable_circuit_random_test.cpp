@@ -206,7 +206,7 @@ class TrackedSelection {
     }
 
     auto move_or_delete(int delta_x, int delta_y) -> void {
-        editable_circuit_.move_or_delete_elements(handle_.copy(), delta_x, delta_y);
+        editable_circuit_.move_or_delete(handle_.copy(), delta_x, delta_y);
     }
 
    private:

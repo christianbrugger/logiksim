@@ -293,7 +293,7 @@ auto MouseMoveSelectionLogic::move_selection(point_fine_t point) -> void {
     }
 
     convert_to(InsertionMode::temporary);
-    editable_circuit_.move_or_delete_elements(copy_selection(), delta_x, delta_y);
+    editable_circuit_.move_unchecked(selection, delta_x, delta_y);
     if (cross_points_) {
         cross_points_ = move_or_delete_points(cross_points_.value(), delta_x, delta_y);
     }
@@ -376,8 +376,8 @@ auto MouseMoveSelectionLogic::restore_original_positions() -> void {
     }
 
     convert_to(InsertionMode::temporary);
-    editable_circuit_.move_or_delete_elements(copy_selection(), -total_offsets_.first,
-                                              -total_offsets_.second);
+    editable_circuit_.move_unchecked(get_selection(), -total_offsets_.first,
+                                     -total_offsets_.second);
 }
 
 auto MouseMoveSelectionLogic::calculate_any_element_colliding() -> bool {
@@ -936,6 +936,8 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         last_pixel_ratio_ = devicePixelRatioF();
         init();
     }
+    const auto t = Timer("render");
+    print();
 
     bl_ctx.begin(bl_image, bl_info);
     const auto& editable_circuit = editable_circuit_.value();

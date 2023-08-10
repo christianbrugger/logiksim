@@ -192,7 +192,7 @@ auto to_offset(grid_t x, grid_t reference) -> offset_t {
     static_assert(sizeof(value) > sizeof(grid_t::value_type));
     static_assert(std::is_signed_v<decltype(value)>);
 
-    return offset_t {gsl::narrow<offset_t::value_type>(value)};
+    return offset_t {gsl::narrow_cast<offset_t::value_type>(value)};
 }
 
 auto to_grid(offset_t offset, grid_t reference) -> grid_t {

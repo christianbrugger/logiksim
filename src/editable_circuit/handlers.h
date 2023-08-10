@@ -53,12 +53,17 @@ auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
 
 // TODO move to dx, dy
 auto is_logic_item_position_representable(const Layout& Layout,
-                                          const element_id_t element_id, int x, int y)
+                                          const element_id_t element_id, int dx, int dy)
     -> bool;
 
 // TODO move to dx, dy
 auto move_or_delete_logic_item(Layout& Layout, MessageSender sender,
-                               element_id_t& element_id, int x, int y) -> void;
+                               element_id_t& element_id, int dx, int dy) -> void;
+
+// Assumptions:
+//   * all new positions are representable
+auto move_logic_item_unchecked(Layout& layout, element_id_t element_id, int dx, int dy)
+    -> void;
 
 //
 // Wire - High level Methods
@@ -81,6 +86,11 @@ auto is_wire_position_representable(const Layout& layout, segment_part_t segment
 
 auto move_or_delete_wire(Layout& layout, MessageSender sender,
                          segment_part_t& segment_part, int dx, int dy) -> void;
+
+// Assumptions:
+//   * all new positions are representable
+auto move_wire_unchecked(Layout& layout, segment_t segment, part_t verify_full_part,
+                         int dx, int dy) -> void;
 
 auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void;
 
@@ -120,6 +130,11 @@ auto new_positions_representable(const Selection& selection, const Layout& Layou
 
 auto move_or_delete_elements(selection_handle_t handle, Layout& Layout,
                              MessageSender sender, int delta_x, int delta_y) -> void;
+
+// Assumptions:
+//   * all new positions are representable
+auto move_unchecked(const Selection& selection, Layout& layout, int delta_x, int delta_y)
+    -> void;
 
 auto delete_all(selection_handle_t handle, State state) -> void;
 

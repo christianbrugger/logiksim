@@ -53,8 +53,12 @@ class EditableCircuit {
     [[nodiscard]] auto new_positions_representable(const Selection& selection,
                                                    int delta_x, int delta_y) const
         -> bool;
-    auto move_or_delete_elements(selection_handle_t handle, int delta_x, int delta_y)
-        -> void;
+    auto move_or_delete(selection_handle_t handle, int delta_x, int delta_y) -> void;
+    // Assumptions:
+    //   * all selected items are temporary
+    //   * all new positions are representable
+    //   * segment lines are all fully selected, not partial
+    auto move_unchecked(const Selection& selection, int delta_x, int delta_y) -> void;
     auto delete_all(selection_handle_t selection) -> void;
 
     auto toggle_inverter(point_t point) -> void;

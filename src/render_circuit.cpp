@@ -24,7 +24,7 @@ auto format(shadow_t orientation) -> std::string {
 
 auto render_above(ElementType type) -> bool {
     // TODO only buttons
-    return true;   // type == ElementType::button;
+    return true;  // type == ElementType::button;
 }
 
 auto add_valid_wire_parts(const layout::ConstElement wire,
@@ -131,6 +131,8 @@ auto build_layers(const Layout& layout, const LayersCache& layers,
                     add_selected_wire_parts(element, *selection, layers.selected_wires);
                 }
             } else {
+                // uninserted segment trees can contain a lot of segments,
+                // therefore do a fine grained collision check
                 for (const auto& info : element.segment_tree().segment_infos()) {
                     if (is_colliding(info.line, scene_rect)) {
                         layers.uninserted_wires.push_back(info);
@@ -197,8 +199,8 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
 }
 
 auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
-                         shadow_t shadow_type, bool selected,
-                         const RenderSettings& settings) -> void {
+                            shadow_t shadow_type, bool selected,
+                            const RenderSettings& settings) -> void {
     const auto data = to_layout_calculation_data(element.layout(), element);
     const auto selection_rect = element_selection_rect(data);
 
@@ -213,7 +215,7 @@ auto draw_logic_item_shadows(BLContext& ctx, const Layout& layout,
                              const RenderSettings& settings) -> void {
     for (const auto element_id : elements) {
         draw_logic_item_shadow(ctx, layout.element(element_id), shadow_type, false,
-                            settings);
+                               settings);
     }
 }
 
