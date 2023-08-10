@@ -930,7 +930,7 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
     const auto backing_store = backingStore();
 
     if (backing_store == nullptr) {
-        print("WARNING: can't use backing store, as backing_store pointer is zero.");
+        print("WARNING: can't use backing store, as backing_store pointer is null.");
         return false;
     }
 
@@ -963,11 +963,11 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
     auto pixels_direct = image->constScanLine(y);
     auto pixels = image->scanLine(y);
 
-    // scanLine can make a deep copy, we don't want that
     if (pixels == nullptr) {
         print("WARNING: can't use backing store, as image data pointer is null.");
         return false;
     }
+    // scanLine can make a deep copy, we don't want that, constScanLine never does
     if (pixels != pixels_direct) {
         print("WARNING: can't use backing store, as image data is shared.");
         return false;
@@ -997,20 +997,6 @@ auto RendererWidget::_init_surface_from_buffer_image() -> void {
                             qt_image.bits(), qt_image.bytesPerLine());
 
     print("INFO: using QImage");
-}
-
-auto RendererWidget::get_window_handle() -> QWindow* {
-    QWindow* window = this->windowHandle();
-    if (window != nullptr) {
-        return window;
-    }
-
-    const QWidget* nativeParent = this->nativeParentWidget();
-    if (nativeParent != nullptr) {
-        return nativeParent->windowHandle();
-    }
-
-    return nullptr;
 }
 
 void RendererWidget::init_surface() {

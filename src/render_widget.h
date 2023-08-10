@@ -278,7 +278,6 @@ class RendererWidget : public RendererWidgetBase {
     auto init_surface() -> void;
     auto _init_surface_from_backing_store() -> bool;
     auto _init_surface_from_buffer_image() -> void;
-    auto get_window_handle() -> QWindow*;
 
     auto reset_interaction_state() -> void;
 
