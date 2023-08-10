@@ -267,7 +267,13 @@ class RendererWidget : public RendererWidgetBase {
    private:
     Q_SLOT void on_benchmark_timeout();
     Q_SLOT void on_simulation_timeout();
-    void init();
+
+    // Can only be called inside of paintEvent
+    auto init_surface() -> void;
+    auto _init_surface_from_backing_store() -> bool;
+    auto _init_surface_from_buffer_image() -> void;
+    auto get_window_handle() -> QWindow*;
+
     auto reset_interaction_state() -> void;
 
     auto delete_selected_items() -> void;
@@ -298,6 +304,7 @@ class RendererWidget : public RendererWidgetBase {
     constexpr static int n_threads_ {0};
     BLContextCreateInfo bl_info {};
     BLContext bl_ctx {};
+    bool is_initialized_ {false};
 
     QTimer benchmark_timer_;
     QTimer simulation_timer_;

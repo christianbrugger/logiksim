@@ -14,6 +14,7 @@
 #include "simulation.h"
 
 #include <QApplication>
+#include <QBackingStore>
 #include <QClipboard>
 #include <QCursor>
 
@@ -898,18 +899,92 @@ auto RendererWidget::pixel_size() const -> QSize {
     return QSize(width() * ratio, height() * ratio);
 }
 
-void RendererWidget::init() {
+// Use the Qt backend store image directly for best performance
+// This is not always available on all platforms.
+auto RendererWidget::_init_surface_from_backing_store() -> bool {
+    const auto handle = get_window_handle();
+
+    if (handle == nullptr) {
+        print("WARNING: can't use backing store, as we can't get a window handle.");
+        return false;
+    }
+    if (handle->surfaceType() != QSurface::RasterSurface) {
+        print("WARNING: can't use backing store, as surface type is not raster.");
+        return false;
+    }
+
+    const auto image = dynamic_cast<QImage*>(backingStore()->paintDevice());
+
+    if (image == nullptr) {
+        print("WARNING: can't use backing store, as paintDevice cast failed.");
+        return false;
+    }
+    if (image->format() != QImage::Format_ARGB32_Premultiplied) {
+        print("WARNING: can't use backing store, as image has the wrong format");
+        return false;
+    }
+
+    // calculate sizes
+    const auto to_pixel = [&](int value_) -> int {
+        return gsl::narrow<int>(round_fast(value_ * image->devicePixelRatioF()));
+    };
+    const auto& rect = this->geometry();
+    const auto x = to_pixel(rect.x());
+    const auto y = to_pixel(rect.y());
+    const auto width = to_pixel(rect.width());
+    const auto height = to_pixel(rect.height());
+
+    // get pointer
+    auto pixels = image->scanLine(y);
+    static_assert(sizeof(*pixels) == 1);
+    pixels += x * 4;
+
+    bl_image.createFromData(width, height, BL_FORMAT_PRGB32, pixels,
+                            image->bytesPerLine());
+    qt_image = QImage {};
+
+    print("INFO: using backing store directly");
+    return true;
+}
+
+// We render into our own buffer image. A bit slower, but portable.
+auto RendererWidget::_init_surface_from_buffer_image() -> void {
     auto window_size = pixel_size();
 
     qt_image = QImage(window_size.width(), window_size.height(),
                       QImage::Format_ARGB32_Premultiplied);
+
     qt_image.setDevicePixelRatio(devicePixelRatioF());
     bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
                             qt_image.bits(), qt_image.bytesPerLine());
+}
+
+auto RendererWidget::get_window_handle() -> QWindow* {
+    QWindow* window = this->windowHandle();
+    if (window != nullptr) {
+        return window;
+    }
+
+    const QWidget* nativeParent = this->nativeParentWidget();
+    if (nativeParent != nullptr) {
+        return nativeParent->windowHandle();
+    }
+
+    return nullptr;
+}
+
+void RendererWidget::init_surface() {
+    // initialize qt_image & bl_image
+    if (!_init_surface_from_backing_store()) {
+        _init_surface_from_buffer_image();
+    }
+
+    // configs
     bl_info.threadCount = n_threads_;
     render_settings_.view_config.set_device_pixel_ratio(devicePixelRatioF());
 
     fps_counter_.reset();
+    is_initialized_ = true;
 }
 
 void RendererWidget::resizeEvent(QResizeEvent* event) {
@@ -921,7 +996,9 @@ void RendererWidget::resizeEvent(QResizeEvent* event) {
         event->accept();
         return;
     }
-    init();
+
+    is_initialized_ = false;
+    update();
 }
 
 void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
@@ -932,9 +1009,9 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     if (!this->isVisible()) {
         return;
     }
-    if (last_pixel_ratio_ != devicePixelRatioF()) {
+    if (!is_initialized_ || last_pixel_ratio_ != devicePixelRatioF()) {
         last_pixel_ratio_ = devicePixelRatioF();
-        init();
+        init_surface();
     }
     // const auto t = Timer("render");
     //  print();
@@ -942,7 +1019,9 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     bl_ctx.begin(bl_image, bl_info);
     const auto& editable_circuit = editable_circuit_.value();
 
-    render_background(bl_ctx, render_settings_);
+    // render_background(bl_ctx, render_settings_);
+    bl_ctx.setFillStyle(BLRgba32(defaults::color_white.value));
+    bl_ctx.fillAll();
 
     if (do_render_circuit_ && simulation_) {
         render_circuit(bl_ctx, render_args_t {
@@ -957,16 +1036,19 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     if (do_render_circuit_ && !simulation_) {
         const auto& selection = editable_circuit.selection_builder().selection();
 
-        // render_circuit(bl_ctx, render_args_t {
-        //                            .layout = editable_circuit.layout(),
-        //                            .selection = &selection,
-        //                            .settings = render_settings_,
-        //                        });
-        render_circuit_2(bl_ctx, render_args_t {
-                                     .layout = editable_circuit.layout(),
-                                     .selection = &selection,
-                                     .settings = render_settings_,
-                                 });
+        if (wire_delay_per_distance_.value < 1us) {
+            render_circuit(bl_ctx, render_args_t {
+                                       .layout = editable_circuit.layout(),
+                                       .selection = &selection,
+                                       .settings = render_settings_,
+                                   });
+        } else {
+            render_circuit_2(bl_ctx, render_args_t {
+                                         .layout = editable_circuit.layout(),
+                                         .selection = &selection,
+                                         .settings = render_settings_,
+                                     });
+        }
     }
 
     if (do_render_collision_cache_) {
@@ -984,8 +1066,11 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
     bl_ctx.end();
 
-    QPainter painter(this);
-    painter.drawImage(QPoint(0, 0), qt_image);
+    // we use QPainter only if we are not using the backing store directly
+    if (qt_image.width() != 0) {
+        QPainter painter(this);
+        painter.drawImage(QPoint(0, 0), qt_image);
+    }
 
     fps_counter_.count_event();
 }

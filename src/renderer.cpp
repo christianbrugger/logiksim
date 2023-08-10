@@ -1150,7 +1150,7 @@ auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
 }
 
 auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
-    ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
+    ctx.setFillStyle(BLRgba32(defaults::color_white.value));
     ctx.fillAll();
 
     draw_background_patterns(ctx, settings);
