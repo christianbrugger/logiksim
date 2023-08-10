@@ -639,16 +639,16 @@ auto RendererWidget::thread_count() const -> uint32_t {
     return thread_count_;
 }
 
-auto RendererWidget::set_use_backend_store(bool value) -> void {
-    if (use_backend_store_ != value) {
+auto RendererWidget::set_use_backing_store(bool value) -> void {
+    if (use_backing_store_ != value) {
         is_initialized_ = false;
     }
-    use_backend_store_ = value;
+    use_backing_store_ = value;
     update();
 }
 
-auto RendererWidget::is_using_backend_store() const -> bool {
-    return use_backend_store_ && qt_image.width() == 0 && qt_image.height() == 0 &&
+auto RendererWidget::is_using_backing_store() const -> bool {
+    return use_backing_store_ && qt_image.width() == 0 && qt_image.height() == 0 &&
            bl_image.width() != 0 && bl_image.height() != 0;
 }
 
@@ -941,11 +941,15 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
     const auto image = dynamic_cast<QImage*>(backingStore()->paintDevice());
 
     if (image == nullptr) {
-        print("WARNING: can't use backing store, as paintDevice cast failed.");
+        print("WARNING: can't use backing store, as paintDevice is not a QImage.");
         return false;
     }
     if (image->format() != QImage::Format_ARGB32_Premultiplied) {
-        print("WARNING: can't use backing store, as image has the wrong format");
+        print("WARNING: can't use backing store, as image has the wrong format.");
+        return false;
+    }
+    if (image->depth() != 32) {
+        print("WARNING: can't use backing store, as image has an unexpected depth.");
         return false;
     }
 
@@ -960,15 +964,24 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
     const auto height = to_pixel(rect.height());
 
     // get pointer
+    auto pixels_direct = image->constScanLine(y);
     auto pixels = image->scanLine(y);
+
+    // scanLine can make a deep copy, we don't want that
+    if (pixels != pixels_direct) {
+        print("WARNING: can't use backing store, as image data is shared.");
+        return false;
+    }
+
+    // shift by x
     static_assert(sizeof(*pixels) == 1);
-    pixels += x * 4;
+    pixels += x * (image->depth() / 8);
 
     bl_image.createFromData(width, height, BL_FORMAT_PRGB32, pixels,
                             image->bytesPerLine());
     qt_image = QImage {};
 
-    print("INFO: using backend store");
+    print("INFO: using backing store");
     return true;
 }
 
@@ -1002,7 +1015,7 @@ auto RendererWidget::get_window_handle() -> QWindow* {
 
 void RendererWidget::init_surface() {
     // initialize qt_image & bl_image
-    if (!use_backend_store_ || !_init_surface_from_backing_store()) {
+    if (!use_backing_store_ || !_init_surface_from_backing_store()) {
         _init_surface_from_buffer_image();
     }
 
@@ -1048,8 +1061,8 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     const auto& editable_circuit = editable_circuit_.value();
 
     render_background(bl_ctx, render_settings_);
-    // bl_ctx.setFillStyle(BLRgba32(defaults::color_white.value));
-    //  bl_ctx.fillAll();
+    //  bl_ctx.setFillStyle(BLRgba32(defaults::color_white.value));
+    //   bl_ctx.fillAll();
 
     if (do_render_circuit_ && simulation_) {
         render_circuit(bl_ctx, render_args_t {

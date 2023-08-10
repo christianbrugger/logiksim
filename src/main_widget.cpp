@@ -141,11 +141,11 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
             [this, combo = threads_select](int index) {
                 render_widget_->set_thread_count(combo->itemData(index).toInt());
             });
-    threads_select->setCurrentIndex(0);
+    threads_select->setCurrentIndex(2);
 
     const auto direct_checkbox = new QCheckBox("Direct Rendering");
     connect(direct_checkbox, &QCheckBox::stateChanged, this, [this](int value) {
-        render_widget_->set_use_backend_store(value == Qt::Checked);
+        render_widget_->set_use_backing_store(value == Qt::Checked);
     });
     direct_checkbox->setCheckState(Qt::Checked);
 

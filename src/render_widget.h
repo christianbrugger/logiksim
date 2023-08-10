@@ -250,8 +250,8 @@ class RendererWidget : public RendererWidgetBase {
     // zero means no threads are used
     auto set_thread_count(uint32_t count) -> void;
     auto thread_count() const -> uint32_t;
-    auto set_use_backend_store(bool value) -> void;
-    auto is_using_backend_store() const -> bool;
+    auto set_use_backing_store(bool value) -> void;
+    auto is_using_backing_store() const -> bool;
 
     auto set_interaction_state(InteractionState state) -> void;
     auto set_default_input_count(std::size_t count) -> void;
@@ -307,11 +307,11 @@ class RendererWidget : public RendererWidgetBase {
     QImage qt_image {};
     BLImage bl_image {};
 
-    uint32_t thread_count_ {0};
+    uint32_t thread_count_ {4};
     BLContextCreateInfo bl_info {};
     BLContext bl_ctx {};
     bool is_initialized_ {false};
-    bool use_backend_store_ {true};
+    bool use_backing_store_ {true};
 
     QTimer benchmark_timer_;
     QTimer simulation_timer_;
