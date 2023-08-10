@@ -1367,10 +1367,16 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
 #endif
 }
 
+// returns pixel accurate, non-rounded mouse position
+auto RendererWidget::get_position(QMouseEvent* event) const -> QPointF {
+    return mapFrom(topLevelWidget(), event->scenePosition());
+}
+
 auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+    const auto position = get_position(event);
 
     if (event->buttons() & Qt::MiddleButton) {
         mouse_drag_logic_.mouse_move(event->position());

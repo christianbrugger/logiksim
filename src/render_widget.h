@@ -289,6 +289,8 @@ class RendererWidget : public RendererWidgetBase {
 
     auto set_new_mouse_logic(QMouseEvent* event) -> void;
 
+    auto get_position(QMouseEvent* event) const -> QPointF;
+
    protected:
     void resizeEvent(QResizeEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
