@@ -22,7 +22,7 @@ auto format(shadow_t orientation) -> std::string {
     throw_exception("Don't know how to convert shadow_t to string.");
 }
 
-auto render_above(ElementType type) -> bool {
+auto render_above(ElementType type [[maybe_unused]]) -> bool {
     // TODO only buttons
     return true;  // type == ElementType::button;
 }
@@ -199,8 +199,8 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
 }
 
 auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
-                            shadow_t shadow_type, bool selected,
-                            const RenderSettings& settings) -> void {
+                            shadow_t shadow_type, const RenderSettings& settings)
+    -> void {
     const auto data = to_layout_calculation_data(element.layout(), element);
     const auto selection_rect = element_selection_rect(data);
 
@@ -214,8 +214,7 @@ auto draw_logic_item_shadows(BLContext& ctx, const Layout& layout,
                              std::span<const element_id_t> elements, shadow_t shadow_type,
                              const RenderSettings& settings) -> void {
     for (const auto element_id : elements) {
-        draw_logic_item_shadow(ctx, layout.element(element_id), shadow_type, false,
-                               settings);
+        draw_logic_item_shadow(ctx, layout.element(element_id), shadow_type, settings);
     }
 }
 
@@ -244,8 +243,8 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout,
     }
 }
 
-auto render_layers(BLContext& ctx, const Layout& layout, const Selection* selection,
-                   const LayersCache& layers, const RenderSettings& settings) -> void {
+auto render_layers(BLContext& ctx, const Layout& layout, const LayersCache& layers,
+                   const RenderSettings& settings) -> void {
     // TODO draw with alpha here anything ???
     // TODO draw line inverters / connectors above wires
     // TODO draw uninserted wires in shadow
@@ -279,7 +278,7 @@ auto render_circuit_2(BLContext& ctx, render_args_t args) -> void {
     const auto scene_rect = get_scene_rect(ctx, args.settings.view_config);
 
     build_layers(args.layout, args.settings.layers, args.selection, scene_rect);
-    render_layers(ctx, args.layout, args.selection, args.settings.layers, args.settings);
+    render_layers(ctx, args.layout, args.settings.layers, args.settings);
 
     // print(args.settings.layers);
 }

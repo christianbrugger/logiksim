@@ -225,8 +225,13 @@ add_subdirectory(external/benchmark EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL SYSTEM)
 
 # Zlib
+# on Windows
 add_subdirectory(external/zlib EXCLUDE_FROM_ALL SYSTEM)
-set (ZLIB_USE_STATIC_LIBS ON)
+set(ZLIB_USE_STATIC_LIBS ON)
+set(LS_ZLIB_NAME zlibstatic)
+# on Linux/Ubuntu
+# set(LS_ZLIB_NAME )
+
 
 # Boost
 set(BOOST_IOSTREAMS_ENABLE_ZLIB ON)
@@ -398,7 +403,7 @@ set(LS_CORE_LIBRARIES
     range-v3
     Blend2D::Blend2D
     glaze::glaze
-    zlibstatic
+    ${LS_ZLIB_NAME}
     
     Qt6::Core
     Qt6::Widgets

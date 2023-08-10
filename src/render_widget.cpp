@@ -927,18 +927,14 @@ auto RendererWidget::pixel_size() const -> QSize {
 // Use the Qt backend store image directly for best performance
 // This is not always available on all platforms.
 auto RendererWidget::_init_surface_from_backing_store() -> bool {
-    const auto handle = get_window_handle();
+    const auto backing_store = backingStore();
 
-    if (handle == nullptr) {
-        print("WARNING: can't use backing store, as we can't get a window handle.");
-        return false;
-    }
-    if (handle->surfaceType() != QSurface::RasterSurface) {
-        print("WARNING: can't use backing store, as surface type is not raster.");
+    if (backing_store == nullptr) {
+        print("WARNING: can't use backing store, as backing_store pointer is zero.");
         return false;
     }
 
-    const auto image = dynamic_cast<QImage*>(backingStore()->paintDevice());
+    const auto image = dynamic_cast<QImage*>(backing_store->paintDevice());
 
     if (image == nullptr) {
         print("WARNING: can't use backing store, as paintDevice is not a QImage.");
@@ -968,6 +964,10 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
     auto pixels = image->scanLine(y);
 
     // scanLine can make a deep copy, we don't want that
+    if (pixels == nullptr) {
+        print("WARNING: can't use backing store, as image data pointer is null.");
+        return false;
+    }
     if (pixels != pixels_direct) {
         print("WARNING: can't use backing store, as image data is shared.");
         return false;
