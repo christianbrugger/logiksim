@@ -3,6 +3,7 @@
 #include "render_widget.h"
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -80,18 +81,20 @@ auto MainWidget::build_render_buttons() -> QWidget* {
     check_box4->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
     check_box5->setShortcut(QKeySequence(Qt::ALT | Qt::Key_E));
 
-    connect(check_box1, &QCheckBox::stateChanged, this,
-            [this](bool enabled) { render_widget_->set_do_benchmark(enabled); });
-    connect(check_box2, &QCheckBox::stateChanged, this,
-            [this](bool enabled) { render_widget_->set_do_render_circuit(enabled); });
-    connect(check_box3, &QCheckBox::stateChanged, this, [this](bool enabled) {
-        render_widget_->set_do_render_collision_cache(enabled);
+    connect(check_box1, &QCheckBox::stateChanged, this, [this](int value) {
+        render_widget_->set_do_benchmark(value == Qt::Checked);
     });
-    connect(check_box4, &QCheckBox::stateChanged, this, [this](bool enabled) {
-        render_widget_->set_do_render_connection_cache(enabled);
+    connect(check_box2, &QCheckBox::stateChanged, this, [this](int value) {
+        render_widget_->set_do_render_circuit(value == Qt::Checked);
     });
-    connect(check_box5, &QCheckBox::stateChanged, this, [this](bool enabled) {
-        render_widget_->set_do_render_selection_cache(enabled);
+    connect(check_box3, &QCheckBox::stateChanged, this, [this](int value) {
+        render_widget_->set_do_render_collision_cache(value == Qt::Checked);
+    });
+    connect(check_box4, &QCheckBox::stateChanged, this, [this](int value) {
+        render_widget_->set_do_render_connection_cache(value == Qt::Checked);
+    });
+    connect(check_box5, &QCheckBox::stateChanged, this, [this](int value) {
+        render_widget_->set_do_render_selection_cache(value == Qt::Checked);
     });
 
     // startup states
@@ -128,6 +131,24 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     connect(button4, &QPushButton::clicked, this,
             [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(4); });
 
+    const auto threads_select = new QComboBox();
+    static const auto available_counts = std::vector {0, 2, 4, 8};
+    for (const auto& count : available_counts) {
+        threads_select->addItem(QString::fromStdString(fmt::format("{}", count)),
+                                QVariant(count));
+    }
+    connect(threads_select, &QComboBox::activated, this,
+            [this, combo = threads_select](int index) {
+                render_widget_->set_thread_count(combo->itemData(index).toInt());
+            });
+    threads_select->setCurrentIndex(0);
+
+    const auto direct_checkbox = new QCheckBox("Direct Rendering");
+    connect(direct_checkbox, &QCheckBox::stateChanged, this, [this](int value) {
+        render_widget_->set_use_backend_store(value == Qt::Checked);
+    });
+    direct_checkbox->setCheckState(Qt::Checked);
+
     const auto layout = new QHBoxLayout();
     layout->addWidget(button0);
     layout->addWidget(button1);
@@ -135,6 +156,9 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
     layout->addWidget(button3);
     layout->addWidget(button4);
     layout->addStretch(1);
+    layout->addWidget(direct_checkbox);
+    layout->addWidget(threads_select);
+    layout->addWidget(new QLabel("threads"));
 
     const auto panel = new QWidget();
     panel->setLayout(layout);
@@ -180,7 +204,9 @@ auto MainWidget::build_delay_slider() -> QWidget* {
         render_widget_->set_wire_delay_per_distance(delay);
         label->setText(to_text(delay));
     });
-    connect(checkbox, &QCheckBox::stateChanged, this, [&, slider, label](int ignore) {
+    connect(checkbox, &QCheckBox::stateChanged, this, [&, slider, label](int value) {
+        bool ignore = value == Qt::Checked;
+
         slider->setEnabled(!ignore);
         const auto delay = ignore ? delay_t {0ns} : from_slider_scale(slider->value());
 

@@ -627,6 +627,31 @@ auto RendererWidget::set_do_render_selection_cache(bool value) -> void {
     update();
 }
 
+auto RendererWidget::set_thread_count(uint32_t count) -> void {
+    if (thread_count_ != count) {
+        is_initialized_ = false;
+    }
+    thread_count_ = count;
+    update();
+}
+
+auto RendererWidget::thread_count() const -> uint32_t {
+    return thread_count_;
+}
+
+auto RendererWidget::set_use_backend_store(bool value) -> void {
+    if (use_backend_store_ != value) {
+        is_initialized_ = false;
+    }
+    use_backend_store_ = value;
+    update();
+}
+
+auto RendererWidget::is_using_backend_store() const -> bool {
+    return use_backend_store_ && qt_image.width() == 0 && qt_image.height() == 0 &&
+           bl_image.width() != 0 && bl_image.height() != 0;
+}
+
 auto RendererWidget::set_interaction_state(InteractionState state) -> void {
     if (interaction_state_ != state) {
         interaction_state_ = state;
@@ -658,11 +683,11 @@ auto RendererWidget::set_wire_delay_per_distance(delay_t value) -> void {
     wire_delay_per_distance_ = value;
 }
 
-auto RendererWidget::interaction_state() -> InteractionState {
+auto RendererWidget::interaction_state() const -> InteractionState {
     return interaction_state_;
 }
 
-auto RendererWidget::default_input_count() -> std::size_t {
+auto RendererWidget::default_input_count() const -> std::size_t {
     return default_input_count_;
 }
 
@@ -943,7 +968,7 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
                             image->bytesPerLine());
     qt_image = QImage {};
 
-    print("INFO: using backing store directly");
+    print("INFO: using backend store");
     return true;
 }
 
@@ -957,6 +982,8 @@ auto RendererWidget::_init_surface_from_buffer_image() -> void {
     qt_image.setDevicePixelRatio(devicePixelRatioF());
     bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
                             qt_image.bits(), qt_image.bytesPerLine());
+
+    print("INFO: using QImage");
 }
 
 auto RendererWidget::get_window_handle() -> QWindow* {
@@ -975,16 +1002,15 @@ auto RendererWidget::get_window_handle() -> QWindow* {
 
 void RendererWidget::init_surface() {
     // initialize qt_image & bl_image
-    if (!_init_surface_from_backing_store()) {
+    if (!use_backend_store_ || !_init_surface_from_backing_store()) {
         _init_surface_from_buffer_image();
     }
 
     // configs
-    bl_info.threadCount = n_threads_;
+    bl_info.threadCount = thread_count_;
     render_settings_.view_config.set_device_pixel_ratio(devicePixelRatioF());
 
     fps_counter_.reset();
-    is_initialized_ = true;
 }
 
 void RendererWidget::resizeEvent(QResizeEvent* event) {
@@ -1010,8 +1036,10 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         return;
     }
     if (!is_initialized_ || last_pixel_ratio_ != devicePixelRatioF()) {
-        last_pixel_ratio_ = devicePixelRatioF();
         init_surface();
+
+        last_pixel_ratio_ = devicePixelRatioF();
+        is_initialized_ = true;
     }
     // const auto t = Timer("render");
     //  print();
@@ -1019,9 +1047,9 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     bl_ctx.begin(bl_image, bl_info);
     const auto& editable_circuit = editable_circuit_.value();
 
-    // render_background(bl_ctx, render_settings_);
-    bl_ctx.setFillStyle(BLRgba32(defaults::color_white.value));
-    bl_ctx.fillAll();
+    render_background(bl_ctx, render_settings_);
+    // bl_ctx.setFillStyle(BLRgba32(defaults::color_white.value));
+    //  bl_ctx.fillAll();
 
     if (do_render_circuit_ && simulation_) {
         render_circuit(bl_ctx, render_args_t {

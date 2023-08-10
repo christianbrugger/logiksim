@@ -247,12 +247,18 @@ class RendererWidget : public RendererWidgetBase {
     auto set_do_render_connection_cache(bool value) -> void;
     auto set_do_render_selection_cache(bool value) -> void;
 
+    // zero means no threads are used
+    auto set_thread_count(uint32_t count) -> void;
+    auto thread_count() const -> uint32_t;
+    auto set_use_backend_store(bool value) -> void;
+    auto is_using_backend_store() const -> bool;
+
     auto set_interaction_state(InteractionState state) -> void;
     auto set_default_input_count(std::size_t count) -> void;
     auto set_time_rate(time_rate_t time_rate) -> void;
     auto set_wire_delay_per_distance(delay_t value) -> void;
-    [[nodiscard]] auto interaction_state() -> InteractionState;
-    [[nodiscard]] auto default_input_count() -> std::size_t;
+    [[nodiscard]] auto interaction_state() const -> InteractionState;
+    [[nodiscard]] auto default_input_count() const -> std::size_t;
     [[nodiscard]] auto time_rate() const -> time_rate_t;
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
@@ -301,10 +307,11 @@ class RendererWidget : public RendererWidgetBase {
     QImage qt_image {};
     BLImage bl_image {};
 
-    constexpr static int n_threads_ {0};
+    uint32_t thread_count_ {0};
     BLContextCreateInfo bl_info {};
     BLContext bl_ctx {};
     bool is_initialized_ {false};
+    bool use_backend_store_ {true};
 
     QTimer benchmark_timer_;
     QTimer simulation_timer_;
