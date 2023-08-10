@@ -214,7 +214,30 @@ TEST(EditableCircuitHandler, MoveLogicItemSuccess) {
     ASSERT_EQ(element_id_0, element_id_t {0});
 
     auto setup = HandlerSetup {layout};
-    move_or_delete_logic_item(layout, setup.sender, element_id_0, 10, -10);
+    move_or_delete_logic_item(layout, setup.sender, element_id_0, 9, -11);
+
+    setup.validate();
+    //  element_ids
+    ASSERT_EQ(element_id_0, element_id_t {0});
+
+    // layout
+    assert_element_count(layout, 1);
+    assert_element_equal(layout, element_id_t {0}, 2, point_t {10, -10});
+
+    // messages
+    ASSERT_EQ(setup.recorder.messages().size(), 0);
+}
+
+TEST(EditableCircuitHandler, MoveLogicItemUnchecked) {
+    using namespace editable_circuit::info_message;
+    using enum display_state_t;
+    auto layout = Layout {};
+
+    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
+    ASSERT_EQ(element_id_0, element_id_t {0});
+
+    auto setup = HandlerSetup {layout};
+    editable_circuit::move_logic_item_unchecked(layout, element_id_0, 9, -11);
 
     setup.validate();
     //  element_ids

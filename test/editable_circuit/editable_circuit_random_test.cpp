@@ -209,6 +209,10 @@ class TrackedSelection {
         editable_circuit_.move_or_delete(handle_.copy(), delta_x, delta_y);
     }
 
+    auto move_unchecked(int delta_x, int delta_y) -> void {
+        editable_circuit_.move_unchecked(handle_.value(), delta_x, delta_y);
+    }
+
    private:
     EditableCircuit &editable_circuit_;
     selection_handle_t handle_;
@@ -233,7 +237,7 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
                                        editable_circuit.get_handle(builder.selection()),
                                        InsertionMode::insert_or_discard};
     tracker_1.convert_to(InsertionMode::temporary);
-    tracker_1.move_or_delete(10, 10);
+    tracker_1.move_unchecked(10, 10);
     tracker_1.convert_to(InsertionMode::insert_or_discard);
     editable_circuit.validate();
 
@@ -254,7 +258,7 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
 
     // Move second part
     tracker_2.convert_to(InsertionMode::temporary);
-    tracker_2.move_or_delete(10, 10);
+    tracker_2.move_unchecked(10, 10);
     tracker_2.convert_to(InsertionMode::insert_or_discard);
     editable_circuit.validate();
 

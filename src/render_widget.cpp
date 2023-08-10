@@ -936,8 +936,8 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         last_pixel_ratio_ = devicePixelRatioF();
         init();
     }
-    const auto t = Timer("render");
-    print();
+    // const auto t = Timer("render");
+    //  print();
 
     bl_ctx.begin(bl_image, bl_info);
     const auto& editable_circuit = editable_circuit_.value();
