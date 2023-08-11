@@ -1162,29 +1162,6 @@ auto RendererWidget::select_all_items() -> void {
     update();
 }
 
-auto RendererWidget::get_mouse_position() -> point_t {
-    if (const auto position =
-            to_grid(this->mapFromGlobal(QCursor::pos()), render_settings_.view_config)) {
-        return position.value();
-    }
-
-    const auto w = this->width();
-    const auto h = this->height();
-
-    if (const auto position =
-            to_grid(QPoint(w / 2, h / 2), render_settings_.view_config)) {
-        return position.value();
-    }
-    if (const auto position = to_grid(QPoint(0, 0), render_settings_.view_config)) {
-        return position.value();
-    }
-    if (const auto position = to_grid(QPoint(w, h), render_settings_.view_config)) {
-        return position.value();
-    }
-
-    return point_t {0, 0};
-}
-
 auto RendererWidget::copy_selected_items() -> void {
     const auto t = Timer {"", Timer::Unit::ms, 3};
 
@@ -1250,10 +1227,51 @@ auto RendererWidget::paste_clipboard_items() -> void {
           selection.selected_segments().size(), "segments in", t);
 }
 
+// returns pixel accurate, non-rounded mouse position
+auto RendererWidget::get_mouse_position(QSinglePointEvent* event) const -> QPointF {
+    // simple way, but off, as geometry requires rounding
+    // return mapFrom(topLevelWidget(), event->scenePosition());
+
+    // Doesn't work for wheel events
+    // const auto ratio = devicePixelRatioF();
+    // const auto scene_position_device = event->scenePosition() * ratio;
+    // const auto geometry_device = round_logical_to_device(geometry(), ratio);
+    // const auto x = (scene_position_device.x() - geometry_device.x()) / ratio;
+    // const auto y = (scene_position_device.y() - geometry_device.y()) / ratio;
+    // return QPointF(x, y);
+
+    return mapFromGlobal(event->globalPosition());
+}
+
+auto RendererWidget::get_mouse_position() -> point_t {
+    if (const auto position =
+            to_grid(this->mapFromGlobal(QCursor::pos()), render_settings_.view_config)) {
+        return position.value();
+    }
+
+    const auto w = this->width();
+    const auto h = this->height();
+
+    if (const auto position =
+            to_grid(QPoint(w / 2, h / 2), render_settings_.view_config)) {
+        return position.value();
+    }
+    if (const auto position = to_grid(QPoint(0, 0), render_settings_.view_config)) {
+        return position.value();
+    }
+    if (const auto position = to_grid(QPoint(w, h), render_settings_.view_config)) {
+        return position.value();
+    }
+
+    return point_t {0, 0};
+}
+
 auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+    const auto position = get_mouse_position(event);
+
     if (event->button() == Qt::LeftButton) {
         if (is_inserting_state(interaction_state_)) {
             if (interaction_state_ == InteractionState::insert_wire) {
@@ -1272,8 +1290,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
 
         if (interaction_state_ == InteractionState::selection) {
             auto& selection_builder = editable_circuit_.value().selection_builder();
-            const auto point =
-                to_grid_fine(event->position(), render_settings_.view_config);
+            const auto point = to_grid_fine(position, render_settings_.view_config);
 
             if (editable_circuit_->caches().spatial_cache().has_element(point)) {
                 if (event->modifiers() == Qt::NoModifier) {
@@ -1311,9 +1328,10 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+    const auto position = get_mouse_position(event);
 
     if (event->button() == Qt::MiddleButton) {
-        mouse_drag_logic_.mouse_press(event->position());
+        mouse_drag_logic_.mouse_press(position);
         update();
     }
 
@@ -1322,10 +1340,9 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
             set_new_mouse_logic(event);
         }
         if (mouse_logic_) {
-            const auto grid_position =
-                to_grid(event->position(), render_settings_.view_config);
+            const auto grid_position = to_grid(position, render_settings_.view_config);
             const auto grid_fine_position =
-                to_grid_fine(event->position(), render_settings_.view_config);
+                to_grid_fine(position, render_settings_.view_config);
             auto double_click = event->type() == QEvent::MouseButtonDblClick;
 
             std::visit(
@@ -1333,7 +1350,7 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                     [&](MouseElementInsertLogic& arg) { arg.mouse_press(grid_position); },
                     [&](MouseLineInsertLogic& arg) { arg.mouse_press(grid_position); },
                     [&](MouseAreaSelectionLogic& arg) {
-                        arg.mouse_press(event->position(), event->modifiers());
+                        arg.mouse_press(position, event->modifiers());
                     },
                     [&](MouseSingleSelectionLogic& arg) {
                         arg.mouse_press(grid_fine_position, double_click);
@@ -1367,33 +1384,27 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
 #endif
 }
 
-// returns pixel accurate, non-rounded mouse position
-auto RendererWidget::get_position(QMouseEvent* event) const -> QPointF {
-    return mapFrom(topLevelWidget(), event->scenePosition());
-}
-
 auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
-    const auto position = get_position(event);
+    const auto position = get_mouse_position(event);
 
     if (event->buttons() & Qt::MiddleButton) {
-        mouse_drag_logic_.mouse_move(event->position());
+        mouse_drag_logic_.mouse_move(position);
         update();
     }
 
     if (mouse_logic_) {
-        const auto grid_position =
-            to_grid(event->position(), render_settings_.view_config);
+        const auto grid_position = to_grid(position, render_settings_.view_config);
         const auto grid_fine_position =
-            to_grid_fine(event->position(), render_settings_.view_config);
+            to_grid_fine(position, render_settings_.view_config);
 
         std::visit(
             overload {
                 [&](MouseElementInsertLogic& arg) { arg.mouse_move(grid_position); },
                 [&](MouseLineInsertLogic& arg) { arg.mouse_move(grid_position); },
-                [&](MouseAreaSelectionLogic& arg) { arg.mouse_move(event->position()); },
+                [&](MouseAreaSelectionLogic& arg) { arg.mouse_move(position); },
                 [&](MouseSingleSelectionLogic& arg) {
                     arg.mouse_move(grid_fine_position);
                 },
@@ -1414,17 +1425,17 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+    const auto position = get_mouse_position(event);
 
     if (event->button() == Qt::MiddleButton) {
-        mouse_drag_logic_.mouse_release(event->position());
+        mouse_drag_logic_.mouse_release(position);
         update();
     }
 
     else if (event->button() == Qt::LeftButton && mouse_logic_) {
-        const auto grid_position =
-            to_grid(event->position(), render_settings_.view_config);
+        const auto grid_position = to_grid(position, render_settings_.view_config);
         const auto grid_fine_position =
-            to_grid_fine(event->position(), render_settings_.view_config);
+            to_grid_fine(position, render_settings_.view_config);
 
         bool finished = std::visit(
             overload {
@@ -1437,7 +1448,7 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
                     return true;
                 },
                 [&](MouseAreaSelectionLogic& arg) {
-                    arg.mouse_release(event->position());
+                    arg.mouse_release(position);
                     return true;
                 },
                 [&](MouseSingleSelectionLogic& arg) {
@@ -1467,6 +1478,7 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
     if (event == nullptr) {
         return;
     }
+    const auto position = get_mouse_position(event);
 
     auto& view_config = render_settings_.view_config;
 
@@ -1481,9 +1493,9 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
         const auto delta = event->angleDelta().y() / standard_delta;
         const auto factor = std::exp(delta * std::log(standard_zoom_factor));
 
-        const auto old_grid_point = to_grid_fine(event->position(), view_config);
+        const auto old_grid_point = to_grid_fine(position, view_config);
         view_config.set_device_scale(view_config.device_scale() * factor);
-        const auto new_grid_point = to_grid_fine(event->position(), view_config);
+        const auto new_grid_point = to_grid_fine(position, view_config);
 
         view_config.set_offset(view_config.offset() + new_grid_point - old_grid_point);
         update();

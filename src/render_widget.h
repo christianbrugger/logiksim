@@ -283,13 +283,13 @@ class RendererWidget : public RendererWidgetBase {
 
     auto delete_selected_items() -> void;
     auto select_all_items() -> void;
-    auto get_mouse_position() -> point_t;
     auto copy_selected_items() -> void;
     auto paste_clipboard_items() -> void;
 
     auto set_new_mouse_logic(QMouseEvent* event) -> void;
 
-    auto get_position(QMouseEvent* event) const -> QPointF;
+    auto get_mouse_position() -> point_t;
+    auto get_mouse_position(QSinglePointEvent* event) const -> QPointF;
 
    protected:
     void resizeEvent(QResizeEvent* event) override;
@@ -303,6 +303,7 @@ class RendererWidget : public RendererWidgetBase {
     auto keyPressEvent(QKeyEvent* event) -> void override;
 
    private:
+    MouseDragLogic mouse_drag_logic_;
     qreal last_pixel_ratio_ {-1};
 
     QImage qt_image {};
@@ -331,7 +332,6 @@ class RendererWidget : public RendererWidgetBase {
     // mouse logic
     InteractionState interaction_state_ {InteractionState::not_interactive};
     std::size_t default_input_count_ {3};
-    MouseDragLogic mouse_drag_logic_;
     std::optional<MouseLogic> mouse_logic_ {};
 
     // states
@@ -341,7 +341,7 @@ class RendererWidget : public RendererWidgetBase {
     bool do_render_connection_cache_ {false};
     bool do_render_selection_cache_ {false};
 
-    EventCounter fps_counter_;
+    EventCounter fps_counter_ {};
 };
 
 }  // namespace logicsim
