@@ -366,7 +366,9 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
     w = w == 0 ? 1.0 : w;
     h = h == 0 ? 1.0 : h;
 
-    const auto r = attributes.rounding >= 0 ? attributes.rounding : std::min(w, h) / 2;
+    const auto r = attributes.rounding >= 0
+                       ? to_context(attributes.rounding, settings.view_config)
+                       : std::min(w, h) / 2;
 
     if (attributes.draw_type == DrawType::fill ||
         attributes.draw_type == DrawType::fill_and_stroke) {

@@ -29,6 +29,10 @@ auto render_above(ElementType type [[maybe_unused]]) -> bool {
     return true;  // type == ElementType::button;
 }
 
+auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> double {
+    return type == ElementType::button ? 0. : 0.3;
+}
+
 auto add_valid_wire_parts(const layout::ConstElement wire,
                           std::vector<ordered_line_t>& output) -> bool {
     auto found = false;
@@ -209,7 +213,12 @@ auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
     const auto color = shadow_color(shadow_type);
     ctx.setFillStyle(BLRgba32(color.value));
 
-    draw_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+    draw_round_rect(ctx, selection_rect,
+                    {
+                        .draw_type = DrawType::fill,
+                        .rounding = element_shadow_rounding(data.element_type),
+                    },
+                    settings);
 }
 
 auto draw_logic_item_shadows(BLContext& ctx, const Layout& layout,
@@ -228,32 +237,6 @@ auto draw_wire_shadows(BLContext& ctx, std::span<const ordered_line_t> lines,
     for (auto line : lines) {
         const auto selection_rect = element_selection_rect_rounded(line);
         draw_round_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
-
-        /*
-        auto rect0 = to_context(selection_rect.p0, settings.view_config);
-        auto rect1 = to_context(selection_rect.p1, settings.view_config);
-
-        BLPoint p0;
-        BLPoint p1;
-        double r;
-
-        if (is_horizontal(line)) {
-            p0.x = rect0.x + 0.5;
-            p1.x = rect1.x + 0.5;
-
-            p0.y = p1.y = (rect0.y + rect1.y + 1) / 2;
-            r = (rect1.y - rect0.y + 1) / 2;
-        } else {
-            p0.y = rect0.y + 0.5;
-            p1.y = rect1.y + 0.5;  // 0.5;
-
-            p0.x = p1.x = (rect0.x + rect1.x + 1) / 2;
-            r = (rect1.x - rect0.x + 1) / 2;
-        }
-
-        ctx.fillCircle(BLCircle(p0.x, p0.y, r));
-        ctx.fillCircle(BLCircle(p1.x, p1.y, r));
-        */
     }
 }
 
@@ -324,7 +307,9 @@ auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& s
     draw_logic_items(ctx, layout, layers.normal_above, settings);
 
     draw_logic_items(ctx, layout, layers.uninserted_below, settings);
+    ctx.setGlobalAlpha(0.5);
     draw_wires(ctx, layers.uninserted_wires, settings);
+    ctx.setGlobalAlpha(1.0);
     draw_logic_items(ctx, layout, layers.uninserted_above, settings);
 
     render_overlay(ctx, layout, settings);
