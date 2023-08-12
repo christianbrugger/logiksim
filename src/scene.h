@@ -22,10 +22,13 @@ class ViewConfig {
     [[nodiscard]] auto pixel_scale() const noexcept -> double;
     [[nodiscard]] auto device_scale() const noexcept -> double;
     [[nodiscard]] auto device_pixel_ratio() const noexcept -> double;
+    [[nodiscard]] auto width() const noexcept -> int;
+    [[nodiscard]] auto height() const noexcept -> int;
 
     auto set_offset(point_fine_t offset) -> void;
     auto set_device_scale(double device_scale) -> void;
     auto set_device_pixel_ratio(double device_pixel_ratio) -> void;
+    auto set_size(int width, int height) -> void;
 
     [[nodiscard]] auto stroke_width() const noexcept -> int;
     [[nodiscard]] auto line_cross_width() const noexcept -> int;
@@ -33,9 +36,11 @@ class ViewConfig {
    private:
     auto update() -> void;
 
-    point_fine_t offset_ {};  // in fine grid points
+    point_fine_t offset_ {};
     double device_pixel_ratio_ {1.};
     double device_scale_ {12.};
+    int width_ {};  // in device pixels
+    int height_ {};
 
     // updated internally
     double pixel_scale_ {};
@@ -48,6 +53,10 @@ class ViewConfig {
 [[nodiscard]] auto is_representable(point_t point, int dx, int dy) -> bool;
 [[nodiscard]] auto is_representable(line_t point, int dx, int dy) -> bool;
 [[nodiscard]] auto is_representable(ordered_line_t point, int dx, int dy) -> bool;
+
+// scene rect
+auto get_scene_rect_fine(const ViewConfig& view_config) -> rect_fine_t;
+auto get_scene_rect(const ViewConfig& view_config) -> rect_t;
 
 // device to grid fine
 [[nodiscard]] auto to_grid_fine(double x, double y, const ViewConfig& config)

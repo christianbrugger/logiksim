@@ -4,8 +4,8 @@
 #include "format.h"
 #include "glyph_cache.h"
 #include "scene.h"
-#include "vocabulary.h"
 #include "segment_tree_types.h"
+#include "vocabulary.h"
 
 class BLContext;
 
@@ -37,16 +37,32 @@ struct LayersCache {
     auto clear() const -> void;
 };
 
-// TODO maybe make glyph cache a pointer
+struct Layer {
+    BLImage image;
+    BLContext ctx;
+    BLRect rect;
+
+    auto initialize(const ViewConfig& config, const BLContextCreateInfo& info) -> void;
+};
+
+// TODO think about const behavior?
+// TODO rename to RenderCache ?
+// TODO maybe make glyph cache a pointer - to remove dependency
 struct RenderSettings {
     ViewConfig view_config {};
+
     GlyphCache text {};
     LayersCache layers {};
+    mutable Layer layer_overlay;
 
     int background_grid_min_distance {10};  // device pixels
+    int thread_count {4};
+    bool separate_layer {true};
 
     auto format() const -> std::string;
 };
+
+auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
 
 //
 // Blend2d specific
@@ -76,9 +92,6 @@ enum class DrawType {
 };
 
 auto stroke_offset(int stoke_width) -> double;
-
-auto get_scene_rect_fine(const BLContext& ctx, ViewConfig view_config) -> rect_fine_t;
-auto get_scene_rect(const BLContext& ctx, ViewConfig view_config) -> rect_t;
 
 //
 // Point

@@ -51,10 +51,10 @@ auto LayersCache::format() const -> std::string {
         uninserted_above,  //
 
         selected_logic_items,   //
-        selected_wires,    //
+        selected_wires,         //
         temporary_wires,        //
         valid_logic_items,      //
-        valid_wires,       //
+        valid_wires,            //
         colliding_logic_items,  //
         colliding_wires         //
     );
@@ -78,12 +78,29 @@ auto LayersCache::clear() const -> void {
     colliding_wires.clear();
 }
 
+auto Layer::initialize(const ViewConfig& config, const BLContextCreateInfo& info)
+    -> void {
+    if (image.width() != config.width() || image.height() != config.height()) {
+        image = BLImage {config.width(), config.height(), BL_FORMAT_PRGB32};
+        rect = BLRect {0, 0, gsl::narrow<double>(image.width()),
+                       gsl::narrow<double>(image.height())};
+
+        ctx.begin(image, info);
+    }
+}
+
 auto RenderSettings::format() const -> std::string {
     return fmt::format(
         "RenderSettings(\n"
         "  view_config = {},\n"
         "  background_grid_min_distance = {})",
         view_config, background_grid_min_distance);
+}
+
+auto context_info(const RenderSettings& settings) -> BLContextCreateInfo {
+    auto info = BLContextCreateInfo {};
+    info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
+    return info;
 }
 
 //
@@ -109,17 +126,6 @@ auto stroke_offset(int stroke_width) -> double {
         return 0;
     }
     return 0.5;
-}
-
-auto get_scene_rect_fine(const BLContext& ctx, ViewConfig view_config) -> rect_fine_t {
-    return rect_fine_t {
-        from_context_fine(BLPoint {0, 0}, view_config),
-        from_context_fine(BLPoint {ctx.targetWidth(), ctx.targetHeight()}, view_config),
-    };
-}
-
-auto get_scene_rect(const BLContext& ctx, ViewConfig view_config) -> rect_t {
-    return to_enclosing_rect(get_scene_rect_fine(ctx, view_config));
 }
 
 //

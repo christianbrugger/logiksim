@@ -243,8 +243,45 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout,
     }
 }
 
-auto render_layers(BLContext& ctx, const Layout& layout, const LayersCache& layers,
-                   const RenderSettings& settings) -> void {
+auto render_overlay_impl(BLContext& ctx, const Layout& layout,
+                         const RenderSettings& settings) -> void {
+    const LayersCache& cache = settings.layers;
+
+    // selected & temporary
+    draw_logic_item_shadows(ctx, layout, cache.selected_logic_items, shadow_t::selected,
+                            settings);
+    draw_wire_shadows(ctx, cache.selected_wires, shadow_t::selected, settings);
+    draw_wire_shadows(ctx, cache.temporary_wires, shadow_t::selected, settings);
+    // valid
+    draw_logic_item_shadows(ctx, layout, cache.valid_logic_items, shadow_t::valid,
+                            settings);
+    draw_wire_shadows(ctx, cache.valid_wires, shadow_t::valid, settings);
+    // colliding
+    draw_logic_item_shadows(ctx, layout, cache.colliding_logic_items, shadow_t::colliding,
+                            settings);
+    draw_wire_shadows(ctx, cache.colliding_wires, shadow_t::colliding, settings);
+}
+
+auto render_overlay_layers(BLContext& target_ctx, const Layout& layout,
+                           const RenderSettings& settings) -> void {
+    if (settings.separate_layer) {
+        Layer& layer = settings.layer_overlay;
+        layer.initialize(settings.view_config, context_info(settings));
+
+        layer.ctx.clearAll();
+        render_overlay_impl(layer.ctx, layout, settings);
+
+        layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
+        target_ctx.blitImage(layer.rect, layer.image);
+    } else {
+        render_overlay_impl(target_ctx, layout, settings);
+    }
+}
+
+auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
+    -> void {
+    const LayersCache& layers = settings.layers;
+
     // TODO draw with alpha here anything ???
     // TODO draw line inverters / connectors above wires
     // TODO draw uninserted wires in shadow
@@ -258,27 +295,14 @@ auto render_layers(BLContext& ctx, const Layout& layout, const LayersCache& laye
     draw_logic_items(ctx, layout, layers.uninserted_above, settings);
 
     // TODO draw to second layer
-
-    // selected & temporary
-    draw_logic_item_shadows(ctx, layout, layers.selected_logic_items, shadow_t::selected,
-                            settings);
-    draw_wire_shadows(ctx, layers.selected_wires, shadow_t::selected, settings);
-    draw_wire_shadows(ctx, layers.temporary_wires, shadow_t::selected, settings);
-    // valid
-    draw_logic_item_shadows(ctx, layout, layers.valid_logic_items, shadow_t::valid,
-                            settings);
-    draw_wire_shadows(ctx, layers.valid_wires, shadow_t::valid, settings);
-    // colliding
-    draw_logic_item_shadows(ctx, layout, layers.colliding_logic_items,
-                            shadow_t::colliding, settings);
-    draw_wire_shadows(ctx, layers.colliding_wires, shadow_t::colliding, settings);
+    render_overlay_layers(ctx, layout, settings);
 }
 
 auto render_circuit_2(BLContext& ctx, render_args_t args) -> void {
-    const auto scene_rect = get_scene_rect(ctx, args.settings.view_config);
+    const auto scene_rect = get_scene_rect(args.settings.view_config);
 
     build_layers(args.layout, args.settings.layers, args.selection, scene_rect);
-    render_layers(ctx, args.layout, args.settings.layers, args.settings);
+    render_layers(ctx, args.layout, args.settings);
 
     // print(args.settings.layers);
 }

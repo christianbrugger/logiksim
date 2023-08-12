@@ -248,8 +248,8 @@ class RendererWidget : public RendererWidgetBase {
     auto set_do_render_selection_cache(bool value) -> void;
 
     // zero means no threads are used
-    auto set_thread_count(uint32_t count) -> void;
-    auto thread_count() const -> uint32_t;
+    auto set_thread_count(int count) -> void;
+    auto thread_count() const -> int;
     auto set_use_backing_store(bool value) -> void;
     auto is_using_backing_store() const -> bool;
 
@@ -303,14 +303,12 @@ class RendererWidget : public RendererWidgetBase {
     auto keyPressEvent(QKeyEvent* event) -> void override;
 
    private:
-    MouseDragLogic mouse_drag_logic_;
     qreal last_pixel_ratio_ {-1};
+    MouseDragLogic mouse_drag_logic_;
 
     QImage qt_image {};
     BLImage bl_image {};
 
-    uint32_t thread_count_ {4};
-    BLContextCreateInfo bl_info {};
     BLContext bl_ctx {};
     bool is_initialized_ {false};
     bool use_backing_store_ {true};

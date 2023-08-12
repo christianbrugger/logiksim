@@ -627,16 +627,16 @@ auto RendererWidget::set_do_render_selection_cache(bool value) -> void {
     update();
 }
 
-auto RendererWidget::set_thread_count(uint32_t count) -> void {
-    if (thread_count_ != count) {
+auto RendererWidget::set_thread_count(int count) -> void {
+    if (count != render_settings_.thread_count) {
         is_initialized_ = false;
     }
-    thread_count_ = count;
+    render_settings_.thread_count = count;
     update();
 }
 
-auto RendererWidget::thread_count() const -> uint32_t {
-    return thread_count_;
+auto RendererWidget::thread_count() const -> int {
+    return render_settings_.thread_count;
 }
 
 auto RendererWidget::set_use_backing_store(bool value) -> void {
@@ -1023,13 +1023,17 @@ auto RendererWidget::_init_surface_from_buffer_image() -> void {
 
 void RendererWidget::init_surface() {
     // initialize qt_image & bl_image
+    bl_ctx.end();
     if (!use_backing_store_ || !_init_surface_from_backing_store()) {
         _init_surface_from_buffer_image();
     }
 
     // configs
-    bl_info.threadCount = thread_count_;
     render_settings_.view_config.set_device_pixel_ratio(devicePixelRatioF());
+    render_settings_.view_config.set_size(bl_image.width(), bl_image.height());
+
+    // create context
+    bl_ctx.begin(bl_image, context_info(render_settings_));
 
     fps_counter_.reset();
 }
@@ -1062,15 +1066,9 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         last_pixel_ratio_ = devicePixelRatioF();
         is_initialized_ = true;
     }
-    // const auto t = Timer("render");
-    //  print();
-
-    bl_ctx.begin(bl_image, bl_info);
     const auto& editable_circuit = editable_circuit_.value();
 
     render_background(bl_ctx, render_settings_);
-    //  bl_ctx.setFillStyle(BLRgba32(defaults::color_white.value));
-    //   bl_ctx.fillAll();
 
     if (do_render_circuit_ && simulation_) {
         render_circuit(bl_ctx, render_args_t {
@@ -1119,7 +1117,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     // bl_ctx.fillRect(BLRect {0, 0, 100, 1});
     // bl_ctx.fillRect(BLRect {0, bl_image.height() - 1.0, 100, 1});
 
-    bl_ctx.end();
+    bl_ctx.flush(BL_CONTEXT_FLUSH_SYNC);
 
     // we use QPainter only if we are not using the backing store directly
     if (qt_image.width() != 0) {

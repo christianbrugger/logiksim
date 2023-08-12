@@ -952,7 +952,7 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& se
 
 auto render_circuit(BLContext& ctx, render_args_t args) -> void {
     auto visibility = visibility_mask_t(args.layout.element_count(), false);
-    auto scene_rect = get_scene_rect(ctx, args.settings.view_config);
+    auto scene_rect = get_scene_rect(args.settings.view_config);
 
     {
         for (const auto element : args.layout.elements()) {
@@ -1126,7 +1126,7 @@ auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int
 }
 
 auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
-    auto scene_rect = get_scene_rect_fine(ctx, settings.view_config);
+    auto scene_rect = get_scene_rect_fine(settings.view_config);
 
     constexpr static auto grid_definition = {
         std::tuple {1, monochrome(0xF0), 1},    //
@@ -1194,7 +1194,7 @@ auto render_undirected_output(BLContext& ctx, point_t position, double size,
 auto render_editable_circuit_connection_cache(BLContext& ctx,
                                               const EditableCircuit& editable_circuit,
                                               const RenderSettings& settings) -> void {
-    const auto scene_rect = get_scene_rect(ctx, settings.view_config);
+    const auto scene_rect = get_scene_rect(settings.view_config);
     const auto& caches = editable_circuit.caches();
 
     for (auto [position, orientation] : caches.input_positions_and_orientations()) {
@@ -1228,7 +1228,7 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
     constexpr static auto color = defaults::color_orange;
     constexpr static auto size = 0.25;
 
-    const auto scene_rect = get_scene_rect(ctx, settings.view_config);
+    const auto scene_rect = get_scene_rect(settings.view_config);
 
     for (auto [point, state] : editable_circuit.caches().collision_states()) {
         if (!is_colliding(point, scene_rect)) {
@@ -1286,7 +1286,7 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
 auto render_editable_circuit_selection_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void {
-    const auto scene_rect = get_scene_rect_fine(ctx, settings.view_config);
+    const auto scene_rect = get_scene_rect_fine(settings.view_config);
     ctx.setStrokeStyle(BLRgba32(0, 255, 0));
 
     for (const rect_fine_t& rect : editable_circuit.caches().selection_rects()) {

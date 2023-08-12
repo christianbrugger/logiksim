@@ -1,5 +1,7 @@
 #include "scene.h"
 
+#include "geometry.h"
+
 #include <gsl/gsl>
 
 #include <algorithm>
@@ -38,6 +40,14 @@ auto ViewConfig::device_pixel_ratio() const noexcept -> double {
     return device_pixel_ratio_;
 }
 
+auto ViewConfig::width() const noexcept -> int {
+    return width_;
+}
+
+auto ViewConfig::height() const noexcept -> int {
+    return height_;
+}
+
 auto ViewConfig::set_offset(point_fine_t offset) -> void {
     offset_ = offset;
 }
@@ -50,6 +60,11 @@ auto ViewConfig::set_device_scale(double device_scale) -> void {
 auto ViewConfig::set_device_pixel_ratio(double device_pixel_ratio) -> void {
     device_pixel_ratio_ = device_pixel_ratio;
     update();
+}
+
+auto ViewConfig::set_size(int width, int height) -> void {
+    width_ = width;
+    height_ = height;
 }
 
 auto ViewConfig::stroke_width() const noexcept -> int {
@@ -105,6 +120,21 @@ auto is_representable(line_t line, int dx, int dy) -> bool {
 
 auto is_representable(ordered_line_t line, int dx, int dy) -> bool {
     return is_representable(line_t {line}, dx, dy);
+}
+
+// scene rect
+
+auto get_scene_rect_fine(const ViewConfig &view_config) -> rect_fine_t {
+    return rect_fine_t {
+        from_context_fine(BLPoint {0, 0}, view_config),
+        from_context_fine(BLPoint {gsl::narrow<double>(view_config.width()),
+                                   gsl::narrow<double>(view_config.height())},
+                          view_config),
+    };
+}
+
+auto get_scene_rect(const ViewConfig &view_config) -> rect_t {
+    return to_enclosing_rect(get_scene_rect_fine(view_config));
 }
 
 // device to grid fine
