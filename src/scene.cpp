@@ -134,7 +134,7 @@ auto get_scene_rect_fine(const ViewConfig &view_config) -> rect_fine_t {
 }
 
 auto get_scene_rect(const ViewConfig &view_config) -> rect_t {
-    return to_enclosing_rect(get_scene_rect_fine(view_config));
+    return enclosing_rect(get_scene_rect_fine(view_config));
 }
 
 // device to grid fine

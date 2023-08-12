@@ -122,7 +122,9 @@ class Layout {
     auto update_bounding_rect(element_id_t element_id) const -> void;
 
    private:
-    constexpr static auto empty_bounding_rect = rect_t {point_t {0, 0}, point_t {0, 0}};
+    // if an item is at this position with a zero bounding rect, we recompute it
+    constexpr static auto empty_bounding_rect =
+        rect_t {point_t {-10'000, -10'000}, point_t {-10'000, -10'000}};
 
     using connection_size_t = std::make_unsigned<connection_id_t::value_type>::type;
     static_assert(sizeof(connection_size_t) == sizeof(connection_id_t));

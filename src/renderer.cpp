@@ -1149,37 +1149,13 @@ auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
     }
 }
 
-auto render_background_impl(BLContext& ctx, const RenderSettings& settings) -> void {
+auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
     ctx.setCompOp(BL_COMP_OP_SRC_COPY);
     ctx.setFillStyle(BLRgba32(defaults::color_white.value));
     ctx.fillAll();
 
     draw_background_patterns(ctx, settings);
     draw_grid_space_limit(ctx, settings);
-}
-
-auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
-    ctx.save();
-    auto& layer = settings.layer_surface_background;
-
-    if (layer.enabled) {
-        if (!layer.is_initialized(settings.view_config) ||
-            settings.view_config != settings.last_view_config_) {
-            settings.last_view_config_ = settings.view_config;
-
-            layer.initialize(settings.view_config, context_info(settings));
-            render_background_impl(layer.ctx, settings);
-            layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
-        }
-
-        ctx.setCompOp(BL_COMP_OP_SRC_OVER);
-        ctx.blitImage(BLPointI {0, 0}, layer.image);
-
-    } else {
-        render_background_impl(ctx, settings);
-    }
-
-    ctx.restore();
 }
 
 //

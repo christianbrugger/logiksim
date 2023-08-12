@@ -123,7 +123,7 @@ auto Layout::update_bounding_rect(element_id_t element_id) const -> void {
 
     if (element.is_logic_item()) {
         const auto data = element.to_layout_calculation_data();
-        rect = element_bounding_rect(data);
+        rect = element_collision_rect(data);
     }
 
     else if (element.is_wire()) {

@@ -359,7 +359,7 @@ auto element_selection_rect_rounded(ordered_line_t line) -> rect_fine_t {
 
 auto element_bounding_rect(layout_calculation_data_t data) -> rect_t {
     if (is_logic_item(data.element_type)) {
-        return to_enclosing_rect(element_selection_rect(data));
+        return enclosing_rect(element_selection_rect(data));
     }
     throw_exception("Not supported for other types");
 }

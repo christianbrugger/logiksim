@@ -169,7 +169,7 @@ auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t {
 // rect_t
 //
 
-auto to_enclosing_rect(rect_fine_t rect) -> rect_t {
+auto enclosing_rect(rect_fine_t rect) -> rect_t {
     return rect_t {
         point_t {
             to_floored(rect.p0.x),
@@ -179,6 +179,20 @@ auto to_enclosing_rect(rect_fine_t rect) -> rect_t {
             to_truncated(rect.p1.x),
             to_truncated(rect.p1.y),
         },
+    };
+}
+
+auto enclosing_rect(rect_t a, rect_t b) -> rect_t {
+    return rect_t {
+        point_t {std::min(a.p0.x, b.p0.x), std::min(a.p0.y, b.p0.y)},
+        point_t {std::max(a.p1.x, b.p1.x), std::max(a.p1.y, b.p1.y)},
+    };
+}
+
+auto enclosing_rect(rect_t rect, ordered_line_t line) -> rect_t {
+    return rect_t {
+        point_t {std::min(rect.p0.x, line.p0.x), std::min(rect.p0.y, line.p0.y)},
+        point_t {std::max(rect.p1.x, line.p1.x), std::max(rect.p1.y, line.p1.y)},
     };
 }
 

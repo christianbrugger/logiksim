@@ -13,33 +13,45 @@ namespace logicsim {
 
 struct LayersCache {
     // inserted
-    mutable std::vector<element_id_t> normal_below;
-    mutable std::vector<element_id_t> normal_wires;
-    mutable std::vector<element_id_t> normal_above;
+    std::vector<element_id_t> normal_below;
+    std::vector<element_id_t> normal_wires;
+    std::vector<element_id_t> normal_above;
 
     // uninserted
-    mutable std::vector<element_id_t> uninserted_below;
-    mutable std::vector<segment_info_t> uninserted_wires;
-    mutable std::vector<element_id_t> uninserted_above;
+    std::vector<element_id_t> uninserted_below;
+    std::vector<segment_info_t> uninserted_wires;
+    std::vector<element_id_t> uninserted_above;
 
     // selected & temporary
-    mutable std::vector<element_id_t> selected_logic_items;
-    mutable std::vector<ordered_line_t> selected_wires;
-    mutable std::vector<ordered_line_t> temporary_wires;
+    std::vector<element_id_t> selected_logic_items;
+    std::vector<ordered_line_t> selected_wires;
+    std::vector<ordered_line_t> temporary_wires;
     // valid
-    mutable std::vector<element_id_t> valid_logic_items;
-    mutable std::vector<ordered_line_t> valid_wires;
+    std::vector<element_id_t> valid_logic_items;
+    std::vector<ordered_line_t> valid_wires;
     // colliding
-    mutable std::vector<element_id_t> colliding_logic_items;
-    mutable std::vector<ordered_line_t> colliding_wires;
+    std::vector<element_id_t> colliding_logic_items;
+    std::vector<ordered_line_t> colliding_wires;
 
+   public:
+    std::optional<rect_t> uninserted_bounding_rect;
+    std::optional<rect_t> overlay_bounding_rect;
+
+   public:
     auto format() const -> std::string;
-    auto clear() const -> void;
+    auto clear() -> void;
 
     [[nodiscard]] auto has_inserted() const -> bool;
     [[nodiscard]] auto has_uninserted() const -> bool;
     [[nodiscard]] auto has_overlay() const -> bool;
+
+    auto calculate_overlay_bounding_rect() -> void;
 };
+
+auto update_uninserted_rect(LayersCache& layers, rect_t bounding_rect) -> void;
+auto update_uninserted_rect(LayersCache& layers, ordered_line_t line) -> void;
+auto update_overlay_rect(LayersCache& layers, rect_t bounding_rect) -> void;
+auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void;
 
 struct LayerSurface {
     bool enabled {true};
@@ -57,12 +69,10 @@ struct RenderSettings {
     ViewConfig view_config {};
 
     GlyphCache text {};
-    LayersCache layers {};
+    mutable LayersCache layers {};
 
-    mutable LayerSurface layer_surface_background {.enabled = false};
     mutable LayerSurface layer_surface_uninserted {.enabled = true};
     mutable LayerSurface layer_surface_overlay {.enabled = true};
-    mutable ViewConfig last_view_config_ {};  /// TODO remove
 
     int background_grid_min_distance {10};  // device pixels
     int thread_count {4};

@@ -22,6 +22,10 @@ auto resolve_stroke_width(int stroke_width, const RenderSettings& settings) -> i
 
 }  // namespace
 
+//
+// Layers Cache
+//
+
 auto LayersCache::format() const -> std::string {
     return fmt::format(
         "LayersCache("
@@ -40,6 +44,9 @@ auto LayersCache::format() const -> std::string {
         "\n  valid_wires = {}"
         "\n  colliding_logic_items = {}"
         "\n  colliding_wires = {}"
+        "\n"
+        "\n  uninserted_bounding_rect = {}"
+        "\n  overlay_bounding_rect = {}"
         "\n)",
 
         normal_below,  //
@@ -56,11 +63,14 @@ auto LayersCache::format() const -> std::string {
         valid_logic_items,      //
         valid_wires,            //
         colliding_logic_items,  //
-        colliding_wires         //
+        colliding_wires,        //
+
+        uninserted_bounding_rect,  //
+        overlay_bounding_rect      //
     );
 }
 
-auto LayersCache::clear() const -> void {
+auto LayersCache::clear() -> void {
     normal_below.clear();
     normal_wires.clear();
     normal_above.clear();
@@ -76,6 +86,9 @@ auto LayersCache::clear() const -> void {
     valid_wires.clear();
     colliding_logic_items.clear();
     colliding_wires.clear();
+
+    uninserted_bounding_rect.reset();
+    overlay_bounding_rect.reset();
 }
 
 auto LayersCache::has_inserted() const -> bool {
@@ -99,6 +112,52 @@ auto LayersCache::has_overlay() const -> bool {
            !colliding_logic_items.empty() ||  //
            !colliding_wires.empty();
 }
+
+auto LayersCache::calculate_overlay_bounding_rect() -> void {
+    const auto update = [this](ordered_line_t line) { update_overlay_rect(*this, line); };
+
+    std::ranges::for_each(selected_wires, update);
+    std::ranges::for_each(temporary_wires, update);
+    std::ranges::for_each(valid_wires, update);
+    std::ranges::for_each(colliding_wires, update);
+}
+
+auto update_bounding_rect(std::optional<rect_t>& target, rect_t new_rect) -> void {
+    if (!target) {
+        target = new_rect;
+    } else {
+        *target = enclosing_rect(*target, new_rect);
+    }
+}
+
+auto update_bounding_rect(std::optional<rect_t>& target, ordered_line_t new_line)
+    -> void {
+    if (!target) {
+        target = rect_t {new_line.p0, new_line.p1};
+    } else {
+        *target = enclosing_rect(*target, new_line);
+    }
+}
+
+auto update_uninserted_rect(LayersCache& layers, rect_t bounding_rect) -> void {
+    update_bounding_rect(layers.uninserted_bounding_rect, bounding_rect);
+}
+
+auto update_uninserted_rect(LayersCache& layers, ordered_line_t line) -> void {
+    update_bounding_rect(layers.uninserted_bounding_rect, line);
+}
+
+auto update_overlay_rect(LayersCache& layers, rect_t bounding_rect) -> void {
+    update_bounding_rect(layers.overlay_bounding_rect, bounding_rect);
+}
+
+auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void {
+    update_bounding_rect(layers.overlay_bounding_rect, line);
+}
+
+//
+// Layer Surface
+//
 
 auto LayerSurface::is_initialized(const ViewConfig& config) const -> bool {
     return image.width() == config.width() || image.height() == config.height();

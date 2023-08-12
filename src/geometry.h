@@ -11,75 +11,77 @@ namespace logicsim {
 // grid_t
 //
 
-auto to_rounded(grid_fine_t v) -> grid_t;
-auto to_floored(grid_fine_t v) -> grid_t;
-auto to_truncated(grid_fine_t v) -> grid_t;
+[[nodiscard]] auto to_rounded(grid_fine_t v) -> grid_t;
+[[nodiscard]] auto to_floored(grid_fine_t v) -> grid_t;
+[[nodiscard]] auto to_truncated(grid_fine_t v) -> grid_t;
 
 //
 // line_t
 //
 
-auto is_horizontal(point_t p0, point_t p1) noexcept -> bool;
-auto is_vertical(point_t p0, point_t p1) noexcept -> bool;
+[[nodiscard]] auto is_horizontal(point_t p0, point_t p1) noexcept -> bool;
+[[nodiscard]] auto is_vertical(point_t p0, point_t p1) noexcept -> bool;
 
-auto is_horizontal(line_t line) noexcept -> bool;
-auto is_vertical(line_t line) noexcept -> bool;
+[[nodiscard]] auto is_horizontal(line_t line) noexcept -> bool;
+[[nodiscard]] auto is_vertical(line_t line) noexcept -> bool;
 
-auto is_horizontal(ordered_line_t line) noexcept -> bool;
-auto is_vertical(ordered_line_t line) noexcept -> bool;
+[[nodiscard]] auto is_horizontal(ordered_line_t line) noexcept -> bool;
+[[nodiscard]] auto is_vertical(ordered_line_t line) noexcept -> bool;
 
 // order points within lines
 // auto order_points(line_t line) noexcept -> line_t;
 // order lines and points within lines
 // auto order_points(const line_t line0, const line_t line1) noexcept
 //    -> std::tuple<line_t, line_t>;
-auto order_points(const line_t line0, const line_t line1) noexcept
+[[nodiscard]] auto order_points(const line_t line0, const line_t line1) noexcept
     -> std::tuple<ordered_line_t, ordered_line_t>;
 
-auto distance(part_t part) -> int;
-auto distance(line_t line) -> int;
-auto distance(ordered_line_t line) -> int;
+[[nodiscard]] auto distance(part_t part) -> int;
+[[nodiscard]] auto distance(line_t line) -> int;
+[[nodiscard]] auto distance(ordered_line_t line) -> int;
 
-auto is_endpoint(point_t point, line_t line) -> bool;
-auto is_endpoint(point_t point, ordered_line_t line) -> bool;
+[[nodiscard]] auto is_endpoint(point_t point, line_t line) -> bool;
+[[nodiscard]] auto is_endpoint(point_t point, ordered_line_t line) -> bool;
 
-auto add_unchecked(grid_t grid, int delta) -> grid_t;
-auto add_unchecked(point_t point, int dx, int dy) -> point_t;
-auto add_unchecked(line_t line, int dx, int dy) -> line_t;
-auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t;
+[[nodiscard]] auto add_unchecked(grid_t grid, int delta) -> grid_t;
+[[nodiscard]] auto add_unchecked(point_t point, int dx, int dy) -> point_t;
+[[nodiscard]] auto add_unchecked(line_t line, int dx, int dy) -> line_t;
+[[nodiscard]] auto add_unchecked(ordered_line_t line, int dx, int dy) -> ordered_line_t;
 
 //
 // rect_t
 //
 
-auto to_enclosing_rect(rect_fine_t rect) -> rect_t;
+[[nodiscard]] auto enclosing_rect(rect_fine_t rect) -> rect_t;
+[[nodiscard]] auto enclosing_rect(rect_t a, rect_t b) -> rect_t;
+[[nodiscard]] auto enclosing_rect(rect_t rect, ordered_line_t line) -> rect_t;
 
 //
 // orientation_t
 //
 
 // from p0 to p1
-auto to_orientation(point_t p0, point_t p1) -> orientation_t;
-auto to_orientation_p0(ordered_line_t line) -> orientation_t;
-auto to_orientation_p1(ordered_line_t line) -> orientation_t;
+[[nodiscard]] auto to_orientation(point_t p0, point_t p1) -> orientation_t;
+[[nodiscard]] auto to_orientation_p0(ordered_line_t line) -> orientation_t;
+[[nodiscard]] auto to_orientation_p1(ordered_line_t line) -> orientation_t;
 
 // angle in respect to left orientation
-auto to_angle(orientation_t orientation) -> double;
+[[nodiscard]] auto to_angle(orientation_t orientation) -> double;
 
 //
 // offset_t
 //
 
-auto to_offset(grid_t x, grid_t reference) -> offset_t;
-auto to_grid(offset_t offset, grid_t reference) -> grid_t;
+[[nodiscard]] auto to_offset(grid_t x, grid_t reference) -> offset_t;
+[[nodiscard]] auto to_grid(offset_t offset, grid_t reference) -> grid_t;
 
 //
 // interpolation
 //
 
-auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double;
-auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_select)
-    -> point_fine_t;
+[[nodiscard]] auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double;
+[[nodiscard]] auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1,
+                                       time_t t_select) -> point_fine_t;
 
 //
 // part_t
@@ -200,7 +202,8 @@ auto remove_part(Container &entries, part_t removing) -> void {
 //
 
 template <typename V = offset_t::difference_type>
-auto _get_shifted_part(part_t part, V shifted, V max_end) -> std::optional<part_t> {
+[[nodiscard]] auto _get_shifted_part(part_t part, V shifted, V max_end)
+    -> std::optional<part_t> {
     const auto begin = V {part.begin.value} + shifted;
     const auto end = std::min(V {part.end.value} + shifted, max_end);
 
@@ -213,7 +216,8 @@ auto _get_shifted_part(part_t part, V shifted, V max_end) -> std::optional<part_
 
 template <typename Container = std::vector<part_t>>
 auto _add_intersecting_parts(const Container &source_entries,
-                             Container &destination_entries, part_t part_destination) {
+                             Container &destination_entries, part_t part_destination)
+    -> void {
     using V = offset_t::difference_type;
 
     auto shifted = V {part_destination.begin.value};
@@ -249,8 +253,8 @@ auto copy_parts(const Container &source_entries, Container &destination_entries,
 
 template <typename Container = std::vector<part_t>>
 auto _add_intersecting_parts(const Container &source_entries,
-                             Container &destination_entries,
-                             part_copy_definition_t parts) {
+                             Container &destination_entries, part_copy_definition_t parts)
+    -> void {
     if (distance(parts.destination) != distance(parts.source)) {
         throw_exception("source and destination need to have the same size");
     }

@@ -18,11 +18,15 @@
 
 namespace logicsim {
 
+class SegmentTree;
+
 [[nodiscard]] auto order_points(segment_info_t segment0, segment_info_t segment1)
     -> std::tuple<segment_info_t, segment_info_t>;
 [[nodiscard]] auto adjust(segment_info_t segment, part_t part) -> segment_info_t;
 [[nodiscard]] auto merge_touching(const segment_info_t segment_info_0,
                                   const segment_info_t segment_info_1) -> segment_info_t;
+
+[[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
 
 namespace detail::segment_tree {
 using index_t = std::make_unsigned_t<segment_index_t::value_type>;
@@ -168,9 +172,6 @@ inline auto calculate_normal_lines(const SegmentTree &tree) {
 
 auto calculate_connected_segments_mask(const SegmentTree &tree, point_t p0)
     -> boost::container::vector<bool>;
-
-auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
-
 }  // namespace logicsim
 
 #endif
