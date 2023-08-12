@@ -40,7 +40,6 @@ struct LayersCache {
 struct Layer {
     BLImage image;
     BLContext ctx;
-    BLRect rect;
 
     auto initialize(const ViewConfig& config, const BLContextCreateInfo& info) -> void;
 };

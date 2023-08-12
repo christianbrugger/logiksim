@@ -82,8 +82,6 @@ auto Layer::initialize(const ViewConfig& config, const BLContextCreateInfo& info
     -> void {
     if (image.width() != config.width() || image.height() != config.height()) {
         image = BLImage {config.width(), config.height(), BL_FORMAT_PRGB32};
-        rect = BLRect {0, 0, gsl::narrow<double>(image.width()),
-                       gsl::narrow<double>(image.height())};
 
         ctx.begin(image, info);
     }
@@ -326,11 +324,16 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
     const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
     const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
 
-    const auto w_ = x1 - x0;
-    const auto h_ = y1 - y0;
+    auto w = x1 - x0;
+    auto h = y1 - y0;
 
-    const auto w = w_ == 0 ? 1.0 : w_;
-    const auto h = h_ == 0 ? 1.0 : h_;
+    if (attributes.draw_type == DrawType::fill) {
+        ++w;
+        ++h;
+    }
+
+    w = w == 0 ? 1.0 : w;
+    h = h == 0 ? 1.0 : h;
 
     if (attributes.draw_type == DrawType::fill ||
         attributes.draw_type == DrawType::fill_and_stroke) {

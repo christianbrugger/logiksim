@@ -195,8 +195,27 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
         }
     };
 
-    return defaults::color_blue;
+    throw_exception("unknown shadow type");
 }
+
+// auto shadow_color(shadow_t shadow_type) -> color_t {
+//     switch (shadow_type) {
+//         case shadow_t::selected: {
+//             // BLRgba32(0, 128, 255, 96);
+//             return color_t {0xFF0080FF};
+//         }
+//         case shadow_t::valid: {
+//             // BLRgba32(0, 192, 0, 96);
+//             return color_t {0xFF00C000};
+//         }
+//         case shadow_t::colliding: {
+//             // BLRgba32(255, 0, 0, 96);
+//             return color_t {0xFFFF0000};
+//         }
+//     };
+//
+//     throw_exception("unknown shadow type");
+// }
 
 auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
                             shadow_t shadow_type, const RenderSettings& settings)
@@ -252,27 +271,30 @@ auto render_overlay_impl(BLContext& ctx, const Layout& layout,
                             settings);
     draw_wire_shadows(ctx, cache.selected_wires, shadow_t::selected, settings);
     draw_wire_shadows(ctx, cache.temporary_wires, shadow_t::selected, settings);
+
     // valid
     draw_logic_item_shadows(ctx, layout, cache.valid_logic_items, shadow_t::valid,
                             settings);
     draw_wire_shadows(ctx, cache.valid_wires, shadow_t::valid, settings);
+
     // colliding
     draw_logic_item_shadows(ctx, layout, cache.colliding_logic_items, shadow_t::colliding,
                             settings);
     draw_wire_shadows(ctx, cache.colliding_wires, shadow_t::colliding, settings);
 }
 
-auto render_overlay_layers(BLContext& target_ctx, const Layout& layout,
-                           const RenderSettings& settings) -> void {
+auto render_overlay(BLContext& target_ctx, const Layout& layout,
+                    const RenderSettings& settings) -> void {
     if (settings.separate_layer) {
         Layer& layer = settings.layer_overlay;
         layer.initialize(settings.view_config, context_info(settings));
 
         layer.ctx.clearAll();
+        layer.ctx.setCompOp(BL_COMP_OP_SRC_COPY);
         render_overlay_impl(layer.ctx, layout, settings);
 
         layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
-        target_ctx.blitImage(layer.rect, layer.image);
+        target_ctx.blitImage(BLPointI {0, 0}, layer.image);
     } else {
         render_overlay_impl(target_ctx, layout, settings);
     }
@@ -294,8 +316,7 @@ auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& s
     draw_wires(ctx, layers.uninserted_wires, settings);
     draw_logic_items(ctx, layout, layers.uninserted_above, settings);
 
-    // TODO draw to second layer
-    render_overlay_layers(ctx, layout, settings);
+    render_overlay(ctx, layout, settings);
 }
 
 auto render_circuit_2(BLContext& ctx, render_args_t args) -> void {
