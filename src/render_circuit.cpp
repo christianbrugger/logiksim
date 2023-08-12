@@ -88,9 +88,7 @@ auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
     const auto data = to_layout_calculation_data(element.layout(), element);
     const auto selection_rect = element_selection_rect(data);
 
-    const auto color = shadow_color(shadow_type);
-    ctx.setFillStyle(BLRgba32(color.value));
-
+    ctx.setFillStyle(shadow_color(shadow_type));
     draw_round_rect(ctx, selection_rect,
                     {
                         .draw_type = DrawType::fill,
@@ -252,10 +250,6 @@ auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& s
         const auto rect = get_dirty_rect(settings.layers.uninserted_bounding_rect.value(),
                                          settings.view_config);
 
-        // ctx.setFillStyle(BLRgba32 {0xFF000000});
-        // ctx.fillRect(rect);
-        // print(rect.x, rect.y, rect.h, rect.w);
-
         render_to_layer(ctx, settings.layer_surface_uninserted, rect, settings,
                         [&](BLContext& layer_ctx) {
                             render_uninserted(layer_ctx, layout, settings);
@@ -265,10 +259,6 @@ auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& s
     if (settings.layers.overlay_bounding_rect.has_value()) {
         const auto rect = get_dirty_rect(settings.layers.overlay_bounding_rect.value(),
                                          settings.view_config);
-
-        // ctx.setFillStyle(BLRgba32 {0xFF000000});
-        // ctx.fillRect(rect);
-        // print(rect.x, rect.y, rect.h, rect.w);
 
         render_to_layer(
             ctx, settings.layer_surface_overlay, rect, settings,

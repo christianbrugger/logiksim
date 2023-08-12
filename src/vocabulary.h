@@ -375,6 +375,14 @@ struct color_t {
     using value_type = uint32_t;
     value_type value;
 
+    color_t() = default;
+
+    constexpr explicit color_t(uint32_t value_) noexcept : value {value_} {}
+
+    constexpr explicit color_t(uint32_t r, uint32_t g, uint32_t b,
+                               uint32_t a = 0xFFu) noexcept
+        : value((r << 16) | (g << 8) | b | (a << 24)) {}
+
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const color_t &other) const -> bool = default;
@@ -400,6 +408,8 @@ struct color_t {
 };
 
 namespace defaults {
+constexpr static inline auto no_color = ::logicsim::color_t {0x00000000};
+
 constexpr static inline auto color_black = ::logicsim::color_t {0xFF000000};
 constexpr static inline auto color_white = ::logicsim::color_t {0xFFFFFFFF};
 constexpr static inline auto color_light_gray = ::logicsim::color_t {0xFFD3D3D3};
@@ -516,10 +526,10 @@ struct point_fine_t {
 
     point_fine_t() = default;
 
-    [[nodiscard]] explicit constexpr point_fine_t(grid_fine_t x_, grid_fine_t y_) noexcept
+    [[nodiscard]] constexpr point_fine_t(grid_fine_t x_, grid_fine_t y_) noexcept
         : x {x_}, y {y_} {}
 
-    [[nodiscard]] explicit constexpr point_fine_t(grid_t x_, grid_t y_) noexcept
+    [[nodiscard]] constexpr point_fine_t(grid_t x_, grid_t y_) noexcept
         : x {grid_fine_t {x_}}, y {grid_fine_t {y_}} {}
 
     [[nodiscard]] explicit constexpr point_fine_t(point_t point) noexcept;

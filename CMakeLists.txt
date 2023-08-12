@@ -35,6 +35,7 @@ set(LS_CORE_SOURCES
     src/random.cpp
     src/renderer.cpp
     src/render_circuit.cpp
+    src/render_element.cpp
     src/render_generic.cpp
     src/scene.cpp
     src/schematic.cpp
