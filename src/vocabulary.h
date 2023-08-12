@@ -365,6 +365,12 @@ static_assert(sizeof(logic_small_vector_t) == 24);
 // Styling Types
 //
 
+}  // namespace logicsim
+
+struct BLRgba32;
+
+namespace logicsim {
+
 struct color_t {
     using value_type = uint32_t;
     value_type value;
@@ -389,6 +395,8 @@ struct color_t {
     [[nodiscard]] constexpr auto a() const noexcept -> int {
         return (value >> 24);
     }
+
+    [[nodiscard]] operator BLRgba32() const noexcept;
 };
 
 namespace defaults {

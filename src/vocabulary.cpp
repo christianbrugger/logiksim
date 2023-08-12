@@ -1,5 +1,7 @@
 #include "vocabulary.h"
 
+#include <blend2d/rgba.h>
+
 namespace logicsim {
 
 template <>
@@ -218,6 +220,10 @@ auto time_rate_t::format() const -> std::string {
 
 auto color_t::format() const -> std::string {
     return fmt::format("{:X}", value);
+}
+
+color_t::operator BLRgba32() const noexcept {
+    return BLRgba32 {value};
 }
 
 auto grid_t::format() const -> std::string {

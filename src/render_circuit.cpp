@@ -188,13 +188,13 @@ auto render_overlay(BLContext& ctx, const Layout& layout, const RenderSettings& 
 }
 
 template <typename Func>
-auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI rect,
+auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
                      const RenderSettings& settings, Func render_func) -> void {
     target_ctx.save();
 
     if (layer.enabled) {
         layer.initialize(settings.view_config, context_info(settings));
-        layer.ctx.clearRect(rect);
+        layer.ctx.clearRect(dirty_rect);
 
         {
             layer.ctx.save();
@@ -204,7 +204,7 @@ auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI rect,
 
         layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
         target_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
-        target_ctx.blitImage(rect, layer.image, rect);
+        target_ctx.blitImage(dirty_rect, layer.image, dirty_rect);
     } else {
         render_func(target_ctx);
     }
