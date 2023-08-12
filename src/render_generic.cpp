@@ -78,11 +78,36 @@ auto LayersCache::clear() const -> void {
     colliding_wires.clear();
 }
 
-auto Layer::initialize(const ViewConfig& config, const BLContextCreateInfo& info)
-    -> void {
-    if (image.width() != config.width() || image.height() != config.height()) {
-        image = BLImage {config.width(), config.height(), BL_FORMAT_PRGB32};
+auto LayersCache::has_inserted() const -> bool {
+    return !normal_below.empty() ||  //
+           !normal_wires.empty() ||  //
+           !normal_above.empty();
+}
 
+auto LayersCache::has_uninserted() const -> bool {
+    return !uninserted_below.empty() ||  //
+           !uninserted_wires.empty() ||  //
+           !uninserted_above.empty();
+}
+
+auto LayersCache::has_overlay() const -> bool {
+    return !selected_logic_items.empty() ||   //
+           !selected_wires.empty() ||         //
+           !temporary_wires.empty() ||        //
+           !valid_logic_items.empty() ||      //
+           !valid_wires.empty() ||            //
+           !colliding_logic_items.empty() ||  //
+           !colliding_wires.empty();
+}
+
+auto LayerSurface::is_initialized(const ViewConfig& config) const -> bool {
+    return image.width() == config.width() || image.height() == config.height();
+}
+
+auto LayerSurface::initialize(const ViewConfig& config, const BLContextCreateInfo& info)
+    -> void {
+    if (!is_initialized(config)) {
+        image = BLImage {config.width(), config.height(), BL_FORMAT_PRGB32};
         ctx.begin(image, info);
     }
 }

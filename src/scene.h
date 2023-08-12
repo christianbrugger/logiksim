@@ -16,6 +16,9 @@ class ViewConfig {
    public:
     ViewConfig();
 
+    [[nodiscard]] auto operator==(const ViewConfig& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const ViewConfig& other) const = default;
+
     auto format() const -> std::string;
 
     [[nodiscard]] auto offset() const noexcept -> point_fine_t;

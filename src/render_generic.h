@@ -35,28 +35,37 @@ struct LayersCache {
 
     auto format() const -> std::string;
     auto clear() const -> void;
+
+    [[nodiscard]] auto has_inserted() const -> bool;
+    [[nodiscard]] auto has_uninserted() const -> bool;
+    [[nodiscard]] auto has_overlay() const -> bool;
 };
 
-struct Layer {
-    BLImage image;
-    BLContext ctx;
+struct LayerSurface {
+    bool enabled {true};
+    BLImage image {};
+    BLContext ctx {};
 
+    auto is_initialized(const ViewConfig& config) const -> bool;
     auto initialize(const ViewConfig& config, const BLContextCreateInfo& info) -> void;
 };
 
 // TODO think about const behavior?
-// TODO rename to RenderCache ?
+// TODO rename settings to RenderCache ?
 // TODO maybe make glyph cache a pointer - to remove dependency
 struct RenderSettings {
     ViewConfig view_config {};
 
     GlyphCache text {};
     LayersCache layers {};
-    mutable Layer layer_overlay;
+
+    mutable LayerSurface layer_surface_background {.enabled = false};
+    mutable LayerSurface layer_surface_uninserted {.enabled = true};
+    mutable LayerSurface layer_surface_overlay {.enabled = true};
+    mutable ViewConfig last_view_config_ {};  /// TODO remove
 
     int background_grid_min_distance {10};  // device pixels
     int thread_count {4};
-    bool separate_layer {true};
 
     auto format() const -> std::string;
 };
