@@ -350,6 +350,39 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
     }
 }
 
+auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
+                     const RenderSettings& settings) -> void {
+    const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
+    const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
+
+    auto w = x1 - x0;
+    auto h = y1 - y0;
+
+    if (attributes.draw_type == DrawType::fill) {
+        ++w;
+        ++h;
+    }
+
+    w = w == 0 ? 1.0 : w;
+    h = h == 0 ? 1.0 : h;
+
+    const auto r = attributes.rounding >= 0 ? attributes.rounding : std::min(w, h) / 2;
+
+    if (attributes.draw_type == DrawType::fill ||
+        attributes.draw_type == DrawType::fill_and_stroke) {
+        ctx.fillRoundRect(x0, y0, w, h, r);
+    }
+
+    if (attributes.draw_type == DrawType::stroke ||
+        attributes.draw_type == DrawType::fill_and_stroke) {
+        const auto width = resolve_stroke_width(attributes.stroke_width, settings);
+        const auto offset = stroke_offset(width);
+
+        ctx.setStrokeWidth(width);
+        ctx.strokeRoundRect(x0 + offset, y0 + offset, w, h, r);
+    }
+}
+
 //
 // Circuit Primitives
 //

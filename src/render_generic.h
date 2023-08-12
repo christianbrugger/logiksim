@@ -161,6 +161,15 @@ struct RectAttributes {
 auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
                const RenderSettings& settings) -> void;
 
+struct RoundRectAttributes {
+    DrawType draw_type {DrawType::fill_and_stroke};
+    int stroke_width {defaults::view_config_width};
+    double rounding {-1};
+};
+
+auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
+                     const RenderSettings& settings) -> void;
+
 //
 // Circuit Primitives
 //

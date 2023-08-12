@@ -21,6 +21,7 @@ namespace logicsim {
 [[nodiscard]] auto element_collision_rect(layout_calculation_data_t data) -> rect_t;
 [[nodiscard]] auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t;
 [[nodiscard]] auto element_selection_rect(ordered_line_t line) -> rect_fine_t;
+[[nodiscard]] auto element_selection_rect_rounded(ordered_line_t line) -> rect_fine_t;
 [[nodiscard]] auto element_bounding_rect(layout_calculation_data_t data) -> rect_t;
 
 [[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;

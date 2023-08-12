@@ -5,6 +5,8 @@
 #include "layout_calculations.h"
 #include "timer.h"
 
+#include <numbers>
+
 namespace logicsim {
 
 template <>
@@ -198,25 +200,6 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
     throw_exception("unknown shadow type");
 }
 
-// auto shadow_color(shadow_t shadow_type) -> color_t {
-//     switch (shadow_type) {
-//         case shadow_t::selected: {
-//             // BLRgba32(0, 128, 255, 96);
-//             return color_t {0xFF0080FF};
-//         }
-//         case shadow_t::valid: {
-//             // BLRgba32(0, 192, 0, 96);
-//             return color_t {0xFF00C000};
-//         }
-//         case shadow_t::colliding: {
-//             // BLRgba32(255, 0, 0, 96);
-//             return color_t {0xFFFF0000};
-//         }
-//     };
-//
-//     throw_exception("unknown shadow type");
-// }
-
 auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
                             shadow_t shadow_type, const RenderSettings& settings)
     -> void {
@@ -243,11 +226,38 @@ auto draw_wire_shadows(BLContext& ctx, std::span<const ordered_line_t> lines,
     ctx.setFillStyle(BLRgba32(color.value));
 
     for (auto line : lines) {
-        const auto selection_rect = element_selection_rect(line);
-        draw_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+        const auto selection_rect = element_selection_rect_rounded(line);
+        draw_round_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+
+        /*
+        auto rect0 = to_context(selection_rect.p0, settings.view_config);
+        auto rect1 = to_context(selection_rect.p1, settings.view_config);
+
+        BLPoint p0;
+        BLPoint p1;
+        double r;
+
+        if (is_horizontal(line)) {
+            p0.x = rect0.x + 0.5;
+            p1.x = rect1.x + 0.5;
+
+            p0.y = p1.y = (rect0.y + rect1.y + 1) / 2;
+            r = (rect1.y - rect0.y + 1) / 2;
+        } else {
+            p0.y = rect0.y + 0.5;
+            p1.y = rect1.y + 0.5;  // 0.5;
+
+            p0.x = p1.x = (rect0.x + rect1.x + 1) / 2;
+            r = (rect1.x - rect0.x + 1) / 2;
+        }
+
+        ctx.fillCircle(BLCircle(p0.x, p0.y, r));
+        ctx.fillCircle(BLCircle(p1.x, p1.y, r));
+        */
     }
 }
 
+/*
 auto draw_wire_shadows(BLContext& ctx, const Layout& layout,
                        std::span<const element_id_t> elements, shadow_t shadow_type,
                        const RenderSettings& settings) -> void {
@@ -261,6 +271,7 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout,
         }
     }
 }
+*/
 
 auto render_overlay_impl(BLContext& ctx, const Layout& layout,
                          const RenderSettings& settings) -> void {

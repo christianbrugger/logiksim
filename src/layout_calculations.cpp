@@ -325,24 +325,36 @@ auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t {
 }
 
 auto element_selection_rect(ordered_line_t line) -> rect_fine_t {
-    constexpr auto width = grid_fine_t {0.3};
+    constexpr auto padding = grid_fine_t {0.3};
 
     const auto p0 = point_fine_t {line.p0};
     const auto p1 = point_fine_t {line.p1};
 
     if (is_horizontal(line)) {
         return rect_fine_t {
-            point_fine_t {p0.x, p0.y - width},
-            point_fine_t {p1.x, p1.y + width},
+            point_fine_t {p0.x, p0.y - padding},
+            point_fine_t {p1.x, p1.y + padding},
         };
     }
     if (is_vertical(line)) {
         return rect_fine_t {
-            point_fine_t {p0.x - width, p0.y},
-            point_fine_t {p1.x + width, p1.y},
+            point_fine_t {p0.x - padding, p0.y},
+            point_fine_t {p1.x + padding, p1.y},
         };
     }
     return rect_fine_t {p0, p1};
+}
+
+auto element_selection_rect_rounded(ordered_line_t line) -> rect_fine_t {
+    constexpr auto padding = grid_fine_t {0.3};
+
+    const auto p0 = point_fine_t {line.p0};
+    const auto p1 = point_fine_t {line.p1};
+
+    return rect_fine_t {
+        point_fine_t {p0.x - padding, p0.y - padding},
+        point_fine_t {p1.x + padding, p1.y + padding},
+    };
 }
 
 auto element_bounding_rect(layout_calculation_data_t data) -> rect_t {
