@@ -11,7 +11,7 @@
 namespace logicsim {
 
 //
-// Logic Items
+// Logic Items Generics
 //
 
 auto draw_logic_item_above(ElementType type) -> bool {
@@ -98,16 +98,54 @@ auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement
               settings);
 }
 
+auto draw_logic_item_text(BLContext& ctx, point_fine_t point, std::string label,
+                          layout::ConstElement element, const ElementDrawState state,
+                          const RenderSettings& settings) {
+    const auto center = point + point_fine_t {element.position()};
+
+    draw_text(ctx, center, label,
+              TextAttributes {
+                  .font_size = defaults::logic_item_label_size,
+                  .fill_color = get_logic_item_stroke_color(state),
+                  .horizontal_alignment = HorizontalAlignment::center,
+                  .vertical_alignment = VerticalAlignment::center,
+                  .cuttoff_size_px = defaults::logic_item_label_cutoff_px,
+              },
+              settings);
+}
+
+//
+// Standard Element
+//
+
+auto standard_element_label(layout::ConstElement element) -> std::string {
+    switch (element.element_type()) {
+        using enum ElementType;
+
+        case and_element:
+            return "&";
+        case or_element:
+            return ">1";
+        case xor_element:
+            return "=1";
+
+        default:
+            throw_exception("unknown standard element");
+    }
+}
+
 auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
                            ElementDrawState state, const RenderSettings& settings)
     -> void {
-    const auto element_height = std::max(element.input_count(), element.output_count());
+    const auto element_height =
+        std::max(element.input_count(), element.output_count()) - 1;
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {point_fine_t {0., -padding},
-                                   point_fine_t {2., element_height - 1 + padding}};
+                                   point_fine_t {2., element_height + padding}};
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
-    // draw_logic_item_text(ctx, point_fine_t {1., 1.}, element, state, settings);
+    draw_logic_item_text(ctx, point_fine_t {1., element_height / 2.0},
+                         standard_element_label(element), element, state, settings);
 }
 
 auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,

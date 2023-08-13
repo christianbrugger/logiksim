@@ -17,7 +17,7 @@ struct RenderSettings;
 
 namespace defaults {
 constexpr inline static auto use_view_config_stroke_width = int {-1};
-}
+}  // namespace defaults
 
 //
 // Element Draw State
@@ -263,6 +263,24 @@ struct RoundRectAttributes {
 
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
                      const RenderSettings& settings) -> void;
+
+//
+// Text
+//
+
+struct TextAttributes {
+    double font_size {1.0};  // grid size
+    color_t fill_color {defaults::no_color};
+
+    HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};
+    VerticalAlignment vertical_alignment {VerticalAlignment::baseline};
+
+    // don't render, if converted font size is smaller
+    double cuttoff_size_px {3.0};  // pixels
+};
+
+auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
+               TextAttributes attributes, const RenderSettings& settings) -> void;
 
 //
 // Circuit Primitives

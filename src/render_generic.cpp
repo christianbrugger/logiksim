@@ -650,6 +650,27 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 }
 
 //
+// Text
+//
+
+auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
+               TextAttributes attributes, const RenderSettings& settings) -> void {
+    const auto font_size_px = attributes.font_size * settings.view_config.pixel_scale();
+    if (font_size_px < attributes.cuttoff_size_px) {
+        return;
+    }
+
+    if (attributes.fill_color != defaults::no_color) {
+        ctx.setFillStyle(attributes.fill_color);
+    }
+    const auto position_px = to_context(position, settings.view_config);
+
+    settings.text.draw_text(ctx, position_px, font_size_px, text,
+                            attributes.horizontal_alignment,
+                            attributes.vertical_alignment);
+}
+
+//
 // Circuit Primitives
 //
 
