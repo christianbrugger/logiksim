@@ -20,8 +20,48 @@ constexpr inline static auto use_view_config_stroke_width = int {-1};
 }
 
 //
+// Element Draw State
+//
+
+enum class ElementDrawState {
+    // inserted
+    normal,
+    normal_selected,
+    valid,
+    simulated,
+
+    // uninserted
+    colliding,
+    temporary_selected,
+};
+
+template <>
+auto format(ElementDrawState) -> std::string;
+
+[[nodiscard]] auto is_inserted(ElementDrawState state) noexcept -> bool;
+
+[[nodiscard]] auto has_overlay(ElementDrawState state) noexcept -> bool;
+
+//
+// Drawable Element
+//
+
+struct DrawableElement {
+    element_id_t element_id;
+    ElementDrawState state;
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const DrawableElement& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const DrawableElement& other) const = default;
+};
+
+static_assert(sizeof(DrawableElement) == 8);
+
+//
 // Layer Surface
 //
+
 struct LayerSurface {
     bool enabled {true};
     BLImage image {};
@@ -43,14 +83,14 @@ auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_r
 
 struct LayersCache {
     // inserted
-    std::vector<element_id_t> normal_below;
+    std::vector<DrawableElement> normal_below;
     std::vector<element_id_t> normal_wires;
-    std::vector<element_id_t> normal_above;
+    std::vector<DrawableElement> normal_above;
 
     // uninserted
-    std::vector<element_id_t> uninserted_below;
+    std::vector<DrawableElement> uninserted_below;
     std::vector<segment_info_t> uninserted_wires;
-    std::vector<element_id_t> uninserted_above;
+    std::vector<DrawableElement> uninserted_above;
 
     // selected & temporary
     std::vector<element_id_t> selected_logic_items;

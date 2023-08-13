@@ -388,19 +388,19 @@ struct color_t {
     [[nodiscard]] auto operator==(const color_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const color_t &other) const = default;
 
-    [[nodiscard]] constexpr auto r() const noexcept -> int {
+    [[nodiscard]] constexpr auto r() const noexcept -> uint32_t {
         return (value >> 16) & 0xFFu;
     }
 
-    [[nodiscard]] constexpr auto g() const noexcept -> int {
+    [[nodiscard]] constexpr auto g() const noexcept -> uint32_t {
         return (value >> 8) & 0xFFu;
     }
 
-    [[nodiscard]] constexpr auto b() const noexcept -> int {
+    [[nodiscard]] constexpr auto b() const noexcept -> uint32_t {
         return (value >> 0) & 0xFFu;
     }
 
-    [[nodiscard]] constexpr auto a() const noexcept -> int {
+    [[nodiscard]] constexpr auto a() const noexcept -> uint32_t {
         return (value >> 24);
     }
 

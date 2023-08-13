@@ -11,42 +11,11 @@
 namespace logicsim {
 
 //
-// Element Draw State
+// Logic Items
 //
 
-template <>
-auto format(ElementDrawState state) -> std::string {
-    switch (state) {
-        using enum ElementDrawState;
-
-        case normal:
-            return "normal";
-        case normal_selected:
-            return "normal_selected";
-        case valid:
-            return "valid";
-        case simulated:
-            return "simulated";
-
-        case colliding:
-            return "colliding";
-        case temporary_selected:
-            return "temporary_selected";
-    }
-
-    throw_exception("cannot convert ElementDrawState to string");
-}
-
-auto is_inserted(ElementDrawState state) noexcept -> bool {
-    using enum ElementDrawState;
-    return state == normal || state == normal_selected || state == valid ||
-           state == simulated;
-}
-
-auto has_overlay(ElementDrawState state) noexcept -> bool {
-    using enum ElementDrawState;
-    return state == normal_selected || state == valid || state == colliding ||
-           state == temporary_selected;
+auto draw_logic_item_above(ElementType type) -> bool {
+    return type == ElementType::button;
 }
 
 auto get_logic_item_state(layout::ConstElement element, const Selection* selection)
@@ -75,45 +44,56 @@ auto get_logic_item_state(layout::ConstElement element, const Selection* selecti
     }
 }
 
-//
-// Logic Items
-//
-
-auto get_logic_item_base_color(ElementDrawState state) -> color_t {
+auto get_logic_item_fill_color(ElementDrawState state) -> color_t {
     switch (state) {
         using enum ElementDrawState;
 
         case normal:
-            return defaults::body_color_normal;
+            return defaults::body_fill_color::normal;
         case normal_selected:
-            return defaults::body_color_selected;
+            return defaults::body_fill_color::normal_selected;
         case valid:
-            return defaults::body_color_normal;
+            return defaults::body_fill_color::valid;
         case simulated:
-            return defaults::body_color_normal;
+            return defaults::body_fill_color::normal;
         case colliding:
-            return defaults::body_color_uninserted;
+            return defaults::body_fill_color::colliding;
         case temporary_selected:
-            return defaults::body_color_uninserted;
+            return defaults::body_fill_color::temporary_selected;
     };
 
     throw_exception("draw state has no logic item base color");
 }
 
-auto draw_logic_item_above(ElementType type) -> bool {
-    return type == ElementType::button;
+auto get_logic_item_stroke_color(ElementDrawState state) -> color_t {
+    switch (state) {
+        using enum ElementDrawState;
+
+        case normal:
+        case normal_selected:
+        case valid:
+        case simulated:
+            return defaults::body_stroke_color::normal;
+
+        case colliding:
+            return defaults::body_stroke_color::colliding;
+        case temporary_selected:
+            return defaults::body_stroke_color::temporary_selected;
+    };
+
+    throw_exception("draw state has no logic item base color");
 }
 
 auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement element,
-                          ElementDrawState state, const RenderSettings& settings)
+                          const ElementDrawState state, const RenderSettings& settings)
     -> void {
     const auto final_rect = rect + point_fine_t {element.position()};
 
     draw_rect(ctx, final_rect,
               RectAttributes {
                   .draw_type = DrawType::fill_and_stroke,
-                  .fill_color = get_logic_item_base_color(state),
-                  .stroke_color = defaults::body_stroke_color,
+                  .fill_color = get_logic_item_fill_color(state),
+                  .stroke_color = get_logic_item_stroke_color(state),
               },
               settings);
 }
@@ -127,6 +107,7 @@ auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
                                    point_fine_t {2., element_height - 1 + padding}};
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
+    // draw_logic_item_text(ctx, point_fine_t {1., 1.}, element, state, settings);
 }
 
 auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
@@ -178,11 +159,12 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
     -> void {}
 
 auto draw_logic_items(BLContext& ctx, const Layout& layout,
-                      std::span<const element_id_t> elements, ElementDrawState state,
+                      std::span<const DrawableElement> elements,
                       const RenderSettings& settings) -> void {
-    for (const auto element_id : elements) {
-        draw_logic_item(ctx, layout.element(element_id), false, settings);
-        // draw_logic_item_base(ctx, layout.element(element_id), state, settings);
+    for (const auto entry : elements) {
+        // draw_logic_item(ctx, layout.element(element_id), false, settings);
+        draw_logic_item_base(ctx, layout.element(entry.element_id), entry.state,
+                             settings);
     }
 }
 
@@ -295,11 +277,9 @@ auto render_inserted(BLContext& ctx, const Layout& layout,
 
     ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    draw_logic_items(ctx, layout, layers.normal_below, ElementDrawState::normal,
-                     settings);
+    draw_logic_items(ctx, layout, layers.normal_below, settings);
     draw_wires(ctx, layout, layers.normal_wires, settings);
-    draw_logic_items(ctx, layout, layers.normal_above, ElementDrawState::normal,
-                     settings);
+    draw_logic_items(ctx, layout, layers.normal_above, settings);
 }
 
 auto render_uninserted(BLContext& ctx, const Layout& layout,
@@ -312,11 +292,9 @@ auto render_uninserted(BLContext& ctx, const Layout& layout,
         ctx.setCompOp(BL_COMP_OP_SRC_OVER);
     }
 
-    draw_logic_items(ctx, layout, layers.uninserted_below, ElementDrawState::normal,
-                     settings);
+    draw_logic_items(ctx, layout, layers.uninserted_below, settings);
     draw_wires(ctx, layers.uninserted_wires, settings);
-    draw_logic_items(ctx, layout, layers.uninserted_above, ElementDrawState::normal,
-                     settings);
+    draw_logic_items(ctx, layout, layers.uninserted_above, settings);
 }
 
 auto render_overlay(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
@@ -430,17 +408,17 @@ auto insert_logic_item(LayersCache& layers, element_id_t element_id,
                        ElementDrawState state) -> void {
     if (is_inserted(state)) {
         if (draw_logic_item_above(element_type)) {
-            layers.normal_above.push_back(element_id);
+            layers.normal_above.push_back({element_id, state});
         } else {
-            layers.normal_below.push_back(element_id);
+            layers.normal_below.push_back({element_id, state});
         }
     } else {
         update_uninserted_rect(layers, bounding_rect);
 
         if (draw_logic_item_above(element_type)) {
-            layers.uninserted_above.push_back(element_id);
+            layers.uninserted_above.push_back({element_id, state});
         } else {
-            layers.uninserted_below.push_back(element_id);
+            layers.uninserted_below.push_back({element_id, state});
         }
     }
 

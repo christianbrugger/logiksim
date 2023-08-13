@@ -25,10 +25,19 @@ namespace defaults {
 constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
 constexpr static inline auto button_body_overdraw = 0.5;      // grid values
 
-constexpr static inline auto body_color_normal = color_t {255, 255, 128};
-constexpr static inline auto body_color_selected = color_t {224, 224, 224};
-constexpr static inline auto body_color_uninserted = color_t {192, 192, 192};
-constexpr static inline auto body_stroke_color = defaults::color_black;
+namespace body_fill_color {
+constexpr static inline auto normal = color_t {255, 255, 128, 255};
+constexpr static inline auto normal_selected = color_t {224, 224, 224, 255};
+constexpr static inline auto valid = color_t {192, 192, 192, 255};
+constexpr static inline auto colliding = color_t {192, 192, 192, 64};
+constexpr static inline auto temporary_selected = color_t {192, 192, 192, 128};
+}  // namespace body_fill_color
+
+namespace body_stroke_color {
+constexpr static inline auto normal = color_t {0, 0, 0, 255};
+constexpr static inline auto colliding = color_t {0, 0, 0, 64};
+constexpr static inline auto temporary_selected = color_t {0, 0, 0, 128};
+}  // namespace body_stroke_color
 
 constexpr static inline auto overlay_selected = color_t {0, 128, 255, 96};
 constexpr static inline auto overlay_valid = color_t {0, 192, 0, 96};
@@ -37,41 +46,19 @@ constexpr static inline auto overlay_colliding = color_t {255, 0, 0, 96};
 }  // namespace defaults
 
 //
-// Element Draw State
-//
-
-enum class ElementDrawState {
-    // inserted
-    normal,
-    normal_selected,
-    valid,
-    simulated,
-
-    // uninserted
-    colliding,
-    temporary_selected,
-};
-
-template <>
-auto format(ElementDrawState) -> std::string;
-
-[[nodiscard]] auto is_inserted(ElementDrawState state) noexcept -> bool;
-
-[[nodiscard]] auto has_overlay(ElementDrawState state) noexcept -> bool;
-
-[[nodiscard]] auto get_logic_item_state(layout::ConstElement element,
-                                        const Selection* selection) -> ElementDrawState;
-
-//
 // Logic Items
 //
 
 [[nodiscard]] auto draw_logic_item_above(ElementType type) -> bool;
 
-[[nodiscard]] auto get_logic_item_base_color(ElementDrawState state) -> color_t;
+[[nodiscard]] auto get_logic_item_state(layout::ConstElement element,
+                                        const Selection* selection) -> ElementDrawState;
+
+[[nodiscard]] auto get_logic_item_fill_color(ElementDrawState state) -> color_t;
+[[nodiscard]] auto get_logic_item_stroke_color(ElementDrawState state) -> color_t;
 
 auto draw_logic_items(BLContext& ctx, const Layout& layout,
-                      std::span<const element_id_t> elements, ElementDrawState state,
+                      std::span<const DrawableElement> elements,
                       const RenderSettings& settings) -> void;
 
 //
