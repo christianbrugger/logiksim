@@ -12,6 +12,10 @@ struct BLPoint;
 
 namespace logicsim {
 
+namespace defaults {
+constexpr static inline auto line_selection_padding = 0.3;
+}
+
 [[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
                                                std::size_t input_count,
                                                std::size_t output_count) -> bool;

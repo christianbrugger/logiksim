@@ -35,7 +35,6 @@ set(LS_CORE_SOURCES
     src/random.cpp
     src/renderer.cpp
     src/render_circuit.cpp
-    src/render_element.cpp
     src/render_generic.cpp
     src/scene.cpp
     src/schematic.cpp
@@ -354,6 +353,7 @@ if (LS_ENABLE_PCH)
         <cstdint>
         <exception>
         <filesystem>
+        <functional>
         <iostream>
         <iterator>
         <optional>

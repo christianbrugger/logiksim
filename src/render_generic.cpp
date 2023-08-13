@@ -12,15 +12,100 @@ namespace logicsim {
 auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
                           const RenderSettings& settings) -> void;
 
-namespace {
+//
+// Layer Surface
+//
 
-auto resolve_stroke_width(int stroke_width, const RenderSettings& settings) -> int {
-    return stroke_width == defaults::view_config_width
-               ? settings.view_config.stroke_width()
-               : stroke_width;
+auto LayerSurface::is_initialized(const ViewConfig& config) const -> bool {
+    return image.width() == config.width() || image.height() == config.height();
 }
 
-}  // namespace
+auto LayerSurface::initialize(const ViewConfig& config, const BLContextCreateInfo& info)
+    -> void {
+    if (!is_initialized(config)) {
+        image = BLImage {config.width(), config.height(), BL_FORMAT_PRGB32};
+        ctx.begin(image, info);
+    }
+}
+
+auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI {
+    const auto clamp_x = [&](double x_) {
+        return std::clamp(x_, 0., view_config.width() * 1.0);
+    };
+    const auto clamp_y = [&](double y_) {
+        return std::clamp(y_, 0., view_config.height() * 1.0);
+    };
+
+    const auto p0 = to_context(bounding_rect.p0, view_config);
+    const auto p1 = to_context(bounding_rect.p1, view_config);
+
+    const auto padding = view_config.pixel_scale() * 0.5 + 2;
+
+    const auto x0 = clamp_x(std::trunc(p0.x - padding));
+    const auto y0 = clamp_y(std::trunc(p0.y - padding));
+
+    const auto x1 = clamp_x(std::ceil(p1.x + padding + 1));
+    const auto y1 = clamp_y(std::ceil(p1.y + padding + 1));
+
+    return BLRectI {
+        gsl::narrow<int>(x0),
+        gsl::narrow<int>(y0),
+        gsl::narrow<int>(x1 - x0),
+        gsl::narrow<int>(y1 - y0),
+    };
+}
+
+auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
+                     const RenderSettings& settings,
+                     std::function<void(BLContext&)> render_func) -> void {
+    target_ctx.save();
+
+    if (layer.enabled) {
+        layer.initialize(settings.view_config, context_info(settings));
+        layer.ctx.clearRect(dirty_rect);
+
+        {
+            layer.ctx.save();
+            render_func(layer.ctx);
+            layer.ctx.restore();
+        }
+
+        layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
+        target_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
+        target_ctx.blitImage(dirty_rect, layer.image, dirty_rect);
+    } else {
+        render_func(target_ctx);
+    }
+
+    target_ctx.restore();
+}
+
+/*
+template <typename Func>
+auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
+                     const RenderSettings& settings, Func render_func) -> void {
+    target_ctx.save();
+
+    if (layer.enabled) {
+        layer.initialize(settings.view_config, context_info(settings));
+        layer.ctx.clearRect(dirty_rect);
+
+        {
+            layer.ctx.save();
+            render_func(layer.ctx);
+            layer.ctx.restore();
+        }
+
+        layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
+        target_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
+        target_ctx.blitImage(dirty_rect, layer.image, dirty_rect);
+    } else {
+        render_func(target_ctx);
+    }
+
+    target_ctx.restore();
+}
+*/
 
 //
 // Layers Cache
@@ -156,20 +241,8 @@ auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void {
 }
 
 //
-// Layer Surface
+// RenderSettings
 //
-
-auto LayerSurface::is_initialized(const ViewConfig& config) const -> bool {
-    return image.width() == config.width() || image.height() == config.height();
-}
-
-auto LayerSurface::initialize(const ViewConfig& config, const BLContextCreateInfo& info)
-    -> void {
-    if (!is_initialized(config)) {
-        image = BLImage {config.width(), config.height(), BL_FORMAT_PRGB32};
-        ctx.begin(image, info);
-    }
-}
 
 auto RenderSettings::format() const -> std::string {
     return fmt::format(
@@ -186,7 +259,7 @@ auto context_info(const RenderSettings& settings) -> BLContextCreateInfo {
 }
 
 //
-// Blend2d specific
+// Context Guard
 //
 
 ContextGuard::ContextGuard(BLContext& ctx) : ctx_(ctx) {
@@ -198,8 +271,34 @@ ContextGuard::~ContextGuard() {
 };
 
 //
-// Generic Types
+// Draw Type
 //
+
+template <>
+auto format(DrawType type) -> std::string {
+    switch (type) {
+        using enum DrawType;
+
+        case fill:
+            return "fill";
+        case stroke:
+            return "stroke";
+        case fill_and_stroke:
+            return "fill_and_stroke";
+    }
+
+    throw_exception("cannot convert DrawType to string");
+}
+
+//
+// Strokes
+//
+
+auto resolve_stroke_width(int attribute, const RenderSettings& settings) -> int {
+    return attribute == defaults::use_view_config_stroke_width
+               ? settings.view_config.stroke_width()
+               : attribute;
+}
 
 auto stroke_offset(int stroke_width) -> double {
     // To allign our strokes to the pixel grid, we need to offset odd strokes
@@ -213,6 +312,34 @@ auto stroke_offset(int stroke_width) -> double {
 //
 // Point
 //
+
+template <>
+auto format(PointShape type) -> std::string {
+    switch (type) {
+        using enum PointShape;
+
+        case circle:
+            return "circle";
+        case full_circle:
+            return "full_circle";
+        case cross:
+            return "cross";
+        case plus:
+            return "plus";
+        case square:
+            return "square";
+        case full_square:
+            return "full_square";
+        case diamond:
+            return "diamond";
+        case horizontal:
+            return "horizontal";
+        case vertical:
+            return "vertical";
+    }
+
+    throw_exception("cannot convert PointType to string");
+}
 
 auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
                   double size, const RenderSettings& settings) -> void {
@@ -421,6 +548,9 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
 
     if (attributes.draw_type == DrawType::fill ||
         attributes.draw_type == DrawType::fill_and_stroke) {
+        if (attributes.fill_color != defaults::no_color) {
+            ctx.setFillStyle(attributes.fill_color);
+        }
         ctx.fillRect(x0, y0, w, h);
     }
 
@@ -429,6 +559,9 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
         const auto width = resolve_stroke_width(attributes.stroke_width, settings);
         const auto offset = stroke_offset(width);
 
+        if (attributes.stroke_color != defaults::no_color) {
+            ctx.setStrokeStyle(attributes.stroke_color);
+        }
         ctx.setStrokeWidth(width);
         ctx.strokeRect(x0 + offset, y0 + offset, w, h);
     }

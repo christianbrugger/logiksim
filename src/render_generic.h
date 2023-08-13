@@ -7,9 +7,39 @@
 #include "segment_tree_types.h"
 #include "vocabulary.h"
 
+#include <functional>
+
 class BLContext;
 
 namespace logicsim {
+
+struct RenderSettings;
+
+namespace defaults {
+constexpr inline static auto use_view_config_stroke_width = int {-1};
+}
+
+//
+// Layer Surface
+//
+struct LayerSurface {
+    bool enabled {true};
+    BLImage image {};
+    BLContext ctx {};
+
+    auto is_initialized(const ViewConfig& config) const -> bool;
+    auto initialize(const ViewConfig& config, const BLContextCreateInfo& info) -> void;
+};
+
+auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI;
+
+auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
+                     const RenderSettings& settings,
+                     std::function<void(BLContext&)> render_func) -> void;
+
+//
+// Layers Cache
+//
 
 struct LayersCache {
     // inserted
@@ -53,15 +83,6 @@ auto update_uninserted_rect(LayersCache& layers, ordered_line_t line) -> void;
 auto update_overlay_rect(LayersCache& layers, rect_t bounding_rect) -> void;
 auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void;
 
-struct LayerSurface {
-    bool enabled {true};
-    BLImage image {};
-    BLContext ctx {};
-
-    auto is_initialized(const ViewConfig& config) const -> bool;
-    auto initialize(const ViewConfig& config, const BLContextCreateInfo& info) -> void;
-};
-
 // TODO think about const behavior?
 // TODO rename settings to RenderCache ?
 // TODO maybe make glyph cache a pointer - to remove dependency
@@ -83,7 +104,7 @@ struct RenderSettings {
 auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
 
 //
-// Blend2d specific
+// Context Guard
 //
 
 class ContextGuard {
@@ -96,18 +117,23 @@ class ContextGuard {
 };
 
 //
-// Generic Types & Methods
+// Draw Type
 //
-
-namespace defaults {
-constexpr inline static auto view_config_width = int {-1};
-}
 
 enum class DrawType {
     fill,
     stroke,
     fill_and_stroke,
 };
+
+template <>
+auto format(DrawType type) -> std::string;
+
+//
+// Strokes
+//
+
+auto resolve_stroke_width(int attribute, const RenderSettings& settings) -> int;
 
 auto stroke_offset(int stoke_width) -> double;
 
@@ -127,6 +153,10 @@ enum class PointShape {
     vertical
 };
 
+template <>
+auto format(PointShape shape) -> std::string;
+
+// TODO !!! fix naming render vs draws
 auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
                   double size, const RenderSettings& settings) -> void;
 
@@ -147,12 +177,12 @@ auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t or
                   double size, const RenderSettings& settings) -> void;
 
 //
-// Orthogonal Line
+// Line
 //
 
 struct LineAttributes {
     color_t color {defaults::color_black};
-    int stroke_width {defaults::view_config_width};
+    int stroke_width {defaults::use_view_config_stroke_width};
 };
 
 auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
@@ -171,18 +201,22 @@ auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attribute
 // Rect
 //
 
-// TODO add colors to rect somehow
+// TODO use color everywhere
 struct RectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
-    int stroke_width {defaults::view_config_width};
+    int stroke_width {defaults::use_view_config_stroke_width};
+
+    color_t fill_color {defaults::no_color};
+    color_t stroke_color {defaults::no_color};
 };
 
 auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
                const RenderSettings& settings) -> void;
 
+// TODO add colors to rounded rect
 struct RoundRectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
-    int stroke_width {defaults::view_config_width};
+    int stroke_width {defaults::use_view_config_stroke_width};
     double rounding {-1};
 };
 

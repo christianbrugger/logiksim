@@ -529,7 +529,7 @@ struct point_fine_t {
     [[nodiscard]] constexpr point_fine_t(grid_fine_t x_, grid_fine_t y_) noexcept
         : x {x_}, y {y_} {}
 
-    [[nodiscard]] constexpr point_fine_t(grid_t x_, grid_t y_) noexcept
+    [[nodiscard]] explicit constexpr point_fine_t(grid_t x_, grid_t y_) noexcept
         : x {grid_fine_t {x_}}, y {grid_fine_t {y_}} {}
 
     [[nodiscard]] explicit constexpr point_fine_t(point_t point) noexcept;
@@ -566,6 +566,10 @@ static_assert(std::is_trivial<point_fine_t>::value);
 struct point_t {
     grid_t x;
     grid_t y;
+
+    point_t() = default;
+
+    constexpr point_t(grid_t x_, grid_t y_) noexcept : x {x_}, y {y_} {};
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -714,6 +718,27 @@ struct rect_fine_t {
 
     [[nodiscard]] constexpr auto operator==(const rect_fine_t &other) const
         -> bool = default;
+    [[nodiscard]] constexpr auto operator<=>(const rect_fine_t &other) const = default;
+
+    [[nodiscard]] constexpr auto operator+(point_fine_t other) const -> rect_fine_t {
+        return rect_fine_t {p0 + other, p1 + other};
+    }
+
+    [[nodiscard]] constexpr auto operator-(point_fine_t other) const -> rect_fine_t {
+        return rect_fine_t {p0 - other, p1 - other};
+    }
+
+    constexpr auto operator+=(point_fine_t other) -> rect_fine_t & {
+        p0 += other;
+        p1 += other;
+        return *this;
+    }
+
+    constexpr auto operator-=(point_fine_t other) -> rect_fine_t & {
+        p0 -= other;
+        p1 -= other;
+        return *this;
+    }
 };
 
 struct rect_t {

@@ -2,6 +2,7 @@
 
 #include "collision.h"
 #include "editable_circuit/selection.h"
+#include "layout.h"
 #include "layout_calculations.h"
 #include "timer.h"
 
@@ -9,29 +10,108 @@
 
 namespace logicsim {
 
-template <>
-auto format(shadow_t orientation) -> std::string {
-    switch (orientation) {
-        using enum shadow_t;
+//
+// Element Draw State
+//
 
+template <>
+auto format(ElementDrawState state) -> std::string {
+    switch (state) {
+        using enum ElementDrawState;
+
+        case normal:
+            return "normal";
         case selected:
             return "selected";
-        case valid:
-            return "valid";
-        case colliding:
-            return "colliding";
+        case uninserted:
+            return "uninserted";
+        case simulated:
+            return "simulated";
     }
-    throw_exception("Don't know how to convert shadow_t to string.");
+
+    throw_exception("cannot convert ElementDrawState to string");
 }
+
+//
+// Logic Items
+//
 
 auto render_above(ElementType type [[maybe_unused]]) -> bool {
-    // TODO only buttons
-    return true;  // type == ElementType::button;
+    return type == ElementType::button;
 }
 
-auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> double {
-    return type == ElementType::button ? 0. : 0.3;
+auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement element,
+                          ElementDrawState state, const RenderSettings& settings)
+    -> void {
+    const auto final_rect = rect + point_fine_t {element.position()};
+
+    draw_rect(ctx, final_rect,
+              RectAttributes {
+                  .draw_type = DrawType::fill_and_stroke,
+                  .fill_color = defaults::body_color_normal,
+                  .stroke_color = defaults::body_stroke_color,
+              },
+              settings);
 }
+
+auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
+                           ElementDrawState state, const RenderSettings& settings)
+    -> void {
+    const auto element_height = std::max(element.input_count(), element.output_count());
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {point_fine_t {0., -padding},
+                                   point_fine_t {2., element_height - 1 + padding}};
+
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+}
+
+auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
+                          ElementDrawState state, const RenderSettings& settings)
+    -> void {
+    switch (element.element_type()) {
+        using enum ElementType;
+
+        case unused:
+        case placeholder:
+        case wire:
+            throw_exception("not supported");
+
+            // case buffer_element:
+            //     return draw_buffer(ctx, element, selected, settings);
+
+        case and_element:
+        case or_element:
+        case xor_element:
+            return draw_standard_element(ctx, element, state, settings);
+
+            // case button:
+            //     return draw_button(ctx, element, selected, settings);
+
+            // case clock_generator:
+            //     return draw_clock_generator(ctx, element, selected, settings);
+            // case flipflop_jk:
+            //     return draw_flipflop_jk(ctx, element, selected, settings);
+            // case shift_register:
+            //     return draw_shift_register(ctx, element, selected, settings);
+            // case latch_d:
+            //     return draw_latch_d(ctx, element, selected, settings);
+            // case flipflop_d:
+            //     return draw_flipflop_d(ctx, element, selected, settings);
+            // case flipflop_ms_d:
+            //     return draw_flipflop_ms_d(ctx, element, selected, settings);
+
+            // case sub_circuit:
+            //     return draw_standard_element(ctx, element, selected, settings);
+
+        default:  // TODO !!! remove this
+            return;
+    }
+    throw_exception("not supported");
+}
+
+auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
+                                ElementDrawState state, const RenderSettings& settings)
+    -> void {}
 
 auto draw_logic_items(BLContext& ctx, const Layout& layout,
                       std::span<const element_id_t> elements,
@@ -40,6 +120,10 @@ auto draw_logic_items(BLContext& ctx, const Layout& layout,
         draw_logic_item(ctx, layout.element(element_id), false, settings);
     }
 }
+
+//
+// Wires
+//
 
 auto draw_wires(BLContext& ctx, const Layout& layout,
                 std::span<const element_id_t> elements, const RenderSettings& settings)
@@ -63,23 +147,43 @@ auto draw_wires(BLContext& ctx, std::span<const segment_info_t> segments,
     }
 }
 
+//
+// Overlay
+//
+
+template <>
+auto format(shadow_t orientation) -> std::string {
+    switch (orientation) {
+        using enum shadow_t;
+
+        case selected:
+            return "selected";
+        case valid:
+            return "valid";
+        case colliding:
+            return "colliding";
+    }
+    throw_exception("Don't know how to convert shadow_t to string.");
+}
+
 auto shadow_color(shadow_t shadow_type) -> color_t {
     switch (shadow_type) {
         case shadow_t::selected: {
-            // BLRgba32(0, 128, 255, 96);
-            return color_t {0x600080FF};
+            return defaults::overlay_selected;
         }
         case shadow_t::valid: {
-            // BLRgba32(0, 192, 0, 96);
-            return color_t {0x6000C000};
+            return defaults::overlay_valid;
         }
         case shadow_t::colliding: {
-            // BLRgba32(255, 0, 0, 96);
-            return color_t {0x60FF0000};
+            return defaults::overlay_colliding;
         }
     };
 
     throw_exception("unknown shadow type");
+}
+
+auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> double {
+    return type == ElementType::button ? 0. : defaults::line_selection_padding;
 }
 
 auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
@@ -116,21 +220,9 @@ auto draw_wire_shadows(BLContext& ctx, std::span<const ordered_line_t> lines,
     }
 }
 
-/*
-auto draw_wire_shadows(BLContext& ctx, const Layout& layout,
-                       std::span<const element_id_t> elements, shadow_t shadow_type,
-                       const RenderSettings& settings) -> void {
-    const auto color = shadow_color(shadow_type);
-    ctx.setFillStyle(BLRgba32(color.value));
-
-    for (const auto element_id : elements) {
-        for (const auto& info : layout.segment_tree(element_id).segment_infos()) {
-            const auto selection_rect = element_selection_rect(info.line);
-            draw_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
-        }
-    }
-}
-*/
+//
+// Layout Rendering
+//
 
 auto render_inserted(BLContext& ctx, const Layout& layout,
                      const RenderSettings& settings) {
@@ -185,58 +277,6 @@ auto render_overlay(BLContext& ctx, const Layout& layout, const RenderSettings& 
     draw_wire_shadows(ctx, layers.colliding_wires, shadow_t::colliding, settings);
 }
 
-template <typename Func>
-auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
-                     const RenderSettings& settings, Func render_func) -> void {
-    target_ctx.save();
-
-    if (layer.enabled) {
-        layer.initialize(settings.view_config, context_info(settings));
-        layer.ctx.clearRect(dirty_rect);
-
-        {
-            layer.ctx.save();
-            render_func(layer.ctx);
-            layer.ctx.restore();
-        }
-
-        layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
-        target_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
-        target_ctx.blitImage(dirty_rect, layer.image, dirty_rect);
-    } else {
-        render_func(target_ctx);
-    }
-
-    target_ctx.restore();
-}
-
-auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI {
-    const auto clamp_x = [&](double x_) {
-        return std::clamp(x_, 0., view_config.width() * 1.0);
-    };
-    const auto clamp_y = [&](double y_) {
-        return std::clamp(y_, 0., view_config.height() * 1.0);
-    };
-
-    const auto p0 = to_context(bounding_rect.p0, view_config);
-    const auto p1 = to_context(bounding_rect.p1, view_config);
-
-    const auto padding = view_config.pixel_scale() * 0.5 + 2;
-
-    const auto x0 = clamp_x(std::trunc(p0.x - padding));
-    const auto y0 = clamp_y(std::trunc(p0.y - padding));
-
-    const auto x1 = clamp_x(std::ceil(p1.x + padding + 1));
-    const auto y1 = clamp_y(std::ceil(p1.y + padding + 1));
-
-    return BLRectI {
-        gsl::narrow<int>(x0),
-        gsl::narrow<int>(y0),
-        gsl::narrow<int>(x1 - x0),
-        gsl::narrow<int>(y1 - y0),
-    };
-}
-
 auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
     -> void {
     // TODO draw line inverters / connectors above wires
@@ -265,6 +305,10 @@ auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& s
             [&](BLContext& layer_ctx) { render_overlay(layer_ctx, layout, settings); });
     }
 }
+
+//
+// Create Layers
+//
 
 auto add_valid_wire_parts(const layout::ConstElement wire,
                           std::vector<ordered_line_t>& output) -> bool {
@@ -401,12 +445,15 @@ auto build_layers(const Layout& layout, LayersCache& layers, const Selection* se
     layers.calculate_overlay_bounding_rect();
 }
 
+//
+//
+//
+
 auto render_circuit_2(BLContext& ctx, render_args_t args) -> void {
     const auto scene_rect = get_scene_rect(args.settings.view_config);
 
     build_layers(args.layout, args.settings.layers, args.selection, scene_rect);
     render_layers(ctx, args.layout, args.settings);
-
-    // print(args.settings.layers);
 }
+
 }  // namespace logicsim
