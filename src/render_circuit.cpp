@@ -11,7 +11,7 @@
 namespace logicsim {
 
 //
-// Logic Items Generics
+// Logic Items Body
 //
 
 auto draw_logic_item_above(ElementType type) -> bool {
@@ -47,41 +47,27 @@ auto get_logic_item_state(layout::ConstElement element, const Selection* selecti
 auto get_logic_item_fill_color(ElementDrawState state) -> color_t {
     switch (state) {
         using enum ElementDrawState;
+        using namespace defaults;
 
         case normal:
-            return defaults::body_fill_color::normal;
+            return with_alpha(body_fill_color::normal, normal);
         case normal_selected:
-            return defaults::body_fill_color::normal_selected;
+            return with_alpha(body_fill_color::normal_selected, normal_selected);
         case valid:
-            return defaults::body_fill_color::valid;
+            return with_alpha(body_fill_color::valid, valid);
         case simulated:
-            return defaults::body_fill_color::normal;
+            return with_alpha(body_fill_color::normal, simulated);
         case colliding:
-            return defaults::body_fill_color::colliding;
+            return with_alpha(body_fill_color::colliding, colliding);
         case temporary_selected:
-            return defaults::body_fill_color::temporary_selected;
+            return with_alpha(body_fill_color::temporary_selected, temporary_selected);
     };
 
     throw_exception("draw state has no logic item base color");
 }
 
 auto get_logic_item_stroke_color(ElementDrawState state) -> color_t {
-    switch (state) {
-        using enum ElementDrawState;
-
-        case normal:
-        case normal_selected:
-        case valid:
-        case simulated:
-            return defaults::body_stroke_color::normal;
-
-        case colliding:
-            return defaults::body_stroke_color::colliding;
-        case temporary_selected:
-            return defaults::body_stroke_color::temporary_selected;
-    };
-
-    throw_exception("draw state has no logic item base color");
+    return with_alpha_runtime(defaults::body_stroke_color, state);
 }
 
 auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement element,
@@ -112,6 +98,45 @@ auto draw_logic_item_text(BLContext& ctx, point_fine_t point, std::string label,
                   .cuttoff_size_px = defaults::logic_item_label_cutoff_px,
               },
               settings);
+}
+
+auto get_inverted_connector_fill_color(ElementDrawState state) -> color_t {
+    return with_alpha_runtime(defaults::inverted_connector_fill, state);
+}
+
+auto draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
+                             const RenderSettings& settings) {
+    const auto radius = defaults::inverted_circle_radius;
+    const auto width = settings.view_config.stroke_width();
+    const auto offset = stroke_offset(width);
+
+    const auto r = radius * settings.view_config.pixel_scale();
+    const auto p = to_context(attributes.position, settings.view_config);
+    const auto p_center = connector_point(p, attributes.orientation, r + width);
+
+    ctx.setFillStyle(get_inverted_connector_fill_color(attributes.state));
+    ctx.fillCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
+
+    ctx.setStrokeStyle(wire_color(attributes.state, attributes.is_enabled));
+    ctx.setStrokeWidth(width);
+    ctx.strokeCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
+}
+
+auto draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
+                           const RenderSettings& settings) -> void {
+    const auto endpoint = connector_point(attributes.position, attributes.orientation,
+                                          defaults::connector_length);
+    draw_line(ctx, line_fine_t {attributes.position, endpoint},
+              {.color = wire_color(attributes.state, attributes.is_enabled)}, settings);
+}
+
+auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
+                    const RenderSettings& settings) -> void {
+    if (attributes.is_inverted) {
+        draw_connector_inverted(ctx, attributes, settings);
+    } else {
+        draw_connector_normal(ctx, attributes, settings);
+    }
 }
 
 //
@@ -194,21 +219,63 @@ auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
 
 auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
                                 ElementDrawState state, const RenderSettings& settings)
-    -> void {}
+    -> void {
+    const auto layout_data = to_layout_calculation_data(element.layout(), element);
+
+    iter_input_location_and_id(
+        layout_data,
+        [&](connection_id_t input_id, point_t position, orientation_t orientation) {
+            draw_connector(ctx,
+                           ConnectorAttributes {
+                               .state = state,
+                               .position = position,
+                               .orientation = orientation,
+                               .is_inverted = element.input_inverted(input_id),
+                               .is_enabled = false,
+                           },
+                           settings);
+            return true;
+        });
+
+    iter_output_location_and_id(
+        layout_data,
+        [&](connection_id_t output_id, point_t position, orientation_t orientation) {
+            draw_connector(ctx,
+                           ConnectorAttributes {
+                               .state = state,
+                               .position = position,
+                               .orientation = orientation,
+                               .is_inverted = element.output_inverted(output_id),
+                               .is_enabled = false,
+                           },
+                           settings);
+            return true;
+        });
+}
 
 auto draw_logic_items(BLContext& ctx, const Layout& layout,
                       std::span<const DrawableElement> elements,
                       const RenderSettings& settings) -> void {
     for (const auto entry : elements) {
         // draw_logic_item(ctx, layout.element(element_id), false, settings);
-        draw_logic_item_base(ctx, layout.element(entry.element_id), entry.state,
-                             settings);
+
+        const auto element = layout.element(entry.element_id);
+
+        draw_logic_item_base(ctx, element, entry.state, settings);
+        draw_logic_item_connectors(ctx, element, entry.state, settings);
     }
 }
 
 //
 // Wires
 //
+
+auto wire_color(ElementDrawState state, bool is_enabled) -> color_t {
+    if (is_enabled) {
+        return with_alpha_runtime(defaults::wire_color_enabled, state);
+    }
+    return with_alpha_runtime(defaults::wire_color_disabled, state);
+}
 
 auto draw_wires(BLContext& ctx, const Layout& layout,
                 std::span<const element_id_t> elements, const RenderSettings& settings)
@@ -254,13 +321,13 @@ auto format(shadow_t orientation) -> std::string {
 auto shadow_color(shadow_t shadow_type) -> color_t {
     switch (shadow_type) {
         case shadow_t::selected: {
-            return defaults::overlay_selected;
+            return defaults::overlay_color::selected;
         }
         case shadow_t::valid: {
-            return defaults::overlay_valid;
+            return defaults::overlay_color::valid;
         }
         case shadow_t::colliding: {
-            return defaults::overlay_colliding;
+            return defaults::overlay_color::colliding;
         }
     };
 

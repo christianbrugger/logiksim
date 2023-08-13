@@ -42,6 +42,7 @@ namespace detail {
     -> orientation_t;
 }  // namespace detail
 
+// TODO !!! remove when not needed
 auto connector_endpoint(point_t position, orientation_t orientation) -> point_fine_t;
 
 auto connector_point(point_t position, orientation_t orientation, grid_fine_t offset)

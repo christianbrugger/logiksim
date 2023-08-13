@@ -28,28 +28,65 @@ constexpr static inline auto button_body_overdraw = 0.5;      // grid values
 constexpr static inline auto logic_item_label_size = 0.9;       // grid values
 constexpr static inline auto logic_item_label_cutoff_px = 3.0;  // pixels
 
+constexpr static inline auto connector_length = 0.4;        // grid points
+constexpr static inline auto inverted_circle_radius = 0.2;  // grid points
+
+namespace element_state_alpha {
+constexpr static inline auto normal = color_t::value_type {255};
+constexpr static inline auto colliding = color_t::value_type {64};
+constexpr static inline auto temporary = color_t::value_type {128};
+}  // namespace element_state_alpha
+
 namespace body_fill_color {
-constexpr static inline auto normal = color_t {255, 255, 128, 255};
-constexpr static inline auto normal_selected = color_t {224, 224, 224, 255};
-constexpr static inline auto valid = color_t {192, 192, 192, 255};
-constexpr static inline auto colliding = color_t {192, 192, 192, 64};
-constexpr static inline auto temporary_selected = color_t {192, 192, 192, 128};
+constexpr static inline auto normal = color_t {255, 255, 128};
+constexpr static inline auto normal_selected = color_t {224, 224, 224};
+constexpr static inline auto valid = color_t {192, 192, 192};
+constexpr static inline auto colliding = color_t {192, 192, 192};
+constexpr static inline auto temporary_selected = color_t {192, 192, 192};
 }  // namespace body_fill_color
 
-namespace body_stroke_color {
-constexpr static inline auto normal = color_t {0, 0, 0, 255};
-constexpr static inline auto colliding = color_t {0, 0, 0, 64};
-constexpr static inline auto temporary_selected = color_t {0, 0, 0, 128};
-}  // namespace body_stroke_color
+constexpr static inline auto body_stroke_color = defaults::color_black;
+constexpr static inline auto inverted_connector_fill = defaults::color_white;
+constexpr static inline auto wire_color_disabled = defaults::color_black;
+constexpr static inline auto wire_color_enabled = defaults::color_red;
 
-constexpr static inline auto overlay_selected = color_t {0, 128, 255, 96};
-constexpr static inline auto overlay_valid = color_t {0, 192, 0, 96};
-constexpr static inline auto overlay_colliding = color_t {255, 0, 0, 96};
+namespace overlay_color {
+constexpr static inline auto selected = color_t {0, 128, 255, 96};
+constexpr static inline auto valid = color_t {0, 192, 0, 96};
+constexpr static inline auto colliding = color_t {255, 0, 0, 96};
+}  // namespace overlay_color
 
 }  // namespace defaults
 
+constexpr auto state_alpha(ElementDrawState state) noexcept -> color_t::value_type {
+    switch (state) {
+        using enum ElementDrawState;
+
+        case normal:
+        case normal_selected:
+        case valid:
+        case simulated:
+            return defaults::element_state_alpha::normal;
+
+        case colliding:
+            return defaults::element_state_alpha::colliding;
+        case temporary_selected:
+            return defaults::element_state_alpha::temporary;
+    }
+    throw_exception("unexcepted draw state in state_alpha");
+}
+
+consteval auto with_alpha(color_t color, ElementDrawState state) noexcept -> color_t {
+    return color_t {color.r(), color.g(), color.b(), state_alpha(state)};
+}
+
+constexpr auto with_alpha_runtime(color_t color, ElementDrawState state) noexcept
+    -> color_t {
+    return color_t {color.r(), color.g(), color.b(), state_alpha(state)};
+}
+
 //
-// Logic Items Generics
+// Logic Items
 //
 
 [[nodiscard]] auto draw_logic_item_above(ElementType type) -> bool;
@@ -68,9 +105,30 @@ auto draw_logic_item_text(BLContext& ctx, point_fine_t point, std::string label,
                           layout::ConstElement element, const ElementDrawState state,
                           const RenderSettings& settings);
 
+struct ConnectorAttributes {
+    ElementDrawState state;
+    point_t position;
+    orientation_t orientation;
+    bool is_inverted;
+    bool is_enabled;
+};
+
+auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
+                    const RenderSettings& settings) -> void;
+
+//
+//
+//
+
 auto draw_logic_items(BLContext& ctx, const Layout& layout,
                       std::span<const DrawableElement> elements,
                       const RenderSettings& settings) -> void;
+
+//
+// Wires
+//
+
+auto wire_color(ElementDrawState state, bool enabled) -> color_t;
 
 //
 // Overlay
