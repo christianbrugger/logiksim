@@ -41,14 +41,38 @@ constexpr static inline auto overlay_colliding = color_t {255, 0, 0, 96};
 //
 
 enum class ElementDrawState {
+    // inserted
     normal,
-    selected,
-    uninserted,
+    normal_selected,
+    valid,
     simulated,
+
+    // uninserted
+    colliding,
+    temporary_selected,
 };
 
 template <>
 auto format(ElementDrawState) -> std::string;
+
+[[nodiscard]] auto is_inserted(ElementDrawState state) noexcept -> bool;
+
+[[nodiscard]] auto has_overlay(ElementDrawState state) noexcept -> bool;
+
+[[nodiscard]] auto get_logic_item_state(layout::ConstElement element,
+                                        const Selection* selection) -> ElementDrawState;
+
+//
+// Logic Items
+//
+
+[[nodiscard]] auto draw_logic_item_above(ElementType type) -> bool;
+
+[[nodiscard]] auto get_logic_item_base_color(ElementDrawState state) -> color_t;
+
+auto draw_logic_items(BLContext& ctx, const Layout& layout,
+                      std::span<const element_id_t> elements, ElementDrawState state,
+                      const RenderSettings& settings) -> void;
 
 //
 // Overlay

@@ -341,8 +341,8 @@ auto format(PointShape type) -> std::string {
     throw_exception("cannot convert PointType to string");
 }
 
-auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
-                  double size, const RenderSettings& settings) -> void {
+auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
+                double size, const RenderSettings& settings) -> void {
     constexpr auto stroke_width = 1;
     const auto color = BLRgba32(color_.value);
 
@@ -449,8 +449,8 @@ auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color
 // Arrow
 //
 
-auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
-                  double size, const RenderSettings& settings) -> void {
+auto draw_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
+                double size, const RenderSettings& settings) -> void {
     auto _ = ContextGuard {ctx};
 
     ctx.setStrokeWidth(1);
@@ -631,8 +631,8 @@ auto draw_line_segment(BLContext& ctx, line_t line, bool enabled,
                        const RenderSettings& settings) -> void {
     draw_line_segment(ctx, line_fine_t {line}, enabled, settings);
 
-    render_point(ctx, line.p0, PointShape::circle, defaults::color_orange, 0.2, settings);
-    render_point(ctx, line.p1, PointShape::cross, defaults::color_orange, 0.2, settings);
+    draw_point(ctx, line.p0, PointShape::circle, defaults::color_orange, 0.2, settings);
+    draw_point(ctx, line.p1, PointShape::cross, defaults::color_orange, 0.2, settings);
 }
 
 auto draw_line_segment(BLContext& ctx, line_fine_t line, bool enabled,

@@ -21,22 +21,86 @@ auto format(ElementDrawState state) -> std::string {
 
         case normal:
             return "normal";
-        case selected:
-            return "selected";
-        case uninserted:
-            return "uninserted";
+        case normal_selected:
+            return "normal_selected";
+        case valid:
+            return "valid";
         case simulated:
             return "simulated";
+
+        case colliding:
+            return "colliding";
+        case temporary_selected:
+            return "temporary_selected";
     }
 
     throw_exception("cannot convert ElementDrawState to string");
+}
+
+auto is_inserted(ElementDrawState state) noexcept -> bool {
+    using enum ElementDrawState;
+    return state == normal || state == normal_selected || state == valid ||
+           state == simulated;
+}
+
+auto has_overlay(ElementDrawState state) noexcept -> bool {
+    using enum ElementDrawState;
+    return state == normal_selected || state == valid || state == colliding ||
+           state == temporary_selected;
+}
+
+auto get_logic_item_state(layout::ConstElement element, const Selection* selection)
+    -> ElementDrawState {
+    const auto is_selected = [&]() {
+        return (selection != nullptr) ? selection->is_selected(element.element_id())
+                                      : false;
+    };
+
+    const auto display_state = element.display_state();
+
+    if (is_inserted(display_state)) {
+        if (display_state == display_state_t::valid) {
+            return ElementDrawState::valid;
+        } else if (is_selected()) {
+            return ElementDrawState::normal_selected;
+        }
+        return ElementDrawState::normal;
+    } else {
+        if (display_state == display_state_t::colliding) {
+            return ElementDrawState::colliding;
+        } else if (is_selected()) {
+            return ElementDrawState::temporary_selected;
+        }
+        throw_exception("cannot draw temporary items");
+    }
 }
 
 //
 // Logic Items
 //
 
-auto render_above(ElementType type [[maybe_unused]]) -> bool {
+auto get_logic_item_base_color(ElementDrawState state) -> color_t {
+    switch (state) {
+        using enum ElementDrawState;
+
+        case normal:
+            return defaults::body_color_normal;
+        case normal_selected:
+            return defaults::body_color_selected;
+        case valid:
+            return defaults::body_color_normal;
+        case simulated:
+            return defaults::body_color_normal;
+        case colliding:
+            return defaults::body_color_uninserted;
+        case temporary_selected:
+            return defaults::body_color_uninserted;
+    };
+
+    throw_exception("draw state has no logic item base color");
+}
+
+auto draw_logic_item_above(ElementType type) -> bool {
     return type == ElementType::button;
 }
 
@@ -48,7 +112,7 @@ auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement
     draw_rect(ctx, final_rect,
               RectAttributes {
                   .draw_type = DrawType::fill_and_stroke,
-                  .fill_color = defaults::body_color_normal,
+                  .fill_color = get_logic_item_base_color(state),
                   .stroke_color = defaults::body_stroke_color,
               },
               settings);
@@ -114,10 +178,11 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
     -> void {}
 
 auto draw_logic_items(BLContext& ctx, const Layout& layout,
-                      std::span<const element_id_t> elements,
+                      std::span<const element_id_t> elements, ElementDrawState state,
                       const RenderSettings& settings) -> void {
     for (const auto element_id : elements) {
         draw_logic_item(ctx, layout.element(element_id), false, settings);
+        // draw_logic_item_base(ctx, layout.element(element_id), state, settings);
     }
 }
 
@@ -230,9 +295,11 @@ auto render_inserted(BLContext& ctx, const Layout& layout,
 
     ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    draw_logic_items(ctx, layout, layers.normal_below, settings);
+    draw_logic_items(ctx, layout, layers.normal_below, ElementDrawState::normal,
+                     settings);
     draw_wires(ctx, layout, layers.normal_wires, settings);
-    draw_logic_items(ctx, layout, layers.normal_above, settings);
+    draw_logic_items(ctx, layout, layers.normal_above, ElementDrawState::normal,
+                     settings);
 }
 
 auto render_uninserted(BLContext& ctx, const Layout& layout,
@@ -245,9 +312,11 @@ auto render_uninserted(BLContext& ctx, const Layout& layout,
         ctx.setCompOp(BL_COMP_OP_SRC_OVER);
     }
 
-    draw_logic_items(ctx, layout, layers.uninserted_below, settings);
+    draw_logic_items(ctx, layout, layers.uninserted_below, ElementDrawState::normal,
+                     settings);
     draw_wires(ctx, layers.uninserted_wires, settings);
-    draw_logic_items(ctx, layout, layers.uninserted_above, settings);
+    draw_logic_items(ctx, layout, layers.uninserted_above, ElementDrawState::normal,
+                     settings);
 }
 
 auto render_overlay(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
@@ -356,6 +425,48 @@ auto add_selected_wire_parts(const layout::ConstElement wire, const Selection& s
     }
 }
 
+auto insert_logic_item(LayersCache& layers, element_id_t element_id,
+                       ElementType element_type, rect_t bounding_rect,
+                       ElementDrawState state) -> void {
+    if (is_inserted(state)) {
+        if (draw_logic_item_above(element_type)) {
+            layers.normal_above.push_back(element_id);
+        } else {
+            layers.normal_below.push_back(element_id);
+        }
+    } else {
+        update_uninserted_rect(layers, bounding_rect);
+
+        if (draw_logic_item_above(element_type)) {
+            layers.uninserted_above.push_back(element_id);
+        } else {
+            layers.uninserted_below.push_back(element_id);
+        }
+    }
+
+    if (has_overlay(state)) {
+        update_overlay_rect(layers, bounding_rect);
+    }
+
+    switch (state) {
+        using enum ElementDrawState;
+        case normal:
+        case simulated:
+            break;
+
+        case normal_selected:
+        case temporary_selected:
+            layers.selected_logic_items.push_back(element_id);
+            break;
+        case valid:
+            layers.valid_logic_items.push_back(element_id);
+            break;
+        case colliding:
+            layers.colliding_logic_items.push_back(element_id);
+            break;
+    }
+}
+
 auto build_layers(const Layout& layout, LayersCache& layers, const Selection* selection,
                   rect_t scene_rect) -> void {
     layers.clear();
@@ -366,49 +477,11 @@ auto build_layers(const Layout& layout, LayersCache& layers, const Selection* se
         if (!is_colliding(bounding_rect, scene_rect)) {
             continue;
         }
-
         const auto element_type = element.element_type();
+
         if (is_logic_item(element_type)) {
-            const auto display_state = element.display_state();
-
-            const auto selected = (selection != nullptr)
-                                      ? selection->is_selected(element.element_id())
-                                      : false;
-            bool has_overlay = false;
-
-            if (is_inserted(display_state)) {
-                if (!render_above(element_type)) {
-                    layers.normal_below.push_back(element);
-                } else {
-                    layers.normal_above.push_back(element);
-                }
-
-                if (display_state == display_state_t::valid) {
-                    layers.valid_logic_items.push_back(element);
-                    has_overlay = true;
-                } else if (selected) {
-                    layers.selected_logic_items.push_back(element);
-                    has_overlay = true;
-                }
-            } else {
-                if (!render_above(element_type)) {
-                    layers.uninserted_below.push_back(element);
-                } else {
-                    layers.uninserted_above.push_back(element);
-                }
-                update_uninserted_rect(layers, bounding_rect);
-
-                if (display_state == display_state_t::colliding) {
-                    layers.colliding_logic_items.push_back(element);
-                    has_overlay = true;
-                } else if (selected) {
-                    layers.selected_logic_items.push_back(element);
-                    has_overlay = true;
-                }
-            }
-            if (has_overlay) {
-                update_overlay_rect(layers, bounding_rect);
-            }
+            const auto state = get_logic_item_state(element, selection);
+            insert_logic_item(layers, element, element_type, bounding_rect, state);
         }
 
         else if (element_type == ElementType::wire) {
@@ -454,6 +527,8 @@ auto render_circuit_2(BLContext& ctx, render_args_t args) -> void {
 
     build_layers(args.layout, args.settings.layers, args.selection, scene_rect);
     render_layers(ctx, args.layout, args.settings);
+
+    print(args.settings.layers);
 }
 
 }  // namespace logicsim

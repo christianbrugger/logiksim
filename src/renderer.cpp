@@ -1186,10 +1186,10 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
 
 auto render_undirected_output(BLContext& ctx, point_t position, double size,
                               const RenderSettings& settings) {
-    render_point(ctx, position, PointShape::cross, defaults::color_green, size / 4,
-                 settings);
-    render_point(ctx, position, PointShape::plus, defaults::color_green, size / 3,
-                 settings);
+    draw_point(ctx, position, PointShape::cross, defaults::color_green, size / 4,
+               settings);
+    draw_point(ctx, position, PointShape::plus, defaults::color_green, size / 3,
+               settings);
 }
 
 auto render_editable_circuit_connection_cache(BLContext& ctx,
@@ -1217,8 +1217,7 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
         if (orientation == orientation_t::undirected) {
             render_undirected_output(ctx, position, size, settings);
         } else {
-            render_arrow(ctx, position, defaults::color_green, orientation, size,
-                         settings);
+            draw_arrow(ctx, position, defaults::color_green, orientation, size, settings);
         }
     }
 }
@@ -1240,40 +1239,40 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
             using enum collision_cache::CacheState;
 
             case element_body: {
-                render_point(ctx, point, PointShape::square, color, size, settings);
+                draw_point(ctx, point, PointShape::square, color, size, settings);
                 break;
             }
             case element_connection: {
-                render_point(ctx, point, PointShape::circle, color, size, settings);
+                draw_point(ctx, point, PointShape::circle, color, size, settings);
                 break;
             }
             case wire_connection: {
-                render_point(ctx, point, PointShape::full_square, color, size * (2. / 3),
-                             settings);
+                draw_point(ctx, point, PointShape::full_square, color, size * (2. / 3),
+                           settings);
                 break;
             }
             case wire_horizontal: {
-                render_point(ctx, point, PointShape::horizontal, color, size, settings);
+                draw_point(ctx, point, PointShape::horizontal, color, size, settings);
                 break;
             }
             case wire_vertical: {
-                render_point(ctx, point, PointShape::vertical, color, size, settings);
+                draw_point(ctx, point, PointShape::vertical, color, size, settings);
                 break;
             }
             case wire_corner_point: {
-                render_point(ctx, point, PointShape::diamond, color, size, settings);
+                draw_point(ctx, point, PointShape::diamond, color, size, settings);
                 break;
             }
             case wire_cross_point: {
-                render_point(ctx, point, PointShape::cross, color, size, settings);
+                draw_point(ctx, point, PointShape::cross, color, size, settings);
                 break;
             }
             case wire_crossing: {
-                render_point(ctx, point, PointShape::plus, color, size, settings);
+                draw_point(ctx, point, PointShape::plus, color, size, settings);
                 break;
             }
             case element_wire_connection: {
-                render_point(ctx, point, PointShape::full_circle, color, size, settings);
+                draw_point(ctx, point, PointShape::full_circle, color, size, settings);
                 break;
             }
             case invalid_state: {

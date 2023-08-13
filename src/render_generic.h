@@ -83,6 +83,10 @@ auto update_uninserted_rect(LayersCache& layers, ordered_line_t line) -> void;
 auto update_overlay_rect(LayersCache& layers, rect_t bounding_rect) -> void;
 auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void;
 
+//
+// RenderSettings
+//
+
 // TODO think about const behavior?
 // TODO rename settings to RenderCache ?
 // TODO maybe make glyph cache a pointer - to remove dependency
@@ -156,15 +160,13 @@ enum class PointShape {
 template <>
 auto format(PointShape shape) -> std::string;
 
-// TODO !!! fix naming render vs draws
-auto render_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
-                  double size, const RenderSettings& settings) -> void;
+auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
+                double size, const RenderSettings& settings) -> void;
 
-auto render_points(BLContext& ctx, std::ranges::input_range auto&& points,
-                   PointShape shape, color_t color, double size,
-                   const RenderSettings& settings) -> void {
+auto draw_points(BLContext& ctx, std::ranges::input_range auto&& points, PointShape shape,
+                 color_t color, double size, const RenderSettings& settings) -> void {
     for (auto&& point : points) {
-        render_point(ctx, point, shape, color, size, settings);
+        draw_point(ctx, point, shape, color, size, settings);
     }
 }
 
@@ -172,9 +174,8 @@ auto render_points(BLContext& ctx, std::ranges::input_range auto&& points,
 // Arrow
 //
 
-// TODO !!! fix naming render vs draw
-auto render_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
-                  double size, const RenderSettings& settings) -> void;
+auto draw_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
+                double size, const RenderSettings& settings) -> void;
 
 //
 // Line
