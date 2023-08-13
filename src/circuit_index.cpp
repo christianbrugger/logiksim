@@ -1,6 +1,6 @@
 #include "circuit_index.h"
 
-#include "exceptions.h"
+#include "exception.h"
 #include "range.h"
 
 #include <algorithm>

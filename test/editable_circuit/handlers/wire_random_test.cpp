@@ -1,6 +1,6 @@
 #include "./test_helpers.h"
-#include "editable_circuit/handler_examples.h"
-#include "editable_circuit/handlers.h"
+#include "editable_circuit/handler.h"
+#include "editable_circuit/handler_example.h"
 #include "editable_circuit/sanitizer.h"
 #include "format.h"
 #include "line_tree.h"

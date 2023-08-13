@@ -1,7 +1,7 @@
 
-#include "render_widget_types.h"
+#include "render_widget_type.h"
 
-#include "editable_circuit/types.h"
+#include "editable_circuit/type.h"
 
 namespace logicsim {
 

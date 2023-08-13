@@ -1,7 +1,7 @@
 #include "geometry.h"
 
 #include "algorithm.h"
-#include "exceptions.h"
+#include "exception.h"
 #include "vocabulary.h"
 
 #include <numbers>

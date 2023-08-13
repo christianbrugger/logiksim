@@ -3,7 +3,7 @@
 #include "collision.h"
 #include "editable_circuit/selection.h"
 #include "layout.h"
-#include "layout_calculations.h"
+#include "layout_calculation.h"
 #include "timer.h"
 
 #include <numbers>

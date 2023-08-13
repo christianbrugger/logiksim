@@ -1,8 +1,8 @@
 
 // TODO rename file to iterator_adaptors.h
 
-#ifndef LOGIKSIM_ITERATOR_H
-#define LOGIKSIM_ITERATOR_H
+#ifndef LOGIKSIM_ITERATOR_ADAPTOR_H
+#define LOGIKSIM_ITERATOR_ADAPTOR_H
 
 #include <cassert>
 #include <functional>

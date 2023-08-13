@@ -2,7 +2,7 @@
 #define LOGIKSIM_SIMULATION_H
 
 #include "circular_buffer.h"
-#include "exceptions.h"
+#include "exception.h"
 #include "schematic.h"
 
 #include <boost/container/small_vector.hpp>

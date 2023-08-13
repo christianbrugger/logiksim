@@ -4,7 +4,7 @@
 
 #include "algorithm.h"
 #include "collision.h"
-#include "exceptions.h"
+#include "exception.h"
 #include "format.h"
 #include "graph.h"
 #include "range.h"

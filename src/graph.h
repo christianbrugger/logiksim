@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_GRAPH_H
 #define LOGIKSIM_GRAPH_H
 
-#include "exceptions.h"
+#include "exception.h"
 #include "format.h"
 #include "geometry.h"
 #include "range.h"

@@ -2,8 +2,8 @@
 #ifndef LOGIKSIM_RANGE_H
 #define LOGIKSIM_RANGE_H
 
-#include "concepts.h"
-#include "exceptions.h"
+#include "concept.h"
+#include "exception.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>

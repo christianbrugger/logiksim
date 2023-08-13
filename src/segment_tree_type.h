@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_SEGMENT_TREE_TYPES_H
-#define LOGIKSIM_SEGMENT_TREE_TYPES_H
+#ifndef LOGIKSIM_SEGMENT_TREE_TYPE_H
+#define LOGIKSIM_SEGMENT_TREE_TYPE_H
 
 #include "format.h"
 #include "vocabulary.h"

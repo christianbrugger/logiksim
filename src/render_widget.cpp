@@ -1,9 +1,9 @@
 #include "render_widget.h"
 
 #include "collision.h"
-#include "editable_circuit/caches.h"
-#include "editable_circuit/caches/spatial_cache.h"
-#include "exceptions.h"
+#include "editable_circuit/cache.h"
+#include "editable_circuit/cache/spatial_cache.h"
+#include "exception.h"
 #include "layout.h"
 #include "range.h"
 #include "render_circuit.h"

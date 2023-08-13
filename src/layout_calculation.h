@@ -1,7 +1,7 @@
-#ifndef LOGIKSIM_LAYOUT_CALCULATIONS_H
-#define LOGIKSIM_LAYOUT_CALCULATIONS_H
+#ifndef LOGIKSIM_LAYOUT_CALCULATION_H
+#define LOGIKSIM_LAYOUT_CALCULATION_H
 
-#include "exceptions.h"
+#include "exception.h"
 #include "layout_calculation_type.h"
 #include "vocabulary.h"
 

@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
-#include "editable_circuit/caches.h"
+#include "editable_circuit/cache.h"
 #include "editable_circuit/selection_builder.h"
 #include "editable_circuit/selection_registrar.h"
-#include "editable_circuit/types.h"
+#include "editable_circuit/type.h"
 #include "layout.h"
 
 #include <optional>

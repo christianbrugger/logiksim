@@ -1,10 +1,10 @@
 
 #include "layout.h"
 
-#include "exceptions.h"
+#include "exception.h"
 #include "iterator_adaptor.h"
+#include "layout_calculation.h"
 #include "layout_calculation_type.h"
-#include "layout_calculations.h"
 #include "range.h"
 #include "scene.h"
 #include "timer.h"

@@ -2,7 +2,7 @@
 #ifndef LOGIKSIM_CIRCULAR_BUFFER_H
 #define LOGIKSIM_CIRCULAR_BUFFER_H
 
-#include "exceptions.h"
+#include "exception.h"
 
 #include <folly/small_vector.h>
 #include <gsl/gsl>

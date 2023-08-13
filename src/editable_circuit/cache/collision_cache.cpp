@@ -1,8 +1,8 @@
-#include "editable_circuit/caches/collision_cache.h"
+#include "editable_circuit/cache/collision_cache.h"
 
-#include "editable_circuit/caches/helpers.h"
-#include "editable_circuit/messages.h"
-#include "layout_calculations.h"
+#include "editable_circuit/cache/helper.h"
+#include "editable_circuit/message.h"
+#include "layout_calculation.h"
 
 namespace logicsim {
 

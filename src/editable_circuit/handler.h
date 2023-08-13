@@ -1,8 +1,8 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_HANDLERS_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_HANDLERS_H
+#ifndef LOGIKSIM_EDITABLE_CIRCUIT_HANDLER_H
+#define LOGIKSIM_EDITABLE_CIRCUIT_HANDLER_H
 
-#include "editable_circuit/messages.h"
-#include "editable_circuit/types.h"
+#include "editable_circuit/message.h"
+#include "editable_circuit/type.h"
 #include "layout.h"
 #include "vocabulary.h"
 

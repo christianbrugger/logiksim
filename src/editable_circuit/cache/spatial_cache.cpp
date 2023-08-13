@@ -1,9 +1,9 @@
-#include "editable_circuit/caches/spatial_cache.h"
+#include "editable_circuit/cache/spatial_cache.h"
 
-#include "editable_circuit/caches/helpers.h"
-#include "editable_circuit/messages.h"
+#include "editable_circuit/cache/helper.h"
+#include "editable_circuit/message.h"
 #include "layout.h"
-#include "layout_calculations.h"
+#include "layout_calculation.h"
 
 #include <boost/geometry.hpp>
 

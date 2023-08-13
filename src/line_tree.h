@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_LINETREE_H
-#define LOGIKSIM_LINETREE_H
+#ifndef LOGIKSIM_LINE_TREE_H
+#define LOGIKSIM_LINE_TREE_H
 
 #include "format.h"
 #include "iterator_adaptor.h"

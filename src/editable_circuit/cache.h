@@ -1,9 +1,9 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHES_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_H
+#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHE_H
+#define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_H
 
-#include "editable_circuit/caches/collision_cache.h"
-#include "editable_circuit/caches/connection_cache.h"
-#include "editable_circuit/caches/spatial_cache.h"
+#include "editable_circuit/cache/collision_cache.h"
+#include "editable_circuit/cache/connection_cache.h"
+#include "editable_circuit/cache/spatial_cache.h"
 
 namespace logicsim {
 

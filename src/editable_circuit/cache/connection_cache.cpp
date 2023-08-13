@@ -1,9 +1,9 @@
-#include "editable_circuit/caches/connection_cache.h"
+#include "editable_circuit/cache/connection_cache.h"
 
-#include "editable_circuit/caches/helpers.h"
-#include "editable_circuit/messages.h"
+#include "editable_circuit/cache/helper.h"
+#include "editable_circuit/message.h"
 #include "geometry.h"
-#include "layout_calculations.h"
+#include "layout_calculation.h"
 
 namespace logicsim {
 

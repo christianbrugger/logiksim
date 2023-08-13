@@ -1,28 +1,28 @@
 cmake_minimum_required(VERSION 3.25)
 
 set(LS_CORE_SOURCES
-    src/editable_circuit/caches/collision_cache.cpp
-    src/editable_circuit/caches/connection_cache.cpp
-    src/editable_circuit/caches/spatial_cache.cpp
-    src/editable_circuit/caches/split_point_cache.cpp
+    src/editable_circuit/cache/collision_cache.cpp
+    src/editable_circuit/cache/connection_cache.cpp
+    src/editable_circuit/cache/spatial_cache.cpp
+    src/editable_circuit/cache/split_point_cache.cpp
 
-    src/editable_circuit/caches.cpp
+    src/editable_circuit/cache.cpp
     src/editable_circuit/editable_circuit.cpp
-    src/editable_circuit/handler_examples.cpp
-    src/editable_circuit/handlers.cpp
-    src/editable_circuit/messages.cpp
+    src/editable_circuit/handler_example.cpp
+    src/editable_circuit/handler.cpp
+    src/editable_circuit/message.cpp
     src/editable_circuit/sanitizer.cpp
     src/editable_circuit/selection.cpp
     src/editable_circuit/selection_builder.cpp
     src/editable_circuit/selection_registrar.cpp
-    src/editable_circuit/types.cpp
+    src/editable_circuit/type.cpp
 
     src/algorithm.cpp
     src/circuit.cpp
     src/circuit_description.cpp
     src/circuit_index.cpp
     src/collision.cpp
-    src/exceptions.cpp
+    src/exception.cpp
     src/flat_schematic.cpp
     src/geometry.cpp
     src/glyph_cache.cpp
@@ -30,7 +30,7 @@ set(LS_CORE_SOURCES
     src/interactive_simulation.cpp
     src/layout.cpp
     src/layout_calculation_type.cpp
-    src/layout_calculations.cpp
+    src/layout_calculation.cpp
     src/line_tree.cpp
     src/random.cpp
     src/renderer.cpp
@@ -40,7 +40,7 @@ set(LS_CORE_SOURCES
     src/schematic.cpp
     src/schematic_generation.cpp
     src/segment_tree.cpp
-    src/segment_tree_types.cpp
+    src/segment_tree_type.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
     src/simulation.cpp
@@ -50,13 +50,13 @@ set(LS_CORE_SOURCES
     
     src/main_widget.cpp
     src/render_widget.cpp
-    src/render_widget_types.cpp
+    src/render_widget_type.cpp
 )
 
 # any file that contains Q_OBJECT
 set(MOC_FILES
     src/main_widget.h 
-    src/render_widget_types.h
+    src/render_widget_type.h
 )
 
 set(LS_TEST_SOURCES
@@ -371,7 +371,7 @@ if (LS_ENABLE_PCH)
         <vector>
         
         "src/algorithm.h"
-        "src/exceptions.h"
+        "src/exception.h"
         "src/iterator_adaptor.h"
         "src/format.h"
     )

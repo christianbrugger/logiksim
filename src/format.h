@@ -5,7 +5,7 @@
 #define LOGIKSIM_FORMAT_H
 
 #include "algorithm.h"
-#include "exceptions.h"
+#include "exception.h"
 #include "iterator_adaptor.h"
 
 #include <boost/algorithm/string/join.hpp>

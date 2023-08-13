@@ -1,5 +1,5 @@
 #include "./test_helpers.h"
-#include "editable_circuit/handlers.h"
+#include "editable_circuit/handler.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

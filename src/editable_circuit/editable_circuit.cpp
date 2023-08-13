@@ -1,10 +1,10 @@
 #include "editable_circuit.h"
 
-#include "editable_circuit/caches.h"
-#include "editable_circuit/caches/split_point_cache.h"
-#include "editable_circuit/handler_examples.h"
-#include "editable_circuit/handlers.h"
-#include "exceptions.h"
+#include "editable_circuit/cache.h"
+#include "editable_circuit/cache/split_point_cache.h"
+#include "editable_circuit/handler.h"
+#include "editable_circuit/handler_example.h"
+#include "exception.h"
 #include "scene.h"
 #include "timer.h"
 

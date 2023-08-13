@@ -1,6 +1,6 @@
 #include "glyph_cache.h"
 
-#include "exceptions.h"
+#include "exception.h"
 #include "format.h"
 #include "vocabulary.h"
 

@@ -1,6 +1,6 @@
 #include "render_generic.h"
 
-#include "exceptions.h"
+#include "exception.h"
 #include "geometry.h"
 
 #include <blend2d.h>

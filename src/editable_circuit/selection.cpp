@@ -2,10 +2,10 @@
 #include "editable_circuit/selection.h"
 
 #include "collision.h"
-#include "editable_circuit/messages.h"
+#include "editable_circuit/message.h"
 #include "geometry.h"
 #include "layout.h"
-#include "layout_calculations.h"
+#include "layout_calculation.h"
 #include "range.h"
 
 namespace logicsim {

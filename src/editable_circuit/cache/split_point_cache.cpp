@@ -1,4 +1,4 @@
-#include "editable_circuit/caches/split_point_cache.h"
+#include "editable_circuit/cache/split_point_cache.h"
 
 #include "layout.h"
 

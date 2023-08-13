@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_SELECTION_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_SELECTION_H
 
-#include "editable_circuit/messages_forward.h"
+#include "editable_circuit/message_forward.h"
 #include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>

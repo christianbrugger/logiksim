@@ -1,13 +1,13 @@
-#include "editable_circuit/handlers.h"
+#include "editable_circuit/handler.h"
 
 #include "collision.h"
-#include "editable_circuit/caches.h"
-#include "editable_circuit/caches/split_point_cache.h"
+#include "editable_circuit/cache.h"
+#include "editable_circuit/cache/split_point_cache.h"
 #include "editable_circuit/selection.h"
 #include "editable_circuit/selection_registrar.h"
 #include "format.h"
 #include "geometry.h"
-#include "layout_calculations.h"
+#include "layout_calculation.h"
 #include "scene.h"
 #include "timer.h"
 

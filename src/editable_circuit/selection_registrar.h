@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_SELECTION_HANDLE_H
 #define LOGIKSIM_SELECTION_HANDLE_H
 
-#include "editable_circuit/messages_forward.h"
+#include "editable_circuit/message_forward.h"
 #include "iterator_adaptor.h"
 
 #include <type_traits>

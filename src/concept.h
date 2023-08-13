@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_CONCEPTS_H
-#define LOGIKSIM_CONCEPTS_H
+#ifndef LOGIKSIM_CONCEPT_H
+#define LOGIKSIM_CONCEPT_H
 
 namespace logicsim {
 

@@ -3,7 +3,7 @@
 
 #include "editable_circuit/editable_circuit.h"
 #include "interactive_simulation.h"
-#include "render_widget_types.h"
+#include "render_widget_type.h"
 #include "renderer.h"
 #include "scene.h"
 #include "timer.h"

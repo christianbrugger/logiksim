@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_RENDER_SCENE_H
-#define LOGIKSIM_RENDER_SCENE_H
+#ifndef LOGIKSIM_RENDER_H
+#define LOGIKSIM_RENDER_H
 
 #include "format.h"
 #include "glyph_cache.h"

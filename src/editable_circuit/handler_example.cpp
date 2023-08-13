@@ -1,4 +1,4 @@
-#include "editable_circuit/handler_examples.h"
+#include "editable_circuit/handler_example.h"
 
 namespace logicsim::editable_circuit::examples {
 

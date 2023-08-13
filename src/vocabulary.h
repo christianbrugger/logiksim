@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_VOCABULARY_H
 #define LOGIKSIM_VOCABULARY_H
 
-#include "exceptions.h"
+#include "exception.h"
 #include "format.h"
 #include "hashing.h"
 #include "range.h"

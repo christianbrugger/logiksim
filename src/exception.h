@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_EXCEPTIONS_H
-#define LOGIKSIM_EXCEPTIONS_H
+#ifndef LOGIKSIM_EXCEPTION_H
+#define LOGIKSIM_EXCEPTION_H
 
 namespace logicsim {
 

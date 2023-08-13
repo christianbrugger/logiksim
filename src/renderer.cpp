@@ -8,7 +8,7 @@
 #include "format.h"
 #include "geometry.h"
 #include "layout.h"
-#include "layout_calculations.h"
+#include "layout_calculation.h"
 #include "range.h"
 #include "timer.h"
 

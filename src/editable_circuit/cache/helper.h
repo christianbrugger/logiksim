@@ -1,7 +1,7 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHES_HELPERS
-#define LOGIKSIM_EDITABLE_CIRCUIT_CACHES_HELPERS
+#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHE_HELPER_H
+#define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_HELPER_H
 
-#include "editable_circuit/messages.h"
+#include "editable_circuit/message.h"
 #include "layout.h"
 
 namespace logicsim {

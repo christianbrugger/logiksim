@@ -1,4 +1,4 @@
-#include "exceptions.h"
+#include "exception.h"
 
 #include <boost/stacktrace.hpp>
 #include <fmt/core.h>

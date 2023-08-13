@@ -1,7 +1,7 @@
-#include "editable_circuit/types.h"
+#include "editable_circuit/type.h"
 
-#include "exceptions.h"
-#include "layout_calculations.h"
+#include "exception.h"
+#include "layout_calculation.h"
 
 #include <fmt/core.h>
 

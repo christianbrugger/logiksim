@@ -1,7 +1,7 @@
 
 #include "editable_circuit/sanitizer.h"
 
-#include "editable_circuit/caches/collision_cache.h"
+#include "editable_circuit/cache/collision_cache.h"
 #include "editable_circuit/selection.h"
 #include "geometry.h"
 #include "layout.h"

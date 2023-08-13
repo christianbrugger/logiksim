@@ -3,7 +3,7 @@
 
 #include "format.h"
 #include "geometry.h"
-#include "segment_tree_types.h"
+#include "segment_tree_type.h"
 #include "vocabulary.h"
 
 #include <boost/container/vector.hpp>

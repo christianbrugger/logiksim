@@ -2,7 +2,7 @@
 #include "simulation.h"
 
 #include "algorithm.h"
-#include "exceptions.h"
+#include "exception.h"
 #include "format.h"
 #include "range.h"
 #include "timer.h"

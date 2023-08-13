@@ -1,4 +1,4 @@
-#include "segment_tree_types.h"
+#include "segment_tree_type.h"
 
 namespace logicsim {
 

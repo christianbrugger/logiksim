@@ -4,7 +4,7 @@
 #include "format.h"
 #include "glyph_cache.h"
 #include "scene.h"
-#include "segment_tree_types.h"
+#include "segment_tree_type.h"
 #include "vocabulary.h"
 
 #include <functional>
