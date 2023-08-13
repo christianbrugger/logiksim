@@ -100,10 +100,6 @@ auto draw_logic_item_text(BLContext& ctx, point_fine_t point, std::string label,
               settings);
 }
 
-auto get_inverted_connector_fill_color(ElementDrawState state) -> color_t {
-    return with_alpha_runtime(defaults::inverted_connector_fill, state);
-}
-
 auto draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
                              const RenderSettings& settings) {
     const auto radius = defaults::inverted_circle_radius;
@@ -114,11 +110,15 @@ auto draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
     const auto p = to_context(attributes.position, settings.view_config);
     const auto p_center = connector_point(p, attributes.orientation, r + width);
 
-    ctx.setFillStyle(get_inverted_connector_fill_color(attributes.state));
+    const auto fill_color =
+        with_alpha_runtime(defaults::inverted_connector_fill, attributes.state);
+    const auto stroke_color = wire_color(attributes.is_enabled, attributes.state);
+
+    ctx.setFillStyle(fill_color);
     ctx.fillCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
 
-    ctx.setStrokeStyle(wire_color(attributes.state, attributes.is_enabled));
     ctx.setStrokeWidth(width);
+    ctx.setStrokeStyle(stroke_color);
     ctx.strokeCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
 }
 
@@ -127,7 +127,7 @@ auto draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
     const auto endpoint = connector_point(attributes.position, attributes.orientation,
                                           defaults::connector_length);
     draw_line(ctx, line_fine_t {attributes.position, endpoint},
-              {.color = wire_color(attributes.state, attributes.is_enabled)}, settings);
+              {.color = wire_color(attributes.is_enabled, attributes.state)}, settings);
 }
 
 auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
@@ -270,7 +270,7 @@ auto draw_logic_items(BLContext& ctx, const Layout& layout,
 // Wires
 //
 
-auto wire_color(ElementDrawState state, bool is_enabled) -> color_t {
+auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
     if (is_enabled) {
         return with_alpha_runtime(defaults::wire_color_enabled, state);
     }
@@ -610,8 +610,6 @@ auto render_circuit_2(BLContext& ctx, render_args_t args) -> void {
 
     build_layers(args.layout, args.settings.layers, args.selection, scene_rect);
     render_layers(ctx, args.layout, args.settings);
-
-    print(args.settings.layers);
 }
 
 }  // namespace logicsim

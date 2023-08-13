@@ -128,7 +128,7 @@ auto draw_logic_items(BLContext& ctx, const Layout& layout,
 // Wires
 //
 
-auto wire_color(ElementDrawState state, bool enabled) -> color_t;
+auto wire_color(bool is_enabled, ElementDrawState state) -> color_t;
 
 //
 // Overlay

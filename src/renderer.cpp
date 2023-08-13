@@ -951,6 +951,8 @@ auto draw_wire_shadows(BLContext& ctx, const Layout& layout, const Selection& se
 }
 
 auto render_circuit(BLContext& ctx, render_args_t args) -> void {
+    ctx.setCompOp(BL_COMP_OP_SRC_OVER);
+
     auto visibility = visibility_mask_t(args.layout.element_count(), false);
     auto scene_rect = get_scene_rect(args.settings.view_config);
 
