@@ -145,13 +145,19 @@ class Simulation {
     [[nodiscard]] auto input_value(element_id_t element_id, connection_id_t index) const
         -> bool;
     [[nodiscard]] auto input_value(Schematic::ConstInput input) const -> bool;
+    [[nodiscard]] auto input_values(element_id_t element_id) const
+        -> const logic_small_vector_t &;
     [[nodiscard]] auto input_values(Schematic::ConstElement element) const
-        -> logic_small_vector_t;
+        -> const logic_small_vector_t &;
     [[nodiscard]] auto input_values() const -> const logic_vector_t;
 
     // infers the output values
     auto set_output_value(Schematic::ConstOutput output, bool value) -> void;
+    [[nodiscard]] auto output_value(element_id_t element_id, connection_id_t index) const
+        -> bool;
     [[nodiscard]] auto output_value(Schematic::ConstOutput output) const -> bool;
+    [[nodiscard]] auto output_values(element_id_t element_id) const
+        -> logic_small_vector_t;
     [[nodiscard]] auto output_values(Schematic::ConstElement element) const
         -> logic_small_vector_t;
     [[nodiscard]] auto output_values() const -> logic_vector_t;

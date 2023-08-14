@@ -412,6 +412,50 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
         });
 }
 
+auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
+                                ElementDrawState state, const RenderSettings& settings,
+                                simulation_view::ConstElement logic_state) -> void {
+    const auto layout_data = to_layout_calculation_data(element.layout(), element);
+
+    iter_input_location_and_id(
+        layout_data,
+        [&](connection_id_t input_id, point_t position, orientation_t orientation) {
+            const auto is_inverted = element.input_inverted(input_id);
+
+            if (is_inverted || !logic_state.has_connected_input(input_id)) {
+                draw_connector(ctx,
+                               ConnectorAttributes {
+                                   .state = state,
+                                   .position = position,
+                                   .orientation = orientation,
+                                   .is_inverted = is_inverted,
+                                   .is_enabled = logic_state.input_value(input_id),
+                               },
+                               settings);
+            }
+            return true;
+        });
+
+    iter_output_location_and_id(
+        layout_data,
+        [&](connection_id_t output_id, point_t position, orientation_t orientation) {
+            const auto is_inverted = element.output_inverted(output_id);
+
+            if (is_inverted || !logic_state.has_connected_output(output_id)) {
+                draw_connector(ctx,
+                               ConnectorAttributes {
+                                   .state = state,
+                                   .position = position,
+                                   .orientation = orientation,
+                                   .is_inverted = is_inverted,
+                                   .is_enabled = logic_state.output_value(output_id),
+                               },
+                               settings);
+            }
+            return true;
+        });
+}
+
 auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements,
                            const RenderSettings& settings) -> void {
@@ -449,7 +493,8 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
     const auto state = ElementDrawState::normal;
 
     for (const auto element_id : elements) {
-        draw_logic_item_connectors(ctx, layout.element(element_id), state, settings);
+        draw_logic_item_connectors(ctx, layout.element(element_id), state, settings,
+                                   simulation_view.element(element_id));
     }
 }
 

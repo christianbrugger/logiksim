@@ -753,9 +753,14 @@ auto Simulation::input_value(const Schematic::ConstInput input) const -> bool {
     return input_value(input.element_id(), input.input_index());
 }
 
+auto Simulation::input_values(element_id_t element_id) const
+    -> const logic_small_vector_t & {
+    return input_values_.at(element_id.value);
+}
+
 auto Simulation::input_values(const Schematic::ConstElement element) const
-    -> logic_small_vector_t {
-    return input_values_.at(element.element_id().value);
+    -> const logic_small_vector_t & {
+    return input_values(element.element_id());
 }
 
 auto Simulation::input_values() const -> const logic_vector_t {
@@ -787,9 +792,18 @@ auto Simulation::set_output_value(Schematic::ConstOutput output, bool value) -> 
     input_value = value ^ input.is_inverted();
 }
 
+auto Simulation::output_value(element_id_t element_id, connection_id_t index) const
+    -> bool {
+    return output_value(schematic_->element(element_id).output(index));
+}
+
 auto Simulation::output_value(const Schematic::ConstOutput output) const -> bool {
     const auto input = output.connected_input();
     return input_value(input) ^ input.is_inverted();
+}
+
+auto Simulation::output_values(element_id_t element_id) const -> logic_small_vector_t {
+    return output_values(schematic_->element(element_id));
 }
 
 auto Simulation::output_values(const Schematic::ConstElement element) const

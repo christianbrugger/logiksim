@@ -41,6 +41,31 @@ namespace simulation_view {
 ConstElement::ConstElement(const SimulationView& view, element_id_t element_id) noexcept
     : view_ {&view}, element_id_ {element_id} {}
 
+auto ConstElement::has_connected_input(connection_id_t index) const -> bool {
+    return view_->schematic_->element(element_id_).input(index).has_connected_element();
+}
+
+auto ConstElement::has_connected_output(connection_id_t index) const -> bool {
+    const auto output = view_->schematic_->element(element_id_).output(index);
+    return output.has_connected_element() && !output.connected_element().is_placeholder();
+}
+
+auto ConstElement::input_value(connection_id_t index) const -> bool {
+    return view_->simulation_->input_value(element_id_, index);
+}
+
+auto ConstElement::input_values() const -> const logic_small_vector_t& {
+    return view_->simulation_->input_values(element_id_);
+}
+
+auto ConstElement::output_value(connection_id_t index) const -> bool {
+    return view_->simulation_->output_value(element_id_, index);
+}
+
+auto ConstElement::output_values() const -> logic_small_vector_t {
+    return view_->simulation_->output_values(element_id_);
+}
+
 auto ConstElement::internal_state() const -> const logic_small_vector_t& {
     return view_->simulation_->internal_state(element_id_);
 }

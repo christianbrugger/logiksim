@@ -165,6 +165,10 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
                                 ElementDrawState state, const RenderSettings& settings)
     -> void;
 
+auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
+                                ElementDrawState state, const RenderSettings& settings,
+                                simulation_view::ConstElement logic_state) -> void;
+
 auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements,
                            const RenderSettings& settings) -> void;
