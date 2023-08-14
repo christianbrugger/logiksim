@@ -183,6 +183,7 @@ class Simulation {
                                       std::size_t index) const -> bool;
 
     // history
+    auto input_history(element_id_t element_id) const -> HistoryView;
     auto input_history(Schematic::ConstElement element) const -> HistoryView;
 
    private:
@@ -300,10 +301,10 @@ auto set_default_inputs(Simulation &simulation) -> void;
 
 }  // namespace logicsim
 
-static_assert(std::forward_iterator<logicsim::Simulation::HistoryIterator>);
+static_assert(std::forward_iterator<logicsim::simulation::HistoryIterator>);
 
 template <>
-inline constexpr bool std::ranges::enable_view<logicsim::Simulation::HistoryView> = true;
+inline constexpr bool std::ranges::enable_view<logicsim::simulation::HistoryView> = true;
 
 // benchmark
 

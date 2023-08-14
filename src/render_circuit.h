@@ -192,6 +192,7 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
 //
 
 auto wire_color(bool is_enabled, ElementDrawState state) -> color_t;
+auto wire_color(bool is_enabled) -> color_t;
 
 auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
                            ElementDrawState state, const RenderSettings& settings)

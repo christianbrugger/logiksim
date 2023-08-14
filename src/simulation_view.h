@@ -10,7 +10,10 @@ namespace logicsim {
 
 class Schematic;
 class Simulation;
+
+namespace simulation {
 class HistoryView;
+}
 
 namespace simulation_view {
 
@@ -59,7 +62,9 @@ class ConstElement {
 
     [[nodiscard]] auto internal_state() const -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(std::size_t index) const -> bool;
-    // [[nodiscard]] auto input_history() const -> HistoryView;
+
+    [[nodiscard]] auto history_length() const -> delay_t;
+    [[nodiscard]] auto input_history() const -> simulation::HistoryView;
 
     [[nodiscard]] auto time() const -> time_t;
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;

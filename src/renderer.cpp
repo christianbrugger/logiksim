@@ -59,7 +59,7 @@ auto draw_line_segment(BLContext& ctx, line_t line, bool is_enabled,
 }
 
 auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,
-                       time_t time_until, const Simulation::HistoryView& history,
+                       time_t time_until, const simulation::HistoryView& history,
                        const RenderSettings& settings) -> void {
     assert(time_from < time_until);
 

@@ -875,6 +875,10 @@ auto Simulation::internal_state(Schematic::ConstElement element, std::size_t ind
     return internal_state(element).at(index);
 }
 
+auto Simulation::input_history(element_id_t element_id) const -> HistoryView {
+    return input_history(schematic_->element(element_id));
+}
+
 auto Simulation::input_history(Schematic::ConstElement element) const -> HistoryView {
     const auto last_value =
         static_cast<bool>(input_values(element).at(0) ^ element.input_inverters().at(0));
@@ -1105,7 +1109,7 @@ auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
         fmt::print("output_values = {}\n", fmt_join("", output_values, "{:b}"));
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
-                auto hist = simulation.input_history(element);
+                auto hist = simulation.input_history(Schematic::ConstElement {element});
                 print(element, hist);
             }
         }

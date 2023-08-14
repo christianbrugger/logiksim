@@ -82,9 +82,13 @@ auto ConstElement::internal_state(std::size_t index) const -> bool {
     return internal_state().at(index);
 }
 
-// auto ConstElement::input_history() const -> HistoryView {
-//     return view_->simulation_->input_history(element_id_)
-// }
+auto ConstElement::history_length() const -> delay_t {
+    return view_->schematic_->element(element_id_).history_length();
+}
+
+auto ConstElement::input_history() const -> simulation::HistoryView {
+    return view_->simulation_->input_history(element_id_);
+}
 
 auto ConstElement::time() const -> time_t {
     return view_->time();

@@ -5,6 +5,7 @@
 #include "editable_circuit/selection.h"
 #include "layout.h"
 #include "layout_calculation.h"
+#include "simulation.h"
 #include "simulation_view.h"
 #include "timer.h"
 
@@ -509,6 +510,13 @@ auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
     return with_alpha_runtime(defaults::wire_color_disabled, state);
 }
 
+auto wire_color(bool is_enabled) -> color_t {
+    if (is_enabled) {
+        return defaults::wire_color_enabled;
+    }
+    return defaults::wire_color_disabled;
+}
+
 auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
                            ElementDrawState state, const RenderSettings& settings)
     -> void {
@@ -556,39 +564,83 @@ auto draw_line_segment(BLContext& ctx, segment_info_t info, bool is_enabled,
     }
 }
 
-auto draw_segment_tree(BLContext& ctx, layout::ConstElement element,
+auto draw_segment_tree(BLContext& ctx, layout::ConstElement element, bool is_enabled,
                        ElementDrawState state, const RenderSettings& settings) -> void {
-    const auto is_enabled = false;
-
     for (const segment_info_t& info : element.segment_tree().segment_infos()) {
         draw_line_segment(ctx, info, is_enabled, state, settings);
     }
 }
 
-/*
-auto draw_wire_with_history(BLContext& ctx, layout::ConstElement element,
-                            simulation_view::ConstElement logic_state,
-                            const RenderSettings& settings) -> void {
+auto draw_segment_tree(BLContext& ctx, layout::ConstElement element,
+                       ElementDrawState state, const RenderSettings& settings) -> void {
+    bool is_enabled = false;
+    draw_segment_tree(ctx, element, is_enabled, state, settings);
+}
+
+auto _draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,
+                        time_t time_until, const simulation::HistoryView& history,
+                        const RenderSettings& settings) -> void {
+    assert(time_from < time_until);
+
+    const auto it_from = history.from(time_from);
+    const auto it_until = history.until(time_until);
+
+    for (const auto& entry : std::ranges::subrange(it_from, it_until)) {
+        const auto p_start =
+            interpolate_line_1d(p_from, p_until, time_from, time_until, entry.first_time);
+        const auto p_end =
+            interpolate_line_1d(p_from, p_until, time_from, time_until, entry.last_time);
+
+        // TODO !!! why do we need this check? fix history.from, history.until?
+        if (p_start != p_end) {
+            draw_line_segment(ctx, line_fine_t {p_start, p_end}, entry.value,
+                              ElementDrawState::normal, settings);
+        }
+    }
+}
+
+auto _draw_wire_with_history(BLContext& ctx, layout::ConstElement element,
+                             simulation_view::ConstElement logic_state,
+                             const RenderSettings& settings) -> void {
     const auto to_time =
         [time = logic_state.time(),
          delay = logic_state.wire_delay_per_distance()](LineTree::length_t length_) {
             return time_t {time.value - static_cast<int64_t>(length_) * delay.value};
         };
 
-    const auto history = simulation.input_history(element);
+    const auto history = logic_state.input_history();
+
+    // TODO optimize for zero history
 
     for (auto&& segment : element.line_tree().sized_segments()) {
-        draw_line_segment(ctx, segment.line.p1, segment.line.p0,
-                          to_time(segment.p1_length), to_time(segment.p0_length), history,
-                          settings);
+        _draw_line_segment(ctx, segment.line.p1, segment.line.p0,
+                           to_time(segment.p1_length), to_time(segment.p0_length),
+                           history, settings);
 
         if (segment.has_cross_point_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
-            draw_line_cross_point(ctx, segment.line.p0, wire_enabled, settings);
+            draw_line_cross_point(ctx, segment.line.p0, wire_enabled,
+                                  ElementDrawState::normal, settings);
         }
     }
 }
-*/
+
+auto draw_wire(BLContext& ctx, layout::ConstElement element,
+               simulation_view::ConstElement logic_state, const RenderSettings& settings)
+    -> void {
+    if (element.input_count() == 0) {
+        draw_segment_tree(ctx, element, ElementDrawState::normal, settings);
+    } else {
+        if (logic_state.history_length() == delay_t {0ns}) {
+            auto is_enabled = logic_state.input_value(connection_id_t {0}) ^
+                              element.input_inverted(connection_id_t {0});
+            draw_segment_tree(ctx, element, is_enabled, ElementDrawState::normal,
+                              settings);
+        } else {
+            _draw_wire_with_history(ctx, element, logic_state, settings);
+        }
+    }
+}
 
 //
 //
@@ -613,18 +665,16 @@ auto draw_wires(BLContext& ctx, const Layout& layout,
 auto draw_wires(BLContext& ctx, const Layout& layout,
                 std::span<const element_id_t> elements, SimulationView simulation_view,
                 const RenderSettings& settings) -> void {
-    const auto state = ElementDrawState::normal;
-
     for (const auto element_id : elements) {
-        draw_segment_tree(ctx, layout.element(element_id), state, settings);
+        draw_wire(ctx, layout.element(element_id), simulation_view.element(element_id),
+                  settings);
     }
 }
 
 auto draw_wires(BLContext& ctx, std::span<const segment_info_t> segment_infos,
                 ElementDrawState state, const RenderSettings& settings) -> void {
-    const auto is_enabled = false;
-
     for (const auto& info : segment_infos) {
+        const auto is_enabled = false;
         draw_line_segment(ctx, info, is_enabled, state, settings);
     }
 }
