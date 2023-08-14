@@ -1,6 +1,7 @@
 #include "render_circuit.h"
 
 #include "collision.h"
+#include "concept.h"
 #include "editable_circuit/selection.h"
 #include "layout.h"
 #include "layout_calculation.h"
@@ -253,16 +254,21 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
         });
 }
 
-auto draw_logic_items(BLContext& ctx, const Layout& layout,
-                      std::span<const DrawableElement> elements,
-                      const RenderSettings& settings) -> void {
+auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+                           std::span<const DrawableElement> elements,
+                           const RenderSettings& settings) -> void {
     for (const auto entry : elements) {
-        // draw_logic_item(ctx, layout.element(element_id), false, settings);
+        draw_logic_item_base(ctx, layout.element(entry.element_id), entry.state,
+                             settings);
+    }
+}
 
-        const auto element = layout.element(entry.element_id);
-
-        draw_logic_item_base(ctx, element, entry.state, settings);
-        draw_logic_item_connectors(ctx, element, entry.state, settings);
+auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
+                                 std::span<const DrawableElement> elements,
+                                 const RenderSettings& settings) -> void {
+    for (const auto entry : elements) {
+        draw_logic_item_connectors(ctx, layout.element(entry.element_id), entry.state,
+                                   settings);
     }
 }
 
@@ -277,25 +283,88 @@ auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
     return with_alpha_runtime(defaults::wire_color_disabled, state);
 }
 
-auto draw_wires(BLContext& ctx, const Layout& layout,
-                std::span<const element_id_t> elements, const RenderSettings& settings)
+auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
+                           ElementDrawState state, const RenderSettings& settings)
     -> void {
-    for (const auto element_id : elements) {
-        draw_segment_tree(ctx, layout.element(element_id), settings);
+    int lc_width = settings.view_config.line_cross_width();
+    if (lc_width <= 0) {
+        return;
+    }
+
+    const int wire_width = settings.view_config.stroke_width();
+    const int wire_offset = (wire_width - 1) / 2;
+
+    const int size = 2 * lc_width + wire_width;
+    const int offset = wire_offset + lc_width;
+
+    const auto [x, y] = to_context(point, settings.view_config);
+    const auto color = wire_color(is_enabled, state);
+
+    ctx.setFillStyle(color);
+    ctx.fillRect(x - offset, y - offset, size, size);
+}
+
+auto draw_line_segment(BLContext& ctx, line_t line, bool is_enabled,
+                       ElementDrawState state, const RenderSettings& settings) -> void {
+    draw_line_segment(ctx, line_fine_t {line}, is_enabled, state, settings);
+
+    draw_point(ctx, line.p0, PointShape::circle, defaults::color_orange, 0.2, settings);
+    draw_point(ctx, line.p1, PointShape::cross, defaults::color_orange, 0.2, settings);
+}
+
+auto draw_line_segment(BLContext& ctx, line_fine_t line, bool is_enabled,
+                       ElementDrawState state, const RenderSettings& settings) -> void {
+    const auto color = wire_color(is_enabled, state);
+    draw_line(ctx, line, {.color = color}, settings);
+}
+
+auto draw_line_segment(BLContext& ctx, segment_info_t info, bool is_enabled,
+                       ElementDrawState state, const RenderSettings& settings) -> void {
+    draw_line_segment(ctx, info.line, is_enabled, state, settings);
+
+    if (is_cross_point(info.p0_type)) {
+        draw_line_cross_point(ctx, info.line.p0, is_enabled, state, settings);
+    }
+    if (is_cross_point(info.p1_type)) {
+        draw_line_cross_point(ctx, info.line.p1, is_enabled, state, settings);
     }
 }
 
-auto draw_wires(BLContext& ctx, std::span<const segment_info_t> segments,
-                const RenderSettings& settings) -> void {
-    for (const auto& segment : segments) {
-        draw_line_segment(ctx, segment.line, false, settings);
+auto draw_segment_tree(BLContext& ctx, layout::ConstElement element,
+                       ElementDrawState state, const RenderSettings& settings) -> void {
+    const auto is_enabled = false;
 
-        if (is_cross_point(segment.p0_type)) {
-            draw_line_cross_point(ctx, segment.line.p0, false, settings);
-        }
-        if (is_cross_point(segment.p1_type)) {
-            draw_line_cross_point(ctx, segment.line.p1, false, settings);
-        }
+    for (const segment_info_t& info : element.segment_tree().segment_infos()) {
+        draw_line_segment(ctx, info, is_enabled, state, settings);
+    }
+}
+
+//
+//
+//
+
+auto draw_wires(BLContext& ctx, const Layout& layout,
+                std::span<const DrawableElement> elements, const RenderSettings& settings)
+    -> void {
+    for (const auto entry : elements) {
+        draw_segment_tree(ctx, layout.element(entry.element_id), entry.state, settings);
+    }
+}
+
+auto draw_wires(BLContext& ctx, const Layout& layout,
+                std::span<const element_id_t> elements, ElementDrawState state,
+                const RenderSettings& settings) -> void {
+    for (const auto element_id : elements) {
+        draw_segment_tree(ctx, layout.element(element_id), state, settings);
+    }
+}
+
+auto draw_wires(BLContext& ctx, std::span<const segment_info_t> segment_infos,
+                ElementDrawState state, const RenderSettings& settings) -> void {
+    const auto is_enabled = false;
+
+    for (const auto& info : segment_infos) {
+        draw_line_segment(ctx, info, is_enabled, state, settings);
     }
 }
 
@@ -361,15 +430,28 @@ auto draw_logic_item_shadows(BLContext& ctx, const Layout& layout,
     }
 }
 
-auto draw_wire_shadows(BLContext& ctx, std::span<const ordered_line_t> lines,
-                       shadow_t shadow_type, const RenderSettings& settings) -> void {
+template <input_range_of<ordered_line_t> View>
+auto draw_wire_shadows_impl(BLContext& ctx, View lines, shadow_t shadow_type,
+                            const RenderSettings& settings) -> void {
     const auto color = shadow_color(shadow_type);
     ctx.setFillStyle(BLRgba32(color.value));
 
-    for (auto line : lines) {
+    for (const ordered_line_t line : lines) {
         const auto selection_rect = element_selection_rect_rounded(line);
         draw_round_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
     }
+}
+
+auto draw_wire_shadows(BLContext& ctx, std::span<const ordered_line_t> lines,
+                       shadow_t shadow_type, const RenderSettings& settings) -> void {
+    draw_wire_shadows_impl(ctx, lines, shadow_type, settings);
+}
+
+auto draw_wire_shadows(BLContext& ctx, std::span<const segment_info_t> segment_infos,
+                       shadow_t shadow_type, const RenderSettings& settings) -> void {
+    draw_wire_shadows_impl(
+        ctx, transform_view(segment_infos, [](segment_info_t info) { return info.line; }),
+        shadow_type, settings);
 }
 
 //
@@ -382,9 +464,12 @@ auto render_inserted(BLContext& ctx, const Layout& layout,
 
     ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    draw_logic_items(ctx, layout, layers.normal_below, settings);
-    draw_wires(ctx, layout, layers.normal_wires, settings);
-    draw_logic_items(ctx, layout, layers.normal_above, settings);
+    draw_logic_items_base(ctx, layout, layers.normal_below, settings);
+    draw_wires(ctx, layout, layers.normal_wires, ElementDrawState::normal, settings);
+    draw_logic_items_base(ctx, layout, layers.normal_above, settings);
+
+    draw_logic_items_connectors(ctx, layout, layers.normal_below, settings);
+    draw_logic_items_connectors(ctx, layout, layers.normal_above, settings);
 }
 
 auto render_uninserted(BLContext& ctx, const Layout& layout,
@@ -397,9 +482,14 @@ auto render_uninserted(BLContext& ctx, const Layout& layout,
         ctx.setCompOp(BL_COMP_OP_SRC_OVER);
     }
 
-    draw_logic_items(ctx, layout, layers.uninserted_below, settings);
-    draw_wires(ctx, layers.uninserted_wires, settings);
-    draw_logic_items(ctx, layout, layers.uninserted_above, settings);
+    draw_logic_items_base(ctx, layout, layers.uninserted_below, settings);
+    draw_wires(ctx, layers.temporary_wires, ElementDrawState::temporary_selected,
+               settings);
+    draw_wires(ctx, layers.colliding_wires, ElementDrawState::colliding, settings);
+    draw_logic_items_base(ctx, layout, layers.uninserted_above, settings);
+
+    draw_logic_items_connectors(ctx, layout, layers.uninserted_below, settings);
+    draw_logic_items_connectors(ctx, layout, layers.uninserted_above, settings);
 }
 
 auto render_overlay(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
@@ -584,13 +674,13 @@ auto build_layers(const Layout& layout, LayersCache& layers, const Selection* se
                 // fine grained check, as uninserted trees can contain a lot of segments
                 for (const auto& info : element.segment_tree().segment_infos()) {
                     if (is_colliding(info.line, scene_rect)) {
-                        layers.uninserted_wires.push_back(info);
+                        // layers.uninserted_wires.push_back(info);
                         update_uninserted_rect(layers, info.line);
 
                         if (display_state == display_state_t::colliding) {
-                            layers.colliding_wires.push_back(info.line);
+                            layers.colliding_wires.push_back(info);
                         } else if (display_state == display_state_t::temporary) {
-                            layers.temporary_wires.push_back(info.line);
+                            layers.temporary_wires.push_back(info);
                         }
                     }
                 }
@@ -605,7 +695,7 @@ auto build_layers(const Layout& layout, LayersCache& layers, const Selection* se
 //
 //
 
-auto render_circuit_2(BLContext& ctx, render_args_t args) -> void {
+auto render_circuit_2(BLContext& ctx, RenderArgs2 args) -> void {
     const auto scene_rect = get_scene_rect(args.settings.view_config);
 
     build_layers(args.layout, args.settings.layers, args.selection, scene_rect);

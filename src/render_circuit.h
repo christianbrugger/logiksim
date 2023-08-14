@@ -1,13 +1,22 @@
 #ifndef LOGIKSIM_RENDER_CIRCUIT_H
 #define LOGIKSIM_RENDER_CIRCUIT_H
 
-#include "renderer.h"  // TODO !!! remove, when done porting
+#include "render_generic.h"
 #include "vocabulary.h"
+
+#include <span>
+
+class BLContext;
 
 namespace logicsim {
 //
 // forward declarations
 //
+class Layout;
+class Selection;
+class Schematic;
+class Simulation;
+
 namespace layout {
 template <bool Const>
 class ElementTemplate;
@@ -120,15 +129,29 @@ auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
 //
 //
 
-auto draw_logic_items(BLContext& ctx, const Layout& layout,
-                      std::span<const DrawableElement> elements,
-                      const RenderSettings& settings) -> void;
+auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+                           std::span<const DrawableElement> elements,
+                           const RenderSettings& settings) -> void;
+
+auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
+                                 std::span<const DrawableElement> elements,
+                                 const RenderSettings& settings) -> void;
 
 //
 // Wires
 //
 
 auto wire_color(bool is_enabled, ElementDrawState state) -> color_t;
+
+auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
+                           ElementDrawState state, const RenderSettings& settings)
+    -> void;
+
+auto draw_line_segment(BLContext& ctx, line_t line, bool is_enabled,
+                       ElementDrawState state, const RenderSettings& settings) -> void;
+
+auto draw_line_segment(BLContext& ctx, line_fine_t line, bool is_enabled,
+                       ElementDrawState state, const RenderSettings& settings) -> void;
 
 //
 // Overlay
@@ -149,9 +172,18 @@ auto shadow_color(shadow_t shadow_type) -> color_t;
 // Layout Rendering
 //
 
+// TODO !!! redo this whole struct
+struct RenderArgs2 {
+    const Layout& layout;
+    const Schematic* schematic {nullptr};
+    const Simulation* simulation {nullptr};
+    const Selection* selection {nullptr};
+    const RenderSettings& settings {};
+};
+
 // TODO fix render args
 // TODO fix nameing
-auto render_circuit_2(BLContext& ctx, render_args_t args) -> void;
+auto render_circuit_2(BLContext& ctx, RenderArgs2 args) -> void;
 
 }  // namespace logicsim
 

@@ -24,6 +24,40 @@
 
 namespace logicsim {
 
+auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
+                           const RenderSettings& settings) -> void {
+    int lc_width = settings.view_config.line_cross_width();
+    if (lc_width <= 0) {
+        return;
+    }
+
+    const int wire_width = settings.view_config.stroke_width();
+    const int wire_offset = (wire_width - 1) / 2;
+
+    const int size = 2 * lc_width + wire_width;
+    const int offset = wire_offset + lc_width;
+
+    const auto [x, y] = to_context(point, settings.view_config);
+    const auto color = is_enabled ? defaults::color_red : defaults::color_black;
+
+    ctx.setFillStyle(color);
+    ctx.fillRect(x - offset, y - offset, size, size);
+}
+
+auto draw_line_segment(BLContext& ctx, line_fine_t line, bool is_enabled,
+                       const RenderSettings& settings) -> void {
+    const auto color = is_enabled ? defaults::color_red : defaults::color_black;
+    draw_line(ctx, line, {.color = color}, settings);
+}
+
+auto draw_line_segment(BLContext& ctx, line_t line, bool is_enabled,
+                       const RenderSettings& settings) -> void {
+    draw_line_segment(ctx, line_fine_t {line}, is_enabled, settings);
+
+    draw_point(ctx, line.p0, PointShape::circle, defaults::color_orange, 0.2, settings);
+    draw_point(ctx, line.p1, PointShape::cross, defaults::color_orange, 0.2, settings);
+}
+
 auto draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,
                        time_t time_until, const Simulation::HistoryView& history,
                        const RenderSettings& settings) -> void {

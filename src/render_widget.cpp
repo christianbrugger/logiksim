@@ -1090,7 +1090,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
                                        .settings = render_settings_,
                                    });
         } else {
-            render_circuit_2(bl_ctx, render_args_t {
+            render_circuit_2(bl_ctx, RenderArgs2 {
                                          .layout = editable_circuit.layout(),
                                          .selection = &selection,
                                          .settings = render_settings_,

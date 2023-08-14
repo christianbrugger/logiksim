@@ -127,33 +127,6 @@ auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_r
     target_ctx.restore();
 }
 
-/*
-template <typename Func>
-auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
-                     const RenderSettings& settings, Func render_func) -> void {
-    target_ctx.save();
-
-    if (layer.enabled) {
-        layer.initialize(settings.view_config, context_info(settings));
-        layer.ctx.clearRect(dirty_rect);
-
-        {
-            layer.ctx.save();
-            render_func(layer.ctx);
-            layer.ctx.restore();
-        }
-
-        layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
-        target_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
-        target_ctx.blitImage(dirty_rect, layer.image, dirty_rect);
-    } else {
-        render_func(target_ctx);
-    }
-
-    target_ctx.restore();
-}
-*/
-
 //
 // Layers Cache
 //
@@ -166,7 +139,6 @@ auto LayersCache::format() const -> std::string {
         "\n  normal_above = {}"
         "\n"
         "\n  uninserted_below = {}"
-        "\n  uninserted_wires = {}"
         "\n  uninserted_above = {}"
         "\n"
         "\n  selected_logic_items = {}"
@@ -186,7 +158,6 @@ auto LayersCache::format() const -> std::string {
         normal_above,  //
 
         uninserted_below,  //
-        uninserted_wires,  //
         uninserted_above,  //
 
         selected_logic_items,   //
@@ -208,7 +179,6 @@ auto LayersCache::clear() -> void {
     normal_above.clear();
 
     uninserted_below.clear();
-    uninserted_wires.clear();
     uninserted_above.clear();
 
     selected_logic_items.clear();
@@ -231,7 +201,8 @@ auto LayersCache::has_inserted() const -> bool {
 
 auto LayersCache::has_uninserted() const -> bool {
     return !uninserted_below.empty() ||  //
-           !uninserted_wires.empty() ||  //
+           !temporary_wires.empty() ||   //
+           !colliding_wires.empty() ||   //
            !uninserted_above.empty();
 }
 
@@ -247,11 +218,14 @@ auto LayersCache::has_overlay() const -> bool {
 
 auto LayersCache::calculate_overlay_bounding_rect() -> void {
     const auto update = [this](ordered_line_t line) { update_overlay_rect(*this, line); };
+    const auto update_info = [this](segment_info_t info) {
+        update_overlay_rect(*this, info.line);
+    };
 
     std::ranges::for_each(selected_wires, update);
-    std::ranges::for_each(temporary_wires, update);
+    std::ranges::for_each(temporary_wires, update_info);
     std::ranges::for_each(valid_wires, update);
-    std::ranges::for_each(colliding_wires, update);
+    std::ranges::for_each(colliding_wires, update_info);
 }
 
 auto update_bounding_rect(std::optional<rect_t>& target, rect_t new_rect) -> void {
@@ -670,42 +644,4 @@ auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
                             attributes.vertical_alignment);
 }
 
-//
-// Circuit Primitives
-//
-
-auto draw_line_cross_point(BLContext& ctx, const point_t point, bool enabled,
-                           const RenderSettings& settings) -> void {
-    int lc_width = settings.view_config.line_cross_width();
-
-    if (lc_width < 1) {
-        return;
-    }
-
-    const int wire_width = settings.view_config.stroke_width();
-    const int wire_offset = (wire_width - 1) / 2;
-
-    const int size = 2 * lc_width + wire_width;
-    const int offset = wire_offset + lc_width;
-
-    const auto [x, y] = to_context(point, settings.view_config);
-    const auto color = enabled ? defaults::color_red : defaults::color_black;
-
-    ctx.setFillStyle(BLRgba32 {color.value});
-    ctx.fillRect(x - offset, y - offset, size, size);
-}
-
-auto draw_line_segment(BLContext& ctx, line_t line, bool enabled,
-                       const RenderSettings& settings) -> void {
-    draw_line_segment(ctx, line_fine_t {line}, enabled, settings);
-
-    draw_point(ctx, line.p0, PointShape::circle, defaults::color_orange, 0.2, settings);
-    draw_point(ctx, line.p1, PointShape::cross, defaults::color_orange, 0.2, settings);
-}
-
-auto draw_line_segment(BLContext& ctx, line_fine_t line, bool enabled,
-                       const RenderSettings& settings) -> void {
-    const auto color = enabled ? defaults::color_red : defaults::color_black;
-    draw_line(ctx, line, {color}, settings);
-}
 }  // namespace logicsim

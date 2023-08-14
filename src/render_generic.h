@@ -89,19 +89,18 @@ struct LayersCache {
 
     // uninserted
     std::vector<DrawableElement> uninserted_below;
-    std::vector<segment_info_t> uninserted_wires;
     std::vector<DrawableElement> uninserted_above;
 
     // selected & temporary
     std::vector<element_id_t> selected_logic_items;
     std::vector<ordered_line_t> selected_wires;
-    std::vector<ordered_line_t> temporary_wires;
+    std::vector<segment_info_t> temporary_wires;
     // valid
     std::vector<element_id_t> valid_logic_items;
     std::vector<ordered_line_t> valid_wires;
     // colliding
     std::vector<element_id_t> colliding_logic_items;
-    std::vector<ordered_line_t> colliding_wires;
+    std::vector<segment_info_t> colliding_wires;
 
    public:
     std::optional<rect_t> uninserted_bounding_rect;
@@ -242,7 +241,7 @@ auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attribute
 // Rect
 //
 
-// TODO use color everywhere
+// TODO !!! make color mandatory
 struct RectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
@@ -254,7 +253,7 @@ struct RectAttributes {
 auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
                const RenderSettings& settings) -> void;
 
-// TODO add colors to rounded rect
+// TODO !!! add color and make mandatory
 struct RoundRectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
@@ -268,6 +267,7 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 // Text
 //
 
+// TODO !!! make color mandatory
 struct TextAttributes {
     double font_size {1.0};  // grid size
     color_t fill_color {defaults::no_color};
@@ -275,25 +275,12 @@ struct TextAttributes {
     HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};
     VerticalAlignment vertical_alignment {VerticalAlignment::baseline};
 
-    // don't render, if converted font size is smaller
+    // don't render, if scaled font size is smaller
     double cuttoff_size_px {3.0};  // pixels
 };
 
 auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
                TextAttributes attributes, const RenderSettings& settings) -> void;
-
-//
-// Circuit Primitives
-//
-
-auto draw_line_cross_point(BLContext& ctx, const point_t point, bool enabled,
-                           const RenderSettings& settings) -> void;
-
-auto draw_line_segment(BLContext& ctx, line_t line, bool enabled,
-                       const RenderSettings& settings) -> void;
-
-auto draw_line_segment(BLContext& ctx, line_fine_t line, bool enabled,
-                       const RenderSettings& settings) -> void;
 
 }  // namespace logicsim
 
