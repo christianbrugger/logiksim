@@ -132,6 +132,12 @@ auto draw_binary_value(BLContext& ctx, point_fine_t point, bool is_enabled,
                           });
 }
 
+auto draw_binary_false(BLContext& ctx, point_fine_t point, layout::ConstElement element,
+                       ElementDrawState state, const RenderSettings& settings) -> void {
+    const auto is_enabled = false;
+    draw_binary_value(ctx, point, is_enabled, element, state, settings);
+}
+
 auto _draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
                               const RenderSettings& settings) {
     const auto radius = defaults::inverted_circle_radius;
@@ -218,11 +224,10 @@ auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState 
         point_fine_t {-padding, -padding},
         point_fine_t {+padding, +padding},
     };
-    const auto is_enabled = false;
 
     draw_logic_item_rect(ctx, rect, element, state, settings,
                          {.custom_fill_color = defaults::button_body_color});
-    draw_binary_value(ctx, point_fine_t {0, 0}, is_enabled, element, state, settings);
+    draw_binary_false(ctx, point_fine_t {0, 0}, element, state, settings);
 }
 
 auto draw_buffer(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
@@ -268,8 +273,19 @@ auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
         point_fine_t {0., 0. - padding},
         point_fine_t {8., 2. + padding},
     };
-
     draw_logic_item_rect(ctx, rect, element, state, settings);
+
+    // content
+    const auto output_count = element.output_count();
+    const auto state_size = std::size_t {10};
+
+    for (auto n : range(output_count, state_size)) {
+        const auto point = point_fine_t {
+            -1 + 2.0 * (n / output_count),
+            0.25 + 1.5 * (n % output_count),
+        };
+        draw_binary_false(ctx, point, element, state, settings);
+    }
 }
 
 auto draw_latch_d(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
