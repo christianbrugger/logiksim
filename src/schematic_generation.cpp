@@ -64,11 +64,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
     const auto& line_tree = element.line_tree();
 
     if (line_tree.empty()) {
-        schematic.add_element(Schematic::ElementData {
-            .element_type = element.element_type(),
-            .input_count = 0,
-            .output_count = 0,
-        });
+        add_unused_element(schematic);
 
     } else {
         auto ignore_delay = schematic.wire_delay_per_distance() == delay_t {0ns};

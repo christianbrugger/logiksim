@@ -908,10 +908,12 @@ Q_SLOT void RendererWidget::on_simulation_timeout() {
         auto t = Timer {"Generate simulation", Timer::Unit::ms, 3};
         simulation_.emplace(editable_circuit_->layout(), time_rate_,
                             wire_delay_per_distance_);
-        print(simulation_->schematic());
+
+        if (simulation_->schematic().element_count() < 30) {
+            print(simulation_->schematic());
+        }
 #ifndef NDEBUG
-        // TODO !!! enable
-        // simulation_->validate();
+        simulation_->validate();
 #endif
     }
 

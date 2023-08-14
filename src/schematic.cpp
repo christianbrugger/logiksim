@@ -364,6 +364,15 @@ auto validate_all_outputs_connected(const Schematic::ConstElement element) -> vo
     std::ranges::for_each(element.outputs(), validate_output_connected);
 }
 
+auto validate_all_non_wire_outputs_connected(const Schematic::ConstElement element)
+    -> void {
+    for (const auto output : element.outputs()) {
+        if (!element.is_wire()) {
+            validate_output_connected(output);
+        }
+    }
+}
+
 auto validate_all_inputs_disconnected(const Schematic::ConstElement element) -> void {
     std::ranges::for_each(element.inputs(), validate_input_disconnected);
 }
@@ -492,7 +501,7 @@ auto Schematic::validate(ValidationSettings settings) const -> void {
     std::ranges::for_each(elements(), validate_element_connections_no_loops);
 
     if (settings.require_all_outputs_connected) {
-        std::ranges::for_each(elements(), validate_all_outputs_connected);
+        std::ranges::for_each(elements(), validate_all_non_wire_outputs_connected);
     }
 
     if (settings.require_all_placeholders_connected) {
