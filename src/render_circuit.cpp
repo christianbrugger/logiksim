@@ -219,16 +219,18 @@ auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
 }
 
 auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
-                 const RenderSettings& settings) -> void {
+                 const RenderSettings& settings,
+                 std::optional<simulation_view::ConstElement> logic_state) -> void {
     const auto padding = defaults::button_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {-padding, -padding},
         point_fine_t {+padding, +padding},
     };
+    const auto logic_value = logic_state ? logic_state->internal_state(0) : false;
 
     draw_logic_item_rect(ctx, rect, element, state, settings,
                          {.custom_fill_color = defaults::button_body_color});
-    draw_binary_false(ctx, point_fine_t {0, 0}, element, state, settings);
+    draw_binary_value(ctx, point_fine_t {0, 0}, logic_value, element, state, settings);
 }
 
 auto draw_buffer(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
@@ -268,7 +270,9 @@ auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element,
 }
 
 auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
-                         ElementDrawState state, const RenderSettings& settings) -> void {
+                         ElementDrawState state, const RenderSettings& settings,
+                         std::optional<simulation_view::ConstElement> logic_state)
+    -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., 0. - padding},
@@ -285,7 +289,8 @@ auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
             -1 + 2.0 * (n / output_count),
             0.25 + 1.5 * (n % output_count),
         };
-        draw_binary_false(ctx, point, element, state, settings);
+        const auto logic_value = logic_state ? logic_state->internal_state(n) : false;
+        draw_binary_value(ctx, point, logic_value, element, state, settings);
     }
 }
 
@@ -330,7 +335,8 @@ auto draw_flipflop_ms_d(BLContext& ctx, layout::ConstElement element,
 //
 
 auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
-                          ElementDrawState state, const RenderSettings& settings)
+                          ElementDrawState state, const RenderSettings& settings,
+                          std::optional<simulation_view::ConstElement> logic_state)
     -> void {
     switch (element.element_type()) {
         using enum ElementType;
@@ -349,14 +355,14 @@ auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
             return draw_standard_element(ctx, element, state, settings);
 
         case button:
-            return draw_button(ctx, element, state, settings);
+            return draw_button(ctx, element, state, settings, logic_state);
 
         case clock_generator:
             return draw_clock_generator(ctx, element, state, settings);
         case flipflop_jk:
             return draw_flipflop_jk(ctx, element, state, settings);
         case shift_register:
-            return draw_shift_register(ctx, element, state, settings);
+            return draw_shift_register(ctx, element, state, settings, logic_state);
         case latch_d:
             return draw_latch_d(ctx, element, state, settings);
         case flipflop_d:
@@ -416,10 +422,14 @@ auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
 }
 
 auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
-                           std::span<const element_id_t> elements, ElementDrawState state,
-                           const RenderSettings& settings) -> void {
+                           std::span<const element_id_t> elements,
+                           SimulationView simulation_view, const RenderSettings& settings)
+    -> void {
+    const auto state = ElementDrawState::normal;
+
     for (const auto element_id : elements) {
-        draw_logic_item_base(ctx, layout.element(element_id), state, settings);
+        draw_logic_item_base(ctx, layout.element(element_id), state, settings,
+                             simulation_view.element(element_id));
     }
 }
 
@@ -434,8 +444,10 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
 
 auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const element_id_t> elements,
-                                 ElementDrawState state, const RenderSettings& settings)
-    -> void {
+                                 SimulationView simulation_view,
+                                 const RenderSettings& settings) -> void {
+    const auto state = ElementDrawState::normal;
+
     for (const auto element_id : elements) {
         draw_logic_item_connectors(ctx, layout.element(element_id), state, settings);
     }
@@ -523,6 +535,16 @@ auto draw_wires(BLContext& ctx, const Layout& layout,
 auto draw_wires(BLContext& ctx, const Layout& layout,
                 std::span<const element_id_t> elements, ElementDrawState state,
                 const RenderSettings& settings) -> void {
+    for (const auto element_id : elements) {
+        draw_segment_tree(ctx, layout.element(element_id), state, settings);
+    }
+}
+
+auto draw_wires(BLContext& ctx, const Layout& layout,
+                std::span<const element_id_t> elements, SimulationView simulation_view,
+                const RenderSettings& settings) -> void {
+    const auto state = ElementDrawState::normal;
+
     for (const auto element_id : elements) {
         draw_segment_tree(ctx, layout.element(element_id), state, settings);
     }
@@ -723,15 +745,13 @@ auto render_simulation_layers(BLContext& ctx, const Layout& layout,
 
     ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    draw_logic_items_base(ctx, layout, layers.items_below, ElementDrawState::normal,
-                          settings);
-    draw_wires(ctx, layout, layers.wires, ElementDrawState::normal, settings);
-    draw_logic_items_base(ctx, layout, layers.items_above, ElementDrawState::normal,
-                          settings);
+    draw_logic_items_base(ctx, layout, layers.items_below, simulation_view, settings);
+    draw_wires(ctx, layout, layers.wires, simulation_view, settings);
+    draw_logic_items_base(ctx, layout, layers.items_above, simulation_view, settings);
 
-    draw_logic_items_connectors(ctx, layout, layers.items_below, ElementDrawState::normal,
+    draw_logic_items_connectors(ctx, layout, layers.items_below, simulation_view,
                                 settings);
-    draw_logic_items_connectors(ctx, layout, layers.items_above, ElementDrawState::normal,
+    draw_logic_items_connectors(ctx, layout, layers.items_above, simulation_view,
                                 settings);
 };
 

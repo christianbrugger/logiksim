@@ -2,6 +2,7 @@
 #define LOGIKSIM_RENDER_CIRCUIT_H
 
 #include "render_generic.h"
+#include "simulation_view.h"
 #include "vocabulary.h"
 
 #include <span>
@@ -23,6 +24,10 @@ class ElementTemplate;
 using Element = ElementTemplate<false>;
 using ConstElement = ElementTemplate<true>;
 }  // namespace layout
+
+namespace simulation_view {
+class ConstElement;
+}
 
 //
 // Defaults
@@ -152,7 +157,9 @@ auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
 //
 
 auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
-                          ElementDrawState state, const RenderSettings& settings) -> void;
+                          ElementDrawState state, const RenderSettings& settings,
+                          std::optional<simulation_view::ConstElement> logic_state = {})
+    -> void;
 
 auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
                                 ElementDrawState state, const RenderSettings& settings)
@@ -162,8 +169,18 @@ auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements,
                            const RenderSettings& settings) -> void;
 
+auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+                           std::span<const element_id_t> elements,
+                           SimulationView simulation_view, const RenderSettings& settings)
+    -> void;
+
 auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements,
+                                 const RenderSettings& settings) -> void;
+
+auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
+                                 std::span<const element_id_t> elements,
+                                 SimulationView simulation_view,
                                  const RenderSettings& settings) -> void;
 
 //

@@ -3,6 +3,11 @@
 #include "simulation.h"
 
 namespace logicsim {
+
+//
+// Simulation View
+//
+
 SimulationView::SimulationView(const Simulation& simulation)
     : schematic_ {&simulation.schematic()}, simulation_ {&simulation} {}
 
@@ -27,12 +32,22 @@ auto SimulationView::element(element_id_t element_id) const
     return simulation_view::ConstElement(*this, element_id);
 }
 
+//
+// Const Element
+//
+
 namespace simulation_view {
 
 ConstElement::ConstElement(const SimulationView& view, element_id_t element_id) noexcept
     : view_ {&view}, element_id_ {element_id} {}
 
-}  // namespace simulation_view
+auto ConstElement::internal_state() const -> const logic_small_vector_t& {
+    return view_->simulation_->internal_state(element_id_);
+}
 
-//
+auto ConstElement::internal_state(std::size_t index) const -> bool {
+    return internal_state().at(index);
+}
+
+}  // namespace simulation_view
 }  // namespace logicsim

@@ -45,6 +45,9 @@ class ConstElement {
     explicit ConstElement(const SimulationView &view, element_id_t element_id) noexcept;
 
    public:
+    [[nodiscard]] auto internal_state() const -> const logic_small_vector_t &;
+    [[nodiscard]] auto internal_state(std::size_t index) const -> bool;
+
    private:
     gsl::not_null<const SimulationView *> view_;
     element_id_t element_id_;

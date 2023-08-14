@@ -159,6 +159,8 @@ class Simulation {
     // internal states
     auto set_internal_state(Schematic::ConstElement element, std::size_t index,
                             bool value) -> void;
+    [[nodiscard]] auto internal_state(element_id_t element_id) const
+        -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(Schematic::ConstElement element) const
         -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(Schematic::ConstElement element,

@@ -843,9 +843,14 @@ auto Simulation::set_internal_state(Schematic::ConstElement element, std::size_t
     }
 }
 
+auto Simulation::internal_state(element_id_t element_id) const
+    -> const logic_small_vector_t & {
+    return internal_states_.at(element_id.value);
+}
+
 auto Simulation::internal_state(Schematic::ConstElement element) const
     -> const logic_small_vector_t & {
-    return internal_states_.at(element.element_id().value);
+    return internal_state(element.element_id());
 }
 
 auto Simulation::internal_state(Schematic::ConstElement element, std::size_t index) const
