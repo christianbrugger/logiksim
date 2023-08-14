@@ -33,6 +33,12 @@
 
 namespace logicsim {
 
+namespace simulation {
+class HistoryView;
+class HistoryIterator;
+struct history_entry_t;
+}  // namespace simulation
+
 // TODO packing
 struct SimulationEvent {
     time_t time;
@@ -114,6 +120,10 @@ class Simulation {
         constexpr static delay_t no_history {0ns};
     };
 
+    using HistoryView = simulation::HistoryView;
+    using HistoryIterator = simulation::HistoryIterator;
+    using history_entry_t = simulation::history_entry_t;
+
    public:
     [[nodiscard]] explicit Simulation(const Schematic &schematic);
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
@@ -173,14 +183,9 @@ class Simulation {
                                       std::size_t index) const -> bool;
 
     // history
-    class HistoryView;
-    class HistoryIterator;
-    struct history_entry_t;
     auto input_history(Schematic::ConstElement element) const -> HistoryView;
 
    private:
-    class Timer;
-
     auto check_counts_valid() const -> void;
 
     auto submit_events_for_changed_outputs(const Schematic::ConstElement element,
@@ -206,7 +211,11 @@ class Simulation {
     std::vector<history_buffer_t> first_input_histories_ {};
 };
 
-class Simulation::HistoryView {
+namespace simulation {
+
+using history_buffer_t = Simulation::history_buffer_t;
+
+class HistoryView {
     friend HistoryIterator;
 
    public:
@@ -248,7 +257,7 @@ class Simulation::HistoryView {
     bool last_value_ {};
 };
 
-struct Simulation::history_entry_t {
+struct history_entry_t {
     time_t first_time;
     time_t last_time;
     bool value;
@@ -257,7 +266,7 @@ struct Simulation::history_entry_t {
     auto operator==(const history_entry_t &other) const -> bool = default;
 };
 
-class Simulation::HistoryIterator {
+class HistoryIterator {
    public:
     using iterator_concept = std::forward_iterator_tag;
     using iterator_category = std::forward_iterator_tag;
@@ -283,6 +292,8 @@ class Simulation::HistoryIterator {
     // from 0 to history.size() + 1
     std::size_t index_ {};
 };
+
+}  // namespace simulation
 
 auto set_default_outputs(Simulation &simulation) -> void;
 auto set_default_inputs(Simulation &simulation) -> void;

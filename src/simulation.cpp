@@ -596,15 +596,17 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     }
 }
 
-class Simulation::Timer {
+namespace simulation {
+
+class Timer {
    public:
     using time_point = timeout_clock::time_point;
 
-    explicit Timer(timeout_t timeout = defaults::no_timeout) noexcept
+    explicit Timer(timeout_t timeout = Simulation::defaults::no_timeout) noexcept
         : timeout_(timeout), start_time_(timeout_clock::now()) {};
 
     [[nodiscard]] auto reached_timeout() const noexcept -> bool {
-        return (timeout_ != defaults::no_timeout) &&
+        return (timeout_ != Simulation::defaults::no_timeout) &&
                (std::chrono::steady_clock::now() - start_time_) > timeout_;
     }
 
@@ -612,6 +614,7 @@ class Simulation::Timer {
     timeout_t timeout_;
     time_point start_time_;
 };
+}  // namespace simulation
 
 auto Simulation::run(const time_t::value_type simulation_time, const timeout_t timeout,
                      const int64_t max_events) -> int64_t {
@@ -630,7 +633,7 @@ auto Simulation::run(const time_t::value_type simulation_time, const timeout_t t
         return 0;
     }
 
-    const Simulation::Timer timer {timeout};
+    const auto timer = simulation::Timer {timeout};
     const auto queue_end_time = simulation_time == defaults::infinite_simulation_time
                                     ? time_t::max()
                                     : time_t {queue_.time().value + simulation_time};
@@ -888,9 +891,10 @@ auto Simulation::input_history(Schematic::ConstElement element) const -> History
 // History View
 //
 
-Simulation::HistoryView::HistoryView(const history_buffer_t &history,
-                                     time_t simulation_time, bool last_value,
-                                     delay_t history_length)
+namespace simulation {
+
+HistoryView::HistoryView(const history_buffer_t &history, time_t simulation_time,
+                         bool last_value, delay_t history_length)
     : history_ {&history}, simulation_time_ {simulation_time}, last_value_ {last_value} {
     // ascending without duplicates
     assert(std::ranges::is_sorted(history, std::ranges::less_equal {}));
@@ -902,33 +906,33 @@ Simulation::HistoryView::HistoryView(const history_buffer_t &history,
     assert(size() >= 1);
 }
 
-auto Simulation::HistoryView::require_history() const -> void {
+auto HistoryView::require_history() const -> void {
     if (history_ == nullptr) [[unlikely]] {
         throw_exception("History needs to be set.");
     }
 }
 
-auto Simulation::HistoryView::size() const -> std::size_t {
+auto HistoryView::size() const -> std::size_t {
     require_history();
     return history_->size() + 1 - min_index_;
 }
 
-auto Simulation::HistoryView::ssize() const -> std::ptrdiff_t {
+auto HistoryView::ssize() const -> std::ptrdiff_t {
     require_history();
     return history_->size() + 1 - min_index_;
 }
 
-auto Simulation::HistoryView::begin() const -> HistoryIterator {
+auto HistoryView::begin() const -> HistoryIterator {
     require_history();
     return HistoryIterator {*this, min_index_};
 }
 
-auto Simulation::HistoryView::end() const -> HistoryIterator {
+auto HistoryView::end() const -> HistoryIterator {
     require_history();
     return HistoryIterator {*this, size() + min_index_};
 }
 
-auto Simulation::HistoryView::from(time_t value) const -> HistoryIterator {
+auto HistoryView::from(time_t value) const -> HistoryIterator {
     if (value > simulation_time_) [[unlikely]] {
         throw_exception("cannot query times in the future");
     }
@@ -936,7 +940,7 @@ auto Simulation::HistoryView::from(time_t value) const -> HistoryIterator {
     return HistoryIterator {*this, index};
 }
 
-auto Simulation::HistoryView::until(time_t value) const -> HistoryIterator {
+auto HistoryView::until(time_t value) const -> HistoryIterator {
     if (value > simulation_time_) [[unlikely]] {
         throw_exception("cannot query times in the future");
     }
@@ -944,7 +948,7 @@ auto Simulation::HistoryView::until(time_t value) const -> HistoryIterator {
     return HistoryIterator {*this, index};
 }
 
-auto Simulation::HistoryView::value(time_t value) const -> bool {
+auto HistoryView::value(time_t value) const -> bool {
     if (value > simulation_time_) [[unlikely]] {
         throw_exception("cannot query times in the future");
     }
@@ -952,7 +956,7 @@ auto Simulation::HistoryView::value(time_t value) const -> bool {
     return get_value(index);
 }
 
-auto Simulation::HistoryView::get_value(std::size_t history_index) const -> bool {
+auto HistoryView::get_value(std::size_t history_index) const -> bool {
     require_history();
 
     auto number = history_->size() - history_index;
@@ -961,7 +965,7 @@ auto Simulation::HistoryView::get_value(std::size_t history_index) const -> bool
 
 // Returns the index to the first element that is greater to the value,
 // or the history.size() if no such element is found.
-auto Simulation::HistoryView::find_index(time_t value) const -> std::size_t {
+auto HistoryView::find_index(time_t value) const -> std::size_t {
     require_history();
 
     const auto it =
@@ -977,8 +981,7 @@ auto Simulation::HistoryView::find_index(time_t value) const -> std::size_t {
     return gsl::narrow_cast<std::size_t>(index);
 }
 
-auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_epsilon) const
-    -> time_t {
+auto HistoryView::get_time(std::ptrdiff_t index, bool substract_epsilon) const -> time_t {
     require_history();
 
     if (index < min_index_) {
@@ -990,19 +993,22 @@ auto Simulation::HistoryView::get_time(std::ptrdiff_t index, bool substract_epsi
     const auto &result = history_->at(index);
     return substract_epsilon ? time_t {result.value - time_t::epsilon().value} : result;
 }
+}  // namespace simulation
 
 //
 // History Iterator
 //
 
-auto Simulation::history_entry_t::format() const -> std::string {
+namespace simulation {
+
+auto history_entry_t::format() const -> std::string {
     return fmt::format("HistoryEntry({}, {}, {})", first_time, last_time, value);
 }
 
-Simulation::HistoryIterator::HistoryIterator(HistoryView view, std::size_t index) noexcept
+HistoryIterator::HistoryIterator(HistoryView view, std::size_t index) noexcept
     : view_ {std::move(view)}, index_ {index} {}
 
-auto Simulation::HistoryIterator::operator*() const -> value_type {
+auto HistoryIterator::operator*() const -> value_type {
     view_.require_history();
 
     return history_entry_t {
@@ -1012,27 +1018,28 @@ auto Simulation::HistoryIterator::operator*() const -> value_type {
     };
 }
 
-auto Simulation::HistoryIterator::operator++() noexcept -> HistoryIterator & {
+auto HistoryIterator::operator++() noexcept -> HistoryIterator & {
     ++index_;
     return *this;
 }
 
-auto Simulation::HistoryIterator::operator++(int) noexcept -> HistoryIterator {
+auto HistoryIterator::operator++(int) noexcept -> HistoryIterator {
     const auto tmp = *this;
     ++(*this);
     return tmp;
 }
 
-auto Simulation::HistoryIterator::operator==(const HistoryIterator &right) const noexcept
-    -> bool {
+auto HistoryIterator::operator==(const HistoryIterator &right) const noexcept -> bool {
     return index_ >= right.index_;
 }
 
-auto Simulation::HistoryIterator::operator-(const HistoryIterator &right) const noexcept
+auto HistoryIterator::operator-(const HistoryIterator &right) const noexcept
     -> difference_type {
     return static_cast<std::ptrdiff_t>(index_) -
            static_cast<std::ptrdiff_t>(right.index_);
 }
+
+}  // namespace simulation
 
 //
 // Benchmark
