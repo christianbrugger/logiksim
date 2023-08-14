@@ -10,6 +10,7 @@ namespace logicsim {
 
 class Schematic;
 class Simulation;
+class HistoryView;
 
 namespace simulation_view {
 
@@ -33,6 +34,9 @@ class SimulationView {
         -> simulation_view::ConstElement;
     [[nodiscard]] inline auto elements() const;
 
+    [[nodiscard]] auto time() const -> time_t;
+    [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
+
    private:
     gsl::not_null<const Schematic *> schematic_;
     gsl::not_null<const Simulation *> simulation_;
@@ -55,6 +59,10 @@ class ConstElement {
 
     [[nodiscard]] auto internal_state() const -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(std::size_t index) const -> bool;
+    // [[nodiscard]] auto input_history() const -> HistoryView;
+
+    [[nodiscard]] auto time() const -> time_t;
+    [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
    private:
     gsl::not_null<const SimulationView *> view_;

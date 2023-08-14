@@ -32,6 +32,14 @@ auto SimulationView::element(element_id_t element_id) const
     return simulation_view::ConstElement(*this, element_id);
 }
 
+auto SimulationView::time() const -> time_t {
+    return simulation_->time();
+}
+
+auto SimulationView::wire_delay_per_distance() const -> delay_t {
+    return schematic_->wire_delay_per_distance();
+}
+
 //
 // Const Element
 //
@@ -72,6 +80,18 @@ auto ConstElement::internal_state() const -> const logic_small_vector_t& {
 
 auto ConstElement::internal_state(std::size_t index) const -> bool {
     return internal_state().at(index);
+}
+
+// auto ConstElement::input_history() const -> HistoryView {
+//     return view_->simulation_->input_history(element_id_)
+// }
+
+auto ConstElement::time() const -> time_t {
+    return view_->time();
+}
+
+auto ConstElement::wire_delay_per_distance() const -> delay_t {
+    return view_->wire_delay_per_distance();
 }
 
 }  // namespace simulation_view

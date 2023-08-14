@@ -565,6 +565,31 @@ auto draw_segment_tree(BLContext& ctx, layout::ConstElement element,
     }
 }
 
+/*
+auto draw_wire_with_history(BLContext& ctx, layout::ConstElement element,
+                            simulation_view::ConstElement logic_state,
+                            const RenderSettings& settings) -> void {
+    const auto to_time =
+        [time = logic_state.time(),
+         delay = logic_state.wire_delay_per_distance()](LineTree::length_t length_) {
+            return time_t {time.value - static_cast<int64_t>(length_) * delay.value};
+        };
+
+    const auto history = simulation.input_history(element);
+
+    for (auto&& segment : element.line_tree().sized_segments()) {
+        draw_line_segment(ctx, segment.line.p1, segment.line.p0,
+                          to_time(segment.p1_length), to_time(segment.p0_length), history,
+                          settings);
+
+        if (segment.has_cross_point_p0) {
+            bool wire_enabled = history.value(to_time(segment.p0_length));
+            draw_line_cross_point(ctx, segment.line.p0, wire_enabled, settings);
+        }
+    }
+}
+*/
+
 //
 //
 //
