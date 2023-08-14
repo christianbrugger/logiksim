@@ -111,6 +111,10 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
     }
 }
 
+auto InteractiveSimulation::validate() const -> void {
+    schematic_.validate(Schematic::validate_all);
+}
+
 auto InteractiveSimulation::expected_simulation_time() const -> time_t {
     const auto realtime_delta =
         std::chrono::duration<double> {timer_t::now() - realtime_reference_};

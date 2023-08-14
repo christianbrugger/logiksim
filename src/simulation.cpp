@@ -134,15 +134,15 @@ auto set_default_inputs(Simulation &simulation) -> void {
         }
         */
 
-        // enable unconnected clocks
+        // activate unconnected clocks enable
         if (element.element_type() == ElementType::clock_generator) {
-            const auto input = element.input(connection_id_t {1});
+            const auto input = element.input(connection_id_t {0});
             if (!input.has_connected_element()) {
                 simulation.set_input_value(input, true);
             }
         }
 
-        // enable j&k of unconnected flipflops
+        // activate unconnected j&k flipflops
         if (element.element_type() == ElementType::flipflop_jk) {
             const auto input_1 = element.input(connection_id_t {1});
             const auto input_2 = element.input(connection_id_t {2});
@@ -224,6 +224,7 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case button:
             return 1;
         case clock_generator:
+            return 1;
         case flipflop_jk:
             return 2;
         case shift_register:
@@ -296,18 +297,18 @@ auto update_internal_state(const logic_small_vector_t &old_input,
         using enum ElementType;
 
         case clock_generator: {
-            // first input & first output are internal signals to loop the clock
-            // second input is reset signal
+            // first input is reset signal
+            // second input & output are internal signals to loop the clock
 
-            bool rise_cycle = !new_input.at(0) && old_input.at(0);
-            bool rise_start = new_input.at(1) && !old_input.at(1);
+            bool rise_cycle = !new_input.at(1) && old_input.at(1);
+            bool rise_start = new_input.at(0) && !old_input.at(0);
 
-            bool in_second_phase = !new_input.at(0);
-            bool enabled = new_input.at(1);
+            bool in_second_phase = !new_input.at(1);
+            bool enabled = new_input.at(0);
 
             if ((rise_cycle && enabled) || (rise_start && in_second_phase)) {
                 state.at(0) = true;
-            } else if (new_input.at(0) && !old_input.at(0)) {
+            } else if (new_input.at(1) && !old_input.at(1)) {
                 state.at(0) = false;
             }
             return;

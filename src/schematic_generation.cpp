@@ -127,8 +127,8 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
     for (auto element : schematic.elements()) {
         // connect clock generators internal
         if (element.element_type() == ElementType::clock_generator) {
-            element.input(connection_id_t {0})
-                .connect(element.output(connection_id_t {0}));
+            element.input(connection_id_t {1})
+                .connect(element.output(connection_id_t {1}));
             continue;
         }
 

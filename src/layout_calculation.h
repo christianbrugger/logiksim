@@ -99,8 +99,11 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
 
         case clock_generator: {
             using p = point_t;
-            auto points = std::array {p {0, 0}, p {1, 0}, p {2, 0}, p {3, 0},
-                                      p {0, 1}, p {0, 2}, p {1, 2}, p {3, 2}};
+            auto points = std::array {
+                p {0, 0}, p {1, 0}, p {2, 0}, p {3, 0},  //
+                p {0, 1}, p {1, 1}, p {2, 1},            //
+                p {0, 2}, p {1, 2}, p {3, 2}             //
+            };
 
             for (auto &&point : points) {
                 if (!next_point(transform(data.position, data.orientation, point))) {
@@ -258,20 +261,11 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
         case clock_generator: {
             require_equal(data.input_count, 2);
 
-            auto points = std::array {
-                // internal input, placed such that it cannot be connected
-                std::make_pair(point_t {1, 1}, orientation_t::down),
-                // output clock signal
-                std::make_pair(point_t {2, 2}, orientation_t::down),
-            };
+            // the second input is used only for simulation
+            // not for any drawing or any types of collisions
 
-            for (auto &&[point, orientation] : points) {
-                if (!next_input(transform(data.position, data.orientation, point),
-                                transform(data.orientation, orientation))) {
-                    return false;
-                }
-            }
-            return true;
+            return next_input(transform(data.position, data.orientation, point_t {2, 2}),
+                              transform(data.orientation, orientation_t::down));
         }
         case flipflop_jk: {
             require_equal(data.input_count, 5);
@@ -432,20 +426,11 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
         case clock_generator: {
             require_equal(data.output_count, 2);
 
-            auto points = std::array {
-                // internal input, placed such that it cannot be connected
-                std::make_pair(point_t {2, 1}, orientation_t::up),
-                // reset signal
-                std::make_pair(point_t {3, 1}, orientation_t::right),
-            };
+            // the second output is used only for simulation
+            // not for any drawing or any types of collisions
 
-            for (auto &&[point, orientation] : points) {
-                if (!next_output(transform(data.position, data.orientation, point),
-                                 transform(data.orientation, orientation))) {
-                    return false;
-                }
-            }
-            return true;
+            return next_output(transform(data.position, data.orientation, point_t {3, 1}),
+                               transform(data.orientation, orientation_t::right));
         }
         case flipflop_jk: {
             require_equal(data.output_count, 2);

@@ -477,21 +477,21 @@ TEST(SimulationTest, TestClockGenerator) {
         .output_count = 2,
         .output_delays = {delay_t {100us}, delay_t {100us}},
     });
-    clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
+    clock.output(connection_id_t {1}).connect(clock.input(connection_id_t {1}));
 
     auto simulation = get_uninitialized_simulation(schematic);
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_id_t {1}), 50us, true);
+    simulation.submit_event(clock.input(connection_id_t {0}), 50us, true);
 
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
 }
 
 TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
@@ -502,29 +502,29 @@ TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
         .element_type = ElementType::clock_generator,
         .input_count = 2,
         .output_count = 2,
-        .output_delays = {delay_t {500us}, delay_t {100us}},
+        .output_delays = {delay_t {100us}, delay_t {500us}},
     });
-    clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
+    clock.output(connection_id_t {1}).connect(clock.input(connection_id_t {1}));
 
     auto simulation = get_uninitialized_simulation(schematic);
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_id_t {1}), 50us, true);
+    simulation.submit_event(clock.input(connection_id_t {0}), 50us, true);
 
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
     simulation.run(100us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
     simulation.run(100us);  // 600 us
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
     simulation.run(100us);  // 700 us
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
 }
 
 TEST(SimulationTest, TestClockReset) {
@@ -535,32 +535,32 @@ TEST(SimulationTest, TestClockReset) {
         .element_type = ElementType::clock_generator,
         .input_count = 2,
         .output_count = 2,
-        .output_delays = {delay_t {1ms}, delay_t {1ns}},
+        .output_delays = {delay_t {1ns}, delay_t {1ms}},
     });
-    clock.output(connection_id_t {0}).connect(clock.input(connection_id_t {0}));
+    clock.output(connection_id_t {1}).connect(clock.input(connection_id_t {1}));
 
     auto simulation = get_uninitialized_simulation(schematic);
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_id_t {1}), 1000us, true);
-    simulation.submit_event(clock.input(connection_id_t {1}), 1100us, false);
+    simulation.submit_event(clock.input(connection_id_t {0}), 1000us, true);
+    simulation.submit_event(clock.input(connection_id_t {0}), 1100us, false);
     simulation.run(10ns);
 
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
     simulation.run(1ms);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
 
     simulation.run(999us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), true);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
     simulation.run(1us);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
 
     simulation.run(1ms);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
     simulation.run(1ms);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
     simulation.run(1ms);
-    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {1})), false);
+    ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
 }
 
 TEST(SimulationTest, TestShiftRegister) {

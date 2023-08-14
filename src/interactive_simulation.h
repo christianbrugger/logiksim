@@ -62,6 +62,8 @@ class InteractiveSimulation {
 
     auto mouse_press(point_t position) -> void;
 
+    auto validate() const -> void;
+
    private:
     [[nodiscard]] auto expected_simulation_time() const -> time_t;
 
