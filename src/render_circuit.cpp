@@ -182,7 +182,7 @@ auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
 }
 
 //
-// Standard Element
+// Individual Elements
 //
 
 auto standard_element_label(layout::ConstElement element) -> std::string {
@@ -324,6 +324,10 @@ auto draw_flipflop_ms_d(BLContext& ctx, layout::ConstElement element,
     draw_logic_item_label(ctx, point_fine_t {2., 1.}, "MS-FF", element, state, settings);
 }
 
+//
+// All Elements
+//
+
 auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
                           ElementDrawState state, const RenderSettings& settings)
     -> void {
@@ -410,6 +414,14 @@ auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
     }
 }
 
+auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+                           std::span<const element_id_t> elements, ElementDrawState state,
+                           const RenderSettings& settings) -> void {
+    for (const auto element_id : elements) {
+        draw_logic_item_base(ctx, layout.element(element_id), state, settings);
+    }
+}
+
 auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements,
                                  const RenderSettings& settings) -> void {
@@ -419,8 +431,17 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
     }
 }
 
+auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
+                                 std::span<const element_id_t> elements,
+                                 ElementDrawState state, const RenderSettings& settings)
+    -> void {
+    for (const auto element_id : elements) {
+        draw_logic_item_connectors(ctx, layout.element(element_id), state, settings);
+    }
+}
+
 //
-// Wires
+// Wire
 //
 
 auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
@@ -607,7 +628,7 @@ auto draw_wire_shadows(BLContext& ctx, std::span<const segment_info_t> segment_i
 
 auto render_inserted(BLContext& ctx, const Layout& layout,
                      const RenderSettings& settings) {
-    const LayersCache& layers = settings.layers;
+    const auto& layers = settings.layers;
 
     ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
@@ -621,7 +642,7 @@ auto render_inserted(BLContext& ctx, const Layout& layout,
 
 auto render_uninserted(BLContext& ctx, const Layout& layout,
                        const RenderSettings& settings) {
-    const LayersCache& layers = settings.layers;
+    const auto& layers = settings.layers;
 
     if (settings.layer_surface_uninserted.enabled) {
         ctx.setCompOp(BL_COMP_OP_SRC_COPY);
@@ -641,7 +662,7 @@ auto render_uninserted(BLContext& ctx, const Layout& layout,
 
 auto render_overlay(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
     -> void {
-    const LayersCache& layers = settings.layers;
+    const auto& layers = settings.layers;
 
     if (settings.layer_surface_overlay.enabled) {
         ctx.setCompOp(BL_COMP_OP_SRC_COPY);
@@ -695,8 +716,27 @@ auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& s
     }
 }
 
+auto render_simulation_layers(BLContext& ctx, const Layout& layout,
+                              const Schematic& schematic, const Simulation& simulation,
+                              RenderSettings& settings) {
+    const auto& layers = settings.simulation_layers;
+
+    ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+
+    draw_logic_items_base(ctx, layout, layers.items_below, ElementDrawState::normal,
+                          settings);
+    draw_wires(ctx, layout, layers.wires, ElementDrawState::normal, settings);
+    draw_logic_items_base(ctx, layout, layers.items_above, ElementDrawState::normal,
+                          settings);
+
+    draw_logic_items_connectors(ctx, layout, layers.items_below, ElementDrawState::normal,
+                                settings);
+    draw_logic_items_connectors(ctx, layout, layers.items_above, ElementDrawState::normal,
+                                settings);
+};
+
 //
-// Create Layers
+// Layers
 //
 
 auto add_valid_wire_parts(const layout::ConstElement wire,
@@ -838,15 +878,69 @@ auto build_layers(const Layout& layout, LayersCache& layers, const Selection* se
     layers.calculate_overlay_bounding_rect();
 }
 
+auto build_simulation_layers(const Layout& layout, SimulationLayersCache& layers,
+                             rect_t scene_rect) -> void {
+    layers.clear();
+
+    for (const auto element : layout.elements()) {
+        // visibility
+        if (!is_colliding(element.bounding_rect(), scene_rect)) {
+            continue;
+        }
+        const auto element_type = element.element_type();
+
+        if (is_logic_item(element_type)) {
+            if (element.display_state() == display_state_t::normal) {
+                if (draw_logic_item_above(element_type)) {
+                    layers.items_above.push_back(element);
+                } else {
+                    layers.items_below.push_back(element);
+                }
+            }
+        }
+
+        else if (element_type == ElementType::wire) {
+            if (element.display_state() == display_state_t::normal) {
+                layers.wires.push_back(element);
+            }
+        }
+    }
+}
+
 //
-//
+// Layout
 //
 
-auto render_circuit_2(BLContext& ctx, RenderArgs2 args) -> void {
-    const auto scene_rect = get_scene_rect(args.settings.view_config);
+auto render_layout_impl(BLContext& ctx, const Layout& layout, const Selection* selection,
+                        RenderSettings& settings) -> void {
+    build_layers(layout, settings.layers, selection,
+                 get_scene_rect(settings.view_config));
+    render_layers(ctx, layout, settings);
+}
 
-    build_layers(args.layout, args.settings.layers, args.selection, scene_rect);
-    render_layers(ctx, args.layout, args.settings);
+auto render_layout(BLContext& ctx, const Layout& layout, RenderSettings& settings)
+    -> void {
+    render_layout_impl(ctx, layout, nullptr, settings);
+}
+
+auto render_layout(BLContext& ctx, const Layout& layout, const Selection& selection,
+                   RenderSettings& settings) -> void {
+    if (selection.empty()) {
+        render_layout_impl(ctx, layout, nullptr, settings);
+    } else {
+        render_layout_impl(ctx, layout, &selection, settings);
+    }
+}
+
+//
+// Simulation
+//
+
+auto render_simulation(BLContext& ctx, const Layout& layout, const Schematic& schematic,
+                       const Simulation& simulation, RenderSettings& settings) -> void {
+    build_simulation_layers(layout, settings.simulation_layers,
+                            get_scene_rect(settings.view_config));
+    render_simulation_layers(ctx, layout, schematic, simulation, settings);
 }
 
 }  // namespace logicsim

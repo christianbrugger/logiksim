@@ -262,6 +262,30 @@ auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void {
 }
 
 //
+// Simulation Layers Cache
+//
+
+auto SimulationLayersCache::format() const -> std::string {
+    return fmt::format(
+        "LayersCache("
+        "\n  items_below = {}"
+        "\n  wires = {}"
+        "\n  items_above = {}"
+        "\n)",
+
+        items_below,  //
+        wires,        //
+        items_above   //
+    );
+}
+
+auto SimulationLayersCache::clear() -> void {
+    items_below.clear();
+    wires.clear();
+    items_above.clear();
+}
+
+//
 // RenderSettings
 //
 

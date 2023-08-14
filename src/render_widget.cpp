@@ -1071,30 +1071,31 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     render_background(bl_ctx, render_settings_);
 
     if (do_render_circuit_ && simulation_) {
-        render_circuit(bl_ctx, render_args_t {
-                                   .layout = editable_circuit.layout(),
-                                   .schematic = &simulation_->schematic(),
-                                   .simulation = &simulation_->simulation(),
-                                   .selection = {},
-                                   .settings = render_settings_,
-                               });
+        if (do_use_old_renderer_) {
+            render_circuit(bl_ctx, render_args_t {
+                                       .layout = editable_circuit.layout(),
+                                       .schematic = &simulation_->schematic(),
+                                       .simulation = &simulation_->simulation(),
+                                       .selection = {},
+                                       .settings = render_settings_,
+                                   });
+        } else {
+            render_simulation(bl_ctx, editable_circuit.layout(), simulation_->schematic(),
+                              simulation_->simulation(), render_settings_);
+        }
     }
 
     if (do_render_circuit_ && !simulation_) {
         const auto& selection = editable_circuit.selection_builder().selection();
 
-        if (wire_delay_per_distance_.value < 1us) {
+        if (do_use_old_renderer_) {
             render_circuit(bl_ctx, render_args_t {
                                        .layout = editable_circuit.layout(),
                                        .selection = &selection,
                                        .settings = render_settings_,
                                    });
         } else {
-            render_circuit_2(bl_ctx, RenderArgs2 {
-                                         .layout = editable_circuit.layout(),
-                                         .selection = &selection,
-                                         .settings = render_settings_,
-                                     });
+            render_layout(bl_ctx, editable_circuit.layout(), selection, render_settings_);
         }
     }
 

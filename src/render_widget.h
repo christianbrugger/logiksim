@@ -340,6 +340,10 @@ class RendererWidget : public RendererWidgetBase {
     bool do_render_selection_cache_ {false};
 
     EventCounter fps_counter_ {};
+
+   public:
+    // TODO !!! remove
+    bool do_use_old_renderer_ {false};
 };
 
 }  // namespace logicsim

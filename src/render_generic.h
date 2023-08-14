@@ -123,6 +123,21 @@ auto update_overlay_rect(LayersCache& layers, rect_t bounding_rect) -> void;
 auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void;
 
 //
+// Simulation Layers Cache
+//
+
+struct SimulationLayersCache {
+    // inserted
+    std::vector<element_id_t> items_below;
+    std::vector<element_id_t> wires;
+    std::vector<element_id_t> items_above;
+
+   public:
+    auto format() const -> std::string;
+    auto clear() -> void;
+};
+
+//
 // RenderSettings
 //
 
@@ -134,6 +149,7 @@ struct RenderSettings {
 
     GlyphCache text {};
     mutable LayersCache layers {};
+    mutable SimulationLayersCache simulation_layers {};
 
     mutable LayerSurface layer_surface_uninserted {.enabled = true};
     mutable LayerSurface layer_surface_overlay {.enabled = true};

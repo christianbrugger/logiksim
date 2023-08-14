@@ -74,12 +74,14 @@ auto MainWidget::build_render_buttons() -> QWidget* {
     const auto check_box3 = new QCheckBox("Render Co&llision Cache");
     const auto check_box4 = new QCheckBox("Render Co&nnection Cache");
     const auto check_box5 = new QCheckBox("Render S&election Cache");
+    const auto check_box6 = new QCheckBox("Old Renderer");
 
     check_box1->setShortcut(QKeySequence(Qt::ALT | Qt::Key_B));
     check_box2->setShortcut(QKeySequence(Qt::ALT | Qt::Key_I));
     check_box3->setShortcut(QKeySequence(Qt::ALT | Qt::Key_L));
     check_box4->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
     check_box5->setShortcut(QKeySequence(Qt::ALT | Qt::Key_E));
+    check_box6->setShortcut(QKeySequence(Qt::Key_F6));
 
     connect(check_box1, &QCheckBox::stateChanged, this, [this](int value) {
         render_widget_->set_do_benchmark(value == Qt::Checked);
@@ -96,6 +98,10 @@ auto MainWidget::build_render_buttons() -> QWidget* {
     connect(check_box5, &QCheckBox::stateChanged, this, [this](int value) {
         render_widget_->set_do_render_selection_cache(value == Qt::Checked);
     });
+    connect(check_box6, &QCheckBox::stateChanged, this, [this](int value) {
+        render_widget_->do_use_old_renderer_ = value == Qt::Checked;
+        render_widget_->update();
+    });
 
     // startup states
     check_box2->setCheckState(Qt::Checked);
@@ -106,6 +112,7 @@ auto MainWidget::build_render_buttons() -> QWidget* {
     layout->addWidget(check_box3);
     layout->addWidget(check_box4);
     layout->addWidget(check_box5);
+    layout->addWidget(check_box6);
     layout->addStretch(1);
 
     const auto panel = new QWidget();

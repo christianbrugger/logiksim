@@ -149,8 +149,15 @@ auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
                     const RenderSettings& settings) -> void;
 
 //
+// All Elements
 //
-//
+
+auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
+                          ElementDrawState state, const RenderSettings& settings) -> void;
+
+auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
+                                ElementDrawState state, const RenderSettings& settings)
+    -> void;
 
 auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements,
@@ -192,21 +199,23 @@ auto format(shadow_t state) -> std::string;
 auto shadow_color(shadow_t shadow_type) -> color_t;
 
 //
-// Layout Rendering
+// Layout
 //
 
-// TODO !!! redo this whole struct
-struct RenderArgs2 {
-    const Layout& layout;
-    const Schematic* schematic {nullptr};
-    const Simulation* simulation {nullptr};
-    const Selection* selection {nullptr};
-    const RenderSettings& settings {};
-};
+auto render_layout(BLContext& ctx, const Layout& layout, RenderSettings& settings)
+    -> void;
 
-// TODO fix render args
-// TODO fix nameing
-auto render_circuit_2(BLContext& ctx, RenderArgs2 args) -> void;
+auto render_layout(BLContext& ctx, const Layout& layout, const Selection& selection,
+                   RenderSettings& settings) -> void;
+
+//
+// Simulation
+//
+
+// TODO use SimulationResult instead of Simulation
+
+auto render_simulation(BLContext& ctx, const Layout& layout, const Schematic& schematic,
+                       const Simulation& simulation, RenderSettings& settings) -> void;
 
 }  // namespace logicsim
 
