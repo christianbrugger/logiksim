@@ -14,8 +14,7 @@ namespace logicsim {
 //
 class Layout;
 class Selection;
-class Schematic;
-class Simulation;
+class SimulationView;
 
 namespace layout {
 template <bool Const>
@@ -214,8 +213,8 @@ auto render_layout(BLContext& ctx, const Layout& layout, const Selection& select
 
 // TODO use SimulationResult instead of Simulation
 
-auto render_simulation(BLContext& ctx, const Layout& layout, const Schematic& schematic,
-                       const Simulation& simulation, RenderSettings& settings) -> void;
+auto render_simulation(BLContext& ctx, const Layout& layout,
+                       SimulationView simulation_view, RenderSettings& settings) -> void;
 
 }  // namespace logicsim
 

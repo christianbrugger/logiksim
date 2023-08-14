@@ -96,6 +96,7 @@ class Schematic {
     [[nodiscard]] auto input_count() const noexcept -> std::size_t;
     [[nodiscard]] auto output_count() const noexcept -> std::size_t;
 
+    [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;
     [[nodiscard]] auto element(element_id_t element_id) -> Element;
     [[nodiscard]] auto element(element_id_t element_id) const -> ConstElement;
     [[nodiscard]] auto elements() noexcept -> ElementView;

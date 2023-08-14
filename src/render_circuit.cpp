@@ -5,6 +5,7 @@
 #include "editable_circuit/selection.h"
 #include "layout.h"
 #include "layout_calculation.h"
+#include "simulation_view.h"
 #include "timer.h"
 
 #include <numbers>
@@ -717,8 +718,7 @@ auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& s
 }
 
 auto render_simulation_layers(BLContext& ctx, const Layout& layout,
-                              const Schematic& schematic, const Simulation& simulation,
-                              RenderSettings& settings) {
+                              SimulationView simulation_view, RenderSettings& settings) {
     const auto& layers = settings.simulation_layers;
 
     ctx.setCompOp(BL_COMP_OP_SRC_COPY);
@@ -936,11 +936,11 @@ auto render_layout(BLContext& ctx, const Layout& layout, const Selection& select
 // Simulation
 //
 
-auto render_simulation(BLContext& ctx, const Layout& layout, const Schematic& schematic,
-                       const Simulation& simulation, RenderSettings& settings) -> void {
+auto render_simulation(BLContext& ctx, const Layout& layout,
+                       SimulationView simulation_view, RenderSettings& settings) -> void {
     build_simulation_layers(layout, settings.simulation_layers,
                             get_scene_rect(settings.view_config));
-    render_simulation_layers(ctx, layout, schematic, simulation, settings);
+    render_simulation_layers(ctx, layout, simulation_view, settings);
 }
 
 }  // namespace logicsim

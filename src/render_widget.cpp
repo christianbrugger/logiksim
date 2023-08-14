@@ -12,6 +12,7 @@
 #include "schematic_generation.h"
 #include "serialize.h"
 #include "simulation.h"
+#include "simulation_view.h"
 
 #include <QApplication>
 #include <QBackingStore>
@@ -1080,8 +1081,9 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
                                        .settings = render_settings_,
                                    });
         } else {
-            render_simulation(bl_ctx, editable_circuit.layout(), simulation_->schematic(),
-                              simulation_->simulation(), render_settings_);
+            render_simulation(bl_ctx, editable_circuit.layout(),
+                              SimulationView {simulation_->simulation()},
+                              render_settings_);
         }
     }
 

@@ -85,9 +85,6 @@ using timeout_clock = std::chrono::steady_clock;
 using timeout_t = timeout_clock::duration;
 
 class Simulation {
-   private:
-    struct ElementState;
-
    public:
     // Remove and put into run parameters
     bool print_events {false};

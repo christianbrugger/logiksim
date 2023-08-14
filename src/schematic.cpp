@@ -163,6 +163,12 @@ auto Schematic::is_element_id_valid(element_id_t element_id) const noexcept -> b
     return element_id.value >= 0 && element_id.value < size;
 }
 
+auto Schematic::element_ids() const noexcept -> forward_range_t<element_id_t> {
+    const auto count =
+        element_id_t {gsl::narrow_cast<element_id_t::value_type>(element_count())};
+    return range(count);
+}
+
 auto Schematic::element(element_id_t element_id) -> Element {
     if (!is_element_id_valid(element_id)) [[unlikely]] {
         throw_exception("Element id is invalid");
