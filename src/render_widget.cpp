@@ -1117,7 +1117,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     // bl_ctx.fillRect(BLRect {0, 0, 100, 1});
     // bl_ctx.fillRect(BLRect {0, bl_image.height() - 1.0, 100, 1});
 
-    bl_ctx.flush(BL_CONTEXT_FLUSH_SYNC);
+    checked_sync(bl_ctx);
 
     // we use QPainter only if we are not using the backing store directly
     if (qt_image.width() != 0) {

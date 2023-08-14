@@ -117,7 +117,7 @@ auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_r
             layer.ctx.restore();
         }
 
-        layer.ctx.flush(BL_CONTEXT_FLUSH_SYNC);
+        checked_sync(layer.ctx);
         target_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
         target_ctx.blitImage(dirty_rect, layer.image, dirty_rect);
     } else {
@@ -277,6 +277,28 @@ auto context_info(const RenderSettings& settings) -> BLContextCreateInfo {
     auto info = BLContextCreateInfo {};
     info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
     return info;
+}
+
+//
+// Error checks
+//
+
+auto check_errors(BLContext& ctx) -> void {
+    if (ctx.accumulatedErrorFlags() != BL_CONTEXT_ERROR_NO_FLAGS) [[unlikely]] {
+        throw_exception(
+            fmt::format("Error in BLContext {}", uint32_t {ctx.accumulatedErrorFlags()})
+                .c_str());
+    }
+}
+
+auto checked_sync(BLContext& ctx) -> void {
+    if (ctx.savedStateCount() != 0) {
+        throw_exception("context has saved state at sync");
+    }
+
+    ctx.flush(BL_CONTEXT_FLUSH_SYNC);
+    check_errors(ctx);
+    ctx.setFillStyle(defaults::color_black);
 }
 
 //

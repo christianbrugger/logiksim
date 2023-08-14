@@ -23,7 +23,7 @@ constexpr inline static auto use_view_config_stroke_width = int {-1};
 // Element Draw State
 //
 
-enum class ElementDrawState {
+enum class ElementDrawState : uint32_t {
     // inserted
     normal,
     normal_selected,
@@ -145,6 +145,14 @@ struct RenderSettings {
 };
 
 auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
+
+//
+// Error checks
+//
+
+auto check_errors(BLContext& ctx) -> void;
+
+auto checked_sync(BLContext& ctx) -> void;
 
 //
 // Context Guard

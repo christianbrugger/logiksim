@@ -32,10 +32,18 @@ using ConstElement = ElementTemplate<true>;
 namespace defaults {
 
 constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
-constexpr static inline auto button_body_overdraw = 0.5;      // grid values
 
-constexpr static inline auto logic_item_label_size = 0.9;       // grid values
-constexpr static inline auto logic_item_label_cutoff_px = 3.0;  // pixels
+constexpr static inline auto button_body_overdraw = 0.5;  // grid values
+constexpr static inline auto button_body_color = color_t {229, 229, 229};
+
+namespace font {
+constexpr static inline auto logic_item_label_size = 0.9;  // grid values
+constexpr static inline auto binary_value_size = 0.7;      // grid values
+constexpr static inline auto buffer_label_size = 0.6;      // grid values
+constexpr static inline auto text_cutoff_px = 3.0;         // pixels
+
+constexpr static inline auto logic_item_text_color = defaults::color_black;
+}  // namespace font
 
 constexpr static inline auto connector_length = 0.4;        // grid points
 constexpr static inline auto inverted_circle_radius = 0.2;  // grid points
@@ -106,13 +114,28 @@ constexpr auto with_alpha_runtime(color_t color, ElementDrawState state) noexcep
 [[nodiscard]] auto get_logic_item_fill_color(ElementDrawState state) -> color_t;
 [[nodiscard]] auto get_logic_item_stroke_color(ElementDrawState state) -> color_t;
 
-auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement element,
-                          const ElementDrawState state, const RenderSettings& settings)
-    -> void;
+struct LogicItemRectAttributes {
+    std::optional<color_t> custom_fill_color {};
+    std::optional<color_t> custom_stroke_color {};
+};
 
-auto draw_logic_item_text(BLContext& ctx, point_fine_t point, std::string label,
-                          layout::ConstElement element, const ElementDrawState state,
-                          const RenderSettings& settings);
+auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement element,
+                          ElementDrawState state, const RenderSettings& settings,
+                          LogicItemRectAttributes attributes = {}) -> void;
+
+struct LogicItemTextAttributes {
+    std::optional<double> custom_font_size {};
+    std::optional<color_t> custom_fill_color {};
+};
+
+auto draw_logic_item_label(BLContext& ctx, point_fine_t point, const std::string& text,
+                           layout::ConstElement element, ElementDrawState state,
+                           const RenderSettings& settings,
+                           LogicItemTextAttributes attributes = {}) -> void;
+
+auto draw_binary_value(BLContext& ctx, bool is_enabled, layout::ConstElement element,
+                       LogicItemTextAttributes attributes, const RenderSettings& settings)
+    -> void;
 
 struct ConnectorAttributes {
     ElementDrawState state;

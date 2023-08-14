@@ -71,38 +71,69 @@ auto get_logic_item_stroke_color(ElementDrawState state) -> color_t {
     return with_alpha_runtime(defaults::body_stroke_color, state);
 }
 
+auto get_logic_item_text_color(ElementDrawState state) -> color_t {
+    return with_alpha_runtime(defaults::font::logic_item_text_color, state);
+}
+
 auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement element,
-                          const ElementDrawState state, const RenderSettings& settings)
-    -> void {
+                          ElementDrawState state, const RenderSettings& settings,
+                          LogicItemRectAttributes attributes) -> void {
     const auto final_rect = rect + point_fine_t {element.position()};
+
+    const auto fill_color = attributes.custom_fill_color
+                                ? with_alpha_runtime(*attributes.custom_fill_color, state)
+                                : get_logic_item_fill_color(state);
+    const auto stroke_color =
+        attributes.custom_stroke_color
+            ? with_alpha_runtime(*attributes.custom_stroke_color, state)
+            : get_logic_item_stroke_color(state);
 
     draw_rect(ctx, final_rect,
               RectAttributes {
                   .draw_type = DrawType::fill_and_stroke,
-                  .fill_color = get_logic_item_fill_color(state),
-                  .stroke_color = get_logic_item_stroke_color(state),
+                  .fill_color = fill_color,
+                  .stroke_color = stroke_color,
               },
               settings);
 }
 
-auto draw_logic_item_text(BLContext& ctx, point_fine_t point, std::string label,
-                          layout::ConstElement element, const ElementDrawState state,
-                          const RenderSettings& settings) {
+auto draw_logic_item_label(BLContext& ctx, point_fine_t point, const std::string& text,
+                           layout::ConstElement element, ElementDrawState state,
+                           const RenderSettings& settings,
+                           LogicItemTextAttributes attributes) -> void {
     const auto center = point + point_fine_t {element.position()};
 
-    draw_text(ctx, center, label,
+    const auto font_size = attributes.custom_font_size
+                               ? *attributes.custom_font_size
+                               : defaults::font::logic_item_label_size;
+
+    const auto fill_color = attributes.custom_fill_color
+                                ? with_alpha_runtime(*attributes.custom_fill_color, state)
+                                : get_logic_item_text_color(state);
+
+    draw_text(ctx, center, text,
               TextAttributes {
-                  .font_size = defaults::logic_item_label_size,
-                  .fill_color = get_logic_item_stroke_color(state),
+                  .font_size = font_size,
+                  .fill_color = fill_color,
                   .horizontal_alignment = HorizontalAlignment::center,
                   .vertical_alignment = VerticalAlignment::center,
-                  .cuttoff_size_px = defaults::logic_item_label_cutoff_px,
+                  .cuttoff_size_px = defaults::font::text_cutoff_px,
               },
               settings);
 }
 
-auto draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
-                             const RenderSettings& settings) {
+auto draw_binary_value(BLContext& ctx, point_fine_t point, bool is_enabled,
+                       layout::ConstElement element, ElementDrawState state,
+                       const RenderSettings& settings) -> void {
+    const auto text = is_enabled ? std::string {"1"} : std::string {"0"};
+    draw_logic_item_label(ctx, point, text, element, state, settings,
+                          LogicItemTextAttributes {
+                              .custom_font_size = defaults::font::binary_value_size,
+                          });
+}
+
+auto _draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
+                              const RenderSettings& settings) {
     const auto radius = defaults::inverted_circle_radius;
     const auto width = settings.view_config.stroke_width();
     const auto offset = stroke_offset(width);
@@ -123,8 +154,8 @@ auto draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
     ctx.strokeCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
 }
 
-auto draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
-                           const RenderSettings& settings) -> void {
+auto _draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
+                            const RenderSettings& settings) -> void {
     const auto endpoint = connector_point(attributes.position, attributes.orientation,
                                           defaults::connector_length);
     draw_line(ctx, line_fine_t {attributes.position, endpoint},
@@ -133,10 +164,14 @@ auto draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
 
 auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
                     const RenderSettings& settings) -> void {
+    if (attributes.orientation == orientation_t::undirected) {
+        return;
+    }
+
     if (attributes.is_inverted) {
-        draw_connector_inverted(ctx, attributes, settings);
+        _draw_connector_inverted(ctx, attributes, settings);
     } else {
-        draw_connector_normal(ctx, attributes, settings);
+        _draw_connector_normal(ctx, attributes, settings);
     }
 }
 
@@ -156,7 +191,7 @@ auto standard_element_label(layout::ConstElement element) -> std::string {
             return "=1";
 
         default:
-            throw_exception("unknown standard element");
+            return "";
     }
 }
 
@@ -166,12 +201,111 @@ auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
     const auto element_height =
         std::max(element.input_count(), element.output_count()) - 1;
     const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {point_fine_t {0., -padding},
-                                   point_fine_t {2., element_height + padding}};
+    const auto rect = rect_fine_t {
+        point_fine_t {0., -padding},
+        point_fine_t {2., element_height + padding},
+    };
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
-    draw_logic_item_text(ctx, point_fine_t {1., element_height / 2.0},
-                         standard_element_label(element), element, state, settings);
+    draw_logic_item_label(ctx, point_fine_t {1., element_height / 2.0},
+                          standard_element_label(element), element, state, settings);
+}
+
+auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
+                 const RenderSettings& settings) -> void {
+    const auto padding = defaults::button_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {-padding, -padding},
+        point_fine_t {+padding, +padding},
+    };
+    const auto is_enabled = false;
+
+    draw_logic_item_rect(ctx, rect, element, state, settings,
+                         {.custom_fill_color = defaults::button_body_color});
+    draw_binary_value(ctx, point_fine_t {0, 0}, is_enabled, element, state, settings);
+}
+
+auto draw_buffer(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
+                 const RenderSettings& settings) -> void {
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {0., -padding},
+        point_fine_t {1., +padding},
+    };
+
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_label(ctx, point_fine_t {0.5, 0.}, "1", element, state, settings,
+                          {.custom_font_size = defaults::font::buffer_label_size});
+}
+
+auto draw_clock_generator(BLContext& ctx, layout::ConstElement element,
+                          ElementDrawState state, const RenderSettings& settings)
+    -> void {
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {0., 0. - padding},
+        point_fine_t {3., 2. + padding},
+    };
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+}
+
+auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element,
+                      ElementDrawState state, const RenderSettings& settings) -> void {
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {0., 0. - padding},
+        point_fine_t {4., 2. + padding},
+    };
+
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_label(ctx, point_fine_t {2., 1.}, "JK-FF", element, state, settings);
+}
+
+auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
+                         ElementDrawState state, const RenderSettings& settings) -> void {
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {0., 0. - padding},
+        point_fine_t {8., 2. + padding},
+    };
+
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+}
+
+auto draw_latch_d(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
+                  const RenderSettings& settings) -> void {
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {0., 0. - padding},
+        point_fine_t {2., 1. + padding},
+    };
+
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_label(ctx, point_fine_t {1., 0.5}, "L", element, state, settings);
+}
+
+auto draw_flipflop_d(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
+                     const RenderSettings& settings) -> void {
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {0., 0. - padding},
+        point_fine_t {3., 2. + padding},
+    };
+
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_label(ctx, point_fine_t {1.5, 1.}, "FF", element, state, settings);
+}
+
+auto draw_flipflop_ms_d(BLContext& ctx, layout::ConstElement element,
+                        ElementDrawState state, const RenderSettings& settings) -> void {
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {0., 0. - padding},
+        point_fine_t {4., 2. + padding},
+    };
+
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_label(ctx, point_fine_t {2., 1.}, "MS-FF", element, state, settings);
 }
 
 auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
@@ -185,35 +319,32 @@ auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
         case wire:
             throw_exception("not supported");
 
-            // case buffer_element:
-            //     return draw_buffer(ctx, element, selected, settings);
+        case buffer_element:
+            return draw_buffer(ctx, element, state, settings);
 
         case and_element:
         case or_element:
         case xor_element:
             return draw_standard_element(ctx, element, state, settings);
 
-            // case button:
-            //     return draw_button(ctx, element, selected, settings);
+        case button:
+            return draw_button(ctx, element, state, settings);
 
-            // case clock_generator:
-            //     return draw_clock_generator(ctx, element, selected, settings);
-            // case flipflop_jk:
-            //     return draw_flipflop_jk(ctx, element, selected, settings);
-            // case shift_register:
-            //     return draw_shift_register(ctx, element, selected, settings);
-            // case latch_d:
-            //     return draw_latch_d(ctx, element, selected, settings);
-            // case flipflop_d:
-            //     return draw_flipflop_d(ctx, element, selected, settings);
-            // case flipflop_ms_d:
-            //     return draw_flipflop_ms_d(ctx, element, selected, settings);
+        case clock_generator:
+            return draw_clock_generator(ctx, element, state, settings);
+        case flipflop_jk:
+            return draw_flipflop_jk(ctx, element, state, settings);
+        case shift_register:
+            return draw_shift_register(ctx, element, state, settings);
+        case latch_d:
+            return draw_latch_d(ctx, element, state, settings);
+        case flipflop_d:
+            return draw_flipflop_d(ctx, element, state, settings);
+        case flipflop_ms_d:
+            return draw_flipflop_ms_d(ctx, element, state, settings);
 
-            // case sub_circuit:
-            //     return draw_standard_element(ctx, element, selected, settings);
-
-        default:  // TODO !!! remove this
-            return;
+        case sub_circuit:
+            return draw_standard_element(ctx, element, state, settings);
     }
     throw_exception("not supported");
 }
