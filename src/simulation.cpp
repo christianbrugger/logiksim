@@ -761,6 +761,11 @@ auto Simulation::input_values(element_id_t element_id) const
     return input_values_.at(element_id.value);
 }
 
+auto Simulation::input_values(Schematic::Element element) const
+    -> const logic_small_vector_t & {
+    return input_values(element.element_id());
+}
+
 auto Simulation::input_values(const Schematic::ConstElement element) const
     -> const logic_small_vector_t & {
     return input_values(element.element_id());
@@ -807,6 +812,10 @@ auto Simulation::output_value(const Schematic::ConstOutput output) const -> bool
 
 auto Simulation::output_values(element_id_t element_id) const -> logic_small_vector_t {
     return output_values(schematic_->element(element_id));
+}
+
+auto Simulation::output_values(Schematic::Element element) const -> logic_small_vector_t {
+    return output_values(Schematic::ConstElement {element});
 }
 
 auto Simulation::output_values(const Schematic::ConstElement element) const
@@ -865,6 +874,11 @@ auto Simulation::internal_state(element_id_t element_id) const
     return internal_states_.at(element_id.value);
 }
 
+auto Simulation::internal_state(Schematic::Element element) const
+    -> const logic_small_vector_t & {
+    return internal_state(element.element_id());
+}
+
 auto Simulation::internal_state(Schematic::ConstElement element) const
     -> const logic_small_vector_t & {
     return internal_state(element.element_id());
@@ -879,9 +893,19 @@ auto Simulation::input_history(element_id_t element_id) const -> HistoryView {
     return input_history(schematic_->element(element_id));
 }
 
+auto Simulation::input_history(Schematic::Element element) const -> HistoryView {
+    return input_history(Schematic::ConstElement {element});
+}
+
 auto Simulation::input_history(Schematic::ConstElement element) const -> HistoryView {
+    const auto &input_values = this->input_values(element);
+
+    if (input_values.empty()) {
+        return HistoryView {};
+    }
+
     const auto last_value =
-        static_cast<bool>(input_values(element).at(0) ^ element.input_inverters().at(0));
+        static_cast<bool>(input_values.at(0) ^ element.input_inverters().at(0));
 
     return HistoryView {
         first_input_histories_.at(element.element_id().value),
@@ -917,12 +941,16 @@ auto HistoryView::require_history() const -> void {
 }
 
 auto HistoryView::size() const -> std::size_t {
-    require_history();
+    if (history_ == nullptr) {
+        return 1;
+    }
     return history_->size() + 1 - min_index_;
 }
 
 auto HistoryView::ssize() const -> std::ptrdiff_t {
-    require_history();
+    if (history_ == nullptr) {
+        return 1;
+    }
     return history_->size() + 1 - min_index_;
 }
 
@@ -958,6 +986,10 @@ auto HistoryView::value(time_t value) const -> bool {
     }
     const auto index = find_index(value);
     return get_value(index);
+}
+
+auto HistoryView::last_value() const -> bool {
+    return last_value_;
 }
 
 auto HistoryView::get_value(std::size_t history_index) const -> bool {

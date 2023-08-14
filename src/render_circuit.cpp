@@ -42,8 +42,9 @@ auto get_logic_item_state(layout::ConstElement element, const Selection* selecti
             return ElementDrawState::colliding;
         } else if (is_selected()) {
             return ElementDrawState::temporary_selected;
+        } else [[unlikely]] {
+            throw_exception("cannot draw temporary items");
         }
-        throw_exception("cannot draw temporary items");
     }
 }
 
@@ -345,7 +346,7 @@ auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
         case unused:
         case placeholder:
         case wire:
-            throw_exception("not supported");
+            [[unlikely]] throw_exception("not supported");
 
         case buffer_element:
             return draw_buffer(ctx, element, state, settings);
@@ -601,16 +602,17 @@ auto _draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t 
 
 auto _draw_wire_with_history(BLContext& ctx, layout::ConstElement element,
                              simulation_view::ConstElement logic_state,
+                             const simulation::HistoryView& history,
                              const RenderSettings& settings) -> void {
+    if (history.size() < 2) [[unlikely]] {
+        throw_exception("requires history view with at least 2 entries");
+    }
+
     const auto to_time =
         [time = logic_state.time(),
          delay = logic_state.wire_delay_per_distance()](LineTree::length_t length_) {
             return time_t {time.value - static_cast<int64_t>(length_) * delay.value};
         };
-
-    const auto history = logic_state.input_history();
-
-    // TODO optimize for zero history
 
     for (auto&& segment : element.line_tree().sized_segments()) {
         _draw_line_segment(ctx, segment.line.p1, segment.line.p0,
@@ -628,18 +630,15 @@ auto _draw_wire_with_history(BLContext& ctx, layout::ConstElement element,
 auto draw_wire(BLContext& ctx, layout::ConstElement element,
                simulation_view::ConstElement logic_state, const RenderSettings& settings)
     -> void {
-    if (element.input_count() == 0) {
-        draw_segment_tree(ctx, element, ElementDrawState::normal, settings);
-    } else {
-        if (logic_state.history_length() == delay_t {0ns}) {
-            auto is_enabled = logic_state.input_value(connection_id_t {0}) ^
-                              element.input_inverted(connection_id_t {0});
-            draw_segment_tree(ctx, element, is_enabled, ElementDrawState::normal,
-                              settings);
-        } else {
-            _draw_wire_with_history(ctx, element, logic_state, settings);
-        }
+    const auto history = logic_state.input_history();
+
+    if (history.size() < 2) {
+        draw_segment_tree(ctx, element, history.last_value(), ElementDrawState::normal,
+                          settings);
+        return;
     }
+
+    _draw_wire_with_history(ctx, element, logic_state, history, settings);
 }
 
 //

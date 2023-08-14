@@ -152,7 +152,7 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     // run simulation for 5 ms
     EXPECT_EQ(simulation.time(), time_t {0us});
     const auto start = timeout_clock::now();
-    simulation.run(simulation::defaults::infinite_simulation_time, 5ms);
+    simulation.run(Simulation::defaults::infinite_simulation_time, 5ms);
     const auto end = timeout_clock::now();
 
     EXPECT_GT(simulation.time(), time_t {1ms});

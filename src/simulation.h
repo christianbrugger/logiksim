@@ -157,6 +157,8 @@ class Simulation {
     [[nodiscard]] auto input_value(Schematic::ConstInput input) const -> bool;
     [[nodiscard]] auto input_values(element_id_t element_id) const
         -> const logic_small_vector_t &;
+    [[nodiscard]] auto input_values(Schematic::Element element) const
+        -> const logic_small_vector_t &;
     [[nodiscard]] auto input_values(Schematic::ConstElement element) const
         -> const logic_small_vector_t &;
     [[nodiscard]] auto input_values() const -> const logic_vector_t;
@@ -168,6 +170,8 @@ class Simulation {
     [[nodiscard]] auto output_value(Schematic::ConstOutput output) const -> bool;
     [[nodiscard]] auto output_values(element_id_t element_id) const
         -> logic_small_vector_t;
+    [[nodiscard]] auto output_values(Schematic::Element element) const
+        -> logic_small_vector_t;
     [[nodiscard]] auto output_values(Schematic::ConstElement element) const
         -> logic_small_vector_t;
     [[nodiscard]] auto output_values() const -> logic_vector_t;
@@ -177,6 +181,8 @@ class Simulation {
                             bool value) -> void;
     [[nodiscard]] auto internal_state(element_id_t element_id) const
         -> const logic_small_vector_t &;
+    [[nodiscard]] auto internal_state(Schematic::Element element) const
+        -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(Schematic::ConstElement element) const
         -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(Schematic::ConstElement element,
@@ -184,6 +190,7 @@ class Simulation {
 
     // history
     auto input_history(element_id_t element_id) const -> HistoryView;
+    auto input_history(Schematic::Element element) const -> HistoryView;
     auto input_history(Schematic::ConstElement element) const -> HistoryView;
 
    private:
@@ -242,6 +249,7 @@ class HistoryView {
     [[nodiscard]] auto until(time_t value) const -> HistoryIterator;
 
     [[nodiscard]] auto value(time_t value) const -> bool;
+    [[nodiscard]] auto last_value() const -> bool;
 
    private:
     auto require_history() const -> void;
