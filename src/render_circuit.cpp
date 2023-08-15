@@ -141,49 +141,6 @@ auto draw_binary_false(BLContext& ctx, point_fine_t point, layout::ConstElement 
     draw_binary_value(ctx, point, is_enabled, element, state, settings);
 }
 
-auto _draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
-                              const RenderSettings& settings) {
-    const auto radius = defaults::inverted_circle_radius;
-    const auto width = settings.view_config.stroke_width();
-    const auto offset = stroke_offset(width);
-
-    const auto r = radius * settings.view_config.pixel_scale();
-    const auto p = to_context(attributes.position, settings.view_config);
-    const auto p_center = connector_point(p, attributes.orientation, r + width);
-
-    const auto fill_color =
-        with_alpha_runtime(defaults::inverted_connector_fill, attributes.state);
-    const auto stroke_color = wire_color(attributes.is_enabled, attributes.state);
-
-    ctx.setFillStyle(fill_color);
-    ctx.fillCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
-
-    ctx.setStrokeWidth(width);
-    ctx.setStrokeStyle(stroke_color);
-    ctx.strokeCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
-}
-
-auto _draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
-                            const RenderSettings& settings) -> void {
-    const auto endpoint = connector_point(attributes.position, attributes.orientation,
-                                          defaults::connector_length);
-    draw_line(ctx, line_fine_t {attributes.position, endpoint},
-              {.color = wire_color(attributes.is_enabled, attributes.state)}, settings);
-}
-
-auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
-                    const RenderSettings& settings) -> void {
-    if (attributes.orientation == orientation_t::undirected) {
-        return;
-    }
-
-    if (attributes.is_inverted) {
-        _draw_connector_inverted(ctx, attributes, settings);
-    } else {
-        _draw_connector_normal(ctx, attributes, settings);
-    }
-}
-
 //
 // Individual Elements
 //
@@ -381,6 +338,78 @@ auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
     throw_exception("not supported");
 }
 
+auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+                           std::span<const DrawableElement> elements,
+                           const RenderSettings& settings) -> void {
+    for (const auto entry : elements) {
+        draw_logic_item_base(ctx, layout.element(entry.element_id), entry.state,
+                             settings);
+    }
+}
+
+auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+                           std::span<const element_id_t> elements,
+                           SimulationView simulation_view, const RenderSettings& settings)
+    -> void {
+    const auto state = ElementDrawState::normal;
+
+    for (const auto element_id : elements) {
+        draw_logic_item_base(ctx, layout.element(element_id), state, settings,
+                             simulation_view.element(element_id));
+    }
+}
+
+//
+// Connectors
+//
+
+auto do_draw_connector(const ViewConfig& view_config) {
+    return view_config.pixel_scale() >= defaults::connector_cutoff_px;
+}
+
+auto _draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
+                              const RenderSettings& settings) {
+    const auto radius = defaults::inverted_circle_radius;
+    const auto width = settings.view_config.stroke_width();
+    const auto offset = stroke_offset(width);
+
+    const auto r = radius * settings.view_config.pixel_scale();
+    const auto p = to_context(attributes.position, settings.view_config);
+    const auto p_center = connector_point(p, attributes.orientation, r + width);
+
+    const auto fill_color =
+        with_alpha_runtime(defaults::inverted_connector_fill, attributes.state);
+    const auto stroke_color = wire_color(attributes.is_enabled, attributes.state);
+
+    ctx.setFillStyle(fill_color);
+    ctx.fillCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
+
+    ctx.setStrokeWidth(width);
+    ctx.setStrokeStyle(stroke_color);
+    ctx.strokeCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
+}
+
+auto _draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
+                            const RenderSettings& settings) -> void {
+    const auto endpoint = connector_point(attributes.position, attributes.orientation,
+                                          defaults::connector_length);
+    draw_line(ctx, line_fine_t {attributes.position, endpoint},
+              {.color = wire_color(attributes.is_enabled, attributes.state)}, settings);
+}
+
+auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
+                    const RenderSettings& settings) -> void {
+    if (attributes.orientation == orientation_t::undirected) {
+        return;
+    }
+
+    if (attributes.is_inverted) {
+        _draw_connector_inverted(ctx, attributes, settings);
+    } else {
+        _draw_connector_normal(ctx, attributes, settings);
+    }
+}
+
 auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
                                 ElementDrawState state, const RenderSettings& settings)
     -> void {
@@ -461,33 +490,14 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
         });
 }
 
-auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
-                           std::span<const DrawableElement> elements,
-                           const RenderSettings& settings) -> void {
-    for (const auto entry : elements) {
-        draw_logic_item_base(ctx, layout.element(entry.element_id), entry.state,
-                             settings);
-    }
-}
-
-auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
-                           std::span<const element_id_t> elements,
-                           SimulationView simulation_view, const RenderSettings& settings)
-    -> void {
-    const auto state = ElementDrawState::normal;
-
-    for (const auto element_id : elements) {
-        draw_logic_item_base(ctx, layout.element(element_id), state, settings,
-                             simulation_view.element(element_id));
-    }
-}
-
 auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements,
                                  const RenderSettings& settings) -> void {
-    for (const auto entry : elements) {
-        draw_logic_item_connectors(ctx, layout.element(entry.element_id), entry.state,
-                                   settings);
+    if (do_draw_connector(settings.view_config)) {
+        for (const auto entry : elements) {
+            draw_logic_item_connectors(ctx, layout.element(entry.element_id), entry.state,
+                                       settings);
+        }
     }
 }
 
@@ -495,11 +505,12 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const element_id_t> elements,
                                  SimulationView simulation_view,
                                  const RenderSettings& settings) -> void {
-    const auto state = ElementDrawState::normal;
-
-    for (const auto element_id : elements) {
-        draw_logic_item_connectors(ctx, layout.element(element_id), state, settings,
-                                   simulation_view.element(element_id));
+    if (do_draw_connector(settings.view_config)) {
+        for (const auto element_id : elements) {
+            const auto state = ElementDrawState::normal;
+            draw_logic_item_connectors(ctx, layout.element(element_id), state, settings,
+                                       simulation_view.element(element_id));
+        }
     }
 }
 

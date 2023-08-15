@@ -35,6 +35,7 @@ class ConstElement;
 
 namespace defaults {
 
+constexpr static inline auto connector_cutoff_px = 3.0;       // pixels
 constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
 
 constexpr static inline auto button_body_overdraw = 0.5;  // grid values
@@ -137,9 +138,29 @@ auto draw_logic_item_label(BLContext& ctx, point_fine_t point, const std::string
                            const RenderSettings& settings,
                            LogicItemTextAttributes attributes = {}) -> void;
 
-auto draw_binary_value(BLContext& ctx, bool is_enabled, layout::ConstElement element,
-                       LogicItemTextAttributes attributes, const RenderSettings& settings)
+auto draw_binary_value(BLContext& ctx, point_fine_t point, bool is_enabled,
+                       layout::ConstElement element, ElementDrawState state,
+                       const RenderSettings& settings) -> void;
+auto draw_binary_false(BLContext& ctx, point_fine_t point, layout::ConstElement element,
+                       ElementDrawState state, const RenderSettings& settings) -> void;
+
+auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
+                          ElementDrawState state, const RenderSettings& settings,
+                          std::optional<simulation_view::ConstElement> logic_state = {})
     -> void;
+
+auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+                           std::span<const DrawableElement> elements,
+                           const RenderSettings& settings) -> void;
+
+auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+                           std::span<const element_id_t> elements,
+                           SimulationView simulation_view, const RenderSettings& settings)
+    -> void;
+
+//
+// Connectors
+//
 
 struct ConnectorAttributes {
     ElementDrawState state;
@@ -152,15 +173,6 @@ struct ConnectorAttributes {
 auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
                     const RenderSettings& settings) -> void;
 
-//
-// All Elements
-//
-
-auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
-                          ElementDrawState state, const RenderSettings& settings,
-                          std::optional<simulation_view::ConstElement> logic_state = {})
-    -> void;
-
 auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
                                 ElementDrawState state, const RenderSettings& settings)
     -> void;
@@ -168,15 +180,6 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
 auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
                                 ElementDrawState state, const RenderSettings& settings,
                                 simulation_view::ConstElement logic_state) -> void;
-
-auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
-                           std::span<const DrawableElement> elements,
-                           const RenderSettings& settings) -> void;
-
-auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
-                           std::span<const element_id_t> elements,
-                           SimulationView simulation_view, const RenderSettings& settings)
-    -> void;
 
 auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements,

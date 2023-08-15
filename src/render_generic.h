@@ -265,13 +265,11 @@ auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attribute
 // Rect
 //
 
-// TODO !!! make color mandatory
 struct RectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
-
-    color_t fill_color {defaults::no_color};
-    color_t stroke_color {defaults::no_color};
+    color_t fill_color {defaults::color_white};
+    color_t stroke_color {defaults::color_black};
 };
 
 auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,

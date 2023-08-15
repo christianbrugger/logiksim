@@ -1323,15 +1323,18 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
                                              const RenderSettings& settings) -> void {
     const auto scene_rect = get_scene_rect_fine(settings.view_config);
-    ctx.setStrokeStyle(BLRgba32(0, 255, 0));
-
     for (const rect_fine_t& rect : editable_circuit.caches().selection_rects()) {
+        // TODO introduce is_visible
         if (!is_colliding(rect, scene_rect)) {
             continue;
         }
 
         draw_rect(ctx, rect,
-                  RectAttributes {.draw_type = DrawType::stroke, .stroke_width = 1},
+                  RectAttributes {
+                      .draw_type = DrawType::stroke,
+                      .stroke_width = 1,
+                      .stroke_color = defaults::color_lime,
+                  },
                   settings);
     }
 }

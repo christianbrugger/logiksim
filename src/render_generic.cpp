@@ -408,10 +408,9 @@ auto format(PointShape type) -> std::string {
     throw_exception("cannot convert PointType to string");
 }
 
-auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
+auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
                 double size, const RenderSettings& settings) -> void {
     constexpr auto stroke_width = 1;
-    const auto color = BLRgba32(color_.value);
 
     switch (shape) {
         using enum PointShape;
@@ -447,34 +446,38 @@ auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
         case plus: {
             const auto [x, y] = to_context(point, settings.view_config);
             const auto d = to_context(size, settings.view_config);
-            const auto attrs = LineAttributes {color_, stroke_width};
+            const auto attrs = LineAttributes {color, stroke_width};
 
             draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs, settings);
             draw_orthogonal_line(ctx, BLLine {x - d, y, x + d, y}, attrs, settings);
             return;
         }
         case square: {
-            ctx.setStrokeStyle(color);
             draw_rect(ctx,
                       rect_fine_t {
                           point_fine_t {point.x.value - size, point.y.value - size},
                           point_fine_t {point.x.value + size, point.y.value + size},
                       },
-                      RectAttributes {.draw_type = DrawType::stroke,
-                                      .stroke_width = stroke_width},
+                      RectAttributes {
+                          .draw_type = DrawType::stroke,
+                          .stroke_width = stroke_width,
+                          .stroke_color = color,
+                      },
                       settings);
 
             return;
         }
         case full_square: {
-            ctx.setFillStyle(color);
             draw_rect(ctx,
                       rect_fine_t {
                           point_fine_t {point.x.value - size, point.y.value - size},
                           point_fine_t {point.x.value + size, point.y.value + size},
                       },
-                      RectAttributes {.draw_type = DrawType::fill,
-                                      .stroke_width = stroke_width},
+                      RectAttributes {
+                          .draw_type = DrawType::fill,
+                          .stroke_width = stroke_width,
+                          .fill_color = color,
+                      },
                       settings);
             return;
         }
@@ -494,7 +497,7 @@ auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
         case horizontal: {
             const auto [x, y] = to_context(point, settings.view_config);
             const auto d = to_context(size, settings.view_config);
-            const auto attrs = LineAttributes {color_, stroke_width};
+            const auto attrs = LineAttributes {color, stroke_width};
 
             draw_orthogonal_line(ctx, BLLine {x - d, y, x + d, y}, attrs, settings);
             return;
@@ -502,7 +505,7 @@ auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color_,
         case vertical: {
             const auto [x, y] = to_context(point, settings.view_config);
             const auto d = to_context(size, settings.view_config);
-            const auto attrs = LineAttributes {color_, stroke_width};
+            const auto attrs = LineAttributes {color, stroke_width};
 
             draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs, settings);
             return;
@@ -596,42 +599,73 @@ auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attribute
 //
 // Rect
 //
-auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-               const RenderSettings& settings) -> void {
-    const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
-    const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
 
-    auto w = x1 - x0;
-    auto h = y1 - y0;
+auto _draw_rect_stroke(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
+                       const RenderSettings& settings) -> void {
+    const auto [x0, y0] = to_context(rect.p0, settings.view_config);
+    const auto [x1, y1] = to_context(rect.p1, settings.view_config);
 
-    if (attributes.draw_type == DrawType::fill) {
-        ++w;
-        ++h;
+    const auto w = std::max(1., x1 - x0);
+    const auto h = std::max(1., y1 - y0);
+
+    const auto width = resolve_stroke_width(attributes.stroke_width, settings);
+
+    ctx.setStrokeWidth(width);
+    ctx.strokeRect(x0 + width / 2.0, y0 + width / 2.0, w - width, h - width,
+                   attributes.stroke_color);
+}
+
+auto _draw_rect_fill(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
+                     const RenderSettings& settings) -> void {
+    const auto [x0, y0] = to_context(rect.p0, settings.view_config);
+    const auto [x1, y1] = to_context(rect.p1, settings.view_config);
+
+    const auto w = std::max(1., x1 - x0);
+    const auto h = std::max(1., y1 - y0);
+
+    ctx.fillRect(x0, y0, w, h, attributes.fill_color);
+}
+
+auto _draw_rect_fill_and_stroke(BLContext& ctx, rect_fine_t rect,
+                                RectAttributes attributes,
+                                const RenderSettings& settings) {
+    const auto stroke_width = resolve_stroke_width(attributes.stroke_width, settings);
+
+    auto [x0, y0] = to_context(rect.p0, settings.view_config);
+    auto [x1, y1] = to_context(rect.p1, settings.view_config);
+
+    auto w = std::max(1., x1 - x0);
+    auto h = std::max(1., y1 - y0);
+
+    if (stroke_width > 0) {
+        ctx.fillRect(x0, y0, w, h, attributes.stroke_color);
+
+        x0 += stroke_width;
+        y0 += stroke_width;
+        w -= stroke_width * 2;
+        h -= stroke_width * 2;
     }
 
-    w = w == 0 ? 1.0 : w;
-    h = h == 0 ? 1.0 : h;
-
-    if (attributes.draw_type == DrawType::fill ||
-        attributes.draw_type == DrawType::fill_and_stroke) {
-        if (attributes.fill_color != defaults::no_color) {
-            ctx.setFillStyle(attributes.fill_color);
-        }
-        ctx.fillRect(x0, y0, w, h);
-    }
-
-    if (attributes.draw_type == DrawType::stroke ||
-        attributes.draw_type == DrawType::fill_and_stroke) {
-        const auto width = resolve_stroke_width(attributes.stroke_width, settings);
-        const auto offset = stroke_offset(width);
-
-        if (attributes.stroke_color != defaults::no_color) {
-            ctx.setStrokeStyle(attributes.stroke_color);
-        }
-        ctx.setStrokeWidth(width);
-        ctx.strokeRect(x0 + offset, y0 + offset, w, h);
+    if (w >= 1 && h >= 1) {
+        ctx.fillRect(x0, y0, w, h, attributes.fill_color);
     }
 }
+
+auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
+               const RenderSettings& settings) -> void {
+    switch (attributes.draw_type) {
+        case DrawType::fill:
+            return _draw_rect_fill(ctx, rect, attributes, settings);
+        case DrawType::stroke:
+            return _draw_rect_stroke(ctx, rect, attributes, settings);
+        case DrawType::fill_and_stroke:
+            return _draw_rect_fill_and_stroke(ctx, rect, attributes, settings);
+    }
+
+    throw_exception("unknown DrawType in draw_rect");
+}
+
+// TODO !!! delete
 
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
                      const RenderSettings& settings) -> void {
