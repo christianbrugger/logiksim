@@ -694,6 +694,23 @@ TEST(SimulationTest, HistoryViewSizeNegative) {
     ASSERT_THAT(view.size(), 3);
 }
 
+TEST(SimulationTest, HistoryViewEmpty) {
+    const auto view = simulation::HistoryView {};
+
+    ASSERT_THAT(view.size(), 1);
+    ASSERT_THAT(view.end() - view.begin(), 1);
+
+    ASSERT_THAT(view.last_value(), false);
+    ASSERT_THAT(view.value(time_t {0us}), false);
+
+    const auto value = *view.begin();
+    ASSERT_THAT(value.first_time, time_t::min());
+    ASSERT_THAT(value.last_time, time_t::max());
+    ASSERT_THAT(value.value, false);
+
+    ASSERT_THAT(view.until(time_t {100us}) - view.from(time_t {0us}), 1);
+}
+
 // begin end iteration
 
 TEST(SimulationTest, HistoryViewBeginEndExact) {
@@ -849,8 +866,8 @@ TEST(SimulationTest, HistoryViewUntilExact) {
     auto from = view.from(time_t {90us});
     ASSERT_THAT(view.end() - from, 2);
 
-    ASSERT_THAT(view.until(time_t {95us}) - from, 2);
-    ASSERT_THAT(view.until(time_t {95us - epsilon}) - from, 1);
+    ASSERT_THAT(view.until(time_t {95us + epsilon}) - from, 2);
+    ASSERT_THAT(view.until(time_t {95us}) - from, 1);
 }
 
 TEST(SimulationTest, HistoryViewFromUntilBounds) {
@@ -919,6 +936,42 @@ TEST(SimulationTest, HistoryViewValuePartialHistory) {
     ASSERT_THAT(view.value(time_t {95us}), false);
 
     ASSERT_THAT(view.value(time_t {100us}), false);
+}
+
+TEST(SimulationTest, HistoryViewIteratorValues) {
+    const auto time = time_t {100us};
+    const auto history_length = delay_t {100us};
+    const auto history = simulation::history_buffer_t {time_t {90us}, time_t {95us}};
+    const auto last_value = false;
+    constexpr auto epsilon = time_t::epsilon().value;
+
+    const auto view = simulation::HistoryView {history, time, last_value, history_length};
+
+    {
+        auto it = view.from(time_t {95us});
+        const auto end = view.until(time_t {100us});
+
+        ASSERT_THAT((*it).first_time, time_t {95us});
+        ASSERT_THAT((*it).last_time, time_t {100us});
+        ASSERT_THAT((*it).value, false);
+
+        ASSERT_THAT(end - it, 1);
+        it++;
+        ASSERT_THAT(it == end, true);
+    }
+
+    {
+        auto it = view.from(time_t {92us});
+        const auto end = view.until(time_t {95us});
+
+        ASSERT_THAT((*it).first_time, time_t {90us});
+        ASSERT_THAT((*it).last_time, time_t {95us});
+        ASSERT_THAT((*it).value, true);
+
+        ASSERT_THAT(end - it, 1);
+        it++;
+        ASSERT_THAT(it == end, true);
+    }
 }
 
 }  // namespace logicsim

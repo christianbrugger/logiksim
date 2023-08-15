@@ -252,15 +252,13 @@ class HistoryView {
     [[nodiscard]] auto last_value() const -> bool;
 
    private:
-    auto require_history() const -> void;
-
     [[nodiscard]] auto get_value(std::size_t history_index) const -> bool;
     [[nodiscard]] auto find_index(time_t value) const -> std::size_t;
     [[nodiscard]] auto get_time(std::ptrdiff_t index) const -> time_t;
 
    private:
     const history_buffer_t *history_ {nullptr};
-    time_t simulation_time_ {};
+    time_t simulation_time_ {time_t::max()};
     history_buffer_t::internal_size_t min_index_ {};
     bool last_value_ {};
 };

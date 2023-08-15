@@ -935,12 +935,6 @@ HistoryView::HistoryView(const history_buffer_t &history, time_t simulation_time
     assert(size() >= 1);
 }
 
-auto HistoryView::require_history() const -> void {
-    if (history_ == nullptr) [[unlikely]] {
-        throw_exception("History needs to be set.");
-    }
-}
-
 auto HistoryView::size() const -> std::size_t {
     if (history_ == nullptr) {
         return 1;
@@ -956,12 +950,10 @@ auto HistoryView::ssize() const -> std::ptrdiff_t {
 }
 
 auto HistoryView::begin() const -> HistoryIterator {
-    require_history();
     return HistoryIterator {*this, min_index_};
 }
 
 auto HistoryView::end() const -> HistoryIterator {
-    require_history();
     return HistoryIterator {*this, size() + min_index_};
 }
 
@@ -977,7 +969,11 @@ auto HistoryView::until(time_t value) const -> HistoryIterator {
     if (value > simulation_time_) [[unlikely]] {
         throw_exception("cannot query times in the future");
     }
-    const auto index = find_index(value) + 1;
+
+    const auto last_time = value > time_t::min()  //
+                               ? time_t {value.value - time_t::epsilon().value}
+                               : value;
+    const auto index = find_index(last_time) + 1;
     return HistoryIterator {*this, index};
 }
 
@@ -994,7 +990,12 @@ auto HistoryView::last_value() const -> bool {
 }
 
 auto HistoryView::get_value(std::size_t history_index) const -> bool {
-    require_history();
+    if (history_ == nullptr) {
+        if (history_index != 0) [[unlikely]] {
+            throw_exception("invalid history index");
+        }
+        return false;
+    }
 
     auto number = history_->size() - history_index;
     return static_cast<bool>(number % 2) ^ last_value_;
@@ -1003,7 +1004,9 @@ auto HistoryView::get_value(std::size_t history_index) const -> bool {
 // Returns the index to the first element that is greater to the value,
 // or the history.size() if no such element is found.
 auto HistoryView::find_index(time_t value) const -> std::size_t {
-    require_history();
+    if (history_ == nullptr) {
+        return 0;
+    }
 
     const auto it =
         std::ranges::lower_bound(history_->begin() + min_index_, history_->end(), value,
@@ -1019,7 +1022,9 @@ auto HistoryView::find_index(time_t value) const -> std::size_t {
 }
 
 auto HistoryView::get_time(std::ptrdiff_t index) const -> time_t {
-    require_history();
+    if (history_ == nullptr) {
+        return index < 0 ? time_t::min() : simulation_time_;
+    }
 
     if (index < min_index_) {
         return time_t::min();
@@ -1045,8 +1050,6 @@ HistoryIterator::HistoryIterator(HistoryView view, std::size_t index) noexcept
     : view_ {std::move(view)}, index_ {index} {}
 
 auto HistoryIterator::operator*() const -> value_type {
-    view_.require_history();
-
     return history_entry_t {
         .first_time = view_.get_time(static_cast<std::ptrdiff_t>(index_) - 1),
         .last_time = view_.get_time(index_),
