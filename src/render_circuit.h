@@ -45,14 +45,17 @@ constexpr static inline auto button_body_overdraw = 0.5;  // grid values
 constexpr static inline auto button_body_color = color_t {229, 229, 229};
 
 namespace font {
+constexpr static inline auto logic_item_text_color = defaults::color_black;
+constexpr static inline auto text_cutoff_px = 3.0;  // pixels
+
 constexpr static inline auto logic_item_label_size = 0.9;   // grid values
 constexpr static inline auto binary_value_size = 0.7;       // grid values
 constexpr static inline auto buffer_label_size = 0.6;       // grid values
 constexpr static inline auto connector_label_size = 0.6;    // grid values
 constexpr static inline auto connector_label_margin = 0.2;  // grid values
 
-constexpr static inline auto logic_item_text_color = defaults::color_black;
-constexpr static inline auto text_cutoff_px = 3.0;  // pixels
+constexpr static inline auto clock_period_size = 0.7;  // grid values
+constexpr static inline auto clock_period_color = defaults::color_dark_orange;
 }  // namespace font
 
 constexpr static inline auto connector_length = 0.4;        // grid points
@@ -136,6 +139,8 @@ auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement
 struct LogicItemTextAttributes {
     std::optional<double> custom_font_size {};
     std::optional<color_t> custom_text_color {};
+    HorizontalAlignment horizontal_alignment {HorizontalAlignment::center};
+    VerticalAlignment vertical_alignment {VerticalAlignment::center};
 };
 
 auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view text,

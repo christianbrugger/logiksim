@@ -120,8 +120,8 @@ auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view 
               TextAttributes {
                   .font_size = font_size,
                   .color = text_color,
-                  .horizontal_alignment = HorizontalAlignment::center,
-                  .vertical_alignment = VerticalAlignment::center,
+                  .horizontal_alignment = attributes.horizontal_alignment,
+                  .vertical_alignment = attributes.vertical_alignment,
                   .cuttoff_size_px = defaults::font::text_cutoff_px,
               },
               settings);
@@ -221,10 +221,23 @@ auto draw_clock_generator(BLContext& ctx, layout::ConstElement element,
     };
     draw_logic_item_rect(ctx, rect, element, state, settings);
 
+    // labels
     static constexpr auto input_labels = string_array<1> {"En"};
     static constexpr auto output_labels = string_array<1> {"C"};
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
                           state, settings);
+
+    // generator delay
+    const auto generator_delay = Schematic::defaults::clock_generator_delay;
+    const auto duration_text = fmt::format("{}", generator_delay);
+    draw_logic_item_label(ctx, point_fine_t {1.5, -padding / 2.}, duration_text, element,
+                          state, settings,
+                          LogicItemTextAttributes {
+                              .custom_font_size = defaults::font::clock_period_size,
+                              .custom_text_color = defaults::font::clock_period_color,
+                              .horizontal_alignment = HorizontalAlignment::center,
+                              .vertical_alignment = VerticalAlignment::top,
+                          });
 }
 
 auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element,

@@ -420,6 +420,7 @@ constexpr static inline auto color_green = ::logicsim::color_t {0xFF009900};
 constexpr static inline auto color_lime = ::logicsim::color_t {0xFF00FF00};
 constexpr static inline auto color_yellow = ::logicsim::color_t {0xFFFFFF00};
 constexpr static inline auto color_orange = ::logicsim::color_t {0xFFFF8000};
+constexpr static inline auto color_dark_orange = ::logicsim::color_t {0xFFB36200};
 constexpr static inline auto color_blue = ::logicsim::color_t {0xFF0000FF};
 }  // namespace defaults
 
