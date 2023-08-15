@@ -8,6 +8,7 @@
 #include <blend2d.h>
 
 #include <bit>
+#include <string_view>
 
 namespace logicsim {
 enum class HorizontalAlignment : uint8_t {
@@ -32,11 +33,13 @@ auto format(VerticalAlignment alignment) -> std::string;
 
 namespace logicsim::glyph_cache {
 
+auto hash(std::string_view text) noexcept -> uint64_t;
+
 struct glyph_key_t {
+    uint64_t text_hash {};
     float font_size {};
     HorizontalAlignment horizontal_alignment;
     VerticalAlignment vertical_alignment;
-    std::string text {};
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const glyph_key_t &other) const -> bool = default;
@@ -45,6 +48,8 @@ struct glyph_key_t {
 struct glyph_entry_t {
     BLGlyphBuffer glyph_buffer {};
     BLPoint offset {0., 0.};
+
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 }  // namespace logicsim::glyph_cache
@@ -61,9 +66,7 @@ struct ankerl::unordered_dense::hash<logicsim::glyph_cache::glyph_key_t> {
             static_cast<uint64_t>(obj.vertical_alignment);
 
         const uint64_t v0 = ankerl::unordered_dense::hash<uint64_t> {}(numerics);
-        const uint64_t v1 = ankerl::unordered_dense::hash<std::string> {}(obj.text);
-
-        return ankerl::unordered_dense::detail::wyhash::mix(v0, v1);
+        return ankerl::unordered_dense::detail::wyhash::mix(v0, obj.text_hash);
     }
 };
 
@@ -77,15 +80,17 @@ class GlyphCache {
    public:
     GlyphCache();
 
+    [[nodiscard]] auto format() const -> std::string;
+
     auto draw_text(
-        BLContext &ctx, const BLPoint &position, float font_size, const std::string &text,
+        BLContext &ctx, const BLPoint &position, std::string_view text, float font_size,
         color_t color = defaults::color_black,
         HorizontalAlignment horizontal_alignment = HorizontalAlignment::left,
         VerticalAlignment vertical_alignment = VerticalAlignment::baseline) const -> void;
 
    private:
     [[nodiscard]] auto get_font(float font_size) const -> const BLFont &;
-    [[nodiscard]] auto get_glyph_entry(float font_size, const std::string &text,
+    [[nodiscard]] auto get_glyph_entry(std::string_view text, float font_size,
                                        HorizontalAlignment horizontal_alignment,
                                        VerticalAlignment vertical_alignment) const
         -> const glyph_entry_t &;

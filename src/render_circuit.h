@@ -138,7 +138,7 @@ struct LogicItemTextAttributes {
     std::optional<color_t> custom_text_color {};
 };
 
-auto draw_logic_item_label(BLContext& ctx, point_fine_t point, const std::string& text,
+auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view text,
                            layout::ConstElement element, ElementDrawState state,
                            const RenderSettings& settings,
                            LogicItemTextAttributes attributes = {}) -> void;
@@ -202,6 +202,10 @@ struct ConnectorLabels {
     gsl::span<const std::string_view> input_labels {};
     gsl::span<const std::string_view> output_labels {};
 };
+
+auto draw_connector_label(BLContext& ctx, point_t position, orientation_t orientation,
+                          std::string_view label, ElementDrawState state,
+                          const RenderSettings& settings) -> void;
 
 auto draw_connector_labels(BLContext& ctx, ConnectorLabels labels,
                            layout::ConstElement element, ElementDrawState state,

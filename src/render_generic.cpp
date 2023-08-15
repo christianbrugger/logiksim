@@ -709,7 +709,7 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 // Text
 //
 
-auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
+auto draw_text(BLContext& ctx, point_fine_t position, std::string_view text,
                TextAttributes attributes, const RenderSettings& settings) -> void {
     if (text.empty()) {
         return;
@@ -720,7 +720,7 @@ auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
     }
 
     const auto position_px = to_context(position, settings.view_config);
-    settings.text.draw_text(ctx, position_px, font_size_px, text, attributes.color,
+    settings.text.draw_text(ctx, position_px, text, font_size_px, attributes.color,
                             attributes.horizontal_alignment,
                             attributes.vertical_alignment);
 }

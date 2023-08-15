@@ -40,8 +40,17 @@ auto format(VerticalAlignment alignment) -> std::string {
 
 namespace glyph_cache {
 
+auto hash(std::string_view text) noexcept -> uint64_t {
+    return ankerl::unordered_dense::hash<std::string_view> {}(text);
+}
+
 auto glyph_key_t::format() const -> std::string {
-    return fmt::format("({}, \"{}\")", font_size, text);
+    return fmt::format("({}, {}, {}, {})", text_hash, font_size, horizontal_alignment,
+                       vertical_alignment);
+}
+
+auto glyph_entry_t::format() const -> std::string {
+    return fmt::format("({}, {})", offset.x, offset.y);
 }
 
 }  // namespace glyph_cache
@@ -55,6 +64,10 @@ GlyphCache::GlyphCache() {
         // TODO create custom exception that can be handeled
         throw_exception("Could not find font face file");
     }
+}
+
+auto GlyphCache::format() const -> std::string {
+    return fmt::format("GlyphCache(glyphs = {})", glyph_map_);
 }
 
 auto GlyphCache::get_font(float font_size) const -> const BLFont& {
@@ -110,22 +123,22 @@ auto calculate_offset(const BLFont& font, BLGlyphBuffer& glyph_buffer,
     return result;
 }
 
-auto GlyphCache::get_glyph_entry(float font_size, const std::string& text,
+auto GlyphCache::get_glyph_entry(std::string_view text, float font_size,
                                  HorizontalAlignment horizontal_alignment,
                                  VerticalAlignment vertical_alignment) const
     -> const glyph_entry_t& {
     const auto [it, inserted] = glyph_map_.try_emplace(glyph_key_t {
+        .text_hash = glyph_cache::hash(text),
         .font_size = font_size,
         .horizontal_alignment = horizontal_alignment,
         .vertical_alignment = vertical_alignment,
-        .text = text,
     });
     auto& glyph_entry = it->second;
 
     if (inserted) {
         const auto& font = get_font(font_size);
 
-        glyph_entry.glyph_buffer.setUtf8Text(text.c_str(), text.size());
+        glyph_entry.glyph_buffer.setUtf8Text(text.data(), text.size());
         font.shape(glyph_entry.glyph_buffer);
         // font.applyKerning(glyph_buffer);
         glyph_entry.offset = calculate_offset(font, glyph_entry.glyph_buffer,
@@ -135,8 +148,8 @@ auto GlyphCache::get_glyph_entry(float font_size, const std::string& text,
     return glyph_entry;
 }
 
-auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, float font_size,
-                           const std::string& text, color_t color,
+auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_view text,
+                           float font_size, color_t color,
                            HorizontalAlignment horizontal_alignment,
                            VerticalAlignment vertical_alignment) const -> void {
     if (text.empty()) {
@@ -145,16 +158,10 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, float font_s
 
     const auto& font = get_font(font_size);
     const auto& glyph_entry =
-        get_glyph_entry(font_size, text, horizontal_alignment, vertical_alignment);
+        get_glyph_entry(text, font_size, horizontal_alignment, vertical_alignment);
 
     ctx.fillGlyphRun(position - glyph_entry.offset, font,
                      glyph_entry.glyph_buffer.glyphRun(), color);
 }
 
 }  // namespace logicsim
-
-/*
-template <>
-auto ankerl::unordered_dense::hash<logicsim::glyph_cache::glyph_key_t>::operator()(
-    const logicsim::glyph_cache::glyph_key_t& obj) const noexcept -> uint64_t
-*/

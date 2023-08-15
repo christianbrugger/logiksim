@@ -303,7 +303,7 @@ struct TextAttributes {
     double cuttoff_size_px {3.0};  // pixels
 };
 
-auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
+auto draw_text(BLContext& ctx, point_fine_t position, std::string_view text,
                TextAttributes attributes, const RenderSettings& settings) -> void;
 
 }  // namespace logicsim

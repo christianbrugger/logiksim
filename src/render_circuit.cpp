@@ -102,7 +102,7 @@ auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement
               settings);
 }
 
-auto draw_logic_item_label(BLContext& ctx, point_fine_t point, const std::string& text,
+auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view text,
                            layout::ConstElement element, ElementDrawState state,
                            const RenderSettings& settings,
                            LogicItemTextAttributes attributes) -> void {
@@ -130,7 +130,7 @@ auto draw_logic_item_label(BLContext& ctx, point_fine_t point, const std::string
 auto draw_binary_value(BLContext& ctx, point_fine_t point, bool is_enabled,
                        layout::ConstElement element, ElementDrawState state,
                        const RenderSettings& settings) -> void {
-    const auto text = is_enabled ? std::string {"1"} : std::string {"0"};
+    const auto text = is_enabled ? std::string_view {"1"} : std::string_view {"0"};
     draw_logic_item_label(ctx, point, text, element, state, settings,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::binary_value_size,
@@ -147,8 +147,8 @@ auto draw_binary_false(BLContext& ctx, point_fine_t point, layout::ConstElement 
 // Individual Elements
 //
 
-auto standard_element_label(layout::ConstElement element) -> std::string {
-    switch (element.element_type()) {
+constexpr auto standard_element_label(ElementType element_type) -> std::string_view {
+    switch (element_type) {
         using enum ElementType;
 
         case and_element:
@@ -179,7 +179,8 @@ auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
     draw_logic_item_label(ctx, point_fine_t {1., element_height / 2.0},
-                          standard_element_label(element), element, state, settings);
+                          standard_element_label(element.element_type()), element, state,
+                          settings);
 }
 
 auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
@@ -587,14 +588,12 @@ auto connector_vertical_alignment(orientation_t orientation) -> VerticalAlignmen
 auto draw_connector_label(BLContext& ctx, point_t position, orientation_t orientation,
                           std::string_view label, ElementDrawState state,
                           const RenderSettings& settings) -> void {
-    const auto text = std::string {label};  // TODO !!! remove std::string
-
     const auto point = label.size() > 0 && label.at(0) == '>'
                            ? point_fine_t {position}
                            : connector_point(position, orientation,
                                              -defaults::font::connector_label_margin);
 
-    draw_text(ctx, point, text,
+    draw_text(ctx, point, label,
               TextAttributes {
                   .font_size = defaults::font::connector_label_size,
                   .color = get_logic_item_text_color(state),
@@ -1183,8 +1182,8 @@ auto build_simulation_layers(const Layout& layout, SimulationLayersCache& layers
 // Layout
 //
 
-auto render_layout_impl(BLContext& ctx, const Layout& layout, const Selection* selection,
-                        RenderSettings& settings) -> void {
+auto _render_layout(BLContext& ctx, const Layout& layout, const Selection* selection,
+                    RenderSettings& settings) -> void {
     build_layers(layout, settings.layers, selection,
                  get_scene_rect(settings.view_config));
     render_layers(ctx, layout, settings);
@@ -1192,15 +1191,15 @@ auto render_layout_impl(BLContext& ctx, const Layout& layout, const Selection* s
 
 auto render_layout(BLContext& ctx, const Layout& layout, RenderSettings& settings)
     -> void {
-    render_layout_impl(ctx, layout, nullptr, settings);
+    _render_layout(ctx, layout, nullptr, settings);
 }
 
 auto render_layout(BLContext& ctx, const Layout& layout, const Selection& selection,
                    RenderSettings& settings) -> void {
     if (selection.empty()) {
-        render_layout_impl(ctx, layout, nullptr, settings);
+        _render_layout(ctx, layout, nullptr, settings);
     } else {
-        render_layout_impl(ctx, layout, &selection, settings);
+        _render_layout(ctx, layout, &selection, settings);
     }
 }
 
