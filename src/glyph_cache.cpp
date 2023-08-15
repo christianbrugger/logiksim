@@ -139,6 +139,10 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, float font_s
                            const std::string& text, color_t color,
                            HorizontalAlignment horizontal_alignment,
                            VerticalAlignment vertical_alignment) const -> void {
+    if (text.empty()) {
+        return;
+    }
+
     const auto& font = get_font(font_size);
     const auto& glyph_entry =
         get_glyph_entry(font_size, text, horizontal_alignment, vertical_alignment);

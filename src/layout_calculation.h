@@ -102,7 +102,7 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             auto points = std::array {
                 p {0, 0}, p {1, 0}, p {2, 0}, p {3, 0},  //
                 p {0, 1}, p {1, 1}, p {2, 1},            //
-                p {0, 2}, p {1, 2}, p {3, 2}             //
+                p {0, 2}, p {2, 2}, p {3, 2}             //
             };
 
             for (auto &&point : points) {
@@ -174,8 +174,8 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
         case flipflop_d: {
             using p = point_t;
             auto points = std::array {p {0, 2},                      //
-                                      p {1, 1},                      //
-                                      p {2, 0}, p {2, 1}, p {2, 2},  //
+                                      p {1, 0}, p {1, 1}, p {1, 2},  //
+                                      p {2, 1},                      //
                                       p {3, 1}, p {3, 2}};
 
             for (auto &&point : points) {
@@ -264,7 +264,7 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             // the second input is used only for simulation
             // not for any drawing or any types of collisions
 
-            return next_input(transform(data.position, data.orientation, point_t {2, 2}),
+            return next_input(transform(data.position, data.orientation, point_t {1, 2}),
                               transform(data.orientation, orientation_t::down));
         }
         case flipflop_jk: {
@@ -337,8 +337,8 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
                 // data
                 std::make_pair(point_t {0, 0}, orientation_t::left),
                 // set & reset
-                std::make_pair(point_t {1, 0}, orientation_t::up),
-                std::make_pair(point_t {1, 2}, orientation_t::down),
+                std::make_pair(point_t {2, 0}, orientation_t::up),
+                std::make_pair(point_t {2, 2}, orientation_t::down),
             };
 
             for (auto &&[point, orientation] : points) {

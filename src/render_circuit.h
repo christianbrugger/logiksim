@@ -5,7 +5,10 @@
 #include "simulation_view.h"
 #include "vocabulary.h"
 
+#include <gsl/gsl>
+
 #include <span>
+#include <string_view>
 
 class BLContext;
 
@@ -42,12 +45,14 @@ constexpr static inline auto button_body_overdraw = 0.5;  // grid values
 constexpr static inline auto button_body_color = color_t {229, 229, 229};
 
 namespace font {
-constexpr static inline auto logic_item_label_size = 0.9;  // grid values
-constexpr static inline auto binary_value_size = 0.7;      // grid values
-constexpr static inline auto buffer_label_size = 0.6;      // grid values
-constexpr static inline auto text_cutoff_px = 3.0;         // pixels
+constexpr static inline auto logic_item_label_size = 0.9;   // grid values
+constexpr static inline auto binary_value_size = 0.7;       // grid values
+constexpr static inline auto buffer_label_size = 0.6;       // grid values
+constexpr static inline auto connector_label_size = 0.6;    // grid values
+constexpr static inline auto connector_label_margin = 0.2;  // grid values
 
 constexpr static inline auto logic_item_text_color = defaults::color_black;
+constexpr static inline auto text_cutoff_px = 3.0;  // pixels
 }  // namespace font
 
 constexpr static inline auto connector_length = 0.4;        // grid points
@@ -189,6 +194,18 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const element_id_t> elements,
                                  SimulationView simulation_view,
                                  const RenderSettings& settings) -> void;
+
+template <std::size_t size>
+using string_array = std::array<std::string_view, size>;
+
+struct ConnectorLabels {
+    gsl::span<const std::string_view> input_labels {};
+    gsl::span<const std::string_view> output_labels {};
+};
+
+auto draw_connector_labels(BLContext& ctx, ConnectorLabels labels,
+                           layout::ConstElement element, ElementDrawState state,
+                           const RenderSettings& settings) -> void;
 
 //
 // Wires

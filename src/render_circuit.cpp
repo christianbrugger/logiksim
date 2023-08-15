@@ -9,6 +9,8 @@
 #include "simulation_view.h"
 #include "timer.h"
 
+#include <gsl/gsl>
+
 #include <numbers>
 
 namespace logicsim {
@@ -217,6 +219,11 @@ auto draw_clock_generator(BLContext& ctx, layout::ConstElement element,
         point_fine_t {3., 2. + padding},
     };
     draw_logic_item_rect(ctx, rect, element, state, settings);
+
+    static constexpr auto input_labels = string_array<1> {"En"};
+    static constexpr auto output_labels = string_array<1> {"C"};
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
+                          state, settings);
 }
 
 auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element,
@@ -228,7 +235,13 @@ auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element,
     };
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
-    draw_logic_item_label(ctx, point_fine_t {2., 1.}, "JK-FF", element, state, settings);
+    // draw_logic_item_label(ctx, point_fine_t {2., 1.}, "JK-FF", element, state,
+    // settings);
+
+    static constexpr auto input_labels = string_array<5> {"> C", "J", "K", "S", "R"};
+    static constexpr auto output_labels = string_array<2> {"Q", ""};
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
+                          state, settings);
 }
 
 auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
@@ -254,6 +267,12 @@ auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
         const auto logic_value = logic_state ? logic_state->internal_state(n) : false;
         draw_binary_value(ctx, point, logic_value, element, state, settings);
     }
+
+    // labels
+    static constexpr auto input_labels = string_array<3> {">", "", ""};
+    static constexpr auto output_labels = string_array<2> {"", ""};
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
+                          state, settings);
 }
 
 auto draw_latch_d(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
@@ -265,7 +284,12 @@ auto draw_latch_d(BLContext& ctx, layout::ConstElement element, ElementDrawState
     };
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
-    draw_logic_item_label(ctx, point_fine_t {1., 0.5}, "L", element, state, settings);
+    // draw_logic_item_label(ctx, point_fine_t {1., 0.5}, "L", element, state, settings);
+
+    static constexpr auto input_labels = string_array<2> {"E", "D"};
+    static constexpr auto output_labels = string_array<1> {"Q"};
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
+                          state, settings);
 }
 
 auto draw_flipflop_d(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
@@ -277,7 +301,12 @@ auto draw_flipflop_d(BLContext& ctx, layout::ConstElement element, ElementDrawSt
     };
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
-    draw_logic_item_label(ctx, point_fine_t {1.5, 1.}, "FF", element, state, settings);
+    // draw_logic_item_label(ctx, point_fine_t {1.5, 1.}, "FF", element, state, settings);
+
+    static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
+    static constexpr auto output_labels = string_array<1> {"Q"};
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
+                          state, settings);
 }
 
 auto draw_flipflop_ms_d(BLContext& ctx, layout::ConstElement element,
@@ -289,7 +318,13 @@ auto draw_flipflop_ms_d(BLContext& ctx, layout::ConstElement element,
     };
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
-    draw_logic_item_label(ctx, point_fine_t {2., 1.}, "MS-FF", element, state, settings);
+    // draw_logic_item_label(ctx, point_fine_t {2., 1.}, "MS-FF", element, state,
+    // settings);
+
+    static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
+    static constexpr auto output_labels = string_array<1> {"Q"};
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
+                          state, settings);
 }
 
 //
@@ -513,6 +548,84 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
     }
 }
 
+auto connector_horizontal_alignment(orientation_t orientation) -> HorizontalAlignment {
+    switch (orientation) {
+        using enum orientation_t;
+
+        case right:
+            return HorizontalAlignment::right;
+        case left:
+            return HorizontalAlignment::left;
+        case up:
+            return HorizontalAlignment::center;
+        case down:
+            return HorizontalAlignment::center;
+
+        default:
+            throw_exception("orienation has no horizontal alignment");
+    };
+}
+
+auto connector_vertical_alignment(orientation_t orientation) -> VerticalAlignment {
+    switch (orientation) {
+        using enum orientation_t;
+
+        case right:
+            return VerticalAlignment::center;
+        case left:
+            return VerticalAlignment::center;
+        case up:
+            return VerticalAlignment::top;
+        case down:
+            return VerticalAlignment::bottom;
+
+        default:
+            throw_exception("orienation has no vertical alignment");
+    };
+}
+
+auto draw_connector_label(BLContext& ctx, point_t position, orientation_t orientation,
+                          std::string_view label, ElementDrawState state,
+                          const RenderSettings& settings) -> void {
+    const auto text = std::string {label};  // TODO !!! remove std::string
+
+    const auto point = label.size() > 0 && label.at(0) == '>'
+                           ? point_fine_t {position}
+                           : connector_point(position, orientation,
+                                             -defaults::font::connector_label_margin);
+
+    draw_text(ctx, point, text,
+              TextAttributes {
+                  .font_size = defaults::font::connector_label_size,
+                  .color = get_logic_item_text_color(state),
+                  .horizontal_alignment = connector_horizontal_alignment(orientation),
+                  .vertical_alignment = connector_vertical_alignment(orientation),
+              },
+              settings);
+}
+
+auto draw_connector_labels(BLContext& ctx, ConnectorLabels labels,
+                           layout::ConstElement element, ElementDrawState state,
+                           const RenderSettings& settings) -> void {
+    const auto layout_data = to_layout_calculation_data(element.layout(), element);
+
+    iter_input_location_and_id(
+        layout_data,
+        [&](connection_id_t input_id, point_t position, orientation_t orientation) {
+            draw_connector_label(ctx, position, orientation,
+                                 labels.input_labels[input_id.value], state, settings);
+            return true;
+        });
+
+    iter_output_location_and_id(
+        layout_data,
+        [&](connection_id_t output_id, point_t position, orientation_t orientation) {
+            draw_connector_label(ctx, position, orientation,
+                                 labels.output_labels[output_id.value], state, settings);
+            return true;
+        });
+}
+
 //
 // Wire
 //
@@ -612,13 +725,11 @@ auto _draw_line_segment_with_history(BLContext& ctx, point_t p_from, point_t p_u
         const auto p_end =
             interpolate_line_1d(p_from, p_until, time_from, time_until, entry.last_time);
 
-        if (p_start == p_end) [[unlikely]] {
-            continue;
+        if (p_start != p_end) [[likely]] {
+            // TODO !!! endcaps
+            draw_line_segment(ctx, line_fine_t {p_start, p_end}, {entry.value},
+                              ElementDrawState::normal, settings);
         }
-
-        // TODO !!! endcaps
-        draw_line_segment(ctx, line_fine_t {p_start, p_end}, {entry.value},
-                          ElementDrawState::normal, settings);
     }
 }
 

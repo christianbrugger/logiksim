@@ -711,6 +711,9 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 
 auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
                TextAttributes attributes, const RenderSettings& settings) -> void {
+    if (text.empty()) {
+        return;
+    }
     const auto font_size_px = attributes.font_size * settings.view_config.pixel_scale();
     if (font_size_px < attributes.cuttoff_size_px) {
         return;
