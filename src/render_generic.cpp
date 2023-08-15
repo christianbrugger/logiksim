@@ -596,7 +596,6 @@ auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attribute
 //
 // Rect
 //
-
 auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
                const RenderSettings& settings) -> void {
     const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);

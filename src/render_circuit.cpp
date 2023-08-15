@@ -199,8 +199,11 @@ auto standard_element_label(layout::ConstElement element) -> std::string {
         case xor_element:
             return "=1";
 
+        case sub_circuit:
+            return "C";
+
         default:
-            return "";
+            throw_exception("element type has no standard label");
     }
 }
 
@@ -504,18 +507,15 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
 // Wire
 //
 
-auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
-    if (is_enabled) {
-        return with_alpha_runtime(defaults::wire_color_enabled, state);
-    }
-    return with_alpha_runtime(defaults::wire_color_disabled, state);
-}
-
 auto wire_color(bool is_enabled) -> color_t {
     if (is_enabled) {
         return defaults::wire_color_enabled;
     }
     return defaults::wire_color_disabled;
+}
+
+auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
+    return with_alpha_runtime(wire_color(is_enabled), state);
 }
 
 auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
