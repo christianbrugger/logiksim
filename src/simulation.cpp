@@ -1018,7 +1018,7 @@ auto HistoryView::find_index(time_t value) const -> std::size_t {
     return gsl::narrow_cast<std::size_t>(index);
 }
 
-auto HistoryView::get_time(std::ptrdiff_t index, bool substract_epsilon) const -> time_t {
+auto HistoryView::get_time(std::ptrdiff_t index) const -> time_t {
     require_history();
 
     if (index < min_index_) {
@@ -1027,8 +1027,7 @@ auto HistoryView::get_time(std::ptrdiff_t index, bool substract_epsilon) const -
     if (index >= std::ssize(*history_)) {
         return simulation_time_;
     }
-    const auto &result = history_->at(index);
-    return substract_epsilon ? time_t {result.value - time_t::epsilon().value} : result;
+    return history_->at(index);
 }
 }  // namespace simulation
 
@@ -1050,7 +1049,7 @@ auto HistoryIterator::operator*() const -> value_type {
 
     return history_entry_t {
         .first_time = view_.get_time(static_cast<std::ptrdiff_t>(index_) - 1),
-        .last_time = view_.get_time(index_, true),
+        .last_time = view_.get_time(index_),
         .value = view_.get_value(index_),
     };
 }

@@ -451,20 +451,17 @@ TEST(SimulationTest, TestInputHistory) {
 
     simulation.run(100us);
     ASSERT_EQ(simulation.time(), time_t {100us});
-    constexpr auto epsilon = time_t::epsilon().value;
-    ASSERT_THAT(
-        simulation.input_history(wire),
-        testing::ElementsAre(entry_t {time_t::min(), time_t {10us - epsilon}, false},
-                             entry_t {time_t {10us}, time_t {40us - epsilon}, true},
-                             entry_t {time_t {40us}, time_t {60us - epsilon}, false},
-                             entry_t {time_t {60us}, time_t {100us}, true}));
+    ASSERT_THAT(simulation.input_history(wire),
+                testing::ElementsAre(entry_t {time_t::min(), time_t {10us}, false},
+                                     entry_t {time_t {10us}, time_t {40us}, true},
+                                     entry_t {time_t {40us}, time_t {60us}, false},
+                                     entry_t {time_t {60us}, time_t {100us}, true}));
 
     simulation.run(100us);
     ASSERT_EQ(simulation.time(), time_t {200us});
-    ASSERT_THAT(
-        simulation.input_history(wire),
-        testing::ElementsAre(entry_t {time_t::min(), time_t {180us - epsilon}, true},
-                             entry_t {time_t {180us}, time_t {200us}, false}));
+    ASSERT_THAT(simulation.input_history(wire),
+                testing::ElementsAre(entry_t {time_t::min(), time_t {180us}, true},
+                                     entry_t {time_t {180us}, time_t {200us}, false}));
 }
 
 TEST(SimulationTest, TestClockGenerator) {
@@ -704,7 +701,6 @@ TEST(SimulationTest, HistoryViewBeginEndExact) {
     auto history_length = delay_t {10us};
     auto history = simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = simulation::HistoryView {history, time, last_value, history_length};
 
@@ -721,7 +717,7 @@ TEST(SimulationTest, HistoryViewBeginEndExact) {
     ASSERT_THAT(begin == end, true);
 
     ASSERT_THAT(value0.first_time, time_t::min());
-    ASSERT_THAT(value0.last_time, time_t {95us - epsilon});
+    ASSERT_THAT(value0.last_time, time_t {95us});
     ASSERT_THAT(value0.value, true);
 
     ASSERT_THAT(value1.first_time, time_t {95us});
@@ -734,7 +730,6 @@ TEST(SimulationTest, HistoryViewBeginEndFull) {
     auto history_length = delay_t {50us};
     auto history = simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = simulation::HistoryView {history, time, last_value, history_length};
 
@@ -753,11 +748,11 @@ TEST(SimulationTest, HistoryViewBeginEndFull) {
     ASSERT_THAT(begin == end, true);
 
     ASSERT_THAT(value0.first_time, time_t::min());
-    ASSERT_THAT(value0.last_time, time_t {90us - epsilon});
+    ASSERT_THAT(value0.last_time, time_t {90us});
     ASSERT_THAT(value0.value, false);
 
     ASSERT_THAT(value1.first_time, time_t {90us});
-    ASSERT_THAT(value1.last_time, time_t {95us - epsilon});
+    ASSERT_THAT(value1.last_time, time_t {95us});
     ASSERT_THAT(value1.value, true);
 
     ASSERT_THAT(value2.first_time, time_t {95us});
@@ -804,7 +799,6 @@ TEST(SimulationTest, HistoryViewFromSecond) {
     auto history_length = delay_t {10us};
     auto history = simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto epsilon = time_t::epsilon().value;
 
     auto view = simulation::HistoryView {history, time, last_value, history_length};
     auto from = view.from(time_t {90us});
@@ -812,7 +806,7 @@ TEST(SimulationTest, HistoryViewFromSecond) {
 
     auto value = *from;
     ASSERT_THAT(value.first_time, time_t::min());
-    ASSERT_THAT(value.last_time, time_t {95us - epsilon});
+    ASSERT_THAT(value.last_time, time_t {95us});
     ASSERT_THAT(value.value, true);
 }
 

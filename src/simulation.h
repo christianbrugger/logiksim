@@ -256,8 +256,7 @@ class HistoryView {
 
     [[nodiscard]] auto get_value(std::size_t history_index) const -> bool;
     [[nodiscard]] auto find_index(time_t value) const -> std::size_t;
-    [[nodiscard]] auto get_time(std::ptrdiff_t index,
-                                bool substract_epsilon = false) const -> time_t;
+    [[nodiscard]] auto get_time(std::ptrdiff_t index) const -> time_t;
 
    private:
     const history_buffer_t *history_ {nullptr};

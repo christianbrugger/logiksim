@@ -552,14 +552,20 @@ auto _draw_orthogonal_line_ordered(BLContext& ctx, const BLLine line,
     }
 
     const int offset = (stroke_width - 1) / 2;
-    const auto square_cap = attributes.p1_endcap ? (stroke_width - offset) : 0;
+
+    const int p0_cap = attributes.p0_endcap ? offset : 0;
+    const int p1_cap = attributes.p1_endcap ? stroke_width - offset : 0;
 
     if (line.y0 == line.y1) {
-        auto w = line.x1 - line.x0 + square_cap;
-        ctx.fillRect(line.x0, line.y0 - offset, w, stroke_width, attributes.color);
-    } else {
-        auto h = line.y1 - line.y0 + square_cap;
-        ctx.fillRect(line.x0 - offset, line.y0, stroke_width, h, attributes.color);
+        const auto x = line.x0 - p0_cap;
+        const auto w = line.x1 + p1_cap - x;
+        ctx.fillRect(x, line.y0 - offset, w, stroke_width, attributes.color);
+    }
+
+    else {
+        const auto y = line.y0 - p0_cap;
+        const auto h = line.y1 + p1_cap - y;
+        ctx.fillRect(line.x0 - offset, y, stroke_width, h, attributes.color);
     }
 }
 

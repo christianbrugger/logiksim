@@ -612,14 +612,10 @@ auto _draw_line_segment_with_history(BLContext& ctx, point_t p_from, point_t p_u
         const auto p_end =
             interpolate_line_1d(p_from, p_until, time_from, time_until, entry.last_time);
 
-        // TODO !!! why do we need this check? fix history.from, history.until?
-
         // TODO !!! endcaps
 
-        if (p_start != p_end) {
-            draw_line_segment(ctx, line_fine_t {p_start, p_end}, {entry.value},
-                              ElementDrawState::normal, settings);
-        }
+        draw_line_segment(ctx, line_fine_t {p_start, p_end}, {entry.value},
+                          ElementDrawState::normal, settings);
     }
 }
 
