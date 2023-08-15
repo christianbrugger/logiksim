@@ -2,6 +2,7 @@
 #define LOGIKSIM_GLYPH_CACHE_H
 
 #include "format.h"
+#include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>
@@ -78,6 +79,7 @@ class GlyphCache {
 
     auto draw_text(
         BLContext &ctx, const BLPoint &position, float font_size, const std::string &text,
+        color_t color = defaults::color_black,
         HorizontalAlignment horizontal_alignment = HorizontalAlignment::left,
         VerticalAlignment vertical_alignment = VerticalAlignment::baseline) const -> void;
 

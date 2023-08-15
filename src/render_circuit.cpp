@@ -110,14 +110,14 @@ auto draw_logic_item_label(BLContext& ctx, point_fine_t point, const std::string
                                ? *attributes.custom_font_size
                                : defaults::font::logic_item_label_size;
 
-    const auto fill_color = attributes.custom_fill_color
-                                ? with_alpha_runtime(*attributes.custom_fill_color, state)
+    const auto text_color = attributes.custom_text_color
+                                ? with_alpha_runtime(*attributes.custom_text_color, state)
                                 : get_logic_item_text_color(state);
 
     draw_text(ctx, center, text,
               TextAttributes {
                   .font_size = font_size,
-                  .fill_color = fill_color,
+                  .color = text_color,
                   .horizontal_alignment = HorizontalAlignment::center,
                   .vertical_alignment = VerticalAlignment::center,
                   .cuttoff_size_px = defaults::font::text_cutoff_px,

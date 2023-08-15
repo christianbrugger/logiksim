@@ -549,7 +549,6 @@ auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes att
     if (width < 1) {
         return;
     }
-    ctx.setFillStyle(BLRgba32 {attributes.color.value});
 
     const int offset = (width - 1) / 2;
 
@@ -563,7 +562,7 @@ auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes att
 
         auto w = x1 - x0 + 1;
 
-        ctx.fillRect(x0, line.y0 - offset, w, width);
+        ctx.fillRect(x0, line.y0 - offset, w, width, attributes.color);
     } else {
         auto y0 = line.y0;
         auto y1 = line.y1;
@@ -574,7 +573,7 @@ auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes att
 
         auto h = y1 - y0 + 1;
 
-        ctx.fillRect(line.x0 - offset, y0, width, h);
+        ctx.fillRect(line.x0 - offset, y0, width, h, attributes.color);
     }
 }
 
@@ -665,8 +664,6 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
     throw_exception("unknown DrawType in draw_rect");
 }
 
-// TODO !!! delete
-
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
                      const RenderSettings& settings) -> void {
     const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
@@ -683,9 +680,9 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
     w = w == 0 ? 1.0 : w;
     h = h == 0 ? 1.0 : h;
 
-    const auto r = attributes.rounding >= 0
-                       ? to_context(attributes.rounding, settings.view_config)
-                       : std::min(w, h) / 2;
+    const auto r = attributes.rounding == defaults::maximum_rounding
+                       ? std::min(w, h) / 2.0
+                       : to_context(attributes.rounding, settings.view_config);
 
     if (attributes.draw_type == DrawType::fill ||
         attributes.draw_type == DrawType::fill_and_stroke) {
@@ -713,12 +710,8 @@ auto draw_text(BLContext& ctx, point_fine_t position, const std::string& text,
         return;
     }
 
-    if (attributes.fill_color != defaults::no_color) {
-        ctx.setFillStyle(attributes.fill_color);
-    }
     const auto position_px = to_context(position, settings.view_config);
-
-    settings.text.draw_text(ctx, position_px, font_size_px, text,
+    settings.text.draw_text(ctx, position_px, font_size_px, text, attributes.color,
                             attributes.horizontal_alignment,
                             attributes.vertical_alignment);
 }

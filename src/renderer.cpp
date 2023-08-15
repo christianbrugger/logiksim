@@ -325,9 +325,10 @@ auto draw_standard_element_body(BLContext& ctx, layout::ConstElement element,
         };
 
         const auto alpha = get_alpha_value(element.display_state());
-        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        const auto color = color_t {0, 0, 0, alpha};
+
         settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
-                                label, HorizontalAlignment::center,
+                                label, color, HorizontalAlignment::center,
                                 VerticalAlignment::center);
     }
 }
@@ -379,10 +380,10 @@ auto draw_binary_value(BLContext& ctx, point_fine_t position, bool enabled,
 
     if (size > 3.0) {
         const auto alpha = get_alpha_value(display_state);
-        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        const auto color = color_t {0, 0, 0, alpha};
 
         settings.text.draw_text(ctx, to_context(position, settings.view_config), size,
-                                label, HorizontalAlignment::center,
+                                label, color, HorizontalAlignment::center,
                                 VerticalAlignment::center);
     }
 }
@@ -432,11 +433,12 @@ auto draw_buffer_body(BLContext& ctx, layout::ConstElement element, bool selecte
     const auto size = 0.6 * settings.view_config.pixel_scale();
     if (size > 3.0) {
         const auto alpha = get_alpha_value(element.display_state());
-        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        const auto color = color_t {0, 0, 0, alpha};
 
         const auto p = point_fine_t {position.x.value + 0.5, position.y.value + 0.0};
         settings.text.draw_text(ctx, to_context(p, settings.view_config), size, "1",
-                                HorizontalAlignment::center, VerticalAlignment::center);
+                                color, HorizontalAlignment::center,
+                                VerticalAlignment::center);
     }
 }
 
@@ -522,9 +524,10 @@ auto draw_flipflop_jk_body(BLContext& ctx, layout::ConstElement element, bool se
         };
 
         const auto alpha = get_alpha_value(element.display_state());
-        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        const auto color = color_t {0, 0, 0, alpha};
+
         settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
-                                label, HorizontalAlignment::center,
+                                label, color, HorizontalAlignment::center,
                                 VerticalAlignment::center);
     }
 }
@@ -650,9 +653,10 @@ auto draw_latch_d_body(BLContext& ctx, layout::ConstElement element, bool select
         };
 
         const auto alpha = get_alpha_value(element.display_state());
-        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        const auto color = color_t {0, 0, 0, alpha};
+
         settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
-                                label, HorizontalAlignment::center,
+                                label, color, HorizontalAlignment::center,
                                 VerticalAlignment::center);
     }
 }
@@ -703,9 +707,10 @@ auto draw_flipflop_d_body(BLContext& ctx, layout::ConstElement element, bool sel
         };
 
         const auto alpha = get_alpha_value(element.display_state());
-        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        const auto color = color_t {0, 0, 0, alpha};
+
         settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
-                                label, HorizontalAlignment::center,
+                                label, color, HorizontalAlignment::center,
                                 VerticalAlignment::center);
     }
 }
@@ -756,9 +761,10 @@ auto draw_flipflop_ms_d_body(BLContext& ctx, layout::ConstElement element, bool 
         };
 
         const auto alpha = get_alpha_value(element.display_state());
-        ctx.setFillStyle(BLRgba32(0, 0, 0, alpha));
+        const auto color = color_t {0, 0, 0, alpha};
+
         settings.text.draw_text(ctx, to_context(center, settings.view_config), size,
-                                label, HorizontalAlignment::center,
+                                label, color, HorizontalAlignment::center,
                                 VerticalAlignment::center);
     }
 }

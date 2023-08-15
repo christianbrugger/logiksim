@@ -130,7 +130,7 @@ auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement
 
 struct LogicItemTextAttributes {
     std::optional<double> custom_font_size {};
-    std::optional<color_t> custom_fill_color {};
+    std::optional<color_t> custom_text_color {};
 };
 
 auto draw_logic_item_label(BLContext& ctx, point_fine_t point, const std::string& text,

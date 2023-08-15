@@ -17,6 +17,7 @@ struct RenderSettings;
 
 namespace defaults {
 constexpr inline static auto use_view_config_stroke_width = int {-1};
+constexpr inline static auto maximum_rounding = double {-1};
 }  // namespace defaults
 
 //
@@ -275,11 +276,11 @@ struct RectAttributes {
 auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
                const RenderSettings& settings) -> void;
 
-// TODO !!! add color and make mandatory
+// TODO !!! add colors
 struct RoundRectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
-    double rounding {-1};
+    double rounding {defaults::maximum_rounding};
 };
 
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
@@ -289,10 +290,9 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 // Text
 //
 
-// TODO !!! make color mandatory
 struct TextAttributes {
     double font_size {1.0};  // grid size
-    color_t fill_color {defaults::no_color};
+    color_t color {defaults::color_black};
 
     HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};
     VerticalAlignment vertical_alignment {VerticalAlignment::baseline};

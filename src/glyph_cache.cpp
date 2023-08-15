@@ -136,7 +136,7 @@ auto GlyphCache::get_glyph_entry(float font_size, const std::string& text,
 }
 
 auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, float font_size,
-                           const std::string& text,
+                           const std::string& text, color_t color,
                            HorizontalAlignment horizontal_alignment,
                            VerticalAlignment vertical_alignment) const -> void {
     const auto& font = get_font(font_size);
@@ -144,7 +144,7 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, float font_s
         get_glyph_entry(font_size, text, horizontal_alignment, vertical_alignment);
 
     ctx.fillGlyphRun(position - glyph_entry.offset, font,
-                     glyph_entry.glyph_buffer.glyphRun());
+                     glyph_entry.glyph_buffer.glyphRun(), color);
 }
 
 }  // namespace logicsim
