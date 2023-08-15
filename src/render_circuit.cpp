@@ -549,23 +549,32 @@ auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
     ctx.fillRect(x - offset, y - offset, size, size);
 }
 
-auto draw_line_segment(BLContext& ctx, line_t line, bool is_enabled,
+auto draw_line_segment(BLContext& ctx, line_fine_t line, SegmentAttributes attributes,
                        ElementDrawState state, const RenderSettings& settings) -> void {
-    draw_line_segment(ctx, line_fine_t {line}, is_enabled, state, settings);
-
-    draw_point(ctx, line.p0, PointShape::circle, defaults::color_orange, 0.2, settings);
-    draw_point(ctx, line.p1, PointShape::cross, defaults::color_orange, 0.2, settings);
+    const auto color = wire_color(attributes.is_enabled, state);
+    draw_line(ctx, line,
+              LineAttributes {
+                  .color = color,
+                  .p0_endcap = attributes.p0_endcap,
+                  .p1_endcap = attributes.p1_endcap,
+              },
+              settings);
 }
 
-auto draw_line_segment(BLContext& ctx, line_fine_t line, bool is_enabled,
+auto draw_line_segment(BLContext& ctx, ordered_line_t line, SegmentAttributes attributes,
                        ElementDrawState state, const RenderSettings& settings) -> void {
-    const auto color = wire_color(is_enabled, state);
-    draw_line(ctx, line, {.color = color}, settings);
+    draw_line_segment(ctx, line_fine_t {line}, attributes, state, settings);
 }
 
 auto draw_line_segment(BLContext& ctx, segment_info_t info, bool is_enabled,
                        ElementDrawState state, const RenderSettings& settings) -> void {
-    draw_line_segment(ctx, info.line, is_enabled, state, settings);
+    draw_line_segment(ctx, info.line,
+                      SegmentAttributes {
+                          .is_enabled = is_enabled,
+                          .p0_endcap = info.p0_type == SegmentPointType::corner_point,
+                          .p1_endcap = info.p1_type == SegmentPointType::corner_point,
+                      },
+                      state, settings);
 
     if (is_cross_point(info.p0_type)) {
         draw_line_cross_point(ctx, info.line.p0, is_enabled, state, settings);
@@ -588,9 +597,10 @@ auto draw_segment_tree(BLContext& ctx, layout::ConstElement element,
     draw_segment_tree(ctx, element, is_enabled, state, settings);
 }
 
-auto _draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t time_from,
-                        time_t time_until, const simulation::HistoryView& history,
-                        const RenderSettings& settings) -> void {
+auto _draw_line_segment_with_history(BLContext& ctx, point_t p_from, point_t p_until,
+                                     time_t time_from, time_t time_until,
+                                     const simulation::HistoryView& history,
+                                     const RenderSettings& settings) -> void {
     assert(time_from < time_until);
 
     const auto it_from = history.from(time_from);
@@ -603,8 +613,11 @@ auto _draw_line_segment(BLContext& ctx, point_t p_from, point_t p_until, time_t 
             interpolate_line_1d(p_from, p_until, time_from, time_until, entry.last_time);
 
         // TODO !!! why do we need this check? fix history.from, history.until?
+
+        // TODO !!! endcaps
+
         if (p_start != p_end) {
-            draw_line_segment(ctx, line_fine_t {p_start, p_end}, entry.value,
+            draw_line_segment(ctx, line_fine_t {p_start, p_end}, {entry.value},
                               ElementDrawState::normal, settings);
         }
     }
@@ -625,9 +638,9 @@ auto _draw_wire_with_history(BLContext& ctx, layout::ConstElement element,
         };
 
     for (auto&& segment : element.line_tree().sized_segments()) {
-        _draw_line_segment(ctx, segment.line.p1, segment.line.p0,
-                           to_time(segment.p1_length), to_time(segment.p0_length),
-                           history, settings);
+        _draw_line_segment_with_history(ctx, segment.line.p1, segment.line.p0,
+                                        to_time(segment.p1_length),
+                                        to_time(segment.p0_length), history, settings);
 
         if (segment.has_cross_point_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));

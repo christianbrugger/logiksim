@@ -194,17 +194,26 @@ auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
 // Wires
 //
 
-auto wire_color(bool is_enabled, ElementDrawState state) -> color_t;
 auto wire_color(bool is_enabled) -> color_t;
+auto wire_color(bool is_enabled, ElementDrawState state) -> color_t;
 
 auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
                            ElementDrawState state, const RenderSettings& settings)
     -> void;
 
-auto draw_line_segment(BLContext& ctx, line_t line, bool is_enabled,
+struct SegmentAttributes {
+    bool is_enabled {false};
+    bool p0_endcap {false};
+    bool p1_endcap {false};
+};
+
+auto draw_line_segment(BLContext& ctx, ordered_line_t line, SegmentAttributes attributes,
                        ElementDrawState state, const RenderSettings& settings) -> void;
 
-auto draw_line_segment(BLContext& ctx, line_fine_t line, bool is_enabled,
+auto draw_line_segment(BLContext& ctx, line_fine_t line, SegmentAttributes attributes,
+                       ElementDrawState state, const RenderSettings& settings) -> void;
+
+auto draw_line_segment(BLContext& ctx, segment_info_t info, bool is_enabled,
                        ElementDrawState state, const RenderSettings& settings) -> void;
 
 //

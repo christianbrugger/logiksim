@@ -9,9 +9,6 @@
 
 namespace logicsim {
 
-auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
-                          const RenderSettings& settings) -> void;
-
 //
 // Element Draw State
 //
@@ -542,57 +539,60 @@ auto draw_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orie
 // Line
 //
 
-auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
-                          const RenderSettings& settings) -> void {
-    const auto width = resolve_stroke_width(attributes.stroke_width, settings);
+auto _draw_orthogonal_line_ordered(BLContext& ctx, const BLLine line,
+                                   LineAttributes attributes,
+                                   const RenderSettings& settings) -> void {
+    assert(line.x0 <= line.x1);
+    assert(line.y0 <= line.y1);
 
-    if (width < 1) {
+    const int stroke_width = resolve_stroke_width(attributes.stroke_width, settings);
+
+    if (stroke_width < 1) {
         return;
     }
 
-    const int offset = (width - 1) / 2;
+    const int offset = (stroke_width - 1) / 2;
+    const auto square_cap = attributes.p1_endcap ? (stroke_width - offset) : 0;
 
     if (line.y0 == line.y1) {
-        auto x0 = line.x0;
-        auto x1 = line.x1;
-
-        if (x0 > x1) {
-            std::swap(x0, x1);
-        }
-
-        auto w = x1 - x0;
-
-        ctx.fillRect(x0, line.y0 - offset, w, width, attributes.color);
+        auto w = line.x1 - line.x0 + square_cap;
+        ctx.fillRect(line.x0, line.y0 - offset, w, stroke_width, attributes.color);
     } else {
-        auto y0 = line.y0;
-        auto y1 = line.y1;
-
-        if (y0 > y1) {
-            std::swap(y0, y1);
-        }
-
-        auto h = y1 - y0;
-
-        ctx.fillRect(line.x0 - offset, y0, width, h, attributes.color);
+        auto h = line.y1 - line.y0 + square_cap;
+        ctx.fillRect(line.x0 - offset, line.y0, stroke_width, h, attributes.color);
     }
 }
 
-auto draw_line(BLContext& ctx, const ordered_line_t& line, LineAttributes attributes,
+auto draw_orthogonal_line(BLContext& ctx, BLLine line, LineAttributes attributes,
+                          const RenderSettings& settings) -> void {
+    if (line.x0 > line.x1) {
+        std::swap(line.x0, line.x1);
+        std::swap(attributes.p0_endcap, attributes.p1_endcap);
+
+    } else if (line.y0 > line.y1) {
+        std::swap(line.y0, line.y1);
+        std::swap(attributes.p0_endcap, attributes.p1_endcap);
+    }
+
+    _draw_orthogonal_line_ordered(ctx, line, attributes, settings);
+}
+
+auto draw_line(BLContext& ctx, const ordered_line_t line, LineAttributes attributes,
                const RenderSettings& settings) -> void {
     draw_line(ctx, line_fine_t {line}, attributes, settings);
 }
 
-auto draw_line(BLContext& ctx, const line_t& line, LineAttributes attributes,
+auto draw_line(BLContext& ctx, const line_t line, LineAttributes attributes,
                const RenderSettings& settings) -> void {
     draw_line(ctx, line_fine_t {line}, attributes, settings);
 }
 
-auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attributes,
+auto draw_line(BLContext& ctx, const line_fine_t line, LineAttributes attributes,
                const RenderSettings& settings) -> void {
     const auto [x0, y0] = to_context(line.p0, settings.view_config);
     const auto [x1, y1] = to_context(line.p1, settings.view_config);
 
-    draw_orthogonal_line(ctx, BLLine(x0, y0, x1, y1), attributes, settings);
+    draw_orthogonal_line(ctx, BLLine {x0, y0, x1, y1}, attributes, settings);
 }
 
 //

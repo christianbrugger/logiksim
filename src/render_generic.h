@@ -248,18 +248,20 @@ auto draw_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orie
 struct LineAttributes {
     color_t color {defaults::color_black};
     int stroke_width {defaults::use_view_config_stroke_width};
+    bool p0_endcap {false};
+    bool p1_endcap {false};
 };
 
-auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes attributes,
+auto draw_orthogonal_line(BLContext& ctx, BLLine line, LineAttributes attributes,
                           const RenderSettings& settings) -> void;
 
-auto draw_line(BLContext& ctx, const ordered_line_t& line, LineAttributes attributes,
+auto draw_line(BLContext& ctx, const ordered_line_t line, LineAttributes attributes,
                const RenderSettings& settings) -> void;
 
-auto draw_line(BLContext& ctx, const line_t& line, LineAttributes attributes,
+auto draw_line(BLContext& ctx, const line_t line, LineAttributes attributes,
                const RenderSettings& settings) -> void;
 
-auto draw_line(BLContext& ctx, const line_fine_t& line, LineAttributes attributes,
+auto draw_line(BLContext& ctx, const line_fine_t line, LineAttributes attributes,
                const RenderSettings& settings) -> void;
 
 //
