@@ -375,18 +375,17 @@ auto _draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
 
     const auto r = radius * settings.view_config.pixel_scale();
     const auto p = to_context(attributes.position, settings.view_config);
-    const auto p_center = connector_point(p, attributes.orientation, r + width);
+    const auto p_center = connector_point(p, attributes.orientation, r + width / 2.0);
 
     const auto fill_color =
         with_alpha_runtime(defaults::inverted_connector_fill, attributes.state);
     const auto stroke_color = wire_color(attributes.is_enabled, attributes.state);
 
-    ctx.setFillStyle(fill_color);
-    ctx.fillCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
+    // TODO offset for vertical connectors
 
     ctx.setStrokeWidth(width);
-    ctx.setStrokeStyle(stroke_color);
-    ctx.strokeCircle(BLCircle {p_center.x + offset, p_center.y + offset, r});
+    ctx.fillCircle(BLCircle {p_center.x, p_center.y + offset, r}, fill_color);
+    ctx.strokeCircle(BLCircle {p_center.x, p_center.y + offset, r}, stroke_color);
 }
 
 auto _draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,

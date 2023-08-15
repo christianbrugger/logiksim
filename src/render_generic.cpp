@@ -560,7 +560,7 @@ auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes att
             std::swap(x0, x1);
         }
 
-        auto w = x1 - x0 + 1;
+        auto w = x1 - x0;
 
         ctx.fillRect(x0, line.y0 - offset, w, width, attributes.color);
     } else {
@@ -571,7 +571,7 @@ auto draw_orthogonal_line(BLContext& ctx, const BLLine& line, LineAttributes att
             std::swap(y0, y1);
         }
 
-        auto h = y1 - y0 + 1;
+        auto h = y1 - y0;
 
         ctx.fillRect(line.x0 - offset, y0, width, h, attributes.color);
     }
