@@ -25,7 +25,7 @@ set(LS_CORE_SOURCES
     src/exception.cpp
     src/flat_schematic.cpp
     src/geometry.cpp
-    # src/glyph_cache.cpp
+    src/glyph_cache.cpp
     src/glyph_cache_type.cpp
     src/graph.cpp
     src/interactive_simulation.cpp
@@ -46,7 +46,7 @@ set(LS_CORE_SOURCES
     src/serialize_detail.cpp
     src/simulation.cpp
     src/simulation_view.cpp
-    # src/text_shaping.cpp
+    src/text_shaping.cpp
     src/timer.cpp
     src/vocabulary.cpp
     
@@ -309,7 +309,7 @@ add_subdirectory(external/glaze EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/cppcodec EXCLUDE_FROM_ALL SYSTEM)
 
 # harfbuzz
-# add_subdirectory(external/harfbuzz EXCLUDE_FROM_ALL SYSTEM)
+add_subdirectory(external/harfbuzz EXCLUDE_FROM_ALL SYSTEM)
 
 
 ###################################################
@@ -409,7 +409,7 @@ set(LS_CORE_LIBRARIES
     Blend2D::Blend2D
     glaze::glaze
     ${LS_ZLIB_NAME}
-    # harfbuzz
+    harfbuzz
     
     Qt6::Core
     Qt6::Widgets

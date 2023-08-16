@@ -2,7 +2,7 @@
 #define LOGIKSIM_RENDER_GENERIC_H
 
 #include "format.h"
-// #include "glyph_cache.h"
+#include "glyph_cache.h"
 #include "glyph_cache_type.h"
 #include "scene.h"
 #include "segment_tree_type.h"
@@ -149,8 +149,8 @@ struct SimulationLayersCache {
 struct RenderSettings {
     ViewConfig view_config {};
 
-    EmptyGlyphCache text {};
-    // GlyphCache text {};
+    // EmptyGlyphCache text {};
+    GlyphCache text {};
     mutable LayersCache layers {};
     mutable SimulationLayersCache simulation_layers {};
 
