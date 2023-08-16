@@ -2,6 +2,7 @@
 #define LOGIKSIM_GLYPH_CACHE_H
 
 #include "format.h"
+#include "glyph_cache_type.h"
 #include "text_shaping.h"
 #include "vocabulary.h"
 
@@ -13,15 +14,7 @@
 
 namespace logicsim {
 
-enum class FontStyle : uint8_t {
-    regular,
-    italic,
-    bold,
-};
-
-template <>
-auto format(FontStyle style) -> std::string;
-
+// missing fonts can contain empty strings
 struct font_definition_t {
     std::string_view regular;
     std::string_view italic;
@@ -37,24 +30,6 @@ constexpr static inline auto font_files = font_definition_t {
     .bold = "NotoSans-Bold.ttf",
 };
 }  // namespace defaults
-
-enum class HorizontalAlignment : uint8_t {
-    left,
-    right,
-    center,
-};
-enum class VerticalAlignment : uint8_t {
-    baseline,
-    center,
-    top,
-    bottom,
-};
-
-template <>
-auto format(HorizontalAlignment alignment) -> std::string;
-
-template <>
-auto format(VerticalAlignment alignment) -> std::string;
 
 }  // namespace logicsim
 

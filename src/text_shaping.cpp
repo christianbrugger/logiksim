@@ -22,10 +22,6 @@
 
 namespace logicsim {
 
-namespace {
-static constexpr int font_size_scale = 1;  // 1 << 16;
-}
-
 //
 // Harfbuzz Blob
 //
@@ -36,7 +32,7 @@ class HarfbuzzBlob {
 
     explicit HarfbuzzBlob(const std::string &filename)
         : hb_blob {hb_blob_create_from_file(filename.c_str())} {
-        if (hb_blob == hb_blob_get_empty()) [[unlikely]] {
+        if (hb_blob == hb_blob_get_empty() && !filename.empty()) [[unlikely]] {
             // TODO exception type
             throw_exception(fmt::format("Font not found {}", filename).c_str());
         }
@@ -221,10 +217,8 @@ HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
         glyph_positions, std::back_inserter(placements_),
         [](const hb_glyph_position_t &position) {
             return BLGlyphPlacement {
-                .placement = BLPointI {position.x_offset / font_size_scale,
-                                       position.y_offset / font_size_scale},
-                .advance = BLPointI {position.x_advance / font_size_scale,
-                                     position.y_advance / font_size_scale},
+                .placement = BLPointI {position.x_offset, position.y_offset},
+                .advance = BLPointI {position.x_advance, position.y_advance},
             };
         });
 

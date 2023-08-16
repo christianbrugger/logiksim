@@ -7,21 +7,6 @@
 
 namespace logicsim {
 
-template <>
-auto format(FontStyle style) -> std::string {
-    switch (style) {
-        using enum FontStyle;
-
-        case regular:
-            return "regular";
-        case italic:
-            return "italic";
-        case bold:
-            return "bold";
-    }
-    throw_exception("Don't know how to convert FontStyle to string.");
-}
-
 auto font_definition_t::get(FontStyle style) const -> std::string_view {
     switch (style) {
         using enum FontStyle;
@@ -34,38 +19,6 @@ auto font_definition_t::get(FontStyle style) const -> std::string_view {
             return this->bold;
     }
     throw_exception("unknown FontStyle");
-}
-
-template <>
-auto format(HorizontalAlignment alignment) -> std::string {
-    switch (alignment) {
-        using enum HorizontalAlignment;
-
-        case left:
-            return "left";
-        case right:
-            return "right";
-        case center:
-            return "center";
-    }
-    throw_exception("Don't know how to convert HorizontalAlignment to string.");
-}
-
-template <>
-auto format(VerticalAlignment alignment) -> std::string {
-    switch (alignment) {
-        using enum VerticalAlignment;
-
-        case baseline:
-            return "baseline";
-        case center:
-            return "center";
-        case top:
-            return "top";
-        case bottom:
-            return "bottom";
-    }
-    throw_exception("Don't know how to convert VerticalAlignment to string.");
 }
 
 namespace glyph_cache {
@@ -95,7 +48,7 @@ auto font_key_t::format() const -> std::string {
 
 FontFace::FontFace(std::string font_file) : hb_font_face {font_file}, bl_font_face {} {
     const auto status = bl_font_face.createFromFile(font_file.c_str());
-    if (status != BL_SUCCESS) {
+    if (status != BL_SUCCESS && !font_file.empty()) [[unlikely]] {
         // TODO create custom exception that can be handeled
         throw_exception(fmt::format("Font not found {}", font_file).c_str());
     }
@@ -133,7 +86,8 @@ GlyphCache::GlyphCache() : GlyphCache(font_definition_t {defaults::font_files}) 
 GlyphCache::GlyphCache(font_definition_t font_files) : font_faces_ {font_files} {}
 
 auto GlyphCache::format() const -> std::string {
-    return fmt::format("GlyphCache(glyphs = {})", glyph_map_);
+    return fmt::format("GlyphCache({} fonts, {} glyphs)", font_map_.size(),
+                       glyph_map_.size());
 }
 
 auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFont& {
@@ -226,8 +180,7 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_
 
     ctx.fillGlyphRun(origin, font, entry.shaped_text.glyph_run(), attributes.color);
 
-    const bool debug_rect = false;
-    if constexpr (debug_rect) {
+    if constexpr (const bool debug_rect [[maybe_unused]] = false) {
         ctx.setStrokeWidth(1);
         ctx.translate(origin);
         ctx.strokeRect(entry.shaped_text.bounding_rect(), defaults::color_lime);

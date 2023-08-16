@@ -2,7 +2,6 @@
 #define LOGIKSIM_RENDER_H
 
 #include "format.h"
-#include "glyph_cache.h"
 #include "layout.h"
 #include "render_generic.h"
 #include "scene.h"
