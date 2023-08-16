@@ -253,7 +253,7 @@ auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element,
     // settings);
 
     static constexpr auto input_labels = string_array<5> {"> C", "J", "K", "S", "R"};
-    static constexpr auto output_labels = string_array<2> {"Q", ""};
+    static constexpr auto output_labels = string_array<2> {"Q", "Q\u0305"};
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
                           state, settings);
 }

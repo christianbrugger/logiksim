@@ -2,6 +2,7 @@
 #define LOGIKSIM_GLYPH_CACHE_H
 
 #include "format.h"
+#include "text_shaping.h"
 #include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>
@@ -46,7 +47,8 @@ struct glyph_key_t {
 };
 
 struct glyph_entry_t {
-    BLGlyphBuffer glyph_buffer {};
+    BLGlyphBuffer glyph_buffer {};  // TODO !!! remove
+    HarfbuzzShapedText shaped_text {};
     BLPoint offset {0., 0.};
 
     [[nodiscard]] auto format() const -> std::string;
@@ -72,13 +74,19 @@ struct ankerl::unordered_dense::hash<logicsim::glyph_cache::glyph_key_t> {
 
 namespace logicsim {
 
+namespace defaults {
+// constexpr static inline auto font_file = "Roboto-Regular.ttf";
+constexpr static inline auto font_file = "NotoSans-Regular.ttf";
+}  // namespace defaults
+
 class GlyphCache {
    private:
     using glyph_key_t = glyph_cache::glyph_key_t;
     using glyph_entry_t = glyph_cache::glyph_entry_t;
 
    public:
-    GlyphCache();
+    explicit GlyphCache();
+    explicit GlyphCache(const std::string &font_file);
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -99,7 +107,8 @@ class GlyphCache {
     using font_map_t = ankerl::unordered_dense::map<float, BLFont>;
     using glyph_map_t = ankerl::unordered_dense::map<glyph_key_t, glyph_entry_t>;
 
-    BLFontFace font_face_ {};
+    HarfbuzzFontFace hb_font_face_ {};
+    BLFontFace bl_font_face_ {};  // TODO !!! remove
 
     mutable font_map_t font_map_ {};
     mutable glyph_map_t glyph_map_ {};

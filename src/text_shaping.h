@@ -5,6 +5,7 @@
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 struct hb_blob_t;
 struct hb_face_t;
@@ -12,10 +13,11 @@ struct hb_font_t;
 
 namespace logicsim {
 
-class HarfbuzzFace final {
+class HarfbuzzFontFace final {
    public:
-    explicit HarfbuzzFace(std::string filename, unsigned int font_index = 0);
-    ~HarfbuzzFace();
+    explicit HarfbuzzFontFace();
+    explicit HarfbuzzFontFace(std::string filename, unsigned int font_index = 0);
+    ~HarfbuzzFontFace();
 
     auto hb_face() const noexcept -> hb_face_t *;
 
@@ -28,7 +30,8 @@ class HarfbuzzFace final {
 
 class HarfbuzzFont final {
    public:
-    explicit HarfbuzzFont(const HarfbuzzFace &face, float font_size);
+    explicit HarfbuzzFont();
+    explicit HarfbuzzFont(const HarfbuzzFontFace &face, float font_size);
     ~HarfbuzzFont();
 
     auto hb_font() const noexcept -> hb_font_t *;
@@ -39,19 +42,21 @@ class HarfbuzzFont final {
 
 class HarfbuzzShapedText {
    public:
-    explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFace &face,
+    explicit HarfbuzzShapedText() = default;
+    explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFontFace &face,
                                 float font_size);
-
     explicit HarfbuzzShapedText(std::string_view text_utf8, const HarfbuzzFont &font);
 
-    inline auto glyph_run() -> BLGlyphRun;
+    auto operator==(const HarfbuzzShapedText &other) const -> bool = default;
+
+    auto glyph_run() const -> BLGlyphRun;
 
    private:
     std::vector<uint32_t> codepoints_ {};
     std::vector<BLGlyphPlacement> placements_ {};
-};
 
-auto test_hb() -> void;
+   public:
+};
 
 }  // namespace logicsim
 

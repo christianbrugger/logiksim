@@ -24,10 +24,13 @@ static constexpr int font_size_scale = 1 << 16;
 }
 
 //
-// HarfbuzzFace
+// Harfbuzz Font Face
 //
 
-HarfbuzzFace::HarfbuzzFace(std::string filename__, unsigned int font_index)
+HarfbuzzFontFace::HarfbuzzFontFace()
+    : hb_blob_ {hb_blob_get_empty()}, hb_face_ {hb_face_get_empty()} {}
+
+HarfbuzzFontFace::HarfbuzzFontFace(std::string filename__, unsigned int font_index)
     : filename_ {std::move(filename__)},
       hb_blob_ {hb_blob_create_from_file(filename_.c_str())},
       hb_face_ {hb_face_create(hb_blob_, font_index)} {
@@ -41,22 +44,24 @@ HarfbuzzFace::HarfbuzzFace(std::string filename__, unsigned int font_index)
     hb_face_make_immutable(hb_face_);
 }
 
-HarfbuzzFace::~HarfbuzzFace() {
+HarfbuzzFontFace::~HarfbuzzFontFace() {
     hb_face_destroy(hb_face_);
     hb_blob_destroy(hb_blob_);
 }
 
-auto HarfbuzzFace::hb_face() const noexcept -> hb_face_t * {
+auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
     return hb_face_;
 }
 
 //
-// HarfbuzzFont
+// Harfbuzz Font
 //
 
-HarfbuzzFont::HarfbuzzFont(const HarfbuzzFace &face, float font_size)
+HarfbuzzFont::HarfbuzzFont() : hb_font_ {hb_font_get_empty()} {}
+
+HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face, float font_size)
     : hb_font_ {hb_font_create(face.hb_face())} {
-    const auto scale = gsl::narrow<int>(std::ceil(font_size * font_size_scale));
+    const auto scale = gsl::narrow<int>(std::ceil(1000 * font_size_scale));
     hb_font_set_scale(hb_font_, scale, scale);
     hb_font_make_immutable(hb_font_);
 }
@@ -90,7 +95,7 @@ class HarfbuzzBuffer {
 //
 
 HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
-                                       const HarfbuzzFace &face, float font_size)
+                                       const HarfbuzzFontFace &face, float font_size)
     : HarfbuzzShapedText {text_utf8, HarfbuzzFont {face, font_size}} {}
 
 HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
@@ -99,7 +104,7 @@ HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
     const auto hb_buffer = buffer.hb_buffer;
 
     const auto text_length = gsl::narrow<int>(text_utf8.size());
-    const auto item_offset = (unsigned int) {0};
+    const auto item_offset = std::size_t {0};
     const auto item_length = text_length;
     hb_buffer_add_utf8(hb_buffer, text_utf8.data(), text_length, item_offset,
                        item_length);
@@ -112,7 +117,7 @@ HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
 
     // shape text
     const hb_feature_t *features = nullptr;
-    const auto num_features = (unsigned int) {0};
+    const auto num_features = std::size_t {0};
     hb_shape(font.hb_font(), hb_buffer, features, num_features);
 
     // extract placement data
@@ -141,7 +146,7 @@ HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
         });
 }
 
-auto HarfbuzzShapedText::glyph_run() -> BLGlyphRun {
+auto HarfbuzzShapedText::glyph_run() const -> BLGlyphRun {
     if (codepoints_.size() != placements_.size()) [[unlikely]] {
         throw_exception("data vectors need to have same size");
     }
@@ -153,20 +158,6 @@ auto HarfbuzzShapedText::glyph_run() -> BLGlyphRun {
     result.placementType = BL_GLYPH_PLACEMENT_TYPE_ADVANCE_OFFSET;
 
     return result;
-}
-
-//
-// free functions
-//
-
-auto test_hb() -> void {
-    const auto filename = "NotoSans-Regular.ttf";
-    const auto text_utf8 = "test Q\u0305";
-    const auto font_size = float {10};
-
-    const auto face = HarfbuzzFace {filename};
-    const auto font = HarfbuzzFont {face, font_size};
-    const auto text = HarfbuzzShapedText {text_utf8, font};
 }
 
 }  // namespace logicsim
