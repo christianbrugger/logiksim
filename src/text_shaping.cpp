@@ -2,10 +2,13 @@
 
 #include "exception.h"
 #include "format.h"
+#include "range.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
 #include <hb.h>
+
+#include <numeric>
 
 //
 // Reference Implementation:
@@ -20,7 +23,7 @@
 namespace logicsim {
 
 namespace {
-static constexpr int font_size_scale = 1 << 16;
+static constexpr int font_size_scale = 1;  // 1 << 16;
 }
 
 //
@@ -60,14 +63,17 @@ auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
 HarfbuzzFont::HarfbuzzFont() : hb_font_ {hb_font_get_empty()} {}
 
 HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face, float font_size)
-    : hb_font_ {hb_font_create(face.hb_face())} {
-    const auto scale = gsl::narrow<int>(std::ceil(1000 * font_size_scale));
-    hb_font_set_scale(hb_font_, scale, scale);
+    : hb_font_ {hb_font_create(face.hb_face())}, font_size_ {font_size} {
+    hb_font_set_ppem(hb_font_, round_fast(font_size), round_fast(font_size));
     hb_font_make_immutable(hb_font_);
 }
 
 HarfbuzzFont::~HarfbuzzFont() {
     hb_font_destroy(hb_font_);
+}
+
+auto HarfbuzzFont::font_size() const noexcept -> float {
+    return font_size_;
 }
 
 auto HarfbuzzFont::hb_font() const noexcept -> hb_font_t * {
@@ -93,6 +99,58 @@ class HarfbuzzBuffer {
 //
 // Harfbuzz Shaped Text
 //
+
+auto calculate_bounding_rect(std::span<const hb_glyph_info_t> glyph_info,
+                             std::span<hb_glyph_position_t> glyph_positions,
+                             const HarfbuzzFont &font) -> BLBox {
+    const auto hb_font = font.hb_font();
+
+    auto scale = BLPointI {};
+    hb_font_get_scale(hb_font, &scale.x, &scale.y);
+
+    auto origin = BLPoint {};
+    auto rect = BLBox {
+        +std::numeric_limits<double>::infinity(),
+        +std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+        -std::numeric_limits<double>::infinity(),
+    };
+    bool found = false;
+
+    for (auto i : range(std::min(glyph_info.size(), glyph_positions.size()))) {
+        const auto &pos = glyph_positions[i];
+        auto extents = hb_glyph_extents_t {};
+
+        if (hb_font_get_glyph_extents(hb_font, glyph_info[i].codepoint, &extents) &&
+            extents.width != 0 && extents.height != 0) {
+            const auto glyph_rect = BLBox {
+                origin.x + pos.x_offset + extents.x_bearing,
+                -(origin.y + pos.y_offset + extents.y_bearing),
+                origin.x + pos.x_offset + extents.x_bearing + extents.width,
+                -(origin.y + pos.y_offset + extents.y_bearing + extents.height),
+            };
+
+            assert(glyph_rect.x0 <= glyph_rect.x1);
+            assert(glyph_rect.y0 <= glyph_rect.y1);
+
+            rect.x0 = std::min(rect.x0, glyph_rect.x0);
+            rect.y0 = std::min(rect.y0, glyph_rect.y0);
+            rect.x1 = std::max(rect.x1, glyph_rect.x1);
+            rect.y1 = std::max(rect.y1, glyph_rect.y1);
+
+            found = true;
+        }
+
+        origin.x += pos.x_advance;
+        origin.y += pos.y_advance;
+    }
+
+    if (!found || scale.x == 0 || scale.y == 0) {
+        return BLBox {};
+    }
+
+    return rect / scale * font.font_size();
+}
 
 HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
                                        const HarfbuzzFontFace &face, float font_size)
@@ -144,20 +202,28 @@ HarfbuzzShapedText::HarfbuzzShapedText(std::string_view text_utf8,
                                      position.y_advance / font_size_scale},
             };
         });
+
+    bounding_box_ = calculate_bounding_rect(glyph_infos, glyph_positions, font);
 }
 
-auto HarfbuzzShapedText::glyph_run() const -> BLGlyphRun {
-    if (codepoints_.size() != placements_.size()) [[unlikely]] {
-        throw_exception("data vectors need to have same size");
-    }
-
+auto HarfbuzzShapedText::glyph_run() const noexcept -> BLGlyphRun {
     auto result = BLGlyphRun {};
-    result.size = codepoints_.size();
+
+    result.size = std::min(codepoints_.size(), placements_.size());
     result.setGlyphData(codepoints_.data());
     result.setPlacementData(placements_.data());
     result.placementType = BL_GLYPH_PLACEMENT_TYPE_ADVANCE_OFFSET;
 
     return result;
+}
+
+auto HarfbuzzShapedText::bounding_box() const noexcept -> BLBox {
+    return bounding_box_;
+}
+
+auto HarfbuzzShapedText::bounding_rect() const noexcept -> BLRect {
+    const auto box = bounding_box_;
+    return BLRect {box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0};
 }
 
 }  // namespace logicsim

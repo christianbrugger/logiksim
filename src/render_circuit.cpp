@@ -230,8 +230,8 @@ auto draw_clock_generator(BLContext& ctx, layout::ConstElement element,
     // generator delay
     const auto generator_delay = Schematic::defaults::clock_generator_delay;
     const auto duration_text = fmt::format("{}", generator_delay);
-    draw_logic_item_label(ctx, point_fine_t {1.5, -padding / 2.}, duration_text, element,
-                          state, settings,
+    draw_logic_item_label(ctx, point_fine_t {1.5, 0}, duration_text, element, state,
+                          settings,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,

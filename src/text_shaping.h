@@ -2,6 +2,7 @@
 #define LOGIKSIM_TEXT_SHAPING_H
 
 #include <blend2d.h>
+#include <gsl/gsl>
 
 #include <string>
 #include <string_view>
@@ -34,10 +35,12 @@ class HarfbuzzFont final {
     explicit HarfbuzzFont(const HarfbuzzFontFace &face, float font_size);
     ~HarfbuzzFont();
 
+    auto font_size() const noexcept -> float;
     auto hb_font() const noexcept -> hb_font_t *;
 
    private:
     gsl::not_null<hb_font_t *> hb_font_;
+    float font_size_ {};
 };
 
 class HarfbuzzShapedText {
@@ -49,13 +52,16 @@ class HarfbuzzShapedText {
 
     auto operator==(const HarfbuzzShapedText &other) const -> bool = default;
 
-    auto glyph_run() const -> BLGlyphRun;
+    auto glyph_run() const noexcept -> BLGlyphRun;
+
+    auto bounding_box() const noexcept -> BLBox;
+    auto bounding_rect() const noexcept -> BLRect;
 
    private:
     std::vector<uint32_t> codepoints_ {};
     std::vector<BLGlyphPlacement> placements_ {};
 
-   public:
+    BLBox bounding_box_ {};
 };
 
 }  // namespace logicsim

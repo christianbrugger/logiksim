@@ -81,26 +81,24 @@ auto GlyphCache::get_font(float font_size) const -> const BLFont& {
     return font;
 }
 
-auto calculate_offset(const BLFont& font, BLGlyphBuffer& glyph_buffer,
+auto calculate_offset(const HarfbuzzShapedText& text,
                       HorizontalAlignment horizontal_alignment,
                       VerticalAlignment vertical_alignment) -> BLPoint {
     BLPoint result {};
 
-    BLFontMetrics font_metrics = font.metrics();
-    BLTextMetrics text_metrics;
-    font.getTextMetrics(glyph_buffer, text_metrics);
+    const auto box = text.bounding_box();
 
     switch (horizontal_alignment) {
         using enum HorizontalAlignment;
 
         case left:
-            result.x = text_metrics.boundingBox.x0;
+            result.x = box.x0;
             break;
         case right:
-            result.x = text_metrics.boundingBox.x1;
+            result.x = box.x1;
             break;
         case center:
-            result.x = (text_metrics.boundingBox.x0 + text_metrics.boundingBox.x1) / 2.0;
+            result.x = (box.x0 + box.x1) / 2.0;
             break;
     }
 
@@ -110,22 +108,22 @@ auto calculate_offset(const BLFont& font, BLGlyphBuffer& glyph_buffer,
         case baseline:
             break;
         case center:
-            result.y = (font_metrics.descent - font_metrics.ascent) / 2.0;
+            result.y = (box.y0 + box.y1) / 2.0;
             break;
         case top:
-            result.y = -font_metrics.ascent;
+            result.y = box.y0;
             break;
         case bottom:
-            result.y = font_metrics.descent;
+            result.y = box.y1;
             break;
     }
 
     return result;
 }
 
-auto GlyphCache::get_glyph_entry(std::string_view text, float font_size,
-                                 HorizontalAlignment horizontal_alignment,
-                                 VerticalAlignment vertical_alignment) const
+auto GlyphCache::get_entry(std::string_view text, float font_size,
+                           HorizontalAlignment horizontal_alignment,
+                           VerticalAlignment vertical_alignment) const
     -> const glyph_entry_t& {
     const auto [it, inserted] = glyph_map_.try_emplace(glyph_key_t {
         .text_hash = glyph_cache::hash(text),
@@ -133,19 +131,15 @@ auto GlyphCache::get_glyph_entry(std::string_view text, float font_size,
         .horizontal_alignment = horizontal_alignment,
         .vertical_alignment = vertical_alignment,
     });
-    auto& glyph_entry = it->second;
+    auto& entry = it->second;
 
     if (inserted) {
-        const auto& font = get_font(font_size);
-
-        glyph_entry.shaped_text = HarfbuzzShapedText {text, hb_font_face_, font_size};
-        glyph_entry.glyph_buffer.setUtf8Text(text.data(), text.size());
-        font.shape(glyph_entry.glyph_buffer);
-        glyph_entry.offset = calculate_offset(font, glyph_entry.glyph_buffer,
-                                              horizontal_alignment, vertical_alignment);
+        entry.shaped_text = HarfbuzzShapedText {text, hb_font_face_, font_size};
+        entry.offset =
+            calculate_offset(entry.shaped_text, horizontal_alignment, vertical_alignment);
     }
 
-    return glyph_entry;
+    return entry;
 }
 
 auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_view text,
@@ -157,14 +151,16 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_
     }
 
     const auto& font = get_font(font_size);
-    print("unitsPerEm", font.unitsPerEm());
-    const auto& glyph_entry =
-        get_glyph_entry(text, font_size, horizontal_alignment, vertical_alignment);
+    const auto& entry =
+        get_entry(text, font_size, horizontal_alignment, vertical_alignment);
+    const auto origin = position - entry.offset;
 
-    const auto glyph_run = glyph_entry.shaped_text.glyph_run();
-    // const auto& glyph_run = glyph_entry.glyph_buffer.glyphRun();
+    ctx.fillGlyphRun(origin, font, entry.shaped_text.glyph_run(), color);
 
-    ctx.fillGlyphRun(position - glyph_entry.offset, font, glyph_run, color);
+    // ctx.setStrokeWidth(1);
+    // ctx.translate(origin);
+    // ctx.strokeRect(entry.shaped_text.bounding_rect(), defaults::color_lime);
+    // ctx.translate(-origin);
 }
 
 }  // namespace logicsim

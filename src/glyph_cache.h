@@ -47,7 +47,6 @@ struct glyph_key_t {
 };
 
 struct glyph_entry_t {
-    BLGlyphBuffer glyph_buffer {};  // TODO !!! remove
     HarfbuzzShapedText shaped_text {};
     BLPoint offset {0., 0.};
 
@@ -98,9 +97,9 @@ class GlyphCache {
 
    private:
     [[nodiscard]] auto get_font(float font_size) const -> const BLFont &;
-    [[nodiscard]] auto get_glyph_entry(std::string_view text, float font_size,
-                                       HorizontalAlignment horizontal_alignment,
-                                       VerticalAlignment vertical_alignment) const
+    [[nodiscard]] auto get_entry(std::string_view text, float font_size,
+                                 HorizontalAlignment horizontal_alignment,
+                                 VerticalAlignment vertical_alignment) const
         -> const glyph_entry_t &;
 
    private:
