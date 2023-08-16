@@ -20,6 +20,11 @@ class HarfbuzzFontFace final {
     explicit HarfbuzzFontFace(std::string filename, unsigned int font_index = 0);
     ~HarfbuzzFontFace();
 
+    HarfbuzzFontFace(const HarfbuzzFontFace &) = delete;
+    HarfbuzzFontFace(HarfbuzzFontFace &&) = delete;
+    HarfbuzzFontFace &operator=(const HarfbuzzFontFace &) = delete;
+    HarfbuzzFontFace &operator=(HarfbuzzFontFace &&) = delete;
+
     auto hb_face() const noexcept -> hb_face_t *;
 
    private:
@@ -34,6 +39,11 @@ class HarfbuzzFont final {
     explicit HarfbuzzFont();
     explicit HarfbuzzFont(const HarfbuzzFontFace &face, float font_size);
     ~HarfbuzzFont();
+
+    HarfbuzzFont(const HarfbuzzFont &) = delete;
+    HarfbuzzFont(HarfbuzzFont &&) = delete;
+    HarfbuzzFont &operator=(const HarfbuzzFont &) = delete;
+    HarfbuzzFont &operator=(HarfbuzzFont &&) = delete;
 
     auto font_size() const noexcept -> float;
     auto hb_font() const noexcept -> hb_font_t *;

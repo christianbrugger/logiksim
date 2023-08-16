@@ -88,6 +88,11 @@ class HarfbuzzBuffer {
    public:
     explicit HarfbuzzBuffer() : hb_buffer {hb_buffer_create()} {}
 
+    HarfbuzzBuffer(const HarfbuzzBuffer &) = delete;
+    HarfbuzzBuffer(HarfbuzzBuffer &&) = delete;
+    HarfbuzzBuffer &operator=(const HarfbuzzBuffer &) = delete;
+    HarfbuzzBuffer &operator=(HarfbuzzBuffer &&) = delete;
+
     ~HarfbuzzBuffer() {
         hb_buffer_destroy(hb_buffer);
     }
