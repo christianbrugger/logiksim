@@ -45,6 +45,7 @@ set(LS_CORE_SOURCES
     src/serialize_detail.cpp
     src/simulation.cpp
     src/simulation_view.cpp
+    src/text_shaping.cpp
     src/timer.cpp
     src/vocabulary.cpp
     
@@ -306,6 +307,8 @@ add_subdirectory(external/glaze EXCLUDE_FROM_ALL SYSTEM)
 # cppcodec / base64
 add_subdirectory(external/cppcodec EXCLUDE_FROM_ALL SYSTEM)
 
+# harfbuzz
+add_subdirectory(external/harfbuzz EXCLUDE_FROM_ALL SYSTEM)
 
 
 ###################################################
@@ -405,6 +408,7 @@ set(LS_CORE_LIBRARIES
     Blend2D::Blend2D
     glaze::glaze
     ${LS_ZLIB_NAME}
+    harfbuzz
     
     Qt6::Core
     Qt6::Widgets

@@ -2,6 +2,7 @@
 
 #include "exception.h"
 #include "format.h"
+#include "text_shaping.h"
 #include "vocabulary.h"
 
 namespace logicsim {

@@ -67,3 +67,6 @@
 	path = external/cppcodec
 	url = https://github.com/tplgy/cppcodec
 	ignore = dirty
+[submodule "external/harfbuzz"]
+	path = external/harfbuzz
+	url = https://github.com/harfbuzz/harfbuzz
