@@ -298,6 +298,7 @@ struct TextAttributes {
 
     HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};
     VerticalAlignment vertical_alignment {VerticalAlignment::baseline};
+    FontStyle style {FontStyle::regular};
 
     // don't render, if scaled font size is smaller
     double cuttoff_size_px {3.0};  // pixels

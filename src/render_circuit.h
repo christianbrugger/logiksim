@@ -141,6 +141,7 @@ struct LogicItemTextAttributes {
     std::optional<color_t> custom_text_color {};
     HorizontalAlignment horizontal_alignment {HorizontalAlignment::center};
     VerticalAlignment vertical_alignment {VerticalAlignment::center};
+    FontStyle style {FontStyle::regular};
 };
 
 auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view text,

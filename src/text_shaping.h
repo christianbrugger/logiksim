@@ -17,7 +17,7 @@ namespace logicsim {
 class HarfbuzzFontFace final {
    public:
     explicit HarfbuzzFontFace();
-    explicit HarfbuzzFontFace(std::string filename, unsigned int font_index = 0);
+    explicit HarfbuzzFontFace(const std::string &filename, unsigned int font_index = 0);
     ~HarfbuzzFontFace();
 
     HarfbuzzFontFace(const HarfbuzzFontFace &) = delete;
@@ -28,9 +28,6 @@ class HarfbuzzFontFace final {
     auto hb_face() const noexcept -> hb_face_t *;
 
    private:
-    std::string filename_ {};
-
-    gsl::not_null<hb_blob_t *> hb_blob_;
     gsl::not_null<hb_face_t *> hb_face_;
 };
 

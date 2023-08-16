@@ -722,7 +722,7 @@ auto draw_text(BLContext& ctx, point_fine_t position, std::string_view text,
     const auto position_px = to_context(position, settings.view_config);
     settings.text.draw_text(ctx, position_px, text, font_size_px, attributes.color,
                             attributes.horizontal_alignment,
-                            attributes.vertical_alignment);
+                            attributes.vertical_alignment, attributes.style);
 }
 
 }  // namespace logicsim

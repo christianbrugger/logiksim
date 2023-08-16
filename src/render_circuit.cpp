@@ -122,6 +122,7 @@ auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view 
                   .color = text_color,
                   .horizontal_alignment = attributes.horizontal_alignment,
                   .vertical_alignment = attributes.vertical_alignment,
+                  .style = attributes.style,
                   .cuttoff_size_px = defaults::font::text_cutoff_px,
               },
               settings);
@@ -237,6 +238,7 @@ auto draw_clock_generator(BLContext& ctx, layout::ConstElement element,
                               .custom_text_color = defaults::font::clock_period_color,
                               .horizontal_alignment = HorizontalAlignment::center,
                               .vertical_alignment = VerticalAlignment::top,
+                              .style = FontStyle::bold,
                           });
 }
 

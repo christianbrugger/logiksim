@@ -27,29 +27,49 @@ static constexpr int font_size_scale = 1;  // 1 << 16;
 }
 
 //
+// Harfbuzz Blob
+//
+
+class HarfbuzzBlob {
+   public:
+    explicit HarfbuzzBlob() : hb_blob {hb_blob_get_empty()} {}
+
+    explicit HarfbuzzBlob(const std::string &filename)
+        : hb_blob {hb_blob_create_from_file(filename.c_str())} {
+        if (hb_blob == hb_blob_get_empty()) [[unlikely]] {
+            // TODO exception type
+            throw_exception(fmt::format("Font not found {}", filename).c_str());
+        }
+    }
+
+    HarfbuzzBlob(const HarfbuzzBlob &) = delete;
+    HarfbuzzBlob(HarfbuzzBlob &&) = delete;
+    HarfbuzzBlob &operator=(const HarfbuzzBlob &) = delete;
+    HarfbuzzBlob &operator=(HarfbuzzBlob &&) = delete;
+
+    ~HarfbuzzBlob() {
+        hb_blob_destroy(hb_blob);
+    }
+
+   public:
+    gsl::not_null<hb_blob_t *> hb_blob;
+};
+
+//
 // Harfbuzz Font Face
 //
 
-HarfbuzzFontFace::HarfbuzzFontFace()
-    : hb_blob_ {hb_blob_get_empty()}, hb_face_ {hb_face_get_empty()} {}
+HarfbuzzFontFace::HarfbuzzFontFace() : hb_face_ {hb_face_get_empty()} {}
 
-HarfbuzzFontFace::HarfbuzzFontFace(std::string filename__, unsigned int font_index)
-    : filename_ {std::move(filename__)},
-      hb_blob_ {hb_blob_create_from_file(filename_.c_str())},
-      hb_face_ {hb_face_create(hb_blob_, font_index)} {
-    if (hb_blob_ == hb_blob_get_empty()) [[unlikely]] {
-        // TODO exception type
-        throw_exception(fmt::format("Font not found {}", filename_).c_str());
-    }
+HarfbuzzFontFace::HarfbuzzFontFace(const std::string &filename, unsigned int font_index)
+    : hb_face_ {hb_face_create(HarfbuzzBlob {filename.c_str()}.hb_blob, font_index)}
 
-    // set read only
-    hb_blob_make_immutable(hb_blob_);
+{
     hb_face_make_immutable(hb_face_);
 }
 
 HarfbuzzFontFace::~HarfbuzzFontFace() {
     hb_face_destroy(hb_face_);
-    hb_blob_destroy(hb_blob_);
 }
 
 auto HarfbuzzFontFace::hb_face() const noexcept -> hb_face_t * {
