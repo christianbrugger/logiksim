@@ -319,7 +319,6 @@ auto checked_sync(BLContext& ctx) -> void {
 
     ctx.flush(BL_CONTEXT_FLUSH_SYNC);
     check_errors(ctx);
-    ctx.setFillStyle(defaults::color_black);
 }
 
 //
@@ -672,6 +671,13 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
 
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
                      const RenderSettings& settings) -> void {
+    return draw_rect(ctx, rect,
+                     RectAttributes {
+                         .draw_type = attributes.draw_type,
+                         .stroke_width = attributes.stroke_width,
+                     },
+                     settings);
+
     const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
     const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
 

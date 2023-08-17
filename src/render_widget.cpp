@@ -728,6 +728,9 @@ auto RendererWidget::reset_circuit() -> void {
     reset_interaction_state();
 
     editable_circuit_.emplace(Layout {});
+
+    // TODO reset render_settings_;
+
     update();
 
 #ifndef NDEBUG
