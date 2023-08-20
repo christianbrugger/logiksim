@@ -190,6 +190,23 @@ auto LayersCache::clear() -> void {
     overlay_bounding_rect.reset();
 }
 
+auto LayersCache::allocated_size() const -> std::size_t {
+    return get_allocated_size(normal_below) +           //
+           get_allocated_size(normal_wires) +           //
+           get_allocated_size(normal_above) +           //
+                                                        //
+           get_allocated_size(uninserted_below) +       //
+           get_allocated_size(uninserted_above) +       //
+                                                        //
+           get_allocated_size(selected_logic_items) +   //
+           get_allocated_size(selected_wires) +         //
+           get_allocated_size(temporary_wires) +        //
+           get_allocated_size(valid_logic_items) +      //
+           get_allocated_size(valid_wires) +            //
+           get_allocated_size(colliding_logic_items) +  //
+           get_allocated_size(colliding_wires);         //
+}
+
 auto LayersCache::has_inserted() const -> bool {
     return !normal_below.empty() ||  //
            !normal_wires.empty() ||  //
@@ -282,6 +299,12 @@ auto SimulationLayersCache::clear() -> void {
     items_above.clear();
 }
 
+auto SimulationLayersCache::allocated_size() const -> std::size_t {
+    return get_allocated_size(items_below) +  //
+           get_allocated_size(wires) +        //
+           get_allocated_size(items_above);
+}
+
 //
 // RenderSettings
 //
@@ -296,6 +319,7 @@ auto RenderSettings::format() const -> std::string {
 
 auto context_info(const RenderSettings& settings) -> BLContextCreateInfo {
     auto info = BLContextCreateInfo {};
+    info.commandQueueLimit = 2048;
     info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
     return info;
 }
@@ -671,13 +695,6 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
 
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
                      const RenderSettings& settings) -> void {
-    return draw_rect(ctx, rect,
-                     RectAttributes {
-                         .draw_type = attributes.draw_type,
-                         .stroke_width = attributes.stroke_width,
-                     },
-                     settings);
-
     const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
     const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
 

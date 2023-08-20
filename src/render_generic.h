@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_RENDER_GENERIC_H
 #define LOGIKSIM_RENDER_GENERIC_H
 
+#include "allocated_size.h"
 #include "format.h"
 #include "glyph_cache.h"
 #include "glyph_cache_type.h"
@@ -111,6 +112,7 @@ struct LayersCache {
    public:
     auto format() const -> std::string;
     auto clear() -> void;
+    auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto has_inserted() const -> bool;
     [[nodiscard]] auto has_uninserted() const -> bool;
@@ -137,7 +139,13 @@ struct SimulationLayersCache {
    public:
     auto format() const -> std::string;
     auto clear() -> void;
+    auto allocated_size() const -> std::size_t;
 };
+
+// template <>
+// struct ByteSize<SimulationLayersCache> {
+//     static auto get_bytesize(const SimulationLayersCache& cache) -> std::size_t;
+// };
 
 //
 // RenderSettings
@@ -280,11 +288,12 @@ struct RectAttributes {
 auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
                const RenderSettings& settings) -> void;
 
-// TODO !!! add colors
 struct RoundRectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
     double rounding {defaults::maximum_rounding};
+    color_t fill_color {defaults::color_white};
+    color_t stroke_color {defaults::color_black};
 };
 
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,

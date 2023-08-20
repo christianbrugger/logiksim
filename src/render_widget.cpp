@@ -1079,6 +1079,9 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     }
     const auto& editable_circuit = editable_circuit_.value();
 
+    // fmt::print("{:.3f} MB\n", get_allocated_size(*this) / 1024. / 1024.);
+    // print(render_settings_.text);
+
     render_background(bl_ctx, render_settings_);
 
     if (do_render_circuit_ && simulation_) {
