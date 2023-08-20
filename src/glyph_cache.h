@@ -56,14 +56,6 @@ struct glyph_entry_t {
     [[nodiscard]] auto operator==(const glyph_entry_t &other) const -> bool = default;
 };
 
-struct font_key_t {
-    float font_size;
-    FontStyle style;
-
-    [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const font_key_t &other) const -> bool = default;
-};
-
 }  // namespace logicsim::glyph_cache
 
 template <>
@@ -80,20 +72,6 @@ struct ankerl::unordered_dense::hash<logicsim::glyph_cache::glyph_key_t> {
 
         const uint64_t v0 = ankerl::unordered_dense::hash<uint64_t> {}(numerics);
         return ankerl::unordered_dense::detail::wyhash::mix(v0, obj.text_hash);
-    }
-};
-
-template <>
-struct ankerl::unordered_dense::hash<logicsim::glyph_cache::font_key_t> {
-    using is_avalanching = void;
-
-    [[nodiscard]] auto operator()(
-        const logicsim::glyph_cache::font_key_t &obj) const noexcept -> uint64_t {
-        const uint64_t numerics =
-            (uint64_t {std::bit_cast<uint32_t>(obj.font_size)} << 32) +
-            (static_cast<uint64_t>(obj.style) << 0);
-
-        return ankerl::unordered_dense::hash<uint64_t> {}(numerics);
     }
 };
 
@@ -118,11 +96,21 @@ struct FontFaces {
     auto get(FontStyle style) const -> const FontFace &;
 };
 
+struct Fonts {
+    BLFont regular {};
+    BLFont italic {};
+    BLFont bold {};
+
+    explicit Fonts() = default;
+    explicit Fonts(const FontFaces &font_faces);
+
+    auto get(FontStyle style) -> BLFont &;
+};
+
 class GlyphCache {
    private:
     using glyph_key_t = glyph_cache::glyph_key_t;
     using glyph_entry_t = glyph_cache::glyph_entry_t;
-    using font_key_t = glyph_cache::font_key_t;
 
    public:
     explicit GlyphCache();
@@ -154,12 +142,11 @@ class GlyphCache {
         -> const glyph_entry_t &;
 
    private:
-    using font_map_t = ankerl::unordered_dense::map<font_key_t, BLFont>;
     using glyph_map_t = ankerl::unordered_dense::map<glyph_key_t, glyph_entry_t>;
 
     FontFaces font_faces_ {};
 
-    mutable font_map_t font_map_ {};
+    mutable Fonts fonts_ {};
     mutable glyph_map_t glyph_map_ {};
 };
 

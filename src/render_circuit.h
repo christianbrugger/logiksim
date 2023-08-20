@@ -55,7 +55,7 @@ constexpr static inline auto connector_label_size = 0.6;    // grid values
 constexpr static inline auto connector_label_margin = 0.2;  // grid values
 
 constexpr static inline auto clock_period_size = 0.7;  // grid values
-constexpr static inline auto clock_period_color = defaults::color_dark_orange;
+constexpr static inline auto clock_period_color = defaults::color_orange;
 }  // namespace font
 
 constexpr static inline auto connector_length = 0.4;        // grid points

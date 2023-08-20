@@ -36,10 +36,6 @@ auto glyph_entry_t::format() const -> std::string {
     return fmt::format("({}, {})", offset.x, offset.y);
 }
 
-auto font_key_t::format() const -> std::string {
-    return fmt::format("({}, {})", font_size, style);
-}
-
 }  // namespace glyph_cache
 
 //
@@ -78,29 +74,35 @@ auto FontFaces::get(FontStyle style) const -> const FontFace& {
 }
 
 //
+// Fonts
+//
+
+Fonts::Fonts(const FontFaces& font_faces) {
+    const auto font_size = float {1.0};
+    regular.createFromFace(font_faces.get(FontStyle::regular).bl_font_face, font_size);
+    italic.createFromFace(font_faces.get(FontStyle::italic).bl_font_face, font_size);
+    bold.createFromFace(font_faces.get(FontStyle::bold).bl_font_face, font_size);
+}
+
+auto Fonts::get(FontStyle style) -> BLFont& {
+    switch (style) {
+        using enum FontStyle;
+
+        case regular:
+            return this->regular;
+        case italic:
+            return this->italic;
+        case bold:
+            return this->bold;
+    }
+    throw_exception("unknown FontStyle");
+}
+
+//
 // GlyphCache
 //
 
-GlyphCache::GlyphCache() : GlyphCache(font_definition_t {defaults::font_files}) {}
-
-GlyphCache::GlyphCache(font_definition_t font_files) : font_faces_ {font_files} {}
-
-auto GlyphCache::format() const -> std::string {
-    return fmt::format("GlyphCache({} fonts, {} glyphs)", font_map_.size(),
-                       glyph_map_.size());
-}
-
-auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFont& {
-    const auto [it, inserted] = font_map_.try_emplace(font_key_t {font_size, style});
-    auto& font = it->second;
-
-    if (inserted) {
-        const auto& font_face = font_faces_.get(style);
-        font.createFromFace(font_face.bl_font_face, font_size);
-    }
-
-    return font;
-}
+namespace {
 
 auto calculate_offset(const HarfbuzzShapedText& text,
                       HorizontalAlignment horizontal_alignment,
@@ -140,6 +142,24 @@ auto calculate_offset(const HarfbuzzShapedText& text,
     }
 
     return result;
+}
+
+}  // namespace
+
+GlyphCache::GlyphCache() : GlyphCache(font_definition_t {defaults::font_files}) {}
+
+GlyphCache::GlyphCache(font_definition_t font_files)
+    : font_faces_ {font_files}, fonts_ {font_faces_} {}
+
+auto GlyphCache::format() const -> std::string {
+    return fmt::format("GlyphCache({} glyphs)", glyph_map_.size());
+}
+
+auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFont& {
+    // reuse font, to avoid allocation everytime we draw a text
+    auto& font = fonts_.get(style);
+    font.setSize(font_size);
+    return font;
 }
 
 auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle style,
