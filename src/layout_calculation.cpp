@@ -236,7 +236,7 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
             return input_count >= 2 && input_count <= 65 && output_count == 0;
         }
         case display_ascii: {
-            return input_count == 7 && output_count == 0;
+            return input_count == 8 && output_count == 0;
         }
 
         case clock_generator: {
@@ -324,8 +324,8 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             return transform(data.position, data.orientation, {0, 0}, {w, h});
         }
         case display_ascii: {
-            require_equal(data.input_count, 7);
-            return transform(data.position, data.orientation, {0, 0}, {2, 6});
+            require_equal(data.input_count, 8);
+            return transform(data.position, data.orientation, {0, 0}, {4, 6});
         }
 
         case clock_generator: {

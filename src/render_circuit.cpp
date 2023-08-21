@@ -110,6 +110,10 @@ auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view 
                            layout::ConstElement element, ElementDrawState state,
                            const RenderSettings& settings,
                            LogicItemTextAttributes attributes) -> void {
+    if (text.empty()) {
+        return;
+    }
+
     const auto center = point + point_fine_t {element.position()};
 
     const auto font_size = attributes.custom_font_size
@@ -221,22 +225,42 @@ auto draw_led(BLContext& ctx, layout::ConstElement element, ElementDrawState sta
                 settings);
 }
 
-auto draw_display_number(BLContext& ctx, layout::ConstElement element,
-                         ElementDrawState state, const RenderSettings& settings,
-                         std::optional<simulation_view::ConstElement> logic_state)
-    -> void {
-    const auto input_count = element.input_count();
-    const auto element_width = grid_fine_t {display_number_width(input_count)};
-    const auto element_height = grid_fine_t {display_number_height(input_count)};
-    const auto padding = defaults::logic_item_body_overdraw;
+namespace {
+auto _draw_power_of_two_inputs(BLContext& ctx, layout::ConstElement element,
+                               ElementDrawState state, const RenderSettings& settings) {
+    if (element.input_count() > 65) {
+        return;
+    }
 
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {element_width, element_height + padding},
+    // connector labels
+    static constexpr auto input_labels = string_array<65> {
+        "En",                                                                  //
+        "2⁰",  "2¹",  "2²",  "2³",  "2⁴",  "2⁵",  "2⁶",  "2⁷",  "2⁸",  "2⁹",   //
+        "2¹⁰", "2¹¹", "2¹²", "2¹³", "2¹⁴", "2¹⁵", "2¹⁶", "2¹⁷", "2¹⁸", "2¹⁹",  //
+        "2²⁰", "2²¹", "2²²", "2²³", "2²⁴", "2²⁵", "2²⁶", "2²⁷", "2²⁸", "2²⁹",  //
+        "2³⁰", "2³¹", "2³²", "2³³", "2³⁴", "2³⁵", "2³⁶", "2³⁷", "2³⁸", "2³⁹",  //
+        "2⁴⁰", "2⁴¹", "2⁴²", "2⁴³", "2⁴⁴", "2⁴⁵", "2⁴⁶", "2⁴⁷", "2⁴⁸", "2⁴⁹",  //
+        "2⁵⁰", "2⁵¹", "2⁵²", "2⁵³", "2⁵⁴", "2⁵⁵", "2⁵⁶", "2⁵⁷", "2⁵⁸", "2⁵⁹",  //
+        "2⁶⁰", "2⁶¹", "2⁶²", "2⁶³"                                             //
     };
-    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, {}}, element, state,
+                          settings);
+}
 
-    if (input_count > 65) {
+struct styled_display_text_t {
+    std::string text;
+    color_t color {defaults::font::display_normal_color};
+    double font_size {defaults::font::display_size};
+};
+
+// to_text = [](uint64_t number) -> std::pair<std::string, color_t> { ... };
+template <typename Func>
+auto _draw_number_display(BLContext& ctx, layout::ConstElement element,
+                          ElementDrawState state, grid_fine_t element_width,
+                          grid_fine_t element_height, Func to_text,
+                          std::string_view edit_mode_text, const RenderSettings& settings,
+                          std::optional<simulation_view::ConstElement> logic_state) {
+    if (element.input_count() > 65) {
         return;
     }
 
@@ -265,46 +289,96 @@ auto draw_display_number(BLContext& ctx, layout::ConstElement element,
             }
 
             // use thousand delimiters
-            const auto text = fmt::format(std::locale("en_US.UTF-8"), "{:L}", number);
-            draw_logic_item_label(ctx, point_fine_t {text_x, text_y}, text, element,
-                                  state, settings);
+            const styled_display_text_t text = to_text(number);
+            draw_logic_item_label(
+                ctx, point_fine_t {text_x, text_y}, text.text, element, state, settings,
+                LogicItemTextAttributes {.custom_font_size = text.font_size,
+                                         .custom_text_color = text.color});
         }
     } else {
-        draw_logic_item_label(ctx, point_fine_t {text_x, text_y}, "0", element, state,
-                              settings);
+        draw_logic_item_label(
+            ctx, point_fine_t {text_x, text_y}, edit_mode_text, element, state, settings,
+            LogicItemTextAttributes {
+                .custom_font_size = defaults::font::display_size,
+                .custom_text_color = defaults::font::display_normal_color});
+    }
+}
+}  // namespace
+
+auto draw_display_number(BLContext& ctx, layout::ConstElement element,
+                         ElementDrawState state, const RenderSettings& settings,
+                         std::optional<simulation_view::ConstElement> logic_state)
+    -> void {
+    const auto input_count = element.input_count();
+    const auto element_width = grid_fine_t {display_number_width(input_count)};
+    const auto element_height = grid_fine_t {display_number_height(input_count)};
+    const auto padding = defaults::logic_item_body_overdraw;
+
+    const auto rect = rect_fine_t {
+        point_fine_t {0., -padding},
+        point_fine_t {element_width, element_height + padding},
+    };
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+
+    const auto to_text = [](uint64_t number) {
+        return styled_display_text_t {
+            fmt::format(std::locale("en_US.UTF-8"), "{:L}", number)};
+    };
+    const auto edit_mode_text = "0";
+    _draw_number_display(ctx, element, state, element_width, element_height, to_text,
+                         edit_mode_text, settings, logic_state);
+    _draw_power_of_two_inputs(ctx, element, state, settings);
+}
+
+namespace {
+auto _to_asci(uint64_t number) -> styled_display_text_t {
+    if (number > 127) [[unlikely]] {
+        throw_exception("value out of range");
     }
 
-    // connector labels
-    static constexpr auto input_labels = string_array<65> {
-        "En",                                                                  //
-        "2⁰",  "2¹",  "2²",  "2³",  "2⁴",  "2⁵",  "2⁶",  "2⁷",  "2⁸",  "2⁹",   //
-        "2¹⁰", "2¹¹", "2¹²", "2¹³", "2¹⁴", "2¹⁵", "2¹⁶", "2¹⁷", "2¹⁸", "2¹⁹",  //
-        "2²⁰", "2²¹", "2²²", "2²³", "2²⁴", "2²⁵", "2²⁶", "2²⁷", "2²⁸", "2²⁹",  //
-        "2³⁰", "2³¹", "2³²", "2³³", "2³⁴", "2³⁵", "2³⁶", "2³⁷", "2³⁸", "2³⁹",  //
-        "2⁴⁰", "2⁴¹", "2⁴²", "2⁴³", "2⁴⁴", "2⁴⁵", "2⁴⁶", "2⁴⁷", "2⁴⁸", "2⁴⁹",  //
-        "2⁵⁰", "2⁵¹", "2⁵²", "2⁵³", "2⁵⁴", "2⁵⁵", "2⁵⁶", "2⁵⁷", "2⁵⁸", "2⁵⁹",  //
-        "2⁶⁰", "2⁶¹", "2⁶²", "2⁶³"                                             //
-    };
-    draw_connector_labels(ctx, ConnectorLabels {input_labels, {}}, element, state,
-                          settings);
+    const auto control_chars =
+        string_array<33> {"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL",  //
+                          "BS",  "HT",  "LF",  "VT",  "FF",  "CR",  "SO",  "SI",   //
+                          "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB",  //
+                          "CAN", "EM",  "SUB", "ESC", "FS",  "GS",  "RS",  "US",   //
+                          "SP"};
+
+    if (number < control_chars.size()) {
+        return styled_display_text_t {
+            .text = std::string {control_chars.at(number)},
+            .color = defaults::font::display_ascii_controll_color,
+            .font_size = defaults::font::display_ascii_control_size,
+        };
+    }
+    if (number == 127) {
+        return styled_display_text_t {
+            .text = std::string {"DEL"},
+            .color = defaults::font::display_ascii_controll_color,
+            .font_size = defaults::font::display_ascii_control_size,
+        };
+    }
+    return styled_display_text_t {std::string {static_cast<char>(number)}};
 }
+}  // namespace
 
 auto draw_display_ascii(BLContext& ctx, layout::ConstElement element,
                         ElementDrawState state, const RenderSettings& settings,
                         std::optional<simulation_view::ConstElement> logic_state)
     -> void {
+    const auto element_width = grid_fine_t {4.};
+    const auto element_height = grid_fine_t {6.};
     const auto padding = defaults::logic_item_body_overdraw;
+
     const auto rect = rect_fine_t {
         point_fine_t {0., -padding},
-        point_fine_t {2., 6 + padding},
+        point_fine_t {element_width, element_height + padding},
     };
-    draw_logic_item_rect(ctx, rect, element, state, settings,
-                         {.custom_fill_color = defaults::button_body_color});
-    // draw_binary_value(ctx, point_fine_t {0, 0}, logic_value, element, state,
-    // settings);
-    // static constexpr auto input_labels = string_array<3> {"1", "2", "en"};
-    // draw_connector_labels(ctx, ConnectorLabels {input_labels, {}}, element, state,
-    //                      settings);
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+
+    const auto edit_mode_text = "A";
+    _draw_number_display(ctx, element, state, element_width, element_height, _to_asci,
+                         edit_mode_text, settings, logic_state);
+    _draw_power_of_two_inputs(ctx, element, state, settings);
 }
 
 auto draw_buffer(BLContext& ctx, layout::ConstElement element, ElementDrawState state,

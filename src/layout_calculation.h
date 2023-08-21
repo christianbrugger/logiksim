@@ -105,11 +105,44 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             return true;
         }
         case display_number: {
-            // has no body
+            require_min(data.input_count, 2);
+            require_max(data.input_count, 65);
+
+            const auto width = display_number_width(data.input_count);
+            const auto height = display_number_height(data.input_count);
+
+            for (const auto y : range(int {height.value} + 1)) {
+                for (const auto x : range(int {width.value} + 1)) {
+                    if (x == 0 && y < gsl::narrow_cast<int>(data.input_count) - 1) {
+                        continue;
+                    }
+                    if (x == 2 && y == gsl::narrow_cast<int>(height)) {
+                        continue;
+                    }
+                    if (!next_point(transform(
+                            data.position, data.orientation,
+                            point_t {gsl::narrow_cast<grid_t::value_type>(x),
+                                     gsl::narrow_cast<grid_t::value_type>(y)}))) {
+                        return false;
+                    }
+                }
+            }
             return true;
         }
         case display_ascii: {
-            // has no body
+            for (const auto y : range(6 + 1)) {
+                for (const auto x : range(1, 4 + 1)) {
+                    if (x == 2 && y == 6) {
+                        continue;
+                    }
+                    if (!next_point(transform(
+                            data.position, data.orientation,
+                            point_t {gsl::narrow_cast<grid_t::value_type>(x),
+                                     gsl::narrow_cast<grid_t::value_type>(y)}))) {
+                        return false;
+                    }
+                }
+            }
             return true;
         }
 
@@ -303,9 +336,13 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             return true;
         }
         case display_ascii: {
-            require_equal(data.input_count, 7);
+            require_equal(data.input_count, 8);
+            if (!next_input(transform(data.position, data.orientation, point_t {2, 6}),
+                            transform(data.orientation, orientation_t::down))) {
+                return false;
+            }
 
-            for (auto i : range(data.input_count)) {
+            for (auto i : range(7)) {
                 const auto y = grid_t {i};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),

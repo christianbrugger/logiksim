@@ -107,7 +107,7 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
         case insert_display_ascii:
             return LogicItemDefinition {
                 .element_type = ElementType::display_ascii,
-                .input_count = 7,
+                .input_count = 8,
                 .output_count = 0,
                 .orientation = orientation_t::right,
             };
@@ -116,24 +116,28 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
             return LogicItemDefinition {
                 .element_type = ElementType::and_element,
                 .input_count = variable_input_count,
+                .output_count = 1,
                 .orientation = orientation_t::right,
             };
         case insert_or_element:
             return LogicItemDefinition {
                 .element_type = ElementType::or_element,
                 .input_count = variable_input_count,
+                .output_count = 1,
                 .orientation = orientation_t::right,
             };
         case insert_xor_element:
             return LogicItemDefinition {
                 .element_type = ElementType::xor_element,
                 .input_count = variable_input_count,
+                .output_count = 1,
                 .orientation = orientation_t::right,
             };
         case insert_nand_element:
             return LogicItemDefinition {
                 .element_type = ElementType::and_element,
                 .input_count = variable_input_count,
+                .output_count = 1,
                 .orientation = orientation_t::right,
                 .output_inverters = logic_small_vector_t {true},
             };
@@ -141,6 +145,7 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
             return LogicItemDefinition {
                 .element_type = ElementType::or_element,
                 .input_count = variable_input_count,
+                .output_count = 1,
                 .orientation = orientation_t::right,
                 .output_inverters = logic_small_vector_t {true},
             };
@@ -149,12 +154,14 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
             return LogicItemDefinition {
                 .element_type = ElementType::buffer_element,
                 .input_count = 1,
+                .output_count = 1,
                 .orientation = orientation_t::right,
             };
         case insert_inverter_element:
             return LogicItemDefinition {
                 .element_type = ElementType::buffer_element,
                 .input_count = 1,
+                .output_count = 1,
                 .orientation = orientation_t::right,
                 .output_inverters = logic_small_vector_t {true},
             };
