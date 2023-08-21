@@ -206,6 +206,11 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
 // Simulation
 //
 
+[[nodiscard]] constexpr auto has_no_logic(const ElementType type) noexcept -> bool {
+    using enum ElementType;
+    return type == placeholder || type == led;
+}
+
 [[nodiscard]] constexpr auto internal_state_size(const ElementType type) noexcept
     -> std::size_t {
     switch (type) {
@@ -221,6 +226,8 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case xor_element:
             return 0;
 
+        case led:
+            return 0;
         case button:
             return 1;
         case clock_generator:
@@ -559,8 +566,8 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
         Schematic::ConstElement {schematic_->element(events.front().element_id)};
     const auto element_type = element.element_type();
 
-    // short-circuit placeholders, as they don't have logic
-    if (element_type == ElementType::placeholder) {
+    // short-circuit trivial elements
+    if (has_no_logic(element_type)) {
         apply_events(element, events);
         return;
     }

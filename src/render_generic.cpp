@@ -741,17 +741,49 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 // Circle
 //
 
+auto _draw_circle_fill_and_stroke(BLContext& ctx, point_fine_t center, grid_fine_t radius,
+                                  CircleAttributes attributes,
+                                  const RenderSettings& settings) -> void {
+    const auto&& [x0, y0] = to_context(
+        point_fine_t {center.x - radius, center.y - radius}, settings.view_config);
+    const auto&& [x1, y1] = to_context(
+        point_fine_t {center.x + radius, center.y + radius}, settings.view_config);
+
+    const auto x = (x0 + x1) / 2;
+    const auto y = (y0 + y1) / 2;
+
+    const auto rx = (x1 - x0) / 2;
+    const auto ry = (y1 - y0) / 2;
+
+    const auto stroke_width = resolve_stroke_width(attributes.stroke_width, settings);
+
+    ctx.fillEllipse(BLEllipse {x, y, rx, ry}, attributes.stroke_color);
+    ctx.fillEllipse(BLEllipse {x, y, rx - stroke_width, ry - stroke_width},
+                    attributes.fill_color);
+}
+
+auto _draw_circle_fill(BLContext& ctx, point_fine_t center, grid_fine_t radius,
+                       CircleAttributes attributes, const RenderSettings& settings)
+    -> void {}
+
+auto _draw_circle_stroke(BLContext& ctx, point_fine_t center, grid_fine_t radius,
+                         CircleAttributes attributes, const RenderSettings& settings)
+    -> void {}
+
 auto draw_circle(BLContext& ctx, point_fine_t center, grid_fine_t radius,
                  CircleAttributes attributes, const RenderSettings& settings) -> void {
-    const auto&& [x, y] = to_context(center, settings.view_config);
-    const auto r = to_context(radius, settings.view_config);
+    switch (attributes.draw_type) {
+        using enum DrawType;
 
-    if (do_fill(attributes.draw_type)) {
-        ctx.fillCircle(BLCircle {x, y, r}, attributes.fill_color);
-    }
-    if (do_stroke(attributes.draw_type)) {
-        ctx.setStrokeWidth(attributes.stroke_width);
-        ctx.strokeCircle(BLCircle {x, y, r}, attributes.stroke_color);
+        case fill_and_stroke:
+            _draw_circle_fill_and_stroke(ctx, center, radius, attributes, settings);
+            break;
+        case fill:
+            _draw_circle_fill(ctx, center, radius, attributes, settings);
+            break;
+        case stroke:
+            _draw_circle_stroke(ctx, center, radius, attributes, settings);
+            break;
     }
 }
 

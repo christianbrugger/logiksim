@@ -141,7 +141,7 @@ auto to_angle(orientation_t orientation) -> double {
         case down:
             return std::numbers::pi * 3 / 2;
         case undirected:
-            throw_exception("can't draw arrow for undirected orientation");
+            throw_exception("undirected orientation has no angle");
     };
     throw_exception("unhandeled orientation");
 }

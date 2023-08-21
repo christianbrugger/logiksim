@@ -348,6 +348,7 @@ auto MainWidget::build_element_buttons() -> QWidget* {
         using enum InteractionState;
         layout->addWidget(element_button("BTN", insert_button), ++row, 0);
         layout->addWidget(element_button("Wire", insert_wire), row, 1);
+        layout->addWidget(element_button("LED", insert_led), ++row, 0);
         layout->addWidget(line_separator(), ++row, 0, 1, 2);
 
         layout->addWidget(element_button("AND", insert_and_element), ++row, 0);

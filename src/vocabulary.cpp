@@ -25,6 +25,8 @@ auto format(ElementType type) -> std::string {
         case xor_element:
             return "XorElement";
 
+        case led:
+            return "LED";
         case button:
             return "Button";
         case clock_generator:

@@ -42,7 +42,8 @@ constexpr static inline auto connector_cutoff_px = 3.0;       // pixels
 constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
 
 constexpr static inline auto button_body_overdraw = 0.5;  // grid values
-constexpr static inline auto button_body_color = color_t {229, 229, 229};
+constexpr static inline auto button_body_color = defaults::color_gray_90;
+constexpr static inline auto led_radius = 0.45;  // grid values
 
 namespace font {
 constexpr static inline auto logic_item_text_color = defaults::color_black;
@@ -79,6 +80,8 @@ constexpr static inline auto body_stroke_color = defaults::color_black;
 constexpr static inline auto inverted_connector_fill = defaults::color_white;
 constexpr static inline auto wire_color_disabled = defaults::color_black;
 constexpr static inline auto wire_color_enabled = defaults::color_red;
+constexpr static inline auto led_color_disabled = defaults::color_light_gray;
+constexpr static inline auto led_color_enabled = defaults::color_red;
 
 namespace overlay_color {
 constexpr static inline auto selected = color_t {0, 128, 255, 96};

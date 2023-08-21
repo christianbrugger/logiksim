@@ -33,6 +33,7 @@ enum class ElementType : uint8_t {
     xor_element,
 
     button,
+    led,
     clock_generator,
     flipflop_jk,
     shift_register,

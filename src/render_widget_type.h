@@ -18,6 +18,7 @@ enum class InteractionState {
 
     insert_wire,
     insert_button,
+    insert_led,
 
     insert_and_element,
     insert_or_element,

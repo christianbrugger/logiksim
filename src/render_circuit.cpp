@@ -20,7 +20,8 @@ namespace logicsim {
 //
 
 auto draw_logic_item_above(ElementType type) -> bool {
-    return type == ElementType::button;
+    using enum ElementType;
+    return type == button || type == led;
 }
 
 auto get_logic_item_state(layout::ConstElement element, const Selection* selection)
@@ -182,6 +183,24 @@ auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
     draw_logic_item_label(ctx, point_fine_t {1., element_height / 2.0},
                           standard_element_label(element.element_type()), element, state,
                           settings);
+}
+
+auto draw_led(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
+              const RenderSettings& settings,
+              std::optional<simulation_view::ConstElement> logic_state) -> void {
+    const auto logic_value =
+        logic_state ? logic_state->input_value(connection_id_t {0}) : false;
+
+    const auto base_color =
+        logic_value ? defaults::led_color_enabled : defaults::led_color_disabled;
+
+    draw_circle(ctx, point_fine_t {element.position()},
+                grid_fine_t {defaults::led_radius},
+                CircleAttributes {
+                    .fill_color = with_alpha_runtime(base_color, state),
+                    .stroke_color = get_logic_item_stroke_color(state),
+                },
+                settings);
 }
 
 auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
@@ -367,6 +386,8 @@ auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
         case xor_element:
             return draw_standard_element(ctx, element, state, settings);
 
+        case led:
+            return draw_led(ctx, element, state, settings, logic_state);
         case button:
             return draw_button(ctx, element, state, settings, logic_state);
 

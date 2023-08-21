@@ -804,6 +804,8 @@ auto draw_logic_item(BLContext& ctx, layout::ConstElement element, bool selected
         case xor_element:
             return draw_standard_element(ctx, element, selected, settings);
 
+        case led:
+            return;
         case button:
             return draw_button(ctx, element, selected, settings);
 
@@ -846,6 +848,8 @@ auto draw_logic_item(BLContext& ctx, Schematic::ConstElement element,
             return draw_standard_element(ctx, element, layout, simulation, selected,
                                          settings);
 
+        case led:
+            return;
         case button:
             return draw_button(ctx, element, layout, simulation, selected, settings);
 
@@ -1204,13 +1208,13 @@ auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
 // Caches
 //
 
-auto render_input_marker(BLContext& ctx, point_t point, color_t color,
-                         orientation_t orientation, double size,
-                         const RenderSettings& settings) -> void {
+auto _directed_input_marker(BLContext& ctx, point_t point, color_t color,
+                            orientation_t orientation, double size,
+                            const RenderSettings& settings) -> void {
     auto _ = ContextGuard {ctx};
 
     ctx.setStrokeWidth(1);
-    ctx.setStrokeStyle(BLRgba32(color.value));
+    ctx.setStrokeStyle(color);
 
     const auto [x, y] = to_context(point, settings.view_config);
     const auto d = to_context(size, settings.view_config);
@@ -1224,6 +1228,43 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
     ctx.strokeArc(BLArc {0, 0, d, d, -pi / 2, pi});
     ctx.strokeLine(BLLine {-d, -d, 0, -d});
     ctx.strokeLine(BLLine {-d, +d, 0, +d});
+}
+
+auto _undirected_input_marker(BLContext& ctx, point_t point, color_t color,
+                              orientation_t orientation, double size,
+                              const RenderSettings& settings) -> void {
+    auto _ = ContextGuard {ctx};
+
+    ctx.setStrokeWidth(1);
+    ctx.setStrokeStyle(color);
+
+    const auto [x, y] = to_context(point, settings.view_config);
+    const auto d = to_context(size, settings.view_config);
+    const auto h = d / 2;
+
+    ctx.translate(BLPoint {x + 0.5, y + 0.5});
+
+    ctx.strokeLine(BLLine {-d, -d, -h, -d});
+    ctx.strokeLine(BLLine {+h, -d, +d, -d});
+
+    ctx.strokeLine(BLLine {-d, -d, -d, -h});
+    ctx.strokeLine(BLLine {-d, +h, -d, +d});
+
+    ctx.strokeLine(BLLine {+d, -d, +d, -h});
+    ctx.strokeLine(BLLine {+d, +h, +d, +d});
+
+    ctx.strokeLine(BLLine {-d, +d, -h, +d});
+    ctx.strokeLine(BLLine {+h, +d, +d, +d});
+}
+
+auto render_input_marker(BLContext& ctx, point_t point, color_t color,
+                         orientation_t orientation, double size,
+                         const RenderSettings& settings) -> void {
+    if (orientation == orientation_t::undirected) {
+        _undirected_input_marker(ctx, point, color, orientation, size, settings);
+    } else {
+        _directed_input_marker(ctx, point, color, orientation, size, settings);
+    }
 }
 
 auto render_undirected_output(BLContext& ctx, point_t position, double size,

@@ -21,6 +21,8 @@ auto format(InteractionState state) -> std::string {
             return "insert_wire";
         case insert_button:
             return "insert_button";
+        case insert_led:
+            return "insert_led";
 
         case insert_and_element:
             return "insert_and_element";
@@ -73,12 +75,21 @@ auto to_logic_item_definition(InteractionState state, std::size_t default_input_
             return LogicItemDefinition {
                 .element_type = ElementType::wire,
                 .input_count = 0,
+                .output_count = 0,
                 .orientation = orientation_t::undirected,
             };
         case insert_button:
             return LogicItemDefinition {
                 .element_type = ElementType::button,
                 .input_count = 0,
+                .output_count = 1,
+                .orientation = orientation_t::undirected,
+            };
+        case insert_led:
+            return LogicItemDefinition {
+                .element_type = ElementType::led,
+                .input_count = 1,
+                .output_count = 0,
                 .orientation = orientation_t::undirected,
             };
 

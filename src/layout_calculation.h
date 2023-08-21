@@ -92,6 +92,10 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             return true;
         }
 
+        case led: {
+            // has no body
+            return true;
+        }
         case button: {
             // has no body
             return true;
@@ -251,6 +255,11 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
                 }
             }
             return true;
+        }
+
+        case led: {
+            require_equal(data.input_count, 1);
+            return next_input(data.position, orientation_t::undirected);
         }
 
         case button: {
@@ -417,9 +426,13 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
                 transform(data.orientation, orientation_t::right));
         }
 
+        case led: {
+            require_equal(data.output_count, 0);
+            return true;
+        }
+
         case button: {
             require_equal(data.output_count, 1);
-
             return next_output(data.position, data.orientation);
         }
 

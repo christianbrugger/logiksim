@@ -203,6 +203,9 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
             return input_count >= 2 && output_count == 1;
         }
 
+        case led: {
+            return input_count == 1 && output_count == 0;
+        }
         case button: {
             return input_count == 0 && output_count == 1;
         }
@@ -240,7 +243,7 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
         return true;
     }
 
-    if (element_type == ElementType::button) {
+    if (element_type == ElementType::button || element_type == ElementType::led) {
         return orientation == orientation_t::undirected;
     }
 
@@ -275,6 +278,9 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             return transform(data.position, data.orientation, {0, 0}, {2, y2});
         }
 
+        case led: {
+            return rect_t {data.position, data.position};
+        }
         case button: {
             return rect_t {data.position, data.position};
         }
