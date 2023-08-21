@@ -34,6 +34,9 @@ enum class ElementType : uint8_t {
 
     button,
     led,
+    display_number,
+    display_ascii,
+
     clock_generator,
     flipflop_jk,
     shift_register,

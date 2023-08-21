@@ -345,6 +345,7 @@ if (LS_ENABLE_PCH)
         <boost/random/mersenne_twister.hpp>
         <boost/random/uniform_int_distribution.hpp>
         <fmt/core.h>
+        <fmt/format.h>
         <folly/small_vector.h>
         <gsl/gsl>
         
@@ -360,6 +361,7 @@ if (LS_ENABLE_PCH)
         <functional>
         <iostream>
         <iterator>
+        <locale>
         <optional>
         <ostream>
         <queue>

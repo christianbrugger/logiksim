@@ -804,10 +804,12 @@ auto draw_logic_item(BLContext& ctx, layout::ConstElement element, bool selected
         case xor_element:
             return draw_standard_element(ctx, element, selected, settings);
 
-        case led:
-            return;
         case button:
             return draw_button(ctx, element, selected, settings);
+        case led:
+        case display_number:
+        case display_ascii:
+            return;
 
         case clock_generator:
             return draw_clock_generator(ctx, element, selected, settings);
@@ -848,10 +850,12 @@ auto draw_logic_item(BLContext& ctx, Schematic::ConstElement element,
             return draw_standard_element(ctx, element, layout, simulation, selected,
                                          settings);
 
-        case led:
-            return;
         case button:
             return draw_button(ctx, element, layout, simulation, selected, settings);
+        case led:
+        case display_number:
+        case display_ascii:
+            return;
 
         case clock_generator:
             return draw_clock_generator(ctx, element, layout, simulation, selected,

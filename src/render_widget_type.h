@@ -19,6 +19,8 @@ enum class InteractionState {
     insert_wire,
     insert_button,
     insert_led,
+    insert_display_number,
+    insert_display_ascii,
 
     insert_and_element,
     insert_or_element,

@@ -208,7 +208,8 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
 
 [[nodiscard]] constexpr auto has_no_logic(const ElementType type) noexcept -> bool {
     using enum ElementType;
-    return type == placeholder || type == led;
+    return type == placeholder || type == led || type == display_ascii ||
+           type == display_number;
 }
 
 [[nodiscard]] constexpr auto internal_state_size(const ElementType type) noexcept
@@ -226,10 +227,14 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case xor_element:
             return 0;
 
-        case led:
-            return 0;
         case button:
             return 1;
+
+        case led:
+        case display_ascii:
+        case display_number:
+            return 0;
+
         case clock_generator:
             return 1;
         case flipflop_jk:
@@ -552,6 +557,12 @@ auto invert_inputs(logic_small_vector_t &values, const logic_small_vector_t &inv
     for (auto i : range(std::ssize(values))) {
         values[i] ^= inverters[i];
     }
+}
+
+auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &inverters)
+    -> logic_small_vector_t {
+    invert_inputs(values, inverters);
+    return values;
 }
 
 auto Simulation::process_event_group(event_group_t &&events) -> void {

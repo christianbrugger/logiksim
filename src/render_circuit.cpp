@@ -1,16 +1,19 @@
-#include "render_circuit.h"
+﻿#include "render_circuit.h"
 
 #include "collision.h"
 #include "concept.h"
 #include "editable_circuit/selection.h"
 #include "layout.h"
 #include "layout_calculation.h"
+#include "range.h"
 #include "simulation.h"
 #include "simulation_view.h"
 #include "timer.h"
 
+#include <fmt/format.h>
 #include <gsl/gsl>
 
+#include <locale>
 #include <numbers>
 
 namespace logicsim {
@@ -172,7 +175,7 @@ auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
                            ElementDrawState state, const RenderSettings& settings)
     -> void {
     const auto element_height =
-        std::max(element.input_count(), element.output_count()) - 1;
+        std::max(element.input_count(), element.output_count()) - std::size_t {1};
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., -padding},
@@ -183,6 +186,21 @@ auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
     draw_logic_item_label(ctx, point_fine_t {1., element_height / 2.0},
                           standard_element_label(element.element_type()), element, state,
                           settings);
+}
+
+auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
+                 const RenderSettings& settings,
+                 std::optional<simulation_view::ConstElement> logic_state) -> void {
+    const auto padding = defaults::button_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {-padding, -padding},
+        point_fine_t {+padding, +padding},
+    };
+    const auto logic_value = logic_state ? logic_state->internal_state(0) : false;
+
+    draw_logic_item_rect(ctx, rect, element, state, settings,
+                         {.custom_fill_color = defaults::button_body_color});
+    draw_binary_value(ctx, point_fine_t {0, 0}, logic_value, element, state, settings);
 }
 
 auto draw_led(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
@@ -203,19 +221,90 @@ auto draw_led(BLContext& ctx, layout::ConstElement element, ElementDrawState sta
                 settings);
 }
 
-auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
-                 const RenderSettings& settings,
-                 std::optional<simulation_view::ConstElement> logic_state) -> void {
-    const auto padding = defaults::button_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {-padding, -padding},
-        point_fine_t {+padding, +padding},
-    };
-    const auto logic_value = logic_state ? logic_state->internal_state(0) : false;
+auto draw_display_number(BLContext& ctx, layout::ConstElement element,
+                         ElementDrawState state, const RenderSettings& settings,
+                         std::optional<simulation_view::ConstElement> logic_state)
+    -> void {
+    const auto input_count = element.input_count();
+    const auto element_width = grid_fine_t {display_number_width(input_count)};
+    const auto element_height = grid_fine_t {display_number_height(input_count)};
+    const auto padding = defaults::logic_item_body_overdraw;
 
+    const auto rect = rect_fine_t {
+        point_fine_t {0., -padding},
+        point_fine_t {element_width, element_height + padding},
+    };
+    draw_logic_item_rect(ctx, rect, element, state, settings);
+
+    if (input_count > 65) {
+        return;
+    }
+
+    // text rect
+    const auto text_x = 1. + (element_width - 1.) / 2.;
+    const auto text_y = (element_height - 1.) / 2.;
+
+    const auto text_rect = rect_fine_t {
+        point_fine_t {1. + 0.2, text_y - 0.7},
+        point_fine_t {element_width - 0.2, text_y + 0.7},
+    };
+    draw_logic_item_rect(
+        ctx, text_rect, element, state, settings,
+        LogicItemRectAttributes {.custom_fill_color = defaults::color_white});
+
+    // number
+    if (logic_state) {
+        const auto& values = logic_state->input_values();
+        const auto& inverters = element.input_inverters();
+        const auto enabled = values.at(0) ^ inverters.at(0);
+
+        if (enabled) {
+            auto number = uint64_t {0};
+            for (const auto i : reverse_range(std::size_t {1}, values.size())) {
+                number = (number << 1) + (values.at(i) ^ inverters.at(i));
+            }
+
+            // use thousand delimiters
+            const auto text = fmt::format(std::locale("en_US.UTF-8"), "{:L}", number);
+            draw_logic_item_label(ctx, point_fine_t {text_x, text_y}, text, element,
+                                  state, settings);
+        }
+    } else {
+        draw_logic_item_label(ctx, point_fine_t {text_x, text_y}, "0", element, state,
+                              settings);
+    }
+
+    // connector labels
+    static constexpr auto input_labels = string_array<65> {
+        "En",                                                                  //
+        "2⁰",  "2¹",  "2²",  "2³",  "2⁴",  "2⁵",  "2⁶",  "2⁷",  "2⁸",  "2⁹",   //
+        "2¹⁰", "2¹¹", "2¹²", "2¹³", "2¹⁴", "2¹⁵", "2¹⁶", "2¹⁷", "2¹⁸", "2¹⁹",  //
+        "2²⁰", "2²¹", "2²²", "2²³", "2²⁴", "2²⁵", "2²⁶", "2²⁷", "2²⁸", "2²⁹",  //
+        "2³⁰", "2³¹", "2³²", "2³³", "2³⁴", "2³⁵", "2³⁶", "2³⁷", "2³⁸", "2³⁹",  //
+        "2⁴⁰", "2⁴¹", "2⁴²", "2⁴³", "2⁴⁴", "2⁴⁵", "2⁴⁶", "2⁴⁷", "2⁴⁸", "2⁴⁹",  //
+        "2⁵⁰", "2⁵¹", "2⁵²", "2⁵³", "2⁵⁴", "2⁵⁵", "2⁵⁶", "2⁵⁷", "2⁵⁸", "2⁵⁹",  //
+        "2⁶⁰", "2⁶¹", "2⁶²", "2⁶³"                                             //
+    };
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, {}}, element, state,
+                          settings);
+}
+
+auto draw_display_ascii(BLContext& ctx, layout::ConstElement element,
+                        ElementDrawState state, const RenderSettings& settings,
+                        std::optional<simulation_view::ConstElement> logic_state)
+    -> void {
+    const auto padding = defaults::logic_item_body_overdraw;
+    const auto rect = rect_fine_t {
+        point_fine_t {0., -padding},
+        point_fine_t {2., 6 + padding},
+    };
     draw_logic_item_rect(ctx, rect, element, state, settings,
                          {.custom_fill_color = defaults::button_body_color});
-    draw_binary_value(ctx, point_fine_t {0, 0}, logic_value, element, state, settings);
+    // draw_binary_value(ctx, point_fine_t {0, 0}, logic_value, element, state,
+    // settings);
+    // static constexpr auto input_labels = string_array<3> {"1", "2", "en"};
+    // draw_connector_labels(ctx, ConnectorLabels {input_labels, {}}, element, state,
+    //                      settings);
 }
 
 auto draw_buffer(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
@@ -319,7 +408,8 @@ auto draw_latch_d(BLContext& ctx, layout::ConstElement element, ElementDrawState
     };
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
-    // draw_logic_item_label(ctx, point_fine_t {1., 0.5}, "L", element, state, settings);
+    // draw_logic_item_label(ctx, point_fine_t {1., 0.5}, "L", element, state,
+    // settings);
 
     static constexpr auto input_labels = string_array<2> {"E", "D"};
     static constexpr auto output_labels = string_array<1> {"Q"};
@@ -336,7 +426,8 @@ auto draw_flipflop_d(BLContext& ctx, layout::ConstElement element, ElementDrawSt
     };
 
     draw_logic_item_rect(ctx, rect, element, state, settings);
-    // draw_logic_item_label(ctx, point_fine_t {1.5, 1.}, "FF", element, state, settings);
+    // draw_logic_item_label(ctx, point_fine_t {1.5, 1.}, "FF", element, state,
+    // settings);
 
     static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
     static constexpr auto output_labels = string_array<1> {"Q"};
@@ -386,10 +477,14 @@ auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
         case xor_element:
             return draw_standard_element(ctx, element, state, settings);
 
-        case led:
-            return draw_led(ctx, element, state, settings, logic_state);
         case button:
             return draw_button(ctx, element, state, settings, logic_state);
+        case led:
+            return draw_led(ctx, element, state, settings, logic_state);
+        case display_number:
+            return draw_display_number(ctx, element, state, settings, logic_state);
+        case display_ascii:
+            return draw_display_ascii(ctx, element, state, settings, logic_state);
 
         case clock_generator:
             return draw_clock_generator(ctx, element, state, settings);
@@ -1171,7 +1266,8 @@ auto build_layers(const Layout& layout, LayersCache& layers, const Selection* se
                     add_selected_wire_parts(element, *selection, layers.selected_wires);
                 }
             } else {
-                // fine grained check, as uninserted trees can contain a lot of segments
+                // fine grained check, as uninserted trees can contain a lot of
+                // segments
                 for (const auto& info : element.segment_tree().segment_infos()) {
                     if (is_colliding(info.line, scene_rect)) {
                         // layers.uninserted_wires.push_back(info);

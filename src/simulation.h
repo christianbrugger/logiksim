@@ -33,6 +33,9 @@
 
 namespace logicsim {
 
+auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &inverters)
+    -> logic_small_vector_t;
+
 namespace simulation {
 class HistoryView;
 class HistoryIterator;

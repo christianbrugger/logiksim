@@ -32,6 +32,7 @@ constexpr static inline auto line_selection_padding = 0.3;
 [[nodiscard]] auto orientations_compatible(orientation_t a, orientation_t b) -> bool;
 
 auto require_min(std::size_t value, std::size_t count) -> void;
+auto require_max(std::size_t value, std::size_t count) -> void;
 auto require_equal(std::size_t value, std::size_t count) -> void;
 
 namespace detail {
@@ -49,6 +50,9 @@ auto connector_point(point_t position, orientation_t orientation, grid_fine_t of
     -> point_fine_t;
 auto connector_point(BLPoint position, orientation_t orientation, double offset)
     -> BLPoint;
+
+auto display_number_width(std::size_t input_count) -> grid_t;
+auto display_number_height(std::size_t input_count) -> grid_t;
 
 /// next_point(point_t position) -> bool;
 template <typename Func>
@@ -97,6 +101,14 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             return true;
         }
         case button: {
+            // has no body
+            return true;
+        }
+        case display_number: {
+            // has no body
+            return true;
+        }
+        case display_ascii: {
             // has no body
             return true;
         }
@@ -261,9 +273,46 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             require_equal(data.input_count, 1);
             return next_input(data.position, orientation_t::undirected);
         }
-
         case button: {
             require_equal(data.input_count, 0);
+            return true;
+        }
+        case display_number: {
+            require_min(data.input_count, 2);
+            require_max(data.input_count, 65);
+
+            // input enable
+            {
+                const auto y = display_number_height(data.input_count);
+                if (!next_input(
+                        transform(data.position, data.orientation, point_t {2, y}),
+                        transform(data.orientation, orientation_t::down))) {
+                    return false;
+                }
+            }
+
+            // 2^0 - 2^x
+            for (auto i : range(data.input_count - std::size_t {1})) {
+                const auto y = grid_t {i};
+                if (!next_input(
+                        transform(data.position, data.orientation, point_t {0, y}),
+                        transform(data.orientation, orientation_t::left))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case display_ascii: {
+            require_equal(data.input_count, 7);
+
+            for (auto i : range(data.input_count)) {
+                const auto y = grid_t {i};
+                if (!next_input(
+                        transform(data.position, data.orientation, point_t {0, y}),
+                        transform(data.orientation, orientation_t::left))) {
+                    return false;
+                }
+            }
             return true;
         }
 
@@ -384,6 +433,7 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             throw_exception("not implemented");
         }
     }
+
     throw_exception("'Don't know to calculate input locations.");
 }
 
@@ -430,10 +480,17 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
             require_equal(data.output_count, 0);
             return true;
         }
-
         case button: {
             require_equal(data.output_count, 1);
             return next_output(data.position, data.orientation);
+        }
+        case display_number: {
+            require_equal(data.output_count, 0);
+            return true;
+        }
+        case display_ascii: {
+            require_equal(data.output_count, 0);
+            return true;
         }
 
         case clock_generator: {

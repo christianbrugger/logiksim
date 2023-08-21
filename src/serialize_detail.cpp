@@ -22,8 +22,11 @@ struct glz::meta<logicsim::ElementType> {
         "or_element", or_element,          //
         "xor_element", xor_element,        //
 
-        "button", button,                          //
-        "led", led,                                //
+        "button", button,                  //
+        "led", led,                        //
+        "display_number", display_number,  //
+        "display_ascii", display_ascii,    //
+
         "clock_generator", clock_generator,        //
         "flipflop_jk", flipflop_jk,                //
         "shift_register", shift_register,          //
