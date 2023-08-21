@@ -9,6 +9,20 @@
 namespace logicsim {
 
 //
+// orientation_t
+//
+
+auto is_horizontal(orientation_t orientation) noexcept -> bool {
+    using enum orientation_t;
+    return orientation == left || orientation == right;
+}
+
+auto is_vertical(orientation_t orientation) noexcept -> bool {
+    using enum orientation_t;
+    return orientation == up || orientation == down;
+}
+
+//
 // grid_t
 //
 

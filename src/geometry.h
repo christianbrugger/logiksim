@@ -8,6 +8,13 @@
 namespace logicsim {
 
 //
+// orientation_t
+//
+
+auto is_horizontal(orientation_t orientation) noexcept -> bool;
+auto is_vertical(orientation_t orientation) noexcept -> bool;
+
+//
 // grid_t
 //
 

@@ -19,7 +19,7 @@ struct RenderSettings;
 
 namespace defaults {
 constexpr inline static auto use_view_config_stroke_width = int {-1};
-constexpr inline static auto maximum_rounding = double {-1};
+constexpr inline static auto maximum_rounding = grid_fine_t {-1};
 }  // namespace defaults
 
 //
@@ -207,6 +207,9 @@ enum class DrawType {
 template <>
 auto format(DrawType type) -> std::string;
 
+[[nodiscard]] auto do_fill(DrawType type) -> bool;
+[[nodiscard]] auto do_stroke(DrawType type) -> bool;
+
 //
 // Strokes
 //
@@ -291,13 +294,27 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
 struct RoundRectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
-    double rounding {defaults::maximum_rounding};
+    grid_fine_t rounding {defaults::maximum_rounding};
     color_t fill_color {defaults::color_white};
     color_t stroke_color {defaults::color_black};
 };
 
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
                      const RenderSettings& settings) -> void;
+
+//
+// Circle
+//
+
+struct CircleAttributes {
+    DrawType draw_type {DrawType::fill_and_stroke};
+    int stroke_width {defaults::use_view_config_stroke_width};
+    color_t fill_color {defaults::color_white};
+    color_t stroke_color {defaults::color_black};
+};
+
+auto draw_circle(BLContext& ctx, point_fine_t center, grid_fine_t radius,
+                 CircleAttributes attributes, const RenderSettings& settings) -> void;
 
 //
 // Text

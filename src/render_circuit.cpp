@@ -427,16 +427,16 @@ auto _draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
     const auto r = radius * settings.view_config.pixel_scale();
     const auto p = to_context(attributes.position, settings.view_config);
     const auto p_center = connector_point(p, attributes.orientation, r + width / 2.0);
+    const auto p_adjusted = is_horizontal(attributes.orientation)
+                                ? BLPoint {p_center.x, p_center.y + offset}
+                                : BLPoint {p_center.x + offset, p_center.y};
 
     const auto fill_color =
         with_alpha_runtime(defaults::inverted_connector_fill, attributes.state);
     const auto stroke_color = wire_color(attributes.is_enabled, attributes.state);
 
-    // TODO offset for vertical connectors
-
-    ctx.setStrokeWidth(width);
-    ctx.fillCircle(BLCircle {p_center.x, p_center.y + offset, r}, fill_color);
-    ctx.strokeCircle(BLCircle {p_center.x, p_center.y + offset, r}, stroke_color);
+    ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r + width / 2.0}, stroke_color);
+    ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r - width / 2.0}, fill_color);
 }
 
 auto _draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
@@ -870,11 +870,11 @@ auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
     const auto data = to_layout_calculation_data(element.layout(), element);
     const auto selection_rect = element_selection_rect(data);
 
-    ctx.setFillStyle(shadow_color(shadow_type));
     draw_round_rect(ctx, selection_rect,
                     {
                         .draw_type = DrawType::fill,
                         .rounding = element_shadow_rounding(data.element_type),
+                        .fill_color = shadow_color(shadow_type),
                     },
                     settings);
 }
@@ -891,11 +891,17 @@ template <input_range_of<ordered_line_t> View>
 auto draw_wire_shadows_impl(BLContext& ctx, View lines, shadow_t shadow_type,
                             const RenderSettings& settings) -> void {
     const auto color = shadow_color(shadow_type);
-    ctx.setFillStyle(BLRgba32(color.value));
 
     for (const ordered_line_t line : lines) {
         const auto selection_rect = element_selection_rect_rounded(line);
-        draw_round_rect(ctx, selection_rect, {.draw_type = DrawType::fill}, settings);
+        draw_round_rect(ctx, selection_rect,
+                        {
+                            .draw_type = DrawType::fill,
+                            .stroke_width = defaults::use_view_config_stroke_width,
+                            .fill_color = color,
+
+                        },
+                        settings);
     }
 }
 

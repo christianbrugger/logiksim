@@ -381,6 +381,16 @@ auto format(DrawType type) -> std::string {
 // Strokes
 //
 
+auto do_fill(DrawType type) -> bool {
+    using enum DrawType;
+    return type == fill || type == fill_and_stroke;
+}
+
+auto do_stroke(DrawType type) -> bool {
+    using enum DrawType;
+    return type == stroke || type == fill_and_stroke;
+}
+
 auto resolve_stroke_width(int attribute, const RenderSettings& settings) -> int {
     return attribute == defaults::use_view_config_stroke_width
                ? settings.view_config.stroke_width()
@@ -713,18 +723,35 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
                        ? std::min(w, h) / 2.0
                        : to_context(attributes.rounding, settings.view_config);
 
-    if (attributes.draw_type == DrawType::fill ||
-        attributes.draw_type == DrawType::fill_and_stroke) {
-        ctx.fillRoundRect(x0, y0, w, h, r);
+    if (do_fill(attributes.draw_type)) {
+        ctx.fillRoundRect(BLRoundRect {x0, y0, w, h, r}, attributes.fill_color);
     }
 
-    if (attributes.draw_type == DrawType::stroke ||
-        attributes.draw_type == DrawType::fill_and_stroke) {
+    if (do_stroke(attributes.draw_type)) {
         const auto width = resolve_stroke_width(attributes.stroke_width, settings);
         const auto offset = stroke_offset(width);
 
         ctx.setStrokeWidth(width);
-        ctx.strokeRoundRect(x0 + offset, y0 + offset, w, h, r);
+        ctx.strokeRoundRect(BLRoundRect {x0 + offset, y0 + offset, w, h, r},
+                            attributes.stroke_color);
+    }
+}
+
+//
+// Circle
+//
+
+auto draw_circle(BLContext& ctx, point_fine_t center, grid_fine_t radius,
+                 CircleAttributes attributes, const RenderSettings& settings) -> void {
+    const auto&& [x, y] = to_context(center, settings.view_config);
+    const auto r = to_context(radius, settings.view_config);
+
+    if (do_fill(attributes.draw_type)) {
+        ctx.fillCircle(BLCircle {x, y, r}, attributes.fill_color);
+    }
+    if (do_stroke(attributes.draw_type)) {
+        ctx.setStrokeWidth(attributes.stroke_width);
+        ctx.strokeCircle(BLCircle {x, y, r}, attributes.stroke_color);
     }
 }
 

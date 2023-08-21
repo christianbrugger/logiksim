@@ -811,6 +811,7 @@ auto RendererWidget::load_circuit(int id) -> void {
             .input_count = 3,
             .output_count = 1,
             .orientation = orientation_t::right,
+            .output_inverters = {true},
         };
 
         for (auto x : range(5, max_value, 5)) {
@@ -839,6 +840,7 @@ auto RendererWidget::load_circuit(int id) -> void {
             .input_count = 3,
             .output_count = 1,
             .orientation = orientation_t::right,
+            .output_inverters = {true},
         };
 
         for (auto x : range(5, max_value, 5)) {
