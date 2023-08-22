@@ -47,7 +47,7 @@ InteractiveSimulation::InteractiveSimulation(const Layout& layout, time_rate_t t
     : schematic_ {generate_schematic(layout, wire_delay_per_distance)},
       simulation_ {schematic_},
       interaction_cache_ {layout},
-      time_rate_ {time_rate},
+      simulation_time_rate_ {time_rate},
       simulation_time_reference_ {simulation_.time()},
       realtime_reference_ {timer_t::now()} {
     set_default_outputs(simulation_);
@@ -63,7 +63,7 @@ auto InteractiveSimulation::simulation() const -> const Simulation& {
     return simulation_;
 }
 
-auto InteractiveSimulation::set_time_rate(time_rate_t time_rate) -> void {
+auto InteractiveSimulation::set_simulation_time_rate(time_rate_t time_rate) -> void {
     if (time_rate < time_rate_t {0us}) [[unlikely]] {
         throw_exception("time rate cannot be negative");
     }
@@ -71,11 +71,11 @@ auto InteractiveSimulation::set_time_rate(time_rate_t time_rate) -> void {
     simulation_time_reference_ = expected_simulation_time();
     realtime_reference_ = timer_t::now();
 
-    time_rate_ = time_rate;
+    simulation_time_rate_ = time_rate;
 }
 
 auto InteractiveSimulation::time_rate() const -> time_rate_t {
-    return time_rate_;
+    return simulation_time_rate_;
 }
 
 auto InteractiveSimulation::time() const -> time_t {
@@ -119,7 +119,7 @@ auto InteractiveSimulation::expected_simulation_time() const -> time_t {
     const auto realtime_delta =
         std::chrono::duration<double> {timer_t::now() - realtime_reference_};
     const auto time_delta_double =
-        realtime_delta / 1000ms * time_rate_.rate_per_second.value;
+        realtime_delta / 1000ms * simulation_time_rate_.rate_per_second.value;
 
     const auto time_delta_int =
         std::chrono::duration_cast<time_t::value_type>(time_delta_double);

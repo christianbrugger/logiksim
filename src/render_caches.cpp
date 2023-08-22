@@ -10,7 +10,7 @@ namespace logicsim {
 
 auto _directed_input_marker(BLContext& ctx, point_t point, color_t color,
                             orientation_t orientation, double size,
-                            const RenderSettings& settings) -> void {
+                            const OldRenderSettings& settings) -> void {
     auto _ = ContextGuard {ctx};
 
     ctx.setStrokeWidth(1);
@@ -32,7 +32,7 @@ auto _directed_input_marker(BLContext& ctx, point_t point, color_t color,
 
 auto _undirected_input_marker(BLContext& ctx, point_t point, color_t color,
                               orientation_t orientation, double size,
-                              const RenderSettings& settings) -> void {
+                              const OldRenderSettings& settings) -> void {
     auto _ = ContextGuard {ctx};
 
     ctx.setStrokeWidth(1);
@@ -59,7 +59,7 @@ auto _undirected_input_marker(BLContext& ctx, point_t point, color_t color,
 
 auto render_input_marker(BLContext& ctx, point_t point, color_t color,
                          orientation_t orientation, double size,
-                         const RenderSettings& settings) -> void {
+                         const OldRenderSettings& settings) -> void {
     if (orientation == orientation_t::undirected) {
         _undirected_input_marker(ctx, point, color, orientation, size, settings);
     } else {
@@ -68,7 +68,7 @@ auto render_input_marker(BLContext& ctx, point_t point, color_t color,
 }
 
 auto render_undirected_output(BLContext& ctx, point_t position, double size,
-                              const RenderSettings& settings) {
+                              const OldRenderSettings& settings) {
     draw_point(ctx, position, PointShape::cross, defaults::color_green, size / 4,
                settings);
     draw_point(ctx, position, PointShape::plus, defaults::color_green, size / 3,
@@ -77,7 +77,7 @@ auto render_undirected_output(BLContext& ctx, point_t position, double size,
 
 auto render_editable_circuit_connection_cache(BLContext& ctx,
                                               const EditableCircuit& editable_circuit,
-                                              const RenderSettings& settings) -> void {
+                                              const OldRenderSettings& settings) -> void {
     const auto scene_rect = get_scene_rect(settings.view_config);
     const auto& caches = editable_circuit.caches();
 
@@ -107,7 +107,7 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
 
 auto render_editable_circuit_collision_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
-                                             const RenderSettings& settings) -> void {
+                                             const OldRenderSettings& settings) -> void {
     constexpr static auto color = defaults::color_orange;
     constexpr static auto size = 0.25;
 
@@ -168,7 +168,7 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
 
 auto render_editable_circuit_selection_cache(BLContext& ctx,
                                              const EditableCircuit& editable_circuit,
-                                             const RenderSettings& settings) -> void {
+                                             const OldRenderSettings& settings) -> void {
     const auto scene_rect = get_scene_rect_fine(settings.view_config);
     for (const rect_fine_t& rect : editable_circuit.caches().selection_rects()) {
         // TODO introduce is_visible

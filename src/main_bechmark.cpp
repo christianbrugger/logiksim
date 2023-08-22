@@ -149,7 +149,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
         ctx.end();
     }
 
-    auto settings = logicsim::RenderSettings {};
+    auto settings = logicsim::OldRenderSettings {};
     settings.view_config.set_size(img.width(), img.height());
 
     int64_t count = 0;

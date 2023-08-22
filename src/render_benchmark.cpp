@@ -262,7 +262,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
 
     // render image
     auto img = BLImage {1200, 1200, BL_FORMAT_PRGB32};
-    auto settings = RenderSettings {};
+    auto settings = OldRenderSettings {};
     settings.view_config.set_size(img.width(), img.height());
 
     auto ctx = BLContext {img};

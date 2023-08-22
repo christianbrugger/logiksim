@@ -100,7 +100,7 @@ auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRe
 }
 
 auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
-                     const RenderSettings& settings,
+                     const OldRenderSettings& settings,
                      std::function<void(BLContext&)> render_func) -> void {
     target_ctx.save();
 
@@ -128,9 +128,9 @@ auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_r
 // Layers Cache
 //
 
-auto LayersCache::format() const -> std::string {
+auto InteractiveLayers::format() const -> std::string {
     return fmt::format(
-        "LayersCache("
+        "InteractiveLayers("
         "\n  normal_below = {}"
         "\n  normal_wires = {}"
         "\n  normal_above = {}"
@@ -170,7 +170,7 @@ auto LayersCache::format() const -> std::string {
     );
 }
 
-auto LayersCache::clear() -> void {
+auto InteractiveLayers::clear() -> void {
     normal_below.clear();
     normal_wires.clear();
     normal_above.clear();
@@ -190,7 +190,7 @@ auto LayersCache::clear() -> void {
     overlay_bounding_rect.reset();
 }
 
-auto LayersCache::allocated_size() const -> std::size_t {
+auto InteractiveLayers::allocated_size() const -> std::size_t {
     return get_allocated_size(normal_below) +           //
            get_allocated_size(normal_wires) +           //
            get_allocated_size(normal_above) +           //
@@ -207,20 +207,20 @@ auto LayersCache::allocated_size() const -> std::size_t {
            get_allocated_size(colliding_wires);         //
 }
 
-auto LayersCache::has_inserted() const -> bool {
+auto InteractiveLayers::has_inserted() const -> bool {
     return !normal_below.empty() ||  //
            !normal_wires.empty() ||  //
            !normal_above.empty();
 }
 
-auto LayersCache::has_uninserted() const -> bool {
+auto InteractiveLayers::has_uninserted() const -> bool {
     return !uninserted_below.empty() ||  //
            !temporary_wires.empty() ||   //
            !colliding_wires.empty() ||   //
            !uninserted_above.empty();
 }
 
-auto LayersCache::has_overlay() const -> bool {
+auto InteractiveLayers::has_overlay() const -> bool {
     return !selected_logic_items.empty() ||   //
            !selected_wires.empty() ||         //
            !temporary_wires.empty() ||        //
@@ -230,7 +230,7 @@ auto LayersCache::has_overlay() const -> bool {
            !colliding_wires.empty();
 }
 
-auto LayersCache::calculate_overlay_bounding_rect() -> void {
+auto InteractiveLayers::calculate_overlay_bounding_rect() -> void {
     const auto update = [this](ordered_line_t line) { update_overlay_rect(*this, line); };
     const auto update_info = [this](segment_info_t info) {
         update_overlay_rect(*this, info.line);
@@ -259,19 +259,19 @@ auto update_bounding_rect(std::optional<rect_t>& target, ordered_line_t new_line
     }
 }
 
-auto update_uninserted_rect(LayersCache& layers, rect_t bounding_rect) -> void {
+auto update_uninserted_rect(InteractiveLayers& layers, rect_t bounding_rect) -> void {
     update_bounding_rect(layers.uninserted_bounding_rect, bounding_rect);
 }
 
-auto update_uninserted_rect(LayersCache& layers, ordered_line_t line) -> void {
+auto update_uninserted_rect(InteractiveLayers& layers, ordered_line_t line) -> void {
     update_bounding_rect(layers.uninserted_bounding_rect, line);
 }
 
-auto update_overlay_rect(LayersCache& layers, rect_t bounding_rect) -> void {
+auto update_overlay_rect(InteractiveLayers& layers, rect_t bounding_rect) -> void {
     update_bounding_rect(layers.overlay_bounding_rect, bounding_rect);
 }
 
-auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void {
+auto update_overlay_rect(InteractiveLayers& layers, ordered_line_t line) -> void {
     update_bounding_rect(layers.overlay_bounding_rect, line);
 }
 
@@ -279,9 +279,9 @@ auto update_overlay_rect(LayersCache& layers, ordered_line_t line) -> void {
 // Simulation Layers Cache
 //
 
-auto SimulationLayersCache::format() const -> std::string {
+auto SimulationLayers::format() const -> std::string {
     return fmt::format(
-        "LayersCache("
+        "InteractiveLayers("
         "\n  items_below = {}"
         "\n  wires = {}"
         "\n  items_above = {}"
@@ -293,31 +293,40 @@ auto SimulationLayersCache::format() const -> std::string {
     );
 }
 
-auto SimulationLayersCache::clear() -> void {
+auto SimulationLayers::clear() -> void {
     items_below.clear();
     wires.clear();
     items_above.clear();
 }
 
-auto SimulationLayersCache::allocated_size() const -> std::size_t {
+auto SimulationLayers::allocated_size() const -> std::size_t {
     return get_allocated_size(items_below) +  //
            get_allocated_size(wires) +        //
            get_allocated_size(items_above);
 }
 
 //
-// RenderSettings
+// OldRenderSettings
 //
 
-auto RenderSettings::format() const -> std::string {
+auto RenderConfig::format() const -> std::string {
     return fmt::format(
-        "RenderSettings(\n"
+        "OldRenderSettings(\n"
+        "  view_config = {},\n"
+        "  background_grid_min_distance = {},\n"
+        "  thread_count = {})",
+        view_config, background_grid_min_distance, thread_count);
+}
+
+auto OldRenderSettings::format() const -> std::string {
+    return fmt::format(
+        "OldRenderSettings(\n"
         "  view_config = {},\n"
         "  background_grid_min_distance = {})",
         view_config, background_grid_min_distance);
 }
 
-auto context_info(const RenderSettings& settings) -> BLContextCreateInfo {
+auto context_info(const OldRenderSettings& settings) -> BLContextCreateInfo {
     auto info = BLContextCreateInfo {};
     info.commandQueueLimit = 2048;
     info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
@@ -391,7 +400,7 @@ auto do_stroke(DrawType type) -> bool {
     return type == stroke || type == fill_and_stroke;
 }
 
-auto resolve_stroke_width(int attribute, const RenderSettings& settings) -> int {
+auto resolve_stroke_width(int attribute, const OldRenderSettings& settings) -> int {
     return attribute == defaults::use_view_config_stroke_width
                ? settings.view_config.stroke_width()
                : attribute;
@@ -439,7 +448,7 @@ auto format(PointShape type) -> std::string {
 }
 
 auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
-                double size, const RenderSettings& settings) -> void {
+                double size, const OldRenderSettings& settings) -> void {
     constexpr auto stroke_width = 1;
 
     switch (shape) {
@@ -550,7 +559,7 @@ auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
 //
 
 auto draw_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
-                double size, const RenderSettings& settings) -> void {
+                double size, const OldRenderSettings& settings) -> void {
     auto _ = ContextGuard {ctx};
 
     ctx.setStrokeWidth(1);
@@ -574,7 +583,7 @@ auto draw_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orie
 
 auto _draw_orthogonal_line_ordered(BLContext& ctx, const BLLine line,
                                    LineAttributes attributes,
-                                   const RenderSettings& settings) -> void {
+                                   const OldRenderSettings& settings) -> void {
     assert(line.x0 <= line.x1);
     assert(line.y0 <= line.y1);
 
@@ -603,7 +612,7 @@ auto _draw_orthogonal_line_ordered(BLContext& ctx, const BLLine line,
 }
 
 auto draw_orthogonal_line(BLContext& ctx, BLLine line, LineAttributes attributes,
-                          const RenderSettings& settings) -> void {
+                          const OldRenderSettings& settings) -> void {
     if (line.x0 > line.x1) {
         std::swap(line.x0, line.x1);
         std::swap(attributes.p0_endcap, attributes.p1_endcap);
@@ -617,17 +626,17 @@ auto draw_orthogonal_line(BLContext& ctx, BLLine line, LineAttributes attributes
 }
 
 auto draw_line(BLContext& ctx, const ordered_line_t line, LineAttributes attributes,
-               const RenderSettings& settings) -> void {
+               const OldRenderSettings& settings) -> void {
     draw_line(ctx, line_fine_t {line}, attributes, settings);
 }
 
 auto draw_line(BLContext& ctx, const line_t line, LineAttributes attributes,
-               const RenderSettings& settings) -> void {
+               const OldRenderSettings& settings) -> void {
     draw_line(ctx, line_fine_t {line}, attributes, settings);
 }
 
 auto draw_line(BLContext& ctx, const line_fine_t line, LineAttributes attributes,
-               const RenderSettings& settings) -> void {
+               const OldRenderSettings& settings) -> void {
     const auto [x0, y0] = to_context(line.p0, settings.view_config);
     const auto [x1, y1] = to_context(line.p1, settings.view_config);
 
@@ -639,7 +648,7 @@ auto draw_line(BLContext& ctx, const line_fine_t line, LineAttributes attributes
 //
 
 auto _draw_rect_stroke(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-                       const RenderSettings& settings) -> void {
+                       const OldRenderSettings& settings) -> void {
     const auto [x0, y0] = to_context(rect.p0, settings.view_config);
     const auto [x1, y1] = to_context(rect.p1, settings.view_config);
 
@@ -654,7 +663,7 @@ auto _draw_rect_stroke(BLContext& ctx, rect_fine_t rect, RectAttributes attribut
 }
 
 auto _draw_rect_fill(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-                     const RenderSettings& settings) -> void {
+                     const OldRenderSettings& settings) -> void {
     const auto [x0, y0] = to_context(rect.p0, settings.view_config);
     const auto [x1, y1] = to_context(rect.p1, settings.view_config);
 
@@ -666,7 +675,7 @@ auto _draw_rect_fill(BLContext& ctx, rect_fine_t rect, RectAttributes attributes
 
 auto _draw_rect_fill_and_stroke(BLContext& ctx, rect_fine_t rect,
                                 RectAttributes attributes,
-                                const RenderSettings& settings) {
+                                const OldRenderSettings& settings) {
     const auto stroke_width = resolve_stroke_width(attributes.stroke_width, settings);
 
     auto [x0, y0] = to_context(rect.p0, settings.view_config);
@@ -690,7 +699,7 @@ auto _draw_rect_fill_and_stroke(BLContext& ctx, rect_fine_t rect,
 }
 
 auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-               const RenderSettings& settings) -> void {
+               const OldRenderSettings& settings) -> void {
     switch (attributes.draw_type) {
         case DrawType::fill:
             return _draw_rect_fill(ctx, rect, attributes, settings);
@@ -704,7 +713,7 @@ auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
 }
 
 auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
-                     const RenderSettings& settings) -> void {
+                     const OldRenderSettings& settings) -> void {
     const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
     const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
 
@@ -743,7 +752,7 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 
 auto _draw_circle_fill_and_stroke(BLContext& ctx, point_fine_t center, grid_fine_t radius,
                                   CircleAttributes attributes,
-                                  const RenderSettings& settings) -> void {
+                                  const OldRenderSettings& settings) -> void {
     const auto&& [x0, y0] = to_context(
         point_fine_t {center.x - radius, center.y - radius}, settings.view_config);
     const auto&& [x1, y1] = to_context(
@@ -763,15 +772,15 @@ auto _draw_circle_fill_and_stroke(BLContext& ctx, point_fine_t center, grid_fine
 }
 
 auto _draw_circle_fill(BLContext& ctx, point_fine_t center, grid_fine_t radius,
-                       CircleAttributes attributes, const RenderSettings& settings)
+                       CircleAttributes attributes, const OldRenderSettings& settings)
     -> void {}
 
 auto _draw_circle_stroke(BLContext& ctx, point_fine_t center, grid_fine_t radius,
-                         CircleAttributes attributes, const RenderSettings& settings)
+                         CircleAttributes attributes, const OldRenderSettings& settings)
     -> void {}
 
 auto draw_circle(BLContext& ctx, point_fine_t center, grid_fine_t radius,
-                 CircleAttributes attributes, const RenderSettings& settings) -> void {
+                 CircleAttributes attributes, const OldRenderSettings& settings) -> void {
     switch (attributes.draw_type) {
         using enum DrawType;
 
@@ -792,7 +801,7 @@ auto draw_circle(BLContext& ctx, point_fine_t center, grid_fine_t radius,
 //
 
 auto draw_text(BLContext& ctx, point_fine_t position, std::string_view text,
-               TextAttributes attributes, const RenderSettings& settings) -> void {
+               TextAttributes attributes, const OldRenderSettings& settings) -> void {
     if (text.empty()) {
         return;
     }

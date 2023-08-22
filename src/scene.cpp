@@ -16,7 +16,7 @@ ViewConfig::ViewConfig() {
 
 auto ViewConfig::format() const -> std::string {
     return fmt::format(
-        "RenderSettings(\n"
+        "OldRenderSettings(\n"
         "  offset = {},\n"
         "  pixel_scale = {},\n"
         "  device_scale = {},\n"

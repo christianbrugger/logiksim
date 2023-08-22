@@ -128,7 +128,7 @@ constexpr auto with_alpha_runtime(color_t color, ElementDrawState state) noexcep
 // Background
 //
 
-auto render_background(BLContext& ctx, const RenderSettings& settings) -> void;
+auto render_background(BLContext& ctx, const OldRenderSettings& settings) -> void;
 
 //
 // Logic Items
@@ -148,7 +148,7 @@ struct LogicItemRectAttributes {
 };
 
 auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement element,
-                          ElementDrawState state, const RenderSettings& settings,
+                          ElementDrawState state, const OldRenderSettings& settings,
                           LogicItemRectAttributes attributes = {}) -> void;
 
 struct LogicItemTextAttributes {
@@ -161,28 +161,28 @@ struct LogicItemTextAttributes {
 
 auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view text,
                            layout::ConstElement element, ElementDrawState state,
-                           const RenderSettings& settings,
+                           const OldRenderSettings& settings,
                            LogicItemTextAttributes attributes = {}) -> void;
 
 auto draw_binary_value(BLContext& ctx, point_fine_t point, bool is_enabled,
                        layout::ConstElement element, ElementDrawState state,
-                       const RenderSettings& settings) -> void;
+                       const OldRenderSettings& settings) -> void;
 auto draw_binary_false(BLContext& ctx, point_fine_t point, layout::ConstElement element,
-                       ElementDrawState state, const RenderSettings& settings) -> void;
+                       ElementDrawState state, const OldRenderSettings& settings) -> void;
 
 auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
-                          ElementDrawState state, const RenderSettings& settings,
+                          ElementDrawState state, const OldRenderSettings& settings,
                           std::optional<simulation_view::ConstElement> logic_state = {})
     -> void;
 
 auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements,
-                           const RenderSettings& settings) -> void;
+                           const OldRenderSettings& settings) -> void;
 
 auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
                            std::span<const element_id_t> elements,
-                           SimulationView simulation_view, const RenderSettings& settings)
-    -> void;
+                           SimulationView simulation_view,
+                           const OldRenderSettings& settings) -> void;
 
 //
 // Connectors
@@ -197,24 +197,24 @@ struct ConnectorAttributes {
 };
 
 auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
-                    const RenderSettings& settings) -> void;
+                    const OldRenderSettings& settings) -> void;
 
 auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
-                                ElementDrawState state, const RenderSettings& settings)
+                                ElementDrawState state, const OldRenderSettings& settings)
     -> void;
 
 auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
-                                ElementDrawState state, const RenderSettings& settings,
+                                ElementDrawState state, const OldRenderSettings& settings,
                                 simulation_view::ConstElement logic_state) -> void;
 
 auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements,
-                                 const RenderSettings& settings) -> void;
+                                 const OldRenderSettings& settings) -> void;
 
 auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
                                  std::span<const element_id_t> elements,
                                  SimulationView simulation_view,
-                                 const RenderSettings& settings) -> void;
+                                 const OldRenderSettings& settings) -> void;
 
 template <std::size_t size>
 using string_array = std::array<std::string_view, size>;
@@ -226,11 +226,11 @@ struct ConnectorLabels {
 
 auto draw_connector_label(BLContext& ctx, point_t position, orientation_t orientation,
                           std::string_view label, ElementDrawState state,
-                          const RenderSettings& settings) -> void;
+                          const OldRenderSettings& settings) -> void;
 
 auto draw_connector_labels(BLContext& ctx, ConnectorLabels labels,
                            layout::ConstElement element, ElementDrawState state,
-                           const RenderSettings& settings) -> void;
+                           const OldRenderSettings& settings) -> void;
 
 //
 // Wires
@@ -240,7 +240,7 @@ auto wire_color(bool is_enabled) -> color_t;
 auto wire_color(bool is_enabled, ElementDrawState state) -> color_t;
 
 auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
-                           ElementDrawState state, const RenderSettings& settings)
+                           ElementDrawState state, const OldRenderSettings& settings)
     -> void;
 
 struct SegmentAttributes {
@@ -250,13 +250,13 @@ struct SegmentAttributes {
 };
 
 auto draw_line_segment(BLContext& ctx, ordered_line_t line, SegmentAttributes attributes,
-                       ElementDrawState state, const RenderSettings& settings) -> void;
+                       ElementDrawState state, const OldRenderSettings& settings) -> void;
 
 auto draw_line_segment(BLContext& ctx, line_fine_t line, SegmentAttributes attributes,
-                       ElementDrawState state, const RenderSettings& settings) -> void;
+                       ElementDrawState state, const OldRenderSettings& settings) -> void;
 
 auto draw_line_segment(BLContext& ctx, segment_info_t info, bool is_enabled,
-                       ElementDrawState state, const RenderSettings& settings) -> void;
+                       ElementDrawState state, const OldRenderSettings& settings) -> void;
 
 //
 // Overlay
@@ -277,11 +277,11 @@ auto shadow_color(shadow_t shadow_type) -> color_t;
 // Layout
 //
 
-auto render_layout(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
-    -> void;
+auto render_layout(BLContext& ctx, const Layout& layout,
+                   const OldRenderSettings& settings) -> void;
 
 auto render_layout(BLContext& ctx, const Layout& layout, const Selection& selection,
-                   const RenderSettings& settings) -> void;
+                   const OldRenderSettings& settings) -> void;
 
 auto render_layout_to_file(const Layout& layout, int width, int height,
                            std::string filename, const ViewConfig& view_config = {})
@@ -297,7 +297,7 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, int
 // TODO use SimulationResult instead of Simulation
 
 auto render_simulation(BLContext& ctx, const Layout& layout,
-                       SimulationView simulation_view, const RenderSettings& settings)
+                       SimulationView simulation_view, const OldRenderSettings& settings)
     -> void;
 
 auto render_layout_to_file(const Layout& layout, SimulationView simulation_view,

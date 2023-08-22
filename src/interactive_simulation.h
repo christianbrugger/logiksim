@@ -54,7 +54,7 @@ class InteractiveSimulation {
     [[nodiscard]] auto schematic() const -> const Schematic&;
     [[nodiscard]] auto simulation() const -> const Simulation&;
 
-    auto set_time_rate(time_rate_t time_rate) -> void;
+    auto set_simulation_time_rate(time_rate_t time_rate) -> void;
     [[nodiscard]] auto time_rate() const -> time_rate_t;
     [[nodiscard]] auto time() const -> time_t;
 
@@ -71,7 +71,7 @@ class InteractiveSimulation {
     Schematic schematic_;
     Simulation simulation_;
     detail::interactive_simulation::InteractionCache interaction_cache_;
-    time_rate_t time_rate_;
+    time_rate_t simulation_time_rate_;
 
     time_t simulation_time_reference_ {};
     realtime_t realtime_reference_ {};

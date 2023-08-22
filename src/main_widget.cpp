@@ -280,7 +280,7 @@ auto MainWidget::build_time_rate_slider() -> QWidget* {
 
     connect(slider, &QSlider::valueChanged, this, [this, label](int value) {
         const auto rate = from_slider_scale(value);
-        render_widget_->set_time_rate(rate);
+        render_widget_->set_simulation_time_rate(rate);
 
         label->setText(QString::fromStdString(fmt::format("{}", rate)));
     });

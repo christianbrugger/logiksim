@@ -669,11 +669,11 @@ auto RendererWidget::set_default_input_count(std::size_t count) -> void {
     default_input_count_ = count;
 }
 
-auto RendererWidget::set_time_rate(time_rate_t time_rate) -> void {
-    time_rate_ = time_rate;
+auto RendererWidget::set_simulation_time_rate(time_rate_t time_rate) -> void {
+    simulation_time_rate_ = time_rate;
 
     if (simulation_) {
-        simulation_->set_time_rate(time_rate);
+        simulation_->set_simulation_time_rate(time_rate);
     }
 }
 
@@ -693,7 +693,7 @@ auto RendererWidget::default_input_count() const -> std::size_t {
 }
 
 auto RendererWidget::time_rate() const -> time_rate_t {
-    return time_rate_;
+    return simulation_time_rate_;
 }
 
 auto RendererWidget::wire_delay_per_distance() const -> delay_t {
@@ -911,7 +911,7 @@ Q_SLOT void RendererWidget::on_simulation_timeout() {
     }
     if (!simulation_) {
         auto t = Timer {"Generate simulation", Timer::Unit::ms, 3};
-        simulation_.emplace(editable_circuit_->layout(), time_rate_,
+        simulation_.emplace(editable_circuit_->layout(), simulation_time_rate_,
                             wire_delay_per_distance_);
 
         if (simulation_->schematic().element_count() < 30) {

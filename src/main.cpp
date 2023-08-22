@@ -51,7 +51,8 @@ auto generate_layout() -> Layout {
 }
 
 auto render_single_layer(BLImage& img, const Layout& layout,
-                         const RenderSettings& settings, unsigned int threads) -> void {
+                         const OldRenderSettings& settings, unsigned int threads)
+    -> void {
     const auto info = BLContextCreateInfo {.threadCount = threads};
     auto ctx = BLContext {img, info};
 
@@ -67,7 +68,7 @@ auto render_single_layer(BLImage& img, const Layout& layout,
 auto benchmark_single_layer(const Layout& layout, int width, int height,
                             unsigned int threads) -> BLImage {
     auto img = BLImage {width, height, BL_FORMAT_PRGB32};
-    const auto settings = RenderSettings {};
+    const auto settings = OldRenderSettings {};
 
     for (auto _ [[maybe_unused]] : range(10)) {
         const auto t = Timer("single");
@@ -84,7 +85,7 @@ auto benchmark_single_layer(const Layout& layout, int width, int height,
 //
 
 auto render_multi_layer(std::vector<BLImage>& images, const Layout& layout,
-                        const RenderSettings& settings, unsigned int threads) -> void {
+                        const OldRenderSettings& settings, unsigned int threads) -> void {
     const auto info = BLContextCreateInfo {.threadCount = threads};
 
     auto contexts = std::vector<BLContext> {};
@@ -118,7 +119,7 @@ auto render_multi_layer(std::vector<BLImage>& images, const Layout& layout,
 
 auto benchmark_multi_layer(const Layout& layout, int width, int height,
                            unsigned int threads) -> std::vector<BLImage> {
-    const auto settings = RenderSettings {};
+    const auto settings = OldRenderSettings {};
     const auto n = 2;
 
     auto images = std::vector<BLImage> {};
