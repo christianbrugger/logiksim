@@ -95,6 +95,10 @@ constexpr static inline auto colliding = color_t {255, 0, 0, 96};
 
 }  // namespace defaults
 
+//
+// Colors
+//
+
 constexpr auto state_alpha(ElementDrawState state) noexcept -> color_t::value_type {
     switch (state) {
         using enum ElementDrawState;
@@ -262,6 +266,90 @@ auto format(shadow_t state) -> std::string;
 auto shadow_color(shadow_t shadow_type) -> color_t;
 
 //
+// Interactive Layers
+//
+
+struct InteractiveLayers {
+    // inserted
+    std::vector<DrawableElement> normal_below;
+    std::vector<element_id_t> normal_wires;
+    std::vector<DrawableElement> normal_above;
+
+    // uninserted
+    std::vector<DrawableElement> uninserted_below;
+    std::vector<DrawableElement> uninserted_above;
+
+    // selected & temporary
+    std::vector<element_id_t> selected_logic_items;
+    std::vector<ordered_line_t> selected_wires;
+    std::vector<segment_info_t> temporary_wires;
+    // valid
+    std::vector<element_id_t> valid_logic_items;
+    std::vector<ordered_line_t> valid_wires;
+    // colliding
+    std::vector<element_id_t> colliding_logic_items;
+    std::vector<segment_info_t> colliding_wires;
+
+   public:
+    std::optional<rect_t> uninserted_bounding_rect;
+    std::optional<rect_t> overlay_bounding_rect;
+
+   public:
+    auto format() const -> std::string;
+    auto clear() -> void;
+    auto allocated_size() const -> std::size_t;
+
+    [[nodiscard]] auto has_inserted() const -> bool;
+    [[nodiscard]] auto has_uninserted() const -> bool;
+    [[nodiscard]] auto has_overlay() const -> bool;
+
+    auto calculate_overlay_bounding_rect() -> void;
+};
+
+auto update_uninserted_rect(InteractiveLayers& layers, rect_t bounding_rect) -> void;
+auto update_uninserted_rect(InteractiveLayers& layers, ordered_line_t line) -> void;
+auto update_overlay_rect(InteractiveLayers& layers, rect_t bounding_rect) -> void;
+auto update_overlay_rect(InteractiveLayers& layers, ordered_line_t line) -> void;
+
+//
+// Simulation Layers
+//
+
+struct SimulationLayers {
+    // inserted
+    std::vector<element_id_t> items_below;
+    std::vector<element_id_t> wires;
+    std::vector<element_id_t> items_above;
+
+   public:
+    auto format() const -> std::string;
+    auto clear() -> void;
+    auto allocated_size() const -> std::size_t;
+};
+
+//
+// Circuit Context
+//
+
+struct CircuitSurfaces {
+    LayerSurface layer_surface_uninserted {.enabled = true};
+    LayerSurface layer_surface_overlay {.enabled = true};
+};
+
+struct CircuitLayers {
+    // vectors are cached to continuous avoid allocations
+    InteractiveLayers interactive_layers {};
+    SimulationLayers simulation_layers {};
+};
+
+struct CircuitContext {
+    Context ctx {};
+
+    CircuitLayers layers {};
+    CircuitSurfaces surfaces {};
+};
+
+//
 // Layout
 //
 
@@ -280,8 +368,6 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, int
 //
 // Simulation
 //
-
-// TODO use SimulationResult instead of Simulation
 
 auto render_simulation(CircuitContext& circuit_ctx, const Layout& layout,
                        SimulationView simulation_view) -> void;

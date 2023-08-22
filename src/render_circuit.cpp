@@ -1157,6 +1157,187 @@ auto draw_wire_shadows(Context& ctx, std::span<const segment_info_t> segment_inf
 }
 
 //
+// Interactive Layers
+//
+
+auto InteractiveLayers::format() const -> std::string {
+    return fmt::format(
+        "InteractiveLayers("
+        "\n  normal_below = {}"
+        "\n  normal_wires = {}"
+        "\n  normal_above = {}"
+        "\n"
+        "\n  uninserted_below = {}"
+        "\n  uninserted_above = {}"
+        "\n"
+        "\n  selected_logic_items = {}"
+        "\n  selected_wires = {}"
+        "\n  temporary_wires = {}"
+        "\n  valid_logic_items = {}"
+        "\n  valid_wires = {}"
+        "\n  colliding_logic_items = {}"
+        "\n  colliding_wires = {}"
+        "\n"
+        "\n  uninserted_bounding_rect = {}"
+        "\n  overlay_bounding_rect = {}"
+        "\n)",
+
+        normal_below,  //
+        normal_wires,  //
+        normal_above,  //
+
+        uninserted_below,  //
+        uninserted_above,  //
+
+        selected_logic_items,   //
+        selected_wires,         //
+        temporary_wires,        //
+        valid_logic_items,      //
+        valid_wires,            //
+        colliding_logic_items,  //
+        colliding_wires,        //
+
+        uninserted_bounding_rect,  //
+        overlay_bounding_rect      //
+    );
+}
+
+auto InteractiveLayers::clear() -> void {
+    normal_below.clear();
+    normal_wires.clear();
+    normal_above.clear();
+
+    uninserted_below.clear();
+    uninserted_above.clear();
+
+    selected_logic_items.clear();
+    selected_wires.clear();
+    temporary_wires.clear();
+    valid_logic_items.clear();
+    valid_wires.clear();
+    colliding_logic_items.clear();
+    colliding_wires.clear();
+
+    uninserted_bounding_rect.reset();
+    overlay_bounding_rect.reset();
+}
+
+auto InteractiveLayers::allocated_size() const -> std::size_t {
+    return get_allocated_size(normal_below) +           //
+           get_allocated_size(normal_wires) +           //
+           get_allocated_size(normal_above) +           //
+                                                        //
+           get_allocated_size(uninserted_below) +       //
+           get_allocated_size(uninserted_above) +       //
+                                                        //
+           get_allocated_size(selected_logic_items) +   //
+           get_allocated_size(selected_wires) +         //
+           get_allocated_size(temporary_wires) +        //
+           get_allocated_size(valid_logic_items) +      //
+           get_allocated_size(valid_wires) +            //
+           get_allocated_size(colliding_logic_items) +  //
+           get_allocated_size(colliding_wires);         //
+}
+
+auto InteractiveLayers::has_inserted() const -> bool {
+    return !normal_below.empty() ||  //
+           !normal_wires.empty() ||  //
+           !normal_above.empty();
+}
+
+auto InteractiveLayers::has_uninserted() const -> bool {
+    return !uninserted_below.empty() ||  //
+           !temporary_wires.empty() ||   //
+           !colliding_wires.empty() ||   //
+           !uninserted_above.empty();
+}
+
+auto InteractiveLayers::has_overlay() const -> bool {
+    return !selected_logic_items.empty() ||   //
+           !selected_wires.empty() ||         //
+           !temporary_wires.empty() ||        //
+           !valid_logic_items.empty() ||      //
+           !valid_wires.empty() ||            //
+           !colliding_logic_items.empty() ||  //
+           !colliding_wires.empty();
+}
+
+auto InteractiveLayers::calculate_overlay_bounding_rect() -> void {
+    const auto update = [this](ordered_line_t line) { update_overlay_rect(*this, line); };
+    const auto update_info = [this](segment_info_t info) {
+        update_overlay_rect(*this, info.line);
+    };
+
+    std::ranges::for_each(selected_wires, update);
+    std::ranges::for_each(temporary_wires, update_info);
+    std::ranges::for_each(valid_wires, update);
+    std::ranges::for_each(colliding_wires, update_info);
+}
+
+auto update_bounding_rect(std::optional<rect_t>& target, rect_t new_rect) -> void {
+    if (!target) {
+        target = new_rect;
+    } else {
+        *target = enclosing_rect(*target, new_rect);
+    }
+}
+
+auto update_bounding_rect(std::optional<rect_t>& target, ordered_line_t new_line)
+    -> void {
+    if (!target) {
+        target = rect_t {new_line.p0, new_line.p1};
+    } else {
+        *target = enclosing_rect(*target, new_line);
+    }
+}
+
+auto update_uninserted_rect(InteractiveLayers& layers, rect_t bounding_rect) -> void {
+    update_bounding_rect(layers.uninserted_bounding_rect, bounding_rect);
+}
+
+auto update_uninserted_rect(InteractiveLayers& layers, ordered_line_t line) -> void {
+    update_bounding_rect(layers.uninserted_bounding_rect, line);
+}
+
+auto update_overlay_rect(InteractiveLayers& layers, rect_t bounding_rect) -> void {
+    update_bounding_rect(layers.overlay_bounding_rect, bounding_rect);
+}
+
+auto update_overlay_rect(InteractiveLayers& layers, ordered_line_t line) -> void {
+    update_bounding_rect(layers.overlay_bounding_rect, line);
+}
+
+//
+// Simulation Layers
+//
+
+auto SimulationLayers::format() const -> std::string {
+    return fmt::format(
+        "InteractiveLayers("
+        "\n  items_below = {}"
+        "\n  wires = {}"
+        "\n  items_above = {}"
+        "\n)",
+
+        items_below,  //
+        wires,        //
+        items_above   //
+    );
+}
+
+auto SimulationLayers::clear() -> void {
+    items_below.clear();
+    wires.clear();
+    items_above.clear();
+}
+
+auto SimulationLayers::allocated_size() const -> std::size_t {
+    return get_allocated_size(items_below) +  //
+           get_allocated_size(wires) +        //
+           get_allocated_size(items_above);
+}
+
+//
 // Layout Rendering
 //
 
