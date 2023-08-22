@@ -3,6 +3,7 @@
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/editable_circuit.h"
 #include "layout_calculation.h"
+#include "render_benchmark.h"
 #include "renderer.h"
 #include "simulation.h"
 #include "timer.h"
@@ -165,7 +166,7 @@ auto benchmark_layered_drawing() -> void {
 
 auto main() -> int {
     using namespace logicsim;
-    bool do_run = false;
+    bool do_run = true;
 
     /// TODO consider: ios_base::sync_with_stdio(false);
     /// SL.io.10 in https://isocpp.github.io/CppCoreGuidelines/

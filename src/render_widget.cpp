@@ -6,6 +6,7 @@
 #include "exception.h"
 #include "layout.h"
 #include "range.h"
+#include "render_caches.h"
 #include "render_circuit.h"
 #include "renderer.h"
 #include "schematic.h"

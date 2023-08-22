@@ -60,16 +60,6 @@ class EditableCircuit;
 
 auto render_background(BLContext& ctx, const RenderSettings& settings = {}) -> void;
 
-auto render_editable_circuit_connection_cache(BLContext& ctx,
-                                              const EditableCircuit& editable_circuit,
-                                              const RenderSettings& settings) -> void;
-auto render_editable_circuit_collision_cache(BLContext& ctx,
-                                             const EditableCircuit& editable_circuit,
-                                             const RenderSettings& settings) -> void;
-auto render_editable_circuit_selection_cache(BLContext& ctx,
-                                             const EditableCircuit& editable_circuit,
-                                             const RenderSettings& settings) -> void;
-
 using selection_mask_t = boost::container::vector<bool>;
 using visibility_mask_t = boost::container::vector<bool>;
 
@@ -89,17 +79,6 @@ auto render_circuit(BLContext& ctx, render_args_t args) -> void;
 
 auto render_circuit(render_args_t args, int width, int height, std::string filename)
     -> void;
-
-struct BenchmarkScene {
-   public:
-    Schematic schematic {};
-    Layout layout {};
-    Simulation simulation {schematic};
-};
-
-auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100) -> int64_t;
-
-auto benchmark_line_renderer(int n_lines = 100, bool save_image = true) -> int64_t;
 
 }  // namespace logicsim
 

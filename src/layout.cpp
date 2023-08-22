@@ -319,10 +319,6 @@ auto Layout::swap_elements(element_id_t element_id_0, element_id_t element_id_1)
     swap_element_data(element_id_0, element_id_1);
 }
 
-auto Layout::set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void {
-    line_trees_.at(element_id.value) = std::move(line_tree);
-}
-
 auto Layout::set_position(element_id_t element_id, point_t position) -> void {
     positions_.at(element_id.value) = position;
     bounding_rects_.at(element_id.value) = empty_bounding_rect;

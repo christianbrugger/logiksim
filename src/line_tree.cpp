@@ -448,6 +448,10 @@ auto LineTree::internal_points() const -> InternalPointView {
     return InternalPointView {*this};
 }
 
+auto LineTree::has_crosspoint_p0(int index) const -> bool {
+    return starts_new_subtree(index);
+}
+
 auto LineTree::format() const -> std::string {
     return fmt::format("LineTree({}, {}, {}, {})", points_, indices_, lengths_,
                        output_indices_);

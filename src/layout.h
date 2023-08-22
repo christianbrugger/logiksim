@@ -81,8 +81,6 @@ class Layout {
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
     auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
 
-    // TODO remove line tree, when not needed anymore
-    auto set_line_tree(element_id_t element_id, LineTree &&line_tree) -> void;
     auto set_position(element_id_t element_id, point_t point) -> void;
     auto set_display_state(element_id_t element_id, display_state_t display_state)
         -> void;

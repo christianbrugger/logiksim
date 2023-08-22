@@ -5,6 +5,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection_registrar.h"
 #include "range.h"
+#include "render_benchmark.h"
 #include "renderer.h"
 #include "schematic.h"
 #include "simulation.h"
@@ -134,6 +135,8 @@ static void BM_Simulation_0(benchmark::State& state) {
 BENCHMARK(BM_Simulation_0);  // NOLINT
 
 static void BM_RenderScene_0(benchmark::State& state) {
+    constexpr static auto save_image = false;  // to verify correctness
+
     logicsim::BenchmarkScene scene;
     auto scene_count = logicsim::fill_line_scene(scene, 100);
 
@@ -145,6 +148,9 @@ static void BM_RenderScene_0(benchmark::State& state) {
         ctx.end();
     }
 
+    auto settings = logicsim::RenderSettings {};
+    settings.view_config.set_size(img.width(), img.height());
+
     int64_t count = 0;
     for ([[maybe_unused]] auto _ : state) {
         count += scene_count;
@@ -154,11 +160,18 @@ static void BM_RenderScene_0(benchmark::State& state) {
                                           .layout = scene.layout,
                                           .schematic = &scene.schematic,
                                           .simulation = &scene.simulation,
+                                          .settings = settings,
                                       });
         ctx.end();
 
         benchmark::DoNotOptimize(img);
         benchmark::ClobberMemory();
+
+        if constexpr (save_image) {
+            BLImageCodec codec;
+            codec.findByName("PNG");
+            img.writeToFile("google_benchmark_BM_RenderScene_0.png", codec);
+        }
     }
 
     state.counters["Events"] =

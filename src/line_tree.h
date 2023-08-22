@@ -126,6 +126,7 @@ class LineTree {
     [[nodiscard]] auto points() const -> std::span<const point_t>;
     // skips input and output points
     [[nodiscard]] auto internal_points() const -> InternalPointView;
+    [[nodiscard]] auto has_crosspoint_p0(int index) const -> bool;
 
     [[nodiscard]] auto input_position() const -> point_t;
     [[nodiscard]] auto input_orientation() const -> orientation_t;
