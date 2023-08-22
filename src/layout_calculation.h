@@ -105,8 +105,8 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             return true;
         }
         case display_number: {
-            require_min(data.input_count, 2);
-            require_max(data.input_count, 65);
+            require_min(data.input_count, 3);
+            require_max(data.input_count, 66);
 
             const auto width = display_number_width(data.input_count);
             const auto height = display_number_height(data.input_count);
@@ -116,7 +116,7 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
                     if (x == 0 && y < gsl::narrow_cast<int>(data.input_count) - 1) {
                         continue;
                     }
-                    if (x == 2 && y == gsl::narrow_cast<int>(height)) {
+                    if ((x == 1 || x == 2) && y == gsl::narrow_cast<int>(height)) {
                         continue;
                     }
                     if (!next_point(transform(
@@ -311,8 +311,8 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             return true;
         }
         case display_number: {
-            require_min(data.input_count, 2);
-            require_max(data.input_count, 65);
+            require_min(data.input_count, 3);
+            require_max(data.input_count, 66);
 
             // input enable
             {
@@ -322,10 +322,15 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
                         transform(data.orientation, orientation_t::down))) {
                     return false;
                 }
+                if (!next_input(
+                        transform(data.position, data.orientation, point_t {1, y}),
+                        transform(data.orientation, orientation_t::down))) {
+                    return false;
+                }
             }
 
             // 2^0 - 2^x
-            for (auto i : range(data.input_count - std::size_t {1})) {
+            for (auto i : range(data.input_count - std::size_t {2})) {
                 const auto y = grid_t {i};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),

@@ -99,8 +99,8 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
         case insert_display_number:
             return LogicItemDefinition {
                 .element_type = ElementType::display_number,
-                .input_count = std::clamp(variable_input_count + std::size_t {1},
-                                          std::size_t {2}, std::size_t {65}),
+                .input_count = std::clamp(variable_input_count + std::size_t {2},
+                                          std::size_t {3}, std::size_t {66}),
                 .output_count = 0,
                 .orientation = orientation_t::right,
             };

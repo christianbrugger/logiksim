@@ -179,20 +179,23 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
 }
 
 auto display_number_width(std::size_t input_count) -> grid_t {
-    if (input_count < 2) {
-        return 2;
-    }
+    require_min(input_count, 3);
+    require_max(input_count, 66);
+
     constexpr static auto log10_of_2 = 0.3010299956639812;
     constexpr static auto font_size = 0.9;  // TODO same as in render_circuit.h
     constexpr static auto digit_factor = 1.0;
 
-    const auto digit_count = std::ceil((input_count - 1) * log10_of_2);
+    const auto digit_count = std::ceil((input_count - 2) * log10_of_2);
     const auto digit_width = std::ceil(digit_count * font_size * digit_factor);
     return grid_t {gsl::narrow<grid_t::value_type>(std::max(3., 1. + digit_width))};
 }
 
 auto display_number_height(std::size_t input_count) -> grid_t {
-    return grid_t {std::max(std::size_t {2}, input_count - std::size_t {2})};
+    require_min(input_count, 3);
+    require_max(input_count, 66);
+
+    return grid_t {std::max(std::size_t {2}, input_count - std::size_t {3})};
 }
 
 auto is_input_output_count_valid(ElementType element_type, std::size_t input_count,
@@ -233,7 +236,7 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
             return input_count == 1 && output_count == 0;
         }
         case display_number: {
-            return input_count >= 2 && input_count <= 65 && output_count == 0;
+            return input_count >= 3 && input_count <= 66 && output_count == 0;
         }
         case display_ascii: {
             return input_count == 8 && output_count == 0;
@@ -315,8 +318,8 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             return rect_t {data.position, data.position};
         }
         case display_number: {
-            require_min(data.input_count, 2);
-            require_max(data.input_count, 65);
+            require_min(data.input_count, 3);
+            require_max(data.input_count, 66);
 
             const auto w = display_number_width(data.input_count);
             const auto h = display_number_height(data.input_count);
