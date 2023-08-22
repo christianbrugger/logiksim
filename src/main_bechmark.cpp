@@ -6,9 +6,10 @@
 #include "editable_circuit/selection_registrar.h"
 #include "range.h"
 #include "render_benchmark.h"
-#include "renderer.h"
+#include "render_circuit.h"
 #include "schematic.h"
 #include "simulation.h"
+#include "simulation_view.h"
 
 #include <benchmark/benchmark.h>
 #include <blend2d.h>
@@ -156,12 +157,9 @@ static void BM_RenderScene_0(benchmark::State& state) {
         count += scene_count;
 
         BLContext ctx(img);
-        logicsim::render_circuit(ctx, logicsim::render_args_t {
-                                          .layout = scene.layout,
-                                          .schematic = &scene.schematic,
-                                          .simulation = &scene.simulation,
-                                          .settings = settings,
-                                      });
+        render_simulation(ctx, scene.layout, logicsim::SimulationView {scene.simulation},
+                          settings);
+
         ctx.end();
 
         benchmark::DoNotOptimize(img);

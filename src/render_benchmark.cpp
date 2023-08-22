@@ -2,7 +2,7 @@
 
 #include "random.h"
 #include "render_circuit.h"
-#include "renderer.h"
+#include "simulation_view.h"
 #include "timer.h"
 
 namespace logicsim {
@@ -269,13 +269,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     render_background(ctx, settings);
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        render_circuit(ctx, render_args_t {
-                                .layout = scene.layout,
-                                .schematic = &scene.schematic,
-                                .simulation = &scene.simulation,
-                                .selection = {},
-                                .settings = settings,
-                            });
+        render_simulation(ctx, scene.layout, SimulationView {scene.simulation}, settings);
     }
     ctx.end();
 

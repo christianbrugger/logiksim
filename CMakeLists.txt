@@ -34,7 +34,6 @@ set(LS_CORE_SOURCES
     src/layout_calculation.cpp
     src/line_tree.cpp
     src/random.cpp
-    src/renderer.cpp
     src/render_benchmark.cpp
     src/render_caches.cpp
     src/render_circuit.cpp

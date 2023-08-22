@@ -8,7 +8,6 @@
 #include "range.h"
 #include "render_caches.h"
 #include "render_circuit.h"
-#include "renderer.h"
 #include "schematic.h"
 #include "schematic_generation.h"
 #include "serialize.h"
@@ -1088,33 +1087,14 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     render_background(bl_ctx, render_settings_);
 
     if (do_render_circuit_ && simulation_) {
-        if (do_use_old_renderer_) {
-            render_circuit(bl_ctx, render_args_t {
-                                       .layout = editable_circuit.layout(),
-                                       .schematic = &simulation_->schematic(),
-                                       .simulation = &simulation_->simulation(),
-                                       .selection = {},
-                                       .settings = render_settings_,
-                                   });
-        } else {
-            render_simulation(bl_ctx, editable_circuit.layout(),
-                              SimulationView {simulation_->simulation()},
-                              render_settings_);
-        }
+        render_simulation(bl_ctx, editable_circuit.layout(),
+                          SimulationView {simulation_->simulation()}, render_settings_);
     }
 
     if (do_render_circuit_ && !simulation_) {
         const auto& selection = editable_circuit.selection_builder().selection();
 
-        if (do_use_old_renderer_) {
-            render_circuit(bl_ctx, render_args_t {
-                                       .layout = editable_circuit.layout(),
-                                       .selection = &selection,
-                                       .settings = render_settings_,
-                                   });
-        } else {
-            render_layout(bl_ctx, editable_circuit.layout(), selection, render_settings_);
-        }
+        render_layout(bl_ctx, editable_circuit.layout(), selection, render_settings_);
     }
 
     if (do_render_collision_cache_) {

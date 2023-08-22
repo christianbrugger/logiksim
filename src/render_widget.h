@@ -3,8 +3,8 @@
 
 #include "editable_circuit/editable_circuit.h"
 #include "interactive_simulation.h"
+#include "render_circuit.h"
 #include "render_widget_type.h"
-#include "renderer.h"
 #include "scene.h"
 #include "timer.h"
 
@@ -340,10 +340,6 @@ class RendererWidget : public RendererWidgetBase {
     bool do_render_selection_cache_ {false};
 
     EventCounter fps_counter_ {};
-
-   public:
-    // TODO !!! remove
-    bool do_use_old_renderer_ {false};
 };
 
 }  // namespace logicsim

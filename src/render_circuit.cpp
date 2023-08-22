@@ -19,6 +19,107 @@
 namespace logicsim {
 
 //
+// Background
+//
+namespace {
+
+auto draw_grid_space_limit(BLContext& ctx, const RenderSettings& settings) {
+    const auto p0 =
+        to_context(point_t {grid_t::min(), grid_t::min()}, settings.view_config);
+    const auto p1 =
+        to_context(point_t {grid_t::max(), grid_t::max()}, settings.view_config);
+
+    ctx.setStrokeStyle(BLRgba32(0xFF808080u));
+    ctx.setStrokeWidth(std::max(5.0, to_context(5.0, settings.view_config)));
+    ctx.strokeRect(p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y);
+}
+
+constexpr auto monochrome(uint8_t value) -> color_t {
+    return color_t {value, value, value, 255};
+}
+
+auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int delta,
+                                     color_t color, int width,
+                                     const RenderSettings& settings) {
+    const auto clamp_to_grid = [](double v_) {
+        return gsl::narrow_cast<grid_t::value_type>(
+            std::clamp(v_, grid_t::min() * 1.0, grid_t::max() * 1.0));
+    };
+
+    const auto g0 = point_t {
+        clamp_to_grid(std::floor(scene_rect.p0.x / delta) * delta),
+        clamp_to_grid(std::floor(scene_rect.p0.y / delta) * delta),
+    };
+    const auto g1 = point_t {
+        clamp_to_grid(std::ceil(scene_rect.p1.x / delta) * delta),
+        clamp_to_grid(std::ceil(scene_rect.p1.y / delta) * delta),
+    };
+
+    /*
+    for (int x = g0.x.value; x <= g1.x.value; x += delta) {
+        const auto x_grid = grid_t {x};
+        draw_line(ctx, line_t {{x_grid, g0.y}, {x_grid, g1.y}}, {color, width}, settings);
+    }
+    for (int y = g0.y.value; y <= g1.y.value; y += delta) {
+        const auto y_grid = grid_t {y};
+        draw_line(ctx, line_t {{g0.x, y_grid}, {g1.x, y_grid}}, {color, width}, settings);
+    }
+    */
+
+    // this version is a bit faster
+    const auto p0 = to_context(g0, settings.view_config);
+    const auto p1 = to_context(g1, settings.view_config);
+
+    const auto offset = settings.view_config.offset();
+    const auto scale = settings.view_config.pixel_scale();
+
+    // vertical
+    for (int x = g0.x.value; x <= g1.x.value; x += delta) {
+        const auto cx = round_fast((x + offset.x) * scale);
+        draw_orthogonal_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width}, settings);
+    }
+    // horizontal
+    for (int y = g0.y.value; y <= g1.y.value; y += delta) {
+        const auto cy = round_fast((y + offset.y) * scale);
+        draw_orthogonal_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width}, settings);
+    }
+}
+
+auto draw_background_patterns(BLContext& ctx, const RenderSettings& settings) {
+    auto scene_rect = get_scene_rect_fine(settings.view_config);
+
+    constexpr static auto grid_definition = {
+        std::tuple {1, monochrome(0xF0), 1},    //
+        std::tuple {8, monochrome(0xE4), 1},    //
+        std::tuple {64, monochrome(0xE4), 2},   //
+        std::tuple {512, monochrome(0xD8), 2},  //
+        std::tuple {4096, monochrome(0xC0), 2},
+    };
+
+    for (auto&& [delta, color, width] : grid_definition) {
+        if (delta * settings.view_config.device_scale() >=
+            settings.background_grid_min_distance) {
+            const auto draw_width_f = width * settings.view_config.device_pixel_ratio();
+            // we substract a little, as we want 150% scaling to round down
+            const auto epsilon = 0.01;
+            const auto draw_width = std::max(1, round_to<int>(draw_width_f - epsilon));
+            draw_background_pattern_checker(ctx, scene_rect, delta, color, draw_width,
+                                            settings);
+        }
+    }
+}
+}  // namespace
+
+auto render_background(BLContext& ctx, const RenderSettings& settings) -> void {
+    ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    ctx.setFillStyle(BLRgba32(defaults::color_white.value));
+    ctx.fillAll();
+
+    draw_background_patterns(ctx, settings);
+    draw_grid_space_limit(ctx, settings);
+}
+
+//
 // Logic Items Body
 //
 
@@ -1202,7 +1303,8 @@ auto render_layers(BLContext& ctx, const Layout& layout, const RenderSettings& s
 }
 
 auto render_simulation_layers(BLContext& ctx, const Layout& layout,
-                              SimulationView simulation_view, RenderSettings& settings) {
+                              SimulationView simulation_view,
+                              const RenderSettings& settings) {
     const auto& layers = settings.simulation_layers;
 
     ctx.setCompOp(BL_COMP_OP_SRC_COPY);
@@ -1391,23 +1493,50 @@ auto build_simulation_layers(const Layout& layout, SimulationLayersCache& layers
 }
 
 //
+// File Rendering
+//
+
+namespace {
+
+// render_function = [](BLContext &ctx, const RenderSettings& settings){ ... }
+template <typename Func>
+auto render_to_file(int width, int height, std::string filename,
+                    const ViewConfig& view_config, Func render_function) {
+    auto img = BLImage {width, height, BL_FORMAT_PRGB32};
+    auto ctx = BLContext {img};
+
+    auto settings = RenderSettings {.view_config = view_config};
+    settings.view_config.set_size(width, height);
+
+    render_background(ctx, settings);
+    render_function(ctx, settings);
+
+    ctx.end();
+
+    std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
+    img.writeToFile(filename.c_str());
+}
+
+}  // namespace
+
+//
 // Layout
 //
 
 auto _render_layout(BLContext& ctx, const Layout& layout, const Selection* selection,
-                    RenderSettings& settings) -> void {
+                    const RenderSettings& settings) -> void {
     build_layers(layout, settings.layers, selection,
                  get_scene_rect(settings.view_config));
     render_layers(ctx, layout, settings);
 }
 
-auto render_layout(BLContext& ctx, const Layout& layout, RenderSettings& settings)
+auto render_layout(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
     -> void {
     _render_layout(ctx, layout, nullptr, settings);
 }
 
 auto render_layout(BLContext& ctx, const Layout& layout, const Selection& selection,
-                   RenderSettings& settings) -> void {
+                   const RenderSettings& settings) -> void {
     if (selection.empty()) {
         _render_layout(ctx, layout, nullptr, settings);
     } else {
@@ -1415,15 +1544,42 @@ auto render_layout(BLContext& ctx, const Layout& layout, const Selection& select
     }
 }
 
+auto render_layout_to_file(const Layout& layout, int width, int height,
+                           std::string filename, const ViewConfig& view_config) -> void {
+    render_to_file(width, height, filename, view_config,
+                   [&](BLContext& ctx, const RenderSettings& settings) {
+                       render_layout(ctx, layout, settings);
+                   });
+}
+
+auto render_layout_to_file(const Layout& layout, const Selection& selection, int width,
+                           int height, std::string filename,
+                           const ViewConfig& view_config) -> void {
+    render_to_file(width, height, filename, view_config,
+                   [&](BLContext& ctx, const RenderSettings& settings) {
+                       render_layout(ctx, layout, selection, settings);
+                   });
+}
+
 //
 // Simulation
 //
 
 auto render_simulation(BLContext& ctx, const Layout& layout,
-                       SimulationView simulation_view, RenderSettings& settings) -> void {
+                       SimulationView simulation_view, const RenderSettings& settings)
+    -> void {
     build_simulation_layers(layout, settings.simulation_layers,
                             get_scene_rect(settings.view_config));
     render_simulation_layers(ctx, layout, simulation_view, settings);
+}
+
+auto render_layout_to_file(const Layout& layout, SimulationView simulation_view,
+                           int width, int height, std::string filename,
+                           const ViewConfig& view_config) -> void {
+    render_to_file(width, height, filename, view_config,
+                   [&](BLContext& ctx, const RenderSettings& settings) {
+                       render_simulation(ctx, layout, simulation_view, settings);
+                   });
 }
 
 }  // namespace logicsim

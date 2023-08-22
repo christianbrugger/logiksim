@@ -943,7 +943,6 @@ TEST(SimulationTest, HistoryViewIteratorValues) {
     const auto history_length = delay_t {100us};
     const auto history = simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     const auto last_value = false;
-    constexpr auto epsilon = time_t::epsilon().value;
 
     const auto view = simulation::HistoryView {history, time, last_value, history_length};
 

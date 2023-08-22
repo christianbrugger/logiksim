@@ -2,7 +2,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "geometry.h"
 #include "random.h"
-#include "renderer.h"
+#include "render_circuit.h"
 #include "timer.h"
 
 #include <gmock/gmock.h>
@@ -274,12 +274,8 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     }
 
     if (do_render) {
-        render_circuit(
-            render_args_t {
-                .layout = editable_circuit.layout(),
-                .settings = RenderSettings {},
-            },
-            400, 400, fmt::format("test_move/{:04d}.png", seed));
+        render_layout_to_file(editable_circuit.layout(), 400, 400,
+                              fmt::format("test_move/{:04d}.png", seed));
     }
 };
 }  // namespace

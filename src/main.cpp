@@ -4,7 +4,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "layout_calculation.h"
 #include "render_benchmark.h"
-#include "renderer.h"
+#include "render_circuit.h"
 #include "simulation.h"
 #include "timer.h"
 
@@ -96,10 +96,7 @@ auto render_multi_layer(std::vector<BLImage>& images, const Layout& layout,
         ctx.clearAll();
     }
     render_background(contexts.at(0), settings);
-    render_circuit(contexts.at(1), render_args_t {
-                                       .layout = layout,
-                                       .settings = settings,
-                                   });
+    render_layout(contexts.at(1), layout, settings);
 
     // finish rendering all layers
     for (auto& ctx : std::ranges::subrange(contexts.begin() + 1, contexts.end())) {

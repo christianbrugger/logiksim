@@ -125,6 +125,12 @@ constexpr auto with_alpha_runtime(color_t color, ElementDrawState state) noexcep
 }
 
 //
+// Background
+//
+
+auto render_background(BLContext& ctx, const RenderSettings& settings) -> void;
+
+//
 // Logic Items
 //
 
@@ -271,11 +277,18 @@ auto shadow_color(shadow_t shadow_type) -> color_t;
 // Layout
 //
 
-auto render_layout(BLContext& ctx, const Layout& layout, RenderSettings& settings)
+auto render_layout(BLContext& ctx, const Layout& layout, const RenderSettings& settings)
     -> void;
 
 auto render_layout(BLContext& ctx, const Layout& layout, const Selection& selection,
-                   RenderSettings& settings) -> void;
+                   const RenderSettings& settings) -> void;
+
+auto render_layout_to_file(const Layout& layout, int width, int height,
+                           std::string filename, const ViewConfig& view_config = {})
+    -> void;
+auto render_layout_to_file(const Layout& layout, const Selection& selection, int width,
+                           int height, std::string filename,
+                           const ViewConfig& view_config = {}) -> void;
 
 //
 // Simulation
@@ -284,7 +297,12 @@ auto render_layout(BLContext& ctx, const Layout& layout, const Selection& select
 // TODO use SimulationResult instead of Simulation
 
 auto render_simulation(BLContext& ctx, const Layout& layout,
-                       SimulationView simulation_view, RenderSettings& settings) -> void;
+                       SimulationView simulation_view, const RenderSettings& settings)
+    -> void;
+
+auto render_layout_to_file(const Layout& layout, SimulationView simulation_view,
+                           int width, int height, std::string filename,
+                           const ViewConfig& view_config = {}) -> void;
 
 }  // namespace logicsim
 
