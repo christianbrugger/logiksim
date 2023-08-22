@@ -578,7 +578,7 @@ auto SimulationInteractionLogic::mouse_press(std::optional<point_t> point) -> vo
 RendererWidget::RendererWidget(QWidget* parent)
     : RendererWidgetBase(parent),
       last_pixel_ratio_ {devicePixelRatioF()},
-      mouse_drag_logic_ {MouseDragLogic::Args {render_settings_.view_config}} {
+      mouse_drag_logic_ {MouseDragLogic::Args {context_.ctx.settings.view_config}} {
     setAutoFillBackground(false);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
@@ -592,7 +592,7 @@ RendererWidget::RendererWidget(QWidget* parent)
             &RendererWidget::on_simulation_timeout);
     simulation_timer_.setInterval(simulation_timer_interval_ms_);
 
-    render_settings_.view_config.set_device_scale(18);
+    context_.ctx.settings.view_config.set_device_scale(18);
     reset_circuit();
 }
 
@@ -629,15 +629,15 @@ auto RendererWidget::set_do_render_selection_cache(bool value) -> void {
 }
 
 auto RendererWidget::set_thread_count(int count) -> void {
-    if (count != render_settings_.thread_count) {
+    if (count != context_.ctx.settings.thread_count) {
         is_initialized_ = false;
     }
-    render_settings_.thread_count = count;
+    context_.ctx.settings.thread_count = count;
     update();
 }
 
 auto RendererWidget::thread_count() const -> int {
-    return render_settings_.thread_count;
+    return context_.ctx.settings.thread_count;
 }
 
 auto RendererWidget::set_use_backing_store(bool value) -> void {
@@ -649,8 +649,8 @@ auto RendererWidget::set_use_backing_store(bool value) -> void {
 }
 
 auto RendererWidget::is_using_backing_store() const -> bool {
-    return use_backing_store_ && qt_image.width() == 0 && qt_image.height() == 0 &&
-           bl_image.width() != 0 && bl_image.height() != 0;
+    return use_backing_store_ && qt_image_.width() == 0 && qt_image_.height() == 0 &&
+           context_.ctx.bl_image.width() != 0 && context_.ctx.bl_image.height() != 0;
 }
 
 auto RendererWidget::set_interaction_state(InteractionState state) -> void {
@@ -721,7 +721,7 @@ auto RendererWidget::fps() const -> double {
 }
 
 auto RendererWidget::pixel_scale() const -> double {
-    return render_settings_.view_config.pixel_scale();
+    return view_config().pixel_scale();
 }
 
 auto RendererWidget::reset_circuit() -> void {
@@ -784,24 +784,6 @@ auto RendererWidget::load_circuit(int id) -> void {
 
     if (id == 1) {
         editable_circuit.add_example();
-        /*
-        editable_circuit.add_standard_logic_item(
-            ElementType::or_element, 2, point_t {5, 3}, InsertionMode::insert_or_discard);
-        editable_circuit.add_standard_logic_item(ElementType::or_element, 2,
-                                                 point_t {15, 6},
-                                                 InsertionMode::insert_or_discard);
-
-        editable_circuit.add_line_segments(
-            point_t {grid_t {10}, grid_t {10}}, point_t {grid_t {15}, grid_t {12}},
-            LineInsertionType::horizontal_first, InsertionMode::insert_or_discard);
-        editable_circuit.add_line_segments(
-            point_t {grid_t {10}, grid_t {15}}, point_t {grid_t {15}, grid_t {15}},
-            LineInsertionType::vertical_first, InsertionMode::insert_or_discard);
-
-        editable_circuit.add_standard_logic_item(ElementType::or_element, 9,
-                                                 point_t {20, 4},
-                                                 InsertionMode::insert_or_discard);
-        */
     }
 
     if (id == 2) {
@@ -960,6 +942,10 @@ auto RendererWidget::size_device() const -> QSize {
     return round_logical_to_device(this->geometry(), devicePixelRatioF()).size();
 }
 
+auto RendererWidget::view_config() const noexcept -> const ViewConfig& {
+    return context_.ctx.settings.view_config;
+}
+
 // Use the Qt backend store image directly for best performance
 // This is not always available on all platforms.
 auto RendererWidget::_init_surface_from_backing_store() -> bool {
@@ -1012,9 +998,9 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
     static_assert(sizeof(*pixels) == 1);
     pixels += rect.x() * (image->depth() / 8);
 
-    bl_image.createFromData(rect.width(), rect.height(), BL_FORMAT_PRGB32, pixels,
-                            image->bytesPerLine());
-    qt_image = QImage {};
+    context_.ctx.bl_image.createFromData(rect.width(), rect.height(), BL_FORMAT_PRGB32,
+                                         pixels, image->bytesPerLine());
+    qt_image_ = QImage {};
 
     print("INFO: using backing store");
     return true;
@@ -1024,29 +1010,29 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
 auto RendererWidget::_init_surface_from_buffer_image() -> void {
     auto window_size = size_device();
 
-    qt_image = QImage(window_size.width(), window_size.height(),
-                      QImage::Format_ARGB32_Premultiplied);
+    qt_image_ = QImage(window_size.width(), window_size.height(),
+                       QImage::Format_ARGB32_Premultiplied);
 
-    qt_image.setDevicePixelRatio(devicePixelRatioF());
-    bl_image.createFromData(qt_image.width(), qt_image.height(), BL_FORMAT_PRGB32,
-                            qt_image.bits(), qt_image.bytesPerLine());
+    qt_image_.setDevicePixelRatio(devicePixelRatioF());
+    context_.ctx.bl_image.createFromData(qt_image_.width(), qt_image_.height(),
+                                         BL_FORMAT_PRGB32, qt_image_.bits(),
+                                         qt_image_.bytesPerLine());
 
     print("INFO: using QImage");
 }
 
 void RendererWidget::init_surface() {
     // initialize qt_image & bl_image
-    bl_ctx.end();
+    context_.ctx.end();
     if (!use_backing_store_ || !_init_surface_from_backing_store()) {
         _init_surface_from_buffer_image();
     }
 
     // configs
-    render_settings_.view_config.set_device_pixel_ratio(devicePixelRatioF());
-    render_settings_.view_config.set_size(bl_image.width(), bl_image.height());
+    context_.ctx.settings.view_config.set_device_pixel_ratio(devicePixelRatioF());
 
-    // create context
-    bl_ctx.begin(bl_image, context_info(render_settings_));
+    // start context
+    context_.ctx.begin();
 
     fps_counter_.reset();
 }
@@ -1084,30 +1070,27 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     // fmt::print("{:.3f} MB\n", get_allocated_size(*this) / 1024. / 1024.);
     // print(render_settings_.text);
 
-    render_background(bl_ctx, render_settings_);
+    render_background(context_.ctx);
 
     if (do_render_circuit_ && simulation_) {
-        render_simulation(bl_ctx, editable_circuit.layout(),
-                          SimulationView {simulation_->simulation()}, render_settings_);
+        render_simulation(context_, editable_circuit.layout(),
+                          SimulationView {simulation_->simulation()});
     }
 
     if (do_render_circuit_ && !simulation_) {
         const auto& selection = editable_circuit.selection_builder().selection();
 
-        render_layout(bl_ctx, editable_circuit.layout(), selection, render_settings_);
+        render_layout(context_, editable_circuit.layout(), selection);
     }
 
     if (do_render_collision_cache_) {
-        render_editable_circuit_collision_cache(bl_ctx, editable_circuit,
-                                                render_settings_);
+        render_editable_circuit_collision_cache(context_.ctx, editable_circuit);
     }
     if (do_render_connection_cache_) {
-        render_editable_circuit_connection_cache(bl_ctx, editable_circuit,
-                                                 render_settings_);
+        render_editable_circuit_connection_cache(context_.ctx, editable_circuit);
     }
     if (do_render_selection_cache_) {
-        render_editable_circuit_selection_cache(bl_ctx, editable_circuit,
-                                                render_settings_);
+        render_editable_circuit_selection_cache(context_.ctx, editable_circuit);
     }
 
     // bl_ctx.setFillStyle(BLRgba32(defaults::color_black.value));
@@ -1116,12 +1099,12 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     // bl_ctx.fillRect(BLRect {0, 0, 100, 1});
     // bl_ctx.fillRect(BLRect {0, bl_image.height() - 1.0, 100, 1});
 
-    checked_sync(bl_ctx);
+    context_.ctx.sync();
 
     // we use QPainter only if we are not using the backing store directly
-    if (qt_image.width() != 0) {
+    if (qt_image_.width() != 0) {
         QPainter painter(this);
-        painter.drawImage(QPoint(0, 0), qt_image);
+        painter.drawImage(QPoint(0, 0), qt_image_);
     }
 
     fps_counter_.count_event();
@@ -1242,21 +1225,20 @@ auto RendererWidget::get_mouse_position(QSinglePointEvent* event) const -> QPoin
 
 auto RendererWidget::get_mouse_position() -> point_t {
     if (const auto position =
-            to_grid(this->mapFromGlobal(QCursor::pos()), render_settings_.view_config)) {
+            to_grid(this->mapFromGlobal(QCursor::pos()), view_config())) {
         return position.value();
     }
 
     const auto w = this->width();
     const auto h = this->height();
 
-    if (const auto position =
-            to_grid(QPoint(w / 2, h / 2), render_settings_.view_config)) {
+    if (const auto position = to_grid(QPoint(w / 2, h / 2), view_config())) {
         return position.value();
     }
-    if (const auto position = to_grid(QPoint(0, 0), render_settings_.view_config)) {
+    if (const auto position = to_grid(QPoint(0, 0), view_config())) {
         return position.value();
     }
-    if (const auto position = to_grid(QPoint(w, h), render_settings_.view_config)) {
+    if (const auto position = to_grid(QPoint(w, h), view_config())) {
         return position.value();
     }
 
@@ -1287,7 +1269,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
 
         if (interaction_state_ == InteractionState::selection) {
             auto& selection_builder = editable_circuit_.value().selection_builder();
-            const auto point = to_grid_fine(position, render_settings_.view_config);
+            const auto point = to_grid_fine(position, view_config());
 
             if (editable_circuit_->caches().spatial_cache().has_element(point)) {
                 if (event->modifiers() == Qt::NoModifier) {
@@ -1308,7 +1290,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             mouse_logic_.emplace(MouseAreaSelectionLogic::Args {
                 .parent = this,
                 .builder = selection_builder,
-                .view_config = render_settings_.view_config,
+                .view_config = view_config(),
             });
             return;
         }
@@ -1337,9 +1319,8 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
             set_new_mouse_logic(event);
         }
         if (mouse_logic_) {
-            const auto grid_position = to_grid(position, render_settings_.view_config);
-            const auto grid_fine_position =
-                to_grid_fine(position, render_settings_.view_config);
+            const auto grid_position = to_grid(position, view_config());
+            const auto grid_fine_position = to_grid_fine(position, view_config());
             auto double_click = event->type() == QEvent::MouseButtonDblClick;
 
             std::visit(
@@ -1393,9 +1374,8 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
     }
 
     if (mouse_logic_) {
-        const auto grid_position = to_grid(position, render_settings_.view_config);
-        const auto grid_fine_position =
-            to_grid_fine(position, render_settings_.view_config);
+        const auto grid_position = to_grid(position, view_config());
+        const auto grid_fine_position = to_grid_fine(position, view_config());
 
         std::visit(
             overload {
@@ -1430,9 +1410,8 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
     }
 
     else if (event->button() == Qt::LeftButton && mouse_logic_) {
-        const auto grid_position = to_grid(position, render_settings_.view_config);
-        const auto grid_fine_position =
-            to_grid_fine(position, render_settings_.view_config);
+        const auto grid_position = to_grid(position, view_config());
+        const auto grid_fine_position = to_grid_fine(position, view_config());
 
         bool finished = std::visit(
             overload {
@@ -1476,8 +1455,7 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
         return;
     }
     const auto position = get_mouse_position(event);
-
-    auto& view_config = render_settings_.view_config;
+    auto& view_config = context_.ctx.settings.view_config;
 
     const auto standard_zoom_factor = 1.1;  // zoom factor for one scroll
     const auto standard_scroll_pixel = 45;  // device pixels to scroll for one scroll

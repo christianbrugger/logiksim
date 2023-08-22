@@ -8,77 +8,69 @@
 
 namespace logicsim {
 
-auto _directed_input_marker(BLContext& ctx, point_t point, color_t color,
-                            orientation_t orientation, double size,
-                            const OldRenderSettings& settings) -> void {
-    auto _ = ContextGuard {ctx};
+auto _directed_input_marker(Context& ctx, point_t point, color_t color,
+                            orientation_t orientation, double size) -> void {
+    auto _ [[maybe_unused]] = ContextGuard {ctx};
 
-    ctx.setStrokeWidth(1);
-    ctx.setStrokeStyle(color);
-
-    const auto [x, y] = to_context(point, settings.view_config);
-    const auto d = to_context(size, settings.view_config);
+    const auto [x, y] = to_context(point, ctx);
+    const auto d = to_context(size, ctx);
     const auto angle = to_angle(orientation);
 
-    ctx.translate(BLPoint {x, y});
-    ctx.rotate(angle);
+    ctx.bl_ctx.translate(BLPoint {x, y});
+    ctx.bl_ctx.rotate(angle);
 
     const auto pi = std::numbers::pi;
 
-    ctx.strokeArc(BLArc {0, 0, d, d, -pi / 2, pi});
-    ctx.strokeLine(BLLine {-d, -d, 0, -d});
-    ctx.strokeLine(BLLine {-d, +d, 0, +d});
+    ctx.bl_ctx.setStrokeWidth(1);
+    ctx.bl_ctx.strokeArc(BLArc {0, 0, d, d, -pi / 2, pi}, color);
+    ctx.bl_ctx.strokeLine(BLLine {-d, -d, 0, -d}, color);
+    ctx.bl_ctx.strokeLine(BLLine {-d, +d, 0, +d}, color);
 }
 
-auto _undirected_input_marker(BLContext& ctx, point_t point, color_t color,
-                              orientation_t orientation, double size,
-                              const OldRenderSettings& settings) -> void {
+auto _undirected_input_marker(Context& ctx, point_t point, color_t color,
+                              orientation_t orientation, double size) -> void {
     auto _ = ContextGuard {ctx};
 
-    ctx.setStrokeWidth(1);
-    ctx.setStrokeStyle(color);
+    ctx.bl_ctx.setStrokeWidth(1);
+    ctx.bl_ctx.setStrokeStyle(color);
 
-    const auto [x, y] = to_context(point, settings.view_config);
-    const auto d = to_context(size, settings.view_config);
+    const auto [x, y] = to_context(point, ctx);
+    const auto d = to_context(size, ctx);
     const auto h = d / 2;
 
-    ctx.translate(BLPoint {x + 0.5, y + 0.5});
+    ctx.bl_ctx.translate(BLPoint {x + 0.5, y + 0.5});
 
-    ctx.strokeLine(BLLine {-d, -d, -h, -d});
-    ctx.strokeLine(BLLine {+h, -d, +d, -d});
+    ctx.bl_ctx.strokeLine(BLLine {-d, -d, -h, -d});
+    ctx.bl_ctx.strokeLine(BLLine {+h, -d, +d, -d});
 
-    ctx.strokeLine(BLLine {-d, -d, -d, -h});
-    ctx.strokeLine(BLLine {-d, +h, -d, +d});
+    ctx.bl_ctx.strokeLine(BLLine {-d, -d, -d, -h});
+    ctx.bl_ctx.strokeLine(BLLine {-d, +h, -d, +d});
 
-    ctx.strokeLine(BLLine {+d, -d, +d, -h});
-    ctx.strokeLine(BLLine {+d, +h, +d, +d});
+    ctx.bl_ctx.strokeLine(BLLine {+d, -d, +d, -h});
+    ctx.bl_ctx.strokeLine(BLLine {+d, +h, +d, +d});
 
-    ctx.strokeLine(BLLine {-d, +d, -h, +d});
-    ctx.strokeLine(BLLine {+h, +d, +d, +d});
+    ctx.bl_ctx.strokeLine(BLLine {-d, +d, -h, +d});
+    ctx.bl_ctx.strokeLine(BLLine {+h, +d, +d, +d});
 }
 
-auto render_input_marker(BLContext& ctx, point_t point, color_t color,
-                         orientation_t orientation, double size,
-                         const OldRenderSettings& settings) -> void {
+auto render_input_marker(Context& ctx, point_t point, color_t color,
+                         orientation_t orientation, double size) -> void {
     if (orientation == orientation_t::undirected) {
-        _undirected_input_marker(ctx, point, color, orientation, size, settings);
+        _undirected_input_marker(ctx, point, color, orientation, size);
     } else {
-        _directed_input_marker(ctx, point, color, orientation, size, settings);
+        _directed_input_marker(ctx, point, color, orientation, size);
     }
 }
 
-auto render_undirected_output(BLContext& ctx, point_t position, double size,
-                              const OldRenderSettings& settings) {
-    draw_point(ctx, position, PointShape::cross, defaults::color_green, size / 4,
-               settings);
-    draw_point(ctx, position, PointShape::plus, defaults::color_green, size / 3,
-               settings);
+auto render_undirected_output(Context& ctx, point_t position, double size) {
+    draw_point(ctx, position, PointShape::cross, defaults::color_green, size / 4);
+    draw_point(ctx, position, PointShape::plus, defaults::color_green, size / 3);
 }
 
-auto render_editable_circuit_connection_cache(BLContext& ctx,
-                                              const EditableCircuit& editable_circuit,
-                                              const OldRenderSettings& settings) -> void {
-    const auto scene_rect = get_scene_rect(settings.view_config);
+auto render_editable_circuit_connection_cache(Context& ctx,
+                                              const EditableCircuit& editable_circuit)
+    -> void {
+    const auto scene_rect = get_scene_rect(ctx.settings.view_config);
     const auto& caches = editable_circuit.caches();
 
     for (auto [position, orientation] : caches.input_positions_and_orientations()) {
@@ -87,8 +79,7 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
         }
 
         const auto size = 1.0 / 3.0;
-        render_input_marker(ctx, position, defaults::color_green, orientation, size,
-                            settings);
+        render_input_marker(ctx, position, defaults::color_green, orientation, size);
     }
 
     for (auto [position, orientation] : caches.output_positions_and_orientations()) {
@@ -98,20 +89,20 @@ auto render_editable_circuit_connection_cache(BLContext& ctx,
 
         const auto size = 0.8;
         if (orientation == orientation_t::undirected) {
-            render_undirected_output(ctx, position, size, settings);
+            render_undirected_output(ctx, position, size);
         } else {
-            draw_arrow(ctx, position, defaults::color_green, orientation, size, settings);
+            draw_arrow(ctx, position, defaults::color_green, orientation, size);
         }
     }
 }
 
-auto render_editable_circuit_collision_cache(BLContext& ctx,
-                                             const EditableCircuit& editable_circuit,
-                                             const OldRenderSettings& settings) -> void {
+auto render_editable_circuit_collision_cache(Context& ctx,
+                                             const EditableCircuit& editable_circuit)
+    -> void {
     constexpr static auto color = defaults::color_orange;
     constexpr static auto size = 0.25;
 
-    const auto scene_rect = get_scene_rect(settings.view_config);
+    const auto scene_rect = get_scene_rect(ctx.settings.view_config);
 
     for (auto [point, state] : editable_circuit.caches().collision_states()) {
         if (!is_colliding(point, scene_rect)) {
@@ -122,40 +113,39 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
             using enum collision_cache::CacheState;
 
             case element_body: {
-                draw_point(ctx, point, PointShape::square, color, size, settings);
+                draw_point(ctx, point, PointShape::square, color, size);
                 break;
             }
             case element_connection: {
-                draw_point(ctx, point, PointShape::circle, color, size, settings);
+                draw_point(ctx, point, PointShape::circle, color, size);
                 break;
             }
             case wire_connection: {
-                draw_point(ctx, point, PointShape::full_square, color, size * (2. / 3),
-                           settings);
+                draw_point(ctx, point, PointShape::full_square, color, size * (2. / 3));
                 break;
             }
             case wire_horizontal: {
-                draw_point(ctx, point, PointShape::horizontal, color, size, settings);
+                draw_point(ctx, point, PointShape::horizontal, color, size);
                 break;
             }
             case wire_vertical: {
-                draw_point(ctx, point, PointShape::vertical, color, size, settings);
+                draw_point(ctx, point, PointShape::vertical, color, size);
                 break;
             }
             case wire_corner_point: {
-                draw_point(ctx, point, PointShape::diamond, color, size, settings);
+                draw_point(ctx, point, PointShape::diamond, color, size);
                 break;
             }
             case wire_cross_point: {
-                draw_point(ctx, point, PointShape::cross, color, size, settings);
+                draw_point(ctx, point, PointShape::cross, color, size);
                 break;
             }
             case wire_crossing: {
-                draw_point(ctx, point, PointShape::plus, color, size, settings);
+                draw_point(ctx, point, PointShape::plus, color, size);
                 break;
             }
             case element_wire_connection: {
-                draw_point(ctx, point, PointShape::full_circle, color, size, settings);
+                draw_point(ctx, point, PointShape::full_circle, color, size);
                 break;
             }
             case invalid_state: {
@@ -166,10 +156,10 @@ auto render_editable_circuit_collision_cache(BLContext& ctx,
     }
 }
 
-auto render_editable_circuit_selection_cache(BLContext& ctx,
-                                             const EditableCircuit& editable_circuit,
-                                             const OldRenderSettings& settings) -> void {
-    const auto scene_rect = get_scene_rect_fine(settings.view_config);
+auto render_editable_circuit_selection_cache(Context& ctx,
+                                             const EditableCircuit& editable_circuit)
+    -> void {
+    const auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
     for (const rect_fine_t& rect : editable_circuit.caches().selection_rects()) {
         // TODO introduce is_visible
         if (!is_colliding(rect, scene_rect)) {
@@ -181,8 +171,7 @@ auto render_editable_circuit_selection_cache(BLContext& ctx,
                       .draw_type = DrawType::stroke,
                       .stroke_width = 1,
                       .stroke_color = defaults::color_lime,
-                  },
-                  settings);
+                  });
     }
 }
 

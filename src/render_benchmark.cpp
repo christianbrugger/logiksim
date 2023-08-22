@@ -261,22 +261,20 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     auto tree_length_sum = fill_line_scene(scene, n_lines);
 
     // render image
-    auto img = BLImage {1200, 1200, BL_FORMAT_PRGB32};
-    auto settings = OldRenderSettings {};
-    settings.view_config.set_size(img.width(), img.height());
+    auto circuit_ctx =
+        CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32}}};
+    auto& ctx = circuit_ctx.ctx;
 
-    auto ctx = BLContext {img};
-    render_background(ctx, settings);
+    ctx.begin();
+    render_background(ctx);
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        render_simulation(ctx, scene.layout, SimulationView {scene.simulation}, settings);
+        render_simulation(circuit_ctx, scene.layout, SimulationView {scene.simulation});
     }
     ctx.end();
 
     if (save_image) {
-        BLImageCodec codec;
-        codec.findByName("PNG");
-        img.writeToFile("benchmark_line_renderer.png", codec);
+        ctx.bl_image.writeToFile("benchmark_line_renderer.png");
     }
 
     return tree_length_sum;

@@ -6,8 +6,79 @@
 #include <blend2d.h>
 
 #include <array>
+#include <type_traits>
 
 namespace logicsim {
+
+//
+// Context
+//
+
+auto RenderSettings::format() const -> std::string {
+    return fmt::format(
+        "RenderSettings(\n"
+        "  view_config = {},\n"
+        "  background_grid_min_distance = {},\n"
+        "  thread_count = {})",
+        view_config, background_grid_min_distance, thread_count);
+}
+
+auto Context::begin() -> void {
+    settings.view_config.set_size(bl_image.width(), bl_image.height());
+    bl_ctx.begin(bl_image, context_info(settings));
+}
+
+auto Context::sync() -> void {
+    checked_sync(bl_ctx);
+}
+
+auto Context::end() -> void {
+    bl_ctx.end();
+    check_errors(bl_ctx);
+}
+
+auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool {
+    static_assert(sizeof(BLContextCreateInfo) ==
+                  sizeof(BLContextCreateInfo::flags) +
+                      sizeof(BLContextCreateInfo::threadCount) +
+                      sizeof(BLContextCreateInfo::cpuFeatures) +
+                      sizeof(BLContextCreateInfo::commandQueueLimit) +
+                      sizeof(BLContextCreateInfo::savedStateLimit) +
+                      sizeof(BLContextCreateInfo::pixelOrigin) +
+                      sizeof(BLContextCreateInfo::reserved));
+    static_assert(std::extent_v<decltype(a.reserved)> == 1);
+
+    return a.flags == b.flags &&                          //
+           a.threadCount == b.threadCount &&              //
+           a.cpuFeatures == b.cpuFeatures &&              //
+           a.commandQueueLimit == b.commandQueueLimit &&  //
+           a.savedStateLimit == b.savedStateLimit &&      //
+           a.pixelOrigin == b.pixelOrigin &&              //
+           a.reserved[0] == b.reserved[0];
+}
+
+auto context_info(const RenderSettings& settings) -> BLContextCreateInfo {
+    auto info = BLContextCreateInfo {};
+    info.commandQueueLimit = 2048;
+    info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
+    return info;
+}
+
+auto to_context(point_t position, const Context& context) -> BLPoint {
+    return to_context(position, context.settings.view_config);
+}
+
+auto to_context(point_fine_t position, const Context& context) -> BLPoint {
+    return to_context(position, context.settings.view_config);
+}
+
+auto to_context(grid_t length, const Context& context) -> double {
+    return to_context(length, context.settings.view_config);
+}
+
+auto to_context(double length, const Context& context) -> double {
+    return to_context(length, context.settings.view_config);
+}
 
 //
 // Element Draw State
@@ -60,15 +131,30 @@ auto DrawableElement::format() const -> std::string {
 // Layer Surface
 //
 
-auto LayerSurface::is_initialized(const ViewConfig& config) const -> bool {
-    return image.width() == config.width() || image.height() == config.height();
-}
+auto LayerSurface::initialize(const RenderSettings& new_settings) -> void {
+    const auto new_width = new_settings.view_config.width();
+    const auto new_height = new_settings.view_config.height();
 
-auto LayerSurface::initialize(const ViewConfig& config, const BLContextCreateInfo& info)
-    -> void {
-    if (!is_initialized(config)) {
-        image = BLImage {config.width(), config.height(), BL_FORMAT_PRGB32};
-        ctx.begin(image, info);
+    // image size changed
+    if (ctx.bl_image.width() != new_width || ctx.bl_image.height() != new_height) {
+        ctx.end();
+        print("init image");
+        ctx.settings = new_settings;
+        ctx.bl_image = BLImage {new_width, new_height, BL_FORMAT_PRGB32};
+        ctx.begin();
+    }
+
+    // context info changed
+    else if (!equals(context_info(ctx.settings), context_info(new_settings))) {
+        ctx.end();
+        print("init settings");
+        ctx.settings = new_settings;
+        ctx.begin();
+    }
+
+    // only settings update
+    else {
+        ctx.settings = new_settings;
     }
 }
 
@@ -99,29 +185,25 @@ auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRe
     };
 }
 
-auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
-                     const OldRenderSettings& settings,
-                     std::function<void(BLContext&)> render_func) -> void {
-    target_ctx.save();
+auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
+                     std::function<void(Context&, bool)> render_func) -> void {
+    auto _ [[maybe_unused]] = ContextGuard {target_ctx};
 
-    if (layer.enabled) {
-        layer.initialize(settings.view_config, context_info(settings));
-        layer.ctx.clearRect(dirty_rect);
+    if (surface.enabled) {
+        surface.initialize(target_ctx.settings);
+        surface.ctx.bl_ctx.clearRect(dirty_rect);
 
         {
-            layer.ctx.save();
-            render_func(layer.ctx);
-            layer.ctx.restore();
+            auto __ [[maybe_unused]] = ContextGuard {surface};
+            render_func(surface.ctx, surface.enabled);
         }
 
-        checked_sync(layer.ctx);
-        target_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
-        target_ctx.blitImage(dirty_rect, layer.image, dirty_rect);
+        surface.ctx.sync();
+        target_ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
+        target_ctx.bl_ctx.blitImage(dirty_rect, surface.ctx.bl_image, dirty_rect);
     } else {
-        render_func(target_ctx);
+        render_func(target_ctx, surface.enabled);
     }
-
-    target_ctx.restore();
 }
 
 //
@@ -306,34 +388,6 @@ auto SimulationLayers::allocated_size() const -> std::size_t {
 }
 
 //
-// OldRenderSettings
-//
-
-auto RenderConfig::format() const -> std::string {
-    return fmt::format(
-        "OldRenderSettings(\n"
-        "  view_config = {},\n"
-        "  background_grid_min_distance = {},\n"
-        "  thread_count = {})",
-        view_config, background_grid_min_distance, thread_count);
-}
-
-auto OldRenderSettings::format() const -> std::string {
-    return fmt::format(
-        "OldRenderSettings(\n"
-        "  view_config = {},\n"
-        "  background_grid_min_distance = {})",
-        view_config, background_grid_min_distance);
-}
-
-auto context_info(const OldRenderSettings& settings) -> BLContextCreateInfo {
-    auto info = BLContextCreateInfo {};
-    info.commandQueueLimit = 2048;
-    info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
-    return info;
-}
-
-//
 // Error checks
 //
 
@@ -358,12 +412,16 @@ auto checked_sync(BLContext& ctx) -> void {
 // Context Guard
 //
 
-ContextGuard::ContextGuard(BLContext& ctx) : ctx_(ctx) {
-    ctx_.save();
+ContextGuard::ContextGuard(BLContext& bl_ctx) : bl_ctx_ {bl_ctx} {
+    bl_ctx_.save();
 }
 
+ContextGuard::ContextGuard(Context& ctx) : ContextGuard {ctx.bl_ctx} {}
+
+ContextGuard::ContextGuard(LayerSurface& surface) : ContextGuard {surface.ctx} {}
+
 ContextGuard::~ContextGuard() {
-    ctx_.restore();
+    bl_ctx_.restore();
 };
 
 //
@@ -400,10 +458,14 @@ auto do_stroke(DrawType type) -> bool {
     return type == stroke || type == fill_and_stroke;
 }
 
-auto resolve_stroke_width(int attribute, const OldRenderSettings& settings) -> int {
+auto resolve_stroke_width(int attribute, const ViewConfig& view_config) -> int {
     return attribute == defaults::use_view_config_stroke_width
-               ? settings.view_config.stroke_width()
+               ? view_config.stroke_width()
                : attribute;
+}
+
+auto resolve_stroke_width(int attribute, const Context& ctx) -> int {
+    return resolve_stroke_width(attribute, ctx.settings.view_config);
 }
 
 auto stroke_offset(int stroke_width) -> double {
@@ -447,48 +509,44 @@ auto format(PointShape type) -> std::string {
     throw_exception("cannot convert PointType to string");
 }
 
-auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
-                double size, const OldRenderSettings& settings) -> void {
+auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color, double size)
+    -> void {
     constexpr auto stroke_width = 1;
 
     switch (shape) {
         using enum PointShape;
 
         case circle: {
-            const auto center = to_context(point, settings.view_config);
-            const auto r = to_context(size, settings.view_config);
+            const auto center = to_context(point, ctx);
+            const auto r = to_context(size, ctx);
 
-            ctx.setStrokeWidth(stroke_width);
-            ctx.setStrokeStyle(color);
-            ctx.strokeCircle(BLCircle {center.x, center.y, r});
+            ctx.bl_ctx.setStrokeWidth(stroke_width);
+            ctx.bl_ctx.strokeCircle(BLCircle {center.x, center.y, r}, color);
             return;
         }
         case full_circle: {
-            const auto center = to_context(point, settings.view_config);
-            const auto r = to_context(size, settings.view_config);
+            const auto center = to_context(point, ctx);
+            const auto r = to_context(size, ctx);
 
-            ctx.setFillStyle(color);
-            ctx.fillCircle(BLCircle {center.x, center.y, r});
+            ctx.bl_ctx.fillCircle(BLCircle {center.x, center.y, r}, color);
             return;
         }
         case cross: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
+            const auto [x, y] = to_context(point, ctx);
+            const auto d = to_context(size, ctx);
 
-            ctx.setStrokeWidth(stroke_width);
-            ctx.setStrokeStyle(color);
-
-            ctx.strokeLine(BLLine {x - d, y - d, x + d, y + d});
-            ctx.strokeLine(BLLine {x - d, y + d, x + d, y - d});
+            ctx.bl_ctx.setStrokeWidth(stroke_width);
+            ctx.bl_ctx.strokeLine(BLLine {x - d, y - d, x + d, y + d}, color);
+            ctx.bl_ctx.strokeLine(BLLine {x - d, y + d, x + d, y - d}, color);
             return;
         }
         case plus: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
+            const auto [x, y] = to_context(point, ctx);
+            const auto d = to_context(size, ctx);
             const auto attrs = LineAttributes {color, stroke_width};
 
-            draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs, settings);
-            draw_orthogonal_line(ctx, BLLine {x - d, y, x + d, y}, attrs, settings);
+            draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs);
+            draw_orthogonal_line(ctx, BLLine {x - d, y, x + d, y}, attrs);
             return;
         }
         case square: {
@@ -501,8 +559,7 @@ auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
                           .draw_type = DrawType::stroke,
                           .stroke_width = stroke_width,
                           .stroke_color = color,
-                      },
-                      settings);
+                      });
 
             return;
         }
@@ -516,37 +573,35 @@ auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
                           .draw_type = DrawType::fill,
                           .stroke_width = stroke_width,
                           .fill_color = color,
-                      },
-                      settings);
+                      });
             return;
         }
         case diamond: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
+            const auto [x, y] = to_context(point, ctx);
+            const auto d = to_context(size, ctx);
 
             const auto poly = std::array {BLPoint {x, y - d}, BLPoint {x + d, y},
                                           BLPoint {x, y + d}, BLPoint {x - d, y}};
             const auto view = BLArrayView<BLPoint> {poly.data(), poly.size()};
 
-            ctx.setStrokeWidth(stroke_width);
-            ctx.setStrokeStyle(color);
-            ctx.strokePolygon(BLArrayView<BLPoint>(view));
+            ctx.bl_ctx.setStrokeWidth(stroke_width);
+            ctx.bl_ctx.strokePolygon(BLArrayView<BLPoint>(view), color);
             return;
         }
         case horizontal: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
+            const auto [x, y] = to_context(point, ctx);
+            const auto d = to_context(size, ctx);
             const auto attrs = LineAttributes {color, stroke_width};
 
-            draw_orthogonal_line(ctx, BLLine {x - d, y, x + d, y}, attrs, settings);
+            draw_orthogonal_line(ctx, BLLine {x - d, y, x + d, y}, attrs);
             return;
         }
         case vertical: {
-            const auto [x, y] = to_context(point, settings.view_config);
-            const auto d = to_context(size, settings.view_config);
+            const auto [x, y] = to_context(point, ctx);
+            const auto d = to_context(size, ctx);
             const auto attrs = LineAttributes {color, stroke_width};
 
-            draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs, settings);
+            draw_orthogonal_line(ctx, BLLine {x, y + d, x, y - d}, attrs);
             return;
         }
     }
@@ -558,36 +613,35 @@ auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
 // Arrow
 //
 
-auto draw_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
-                double size, const OldRenderSettings& settings) -> void {
+auto draw_arrow(Context& ctx, point_t point, color_t color, orientation_t orientation,
+                double size) -> void {
     auto _ = ContextGuard {ctx};
 
-    ctx.setStrokeWidth(1);
-    ctx.setStrokeStyle(BLRgba32(color.value));
+    ctx.bl_ctx.setStrokeWidth(1);
+    ctx.bl_ctx.setStrokeStyle(color);
 
-    const auto [x, y] = to_context(point, settings.view_config);
-    const auto d = to_context(size, settings.view_config);
+    const auto [x, y] = to_context(point, ctx);
+    const auto d = to_context(size, ctx);
     const auto angle = to_angle(orientation);
 
-    ctx.translate(BLPoint {x, y});
-    ctx.rotate(angle);
+    ctx.bl_ctx.translate(BLPoint {x, y});
+    ctx.bl_ctx.rotate(angle);
 
-    ctx.strokeLine(BLLine(0, 0, d, 0));
-    ctx.strokeLine(BLLine(0, 0, d * 0.5, +d * 0.25));
-    ctx.strokeLine(BLLine(0, 0, d * 0.5, -d * 0.25));
+    ctx.bl_ctx.strokeLine(BLLine(0, 0, d, 0));
+    ctx.bl_ctx.strokeLine(BLLine(0, 0, d * 0.5, +d * 0.25));
+    ctx.bl_ctx.strokeLine(BLLine(0, 0, d * 0.5, -d * 0.25));
 }
 
 //
 // Line
 //
 
-auto _draw_orthogonal_line_ordered(BLContext& ctx, const BLLine line,
-                                   LineAttributes attributes,
-                                   const OldRenderSettings& settings) -> void {
+auto _draw_orthogonal_line_ordered(Context& ctx, const BLLine line,
+                                   LineAttributes attributes) -> void {
     assert(line.x0 <= line.x1);
     assert(line.y0 <= line.y1);
 
-    const int stroke_width = resolve_stroke_width(attributes.stroke_width, settings);
+    const int stroke_width = resolve_stroke_width(attributes.stroke_width, ctx);
 
     if (stroke_width < 1) {
         return;
@@ -601,18 +655,17 @@ auto _draw_orthogonal_line_ordered(BLContext& ctx, const BLLine line,
     if (line.y0 == line.y1) {
         const auto x = line.x0 - p0_cap;
         const auto w = line.x1 + p1_cap - x;
-        ctx.fillRect(x, line.y0 - offset, w, stroke_width, attributes.color);
+        ctx.bl_ctx.fillRect(x, line.y0 - offset, w, stroke_width, attributes.color);
     }
 
     else {
         const auto y = line.y0 - p0_cap;
         const auto h = line.y1 + p1_cap - y;
-        ctx.fillRect(line.x0 - offset, y, stroke_width, h, attributes.color);
+        ctx.bl_ctx.fillRect(line.x0 - offset, y, stroke_width, h, attributes.color);
     }
 }
 
-auto draw_orthogonal_line(BLContext& ctx, BLLine line, LineAttributes attributes,
-                          const OldRenderSettings& settings) -> void {
+auto draw_orthogonal_line(Context& ctx, BLLine line, LineAttributes attributes) -> void {
     if (line.x0 > line.x1) {
         std::swap(line.x0, line.x1);
         std::swap(attributes.p0_endcap, attributes.p1_endcap);
@@ -622,70 +675,66 @@ auto draw_orthogonal_line(BLContext& ctx, BLLine line, LineAttributes attributes
         std::swap(attributes.p0_endcap, attributes.p1_endcap);
     }
 
-    _draw_orthogonal_line_ordered(ctx, line, attributes, settings);
+    _draw_orthogonal_line_ordered(ctx, line, attributes);
 }
 
-auto draw_line(BLContext& ctx, const ordered_line_t line, LineAttributes attributes,
-               const OldRenderSettings& settings) -> void {
-    draw_line(ctx, line_fine_t {line}, attributes, settings);
+auto draw_line(Context& ctx, const ordered_line_t line, LineAttributes attributes)
+    -> void {
+    draw_line(ctx, line_fine_t {line}, attributes);
 }
 
-auto draw_line(BLContext& ctx, const line_t line, LineAttributes attributes,
-               const OldRenderSettings& settings) -> void {
-    draw_line(ctx, line_fine_t {line}, attributes, settings);
+auto draw_line(Context& ctx, const line_t line, LineAttributes attributes) -> void {
+    draw_line(ctx, line_fine_t {line}, attributes);
 }
 
-auto draw_line(BLContext& ctx, const line_fine_t line, LineAttributes attributes,
-               const OldRenderSettings& settings) -> void {
-    const auto [x0, y0] = to_context(line.p0, settings.view_config);
-    const auto [x1, y1] = to_context(line.p1, settings.view_config);
+auto draw_line(Context& ctx, const line_fine_t line, LineAttributes attributes) -> void {
+    const auto [x0, y0] = to_context(line.p0, ctx);
+    const auto [x1, y1] = to_context(line.p1, ctx);
 
-    draw_orthogonal_line(ctx, BLLine {x0, y0, x1, y1}, attributes, settings);
+    draw_orthogonal_line(ctx, BLLine {x0, y0, x1, y1}, attributes);
 }
 
 //
 // Rect
 //
 
-auto _draw_rect_stroke(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-                       const OldRenderSettings& settings) -> void {
-    const auto [x0, y0] = to_context(rect.p0, settings.view_config);
-    const auto [x1, y1] = to_context(rect.p1, settings.view_config);
+auto _draw_rect_stroke(Context& ctx, rect_fine_t rect, RectAttributes attributes)
+    -> void {
+    const auto [x0, y0] = to_context(rect.p0, ctx);
+    const auto [x1, y1] = to_context(rect.p1, ctx);
 
     const auto w = std::max(1., x1 - x0);
     const auto h = std::max(1., y1 - y0);
 
-    const auto width = resolve_stroke_width(attributes.stroke_width, settings);
+    const auto width = resolve_stroke_width(attributes.stroke_width, ctx);
 
-    ctx.setStrokeWidth(width);
-    ctx.strokeRect(x0 + width / 2.0, y0 + width / 2.0, w - width, h - width,
-                   attributes.stroke_color);
+    ctx.bl_ctx.setStrokeWidth(width);
+    ctx.bl_ctx.strokeRect(x0 + width / 2.0, y0 + width / 2.0, w - width, h - width,
+                          attributes.stroke_color);
 }
 
-auto _draw_rect_fill(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-                     const OldRenderSettings& settings) -> void {
-    const auto [x0, y0] = to_context(rect.p0, settings.view_config);
-    const auto [x1, y1] = to_context(rect.p1, settings.view_config);
+auto _draw_rect_fill(Context& ctx, rect_fine_t rect, RectAttributes attributes) -> void {
+    const auto [x0, y0] = to_context(rect.p0, ctx);
+    const auto [x1, y1] = to_context(rect.p1, ctx);
 
     const auto w = std::max(1., x1 - x0);
     const auto h = std::max(1., y1 - y0);
 
-    ctx.fillRect(x0, y0, w, h, attributes.fill_color);
+    ctx.bl_ctx.fillRect(x0, y0, w, h, attributes.fill_color);
 }
 
-auto _draw_rect_fill_and_stroke(BLContext& ctx, rect_fine_t rect,
-                                RectAttributes attributes,
-                                const OldRenderSettings& settings) {
-    const auto stroke_width = resolve_stroke_width(attributes.stroke_width, settings);
+auto _draw_rect_fill_and_stroke(Context& ctx, rect_fine_t rect,
+                                RectAttributes attributes) {
+    const auto stroke_width = resolve_stroke_width(attributes.stroke_width, ctx);
 
-    auto [x0, y0] = to_context(rect.p0, settings.view_config);
-    auto [x1, y1] = to_context(rect.p1, settings.view_config);
+    auto [x0, y0] = to_context(rect.p0, ctx);
+    auto [x1, y1] = to_context(rect.p1, ctx);
 
     auto w = std::max(1., x1 - x0);
     auto h = std::max(1., y1 - y0);
 
     if (stroke_width > 0) {
-        ctx.fillRect(x0, y0, w, h, attributes.stroke_color);
+        ctx.bl_ctx.fillRect(x0, y0, w, h, attributes.stroke_color);
 
         x0 += stroke_width;
         y0 += stroke_width;
@@ -694,28 +743,27 @@ auto _draw_rect_fill_and_stroke(BLContext& ctx, rect_fine_t rect,
     }
 
     if (w >= 1 && h >= 1) {
-        ctx.fillRect(x0, y0, w, h, attributes.fill_color);
+        ctx.bl_ctx.fillRect(x0, y0, w, h, attributes.fill_color);
     }
 }
 
-auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-               const OldRenderSettings& settings) -> void {
+auto draw_rect(Context& ctx, rect_fine_t rect, RectAttributes attributes) -> void {
     switch (attributes.draw_type) {
         case DrawType::fill:
-            return _draw_rect_fill(ctx, rect, attributes, settings);
+            return _draw_rect_fill(ctx, rect, attributes);
         case DrawType::stroke:
-            return _draw_rect_stroke(ctx, rect, attributes, settings);
+            return _draw_rect_stroke(ctx, rect, attributes);
         case DrawType::fill_and_stroke:
-            return _draw_rect_fill_and_stroke(ctx, rect, attributes, settings);
+            return _draw_rect_fill_and_stroke(ctx, rect, attributes);
     }
 
     throw_exception("unknown DrawType in draw_rect");
 }
 
-auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
-                     const OldRenderSettings& settings) -> void {
-    const auto&& [x0, y0] = to_context(rect.p0, settings.view_config);
-    const auto&& [x1, y1] = to_context(rect.p1, settings.view_config);
+auto draw_round_rect(Context& ctx, rect_fine_t rect, RoundRectAttributes attributes)
+    -> void {
+    const auto&& [x0, y0] = to_context(rect.p0, ctx);
+    const auto&& [x1, y1] = to_context(rect.p1, ctx);
 
     auto w = x1 - x0;
     auto h = y1 - y0;
@@ -730,19 +778,19 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 
     const auto r = attributes.rounding == defaults::maximum_rounding
                        ? std::min(w, h) / 2.0
-                       : to_context(attributes.rounding, settings.view_config);
+                       : to_context(attributes.rounding, ctx);
 
     if (do_fill(attributes.draw_type)) {
-        ctx.fillRoundRect(BLRoundRect {x0, y0, w, h, r}, attributes.fill_color);
+        ctx.bl_ctx.fillRoundRect(BLRoundRect {x0, y0, w, h, r}, attributes.fill_color);
     }
 
     if (do_stroke(attributes.draw_type)) {
-        const auto width = resolve_stroke_width(attributes.stroke_width, settings);
+        const auto width = resolve_stroke_width(attributes.stroke_width, ctx);
         const auto offset = stroke_offset(width);
 
-        ctx.setStrokeWidth(width);
-        ctx.strokeRoundRect(BLRoundRect {x0 + offset, y0 + offset, w, h, r},
-                            attributes.stroke_color);
+        ctx.bl_ctx.setStrokeWidth(width);
+        ctx.bl_ctx.strokeRoundRect(BLRoundRect {x0 + offset, y0 + offset, w, h, r},
+                                   attributes.stroke_color);
     }
 }
 
@@ -750,13 +798,12 @@ auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attri
 // Circle
 //
 
-auto _draw_circle_fill_and_stroke(BLContext& ctx, point_fine_t center, grid_fine_t radius,
-                                  CircleAttributes attributes,
-                                  const OldRenderSettings& settings) -> void {
-    const auto&& [x0, y0] = to_context(
-        point_fine_t {center.x - radius, center.y - radius}, settings.view_config);
-    const auto&& [x1, y1] = to_context(
-        point_fine_t {center.x + radius, center.y + radius}, settings.view_config);
+auto _draw_circle_fill_and_stroke(Context& ctx, point_fine_t center, grid_fine_t radius,
+                                  CircleAttributes attributes) -> void {
+    const auto&& [x0, y0] =
+        to_context(point_fine_t {center.x - radius, center.y - radius}, ctx);
+    const auto&& [x1, y1] =
+        to_context(point_fine_t {center.x + radius, center.y + radius}, ctx);
 
     const auto x = (x0 + x1) / 2;
     const auto y = (y0 + y1) / 2;
@@ -764,34 +811,32 @@ auto _draw_circle_fill_and_stroke(BLContext& ctx, point_fine_t center, grid_fine
     const auto rx = (x1 - x0) / 2;
     const auto ry = (y1 - y0) / 2;
 
-    const auto stroke_width = resolve_stroke_width(attributes.stroke_width, settings);
+    const auto stroke_width = resolve_stroke_width(attributes.stroke_width, ctx);
 
-    ctx.fillEllipse(BLEllipse {x, y, rx, ry}, attributes.stroke_color);
-    ctx.fillEllipse(BLEllipse {x, y, rx - stroke_width, ry - stroke_width},
-                    attributes.fill_color);
+    ctx.bl_ctx.fillEllipse(BLEllipse {x, y, rx, ry}, attributes.stroke_color);
+    ctx.bl_ctx.fillEllipse(BLEllipse {x, y, rx - stroke_width, ry - stroke_width},
+                           attributes.fill_color);
 }
 
-auto _draw_circle_fill(BLContext& ctx, point_fine_t center, grid_fine_t radius,
-                       CircleAttributes attributes, const OldRenderSettings& settings)
-    -> void {}
+auto _draw_circle_fill(Context& ctx, point_fine_t center, grid_fine_t radius,
+                       CircleAttributes attributes) -> void {}
 
-auto _draw_circle_stroke(BLContext& ctx, point_fine_t center, grid_fine_t radius,
-                         CircleAttributes attributes, const OldRenderSettings& settings)
-    -> void {}
+auto _draw_circle_stroke(Context& ctx, point_fine_t center, grid_fine_t radius,
+                         CircleAttributes attributes) -> void {}
 
-auto draw_circle(BLContext& ctx, point_fine_t center, grid_fine_t radius,
-                 CircleAttributes attributes, const OldRenderSettings& settings) -> void {
+auto draw_circle(Context& ctx, point_fine_t center, grid_fine_t radius,
+                 CircleAttributes attributes) -> void {
     switch (attributes.draw_type) {
         using enum DrawType;
 
         case fill_and_stroke:
-            _draw_circle_fill_and_stroke(ctx, center, radius, attributes, settings);
+            _draw_circle_fill_and_stroke(ctx, center, radius, attributes);
             break;
         case fill:
-            _draw_circle_fill(ctx, center, radius, attributes, settings);
+            _draw_circle_fill(ctx, center, radius, attributes);
             break;
         case stroke:
-            _draw_circle_stroke(ctx, center, radius, attributes, settings);
+            _draw_circle_stroke(ctx, center, radius, attributes);
             break;
     }
 }
@@ -800,20 +845,21 @@ auto draw_circle(BLContext& ctx, point_fine_t center, grid_fine_t radius,
 // Text
 //
 
-auto draw_text(BLContext& ctx, point_fine_t position, std::string_view text,
-               TextAttributes attributes, const OldRenderSettings& settings) -> void {
+auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
+               TextAttributes attributes) -> void {
     if (text.empty()) {
         return;
     }
-    const auto font_size_px = attributes.font_size * settings.view_config.pixel_scale();
+    const auto font_size_px =
+        attributes.font_size * ctx.settings.view_config.pixel_scale();
     if (font_size_px < attributes.cuttoff_size_px) {
         return;
     }
 
-    const auto position_px = to_context(position, settings.view_config);
-    settings.text.draw_text(ctx, position_px, text, font_size_px, attributes.color,
-                            attributes.horizontal_alignment,
-                            attributes.vertical_alignment, attributes.style);
+    const auto position_px = to_context(position, ctx);
+    ctx.text_cache.draw_text(ctx.bl_ctx, position_px, text, font_size_px,
+                             attributes.color, attributes.horizontal_alignment,
+                             attributes.vertical_alignment, attributes.style);
 }
 
 }  // namespace logicsim

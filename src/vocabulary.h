@@ -416,6 +416,8 @@ constexpr static inline auto no_color = ::logicsim::color_t {0x00000000};
 
 constexpr static inline auto color_black = ::logicsim::color_t {0xFF000000};
 constexpr static inline auto color_white = ::logicsim::color_t {0xFFFFFFFF};
+
+constexpr static inline auto color_gray = ::logicsim::color_t {0xFF808080};
 constexpr static inline auto color_light_gray = ::logicsim::color_t {0xFFD3D3D3};
 constexpr static inline auto color_gray_90 = ::logicsim::color_t {0xFFE5E5E5};
 

@@ -265,6 +265,7 @@ class RendererWidget : public RendererWidgetBase {
     auto fps() const -> double;
     auto pixel_scale() const -> double;
     auto size_device() const -> QSize;
+    auto view_config() const noexcept -> const ViewConfig&;
 
     auto reset_circuit() -> void;
     auto load_circuit(int id) -> void;
@@ -306,10 +307,8 @@ class RendererWidget : public RendererWidgetBase {
     qreal last_pixel_ratio_ {-1};
     MouseDragLogic mouse_drag_logic_;
 
-    QImage qt_image {};
-    BLImage bl_image {};
-
-    BLContext bl_ctx {};
+    QImage qt_image_ {};
+    CircuitContext context_ {};
     bool is_initialized_ {false};
     bool use_backing_store_ {true};
 
@@ -322,7 +321,6 @@ class RendererWidget : public RendererWidgetBase {
     // new circuit
     std::optional<EditableCircuit> editable_circuit_ {};
     std::optional<SelectionBuilder> selection_builder_ {};
-    OldRenderSettings render_settings_ {};
 
     // simulation
     std::optional<InteractiveSimulation> simulation_;

@@ -7,17 +7,17 @@ namespace logicsim {
 
 class EditableCircuit;
 
-auto render_editable_circuit_connection_cache(BLContext& ctx,
-                                              const EditableCircuit& editable_circuit,
-                                              const OldRenderSettings& settings) -> void;
+auto render_editable_circuit_connection_cache(Context& ctx,
+                                              const EditableCircuit& editable_circuit)
+    -> void;
 
-auto render_editable_circuit_collision_cache(BLContext& ctx,
-                                             const EditableCircuit& editable_circuit,
-                                             const OldRenderSettings& settings) -> void;
+auto render_editable_circuit_collision_cache(Context& ctx,
+                                             const EditableCircuit& editable_circuit)
+    -> void;
 
-auto render_editable_circuit_selection_cache(BLContext& ctx,
-                                             const EditableCircuit& editable_circuit,
-                                             const OldRenderSettings& settings) -> void;
+auto render_editable_circuit_selection_cache(Context& ctx,
+                                             const EditableCircuit& editable_circuit)
+    -> void;
 
 }  // namespace logicsim
 

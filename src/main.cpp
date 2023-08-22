@@ -20,6 +20,7 @@ namespace logicsim {
 
 //////////
 
+/*
 auto generate_layout() -> Layout {
     constexpr auto max_value = 300;
     auto editable_circuit = EditableCircuit {Layout {}};
@@ -50,9 +51,12 @@ auto generate_layout() -> Layout {
     return editable_circuit.extract_layout();
 }
 
-auto render_single_layer(BLImage& img, const Layout& layout,
-                         const OldRenderSettings& settings, unsigned int threads)
+auto render_single_layer(BLImage& img, const Layout& layout, unsigned int threads)
     -> void {
+    CircuitContext {
+        Context {.bl_image = img}
+    }
+
     const auto info = BLContextCreateInfo {.threadCount = threads};
     auto ctx = BLContext {img, info};
 
@@ -137,6 +141,7 @@ auto benchmark_multi_layer(const Layout& layout, int width, int height,
     return images;
 }
 
+
 auto benchmark_layered_drawing() -> void {
     const int width = 3840;
     const int height = 2160;
@@ -160,6 +165,8 @@ auto benchmark_layered_drawing() -> void {
     }
 }
 
+*/
+
 }  // namespace logicsim
 
 auto main() -> int {
@@ -168,8 +175,6 @@ auto main() -> int {
 
     /// TODO consider: ios_base::sync_with_stdio(false);
     /// SL.io.10 in https://isocpp.github.io/CppCoreGuidelines/
-
-    benchmark_layered_drawing();
 
     if (do_run) {
         try {

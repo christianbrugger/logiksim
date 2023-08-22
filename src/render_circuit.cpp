@@ -23,24 +23,24 @@ namespace logicsim {
 //
 namespace {
 
-auto draw_grid_space_limit(BLContext& ctx, const OldRenderSettings& settings) {
-    const auto p0 =
-        to_context(point_t {grid_t::min(), grid_t::min()}, settings.view_config);
-    const auto p1 =
-        to_context(point_t {grid_t::max(), grid_t::max()}, settings.view_config);
+auto draw_grid_space_limit(Context& ctx) {
+    constexpr auto stroke_color = defaults::color_gray;
+    const auto stroke_width = std::max(5.0, to_context(5.0, ctx));
 
-    ctx.setStrokeStyle(BLRgba32(0xFF808080u));
-    ctx.setStrokeWidth(std::max(5.0, to_context(5.0, settings.view_config)));
-    ctx.strokeRect(p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y);
+    const auto p0 = to_context(point_t {grid_t::min(), grid_t::min()}, ctx);
+    const auto p1 = to_context(point_t {grid_t::max(), grid_t::max()}, ctx);
+
+    ctx.bl_ctx.setStrokeWidth(stroke_width);
+    ctx.bl_ctx.strokeRect(BLRect {p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y},
+                          stroke_color);
 }
 
 constexpr auto monochrome(uint8_t value) -> color_t {
     return color_t {value, value, value, 255};
 }
 
-auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int delta,
-                                     color_t color, int width,
-                                     const OldRenderSettings& settings) {
+auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int delta,
+                                     color_t color, int width) {
     const auto clamp_to_grid = [](double v_) {
         return gsl::narrow_cast<grid_t::value_type>(
             std::clamp(v_, grid_t::min() * 1.0, grid_t::max() * 1.0));
@@ -67,26 +67,26 @@ auto draw_background_pattern_checker(BLContext& ctx, rect_fine_t scene_rect, int
     */
 
     // this version is a bit faster
-    const auto p0 = to_context(g0, settings.view_config);
-    const auto p1 = to_context(g1, settings.view_config);
+    const auto p0 = to_context(g0, ctx);
+    const auto p1 = to_context(g1, ctx);
 
-    const auto offset = settings.view_config.offset();
-    const auto scale = settings.view_config.pixel_scale();
+    const auto offset = ctx.settings.view_config.offset();
+    const auto scale = ctx.settings.view_config.pixel_scale();
 
     // vertical
     for (int x = g0.x.value; x <= g1.x.value; x += delta) {
         const auto cx = round_fast((x + offset.x) * scale);
-        draw_orthogonal_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width}, settings);
+        draw_orthogonal_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width});
     }
     // horizontal
     for (int y = g0.y.value; y <= g1.y.value; y += delta) {
         const auto cy = round_fast((y + offset.y) * scale);
-        draw_orthogonal_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width}, settings);
+        draw_orthogonal_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width});
     }
 }
 
-auto draw_background_patterns(BLContext& ctx, const OldRenderSettings& settings) {
-    auto scene_rect = get_scene_rect_fine(settings.view_config);
+auto draw_background_patterns(Context& ctx) {
+    auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
 
     constexpr static auto grid_definition = {
         std::tuple {1, monochrome(0xF0), 1},    //
@@ -97,26 +97,25 @@ auto draw_background_patterns(BLContext& ctx, const OldRenderSettings& settings)
     };
 
     for (auto&& [delta, color, width] : grid_definition) {
-        if (delta * settings.view_config.device_scale() >=
-            settings.background_grid_min_distance) {
-            const auto draw_width_f = width * settings.view_config.device_pixel_ratio();
+        if (delta * ctx.settings.view_config.device_scale() >=
+            ctx.settings.background_grid_min_distance) {
+            const auto draw_width_f =
+                width * ctx.settings.view_config.device_pixel_ratio();
             // we substract a little, as we want 150% scaling to round down
             const auto epsilon = 0.01;
             const auto draw_width = std::max(1, round_to<int>(draw_width_f - epsilon));
-            draw_background_pattern_checker(ctx, scene_rect, delta, color, draw_width,
-                                            settings);
+            draw_background_pattern_checker(ctx, scene_rect, delta, color, draw_width);
         }
     }
 }
 }  // namespace
 
-auto render_background(BLContext& ctx, const OldRenderSettings& settings) -> void {
-    ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-    ctx.setFillStyle(BLRgba32(defaults::color_white.value));
-    ctx.fillAll();
+auto render_background(Context& ctx) -> void {
+    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    ctx.bl_ctx.fillAll(defaults::color_white);
 
-    draw_background_patterns(ctx, settings);
-    draw_grid_space_limit(ctx, settings);
+    draw_background_patterns(ctx);
+    draw_grid_space_limit(ctx);
 }
 
 //
@@ -185,9 +184,9 @@ auto get_logic_item_text_color(ElementDrawState state) -> color_t {
     return with_alpha_runtime(defaults::font::logic_item_text_color, state);
 }
 
-auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement element,
-                          ElementDrawState state, const OldRenderSettings& settings,
-                          LogicItemRectAttributes attributes) -> void {
+auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement element,
+                          ElementDrawState state, LogicItemRectAttributes attributes)
+    -> void {
     const auto final_rect = rect + point_fine_t {element.position()};
 
     const auto fill_color = attributes.custom_fill_color
@@ -203,13 +202,12 @@ auto draw_logic_item_rect(BLContext& ctx, rect_fine_t rect, layout::ConstElement
                   .draw_type = DrawType::fill_and_stroke,
                   .fill_color = fill_color,
                   .stroke_color = stroke_color,
-              },
-              settings);
+              });
 }
 
-auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view text,
+auto draw_logic_item_label(Context& ctx, point_fine_t point, std::string_view text,
                            layout::ConstElement element, ElementDrawState state,
-                           const OldRenderSettings& settings,
+
                            LogicItemTextAttributes attributes) -> void {
     if (text.empty()) {
         return;
@@ -233,25 +231,22 @@ auto draw_logic_item_label(BLContext& ctx, point_fine_t point, std::string_view 
                   .vertical_alignment = attributes.vertical_alignment,
                   .style = attributes.style,
                   .cuttoff_size_px = defaults::font::text_cutoff_px,
-              },
-              settings);
+              });
 }
 
-auto draw_binary_value(BLContext& ctx, point_fine_t point, bool is_enabled,
-                       layout::ConstElement element, ElementDrawState state,
-                       const OldRenderSettings& settings) -> void {
+auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,
+                       layout::ConstElement element, ElementDrawState state) -> void {
     const auto text = is_enabled ? std::string_view {"1"} : std::string_view {"0"};
-    draw_logic_item_label(ctx, point, text, element, state, settings,
+    draw_logic_item_label(ctx, point, text, element, state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::binary_value_size,
                           });
 }
 
-auto draw_binary_false(BLContext& ctx, point_fine_t point, layout::ConstElement element,
-                       ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
+auto draw_binary_false(Context& ctx, point_fine_t point, layout::ConstElement element,
+                       ElementDrawState state) -> void {
     const auto is_enabled = false;
-    draw_binary_value(ctx, point, is_enabled, element, state, settings);
+    draw_binary_value(ctx, point, is_enabled, element, state);
 }
 
 //
@@ -277,9 +272,8 @@ constexpr auto standard_element_label(ElementType element_type) -> std::string_v
     }
 }
 
-auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
-                           ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
+auto draw_standard_element(Context& ctx, layout::ConstElement element,
+                           ElementDrawState state) -> void {
     const auto element_height =
         std::max(element.input_count(), element.output_count()) - std::size_t {1};
     const auto padding = defaults::logic_item_body_overdraw;
@@ -288,14 +282,13 @@ auto draw_standard_element(BLContext& ctx, layout::ConstElement element,
         point_fine_t {2., element_height + padding},
     };
 
-    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_rect(ctx, rect, element, state);
     draw_logic_item_label(ctx, point_fine_t {1., element_height / 2.0},
-                          standard_element_label(element.element_type()), element, state,
-                          settings);
+                          standard_element_label(element.element_type()), element, state);
 }
 
-auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
-                 const OldRenderSettings& settings,
+auto draw_button(Context& ctx, layout::ConstElement element, ElementDrawState state,
+
                  std::optional<simulation_view::ConstElement> logic_state) -> void {
     const auto padding = defaults::button_body_overdraw;
     const auto rect = rect_fine_t {
@@ -304,13 +297,13 @@ auto draw_button(BLContext& ctx, layout::ConstElement element, ElementDrawState 
     };
     const auto logic_value = logic_state ? logic_state->internal_state(0) : false;
 
-    draw_logic_item_rect(ctx, rect, element, state, settings,
+    draw_logic_item_rect(ctx, rect, element, state,
                          {.custom_fill_color = defaults::button_body_color});
-    draw_binary_value(ctx, point_fine_t {0, 0}, logic_value, element, state, settings);
+    draw_binary_value(ctx, point_fine_t {0, 0}, logic_value, element, state);
 }
 
-auto draw_led(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
-              const OldRenderSettings& settings,
+auto draw_led(Context& ctx, layout::ConstElement element, ElementDrawState state,
+
               std::optional<simulation_view::ConstElement> logic_state) -> void {
     const auto logic_value =
         logic_state ? logic_state->input_value(connection_id_t {0}) : false;
@@ -323,14 +316,12 @@ auto draw_led(BLContext& ctx, layout::ConstElement element, ElementDrawState sta
                 CircleAttributes {
                     .fill_color = with_alpha_runtime(base_color, state),
                     .stroke_color = get_logic_item_stroke_color(state),
-                },
-                settings);
+                });
 }
 
 namespace {
-auto _draw_power_of_two_inputs(BLContext& ctx, layout::ConstElement element,
-                               ElementDrawState state,
-                               const OldRenderSettings& settings) {
+auto _draw_power_of_two_inputs(Context& ctx, layout::ConstElement element,
+                               ElementDrawState state) {
     if (element.input_count() > 65) {
         return;
     }
@@ -346,8 +337,7 @@ auto _draw_power_of_two_inputs(BLContext& ctx, layout::ConstElement element,
         "2⁵⁰", "2⁵¹", "2⁵²", "2⁵³", "2⁵⁴", "2⁵⁵", "2⁵⁶", "2⁵⁷", "2⁵⁸", "2⁵⁹",  //
         "2⁶⁰", "2⁶¹", "2⁶²", "2⁶³"                                             //
     };
-    draw_connector_labels(ctx, ConnectorLabels {input_labels, {}}, element, state,
-                          settings);
+    draw_connector_labels(ctx, ConnectorLabels {input_labels, {}}, element, state);
 }
 
 struct styled_display_text_t {
@@ -358,11 +348,11 @@ struct styled_display_text_t {
 
 // to_text = [](uint64_t number) -> std::pair<std::string, color_t> { ... };
 template <typename Func>
-auto _draw_number_display(BLContext& ctx, layout::ConstElement element,
+auto _draw_number_display(Context& ctx, layout::ConstElement element,
                           ElementDrawState state, grid_fine_t element_width,
                           grid_fine_t element_height, Func to_text,
                           std::string_view edit_mode_text,
-                          const OldRenderSettings& settings,
+
                           std::optional<simulation_view::ConstElement> logic_state) {
     if (element.input_count() > 65) {
         return;
@@ -377,7 +367,7 @@ auto _draw_number_display(BLContext& ctx, layout::ConstElement element,
         point_fine_t {element_width - 0.2, text_y + 0.7},
     };
     draw_logic_item_rect(
-        ctx, text_rect, element, state, settings,
+        ctx, text_rect, element, state,
         LogicItemRectAttributes {.custom_fill_color = defaults::color_white});
 
     // number
@@ -395,13 +385,13 @@ auto _draw_number_display(BLContext& ctx, layout::ConstElement element,
             // use thousand delimiters
             const styled_display_text_t text = to_text(number);
             draw_logic_item_label(
-                ctx, point_fine_t {text_x, text_y}, text.text, element, state, settings,
+                ctx, point_fine_t {text_x, text_y}, text.text, element, state,
                 LogicItemTextAttributes {.custom_font_size = text.font_size,
                                          .custom_text_color = text.color});
         }
     } else {
         draw_logic_item_label(
-            ctx, point_fine_t {text_x, text_y}, edit_mode_text, element, state, settings,
+            ctx, point_fine_t {text_x, text_y}, edit_mode_text, element, state,
             LogicItemTextAttributes {
                 .custom_font_size = defaults::font::display_size,
                 .custom_text_color = defaults::font::display_normal_color});
@@ -409,8 +399,8 @@ auto _draw_number_display(BLContext& ctx, layout::ConstElement element,
 }
 }  // namespace
 
-auto draw_display_number(BLContext& ctx, layout::ConstElement element,
-                         ElementDrawState state, const OldRenderSettings& settings,
+auto draw_display_number(Context& ctx, layout::ConstElement element,
+                         ElementDrawState state,
                          std::optional<simulation_view::ConstElement> logic_state)
     -> void {
     const auto input_count = element.input_count();
@@ -422,7 +412,7 @@ auto draw_display_number(BLContext& ctx, layout::ConstElement element,
         point_fine_t {0., -padding},
         point_fine_t {element_width, element_height + padding},
     };
-    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_rect(ctx, rect, element, state);
 
     const auto to_text = [](uint64_t number) {
         return styled_display_text_t {
@@ -430,8 +420,8 @@ auto draw_display_number(BLContext& ctx, layout::ConstElement element,
     };
     const auto edit_mode_text = "0";
     _draw_number_display(ctx, element, state, element_width, element_height, to_text,
-                         edit_mode_text, settings, logic_state);
-    _draw_power_of_two_inputs(ctx, element, state, settings);
+                         edit_mode_text, logic_state);
+    _draw_power_of_two_inputs(ctx, element, state);
 }
 
 namespace {
@@ -465,8 +455,8 @@ auto _to_asci(uint64_t number) -> styled_display_text_t {
 }
 }  // namespace
 
-auto draw_display_ascii(BLContext& ctx, layout::ConstElement element,
-                        ElementDrawState state, const OldRenderSettings& settings,
+auto draw_display_ascii(Context& ctx, layout::ConstElement element,
+                        ElementDrawState state,
                         std::optional<simulation_view::ConstElement> logic_state)
     -> void {
     const auto element_width = grid_fine_t {4.};
@@ -477,48 +467,47 @@ auto draw_display_ascii(BLContext& ctx, layout::ConstElement element,
         point_fine_t {0., -padding},
         point_fine_t {element_width, element_height + padding},
     };
-    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_rect(ctx, rect, element, state);
 
     const auto edit_mode_text = "A";
     _draw_number_display(ctx, element, state, element_width, element_height, _to_asci,
-                         edit_mode_text, settings, logic_state);
-    _draw_power_of_two_inputs(ctx, element, state, settings);
+                         edit_mode_text, logic_state);
+    _draw_power_of_two_inputs(ctx, element, state);
 }
 
-auto draw_buffer(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
-                 const OldRenderSettings& settings) -> void {
+auto draw_buffer(Context& ctx, layout::ConstElement element, ElementDrawState state)
+    -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., -padding},
         point_fine_t {1., +padding},
     };
 
-    draw_logic_item_rect(ctx, rect, element, state, settings);
-    draw_logic_item_label(ctx, point_fine_t {0.5, 0.}, "1", element, state, settings,
+    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_label(ctx, point_fine_t {0.5, 0.}, "1", element, state,
                           {.custom_font_size = defaults::font::buffer_label_size});
 }
 
-auto draw_clock_generator(BLContext& ctx, layout::ConstElement element,
-                          ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
+auto draw_clock_generator(Context& ctx, layout::ConstElement element,
+                          ElementDrawState state) -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., 0. - padding},
         point_fine_t {3., 2. + padding},
     };
-    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_rect(ctx, rect, element, state);
 
     // labels
     static constexpr auto input_labels = string_array<1> {"En"};
     static constexpr auto output_labels = string_array<1> {"C"};
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state, settings);
+                          state);
 
     // generator delay
     const auto generator_delay = Schematic::defaults::clock_generator_delay;
     const auto duration_text = fmt::format("{}", generator_delay);
     draw_logic_item_label(ctx, point_fine_t {1.5, 0}, duration_text, element, state,
-                          settings,
+
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,
@@ -528,26 +517,23 @@ auto draw_clock_generator(BLContext& ctx, layout::ConstElement element,
                           });
 }
 
-auto draw_flipflop_jk(BLContext& ctx, layout::ConstElement element,
-                      ElementDrawState state, const OldRenderSettings& settings) -> void {
+auto draw_flipflop_jk(Context& ctx, layout::ConstElement element, ElementDrawState state)
+    -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., 0. - padding},
         point_fine_t {4., 2. + padding},
     };
-
-    draw_logic_item_rect(ctx, rect, element, state, settings);
-    // draw_logic_item_label(ctx, point_fine_t {2., 1.}, "JK-FF", element, state,
-    // settings);
+    draw_logic_item_rect(ctx, rect, element, state);
 
     static constexpr auto input_labels = string_array<5> {"> C", "J", "K", "S", "R"};
     static constexpr auto output_labels = string_array<2> {"Q", "Q\u0305"};
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state, settings);
+                          state);
 }
 
-auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
-                         ElementDrawState state, const OldRenderSettings& settings,
+auto draw_shift_register(Context& ctx, layout::ConstElement element,
+                         ElementDrawState state,
                          std::optional<simulation_view::ConstElement> logic_state)
     -> void {
     const auto padding = defaults::logic_item_body_overdraw;
@@ -555,7 +541,7 @@ auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
         point_fine_t {0., 0. - padding},
         point_fine_t {8., 2. + padding},
     };
-    draw_logic_item_rect(ctx, rect, element, state, settings);
+    draw_logic_item_rect(ctx, rect, element, state);
 
     // content
     const auto output_count = element.output_count();
@@ -567,77 +553,67 @@ auto draw_shift_register(BLContext& ctx, layout::ConstElement element,
             0.25 + 1.5 * (n % output_count),
         };
         const auto logic_value = logic_state ? logic_state->internal_state(n) : false;
-        draw_binary_value(ctx, point, logic_value, element, state, settings);
+        draw_binary_value(ctx, point, logic_value, element, state);
     }
 
     // labels
     static constexpr auto input_labels = string_array<3> {">", "", ""};
     static constexpr auto output_labels = string_array<2> {"", ""};
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state, settings);
+                          state);
 }
 
-auto draw_latch_d(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
-                  const OldRenderSettings& settings) -> void {
+auto draw_latch_d(Context& ctx, layout::ConstElement element, ElementDrawState state)
+    -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., 0. - padding},
         point_fine_t {2., 1. + padding},
     };
-
-    draw_logic_item_rect(ctx, rect, element, state, settings);
-    // draw_logic_item_label(ctx, point_fine_t {1., 0.5}, "L", element, state,
-    // settings);
+    draw_logic_item_rect(ctx, rect, element, state);
 
     static constexpr auto input_labels = string_array<2> {"E", "D"};
     static constexpr auto output_labels = string_array<1> {"Q"};
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state, settings);
+                          state);
 }
 
-auto draw_flipflop_d(BLContext& ctx, layout::ConstElement element, ElementDrawState state,
-                     const OldRenderSettings& settings) -> void {
+auto draw_flipflop_d(Context& ctx, layout::ConstElement element, ElementDrawState state)
+    -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., 0. - padding},
         point_fine_t {3., 2. + padding},
     };
-
-    draw_logic_item_rect(ctx, rect, element, state, settings);
-    // draw_logic_item_label(ctx, point_fine_t {1.5, 1.}, "FF", element, state,
-    // settings);
+    draw_logic_item_rect(ctx, rect, element, state);
 
     static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
     static constexpr auto output_labels = string_array<1> {"Q"};
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state, settings);
+                          state);
 }
 
-auto draw_flipflop_ms_d(BLContext& ctx, layout::ConstElement element,
-                        ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
+auto draw_flipflop_ms_d(Context& ctx, layout::ConstElement element,
+                        ElementDrawState state) -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., 0. - padding},
         point_fine_t {4., 2. + padding},
     };
-
-    draw_logic_item_rect(ctx, rect, element, state, settings);
-    // draw_logic_item_label(ctx, point_fine_t {2., 1.}, "MS-FF", element, state,
-    // settings);
+    draw_logic_item_rect(ctx, rect, element, state);
 
     static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
     static constexpr auto output_labels = string_array<1> {"Q"};
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state, settings);
+                          state);
 }
 
 //
 // All Elements
 //
 
-auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
-                          ElementDrawState state, const OldRenderSettings& settings,
+auto draw_logic_item_base(Context& ctx, layout::ConstElement element,
+                          ElementDrawState state,
                           std::optional<simulation_view::ConstElement> logic_state)
     -> void {
     switch (element.element_type()) {
@@ -649,58 +625,55 @@ auto draw_logic_item_base(BLContext& ctx, layout::ConstElement element,
             [[unlikely]] throw_exception("not supported");
 
         case buffer_element:
-            return draw_buffer(ctx, element, state, settings);
+            return draw_buffer(ctx, element, state);
 
         case and_element:
         case or_element:
         case xor_element:
-            return draw_standard_element(ctx, element, state, settings);
+            return draw_standard_element(ctx, element, state);
 
         case button:
-            return draw_button(ctx, element, state, settings, logic_state);
+            return draw_button(ctx, element, state, logic_state);
         case led:
-            return draw_led(ctx, element, state, settings, logic_state);
+            return draw_led(ctx, element, state, logic_state);
         case display_number:
-            return draw_display_number(ctx, element, state, settings, logic_state);
+            return draw_display_number(ctx, element, state, logic_state);
         case display_ascii:
-            return draw_display_ascii(ctx, element, state, settings, logic_state);
+            return draw_display_ascii(ctx, element, state, logic_state);
 
         case clock_generator:
-            return draw_clock_generator(ctx, element, state, settings);
+            return draw_clock_generator(ctx, element, state);
         case flipflop_jk:
-            return draw_flipflop_jk(ctx, element, state, settings);
+            return draw_flipflop_jk(ctx, element, state);
         case shift_register:
-            return draw_shift_register(ctx, element, state, settings, logic_state);
+            return draw_shift_register(ctx, element, state, logic_state);
         case latch_d:
-            return draw_latch_d(ctx, element, state, settings);
+            return draw_latch_d(ctx, element, state);
         case flipflop_d:
-            return draw_flipflop_d(ctx, element, state, settings);
+            return draw_flipflop_d(ctx, element, state);
         case flipflop_ms_d:
-            return draw_flipflop_ms_d(ctx, element, state, settings);
+            return draw_flipflop_ms_d(ctx, element, state);
 
         case sub_circuit:
-            return draw_standard_element(ctx, element, state, settings);
+            return draw_standard_element(ctx, element, state);
     }
     throw_exception("not supported");
 }
 
-auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
-                           std::span<const DrawableElement> elements,
-                           const OldRenderSettings& settings) -> void {
+auto draw_logic_items_base(Context& ctx, const Layout& layout,
+                           std::span<const DrawableElement> elements) -> void {
     for (const auto entry : elements) {
-        draw_logic_item_base(ctx, layout.element(entry.element_id), entry.state,
-                             settings);
+        draw_logic_item_base(ctx, layout.element(entry.element_id), entry.state);
     }
 }
 
-auto draw_logic_items_base(BLContext& ctx, const Layout& layout,
+auto draw_logic_items_base(Context& ctx, const Layout& layout,
                            std::span<const element_id_t> elements,
-                           SimulationView simulation_view,
-                           const OldRenderSettings& settings) -> void {
+                           SimulationView simulation_view) -> void {
     const auto state = ElementDrawState::normal;
 
     for (const auto element_id : elements) {
-        draw_logic_item_base(ctx, layout.element(element_id), state, settings,
+        draw_logic_item_base(ctx, layout.element(element_id), state,
                              simulation_view.element(element_id));
     }
 }
@@ -713,14 +686,13 @@ auto do_draw_connector(const ViewConfig& view_config) {
     return view_config.pixel_scale() >= defaults::connector_cutoff_px;
 }
 
-auto _draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
-                              const OldRenderSettings& settings) {
+auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
     const auto radius = defaults::inverted_circle_radius;
-    const auto width = settings.view_config.stroke_width();
+    const auto width = ctx.settings.view_config.stroke_width();
     const auto offset = stroke_offset(width);
 
-    const auto r = radius * settings.view_config.pixel_scale();
-    const auto p = to_context(attributes.position, settings.view_config);
+    const auto r = radius * ctx.settings.view_config.pixel_scale();
+    const auto p = to_context(attributes.position, ctx);
     const auto p_center = connector_point(p, attributes.orientation, r + width / 2.0);
     const auto p_adjusted = is_horizontal(attributes.orientation)
                                 ? BLPoint {p_center.x, p_center.y + offset}
@@ -730,69 +702,64 @@ auto _draw_connector_inverted(BLContext& ctx, ConnectorAttributes attributes,
         with_alpha_runtime(defaults::inverted_connector_fill, attributes.state);
     const auto stroke_color = wire_color(attributes.is_enabled, attributes.state);
 
-    ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r + width / 2.0}, stroke_color);
-    ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r - width / 2.0}, fill_color);
+    ctx.bl_ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r + width / 2.0},
+                          stroke_color);
+    ctx.bl_ctx.fillCircle(BLCircle {p_adjusted.x, p_adjusted.y, r - width / 2.0},
+                          fill_color);
 }
 
-auto _draw_connector_normal(BLContext& ctx, ConnectorAttributes attributes,
-                            const OldRenderSettings& settings) -> void {
+auto _draw_connector_normal(Context& ctx, ConnectorAttributes attributes) -> void {
     const auto endpoint = connector_point(attributes.position, attributes.orientation,
                                           defaults::connector_length);
     draw_line(ctx, line_fine_t {attributes.position, endpoint},
-              {.color = wire_color(attributes.is_enabled, attributes.state)}, settings);
+              {.color = wire_color(attributes.is_enabled, attributes.state)});
 }
 
-auto draw_connector(BLContext& ctx, ConnectorAttributes attributes,
-                    const OldRenderSettings& settings) -> void {
+auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
     if (attributes.orientation == orientation_t::undirected) {
         return;
     }
 
     if (attributes.is_inverted) {
-        _draw_connector_inverted(ctx, attributes, settings);
+        _draw_connector_inverted(ctx, attributes);
     } else {
-        _draw_connector_normal(ctx, attributes, settings);
+        _draw_connector_normal(ctx, attributes);
     }
 }
 
-auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
-                                ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
+auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
+                                ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
     iter_input_location_and_id(
         layout_data,
         [&](connection_id_t input_id, point_t position, orientation_t orientation) {
-            draw_connector(ctx,
-                           ConnectorAttributes {
-                               .state = state,
-                               .position = position,
-                               .orientation = orientation,
-                               .is_inverted = element.input_inverted(input_id),
-                               .is_enabled = false,
-                           },
-                           settings);
+            draw_connector(ctx, ConnectorAttributes {
+                                    .state = state,
+                                    .position = position,
+                                    .orientation = orientation,
+                                    .is_inverted = element.input_inverted(input_id),
+                                    .is_enabled = false,
+                                });
             return true;
         });
 
     iter_output_location_and_id(
         layout_data,
         [&](connection_id_t output_id, point_t position, orientation_t orientation) {
-            draw_connector(ctx,
-                           ConnectorAttributes {
-                               .state = state,
-                               .position = position,
-                               .orientation = orientation,
-                               .is_inverted = element.output_inverted(output_id),
-                               .is_enabled = false,
-                           },
-                           settings);
+            draw_connector(ctx, ConnectorAttributes {
+                                    .state = state,
+                                    .position = position,
+                                    .orientation = orientation,
+                                    .is_inverted = element.output_inverted(output_id),
+                                    .is_enabled = false,
+                                });
             return true;
         });
 }
 
-auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
-                                ElementDrawState state, const OldRenderSettings& settings,
+auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
+                                ElementDrawState state,
                                 simulation_view::ConstElement logic_state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
@@ -802,15 +769,13 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
             const auto is_inverted = element.input_inverted(input_id);
 
             if (is_inverted || !logic_state.has_connected_input(input_id)) {
-                draw_connector(ctx,
-                               ConnectorAttributes {
-                                   .state = state,
-                                   .position = position,
-                                   .orientation = orientation,
-                                   .is_inverted = is_inverted,
-                                   .is_enabled = logic_state.input_value(input_id),
-                               },
-                               settings);
+                draw_connector(ctx, ConnectorAttributes {
+                                        .state = state,
+                                        .position = position,
+                                        .orientation = orientation,
+                                        .is_inverted = is_inverted,
+                                        .is_enabled = logic_state.input_value(input_id),
+                                    });
             }
             return true;
         });
@@ -821,39 +786,35 @@ auto draw_logic_item_connectors(BLContext& ctx, layout::ConstElement element,
             const auto is_inverted = element.output_inverted(output_id);
 
             if (is_inverted || !logic_state.has_connected_output(output_id)) {
-                draw_connector(ctx,
-                               ConnectorAttributes {
-                                   .state = state,
-                                   .position = position,
-                                   .orientation = orientation,
-                                   .is_inverted = is_inverted,
-                                   .is_enabled = logic_state.output_value(output_id),
-                               },
-                               settings);
+                draw_connector(ctx, ConnectorAttributes {
+                                        .state = state,
+                                        .position = position,
+                                        .orientation = orientation,
+                                        .is_inverted = is_inverted,
+                                        .is_enabled = logic_state.output_value(output_id),
+                                    });
             }
             return true;
         });
 }
 
-auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
-                                 std::span<const DrawableElement> elements,
-                                 const OldRenderSettings& settings) -> void {
-    if (do_draw_connector(settings.view_config)) {
+auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
+                                 std::span<const DrawableElement> elements) -> void {
+    if (do_draw_connector(ctx.settings.view_config)) {
         for (const auto entry : elements) {
-            draw_logic_item_connectors(ctx, layout.element(entry.element_id), entry.state,
-                                       settings);
+            draw_logic_item_connectors(ctx, layout.element(entry.element_id),
+                                       entry.state);
         }
     }
 }
 
-auto draw_logic_items_connectors(BLContext& ctx, const Layout& layout,
+auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
                                  std::span<const element_id_t> elements,
-                                 SimulationView simulation_view,
-                                 const OldRenderSettings& settings) -> void {
-    if (do_draw_connector(settings.view_config)) {
+                                 SimulationView simulation_view) -> void {
+    if (do_draw_connector(ctx.settings.view_config)) {
         for (const auto element_id : elements) {
             const auto state = ElementDrawState::normal;
-            draw_logic_item_connectors(ctx, layout.element(element_id), state, settings,
+            draw_logic_item_connectors(ctx, layout.element(element_id), state,
                                        simulation_view.element(element_id));
         }
     }
@@ -895,9 +856,8 @@ auto connector_vertical_alignment(orientation_t orientation) -> VerticalAlignmen
     };
 }
 
-auto draw_connector_label(BLContext& ctx, point_t position, orientation_t orientation,
-                          std::string_view label, ElementDrawState state,
-                          const OldRenderSettings& settings) -> void {
+auto draw_connector_label(Context& ctx, point_t position, orientation_t orientation,
+                          std::string_view label, ElementDrawState state) -> void {
     const auto point = label.size() > 0 && label.at(0) == '>'
                            ? point_fine_t {position}
                            : connector_point(position, orientation,
@@ -909,20 +869,18 @@ auto draw_connector_label(BLContext& ctx, point_t position, orientation_t orient
                   .color = get_logic_item_text_color(state),
                   .horizontal_alignment = connector_horizontal_alignment(orientation),
                   .vertical_alignment = connector_vertical_alignment(orientation),
-              },
-              settings);
+              });
 }
 
-auto draw_connector_labels(BLContext& ctx, ConnectorLabels labels,
-                           layout::ConstElement element, ElementDrawState state,
-                           const OldRenderSettings& settings) -> void {
+auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
+                           layout::ConstElement element, ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
     iter_input_location_and_id(
         layout_data,
         [&](connection_id_t input_id, point_t position, orientation_t orientation) {
             draw_connector_label(ctx, position, orientation,
-                                 labels.input_labels[input_id.value], state, settings);
+                                 labels.input_labels[input_id.value], state);
             return true;
         });
 
@@ -930,7 +888,7 @@ auto draw_connector_labels(BLContext& ctx, ConnectorLabels labels,
         layout_data,
         [&](connection_id_t output_id, point_t position, orientation_t orientation) {
             draw_connector_label(ctx, position, orientation,
-                                 labels.output_labels[output_id.value], state, settings);
+                                 labels.output_labels[output_id.value], state);
             return true;
         });
 }
@@ -950,84 +908,75 @@ auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
     return with_alpha_runtime(wire_color(is_enabled), state);
 }
 
-auto draw_line_cross_point(BLContext& ctx, const point_t point, bool is_enabled,
-                           ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
-    int lc_width = settings.view_config.line_cross_width();
+auto draw_line_cross_point(Context& ctx, const point_t point, bool is_enabled,
+                           ElementDrawState state) -> void {
+    int lc_width = ctx.settings.view_config.line_cross_width();
     if (lc_width <= 0) {
         return;
     }
 
-    const int wire_width = settings.view_config.stroke_width();
+    const int wire_width = ctx.settings.view_config.stroke_width();
     const int wire_offset = (wire_width - 1) / 2;
 
     const int size = 2 * lc_width + wire_width;
     const int offset = wire_offset + lc_width;
 
-    const auto [x, y] = to_context(point, settings.view_config);
+    const auto [x, y] = to_context(point, ctx);
     const auto color = wire_color(is_enabled, state);
 
-    ctx.setFillStyle(color);
-    ctx.fillRect(x - offset, y - offset, size, size);
+    ctx.bl_ctx.fillRect(BLRect {x - offset, y - offset, 1. * size, 1. * size}, color);
 }
 
-auto draw_line_segment(BLContext& ctx, line_fine_t line, SegmentAttributes attributes,
-                       ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
+auto draw_line_segment(Context& ctx, line_fine_t line, SegmentAttributes attributes,
+                       ElementDrawState state) -> void {
     const auto color = wire_color(attributes.is_enabled, state);
     draw_line(ctx, line,
               LineAttributes {
                   .color = color,
                   .p0_endcap = attributes.p0_endcap,
                   .p1_endcap = attributes.p1_endcap,
-              },
-              settings);
+              });
 }
 
-auto draw_line_segment(BLContext& ctx, ordered_line_t line, SegmentAttributes attributes,
-                       ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
-    draw_line_segment(ctx, line_fine_t {line}, attributes, state, settings);
+auto draw_line_segment(Context& ctx, ordered_line_t line, SegmentAttributes attributes,
+                       ElementDrawState state) -> void {
+    draw_line_segment(ctx, line_fine_t {line}, attributes, state);
 }
 
-auto draw_line_segment(BLContext& ctx, segment_info_t info, bool is_enabled,
-                       ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
+auto draw_line_segment(Context& ctx, segment_info_t info, bool is_enabled,
+                       ElementDrawState state) -> void {
     draw_line_segment(ctx, info.line,
                       SegmentAttributes {
                           .is_enabled = is_enabled,
                           .p0_endcap = info.p0_type == SegmentPointType::corner_point,
                           .p1_endcap = info.p1_type == SegmentPointType::corner_point,
                       },
-                      state, settings);
+                      state);
 
     if (is_cross_point(info.p0_type)) {
-        draw_line_cross_point(ctx, info.line.p0, is_enabled, state, settings);
+        draw_line_cross_point(ctx, info.line.p0, is_enabled, state);
     }
     if (is_cross_point(info.p1_type)) {
-        draw_line_cross_point(ctx, info.line.p1, is_enabled, state, settings);
+        draw_line_cross_point(ctx, info.line.p1, is_enabled, state);
     }
 }
 
-auto draw_segment_tree(BLContext& ctx, layout::ConstElement element, bool is_enabled,
-                       ElementDrawState state, const OldRenderSettings& settings)
-    -> void {
+auto draw_segment_tree(Context& ctx, layout::ConstElement element, bool is_enabled,
+                       ElementDrawState state) -> void {
     for (const segment_info_t& info : element.segment_tree().segment_infos()) {
-        draw_line_segment(ctx, info, is_enabled, state, settings);
+        draw_line_segment(ctx, info, is_enabled, state);
     }
 }
 
-auto draw_segment_tree(BLContext& ctx, layout::ConstElement element,
-                       ElementDrawState state, const OldRenderSettings& settings)
+auto draw_segment_tree(Context& ctx, layout::ConstElement element, ElementDrawState state)
     -> void {
     bool is_enabled = false;
-    draw_segment_tree(ctx, element, is_enabled, state, settings);
+    draw_segment_tree(ctx, element, is_enabled, state);
 }
 
-auto _draw_line_segment_with_history(BLContext& ctx, point_t p_from, point_t p_until,
+auto _draw_line_segment_with_history(Context& ctx, point_t p_from, point_t p_until,
                                      time_t time_from, time_t time_until,
-                                     const simulation::HistoryView& history,
-                                     const OldRenderSettings& settings) -> void {
+                                     const simulation::HistoryView& history) -> void {
     assert(time_from < time_until);
 
     const auto it_from = history.from(time_from);
@@ -1042,15 +991,14 @@ auto _draw_line_segment_with_history(BLContext& ctx, point_t p_from, point_t p_u
         if (p_start != p_end) [[likely]] {
             // TODO !!! endcaps
             draw_line_segment(ctx, line_fine_t {p_start, p_end}, {entry.value},
-                              ElementDrawState::normal, settings);
+                              ElementDrawState::normal);
         }
     }
 }
 
-auto _draw_wire_with_history(BLContext& ctx, layout::ConstElement element,
+auto _draw_wire_with_history(Context& ctx, layout::ConstElement element,
                              simulation_view::ConstElement logic_state,
-                             const simulation::HistoryView& history,
-                             const OldRenderSettings& settings) -> void {
+                             const simulation::HistoryView& history) -> void {
     if (history.size() < 2) [[unlikely]] {
         throw_exception("requires history view with at least 2 entries");
     }
@@ -1064,64 +1012,59 @@ auto _draw_wire_with_history(BLContext& ctx, layout::ConstElement element,
     for (auto&& segment : element.line_tree().sized_segments()) {
         _draw_line_segment_with_history(ctx, segment.line.p1, segment.line.p0,
                                         to_time(segment.p1_length),
-                                        to_time(segment.p0_length), history, settings);
+                                        to_time(segment.p0_length), history);
 
         if (segment.has_cross_point_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
             draw_line_cross_point(ctx, segment.line.p0, wire_enabled,
-                                  ElementDrawState::normal, settings);
+                                  ElementDrawState::normal);
         }
     }
 }
 
-auto draw_wire(BLContext& ctx, layout::ConstElement element,
-               simulation_view::ConstElement logic_state,
-               const OldRenderSettings& settings) -> void {
+auto draw_wire(Context& ctx, layout::ConstElement element,
+               simulation_view::ConstElement logic_state) -> void {
     const auto history = logic_state.input_history();
 
     if (history.size() < 2) {
-        draw_segment_tree(ctx, element, history.last_value(), ElementDrawState::normal,
-                          settings);
+        draw_segment_tree(ctx, element, history.last_value(), ElementDrawState::normal);
         return;
     }
 
-    _draw_wire_with_history(ctx, element, logic_state, history, settings);
+    _draw_wire_with_history(ctx, element, logic_state, history);
 }
 
 //
 //
 //
 
-auto draw_wires(BLContext& ctx, const Layout& layout,
-                std::span<const DrawableElement> elements,
-                const OldRenderSettings& settings) -> void {
+auto draw_wires(Context& ctx, const Layout& layout,
+                std::span<const DrawableElement> elements) -> void {
     for (const auto entry : elements) {
-        draw_segment_tree(ctx, layout.element(entry.element_id), entry.state, settings);
+        draw_segment_tree(ctx, layout.element(entry.element_id), entry.state);
     }
 }
 
-auto draw_wires(BLContext& ctx, const Layout& layout,
-                std::span<const element_id_t> elements, ElementDrawState state,
-                const OldRenderSettings& settings) -> void {
+auto draw_wires(Context& ctx, const Layout& layout,
+                std::span<const element_id_t> elements, ElementDrawState state) -> void {
     for (const auto element_id : elements) {
-        draw_segment_tree(ctx, layout.element(element_id), state, settings);
+        draw_segment_tree(ctx, layout.element(element_id), state);
     }
 }
 
-auto draw_wires(BLContext& ctx, const Layout& layout,
-                std::span<const element_id_t> elements, SimulationView simulation_view,
-                const OldRenderSettings& settings) -> void {
+auto draw_wires(Context& ctx, const Layout& layout,
+                std::span<const element_id_t> elements, SimulationView simulation_view)
+    -> void {
     for (const auto element_id : elements) {
-        draw_wire(ctx, layout.element(element_id), simulation_view.element(element_id),
-                  settings);
+        draw_wire(ctx, layout.element(element_id), simulation_view.element(element_id));
     }
 }
 
-auto draw_wires(BLContext& ctx, std::span<const segment_info_t> segment_infos,
-                ElementDrawState state, const OldRenderSettings& settings) -> void {
+auto draw_wires(Context& ctx, std::span<const segment_info_t> segment_infos,
+                ElementDrawState state) -> void {
     for (const auto& info : segment_infos) {
         const auto is_enabled = false;
-        draw_line_segment(ctx, info, is_enabled, state, settings);
+        draw_line_segment(ctx, info, is_enabled, state);
     }
 }
 
@@ -1164,9 +1107,8 @@ auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> double {
     return type == ElementType::button ? 0. : defaults::line_selection_padding;
 }
 
-auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
-                            shadow_t shadow_type, const OldRenderSettings& settings)
-    -> void {
+auto draw_logic_item_shadow(Context& ctx, layout::ConstElement element,
+                            shadow_t shadow_type) -> void {
     const auto data = to_layout_calculation_data(element.layout(), element);
     const auto selection_rect = element_selection_rect(data);
 
@@ -1175,21 +1117,19 @@ auto draw_logic_item_shadow(BLContext& ctx, layout::ConstElement element,
                         .draw_type = DrawType::fill,
                         .rounding = element_shadow_rounding(data.element_type),
                         .fill_color = shadow_color(shadow_type),
-                    },
-                    settings);
+                    });
 }
 
-auto draw_logic_item_shadows(BLContext& ctx, const Layout& layout,
-                             std::span<const element_id_t> elements, shadow_t shadow_type,
-                             const OldRenderSettings& settings) -> void {
+auto draw_logic_item_shadows(Context& ctx, const Layout& layout,
+                             std::span<const element_id_t> elements, shadow_t shadow_type)
+    -> void {
     for (const auto element_id : elements) {
-        draw_logic_item_shadow(ctx, layout.element(element_id), shadow_type, settings);
+        draw_logic_item_shadow(ctx, layout.element(element_id), shadow_type);
     }
 }
 
 template <input_range_of<ordered_line_t> View>
-auto draw_wire_shadows_impl(BLContext& ctx, View lines, shadow_t shadow_type,
-                            const OldRenderSettings& settings) -> void {
+auto draw_wire_shadows_impl(Context& ctx, View lines, shadow_t shadow_type) -> void {
     const auto color = shadow_color(shadow_type);
 
     for (const ordered_line_t line : lines) {
@@ -1200,132 +1140,117 @@ auto draw_wire_shadows_impl(BLContext& ctx, View lines, shadow_t shadow_type,
                             .stroke_width = defaults::use_view_config_stroke_width,
                             .fill_color = color,
 
-                        },
-                        settings);
+                        });
     }
 }
 
-auto draw_wire_shadows(BLContext& ctx, std::span<const ordered_line_t> lines,
-                       shadow_t shadow_type, const OldRenderSettings& settings) -> void {
-    draw_wire_shadows_impl(ctx, lines, shadow_type, settings);
+auto draw_wire_shadows(Context& ctx, std::span<const ordered_line_t> lines,
+                       shadow_t shadow_type) -> void {
+    draw_wire_shadows_impl(ctx, lines, shadow_type);
 }
 
-auto draw_wire_shadows(BLContext& ctx, std::span<const segment_info_t> segment_infos,
-                       shadow_t shadow_type, const OldRenderSettings& settings) -> void {
+auto draw_wire_shadows(Context& ctx, std::span<const segment_info_t> segment_infos,
+                       shadow_t shadow_type) -> void {
     draw_wire_shadows_impl(
         ctx, transform_view(segment_infos, [](segment_info_t info) { return info.line; }),
-        shadow_type, settings);
+        shadow_type);
 }
 
 //
 // Layout Rendering
 //
 
-auto render_inserted(BLContext& ctx, const Layout& layout,
-                     const OldRenderSettings& settings) {
-    const auto& layers = settings.layers;
+auto render_inserted(Context& ctx, const Layout& layout,
+                     const InteractiveLayers& layers) {
+    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    draw_logic_items_base(ctx, layout, layers.normal_below);
+    draw_wires(ctx, layout, layers.normal_wires, ElementDrawState::normal);
+    draw_logic_items_base(ctx, layout, layers.normal_above);
 
-    draw_logic_items_base(ctx, layout, layers.normal_below, settings);
-    draw_wires(ctx, layout, layers.normal_wires, ElementDrawState::normal, settings);
-    draw_logic_items_base(ctx, layout, layers.normal_above, settings);
-
-    draw_logic_items_connectors(ctx, layout, layers.normal_below, settings);
-    draw_logic_items_connectors(ctx, layout, layers.normal_above, settings);
+    draw_logic_items_connectors(ctx, layout, layers.normal_below);
+    draw_logic_items_connectors(ctx, layout, layers.normal_above);
 }
 
-auto render_uninserted(BLContext& ctx, const Layout& layout,
-                       const OldRenderSettings& settings) {
-    const auto& layers = settings.layers;
-
-    if (settings.layer_surface_uninserted.enabled) {
-        ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+auto render_uninserted(Context& ctx, const Layout& layout,
+                       const InteractiveLayers& layers, bool layer_enabled) {
+    if (layer_enabled) {
+        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
     } else {
-        ctx.setCompOp(BL_COMP_OP_SRC_OVER);
+        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
     }
 
-    draw_logic_items_base(ctx, layout, layers.uninserted_below, settings);
-    draw_wires(ctx, layers.temporary_wires, ElementDrawState::temporary_selected,
-               settings);
-    draw_wires(ctx, layers.colliding_wires, ElementDrawState::colliding, settings);
-    draw_logic_items_base(ctx, layout, layers.uninserted_above, settings);
+    draw_logic_items_base(ctx, layout, layers.uninserted_below);
+    draw_wires(ctx, layers.temporary_wires, ElementDrawState::temporary_selected);
+    draw_wires(ctx, layers.colliding_wires, ElementDrawState::colliding);
+    draw_logic_items_base(ctx, layout, layers.uninserted_above);
 
-    draw_logic_items_connectors(ctx, layout, layers.uninserted_below, settings);
-    draw_logic_items_connectors(ctx, layout, layers.uninserted_above, settings);
+    draw_logic_items_connectors(ctx, layout, layers.uninserted_below);
+    draw_logic_items_connectors(ctx, layout, layers.uninserted_above);
 }
 
-auto render_overlay(BLContext& ctx, const Layout& layout,
-                    const OldRenderSettings& settings) -> void {
-    const auto& layers = settings.layers;
-
-    if (settings.layer_surface_overlay.enabled) {
-        ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+auto render_overlay(Context& ctx, const Layout& layout, const InteractiveLayers& layers,
+                    bool layer_enabled) -> void {
+    if (layer_enabled) {
+        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
     } else {
-        ctx.setCompOp(BL_COMP_OP_SRC_OVER);
+        ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_OVER);
     }
 
     // selected & temporary
-    draw_logic_item_shadows(ctx, layout, layers.selected_logic_items, shadow_t::selected,
-                            settings);
-    draw_wire_shadows(ctx, layers.selected_wires, shadow_t::selected, settings);
-    draw_wire_shadows(ctx, layers.temporary_wires, shadow_t::selected, settings);
+    draw_logic_item_shadows(ctx, layout, layers.selected_logic_items, shadow_t::selected);
+    draw_wire_shadows(ctx, layers.selected_wires, shadow_t::selected);
+    draw_wire_shadows(ctx, layers.temporary_wires, shadow_t::selected);
 
     // valid
-    draw_logic_item_shadows(ctx, layout, layers.valid_logic_items, shadow_t::valid,
-                            settings);
-    draw_wire_shadows(ctx, layers.valid_wires, shadow_t::valid, settings);
+    draw_logic_item_shadows(ctx, layout, layers.valid_logic_items, shadow_t::valid);
+    draw_wire_shadows(ctx, layers.valid_wires, shadow_t::valid);
 
     // colliding
     draw_logic_item_shadows(ctx, layout, layers.colliding_logic_items,
-                            shadow_t::colliding, settings);
-    draw_wire_shadows(ctx, layers.colliding_wires, shadow_t::colliding, settings);
+                            shadow_t::colliding);
+    draw_wire_shadows(ctx, layers.colliding_wires, shadow_t::colliding);
 }
 
-auto render_layers(BLContext& ctx, const Layout& layout,
-                   const OldRenderSettings& settings) -> void {
-    // TODO draw line inverters / connectors above wires
-    // TODO draw uninserted wires in shadow
-
-    if (settings.layers.has_inserted()) {
-        render_inserted(ctx, layout, settings);
+auto render_interactive_layers(Context& ctx, const Layout& layout,
+                               const InteractiveLayers& layers, CircuitSurfaces& surfaces)
+    -> void {
+    if (layers.has_inserted()) {
+        render_inserted(ctx, layout, layers);
     }
 
-    if (settings.layers.uninserted_bounding_rect.has_value()) {
-        const auto rect = get_dirty_rect(settings.layers.uninserted_bounding_rect.value(),
-                                         settings.view_config);
+    if (layers.uninserted_bounding_rect.has_value()) {
+        const auto rect = get_dirty_rect(layers.uninserted_bounding_rect.value(),
+                                         ctx.settings.view_config);
 
-        render_to_layer(ctx, settings.layer_surface_uninserted, rect, settings,
-                        [&](BLContext& layer_ctx) {
-                            render_uninserted(layer_ctx, layout, settings);
+        render_to_layer(ctx, surfaces.layer_surface_uninserted, rect,
+                        [&](Context& layer_ctx, bool layer_enabled) {
+                            render_uninserted(layer_ctx, layout, layers, layer_enabled);
                         });
     }
 
-    if (settings.layers.overlay_bounding_rect.has_value()) {
-        const auto rect = get_dirty_rect(settings.layers.overlay_bounding_rect.value(),
-                                         settings.view_config);
+    if (layers.overlay_bounding_rect.has_value()) {
+        const auto rect = get_dirty_rect(layers.overlay_bounding_rect.value(),
+                                         ctx.settings.view_config);
 
-        render_to_layer(
-            ctx, settings.layer_surface_overlay, rect, settings,
-            [&](BLContext& layer_ctx) { render_overlay(layer_ctx, layout, settings); });
+        render_to_layer(ctx, surfaces.layer_surface_overlay, rect,
+                        [&](Context& layer_ctx, bool layer_enabled) {
+                            render_overlay(layer_ctx, layout, layers, layer_enabled);
+                        });
     }
 }
 
-auto render_simulation_layers(BLContext& ctx, const Layout& layout,
+auto render_simulation_layers(Context& ctx, const Layout& layout,
                               SimulationView simulation_view,
-                              const OldRenderSettings& settings) {
-    const auto& layers = settings.simulation_layers;
+                              const SimulationLayers& layers) {
+    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    draw_logic_items_base(ctx, layout, layers.items_below, simulation_view);
+    draw_wires(ctx, layout, layers.wires, simulation_view);
+    draw_logic_items_base(ctx, layout, layers.items_above, simulation_view);
 
-    draw_logic_items_base(ctx, layout, layers.items_below, simulation_view, settings);
-    draw_wires(ctx, layout, layers.wires, simulation_view, settings);
-    draw_logic_items_base(ctx, layout, layers.items_above, simulation_view, settings);
-
-    draw_logic_items_connectors(ctx, layout, layers.items_below, simulation_view,
-                                settings);
-    draw_logic_items_connectors(ctx, layout, layers.items_above, simulation_view,
-                                settings);
+    draw_logic_items_connectors(ctx, layout, layers.items_below, simulation_view);
+    draw_logic_items_connectors(ctx, layout, layers.items_above, simulation_view);
 };
 
 //
@@ -1420,8 +1345,8 @@ auto insert_logic_item(InteractiveLayers& layers, element_id_t element_id,
     }
 }
 
-auto build_layers(const Layout& layout, InteractiveLayers& layers,
-                  const Selection* selection, rect_t scene_rect) -> void {
+auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
+                              const Selection* selection, rect_t scene_rect) -> void {
     layers.clear();
 
     for (const auto element : layout.elements()) {
@@ -1507,23 +1432,23 @@ auto build_simulation_layers(const Layout& layout, SimulationLayers& layers,
 
 namespace {
 
-// render_function = [](BLContext &ctx, const OldRenderSettings& settings){ ... }
+// render_function = [](CircuitContext &ctx){ ... }
 template <typename Func>
-auto render_to_file(int width, int height, std::string filename,
-                    const ViewConfig& view_config, Func render_function) {
-    auto img = BLImage {width, height, BL_FORMAT_PRGB32};
-    auto ctx = BLContext {img};
+auto render_circuit_to_file(int width, int height, std::string filename,
+                            const ViewConfig& view_config, Func render_function) {
+    auto circuit_ctx = CircuitContext {Context {
+        .bl_image = BLImage {width, height, BL_FORMAT_PRGB32},
+        .settings = RenderSettings {.view_config = view_config},
+    }};
+    auto& ctx = circuit_ctx.ctx;
 
-    auto settings = OldRenderSettings {.view_config = view_config};
-    settings.view_config.set_size(width, height);
-
-    render_background(ctx, settings);
-    render_function(ctx, settings);
-
+    ctx.begin();
+    render_background(circuit_ctx.ctx);
+    render_function(circuit_ctx);
     ctx.end();
 
     std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
-    img.writeToFile(filename.c_str());
+    ctx.bl_image.writeToFile(filename.c_str());
 }
 
 }  // namespace
@@ -1532,63 +1457,62 @@ auto render_to_file(int width, int height, std::string filename,
 // Layout
 //
 
-auto _render_layout(BLContext& ctx, const Layout& layout, const Selection* selection,
-                    const OldRenderSettings& settings) -> void {
-    build_layers(layout, settings.layers, selection,
-                 get_scene_rect(settings.view_config));
-    render_layers(ctx, layout, settings);
+auto _render_layout(CircuitContext& circuit_ctx, const Layout& layout,
+                    const Selection* selection) -> void {
+    const auto scene_rect = get_scene_rect(circuit_ctx.ctx.settings.view_config);
+    auto& layers = circuit_ctx.layers.interactive_layers;
+
+    build_interactive_layers(layout, layers, selection, scene_rect);
+    render_interactive_layers(circuit_ctx.ctx, layout, layers, circuit_ctx.surfaces);
 }
 
-auto render_layout(BLContext& ctx, const Layout& layout,
-                   const OldRenderSettings& settings) -> void {
-    _render_layout(ctx, layout, nullptr, settings);
+auto render_layout(CircuitContext& circuit_ctx, const Layout& layout) -> void {
+    _render_layout(circuit_ctx, layout, nullptr);
 }
 
-auto render_layout(BLContext& ctx, const Layout& layout, const Selection& selection,
-                   const OldRenderSettings& settings) -> void {
+auto render_layout(CircuitContext& circuit_ctx, const Layout& layout,
+                   const Selection& selection) -> void {
     if (selection.empty()) {
-        _render_layout(ctx, layout, nullptr, settings);
+        _render_layout(circuit_ctx, layout, nullptr);
     } else {
-        _render_layout(ctx, layout, &selection, settings);
+        _render_layout(circuit_ctx, layout, &selection);
     }
 }
 
 auto render_layout_to_file(const Layout& layout, int width, int height,
                            std::string filename, const ViewConfig& view_config) -> void {
-    render_to_file(width, height, filename, view_config,
-                   [&](BLContext& ctx, const OldRenderSettings& settings) {
-                       render_layout(ctx, layout, settings);
-                   });
+    render_circuit_to_file(width, height, filename, view_config,
+                           [&](CircuitContext& ctx) { render_layout(ctx, layout); });
 }
 
 auto render_layout_to_file(const Layout& layout, const Selection& selection, int width,
                            int height, std::string filename,
                            const ViewConfig& view_config) -> void {
-    render_to_file(width, height, filename, view_config,
-                   [&](BLContext& ctx, const OldRenderSettings& settings) {
-                       render_layout(ctx, layout, selection, settings);
-                   });
+    render_circuit_to_file(
+        width, height, filename, view_config,
+        [&](CircuitContext& ctx) { render_layout(ctx, layout, selection); });
 }
 
 //
 // Simulation
 //
 
-auto render_simulation(BLContext& ctx, const Layout& layout,
-                       SimulationView simulation_view, const OldRenderSettings& settings)
-    -> void {
-    build_simulation_layers(layout, settings.simulation_layers,
-                            get_scene_rect(settings.view_config));
-    render_simulation_layers(ctx, layout, simulation_view, settings);
+auto render_simulation(CircuitContext& circuit_ctx, const Layout& layout,
+                       SimulationView simulation_view) -> void {
+    const auto scene_rect = get_scene_rect(circuit_ctx.ctx.settings.view_config);
+    auto& layers = circuit_ctx.layers.simulation_layers;
+
+    build_simulation_layers(layout, layers, scene_rect);
+    render_simulation_layers(circuit_ctx.ctx, layout, simulation_view, layers);
 }
 
 auto render_layout_to_file(const Layout& layout, SimulationView simulation_view,
                            int width, int height, std::string filename,
                            const ViewConfig& view_config) -> void {
-    render_to_file(width, height, filename, view_config,
-                   [&](BLContext& ctx, const OldRenderSettings& settings) {
-                       render_simulation(ctx, layout, simulation_view, settings);
-                   });
+    render_circuit_to_file(width, height, filename, view_config,
+                           [&](CircuitContext& circuit_ctx) {
+                               render_simulation(circuit_ctx, layout, simulation_view);
+                           });
 }
 
 }  // namespace logicsim

@@ -24,6 +24,8 @@
 #include <numeric>
 #include <vector>
 
+namespace logicsim {
+
 static void BM_Benchmark_New_Selection(benchmark::State& state) {
     using namespace logicsim;
 
@@ -99,7 +101,7 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 
         schematic.validate();
         add_output_placeholders(schematic);
-        schematic.validate(logicsim::Schematic::validate_all);
+        schematic.validate(Schematic::validate_all);
 
         benchmark::DoNotOptimize(schematic);
     }
@@ -114,17 +116,17 @@ static void BM_Simulation_0(benchmark::State& state) {
 
         boost::random::mt19937 rng {0};
 
-        auto schematic = logicsim::create_random_schematic(rng, 100);
-        logicsim::add_output_placeholders(schematic);
+        auto schematic = create_random_schematic(rng, 100);
+        add_output_placeholders(schematic);
         // TODO fix bug and re-enable?
-        // schematic.validate(logicsim::Schematic::validate_all);
+        // schematic.validate(Schematic::validate_all);
 
         benchmark::DoNotOptimize(schematic);
         benchmark::ClobberMemory();
 
         state.ResumeTiming();
 
-        count += logicsim::benchmark_simulation(rng, schematic, 10'000, false);
+        count += benchmark_simulation(rng, schematic, 10'000, false);
 
         benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();
@@ -138,37 +140,31 @@ BENCHMARK(BM_Simulation_0);  // NOLINT
 static void BM_RenderScene_0(benchmark::State& state) {
     constexpr static auto save_image = false;  // to verify correctness
 
-    logicsim::BenchmarkScene scene;
-    auto scene_count = logicsim::fill_line_scene(scene, 100);
+    auto scene = BenchmarkScene {};
+    auto scene_count = fill_line_scene(scene, 100);
 
-    BLImage img(1200, 1200, BL_FORMAT_PRGB32);
+    auto context =
+        CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32},
+                                 .settings = {.thread_count = 1}}};
+    context.ctx.begin();
+
     {
-        BLContext ctx(img);
-        ctx.setFillStyle(BLRgba32(0xFFFFFFFFu));
-        ctx.fillAll();
-        ctx.end();
+        context.ctx.bl_ctx.fillAll(defaults::color_white);
+        context.ctx.sync();
     }
-
-    auto settings = logicsim::OldRenderSettings {};
-    settings.view_config.set_size(img.width(), img.height());
 
     int64_t count = 0;
     for ([[maybe_unused]] auto _ : state) {
         count += scene_count;
 
-        BLContext ctx(img);
-        render_simulation(ctx, scene.layout, logicsim::SimulationView {scene.simulation},
-                          settings);
+        render_simulation(context, scene.layout, SimulationView {scene.simulation});
+        context.ctx.sync();
 
-        ctx.end();
-
-        benchmark::DoNotOptimize(img);
+        benchmark::DoNotOptimize(context.ctx.bl_image);
         benchmark::ClobberMemory();
 
         if constexpr (save_image) {
-            BLImageCodec codec;
-            codec.findByName("PNG");
-            img.writeToFile("google_benchmark_BM_RenderScene_0.png", codec);
+            context.ctx.bl_image.writeToFile("google_benchmark_BM_RenderScene_0.png");
         }
     }
 
@@ -177,5 +173,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
 }
 
 BENCHMARK(BM_RenderScene_0);  // NOLINT
+
+}  // namespace logicsim
 
 BENCHMARK_MAIN();  // NOLINT

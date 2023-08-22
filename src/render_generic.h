@@ -9,18 +9,51 @@
 #include "segment_tree_type.h"
 #include "vocabulary.h"
 
-#include <functional>
+#include <blend2d.h>
 
-class BLContext;
+#include <functional>
 
 namespace logicsim {
 
-struct OldRenderSettings;
+struct Context;
 
 namespace defaults {
 constexpr inline static auto use_view_config_stroke_width = int {-1};
 constexpr inline static auto maximum_rounding = grid_fine_t {-1};
 }  // namespace defaults
+
+//
+// Context & Settings
+//
+
+struct RenderSettings {
+    ViewConfig view_config {};
+
+    int background_grid_min_distance {10};  // device pixels
+    int thread_count {4};
+
+    auto format() const -> std::string;
+};
+
+struct Context {
+    BLImage bl_image {};
+    BLContext bl_ctx {};
+    RenderSettings settings {};
+    GlyphCache text_cache {};
+
+    auto begin() -> void;
+    auto sync() -> void;
+    auto end() -> void;
+};
+
+auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool;
+
+auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
+
+[[nodiscard]] auto to_context(point_t position, const Context& context) -> BLPoint;
+[[nodiscard]] auto to_context(point_fine_t position, const Context& context) -> BLPoint;
+[[nodiscard]] auto to_context(grid_t length, const Context& context) -> double;
+[[nodiscard]] auto to_context(double length, const Context& context) -> double;
 
 //
 // Element Draw State
@@ -67,21 +100,18 @@ static_assert(sizeof(DrawableElement) == 8);
 
 struct LayerSurface {
     bool enabled {true};
-    BLImage image {};
-    BLContext ctx {};
+    Context ctx {};
 
-    auto is_initialized(const ViewConfig& config) const -> bool;
-    auto initialize(const ViewConfig& config, const BLContextCreateInfo& info) -> void;
+    auto initialize(const RenderSettings& settings) -> void;
 };
 
 auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI;
 
-auto render_to_layer(BLContext& target_ctx, LayerSurface& layer, BLRectI dirty_rect,
-                     const OldRenderSettings& settings,
-                     std::function<void(BLContext&)> render_func) -> void;
+auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
+                     std::function<void(Context&, bool)> render_func) -> void;
 
 //
-// Layers Cache
+// Interactive Layers
 //
 
 struct InteractiveLayers {
@@ -127,7 +157,7 @@ auto update_overlay_rect(InteractiveLayers& layers, rect_t bounding_rect) -> voi
 auto update_overlay_rect(InteractiveLayers& layers, ordered_line_t line) -> void;
 
 //
-// Simulation Layers Cache
+// Simulation Layers
 //
 
 struct SimulationLayers {
@@ -142,66 +172,27 @@ struct SimulationLayers {
     auto allocated_size() const -> std::size_t;
 };
 
-// template <>
-// struct ByteSize<SimulationLayers> {
-//     static auto get_bytesize(const SimulationLayers& cache) -> std::size_t;
-// };
-
 //
-// OldRenderSettings
+// Circuit Context
 //
 
-struct RenderConfig {
-    ViewConfig view_config {};
-
-    int background_grid_min_distance {10};  // device pixels
-    int thread_count {4};
-
-    auto format() const -> std::string;
-};
-
-struct ContextSurfaces {
+struct CircuitSurfaces {
     LayerSurface layer_surface_uninserted {.enabled = true};
     LayerSurface layer_surface_overlay {.enabled = true};
 };
 
-// cache vectors to continuous avoid allocations
-struct ContextLayers {
+struct CircuitLayers {
+    // vectors are cached to continuous avoid allocations
     InteractiveLayers interactive_layers {};
     SimulationLayers simulation_layers {};
 };
 
-struct Context {
-    BLImage bl_image;
-    BLContext bl_ctx;
-    RenderConfig settings;
+struct CircuitContext {
+    Context ctx {};
 
-    GlyphCache text_cache {};
-    ContextLayers layers;
-    ContextSurfaces surfaces;
+    CircuitLayers layers {};
+    CircuitSurfaces surfaces {};
 };
-
-// TODO think about const behavior?
-// TODO rename settings to RenderCache ?
-// TODO maybe make glyph cache a pointer - to remove dependency
-struct OldRenderSettings {
-    ViewConfig view_config {};
-
-    // EmptyGlyphCache text {};
-    GlyphCache text {};
-    mutable InteractiveLayers layers {};
-    mutable SimulationLayers simulation_layers {};
-
-    mutable LayerSurface layer_surface_uninserted {.enabled = true};
-    mutable LayerSurface layer_surface_overlay {.enabled = true};
-
-    int background_grid_min_distance {10};  // device pixels
-    int thread_count {4};
-
-    auto format() const -> std::string;
-};
-
-auto context_info(const OldRenderSettings& settings) -> BLContextCreateInfo;
 
 //
 // Error checks
@@ -217,11 +208,13 @@ auto checked_sync(BLContext& ctx) -> void;
 
 class ContextGuard {
    public:
-    explicit ContextGuard(BLContext& ctx);
+    [[nodiscard]] explicit ContextGuard(BLContext& bl_ctx);
+    [[nodiscard]] explicit ContextGuard(Context& ctx);
+    [[nodiscard]] explicit ContextGuard(LayerSurface& surface);
     ~ContextGuard();
 
    private:
-    BLContext& ctx_;
+    BLContext& bl_ctx_;
 };
 
 //
@@ -244,7 +237,8 @@ auto format(DrawType type) -> std::string;
 // Strokes
 //
 
-auto resolve_stroke_width(int attribute, const OldRenderSettings& settings) -> int;
+auto resolve_stroke_width(int attribute, const ViewConfig& view_config) -> int;
+auto resolve_stroke_width(int attribute, const Context& ctx) -> int;
 
 auto stroke_offset(int stoke_width) -> double;
 
@@ -267,13 +261,13 @@ enum class PointShape {
 template <>
 auto format(PointShape shape) -> std::string;
 
-auto draw_point(BLContext& ctx, point_t point, PointShape shape, color_t color,
-                double size, const OldRenderSettings& settings) -> void;
+auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color, double size)
+    -> void;
 
-auto draw_points(BLContext& ctx, std::ranges::input_range auto&& points, PointShape shape,
-                 color_t color, double size, const OldRenderSettings& settings) -> void {
+auto draw_points(Context& ctx, std::ranges::input_range auto&& points, PointShape shape,
+                 color_t color, double size) -> void {
     for (auto&& point : points) {
-        draw_point(ctx, point, shape, color, size, settings);
+        draw_point(ctx, point, shape, color, size);
     }
 }
 
@@ -281,8 +275,8 @@ auto draw_points(BLContext& ctx, std::ranges::input_range auto&& points, PointSh
 // Arrow
 //
 
-auto draw_arrow(BLContext& ctx, point_t point, color_t color, orientation_t orientation,
-                double size, const OldRenderSettings& settings) -> void;
+auto draw_arrow(Context& ctx, point_t point, color_t color, orientation_t orientation,
+                double size) -> void;
 
 //
 // Line
@@ -295,17 +289,14 @@ struct LineAttributes {
     bool p1_endcap {false};
 };
 
-auto draw_orthogonal_line(BLContext& ctx, BLLine line, LineAttributes attributes,
-                          const OldRenderSettings& settings) -> void;
+auto draw_orthogonal_line(Context& ctx, BLLine line, LineAttributes attributes) -> void;
 
-auto draw_line(BLContext& ctx, const ordered_line_t line, LineAttributes attributes,
-               const OldRenderSettings& settings) -> void;
+auto draw_line(Context& ctx, const ordered_line_t line, LineAttributes attributes)
+    -> void;
 
-auto draw_line(BLContext& ctx, const line_t line, LineAttributes attributes,
-               const OldRenderSettings& settings) -> void;
+auto draw_line(Context& ctx, const line_t line, LineAttributes attributes) -> void;
 
-auto draw_line(BLContext& ctx, const line_fine_t line, LineAttributes attributes,
-               const OldRenderSettings& settings) -> void;
+auto draw_line(Context& ctx, const line_fine_t line, LineAttributes attributes) -> void;
 
 //
 // Rect
@@ -318,8 +309,7 @@ struct RectAttributes {
     color_t stroke_color {defaults::color_black};
 };
 
-auto draw_rect(BLContext& ctx, rect_fine_t rect, RectAttributes attributes,
-               const OldRenderSettings& settings) -> void;
+auto draw_rect(Context& ctx, rect_fine_t rect, RectAttributes attributes) -> void;
 
 struct RoundRectAttributes {
     DrawType draw_type {DrawType::fill_and_stroke};
@@ -329,8 +319,8 @@ struct RoundRectAttributes {
     color_t stroke_color {defaults::color_black};
 };
 
-auto draw_round_rect(BLContext& ctx, rect_fine_t rect, RoundRectAttributes attributes,
-                     const OldRenderSettings& settings) -> void;
+auto draw_round_rect(Context& ctx, rect_fine_t rect, RoundRectAttributes attributes)
+    -> void;
 
 //
 // Circle
@@ -343,8 +333,8 @@ struct CircleAttributes {
     color_t stroke_color {defaults::color_black};
 };
 
-auto draw_circle(BLContext& ctx, point_fine_t center, grid_fine_t radius,
-                 CircleAttributes attributes, const OldRenderSettings& settings) -> void;
+auto draw_circle(Context& ctx, point_fine_t center, grid_fine_t radius,
+                 CircleAttributes attributes) -> void;
 
 //
 // Text
@@ -362,8 +352,8 @@ struct TextAttributes {
     double cuttoff_size_px {3.0};  // pixels
 };
 
-auto draw_text(BLContext& ctx, point_fine_t position, std::string_view text,
-               TextAttributes attributes, const OldRenderSettings& settings) -> void;
+auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
+               TextAttributes attributes) -> void;
 
 }  // namespace logicsim
 
