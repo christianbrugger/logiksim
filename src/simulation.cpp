@@ -137,7 +137,7 @@ auto set_default_inputs(Simulation &simulation) -> void {
         // activate unconnected enable
         if (has_enable(element.element_type())) {
             const auto input = element.input(connection_id_t {0});
-            if (!input.has_connected_element()) {
+            if (!input.has_connected_element() && !input.is_inverted()) {
                 simulation.set_input_value(input, true);
             }
         }
@@ -146,7 +146,8 @@ auto set_default_inputs(Simulation &simulation) -> void {
         if (element.element_type() == ElementType::flipflop_jk) {
             const auto input_1 = element.input(connection_id_t {1});
             const auto input_2 = element.input(connection_id_t {2});
-            if (!input_1.has_connected_element() && !input_2.has_connected_element()) {
+            if (!input_1.has_connected_element() && !input_1.is_inverted() &&
+                !input_2.has_connected_element() && !input_2.is_inverted()) {
                 simulation.set_input_value(input_1, true);
                 simulation.set_input_value(input_2, true);
             }

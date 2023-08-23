@@ -39,6 +39,8 @@ auto format(VerticalAlignment alignment) -> std::string {
 
         case baseline:
             return "baseline";
+        case stable_center:
+            return "stable_center";
         case center:
             return "center";
         case top:
@@ -48,14 +50,5 @@ auto format(VerticalAlignment alignment) -> std::string {
     }
     throw_exception("Don't know how to convert VerticalAlignment to string.");
 }
-
-auto EmptyGlyphCache::draw_text(BLContext &ctx [[maybe_unused]],
-                                const BLPoint &position [[maybe_unused]],
-                                std::string_view text [[maybe_unused]],
-                                float font_size [[maybe_unused]],
-                                color_t color [[maybe_unused]],
-                                HorizontalAlignment horizontal_alignment [[maybe_unused]],
-                                VerticalAlignment vertical_alignment [[maybe_unused]],
-                                FontStyle style [[maybe_unused]]) const -> void {};
 
 }  // namespace logicsim

@@ -206,7 +206,6 @@ struct LogicItemTextAttributes {
 
 auto draw_logic_item_label(Context& ctx, point_fine_t point, std::string_view text,
                            layout::ConstElement element, ElementDrawState state,
-
                            LogicItemTextAttributes attributes = {}) -> void;
 
 auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,

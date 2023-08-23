@@ -107,6 +107,15 @@ struct Fonts {
     auto get(FontStyle style) -> BLFont &;
 };
 
+struct StableCenterOffsets : public FontStyleCollection<double, double> {
+    [[nodiscard]] explicit StableCenterOffsets(const FontFaces &faces);
+
+    auto get(FontStyle style, double font_size) const -> double;
+
+   private:
+    using FontStyleCollection::get;
+};
+
 class GlyphCache {
    private:
     using glyph_key_t = glyph_cache::glyph_key_t;
@@ -144,9 +153,10 @@ class GlyphCache {
    private:
     using glyph_map_t = ankerl::unordered_dense::map<glyph_key_t, glyph_entry_t>;
 
-    FontFaces font_faces_ {};
+    FontFaces font_faces_;
+    StableCenterOffsets stable_center_offsets_;
+    mutable Fonts fonts_;
 
-    mutable Fonts fonts_ {};
     mutable glyph_map_t glyph_map_ {};
 };
 

@@ -99,12 +99,44 @@ auto Fonts::get(FontStyle style) -> BLFont& {
 }
 
 //
+// Stable Center Offsets
+//
+
+namespace {
+
+auto calculate_stable_center_y_offset(FontStyle style, const FontFaces& faces) -> double {
+    const auto sample_text =
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "0123456789";
+    const auto sample_font_size = 20.;
+
+    const auto& font_face = faces.get(style);
+    const auto rect =
+        HarfbuzzShapedText {sample_text, font_face.hb_font_face, sample_font_size}
+            .bounding_box();
+    return (rect.y0 + rect.y1) / 2. / sample_font_size;
+}
+
+}  // namespace
+
+StableCenterOffsets::StableCenterOffsets(const FontFaces& faces) {
+    for (auto& style : all_font_styles) {
+        set(style, calculate_stable_center_y_offset(style, faces));
+    }
+}
+
+auto StableCenterOffsets::get(FontStyle style, double font_size) const -> double {
+    return get(style) * font_size;
+}
+
+//
 // GlyphCache
 //
 
 namespace {
 
-auto calculate_offset(const HarfbuzzShapedText& text,
+auto calculate_offset(const HarfbuzzShapedText& text, double stable_center_y_offsets,
                       HorizontalAlignment horizontal_alignment,
                       VerticalAlignment vertical_alignment) -> BLPoint {
     BLPoint result {};
@@ -130,6 +162,9 @@ auto calculate_offset(const HarfbuzzShapedText& text,
 
         case baseline:
             break;
+        case stable_center:
+            result.y = stable_center_y_offsets;
+            break;
         case center:
             result.y = (box.y0 + box.y1) / 2.0;
             break;
@@ -149,7 +184,9 @@ auto calculate_offset(const HarfbuzzShapedText& text,
 GlyphCache::GlyphCache() : GlyphCache(font_definition_t {defaults::font_files}) {}
 
 GlyphCache::GlyphCache(font_definition_t font_files)
-    : font_faces_ {font_files}, fonts_ {font_faces_} {}
+    : font_faces_ {font_files},
+      stable_center_offsets_ {font_faces_},
+      fonts_ {font_faces_} {}
 
 auto GlyphCache::format() const -> std::string {
     return fmt::format("GlyphCache({} glyphs)", glyph_map_.size());
@@ -179,8 +216,9 @@ auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle sty
         const auto& font_face = font_faces_.get(style);
 
         entry.shaped_text = HarfbuzzShapedText {text, font_face.hb_font_face, font_size};
-        entry.offset =
-            calculate_offset(entry.shaped_text, horizontal_alignment, vertical_alignment);
+        entry.offset = calculate_offset(entry.shaped_text,
+                                        stable_center_offsets_.get(style, font_size),
+                                        horizontal_alignment, vertical_alignment);
     }
 
     return entry;

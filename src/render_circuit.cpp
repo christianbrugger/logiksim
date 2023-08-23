@@ -435,7 +435,6 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement e
 
 auto draw_logic_item_label(Context& ctx, point_fine_t point, std::string_view text,
                            layout::ConstElement element, ElementDrawState state,
-
                            LogicItemTextAttributes attributes) -> void {
     if (text.empty()) {
         return;
@@ -645,6 +644,8 @@ struct styled_display_text_t {
     std::string text;
     color_t color {defaults::font::display_normal_color};
     double font_size {defaults::font::display_font_size};
+    HorizontalAlignment horizontal_alignment {HorizontalAlignment::center};
+    VerticalAlignment vertical_alignment {VerticalAlignment::center};
 };
 
 // to_text = [](uint64_t number) -> styled_display_text_t { ... };
@@ -681,10 +682,13 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
         if (_is_display_enabled(element, logic_state)) {
             auto number = _inputs_to_number(element, *logic_state, control_inputs);
             const auto text = styled_display_text_t {to_text(number)};
-            draw_logic_item_label(
-                ctx, point_fine_t {text_x, text_y}, text.text, element, state,
-                LogicItemTextAttributes {.custom_font_size = text.font_size,
-                                         .custom_text_color = text.color});
+            draw_logic_item_label(ctx, point_fine_t {text_x, text_y}, text.text, element,
+                                  state,
+                                  LogicItemTextAttributes {
+                                      .custom_font_size = text.font_size,
+                                      .custom_text_color = text.color,
+                                      .horizontal_alignment = text.horizontal_alignment,
+                                      .vertical_alignment = text.vertical_alignment});
         }
     } else {
         draw_logic_item_label(
@@ -751,6 +755,8 @@ auto draw_display_number(Context& ctx, layout::ConstElement element,
 
 namespace {
 auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
+    constexpr auto vertical_alignment = VerticalAlignment::stable_center;
+
     if (number > 127) [[unlikely]] {
         throw_exception("value out of range");
     }
@@ -766,6 +772,7 @@ auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
             .text = std::string {control_chars.at(number)},
             .color = defaults::font::display_ascii_controll_color,
             .font_size = defaults::font::display_ascii_control_size,
+            .vertical_alignment = vertical_alignment,
         };
     }
     if (number == 127) {
@@ -773,9 +780,13 @@ auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
             .text = std::string {"DEL"},
             .color = defaults::font::display_ascii_controll_color,
             .font_size = defaults::font::display_ascii_control_size,
+            .vertical_alignment = vertical_alignment,
         };
     }
-    return styled_display_text_t {std::string {static_cast<char>(number)}};
+    return styled_display_text_t {
+        .text = std::string {static_cast<char>(number)},
+        .vertical_alignment = vertical_alignment,
+    };
 }
 }  // namespace
 

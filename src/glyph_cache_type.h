@@ -5,6 +5,7 @@
 #include "vocabulary.h"
 
 #include <string_view>
+#include <type_traits>
 
 class BLContext;
 struct BLPoint;
@@ -16,6 +17,8 @@ enum class FontStyle : uint8_t {
     italic,
     bold,
 };
+
+constexpr auto all_font_styles = {FontStyle::regular, FontStyle::italic, FontStyle::bold};
 
 template <>
 auto format(FontStyle style) -> std::string;
@@ -31,6 +34,7 @@ auto format(HorizontalAlignment alignment) -> std::string;
 
 enum class VerticalAlignment : uint8_t {
     baseline,
+    stable_center,  // centers the baseline, the same for changing text
     center,
     top,
     bottom,
@@ -39,12 +43,48 @@ enum class VerticalAlignment : uint8_t {
 template <>
 auto format(VerticalAlignment alignment) -> std::string;
 
-struct EmptyGlyphCache {
-    auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,
-                   float font_size, color_t color = defaults::color_black,
-                   HorizontalAlignment horizontal_alignment = HorizontalAlignment::left,
-                   VerticalAlignment vertical_alignment = VerticalAlignment::baseline,
-                   FontStyle style = FontStyle::regular) const -> void;
+// Store an object for each font style
+template <typename ValueType, typename ReferenceType>
+struct FontStyleCollection {
+    using value_type = ValueType;
+    using reference_type = ReferenceType;
+
+    value_type regular {};
+    value_type italic {};
+    value_type bold {};
+
+   protected:
+    auto get(FontStyle style) const -> std::add_const_t<reference_type> {
+        switch (style) {
+            using enum FontStyle;
+
+            case regular:
+                return this->regular;
+            case italic:
+                return this->italic;
+            case bold:
+                return this->bold;
+        }
+        throw_exception("unknown FontStyle");
+    }
+
+   protected:
+    auto set(FontStyle style, value_type value) -> void {
+        switch (style) {
+            using enum FontStyle;
+
+            case regular:
+                this->regular = std::move(value);
+                return;
+            case italic:
+                this->italic = std::move(value);
+                return;
+            case bold:
+                this->bold = std::move(value);
+                return;
+        }
+        throw_exception("unknown FontStyle");
+    }
 };
 
 }  // namespace logicsim

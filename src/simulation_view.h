@@ -63,6 +63,8 @@ class ConstElement {
     [[nodiscard]] auto internal_state() const -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(std::size_t index) const -> bool;
 
+    // TODO add inverted
+
     [[nodiscard]] auto history_length() const -> delay_t;
     [[nodiscard]] auto input_history() const -> simulation::HistoryView;
 
