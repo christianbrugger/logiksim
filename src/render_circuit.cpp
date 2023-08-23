@@ -289,7 +289,7 @@ auto connector_vertical_alignment(orientation_t orientation) -> VerticalAlignmen
         case up:
             return VerticalAlignment::top;
         case down:
-            return VerticalAlignment::bottom;
+            return VerticalAlignment::baseline;
 
         default:
             throw_exception("orienation has no vertical alignment");
@@ -586,11 +586,14 @@ auto _is_display_twos_complement(layout::ConstElement element,
 
 auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement element,
                                        ElementDrawState state, bool two_complement) {
-    const auto last_input_id = connection_id_t {gsl::narrow<connection_id_t::value_type>(
-        element.input_count() - std::size_t {1})};
+    const auto input_count = element.input_count();
+    const auto last_input_id = connection_id_t {
+        gsl::narrow<connection_id_t::value_type>(input_count - std::size_t {1})};
+    const auto has_space =
+        display_number::input_shift(element.input_count()) > grid_t {0};
 
-    const auto to_label = [last_input_id,
-                           two_complement](connection_id_t input_id) -> std::string_view {
+    const auto to_label = [last_input_id, two_complement,
+                           has_space](connection_id_t input_id) -> std::string_view {
         if (input_id == display::enable_input_id) {
             return "En";
         }
@@ -598,7 +601,7 @@ auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement elemen
             return "n";
         }
         if (two_complement && input_id == last_input_id) {
-            return "s";
+            return has_space ? "sign" : "s";
         }
         const auto index = gsl::narrow<std::size_t>(input_id.value);
         return power_of_two_labels.at(index - display_number::control_inputs);
@@ -654,10 +657,10 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
                           std::optional<simulation_view::ConstElement> logic_state) {
     // white background
     const auto text_x = 1. + (element_width - 1.) / 2.;
-    const auto text_y = (element_height - 1.) / 2.;
+    const auto text_y = std::min(3., (element_height - 1.) / 2.);
 
-    const auto h_padding = defaults::display_padding_horizontal;
-    const auto v_margin = defaults::display_margin_vertical;
+    const auto h_padding = display::padding_horizontal;
+    const auto v_margin = display::margin_vertical;
 
     const auto rect = rect_fine_t {
         point_fine_t {
@@ -753,11 +756,10 @@ auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
     }
 
     const auto control_chars =
-        string_array<33> {"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL",  //
+        string_array<32> {"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL",  //
                           "BS",  "HT",  "LF",  "VT",  "FF",  "CR",  "SO",  "SI",   //
                           "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB",  //
-                          "CAN", "EM",  "SUB", "ESC", "FS",  "GS",  "RS",  "US",   //
-                          "SP"};
+                          "CAN", "EM",  "SUB", "ESC", "FS",  "GS",  "RS",  "US"};  //
 
     if (number < control_chars.size()) {
         return styled_display_text_t {

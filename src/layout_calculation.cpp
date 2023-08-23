@@ -2,6 +2,9 @@
 
 #include "geometry.h"
 #include "scene.h"
+#include "timer.h"
+
+#include <gcem.hpp>
 
 namespace logicsim {
 
@@ -179,28 +182,62 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
 }
 
 namespace display_number {
-auto value_inputs(std::size_t input_count) -> std::size_t {
-    require_min(input_count, min_inputs);
+constexpr auto value_inputs_constexpr(std::size_t input_count) -> std::size_t {
+    if (input_count < control_inputs) {
+        throw_exception("input count too small");
+    }
     return input_count - control_inputs;
 }
+
+auto value_inputs(std::size_t input_count) -> std::size_t {
+    return value_inputs_constexpr(input_count);
+}
+
+namespace {
+constexpr auto _width(std::size_t input_count) -> grid_t {
+    using gcem::ceil;
+    using gcem::max;
+
+    constexpr auto log10_of_2 = 0.3010299956639812;
+    constexpr auto digit_size = 0.6;
+    constexpr auto sign_width = 0.35;
+    constexpr auto separator_width = 0.3;
+    constexpr auto font_size = display::font_size;
+    constexpr auto padding = 2 * display::padding_horizontal;
+
+    const auto digit_count_2 = 1. * value_inputs_constexpr(input_count);
+    const auto digit_count_10 = ceil(digit_count_2 * log10_of_2);
+    const auto digit_count_10_neg = ceil(max(1., digit_count_2 - 1) * log10_of_2);
+
+    const auto sign_effective_width = max(
+        0., digit_count_10_neg * digit_size + sign_width - digit_count_10 * digit_size);
+    const auto separator_count = ceil((digit_count_10 - 1) / 3);
+
+    const auto digit_width_grid =
+        ceil((digit_count_10 * digit_size + sign_effective_width +
+              separator_count * separator_width) *
+                 font_size +
+             padding);
+    return grid_t {gsl::narrow<grid_t::value_type>(max(3., 1. + digit_width_grid))};
+}
+
+constexpr auto _generate_widths() {
+    auto result = std::array<grid_t, max_inputs - min_inputs + 1> {};
+    for (std::size_t i = min_inputs; i <= max_inputs; ++i) {
+        result[i - min_inputs] = _width(i);
+    }
+    return result;
+}
+
+constexpr static inline auto generated_widths = _generate_widths();
+}  // namespace
 
 auto width(std::size_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
     require_max(input_count, max_inputs);
 
-    constexpr auto log10_of_2 = 0.3010299956639812;
-    constexpr auto digit_factor = 1.0;
-    constexpr auto font_size = display::font_size;
-
-    const auto digit_count_2 = value_inputs(input_count);
-    const auto digit_count_10 = std::ceil(digit_count_2 * log10_of_2);
-    const auto digit_width_grid = std::ceil(digit_count_10 * font_size * digit_factor);
-    return grid_t {gsl::narrow<grid_t::value_type>(std::max(3., 1. + digit_width_grid))};
+    return generated_widths.at(input_count - min_inputs);
 }
-
-// auto width(std::size_t input_count) -> grid_t {
-//     return _width(input_count);
-// }
 
 auto height(std::size_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
@@ -209,17 +246,17 @@ auto height(std::size_t input_count) -> grid_t {
     return grid_t {std::max(std::size_t {2}, input_count - std::size_t {3})};
 }
 
-auto _input_shift(std::size_t input_count) -> grid_t {
+auto input_shift(std::size_t input_count) -> grid_t {
     const auto space = width(input_count) - grid_t {1} - display_number::control_inputs;
     return grid_t {(int {space.value} + 1) / 2};
 }
 
 auto negative_position(std::size_t input_count) -> point_t {
-    return point_t {grid_t {1} + _input_shift(input_count), height(input_count)};
+    return point_t {grid_t {1} + input_shift(input_count), height(input_count)};
 }
 
 auto enable_position(std::size_t input_count) -> point_t {
-    return point_t {grid_t {2} + _input_shift(input_count), height(input_count)};
+    return point_t {grid_t {2} + input_shift(input_count), height(input_count)};
 }
 
 }  // namespace display_number

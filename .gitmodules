@@ -72,3 +72,8 @@
 	path = external/harfbuzz
 	url = https://github.com/harfbuzz/harfbuzz
 	ignore = dirty
+
+[submodule "external/gcem"]
+	path = external/gcem
+	url = https://github.com/kthohr/gcem.git
+	ignore = dirty

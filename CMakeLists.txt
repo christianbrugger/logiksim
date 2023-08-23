@@ -312,6 +312,10 @@ add_subdirectory(external/cppcodec EXCLUDE_FROM_ALL SYSTEM)
 # harfbuzz
 add_subdirectory(external/harfbuzz EXCLUDE_FROM_ALL SYSTEM)
 
+# GCE-Math
+add_subdirectory(external/gcem EXCLUDE_FROM_ALL SYSTEM)
+
+
 
 ###################################################
 # needed to run clang-tidy outside, generates compile_commands.json
@@ -348,6 +352,7 @@ if (LS_ENABLE_PCH)
         <fmt/core.h>
         <fmt/format.h>
         <folly/small_vector.h>
+        <gcem.hpp>
         <gsl/gsl>
         
         <QWidget>
@@ -413,6 +418,7 @@ set(LS_CORE_LIBRARIES
     glaze::glaze
     ${LS_ZLIB_NAME}
     harfbuzz
+    gcem
     
     Qt6::Core
     Qt6::Widgets

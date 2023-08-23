@@ -55,6 +55,9 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
 namespace display {
 constexpr static inline auto font_size = grid_fine_t {0.9};  // grid values
 constexpr static inline auto enable_input_id = connection_id_t {0};
+
+constexpr static inline auto padding_horizontal = grid_fine_t {0.2};
+constexpr static inline auto margin_vertical = grid_fine_t {0.7};
 }  // namespace display
 
 // Display Number
@@ -68,6 +71,7 @@ constexpr static inline auto max_inputs = control_inputs + max_value_inputs;
 [[nodiscard]] auto width(std::size_t input_count) -> grid_t;
 [[nodiscard]] auto height(std::size_t input_count) -> grid_t;
 
+[[nodiscard]] auto input_shift(std::size_t input_count) -> grid_t;
 [[nodiscard]] auto enable_position(std::size_t input_count) -> point_t;
 [[nodiscard]] auto negative_position(std::size_t input_count) -> point_t;
 constexpr static inline auto negative_input_id = connection_id_t {1};

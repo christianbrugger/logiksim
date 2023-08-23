@@ -43,9 +43,6 @@ constexpr static inline auto button_body_overdraw = 0.5;  // grid values
 constexpr static inline auto button_body_color = defaults::color_gray_90;
 constexpr static inline auto led_radius = 0.45;  // grid values
 
-constexpr static inline auto display_padding_horizontal = grid_fine_t {0.2};
-constexpr static inline auto display_margin_vertical = grid_fine_t {0.7};
-
 namespace font {
 constexpr static inline auto logic_item_text_color = defaults::color_black;
 constexpr static inline auto text_cutoff_px = 3.0;  // pixels

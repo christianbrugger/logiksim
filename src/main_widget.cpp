@@ -334,7 +334,7 @@ auto MainWidget::build_element_buttons() -> QWidget* {
             [this](int value) { render_widget_->set_default_input_count(value); });
 
     input_count->setValue(gsl::narrow<int>(render_widget_->default_input_count()));
-    input_count->setMinimum(2);
+    input_count->setMinimum(1);
     input_count->setMaximum(connection_id_t::max());
 
     {
