@@ -102,33 +102,6 @@ auto transform(point_t position, orientation_t orientation, point_t p0, point_t 
     throw_exception("Don't know how to transform position.");
 }
 
-auto connector_endpoint(point_t position, orientation_t orientation) -> point_fine_t {
-    const auto p0 = point_fine_t {position};
-    const auto connector_offset = 0.4;
-
-    switch (orientation) {
-        using enum orientation_t;
-
-        case right: {
-            return point_fine_t {p0.x + connector_offset, p0.y};
-        }
-        case left: {
-            return point_fine_t {p0.x - connector_offset, p0.y};
-        }
-        case up: {
-            return point_fine_t {p0.x, p0.y - connector_offset};
-        }
-        case down: {
-            return point_fine_t {p0.x, p0.y + connector_offset};
-        }
-
-        case undirected: {
-            return p0;
-        }
-    };
-    throw_exception("unknown orientation");
-}
-
 auto connector_point(point_t position, orientation_t orientation, grid_fine_t offset)
     -> point_fine_t {
     const auto p0 = point_fine_t {position};

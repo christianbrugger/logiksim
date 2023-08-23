@@ -134,8 +134,8 @@ auto set_default_inputs(Simulation &simulation) -> void {
         }
         */
 
-        // activate unconnected clocks enable
-        if (element.element_type() == ElementType::clock_generator) {
+        // activate unconnected enable
+        if (has_enable(element.element_type())) {
             const auto input = element.input(connection_id_t {0});
             if (!input.has_connected_element()) {
                 simulation.set_input_value(input, true);
