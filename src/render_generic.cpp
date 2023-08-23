@@ -138,7 +138,6 @@ auto LayerSurface::initialize(const RenderSettings& new_settings) -> void {
     // image size changed
     if (ctx.bl_image.width() != new_width || ctx.bl_image.height() != new_height) {
         ctx.end();
-        print("init image");
         ctx.settings = new_settings;
         ctx.bl_image = BLImage {new_width, new_height, BL_FORMAT_PRGB32};
         ctx.begin();
@@ -147,7 +146,6 @@ auto LayerSurface::initialize(const RenderSettings& new_settings) -> void {
     // context info changed
     else if (!equals(context_info(ctx.settings), context_info(new_settings))) {
         ctx.end();
-        print("init settings");
         ctx.settings = new_settings;
         ctx.begin();
     }

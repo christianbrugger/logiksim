@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_RENDER_CIRCUIT_H
 #define LOGIKSIM_RENDER_CIRCUIT_H
 
+#include "layout_calculation.h"
 #include "render_generic.h"
 #include "simulation_view.h"
 #include "vocabulary.h"
@@ -42,6 +43,9 @@ constexpr static inline auto button_body_overdraw = 0.5;  // grid values
 constexpr static inline auto button_body_color = defaults::color_gray_90;
 constexpr static inline auto led_radius = 0.45;  // grid values
 
+constexpr static inline auto display_padding_horizontal = grid_fine_t {0.2};
+constexpr static inline auto display_margin_vertical = grid_fine_t {0.7};
+
 namespace font {
 constexpr static inline auto logic_item_text_color = defaults::color_black;
 constexpr static inline auto text_cutoff_px = 3.0;  // pixels
@@ -57,8 +61,8 @@ constexpr static inline auto clock_period_color = defaults::color_orange;
 
 constexpr static inline auto display_ascii_controll_color = defaults::color_dark_orange;
 constexpr static inline auto display_normal_color = defaults::color_black;
-constexpr static inline auto display_size = logic_item_label_size;  // grid values
-constexpr static inline auto display_ascii_control_size = 0.7;      // grid values
+constexpr static inline auto display_font_size = display::font_size;  // grid values
+constexpr static inline auto display_ascii_control_size = 0.7;        // grid values
 
 }  // namespace font
 

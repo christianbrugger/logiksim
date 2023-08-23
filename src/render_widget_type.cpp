@@ -2,6 +2,7 @@
 #include "render_widget_type.h"
 
 #include "editable_circuit/type.h"
+#include "layout_calculation.h"
 
 namespace logicsim {
 
@@ -99,15 +100,16 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
         case insert_display_number:
             return LogicItemDefinition {
                 .element_type = ElementType::display_number,
-                .input_count = std::clamp(variable_input_count + std::size_t {2},
-                                          std::size_t {3}, std::size_t {66}),
+                .input_count =
+                    std::clamp(variable_input_count + display_number::control_inputs,
+                               display_number::min_inputs, display_number::max_inputs),
                 .output_count = 0,
                 .orientation = orientation_t::right,
             };
         case insert_display_ascii:
             return LogicItemDefinition {
                 .element_type = ElementType::display_ascii,
-                .input_count = 8,
+                .input_count = display_ascii::input_count,
                 .output_count = 0,
                 .orientation = orientation_t::right,
             };

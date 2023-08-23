@@ -51,8 +51,38 @@ auto connector_point(point_t position, orientation_t orientation, grid_fine_t of
 auto connector_point(BLPoint position, orientation_t orientation, double offset)
     -> BLPoint;
 
-auto display_number_width(std::size_t input_count) -> grid_t;
-auto display_number_height(std::size_t input_count) -> grid_t;
+// Display General
+namespace display {
+constexpr static inline auto font_size = grid_fine_t {0.9};  // grid values
+constexpr static inline auto enable_input_id = connection_id_t {0};
+}  // namespace display
+
+// Display Number
+namespace display_number {
+constexpr static inline auto control_inputs = std::size_t {2};
+[[nodiscard]] auto value_inputs(std::size_t input_count) -> std::size_t;
+constexpr static inline auto min_value_inputs = std::size_t {1};
+constexpr static inline auto max_value_inputs = std::size_t {64};
+constexpr static inline auto min_inputs = control_inputs + min_value_inputs;
+constexpr static inline auto max_inputs = control_inputs + max_value_inputs;
+[[nodiscard]] auto width(std::size_t input_count) -> grid_t;
+[[nodiscard]] auto height(std::size_t input_count) -> grid_t;
+
+[[nodiscard]] auto enable_position(std::size_t input_count) -> point_t;
+[[nodiscard]] auto negative_position(std::size_t input_count) -> point_t;
+constexpr static inline auto negative_input_id = connection_id_t {1};
+;
+}  // namespace display_number
+
+// Display ASCII
+namespace display_ascii {
+constexpr static inline auto control_inputs = std::size_t {1};
+constexpr static inline auto value_inputs = std::size_t {7};
+constexpr static inline auto input_count = control_inputs + value_inputs;
+constexpr static inline auto width = grid_t {4};
+constexpr static inline auto height = grid_t {value_inputs - 1};
+constexpr static inline auto enable_position = point_t {2, height};
+}  // namespace display_ascii
 
 /// next_point(point_t position) -> bool;
 template <typename Func>
@@ -105,24 +135,28 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             return true;
         }
         case display_number: {
-            require_min(data.input_count, 3);
-            require_max(data.input_count, 66);
+            namespace display_number = logicsim::display_number;
 
-            const auto width = display_number_width(data.input_count);
-            const auto height = display_number_height(data.input_count);
+            const auto width = display_number::width(data.input_count);
+            const auto height = display_number::height(data.input_count);
 
-            for (const auto y : range(int {height.value} + 1)) {
-                for (const auto x : range(int {width.value} + 1)) {
-                    if (x == 0 && y < gsl::narrow_cast<int>(data.input_count) - 1) {
+            const auto negative_pos = display_number::negative_position(data.input_count);
+            const auto enable_pos = display_number::enable_position(data.input_count);
+            const auto max_input_y =
+                grid_t {display_number::value_inputs(data.input_count) - 1};
+
+            for (const auto y : range(int {height} + 1)) {
+                for (const auto x : range(int {width} + 1)) {
+                    const auto point = point_t {gsl::narrow_cast<grid_t::value_type>(x),
+                                                gsl::narrow_cast<grid_t::value_type>(y)};
+
+                    if (point.x == 0 && point.y <= max_input_y) {
                         continue;
                     }
-                    if ((x == 1 || x == 2) && y == gsl::narrow_cast<int>(height)) {
+                    if (point == negative_pos || point == enable_pos) {
                         continue;
                     }
-                    if (!next_point(transform(
-                            data.position, data.orientation,
-                            point_t {gsl::narrow_cast<grid_t::value_type>(x),
-                                     gsl::narrow_cast<grid_t::value_type>(y)}))) {
+                    if (!next_point(transform(data.position, data.orientation, point))) {
                         return false;
                     }
                 }
@@ -130,15 +164,17 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
             return true;
         }
         case display_ascii: {
-            for (const auto y : range(6 + 1)) {
-                for (const auto x : range(1, 4 + 1)) {
-                    if (x == 2 && y == 6) {
+            namespace display_ascii = logicsim::display_ascii;
+
+            for (const auto y : range(int {display_ascii::height} + 1)) {
+                for (const auto x : range(1, int {display_ascii::width} + 1)) {
+                    const auto point = point_t {gsl::narrow_cast<grid_t::value_type>(x),
+                                                gsl::narrow_cast<grid_t::value_type>(y)};
+
+                    if (point == display_ascii::enable_position) {
                         continue;
                     }
-                    if (!next_point(transform(
-                            data.position, data.orientation,
-                            point_t {gsl::narrow_cast<grid_t::value_type>(x),
-                                     gsl::narrow_cast<grid_t::value_type>(y)}))) {
+                    if (!next_point(transform(data.position, data.orientation, point))) {
                         return false;
                     }
                 }
@@ -311,26 +347,30 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             return true;
         }
         case display_number: {
-            require_min(data.input_count, 3);
-            require_max(data.input_count, 66);
+            namespace display_number = logicsim::display_number;
 
-            // input enable
-            {
-                const auto y = display_number_height(data.input_count);
-                if (!next_input(
-                        transform(data.position, data.orientation, point_t {2, y}),
-                        transform(data.orientation, orientation_t::down))) {
-                    return false;
-                }
-                if (!next_input(
-                        transform(data.position, data.orientation, point_t {1, y}),
-                        transform(data.orientation, orientation_t::down))) {
-                    return false;
-                }
+            require_min(data.input_count, display_number::min_inputs);
+            require_max(data.input_count, display_number::max_inputs);
+
+            // enable
+            static_assert(display::enable_input_id == connection_id_t {0});
+            if (!next_input(transform(data.position, data.orientation,
+                                      display_number::enable_position(data.input_count)),
+                            transform(data.orientation, orientation_t::down))) {
+                return false;
             }
 
-            // 2^0 - 2^x
-            for (auto i : range(data.input_count - std::size_t {2})) {
+            // negative
+            static_assert(display_number::negative_input_id == connection_id_t {1});
+            if (!next_input(
+                    transform(data.position, data.orientation,
+                              display_number::negative_position(data.input_count)),
+                    transform(data.orientation, orientation_t::down))) {
+                return false;
+            }
+
+            // number inputs
+            for (auto i : range(display_number::value_inputs(data.input_count))) {
                 const auto y = grid_t {i};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
@@ -341,13 +381,19 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
             return true;
         }
         case display_ascii: {
-            require_equal(data.input_count, 8);
-            if (!next_input(transform(data.position, data.orientation, point_t {2, 6}),
+            namespace display_ascii = logicsim::display_ascii;
+            require_equal(data.input_count, display_ascii::input_count);
+
+            // enable
+            static_assert(display::enable_input_id == connection_id_t {0});
+            if (!next_input(transform(data.position, data.orientation,
+                                      display_ascii::enable_position),
                             transform(data.orientation, orientation_t::down))) {
                 return false;
             }
 
-            for (auto i : range(7)) {
+            // number inputs
+            for (auto i : range(display_ascii::value_inputs)) {
                 const auto y = grid_t {i};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),

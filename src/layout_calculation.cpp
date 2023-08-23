@@ -178,25 +178,51 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
     throw_exception("unknown orientation");
 }
 
-auto display_number_width(std::size_t input_count) -> grid_t {
-    require_min(input_count, 3);
-    require_max(input_count, 66);
-
-    constexpr static auto log10_of_2 = 0.3010299956639812;
-    constexpr static auto font_size = 0.9;  // TODO same as in render_circuit.h
-    constexpr static auto digit_factor = 1.0;
-
-    const auto digit_count = std::ceil((input_count - 2) * log10_of_2);
-    const auto digit_width = std::ceil(digit_count * font_size * digit_factor);
-    return grid_t {gsl::narrow<grid_t::value_type>(std::max(3., 1. + digit_width))};
+namespace display_number {
+auto value_inputs(std::size_t input_count) -> std::size_t {
+    require_min(input_count, min_inputs);
+    return input_count - control_inputs;
 }
 
-auto display_number_height(std::size_t input_count) -> grid_t {
-    require_min(input_count, 3);
-    require_max(input_count, 66);
+auto width(std::size_t input_count) -> grid_t {
+    require_min(input_count, min_inputs);
+    require_max(input_count, max_inputs);
+
+    constexpr auto log10_of_2 = 0.3010299956639812;
+    constexpr auto digit_factor = 1.0;
+    constexpr auto font_size = display::font_size;
+
+    const auto digit_count_2 = value_inputs(input_count);
+    const auto digit_count_10 = std::ceil(digit_count_2 * log10_of_2);
+    const auto digit_width_grid = std::ceil(digit_count_10 * font_size * digit_factor);
+    return grid_t {gsl::narrow<grid_t::value_type>(std::max(3., 1. + digit_width_grid))};
+}
+
+// auto width(std::size_t input_count) -> grid_t {
+//     return _width(input_count);
+// }
+
+auto height(std::size_t input_count) -> grid_t {
+    require_min(input_count, min_inputs);
+    require_max(input_count, max_inputs);
 
     return grid_t {std::max(std::size_t {2}, input_count - std::size_t {3})};
 }
+
+auto _input_shift(std::size_t input_count) -> grid_t {
+    const auto space = width(input_count) - grid_t {1} - display_number::control_inputs;
+    return grid_t {(int {space.value} + 1) / 2};
+}
+
+auto negative_position(std::size_t input_count) -> point_t {
+    return point_t {grid_t {1} + _input_shift(input_count), height(input_count)};
+}
+
+auto enable_position(std::size_t input_count) -> point_t {
+    return point_t {grid_t {2} + _input_shift(input_count), height(input_count)};
+}
+
+}  // namespace display_number
 
 auto is_input_output_count_valid(ElementType element_type, std::size_t input_count,
                                  std::size_t output_count) -> bool {
@@ -236,10 +262,11 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
             return input_count == 1 && output_count == 0;
         }
         case display_number: {
-            return input_count >= 3 && input_count <= 66 && output_count == 0;
+            return input_count >= display_number::min_inputs &&
+                   input_count <= display_number::max_inputs && output_count == 0;
         }
         case display_ascii: {
-            return input_count == 8 && output_count == 0;
+            return input_count == display_ascii::input_count && output_count == 0;
         }
 
         case clock_generator: {
@@ -318,17 +345,16 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             return rect_t {data.position, data.position};
         }
         case display_number: {
-            require_min(data.input_count, 3);
-            require_max(data.input_count, 66);
-
-            const auto w = display_number_width(data.input_count);
-            const auto h = display_number_height(data.input_count);
+            const auto w = display_number::width(data.input_count);
+            const auto h = display_number::height(data.input_count);
 
             return transform(data.position, data.orientation, {0, 0}, {w, h});
         }
         case display_ascii: {
-            require_equal(data.input_count, 8);
-            return transform(data.position, data.orientation, {0, 0}, {4, 6});
+            const auto w = display_ascii::width;
+            const auto h = display_ascii::height;
+
+            return transform(data.position, data.orientation, {0, 0}, {w, h});
         }
 
         case clock_generator: {
