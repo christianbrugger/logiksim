@@ -636,10 +636,24 @@ auto _draw_circle_fill_and_stroke(Context& ctx, point_fine_t center, grid_fine_t
 }
 
 auto _draw_circle_fill(Context& ctx, point_fine_t center, grid_fine_t radius,
-                       CircleAttributes attributes) -> void {}
+                       CircleAttributes attributes) -> void {
+    static_cast<void>(ctx);
+    static_cast<void>(center);
+    static_cast<void>(radius);
+    static_cast<void>(attributes);
+
+    throw_exception("not implemented");
+}
 
 auto _draw_circle_stroke(Context& ctx, point_fine_t center, grid_fine_t radius,
-                         CircleAttributes attributes) -> void {}
+                         CircleAttributes attributes) -> void {
+    static_cast<void>(ctx);
+    static_cast<void>(center);
+    static_cast<void>(radius);
+    static_cast<void>(attributes);
+
+    throw_exception("not implemented");
+}
 
 auto draw_circle(Context& ctx, point_fine_t center, grid_fine_t radius,
                  CircleAttributes attributes) -> void {

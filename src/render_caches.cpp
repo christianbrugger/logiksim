@@ -27,8 +27,8 @@ auto _directed_input_marker(Context& ctx, point_t point, color_t color,
     ctx.bl_ctx.strokeLine(BLLine {-d, +d, 0, +d}, color);
 }
 
-auto _undirected_input_marker(Context& ctx, point_t point, color_t color,
-                              orientation_t orientation, double size) -> void {
+auto _undirected_input_marker(Context& ctx, point_t point, color_t color, double size)
+    -> void {
     auto _ = ContextGuard {ctx};
 
     ctx.bl_ctx.setStrokeWidth(1);
@@ -56,7 +56,7 @@ auto _undirected_input_marker(Context& ctx, point_t point, color_t color,
 auto render_input_marker(Context& ctx, point_t point, color_t color,
                          orientation_t orientation, double size) -> void {
     if (orientation == orientation_t::undirected) {
-        _undirected_input_marker(ctx, point, color, orientation, size);
+        _undirected_input_marker(ctx, point, color, size);
     } else {
         _directed_input_marker(ctx, point, color, orientation, size);
     }
