@@ -2,6 +2,7 @@
 #define LOGIKSIM_GLYPH_CACHE_TYPE_H
 
 #include "format.h"
+#include "type_trait.h"
 #include "vocabulary.h"
 
 #include <string_view>
@@ -48,13 +49,28 @@ template <typename ValueType, typename ReferenceType>
 struct FontStyleCollection {
     using value_type = ValueType;
     using reference_type = ReferenceType;
+    using const_reference_type = add_const_to_reference_t<ReferenceType>;
 
     value_type regular {};
     value_type italic {};
     value_type bold {};
 
+    auto get(FontStyle style) const -> const_reference_type {
+        switch (style) {
+            using enum FontStyle;
+
+            case regular:
+                return this->regular;
+            case italic:
+                return this->italic;
+            case bold:
+                return this->bold;
+        }
+        throw_exception("unknown FontStyle");
+    }
+
    protected:
-    auto get(FontStyle style) const -> std::add_const_t<reference_type> {
+    auto get(FontStyle style) -> reference_type {
         switch (style) {
             using enum FontStyle;
 

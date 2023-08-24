@@ -55,23 +55,11 @@ FontFace::FontFace(std::string font_file) : hb_font_face {font_file}, bl_font_fa
 //
 
 FontFaces::FontFaces(font_definition_t font_files)
-    : regular {std::string {font_files.regular}},
-      italic {std::string {font_files.italic}},
-      bold {std::string {font_files.bold}} {}
-
-auto FontFaces::get(FontStyle style) const -> const FontFace& {
-    switch (style) {
-        using enum FontStyle;
-
-        case regular:
-            return this->regular;
-        case italic:
-            return this->italic;
-        case bold:
-            return this->bold;
-    }
-    throw_exception("unknown FontStyle");
-}
+    : FontStyleCollection {
+          .regular = FontFace {std::string {font_files.regular}},
+          .italic = FontFace {std::string {font_files.italic}},
+          .bold = FontFace {std::string {font_files.bold}},
+      } {}
 
 //
 // Fonts
@@ -82,20 +70,6 @@ Fonts::Fonts(const FontFaces& font_faces) {
     regular.createFromFace(font_faces.get(FontStyle::regular).bl_font_face, font_size);
     italic.createFromFace(font_faces.get(FontStyle::italic).bl_font_face, font_size);
     bold.createFromFace(font_faces.get(FontStyle::bold).bl_font_face, font_size);
-}
-
-auto Fonts::get(FontStyle style) -> BLFont& {
-    switch (style) {
-        using enum FontStyle;
-
-        case regular:
-            return this->regular;
-        case italic:
-            return this->italic;
-        case bold:
-            return this->bold;
-    }
-    throw_exception("unknown FontStyle");
 }
 
 //

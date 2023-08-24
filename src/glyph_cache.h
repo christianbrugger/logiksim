@@ -77,6 +77,10 @@ struct ankerl::unordered_dense::hash<logicsim::glyph_cache::glyph_key_t> {
 
 namespace logicsim {
 
+//
+// Font Collections
+//
+
 struct FontFace {
     HarfbuzzFontFace hb_font_face {};
     BLFontFace bl_font_face {};
@@ -85,26 +89,16 @@ struct FontFace {
     explicit FontFace(std::string font_file);
 };
 
-struct FontFaces {
-    FontFace regular {};
-    FontFace italic {};
-    FontFace bold {};
-
+struct FontFaces : public FontStyleCollection<FontFace, FontFace &> {
     explicit FontFaces() = default;
     explicit FontFaces(font_definition_t font_files);
-
-    auto get(FontStyle style) const -> const FontFace &;
 };
 
-struct Fonts {
-    BLFont regular {};
-    BLFont italic {};
-    BLFont bold {};
-
+struct Fonts : public FontStyleCollection<BLFont, BLFont &> {
     explicit Fonts() = default;
     explicit Fonts(const FontFaces &font_faces);
 
-    auto get(FontStyle style) -> BLFont &;
+    using FontStyleCollection::get;
 };
 
 struct StableCenterOffsets : public FontStyleCollection<double, double> {
@@ -115,6 +109,10 @@ struct StableCenterOffsets : public FontStyleCollection<double, double> {
    private:
     using FontStyleCollection::get;
 };
+
+//
+// Glyph Cache
+//
 
 class GlyphCache {
    private:
