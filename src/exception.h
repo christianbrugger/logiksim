@@ -15,7 +15,7 @@ namespace detail {
     if constexpr (std::is_constant_evaluated()) {
         // to make it not ill-formed until P2448R2 is implemented in C++23
         if (msg != nullptr) {
-            std::abort();
+            detail::throw_exception_impl(msg);
         }
     } else {
         detail::throw_exception_impl(msg);

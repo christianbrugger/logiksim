@@ -45,7 +45,7 @@ enum class VerticalAlignment : uint8_t {
     center_baseline,
     top_baseline,
     bottom_baseline,
-    // aligns the current text
+    // aligns the specific text
     center,
     top,
     bottom,
@@ -54,6 +54,7 @@ enum class VerticalAlignment : uint8_t {
 template <>
 auto format(VerticalAlignment alignment) -> std::string;
 
+// for style collections, i.e. types that store a value for each style
 template <typename ReturnType, typename T>
 auto get(T& obj, FontStyle style) -> ReturnType {
     switch (style) {
@@ -71,6 +72,7 @@ auto get(T& obj, FontStyle style) -> ReturnType {
     throw_exception("unknown FontStyle");
 }
 
+// for style collections, i.e. types that store a value for each style
 template <typename T, typename V>
 auto set(T& obj, FontStyle style, V&& value) -> void {
     switch (style) {
