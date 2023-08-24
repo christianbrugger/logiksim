@@ -755,7 +755,7 @@ auto draw_display_number(Context& ctx, layout::ConstElement element,
 
 namespace {
 auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
-    constexpr auto vertical_alignment = VerticalAlignment::stable_center;
+    constexpr auto vertical_alignment = VerticalAlignment::center_baseline;
 
     if (number > 127) [[unlikely]] {
         throw_exception("value out of range");

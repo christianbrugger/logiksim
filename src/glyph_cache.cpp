@@ -8,17 +8,7 @@
 namespace logicsim {
 
 auto font_definition_t::get(FontStyle style) const -> std::string_view {
-    switch (style) {
-        using enum FontStyle;
-
-        case regular:
-            return this->regular;
-        case italic:
-            return this->italic;
-        case bold:
-            return this->bold;
-    }
-    throw_exception("unknown FontStyle");
+    return ::logicsim::get<std::string_view>(*this, style);
 }
 
 namespace glyph_cache {
@@ -55,112 +45,175 @@ FontFace::FontFace(std::string font_file) : hb_font_face {font_file}, bl_font_fa
 //
 
 FontFaces::FontFaces(font_definition_t font_files)
-    : FontStyleCollection {
-          .regular = FontFace {std::string {font_files.regular}},
-          .italic = FontFace {std::string {font_files.italic}},
-          .bold = FontFace {std::string {font_files.bold}},
-      } {}
+    : regular {FontFace {std::string {font_files.regular}}},
+      italic {FontFace {std::string {font_files.italic}}},
+      bold {FontFace {std::string {font_files.bold}}},
+      monospace {FontFace {std::string {font_files.monospace}}} {}
+
+auto FontFaces::get(FontStyle style) const -> const FontFace& {
+    return ::logicsim::get<const FontFace&>(*this, style);
+}
 
 //
 // Fonts
 //
 
 Fonts::Fonts(const FontFaces& font_faces) {
-    const auto font_size = float {1.0};
-    regular.createFromFace(font_faces.get(FontStyle::regular).bl_font_face, font_size);
-    italic.createFromFace(font_faces.get(FontStyle::italic).bl_font_face, font_size);
-    bold.createFromFace(font_faces.get(FontStyle::bold).bl_font_face, font_size);
+    const auto create_font_size = float {10};  // doesn't matter, as we rescale it later
+
+    for (auto& style : all_font_styles) {
+        get(style).createFromFace(font_faces.get(style).bl_font_face, create_font_size);
+    }
+}
+
+auto Fonts::get(FontStyle style) const -> const BLFont& {
+    return ::logicsim::get<const BLFont&>(*this, style);
+}
+
+auto Fonts::get(FontStyle style) -> BLFont& {
+    return ::logicsim::get<BLFont&>(*this, style);
 }
 
 //
 // Stable Center Offsets
 //
 
+auto BaselineOffset::format() const -> std::string {
+    return fmt::format(
+        "BaselineOffset(baseline_center = {}, baseline_top = {}, "
+        "baseline_bottom = {})",
+        baseline_center, baseline_top, baseline_bottom);
+}
+
+[[nodiscard]] auto BaselineOffset::operator*(float font_size) const
+    -> ScaledBaselineOffset {
+    return ScaledBaselineOffset {
+        .baseline_center = baseline_center * font_size,
+        .baseline_top = baseline_center * font_size,
+        .baseline_bottom = baseline_center * font_size,
+    };
+}
+
+auto ScaledBaselineOffset::format() const -> std::string {
+    return fmt::format(
+        "ScaledBaselineOffset(baseline_center = {}, baseline_top = {}, "
+        "baseline_bottom = {})",
+        baseline_center, baseline_top, baseline_bottom);
+}
+
 namespace {
 
-auto calculate_stable_center_y_offset(FontStyle style, const FontFaces& faces) -> double {
-    const auto sample_text =
+auto calculate_horizontal_offset(const BLBox& bounding_box,
+                                 HorizontalAlignment horizontal_alignment) -> double {
+    const auto& box = bounding_box;
+
+    switch (horizontal_alignment) {
+        using enum HorizontalAlignment;
+
+        case left:
+            return box.x0;
+        case right:
+            return box.x1;
+        case center:
+            return (box.x0 + box.x1) / 2.0;
+    }
+    throw_exception("Unknown HorizontalAlignment in calculate_horizontal_offset");
+}
+
+auto calculate_vertical_offset(const BLBox& bounding_box,
+                               const ScaledBaselineOffset& baseline_offsets,
+                               VerticalAlignment vertical_alignment) -> double {
+    const auto& box = bounding_box;
+
+    switch (vertical_alignment) {
+        using enum VerticalAlignment;
+
+        case baseline:
+            return 0;
+
+        case center_baseline:
+            return baseline_offsets.baseline_center;
+        case top_baseline:
+            return baseline_offsets.baseline_top;
+        case bottom_baseline:
+            return baseline_offsets.baseline_bottom;
+
+        case center:
+            return (box.y0 + box.y1) / 2.0;
+        case top:
+            return box.y0;
+        case bottom:
+            return box.y1;
+    }
+    throw_exception("Unknown VerticalAlignment in calculate_vertical_offset");
+}
+
+auto calculate_offset(const BLBox& bounding_box,
+                      const ScaledBaselineOffset& baseline_offsets,
+                      HorizontalAlignment horizontal_alignment,
+                      VerticalAlignment vertical_alignment) -> BLPoint {
+    return BLPoint {
+        calculate_horizontal_offset(bounding_box, horizontal_alignment),
+        calculate_vertical_offset(bounding_box, baseline_offsets, vertical_alignment),
+    };
+}
+
+auto calculate_baseline_offset(FontStyle style, const FontFace& face) -> BaselineOffset {
+    const auto text =
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "0123456789";
-    const auto sample_font_size = 20.;
+    const auto font_size = float {16};
 
-    const auto& font_face = faces.get(style);
-    const auto rect =
-        HarfbuzzShapedText {sample_text, font_face.hb_font_face, sample_font_size}
-            .bounding_box();
-    return (rect.y0 + rect.y1) / 2. / sample_font_size;
+    const auto box =
+        HarfbuzzShapedText {text, face.hb_font_face, font_size}.bounding_box();
+
+    using enum VerticalAlignment;
+    return BaselineOffset {
+        .baseline_center = calculate_vertical_offset(box, {}, center) / font_size,
+        .baseline_top = calculate_vertical_offset(box, {}, top) / font_size,
+        .baseline_bottom = calculate_vertical_offset(box, {}, bottom) / font_size,
+    };
 }
 
 }  // namespace
 
-StableCenterOffsets::StableCenterOffsets(const FontFaces& faces) {
+BaselineOffsets::BaselineOffsets(const FontFaces& faces) {
     for (auto& style : all_font_styles) {
-        set(style, calculate_stable_center_y_offset(style, faces));
+        set(style, calculate_baseline_offset(style, faces.get(style)));
     }
 }
 
-auto StableCenterOffsets::get(FontStyle style, double font_size) const -> double {
+auto BaselineOffsets::format() const -> std::string {
+    const auto to_string = [this](FontStyle style) {
+        return fmt::format("{} = {}", style, this->get(style));
+    };
+    const auto joined = fmt_join(",\n  ", all_font_styles, "{}", to_string);
+
+    return fmt::format("BaselineOffsets(\n  {})\n", joined);
+}
+
+auto BaselineOffsets::get(FontStyle style, double font_size) const
+    -> ScaledBaselineOffset {
     return get(style) * font_size;
+}
+
+auto BaselineOffsets::get(FontStyle style) const -> const BaselineOffset& {
+    return ::logicsim::get<const BaselineOffset&>(*this, style);
+}
+
+auto BaselineOffsets::set(FontStyle style, BaselineOffset offset) -> void {
+    ::logicsim::set(*this, style, std::move(offset));
 }
 
 //
 // GlyphCache
 //
 
-namespace {
-
-auto calculate_offset(const HarfbuzzShapedText& text, double stable_center_y_offsets,
-                      HorizontalAlignment horizontal_alignment,
-                      VerticalAlignment vertical_alignment) -> BLPoint {
-    BLPoint result {};
-
-    const auto box = text.bounding_box();
-
-    switch (horizontal_alignment) {
-        using enum HorizontalAlignment;
-
-        case left:
-            result.x = box.x0;
-            break;
-        case right:
-            result.x = box.x1;
-            break;
-        case center:
-            result.x = (box.x0 + box.x1) / 2.0;
-            break;
-    }
-
-    switch (vertical_alignment) {
-        using enum VerticalAlignment;
-
-        case baseline:
-            break;
-        case stable_center:
-            result.y = stable_center_y_offsets;
-            break;
-        case center:
-            result.y = (box.y0 + box.y1) / 2.0;
-            break;
-        case top:
-            result.y = box.y0;
-            break;
-        case bottom:
-            result.y = box.y1;
-            break;
-    }
-
-    return result;
-}
-
-}  // namespace
-
 GlyphCache::GlyphCache() : GlyphCache(font_definition_t {defaults::font_files}) {}
 
 GlyphCache::GlyphCache(font_definition_t font_files)
-    : font_faces_ {font_files},
-      stable_center_offsets_ {font_faces_},
-      fonts_ {font_faces_} {}
+    : font_faces_ {font_files}, baseline_offsets_ {font_faces_}, fonts_ {font_faces_} {}
 
 auto GlyphCache::format() const -> std::string {
     return fmt::format("GlyphCache({} glyphs)", glyph_map_.size());
@@ -190,8 +243,8 @@ auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle sty
         const auto& font_face = font_faces_.get(style);
 
         entry.shaped_text = HarfbuzzShapedText {text, font_face.hb_font_face, font_size};
-        entry.offset = calculate_offset(entry.shaped_text,
-                                        stable_center_offsets_.get(style, font_size),
+        entry.offset = calculate_offset(entry.shaped_text.bounding_box(),
+                                        baseline_offsets_.get(style, font_size),
                                         horizontal_alignment, vertical_alignment);
     }
 

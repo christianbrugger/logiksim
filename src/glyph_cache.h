@@ -19,8 +19,9 @@ struct font_definition_t {
     std::string_view regular;
     std::string_view italic;
     std::string_view bold;
+    std::string_view monospace;
 
-    auto get(FontStyle style) const -> std::string_view;
+    [[nodiscard]] auto get(FontStyle style) const -> std::string_view;
 };
 
 namespace defaults {
@@ -28,6 +29,7 @@ constexpr static inline auto font_files = font_definition_t {
     .regular = "NotoSans-Regular.ttf",
     .italic = "NotoSans-Italic.ttf",
     .bold = "NotoSans-Bold.ttf",
+    .monospace = "NotoSansMono-Regular.ttf",
 };
 }  // namespace defaults
 
@@ -85,29 +87,77 @@ struct FontFace {
     HarfbuzzFontFace hb_font_face {};
     BLFontFace bl_font_face {};
 
-    explicit FontFace() = default;
-    explicit FontFace(std::string font_file);
+    [[nodiscard]] explicit FontFace() = default;
+    [[nodiscard]] explicit FontFace(std::string font_file);
 };
 
-struct FontFaces : public FontStyleCollection<FontFace, FontFace &> {
-    explicit FontFaces() = default;
-    explicit FontFaces(font_definition_t font_files);
+struct FontFaces {
+    FontFace regular {};
+    FontFace italic {};
+    FontFace bold {};
+    FontFace monospace;
+
+    [[nodiscard]] explicit FontFaces() = default;
+    [[nodiscard]] explicit FontFaces(font_definition_t font_files);
+
+    auto get(FontStyle style) const -> const FontFace &;
 };
 
-struct Fonts : public FontStyleCollection<BLFont, BLFont &> {
-    explicit Fonts() = default;
-    explicit Fonts(const FontFaces &font_faces);
+struct Fonts {
+    BLFont regular {};
+    BLFont italic {};
+    BLFont bold {};
+    BLFont monospace;
 
-    using FontStyleCollection::get;
+    [[nodiscard]] explicit Fonts() = default;
+    [[nodiscard]] explicit Fonts(const FontFaces &font_faces);
+
+    [[nodiscard]] auto get(FontStyle style) const -> const BLFont &;
+    [[nodiscard]] auto get(FontStyle style) -> BLFont &;
 };
 
-struct StableCenterOffsets : public FontStyleCollection<double, double> {
-    [[nodiscard]] explicit StableCenterOffsets(const FontFaces &faces);
+struct ScaledBaselineOffset;
 
-    auto get(FontStyle style, double font_size) const -> double;
+// offsets for fontsize 1.0
+struct BaselineOffset {
+    double baseline_center {};
+    double baseline_top {};
+    double baseline_bottom {};
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator*(float font_size) const -> ScaledBaselineOffset;
+    [[nodiscard]] constexpr auto operator==(const BaselineOffset &other) const
+        -> bool = default;
+};
+
+// using strong type for scaled offsets for a specific font size
+struct ScaledBaselineOffset {
+    double baseline_center {};
+    double baseline_top {};
+    double baseline_bottom {};
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] constexpr auto operator==(const ScaledBaselineOffset &other) const
+        -> bool = default;
+};
+
+struct BaselineOffsets {
+    BaselineOffset regular {};
+    BaselineOffset italic {};
+    BaselineOffset bold {};
+    BaselineOffset monospace;
+
+    [[nodiscard]] explicit BaselineOffsets(const FontFaces &faces);
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] constexpr auto operator==(const BaselineOffsets &other) const
+        -> bool = default;
+
+    [[nodiscard]] auto get(FontStyle style, double font_size) const
+        -> ScaledBaselineOffset;
 
    private:
-    using FontStyleCollection::get;
+    [[nodiscard]] auto get(FontStyle style) const -> const BaselineOffset &;
+    auto set(FontStyle style, BaselineOffset offset) -> void;
 };
 
 //
@@ -152,7 +202,7 @@ class GlyphCache {
     using glyph_map_t = ankerl::unordered_dense::map<glyph_key_t, glyph_entry_t>;
 
     FontFaces font_faces_;
-    StableCenterOffsets stable_center_offsets_;
+    BaselineOffsets baseline_offsets_;
     mutable Fonts fonts_;
 
     mutable glyph_map_t glyph_map_ {};

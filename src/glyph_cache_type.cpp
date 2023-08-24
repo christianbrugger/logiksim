@@ -13,6 +13,8 @@ auto format(FontStyle style) -> std::string {
             return "italic";
         case bold:
             return "bold";
+        case monospace:
+            return "monospace";
     }
     throw_exception("Don't know how to convert FontStyle to string.");
 }
@@ -39,8 +41,14 @@ auto format(VerticalAlignment alignment) -> std::string {
 
         case baseline:
             return "baseline";
-        case stable_center:
-            return "stable_center";
+
+        case center_baseline:
+            return "center_baseline";
+        case top_baseline:
+            return "top_baseline";
+        case bottom_baseline:
+            return "bottom_baseline";
+
         case center:
             return "center";
         case top:

@@ -17,9 +17,15 @@ enum class FontStyle : uint8_t {
     regular,
     italic,
     bold,
+    monospace,
 };
 
-constexpr auto all_font_styles = {FontStyle::regular, FontStyle::italic, FontStyle::bold};
+constexpr auto all_font_styles = {
+    FontStyle::regular,
+    FontStyle::italic,
+    FontStyle::bold,
+    FontStyle::monospace,
+};
 
 template <>
 auto format(FontStyle style) -> std::string;
@@ -35,7 +41,11 @@ auto format(HorizontalAlignment alignment) -> std::string;
 
 enum class VerticalAlignment : uint8_t {
     baseline,
-    stable_center,  // centers the baseline, the same for changing text
+    // adjusts the baseline
+    center_baseline,
+    top_baseline,
+    bottom_baseline,
+    // aligns the current text
     center,
     top,
     bottom,
@@ -44,64 +54,43 @@ enum class VerticalAlignment : uint8_t {
 template <>
 auto format(VerticalAlignment alignment) -> std::string;
 
-// Store an object for each font style
-template <typename ValueType, typename ReferenceType>
-struct FontStyleCollection {
-    using value_type = ValueType;
-    using reference_type = ReferenceType;
-    using const_reference_type = add_const_to_reference_t<ReferenceType>;
+template <typename ReturnType, typename T>
+auto get(T& obj, FontStyle style) -> ReturnType {
+    switch (style) {
+        using enum FontStyle;
 
-    value_type regular {};
-    value_type italic {};
-    value_type bold {};
-
-    auto get(FontStyle style) const -> const_reference_type {
-        switch (style) {
-            using enum FontStyle;
-
-            case regular:
-                return this->regular;
-            case italic:
-                return this->italic;
-            case bold:
-                return this->bold;
-        }
-        throw_exception("unknown FontStyle");
+        case regular:
+            return obj.regular;
+        case italic:
+            return obj.italic;
+        case bold:
+            return obj.bold;
+        case monospace:
+            return obj.monospace;
     }
+    throw_exception("unknown FontStyle");
+}
 
-   protected:
-    auto get(FontStyle style) -> reference_type {
-        switch (style) {
-            using enum FontStyle;
+template <typename T, typename V>
+auto set(T& obj, FontStyle style, V&& value) -> void {
+    switch (style) {
+        using enum FontStyle;
 
-            case regular:
-                return this->regular;
-            case italic:
-                return this->italic;
-            case bold:
-                return this->bold;
-        }
-        throw_exception("unknown FontStyle");
+        case regular:
+            obj.regular = std::move(value);
+            return;
+        case italic:
+            obj.italic = std::move(value);
+            return;
+        case bold:
+            obj.bold = std::move(value);
+            return;
+        case monospace:
+            obj.monospace = std::move(value);
+            return;
     }
-
-   protected:
-    auto set(FontStyle style, value_type value) -> void {
-        switch (style) {
-            using enum FontStyle;
-
-            case regular:
-                this->regular = std::move(value);
-                return;
-            case italic:
-                this->italic = std::move(value);
-                return;
-            case bold:
-                this->bold = std::move(value);
-                return;
-        }
-        throw_exception("unknown FontStyle");
-    }
-};
+    throw_exception("unknown FontStyle");
+}
 
 }  // namespace logicsim
 
