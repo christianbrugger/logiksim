@@ -2,6 +2,7 @@
 #define LOGIKSIM_LAYOUT_CALCULATION_H
 
 #include "exception.h"
+#include "glyph_cache_type.h"
 #include "layout_calculation_type.h"
 #include "vocabulary.h"
 
@@ -50,11 +51,13 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
 
 // Display General
 namespace display {
+constexpr static inline auto font_style = FontStyle::monospace;
 constexpr static inline auto font_size = grid_fine_t {0.9};  // grid values
 constexpr static inline auto enable_input_id = connection_id_t {0};
 
-constexpr static inline auto padding_horizontal = grid_fine_t {0.2};
-constexpr static inline auto margin_vertical = grid_fine_t {0.7};
+constexpr static inline auto margin_horizontal = grid_fine_t {0.2};
+constexpr static inline auto padding_vertical = grid_fine_t {0.7};
+constexpr static inline auto padding_horizontal = grid_fine_t {0.25};
 }  // namespace display
 
 // Display Number

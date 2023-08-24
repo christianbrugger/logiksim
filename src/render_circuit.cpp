@@ -660,17 +660,17 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
     const auto text_x = 1. + (element_width - 1.) / 2.;
     const auto text_y = std::min(3., (element_height - 1.) / 2.);
 
-    const auto h_padding = display::padding_horizontal;
-    const auto v_margin = display::margin_vertical;
+    const auto h_margin = display::margin_horizontal;
+    const auto v_padding = display::padding_vertical;
 
     const auto rect = rect_fine_t {
         point_fine_t {
-            1. + h_padding,     // x
-            text_y - v_margin,  // y
+            1. + h_margin,       // x
+            text_y - v_padding,  // y
         },
         point_fine_t {
-            element_width - h_padding,  // x
-            text_y + v_margin,          // y
+            element_width - h_margin,  // x
+            text_y + v_padding,         // y
         },
     };
     draw_logic_item_rect(
@@ -688,14 +688,17 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
                                       .custom_font_size = text.font_size,
                                       .custom_text_color = text.color,
                                       .horizontal_alignment = text.horizontal_alignment,
-                                      .vertical_alignment = text.vertical_alignment});
+                                      .vertical_alignment = text.vertical_alignment,
+                                      .style = defaults::font::display_font_style});
         }
     } else {
         draw_logic_item_label(
             ctx, point_fine_t {text_x, text_y}, interactive_mode_text, element, state,
             LogicItemTextAttributes {
                 .custom_font_size = defaults::font::display_font_size,
-                .custom_text_color = defaults::font::display_normal_color});
+                .custom_text_color = defaults::font::display_normal_color,
+                .style = defaults::font::display_font_style,
+            });
     }
 }
 

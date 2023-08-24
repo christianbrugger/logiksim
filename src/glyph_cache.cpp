@@ -226,6 +226,12 @@ auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFon
     return font;
 }
 
+auto GlyphCache::calculate_bounding_box(std::string_view text, float font_size,
+                                        FontStyle style) const -> BLBox {
+    return HarfbuzzShapedText {text, font_faces_.get(style).hb_font_face, font_size}
+        .bounding_box();
+}
+
 auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle style,
                            HorizontalAlignment horizontal_alignment,
                            VerticalAlignment vertical_alignment) const
@@ -280,6 +286,38 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_
     -> void {
     draw_text(ctx, position, text, font_size,
               TextAttributes {color, horizontal_alignment, vertical_alignment, style});
+}
+
+namespace {
+
+auto text_width(const GlyphCache& glyph_cache, std::string_view text, FontStyle style)
+    -> double {
+    const auto font_size = float {16};
+    const auto box = glyph_cache.calculate_bounding_box(text, font_size, style);
+    return (box.x1 - box.x0) / font_size;
+}
+
+auto character_width(const GlyphCache& glyph_cache, char character, FontStyle style)
+    -> double {
+    const auto fill = '0';
+
+    return text_width(glyph_cache, std::string {fill, character, fill}, style) -
+           text_width(glyph_cache, std::string {fill, fill}, style);
+}
+
+}  // namespace
+
+auto print_character_metrics(const GlyphCache& glyph_cache) -> void {
+    for (const auto& style : all_font_styles) {
+        fmt::print("{}:\n", style);
+
+        for (const auto& character : "gJ0123456789,.-") {
+            const auto width = character_width(glyph_cache, character, style);
+            fmt::print("{}: {} grid\n", character, width);
+        }
+
+        print("");
+    }
 }
 
 }  // namespace logicsim

@@ -31,6 +31,7 @@ constexpr static inline auto font_files = font_definition_t {
     .bold = "NotoSans-Bold.ttf",
     .monospace = "NotoSansMono-Regular.ttf",
 };
+
 }  // namespace defaults
 
 }  // namespace logicsim
@@ -191,6 +192,9 @@ class GlyphCache {
                    VerticalAlignment vertical_alignment = VerticalAlignment::baseline,
                    FontStyle style = FontStyle::regular) const -> void;
 
+    auto calculate_bounding_box(std::string_view text, float font_size,
+                                FontStyle style) const -> BLBox;
+
    private:
     [[nodiscard]] auto get_font(float font_size, FontStyle style) const -> const BLFont &;
     [[nodiscard]] auto get_entry(std::string_view text, float font_size, FontStyle style,
@@ -207,6 +211,8 @@ class GlyphCache {
 
     mutable glyph_map_t glyph_map_ {};
 };
+
+auto print_character_metrics(const GlyphCache &glyph_cache) -> void;
 
 }  // namespace logicsim
 
