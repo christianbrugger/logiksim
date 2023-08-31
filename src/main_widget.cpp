@@ -102,13 +102,21 @@ auto add_action(QMenu* menu, const QString& text, const QKeySequence& shortcut,
     return action;
 }
 
-// https://feathericons.com/
+auto set_icon(QAction* action, const QString& icon) -> void {
+    action->setIcon(QIcon("public/icons/lucide/" + icon));
+}
+
 auto add_action(QMenu* menu, const QString& text, const QKeySequence& shortcut,
                 const QString& icon, std::invocable<> auto callable) -> QAction* {
+    auto* action = add_action(menu, text, shortcut, callable);
+    set_icon(action, icon);
+    return action;
+}
+
+auto add_action(QMenu* menu, const QString& text, const QString& icon,
+                std::invocable<> auto callable) -> QAction* {
     auto* action = add_action(menu, text, callable);
-    action->setShortcut(shortcut);
-    action->setAutoRepeat(false);
-    action->setIcon(QIcon("public/icons/feather/" + icon));
+    set_icon(action, icon);
     return action;
 }
 
@@ -136,13 +144,14 @@ auto add_action_group(QMenu* menu, const QString& text, QActionGroup* group,
 }  // namespace
 
 auto MainWidget::create_menu() -> void {
+    // Browse Icons: https://lucide.dev/icons/
     {
         // File
         auto* menu = menuBar()->addMenu(tr("&File"));
 
         add_action(menu, tr("&New"), QKeySequence::New, "file.svg",
                    [] { print("new file"); });
-        add_action(menu, tr("&Open..."), QKeySequence::Open, "folder.svg",
+        add_action(menu, tr("&Open..."), QKeySequence::Open, "folder-open.svg",
                    [] { print("open"); });
         add_action(menu, tr("&Save"), QKeySequence::Save, "save.svg",
                    [] { print("save"); });
@@ -166,56 +175,73 @@ auto MainWidget::create_menu() -> void {
                    [this] { render_widget_->paste_clipboard_items(); });
         add_action(menu, tr("&Delete"), QKeySequence::Delete, "trash-2.svg",
                    [this] { render_widget_->delete_selected_items(); });
-        add_action(menu, tr("Select &All"), QKeySequence::SelectAll, "maximize.svg",
+        add_action(menu, tr("Select &All"), QKeySequence::SelectAll, "box-select.svg",
                    [this] { render_widget_->select_all_items(); });
-        // select all options: "maximize.svg", "grid.svg", "check-square.svg",
+        // select all options:
+        //      "maximize.svg"
+        //      "grid.svg"
+        //      "check-square.svg"
+        //      "box-select.svg"
     }
     {
         // Debug
         auto* menu = menuBar()->addMenu(tr("&Debug"));
 
         // Benchmark
-        add_action_checkable(menu, tr("&Benchmark"), false, [this](bool checked) {
-            render_widget_->set_do_benchmark(checked);
-        });
+        auto* ba = add_action_checkable(
+            menu, tr("&Benchmark"), false,
+            [this](bool checked) { render_widget_->set_do_benchmark(checked); });
+        set_icon(ba, "infinity.svg");
+
         menu->addSeparator();
         {
-            add_action_checkable(menu, tr("Show C&ircuit"), true, [this](bool checked) {
-                render_widget_->set_do_render_circuit(checked);
-            });
-            add_action_checkable(
+            auto* ia = add_action_checkable(
+                menu, tr("Show C&ircuit"), true,
+                [this](bool checked) { render_widget_->set_do_render_circuit(checked); });
+            set_icon(ia, "cpu.svg");
+            auto* oa = add_action_checkable(
                 menu, tr("Show C&ollision Cache"), false, [this](bool checked) {
                     render_widget_->set_do_render_collision_cache(checked);
                 });
-            add_action_checkable(
+            set_icon(oa, "shapes.svg");
+            auto* na = add_action_checkable(
                 menu, tr("Show Co&nnection Cache"), false, [this](bool checked) {
                     render_widget_->set_do_render_connection_cache(checked);
                 });
-            add_action_checkable(
+            set_icon(na, "spline.svg");  // share-2
+            auto* sa = add_action_checkable(
                 menu, tr("Show &Selection Cache"), false, [this](bool checked) {
                     render_widget_->set_do_render_selection_cache(checked);
                 });
+            set_icon(sa, "ungroup.svg");  // ungroup, group, boxes, ratio
         }
 
         // Examples
         menu->addSeparator();
-        add_action(menu, tr("&Reload"), [this]() { render_widget_->reload_circuit(); });
+        add_action(menu, tr("&Reload"), "refresh-ccw.svg",
+                   [this]() { render_widget_->reload_circuit(); });
         {
-            add_action(menu, tr("Load \"Si&mple\" Example"),
-                       [this]() { render_widget_->load_circuit(1); });
-            add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
-                       [this]() { render_widget_->load_circuit(2); });
-            add_action(menu, tr("Load \"&Elements\" Example"),
-                       [this]() { render_widget_->load_circuit(3); });
-            add_action(menu, tr("Load \"&Wires\" Example"),
-                       [this]() { render_widget_->load_circuit(4); });
+            auto* ma = add_action(menu, tr("Load \"Si&mple\" Example"),
+                                  [this]() { render_widget_->load_circuit(1); });
+            set_icon(ma, "cable.svg");
+            auto* ra = add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
+                                  [this]() { render_widget_->load_circuit(2); });
+            set_icon(ra, "network.svg");
+            auto* ea = add_action(menu, tr("Load \"&Elements\" Example"),
+                                  [this]() { render_widget_->load_circuit(3); });
+            set_icon(ea, "workflow.svg");
+            auto* wa = add_action(menu, tr("Load \"&Wires\" Example"),
+                                  [this]() { render_widget_->load_circuit(4); });
+            set_icon(wa, "share-2.svg");
         }
 
         // Thread Count
         menu->addSeparator();
-        add_action_checkable(menu, tr("&Direct Rendering"), true, [this](bool checked) {
-            render_widget_->set_use_backing_store(checked);
-        });
+        auto* da = add_action_checkable(
+            menu, tr("&Direct Rendering"), true,
+            [this](bool checked) { render_widget_->set_use_backing_store(checked); });
+        set_icon(da, "grid-2x2.svg");
+
         menu->addSeparator();
         {
             auto* group = new QActionGroup(menu);
