@@ -224,15 +224,15 @@ auto MainWidget::create_menu() -> void {
             auto* ma = add_action(menu, tr("Load \"Si&mple\" Example"),
                                   [this]() { render_widget_->load_circuit(1); });
             set_icon(ma, "cable.svg");
-            auto* ra = add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
-                                  [this]() { render_widget_->load_circuit(2); });
-            set_icon(ra, "network.svg");
-            auto* ea = add_action(menu, tr("Load \"&Elements\" Example"),
-                                  [this]() { render_widget_->load_circuit(3); });
-            set_icon(ea, "workflow.svg");
             auto* wa = add_action(menu, tr("Load \"&Wires\" Example"),
                                   [this]() { render_widget_->load_circuit(4); });
             set_icon(wa, "share-2.svg");
+            auto* ea = add_action(menu, tr("Load \"&Elements\" Example"),
+                                  [this]() { render_widget_->load_circuit(3); });
+            set_icon(ea, "workflow.svg");
+            auto* ra = add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
+                                  [this]() { render_widget_->load_circuit(2); });
+            set_icon(ra, "network.svg");
         }
 
         // Thread Count

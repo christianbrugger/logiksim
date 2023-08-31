@@ -70,7 +70,17 @@ auto EditableCircuit::validate() -> void {
 
 auto EditableCircuit::add_example() -> void {
     auto rng = get_random_number_generator();
-    editable_circuit::examples::add_many_wires_and_buttons(rng, get_state(), false);
+    editable_circuit::examples::add_many_wires_and_buttons(rng, get_state());
+
+    // editable_circuit::examples::add_many_wires_and_buttons(
+    //     rng, get_state(),
+    //     editable_circuit::examples::WiresButtonsParams {
+    //         .tries_start = 10,
+    //         .tries_end = 1'000,
+    //         .grid_start = 5,
+    //         .grid_end = 25,
+    //         .max_length = 6,
+    //     });
 }
 
 auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
