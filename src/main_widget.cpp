@@ -6,6 +6,8 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMenu>
+#include <QMenuBar>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSlider>
@@ -38,8 +40,10 @@ auto ElementButton::minimumSizeHint() const -> QSize {
 //
 
 MainWidget::MainWidget(QWidget* parent)
-    : QWidget(parent), render_widget_ {new RendererWidget(this)} {
-    const auto layout = new QVBoxLayout(this);
+    : QMainWindow(parent), render_widget_ {new RendererWidget(this)} {
+    create_menu();
+
+    const auto layout = new QVBoxLayout();
     layout->addWidget(build_render_buttons());
     layout->addWidget(build_mode_buttons());
     layout->addWidget(build_delay_slider());
@@ -54,7 +58,10 @@ MainWidget::MainWidget(QWidget* parent)
     hlayout->setSpacing(0);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    setLayout(layout);
+
+    const auto frame = new QWidget(this);
+    frame->setLayout(layout);
+    this->setCentralWidget(frame);
 
     connect(&timer_, &QTimer::timeout, this, &MainWidget::update_title);
 
@@ -68,18 +75,55 @@ MainWidget::MainWidget(QWidget* parent)
     resize(914, 700);
 }
 
-auto MainWidget::build_render_buttons() -> QWidget* {
-    const auto check_box1 = new QCheckBox("&Benchmark");
-    const auto check_box2 = new QCheckBox("Render C&ircuit");
-    const auto check_box3 = new QCheckBox("Render Co&llision Cache");
-    const auto check_box4 = new QCheckBox("Render Co&nnection Cache");
-    const auto check_box5 = new QCheckBox("Render S&election Cache");
+template <typename Func>
+auto add_action(QMenu& menu, const QString& text, const QKeySequence& shortcut,
+                Func callable) {
+    auto* action = menu.addAction(text, shortcut);
+    auto* widget = menu.parentWidget();
+    widget->connect(action, &QAction::triggered, widget, callable);
+}
 
-    check_box1->setShortcut(QKeySequence(Qt::ALT | Qt::Key_B));
-    check_box2->setShortcut(QKeySequence(Qt::ALT | Qt::Key_I));
-    check_box3->setShortcut(QKeySequence(Qt::ALT | Qt::Key_L));
-    check_box4->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
-    check_box5->setShortcut(QKeySequence(Qt::ALT | Qt::Key_E));
+auto MainWidget::create_menu() -> void {
+    // file menu
+    {
+        auto& menu = *menuBar()->addMenu(tr("&File"));
+
+        // new, open, save
+        add_action(menu, tr("&New"), QKeySequence::New, [] { print("new file"); });
+        add_action(menu, tr("&Open..."), QKeySequence::Open, [] { print("open"); });
+        add_action(menu, tr("&Save"), QKeySequence::Save, [] { print("save"); });
+        add_action(menu, tr("Save &As..."), QKeySequence::SaveAs,
+                   [] { print("save as"); });
+
+        // exit
+        menu.addSeparator();
+        add_action(menu, tr("E&xit"), QKeySequence::Quit, [&]() { this->close(); });
+    }
+
+    {
+        // edit menu
+        auto& menu = *menuBar()->addMenu(tr("&Edit"));
+
+        // copy, paste, select
+        add_action(menu, tr("Cu&t"), QKeySequence::Cut,
+                   [&] { this->render_widget_->cut_selected_items(); });
+        add_action(menu, tr("&Copy"), QKeySequence::Copy,
+                   [&] { this->render_widget_->copy_selected_items(); });
+        add_action(menu, tr("&Paste"), QKeySequence::Paste,
+                   [&] { this->render_widget_->paste_clipboard_items(); });
+        add_action(menu, tr("&Delete"), QKeySequence::Delete,
+                   [&] { this->render_widget_->delete_selected_items(); });
+        add_action(menu, tr("Select &All"), QKeySequence::SelectAll,
+                   [&] { this->render_widget_->select_all_items(); });
+    }
+}
+
+auto MainWidget::build_render_buttons() -> QWidget* {
+    const auto check_box1 = new QCheckBox("Benchmark");
+    const auto check_box2 = new QCheckBox("Render Circuit");
+    const auto check_box3 = new QCheckBox("Render Collision Cache");
+    const auto check_box4 = new QCheckBox("Render Connection Cache");
+    const auto check_box5 = new QCheckBox("Render Selection Cache");
 
     connect(check_box1, &QCheckBox::stateChanged, this, [this](int value) {
         render_widget_->set_do_benchmark(value == Qt::Checked);

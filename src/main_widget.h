@@ -6,6 +6,7 @@
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>
 
+#include <QMainWindow>
 #include <QPushButton>
 #include <QTimer>
 #include <QWidget>
@@ -26,13 +27,14 @@ class ElementButton : public QPushButton {
     auto minimumSizeHint() const -> QSize override;
 };
 
-class MainWidget : public QWidget {
+class MainWidget : public QMainWindow {
     Q_OBJECT
 
    public:
     MainWidget(QWidget* parent = nullptr);
 
    private:
+    auto create_menu() -> void;
     [[nodiscard]] auto build_render_buttons() -> QWidget*;
     [[nodiscard]] auto build_mode_buttons() -> QWidget*;
     [[nodiscard]] auto build_delay_slider() -> QWidget*;

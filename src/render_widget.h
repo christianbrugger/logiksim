@@ -262,8 +262,16 @@ class RendererWidget : public RendererWidgetBase {
     [[nodiscard]] auto time_rate() const -> time_rate_t;
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
+    // actions
+    auto delete_selected_items() -> void;
+    auto select_all_items() -> void;
+    auto copy_selected_items() -> void;
+    auto cut_selected_items() -> void;
+    auto paste_clipboard_items() -> void;
+
     auto fps() const -> double;
     auto pixel_scale() const -> double;
+    auto geometry_toplevel() const -> QRect;
     auto size_device() const -> QSize;
     auto view_config() const noexcept -> const ViewConfig&;
 
@@ -281,11 +289,6 @@ class RendererWidget : public RendererWidgetBase {
     auto _init_surface_from_buffer_image() -> void;
 
     auto reset_interaction_state() -> void;
-
-    auto delete_selected_items() -> void;
-    auto select_all_items() -> void;
-    auto copy_selected_items() -> void;
-    auto paste_clipboard_items() -> void;
 
     auto set_new_mouse_logic(QMouseEvent* event) -> void;
 

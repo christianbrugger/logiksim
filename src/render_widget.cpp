@@ -938,8 +938,15 @@ auto round_logical_to_device(QRectF rect, double pixel_ratio,
     return QRect(p0.x(), p0.y(), p1.x() - p0.x(), p1.y() - p0.y());
 }
 
+auto RendererWidget::geometry_toplevel() const -> QRect {
+    const auto geometry = this->geometry();
+    const auto widget = this->topLevelWidget();
+    const auto top_left = this->mapTo(widget, QPoint {0, 0});
+    return QRect {top_left.x(), top_left.y(), geometry.width(), geometry.height()};
+}
+
 auto RendererWidget::size_device() const -> QSize {
-    return round_logical_to_device(this->geometry(), devicePixelRatioF()).size();
+    return round_logical_to_device(geometry_toplevel(), devicePixelRatioF()).size();
 }
 
 auto RendererWidget::view_config() const noexcept -> const ViewConfig& {
@@ -971,7 +978,7 @@ auto RendererWidget::_init_surface_from_backing_store() -> bool {
         return false;
     }
 
-    const auto rect = round_logical_to_device(this->geometry(),
+    const auto rect = round_logical_to_device(geometry_toplevel(),
                                               image->devicePixelRatioF(), image->rect());
 
     // print(geometry().x() * image->devicePixelRatioF(),                         //
@@ -1093,11 +1100,12 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         render_editable_circuit_selection_cache(context_.ctx, editable_circuit);
     }
 
-    // bl_ctx.setFillStyle(BLRgba32(defaults::color_black.value));
-    // bl_ctx.fillRect(BLRect {0, 0, 1, 100});
-    // bl_ctx.fillRect(BLRect {bl_image.width() - 1.0, 0, 1, 100});
-    // bl_ctx.fillRect(BLRect {0, 0, 100, 1});
-    // bl_ctx.fillRect(BLRect {0, bl_image.height() - 1.0, 100, 1});
+    // context_.ctx.bl_ctx.setFillStyle(BLRgba32(defaults::color_black.value));
+    // context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 1, 100});
+    // context_.ctx.bl_ctx.fillRect(BLRect {context_.ctx.bl_image.width() - 1.0, 0, 1,
+    // 100}); context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 100, 1});
+    // context_.ctx.bl_ctx.fillRect(
+    //     BLRect {0, context_.ctx.bl_image.height() - 1.0, 100, 1});
 
     context_.ctx.sync();
 
@@ -1121,6 +1129,10 @@ auto RendererWidget::delete_selected_items() -> void {
 
     editable_circuit_.value().delete_all(std::move(copy_handle));
     update();
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::select_all_items() -> void {
@@ -1140,6 +1152,10 @@ auto RendererWidget::select_all_items() -> void {
     selection_builder.add(SelectionFunction::add, rect);
 
     update();
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 auto RendererWidget::copy_selected_items() -> void {
@@ -1156,6 +1172,15 @@ auto RendererWidget::copy_selected_items() -> void {
 
     print("Copied", selection.selected_logic_items().size(), "logic items and",
           selection.selected_segments().size(), "segments in", t);
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
+}
+
+auto RendererWidget::cut_selected_items() -> void {
+    copy_selected_items();
+    delete_selected_items();
 }
 
 auto RendererWidget::paste_clipboard_items() -> void {
@@ -1205,6 +1230,10 @@ auto RendererWidget::paste_clipboard_items() -> void {
     const auto& selection = editable_circuit.selection_builder().selection();
     print("Pasted", selection.selected_logic_items().size(), "logic items and",
           selection.selected_segments().size(), "segments in", t);
+
+#ifndef NDEBUG
+    editable_circuit_->validate();
+#endif
 }
 
 // returns pixel accurate, non-rounded mouse position
@@ -1519,12 +1548,6 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
         return;
     }
 
-    // Delete
-    if (event->key() == Qt::Key_Delete) {
-        delete_selected_items();
-        event->accept();
-    }
-
     // Escape
     else if (event->key() == Qt::Key_Escape) {
         if (mouse_logic_) {
@@ -1536,31 +1559,6 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
             }
         }
         update();
-        event->accept();
-    }
-
-    // CTRL + A
-    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_A) {
-        select_all_items();
-        event->accept();
-    }
-
-    // CTRL + C
-    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_C) {
-        copy_selected_items();
-        event->accept();
-    }
-
-    // CTRL + V
-    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_V) {
-        paste_clipboard_items();
-        event->accept();
-    }
-
-    // CTRL + X
-    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_X) {
-        copy_selected_items();
-        delete_selected_items();
         event->accept();
     }
 
