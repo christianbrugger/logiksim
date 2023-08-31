@@ -2,6 +2,7 @@
 
 #include "render_widget.h"
 
+#include <QActionGroup>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -44,8 +45,8 @@ MainWidget::MainWidget(QWidget* parent)
     create_menu();
 
     const auto layout = new QVBoxLayout();
-    layout->addWidget(build_render_buttons());
-    layout->addWidget(build_mode_buttons());
+    // layout->addWidget(build_render_buttons());
+    // layout->addWidget(build_mode_buttons());
     layout->addWidget(build_delay_slider());
     layout->addWidget(build_time_rate_slider());
 
@@ -75,46 +76,150 @@ MainWidget::MainWidget(QWidget* parent)
     resize(914, 700);
 }
 
-template <typename Func>
-auto add_action(QMenu& menu, const QString& text, const QKeySequence& shortcut,
-                Func callable) {
-    auto* action = menu.addAction(text, shortcut);
-    auto* widget = menu.parentWidget();
+namespace {
+
+template <typename Callback>
+concept action_callable = std::invocable<Callback> || std::invocable<Callback, bool>;
+
+auto add_action_impl(QMenu* menu, const QString& text, action_callable auto callable)
+    -> QAction* {
+    auto* action = menu->addAction(text);
+    auto* widget = menu->parentWidget();
     widget->connect(action, &QAction::triggered, widget, callable);
+    return action;
 }
 
-auto MainWidget::create_menu() -> void {
-    // file menu
-    {
-        auto& menu = *menuBar()->addMenu(tr("&File"));
+auto add_action(QMenu* menu, const QString& text, std::invocable<> auto callable)
+    -> QAction* {
+    return add_action_impl(menu, text, callable);
+}
 
-        // new, open, save
+auto add_action(QMenu* menu, const QString& text, const QKeySequence& shortcut,
+                std::invocable<> auto callable) -> QAction* {
+    auto* action = add_action(menu, text, callable);
+    action->setShortcut(shortcut);
+    action->setAutoRepeat(false);
+    return action;
+}
+
+auto add_action_checkable(QMenu* menu, const QString& text, bool start_state,
+                          std::invocable<bool> auto callable) -> QAction* {
+    auto* action = add_action_impl(menu, text, callable);
+    action->setCheckable(true);
+    action->setChecked(start_state);
+    std::invoke(callable, start_state);
+    return action;
+}
+
+auto add_action_group(QMenu* menu, const QString& text, QActionGroup* group,
+                      bool start_state, std::invocable<> auto callable) -> QAction* {
+    auto* action = add_action_impl(menu, text, callable);
+    action->setActionGroup(group);
+    action->setCheckable(true);
+    action->setChecked(start_state);
+    if (start_state) {
+        std::invoke(callable);
+    }
+    return action;
+}
+
+}  // namespace
+
+auto MainWidget::create_menu() -> void {
+    {
+        // File
+        auto* menu = menuBar()->addMenu(tr("&File"));
+
         add_action(menu, tr("&New"), QKeySequence::New, [] { print("new file"); });
         add_action(menu, tr("&Open..."), QKeySequence::Open, [] { print("open"); });
         add_action(menu, tr("&Save"), QKeySequence::Save, [] { print("save"); });
         add_action(menu, tr("Save &As..."), QKeySequence::SaveAs,
                    [] { print("save as"); });
 
-        // exit
-        menu.addSeparator();
+        menu->addSeparator();
         add_action(menu, tr("E&xit"), QKeySequence::Quit, [&]() { this->close(); });
     }
 
     {
-        // edit menu
-        auto& menu = *menuBar()->addMenu(tr("&Edit"));
+        // Edit
+        auto* menu = menuBar()->addMenu(tr("&Edit"));
 
-        // copy, paste, select
         add_action(menu, tr("Cu&t"), QKeySequence::Cut,
-                   [&] { this->render_widget_->cut_selected_items(); });
+                   [this] { render_widget_->cut_selected_items(); });
         add_action(menu, tr("&Copy"), QKeySequence::Copy,
-                   [&] { this->render_widget_->copy_selected_items(); });
+                   [this] { render_widget_->copy_selected_items(); });
         add_action(menu, tr("&Paste"), QKeySequence::Paste,
-                   [&] { this->render_widget_->paste_clipboard_items(); });
+                   [this] { render_widget_->paste_clipboard_items(); });
         add_action(menu, tr("&Delete"), QKeySequence::Delete,
-                   [&] { this->render_widget_->delete_selected_items(); });
+                   [this] { render_widget_->delete_selected_items(); });
         add_action(menu, tr("Select &All"), QKeySequence::SelectAll,
-                   [&] { this->render_widget_->select_all_items(); });
+                   [this] { render_widget_->select_all_items(); });
+    }
+    {
+        // Debug
+        auto* menu = menuBar()->addMenu(tr("&Debug"));
+
+        // Benchmark
+        add_action_checkable(menu, tr("&Benchmark"), false, [this](bool checked) {
+            render_widget_->set_do_benchmark(checked);
+        });
+        {
+            auto* render = menu->addMenu(tr("R&ender"));
+            add_action_checkable(render, tr("C&ircuit"), true, [this](bool checked) {
+                render_widget_->set_do_render_circuit(checked);
+            });
+            add_action_checkable(
+                render, tr("C&ollision Cache"), false, [this](bool checked) {
+                    render_widget_->set_do_render_collision_cache(checked);
+                });
+            add_action_checkable(
+                render, tr("Co&nnection Cache"), false, [this](bool checked) {
+                    render_widget_->set_do_render_connection_cache(checked);
+                });
+            add_action_checkable(
+                render, tr("&Selection Cache"), false, [this](bool checked) {
+                    render_widget_->set_do_render_selection_cache(checked);
+                });
+        }
+        // Examples
+        menu->addSeparator();
+        add_action(menu, tr("&Reload"), [this]() { render_widget_->reload_circuit(); });
+        {
+            auto* examples = menu->addMenu(tr("&Load Example"));
+            add_action(examples, tr("Simple"),
+                       [this]() { render_widget_->load_circuit(1); });
+            add_action(examples, tr("Elements + Wires"),
+                       [this]() { render_widget_->load_circuit(2); });
+            add_action(examples, tr("Elements"),
+                       [this]() { render_widget_->load_circuit(3); });
+            add_action(examples, tr("Wires"),
+                       [this]() { render_widget_->load_circuit(4); });
+        }
+
+        // Thread Count
+        menu->addSeparator();
+        add_action_checkable(menu, tr("&Direct Rendering"), true, [this](bool checked) {
+            render_widget_->set_use_backing_store(checked);
+        });
+        {
+            auto* threads = menu->addMenu(tr("&Render Threads"));
+            auto* group = new QActionGroup(menu);
+            add_action_group(threads, tr("Synchronous"), group, false,
+                             [this]() { render_widget_->set_thread_count(0); });
+            add_action_group(threads, tr("2 Render Threads"), group, false,
+                             [this]() { render_widget_->set_thread_count(2); });
+            add_action_group(threads, tr("4 Render Threads"), group, true,
+                             [this]() { render_widget_->set_thread_count(4); });
+            add_action_group(threads, tr("8 Render Threads"), group, false,
+                             [this]() { render_widget_->set_thread_count(8); });
+        }
+    }
+    {
+        // Tools
+        auto* menu = menuBar()->addMenu(tr("&Tools"));
+
+        add_action(menu, tr("&Options..."), QKeySequence::SelectAll,
+                   [] { print("options"); });
     }
 }
 

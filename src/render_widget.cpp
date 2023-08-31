@@ -630,9 +630,9 @@ auto RendererWidget::set_do_render_selection_cache(bool value) -> void {
 
 auto RendererWidget::set_thread_count(int count) -> void {
     if (count != context_.ctx.settings.thread_count) {
+        context_.ctx.settings.thread_count = count;
         is_initialized_ = false;
     }
-    context_.ctx.settings.thread_count = count;
     update();
 }
 
