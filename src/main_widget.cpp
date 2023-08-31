@@ -102,6 +102,16 @@ auto add_action(QMenu* menu, const QString& text, const QKeySequence& shortcut,
     return action;
 }
 
+// https://feathericons.com/
+auto add_action(QMenu* menu, const QString& text, const QKeySequence& shortcut,
+                const QString& icon, std::invocable<> auto callable) -> QAction* {
+    auto* action = add_action(menu, text, callable);
+    action->setShortcut(shortcut);
+    action->setAutoRepeat(false);
+    action->setIcon(QIcon("public/icons/feather/" + icon));
+    return action;
+}
+
 auto add_action_checkable(QMenu* menu, const QString& text, bool start_state,
                           std::invocable<bool> auto callable) -> QAction* {
     auto* action = add_action_impl(menu, text, callable);
@@ -130,30 +140,35 @@ auto MainWidget::create_menu() -> void {
         // File
         auto* menu = menuBar()->addMenu(tr("&File"));
 
-        add_action(menu, tr("&New"), QKeySequence::New, [] { print("new file"); });
-        add_action(menu, tr("&Open..."), QKeySequence::Open, [] { print("open"); });
-        add_action(menu, tr("&Save"), QKeySequence::Save, [] { print("save"); });
+        add_action(menu, tr("&New"), QKeySequence::New, "file.svg",
+                   [] { print("new file"); });
+        add_action(menu, tr("&Open..."), QKeySequence::Open, "folder.svg",
+                   [] { print("open"); });
+        add_action(menu, tr("&Save"), QKeySequence::Save, "save.svg",
+                   [] { print("save"); });
         add_action(menu, tr("Save &As..."), QKeySequence::SaveAs,
                    [] { print("save as"); });
 
         menu->addSeparator();
-        add_action(menu, tr("E&xit"), QKeySequence::Quit, [&]() { this->close(); });
+        add_action(menu, tr("E&xit"), QKeySequence::Quit, "log-out.svg",
+                   [&]() { this->close(); });
     }
 
     {
         // Edit
         auto* menu = menuBar()->addMenu(tr("&Edit"));
 
-        add_action(menu, tr("Cu&t"), QKeySequence::Cut,
+        add_action(menu, tr("Cu&t"), QKeySequence::Cut, "scissors.svg",
                    [this] { render_widget_->cut_selected_items(); });
-        add_action(menu, tr("&Copy"), QKeySequence::Copy,
+        add_action(menu, tr("&Copy"), QKeySequence::Copy, "copy.svg",
                    [this] { render_widget_->copy_selected_items(); });
-        add_action(menu, tr("&Paste"), QKeySequence::Paste,
+        add_action(menu, tr("&Paste"), QKeySequence::Paste, "clipboard.svg",
                    [this] { render_widget_->paste_clipboard_items(); });
-        add_action(menu, tr("&Delete"), QKeySequence::Delete,
+        add_action(menu, tr("&Delete"), QKeySequence::Delete, "trash-2.svg",
                    [this] { render_widget_->delete_selected_items(); });
-        add_action(menu, tr("Select &All"), QKeySequence::SelectAll,
+        add_action(menu, tr("Select &All"), QKeySequence::SelectAll, "maximize.svg",
                    [this] { render_widget_->select_all_items(); });
+        // select all options: "maximize.svg", "grid.svg", "check-square.svg",
     }
     {
         // Debug
@@ -163,36 +178,36 @@ auto MainWidget::create_menu() -> void {
         add_action_checkable(menu, tr("&Benchmark"), false, [this](bool checked) {
             render_widget_->set_do_benchmark(checked);
         });
+        menu->addSeparator();
         {
-            auto* render = menu->addMenu(tr("R&ender"));
-            add_action_checkable(render, tr("C&ircuit"), true, [this](bool checked) {
+            add_action_checkable(menu, tr("Show C&ircuit"), true, [this](bool checked) {
                 render_widget_->set_do_render_circuit(checked);
             });
             add_action_checkable(
-                render, tr("C&ollision Cache"), false, [this](bool checked) {
+                menu, tr("Show C&ollision Cache"), false, [this](bool checked) {
                     render_widget_->set_do_render_collision_cache(checked);
                 });
             add_action_checkable(
-                render, tr("Co&nnection Cache"), false, [this](bool checked) {
+                menu, tr("Show Co&nnection Cache"), false, [this](bool checked) {
                     render_widget_->set_do_render_connection_cache(checked);
                 });
             add_action_checkable(
-                render, tr("&Selection Cache"), false, [this](bool checked) {
+                menu, tr("Show &Selection Cache"), false, [this](bool checked) {
                     render_widget_->set_do_render_selection_cache(checked);
                 });
         }
+
         // Examples
         menu->addSeparator();
         add_action(menu, tr("&Reload"), [this]() { render_widget_->reload_circuit(); });
         {
-            auto* examples = menu->addMenu(tr("&Load Example"));
-            add_action(examples, tr("Simple"),
+            add_action(menu, tr("Load \"Si&mple\" Example"),
                        [this]() { render_widget_->load_circuit(1); });
-            add_action(examples, tr("Elements + Wires"),
+            add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
                        [this]() { render_widget_->load_circuit(2); });
-            add_action(examples, tr("Elements"),
+            add_action(menu, tr("Load \"&Elements\" Example"),
                        [this]() { render_widget_->load_circuit(3); });
-            add_action(examples, tr("Wires"),
+            add_action(menu, tr("Load \"&Wires\" Example"),
                        [this]() { render_widget_->load_circuit(4); });
         }
 
@@ -201,16 +216,16 @@ auto MainWidget::create_menu() -> void {
         add_action_checkable(menu, tr("&Direct Rendering"), true, [this](bool checked) {
             render_widget_->set_use_backing_store(checked);
         });
+        menu->addSeparator();
         {
-            auto* threads = menu->addMenu(tr("&Render Threads"));
             auto* group = new QActionGroup(menu);
-            add_action_group(threads, tr("Synchronous"), group, false,
+            add_action_group(menu, tr("S&ynchronous Rendering"), group, false,
                              [this]() { render_widget_->set_thread_count(0); });
-            add_action_group(threads, tr("2 Render Threads"), group, false,
+            add_action_group(menu, tr("&2 Render Threads"), group, false,
                              [this]() { render_widget_->set_thread_count(2); });
-            add_action_group(threads, tr("4 Render Threads"), group, true,
+            add_action_group(menu, tr("&4 Render Threads"), group, true,
                              [this]() { render_widget_->set_thread_count(4); });
-            add_action_group(threads, tr("8 Render Threads"), group, false,
+            add_action_group(menu, tr("&8 Render Threads"), group, false,
                              [this]() { render_widget_->set_thread_count(8); });
         }
     }
@@ -218,7 +233,7 @@ auto MainWidget::create_menu() -> void {
         // Tools
         auto* menu = menuBar()->addMenu(tr("&Tools"));
 
-        add_action(menu, tr("&Options..."), QKeySequence::SelectAll,
+        add_action(menu, tr("&Options..."), QKeySequence::Preferences, "settings.svg",
                    [] { print("options"); });
     }
 }

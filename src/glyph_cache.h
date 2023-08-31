@@ -25,11 +25,12 @@ struct font_definition_t {
 };
 
 namespace defaults {
+
 constexpr static inline auto font_files = font_definition_t {
-    .regular = "NotoSans-Regular.ttf",
-    .italic = "NotoSans-Italic.ttf",
-    .bold = "NotoSans-Bold.ttf",
-    .monospace = "NotoSansMono-Regular.ttf",
+    .regular = "public/fonts/NotoSans-Regular.ttf",
+    .italic = "public/fonts/NotoSans-Italic.ttf",
+    .bold = "public/fonts/NotoSans-Bold.ttf",
+    .monospace = "public/fonts/NotoSansMono-Regular.ttf",
 };
 
 }  // namespace defaults
