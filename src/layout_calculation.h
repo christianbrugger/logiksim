@@ -14,8 +14,9 @@ struct BLPoint;
 namespace logicsim {
 
 namespace defaults {
-constexpr static inline auto line_selection_padding = 0.3;
-}
+constexpr static inline auto line_selection_padding = 0.3;    // grid values
+constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
+}  // namespace defaults
 
 [[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
                                                std::size_t input_count,
@@ -36,13 +37,13 @@ auto require_min(std::size_t value, std::size_t count) -> void;
 auto require_max(std::size_t value, std::size_t count) -> void;
 auto require_equal(std::size_t value, std::size_t count) -> void;
 
-namespace detail {
 [[nodiscard]] auto transform(point_t element_position, orientation_t orientation,
                              point_t offset) -> point_t;
+[[nodiscard]] auto transform(point_t element_position, orientation_t orientation,
+                             point_fine_t offset) -> point_fine_t;
 
 [[nodiscard]] auto transform(orientation_t element_orientation, orientation_t connector)
     -> orientation_t;
-}  // namespace detail
 
 auto connector_point(point_t position, orientation_t orientation, grid_fine_t offset)
     -> point_fine_t;
@@ -91,8 +92,6 @@ constexpr static inline auto enable_position = point_t {2, height};
 /// next_point(point_t position) -> bool;
 template <typename Func>
 auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -> bool {
-    using detail::transform;
-
     switch (data.element_type) {
         using enum ElementType;
 
@@ -302,8 +301,6 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
 /// next_input(point_t position, orientation_t orientation) -> bool;
 template <typename Func>
 auto iter_input_location(layout_calculation_data_t data, Func next_input) -> bool {
-    using detail::transform;
-
     switch (data.element_type) {
         using enum ElementType;
 
@@ -532,8 +529,6 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
 /// next_output(point_t position, orientation_t orientation) -> bool;
 template <typename Func>
 auto iter_output_location(layout_calculation_data_t data, Func next_output) -> bool {
-    using detail::transform;
-
     switch (data.element_type) {
         using enum ElementType;
 

@@ -26,8 +26,6 @@ auto require_equal(std::size_t value, std::size_t count) -> void {
     }
 }
 
-namespace detail {
-
 auto transform(point_t element_position, orientation_t orientation, point_t offset)
     -> point_t {
     switch (orientation) {
@@ -35,6 +33,30 @@ auto transform(point_t element_position, orientation_t orientation, point_t offs
 
         case right: {
             return element_position + offset;
+        }
+        case left: {
+            throw_exception("Please implement.");
+        }
+        case up: {
+            throw_exception("Please implement.");
+        }
+        case down: {
+            throw_exception("Please implement.");
+        }
+        case undirected: {
+            throw_exception("Cannot transform undirected elements.");
+        }
+    }
+    throw_exception("Don't know how to transform position.");
+}
+
+auto transform(point_t element_position, orientation_t orientation, point_fine_t offset)
+    -> point_fine_t {
+    switch (orientation) {
+        using enum orientation_t;
+
+        case right: {
+            return point_fine_t {element_position} + offset;
         }
         case left: {
             throw_exception("Please implement.");
@@ -75,8 +97,6 @@ auto transform(orientation_t element_orientation, orientation_t connector)
     }
     throw_exception("Don't know how to transform connector.");
 }
-
-}  // namespace detail
 
 auto transform(point_t position, orientation_t orientation, point_t p0, point_t p1)
     -> rect_t {

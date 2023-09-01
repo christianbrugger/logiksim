@@ -1,6 +1,7 @@
 #include "render_widget.h"
 
 #include "collision.h"
+#include "drag_handle.h"
 #include "editable_circuit/cache.h"
 #include "editable_circuit/cache/spatial_cache.h"
 #include "exception.h"
@@ -1085,9 +1086,11 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     }
 
     if (do_render_circuit_ && !simulation_) {
+        const auto& layout = editable_circuit.layout();
         const auto& selection = editable_circuit.selection_builder().selection();
 
-        render_layout(context_, editable_circuit.layout(), selection);
+        render_layout(context_, layout, selection);
+        render_drag_handles(context_.ctx, layout, selection);
     }
 
     if (do_render_collision_cache_) {
@@ -1300,7 +1303,18 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             auto& selection_builder = editable_circuit_.value().selection_builder();
             const auto point = to_grid_fine(position, view_config());
 
-            if (editable_circuit_->caches().spatial_cache().has_element(point)) {
+            if (is_drag_handle_colliding(
+                    point, editable_circuit_.value().layout(),
+                    editable_circuit_.value().selection_builder().selection(),
+                    view_config())) {
+                mouse_logic_.emplace(MouseDragHandleLogic::Args {
+                    .editable_circuit = editable_circuit_.value(),
+                });
+                print("is_drag_handle_colliding");
+                return;
+            }
+
+            else if (editable_circuit_->caches().spatial_cache().has_element(point)) {
                 if (event->modifiers() == Qt::NoModifier) {
                     mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
                         .builder = selection_builder,
@@ -1368,6 +1382,9 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                     [&](SimulationInteractionLogic& arg) {
                         arg.mouse_press(grid_position);
                     },
+                    [&](MouseDragHandleLogic& arg) {
+                        arg.mouse_press(grid_fine_position);
+                    },
                 },
                 *mouse_logic_);
             update();
@@ -1416,6 +1433,7 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
                 },
                 [&](MouseMoveSelectionLogic& arg) { arg.mouse_move(grid_fine_position); },
                 [&](SimulationInteractionLogic& arg [[maybe_unused]]) {},
+                [&](MouseDragHandleLogic& arg) { arg.mouse_move(grid_fine_position); },
             },
             *mouse_logic_);
 
@@ -1465,6 +1483,10 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
                     return arg.finished();
                 },
                 [&](SimulationInteractionLogic& arg [[maybe_unused]]) { return true; },
+                [&](MouseDragHandleLogic& arg) {
+                    arg.mouse_release(grid_fine_position);
+                    return true;
+                },
             },
             *mouse_logic_);
 
@@ -1580,6 +1602,7 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
                     [&](SimulationInteractionLogic& arg [[maybe_unused]]) {
                         return false;
                     },
+                    [&](MouseDragHandleLogic& arg [[maybe_unused]]) { return false; },
                 },
                 *mouse_logic_);
 

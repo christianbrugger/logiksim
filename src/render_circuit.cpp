@@ -2,6 +2,7 @@
 
 #include "collision.h"
 #include "concept.h"
+#include "drag_handle.h"
 #include "editable_circuit/selection.h"
 #include "layout.h"
 #include "layout_calculation.h"
@@ -670,7 +671,7 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
         },
         point_fine_t {
             element_width - h_margin,  // x
-            text_y + v_padding,         // y
+            text_y + v_padding,        // y
         },
     };
     draw_logic_item_rect(
@@ -1191,6 +1192,40 @@ auto draw_wires(Context& ctx, std::span<const segment_info_t> segment_infos,
         const auto is_enabled = false;
         draw_line_segment(ctx, info, is_enabled, state);
     }
+}
+
+//
+// Drag Handles
+//
+
+auto draw_drag_handle(Context& ctx, const drag_handle_t& position) -> void {
+    auto rect = drag_handle_rect_px(position, ctx.settings.view_config);
+
+    // stroke width
+    auto stroke_width = defaults::drag_handle_stroke_width_device *
+                        ctx.settings.view_config.device_pixel_ratio();
+    auto sw = std::max(1., round_fast(stroke_width));
+
+    // draw square
+    ctx.bl_ctx.fillRect(rect, defaults::drag_handle_color_stroke);
+    rect.x += sw;
+    rect.y += sw;
+    rect.w -= sw * 2;
+    rect.h -= sw * 2;
+    ctx.bl_ctx.fillRect(rect, defaults::drag_handle_color_fill);
+}
+
+auto draw_drag_handles(Context& ctx, std::span<const drag_handle_t> handle_positions)
+    -> void {
+    for (const auto& position : handle_positions) {
+        draw_drag_handle(ctx, position);
+    }
+}
+
+auto render_drag_handles(Context& ctx, const Layout& layout, const Selection& selection)
+    -> void {
+    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
+    draw_drag_handles(ctx, drag_handle_positions(layout, selection));
 }
 
 //

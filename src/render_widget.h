@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_RENDER_WIDGET_H
 #define LOGIKSIM_RENDER_WIDGET_H
 
+#include "drag_handle.h"
 #include "editable_circuit/editable_circuit.h"
 #include "interactive_simulation.h"
 #include "render_circuit.h"
@@ -236,7 +237,8 @@ class RendererWidget : public RendererWidgetBase {
    public:
     using MouseLogic = std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
                                     MouseSingleSelectionLogic, MouseAreaSelectionLogic,
-                                    MouseMoveSelectionLogic, SimulationInteractionLogic>;
+                                    MouseMoveSelectionLogic, SimulationInteractionLogic,
+                                    MouseDragHandleLogic>;
 
    public:
     RendererWidget(QWidget* parent = nullptr);
