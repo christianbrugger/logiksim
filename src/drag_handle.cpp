@@ -67,28 +67,25 @@ auto drag_handle_positions(const layout::ConstElement element)
     throw_exception("unknown ElementType in drag_handle_positions");
 }
 
-auto get_single_logic_item(const Layout& layout, const Selection& selection)
-    -> element_id_t {
+auto get_single_logic_item(const Selection& selection) -> element_id_t {
     if (selection.selected_logic_items().size() != 1 ||
         !selection.selected_segments().empty()) {
         return null_element;
     }
-    const auto element_id = selection.selected_logic_items().front();
-
-    if (layout.display_state(element_id) == display_state_t::colliding) {
-        return null_element;
-    }
-
-    return element_id;
+    return selection.selected_logic_items().front();
 }
 
 auto drag_handle_positions(const Layout& layout, const Selection& selection)
     -> std::vector<drag_handle_t> {
     // only show handles when a single item is selected
-    const auto element_id = get_single_logic_item(layout, selection);
+    const auto element_id = get_single_logic_item(selection);
     if (!element_id) {
         return {};
     }
+    if (layout.display_state(element_id) == display_state_t::colliding) {
+        return {};
+    }
+
     return drag_handle_positions(layout.element(element_id));
 }
 
@@ -227,7 +224,7 @@ auto transform_item(const logic_item_t original, drag_handle_t handle, int delta
 
 auto get_logic_item(const EditableCircuit& editable_circuit) -> logic_item_t {
     const auto& selection = editable_circuit.selection_builder().selection();
-    const auto& element_id = get_single_logic_item(editable_circuit.layout(), selection);
+    const auto& element_id = get_single_logic_item(selection);
 
     return logic_item_t {
         .definition = editable_circuit.get_logic_item_definition(element_id),
