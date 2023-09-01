@@ -24,6 +24,7 @@ constexpr static inline auto min_inputs = std::size_t {2};
 constexpr static inline auto max_inputs =
     static_cast<std::size_t>(connection_id_t::max());
 [[nodiscard]] auto height(std::size_t input_count) -> grid_t;
+constexpr static inline auto width = grid_t {2};
 }  // namespace standard_element
 
 // Display General

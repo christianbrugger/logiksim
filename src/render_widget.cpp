@@ -1090,7 +1090,11 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
         const auto& selection = editable_circuit.selection_builder().selection();
 
         render_layout(context_, layout, selection);
-        render_drag_handles(context_.ctx, layout, selection);
+
+        if (!(mouse_logic_ &&
+              std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value()))) {
+            render_drag_handles(context_.ctx, layout, selection);
+        }
     }
 
     if (do_render_collision_cache_) {
