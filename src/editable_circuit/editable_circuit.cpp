@@ -106,6 +106,11 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
     }
 }
 
+auto EditableCircuit::get_logic_item_definition(element_id_t element_id) const
+    -> LogicItemDefinition {
+    return editable_circuit::get_logic_item_definition(layout_.value(), element_id);
+}
+
 auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
     -> selection_handle_t {
     auto handle = registrar_.get_handle();

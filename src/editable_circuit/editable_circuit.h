@@ -36,6 +36,9 @@ class EditableCircuit {
                         InsertionMode insertion_mode, const selection_handle_t& handle)
         -> void;
 
+    [[nodiscard]] auto get_logic_item_definition(element_id_t element_id) const
+        -> LogicItemDefinition;
+
     auto add_line_segment(line_t line, InsertionMode insertion_mode)
         -> selection_handle_t;
     auto add_line_segment(line_t line, InsertionMode insertion_mode,

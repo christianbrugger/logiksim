@@ -1300,17 +1300,16 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
         }
 
         if (interaction_state_ == InteractionState::selection) {
-            auto& selection_builder = editable_circuit_.value().selection_builder();
             const auto point = to_grid_fine(position, view_config());
+            const auto& layout = editable_circuit_.value().layout();
+            auto& selection_builder = editable_circuit_.value().selection_builder();
 
-            if (is_drag_handle_colliding(
-                    point, editable_circuit_.value().layout(),
-                    editable_circuit_.value().selection_builder().selection(),
-                    view_config())) {
+            if (const auto handle = get_colliding_handle(
+                    point, layout, selection_builder.selection(), view_config())) {
                 mouse_logic_.emplace(MouseDragHandleLogic::Args {
                     .editable_circuit = editable_circuit_.value(),
+                    .drag_handle = handle.value(),
                 });
-                print("is_drag_handle_colliding");
                 return;
             }
 

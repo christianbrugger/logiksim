@@ -48,22 +48,23 @@ auto swap_and_delete_single_element(Layout& layout, MessageSender sender,
 auto add_logic_item(State state, LogicItemDefinition definition, point_t position,
                     InsertionMode insertion_mode) -> element_id_t;
 
+auto get_logic_item_definition(const Layout& layout, const element_id_t element_id)
+    -> LogicItemDefinition;
+
 auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
                                       InsertionMode new_insertion_mode) -> void;
 
-// TODO move to dx, dy
 auto is_logic_item_position_representable(const Layout& Layout,
                                           const element_id_t element_id, int dx, int dy)
     -> bool;
 
-// TODO move to dx, dy
 auto move_or_delete_logic_item(Layout& Layout, MessageSender sender,
                                element_id_t& element_id, int dx, int dy) -> void;
 
 // Assumptions:
 //   * all new positions are representable
-auto move_logic_item_unchecked(Layout& layout, element_id_t element_id, int dx, int dy)
-    -> void;
+auto move_logic_item_unchecked(Layout& layout, const element_id_t element_id, int dx,
+                               int dy) -> void;
 
 //
 // Wire - High level Methods

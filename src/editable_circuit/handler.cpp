@@ -393,14 +393,14 @@ auto move_or_delete_logic_item(Layout& layout, MessageSender sender,
     move_or_delete_logic_item_private(layout, sender, element_id, dx, dy);
 }
 
-auto move_logic_item_unchecked_private(Layout& layout, element_id_t element_id, int dx,
-                                       int dy) -> void {
+auto move_logic_item_unchecked_private(Layout& layout, const element_id_t element_id,
+                                       int dx, int dy) -> void {
     const auto position = add_unchecked(layout.position(element_id), dx, dy);
     layout.set_position(element_id, position);
 }
 
-auto move_logic_item_unchecked(Layout& layout, element_id_t element_id, int dx, int dy)
-    -> void {
+auto move_logic_item_unchecked(Layout& layout, const element_id_t element_id, int dx,
+                               int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         fmt::print(
             "\n==========================================================\n{}\n"
@@ -629,6 +629,20 @@ auto add_logic_item(State state, LogicItemDefinition definition, point_t positio
             state.layout, definition, position, insertion_mode);
     }
     return add_logic_item_private(state, definition, position, insertion_mode);
+}
+
+auto get_logic_item_definition(const Layout& layout, const element_id_t element_id)
+    -> LogicItemDefinition {
+    const auto element = layout.element(element_id);
+
+    return LogicItemDefinition {
+        .element_type = element.element_type(),
+        .input_count = element.input_count(),
+        .output_count = element.output_count(),
+        .orientation = element.orientation(),
+        .input_inverters = element.input_inverters(),
+        .output_inverters = element.output_inverters(),
+    };
 }
 
 //

@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_DRAG_HANDLE_H
 #define LOGIKSIM_DRAG_HANDLE_H
 
+#include "editable_circuit/selection_registrar.h"
+#include "editable_circuit/type.h"
 #include "vocabulary.h"
 
 #include <blend2d.h>
@@ -27,7 +29,8 @@ constexpr static inline auto drag_handle_rect_size_device = 8;     // device coo
 }  // namespace defaults
 
 struct drag_handle_t {
-    point_fine_t value;
+    int index;
+    point_fine_t point;
 };
 
 auto drag_handle_positions(const layout::ConstElement element)
@@ -42,29 +45,47 @@ auto drag_handle_rect_px(drag_handle_t handle_position, const ViewConfig& config
 auto drag_handle_rect_gird(drag_handle_t handle_position, const ViewConfig& config)
     -> rect_fine_t;
 
-auto is_drag_handle_colliding(point_fine_t position,
-                              const std::vector<drag_handle_t>& handle_positions,
-                              const ViewConfig& config) -> bool;
+auto get_colliding_handle(point_fine_t position,
+                          const std::vector<drag_handle_t>& handle_positions,
+                          const ViewConfig& config) -> std::optional<drag_handle_t>;
 
-auto is_drag_handle_colliding(point_fine_t position, const Layout& layout,
-                              const Selection& selection, const ViewConfig& config)
-    -> bool;
+auto get_colliding_handle(point_fine_t position, const Layout& layout,
+                          const Selection& selection, const ViewConfig& config)
+    -> std::optional<drag_handle_t>;
+
+namespace drag_handle {
+
+struct logic_item_t {
+    LogicItemDefinition definition;
+    point_t position;
+};
+
+}  // namespace drag_handle
 
 class MouseDragHandleLogic {
    public:
     struct Args {
         EditableCircuit& editable_circuit;
+        drag_handle_t drag_handle;
     };
 
     MouseDragHandleLogic(Args args) noexcept;
+    ~MouseDragHandleLogic();
 
     auto mouse_press(point_fine_t position) -> void;
     auto mouse_move(point_fine_t position) -> void;
     auto mouse_release(point_fine_t position) -> void;
 
    private:
+    auto move_handle(point_fine_t position, InsertionMode mode) -> void;
+
     EditableCircuit& editable_circuit_;
-    std::optional<point_fine_t> last_position_ {};
+    drag_handle_t drag_handle_;
+    drag_handle::logic_item_t initial_logic_item_ {};
+
+    std::optional<point_fine_t> first_position_ {};
+    std::optional<int> last_delta_ {};
+    selection_handle_t temp_element_ {};
 };
 
 }  // namespace logicsim
