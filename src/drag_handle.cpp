@@ -15,17 +15,10 @@ auto drag_handle_positions(const layout::ConstElement element)
     switch (element.element_type()) {
         using enum ElementType;
 
-        case unused:
-        case placeholder:
-        case wire:
-            return {};
-
-        case buffer_element:
-            return {};
         case and_element:
         case or_element:
         case xor_element: {
-            require_min(element.input_count(), 2);
+            require_min(element.input_count(), standard_element::min_inputs);
 
             const auto height = element.input_count() - 1.0;
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
@@ -38,11 +31,28 @@ auto drag_handle_positions(const layout::ConstElement element)
             };
         }
 
+        case display_number: {
+            // const auto height = display_number::height(element.input_count()).value;
+            const auto width = display_number::width(element.input_count()).value;
+            constexpr auto overdraw = defaults::logic_item_body_overdraw;
+            const auto value_inputs = display_number::value_inputs(element.input_count());
+
+            return {
+                drag_handle_t {
+                    1,
+                    transform(element.position(), element.orientation(),
+                              point_fine_t {0.5 * width, value_inputs - 1.0 + overdraw})},
+            };
+        }
+
+        case unused:
+        case placeholder:
+        case wire:
+
+        case buffer_element:
         case button:
         case led:
-        case display_number:
         case display_ascii:
-            return {};
 
         case clock_generator:
         case flipflop_jk:
@@ -50,7 +60,6 @@ auto drag_handle_positions(const layout::ConstElement element)
         case latch_d:
         case flipflop_d:
         case flipflop_ms_d:
-            return {};
 
         case sub_circuit:
             return {};
@@ -133,50 +142,68 @@ auto get_colliding_handle(point_fine_t position, const Layout& layout,
 
 namespace drag_handle {
 
+auto adjust_height(const logic_item_t original, drag_handle_t handle, int delta,
+                   std::size_t min_inputs, std::size_t max_inputs,
+                   std::invocable<std::size_t> auto get_height) {
+    if (handle.index != 0 && handle.index != 1) {
+        throw_exception("unknown handle index");
+    }
+
+    auto result = logic_item_t {original};
+
+    // input count
+    if (handle.index == 0) {
+        result.definition.input_count =
+            std::clamp(gsl::narrow<int>(original.definition.input_count) - delta,
+                       gsl::narrow<int>(min_inputs), gsl::narrow<int>(max_inputs));
+    } else if (handle.index == 1) {
+        result.definition.input_count =
+            std::clamp(gsl::narrow<int>(original.definition.input_count) + delta,
+                       gsl::narrow<int>(min_inputs), gsl::narrow<int>(max_inputs));
+    }
+
+    // position adjustment
+    if (handle.index == 0) {
+        const auto old_height = get_height(original.definition.input_count);
+        const auto new_height = get_height(result.definition.input_count);
+        const auto delta_height = int {old_height} - int {new_height};
+
+        if (is_representable(original.position, 0, delta_height)) {
+            result.position = add_unchecked(original.position, 0, delta_height);
+        } else {
+            return original;
+        }
+    }
+
+    // inverters
+    result.definition.input_inverters.resize(result.definition.input_count);
+    return result;
+}
+
 auto transform_item(const logic_item_t original, drag_handle_t handle, int delta)
     -> logic_item_t {
     switch (original.definition.element_type) {
         using enum ElementType;
 
-        case unused:
-        case placeholder:
-        case wire:
-            throw_exception("not supported");
-
-        case buffer_element:
-            throw_exception("not supported");
-
         case and_element:
         case or_element:
         case xor_element: {
-            const auto input_count = gsl::narrow<int>(original.definition.input_count);
-            auto result = logic_item_t {original};
-            // TODO !!! put 2 and 127 in global constant
-
-            if (handle.index == 0) {
-                const auto delta_clamped =
-                    input_count - std::clamp(input_count - delta, 2, 127);
-
-                if (is_representable(original.position, 0, delta_clamped)) {
-                    result.position = add_unchecked(original.position, 0, delta_clamped);
-                    result.definition.input_count =
-                        std::clamp(input_count - delta_clamped, 2, 127);
-                }
-            } else if (handle.index == 1) {
-                result.definition.input_count = std::clamp(input_count + delta, 2, 127);
-            } else {
-                throw_exception("unknown handle index");
-            }
-
-            result.definition.input_inverters.resize(result.definition.input_count);
-            return result;
+            return adjust_height(original, handle, delta, standard_element::min_inputs,
+                                 standard_element::max_inputs, standard_element::height);
+        }
+        case display_number: {
+            return adjust_height(original, handle, delta, display_number::min_inputs,
+                                 display_number::max_inputs, display_number::height);
         }
 
+        case unused:
+        case placeholder:
+        case wire:
+
+        case buffer_element:
         case button:
         case led:
-        case display_number:
         case display_ascii:
-            throw_exception("not supported");
 
         case clock_generator:
         case flipflop_jk:
@@ -184,7 +211,6 @@ auto transform_item(const logic_item_t original, drag_handle_t handle, int delta
         case latch_d:
         case flipflop_d:
         case flipflop_ms_d:
-            throw_exception("not supported");
 
         case sub_circuit:
             throw_exception("not supported");
@@ -236,7 +262,7 @@ auto MouseDragHandleLogic::mouse_release(point_fine_t position) -> void {
     move_handle(position);
 
     // mark as permanent
-    if (!temp_item_colliding()) {
+    if (temp_item_exists() && !temp_item_colliding()) {
         temp_item_.reset();
     }
 }
@@ -272,9 +298,13 @@ auto MouseDragHandleLogic::move_handle(point_fine_t position) -> void {
     }
 }
 
-auto MouseDragHandleLogic::temp_item_colliding() -> bool {
+auto MouseDragHandleLogic::temp_item_colliding() const -> bool {
     return temp_item_ &&
            anything_colliding(temp_item_.value(), editable_circuit_.layout());
+}
+
+auto MouseDragHandleLogic::temp_item_exists() const -> bool {
+    return temp_item_ && !temp_item_->selected_logic_items().empty();
 }
 
 }  // namespace logicsim

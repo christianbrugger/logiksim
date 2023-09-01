@@ -117,28 +117,36 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
         case insert_and_element:
             return LogicItemDefinition {
                 .element_type = ElementType::and_element,
-                .input_count = std::max(std::size_t {2}, variable_input_count),
+                .input_count =
+                    std::clamp(variable_input_count, standard_element::min_inputs,
+                               standard_element::max_inputs),
                 .output_count = 1,
                 .orientation = orientation_t::right,
             };
         case insert_or_element:
             return LogicItemDefinition {
                 .element_type = ElementType::or_element,
-                .input_count = std::max(std::size_t {2}, variable_input_count),
+                .input_count =
+                    std::clamp(variable_input_count, standard_element::min_inputs,
+                               standard_element::max_inputs),
                 .output_count = 1,
                 .orientation = orientation_t::right,
             };
         case insert_xor_element:
             return LogicItemDefinition {
                 .element_type = ElementType::xor_element,
-                .input_count = std::max(std::size_t {2}, variable_input_count),
+                .input_count =
+                    std::clamp(variable_input_count, standard_element::min_inputs,
+                               standard_element::max_inputs),
                 .output_count = 1,
                 .orientation = orientation_t::right,
             };
         case insert_nand_element:
             return LogicItemDefinition {
                 .element_type = ElementType::and_element,
-                .input_count = std::max(std::size_t {2}, variable_input_count),
+                .input_count =
+                    std::clamp(variable_input_count, standard_element::min_inputs,
+                               standard_element::max_inputs),
                 .output_count = 1,
                 .orientation = orientation_t::right,
                 .output_inverters = logic_small_vector_t {true},
@@ -146,7 +154,9 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
         case insert_nor_element:
             return LogicItemDefinition {
                 .element_type = ElementType::or_element,
-                .input_count = std::max(std::size_t {2}, variable_input_count),
+                .input_count =
+                    std::clamp(variable_input_count, standard_element::min_inputs,
+                               standard_element::max_inputs),
                 .output_count = 1,
                 .orientation = orientation_t::right,
                 .output_inverters = logic_small_vector_t {true},

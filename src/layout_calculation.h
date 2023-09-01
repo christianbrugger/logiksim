@@ -13,10 +13,46 @@ struct BLPoint;
 
 namespace logicsim {
 
+// General
 namespace defaults {
 constexpr static inline auto line_selection_padding = 0.3;    // grid values
 constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
 }  // namespace defaults
+
+namespace standard_element {
+constexpr static inline auto min_inputs = std::size_t {2};
+constexpr static inline auto max_inputs =
+    static_cast<std::size_t>(connection_id_t::max());
+[[nodiscard]] auto height(std::size_t input_count) -> grid_t;
+}  // namespace standard_element
+
+// Display General
+namespace display {
+constexpr static inline auto font_style = FontStyle::monospace;
+constexpr static inline auto font_size = grid_fine_t {0.9};  // grid values
+constexpr static inline auto enable_input_id = connection_id_t {0};
+
+constexpr static inline auto margin_horizontal = grid_fine_t {0.2};
+constexpr static inline auto padding_vertical = grid_fine_t {0.7};
+constexpr static inline auto padding_horizontal = grid_fine_t {0.25};
+}  // namespace display
+
+// Display Number
+namespace display_number {
+constexpr static inline auto control_inputs = std::size_t {2};
+[[nodiscard]] auto value_inputs(std::size_t input_count) -> std::size_t;
+constexpr static inline auto min_value_inputs = std::size_t {1};
+constexpr static inline auto max_value_inputs = std::size_t {64};
+constexpr static inline auto min_inputs = control_inputs + min_value_inputs;
+constexpr static inline auto max_inputs = control_inputs + max_value_inputs;
+[[nodiscard]] auto width(std::size_t input_count) -> grid_t;
+[[nodiscard]] auto height(std::size_t input_count) -> grid_t;
+
+[[nodiscard]] auto input_shift(std::size_t input_count) -> grid_t;
+[[nodiscard]] auto enable_position(std::size_t input_count) -> point_t;
+[[nodiscard]] auto negative_position(std::size_t input_count) -> point_t;
+constexpr static inline auto negative_input_id = connection_id_t {1};
+}  // namespace display_number
 
 [[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
                                                std::size_t input_count,
@@ -50,35 +86,6 @@ auto connector_point(point_t position, orientation_t orientation, grid_fine_t of
 auto connector_point(BLPoint position, orientation_t orientation, double offset)
     -> BLPoint;
 
-// Display General
-namespace display {
-constexpr static inline auto font_style = FontStyle::monospace;
-constexpr static inline auto font_size = grid_fine_t {0.9};  // grid values
-constexpr static inline auto enable_input_id = connection_id_t {0};
-
-constexpr static inline auto margin_horizontal = grid_fine_t {0.2};
-constexpr static inline auto padding_vertical = grid_fine_t {0.7};
-constexpr static inline auto padding_horizontal = grid_fine_t {0.25};
-}  // namespace display
-
-// Display Number
-namespace display_number {
-constexpr static inline auto control_inputs = std::size_t {2};
-[[nodiscard]] auto value_inputs(std::size_t input_count) -> std::size_t;
-constexpr static inline auto min_value_inputs = std::size_t {1};
-constexpr static inline auto max_value_inputs = std::size_t {64};
-constexpr static inline auto min_inputs = control_inputs + min_value_inputs;
-constexpr static inline auto max_inputs = control_inputs + max_value_inputs;
-[[nodiscard]] auto width(std::size_t input_count) -> grid_t;
-[[nodiscard]] auto height(std::size_t input_count) -> grid_t;
-
-[[nodiscard]] auto input_shift(std::size_t input_count) -> grid_t;
-[[nodiscard]] auto enable_position(std::size_t input_count) -> point_t;
-[[nodiscard]] auto negative_position(std::size_t input_count) -> point_t;
-constexpr static inline auto negative_input_id = connection_id_t {1};
-;
-}  // namespace display_number
-
 // Display ASCII
 namespace display_ascii {
 constexpr static inline auto control_inputs = std::size_t {1};
@@ -106,7 +113,7 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
         case and_element:
         case or_element:
         case xor_element: {
-            require_min(data.input_count, 2);
+            require_min(data.input_count, standard_element::min_inputs);
 
             const auto height = data.input_count;
             const auto output_offset = (height - data.output_count) / 2;
@@ -326,7 +333,7 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
         case and_element:
         case or_element:
         case xor_element: {
-            require_min(data.input_count, 2);
+            require_min(data.input_count, standard_element::min_inputs);
 
             for (auto i : range(data.input_count)) {
                 const auto y = grid_t {i};

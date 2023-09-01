@@ -78,7 +78,8 @@ class MouseDragHandleLogic {
 
    private:
     auto move_handle(point_fine_t position) -> void;
-    auto temp_item_colliding() -> bool;
+    auto temp_item_colliding() const -> bool;
+    auto temp_item_exists() const -> bool;
 
     EditableCircuit& editable_circuit_;
     drag_handle_t drag_handle_;

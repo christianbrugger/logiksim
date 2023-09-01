@@ -174,6 +174,11 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
     throw_exception("unknown orientation");
 }
 
+auto logicsim::standard_element::height(std::size_t input_count) -> grid_t {
+    require_min(input_count, min_inputs);
+    return grid_t {input_count - std::size_t {1}};
+}
+
 namespace display_number {
 constexpr auto value_inputs_(std::size_t input_count) -> std::size_t {
     if (input_count < control_inputs) {
@@ -307,7 +312,8 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
         case and_element:
         case or_element:
         case xor_element: {
-            return input_count >= 2 && output_count == 1;
+            return input_count >= standard_element::min_inputs &&
+                   input_count <= standard_element::max_inputs && output_count == 1;
         }
 
         case button: {
@@ -387,7 +393,8 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
         case and_element:
         case or_element:
         case xor_element: {
-            require_min(data.input_count, 1);
+            require_min(data.input_count, standard_element::min_inputs);
+
             const auto height = data.input_count;
             const auto y2 = grid_t {height - std::size_t {1}};
             return transform(data.position, data.orientation, {0, 0}, {2, y2});
