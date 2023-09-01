@@ -167,6 +167,7 @@ auto transform_item(const logic_item_t original, drag_handle_t handle, int delta
             } else {
                 throw_exception("unknown handle index");
             }
+
             result.definition.input_inverters.resize(result.definition.input_count);
             return result;
         }
@@ -214,8 +215,11 @@ MouseDragHandleLogic::MouseDragHandleLogic(Args args) noexcept
       initial_logic_item_ {drag_handle::get_logic_item(editable_circuit_)} {}
 
 MouseDragHandleLogic::~MouseDragHandleLogic() {
-    if (first_position_) {
-        move_handle(*first_position_, InsertionMode::insert_or_discard);
+    if (temp_item_) {
+        move_handle(*first_position_);
+    }
+    if (temp_item_colliding()) [[unlikely]] {
+        throw_exception("unexpected collision");
     }
 }
 
@@ -225,15 +229,19 @@ auto MouseDragHandleLogic::mouse_press(point_fine_t position) -> void {
 }
 
 auto MouseDragHandleLogic::mouse_move(point_fine_t position) -> void {
-    move_handle(position, InsertionMode::collisions);
+    move_handle(position);
 }
 
 auto MouseDragHandleLogic::mouse_release(point_fine_t position) -> void {
-    move_handle(position, InsertionMode::collisions);
+    move_handle(position);
+
+    // mark as permanent
+    if (!temp_item_colliding()) {
+        temp_item_.reset();
+    }
 }
 
-auto MouseDragHandleLogic::move_handle(point_fine_t position, InsertionMode mode)
-    -> void {
+auto MouseDragHandleLogic::move_handle(point_fine_t position) -> void {
     if (!first_position_ || !last_delta_) {
         return;
     }
@@ -251,11 +259,22 @@ auto MouseDragHandleLogic::move_handle(point_fine_t position, InsertionMode mode
     // add transformed
     const auto logic_item =
         drag_handle::transform_item(initial_logic_item_, drag_handle_, new_delta);
-    temp_element_ = editable_circuit_.add_logic_item(logic_item.definition,
-                                                     logic_item.position, mode);
+    temp_item_ = editable_circuit_.add_logic_item(
+        logic_item.definition, logic_item.position, InsertionMode::collisions);
 
     // mark selected
-    builder.set_selection(temp_element_.value());
+    builder.set_selection(temp_item_.value());
+
+    // check collisions
+    if (!temp_item_colliding()) {
+        editable_circuit_.change_insertion_mode(temp_item_.copy(),
+                                                InsertionMode::insert_or_discard);
+    }
+}
+
+auto MouseDragHandleLogic::temp_item_colliding() -> bool {
+    return temp_item_ &&
+           anything_colliding(temp_item_.value(), editable_circuit_.layout());
 }
 
 }  // namespace logicsim

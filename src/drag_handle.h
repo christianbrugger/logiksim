@@ -77,7 +77,8 @@ class MouseDragHandleLogic {
     auto mouse_release(point_fine_t position) -> void;
 
    private:
-    auto move_handle(point_fine_t position, InsertionMode mode) -> void;
+    auto move_handle(point_fine_t position) -> void;
+    auto temp_item_colliding() -> bool;
 
     EditableCircuit& editable_circuit_;
     drag_handle_t drag_handle_;
@@ -85,7 +86,7 @@ class MouseDragHandleLogic {
 
     std::optional<point_fine_t> first_position_ {};
     std::optional<int> last_delta_ {};
-    selection_handle_t temp_element_ {};
+    selection_handle_t temp_item_ {};
 };
 
 }  // namespace logicsim
