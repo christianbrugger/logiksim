@@ -22,7 +22,6 @@ set(LS_CORE_SOURCES
     src/circuit_description.cpp
     src/circuit_index.cpp
     src/collision.cpp
-    src/drag_handle.cpp
     src/exception.cpp
     src/flat_schematic.cpp
     src/geometry.cpp
@@ -48,6 +47,7 @@ set(LS_CORE_SOURCES
     src/serialize_detail.cpp
     src/simulation.cpp
     src/simulation_view.cpp
+    src/size_handle.cpp
     src/text_shaping.cpp
     src/timer.cpp
     src/vocabulary.cpp

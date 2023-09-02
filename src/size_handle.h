@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_DRAG_HANDLE_H
-#define LOGIKSIM_DRAG_HANDLE_H
+#ifndef LOGIKSIM_SIZE_HANDLE_H
+#define LOGIKSIM_SIZE_HANDLE_H
 
 #include "editable_circuit/selection_registrar.h"
 #include "editable_circuit/type.h"
@@ -24,53 +24,53 @@ class EditableCircuit;
 class ViewConfig;
 
 namespace defaults {
-constexpr static inline auto drag_handle_stroke_width_device = 1;  // device coordinates
-constexpr static inline auto drag_handle_rect_size_device = 8;     // device coordinates
+constexpr static inline auto size_handle_stroke_width_device = 1;  // device coordinates
+constexpr static inline auto size_handle_rect_size_device = 8;     // device coordinates
 }  // namespace defaults
 
-struct drag_handle_t {
+struct size_handle_t {
     int index;
     point_fine_t point;
 };
 
-auto drag_handle_positions(const layout::ConstElement element)
-    -> std::vector<drag_handle_t>;
+auto size_handle_positions(const layout::ConstElement element)
+    -> std::vector<size_handle_t>;
 
-auto drag_handle_positions(const Layout& layout, const Selection& selection)
-    -> std::vector<drag_handle_t>;
+auto size_handle_positions(const Layout& layout, const Selection& selection)
+    -> std::vector<size_handle_t>;
 
-auto drag_handle_rect_px(drag_handle_t handle_position, const ViewConfig& config)
+auto size_handle_rect_px(size_handle_t handle_position, const ViewConfig& config)
     -> BLRect;
 
-auto drag_handle_rect_gird(drag_handle_t handle_position, const ViewConfig& config)
+auto size_handle_rect_gird(size_handle_t handle_position, const ViewConfig& config)
     -> rect_fine_t;
 
 auto get_colliding_handle(point_fine_t position,
-                          const std::vector<drag_handle_t>& handle_positions,
-                          const ViewConfig& config) -> std::optional<drag_handle_t>;
+                          const std::vector<size_handle_t>& handle_positions,
+                          const ViewConfig& config) -> std::optional<size_handle_t>;
 
 auto get_colliding_handle(point_fine_t position, const Layout& layout,
                           const Selection& selection, const ViewConfig& config)
-    -> std::optional<drag_handle_t>;
+    -> std::optional<size_handle_t>;
 
-namespace drag_handle {
+namespace size_handle {
 
 struct logic_item_t {
     LogicItemDefinition definition;
     point_t position;
 };
 
-}  // namespace drag_handle
+}  // namespace size_handle
 
-class MouseDragHandleLogic {
+class MouseSizeHandleLogic {
    public:
     struct Args {
         EditableCircuit& editable_circuit;
-        drag_handle_t drag_handle;
+        size_handle_t size_handle;
     };
 
-    MouseDragHandleLogic(Args args) noexcept;
-    ~MouseDragHandleLogic();
+    MouseSizeHandleLogic(Args args) noexcept;
+    ~MouseSizeHandleLogic();
 
     auto mouse_press(point_fine_t position) -> void;
     auto mouse_move(point_fine_t position) -> void;
@@ -82,8 +82,8 @@ class MouseDragHandleLogic {
     auto temp_item_exists() const -> bool;
 
     EditableCircuit& editable_circuit_;
-    drag_handle_t drag_handle_;
-    drag_handle::logic_item_t initial_logic_item_ {};
+    size_handle_t size_handle_;
+    size_handle::logic_item_t initial_logic_item_ {};
 
     std::optional<point_fine_t> first_position_ {};
     std::optional<int> last_delta_ {};

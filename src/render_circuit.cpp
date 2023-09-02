@@ -2,13 +2,13 @@
 
 #include "collision.h"
 #include "concept.h"
-#include "drag_handle.h"
 #include "editable_circuit/selection.h"
 #include "layout.h"
 #include "layout_calculation.h"
 #include "range.h"
 #include "simulation.h"
 #include "simulation_view.h"
+#include "size_handle.h"
 #include "timer.h"
 
 #include <fmt/format.h>
@@ -1195,37 +1195,37 @@ auto draw_wires(Context& ctx, std::span<const segment_info_t> segment_infos,
 }
 
 //
-// Drag Handles
+// Size Handles
 //
 
-auto draw_drag_handle(Context& ctx, const drag_handle_t& position) -> void {
-    auto rect = drag_handle_rect_px(position, ctx.settings.view_config);
+auto draw_size_handle(Context& ctx, const size_handle_t& position) -> void {
+    auto rect = size_handle_rect_px(position, ctx.settings.view_config);
 
     // stroke width
-    auto stroke_width = defaults::drag_handle_stroke_width_device *
+    auto stroke_width = defaults::size_handle_stroke_width_device *
                         ctx.settings.view_config.device_pixel_ratio();
     auto sw = std::max(1., round_fast(stroke_width));
 
     // draw square
-    ctx.bl_ctx.fillRect(rect, defaults::drag_handle_color_stroke);
+    ctx.bl_ctx.fillRect(rect, defaults::size_handle_color_stroke);
     rect.x += sw;
     rect.y += sw;
     rect.w -= sw * 2;
     rect.h -= sw * 2;
-    ctx.bl_ctx.fillRect(rect, defaults::drag_handle_color_fill);
+    ctx.bl_ctx.fillRect(rect, defaults::size_handle_color_fill);
 }
 
-auto draw_drag_handles(Context& ctx, std::span<const drag_handle_t> handle_positions)
+auto draw_size_handles(Context& ctx, std::span<const size_handle_t> handle_positions)
     -> void {
     for (const auto& position : handle_positions) {
-        draw_drag_handle(ctx, position);
+        draw_size_handle(ctx, position);
     }
 }
 
-auto render_drag_handles(Context& ctx, const Layout& layout, const Selection& selection)
+auto render_size_handles(Context& ctx, const Layout& layout, const Selection& selection)
     -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
-    draw_drag_handles(ctx, drag_handle_positions(layout, selection));
+    draw_size_handles(ctx, size_handle_positions(layout, selection));
 }
 
 //

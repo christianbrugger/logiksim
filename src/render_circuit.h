@@ -17,7 +17,7 @@ namespace logicsim {
 class Layout;
 class Selection;
 class SimulationView;
-struct drag_handle_t;
+struct size_handle_t;
 
 namespace layout {
 template <bool Const>
@@ -66,8 +66,8 @@ constexpr static inline auto display_ascii_control_size = 0.7;        // grid va
 
 constexpr static inline auto connector_length = 0.4;        // grid points
 constexpr static inline auto inverted_circle_radius = 0.2;  // grid points
-constexpr static inline auto drag_handle_color_fill = defaults::color_orange;
-constexpr static inline auto drag_handle_color_stroke = defaults::color_dark_orange;
+constexpr static inline auto size_handle_color_fill = defaults::color_orange;
+constexpr static inline auto size_handle_color_stroke = defaults::color_dark_orange;
 
 namespace element_state_alpha {
 constexpr static inline auto normal = color_t::value_type {255};
@@ -254,10 +254,10 @@ auto draw_line_segment(Context& ctx, segment_info_t info, bool is_enabled,
                        ElementDrawState state) -> void;
 
 //
-// Drag Handles
+// Size Handles
 //
 
-auto render_drag_handles(Context& ctx, const Layout& layout, const Selection& selection)
+auto render_size_handles(Context& ctx, const Layout& layout, const Selection& selection)
     -> void;
 
 //

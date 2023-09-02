@@ -1,12 +1,12 @@
 #ifndef LOGIKSIM_RENDER_WIDGET_H
 #define LOGIKSIM_RENDER_WIDGET_H
 
-#include "drag_handle.h"
 #include "editable_circuit/editable_circuit.h"
 #include "interactive_simulation.h"
 #include "render_circuit.h"
 #include "render_widget_type.h"
 #include "scene.h"
+#include "size_handle.h"
 #include "timer.h"
 
 #include <blend2d.h>
@@ -238,7 +238,7 @@ class RendererWidget : public RendererWidgetBase {
     using MouseLogic = std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
                                     MouseSingleSelectionLogic, MouseAreaSelectionLogic,
                                     MouseMoveSelectionLogic, SimulationInteractionLogic,
-                                    MouseDragHandleLogic>;
+                                    MouseSizeHandleLogic>;
 
    public:
     RendererWidget(QWidget* parent = nullptr);

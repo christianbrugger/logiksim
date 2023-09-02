@@ -1,4 +1,4 @@
-#include "drag_handle.h"
+#include "size_handle.h"
 
 #include "collision.h"
 #include "editable_circuit/editable_circuit.h"
@@ -10,8 +10,8 @@
 
 namespace logicsim {
 
-auto drag_handle_positions(const layout::ConstElement element)
-    -> std::vector<drag_handle_t> {
+auto size_handle_positions(const layout::ConstElement element)
+    -> std::vector<size_handle_t> {
     switch (element.element_type()) {
         using enum ElementType;
 
@@ -24,9 +24,9 @@ auto drag_handle_positions(const layout::ConstElement element)
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
             return {
-                drag_handle_t {0, transform(element.position(), element.orientation(),
+                size_handle_t {0, transform(element.position(), element.orientation(),
                                             point_fine_t {1.0, -overdraw})},
-                drag_handle_t {1, transform(element.position(), element.orientation(),
+                size_handle_t {1, transform(element.position(), element.orientation(),
                                             point_fine_t {1.0, height + overdraw})},
             };
         }
@@ -37,7 +37,7 @@ auto drag_handle_positions(const layout::ConstElement element)
             const auto value_inputs = display_number::value_inputs(element.input_count());
 
             return {
-                drag_handle_t {
+                size_handle_t {
                     1,
                     transform(element.position(), element.orientation(),
                               point_fine_t {0.5 * width, value_inputs - 1.0 + overdraw})},
@@ -64,7 +64,7 @@ auto drag_handle_positions(const layout::ConstElement element)
             return {};
     };
 
-    throw_exception("unknown ElementType in drag_handle_positions");
+    throw_exception("unknown ElementType in size_handle_positions");
 }
 
 auto get_single_logic_item(const Selection& selection) -> element_id_t {
@@ -75,8 +75,8 @@ auto get_single_logic_item(const Selection& selection) -> element_id_t {
     return selection.selected_logic_items().front();
 }
 
-auto drag_handle_positions(const Layout& layout, const Selection& selection)
-    -> std::vector<drag_handle_t> {
+auto size_handle_positions(const Layout& layout, const Selection& selection)
+    -> std::vector<size_handle_t> {
     // only show handles when a single item is selected
     const auto element_id = get_single_logic_item(selection);
     if (!element_id) {
@@ -86,12 +86,12 @@ auto drag_handle_positions(const Layout& layout, const Selection& selection)
         return {};
     }
 
-    return drag_handle_positions(layout.element(element_id));
+    return size_handle_positions(layout.element(element_id));
 }
 
-auto drag_handle_rect_px(drag_handle_t handle_position, const ViewConfig& config)
+auto size_handle_rect_px(size_handle_t handle_position, const ViewConfig& config)
     -> BLRect {
-    const auto rect_size_lp = defaults::drag_handle_rect_size_device;
+    const auto rect_size_lp = defaults::size_handle_rect_size_device;
 
     const auto [x, y] = to_context(handle_position.point, config);
     const auto width = rect_size_lp * config.device_pixel_ratio();
@@ -103,26 +103,26 @@ auto drag_handle_rect_px(drag_handle_t handle_position, const ViewConfig& config
     return BLRect(x0, y0, w, w);
 }
 
-auto drag_handle_rect_gird(drag_handle_t handle_position, const ViewConfig& config)
+auto size_handle_rect_gird(size_handle_t handle_position, const ViewConfig& config)
     -> rect_fine_t {
-    const auto rect = drag_handle_rect_px(handle_position, config);
+    const auto rect = size_handle_rect_px(handle_position, config);
     return rect_fine_t {
         from_context_fine(BLPoint {rect.x, rect.y}, config),
         from_context_fine(BLPoint {rect.x + rect.w, rect.y + rect.h}, config),
     };
 }
 
-auto is_drag_handle_colliding(point_fine_t position, drag_handle_t handle_positions,
+auto is_size_handle_colliding(point_fine_t position, size_handle_t handle_positions,
                               const ViewConfig& config) -> bool {
-    const auto rect = drag_handle_rect_gird(handle_positions, config);
+    const auto rect = size_handle_rect_gird(handle_positions, config);
     return is_colliding(position, rect);
 }
 
 auto get_colliding_handle(point_fine_t position,
-                          const std::vector<drag_handle_t>& handle_positions,
-                          const ViewConfig& config) -> std::optional<drag_handle_t> {
-    const auto is_colliding = [&](drag_handle_t handle) -> bool {
-        return is_drag_handle_colliding(position, handle, config);
+                          const std::vector<size_handle_t>& handle_positions,
+                          const ViewConfig& config) -> std::optional<size_handle_t> {
+    const auto is_colliding = [&](size_handle_t handle) -> bool {
+        return is_size_handle_colliding(position, handle, config);
     };
 
     if (const auto it = std::ranges::find_if(handle_positions, is_colliding);
@@ -134,8 +134,8 @@ auto get_colliding_handle(point_fine_t position,
 
 auto get_colliding_handle(point_fine_t position, const Layout& layout,
                           const Selection& selection, const ViewConfig& config)
-    -> std::optional<drag_handle_t> {
-    const auto handles = drag_handle_positions(layout, selection);
+    -> std::optional<size_handle_t> {
+    const auto handles = size_handle_positions(layout, selection);
     return get_colliding_handle(position, handles, config);
 }
 
@@ -143,9 +143,9 @@ auto get_colliding_handle(point_fine_t position, const Layout& layout,
 // Change Logic
 //
 
-namespace drag_handle {
+namespace size_handle {
 
-auto adjust_height(const logic_item_t original, drag_handle_t handle, int delta,
+auto adjust_height(const logic_item_t original, size_handle_t handle, int delta,
                    std::size_t min_inputs, std::size_t max_inputs,
                    std::invocable<std::size_t> auto get_height) {
     if (handle.index != 0 && handle.index != 1) {
@@ -183,7 +183,7 @@ auto adjust_height(const logic_item_t original, drag_handle_t handle, int delta,
     return result;
 }
 
-auto transform_item(const logic_item_t original, drag_handle_t handle, int delta)
+auto transform_item(const logic_item_t original, size_handle_t handle, int delta)
     -> logic_item_t {
     switch (original.definition.element_type) {
         using enum ElementType;
@@ -219,7 +219,7 @@ auto transform_item(const logic_item_t original, drag_handle_t handle, int delta
             throw_exception("not supported");
     };
 
-    throw_exception("unknown ElementType in drag_handle::transform_item");
+    throw_exception("unknown ElementType in size_handle::transform_item");
 }
 
 auto get_logic_item(const EditableCircuit& editable_circuit) -> logic_item_t {
@@ -232,18 +232,18 @@ auto get_logic_item(const EditableCircuit& editable_circuit) -> logic_item_t {
     };
 }
 
-}  // namespace drag_handle
+}  // namespace size_handle
 
 //
-// Mouse Drag Handle Logic
+// Mouse Size Handle Logic
 //
 
-MouseDragHandleLogic::MouseDragHandleLogic(Args args) noexcept
+MouseSizeHandleLogic::MouseSizeHandleLogic(Args args) noexcept
     : editable_circuit_ {args.editable_circuit},
-      drag_handle_ {args.drag_handle},
-      initial_logic_item_ {drag_handle::get_logic_item(editable_circuit_)} {}
+      size_handle_ {args.size_handle},
+      initial_logic_item_ {size_handle::get_logic_item(editable_circuit_)} {}
 
-MouseDragHandleLogic::~MouseDragHandleLogic() {
+MouseSizeHandleLogic::~MouseSizeHandleLogic() {
     if (temp_item_) {
         move_handle(*first_position_);
     }
@@ -252,16 +252,16 @@ MouseDragHandleLogic::~MouseDragHandleLogic() {
     }
 }
 
-auto MouseDragHandleLogic::mouse_press(point_fine_t position) -> void {
+auto MouseSizeHandleLogic::mouse_press(point_fine_t position) -> void {
     first_position_ = position;
     last_delta_ = 0;
 }
 
-auto MouseDragHandleLogic::mouse_move(point_fine_t position) -> void {
+auto MouseSizeHandleLogic::mouse_move(point_fine_t position) -> void {
     move_handle(position);
 }
 
-auto MouseDragHandleLogic::mouse_release(point_fine_t position) -> void {
+auto MouseSizeHandleLogic::mouse_release(point_fine_t position) -> void {
     move_handle(position);
 
     // mark as permanent
@@ -270,7 +270,7 @@ auto MouseDragHandleLogic::mouse_release(point_fine_t position) -> void {
     }
 }
 
-auto MouseDragHandleLogic::move_handle(point_fine_t position) -> void {
+auto MouseSizeHandleLogic::move_handle(point_fine_t position) -> void {
     if (!first_position_ || !last_delta_) {
         return;
     }
@@ -287,7 +287,7 @@ auto MouseDragHandleLogic::move_handle(point_fine_t position) -> void {
 
     // add transformed
     const auto logic_item =
-        drag_handle::transform_item(initial_logic_item_, drag_handle_, new_delta);
+        size_handle::transform_item(initial_logic_item_, size_handle_, new_delta);
     temp_item_ = editable_circuit_.add_logic_item(
         logic_item.definition, logic_item.position, InsertionMode::collisions);
 
@@ -301,12 +301,12 @@ auto MouseDragHandleLogic::move_handle(point_fine_t position) -> void {
     }
 }
 
-auto MouseDragHandleLogic::temp_item_colliding() const -> bool {
+auto MouseSizeHandleLogic::temp_item_colliding() const -> bool {
     return temp_item_ &&
            anything_colliding(temp_item_.value(), editable_circuit_.layout());
 }
 
-auto MouseDragHandleLogic::temp_item_exists() const -> bool {
+auto MouseSizeHandleLogic::temp_item_exists() const -> bool {
     return temp_item_ && !temp_item_->selected_logic_items().empty();
 }
 
