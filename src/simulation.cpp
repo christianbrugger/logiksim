@@ -672,6 +672,11 @@ auto Simulation::run(const time_t::value_type simulation_time, const timeout_t t
         process_event_group(std::move(event_group));
 
         if (event_count >= next_check) {
+            // process all events at this time-point
+            if (queue_.next_event_time() == queue_.time()) {
+                continue;
+            }
+
             // we check timeout after we process at least one group
             if (timer.reached_timeout() || event_count >= max_events) {
                 return event_count;

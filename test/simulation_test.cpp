@@ -101,6 +101,33 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
     EXPECT_EQ(simulation.time(), time_t {3s});
 }
 
+TEST(SimulationTest, SimulationProcessAllEventsForTime) {
+    using namespace std::chrono_literals;
+
+    Schematic schematic;
+    auto and_element = schematic.add_element(Schematic::ElementData {
+        .element_type = ElementType::and_element,
+        .input_count = 2,
+        .output_count = 1,
+    });
+    auto xor_element = schematic.add_element(Schematic::ElementData {
+        .element_type = ElementType::xor_element,
+        .input_count = 2,
+        .output_count = 1,
+    });
+    auto simulation = get_initialized_simulation(schematic);
+
+    simulation.submit_event(and_element.input(connection_id_t {0}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, true);
+
+    const auto max_events = 1;
+    const auto event_count =
+        simulation.run(Simulation::defaults::infinite_simulation_time,
+                       Simulation::defaults::no_timeout, max_events);
+
+    EXPECT_EQ(event_count, 2);
+}
+
 TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     using namespace std::chrono_literals;
 
