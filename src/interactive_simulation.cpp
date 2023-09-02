@@ -111,6 +111,10 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
     }
 }
 
+auto InteractiveSimulation::events_per_second() const -> double {
+    return event_counter_.events_per_second();
+}
+
 auto InteractiveSimulation::validate() const -> void {
     schematic_.validate(Schematic::validate_all);
 }

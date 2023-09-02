@@ -272,6 +272,7 @@ class RendererWidget : public RendererWidgetBase {
     auto paste_clipboard_items() -> void;
 
     auto fps() const -> double;
+    auto simulation_events_per_second() const -> std::optional<double>;
     auto pixel_scale() const -> double;
     auto geometry_toplevel() const -> QRect;
     auto size_device() const -> QSize;

@@ -564,11 +564,16 @@ auto MainWidget::build_element_buttons() -> QWidget* {
 
 void MainWidget::update_title() {
     const auto fps = render_widget_->fps();
+    const auto eps = render_widget_->simulation_events_per_second();
     const auto scale = render_widget_->pixel_scale();
     const auto size = render_widget_->size_device();
 
     auto text = fmt::format("[{}x{}] {:.1f} FPS {:.1f} pixel scale", size.width(),
                             size.height(), fps, scale);
+
+    if (eps.has_value()) {
+        text = fmt::format("{} {:.3g} EPS", text, round_fast(eps.value()));
+    }
 
     QString title = QString::fromUtf8(text);
     if (title != windowTitle()) {

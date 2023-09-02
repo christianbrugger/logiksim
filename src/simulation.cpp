@@ -1190,4 +1190,49 @@ auto benchmark_simulation(const int n_elements, const int n_events, const bool d
     return benchmark_simulation(rng, schematic, n_events, do_print);
 }
 
+auto benchmark_simulation_pure(Schematic &schematic, const int n_events,
+                               const bool do_print) -> int64_t {
+    Simulation simulation {schematic};
+    simulation.print_events = do_print;
+
+    set_default_inputs(simulation);
+    set_default_outputs(simulation);
+    simulation.initialize();
+
+    int64_t simulated_event_count {0};
+    while (true) {
+        const auto event_count =
+            simulation.run(Simulation::defaults::infinite_simulation_time,
+                           timeout_t {1000 * 1ms}, n_events - simulated_event_count);
+        // const auto event_count = simulation.run(
+        //     Simulation::defaults::infinite_simulation_time,
+        //     Simulation::defaults::no_timeout, n_events - simulated_event_count);
+        simulated_event_count += event_count;
+
+        if (event_count == 0) {
+            break;
+        }
+        if (simulated_event_count >= n_events) {
+            break;
+        }
+    }
+
+    if (do_print) {
+        auto output_values {simulation.output_values()};
+
+        fmt::print("events simulated = {}\n", simulated_event_count);
+        fmt::print("input_values = {}\n",
+                   fmt_join("", simulation.input_values(), "{:b}"));
+        fmt::print("output_values = {}\n", fmt_join("", output_values, "{:b}"));
+        for (auto element : schematic.elements()) {
+            if (element.element_type() == ElementType::wire) {
+                auto hist = simulation.input_history(Schematic::ConstElement {element});
+                print(element, hist);
+            }
+        }
+    }
+
+    return simulated_event_count;
+}
+
 }  // namespace logicsim

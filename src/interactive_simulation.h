@@ -59,8 +59,9 @@ class InteractiveSimulation {
     [[nodiscard]] auto time() const -> time_t;
 
     auto run(timeout_t timeout = defaults::default_timeout) -> void;
-
     auto mouse_press(point_t position) -> void;
+
+    [[nodiscard]] auto events_per_second() const -> double;
 
     auto validate() const -> void;
 
@@ -75,6 +76,7 @@ class InteractiveSimulation {
 
     time_t simulation_time_reference_ {};
     realtime_t realtime_reference_ {};
+    MultiEventCounter event_counter_ {std::chrono::seconds {2}};
 };
 
 }  // namespace logicsim

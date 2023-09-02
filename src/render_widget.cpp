@@ -720,6 +720,13 @@ auto RendererWidget::fps() const -> double {
     return fps_counter_.events_per_second();
 }
 
+auto RendererWidget::simulation_events_per_second() const -> std::optional<double> {
+    if (simulation_) {
+        return simulation_->events_per_second();
+    }
+    return std::nullopt;
+}
+
 auto RendererWidget::pixel_scale() const -> double {
     return view_config().pixel_scale();
 }

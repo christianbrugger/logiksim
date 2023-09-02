@@ -137,6 +137,50 @@ static void BM_Simulation_0(benchmark::State& state) {
 
 BENCHMARK(BM_Simulation_0);  // NOLINT
 
+static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
+    int64_t count = 0;
+    for ([[maybe_unused]] auto _ : state) {
+        state.PauseTiming();
+
+        auto schematic = Schematic {};
+        for (auto _ [[maybe_unused]] : range(8)) {
+            auto inverter = schematic.add_element(Schematic::ElementData {
+                .element_type = ElementType::buffer_element,
+                .input_count = 1,
+                .output_count = 1,
+                .input_inverters = {false},
+                .output_delays = {delay_t {3us}},
+            });
+            auto wire = schematic.add_element(Schematic::ElementData {
+                .element_type = ElementType::wire,
+                .input_count = 1,
+                .output_count = 1,
+                .input_inverters = {true},
+                .output_delays = {delay_t {1ns}},
+            });
+            const auto id_0 = connection_id_t {0};
+            inverter.output(id_0).connect(wire.input(id_0));
+            wire.output(id_0).connect(inverter.input(id_0));
+        }
+        schematic.validate(Schematic::validate_all);
+
+        benchmark::DoNotOptimize(schematic);
+        benchmark::ClobberMemory();
+
+        state.ResumeTiming();
+
+        count += benchmark_simulation_pure(schematic, 10'000, false);
+
+        benchmark::DoNotOptimize(count);
+        benchmark::ClobberMemory();
+    }
+
+    state.counters["Events"] =
+        benchmark::Counter(gsl::narrow<double>(count), benchmark::Counter::kIsRate);
+}
+
+BENCHMARK(BM_Simulation_Inverter_Loop);  // NOLINT
+
 static void BM_RenderScene_0(benchmark::State& state) {
     constexpr static auto save_image = false;  // to verify correctness
 

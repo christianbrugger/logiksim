@@ -1,6 +1,10 @@
 ﻿
 #include "timer.h"
 
+#include "exception.h"
+
+#include <numeric>
+
 namespace logicsim {
 
 Timer::Timer(std::string description, Unit unit, int precision)
@@ -18,6 +22,14 @@ Timer::~Timer() {
 
 auto Timer::delta() const -> std::chrono::duration<double> {
     return delta_t {timer_t::now() - start_};
+}
+
+auto Timer::delta_seconds() const -> double {
+    return delta().count();
+}
+
+auto Timer::delta_ms() const -> double {
+    return delta_seconds() * 1000;
 }
 
 auto Timer::format() const -> std::string {
@@ -45,6 +57,11 @@ auto Timer::format() const -> std::string {
 // EventCounter
 //
 
+EventCounter::EventCounter() : EventCounter {defaults::event_counter_average_interval} {}
+
+EventCounter::EventCounter(duration_t average_interval)
+    : average_interval_ {average_interval} {}
+
 auto EventCounter::count_event() -> void {
     deque_.push_back(timer_t::now());
 }
@@ -57,16 +74,70 @@ auto EventCounter::events_per_second() const -> double {
     using namespace std::literals::chrono_literals;
     const auto now = timer_t::now();
 
-    while (deque_.size() > 20 && now - deque_.front() > 2s) {
+    while (!deque_.empty() && now - deque_.front() > average_interval_) {
         deque_.pop_front();
     }
 
-    if (deque_.size() < 2) {
-        return -1.0;
+    if (deque_.empty()) {
+        return 0;
     }
 
-    auto time_delta = std::chrono::duration<double>(deque_.back() - deque_.front());
-    return (deque_.size() - 1) / time_delta.count();
+    auto time_delta = std::chrono::duration<double>(now - deque_.front()).count();
+
+    if (time_delta == 0) {
+        return 0;
+    }
+    return deque_.size() / time_delta;
+}
+
+// Multi Event Counter
+
+MultiEventCounter::MultiEventCounter()
+    : MultiEventCounter {defaults::event_counter_average_interval} {}
+
+MultiEventCounter::MultiEventCounter(duration_t average_interval)
+    : average_interval_ {average_interval} {}
+
+auto MultiEventCounter::count_events(int64_t count) -> void {
+    if (count < 0) [[unlikely]] {
+        throw_exception("count cannot be negative");
+    }
+    if (count == 0) {
+        return;
+    }
+
+    times_.push_back(timer_t::now());
+    counts_.push_back(count);
+}
+
+auto MultiEventCounter::reset() -> void {
+    times_.clear();
+    counts_.clear();
+}
+
+auto MultiEventCounter::events_per_second() const -> double {
+    const auto now = timer_t::now();
+
+    if (times_.size() != counts_.size()) [[unlikely]] {
+        throw_exception("times and counts need to have same size");
+    }
+
+    while (!times_.empty() && now - times_.front() > average_interval_) {
+        times_.pop_front();
+        counts_.pop_front();
+    }
+
+    if (times_.empty()) {
+        return 0;
+    }
+
+    const auto time_delta = std::chrono::duration<double>(now - times_.front()).count();
+    const auto total_count = std::accumulate(counts_.begin(), counts_.end(), int64_t {0});
+
+    if (time_delta == 0) {
+        return 0;
+    }
+    return total_count / time_delta;
 }
 
 }  // namespace logicsim
