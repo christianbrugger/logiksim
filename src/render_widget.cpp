@@ -895,6 +895,24 @@ Q_SLOT void RendererWidget::on_benchmark_timeout() {
 }
 
 Q_SLOT void RendererWidget::on_simulation_timeout() {
+    // make sure the image is updated, before we run the simulation again
+    if (simulation_image_update_requested_) {
+        update();
+        simulation_timer_.setInterval(0);
+        return;
+    }
+    const auto timer = Timer {};
+
+    on_simulation_timeout_impl();
+
+    const auto duration_ms = static_cast<int>(std::ceil(timer.delta_ms()));
+    const auto delay_interval = std::clamp(simulation_timer_interval_ms_ - duration_ms, 0,
+                                           simulation_timer_interval_ms_);
+
+    simulation_timer_.setInterval(delay_interval);
+}
+
+auto RendererWidget::on_simulation_timeout_impl() -> void {
     if (!editable_circuit_) {
         return;
     }
@@ -911,12 +929,13 @@ Q_SLOT void RendererWidget::on_simulation_timeout() {
 #endif
     }
 
-    const auto timeout =
-        timeout_t {std::chrono::milliseconds(simulation_timer_interval_ms_)};
+    constexpr auto timeout =
+        timeout_t {std::chrono::milliseconds {simulation_timer_interval_ms_}};
     simulation_->run(timeout);
 
     // TODO how do we know simulation end is reached?
     // if (event_count > 0) {
+    simulation_image_update_requested_ = true;
     this->update();
     //}
 }
@@ -1066,9 +1085,7 @@ void RendererWidget::resizeEvent(QResizeEvent* event) {
 }
 
 void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
-    if (event == nullptr) {
-        return;
-    }
+    simulation_image_update_requested_ = false;
 
     if (!this->isVisible()) {
         return;

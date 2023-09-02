@@ -66,7 +66,7 @@ class InteractiveSimulation {
     auto validate() const -> void;
 
    private:
-    [[nodiscard]] auto expected_simulation_time() const -> time_t;
+    [[nodiscard]] auto expected_simulation_time(realtime_t now) const -> time_t;
 
    private:
     Schematic schematic_;

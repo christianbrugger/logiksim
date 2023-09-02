@@ -68,8 +68,9 @@ auto InteractiveSimulation::set_simulation_time_rate(time_rate_t time_rate) -> v
         throw_exception("time rate cannot be negative");
     }
 
-    simulation_time_reference_ = expected_simulation_time();
-    realtime_reference_ = timer_t::now();
+    const auto realtime_now = timer_t::now();
+    simulation_time_reference_ = expected_simulation_time(realtime_now);
+    realtime_reference_ = realtime_now;
 
     simulation_time_rate_ = time_rate;
 }
@@ -83,19 +84,23 @@ auto InteractiveSimulation::time() const -> time_t {
 }
 
 auto InteractiveSimulation::run(timeout_t timeout) -> void {
-    const auto expected_time = expected_simulation_time();
-    const auto time_to_simulate = expected_time.value - simulation_.time().value;
+    const auto start_realtime = timer_t::now();
+    const auto start_simulation_time = simulation_.time();
+
+    const auto expected_time = expected_simulation_time(start_realtime);
+    const auto time_to_simulate = expected_time.value - start_simulation_time.value;
 
     if (time_to_simulate <= 0us) {
         return;
     }
 
-    simulation_.run(time_to_simulate, timeout);
+    const auto event_count = simulation_.run(time_to_simulate, timeout);
+    event_counter_.count_events(event_count);
 
     // in case simulation is too slow, allow us to catch up
     if (expected_time > simulation_.time()) {
-        realtime_reference_ = timer_t::now();
-        simulation_time_reference_ = simulation_.time();
+        realtime_reference_ = start_realtime;
+        simulation_time_reference_ = start_simulation_time;
     }
 }
 
@@ -119,9 +124,8 @@ auto InteractiveSimulation::validate() const -> void {
     schematic_.validate(Schematic::validate_all);
 }
 
-auto InteractiveSimulation::expected_simulation_time() const -> time_t {
-    const auto realtime_delta =
-        std::chrono::duration<double> {timer_t::now() - realtime_reference_};
+auto InteractiveSimulation::expected_simulation_time(realtime_t now) const -> time_t {
+    const auto realtime_delta = std::chrono::duration<double> {now - realtime_reference_};
     const auto time_delta_double =
         realtime_delta / 1000ms * simulation_time_rate_.rate_per_second.value;
 

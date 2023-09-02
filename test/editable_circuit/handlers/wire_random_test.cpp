@@ -345,8 +345,10 @@ auto test_add_wires_buttons(Rng& rng, bool random_modes) {
     auto layout = Layout {};
     auto setup = HandlerSetup {layout};
 
-    editable_circuit::examples::add_many_wires_and_buttons(rng, setup.state,
-                                                           random_modes);
+    using namespace editable_circuit::examples;
+
+    add_many_wires_and_buttons(rng, setup.state,
+                               WiresButtonsParams {.random_modes = random_modes});
 
     setup.validate();
 }

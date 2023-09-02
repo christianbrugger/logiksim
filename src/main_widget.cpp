@@ -16,6 +16,8 @@
 #include <QString>
 #include <QVBoxLayout>
 
+#include <locale>
+
 namespace logicsim {
 
 ElementButton::ElementButton(const QString& text, QWidget* parent)

@@ -285,6 +285,7 @@ class RendererWidget : public RendererWidgetBase {
    private:
     Q_SLOT void on_benchmark_timeout();
     Q_SLOT void on_simulation_timeout();
+    auto on_simulation_timeout_impl() -> void;
 
     // Can only be called inside of paintEvent
     auto init_surface() -> void;
@@ -320,7 +321,8 @@ class RendererWidget : public RendererWidgetBase {
 
     QTimer benchmark_timer_;
     QTimer simulation_timer_;
-    constexpr static int simulation_timer_interval_ms_ = 16;  // ms
+    constexpr static int simulation_timer_interval_ms_ = 20;  // ms
+    bool simulation_image_update_requested_ {false};
     time_rate_t simulation_time_rate_ {50us};
     delay_t wire_delay_per_distance_ {Schematic::defaults::wire_delay_per_distance};
 
