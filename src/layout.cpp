@@ -387,8 +387,9 @@ auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
     auto &line_tree = line_trees_.at(element_id.value);
     auto element = this->element(element_id);
 
-    if (line_tree.empty() && element.display_state() == display_state_t::normal &&
-        element.is_wire() && element.segment_tree().has_input()) {
+    if (line_tree.empty() && element.is_wire() &&
+        element.display_state() == display_state_t::normal &&
+        element.segment_tree().has_input()) {
         line_tree = LineTree::from_segment_tree(element.segment_tree()).value();
 
         if (line_tree.empty()) {

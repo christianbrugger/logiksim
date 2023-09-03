@@ -8,10 +8,11 @@ namespace logicsim {
 
 namespace {
 
-auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
-    // constexpr static auto connector_delay
-    //    = delay_t {Schematic::defaults::wire_delay_per_distance.value / 2};
+//
+// Layout Elements
+//
 
+auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
     return schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::placeholder,
         .input_count = 1,
@@ -64,7 +65,16 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
     const auto& line_tree = element.line_tree();
 
     if (line_tree.empty()) {
-        add_unused_element(schematic);
+        // TODO: temporarily disable wires with to many outputs
+        if (element.output_count() > connection_id_t::max()) {
+            add_unused_element(schematic);
+        } else {
+            schematic.add_element(Schematic::ElementData {
+                .element_type = element.element_type(),
+                .input_count = 0,
+                .output_count = element.segment_tree().output_count(),
+            });
+        }
 
     } else {
         auto ignore_delay = schematic.wire_delay_per_distance() == delay_t {0ns};
@@ -111,17 +121,91 @@ auto add_layout_elements(Schematic& schematic, const Layout& layout) -> void {
     }
 }
 
-auto create_connections(Schematic& schematic, const Layout& layout) -> void {
-    // connection caches
-    auto input_cache = ConnectionCache<true>();
-    auto output_cache = ConnectionCache<false>();
-    {
-        add_logic_items_to_cache(input_cache, layout);
-        add_logic_items_to_cache(output_cache, layout);
+//
+// Connections
+//
+
+struct GenerationCache {
+    GenerationCache(const Layout& layout) {
+        add_logic_items_to_cache(inputs, layout);
+        add_logic_items_to_cache(outputs, layout);
     }
 
+    ConnectionCache<true> inputs {};
+    ConnectionCache<false> outputs {};
+};
+
+auto connect_line_tree(const GenerationCache& cache, const LineTree& line_tree,
+                       Schematic::Element element) -> void {
+    auto& schematic = element.schematic();
+
+    // connect input
+    {
+        if (const auto entry = cache.outputs.find(line_tree.input_position())) {
+            if (!orientations_compatible(entry->orientation,
+                                         line_tree.input_orientation())) {
+                throw_exception("input orientation not compatible");
+            }
+            const auto output = schematic.output(entry->connection());
+            output.connect(element.input(connection_id_t {0}));
+        }
+    }
+
+    // connect outputs
+    for (auto output : element.outputs()) {
+        const auto output_index = output.output_index().value;
+        const auto position = line_tree.output_position(output_index);
+
+        if (const auto entry = cache.inputs.find(position)) {
+            if (!orientations_compatible(entry->orientation,
+                                         line_tree.output_orientation(output_index))) {
+                throw_exception("input orientation not compatible");
+            }
+            const auto input = schematic.input(entry->connection());
+            input.connect(output);
+        }
+    }
+}
+
+// wires without inputs have no LineTree
+auto connect_segment_tree(const GenerationCache& cache, const SegmentTree& segment_tree,
+                          Schematic::Element element) -> void {
+    if (element.input_count() != 0) [[unlikely]] {
+        throw_exception("can only connect segment trees without inputs");
+    }
+    auto& schematic = element.schematic();
+
+    // connect outputs
+    auto output_index = connection_id_t {0};
+    const auto try_connect_output = [&](point_t position, orientation_t orientation) {
+        if (const auto entry = cache.inputs.find(position)) {
+            if (!orientations_compatible(entry->orientation, orientation)) {
+                throw_exception("input orientation not compatible");
+            }
+
+            const auto output = element.output(output_index);
+            const auto input = schematic.input(entry->connection());
+            input.connect(output);
+
+            ++output_index;
+        }
+    };
+
+    for (const auto& info : segment_tree.segment_infos()) {
+        if (info.p0_type == SegmentPointType::output) {
+            try_connect_output(info.line.p0, to_orientation_p0(info.line));
+        }
+        if (info.p1_type == SegmentPointType::output) {
+            try_connect_output(info.line.p1, to_orientation_p1(info.line));
+        }
+    }
+}
+
+auto create_connections(Schematic& schematic, const Layout& layout) -> void {
+    const auto cache = GenerationCache {layout};
+
     for (auto element : schematic.elements()) {
-        // connect clock generators internal
+        // connect clock generator internals
         if (element.element_type() == ElementType::clock_generator) {
             element.input(connection_id_t {1})
                 .connect(element.output(connection_id_t {1}));
@@ -129,42 +213,20 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
         }
 
         // connect wires to elements
-        if (element.element_type() != ElementType::wire) {
-            continue;
-        }
-        const auto& line_tree = layout.line_tree(element.element_id());
-        if (line_tree.empty()) {
-            continue;
-        }
-
-        // connect input
-        {
-            if (const auto entry = output_cache.find(line_tree.input_position())) {
-                if (!orientations_compatible(entry->orientation,
-                                             line_tree.input_orientation())) {
-                    throw_exception("input orientation not compatible");
-                }
-                const auto output = schematic.output(entry->connection());
-                output.connect(element.input(connection_id_t {0}));
-            }
-        }
-
-        // connect outputs
-        for (auto output : element.outputs()) {
-            const auto output_index = output.output_index().value;
-            const auto position = line_tree.output_position(output_index);
-
-            if (const auto entry = input_cache.find(position)) {
-                if (!orientations_compatible(
-                        entry->orientation, line_tree.output_orientation(output_index))) {
-                    throw_exception("input orientation not compatible");
-                }
-                const auto input = schematic.input(entry->connection());
-                input.connect(output);
+        if (element.element_type() == ElementType::wire) {
+            const auto& line_tree = layout.line_tree(element);
+            if (!line_tree.empty()) {
+                connect_line_tree(cache, line_tree, element);
+            } else {
+                connect_segment_tree(cache, layout.segment_tree(element), element);
             }
         }
     }
 }
+
+//
+// Missing Placeholders
+//
 
 auto add_missing_placeholders(Schematic& schematic) -> void {
     for (auto element : schematic.elements()) {
@@ -178,6 +240,10 @@ auto add_missing_placeholders(Schematic& schematic) -> void {
         }
     }
 }
+
+//
+// Output Inverters
+//
 
 auto set_output_inverters(Schematic& schematic, layout::ConstElement element) -> void {
     for (auto output : schematic.element(element).outputs()) {
@@ -196,6 +262,10 @@ auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
 }
 
 }  // namespace
+
+//
+// Main
+//
 
 auto generate_schematic(const Layout& layout, delay_t wire_delay_per_unit) -> Schematic {
     auto schematic = Schematic {layout.circuit_id(), wire_delay_per_unit};
