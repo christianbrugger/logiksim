@@ -723,16 +723,21 @@ auto MainWidget::closeEvent(QCloseEvent* event) -> void {
 }
 
 auto MainWidget::dragEnterEvent(QDragEnterEvent* event) -> void {
-    if (event->mimeData()->hasUrls() && event->mimeData()->urls().size() == 1) {
+    const auto& mimeData = *event->mimeData();
+
+    if (mimeData.hasUrls() && mimeData.urls().size() == 1 &&
+        mimeData.urls().front().isLocalFile()) {
         event->acceptProposedAction();
     }
 }
 
 auto MainWidget::dropEvent(QDropEvent* event) -> void {
-    for (const auto& url : event->mimeData()->urls()) {
-        const auto filename = url.toLocalFile().toStdString();
+    const auto& mimeData = *event->mimeData();
+
+    if (mimeData.hasUrls() && mimeData.urls().size() == 1 &&
+        mimeData.urls().front().isLocalFile()) {
+        const auto filename = mimeData.urls().front().toLocalFile().toStdString();
         open_circuit(filename);
-        break;
     }
 }
 
