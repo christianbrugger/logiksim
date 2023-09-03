@@ -6,6 +6,7 @@
 #include <QActionGroup>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -20,7 +21,9 @@
 #include <QString>
 #include <QVBoxLayout>
 
+#include <filesystem>
 #include <locale>
+#include <ranges>
 
 namespace logicsim {
 
@@ -75,9 +78,14 @@ MainWidget::MainWidget(QWidget* parent)
     this->setCentralWidget(frame);
 
     connect(&timer_, &QTimer::timeout, this, &MainWidget::update_title);
-
     timer_.setInterval(100);
     timer_.start();
+
+    connect(&timer_process_arguments_, &QTimer::timeout, this,
+            &MainWidget::process_arguments);
+    timer_process_arguments_.setInterval(0);
+    timer_process_arguments_.setSingleShot(true);
+    timer_process_arguments_.start();
 
     connect(render_widget_, &RendererWidgetBase::interaction_state_changed, this,
             &MainWidget::on_interaction_state_changed);
@@ -610,6 +618,16 @@ void MainWidget::on_interaction_state_changed(InteractionState new_state) {
     // delay slider
     if (delay_panel_ != nullptr) {
         delay_panel_->setEnabled(new_state != InteractionState::simulation);
+    }
+}
+
+auto MainWidget::process_arguments() -> void {
+    for (const auto& argument_qt : QCoreApplication::arguments() | std::views::drop(1)) {
+        const auto argument = argument_qt.toStdString();
+        if (std::filesystem::is_regular_file(argument)) {
+            open_circuit(argument);
+            break;
+        }
     }
 }
 

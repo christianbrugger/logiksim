@@ -50,6 +50,8 @@ class MainWidget : public QMainWindow {
     Q_SLOT void update_title();
     Q_SLOT void on_interaction_state_changed(InteractionState new_state);
 
+    auto process_arguments() -> void;
+
     auto filename_filter() const -> QString;
     auto new_circuit() -> void;
     enum class filename_choice_t { ask_new, same_as_last };
@@ -67,6 +69,7 @@ class MainWidget : public QMainWindow {
     gsl::not_null<RendererWidget*> render_widget_;
 
     QTimer timer_ {};
+    QTimer timer_process_arguments_ {};
 
     using button_map_type =
         ankerl::unordered_dense::map<InteractionState, QAbstractButton*>;
