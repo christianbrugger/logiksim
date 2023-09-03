@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSlider>
@@ -49,6 +50,8 @@ MainWidget::MainWidget(QWidget* parent)
     : QMainWindow(parent),
       render_widget_ {new RendererWidget(this)},
       last_saved_data_ {render_widget_->serialize_circuit()} {
+    setAcceptDrops(true);
+
     create_menu();
 
     const auto layout = new QVBoxLayout();
@@ -79,7 +82,7 @@ MainWidget::MainWidget(QWidget* parent)
     connect(render_widget_, &RendererWidgetBase::interaction_state_changed, this,
             &MainWidget::on_interaction_state_changed);
 
-    render_widget_->set_interaction_state(InteractionState::selection);
+    new_circuit();
     resize(914, 700);
 }
 
@@ -656,29 +659,32 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
     return save_result_t::success;
 }
 
-auto MainWidget::open_circuit() -> void {
+auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
     if (ensure_circuit_saved() != save_result_t::success) {
         return;
     }
 
-    const auto filename = QFileDialog::getOpenFileName(this,              //
-                                                       tr("Open"),        //
-                                                       "",                //
-                                                       filename_filter()  //
-                                                       )
-                              .toStdString();
-    if (filename.empty()) {
+    if (!filename) {
+        filename = QFileDialog::getOpenFileName(this,              //
+                                                tr("Open"),        //
+                                                "",                //
+                                                filename_filter()  //
+                                                )
+                       .toStdString();
+    }
+
+    if (!filename || filename->empty()) {
         return;
     }
 
-    if (!render_widget_->load_circuit(filename)) {
+    if (!render_widget_->load_circuit(*filename)) {
         const auto message = fmt::format("Failed to load \"{}\".", filename);
         QMessageBox::warning(this,                         //
                              QString::fromUtf8(app_name),  //
                              QString::fromUtf8(message)    //
         );
     }
-    last_saved_filename_ = filename;
+    last_saved_filename_ = *filename;
     last_saved_data_ = render_widget_->serialize_circuit();
 }
 
@@ -713,6 +719,20 @@ auto MainWidget::closeEvent(QCloseEvent* event) -> void {
 
     if (ensure_circuit_saved() == save_result_t::success) {
         event->accept();
+    }
+}
+
+auto MainWidget::dragEnterEvent(QDragEnterEvent* event) -> void {
+    if (event->mimeData()->hasUrls() && event->mimeData()->urls().size() == 1) {
+        event->acceptProposedAction();
+    }
+}
+
+auto MainWidget::dropEvent(QDropEvent* event) -> void {
+    for (const auto& url : event->mimeData()->urls()) {
+        const auto filename = url.toLocalFile().toStdString();
+        open_circuit(filename);
+        break;
     }
 }
 

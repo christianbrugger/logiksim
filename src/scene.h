@@ -41,7 +41,7 @@ class ViewConfig {
 
     point_fine_t offset_ {};
     double device_pixel_ratio_ {1.};
-    double device_scale_ {12.};
+    double device_scale_ {18.};
     int width_ {};  // in device pixels
     int height_ {};
 

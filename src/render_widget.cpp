@@ -592,7 +592,6 @@ RendererWidget::RendererWidget(QWidget* parent)
             &RendererWidget::on_simulation_timeout);
     simulation_timer_.setInterval(simulation_timer_interval_ms_);
 
-    context_.ctx.settings.view_config.set_device_scale(18);
     reset_circuit();
 }
 
@@ -719,6 +718,9 @@ auto RendererWidget::reset_interaction_state() -> void {
 auto RendererWidget::reset_context() -> void {
     context_.clear();
     context_.shrink_to_fit();
+
+    context_.ctx.settings.view_config = ViewConfig {};
+    is_initialized_ = false;
 };
 
 auto RendererWidget::fps() const -> double {

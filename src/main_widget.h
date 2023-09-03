@@ -40,7 +40,7 @@ class MainWidget : public QMainWindow {
     auto create_menu() -> void;
 
     [[nodiscard]] auto build_render_buttons() -> QWidget*;  // TODO !!! remove
-    [[nodiscard]] auto build_mode_buttons() -> QWidget*;  // TODO !!! remove
+    [[nodiscard]] auto build_mode_buttons() -> QWidget*;    // TODO !!! remove
     [[nodiscard]] auto build_delay_slider() -> QWidget*;
     [[nodiscard]] auto build_time_rate_slider() -> QWidget*;
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
@@ -55,11 +55,13 @@ class MainWidget : public QMainWindow {
     enum class filename_choice_t { ask_new, same_as_last };
     enum class save_result_t { success, canceled };
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
-    auto open_circuit() -> void;
+    auto open_circuit(std::optional<std::string> filename = {}) -> void;
     auto ensure_circuit_saved() -> save_result_t;
 
    protected:
     auto closeEvent(QCloseEvent* event) -> void;
+    auto dragEnterEvent(QDragEnterEvent* event) -> void;
+    auto dropEvent(QDropEvent* event) -> void;
 
    private:
     gsl::not_null<RendererWidget*> render_widget_;
