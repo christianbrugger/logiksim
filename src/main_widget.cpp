@@ -1,14 +1,17 @@
 #include "main_widget.h"
 
 #include "render_widget.h"
+#include "serialize.h"
 
 #include <QActionGroup>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSlider>
@@ -151,16 +154,14 @@ auto MainWidget::create_menu() -> void {
         // File
         auto* menu = menuBar()->addMenu(tr("&File"));
 
-        add_action(menu, tr("&New"), QKeySequence::New, "file.svg", [this] {
-            render_widget_->reset_circuit();
-            render_widget_->set_interaction_state(InteractionState::selection);
-        });
+        add_action(menu, tr("&New"), QKeySequence::New, "file.svg",
+                   [this] { new_circuit(); });
         add_action(menu, tr("&Open..."), QKeySequence::Open, "folder-open.svg",
-                   [] { print("open"); });
+                   [this] { open_circuit(); });
         add_action(menu, tr("&Save"), QKeySequence::Save, "save.svg",
-                   [] { print("save"); });
+                   [this] { save_circuit(filename_choice_t::same_as_last); });
         add_action(menu, tr("Save &As..."), QKeySequence::SaveAs,
-                   [] { print("save as"); });
+                   [this] { save_circuit(filename_choice_t::ask_new); });
 
         menu->addSeparator();
         add_action(menu, tr("E&xit"), QKeySequence::Quit, "log-out.svg",
@@ -226,16 +227,16 @@ auto MainWidget::create_menu() -> void {
                    [this]() { render_widget_->reload_circuit(); });
         {
             auto* ma = add_action(menu, tr("Load \"Si&mple\" Example"),
-                                  [this]() { render_widget_->load_circuit(1); });
+                                  [this]() { render_widget_->load_circuit_example(1); });
             set_icon(ma, "cable.svg");
             auto* wa = add_action(menu, tr("Load \"&Wires\" Example"),
-                                  [this]() { render_widget_->load_circuit(4); });
+                                  [this]() { render_widget_->load_circuit_example(4); });
             set_icon(wa, "share-2.svg");
             auto* ea = add_action(menu, tr("Load \"&Elements\" Example"),
-                                  [this]() { render_widget_->load_circuit(3); });
+                                  [this]() { render_widget_->load_circuit_example(3); });
             set_icon(ea, "workflow.svg");
             auto* ra = add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
-                                  [this]() { render_widget_->load_circuit(2); });
+                                  [this]() { render_widget_->load_circuit_example(2); });
             set_icon(ra, "network.svg");
         }
 
@@ -316,14 +317,18 @@ auto MainWidget::build_mode_buttons() -> QWidget* {
 
     connect(button0, &QPushButton::clicked, this,
             [this](bool checked [[maybe_unused]]) { render_widget_->reload_circuit(); });
-    connect(button1, &QPushButton::clicked, this,
-            [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(1); });
-    connect(button2, &QPushButton::clicked, this,
-            [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(2); });
-    connect(button3, &QPushButton::clicked, this,
-            [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(3); });
-    connect(button4, &QPushButton::clicked, this,
-            [this](bool checked [[maybe_unused]]) { render_widget_->load_circuit(4); });
+    connect(button1, &QPushButton::clicked, this, [this](bool checked [[maybe_unused]]) {
+        render_widget_->load_circuit_example(1);
+    });
+    connect(button2, &QPushButton::clicked, this, [this](bool checked [[maybe_unused]]) {
+        render_widget_->load_circuit_example(2);
+    });
+    connect(button3, &QPushButton::clicked, this, [this](bool checked [[maybe_unused]]) {
+        render_widget_->load_circuit_example(3);
+    });
+    connect(button4, &QPushButton::clicked, this, [this](bool checked [[maybe_unused]]) {
+        render_widget_->load_circuit_example(4);
+    });
 
     const auto threads_select = new QComboBox();
     static const auto available_counts = std::vector {0, 2, 4, 8};
@@ -579,6 +584,10 @@ void MainWidget::update_title() {
         text = fmt::format("{} {:.3g} EPS", text, round_fast(eps.value()));
     }
 
+    if (!last_saved_filename_.empty()) {
+        text = fmt::format("{} - {}", text, last_saved_filename_);
+    }
+
     QString title = QString::fromUtf8(text);
     if (title != windowTitle()) {
         setWindowTitle(title);
@@ -599,9 +608,89 @@ void MainWidget::on_interaction_state_changed(InteractionState new_state) {
     }
 }
 
+auto MainWidget::filename_filter() const -> QString {
+    return tr("Circuit Files (*.ls2)");
+}
+
+auto MainWidget::new_circuit() -> void {
+    if (ensure_circuit_saved() == save_result_t::success) {
+        render_widget_->reset_circuit();
+        render_widget_->set_interaction_state(InteractionState::selection);
+
+        last_saved_filename_.clear();
+        last_saved_data_.clear();
+    }
+}
+
+auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_t {
+    const auto filename = [&] {
+        if (!last_saved_filename_.empty() &&
+            filename_choice == filename_choice_t::same_as_last) {
+            return last_saved_filename_;
+        }
+        return QFileDialog::getSaveFileName(this,              //
+                                            tr("Save As"),     //
+                                            "",                //
+                                            filename_filter()  //
+                                            )
+            .toStdString();
+    }();
+    if (filename.empty()) {
+        return save_result_t::canceled;
+    }
+
+    if (!render_widget_->save_circuit(filename)) {
+        const auto message = fmt::format("Failed to save \"{}\".", filename);
+        QMessageBox::warning(this,                         //
+                             QString::fromUtf8(app_name),  //
+                             QString::fromUtf8(message)    //
+        );
+        return save_circuit(filename_choice_t::ask_new);
+    }
+
+    last_saved_filename_ = filename;
+    return save_result_t::success;
+}
+
+auto MainWidget::open_circuit() -> void {
+    const auto filename = QFileDialog::getOpenFileName(this,              //
+                                                       tr("Open"),        //
+                                                       "",                //
+                                                       filename_filter()  //
+                                                       )
+                              .toStdString();
+
+    print(filename);
+}
+
+auto MainWidget::ensure_circuit_saved() -> save_result_t {
+    const auto name =
+        last_saved_filename_.empty() ? std::string("New Circuit") : last_saved_filename_;
+    const auto message = fmt::format("Save file \"{}\"?", name);
+    const auto result = QMessageBox::question(
+        this,                                                      //
+        QString::fromUtf8(app_name),                               //
+        QString::fromUtf8(message),                                //
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,  //
+        QMessageBox::Yes);
+
+    if (result == QMessageBox::Yes) {
+        return save_circuit(filename_choice_t::same_as_last);
+    }
+
+    else if (result == QMessageBox::No) {
+        return save_result_t::success;
+    }
+
+    return save_result_t::canceled;
+}
+
 auto MainWidget::closeEvent(QCloseEvent* event) -> void {
-    // event->ignore();
-    event->accept();
+    event->ignore();
+
+    if (ensure_circuit_saved() == save_result_t::success) {
+        event->accept();
+    }
 }
 
 }  // namespace logicsim

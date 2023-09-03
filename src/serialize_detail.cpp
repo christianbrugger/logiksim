@@ -176,10 +176,11 @@ auto base64_decode(const std::string& data) -> std::string {
     return "";
 }
 
-auto save_file(std::string filename, std::string binary) -> void {
+auto save_file(std::string filename, std::string binary) -> bool {
     auto file = std::ofstream(filename, std::ios::binary);
     file.write(binary.data(), binary.size());
     file.close();
+    return !file.bad();
 }
 
 }  // namespace logicsim

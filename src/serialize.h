@@ -22,7 +22,7 @@ using binary_t = std::vector<uint8_t>;
 [[nodiscard]] auto base64_encode(const std::string& data) -> std::string;
 [[nodiscard]] auto base64_decode(const std::string& data) -> std::string;
 
-auto save_layout(const Layout& layout, std::string filename = "data.json.gz") -> void;
+auto save_layout(const Layout& layout, std::string filename) -> bool;
 
 auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
                 InsertionMode insertion_mode, std::optional<point_t> load_position = {})

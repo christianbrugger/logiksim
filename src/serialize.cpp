@@ -159,9 +159,9 @@ auto serialize_selected(const Layout& layout, const Selection& selection,
     return gzip_compress(json_dumps(data));
 }
 
-auto save_layout(const Layout& layout, std::string filename) -> void {
+auto save_layout(const Layout& layout, std::string filename) -> bool {
     const auto binary = serialize_inserted(layout);
-    save_file(filename, binary);
+    return save_file(filename, binary);
 }
 
 namespace serialize {

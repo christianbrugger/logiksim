@@ -777,7 +777,11 @@ auto RendererWidget::reload_circuit() -> void {
 #endif
 }
 
-auto RendererWidget::load_circuit(int id) -> void {
+auto RendererWidget::save_circuit(std::string filename) -> bool {
+    return save_layout(editable_circuit_.value().layout(), filename);
+}
+
+auto RendererWidget::load_circuit_example(int id) -> void {
     reset_circuit();
     auto timer = Timer {"", Timer::Unit::ms, 1};
 

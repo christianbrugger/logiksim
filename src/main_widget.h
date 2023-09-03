@@ -28,6 +28,8 @@ class ElementButton : public QPushButton {
     auto minimumSizeHint() const -> QSize override;
 };
 
+constexpr static inline auto app_name = std::string_view {"LogicSim 2"};
+
 class MainWidget : public QMainWindow {
     Q_OBJECT
 
@@ -36,8 +38,9 @@ class MainWidget : public QMainWindow {
 
    private:
     auto create_menu() -> void;
-    [[nodiscard]] auto build_render_buttons() -> QWidget*;
-    [[nodiscard]] auto build_mode_buttons() -> QWidget*;
+
+    [[nodiscard]] auto build_render_buttons() -> QWidget*;  // TODO !!! remove
+    [[nodiscard]] auto build_mode_buttons() -> QWidget*;  // TODO !!! remove
     [[nodiscard]] auto build_delay_slider() -> QWidget*;
     [[nodiscard]] auto build_time_rate_slider() -> QWidget*;
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
@@ -46,6 +49,14 @@ class MainWidget : public QMainWindow {
 
     Q_SLOT void update_title();
     Q_SLOT void on_interaction_state_changed(InteractionState new_state);
+
+    auto filename_filter() const -> QString;
+    auto new_circuit() -> void;
+    enum class filename_choice_t { ask_new, same_as_last };
+    enum class save_result_t { success, canceled };
+    auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
+    auto open_circuit() -> void;
+    auto ensure_circuit_saved() -> save_result_t;
 
    protected:
     auto closeEvent(QCloseEvent* event) -> void;
@@ -61,6 +72,9 @@ class MainWidget : public QMainWindow {
 
     QWidget* delay_panel_ {};
     QSlider* delay_slider_ {};
+
+    std::string last_saved_filename_ {};
+    std::string last_saved_data_ {};
 };
 
 }  // namespace logicsim

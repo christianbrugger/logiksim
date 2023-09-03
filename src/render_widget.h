@@ -279,8 +279,10 @@ class RendererWidget : public RendererWidgetBase {
     auto view_config() const noexcept -> const ViewConfig&;
 
     auto reset_circuit() -> void;
-    auto load_circuit(int id) -> void;
     auto reload_circuit() -> void;
+
+    auto save_circuit(std::string filename) -> bool;
+    auto load_circuit_example(int id) -> void;
 
    private:
     Q_SLOT void on_benchmark_timeout();
