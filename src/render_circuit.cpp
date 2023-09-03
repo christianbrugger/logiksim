@@ -1382,6 +1382,23 @@ auto InteractiveLayers::clear() -> void {
     overlay_bounding_rect.reset();
 }
 
+auto InteractiveLayers::shrink_to_fit() -> void {
+    normal_below.shrink_to_fit();
+    normal_wires.shrink_to_fit();
+    normal_above.shrink_to_fit();
+
+    uninserted_below.shrink_to_fit();
+    uninserted_above.shrink_to_fit();
+
+    selected_logic_items.shrink_to_fit();
+    selected_wires.shrink_to_fit();
+    temporary_wires.shrink_to_fit();
+    valid_logic_items.shrink_to_fit();
+    valid_wires.shrink_to_fit();
+    colliding_logic_items.shrink_to_fit();
+    colliding_wires.shrink_to_fit();
+}
+
 auto InteractiveLayers::allocated_size() const -> std::size_t {
     return get_allocated_size(normal_below) +           //
            get_allocated_size(normal_wires) +           //
@@ -1491,6 +1508,12 @@ auto SimulationLayers::clear() -> void {
     items_above.clear();
 }
 
+auto SimulationLayers::shrink_to_fit() -> void {
+    items_below.shrink_to_fit();
+    wires.shrink_to_fit();
+    items_above.shrink_to_fit();
+}
+
 auto SimulationLayers::allocated_size() const -> std::size_t {
     return get_allocated_size(items_below) +  //
            get_allocated_size(wires) +        //
@@ -1498,7 +1521,43 @@ auto SimulationLayers::allocated_size() const -> std::size_t {
 }
 
 //
-// Layout Rendering
+// Circuit Context
+//
+
+auto CircuitSurfaces::clear() -> void {
+    layer_surface_uninserted.clear();
+    layer_surface_overlay.clear();
+}
+
+auto CircuitSurfaces::shrink_to_fit() -> void {
+    layer_surface_uninserted.shrink_to_fit();
+    layer_surface_overlay.shrink_to_fit();
+}
+
+auto CircuitLayers::clear() -> void {
+    interactive_layers.clear();
+    simulation_layers.clear();
+}
+
+auto CircuitLayers::shrink_to_fit() -> void {
+    interactive_layers.shrink_to_fit();
+    simulation_layers.shrink_to_fit();
+}
+
+auto CircuitContext::clear() -> void {
+    ctx.clear();
+    layers.clear();
+    surfaces.clear();
+}
+
+auto CircuitContext::shrink_to_fit() -> void {
+    ctx.shrink_to_fit();
+    layers.shrink_to_fit();
+    surfaces.shrink_to_fit();
+}
+
+//
+// Layout
 //
 
 auto render_inserted(Context& ctx, const Layout& layout,
@@ -1855,5 +1914,4 @@ auto render_simulation_to_file(const Layout& layout, SimulationView simulation_v
                                render_simulation(circuit_ctx, layout, simulation_view);
                            });
 }
-
 }  // namespace logicsim

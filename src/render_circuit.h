@@ -307,6 +307,7 @@ struct InteractiveLayers {
    public:
     auto format() const -> std::string;
     auto clear() -> void;
+    auto shrink_to_fit() -> void;
     auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto has_inserted() const -> bool;
@@ -334,6 +335,7 @@ struct SimulationLayers {
    public:
     auto format() const -> std::string;
     auto clear() -> void;
+    auto shrink_to_fit() -> void;
     auto allocated_size() const -> std::size_t;
 };
 
@@ -344,12 +346,18 @@ struct SimulationLayers {
 struct CircuitSurfaces {
     LayerSurface layer_surface_uninserted {.enabled = true};
     LayerSurface layer_surface_overlay {.enabled = true};
+
+    auto clear() -> void;
+    auto shrink_to_fit() -> void;
 };
 
 struct CircuitLayers {
     // vectors are cached to continuous avoid allocations
     InteractiveLayers interactive_layers {};
     SimulationLayers simulation_layers {};
+
+    auto clear() -> void;
+    auto shrink_to_fit() -> void;
 };
 
 struct CircuitContext {
@@ -357,6 +365,9 @@ struct CircuitContext {
 
     CircuitLayers layers {};
     CircuitSurfaces surfaces {};
+
+    auto clear() -> void;
+    auto shrink_to_fit() -> void;
 };
 
 //

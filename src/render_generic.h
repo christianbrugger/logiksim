@@ -44,6 +44,9 @@ struct Context {
     auto begin() -> void;
     auto sync() -> void;
     auto end() -> void;
+
+    auto clear() -> void;
+    auto shrink_to_fit() -> void;
 };
 
 auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool;
@@ -103,6 +106,9 @@ struct LayerSurface {
     Context ctx {};
 
     auto initialize(const RenderSettings& settings) -> void;
+
+    auto clear() -> void;
+    auto shrink_to_fit() -> void;
 };
 
 auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI;

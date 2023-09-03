@@ -219,6 +219,14 @@ auto GlyphCache::format() const -> std::string {
     return fmt::format("GlyphCache({} glyphs)", glyph_map_.size());
 }
 
+auto GlyphCache::clear() -> void {
+    glyph_map_.clear();
+}
+
+auto GlyphCache::shrink_to_fit() -> void {
+    glyph_map_.rehash(glyph_map_.size());
+}
+
 auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFont& {
     // reuse font, to avoid allocation everytime we draw a text
     auto& font = fonts_.get(style);

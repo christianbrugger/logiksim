@@ -151,8 +151,10 @@ auto MainWidget::create_menu() -> void {
         // File
         auto* menu = menuBar()->addMenu(tr("&File"));
 
-        add_action(menu, tr("&New"), QKeySequence::New, "file.svg",
-                   [] { print("new file"); });
+        add_action(menu, tr("&New"), QKeySequence::New, "file.svg", [this] {
+            render_widget_->reset_circuit();
+            render_widget_->set_interaction_state(InteractionState::selection);
+        });
         add_action(menu, tr("&Open..."), QKeySequence::Open, "folder-open.svg",
                    [] { print("open"); });
         add_action(menu, tr("&Save"), QKeySequence::Save, "save.svg",
@@ -162,7 +164,7 @@ auto MainWidget::create_menu() -> void {
 
         menu->addSeparator();
         add_action(menu, tr("E&xit"), QKeySequence::Quit, "log-out.svg",
-                   [&]() { this->close(); });
+                   [this]() { close(); });
     }
 
     {
@@ -595,6 +597,11 @@ void MainWidget::on_interaction_state_changed(InteractionState new_state) {
     if (delay_panel_ != nullptr) {
         delay_panel_->setEnabled(new_state != InteractionState::simulation);
     }
+}
+
+auto MainWidget::closeEvent(QCloseEvent* event) -> void {
+    // event->ignore();
+    event->accept();
 }
 
 }  // namespace logicsim

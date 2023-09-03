@@ -37,6 +37,14 @@ auto Context::end() -> void {
     check_errors(bl_ctx);
 }
 
+auto Context::clear() -> void {
+    text_cache.clear();
+}
+
+auto Context::shrink_to_fit() -> void {
+    text_cache.shrink_to_fit();
+}
+
 auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool {
     static_assert(sizeof(BLContextCreateInfo) ==
                   sizeof(BLContextCreateInfo::flags) +
@@ -154,6 +162,14 @@ auto LayerSurface::initialize(const RenderSettings& new_settings) -> void {
     else {
         ctx.settings = new_settings;
     }
+}
+
+auto LayerSurface::clear() -> void {
+    ctx.clear();
+}
+
+auto LayerSurface::shrink_to_fit() -> void {
+    ctx.shrink_to_fit();
 }
 
 auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI {

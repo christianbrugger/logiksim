@@ -20,7 +20,7 @@ struct State;
 
 class EditableCircuit {
    public:
-    [[nodiscard]] EditableCircuit(Layout&& layout);
+    [[nodiscard]] explicit EditableCircuit(Layout&& layout);
     [[nodiscard]] auto format() const -> std::string;
     auto validate() -> void;
 

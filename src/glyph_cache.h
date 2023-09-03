@@ -177,6 +177,9 @@ class GlyphCache {
 
     [[nodiscard]] auto format() const -> std::string;
 
+    auto clear() -> void;
+    auto shrink_to_fit() -> void;
+
     struct TextAttributes {
         color_t color {defaults::color_black};
         HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};
@@ -208,8 +211,8 @@ class GlyphCache {
 
     FontFaces font_faces_;
     BaselineOffsets baseline_offsets_;
-    mutable Fonts fonts_;
 
+    mutable Fonts fonts_;
     mutable glyph_map_t glyph_map_ {};
 };
 

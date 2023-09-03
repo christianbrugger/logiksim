@@ -714,6 +714,11 @@ auto RendererWidget::reset_interaction_state() -> void {
     }
 
     update();
+}
+
+auto RendererWidget::reset_context() -> void {
+    context_.clear();
+    context_.shrink_to_fit();
 };
 
 auto RendererWidget::fps() const -> double {
@@ -733,10 +738,10 @@ auto RendererWidget::pixel_scale() const -> double {
 
 auto RendererWidget::reset_circuit() -> void {
     reset_interaction_state();
+    reset_context();
 
+    editable_circuit_.reset();
     editable_circuit_.emplace(Layout {});
-
-    // TODO reset render_settings_;
 
     update();
 
@@ -750,22 +755,22 @@ auto RendererWidget::reload_circuit() -> void {
         return;
     }
     reset_interaction_state();
+    reset_context();
+
+    // copy so we compact the memory
+    auto layout = Layout {editable_circuit_->layout()};
+    editable_circuit_.reset();
 
     {
         const auto t = Timer {"reload", Timer::Unit::ms, 3};
-
-        auto layout = editable_circuit_->extract_layout();
-
-        editable_circuit_.reset();
         editable_circuit_.emplace(std::move(layout));
     }
 
-    save_layout(editable_circuit_->layout());
-
-    update();
     if (editable_circuit_->layout().element_count() < 30) {
         print(editable_circuit_);
     }
+
+    update();
 
 #ifndef NDEBUG
     editable_circuit_->validate();

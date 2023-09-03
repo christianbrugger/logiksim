@@ -293,6 +293,7 @@ class RendererWidget : public RendererWidgetBase {
     auto _init_surface_from_buffer_image() -> void;
 
     auto reset_interaction_state() -> void;
+    auto reset_context() -> void;
 
     auto set_new_mouse_logic(QMouseEvent* event) -> void;
 
@@ -328,7 +329,6 @@ class RendererWidget : public RendererWidgetBase {
 
     // new circuit
     std::optional<EditableCircuit> editable_circuit_ {};
-    std::optional<SelectionBuilder> selection_builder_ {};
 
     // simulation
     std::optional<InteractiveSimulation> simulation_;

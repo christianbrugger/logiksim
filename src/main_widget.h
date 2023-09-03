@@ -14,6 +14,7 @@
 class QString;
 class QSlider;
 class QAbstractButton;
+class QHBoxLayout;
 
 namespace logicsim {
 
@@ -45,6 +46,9 @@ class MainWidget : public QMainWindow {
 
     Q_SLOT void update_title();
     Q_SLOT void on_interaction_state_changed(InteractionState new_state);
+
+   protected:
+    auto closeEvent(QCloseEvent* event) -> void;
 
    private:
     gsl::not_null<RendererWidget*> render_widget_;
