@@ -66,6 +66,8 @@ auto move_or_delete_logic_item(Layout& Layout, MessageSender sender,
 auto move_logic_item_unchecked(Layout& layout, const element_id_t element_id, int dx,
                                int dy) -> void;
 
+auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) -> void;
+
 //
 // Wire - High level Methods
 //

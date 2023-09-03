@@ -411,6 +411,52 @@ auto move_logic_item_unchecked(Layout& layout, const element_id_t element_id, in
     move_logic_item_unchecked_private(layout, element_id, dx, dy);
 }
 
+auto toggle_inverter_private(Layout& layout, const CacheProvider& cache, point_t point)
+    -> void {
+    if (const auto entry = cache.input_cache().find(point);
+        entry.has_value() && entry->is_connection()) {
+        const auto element = layout.element(entry->element_id);
+        const auto data = element.to_layout_calculation_data();
+
+        iter_input_location_and_id(data, [&](connection_id_t connection_id, point_t,
+                                             orientation_t orientation) {
+            if (connection_id == entry->connection_id &&
+                orientation != orientation_t::undirected) {
+                element.set_input_inverter(entry->connection_id,
+                                           !element.input_inverted(entry->connection_id));
+            }
+            return true;
+        });
+    }
+
+    if (const auto entry = cache.output_cache().find(point);
+        entry.has_value() && entry->is_connection()) {
+        const auto element = layout.element(entry->element_id);
+        const auto data = element.to_layout_calculation_data();
+
+        iter_output_location_and_id(data, [&](connection_id_t connection_id, point_t,
+                                              orientation_t orientation) {
+            if (connection_id == entry->connection_id &&
+                orientation != orientation_t::undirected) {
+                element.set_output_inverter(
+                    entry->connection_id, !element.output_inverted(entry->connection_id));
+            }
+            return true;
+        });
+    }
+}
+
+auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        fmt::print(
+            "\n==========================================================\n{}\n"
+            "toggle_inverter(point = {});\n"
+            "==========================================================\n\n",
+            layout, point);
+    }
+    toggle_inverter_private(layout, cache, point);
+}
+
 //
 // logic item mode change
 //

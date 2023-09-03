@@ -98,8 +98,8 @@ constexpr static inline auto enable_position = point_t {2, height};
 }  // namespace display_ascii
 
 /// next_point(point_t position) -> bool;
-template <typename Func>
-auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -> bool {
+auto iter_element_body_points(layout_calculation_data_t data,
+                              std::invocable<point_t> auto next_point) -> bool {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -306,9 +306,9 @@ auto iter_element_body_points(layout_calculation_data_t data, Func next_point) -
     throw_exception("'Don't know to calculate input locations.");
 }
 
-/// next_input(point_t position, orientation_t orientation) -> bool;
-template <typename Func>
-auto iter_input_location(layout_calculation_data_t data, Func next_input) -> bool {
+// next_input(point_t position, orientation_t orientation) -> bool;
+auto iter_input_location(layout_calculation_data_t data,
+                         std::invocable<point_t, orientation_t> auto next_input) -> bool {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -534,9 +534,10 @@ auto iter_input_location(layout_calculation_data_t data, Func next_input) -> boo
     throw_exception("'Don't know to calculate input locations.");
 }
 
-/// next_output(point_t position, orientation_t orientation) -> bool;
-template <typename Func>
-auto iter_output_location(layout_calculation_data_t data, Func next_output) -> bool {
+// next_output(point_t position, orientation_t orientation) -> bool;
+auto iter_output_location(layout_calculation_data_t data,
+                          std::invocable<point_t, orientation_t> auto next_output)
+    -> bool {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -664,24 +665,25 @@ auto iter_output_location(layout_calculation_data_t data, Func next_output) -> b
 
 // next_input(connection_id_t input_id, point_t position,
 //            orientation_t orientation) -> bool;
-template <typename Func>
-auto iter_input_location_and_id(layout_calculation_data_t data, Func next_input) -> bool {
+auto iter_input_location_and_id(
+    layout_calculation_data_t data,
+    std::invocable<connection_id_t, point_t, orientation_t> auto next_input) -> bool {
     return iter_input_location(
         data, [&, input_id = connection_id_t {0}](point_t position,
                                                   orientation_t orientation) mutable {
-            return next_input(input_id++, position, orientation);
+            return std::invoke(next_input, input_id++, position, orientation);
         });
 }
 
 // next_output(connection_id_t output_id, point_t position,
 //             orientation_t orientation) -> bool;
-template <typename Func>
-auto iter_output_location_and_id(layout_calculation_data_t data, Func next_output)
-    -> bool {
+auto iter_output_location_and_id(
+    layout_calculation_data_t data,
+    std::invocable<connection_id_t, point_t, orientation_t> auto next_output) -> bool {
     return iter_output_location(
         data, [&, output_id = connection_id_t {0}](point_t position,
                                                    orientation_t orientation) mutable {
-            return next_output(output_id++, position, orientation);
+            return std::invoke(next_output, output_id++, position, orientation);
         });
 }
 

@@ -175,21 +175,7 @@ auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
 }
 
 auto EditableCircuit::toggle_inverter(point_t point) -> void {
-    auto& layout = layout_.value();
-
-    if (const auto entry = cache_provider_.input_cache().find(point);
-        entry.has_value() && entry->is_connection()) {
-        const auto element = layout.element(entry->element_id);
-        element.set_input_inverter(entry->connection_id,
-                                   !element.input_inverted(entry->connection_id));
-    }
-
-    if (const auto entry = cache_provider_.output_cache().find(point);
-        entry.has_value() && entry->is_connection()) {
-        const auto element = layout.element(entry->element_id);
-        element.set_output_inverter(entry->connection_id,
-                                    !element.output_inverted(entry->connection_id));
-    }
+    editable_circuit::toggle_inverter(layout_.value(), cache_provider_, point);
 }
 
 auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
