@@ -282,6 +282,8 @@ class RendererWidget : public RendererWidgetBase {
     auto reload_circuit() -> void;
 
     auto save_circuit(std::string filename) -> bool;
+    auto serialize_circuit() -> std::string;
+    auto load_circuit(std::string filename) -> bool;
     auto load_circuit_example(int id) -> void;
 
    private:

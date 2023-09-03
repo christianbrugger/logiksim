@@ -778,7 +778,24 @@ auto RendererWidget::reload_circuit() -> void {
 }
 
 auto RendererWidget::save_circuit(std::string filename) -> bool {
+    mouse_logic_.reset();
     return save_layout(editable_circuit_.value().layout(), filename);
+}
+
+auto RendererWidget::serialize_circuit() -> std::string {
+    mouse_logic_.reset();
+    return serialize_inserted(editable_circuit_.value().layout());
+}
+
+auto RendererWidget::load_circuit(std::string filename) -> bool {
+    set_interaction_state(InteractionState::selection);
+    reset_circuit();
+
+    const auto binary = load_binary_data(filename);
+    auto handle =
+        add_layout(binary, editable_circuit_.value(), InsertionMode::insert_or_discard);
+
+    return handle.has_value();
 }
 
 auto RendererWidget::load_circuit_example(int id) -> void {

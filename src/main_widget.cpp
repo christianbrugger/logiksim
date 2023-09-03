@@ -46,7 +46,9 @@ auto ElementButton::minimumSizeHint() const -> QSize {
 //
 
 MainWidget::MainWidget(QWidget* parent)
-    : QMainWindow(parent), render_widget_ {new RendererWidget(this)} {
+    : QMainWindow(parent),
+      render_widget_ {new RendererWidget(this)},
+      last_saved_data_ {render_widget_->serialize_circuit()} {
     create_menu();
 
     const auto layout = new QVBoxLayout();
@@ -618,7 +620,7 @@ auto MainWidget::new_circuit() -> void {
         render_widget_->set_interaction_state(InteractionState::selection);
 
         last_saved_filename_.clear();
-        last_saved_data_.clear();
+        last_saved_data_ = render_widget_->serialize_circuit();
     }
 }
 
@@ -649,21 +651,42 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
     }
 
     last_saved_filename_ = filename;
+    last_saved_data_ = render_widget_->serialize_circuit();
+
     return save_result_t::success;
 }
 
 auto MainWidget::open_circuit() -> void {
+    if (ensure_circuit_saved() != save_result_t::success) {
+        return;
+    }
+
     const auto filename = QFileDialog::getOpenFileName(this,              //
                                                        tr("Open"),        //
                                                        "",                //
                                                        filename_filter()  //
                                                        )
                               .toStdString();
+    if (filename.empty()) {
+        return;
+    }
 
-    print(filename);
+    if (!render_widget_->load_circuit(filename)) {
+        const auto message = fmt::format("Failed to load \"{}\".", filename);
+        QMessageBox::warning(this,                         //
+                             QString::fromUtf8(app_name),  //
+                             QString::fromUtf8(message)    //
+        );
+    }
+    last_saved_filename_ = filename;
+    last_saved_data_ = render_widget_->serialize_circuit();
 }
 
 auto MainWidget::ensure_circuit_saved() -> save_result_t {
+    if (last_saved_data_ == render_widget_->serialize_circuit()) {
+        return save_result_t::success;
+    }
+
     const auto name =
         last_saved_filename_.empty() ? std::string("New Circuit") : last_saved_filename_;
     const auto message = fmt::format("Save file \"{}\"?", name);

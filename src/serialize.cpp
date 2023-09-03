@@ -164,6 +164,10 @@ auto save_layout(const Layout& layout, std::string filename) -> bool {
     return save_file(filename, binary);
 }
 
+auto load_binary_data(std::string filename) -> std::string {
+    return load_file(filename);
+}
+
 namespace serialize {
 
 auto unserialize_data(const std::string& binary) -> std::optional<SerializedLayout> {

@@ -183,4 +183,26 @@ auto save_file(std::string filename, std::string binary) -> bool {
     return !file.bad();
 }
 
+auto load_file(std::string filename) -> std::string {
+    // open at end of file
+    auto file = std::ifstream(filename, std::ios::binary | std::ios::ate);
+
+    // read size
+    const auto size = file.tellg();
+    file.seekg(0);
+    if (size < 0) {
+        return "";
+    }
+
+    // read data
+    auto binary = std::string(size, '\0');
+    file.read(binary.data(), size);
+    file.close();
+
+    if (file.bad()) {
+        return "";
+    }
+    return binary;
+}
+
 }  // namespace logicsim
