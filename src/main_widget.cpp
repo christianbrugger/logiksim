@@ -8,6 +8,7 @@
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
@@ -21,7 +22,6 @@
 #include <QString>
 #include <QVBoxLayout>
 
-#include <filesystem>
 #include <locale>
 #include <ranges>
 
@@ -624,7 +624,7 @@ void MainWidget::on_interaction_state_changed(InteractionState new_state) {
 auto MainWidget::process_arguments() -> void {
     for (const auto& argument_qt : QCoreApplication::arguments() | std::views::drop(1)) {
         const auto argument = argument_qt.toStdString();
-        if (std::filesystem::is_regular_file(argument)) {
+        if (QFileInfo(argument_qt).isFile()) {
             open_circuit(argument);
             break;
         }

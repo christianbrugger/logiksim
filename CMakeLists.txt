@@ -364,9 +364,7 @@ if (LS_ENABLE_PCH)
         <concepts>
         <cstdint>
         <exception>
-        <filesystem>
         <functional>
-        <iostream>
         <iterator>
         <locale>
         <optional>
@@ -376,7 +374,6 @@ if (LS_ENABLE_PCH)
         <ranges>
         <ratio>
         <string>
-        <string_view>
         <string_view>
         <type_traits>
         <utility>

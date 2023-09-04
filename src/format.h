@@ -67,6 +67,23 @@ auto print(Args &&...args) {
 }  // namespace logicsim
 
 //
+// Escape Non-ASCI
+//
+
+auto escape_non_ascii(const std::string &input) -> std::string {
+    auto result = std::string {};
+    for (const auto &c : input) {
+        const auto index = static_cast<unsigned char>(c);
+        if (index > 127) {
+            fmt::format_to(std::back_inserter(result), "\\x{:02x}", index);
+        } else {
+            result.push_back(c);
+        }
+    }
+    return result;
+}
+
+//
 // std::pair
 //
 

@@ -5,8 +5,7 @@
 #include <cppcodec/base64_rfc4648.hpp>
 #include <glaze/glaze.hpp>
 
-#include <fstream>
-#include <ostream>
+#include <QFile>
 
 template <>
 struct glz::meta<logicsim::ElementType> {
@@ -177,31 +176,32 @@ auto base64_decode(const std::string& data) -> std::string {
 }
 
 auto save_file(std::string filename, std::string binary) -> bool {
-    auto file = std::ofstream(filename, std::ios::binary);
-    file.write(binary.data(), binary.size());
-    file.close();
-    return !file.bad();
+    auto file = QFile(QString::fromUtf8(filename));
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        return false;
+    }
+
+    if (file.write(binary.data(), binary.size()) < 0) {
+        return false;
+    }
+
+    return true;
 }
 
 auto load_file(std::string filename) -> std::string {
-    // open at end of file
-    auto file = std::ifstream(filename, std::ios::binary | std::ios::ate);
+    auto file = QFile(QString::fromUtf8(filename));
 
-    // read size
-    const auto size = file.tellg();
-    file.seekg(0);
-    if (size < 0) {
+    if (!file.open(QIODevice::ReadOnly)) {
         return "";
     }
 
-    // read data
-    auto binary = std::string(size, '\0');
-    file.read(binary.data(), size);
-    file.close();
+    auto binary = std::string(file.size(), '\0');
 
-    if (file.bad()) {
+    if (file.read(binary.data(), binary.size()) < 0) {
         return "";
     }
+
     return binary;
 }
 

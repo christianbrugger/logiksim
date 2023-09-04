@@ -14,6 +14,9 @@
 #include <fmt/format.h>
 #include <gsl/gsl>
 
+#include <QDir>
+#include <QFileInfo>
+
 #include <locale>
 #include <numbers>
 
@@ -1847,7 +1850,9 @@ auto render_circuit_to_file(int width, int height, std::string filename,
     render_function(circuit_ctx);
     ctx.end();
 
-    std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
+    const auto folder = QFileInfo(QString::fromUtf8(filename)).baseName();
+    QDir().mkdir(folder);
+
     ctx.bl_image.writeToFile(filename.c_str());
 }
 

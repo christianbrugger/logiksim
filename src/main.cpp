@@ -12,7 +12,6 @@
 #include <gsl/gsl>
 
 #include <exception>
-#include <iostream>
 
 namespace logicsim {
 
