@@ -45,9 +45,6 @@ auto gzip_decompress(const std::string& input) -> std::string;
 auto base64_encode(const std::string& data) -> std::string;
 auto base64_decode(const std::string& data) -> std::string;
 
-auto save_file(std::string filename, std::string binary) -> bool;
-auto load_file(std::string filename) -> std::string;
-
 }  // namespace logicsim
 
 #endif

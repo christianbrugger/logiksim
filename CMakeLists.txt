@@ -23,6 +23,7 @@ set(LS_CORE_SOURCES
     src/circuit_index.cpp
     src/collision.cpp
     src/exception.cpp
+    src/file.cpp
     src/flat_schematic.cpp
     src/geometry.cpp
     src/glyph_cache.cpp
@@ -38,6 +39,7 @@ set(LS_CORE_SOURCES
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
+    src/ressource.cpp
     src/scene.cpp
     src/schematic.cpp
     src/schematic_generation.cpp

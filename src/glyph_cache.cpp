@@ -1,14 +1,25 @@
-#include "glyph_cache.h"
+﻿#include "glyph_cache.h"
 
 #include "exception.h"
+#include "file.h"
 #include "format.h"
+#include "ressource.h"
 #include "text_shaping.h"
 #include "vocabulary.h"
 
 namespace logicsim {
 
-auto font_definition_t::get(FontStyle style) const -> std::string_view {
+auto font_locations_t::get(FontStyle style) const -> std::string_view {
     return ::logicsim::get<std::string_view>(*this, style);
+}
+
+auto get_default_font_locations() -> font_locations_t {
+    return font_locations_t {
+        .regular = get_font_path(font_t::regular).toStdString(),
+        .italic = get_font_path(font_t::italic).toStdString(),
+        .bold = get_font_path(font_t::bold).toStdString(),
+        .monospace = get_font_path(font_t::monospace).toStdString(),
+    };
 }
 
 namespace glyph_cache {
@@ -32,19 +43,39 @@ auto glyph_entry_t::format() const -> std::string {
 // Font Face
 //
 
-FontFace::FontFace(std::string font_file) : hb_font_face {font_file}, bl_font_face {} {
-    const auto status = bl_font_face.createFromFile(font_file.c_str());
-    if (status != BL_SUCCESS && !font_file.empty()) [[unlikely]] {
-        // TODO create custom exception that can be handeled
-        throw_exception(fmt::format("Font not found {}", font_file).c_str());
+FontFace::FontFace(std::string font_file)
+    : font_data_ {load_file(font_file)},
+      hb_font_face_ {std::span<const char> {font_data_.data(), font_data_.size()}} {
+    // TODO check if font_file is empty
+
+    {
+        const auto status =
+            bl_font_data_.createFromData(font_data_.data(), font_data_.size());
+        if (status != BL_SUCCESS && !font_file.empty()) [[unlikely]] {
+            throw_exception("Could not create BLFontData");
+        }
     }
+    {
+        const auto status = bl_font_face_.createFromData(bl_font_data_, 0);
+        if (status != BL_SUCCESS && !font_file.empty()) [[unlikely]] {
+            throw_exception("Could not create BLFontFace");
+        }
+    }
+}
+
+auto FontFace::hb_font_face() const -> const HarfbuzzFontFace& {
+    return hb_font_face_;
+}
+
+auto FontFace::bl_font_face() const -> const BLFontFace& {
+    return bl_font_face_;
 }
 
 //
 // Font Faces
 //
 
-FontFaces::FontFaces(font_definition_t font_files)
+FontFaces::FontFaces(font_locations_t font_files)
     : regular {FontFace {std::string {font_files.regular}}},
       italic {FontFace {std::string {font_files.italic}}},
       bold {FontFace {std::string {font_files.bold}}},
@@ -62,7 +93,7 @@ Fonts::Fonts(const FontFaces& font_faces) {
     const auto create_font_size = float {10};  // doesn't matter, as we rescale it later
 
     for (auto& style : all_font_styles) {
-        get(style).createFromFace(font_faces.get(style).bl_font_face, create_font_size);
+        get(style).createFromFace(font_faces.get(style).bl_font_face(), create_font_size);
     }
 }
 
@@ -166,7 +197,7 @@ auto calculate_baseline_offset(FontStyle style, const FontFace& face) -> Baselin
     const auto font_size = float {16};
 
     const auto box =
-        HarfbuzzShapedText {text, face.hb_font_face, font_size}.bounding_box();
+        HarfbuzzShapedText {text, face.hb_font_face(), font_size}.bounding_box();
 
     using enum VerticalAlignment;
     return BaselineOffset {
@@ -210,9 +241,9 @@ auto BaselineOffsets::set(FontStyle style, BaselineOffset offset) -> void {
 // GlyphCache
 //
 
-GlyphCache::GlyphCache() : GlyphCache(font_definition_t {defaults::font_files}) {}
+GlyphCache::GlyphCache() : GlyphCache(get_default_font_locations()) {}
 
-GlyphCache::GlyphCache(font_definition_t font_files)
+GlyphCache::GlyphCache(font_locations_t font_files)
     : font_faces_ {font_files}, baseline_offsets_ {font_faces_}, fonts_ {font_faces_} {}
 
 auto GlyphCache::format() const -> std::string {
@@ -236,7 +267,7 @@ auto GlyphCache::get_font(float font_size, FontStyle style) const -> const BLFon
 
 auto GlyphCache::calculate_bounding_box(std::string_view text, float font_size,
                                         FontStyle style) const -> BLBox {
-    return HarfbuzzShapedText {text, font_faces_.get(style).hb_font_face, font_size}
+    return HarfbuzzShapedText {text, font_faces_.get(style).hb_font_face(), font_size}
         .bounding_box();
 }
 
@@ -256,7 +287,8 @@ auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle sty
     if (inserted) {
         const auto& font_face = font_faces_.get(style);
 
-        entry.shaped_text = HarfbuzzShapedText {text, font_face.hb_font_face, font_size};
+        entry.shaped_text =
+            HarfbuzzShapedText {text, font_face.hb_font_face(), font_size};
         entry.offset = calculate_offset(entry.shaped_text.bounding_box(),
                                         baseline_offsets_.get(style, font_size),
                                         horizontal_alignment, vertical_alignment);

@@ -11,6 +11,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <fmt/core.h>
 
+#include <QString>
+
 #include <concepts>
 #include <functional>
 #include <memory>
@@ -70,18 +72,42 @@ auto print(Args &&...args) {
 // Escape Non-ASCI
 //
 
-auto escape_non_ascii(const std::string &input) -> std::string {
+namespace logicsim {
+
+template <class CharT, class Traits, class Allocator>
+auto escape_non_ascii(const std::basic_string<CharT, Traits, Allocator> &input)
+    -> std::string {
+    using unsigned_integer_type = std::make_unsigned_t<CharT>;
+    constexpr auto hex_zeros = sizeof(unsigned_integer_type) * 2;
+
     auto result = std::string {};
-    for (const auto &c : input) {
-        const auto index = static_cast<unsigned char>(c);
-        if (index > 127) {
-            fmt::format_to(std::back_inserter(result), "\\x{:02x}", index);
+    for (const auto &character : input) {
+        const auto index = static_cast<unsigned_integer_type>(character);
+        if (index > unsigned_integer_type {127}) {
+            fmt::format_to(std::back_inserter(result), "\\x{:0{}x}", index, hex_zeros);
         } else {
-            result.push_back(c);
+            result.push_back(character);
         }
     }
     return result;
 }
+
+}  // namespace logicsim
+
+//
+// QString
+//
+
+template <typename Char>
+struct fmt::formatter<QString, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const QString &obj, fmt::format_context &ctx) {
+        return fmt::format_to(ctx.out(), "{}", obj.toStdString());
+    }
+};
 
 //
 // std::pair

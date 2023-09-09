@@ -5,8 +5,6 @@
 #include <cppcodec/base64_rfc4648.hpp>
 #include <glaze/glaze.hpp>
 
-#include <QFile>
-
 template <>
 struct glz::meta<logicsim::ElementType> {
     using enum logicsim::ElementType;
@@ -173,36 +171,6 @@ auto base64_decode(const std::string& data) -> std::string {
     } catch (cppcodec::parse_error&) {
     }
     return "";
-}
-
-auto save_file(std::string filename, std::string binary) -> bool {
-    auto file = QFile(QString::fromUtf8(filename));
-
-    if (!file.open(QIODevice::WriteOnly)) {
-        return false;
-    }
-
-    if (file.write(binary.data(), binary.size()) < 0) {
-        return false;
-    }
-
-    return true;
-}
-
-auto load_file(std::string filename) -> std::string {
-    auto file = QFile(QString::fromUtf8(filename));
-
-    if (!file.open(QIODevice::ReadOnly)) {
-        return "";
-    }
-
-    auto binary = std::string(file.size(), '\0');
-
-    if (file.read(binary.data(), binary.size()) < 0) {
-        return "";
-    }
-
-    return binary;
 }
 
 }  // namespace logicsim

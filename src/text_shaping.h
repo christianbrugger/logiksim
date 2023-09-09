@@ -17,6 +17,8 @@ namespace logicsim {
 class HarfbuzzFontFace final {
    public:
     explicit HarfbuzzFontFace();
+    explicit HarfbuzzFontFace(std::span<const char> font_data,
+                              unsigned int font_index = 0);
     explicit HarfbuzzFontFace(const std::string &filename, unsigned int font_index = 0);
     ~HarfbuzzFontFace();
 

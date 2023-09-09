@@ -14,26 +14,16 @@
 
 namespace logicsim {
 
-// missing fonts can contain empty strings
-struct font_definition_t {
-    std::string_view regular;
-    std::string_view italic;
-    std::string_view bold;
-    std::string_view monospace;
+struct font_locations_t {
+    std::string regular;
+    std::string italic;
+    std::string bold;
+    std::string monospace;
 
     [[nodiscard]] auto get(FontStyle style) const -> std::string_view;
 };
 
-namespace defaults {
-
-constexpr static inline auto font_files = font_definition_t {
-    .regular = "public/fonts/NotoSans-Regular.ttf",
-    .italic = "public/fonts/NotoSans-Italic.ttf",
-    .bold = "public/fonts/NotoSans-Bold.ttf",
-    .monospace = "public/fonts/NotoSansMono-Regular.ttf",
-};
-
-}  // namespace defaults
+auto get_default_font_locations() -> font_locations_t;
 
 }  // namespace logicsim
 
@@ -86,11 +76,20 @@ namespace logicsim {
 //
 
 struct FontFace {
-    HarfbuzzFontFace hb_font_face {};
-    BLFontFace bl_font_face {};
-
+   public:
     [[nodiscard]] explicit FontFace() = default;
     [[nodiscard]] explicit FontFace(std::string font_file);
+
+    [[nodiscard]] auto hb_font_face() const -> const HarfbuzzFontFace &;
+    [[nodiscard]] auto bl_font_face() const -> const BLFontFace &;
+
+   private:
+    std::string font_data_ {};
+
+    HarfbuzzFontFace hb_font_face_ {};
+
+    BLFontData bl_font_data_ {};
+    BLFontFace bl_font_face_ {};
 };
 
 struct FontFaces {
@@ -100,7 +99,7 @@ struct FontFaces {
     FontFace monospace;
 
     [[nodiscard]] explicit FontFaces() = default;
-    [[nodiscard]] explicit FontFaces(font_definition_t font_files);
+    [[nodiscard]] explicit FontFaces(font_locations_t font_files);
 
     auto get(FontStyle style) const -> const FontFace &;
 };
@@ -173,7 +172,7 @@ class GlyphCache {
 
    public:
     explicit GlyphCache();
-    explicit GlyphCache(font_definition_t font_files);
+    explicit GlyphCache(font_locations_t font_files);
 
     [[nodiscard]] auto format() const -> std::string;
 
