@@ -78,10 +78,10 @@ auto FontFace::bl_font_face() const -> const BLFontFace& {
 //
 
 FontFaces::FontFaces(font_locations_t font_files)
-    : regular {FontFace {std::string {font_files.regular}}},
-      italic {FontFace {std::string {font_files.italic}}},
-      bold {FontFace {std::string {font_files.bold}}},
-      monospace {FontFace {std::string {font_files.monospace}}} {}
+    : regular {FontFace {font_files.regular}},
+      italic {FontFace {font_files.italic}},
+      bold {FontFace {font_files.bold}},
+      monospace {FontFace {font_files.monospace}} {}
 
 auto FontFaces::get(FontStyle style) const -> const FontFace& {
     return ::logicsim::get<const FontFace&>(*this, style);
