@@ -44,7 +44,7 @@ auto glyph_entry_t::format() const -> std::string {
 //
 
 FontFace::FontFace(std::string font_file)
-    : font_data_ {load_file(font_file)},
+    : font_data_ {font_file.empty() ? "" : load_file(font_file)},
       hb_font_face_ {std::span<const char> {font_data_.data(), font_data_.size()}} {
     if (!font_file.empty() && font_data_.empty()) {
         print("WARNING: could not open font file", font_file);
