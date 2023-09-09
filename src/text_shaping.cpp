@@ -34,15 +34,14 @@ class HarfbuzzBlob {
         : hb_blob {hb_blob_create(
               font_data.data(), gsl::narrow<unsigned int>(font_data.size()),
               hb_memory_mode_t::HB_MEMORY_MODE_READONLY, nullptr, nullptr)} {
-        if (hb_blob == hb_blob_get_empty()) [[unlikely]] {
+        if (!font_data.empty() && hb_blob == hb_blob_get_empty()) [[unlikely]] {
             throw_exception(fmt::format("Could not load font data in Harfbuzz").c_str());
         }
     }
 
     explicit HarfbuzzBlob(const std::string &filename)
         : hb_blob {hb_blob_create_from_file(filename.c_str())} {
-        if (hb_blob == hb_blob_get_empty() && !filename.empty()) [[unlikely]] {
-            // TODO exception type
+        if (!filename.empty() && hb_blob == hb_blob_get_empty()) [[unlikely]] {
             throw_exception(fmt::format("Font not found {}", filename).c_str());
         }
     }

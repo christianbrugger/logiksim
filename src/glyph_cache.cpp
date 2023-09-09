@@ -46,18 +46,20 @@ auto glyph_entry_t::format() const -> std::string {
 FontFace::FontFace(std::string font_file)
     : font_data_ {load_file(font_file)},
       hb_font_face_ {std::span<const char> {font_data_.data(), font_data_.size()}} {
-    // TODO check if font_file is empty
+    if (!font_file.empty() && font_data_.empty()) {
+        print("WARNING: could not open font file", font_file);
+    }
 
     {
         const auto status =
             bl_font_data_.createFromData(font_data_.data(), font_data_.size());
-        if (status != BL_SUCCESS && !font_file.empty()) [[unlikely]] {
+        if (!font_data_.empty() && status != BL_SUCCESS) [[unlikely]] {
             throw_exception("Could not create BLFontData");
         }
     }
     {
         const auto status = bl_font_face_.createFromData(bl_font_data_, 0);
-        if (status != BL_SUCCESS && !font_file.empty()) [[unlikely]] {
+        if (!font_data_.empty() && status != BL_SUCCESS) [[unlikely]] {
             throw_exception("Could not create BLFontFace");
         }
     }
