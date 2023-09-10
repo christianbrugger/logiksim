@@ -39,7 +39,7 @@ set(LS_CORE_SOURCES
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
-    src/ressource.cpp
+    src/resource.cpp
     src/scene.cpp
     src/schematic.cpp
     src/schematic_generation.cpp
@@ -424,6 +424,26 @@ set(LS_CORE_LIBRARIES
     Qt6::Widgets
 )
 
+# Resources
+file(GLOB_RECURSE
+    LS_RESOURCE_FILES
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
+    CONFIGURE_DEPENDS
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.ttf    # adapt these to your needs
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.svg
+)
+FOREACH(LS_RESOURCE_FILE ${LS_RESOURCE_FILES})
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${LS_RESOURCE_FILE}
+        COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_SOURCE_DIR}/${LS_RESOURCE_FILE}
+            ${CMAKE_CURRENT_BINARY_DIR}/${LS_RESOURCE_FILE}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${LS_RESOURCE_FILE}
+  )
+ENDFOREACH()
+list(TRANSFORM LS_RESOURCE_FILES PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
+
 # target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
 # target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/format.h)
 # target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/ranges.h)
@@ -437,6 +457,7 @@ set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
 add_executable(${MAIN_BENCHMARK_TARGET} 
     ${LS_CORE_SOURCES}
     ${MOC_SOURCES}
+    ${LS_RESOURCE_FILES}
     
     src/main_bechmark.cpp
 )
@@ -456,9 +477,9 @@ set(MAIN_TARGET "simulation_srp_main")
 add_executable(${MAIN_TARGET} 
     ${LS_CORE_SOURCES}
     ${MOC_SOURCES}
+    ${LS_RESOURCE_FILES}
     
     src/main.cpp
-    
 )
 target_include_directories(${MAIN_TARGET} PRIVATE
     ${LS_CORE_INCLUDE_DIRS}
@@ -474,6 +495,7 @@ set(MAIN_GUI_TARGET "simulation_srp_gui")
 add_executable(${MAIN_GUI_TARGET} 
     ${LS_CORE_SOURCES}
     ${MOC_SOURCES}
+    ${LS_RESOURCE_FILES}
 
     src/main_gui.cpp
 )
@@ -493,6 +515,7 @@ add_executable(${MAIN_TEST_TARGET}
     ${LS_CORE_SOURCES}
     ${MOC_SOURCES}
     ${LS_TEST_SOURCES}
+    ${LS_RESOURCE_FILES}
 )
 target_include_directories(${MAIN_TEST_TARGET} PRIVATE
     ${LS_CORE_INCLUDE_DIRS}

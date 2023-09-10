@@ -1,7 +1,7 @@
 #include "main_widget.h"
 
 #include "render_widget.h"
-#include "ressource.h"
+#include "resource.h"
 #include "serialize.h"
 
 #include <QActionGroup>

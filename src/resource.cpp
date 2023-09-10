@@ -1,4 +1,4 @@
-#include "ressource.h"
+#include "resource.h"
 
 #include "exception.h"
 #include "format.h"
@@ -9,13 +9,13 @@
 
 namespace logicsim {
 
-auto to_absolute_ressource_path(QString relative) -> QString {
+auto to_absolute_resource_path(QString relative) -> QString {
     if (relative.isEmpty()) {
         return QString {};
     }
 
     const auto app_dir = QApplication::instance()->applicationDirPath();
-    return QFileInfo(app_dir + '/' + "ressources" + '/' + relative).absoluteFilePath();
+    return QFileInfo(app_dir + '/' + "resources" + '/' + relative).absoluteFilePath();
 }
 
 auto get_font_path_relative(font_t font) -> QString {
@@ -40,7 +40,7 @@ auto get_font_path_relative(font_t font) -> QString {
 }
 
 auto get_font_path(font_t font) -> QString {
-    return to_absolute_ressource_path(get_font_path_relative(font));
+    return to_absolute_resource_path(get_font_path_relative(font));
 }
 
 // Browse Icons: https://lucide.dev/icons/
@@ -135,7 +135,7 @@ auto get_icon_path_relative(icon_t icon) {
 }
 
 auto get_icon_path(icon_t icon) -> QString {
-    return to_absolute_ressource_path(get_icon_path_relative(icon));
+    return to_absolute_resource_path(get_icon_path_relative(icon));
 }
 
 }  // namespace logicsim

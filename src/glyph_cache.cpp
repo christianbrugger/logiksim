@@ -3,7 +3,7 @@
 #include "exception.h"
 #include "file.h"
 #include "format.h"
-#include "ressource.h"
+#include "resource.h"
 #include "text_shaping.h"
 #include "vocabulary.h"
 

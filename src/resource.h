@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_RESSOURCE_H
-#define LOGIKSIM_RESSOURCE_H
+#ifndef LOGIKSIM_RESOURCE_H
+#define LOGIKSIM_RESOURCE_H
 
 #include <QString>
 
