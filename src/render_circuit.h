@@ -260,6 +260,9 @@ auto draw_line_segment(Context& ctx, segment_info_t info, bool is_enabled,
 auto render_size_handles(Context& ctx, const Layout& layout, const Selection& selection)
     -> void;
 
+auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
+    -> void;
+
 //
 // Overlay
 //

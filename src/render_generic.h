@@ -5,6 +5,7 @@
 #include "format.h"
 #include "glyph_cache.h"
 #include "glyph_cache_type.h"
+#include "render_helper.h"
 #include "scene.h"
 #include "segment_tree_type.h"
 #include "vocabulary.h"
@@ -128,16 +129,8 @@ auto checked_sync(BLContext& ctx) -> void;
 // Context Guard
 //
 
-class ContextGuard {
-   public:
-    [[nodiscard]] explicit ContextGuard(BLContext& bl_ctx);
-    [[nodiscard]] explicit ContextGuard(Context& ctx);
-    [[nodiscard]] explicit ContextGuard(LayerSurface& surface);
-    ~ContextGuard();
-
-   private:
-    BLContext& bl_ctx_;
-};
+[[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard;
+[[nodiscard]] auto make_context_guard(LayerSurface& surface) -> ContextGuard;
 
 //
 // Draw Type

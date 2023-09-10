@@ -573,7 +573,7 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
         return save_result_t::canceled;
     }
 
-    const auto _ [[maybe_unused]] = Timer("Saved circuit");
+    const auto _ [[maybe_unused]] = Timer("Save");
 
     if (!render_widget_->save_circuit(filename)) {
         const auto message = fmt::format("Failed to save \"{}\".", filename);
@@ -608,7 +608,7 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
         return;
     }
 
-    const auto _ [[maybe_unused]] = Timer("Opened circuit");
+    const auto _ [[maybe_unused]] = Timer("Open");
 
     if (!render_widget_->load_circuit(*filename)) {
         const auto message = fmt::format("Failed to load \"{}\".", filename);

@@ -129,6 +129,10 @@ auto get_icon_path_relative(icon_t icon) {
         case options: {
             return QString("icons/lucide/settings.svg");
         }
+
+        case setting_handle: {
+            return QString("icons/lucide/cog.svg");
+        }
     };
 
     throw_exception("unknown icon_t");

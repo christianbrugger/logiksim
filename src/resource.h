@@ -15,6 +15,7 @@ enum class font_t : uint8_t {
 auto get_font_path(font_t font) -> QString;
 
 enum class icon_t {
+    // menus
     new_file,
     open_file,
     save_file,
@@ -45,6 +46,9 @@ enum class icon_t {
     direct_rendering,
 
     options,
+
+    // circuit rendering
+    setting_handle,
 };
 
 auto get_icon_path(icon_t icon) -> QString;

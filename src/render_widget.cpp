@@ -1196,6 +1196,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
               std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value()))) {
             render_size_handles(context_.ctx, layout, selection);
         }
+        render_setting_handle(context_.ctx, layout, selection);
     }
 
     if (do_render_collision_cache_) {
@@ -1405,7 +1406,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             const auto& layout = editable_circuit_.value().layout();
             auto& selection_builder = editable_circuit_.value().selection_builder();
 
-            if (const auto handle = get_colliding_handle(
+            if (const auto handle = get_colliding_size_handle(
                     point, layout, selection_builder.selection(), view_config())) {
                 mouse_logic_.emplace(MouseSizeHandleLogic::Args {
                     .editable_circuit = editable_circuit_.value(),

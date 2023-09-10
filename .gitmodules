@@ -77,3 +77,8 @@
 	path = external/gcem
 	url = https://github.com/kthohr/gcem.git
 	ignore = dirty
+
+[submodule "external/svg2b2d"]
+	path = external/svg2b2d
+	url = https://github.com/christianbrugger/svg2b2d
+	ignore = dirty

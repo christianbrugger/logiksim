@@ -6,6 +6,7 @@
 #include "layout.h"
 #include "layout_calculation.h"
 #include "range.h"
+#include "render_svg.h"
 #include "simulation.h"
 #include "simulation_view.h"
 #include "size_handle.h"
@@ -1229,6 +1230,11 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
     -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
     draw_size_handles(ctx, size_handle_positions(layout, selection));
+}
+
+auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
+    -> void {
+    render_icon(ctx.bl_ctx);
 }
 
 //

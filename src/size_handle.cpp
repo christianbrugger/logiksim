@@ -118,9 +118,9 @@ auto is_size_handle_colliding(point_fine_t position, size_handle_t handle_positi
     return is_colliding(position, rect);
 }
 
-auto get_colliding_handle(point_fine_t position,
-                          const std::vector<size_handle_t>& handle_positions,
-                          const ViewConfig& config) -> std::optional<size_handle_t> {
+auto get_colliding_size_handle(point_fine_t position,
+                               const std::vector<size_handle_t>& handle_positions,
+                               const ViewConfig& config) -> std::optional<size_handle_t> {
     const auto is_colliding = [&](size_handle_t handle) -> bool {
         return is_size_handle_colliding(position, handle, config);
     };
@@ -132,11 +132,11 @@ auto get_colliding_handle(point_fine_t position,
     return {};
 }
 
-auto get_colliding_handle(point_fine_t position, const Layout& layout,
-                          const Selection& selection, const ViewConfig& config)
+auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
+                               const Selection& selection, const ViewConfig& config)
     -> std::optional<size_handle_t> {
     const auto handles = size_handle_positions(layout, selection);
-    return get_colliding_handle(position, handles, config);
+    return get_colliding_size_handle(position, handles, config);
 }
 
 //

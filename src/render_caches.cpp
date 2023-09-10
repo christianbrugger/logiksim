@@ -10,7 +10,7 @@ namespace logicsim {
 
 auto _directed_input_marker(Context& ctx, point_t point, color_t color,
                             orientation_t orientation, double size) -> void {
-    auto _ [[maybe_unused]] = ContextGuard {ctx};
+    auto _ [[maybe_unused]] = make_context_guard(ctx);
 
     const auto [x, y] = to_context(point, ctx);
     const auto d = to_context(size, ctx);
@@ -29,7 +29,7 @@ auto _directed_input_marker(Context& ctx, point_t point, color_t color,
 
 auto _undirected_input_marker(Context& ctx, point_t point, color_t color, double size)
     -> void {
-    auto _ = ContextGuard {ctx};
+    auto _ [[maybe_unused]] = make_context_guard(ctx);
 
     ctx.bl_ctx.setStrokeWidth(1);
     ctx.bl_ctx.setStrokeStyle(color);

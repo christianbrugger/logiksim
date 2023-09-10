@@ -45,12 +45,12 @@ auto size_handle_rect_px(size_handle_t handle_position, const ViewConfig& config
 auto size_handle_rect_gird(size_handle_t handle_position, const ViewConfig& config)
     -> rect_fine_t;
 
-auto get_colliding_handle(point_fine_t position,
-                          const std::vector<size_handle_t>& handle_positions,
-                          const ViewConfig& config) -> std::optional<size_handle_t>;
+auto get_colliding_size_handle(point_fine_t position,
+                               const std::vector<size_handle_t>& handle_positions,
+                               const ViewConfig& config) -> std::optional<size_handle_t>;
 
-auto get_colliding_handle(point_fine_t position, const Layout& layout,
-                          const Selection& selection, const ViewConfig& config)
+auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
+                               const Selection& selection, const ViewConfig& config)
     -> std::optional<size_handle_t>;
 
 namespace size_handle {

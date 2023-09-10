@@ -201,14 +201,14 @@ auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRe
 
 auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
                      std::function<void(Context&, bool)> render_func) -> void {
-    auto _ [[maybe_unused]] = ContextGuard {target_ctx};
+    auto _ [[maybe_unused]] = make_context_guard(target_ctx);
 
     if (surface.enabled) {
         surface.initialize(target_ctx.settings);
         surface.ctx.bl_ctx.clearRect(dirty_rect);
 
         {
-            auto __ [[maybe_unused]] = ContextGuard {surface};
+            auto __ [[maybe_unused]] = make_context_guard(surface);
             render_func(surface.ctx, surface.enabled);
         }
 
@@ -245,17 +245,13 @@ auto checked_sync(BLContext& ctx) -> void {
 // Context Guard
 //
 
-ContextGuard::ContextGuard(BLContext& bl_ctx) : bl_ctx_ {bl_ctx} {
-    bl_ctx_.save();
+[[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard {
+    return make_context_guard(ctx.bl_ctx);
 }
 
-ContextGuard::ContextGuard(Context& ctx) : ContextGuard {ctx.bl_ctx} {}
-
-ContextGuard::ContextGuard(LayerSurface& surface) : ContextGuard {surface.ctx} {}
-
-ContextGuard::~ContextGuard() {
-    bl_ctx_.restore();
-};
+[[nodiscard]] auto make_context_guard(LayerSurface& surface) -> ContextGuard {
+    return make_context_guard(surface.ctx);
+}
 
 //
 // Draw Type
@@ -448,7 +444,7 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color, do
 
 auto draw_arrow(Context& ctx, point_t point, color_t color, orientation_t orientation,
                 double size) -> void {
-    auto _ = ContextGuard {ctx};
+    auto _ [[maybe_unused]] = make_context_guard(ctx);
 
     ctx.bl_ctx.setStrokeWidth(1);
     ctx.bl_ctx.setStrokeStyle(color);

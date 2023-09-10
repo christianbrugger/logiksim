@@ -6,8 +6,8 @@
 
 namespace logicsim {
 
-auto save_file(std::string filename, std::string binary) -> bool {
-    auto file = QFile(QString::fromUtf8(filename));
+auto save_file(const QString &filename, const std::string &binary) -> bool {
+    auto file = QFile(filename);
 
     if (!file.open(QIODevice::WriteOnly)) {
         return false;
@@ -20,8 +20,12 @@ auto save_file(std::string filename, std::string binary) -> bool {
     return true;
 }
 
-auto load_file(std::string filename) -> std::string {
-    auto file = QFile(QString::fromUtf8(filename));
+auto save_file(const std::string &filename, const std::string &binary) -> bool {
+    return save_file(QString::fromUtf8(filename), std::move(binary));
+}
+
+auto load_file(const QString &filename) -> std::string {
+    auto file = QFile(filename);
 
     if (!file.open(QIODevice::ReadOnly)) {
         return "";
@@ -34,6 +38,10 @@ auto load_file(std::string filename) -> std::string {
     }
 
     return binary;
+}
+
+auto load_file(const std::string &filename) -> std::string {
+    return load_file(QString::fromUtf8(filename));
 }
 
 }  // namespace logicsim

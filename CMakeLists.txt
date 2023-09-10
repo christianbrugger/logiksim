@@ -39,6 +39,8 @@ set(LS_CORE_SOURCES
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
+    src/render_helper.cpp
+    src/render_svg.cpp
     src/resource.cpp
     src/scene.cpp
     src/schematic.cpp
@@ -47,6 +49,7 @@ set(LS_CORE_SOURCES
     src/segment_tree_type.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
+    src/setting_handle.cpp
     src/simulation.cpp
     src/simulation_view.cpp
     src/size_handle.cpp
@@ -318,6 +321,10 @@ add_subdirectory(external/harfbuzz EXCLUDE_FROM_ALL SYSTEM)
 # GCE-Math
 add_subdirectory(external/gcem EXCLUDE_FROM_ALL SYSTEM)
 
+# svg2b2d
+add_subdirectory(external/svg2b2d EXCLUDE_FROM_ALL SYSTEM)
+
+
 
 
 ###################################################
@@ -419,6 +426,7 @@ set(LS_CORE_LIBRARIES
     ${LS_ZLIB_NAME}
     harfbuzz
     gcem
+    svg2b2d
     
     Qt6::Core
     Qt6::Widgets
