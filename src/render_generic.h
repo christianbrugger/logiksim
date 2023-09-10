@@ -8,6 +8,7 @@
 #include "render_helper.h"
 #include "scene.h"
 #include "segment_tree_type.h"
+#include "svg_cache.h"
 #include "vocabulary.h"
 
 #include <blend2d.h>
@@ -41,6 +42,7 @@ struct Context {
     BLContext bl_ctx {};
     RenderSettings settings {};
     GlyphCache text_cache {};
+    SVGCache svg_cache {};
 
     auto begin() -> void;
     auto sync() -> void;

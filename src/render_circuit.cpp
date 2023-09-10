@@ -6,10 +6,10 @@
 #include "layout.h"
 #include "layout_calculation.h"
 #include "range.h"
-#include "render_svg.h"
 #include "simulation.h"
 #include "simulation_view.h"
 #include "size_handle.h"
+#include "svg_cache.h"
 #include "timer.h"
 
 #include <fmt/format.h>
@@ -1234,13 +1234,15 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
 
 auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
     -> void {
-    const auto cache = SVGCache {};
-
-    cache.draw_icon(ctx.bl_ctx, SVGCache::IconAttributes {
-                                    .icon = icon_t::setting_handle,
-                                    .position = BLPoint {100, 100},
-                                    .height = 100,
-                                });
+    ctx.svg_cache.draw_icon(ctx.bl_ctx,
+                            SVGCache::IconAttributes {
+                                .icon = icon_t::setting_handle,
+                                .position = BLPoint {100, 100},
+                                .height = 100,
+                                .color = defaults::color_dark_blue,
+                                .horizontal_alignment = HorizontalAlignment::center,
+                                .vertical_alignment = VerticalAlignment::center,
+                            });
 }
 
 //

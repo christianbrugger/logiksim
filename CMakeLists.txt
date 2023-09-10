@@ -40,7 +40,6 @@ set(LS_CORE_SOURCES
     src/render_circuit.cpp
     src/render_generic.cpp
     src/render_helper.cpp
-    src/render_svg.cpp
     src/resource.cpp
     src/scene.cpp
     src/schematic.cpp
@@ -53,6 +52,7 @@ set(LS_CORE_SOURCES
     src/simulation.cpp
     src/simulation_view.cpp
     src/size_handle.cpp
+    src/svg_cache.cpp
     src/text_shaping.cpp
     src/timer.cpp
     src/vocabulary.cpp

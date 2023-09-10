@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_RENDER_SVG_H
-#define LOGIKSIM_RENDER_SVG_H
+#ifndef LOGIKSIM_SVG_CACHE_H
+#define LOGIKSIM_SVG_CACHE_H
 
 #include "glyph_cache_type.h"  // TODO move HorizontalAlignment to different header?
 #include "resource.h"
@@ -39,6 +39,9 @@ class SVGCache {
 
    public:
     [[nodiscard]] explicit SVGCache() = default;
+
+    auto clear() -> void;
+    auto shrink_to_fit() -> void;
 
     struct IconAttributes {
         icon_t icon;

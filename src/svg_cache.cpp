@@ -1,4 +1,4 @@
-#include "render_svg.h"
+#include "svg_cache.h"
 
 #include "blend2d.h"
 #include "file.h"
@@ -48,6 +48,14 @@ auto render_svg_icon_impl(BLContext &bl_ctx, const svg2b2d::SVGDocument &documen
 }
 
 }  // namespace
+
+auto SVGCache::clear() -> void {
+    svg_map_.clear();
+}
+
+auto SVGCache::shrink_to_fit() -> void {
+    svg_map_.rehash(svg_map_.size());
+}
 
 auto SVGCache::draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> void {
     const auto &entry = get_entry(attributes.icon);

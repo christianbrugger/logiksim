@@ -39,10 +39,12 @@ auto Context::end() -> void {
 
 auto Context::clear() -> void {
     text_cache.clear();
+    svg_cache.clear();
 }
 
 auto Context::shrink_to_fit() -> void {
     text_cache.shrink_to_fit();
+    svg_cache.shrink_to_fit();
 }
 
 auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool {
