@@ -125,12 +125,41 @@ auto add_element(SerializedLayout& data, const layout::ConstElement element) -> 
     }
 }
 
+auto serialize_view_config(const ViewConfig& view_config) -> SerializedViewConfig {
+    return SerializedViewConfig {
+        .device_scale = view_config.device_scale(),
+        .grid_offset_x = view_config.offset().x,
+        .grid_offset_y = view_config.offset().y,
+    };
+}
+
+auto apply_view_config(const SerializedViewConfig& serialized, ViewConfig& view_config)
+    -> void {
+    // device scale
+    if (serialized.device_scale <= 0) {
+        view_config.set_device_scale(ViewConfig().device_scale());
+    } else {
+        view_config.set_device_scale(serialized.device_scale);
+    }
+
+    // offsets
+    view_config.set_offset(point_fine_t {
+        serialized.grid_offset_x,
+        serialized.grid_offset_y,
+    });
+}
+
 }  // namespace logicsim::serialize
 
 namespace logicsim {
 
-auto serialize_inserted(const Layout& layout) -> std::string {
+auto serialize_inserted(const Layout& layout, const ViewConfig* view_config)
+    -> std::string {
     auto data = serialize::SerializedLayout {};
+
+    if (view_config != nullptr) {
+        data.view_config = serialize::serialize_view_config(*view_config);
+    }
 
     for (const auto element : layout.elements()) {
         if (element.is_inserted()) {
@@ -143,7 +172,9 @@ auto serialize_inserted(const Layout& layout) -> std::string {
 
 auto serialize_selected(const Layout& layout, const Selection& selection,
                         point_t save_position) -> std::string {
-    auto data = serialize::SerializedLayout {.save_position = save_position};
+    auto data = serialize::SerializedLayout {
+        .save_position = save_position,
+    };
 
     for (const auto element_id : selection.selected_logic_items()) {
         serialize::add_element(data, layout.element(element_id));
@@ -158,15 +189,6 @@ auto serialize_selected(const Layout& layout, const Selection& selection,
     }
 
     return gzip_compress(json_dumps(data));
-}
-
-auto save_layout(const Layout& layout, std::string filename) -> bool {
-    const auto binary = serialize_inserted(layout);
-    return save_file(filename, binary);
-}
-
-auto load_binary_data(std::string filename) -> std::string {
-    return load_file(filename);
 }
 
 namespace serialize {
@@ -190,22 +212,20 @@ auto calculate_move_delta(point_t save_position, std::optional<point_t> load_pos
             load_position->y.value - save_position.y.value};
 }
 
-}  // namespace serialize
+LoadLayoutResult::LoadLayoutResult(SerializedLayout&& layout)
+    : data_ {std::make_unique<SerializedLayout>(std::move(layout))} {}
 
-auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
-                InsertionMode insertion_mode, std::optional<point_t> load_position)
+LoadLayoutResult::~LoadLayoutResult() {};
+
+auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
+                           InsertionMode insertion_mode,
+                           std::optional<point_t> load_position) const
     -> selection_handle_t {
-    const auto data = serialize::unserialize_data(binary);
-    if (!data) {
-        return selection_handle_t {};
-    }
-
     auto handle = editable_circuit.get_handle();
-    const auto delta =
-        serialize::calculate_move_delta(data->save_position, load_position);
+    const auto delta = calculate_move_delta(data_->save_position, load_position);
 
     // logic items
-    for (const auto& item : data->logic_items) {
+    for (const auto& item : data_->logic_items) {
         if (const auto definition = to_definition(item, delta)) {
             editable_circuit.add_logic_item(definition->definition, definition->position,
                                             insertion_mode, handle);
@@ -213,13 +233,28 @@ auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
     }
 
     // wire segments
-    for (const auto& entry : data->wire_segments) {
+    for (const auto& entry : data_->wire_segments) {
         if (const auto line = to_line(entry, delta)) {
             editable_circuit.add_line_segment(line.value(), insertion_mode, handle);
         }
     }
 
     return handle;
+}
+
+auto LoadLayoutResult::apply(ViewConfig& view_config) const -> void {
+    apply_view_config(data_->view_config, view_config);
+}
+
+}  // namespace serialize
+
+auto load_layout(const std::string& binary)
+    -> std::optional<serialize::LoadLayoutResult> {
+    auto data = serialize::unserialize_data(binary);
+    if (!data) {
+        return std::nullopt;
+    }
+    return std::optional<serialize::LoadLayoutResult> {std::move(data.value())};
 }
 
 }  // namespace logicsim

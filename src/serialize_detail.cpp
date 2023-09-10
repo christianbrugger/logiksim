@@ -88,6 +88,18 @@ struct glz::meta<SerializedLogicItem> {
         "orientation", &T::orientation);
 };
 
+using logicsim::serialize::SerializedViewConfig;
+
+template <>
+struct glz::meta<SerializedViewConfig> {
+    using T = SerializedViewConfig;
+
+    static constexpr auto value = glz::object(  //
+        "device_scale", &T::device_scale,       //
+        "grid_offset_x", &T::grid_offset_x,     //
+        "grid_offset_y", &T::grid_offset_y);
+};
+
 using logicsim::serialize::SerializedLayout;
 
 template <>
@@ -97,6 +109,7 @@ struct glz::meta<SerializedLayout> {
     static constexpr auto value = glz::object(  //
         "version", &T::version,                 //
         "save_position", &T::save_position,     //
+        "view_config", &T::view_config,         //
         "logic_items", &T::logic_items,         //
         "wire_segments", &T::wire_segments);
 };

@@ -4,6 +4,7 @@
 #include "editable_circuit/cache.h"
 #include "editable_circuit/cache/spatial_cache.h"
 #include "exception.h"
+#include "file.h"
 #include "layout.h"
 #include "range.h"
 #include "render_caches.h"
@@ -781,7 +782,9 @@ auto RendererWidget::reload_circuit() -> void {
 
 auto RendererWidget::save_circuit(std::string filename) -> bool {
     mouse_logic_.reset();
-    return save_layout(editable_circuit_.value().layout(), filename);
+    const auto binary =
+        serialize_inserted(editable_circuit_.value().layout(), &view_config());
+    return save_file(filename, binary);
 }
 
 auto RendererWidget::serialize_circuit() -> std::string {
@@ -793,11 +796,22 @@ auto RendererWidget::load_circuit(std::string filename) -> bool {
     set_interaction_state(InteractionState::selection);
     reset_circuit();
 
-    const auto binary = load_binary_data(filename);
-    auto handle =
-        add_layout(binary, editable_circuit_.value(), InsertionMode::insert_or_discard);
+    const auto loaded = load_layout(load_file(filename));
+    if (!loaded) {
+        return false;
+    }
 
-    return handle.has_value();
+    // insert layout
+    const auto handle =
+        loaded.value().add(editable_circuit_.value(), InsertionMode::insert_or_discard);
+    if (!handle) {
+        return false;
+    }
+
+    // view config
+    loaded.value().apply(context_.ctx.settings.view_config);
+
+    return true;
 }
 
 auto RendererWidget::load_circuit_example(int id) -> void {
@@ -1255,13 +1269,17 @@ auto RendererWidget::paste_clipboard_items() -> void {
     if (binary.empty()) {
         return;
     }
+    const auto loaded = load_layout(binary);
+    if (!loaded) {
+        return;
+    }
 
     set_interaction_state(InteractionState::selection);
     reset_interaction_state();
 
     const auto position = get_mouse_position();
     auto handle =
-        add_layout(binary, editable_circuit, InsertionMode::temporary, position);
+        loaded.value().add(editable_circuit, InsertionMode::temporary, position);
     if (!handle) {
         return;
     }

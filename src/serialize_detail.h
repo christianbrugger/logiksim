@@ -24,9 +24,18 @@ struct SerializedLogicItem {
     orientation_t orientation;
 };
 
+struct SerializedViewConfig {
+    double device_scale {};
+    double grid_offset_x {};
+    double grid_offset_y {};
+};
+
 struct SerializedLayout {
     int version {CURRENT_VERSION};
+    // used for copy & paste
     point_t save_position {0, 0};
+    // view config
+    SerializedViewConfig view_config {};
 
     std::vector<SerializedLogicItem> logic_items {};
     std::vector<SerializedLine> wire_segments {};

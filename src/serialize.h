@@ -3,6 +3,9 @@
 
 #include "vocabulary.h"
 
+#include <gsl/gsl>
+
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -12,22 +15,38 @@ class Layout;
 class Selection;
 class EditableCircuit;
 class selection_handle_t;
+class ViewConfig;
 
 using binary_t = std::vector<uint8_t>;
 
-[[nodiscard]] auto serialize_inserted(const Layout& layout) -> std::string;
+[[nodiscard]] auto serialize_inserted(const Layout& layout,
+                                      const ViewConfig* view_config = nullptr)
+    -> std::string;
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
                                       point_t save_position = {0, 0}) -> std::string;
 
 [[nodiscard]] auto base64_encode(const std::string& data) -> std::string;
 [[nodiscard]] auto base64_decode(const std::string& data) -> std::string;
 
-auto save_layout(const Layout& layout, std::string filename) -> bool;
-auto load_binary_data(std::string filename) -> std::string;
+namespace serialize {
+struct SerializedLayout;
 
-auto add_layout(const std::string& binary, EditableCircuit& editable_circuit,
-                InsertionMode insertion_mode, std::optional<point_t> load_position = {})
-    -> selection_handle_t;
+class LoadLayoutResult {
+   public:
+    LoadLayoutResult(SerializedLayout&& layout);
+    ~LoadLayoutResult();
+
+    auto add(EditableCircuit& editable_circuit, InsertionMode insertion_mode,
+             std::optional<point_t> load_position = {}) const -> selection_handle_t;
+
+    auto apply(ViewConfig& view_config) const -> void;
+
+   private:
+    gsl::not_null<std::unique_ptr<SerializedLayout>> data_;
+};
+}  // namespace serialize
+
+auto load_layout(const std::string& binary) -> std::optional<serialize::LoadLayoutResult>;
 
 }  // namespace logicsim
 
