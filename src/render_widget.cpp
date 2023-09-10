@@ -795,6 +795,7 @@ auto RendererWidget::serialize_circuit() -> std::string {
 auto RendererWidget::load_circuit(std::string filename) -> bool {
     set_interaction_state(InteractionState::selection);
     reset_circuit();
+    update();
 
     const auto loaded = load_layout(load_file(filename));
     if (!loaded) {
@@ -930,6 +931,40 @@ auto RendererWidget::load_circuit_example(int id) -> void {
 #ifndef NDEBUG
     editable_circuit_->validate();
 #endif
+}
+
+auto RendererWidget::reset_view_config() -> void {
+    context_.ctx.settings.view_config = ViewConfig {};
+    is_initialized_ = false;
+    update();
+}
+
+auto RendererWidget::zoom(double steps, std::optional<QPointF> center) -> void {
+    constexpr auto standard_zoom_factor = 1.1;
+
+    const auto position = [&] {
+        if (center) {
+            return center.value();
+        }
+
+        const auto mouse_position = get_mouse_position();
+        if (QRectF(rect()).contains(mouse_position)) {
+            return mouse_position;
+        }
+
+        return QPointF(this->width() / 2., this->height() / 2.);
+    }();
+
+    const auto factor = std::exp(steps * std::log(standard_zoom_factor));
+
+    auto& view_config = context_.ctx.settings.view_config;
+
+    const auto old_grid_point = to_grid_fine(position, view_config);
+    view_config.set_device_scale(view_config.device_scale() * factor);
+    const auto new_grid_point = to_grid_fine(position, view_config);
+
+    view_config.set_offset(view_config.offset() + new_grid_point - old_grid_point);
+    update();
 }
 
 Q_SLOT void RendererWidget::on_benchmark_timeout() {
@@ -1238,7 +1273,7 @@ auto RendererWidget::copy_selected_items() -> void {
     const auto& selection = editable_circuit_.value().selection_builder().selection();
 
     if (!selection.empty()) {
-        const auto position = get_mouse_position();
+        const auto position = get_mouse_grid_position();
         const auto value = base64_encode(serialize_selected(layout, selection, position));
         QApplication::clipboard()->setText(QString::fromStdString(value));
     }
@@ -1277,7 +1312,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
     set_interaction_state(InteractionState::selection);
     reset_interaction_state();
 
-    const auto position = get_mouse_position();
+    const auto position = get_mouse_grid_position();
     auto handle =
         loaded.value().add(editable_circuit, InsertionMode::temporary, position);
     if (!handle) {
@@ -1315,23 +1350,15 @@ auto RendererWidget::paste_clipboard_items() -> void {
 
 // returns pixel accurate, non-rounded mouse position
 auto RendererWidget::get_mouse_position(QSinglePointEvent* event) const -> QPointF {
-    // simple way, but off, as geometry requires rounding
-    // return mapFrom(topLevelWidget(), event->scenePosition());
-
-    // Doesn't work for wheel events
-    // const auto ratio = devicePixelRatioF();
-    // const auto scene_position_device = event->scenePosition() * ratio;
-    // const auto geometry_device = round_logical_to_device(geometry(), ratio);
-    // const auto x = (scene_position_device.x() - geometry_device.x()) / ratio;
-    // const auto y = (scene_position_device.y() - geometry_device.y()) / ratio;
-    // return QPointF(x, y);
-
     return mapFromGlobal(event->globalPosition());
 }
 
-auto RendererWidget::get_mouse_position() -> point_t {
-    if (const auto position =
-            to_grid(this->mapFromGlobal(QCursor::pos()), view_config())) {
+auto RendererWidget::get_mouse_position() -> QPointF {
+    return this->mapFromGlobal(QPointF {QCursor::pos()});
+}
+
+auto RendererWidget::get_mouse_grid_position() -> point_t {
+    if (const auto position = to_grid(get_mouse_position(), view_config())) {
         return position.value();
     }
 
@@ -1581,23 +1608,15 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
     const auto position = get_mouse_position(event);
     auto& view_config = context_.ctx.settings.view_config;
 
-    const auto standard_zoom_factor = 1.1;  // zoom factor for one scroll
-    const auto standard_scroll_pixel = 45;  // device pixels to scroll for one scroll
-    const auto standard_delta = 120.0;      // degree delta for one scroll
+    constexpr auto standard_scroll_pixel = 45;  // device pixels to scroll for one scroll
+    constexpr auto standard_delta = 120.0;      // degree delta for one scroll
 
     const auto standard_scroll_grid = standard_scroll_pixel / view_config.device_scale();
 
     // zoom
     if (event->modifiers() == Qt::ControlModifier) {
-        const auto delta = event->angleDelta().y() / standard_delta;
-        const auto factor = std::exp(delta * std::log(standard_zoom_factor));
-
-        const auto old_grid_point = to_grid_fine(position, view_config);
-        view_config.set_device_scale(view_config.device_scale() * factor);
-        const auto new_grid_point = to_grid_fine(position, view_config);
-
-        view_config.set_offset(view_config.offset() + new_grid_point - old_grid_point);
-        update();
+        const auto steps = event->angleDelta().y() / standard_delta;
+        zoom(steps, position);
     }
 
     // standard scroll

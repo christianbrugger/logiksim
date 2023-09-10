@@ -136,11 +136,9 @@ auto serialize_view_config(const ViewConfig& view_config) -> SerializedViewConfi
 auto apply_view_config(const SerializedViewConfig& serialized, ViewConfig& view_config)
     -> void {
     // device scale
-    if (serialized.device_scale <= 0) {
-        view_config.set_device_scale(ViewConfig().device_scale());
-    } else {
-        view_config.set_device_scale(serialized.device_scale);
-    }
+    view_config.set_device_scale(serialized.device_scale > 0
+                                     ? serialized.device_scale
+                                     : ViewConfig().device_scale());
 
     // offsets
     view_config.set_offset(point_fine_t {

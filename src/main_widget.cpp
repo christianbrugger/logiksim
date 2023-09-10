@@ -59,8 +59,6 @@ MainWidget::MainWidget(QWidget* parent)
     create_menu();
 
     const auto layout = new QVBoxLayout();
-    // layout->addWidget(build_render_buttons());
-    // layout->addWidget(build_mode_buttons());
     layout->addWidget(build_delay_slider());
     layout->addWidget(build_time_rate_slider());
 
@@ -199,6 +197,19 @@ auto MainWidget::create_menu() -> void {
         add_action(menu, tr("Select &All"), QKeySequence::SelectAll, icon_t::select_all,
                    [this] { render_widget_->select_all_items(); });
     }
+
+    {
+        // View
+        auto* menu = menuBar()->addMenu(tr("&View"));
+
+        add_action(menu, tr("Zoom &In"), QKeySequence::ZoomIn, icon_t::zoom_in,
+                   [this] { render_widget_->zoom(+1); });
+        add_action(menu, tr("Zoom &Out"), QKeySequence::ZoomOut, icon_t::zoom_out,
+                   [this] { render_widget_->zoom(-1); });
+        add_action(menu, tr("&Reset Zoom"), icon_t::reset_zoom,
+                   [this] { render_widget_->reset_view_config(); });
+    }
+
     {
         // Debug
         auto* menu = menuBar()->addMenu(tr("&Debug"));
@@ -275,101 +286,6 @@ auto MainWidget::create_menu() -> void {
         add_action(menu, tr("&Options..."), QKeySequence::Preferences, icon_t::options,
                    [] { print("options"); });
     }
-}
-
-auto MainWidget::build_render_buttons() -> QWidget* {
-    const auto check_box1 = new QCheckBox("Benchmark");
-    const auto check_box2 = new QCheckBox("Render Circuit");
-    const auto check_box3 = new QCheckBox("Render Collision Cache");
-    const auto check_box4 = new QCheckBox("Render Connection Cache");
-    const auto check_box5 = new QCheckBox("Render Selection Cache");
-
-    connect(check_box1, &QCheckBox::stateChanged, this, [this](int value) {
-        render_widget_->set_do_benchmark(value == Qt::Checked);
-    });
-    connect(check_box2, &QCheckBox::stateChanged, this, [this](int value) {
-        render_widget_->set_do_render_circuit(value == Qt::Checked);
-    });
-    connect(check_box3, &QCheckBox::stateChanged, this, [this](int value) {
-        render_widget_->set_do_render_collision_cache(value == Qt::Checked);
-    });
-    connect(check_box4, &QCheckBox::stateChanged, this, [this](int value) {
-        render_widget_->set_do_render_connection_cache(value == Qt::Checked);
-    });
-    connect(check_box5, &QCheckBox::stateChanged, this, [this](int value) {
-        render_widget_->set_do_render_selection_cache(value == Qt::Checked);
-    });
-
-    // startup states
-    check_box2->setCheckState(Qt::Checked);
-
-    const auto layout = new QHBoxLayout();
-    layout->addWidget(check_box1);
-    layout->addWidget(check_box2);
-    layout->addWidget(check_box3);
-    layout->addWidget(check_box4);
-    layout->addWidget(check_box5);
-    layout->addStretch(1);
-
-    const auto panel = new QWidget();
-    panel->setLayout(layout);
-    return panel;
-}
-
-auto MainWidget::build_mode_buttons() -> QWidget* {
-    const auto button0 = new QPushButton("Reload");
-    const auto button1 = new QPushButton("Simple");
-    const auto button2 = new QPushButton("Elements + Wires");
-    const auto button3 = new QPushButton("Elements");
-    const auto button4 = new QPushButton("Wires");
-
-    connect(button0, &QPushButton::clicked, this,
-            [this](bool checked [[maybe_unused]]) { render_widget_->reload_circuit(); });
-    connect(button1, &QPushButton::clicked, this, [this](bool checked [[maybe_unused]]) {
-        render_widget_->load_circuit_example(1);
-    });
-    connect(button2, &QPushButton::clicked, this, [this](bool checked [[maybe_unused]]) {
-        render_widget_->load_circuit_example(2);
-    });
-    connect(button3, &QPushButton::clicked, this, [this](bool checked [[maybe_unused]]) {
-        render_widget_->load_circuit_example(3);
-    });
-    connect(button4, &QPushButton::clicked, this, [this](bool checked [[maybe_unused]]) {
-        render_widget_->load_circuit_example(4);
-    });
-
-    const auto threads_select = new QComboBox();
-    static const auto available_counts = std::vector {0, 2, 4, 8};
-    for (const auto& count : available_counts) {
-        threads_select->addItem(QString::fromStdString(fmt::format("{}", count)),
-                                QVariant(count));
-    }
-    connect(threads_select, &QComboBox::activated, this,
-            [this, combo = threads_select](int index) {
-                render_widget_->set_thread_count(combo->itemData(index).toInt());
-            });
-    threads_select->setCurrentIndex(2);
-
-    const auto direct_checkbox = new QCheckBox("Direct Rendering");
-    connect(direct_checkbox, &QCheckBox::stateChanged, this, [this](int value) {
-        render_widget_->set_use_backing_store(value == Qt::Checked);
-    });
-    direct_checkbox->setCheckState(Qt::Checked);
-
-    const auto layout = new QHBoxLayout();
-    layout->addWidget(button0);
-    layout->addWidget(button1);
-    layout->addWidget(button2);
-    layout->addWidget(button3);
-    layout->addWidget(button4);
-    layout->addStretch(1);
-    layout->addWidget(direct_checkbox);
-    layout->addWidget(threads_select);
-    layout->addWidget(new QLabel("threads"));
-
-    const auto panel = new QWidget();
-    panel->setLayout(layout);
-    return panel;
 }
 
 namespace detail::delay_slider {
@@ -657,6 +573,8 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
         return save_result_t::canceled;
     }
 
+    const auto _ [[maybe_unused]] = Timer("Saved circuit");
+
     if (!render_widget_->save_circuit(filename)) {
         const auto message = fmt::format("Failed to save \"{}\".", filename);
         QMessageBox::warning(this,                         //
@@ -689,6 +607,8 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
     if (!filename || filename->empty()) {
         return;
     }
+
+    const auto _ [[maybe_unused]] = Timer("Opened circuit");
 
     if (!render_widget_->load_circuit(*filename)) {
         const auto message = fmt::format("Failed to load \"{}\".", filename);

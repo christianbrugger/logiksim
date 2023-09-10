@@ -26,6 +26,10 @@ enum class icon_t {
     delete_selected,
     select_all,
 
+    reset_zoom,
+    zoom_in,
+    zoom_out,
+
     benchmark,
     show_circuit,
     show_collision_cache,

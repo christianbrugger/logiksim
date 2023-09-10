@@ -39,8 +39,6 @@ class MainWidget : public QMainWindow {
    private:
     auto create_menu() -> void;
 
-    [[nodiscard]] auto build_render_buttons() -> QWidget*;  // TODO !!! remove
-    [[nodiscard]] auto build_mode_buttons() -> QWidget*;    // TODO !!! remove
     [[nodiscard]] auto build_delay_slider() -> QWidget*;
     [[nodiscard]] auto build_time_rate_slider() -> QWidget*;
     [[nodiscard]] auto build_element_buttons() -> QWidget*;

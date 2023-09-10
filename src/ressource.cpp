@@ -78,6 +78,16 @@ auto get_icon_path_relative(icon_t icon) {
             return QString("icons/lucide/box-select.svg");
         }
 
+        case reset_zoom: {
+            return QString("icons/lucide/rotate-ccw.svg");
+        }
+        case zoom_in: {
+            return QString("icons/lucide/zoom-in.svg");
+        }
+        case zoom_out: {
+            return QString("icons/lucide/zoom-out.svg");
+        }
+
         case benchmark: {
             return QString("icons/lucide/infinity.svg");
         }

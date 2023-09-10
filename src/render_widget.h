@@ -286,6 +286,10 @@ class RendererWidget : public RendererWidgetBase {
     auto load_circuit(std::string filename) -> bool;
     auto load_circuit_example(int id) -> void;
 
+    auto reset_view_config() -> void;
+    // negative steps zoom out, positive zoom in
+    auto zoom(double steps, std::optional<QPointF> center = {}) -> void;
+
    private:
     Q_SLOT void on_benchmark_timeout();
     Q_SLOT void on_simulation_timeout();
@@ -301,8 +305,9 @@ class RendererWidget : public RendererWidgetBase {
 
     auto set_new_mouse_logic(QMouseEvent* event) -> void;
 
-    auto get_mouse_position() -> point_t;
     auto get_mouse_position(QSinglePointEvent* event) const -> QPointF;
+    auto get_mouse_position() -> QPointF;
+    auto get_mouse_grid_position() -> point_t;
 
    protected:
     void resizeEvent(QResizeEvent* event) override;
