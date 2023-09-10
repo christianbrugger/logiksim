@@ -1234,7 +1234,13 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
 
 auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
     -> void {
-    render_icon(ctx.bl_ctx);
+    const auto cache = SVGCache {};
+
+    cache.draw_icon(ctx.bl_ctx, SVGCache::IconAttributes {
+                                    .icon = icon_t::setting_handle,
+                                    .position = BLPoint {100, 100},
+                                    .height = 100,
+                                });
 }
 
 //

@@ -34,15 +34,21 @@ struct SerializedLayout;
 class LoadLayoutResult {
    public:
     LoadLayoutResult(SerializedLayout&& layout);
+
+    LoadLayoutResult(LoadLayoutResult&&);
+    LoadLayoutResult(const LoadLayoutResult&) = delete;
+    auto operator=(LoadLayoutResult&&) -> LoadLayoutResult&;
+    auto operator=(const LoadLayoutResult&) -> LoadLayoutResult& = delete;
     ~LoadLayoutResult();
 
+   public:
     auto add(EditableCircuit& editable_circuit, InsertionMode insertion_mode,
              std::optional<point_t> load_position = {}) const -> selection_handle_t;
 
     auto apply(ViewConfig& view_config) const -> void;
 
    private:
-    gsl::not_null<std::unique_ptr<SerializedLayout>> data_;
+    std::unique_ptr<SerializedLayout> data_;
 };
 }  // namespace serialize
 

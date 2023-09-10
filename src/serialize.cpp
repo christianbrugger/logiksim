@@ -213,12 +213,20 @@ auto calculate_move_delta(point_t save_position, std::optional<point_t> load_pos
 LoadLayoutResult::LoadLayoutResult(SerializedLayout&& layout)
     : data_ {std::make_unique<SerializedLayout>(std::move(layout))} {}
 
-LoadLayoutResult::~LoadLayoutResult() {};
+LoadLayoutResult::LoadLayoutResult(LoadLayoutResult&&) = default;
+
+auto LoadLayoutResult::operator=(LoadLayoutResult&&) -> LoadLayoutResult& = default;
+
+LoadLayoutResult::~LoadLayoutResult() = default;
 
 auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
                            InsertionMode insertion_mode,
                            std::optional<point_t> load_position) const
     -> selection_handle_t {
+    if (!data_) {
+        throw_exception("no layout data");
+    }
+
     auto handle = editable_circuit.get_handle();
     const auto delta = calculate_move_delta(data_->save_position, load_position);
 
@@ -241,6 +249,10 @@ auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
 }
 
 auto LoadLayoutResult::apply(ViewConfig& view_config) const -> void {
+    if (!data_) {
+        throw_exception("no layout data");
+    }
+
     apply_view_config(data_->view_config, view_config);
 }
 
