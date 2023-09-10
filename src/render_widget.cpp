@@ -957,15 +957,16 @@ auto RendererWidget::on_simulation_timeout_impl() -> void {
 #endif
     }
 
+    const auto was_finished = simulation_->finished();
+
     constexpr auto timeout =
         timeout_t {std::chrono::milliseconds {simulation_timer_interval_ms_}};
     simulation_->run(timeout);
 
-    // TODO how do we know simulation end is reached?
-    // if (event_count > 0) {
-    simulation_image_update_requested_ = true;
-    this->update();
-    //}
+    if (!was_finished) {
+        simulation_image_update_requested_ = true;
+        this->update();
+    }
 }
 
 auto round_logical_to_device(QPointF p, double pixel_ratio,

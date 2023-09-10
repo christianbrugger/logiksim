@@ -104,6 +104,10 @@ auto InteractiveSimulation::run(timeout_t timeout) -> void {
     }
 }
 
+auto InteractiveSimulation::finished() const -> bool {
+    return simulation_.finished();
+}
+
 auto InteractiveSimulation::mouse_press(point_t position) -> void {
     const auto element_id = interaction_cache_.find(position);
 

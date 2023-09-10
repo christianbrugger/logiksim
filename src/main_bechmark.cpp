@@ -17,6 +17,8 @@
 #include <boost/random/uniform_int_distribution.hpp>
 #include <gsl/gsl>
 
+#include <QCoreApplication>
+
 #include <array>
 #include <functional>
 #include <memory>
@@ -219,4 +221,14 @@ BENCHMARK(BM_RenderScene_0);  // NOLINT
 
 }  // namespace logicsim
 
-BENCHMARK_MAIN();  // NOLINT
+int main(int argc, char** argv) {
+    const auto app [[maybe_unused]] = QCoreApplication {argc, argv};
+
+    ::benchmark::Initialize(&argc, argv);
+    if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {
+        return 1;
+    }
+    ::benchmark::RunSpecifiedBenchmarks();
+    ::benchmark::Shutdown();
+    return 0;
+}

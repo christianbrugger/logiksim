@@ -59,6 +59,7 @@ class InteractiveSimulation {
     [[nodiscard]] auto time() const -> time_t;
 
     auto run(timeout_t timeout = defaults::default_timeout) -> void;
+    auto finished() const -> bool;
     auto mouse_press(point_t position) -> void;
 
     [[nodiscard]] auto events_per_second() const -> double;

@@ -152,6 +152,7 @@ class Simulation {
              int64_t max_events = defaults::no_max_events) -> int64_t;
     // Runs simulation for a very short time
     auto run_infinitesimal() -> int64_t;
+    auto finished() const -> bool;
 
     // input values
     auto set_input_value(Schematic::ConstInput input, bool value) -> void;
@@ -214,8 +215,9 @@ class Simulation {
     auto clean_history(history_buffer_t &history, delay_t history_length) -> void;
 
     gsl::not_null<const Schematic *> schematic_;
-    SimulationQueue queue_ {};
-    bool is_initialized_ {false};
+    SimulationQueue queue_;
+    time_t largest_history_event_;
+    bool is_initialized_;
 
     std::vector<logic_small_vector_t> input_values_ {};
     std::vector<logic_small_vector_t> internal_states_ {};

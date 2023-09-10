@@ -11,7 +11,10 @@
 #include <fmt/core.h>
 #include <gsl/gsl>
 
+#include <QCoreApplication>
+
 #include <exception>
+#include <iostream>
 
 namespace logicsim {
 
@@ -168,8 +171,10 @@ auto benchmark_layered_drawing() -> void {
 
 }  // namespace logicsim
 
-auto main() -> int {
+auto main(int argc, char** argv) -> int {
     using namespace logicsim;
+    const auto app [[maybe_unused]] = QCoreApplication {argc, argv};
+
     bool do_run = true;
 
     /// TODO consider: ios_base::sync_with_stdio(false);

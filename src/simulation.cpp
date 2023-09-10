@@ -259,7 +259,11 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
     return internal_state_size(type) != 0;
 }
 
-Simulation::Simulation(const Schematic &schematic) : schematic_ {&schematic}, queue_ {} {
+Simulation::Simulation(const Schematic &schematic)
+    : schematic_ {&schematic},
+      queue_ {},
+      largest_history_event_ {queue_.time()},
+      is_initialized_ {false} {
     input_values_.reserve(schematic.element_count());
     internal_states_.reserve(schematic.element_count());
 
@@ -695,6 +699,10 @@ auto Simulation::run_infinitesimal() -> int64_t {
     return run(time_t::epsilon().value);
 }
 
+auto Simulation::finished() const -> bool {
+    return queue_.empty() && time() >= largest_history_event_;
+}
+
 auto Simulation::initialize() -> void {
     if (!queue_.empty()) [[unlikely]] {
         throw_exception("Cannot initialize simulation with scheduled events.");
@@ -771,6 +779,10 @@ auto Simulation::record_input_history(const Schematic::ConstInput input,
 
     // add new entry
     history.push_back(time());
+
+    // update largest history event
+    largest_history_event_ =
+        std::max(largest_history_event_, time_t {time().value + history_length.value});
 }
 
 auto Simulation::clean_history(history_buffer_t &history, delay_t history_length)
