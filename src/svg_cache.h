@@ -46,7 +46,7 @@ class SVGCache {
     struct IconAttributes {
         icon_t icon;
         BLPoint position {};
-        double height {24};
+        double height {100};  // pixel
 
         color_t color {defaults::color_black};
         HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};

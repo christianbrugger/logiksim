@@ -57,6 +57,56 @@ auto SVGCache::shrink_to_fit() -> void {
     svg_map_.rehash(svg_map_.size());
 }
 
+namespace {
+
+auto calculate_offset_x(double width, HorizontalAlignment horizontal_alignment)
+    -> double {
+    switch (horizontal_alignment) {
+        using enum HorizontalAlignment;
+
+        case left:
+            return 0;
+        case right:
+            return -width;
+        case center:
+            return -width / 2.0;
+    }
+
+    throw_exception("unknown horizontal_alignment in calculate_offset_x");
+}
+
+auto calculate_offset_y(double height, VerticalAlignment vertical_alignment) -> double {
+    switch (vertical_alignment) {
+        using enum VerticalAlignment;
+
+        case top:
+            return 0;
+        case bottom:
+            return -height;
+        case center:
+            return -height / 2.0;
+
+        case baseline:
+        case center_baseline:
+        case top_baseline:
+        case bottom_baseline:
+            throw_exception("unsupported alignment for svgs");
+    }
+
+    throw_exception("unknown vertical_alignment in calculate_offset_y");
+}
+
+auto calculate_offset(const svg2b2d::SVGDocument &document, double scale,
+                      HorizontalAlignment horizontal_alignment,
+                      VerticalAlignment vertical_alignment) -> BLPoint {
+    return BLPoint {
+        calculate_offset_x(document.width(), horizontal_alignment) * scale,
+        calculate_offset_y(document.height(), vertical_alignment) * scale,
+    };
+}
+
+}  // namespace
+
 auto SVGCache::draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> void {
     const auto &entry = get_entry(attributes.icon);
 
@@ -65,18 +115,26 @@ auto SVGCache::draw_icon(BLContext &bl_ctx, IconAttributes attributes) const -> 
     }
     const auto &document = entry.data->document;
 
-    if (document.height() <= 0) {
+    if (document.height() <= 0 || document.width() <= 0) {
         return;
     }
-    const auto scale = attributes.height / document.height();
 
-    render_svg_icon_impl(bl_ctx, document, attributes.position, attributes.color, scale);
+    const auto scale = attributes.height / document.height();
+    const auto offset = calculate_offset(document, scale, attributes.horizontal_alignment,
+                                         attributes.vertical_alignment);
+    render_svg_icon_impl(bl_ctx, document, attributes.position + offset, attributes.color,
+                         scale);
 }
 
 namespace {
 
 auto load_svg_icon(icon_t icon) -> svg2b2d::SVGDocument {
-    const auto binary = load_file(get_icon_path(icon));
+    const auto filename = get_icon_path(icon);
+    const auto binary = load_file(filename);
+
+    if (binary.empty()) {
+        print("WARNING: unable to load svg icon", filename);
+    }
 
     auto byte_span = svg2b2d::ByteSpan {binary.data(), binary.size()};
     auto document = svg2b2d::SVGDocument {};

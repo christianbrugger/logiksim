@@ -1234,11 +1234,14 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
 
 auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
     -> void {
+    const auto center = to_context(point_fine_t {10, 10}, ctx);
+    const auto height = to_context(grid_fine_t {2.0}, ctx);
+
     ctx.svg_cache.draw_icon(ctx.bl_ctx,
                             SVGCache::IconAttributes {
                                 .icon = icon_t::setting_handle,
-                                .position = BLPoint {100, 100},
-                                .height = 100,
+                                .position = center,
+                                .height = height,
                                 .color = defaults::color_dark_blue,
                                 .horizontal_alignment = HorizontalAlignment::center,
                                 .vertical_alignment = VerticalAlignment::center,

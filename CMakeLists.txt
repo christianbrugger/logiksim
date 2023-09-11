@@ -322,7 +322,7 @@ add_subdirectory(external/harfbuzz EXCLUDE_FROM_ALL SYSTEM)
 add_subdirectory(external/gcem EXCLUDE_FROM_ALL SYSTEM)
 
 # svg2b2d
-add_subdirectory(external/svg2b2d) # EXCLUDE_FROM_ALL SYSTEM)
+add_subdirectory(external/svg2b2d EXCLUDE_FROM_ALL SYSTEM)
 
 
 

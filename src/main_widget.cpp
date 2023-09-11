@@ -98,66 +98,72 @@ namespace {
 template <typename Callback>
 concept action_callable = std::invocable<Callback> || std::invocable<Callback, bool>;
 
-auto add_action_impl(QMenu* menu, const QString& text, action_callable auto callable)
-    -> QAction* {
+struct ActionAttributes {
+    std::optional<QKeySequence> shortcut;
+    bool shortcut_auto_repeat {false};
+    std::optional<icon_t> icon;
+};
+
+auto add_action_impl(QMenu* menu, const QString& text, ActionAttributes attributes,
+                     action_callable auto callable) -> QAction* {
     auto* action = menu->addAction(text);
     auto* widget = menu->parentWidget();
     widget->connect(action, &QAction::triggered, widget, callable);
+
+    if (attributes.shortcut) {
+        action->setShortcut(*attributes.shortcut);
+        action->setAutoRepeat(attributes.shortcut_auto_repeat);
+    }
+    if (attributes.icon) {
+        action->setIcon(QIcon(get_icon_path(*attributes.icon)));
+    }
+
     return action;
 }
 
-auto add_action(QMenu* menu, const QString& text, std::invocable<> auto callable)
+auto add_action(QMenu* menu, const QString& text, ActionAttributes attributes,
+                std::invocable<> auto callable) {
+    return add_action_impl(menu, text, attributes, callable);
+}
+
+struct CheckableAttributes {
+    bool start_state {false};
+};
+
+auto add_action_checkable(QMenu* menu, const QString& text,
+                          ActionAttributes action_attributes,
+                          CheckableAttributes checkable_attributes,
+                          std::invocable<bool> auto callable) -> QAction* {
+    auto* action = add_action_impl(menu, text, action_attributes, callable);
+    action->setCheckable(true);
+
+    action->setChecked(checkable_attributes.start_state);
+    std::invoke(callable, checkable_attributes.start_state);
+
+    return action;
+}
+
+struct GroupAttributes {
+    bool active {false};
+    QActionGroup* group {nullptr};
+};
+
+auto add_action_group(QMenu* menu, const QString& text,
+                      ActionAttributes action_attributes,
+                      GroupAttributes group_attributes, std::invocable<> auto callable)
     -> QAction* {
-    return add_action_impl(menu, text, callable);
-}
-
-auto add_action(QMenu* menu, const QString& text, const QKeySequence& shortcut,
-                std::invocable<> auto callable) -> QAction* {
-    auto* action = add_action(menu, text, callable);
-    action->setShortcut(shortcut);
-    action->setAutoRepeat(false);
-    return action;
-}
-
-auto add_action(QMenu* menu, const QString& text, const QKeySequence& shortcut,
-                icon_t icon, std::invocable<> auto callable) -> QAction* {
-    auto* action = add_action(menu, text, shortcut, callable);
-    action->setIcon(QIcon(get_icon_path(icon)));
-    return action;
-}
-
-auto add_action(QMenu* menu, const QString& text, icon_t icon,
-                std::invocable<> auto callable) -> QAction* {
-    auto* action = add_action(menu, text, callable);
-    action->setIcon(QIcon(get_icon_path(icon)));
-    return action;
-}
-
-auto add_action_checkable(QMenu* menu, const QString& text, bool start_state,
-                          std::invocable<bool> auto callable) -> QAction* {
-    auto* action = add_action_impl(menu, text, callable);
+    auto* action = add_action_impl(menu, text, action_attributes, callable);
     action->setCheckable(true);
-    action->setChecked(start_state);
-    std::invoke(callable, start_state);
-    return action;
-}
 
-auto add_action_checkable(QMenu* menu, const QString& text, bool start_state, icon_t icon,
-                          std::invocable<bool> auto callable) -> QAction* {
-    auto* action = add_action_checkable(menu, text, start_state, callable);
-    action->setIcon(QIcon(get_icon_path(icon)));
-    return action;
-}
+    if (group_attributes.group) {
+        action->setActionGroup(group_attributes.group);
+    }
 
-auto add_action_group(QMenu* menu, const QString& text, QActionGroup* group,
-                      bool start_state, std::invocable<> auto callable) -> QAction* {
-    auto* action = add_action_impl(menu, text, callable);
-    action->setActionGroup(group);
-    action->setCheckable(true);
-    action->setChecked(start_state);
-    if (start_state) {
+    action->setChecked(group_attributes.active);
+    if (group_attributes.active) {
         std::invoke(callable);
     }
+
     return action;
 }
 
@@ -168,33 +174,51 @@ auto MainWidget::create_menu() -> void {
         // File
         auto* menu = menuBar()->addMenu(tr("&File"));
 
-        add_action(menu, tr("&New"), QKeySequence::New, icon_t::new_file,
-                   [this] { new_circuit(); });
-        add_action(menu, tr("&Open..."), QKeySequence::Open, icon_t::open_file,
-                   [this] { open_circuit(); });
-        add_action(menu, tr("&Save"), QKeySequence::Save, icon_t::save_file,
-                   [this] { save_circuit(filename_choice_t::same_as_last); });
-        add_action(menu, tr("Save &As..."), QKeySequence::SaveAs,
+        add_action(
+            menu, tr("&New"),
+            ActionAttributes {.shortcut = QKeySequence::New, .icon = icon_t::new_file},
+            [this] { new_circuit(); });
+        add_action(
+            menu, tr("&Open..."),
+            ActionAttributes {.shortcut = QKeySequence::Open, .icon = icon_t::open_file},
+            [this] { open_circuit(); });
+        add_action(
+            menu, tr("&Save"),
+            ActionAttributes {.shortcut = QKeySequence::Save, .icon = icon_t::save_file},
+            [this] { save_circuit(filename_choice_t::same_as_last); });
+        add_action(menu, tr("Save &As..."),
+                   ActionAttributes {.shortcut = QKeySequence::SaveAs},
                    [this] { save_circuit(filename_choice_t::ask_new); });
 
         menu->addSeparator();
-        add_action(menu, tr("E&xit"), QKeySequence::Quit, icon_t::exit,
-                   [this]() { close(); });
+        add_action(
+            menu, tr("E&xit"),
+            ActionAttributes {.shortcut = QKeySequence::Quit, .icon = icon_t::exit},
+            [this]() { close(); });
     }
 
     {
         // Edit
         auto* menu = menuBar()->addMenu(tr("&Edit"));
 
-        add_action(menu, tr("Cu&t"), QKeySequence::Cut, icon_t::cut,
+        add_action(menu, tr("Cu&t"),
+                   ActionAttributes {.shortcut = QKeySequence::Cut, .icon = icon_t::cut},
                    [this] { render_widget_->cut_selected_items(); });
-        add_action(menu, tr("&Copy"), QKeySequence::Copy, icon_t::copy,
-                   [this] { render_widget_->copy_selected_items(); });
-        add_action(menu, tr("&Paste"), QKeySequence::Paste, icon_t::paste,
-                   [this] { render_widget_->paste_clipboard_items(); });
-        add_action(menu, tr("&Delete"), QKeySequence::Delete, icon_t::delete_selected,
+        add_action(
+            menu, tr("&Copy"),
+            ActionAttributes {.shortcut = QKeySequence::Copy, .icon = icon_t::copy},
+            [this] { render_widget_->copy_selected_items(); });
+        add_action(
+            menu, tr("&Paste"),
+            ActionAttributes {.shortcut = QKeySequence::Paste, .icon = icon_t::paste},
+            [this] { render_widget_->paste_clipboard_items(); });
+        add_action(menu, tr("&Delete"),
+                   ActionAttributes {.shortcut = QKeySequence::Delete,
+                                     .icon = icon_t::delete_selected},
                    [this] { render_widget_->delete_selected_items(); });
-        add_action(menu, tr("Select &All"), QKeySequence::SelectAll, icon_t::select_all,
+        add_action(menu, tr("Select &All"),
+                   ActionAttributes {.shortcut = QKeySequence::SelectAll,
+                                     .icon = icon_t::select_all},
                    [this] { render_widget_->select_all_items(); });
     }
 
@@ -202,11 +226,17 @@ auto MainWidget::create_menu() -> void {
         // View
         auto* menu = menuBar()->addMenu(tr("&View"));
 
-        add_action(menu, tr("Zoom &In"), QKeySequence::ZoomIn, icon_t::zoom_in,
+        add_action(menu, tr("Zoom &In"),
+                   ActionAttributes {.shortcut = QKeySequence::ZoomIn,
+                                     .shortcut_auto_repeat = true,
+                                     .icon = icon_t::zoom_in},
                    [this] { render_widget_->zoom(+1); });
-        add_action(menu, tr("Zoom &Out"), QKeySequence::ZoomOut, icon_t::zoom_out,
+        add_action(menu, tr("Zoom &Out"),
+                   ActionAttributes {.shortcut = QKeySequence::ZoomOut,
+                                     .shortcut_auto_repeat = true,
+                                     .icon = icon_t::zoom_out},
                    [this] { render_widget_->zoom(-1); });
-        add_action(menu, tr("&Reset Zoom"), icon_t::reset_zoom,
+        add_action(menu, tr("&Reset Zoom"), ActionAttributes {.icon = icon_t::reset_zoom},
                    [this] { render_widget_->reset_view_config(); });
     }
 
@@ -216,74 +246,90 @@ auto MainWidget::create_menu() -> void {
 
         // Benchmark
         add_action_checkable(
-            menu, tr("&Benchmark"), false, icon_t::benchmark,
+            menu, tr("&Benchmark"), ActionAttributes {.icon = icon_t::benchmark},
+            CheckableAttributes {.start_state = false},
             [this](bool checked) { render_widget_->set_do_benchmark(checked); });
 
         menu->addSeparator();
         {
             add_action_checkable(
-                menu, tr("Show C&ircuit"), true, icon_t::show_circuit,
+                menu, tr("Show C&ircuit"),
+                ActionAttributes {.icon = icon_t::show_circuit},
+                CheckableAttributes {.start_state = true},
                 [this](bool checked) { render_widget_->set_do_render_circuit(checked); });
             add_action_checkable(
-                menu, tr("Show C&ollision Cache"), false, icon_t::show_collision_cache,
-                [this](bool checked) {
+                menu, tr("Show C&ollision Cache"),
+                ActionAttributes {.icon = icon_t::show_collision_cache},
+                CheckableAttributes {.start_state = false}, [this](bool checked) {
                     render_widget_->set_do_render_collision_cache(checked);
                 });
             add_action_checkable(
-                menu, tr("Show Co&nnection Cache"), false, icon_t::show_connection_cache,
-                [this](bool checked) {
+                menu, tr("Show Co&nnection Cache"),
+                ActionAttributes {.icon = icon_t::show_connection_cache},
+                CheckableAttributes {.start_state = false}, [this](bool checked) {
                     render_widget_->set_do_render_connection_cache(checked);
                 });
             add_action_checkable(
-                menu, tr("Show &Selection Cache"), false, icon_t::show_selection_cache,
-                [this](bool checked) {
+                menu, tr("Show &Selection Cache"),
+                ActionAttributes {.icon = icon_t::show_selection_cache},
+                CheckableAttributes {.start_state = false}, [this](bool checked) {
                     render_widget_->set_do_render_selection_cache(checked);
                 });
         }
 
         // Examples
         menu->addSeparator();
-        add_action(menu, tr("&Reload"), icon_t::reload_circuit,
+        add_action(menu, tr("&Reload"), ActionAttributes {.icon = icon_t::reload_circuit},
                    [this]() { render_widget_->reload_circuit(); });
         {
-            add_action(menu, tr("Load \"Si&mple\" Example"), icon_t::load_simple_example,
+            add_action(menu, tr("Load \"Si&mple\" Example"),
+                       ActionAttributes {.icon = icon_t::load_simple_example},
                        [this]() { render_widget_->load_circuit_example(1); });
 
-            add_action(menu, tr("Load \"&Wires\" Example"), icon_t::load_wire_example,
+            add_action(menu, tr("Load \"&Wires\" Example"),
+                       ActionAttributes {.icon = icon_t::load_wire_example},
                        [this]() { render_widget_->load_circuit_example(4); });
 
             add_action(menu, tr("Load \"&Elements\" Example"),
-                       icon_t::load_element_example,
+                       ActionAttributes {.icon = icon_t::load_element_example},
                        [this]() { render_widget_->load_circuit_example(3); });
 
             add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
-                       icon_t::load_elements_and_wires_example,
+                       ActionAttributes {.icon = icon_t::load_elements_and_wires_example},
                        [this]() { render_widget_->load_circuit_example(2); });
         }
 
         // Thread Count
         menu->addSeparator();
         add_action_checkable(
-            menu, tr("&Direct Rendering"), true, icon_t::direct_rendering,
+            menu, tr("&Direct Rendering"),
+            ActionAttributes {.icon = icon_t::direct_rendering},
+            CheckableAttributes {.start_state = true},
             [this](bool checked) { render_widget_->set_use_backing_store(checked); });
 
         menu->addSeparator();
         {
             auto* group = new QActionGroup(menu);
-            add_action_group(menu, tr("S&ynchronous Rendering"), group, false,
+            add_action_group(menu, tr("S&ynchronous Rendering"), ActionAttributes {},
+                             GroupAttributes {.active = false, .group = group},
                              [this]() { render_widget_->set_thread_count(0); });
-            add_action_group(menu, tr("&2 Render Threads"), group, false,
+            add_action_group(menu, tr("&2 Render Threads"), ActionAttributes {},
+                             GroupAttributes {.active = false, .group = group},
                              [this]() { render_widget_->set_thread_count(2); });
-            add_action_group(menu, tr("&4 Render Threads"), group, true,
+            add_action_group(menu, tr("&4 Render Threads"), ActionAttributes {},
+                             GroupAttributes {.active = true, .group = group},
                              [this]() { render_widget_->set_thread_count(4); });
-            add_action_group(menu, tr("&8 Render Threads"), group, false,
+            add_action_group(menu, tr("&8 Render Threads"), ActionAttributes {},
+                             GroupAttributes {.active = false, .group = group},
                              [this]() { render_widget_->set_thread_count(8); });
         }
     }
     {
         // Tools
         auto* menu = menuBar()->addMenu(tr("&Tools"));
-        add_action(menu, tr("&Options..."), QKeySequence::Preferences, icon_t::options,
+        add_action(menu, tr("&Options..."),
+                   ActionAttributes {.shortcut = QKeySequence::Preferences,
+                                     .icon = icon_t::options},
                    [] { print("options"); });
     }
 }
