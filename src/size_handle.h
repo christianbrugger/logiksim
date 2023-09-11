@@ -39,11 +39,9 @@ auto size_handle_positions(const layout::ConstElement element)
 auto size_handle_positions(const Layout& layout, const Selection& selection)
     -> std::vector<size_handle_t>;
 
-auto size_handle_rect_px(size_handle_t handle_position, const ViewConfig& config)
-    -> BLRect;
+auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config) -> BLRect;
 
-auto size_handle_rect_gird(size_handle_t handle_position, const ViewConfig& config)
-    -> rect_fine_t;
+auto size_handle_rect_grid(size_handle_t handle, const ViewConfig& config) -> rect_fine_t;
 
 auto get_colliding_size_handle(point_fine_t position,
                                const std::vector<size_handle_t>& handle_positions,

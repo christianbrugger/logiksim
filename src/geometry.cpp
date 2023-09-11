@@ -210,6 +210,22 @@ auto enclosing_rect(rect_t rect, ordered_line_t line) -> rect_t {
     };
 }
 
+auto to_rect(point_fine_t center, grid_fine_t size) -> rect_fine_t {
+    const auto half = size / 2.0;
+
+    return rect_fine_t {
+        point_fine_t {center.x - half, center.y - half},
+        point_fine_t {center.x + half, center.y + half},
+    };
+}
+
+auto get_center(rect_fine_t rect) -> point_fine_t {
+    return point_fine_t {
+        (rect.p0.x + rect.p1.x) / 2.0,
+        (rect.p0.y + rect.p1.y) / 2.0,
+    };
+}
+
 //
 // offset_t
 //

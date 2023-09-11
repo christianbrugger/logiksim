@@ -130,8 +130,8 @@ auto get_icon_path_relative(icon_t icon) {
             return QString("icons/lucide/settings.svg");
         }
 
-        case setting_handle: {
-            return QString("icons/lucide/cog.svg");
+        case setting_handle_clock: {
+            return QString("icons/lucide/activity.svg");
         }
     };
 

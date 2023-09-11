@@ -6,6 +6,7 @@
 #include "layout.h"
 #include "layout_calculation.h"
 #include "range.h"
+#include "setting_handle.h"
 #include "simulation.h"
 #include "simulation_view.h"
 #include "size_handle.h"
@@ -1202,21 +1203,39 @@ auto draw_wires(Context& ctx, std::span<const segment_info_t> segment_infos,
 // Size Handles
 //
 
+namespace {
+
+struct OutlinedRectAttributes {
+    color_t fill_color;
+    color_t stroke_color;
+    double stroke_width_device;
+};
+
+auto draw_outlined_rect_px(Context& ctx, BLRect rect, OutlinedRectAttributes attributes) {
+    auto stroke_width =
+        std::max(1., round_fast(attributes.stroke_width_device *
+                                ctx.settings.view_config.device_pixel_ratio()));
+
+    // draw square
+    ctx.bl_ctx.fillRect(rect, attributes.stroke_color);
+    rect.x += stroke_width;
+    rect.y += stroke_width;
+    rect.w -= stroke_width * 2;
+    rect.h -= stroke_width * 2;
+    ctx.bl_ctx.fillRect(rect, attributes.fill_color);
+}
+}  // namespace
+
 auto draw_size_handle(Context& ctx, const size_handle_t& position) -> void {
     auto rect = size_handle_rect_px(position, ctx.settings.view_config);
 
-    // stroke width
-    auto stroke_width = defaults::size_handle_stroke_width_device *
-                        ctx.settings.view_config.device_pixel_ratio();
-    auto sw = std::max(1., round_fast(stroke_width));
-
-    // draw square
-    ctx.bl_ctx.fillRect(rect, defaults::size_handle_color_stroke);
-    rect.x += sw;
-    rect.y += sw;
-    rect.w -= sw * 2;
-    rect.h -= sw * 2;
-    ctx.bl_ctx.fillRect(rect, defaults::size_handle_color_fill);
+    draw_outlined_rect_px(
+        ctx, rect,
+        OutlinedRectAttributes {
+            .fill_color = defaults::size_handle_color_fill,
+            .stroke_color = defaults::size_handle_color_stroke,
+            .stroke_width_device = defaults::size_handle_stroke_width_device,
+        });
 }
 
 auto draw_size_handles(Context& ctx, std::span<const size_handle_t> handle_positions)
@@ -1232,20 +1251,39 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
     draw_size_handles(ctx, size_handle_positions(layout, selection));
 }
 
+//
+// Setting Handle
+//
+
+auto draw_setting_handle(Context& ctx, setting_handle_t handle) -> void {
+    auto rect = setting_handle_rect(handle, ctx.settings.view_config);
+
+    // button rect
+    draw_rect(ctx, rect,
+              RectAttributes {
+                  .draw_type = DrawType::fill_and_stroke,
+                  .fill_color = defaults::setting_handle_color_fill,
+                  .stroke_color = defaults::setting_handle_color_stroke,
+              });
+
+    // button icon
+    draw_icon(ctx, get_center(rect), handle.icon,
+              IconAttributes {
+                  .icon_height = defaults::setting_handle_icon_scale,
+                  .color = defaults::setting_handle_color_icon,
+                  .horizontal_alignment = HorizontalAlignment::center,
+                  .vertical_alignment = VerticalAlignment::center,
+              });
+}
+
 auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& selection)
     -> void {
-    const auto center = to_context(point_fine_t {10, 10}, ctx);
-    const auto height = to_context(grid_fine_t {2.0}, ctx);
+    ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    ctx.svg_cache.draw_icon(ctx.bl_ctx,
-                            SVGCache::IconAttributes {
-                                .icon = icon_t::setting_handle,
-                                .position = center,
-                                .height = height,
-                                .color = defaults::color_dark_blue,
-                                .horizontal_alignment = HorizontalAlignment::center,
-                                .vertical_alignment = VerticalAlignment::center,
-                            });
+    const auto handle = setting_handle_position(layout, selection);
+    if (handle) {
+        draw_setting_handle(ctx, *handle);
+    }
 }
 
 //

@@ -272,6 +272,20 @@ struct TextAttributes {
 auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
                TextAttributes attributes) -> void;
 
+//
+// Icon
+//
+
+struct IconAttributes {
+    grid_fine_t icon_height {1.0};
+    color_t color {defaults::color_black};
+    HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};
+    VerticalAlignment vertical_alignment {VerticalAlignment::top};
+};
+
+auto draw_icon(Context& ctx, point_fine_t position, icon_t icon,
+               IconAttributes attributes) -> void;
+
 }  // namespace logicsim
 
 #endif

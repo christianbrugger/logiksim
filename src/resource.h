@@ -48,7 +48,7 @@ enum class icon_t {
     options,
 
     // circuit rendering
-    setting_handle,
+    setting_handle_clock,
 };
 
 auto get_icon_path(icon_t icon) -> QString;

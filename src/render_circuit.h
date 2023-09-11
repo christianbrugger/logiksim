@@ -68,6 +68,10 @@ constexpr static inline auto connector_length = 0.4;        // grid points
 constexpr static inline auto inverted_circle_radius = 0.2;  // grid points
 constexpr static inline auto size_handle_color_fill = defaults::color_orange;
 constexpr static inline auto size_handle_color_stroke = defaults::color_dark_orange;
+constexpr static inline auto setting_handle_color_fill = defaults::color_orange;
+constexpr static inline auto setting_handle_color_stroke = defaults::color_dark_orange;
+constexpr static inline auto setting_handle_color_icon = defaults::color_white;
+constexpr static inline auto setting_handle_icon_scale = 0.7;  // ratio
 
 namespace element_state_alpha {
 constexpr static inline auto normal = color_t::value_type {255};
@@ -254,7 +258,7 @@ auto draw_line_segment(Context& ctx, segment_info_t info, bool is_enabled,
                        ElementDrawState state) -> void;
 
 //
-// Size Handles
+// Handles
 //
 
 auto render_size_handles(Context& ctx, const Layout& layout, const Selection& selection)

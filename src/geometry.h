@@ -63,6 +63,9 @@ auto is_vertical(orientation_t orientation) noexcept -> bool;
 [[nodiscard]] auto enclosing_rect(rect_t a, rect_t b) -> rect_t;
 [[nodiscard]] auto enclosing_rect(rect_t rect, ordered_line_t line) -> rect_t;
 
+[[nodiscard]] auto to_rect(point_fine_t center, grid_fine_t size) -> rect_fine_t;
+[[nodiscard]] auto get_center(rect_fine_t rect) -> point_fine_t;
+
 //
 // orientation_t
 //

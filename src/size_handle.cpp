@@ -67,6 +67,8 @@ auto size_handle_positions(const layout::ConstElement element)
     throw_exception("unknown ElementType in size_handle_positions");
 }
 
+namespace {
+
 auto get_single_logic_item(const Selection& selection) -> element_id_t {
     if (selection.selected_logic_items().size() != 1 ||
         !selection.selected_segments().empty()) {
@@ -74,6 +76,8 @@ auto get_single_logic_item(const Selection& selection) -> element_id_t {
     }
     return selection.selected_logic_items().front();
 }
+
+}  // namespace
 
 auto size_handle_positions(const Layout& layout, const Selection& selection)
     -> std::vector<size_handle_t> {
@@ -89,23 +93,22 @@ auto size_handle_positions(const Layout& layout, const Selection& selection)
     return size_handle_positions(layout.element(element_id));
 }
 
-auto size_handle_rect_px(size_handle_t handle_position, const ViewConfig& config)
-    -> BLRect {
-    const auto rect_size_lp = defaults::size_handle_rect_size_device;
+auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config) -> BLRect {
+    const auto rect_size_dev = defaults::size_handle_rect_size_device;
 
-    const auto [x, y] = to_context(handle_position.point, config);
-    const auto width = rect_size_lp * config.device_pixel_ratio();
+    const auto [x, y] = to_context(handle.point, config);
+    const auto size = rect_size_dev * config.device_pixel_ratio();
 
-    const auto x0 = round_fast(x - width / 2);
-    const auto y0 = round_fast(y - width / 2);
-    const auto w = round_fast(width);
+    const auto x0 = round_fast(x - size / 2);
+    const auto y0 = round_fast(y - size / 2);
+    const auto s = round_fast(size);
 
-    return BLRect(x0, y0, w, w);
+    return BLRect(x0, y0, s, s);
 }
 
-auto size_handle_rect_gird(size_handle_t handle_position, const ViewConfig& config)
+auto size_handle_rect_grid(size_handle_t handle, const ViewConfig& config)
     -> rect_fine_t {
-    const auto rect = size_handle_rect_px(handle_position, config);
+    const auto rect = size_handle_rect_px(handle, config);
     return rect_fine_t {
         from_context_fine(BLPoint {rect.x, rect.y}, config),
         from_context_fine(BLPoint {rect.x + rect.w, rect.y + rect.h}, config),
@@ -114,7 +117,7 @@ auto size_handle_rect_gird(size_handle_t handle_position, const ViewConfig& conf
 
 auto is_size_handle_colliding(point_fine_t position, size_handle_t handle_positions,
                               const ViewConfig& config) -> bool {
-    const auto rect = size_handle_rect_gird(handle_positions, config);
+    const auto rect = size_handle_rect_grid(handle_positions, config);
     return is_colliding(position, rect);
 }
 
