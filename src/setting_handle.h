@@ -67,6 +67,11 @@ class MouseSettingHandleLogic {
 
 // Setting Widgets
 
+class ClockGeneratorWidget : public QWidget {
+   public:
+    using QWidget::QWidget;
+};
+
 }  // namespace logicsim
 
 #endif

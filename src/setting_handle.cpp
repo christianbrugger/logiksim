@@ -1,10 +1,19 @@
-#include "setting_handle.h"
+﻿#include "setting_handle.h"
 
 #include "collision.h"
 #include "editable_circuit/selection.h"
 #include "layout.h"
 #include "layout_calculation.h"
+#include "resource.h"
 #include "scene.h"
+
+#include <QBoxLayout>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QFormLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QSpinBox>
 
 namespace logicsim {
 auto setting_handle_position(const Layout& layout, element_id_t element_id)
@@ -28,7 +37,7 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
                                           width - handle_size / 2.0 - margin,
                                           height + overdraw - handle_size / 2.0 - margin,
                                       }),
-                .icon = icon_t::setting_handle_clock,
+                .icon = icon_t::setting_handle_clock_generator,
             };
         }
 
@@ -118,12 +127,118 @@ auto MouseSettingHandleLogic::mouse_release(point_fine_t position) -> void {
         is_colliding(setting_handle_, position)) {
         print("clicked on setting handle");
 
-        // auto* top = dynamic_cast<QMainWindow*>(parent_->topLevelWidget());
-        // auto* widget = new ClockGeneratorWidget("Clock Generator", top);
+        static auto test_counter = 0;  // TODO !!! REMOVE
+        ++test_counter;
 
-        // widget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-        // top->addDockWidget(Qt::RightDockWidgetArea, widget);
-        //  widget->show();
+        if (test_counter % 2 == 0) {
+            auto* widget = new ClockGeneratorWidget(parent_);
+            widget->setWindowFlags(Qt::Dialog);
+            widget->setWindowTitle(widget->tr("Clock Generator"));
+            widget->setWindowIcon(QIcon(get_icon_path(setting_handle_.icon)));
+            auto* layout = new QFormLayout(widget);
+
+            // Name
+            {
+                auto* label = new QLabel(widget);
+                label->setText(widget->tr("Clock Name:"));
+                auto* text_edit = new QLineEdit(widget);
+                text_edit->setText(widget->tr("Clock 1"));
+
+                layout->addRow(label, text_edit);
+            }
+
+            // Period
+            {
+                auto* label = new QLabel(widget);
+                label->setText(widget->tr("Clock Period:"));
+
+                auto* hlayout = new QHBoxLayout(widget);
+                auto* spin_box = new QSpinBox(widget);
+                auto* combo_box = new QComboBox(widget);
+
+                spin_box->setMinimum(1);
+                spin_box->setMaximum(1000);
+
+                combo_box->addItems({
+                    widget->tr("ns"),
+                    widget->tr("µs"),
+                    widget->tr("ms"),
+                    widget->tr("seconds"),
+                });
+
+                hlayout->addWidget(spin_box);
+                hlayout->addWidget(combo_box);
+
+                layout->addRow(label, hlayout);
+            }
+
+            // Simulation Controls
+            {
+                auto* check_box = new QCheckBox(widget);
+                check_box->setText(widget->tr("Show Simulation Controls"));
+                check_box->setChecked(true);
+
+                layout->addRow(nullptr, check_box);
+            }
+
+            widget->show();
+        } else {
+            auto* widget = new ClockGeneratorWidget(parent_);
+            widget->setWindowFlags(Qt::Dialog);
+            widget->setWindowTitle(widget->tr("Clock Generator"));
+            widget->setWindowIcon(QIcon(get_icon_path(setting_handle_.icon)));
+            auto* layout = new QVBoxLayout(widget);
+
+            // Name
+            {
+                auto* label = new QLabel(widget);
+                label->setText(widget->tr("Clock Name:"));
+                auto* text_edit = new QLineEdit(widget);
+                text_edit->setText(widget->tr("Clock 1"));
+
+                layout->addWidget(label);
+                layout->addWidget(text_edit);
+            }
+
+            // Period
+            {
+                auto* label = new QLabel(widget);
+                label->setText(widget->tr("Clock Period:"));
+
+                layout->addWidget(label);
+            }
+            {
+                auto* hlayout = new QHBoxLayout(widget);
+                auto* spin_box = new QSpinBox(widget);
+                auto* combo_box = new QComboBox(widget);
+
+                spin_box->setMinimum(1);
+                spin_box->setMaximum(1000);
+
+                combo_box->addItems({
+                    widget->tr("ns"),
+                    widget->tr("µs"),
+                    widget->tr("ms"),
+                    widget->tr("seconds"),
+                });
+
+                hlayout->addWidget(spin_box);
+                hlayout->addWidget(combo_box);
+
+                layout->addLayout(hlayout);
+            }
+
+            // Simulation Controls
+            {
+                auto* check_box = new QCheckBox(widget);
+                check_box->setText(widget->tr("Show Simulation Controls"));
+                check_box->setChecked(true);
+
+                layout->addWidget(check_box);
+            }
+
+            widget->show();
+        }
     }
 }
 
