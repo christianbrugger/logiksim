@@ -84,22 +84,20 @@ auto setting_handle_position(const Layout& layout, const Selection& selection)
     return setting_handle_position(layout, element_id);
 }
 
-auto setting_handle_rect(setting_handle_t handle, const ViewConfig& config)
-    -> rect_fine_t {
+auto setting_handle_rect(setting_handle_t handle) -> rect_fine_t {
     return to_rect(handle.position, defaults::setting_handle_size);
 }
 
+auto is_colliding(setting_handle_t handle, point_fine_t position) -> bool {
+    return is_colliding(position, setting_handle_rect(handle));
+}
+
 auto get_colliding_setting_handle(point_fine_t position, const Layout& layout,
-                                  const Selection& selection, const ViewConfig& config)
+                                  const Selection& selection)
     -> std::optional<setting_handle_t> {
     const auto handle = setting_handle_position(layout, selection);
 
-    if (!handle) {
-        return {};
-    }
-
-    const auto rect = setting_handle_rect(*handle, config);
-    if (is_colliding(position, rect)) {
+    if (handle && is_colliding(*handle, position)) {
         return handle;
     }
 
