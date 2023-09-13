@@ -16,7 +16,7 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
 
         case clock_generator: {
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
-            constexpr auto size = defaults::setting_handle_size;
+            constexpr auto handle_size = defaults::setting_handle_size;
             constexpr auto margin = defaults::setting_handle_margin;
 
             const auto width = 3.0;
@@ -25,8 +25,8 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
             return setting_handle_t {
                 .position = transform(element.position(), element.orientation(),
                                       point_fine_t {
-                                          width - size / 2.0 - margin,
-                                          height + overdraw - size / 2.0 - margin,
+                                          width - handle_size / 2.0 - margin,
+                                          height + overdraw - handle_size / 2.0 - margin,
                                       }),
                 .icon = icon_t::setting_handle_clock,
             };
@@ -106,5 +106,27 @@ auto get_colliding_setting_handle(point_fine_t position, const Layout& layout,
     return {};
 }
 
-//
+MouseSettingHandleLogic::MouseSettingHandleLogic(Args args) noexcept
+    : editable_circuit_ {args.editable_circuit},
+      setting_handle_ {args.setting_handle},
+      parent_ {args.parent} {}
+
+auto MouseSettingHandleLogic::mouse_press(point_fine_t position) -> void {
+    first_position_ = position;
+}
+
+auto MouseSettingHandleLogic::mouse_release(point_fine_t position) -> void {
+    if (first_position_ && is_colliding(setting_handle_, first_position_.value()) &&
+        is_colliding(setting_handle_, position)) {
+        print("clicked on setting handle");
+
+        // auto* top = dynamic_cast<QMainWindow*>(parent_->topLevelWidget());
+        // auto* widget = new ClockGeneratorWidget("Clock Generator", top);
+
+        // widget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+        // top->addDockWidget(Qt::RightDockWidgetArea, widget);
+        //  widget->show();
+    }
+}
+
 }  // namespace logicsim

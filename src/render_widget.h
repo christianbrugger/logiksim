@@ -6,6 +6,7 @@
 #include "render_circuit.h"
 #include "render_widget_type.h"
 #include "scene.h"
+#include "setting_handle.h"
 #include "size_handle.h"
 #include "timer.h"
 
@@ -238,7 +239,7 @@ class RendererWidget : public RendererWidgetBase {
     using MouseLogic = std::variant<MouseElementInsertLogic, MouseLineInsertLogic,
                                     MouseSingleSelectionLogic, MouseAreaSelectionLogic,
                                     MouseMoveSelectionLogic, SimulationInteractionLogic,
-                                    MouseSizeHandleLogic>;
+                                    MouseSizeHandleLogic, MouseSettingHandleLogic>;
 
    public:
     RendererWidget(QWidget* parent = nullptr);

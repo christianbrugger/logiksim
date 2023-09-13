@@ -1196,6 +1196,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
               std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value()))) {
             render_size_handles(context_.ctx, layout, selection);
         }
+
         render_setting_handle(context_.ctx, layout, selection);
     }
 
@@ -1405,12 +1406,23 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             const auto point = to_grid_fine(position, view_config());
             const auto& layout = editable_circuit_.value().layout();
             auto& selection_builder = editable_circuit_.value().selection_builder();
+            const auto& selection = selection_builder.selection();
 
-            if (const auto handle = get_colliding_size_handle(
-                    point, layout, selection_builder.selection(), view_config())) {
+            if (const auto size_handle =
+                    get_colliding_size_handle(point, layout, selection, view_config())) {
                 mouse_logic_.emplace(MouseSizeHandleLogic::Args {
                     .editable_circuit = editable_circuit_.value(),
-                    .size_handle = handle.value(),
+                    .size_handle = size_handle.value(),
+                });
+                return;
+            }
+
+            else if (const auto setting_handle =
+                         get_colliding_setting_handle(point, layout, selection)) {
+                mouse_logic_.emplace(MouseSettingHandleLogic::Args {
+                    .editable_circuit = editable_circuit_.value(),
+                    .setting_handle = setting_handle.value(),
+                    .parent = this,
                 });
                 return;
             }
@@ -1486,6 +1498,9 @@ auto RendererWidget::mousePressEvent(QMouseEvent* event) -> void {
                     [&](MouseSizeHandleLogic& arg) {
                         arg.mouse_press(grid_fine_position);
                     },
+                    [&](MouseSettingHandleLogic& arg) {
+                        arg.mouse_press(grid_fine_position);
+                    },
                 },
                 *mouse_logic_);
             update();
@@ -1535,6 +1550,7 @@ auto RendererWidget::mouseMoveEvent(QMouseEvent* event) -> void {
                 [&](MouseMoveSelectionLogic& arg) { arg.mouse_move(grid_fine_position); },
                 [&](SimulationInteractionLogic& arg [[maybe_unused]]) {},
                 [&](MouseSizeHandleLogic& arg) { arg.mouse_move(grid_fine_position); },
+                [&](MouseSettingHandleLogic& arg [[maybe_unused]]) {},
             },
             *mouse_logic_);
 
@@ -1585,6 +1601,10 @@ auto RendererWidget::mouseReleaseEvent(QMouseEvent* event) -> void {
                 },
                 [&](SimulationInteractionLogic& arg [[maybe_unused]]) { return true; },
                 [&](MouseSizeHandleLogic& arg) {
+                    arg.mouse_release(grid_fine_position);
+                    return true;
+                },
+                [&](MouseSettingHandleLogic& arg) {
                     arg.mouse_release(grid_fine_position);
                     return true;
                 },
@@ -1696,6 +1716,7 @@ auto RendererWidget::keyPressEvent(QKeyEvent* event) -> void {
                         return false;
                     },
                     [&](MouseSizeHandleLogic& arg [[maybe_unused]]) { return false; },
+                    [&](MouseSettingHandleLogic& arg [[maybe_unused]]) { return false; },
                 },
                 *mouse_logic_);
 

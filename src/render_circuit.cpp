@@ -1256,7 +1256,7 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
 //
 
 auto draw_setting_handle(Context& ctx, setting_handle_t handle) -> void {
-    auto rect = setting_handle_rect(handle, ctx.settings.view_config);
+    auto rect = setting_handle_rect(handle);
 
     // button rect
     draw_rect(ctx, rect,
@@ -1280,8 +1280,7 @@ auto render_setting_handle(Context& ctx, const Layout& layout, const Selection& 
     -> void {
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
 
-    const auto handle = setting_handle_position(layout, selection);
-    if (handle) {
+    if (const auto handle = setting_handle_position(layout, selection)) {
         draw_setting_handle(ctx, *handle);
     }
 }
