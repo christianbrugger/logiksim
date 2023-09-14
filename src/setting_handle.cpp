@@ -220,6 +220,7 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
     setWindowIcon(QIcon(get_icon_path(icon_t::setting_handle_clock_generator)));
 
     const auto& attrs = element.attrs_clock_generator();
+    last_valid_period_ = attrs.period;
 
     auto* layout = new QFormLayout(this);
     // Name
@@ -239,21 +240,30 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
         label->setText(tr("Clock Period:"));
 
         auto* hlayout = new QHBoxLayout();
-        auto* spin_box = new QSpinBox(this);
+        auto* line_edit = new QLineEdit(this);
         auto* combo_box = new QComboBox(this);
 
-        spin_box->setMinimum(1);
-        spin_box->setMaximum(2000);
+        line_edit->setValidator(&period_validator_);
 
         combo_box->addItem(tr("ns"), qint64 {1});
         combo_box->addItem(tr("µs"), qint64 {1'000});
         combo_box->addItem(tr("ms"), qint64 {1'000'000});
 
-        hlayout->addWidget(spin_box);
+        const auto value_ns = attrs.period.value / 1ns;
+        for (auto index : range(combo_box->count())) {
+            const auto unit = combo_box->itemData(index).toLongLong();
+            if (value_ns >= unit) {
+                combo_box->setCurrentIndex(index);
+            }
+        }
+        const auto unit = combo_box->currentData().toLongLong();
+        line_edit->setText(period_validator_.locale().toString(1.0 * value_ns / unit));
+
+        hlayout->addWidget(line_edit);
         hlayout->addWidget(combo_box);
 
         layout->addRow(label, hlayout);
-        period_value_ = spin_box;
+        period_value_ = line_edit;
         period_unit_ = combo_box;
     }
 
@@ -267,15 +277,18 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
         simulation_controls_ = check_box;
     }
 
+    connect(period_unit_, &QComboBox::currentIndexChanged, this,
+            &ClockGeneratorDialog::period_unit_changed);
+
     connect(name_, &QLineEdit::textChanged, this, &ClockGeneratorDialog::value_changed);
-    connect(period_value_, &QSpinBox::valueChanged, this,
+    connect(period_value_, &QLineEdit::textChanged, this,
             &ClockGeneratorDialog::value_changed);
     connect(period_unit_, &QComboBox::currentIndexChanged, this,
             &ClockGeneratorDialog::value_changed);
     connect(simulation_controls_, &QCheckBox::stateChanged, this,
             &ClockGeneratorDialog::value_changed);
 
-    value_changed();
+    period_unit_changed();
 }
 
 auto ClockGeneratorDialog::value_changed() -> void {
@@ -283,16 +296,37 @@ auto ClockGeneratorDialog::value_changed() -> void {
         throw_exception("a pointer is not set");
     }
 
-    const auto value = int64_t {period_value_->value()};
-    const auto unit = int64_t {period_unit_->currentData().toLongLong()};
-    const auto period = delay_t {round_to<int64_t>(value * unit) * 1ns};
+    if (period_value_->hasAcceptableInput()) {
+        const auto value = period_validator_.locale().toDouble(period_value_->text());
+        const auto unit = int64_t {period_unit_->currentData().toLongLong()};
+        const auto period = delay_t {round_to<int64_t>(value * unit) * 1ns};
+        last_valid_period_ = period;
+    }
 
     widget_registry_.set_attributes(
         this, layout::attributes_clock_generator {
                   .name = name_->text().toStdString(),
-                  .period = period,
+                  .period = last_valid_period_.value(),
                   .show_simulation_controls = simulation_controls_->isChecked(),
               });
+}
+
+auto ClockGeneratorDialog::period_unit_changed() -> void {
+    const auto unit = int64_t {period_unit_->currentData().toLongLong()};
+
+    if (unit == 1) {
+        period_validator_.setDecimals(0);
+    } else if (unit == 1'000) {
+        period_validator_.setDecimals(3);
+    } else if (unit == 1'000'000) {
+        period_validator_.setDecimals(6);
+    } else {
+        throw_exception("unexpected unit");
+    }
+
+    double max_ns = 2e9;
+    double min_ns = 1.0;
+    period_validator_.setRange(min_ns / unit, max_ns / unit);
 }
 
 //

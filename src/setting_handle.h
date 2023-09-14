@@ -8,6 +8,7 @@
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>
 
+#include <QDoubleValidator>
 #include <QObject>
 #include <QWidget>
 
@@ -100,14 +101,18 @@ class ClockGeneratorDialog : public QWidget {
 
    private:
     auto value_changed() -> void;
+    auto period_unit_changed() -> void;
 
    private:
     SettingWidgetRegistry& widget_registry_;
+    std::optional<delay_t> last_valid_period_;
 
     QLineEdit* name_;
-    QSpinBox* period_value_;
+    QLineEdit* period_value_;
     QComboBox* period_unit_;
     QCheckBox* simulation_controls_;
+
+    QDoubleValidator period_validator_;
 };
 
 //
