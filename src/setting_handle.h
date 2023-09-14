@@ -18,6 +18,9 @@ class QLineEdit;
 class QComboBox;
 class QSpinBox;
 class QCheckBox;
+class QLabel;
+class QLayout;
+class QFormLayout;
 
 namespace logicsim {
 class Layout;
@@ -94,6 +97,23 @@ class SettingWidgetRegistry : public QObject {
 // Clock Generator Dialog
 //
 
+class PeriodInput : public QObject {
+   public:
+    explicit PeriodInput(QWidget* parent, QString text, delay_t initial_value);
+
+    auto value_changed() -> void;
+    auto period_unit_changed() -> void;
+
+    delay_t last_valid_period;
+
+    QLineEdit* period_value;
+    QComboBox* period_unit;
+    QDoubleValidator period_validator;
+
+    QLabel* label;
+    QLayout* layout;
+};
+
 class ClockGeneratorDialog : public QWidget {
    public:
     explicit ClockGeneratorDialog(QWidget* parent, SettingWidgetRegistry& widget_registry,
@@ -101,18 +121,19 @@ class ClockGeneratorDialog : public QWidget {
 
    private:
     auto value_changed() -> void;
-    auto period_unit_changed() -> void;
+    auto update_row_visibility() -> void;
 
    private:
     SettingWidgetRegistry& widget_registry_;
-    std::optional<delay_t> last_valid_period_;
+
+    QFormLayout* layout_;
 
     QLineEdit* name_;
-    QLineEdit* period_value_;
-    QComboBox* period_unit_;
+    QCheckBox* symmetric_period_;
+    PeriodInput* period_;
+    PeriodInput* period_on_;
+    PeriodInput* period_off_;
     QCheckBox* simulation_controls_;
-
-    QDoubleValidator period_validator_;
 };
 
 //

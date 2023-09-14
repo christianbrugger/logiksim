@@ -212,6 +212,78 @@ auto SettingWidgetRegistry::on_dialog_destroyed(QObject* object) -> void {
 // Clock Generator Dialog
 //
 
+PeriodInput::PeriodInput(QWidget* parent, QString text, delay_t initial_value)
+    : QObject(parent), last_valid_period {initial_value} {
+    label = new QLabel(parent);
+    label->setText(text);
+
+    layout = new QHBoxLayout();
+    auto* line_edit = new QLineEdit(parent);
+    auto* combo_box = new QComboBox(parent);
+
+    line_edit->setValidator(&period_validator);
+
+    combo_box->addItem(tr("ns"), qint64 {1});
+    combo_box->addItem(tr("µs"), qint64 {1'000});
+    combo_box->addItem(tr("ms"), qint64 {1'000'000});
+
+    const auto value_ns = initial_value.value / 1ns;
+    for (auto index : range(combo_box->count())) {
+        const auto unit = combo_box->itemData(index).toLongLong();
+        if (value_ns >= unit) {
+            combo_box->setCurrentIndex(index);
+        }
+    }
+    const auto unit = combo_box->currentData().toLongLong();
+    line_edit->setText(period_validator.locale().toString(1.0 * value_ns / unit));
+
+    layout->addWidget(line_edit);
+    layout->addWidget(combo_box);
+
+    period_value = line_edit;
+    period_unit = combo_box;
+
+    connect(period_unit, &QComboBox::currentIndexChanged, this,
+            &PeriodInput::period_unit_changed);
+
+    connect(period_value, &QLineEdit::textChanged, this, &PeriodInput::value_changed);
+    connect(period_unit, &QComboBox::currentIndexChanged, this,
+            &PeriodInput::value_changed);
+
+    period_unit_changed();
+}
+
+auto PeriodInput::value_changed() -> void {
+    if (!period_value || !period_unit) {
+        throw_exception("a pointer is not set in PeriodInput");
+    }
+
+    if (period_value->hasAcceptableInput()) {
+        const auto value = period_validator.locale().toDouble(period_value->text());
+        const auto unit = int64_t {period_unit->currentData().toLongLong()};
+        const auto period = delay_t {round_to<int64_t>(value * unit) * 1ns};
+        last_valid_period = period;
+    }
+}
+
+auto PeriodInput::period_unit_changed() -> void {
+    const auto unit = int64_t {period_unit->currentData().toLongLong()};
+
+    if (unit == 1) {
+        period_validator.setDecimals(0);
+    } else if (unit == 1'000) {
+        period_validator.setDecimals(3);
+    } else if (unit == 1'000'000) {
+        period_validator.setDecimals(6);
+    } else {
+        throw_exception("unexpected unit");
+    }
+
+    double max_ns = 2e9;
+    double min_ns = 1.0;
+    period_validator.setRange(min_ns / unit, max_ns / unit);
+}
+
 ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
                                            SettingWidgetRegistry& widget_registry,
                                            layout::ConstElement element)
@@ -220,51 +292,70 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
     setWindowIcon(QIcon(get_icon_path(icon_t::setting_handle_clock_generator)));
 
     const auto& attrs = element.attrs_clock_generator();
-    last_valid_period_ = attrs.period;
 
     auto* layout = new QFormLayout(this);
+    layout_ = layout;
+
     // Name
     {
         auto* label = new QLabel(this);
         label->setText(tr("Clock Name:"));
-        auto* text_edit = new QLineEdit(this);
-        text_edit->setText(QString::fromStdString(attrs.name));
+        auto* line_edit = new QLineEdit(this);
+        line_edit->setText(QString::fromStdString(attrs.name));
 
-        layout->addRow(label, text_edit);
-        name_ = text_edit;
+        layout->addRow(label, line_edit);
+
+        name_ = line_edit;
+        connect(name_, &QLineEdit::textChanged, this,
+                &ClockGeneratorDialog::value_changed);
     }
 
-    // Period
+    // Symmetric Period
     {
-        auto* label = new QLabel(this);
-        label->setText(tr("Clock Period:"));
+        auto* check_box = new QCheckBox(this);
+        check_box->setText(tr("Symmetric Period"));
+        check_box->setChecked(attrs.symmetric_period);
 
-        auto* hlayout = new QHBoxLayout();
-        auto* line_edit = new QLineEdit(this);
-        auto* combo_box = new QComboBox(this);
+        layout->addRow(nullptr, check_box);
+        symmetric_period_ = check_box;
 
-        line_edit->setValidator(&period_validator_);
+        connect(symmetric_period_, &QCheckBox::stateChanged, this,
+                &ClockGeneratorDialog::update_row_visibility);
+        connect(symmetric_period_, &QCheckBox::stateChanged, this,
+                &ClockGeneratorDialog::value_changed);
+    }
 
-        combo_box->addItem(tr("ns"), qint64 {1});
-        combo_box->addItem(tr("µs"), qint64 {1'000});
-        combo_box->addItem(tr("ms"), qint64 {1'000'000});
+    // Symmetric Period
+    {
+        period_ = new PeriodInput(this, tr("Period:"), attrs.period);
+        layout->addRow(period_->label, period_->layout);
 
-        const auto value_ns = attrs.period.value / 1ns;
-        for (auto index : range(combo_box->count())) {
-            const auto unit = combo_box->itemData(index).toLongLong();
-            if (value_ns >= unit) {
-                combo_box->setCurrentIndex(index);
-            }
-        }
-        const auto unit = combo_box->currentData().toLongLong();
-        line_edit->setText(period_validator_.locale().toString(1.0 * value_ns / unit));
+        connect(period_->period_value, &QLineEdit::textChanged, this,
+                &ClockGeneratorDialog::value_changed);
+        connect(period_->period_unit, &QComboBox::currentIndexChanged, this,
+                &ClockGeneratorDialog::value_changed);
+    }
 
-        hlayout->addWidget(line_edit);
-        hlayout->addWidget(combo_box);
+    // On Period
+    {
+        period_on_ = new PeriodInput(this, tr("On Period:"), attrs.period_on);
+        layout->addRow(period_on_->label, period_on_->layout);
 
-        layout->addRow(label, hlayout);
-        period_value_ = line_edit;
-        period_unit_ = combo_box;
+        connect(period_on_->period_value, &QLineEdit::textChanged, this,
+                &ClockGeneratorDialog::value_changed);
+        connect(period_on_->period_unit, &QComboBox::currentIndexChanged, this,
+                &ClockGeneratorDialog::value_changed);
+    }
+
+    // Off Period
+    {
+        period_off_ = new PeriodInput(this, tr("Off Period:"), attrs.period_off);
+        layout->addRow(period_off_->label, period_off_->layout);
+
+        connect(period_off_->period_value, &QLineEdit::textChanged, this,
+                &ClockGeneratorDialog::value_changed);
+        connect(period_off_->period_unit, &QComboBox::currentIndexChanged, this,
+                &ClockGeneratorDialog::value_changed);
     }
 
     // Simulation Controls
@@ -275,58 +366,42 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
 
         layout->addRow(nullptr, check_box);
         simulation_controls_ = check_box;
+        connect(simulation_controls_, &QCheckBox::stateChanged, this,
+                &ClockGeneratorDialog::value_changed);
     }
 
-    connect(period_unit_, &QComboBox::currentIndexChanged, this,
-            &ClockGeneratorDialog::period_unit_changed);
-
-    connect(name_, &QLineEdit::textChanged, this, &ClockGeneratorDialog::value_changed);
-    connect(period_value_, &QLineEdit::textChanged, this,
-            &ClockGeneratorDialog::value_changed);
-    connect(period_unit_, &QComboBox::currentIndexChanged, this,
-            &ClockGeneratorDialog::value_changed);
-    connect(simulation_controls_, &QCheckBox::stateChanged, this,
-            &ClockGeneratorDialog::value_changed);
-
-    period_unit_changed();
+    update_row_visibility();
 }
 
 auto ClockGeneratorDialog::value_changed() -> void {
-    if (!name_ || !period_value_ || !period_unit_ || !simulation_controls_) {
+    if (!name_ || !symmetric_period_ || !period_ || !period_on_ || !period_off_ ||
+        !simulation_controls_) {
         throw_exception("a pointer is not set");
-    }
-
-    if (period_value_->hasAcceptableInput()) {
-        const auto value = period_validator_.locale().toDouble(period_value_->text());
-        const auto unit = int64_t {period_unit_->currentData().toLongLong()};
-        const auto period = delay_t {round_to<int64_t>(value * unit) * 1ns};
-        last_valid_period_ = period;
     }
 
     widget_registry_.set_attributes(
         this, layout::attributes_clock_generator {
                   .name = name_->text().toStdString(),
-                  .period = last_valid_period_.value(),
+                  .symmetric_period = symmetric_period_->isChecked(),
+                  .period = period_->last_valid_period,
+                  .period_on = period_on_->last_valid_period,
+                  .period_off = period_off_->last_valid_period,
                   .show_simulation_controls = simulation_controls_->isChecked(),
               });
 }
 
-auto ClockGeneratorDialog::period_unit_changed() -> void {
-    const auto unit = int64_t {period_unit_->currentData().toLongLong()};
+auto ClockGeneratorDialog::update_row_visibility() -> void {
+    const auto symmetric_period = symmetric_period_->isChecked();
 
-    if (unit == 1) {
-        period_validator_.setDecimals(0);
-    } else if (unit == 1'000) {
-        period_validator_.setDecimals(3);
-    } else if (unit == 1'000'000) {
-        period_validator_.setDecimals(6);
-    } else {
-        throw_exception("unexpected unit");
-    }
+    layout_->setRowVisible(period_->label, false);
+    layout_->setRowVisible(period_on_->label, false);
+    layout_->setRowVisible(period_off_->label, false);
 
-    double max_ns = 2e9;
-    double min_ns = 1.0;
-    period_validator_.setRange(min_ns / unit, max_ns / unit);
+    layout_->setRowVisible(period_->label, symmetric_period);
+    layout_->setRowVisible(period_on_->label, !symmetric_period);
+    layout_->setRowVisible(period_off_->label, !symmetric_period);
+
+    this->adjustSize();
 }
 
 //

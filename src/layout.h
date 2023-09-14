@@ -34,7 +34,10 @@ using data_map_t = ankerl::unordered_dense::map<element_id_t, T>;
 
 struct attributes_clock_generator {
     std::string name {"clock"};
+    bool symmetric_period {true};
     delay_t period {1ms};
+    delay_t period_on {1ms};
+    delay_t period_off {1ms};
     bool show_simulation_controls {true};
 
    public:
