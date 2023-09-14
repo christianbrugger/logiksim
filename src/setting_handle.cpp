@@ -11,10 +11,11 @@
 #include <QBoxLayout>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QSpinBox>
+#include <QRegularExpression>
 
 namespace logicsim {
 auto setting_handle_position(const Layout& layout, element_id_t element_id)
@@ -186,6 +187,16 @@ auto SettingWidgetRegistry::element(QWidget* dialog) const -> layout::ConstEleme
     return editable_circuit_.layout().element(element_id(dialog));
 }
 
+auto SettingWidgetRegistry::set_attributes(QWidget* dialog,
+                                           layout::attributes_clock_generator attrs)
+    -> void {
+    editable_circuit_.set_attributes(element_id(dialog), std::move(attrs));
+
+    if (parent_) {
+        parent_->update();
+    }
+}
+
 auto SettingWidgetRegistry::on_dialog_destroyed(QObject* object) -> void {
     auto* widget = reinterpret_cast<QWidget*>(object);
     if (!widget) {
@@ -211,7 +222,6 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
     const auto& attrs = element.attrs_clock_generator();
 
     auto* layout = new QFormLayout(this);
-
     // Name
     {
         auto* label = new QLabel(this);
@@ -220,6 +230,7 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
         text_edit->setText(QString::fromStdString(attrs.name));
 
         layout->addRow(label, text_edit);
+        name_ = text_edit;
     }
 
     // Period
@@ -232,14 +243,18 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
         auto* combo_box = new QComboBox(this);
 
         spin_box->setMinimum(1);
-        spin_box->setMaximum(1000);
+        spin_box->setMaximum(2000);
 
-        combo_box->addItems({tr("ns"), tr("µs"), tr("ms"), tr("seconds")});
+        combo_box->addItem(tr("ns"), qint64 {1});
+        combo_box->addItem(tr("µs"), qint64 {1'000});
+        combo_box->addItem(tr("ms"), qint64 {1'000'000});
 
         hlayout->addWidget(spin_box);
         hlayout->addWidget(combo_box);
 
         layout->addRow(label, hlayout);
+        period_value_ = spin_box;
+        period_unit_ = combo_box;
     }
 
     // Simulation Controls
@@ -249,7 +264,35 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
         check_box->setChecked(attrs.show_simulation_controls);
 
         layout->addRow(nullptr, check_box);
+        simulation_controls_ = check_box;
     }
+
+    connect(name_, &QLineEdit::textChanged, this, &ClockGeneratorDialog::value_changed);
+    connect(period_value_, &QSpinBox::valueChanged, this,
+            &ClockGeneratorDialog::value_changed);
+    connect(period_unit_, &QComboBox::currentIndexChanged, this,
+            &ClockGeneratorDialog::value_changed);
+    connect(simulation_controls_, &QCheckBox::stateChanged, this,
+            &ClockGeneratorDialog::value_changed);
+
+    value_changed();
+}
+
+auto ClockGeneratorDialog::value_changed() -> void {
+    if (!name_ || !period_value_ || !period_unit_ || !simulation_controls_) {
+        throw_exception("a pointer is not set");
+    }
+
+    const auto value = int64_t {period_value_->value()};
+    const auto unit = int64_t {period_unit_->currentData().toLongLong()};
+    const auto period = delay_t {round_to<int64_t>(value * unit) * 1ns};
+
+    widget_registry_.set_attributes(
+        this, layout::attributes_clock_generator {
+                  .name = name_->text().toStdString(),
+                  .period = period,
+                  .show_simulation_controls = simulation_controls_->isChecked(),
+              });
 }
 
 //

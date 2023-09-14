@@ -13,6 +13,11 @@
 
 #include <optional>
 
+class QLineEdit;
+class QComboBox;
+class QSpinBox;
+class QCheckBox;
+
 namespace logicsim {
 class Layout;
 class Selection;
@@ -23,6 +28,7 @@ namespace layout {
 template <bool Const>
 class ElementTemplate;
 using ConstElement = ElementTemplate<true>;
+struct attributes_clock_generator;
 }  // namespace layout
 
 namespace defaults {
@@ -70,6 +76,9 @@ class SettingWidgetRegistry : public QObject {
     [[nodiscard]] auto element_id(QWidget* dialog) const -> element_id_t;
     [[nodiscard]] auto element(QWidget* dialog) const -> layout::ConstElement;
 
+    auto set_attributes(QWidget* dialog, layout::attributes_clock_generator attrs)
+        -> void;
+
    private:
     auto on_dialog_destroyed(QObject* object) -> void;
 
@@ -90,7 +99,15 @@ class ClockGeneratorDialog : public QWidget {
                                   layout::ConstElement element);
 
    private:
+    auto value_changed() -> void;
+
+   private:
     SettingWidgetRegistry& widget_registry_;
+
+    QLineEdit* name_;
+    QSpinBox* period_value_;
+    QComboBox* period_unit_;
+    QCheckBox* simulation_controls_;
 };
 
 //

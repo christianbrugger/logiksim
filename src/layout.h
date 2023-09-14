@@ -105,8 +105,8 @@ class Layout {
     auto set_position(element_id_t element_id, point_t point) -> void;
     auto set_display_state(element_id_t element_id, display_state_t display_state)
         -> void;
-    auto set_attrs_clock_generator(element_id_t element_id,
-                                   layout::attributes_clock_generator attrs) -> void;
+    auto set_attributes(element_id_t element_id, layout::attributes_clock_generator attrs)
+        -> void;
 
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;

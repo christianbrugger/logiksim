@@ -836,6 +836,8 @@ auto draw_buffer(Context& ctx, layout::ConstElement element, ElementDrawState st
 
 auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           ElementDrawState state) -> void {
+    const auto& attrs = element.attrs_clock_generator();
+
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., 0. - padding},
@@ -850,10 +852,8 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           state);
 
     // generator delay
-    const auto generator_delay = element.attrs_clock_generator().period;
-    const auto duration_text = fmt::format("{}", generator_delay);
+    const auto duration_text = fmt::format("{}", attrs.period);
     draw_logic_item_label(ctx, point_fine_t {1.5, 0}, duration_text, element, state,
-
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,
@@ -861,6 +861,9 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                               .vertical_alignment = VerticalAlignment::top,
                               .style = FontStyle::bold,
                           });
+
+    // name
+    draw_logic_item_label(ctx, point_fine_t {1.5, -1}, attrs.name, element, state);
 }
 
 auto draw_flipflop_jk(Context& ctx, layout::ConstElement element, ElementDrawState state)

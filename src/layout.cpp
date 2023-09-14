@@ -386,8 +386,8 @@ auto Layout::set_display_state(element_id_t element_id, display_state_t display_
     display_states_.at(element_id.value) = display_state;
 }
 
-auto Layout::set_attrs_clock_generator(element_id_t element_id,
-                                       layout::attributes_clock_generator attrs) -> void {
+auto Layout::set_attributes(element_id_t element_id,
+                            layout::attributes_clock_generator attrs) -> void {
     const auto it = map_clock_generator_.find(element_id);
     if (it == map_clock_generator_.end()) [[unlikely]] {
         throw_exception("could not find attribute");

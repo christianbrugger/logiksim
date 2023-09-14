@@ -182,6 +182,11 @@ auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
     editable_circuit::toggle_inserted_wire_crosspoint(get_state(), point);
 }
 
+auto EditableCircuit::set_attributes(element_id_t element_id,
+                                     layout::attributes_clock_generator attrs) -> void {
+    layout_.value().set_attributes(element_id, std::move(attrs));
+}
+
 auto EditableCircuit::regularize_temporary_selection(
     const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t> {

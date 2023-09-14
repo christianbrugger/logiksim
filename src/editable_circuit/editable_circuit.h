@@ -68,6 +68,9 @@ class EditableCircuit {
 
     auto toggle_wire_crosspoint(point_t point) -> void;
 
+    auto set_attributes(element_id_t element_id, layout::attributes_clock_generator attrs)
+        -> void;
+
     // Wire Mode Change Helpers
 
     // adds crosspoints, merges wire segments and
