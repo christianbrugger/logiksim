@@ -651,6 +651,8 @@ auto add_logic_item_private(State state, LogicItemDefinition definition, point_t
 
                               .input_inverters = definition.input_inverters,
                               .output_inverters = definition.output_inverters,
+
+                              .attrs_clock_generator = definition.attrs_clock_generator,
                           })
                           .element_id();
     state.sender.submit(info_message::LogicItemCreated {element_id});
@@ -688,6 +690,10 @@ auto get_logic_item_definition(const Layout& layout, const element_id_t element_
         .orientation = element.orientation(),
         .input_inverters = element.input_inverters(),
         .output_inverters = element.output_inverters(),
+
+        .attrs_clock_generator = element.element_type() == ElementType::clock_generator
+                                     ? std::make_optional(element.attrs_clock_generator())
+                                     : std::nullopt,
     };
 }
 

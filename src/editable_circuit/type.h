@@ -2,7 +2,11 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_TYPE_H
 
 #include "format.h"
+#include "layout.h"
 #include "vocabulary.h"
+
+#include <cstddef>
+#include <optional>
 
 namespace logicsim {
 
@@ -22,10 +26,12 @@ struct LogicItemDefinition {
     logic_small_vector_t input_inverters {};
     logic_small_vector_t output_inverters {};
 
+    std::optional<layout::attributes_clock_generator> attrs_clock_generator {};
+
     [[nodiscard]] auto is_valid() const -> bool;
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const LogicItemDefinition& other) const
+    [[nodiscard]] auto operator==(const LogicItemDefinition &other) const
         -> bool = default;
 };
 

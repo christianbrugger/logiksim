@@ -213,6 +213,8 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
                 .input_count = 2,
                 .output_count = 2,
                 .orientation = orientation_t::right,
+
+                .attrs_clock_generator = layout::attributes_clock_generator {},
             };
         case insert_shift_register:
             return LogicItemDefinition {

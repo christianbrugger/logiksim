@@ -1323,8 +1323,7 @@ auto RendererWidget::paste_clipboard_items() -> void {
     auto cross_points = editable_circuit.regularize_temporary_selection(*handle);
 
     editable_circuit.split_before_insert(*handle);
-    editable_circuit.change_insertion_mode(editable_circuit.get_handle(*handle),
-                                           InsertionMode::collisions);
+    editable_circuit.change_insertion_mode(handle.copy(), InsertionMode::collisions);
 
     editable_circuit.selection_builder().set_selection(*handle.get());
 

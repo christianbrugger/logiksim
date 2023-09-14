@@ -55,22 +55,23 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
     if (!is_logic_item(obj.element_type)) {
         return std::nullopt;
     }
-    // input & output counts
-    if (!is_input_output_count_valid(obj.element_type, obj.input_count,
-                                     obj.output_count)) {
-        return std::nullopt;
-    }
 
-    // inverters
-    if (obj.input_inverters.size() != obj.input_count) {
-        return std::nullopt;
-    }
-    if (obj.output_inverters.size() != obj.output_count) {
-        return std::nullopt;
-    }
+    // definition
+    const auto definition = LogicItemDefinition {
+        .element_type = obj.element_type,
+        .input_count = obj.input_count,
+        .output_count = obj.output_count,
+        .orientation = obj.orientation,
+        .input_inverters = obj.input_inverters,
+        .output_inverters = obj.output_inverters,
 
-    // orientation
-    if (!is_orientation_valid(obj.element_type, obj.orientation)) {
+        // TODO rework this
+        .attrs_clock_generator =
+            obj.element_type == ElementType::clock_generator
+                ? std::make_optional(layout::attributes_clock_generator {})
+                : std::nullopt,
+    };
+    if (!definition.is_valid()) {
         return std::nullopt;
     }
 
@@ -92,15 +93,7 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
     }
 
     return LogicItemData {
-        .definition =
-            LogicItemDefinition {
-                .element_type = obj.element_type,
-                .input_count = obj.input_count,
-                .output_count = obj.output_count,
-                .orientation = obj.orientation,
-                .input_inverters = obj.input_inverters,
-                .output_inverters = obj.output_inverters,
-            },
+        .definition = definition,
         .position = moved_position,
     };
 }

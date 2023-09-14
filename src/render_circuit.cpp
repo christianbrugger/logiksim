@@ -850,7 +850,7 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           state);
 
     // generator delay
-    const auto generator_delay = Schematic::defaults::clock_generator_delay;
+    const auto generator_delay = element.attrs_clock_generator().period;
     const auto duration_text = fmt::format("{}", generator_delay);
     draw_logic_item_label(ctx, point_fine_t {1.5, 0}, duration_text, element, state,
 

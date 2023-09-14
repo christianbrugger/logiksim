@@ -21,8 +21,15 @@ auto format(LineInsertionType type) -> std::string {
 }
 
 auto LogicItemDefinition::is_valid() const -> bool {
+    using enum ElementType;
+
     return is_input_output_count_valid(element_type, input_count, output_count) &&
-           is_orientation_valid(element_type, orientation);
+           is_orientation_valid(element_type, orientation) &&
+           (input_inverters.empty() || input_inverters.size() == input_count) &&
+           (output_inverters.empty() || output_inverters.size() == output_count) &&
+           // clock generator
+           attrs_clock_generator.has_value() == (element_type == clock_generator) &&
+           (!attrs_clock_generator || attrs_clock_generator->is_valid());
 }
 
 auto LogicItemDefinition::format() const -> std::string {

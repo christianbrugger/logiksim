@@ -10,12 +10,39 @@
 #include <fmt/core.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
 namespace logicsim {
 
 class Layout;
+
+namespace layout {
+template <bool Const>
+class ElementTemplate;
+
+using Element = ElementTemplate<false>;
+using ConstElement = ElementTemplate<true>;
+}  // namespace layout
+
+namespace layout {
+
+template <typename T>
+using data_map_t = ankerl::unordered_dense::map<element_id_t, T>;
+
+struct attributes_clock_generator {
+    std::string name {"clock"};
+    delay_t period {1ms};
+    bool show_simulation_controls {true};
+
+   public:
+    [[nodiscard]] auto is_valid() const -> bool;
+    [[nodiscard]] auto operator==(const attributes_clock_generator &) const
+        -> bool = default;
+    [[nodiscard]] auto operator<=>(const attributes_clock_generator &) const = default;
+};
+}  // namespace layout
 
 [[nodiscard]] auto is_inserted(const Layout &layout, element_id_t element_id) -> bool;
 
@@ -31,14 +58,6 @@ class Layout;
 
 [[nodiscard]] auto moved_layout(Layout layout, int delta_x, int delta_y)
     -> std::optional<Layout>;
-
-namespace layout {
-template <bool Const>
-class ElementTemplate;
-
-using Element = ElementTemplate<false>;
-using ConstElement = ElementTemplate<true>;
-}  // namespace layout
 
 class Layout {
     template <bool Const>
@@ -68,11 +87,12 @@ class Layout {
         std::size_t output_count {0};
         point_t position {point_t {0, 0}};
         orientation_t orientation {orientation_t::undirected};
-        color_t color {defaults::color_black};
 
         circuit_id_t circuit_id {null_circuit};
         logic_small_vector_t input_inverters {};
         logic_small_vector_t output_inverters {};
+
+        std::optional<layout::attributes_clock_generator> attrs_clock_generator {};
     };
 
     auto add_element(ElementData &&data) -> layout::Element;
@@ -84,6 +104,8 @@ class Layout {
     auto set_position(element_id_t element_id, point_t point) -> void;
     auto set_display_state(element_id_t element_id, display_state_t display_state)
         -> void;
+    auto set_attrs_clock_generator(element_id_t element_id,
+                                   layout::attributes_clock_generator attrs) -> void;
 
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;
@@ -107,8 +129,10 @@ class Layout {
     [[nodiscard]] auto position(element_id_t element_id) const -> point_t;
     [[nodiscard]] auto orientation(element_id_t element_id) const -> orientation_t;
     [[nodiscard]] auto display_state(element_id_t element_id) const -> display_state_t;
-    [[nodiscard]] auto color(element_id_t element_id) const -> color_t;
     [[nodiscard]] auto bounding_rect(element_id_t element_id) const -> rect_t;
+
+    [[nodiscard]] auto attrs_clock_generator(element_id_t element_id) const
+        -> const layout::attributes_clock_generator &;
 
     [[nodiscard]] auto modifyable_segment_tree(element_id_t element_id) -> SegmentTree &;
 
@@ -128,6 +152,7 @@ class Layout {
     static_assert(sizeof(connection_size_t) == sizeof(connection_id_t));
 
     std::vector<ElementType> element_types_ {};
+    // TODO create two lists for lines and logic items or use a variant
     std::vector<circuit_id_t> sub_circuit_ids_ {};
     std::vector<connection_size_t> input_counts_ {};
     std::vector<connection_size_t> output_counts_ {};
@@ -139,9 +164,10 @@ class Layout {
     std::vector<point_t> positions_ {};
     std::vector<orientation_t> orientations_ {};
     std::vector<display_state_t> display_states_ {};
-    std::vector<color_t> colors_ {};
-
     mutable std::vector<rect_t> bounding_rects_ {};
+
+    // element type specific data
+    layout::data_map_t<layout::attributes_clock_generator> map_clock_generator_ {};
 
     circuit_id_t circuit_id_ {0};
 };
@@ -207,9 +233,11 @@ class ElementTemplate {
     [[nodiscard]] auto line_tree() const -> const LineTree &;
     [[nodiscard]] auto position() const -> point_t;
     [[nodiscard]] auto orientation() const -> orientation_t;
-    [[nodiscard]] auto color() const -> color_t;
 
     [[nodiscard]] auto bounding_rect() const -> rect_t;
+
+    [[nodiscard]] auto attrs_clock_generator() const
+        -> const layout::attributes_clock_generator &;
 
     // modification
     [[nodiscard]] auto modifyable_segment_tree() const -> SegmentTree &

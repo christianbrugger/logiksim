@@ -16,6 +16,18 @@
 
 namespace logicsim {
 
+namespace layout {
+
+auto attributes_clock_generator::is_valid() const -> bool {
+    return period > delay_t {0ns};
+}
+
+}  // namespace layout
+
+//
+// Layout
+//
+
 Layout::Layout(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {}
 
 auto Layout::swap(Layout &other) noexcept -> void {
@@ -33,9 +45,9 @@ auto Layout::swap(Layout &other) noexcept -> void {
     positions_.swap(other.positions_);
     orientations_.swap(other.orientations_);
     display_states_.swap(other.display_states_);
-    colors_.swap(other.colors_);
-
     bounding_rects_.swap(other.bounding_rects_);
+
+    map_clock_generator_.swap(other.map_clock_generator_);
 
     swap(circuit_id_, other.circuit_id_);
 }
@@ -51,6 +63,28 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
         swap(container.at(element_id_1.value), container.at(element_id_2.value));
     };
 
+    const auto swap_map_ids = [element_id_1, element_id_2](auto &map) {
+        using std::swap;
+
+        auto it1 = map.find(element_id_1);
+        auto it2 = map.find(element_id_2);
+
+        if (it1 == map.end() && it2 == map.end()) {
+            return;
+        }
+
+        if (it1 != map.end() && it2 != map.end()) {
+            swap(it1->second, it2->second);
+            return;
+        }
+
+        if (it1 == map.end()) {
+            swap(it1, it2);
+        }
+        map.emplace(element_id_2, std::move(it1->second));
+        map.erase(it1);
+    };
+
     swap_ids(element_types_);
     swap_ids(sub_circuit_ids_);
     swap_ids(input_counts_);
@@ -63,15 +97,20 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
     swap_ids(positions_);
     swap_ids(orientations_);
     swap_ids(display_states_);
-    swap_ids(colors_);
-
     swap_ids(bounding_rects_);
+
+    swap_map_ids(map_clock_generator_);
 }
 
 auto Layout::delete_last_element() -> void {
     if (empty()) {
         throw_exception("Cannot delete last element of empty schematics.");
     }
+
+    const auto erase_last_map =
+        [last_element_id = element_id_t {element_count() - size_t {1}}](auto &map) {
+            map.erase(last_element_id);
+        };
 
     element_types_.pop_back();
     sub_circuit_ids_.pop_back();
@@ -85,9 +124,9 @@ auto Layout::delete_last_element() -> void {
     positions_.pop_back();
     orientations_.pop_back();
     display_states_.pop_back();
-    colors_.pop_back();
-
     bounding_rects_.pop_back();
+
+    erase_last_map(map_clock_generator_);
 }
 
 auto Layout::normalize() -> void {
@@ -101,18 +140,19 @@ auto Layout::normalize() -> void {
     }
 
     // sort our data (except caches)
-    const auto vectors = ranges::zip_view(element_types_,     //
-                                          sub_circuit_ids_,   //
-                                          input_counts_,      //
-                                          output_counts_,     //
-                                          input_inverters_,   //
-                                          output_inverters_,  //
-                                                              //
-                                          segment_trees_,     //
-                                          positions_,         //
-                                          orientations_,      //
-                                          display_states_,    //
-                                          colors_);
+    const auto vectors = ranges::zip_view(  //
+        element_types_,                     //
+        sub_circuit_ids_,                   //
+        input_counts_,                      //
+        output_counts_,                     //
+        input_inverters_,                   //
+        output_inverters_,                  //
+                                            //
+        segment_trees_,                     //
+        positions_,                         //
+        orientations_,                      //
+        display_states_                     //
+    );
 
     ranges::sort(vectors);
 }
@@ -264,7 +304,6 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
     if (data.output_count > connection_id_t::max()) [[unlikely]] {
         throw_exception("Output count needs to be positive and not too large.");
     }
-
     if (element_count() + 1 >= element_id_t::max()) [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
@@ -300,8 +339,16 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
     positions_.push_back(data.position);
     orientations_.push_back(data.orientation);
     display_states_.push_back(data.display_state);
-    colors_.push_back(data.color);
     bounding_rects_.push_back(empty_bounding_rect);
+
+    // maps
+    const auto add_map_entry = [element_id](auto &map, auto &&optional) {
+        if (optional && !map.emplace(element_id, std::move(*optional)).second) {
+            throw_exception("element_id already exists in map");
+        }
+    };
+
+    add_map_entry(map_clock_generator_, std::move(data.attrs_clock_generator));
 
     return element(element_id);
 }
@@ -327,6 +374,15 @@ auto Layout::set_position(element_id_t element_id, point_t position) -> void {
 auto Layout::set_display_state(element_id_t element_id, display_state_t display_state)
     -> void {
     display_states_.at(element_id.value) = display_state;
+}
+
+auto Layout::set_attrs_clock_generator(element_id_t element_id,
+                                       layout::attributes_clock_generator attrs) -> void {
+    const auto it = map_clock_generator_.find(element_id);
+    if (it == map_clock_generator_.end()) {
+        throw_exception("could not find attribute");
+    }
+    it->second = std::move(attrs);
 }
 
 auto Layout::element_ids() const noexcept -> forward_range_t<element_id_t> {
@@ -412,15 +468,20 @@ auto Layout::display_state(element_id_t element_id) const -> display_state_t {
     return display_states_.at(element_id.value);
 }
 
-auto Layout::color(element_id_t element_id) const -> color_t {
-    return colors_.at(element_id.value);
-}
-
 auto Layout::bounding_rect(element_id_t element_id) const -> rect_t {
     if (bounding_rects_.at(element_id.value) == empty_bounding_rect) {
         update_bounding_rect(element_id);
     }
     return bounding_rects_.at(element_id.value);
+}
+
+auto Layout::attrs_clock_generator(element_id_t element_id) const
+    -> const layout::attributes_clock_generator & {
+    const auto it = map_clock_generator_.find(element_id);
+    if (it == map_clock_generator_.end()) {
+        throw_exception("could not find attribute");
+    }
+    return it->second;
 }
 
 auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
@@ -619,13 +680,14 @@ auto ElementTemplate<Const>::is_inserted() const -> bool {
 }
 
 template <bool Const>
-auto ElementTemplate<Const>::color() const -> color_t {
-    return layout_->color(element_id_);
+auto ElementTemplate<Const>::bounding_rect() const -> rect_t {
+    return layout_->bounding_rect(element_id_);
 }
 
 template <bool Const>
-auto ElementTemplate<Const>::bounding_rect() const -> rect_t {
-    return layout_->bounding_rect(element_id_);
+auto ElementTemplate<Const>::attrs_clock_generator() const
+    -> const layout::attributes_clock_generator & {
+    return layout_->attrs_clock_generator(element_id_);
 }
 
 template <bool Const>
