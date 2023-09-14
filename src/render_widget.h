@@ -279,7 +279,7 @@ class RendererWidget : public RendererWidgetBase {
     auto size_device() const -> QSize;
     auto view_config() const noexcept -> const ViewConfig&;
 
-    auto reset_circuit() -> void;
+    auto reset_circuit(Layout&& layout = Layout {}) -> void;
     auto reload_circuit() -> void;
 
     auto save_circuit(std::string filename) -> bool;
@@ -341,12 +341,15 @@ class RendererWidget : public RendererWidgetBase {
     std::optional<EditableCircuit> editable_circuit_ {};
 
     // simulation
-    std::optional<InteractiveSimulation> simulation_;
+    std::optional<InteractiveSimulation> simulation_ {};
 
     // mouse logic
     InteractionState interaction_state_ {InteractionState::not_interactive};
     std::size_t default_input_count_ {3};
     std::optional<MouseLogic> mouse_logic_ {};
+
+    // setting widgets
+    std::optional<SettingWidgetRegistry> setting_widget_registry_ {};
 
     // states
     bool do_benchmark_ {false};

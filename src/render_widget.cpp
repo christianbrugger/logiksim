@@ -708,6 +708,9 @@ auto RendererWidget::reset_interaction_state() -> void {
     }
 
     if (interaction_state_ == InteractionState::simulation) {
+        if (setting_widget_registry_) {
+            setting_widget_registry_->close_all();
+        }
         simulation_timer_.start();
     } else {
         simulation_timer_.stop();
@@ -739,12 +742,20 @@ auto RendererWidget::pixel_scale() const -> double {
     return view_config().pixel_scale();
 }
 
-auto RendererWidget::reset_circuit() -> void {
+auto RendererWidget::reset_circuit(Layout&& layout) -> void {
     reset_interaction_state();
     reset_context();
 
+    setting_widget_registry_.reset();
     editable_circuit_.reset();
-    editable_circuit_.emplace(Layout {});
+
+    editable_circuit_.emplace(std::move(layout));
+    setting_widget_registry_.emplace(this, editable_circuit_.value());
+
+    if (const auto count = editable_circuit_->layout().element_count();
+        0 < count && count < 30) {
+        print(editable_circuit_);
+    }
 
     update();
 
@@ -757,27 +768,13 @@ auto RendererWidget::reload_circuit() -> void {
     if (!editable_circuit_) {
         return;
     }
+    // commit all pending changes
     reset_interaction_state();
-    reset_context();
 
     // copy so we compact the memory
     auto layout = Layout {editable_circuit_->layout()};
-    editable_circuit_.reset();
 
-    {
-        const auto t = Timer {"reload", Timer::Unit::ms, 3};
-        editable_circuit_.emplace(std::move(layout));
-    }
-
-    if (editable_circuit_->layout().element_count() < 30) {
-        print(editable_circuit_);
-    }
-
-    update();
-
-#ifndef NDEBUG
-    editable_circuit_->validate();
-#endif
+    reset_circuit(std::move(layout));
 }
 
 auto RendererWidget::save_circuit(std::string filename) -> bool {
@@ -1419,9 +1416,8 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             else if (const auto setting_handle =
                          get_colliding_setting_handle(point, layout, selection)) {
                 mouse_logic_.emplace(MouseSettingHandleLogic::Args {
-                    .editable_circuit = editable_circuit_.value(),
+                    .widget_registry = setting_widget_registry_.value(),
                     .setting_handle = setting_handle.value(),
-                    .parent = this,
                 });
                 return;
             }

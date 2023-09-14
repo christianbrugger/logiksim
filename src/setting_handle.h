@@ -1,11 +1,14 @@
 #ifndef LOGIKSIM_SETTING_HANDLE
 #define LOGIKSIM_SETTING_HANDLE
 
+#include "editable_circuit/selection_registrar.h"
 #include "resource.h"
 #include "vocabulary.h"
 
+#include <ankerl/unordered_dense.h>
 #include <blend2d.h>
 
+#include <QObject>
 #include <QWidget>
 
 #include <optional>
@@ -16,6 +19,12 @@ class Selection;
 class EditableCircuit;
 class ViewConfig;
 
+namespace layout {
+template <bool Const>
+class ElementTemplate;
+using ConstElement = ElementTemplate<true>;
+}  // namespace layout
+
 namespace defaults {
 constexpr static inline auto setting_handle_size = grid_fine_t {1.0};
 constexpr static inline auto setting_handle_margin = grid_fine_t {0.1};
@@ -24,6 +33,7 @@ constexpr static inline auto setting_handle_margin = grid_fine_t {0.1};
 struct setting_handle_t {
     point_fine_t position;
     icon_t icon;
+    element_id_t element_id;
 };
 
 auto setting_handle_position(const Layout& layout, element_id_t element_id)
@@ -41,15 +51,57 @@ auto get_colliding_setting_handle(point_fine_t position, const Layout& layout,
     -> std::optional<setting_handle_t>;
 
 //
-// Mouse Logic
+// Settings Registrar
+//
+
+class SettingWidgetRegistry : public QObject {
+   public:
+    explicit SettingWidgetRegistry(QWidget* parent, EditableCircuit& editable_circuit);
+    ~SettingWidgetRegistry();
+
+    SettingWidgetRegistry(SettingWidgetRegistry&&) = default;
+    SettingWidgetRegistry(const SettingWidgetRegistry&) = delete;
+    auto operator=(SettingWidgetRegistry&&) -> SettingWidgetRegistry& = default;
+    auto operator=(const SettingWidgetRegistry&) -> SettingWidgetRegistry& = delete;
+
+    auto show_setting_dialog(setting_handle_t setting_handle) -> void;
+    auto close_all() -> void;
+
+    [[nodiscard]] auto element_id(QWidget* dialog) const -> element_id_t;
+    [[nodiscard]] auto element(QWidget* dialog) const -> layout::ConstElement;
+
+   private:
+    auto on_dialog_destroyed(QObject* object) -> void;
+
+   private:
+    QWidget* parent_;
+    EditableCircuit& editable_circuit_;
+
+    ankerl::unordered_dense::map<QWidget*, selection_handle_t> map_;
+};
+
+//
+// Clock Generator Dialog
+//
+
+class ClockGeneratorDialog : public QWidget {
+   public:
+    explicit ClockGeneratorDialog(QWidget* parent, SettingWidgetRegistry& widget_registry,
+                                  layout::ConstElement element);
+
+   private:
+    SettingWidgetRegistry& widget_registry_;
+};
+
+//
+// Mouse Setting Handle Logic
 //
 
 class MouseSettingHandleLogic {
    public:
     struct Args {
-        EditableCircuit& editable_circuit;
+        SettingWidgetRegistry& widget_registry;
         setting_handle_t setting_handle;
-        QWidget* parent;
     };
 
     MouseSettingHandleLogic(Args args) noexcept;
@@ -58,18 +110,10 @@ class MouseSettingHandleLogic {
     auto mouse_release(point_fine_t position) -> void;
 
    private:
-    EditableCircuit& editable_circuit_;
+    SettingWidgetRegistry& widget_registry_;
     setting_handle_t setting_handle_;
-    QWidget* parent_;
 
     std::optional<point_fine_t> first_position_ {};
-};
-
-// Setting Widgets
-
-class ClockGeneratorWidget : public QWidget {
-   public:
-    using QWidget::QWidget;
 };
 
 }  // namespace logicsim

@@ -79,14 +79,14 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
         }
 
         if (it1 != map.end() && it2 == map.end()) {
-            auto tmp = std::move(it1->second);
+            auto &&tmp = std::move(it1->second);
             map.erase(it1);
             map.emplace(element_id_2, std::move(tmp));
             return;
         }
 
         if (it1 == map.end() && it2 != map.end()) {
-            auto tmp = std::move(it2->second);
+            auto &&tmp = std::move(it2->second);
             map.erase(it2);
             map.emplace(element_id_1, std::move(tmp));
             return;

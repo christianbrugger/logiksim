@@ -7,6 +7,7 @@
 #include "segment_tree.h"
 #include "vocabulary.h"
 
+#include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
 
 #include <cstdint>
