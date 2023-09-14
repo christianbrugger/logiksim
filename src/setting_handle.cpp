@@ -122,7 +122,13 @@ auto get_colliding_setting_handle(point_fine_t position, const Layout& layout,
 
 SettingWidgetRegistry::SettingWidgetRegistry(QWidget* parent,
                                              EditableCircuit& editable_circuit)
-    : parent_ {parent}, editable_circuit_ {editable_circuit} {}
+    : parent_ {parent}, editable_circuit_ {editable_circuit} {
+    connect(&cleanup_timer_, &QTimer::timeout, this,
+            &SettingWidgetRegistry::on_cleanup_timeout);
+
+    cleanup_timer_.setInterval(1000);
+    cleanup_timer_.start();
+}
 
 SettingWidgetRegistry::~SettingWidgetRegistry() {
     close_all();
@@ -162,35 +168,38 @@ auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle)
 
 auto SettingWidgetRegistry::close_all() -> void {
     for (auto&& [widget, _] : map_) {
-        disconnect(widget, &QWidget::destroyed, this,
-                   &SettingWidgetRegistry::on_dialog_destroyed);
-        delete widget;
+        widget->deleteLater();
     }
     map_.clear();
 }
 
-auto SettingWidgetRegistry::element_id(QWidget* dialog) const -> element_id_t {
+auto SettingWidgetRegistry::get_element_id(QWidget* dialog) const -> element_id_t {
     if (const auto it = map_.find(dialog); it != map_.end()) {
-        const auto& selection_handle = it->second;
+        const auto& [widget, selection_handle] = *it;
         const auto& selected_items = selection_handle.value().selected_logic_items();
 
-        if (selected_items.size() != 1) {
+        if (selected_items.size() > 1) {
             throw_exception("unexpected selected items size in SettingWidgetRegistry");
+        }
+        if (selected_items.size() == 0) {
+            return null_element;
         }
 
         return selected_items.front();
     }
-    throw_exception("dialog is not registered in SettingWidgetRegistry");
-}
-
-auto SettingWidgetRegistry::element(QWidget* dialog) const -> layout::ConstElement {
-    return editable_circuit_.layout().element(element_id(dialog));
+    return null_element;
 }
 
 auto SettingWidgetRegistry::set_attributes(QWidget* dialog,
                                            layout::attributes_clock_generator attrs)
     -> void {
-    editable_circuit_.set_attributes(element_id(dialog), std::move(attrs));
+    const auto element_id = get_element_id(dialog);
+
+    if (!element_id) {
+        dialog->deleteLater();
+        return;
+    }
+    editable_circuit_.set_attributes(element_id, std::move(attrs));
 
     if (parent_) {
         parent_->update();
@@ -202,10 +211,15 @@ auto SettingWidgetRegistry::on_dialog_destroyed(QObject* object) -> void {
     if (!widget) {
         throw_exception("got non-widget object in dialog_destroyed");
     }
-    if (map_.erase(widget) != 1) {
-        throw_exception("did not find widget marked for deletion");
+    map_.erase(widget);
+}
+
+auto SettingWidgetRegistry::on_cleanup_timeout() -> void {
+    for (auto&& [widget, selection_handle] : map_) {
+        if (selection_handle && selection_handle->selected_logic_items().empty()) {
+            widget->deleteLater();
+        }
     }
-    print("object erased", map_.size());
 }
 
 //
@@ -288,7 +302,7 @@ auto PeriodInput::period_unit_changed() -> void {
 ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
                                            SettingWidgetRegistry& widget_registry,
                                            layout::ConstElement element)
-    : QWidget(parent), widget_registry_ {widget_registry} {
+    : QWidget {parent}, widget_registry_ {widget_registry} {
     setWindowTitle(tr("Clock Generator"));
     setWindowIcon(QIcon(get_icon_path(icon_t::setting_handle_clock_generator)));
 
@@ -319,6 +333,8 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
 
         layout->addRow(nullptr, check_box);
         symmetric_period_ = check_box;
+
+        layout->setRowVisible(check_box, false);
 
         connect(symmetric_period_, &QCheckBox::stateChanged, this,
                 &ClockGeneratorDialog::update_row_visibility);

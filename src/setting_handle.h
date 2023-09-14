@@ -10,6 +10,7 @@
 
 #include <QDoubleValidator>
 #include <QObject>
+#include <QTimer>
 #include <QWidget>
 
 #include <optional>
@@ -76,19 +77,18 @@ class SettingWidgetRegistry : public QObject {
 
     auto show_setting_dialog(setting_handle_t setting_handle) -> void;
     auto close_all() -> void;
-
-    [[nodiscard]] auto element_id(QWidget* dialog) const -> element_id_t;
-    [[nodiscard]] auto element(QWidget* dialog) const -> layout::ConstElement;
-
     auto set_attributes(QWidget* dialog, layout::attributes_clock_generator attrs)
         -> void;
 
    private:
+    [[nodiscard]] auto get_element_id(QWidget* dialog) const -> element_id_t;
     auto on_dialog_destroyed(QObject* object) -> void;
+    auto on_cleanup_timeout() -> void;
 
    private:
     QWidget* parent_;
     EditableCircuit& editable_circuit_;
+    QTimer cleanup_timer_;
 
     ankerl::unordered_dense::map<QWidget*, selection_handle_t> map_;
 };
