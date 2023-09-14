@@ -212,8 +212,9 @@ auto SettingWidgetRegistry::on_dialog_destroyed(QObject* object) -> void {
 // Clock Generator Dialog
 //
 
-PeriodInput::PeriodInput(QWidget* parent, QString text, delay_t initial_value)
-    : QObject(parent), last_valid_period {initial_value} {
+PeriodInput::PeriodInput(QWidget* parent, QString text, delay_t initial_value,
+                         double scale_)
+    : QObject(parent), scale {scale_}, last_valid_period {initial_value} {
     label = new QLabel(parent);
     label->setText(text);
 
@@ -235,7 +236,7 @@ PeriodInput::PeriodInput(QWidget* parent, QString text, delay_t initial_value)
         }
     }
     const auto unit = combo_box->currentData().toLongLong();
-    line_edit->setText(period_validator.locale().toString(1.0 * value_ns / unit));
+    line_edit->setText(period_validator.locale().toString(scale * value_ns / unit));
 
     layout->addWidget(line_edit);
     layout->addWidget(combo_box);
@@ -261,7 +262,7 @@ auto PeriodInput::value_changed() -> void {
     if (period_value->hasAcceptableInput()) {
         const auto value = period_validator.locale().toDouble(period_value->text());
         const auto unit = int64_t {period_unit->currentData().toLongLong()};
-        const auto period = delay_t {round_to<int64_t>(value * unit) * 1ns};
+        const auto period = delay_t {round_to<int64_t>(value * unit / scale) * 1ns};
         last_valid_period = period;
     }
 }
@@ -279,8 +280,8 @@ auto PeriodInput::period_unit_changed() -> void {
         throw_exception("unexpected unit");
     }
 
-    double max_ns = 2e9;
-    double min_ns = 1.0;
+    double max_ns = delay_t::max().value / 1ns * scale;
+    double min_ns = 1.0 * scale;
     period_validator.setRange(min_ns / unit, max_ns / unit);
 }
 
@@ -327,7 +328,7 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
 
     // Symmetric Period
     {
-        period_ = new PeriodInput(this, tr("Period:"), attrs.period);
+        period_ = new PeriodInput(this, tr("Period:"), attrs.period, 2.0);
         layout->addRow(period_->label, period_->layout);
 
         connect(period_->period_value, &QLineEdit::textChanged, this,
@@ -338,7 +339,7 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
 
     // On Period
     {
-        period_on_ = new PeriodInput(this, tr("On Period:"), attrs.period_on);
+        period_on_ = new PeriodInput(this, tr("On Time:"), attrs.period_on, 1.0);
         layout->addRow(period_on_->label, period_on_->layout);
 
         connect(period_on_->period_value, &QLineEdit::textChanged, this,
@@ -349,7 +350,7 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
 
     // Off Period
     {
-        period_off_ = new PeriodInput(this, tr("Off Period:"), attrs.period_off);
+        period_off_ = new PeriodInput(this, tr("Off Time:"), attrs.period_off, 1.0);
         layout->addRow(period_off_->label, period_off_->layout);
 
         connect(period_off_->period_value, &QLineEdit::textChanged, this,

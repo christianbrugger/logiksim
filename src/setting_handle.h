@@ -99,11 +99,13 @@ class SettingWidgetRegistry : public QObject {
 
 class PeriodInput : public QObject {
    public:
-    explicit PeriodInput(QWidget* parent, QString text, delay_t initial_value);
+    explicit PeriodInput(QWidget* parent, QString text, delay_t initial_value,
+                         double scale_);
 
     auto value_changed() -> void;
     auto period_unit_changed() -> void;
 
+    double scale;
     delay_t last_valid_period;
 
     QLineEdit* period_value;

@@ -348,6 +348,14 @@ struct delay_t {
 
     [[nodiscard]] auto operator==(const delay_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const delay_t &other) const = default;
+
+    [[nodiscard]] static constexpr auto min() noexcept -> delay_t {
+        return delay_t {value_type::min()};
+    };
+
+    [[nodiscard]] static constexpr auto max() noexcept -> delay_t {
+        return delay_t {value_type::max()};
+    };
 };
 
 struct time_rate_t {
