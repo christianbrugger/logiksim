@@ -63,9 +63,8 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
         swap(container.at(element_id_1.value), container.at(element_id_2.value));
     };
 
+    // TODO put in algorithm
     const auto swap_map_ids = [element_id_1, element_id_2](auto &map) {
-        using std::swap;
-
         auto it1 = map.find(element_id_1);
         auto it2 = map.find(element_id_2);
 
@@ -74,15 +73,26 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
         }
 
         if (it1 != map.end() && it2 != map.end()) {
+            using std::swap;
             swap(it1->second, it2->second);
             return;
         }
 
-        if (it1 == map.end()) {
-            swap(it1, it2);
+        if (it1 != map.end() && it2 == map.end()) {
+            auto tmp = std::move(it1->second);
+            map.erase(it1);
+            map.emplace(element_id_2, std::move(tmp));
+            return;
         }
-        map.emplace(element_id_2, std::move(it1->second));
-        map.erase(it1);
+
+        if (it1 == map.end() && it2 != map.end()) {
+            auto tmp = std::move(it2->second);
+            map.erase(it2);
+            map.emplace(element_id_1, std::move(tmp));
+            return;
+        }
+
+        throw_exception("unknown case in swap_map_ids");
     };
 
     swap_ids(element_types_);
@@ -379,8 +389,11 @@ auto Layout::set_display_state(element_id_t element_id, display_state_t display_
 auto Layout::set_attrs_clock_generator(element_id_t element_id,
                                        layout::attributes_clock_generator attrs) -> void {
     const auto it = map_clock_generator_.find(element_id);
-    if (it == map_clock_generator_.end()) {
+    if (it == map_clock_generator_.end()) [[unlikely]] {
         throw_exception("could not find attribute");
+    }
+    if (!attrs.is_valid()) [[unlikely]] {
+        throw_exception("attributes not valid");
     }
     it->second = std::move(attrs);
 }
