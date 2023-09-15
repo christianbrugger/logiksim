@@ -44,8 +44,7 @@ auto format(InteractionState type) -> std::string;
 
 [[nodiscard]] auto is_inserting_state(InteractionState state) -> bool;
 
-[[nodiscard]] auto to_logic_item_definition(InteractionState state,
-                                            std::size_t default_input_count = 3)
+[[nodiscard]] auto to_logic_item_definition(InteractionState state)
     -> LogicItemDefinition;
 
 class RendererWidgetBase : public QWidget {

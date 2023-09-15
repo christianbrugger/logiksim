@@ -257,11 +257,9 @@ class RendererWidget : public RendererWidgetBase {
     auto is_using_backing_store() const -> bool;
 
     auto set_interaction_state(InteractionState state) -> void;
-    auto set_default_input_count(std::size_t count) -> void;
     auto set_simulation_time_rate(time_rate_t time_rate) -> void;
     auto set_wire_delay_per_distance(delay_t value) -> void;
     [[nodiscard]] auto interaction_state() const -> InteractionState;
-    [[nodiscard]] auto default_input_count() const -> std::size_t;
     [[nodiscard]] auto time_rate() const -> time_rate_t;
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
@@ -345,7 +343,6 @@ class RendererWidget : public RendererWidgetBase {
 
     // mouse logic
     InteractionState interaction_state_ {InteractionState::not_interactive};
-    std::size_t default_input_count_ {3};
     std::optional<MouseLogic> mouse_logic_ {};
 
     // setting widgets

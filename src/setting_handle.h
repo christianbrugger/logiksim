@@ -71,9 +71,9 @@ class SettingWidgetRegistry : public QObject {
     explicit SettingWidgetRegistry(QWidget* parent, EditableCircuit& editable_circuit);
     ~SettingWidgetRegistry();
 
-    SettingWidgetRegistry(SettingWidgetRegistry&&) = default;
+    SettingWidgetRegistry(SettingWidgetRegistry&&) = delete;
     SettingWidgetRegistry(const SettingWidgetRegistry&) = delete;
-    auto operator=(SettingWidgetRegistry&&) -> SettingWidgetRegistry& = default;
+    auto operator=(SettingWidgetRegistry&&) -> SettingWidgetRegistry& = delete;
     auto operator=(const SettingWidgetRegistry&) -> SettingWidgetRegistry& = delete;
 
     auto show_setting_dialog(setting_handle_t setting_handle) -> void;

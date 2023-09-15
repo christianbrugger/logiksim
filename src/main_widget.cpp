@@ -494,18 +494,6 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     const auto layout = new QGridLayout();
     int row = -1;
 
-    // input count
-    const auto input_count = new QSpinBox();
-    layout->addWidget(input_count, ++row, 0, 1, 2);
-    layout->addWidget(line_separator(), ++row, 0, 1, 2);
-
-    connect(input_count, &QSpinBox::valueChanged, this,
-            [this](int value) { render_widget_->set_default_input_count(value); });
-
-    input_count->setValue(gsl::narrow<int>(render_widget_->default_input_count()));
-    input_count->setMinimum(1);
-    input_count->setMaximum(connection_id_t::max());
-
     {
         using enum InteractionState;
         layout->addWidget(element_button("BTN", insert_button), ++row, 0);

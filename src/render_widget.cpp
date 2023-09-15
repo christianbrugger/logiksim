@@ -665,10 +665,6 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
 #endif
 }
 
-auto RendererWidget::set_default_input_count(std::size_t count) -> void {
-    default_input_count_ = count;
-}
-
 auto RendererWidget::set_simulation_time_rate(time_rate_t time_rate) -> void {
     simulation_time_rate_ = time_rate;
 
@@ -686,10 +682,6 @@ auto RendererWidget::set_wire_delay_per_distance(delay_t value) -> void {
 
 auto RendererWidget::interaction_state() const -> InteractionState {
     return interaction_state_;
-}
-
-auto RendererWidget::default_input_count() const -> std::size_t {
-    return default_input_count_;
 }
 
 auto RendererWidget::time_rate() const -> time_rate_t {
@@ -1392,8 +1384,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
             }
             mouse_logic_.emplace(MouseElementInsertLogic::Args {
                 .editable_circuit = editable_circuit_.value(),
-                .element_definition =
-                    to_logic_item_definition(interaction_state_, default_input_count_),
+                .element_definition = to_logic_item_definition(interaction_state_),
             });
             return;
         }

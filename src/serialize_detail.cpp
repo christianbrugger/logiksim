@@ -140,7 +140,7 @@ struct glz::meta<SerializedLayout> {
 namespace logicsim {
 
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
-    constexpr auto debug_json = true;
+    constexpr auto debug_json = false;
 
     if constexpr (debug_json) {
         print(glz::prettify(glz::write_json(data)));
