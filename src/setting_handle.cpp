@@ -266,15 +266,15 @@ DelayInput::DelayInput(QWidget* parent, QString text, delay_t initial_value,
     combo_box->addItem(tr("µs"), qint64 {1'000});
     combo_box->addItem(tr("ms"), qint64 {1'000'000});
 
-    const auto value_ns = initial_value.value / 1ns;
+    const auto value_ns = initial_value.value / 1ns * scale;
     for (auto index : range(combo_box->count())) {
         const auto unit = combo_box->itemData(index).toLongLong();
-        if (value_ns >= unit) {
+        if (round_to<int64_t>(value_ns) >= int64_t {unit}) {
             combo_box->setCurrentIndex(index);
         }
     }
     const auto unit = combo_box->currentData().toLongLong();
-    line_edit->setText(delay_validator.locale().toString(scale * value_ns / unit));
+    line_edit->setText(delay_validator.locale().toString(1.0 * value_ns / unit));
 
     layout->addWidget(line_edit);
     layout->addWidget(combo_box);
