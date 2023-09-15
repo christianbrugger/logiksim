@@ -126,7 +126,7 @@ SettingWidgetRegistry::SettingWidgetRegistry(QWidget* parent,
     connect(&cleanup_timer_, &QTimer::timeout, this,
             &SettingWidgetRegistry::on_cleanup_timeout);
 
-    cleanup_timer_.setInterval(1000);
+    cleanup_timer_.setInterval(250);
     cleanup_timer_.start();
 }
 
@@ -145,7 +145,7 @@ auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle)
     }
     // create new
     const auto element = editable_circuit_.layout().element(setting_handle.element_id);
-    auto* widget = new ClockGeneratorDialog {parent_, *this, element};
+    auto* widget = new ClockGeneratorDialog {parent_, AttributeSetter {this}, element};
     widget->setWindowFlags(Qt::Dialog);
     widget->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -190,17 +190,21 @@ auto SettingWidgetRegistry::get_element_id(QWidget* dialog) const -> element_id_
     return null_element;
 }
 
-auto SettingWidgetRegistry::set_attributes(QWidget* dialog,
+auto SettingWidgetRegistry::set_attributes(QWidget* widget,
                                            layout::attributes_clock_generator attrs)
     -> void {
-    const auto element_id = get_element_id(dialog);
+    if (!widget) {
+        throw_exception("widget sender cannot be nullptr");
+    }
+
+    const auto element_id = get_element_id(widget);
 
     if (!element_id) {
-        dialog->deleteLater();
+        widget->deleteLater();
         return;
     }
-    editable_circuit_.set_attributes(element_id, std::move(attrs));
 
+    editable_circuit_.set_attributes(element_id, std::move(attrs));
     if (parent_) {
         parent_->update();
     }
@@ -219,6 +223,22 @@ auto SettingWidgetRegistry::on_cleanup_timeout() -> void {
         if (selection_handle && selection_handle->selected_logic_items().empty()) {
             widget->deleteLater();
         }
+    }
+}
+
+AttributeSetter::AttributeSetter(SettingWidgetRegistry* receiver)
+    : receiver_ {receiver} {}
+
+auto AttributeSetter::set_attributes(QWidget* sender,
+                                     layout::attributes_clock_generator attrs) -> void {
+    if (!sender) {
+        throw_exception("sender cannot be nullptr");
+    }
+
+    if (receiver_) {
+        receiver_->set_attributes(sender, attrs);
+    } else {
+        sender->deleteLater();
     }
 }
 
@@ -299,10 +319,9 @@ auto PeriodInput::period_unit_changed() -> void {
     period_validator.setRange(min_ns / unit, max_ns / unit);
 }
 
-ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent,
-                                           SettingWidgetRegistry& widget_registry,
+ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, AttributeSetter setter,
                                            layout::ConstElement element)
-    : QWidget {parent}, widget_registry_ {widget_registry} {
+    : QWidget {parent}, setter_ {setter} {
     setWindowTitle(tr("Clock Generator"));
     setWindowIcon(QIcon(get_icon_path(icon_t::setting_handle_clock_generator)));
 
@@ -396,7 +415,7 @@ auto ClockGeneratorDialog::value_changed() -> void {
         throw_exception("a pointer is not set");
     }
 
-    widget_registry_.set_attributes(
+    setter_.set_attributes(
         this, layout::attributes_clock_generator {
                   .name = name_->text().toStdString(),
                   .symmetric_period = symmetric_period_->isChecked(),
@@ -438,5 +457,4 @@ auto MouseSettingHandleLogic::mouse_release(point_fine_t position) -> void {
         widget_registry_.show_setting_dialog(setting_handle_);
     }
 }
-
 }  // namespace logicsim

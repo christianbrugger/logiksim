@@ -10,6 +10,7 @@
 
 #include <QDoubleValidator>
 #include <QObject>
+#include <QPointer>
 #include <QTimer>
 #include <QWidget>
 
@@ -77,7 +78,7 @@ class SettingWidgetRegistry : public QObject {
 
     auto show_setting_dialog(setting_handle_t setting_handle) -> void;
     auto close_all() -> void;
-    auto set_attributes(QWidget* dialog, layout::attributes_clock_generator attrs)
+    auto set_attributes(QWidget* widget, layout::attributes_clock_generator attrs)
         -> void;
 
    private:
@@ -91,6 +92,17 @@ class SettingWidgetRegistry : public QObject {
     QTimer cleanup_timer_;
 
     ankerl::unordered_dense::map<QWidget*, selection_handle_t> map_;
+};
+
+class AttributeSetter {
+   public:
+    explicit AttributeSetter(SettingWidgetRegistry* receiver);
+
+    auto set_attributes(QWidget* sender, layout::attributes_clock_generator attrs)
+        -> void;
+
+   private:
+    QPointer<SettingWidgetRegistry> receiver_ {};
 };
 
 //
@@ -118,7 +130,7 @@ class PeriodInput : public QObject {
 
 class ClockGeneratorDialog : public QWidget {
    public:
-    explicit ClockGeneratorDialog(QWidget* parent, SettingWidgetRegistry& widget_registry,
+    explicit ClockGeneratorDialog(QWidget* parent, AttributeSetter setter,
                                   layout::ConstElement element);
 
    private:
@@ -126,7 +138,7 @@ class ClockGeneratorDialog : public QWidget {
     auto update_row_visibility() -> void;
 
    private:
-    SettingWidgetRegistry& widget_registry_;
+    AttributeSetter setter_;
 
     QFormLayout* layout_;
 
