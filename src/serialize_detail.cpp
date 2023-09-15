@@ -70,6 +70,24 @@ struct glz::meta<SerializedLine> {
     static constexpr auto value = glz::array(&T::p0, &T::p1);
 };
 
+using logicsim::serialize::SerializedAttributesClockGenerator;
+
+template <>
+struct glz::meta<SerializedAttributesClockGenerator> {
+    using T = SerializedAttributesClockGenerator;
+
+    static constexpr auto value = glz::object(  //
+        "name", &T::name,                       //
+
+        "time_symmetric_ns", &T::time_symmetric_ns,  //
+        "time_on_ns", &T::time_on_ns,                //
+        "time_off_ns", &T::time_off_ns,              //
+
+        "is_symmetric", &T::is_symmetric,                         //
+        "show_simulation_controls", &T::show_simulation_controls  //
+    );
+};
+
 using logicsim::serialize::SerializedLogicItem;
 
 template <>
@@ -84,8 +102,11 @@ struct glz::meta<SerializedLogicItem> {
         "input_inverters", &T::input_inverters,    //
         "output_inverters", &T::output_inverters,  //
 
-        "position", &T::position,  //
-        "orientation", &T::orientation);
+        "position", &T::position,        //
+        "orientation", &T::orientation,  //
+
+        "attributes_clock_generator", &T::attributes_clock_generator  //
+    );
 };
 
 using logicsim::serialize::SerializedViewConfig;
@@ -97,7 +118,8 @@ struct glz::meta<SerializedViewConfig> {
     static constexpr auto value = glz::object(  //
         "device_scale", &T::device_scale,       //
         "grid_offset_x", &T::grid_offset_x,     //
-        "grid_offset_y", &T::grid_offset_y);
+        "grid_offset_y", &T::grid_offset_y      //
+    );
 };
 
 using logicsim::serialize::SerializedLayout;
@@ -111,12 +133,19 @@ struct glz::meta<SerializedLayout> {
         "save_position", &T::save_position,     //
         "view_config", &T::view_config,         //
         "logic_items", &T::logic_items,         //
-        "wire_segments", &T::wire_segments);
+        "wire_segments", &T::wire_segments      //
+    );
 };
 
 namespace logicsim {
 
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string {
+    constexpr auto debug_json = true;
+
+    if constexpr (debug_json) {
+        print(glz::prettify(glz::write_json(data)));
+    }
+
     return glz::write_json(data);
 }
 

@@ -33,7 +33,8 @@ auto attributes_clock_generator::format_period() const -> std::string {
 }
 
 auto attributes_clock_generator::is_valid() const -> bool {
-    return time_symmetric > delay_t {0ns};
+    return time_symmetric > delay_t {0ns} && time_on > delay_t {0ns} &&
+           time_off > delay_t {0ns};
 }
 
 }  // namespace layout

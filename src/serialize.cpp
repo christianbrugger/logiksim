@@ -49,6 +49,35 @@ auto to_line(const SerializedLine& obj, move_delta_t delta = {})
     return add_unchecked(line_t {obj.p0, obj.p1}, delta.x, delta.y);
 }
 
+auto parse_attr_clock_generator(
+    const std::optional<SerializedAttributesClockGenerator>& obj)
+    -> std::optional<layout::attributes_clock_generator> {
+    if (obj.has_value()) {
+        using rep = delay_t::value_type::rep;
+        static_assert(std::is_same_v<rep, decltype(obj->time_symmetric_ns)>);
+        static_assert(std::is_same_v<rep, decltype(obj->time_on_ns)>);
+        static_assert(std::is_same_v<rep, decltype(obj->time_off_ns)>);
+
+        auto limited_name = obj->name;
+        if (limited_name.size() > name_max_size) {
+            limited_name.resize(name_max_size);
+        }
+
+        return layout::attributes_clock_generator {
+            .name = limited_name,
+
+            .time_symmetric = delay_t {obj->time_symmetric_ns * 1ns},
+            .time_on = delay_t {obj->time_on_ns * 1ns},
+            .time_off = delay_t {obj->time_off_ns * 1ns},
+
+            .is_symmetric = obj->is_symmetric,
+            .show_simulation_controls = obj->show_simulation_controls,
+        };
+    }
+
+    return std::nullopt;
+}
+
 auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
     -> std::optional<LogicItemData> {
     // element type
@@ -65,11 +94,8 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
         .input_inverters = obj.input_inverters,
         .output_inverters = obj.output_inverters,
 
-        // TODO rework this
         .attrs_clock_generator =
-            obj.element_type == ElementType::clock_generator
-                ? std::make_optional(layout::attributes_clock_generator {})
-                : std::nullopt,
+            parse_attr_clock_generator(obj.attributes_clock_generator),
     };
     if (!definition.is_valid()) {
         return std::nullopt;
@@ -98,6 +124,28 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
     };
 }
 
+auto serialize_attr_clock_generator(const layout::ConstElement element)
+    -> std::optional<SerializedAttributesClockGenerator> {
+    if (element.element_type() == ElementType::clock_generator) {
+        const auto& attr = element.attrs_clock_generator();
+
+        static_assert(std::is_same_v<delay_t::value_type::period, std::nano>);
+
+        return SerializedAttributesClockGenerator {
+            .name = attr.name,
+
+            .time_symmetric_ns = attr.time_symmetric.value.count(),
+            .time_on_ns = attr.time_on.value.count(),
+            .time_off_ns = attr.time_off.value.count(),
+
+            .is_symmetric = attr.is_symmetric,
+            .show_simulation_controls = attr.show_simulation_controls,
+        };
+    }
+
+    return std::nullopt;
+}
+
 auto add_element(SerializedLayout& data, const layout::ConstElement element) -> void {
     if (element.is_logic_item()) {
         data.logic_items.push_back(SerializedLogicItem {
@@ -108,6 +156,8 @@ auto add_element(SerializedLayout& data, const layout::ConstElement element) -> 
             .output_inverters = element.output_inverters(),
             .position = element.position(),
             .orientation = element.orientation(),
+
+            .attributes_clock_generator = serialize_attr_clock_generator(element),
         });
     }
 
