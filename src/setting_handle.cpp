@@ -149,6 +149,7 @@ auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle)
     widget->setWindowFlags(Qt::Dialog);
     widget->setAttribute(Qt::WA_DeleteOnClose);
 
+    // add to map
     try {
         const auto [it, inserted] = map_.emplace(widget, editable_circuit_.get_handle());
         if (!inserted) {
@@ -198,7 +199,6 @@ auto SettingWidgetRegistry::set_attributes(QWidget* widget,
     }
 
     const auto element_id = get_element_id(widget);
-
     if (!element_id) {
         widget->deleteLater();
         return;
@@ -246,9 +246,9 @@ auto AttributeSetter::set_attributes(QWidget* sender,
 // Clock Generator Dialog
 //
 
-PeriodInput::PeriodInput(QWidget* parent, QString text, delay_t initial_value,
-                         double scale_)
-    : QObject(parent), scale {scale_}, last_valid_period {initial_value} {
+DelayInput::DelayInput(QWidget* parent, QString text, delay_t initial_value,
+                       double scale_)
+    : QObject(parent), scale {scale_}, last_valid_delay {initial_value} {
     label = new QLabel(parent);
     label->setText(text);
 
@@ -256,7 +256,7 @@ PeriodInput::PeriodInput(QWidget* parent, QString text, delay_t initial_value,
     auto* line_edit = new QLineEdit(parent);
     auto* combo_box = new QComboBox(parent);
 
-    line_edit->setValidator(&period_validator);
+    line_edit->setValidator(&delay_validator);
 
     combo_box->addItem(tr("ns"), qint64 {1});
     combo_box->addItem(tr("µs"), qint64 {1'000});
@@ -270,53 +270,53 @@ PeriodInput::PeriodInput(QWidget* parent, QString text, delay_t initial_value,
         }
     }
     const auto unit = combo_box->currentData().toLongLong();
-    line_edit->setText(period_validator.locale().toString(scale * value_ns / unit));
+    line_edit->setText(delay_validator.locale().toString(scale * value_ns / unit));
 
     layout->addWidget(line_edit);
     layout->addWidget(combo_box);
 
-    period_value = line_edit;
-    period_unit = combo_box;
+    delay_value = line_edit;
+    delay_unit = combo_box;
 
-    connect(period_unit, &QComboBox::currentIndexChanged, this,
-            &PeriodInput::period_unit_changed);
+    connect(delay_unit, &QComboBox::currentIndexChanged, this,
+            &DelayInput::delay_unit_changed);
 
-    connect(period_value, &QLineEdit::textChanged, this, &PeriodInput::value_changed);
-    connect(period_unit, &QComboBox::currentIndexChanged, this,
-            &PeriodInput::value_changed);
+    connect(delay_value, &QLineEdit::textChanged, this, &DelayInput::value_changed);
+    connect(delay_unit, &QComboBox::currentIndexChanged, this,
+            &DelayInput::value_changed);
 
-    period_unit_changed();
+    delay_unit_changed();
 }
 
-auto PeriodInput::value_changed() -> void {
-    if (!period_value || !period_unit) {
-        throw_exception("a pointer is not set in PeriodInput");
+auto DelayInput::value_changed() -> void {
+    if (!delay_value || !delay_unit) {
+        throw_exception("a pointer is not set in DelayInput");
     }
 
-    if (period_value->hasAcceptableInput()) {
-        const auto value = period_validator.locale().toDouble(period_value->text());
-        const auto unit = int64_t {period_unit->currentData().toLongLong()};
+    if (delay_value->hasAcceptableInput()) {
+        const auto value = delay_validator.locale().toDouble(delay_value->text());
+        const auto unit = int64_t {delay_unit->currentData().toLongLong()};
         const auto period = delay_t {round_to<int64_t>(value * unit / scale) * 1ns};
-        last_valid_period = period;
+        last_valid_delay = period;
     }
 }
 
-auto PeriodInput::period_unit_changed() -> void {
-    const auto unit = int64_t {period_unit->currentData().toLongLong()};
+auto DelayInput::delay_unit_changed() -> void {
+    const auto unit = int64_t {delay_unit->currentData().toLongLong()};
 
     if (unit == 1) {
-        period_validator.setDecimals(0);
+        delay_validator.setDecimals(0);
     } else if (unit == 1'000) {
-        period_validator.setDecimals(3);
+        delay_validator.setDecimals(3);
     } else if (unit == 1'000'000) {
-        period_validator.setDecimals(6);
+        delay_validator.setDecimals(6);
     } else {
         throw_exception("unexpected unit");
     }
 
     double max_ns = delay_t::max().value / 1ns * scale;
     double min_ns = 1.0 * scale;
-    period_validator.setRange(min_ns / unit, max_ns / unit);
+    delay_validator.setRange(min_ns / unit, max_ns / unit);
 }
 
 ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, AttributeSetter setter,
@@ -344,53 +344,51 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, AttributeSetter sett
                 &ClockGeneratorDialog::value_changed);
     }
 
-    // Symmetric Period
+    // Is Symmetric
     {
         auto* check_box = new QCheckBox(this);
         check_box->setText(tr("Symmetric Period"));
-        check_box->setChecked(attrs.symmetric_period);
+        check_box->setChecked(attrs.is_symmetric);
 
         layout->addRow(nullptr, check_box);
-        symmetric_period_ = check_box;
+        is_symmetric_ = check_box;
 
-        layout->setRowVisible(check_box, false);
-
-        connect(symmetric_period_, &QCheckBox::stateChanged, this,
+        connect(is_symmetric_, &QCheckBox::stateChanged, this,
                 &ClockGeneratorDialog::update_row_visibility);
-        connect(symmetric_period_, &QCheckBox::stateChanged, this,
+        connect(is_symmetric_, &QCheckBox::stateChanged, this,
                 &ClockGeneratorDialog::value_changed);
     }
 
-    // Symmetric Period
+    // Time Symmetric
     {
-        period_ = new PeriodInput(this, tr("Period:"), attrs.period, 2.0);
-        layout->addRow(period_->label, period_->layout);
+        time_symmetric_ = new DelayInput(this, tr("Period:"), attrs.time_symmetric, 2.0);
+        layout->addRow(time_symmetric_->label, time_symmetric_->layout);
 
-        connect(period_->period_value, &QLineEdit::textChanged, this,
+        connect(time_symmetric_->delay_value, &QLineEdit::textChanged, this,
                 &ClockGeneratorDialog::value_changed);
-        connect(period_->period_unit, &QComboBox::currentIndexChanged, this,
+        connect(time_symmetric_->delay_unit, &QComboBox::currentIndexChanged, this,
                 &ClockGeneratorDialog::value_changed);
     }
 
-    // On Period
+    // Time On
     {
-        period_on_ = new PeriodInput(this, tr("On Time:"), attrs.period_on, 1.0);
-        layout->addRow(period_on_->label, period_on_->layout);
+        time_on_ = new DelayInput(this, tr("On Time:"), attrs.time_on, 1.0);
+        layout->addRow(time_on_->label, time_on_->layout);
 
-        connect(period_on_->period_value, &QLineEdit::textChanged, this,
+        connect(time_on_->delay_value, &QLineEdit::textChanged, this,
                 &ClockGeneratorDialog::value_changed);
-        connect(period_on_->period_unit, &QComboBox::currentIndexChanged, this,
+        connect(time_on_->delay_unit, &QComboBox::currentIndexChanged, this,
                 &ClockGeneratorDialog::value_changed);
     }
 
-    // Off Period
+    // Time Off
     {
-        period_off_ = new PeriodInput(this, tr("Off Time:"), attrs.period_off, 1.0);
-        layout->addRow(period_off_->label, period_off_->layout);
+        time_off_ = new DelayInput(this, tr("Off Time:"), attrs.time_off, 1.0);
+        layout->addRow(time_off_->label, time_off_->layout);
 
-        connect(period_off_->period_value, &QLineEdit::textChanged, this,
+        connect(time_off_->delay_value, &QLineEdit::textChanged, this,
                 &ClockGeneratorDialog::value_changed);
-        connect(period_off_->period_unit, &QComboBox::currentIndexChanged, this,
+        connect(time_off_->delay_unit, &QComboBox::currentIndexChanged, this,
                 &ClockGeneratorDialog::value_changed);
     }
 
@@ -410,7 +408,7 @@ ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, AttributeSetter sett
 }
 
 auto ClockGeneratorDialog::value_changed() -> void {
-    if (!name_ || !symmetric_period_ || !period_ || !period_on_ || !period_off_ ||
+    if (!name_ || !is_symmetric_ || !time_symmetric_ || !time_on_ || !time_off_ ||
         !simulation_controls_) {
         throw_exception("a pointer is not set");
     }
@@ -418,24 +416,22 @@ auto ClockGeneratorDialog::value_changed() -> void {
     setter_.set_attributes(
         this, layout::attributes_clock_generator {
                   .name = name_->text().toStdString(),
-                  .symmetric_period = symmetric_period_->isChecked(),
-                  .period = period_->last_valid_period,
-                  .period_on = period_on_->last_valid_period,
-                  .period_off = period_off_->last_valid_period,
+
+                  .time_symmetric = time_symmetric_->last_valid_delay,
+                  .time_on = time_on_->last_valid_delay,
+                  .time_off = time_off_->last_valid_delay,
+
+                  .is_symmetric = is_symmetric_->isChecked(),
                   .show_simulation_controls = simulation_controls_->isChecked(),
               });
 }
 
 auto ClockGeneratorDialog::update_row_visibility() -> void {
-    const auto symmetric_period = symmetric_period_->isChecked();
+    const auto is_symmetric = is_symmetric_->isChecked();
 
-    layout_->setRowVisible(period_->label, false);
-    layout_->setRowVisible(period_on_->label, false);
-    layout_->setRowVisible(period_off_->label, false);
-
-    layout_->setRowVisible(period_->label, symmetric_period);
-    layout_->setRowVisible(period_on_->label, !symmetric_period);
-    layout_->setRowVisible(period_off_->label, !symmetric_period);
+    layout_->setRowVisible(time_symmetric_->label, is_symmetric);
+    layout_->setRowVisible(time_on_->label, !is_symmetric);
+    layout_->setRowVisible(time_off_->label, !is_symmetric);
 
     this->adjustSize();
 }
@@ -452,7 +448,8 @@ auto MouseSettingHandleLogic::mouse_press(point_fine_t position) -> void {
 }
 
 auto MouseSettingHandleLogic::mouse_release(point_fine_t position) -> void {
-    if (first_position_ && is_colliding(setting_handle_, first_position_.value()) &&
+    if (first_position_ &&  //
+        is_colliding(setting_handle_, first_position_.value()) &&
         is_colliding(setting_handle_, position)) {
         widget_registry_.show_setting_dialog(setting_handle_);
     }

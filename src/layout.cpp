@@ -17,9 +17,23 @@
 namespace logicsim {
 
 namespace layout {
+auto attributes_clock_generator::format() const -> std::string {
+    return fmt::format("<Clock: '{}', Symmetric: {}, Period: {}, Controls: {}>", name,
+                       is_symmetric, format_period(), show_simulation_controls);
+}
+
+auto attributes_clock_generator::format_period() const -> std::string {
+    if (is_symmetric) {
+        const auto period =
+            2 * std::chrono::duration<int64_t, delay_t::value_type::period> {
+                    time_symmetric.value};
+        return fmt::format("{}", format_time(period));
+    }
+    return fmt::format("{}/{}", time_on, time_off);
+}
 
 auto attributes_clock_generator::is_valid() const -> bool {
-    return period > delay_t {0ns};
+    return time_symmetric > delay_t {0ns};
 }
 
 }  // namespace layout

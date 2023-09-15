@@ -109,20 +109,20 @@ class AttributeSetter {
 // Clock Generator Dialog
 //
 
-class PeriodInput : public QObject {
+class DelayInput : public QObject {
    public:
-    explicit PeriodInput(QWidget* parent, QString text, delay_t initial_value,
-                         double scale_);
+    explicit DelayInput(QWidget* parent, QString text, delay_t initial_value,
+                        double scale_);
 
     auto value_changed() -> void;
-    auto period_unit_changed() -> void;
+    auto delay_unit_changed() -> void;
 
     double scale;
-    delay_t last_valid_period;
+    delay_t last_valid_delay;
 
-    QLineEdit* period_value;
-    QComboBox* period_unit;
-    QDoubleValidator period_validator;
+    QLineEdit* delay_value;
+    QComboBox* delay_unit;
+    QDoubleValidator delay_validator;
 
     QLabel* label;
     QLayout* layout;
@@ -143,10 +143,11 @@ class ClockGeneratorDialog : public QWidget {
     QFormLayout* layout_;
 
     QLineEdit* name_;
-    QCheckBox* symmetric_period_;
-    PeriodInput* period_;
-    PeriodInput* period_on_;
-    PeriodInput* period_off_;
+    DelayInput* time_symmetric_;
+    DelayInput* time_on_;
+    DelayInput* time_off_;
+
+    QCheckBox* is_symmetric_;
     QCheckBox* simulation_controls_;
 };
 

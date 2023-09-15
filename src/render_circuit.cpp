@@ -851,19 +851,26 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
     draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
                           state);
 
+    // name
+    draw_logic_item_label(ctx, point_fine_t {1.5, -1}, attrs.name, element, state,
+                          LogicItemTextAttributes {
+                              .custom_font_size = defaults::font::clock_name_size,
+                              .custom_text_color = defaults::font::clock_name_color,
+                              .horizontal_alignment = HorizontalAlignment::center,
+                              .vertical_alignment = VerticalAlignment::top,
+                              .style = defaults::font::clock_name_style,
+                          });
+
     // generator delay
-    const auto duration_text = fmt::format("{}", attrs.period);
+    const auto duration_text = attrs.format_period();
     draw_logic_item_label(ctx, point_fine_t {1.5, 0}, duration_text, element, state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,
                               .horizontal_alignment = HorizontalAlignment::center,
                               .vertical_alignment = VerticalAlignment::top,
-                              .style = FontStyle::bold,
+                              .style = defaults::font::clock_period_style,
                           });
-
-    // name
-    draw_logic_item_label(ctx, point_fine_t {1.5, -1}, attrs.name, element, state);
 }
 
 auto draw_flipflop_jk(Context& ctx, layout::ConstElement element, ElementDrawState state)
