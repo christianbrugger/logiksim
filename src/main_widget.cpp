@@ -20,6 +20,7 @@
 #include <QRadioButton>
 #include <QSlider>
 #include <QSpinBox>
+#include <QStatusBar>
 #include <QString>
 #include <QToolBar>
 #include <QToolButton>
@@ -58,15 +59,13 @@ MainWidget::MainWidget(QWidget* parent)
       last_saved_data_ {render_widget_->serialize_circuit()} {
     setAcceptDrops(true);
 
-    // disable context menu to show/hide toolbars
-    this->setContextMenuPolicy(Qt::PreventContextMenu);
-
     create_menu();
     create_toolbar();
+    // create_statusbar();
 
     const auto layout = new QVBoxLayout();
-    layout->addWidget(build_delay_slider());
-    layout->addWidget(build_time_rate_slider());
+    // layout->addWidget(build_delay_slider());
+    // layout->addWidget(build_time_rate_slider());
 
     const auto hlayout = new QHBoxLayout();
     layout->addLayout(hlayout, 1);
@@ -272,6 +271,7 @@ auto MainWidget::create_menu() -> void {
                 };
             });
 
+        menu->addSeparator();
         actions_.wire_delay = add_action_checkable(
             menu, tr("Wire &Delay"), ActionAttributes {},
             CheckableAttributes {.start_state = true}, [this](bool checked) {
@@ -386,65 +386,137 @@ auto MainWidget::create_menu() -> void {
     }
 }
 
+namespace detail::time_slider {
+
+constexpr static int SLIDER_MIN_VALUE = 0;
+constexpr static int SLIDER_MAX_VALUE = 700'000;
+constexpr static auto SLIDER_START_VALUE = time_rate_t {2ms};
+
+auto from_slider_scale(int value) -> time_rate_t {
+    if (value == SLIDER_MIN_VALUE) {
+        return time_rate_t {0us};
+    }
+
+    const double value_ns = std::pow(10.0, value / double {100'000.0}) * 1000.0;
+    return time_rate_t {1ns * gsl::narrow<int64_t>(std::round(value_ns))};
+};
+
+auto to_slider_scale(time_rate_t rate) -> int {
+    const auto value_log =
+        std::log10(rate.rate_per_second.value.count() / 1000.0) * 100'000;
+    return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
+                      SLIDER_MAX_VALUE);
+};
+
+}  // namespace detail::time_slider
+
 auto MainWidget::create_toolbar() -> void {
-    auto* toolbar = this->addToolBar("Toolbar");
-    toolbar->setIconSize(QSize {18, 18});
+    const auto icon_size = QSize {18, 18};
 
-    // make static
-    toolbar->setMovable(false);
-    toolbar->setFloatable(false);
-    toolbar->toggleViewAction()->setEnabled(false);
-
-    // file actions
-    toolbar->addAction(actions_.new_file);
-    toolbar->addAction(actions_.open_file);
-    toolbar->addAction(actions_.save_file);
-    toolbar->addSeparator();
-
-    // edit actions
-    toolbar->addAction(actions_.cut);
-    toolbar->addAction(actions_.copy);
-    toolbar->addAction(actions_.paste);
-    toolbar->addSeparator();
-
-    // start simulation
+    // Standard
     {
-        auto* button = new QToolButton(this);
-        button->setDefaultAction(actions_.simulation_start);
-        button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        auto* toolbar = this->addToolBar("Standard");
+        toolbar->setIconSize(icon_size);
 
-        toolbar->addWidget(button);
+        // file actions
+        toolbar->addAction(actions_.new_file);
+        toolbar->addAction(actions_.open_file);
+        toolbar->addAction(actions_.save_file);
+        toolbar->addSeparator();
+
+        // edit actions
+        toolbar->addAction(actions_.cut);
+        toolbar->addAction(actions_.copy);
+        toolbar->addAction(actions_.paste);
         toolbar->addSeparator();
     }
-    // stop simulation
     {
-        auto* button = new QToolButton(this);
-        button->setDefaultAction(actions_.simulation_stop);
-        button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        auto* toolbar = this->addToolBar("Simulation");
+        toolbar->setIconSize(icon_size);
 
-        toolbar->addWidget(button);
-        toolbar->addSeparator();
+        // start simulation
+        {
+            auto* button = new QToolButton(this);
+            button->setDefaultAction(actions_.simulation_start);
+            button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
+            toolbar->addWidget(button);
+            toolbar->addSeparator();
+        }
+        // stop simulation
+        {
+            auto* button = new QToolButton(this);
+            button->setDefaultAction(actions_.simulation_stop);
+            button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
+            toolbar->addWidget(button);
+            toolbar->addSeparator();
+        }
+
+        // wire delay
+        {
+            auto* action = actions_.wire_delay;
+
+            auto* check_box = new QCheckBox(tr("Wire Delay"), this);
+            check_box->setChecked(action->isChecked());
+            check_box->setToolTip(action->toolTip());
+
+            toolbar->addWidget(check_box);
+            toolbar->addSeparator();
+            actions_.wire_delay_checkbox = check_box;
+
+            connect(check_box, &QCheckBox::stateChanged, this, [this](int state) {
+                const auto checked = state == Qt::Checked;
+                actions_.wire_delay->setChecked(checked);
+            });
+            connect(action, &QAction::toggled, this,
+                    [check_box](bool checked) { check_box->setChecked(checked); });
+        }
     }
 
-    // wire delay
+    this->addToolBarBreak();
+
     {
-        auto* action = actions_.wire_delay;
+        auto* toolbar = this->addToolBar("Speed");
+        toolbar->setIconSize(icon_size);
 
-        auto* check_box = new QCheckBox(tr("Wire Delay"), this);
-        check_box->setChecked(action->isChecked());
-        check_box->setToolTip(action->toolTip());
+        {
+            using namespace detail::time_slider;
 
-        toolbar->addWidget(check_box);
-        toolbar->addSeparator();
-        actions_.wire_delay_checkbox = check_box;
+            auto* slider = new QSlider(Qt::Orientation::Horizontal);
+            auto* label = new QLabel();
 
-        connect(check_box, &QCheckBox::stateChanged, this, [this](int state) {
-            const auto checked = state == Qt::Checked;
-            actions_.wire_delay->setChecked(checked);
-        });
-        connect(action, &QAction::toggled, this,
-                [check_box](bool checked) { check_box->setChecked(checked); });
+            connect(slider, &QSlider::valueChanged, this, [this, label](int value) {
+                const auto rate = from_slider_scale(value);
+                render_widget_->set_simulation_time_rate(rate);
+
+                label->setText(QString::fromStdString(fmt::format("{}", rate)));
+            });
+
+            slider->setMinimum(SLIDER_MIN_VALUE);
+            slider->setMaximum(SLIDER_MAX_VALUE);
+            slider->setValue(to_slider_scale(SLIDER_START_VALUE));
+
+            slider->setTickInterval(100'000);
+            slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
+            label->setMinimumWidth(70);
+
+            toolbar->addWidget(slider);
+            toolbar->addWidget(label);
+        }
     }
+}
+
+auto MainWidget::create_statusbar() -> void {
+    auto* statusbar = new QStatusBar(this);
+
+    {
+        auto* slider = new QSlider(Qt::Orientation::Horizontal, this);
+        slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
+        statusbar->addPermanentWidget(slider);
+    }
+
+    this->setStatusBar(statusbar);
 }
 
 namespace detail::delay_slider {
@@ -517,30 +589,6 @@ auto MainWidget::build_delay_slider() -> QWidget* {
 
     return panel;
 }
-
-namespace detail::time_slider {
-
-constexpr static int SLIDER_MIN_VALUE = 0;
-constexpr static int SLIDER_MAX_VALUE = 700'000;
-constexpr static auto SLIDER_START_VALUE = time_rate_t {2ms};
-
-auto from_slider_scale(int value) -> time_rate_t {
-    if (value == SLIDER_MIN_VALUE) {
-        return time_rate_t {0us};
-    }
-
-    const double value_ns = std::pow(10.0, value / double {100'000.0}) * 1000.0;
-    return time_rate_t {1ns * gsl::narrow<int64_t>(std::round(value_ns))};
-};
-
-auto to_slider_scale(time_rate_t rate) -> int {
-    const auto value_log =
-        std::log10(rate.rate_per_second.value.count() / 1000.0) * 100'000;
-    return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
-                      SLIDER_MAX_VALUE);
-};
-
-}  // namespace detail::time_slider
 
 auto MainWidget::build_time_rate_slider() -> QWidget* {
     using namespace detail::time_slider;
