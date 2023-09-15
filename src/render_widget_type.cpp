@@ -210,8 +210,8 @@ auto to_logic_item_definition(InteractionState state, std::size_t variable_input
         case insert_clock_generator:
             return LogicItemDefinition {
                 .element_type = ElementType::clock_generator,
-                .input_count = 2,
-                .output_count = 2,
+                .input_count = 3,
+                .output_count = 3,
                 .orientation = orientation_t::right,
 
                 .attrs_clock_generator = layout::attributes_clock_generator {},

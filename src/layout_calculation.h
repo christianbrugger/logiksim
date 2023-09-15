@@ -416,7 +416,7 @@ auto iter_input_location(layout_calculation_data_t data,
         }
 
         case clock_generator: {
-            require_equal(data.input_count, 2);
+            require_equal(data.input_count, 3);
 
             // the second input is used only for simulation
             // not for any drawing or any types of collisions
@@ -592,7 +592,7 @@ auto iter_output_location(layout_calculation_data_t data,
         }
 
         case clock_generator: {
-            require_equal(data.output_count, 2);
+            require_equal(data.output_count, 3);
 
             // the second output is used only for simulation
             // not for any drawing or any types of collisions

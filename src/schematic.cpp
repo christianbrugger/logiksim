@@ -432,8 +432,10 @@ auto validate_no_input_loops(const Schematic::ConstInput input) -> void {
     // clocks have an internal loop, that's allowed.
     const auto clock_loop = [=]() {
         return input.element().element_type() == ElementType::clock_generator &&
-               input.input_index() == connection_id_t {1} &&
-               input.connected_output_index() == connection_id_t {1};
+               ((input.input_index() == connection_id_t {1} &&
+                 input.connected_output_index() == connection_id_t {1}) ||
+                (input.input_index() == connection_id_t {2} &&
+                 input.connected_output_index() == connection_id_t {2}));
     };
 
     if (input.connected_element_id() == input.element_id() && !clock_loop())
@@ -446,8 +448,10 @@ auto validate_no_output_loops(const Schematic::ConstOutput output) -> void {
     // clocks have an internal loop, that's allowed.
     const auto clock_loop = [=]() {
         return output.element().element_type() == ElementType::clock_generator &&
-               output.output_index() == connection_id_t {1} &&
-               output.connected_input_index() == connection_id_t {1};
+               ((output.output_index() == connection_id_t {1} &&
+                 output.connected_input_index() == connection_id_t {1}) ||
+                (output.output_index() == connection_id_t {2} &&
+                 output.connected_input_index() == connection_id_t {2}));
     };
 
     if (output.connected_element_id() == output.element_id() && !clock_loop())

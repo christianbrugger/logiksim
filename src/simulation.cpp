@@ -237,7 +237,7 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
             return 0;
 
         case clock_generator:
-            return 1;
+            return 4;
         case flipflop_jk:
             return 2;
         case shift_register:
@@ -307,6 +307,32 @@ auto Simulation::check_counts_valid() const -> void {
     }
 }
 
+namespace {
+
+template <bool Const>
+struct state_mapping_clock_generator {
+    using vector_ref =
+        std::conditional_t<!Const, logic_small_vector_t &, const logic_small_vector_t &>;
+    using bool_ref = std::conditional_t<!Const, bool &, const bool &>;
+
+    explicit state_mapping_clock_generator(vector_ref state)
+        : enabled {state.at(0)},
+          output_value {state.at(1)},
+          on_finish_event {state.at(2)},
+          off_finish_event {state.at(3)} {
+        if (state.size() != 4) {
+            throw_exception("invalid state size");
+        }
+    }
+
+    bool_ref enabled;
+    bool_ref output_value;
+    bool_ref on_finish_event;
+    bool_ref off_finish_event;
+};
+
+}  // namespace
+
 auto update_internal_state(const logic_small_vector_t &old_input,
                            const logic_small_vector_t &new_input, const ElementType type,
                            logic_small_vector_t &state) {
@@ -314,20 +340,37 @@ auto update_internal_state(const logic_small_vector_t &old_input,
         using enum ElementType;
 
         case clock_generator: {
-            // first input is reset signal
+            // first input is enable signal
             // second input & output are internal signals to loop the clock
+            // third input & output are internal signals to loop the clock
 
-            bool rise_cycle = !new_input.at(1) && old_input.at(1);
-            bool rise_start = new_input.at(0) && !old_input.at(0);
+            const auto state_map = state_mapping_clock_generator<false> {state};
 
-            bool in_second_phase = !new_input.at(1);
-            bool enabled = new_input.at(0);
+            bool input_enabled = new_input.at(0);
+            bool on_finished = new_input.at(1) ^ old_input.at(1);
+            bool off_finished = new_input.at(2) ^ old_input.at(2);
 
-            if ((rise_cycle && enabled) || (rise_start && in_second_phase)) {
-                state.at(0) = true;
-            } else if (new_input.at(1) && !old_input.at(1)) {
-                state.at(0) = false;
+            if (!state_map.enabled) {
+                if (input_enabled) {
+                    state_map.enabled = true;
+
+                    state_map.output_value = true;
+                    state_map.on_finish_event = !state_map.on_finish_event;
+                }
+            } else {
+                if (on_finished) {
+                    state_map.output_value = false;
+                    state_map.off_finish_event = !state_map.off_finish_event;
+                } else if (off_finished) {
+                    if (input_enabled) {
+                        state_map.output_value = true;
+                        state_map.on_finish_event = !state_map.on_finish_event;
+                    } else {
+                        state_map.enabled = false;
+                    }
+                }
             }
+
             return;
         }
 
@@ -437,8 +480,10 @@ auto calculate_outputs_from_state(const logic_small_vector_t &state,
         }
 
         case clock_generator: {
-            const bool enabled = state.at(0);
-            return {enabled, enabled};
+            const auto state_map = state_mapping_clock_generator<true> {state};
+
+            return {state_map.output_value, state_map.on_finish_event,
+                    state_map.off_finish_event};
         }
 
         case flipflop_jk: {

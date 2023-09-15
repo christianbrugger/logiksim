@@ -35,16 +35,27 @@ auto add_unused_element(Schematic& schematic) -> void {
 }
 
 auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void {
-    const auto delay = [&]() {
+    const auto output_delays = [&]() -> std::vector<delay_t> {
         switch (element.element_type()) {
             using enum ElementType;
 
-            case button:
-                return Schematic::defaults::button_delay;
-            case clock_generator:
-                return element.attrs_clock_generator().time_symmetric;
-            default:
-                return Schematic::defaults::logic_item_delay;
+            case button: {
+                return {Schematic::defaults::button_delay};
+            }
+
+            case clock_generator: {
+                const auto& attrs = element.attrs_clock_generator();
+                if (attrs.is_symmetric) {
+                    return {delay_t::epsilon(), attrs.time_symmetric,
+                            attrs.time_symmetric};
+                }
+                return {delay_t::epsilon(), attrs.time_on, attrs.time_off};
+            }
+
+            default: {
+                return std::vector<delay_t>(element.output_count(),
+                                            Schematic::defaults::logic_item_delay);
+            }
         }
         throw_exception("invalid");
     }();
@@ -56,7 +67,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
 
         .circuit_id = element.sub_circuit_id(),
         .input_inverters = element.input_inverters(),
-        .output_delays = std::vector<delay_t>(element.output_count(), delay),
+        .output_delays = output_delays,
         .history_length = Schematic::defaults::no_history,
     });
 }
@@ -209,6 +220,8 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
         if (element.element_type() == ElementType::clock_generator) {
             element.input(connection_id_t {1})
                 .connect(element.output(connection_id_t {1}));
+            element.input(connection_id_t {2})
+                .connect(element.output(connection_id_t {2}));
             continue;
         }
 

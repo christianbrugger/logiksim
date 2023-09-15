@@ -331,7 +331,7 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
         }
 
         case clock_generator: {
-            return input_count == 2 && output_count == 2;
+            return input_count == 3 && output_count == 3;
         }
         case flipflop_jk: {
             return input_count == 5 && output_count == 2;
