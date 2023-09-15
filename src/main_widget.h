@@ -16,10 +16,13 @@ class QSlider;
 class QAbstractButton;
 class QHBoxLayout;
 class QCheckBox;
+class QMenu;
+class QSlider;
 
 namespace logicsim {
 
 class RendererWidget;
+struct time_rate_t;
 
 class ElementButton : public QPushButton {
     Q_OBJECT
@@ -78,6 +81,7 @@ class MainWidget : public QMainWindow {
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
     auto open_circuit(std::optional<std::string> filename = {}) -> void;
     auto ensure_circuit_saved() -> save_result_t;
+    auto set_time_rate_slider(time_rate_t time_rate) -> void;
 
    protected:
     auto closeEvent(QCloseEvent* event) -> void;
@@ -101,6 +105,8 @@ class MainWidget : public QMainWindow {
     std::string last_saved_data_ {};
 
     MainActions actions_ {};
+    QMenu* menu_toolbars_ {};
+    QSlider* time_rate_slider_ {};
 };
 
 }  // namespace logicsim

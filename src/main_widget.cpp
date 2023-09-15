@@ -95,8 +95,45 @@ MainWidget::MainWidget(QWidget* parent)
             &MainWidget::on_interaction_state_changed);
 
     new_circuit();
-    resize(914, 700);
+    resize(914, 500);
 }
+
+namespace detail::time_slider {
+
+using namespace std::chrono_literals;
+
+constexpr static int SLIDER_MIN_VALUE = 0;
+constexpr static int SLIDER_MAX_VALUE = 700'000;
+constexpr static int SLIDER_TICK_INTERVAL = 100'000;
+constexpr static auto SLIDER_START_VALUE = time_rate_t {10us};
+
+constexpr static auto TIME_RATE_MENU_ITEMS = std::array {
+    time_rate_t {0ns},   time_rate_t {1001ns}, time_rate_t {10us},
+    time_rate_t {100us}, time_rate_t {1ms},    time_rate_t {10ms},
+    time_rate_t {100ms}, time_rate_t {1s},     time_rate_t {10s},
+};
+
+auto from_slider_scale(int value) -> time_rate_t {
+    if (value == SLIDER_MIN_VALUE) {
+        return time_rate_t {0us};
+    }
+
+    const double value_ns = std::pow(10.0, value / double {100'000.0}) * 1000.0;
+    return time_rate_t {1ns * gsl::narrow<int64_t>(std::round(value_ns))};
+};
+
+auto to_slider_scale(time_rate_t rate) -> int {
+    if (rate == time_rate_t {0us}) {
+        return SLIDER_MIN_VALUE;
+    }
+
+    const auto value_log =
+        std::log10(rate.rate_per_second.value.count() / 1000.0) * 100'000;
+    return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
+                      SLIDER_MAX_VALUE);
+};
+
+}  // namespace detail::time_slider
 
 namespace {
 
@@ -249,6 +286,10 @@ auto MainWidget::create_menu() -> void {
                    [this] { render_widget_->zoom(-1); });
         add_action(menu, tr("&Reset Zoom"), ActionAttributes {.icon = icon_t::reset_zoom},
                    [this] { render_widget_->reset_view_config(); });
+
+        menu->addSeparator();
+
+        menu_toolbars_ = menu->addMenu(tr("&Toolbars"));
     }
 
     {
@@ -290,6 +331,18 @@ auto MainWidget::create_menu() -> void {
                                          Schematic::defaults::wire_delay_per_distance);
 
         actions_.wire_delay->setToolTip(QString::fromStdString(tooltip));
+
+        menu->addSeparator();
+
+        {
+            auto* submenu = menu->addMenu(tr("Simulation Speed"));
+
+            for (auto time_rate : detail::time_slider::TIME_RATE_MENU_ITEMS) {
+                const auto text = fmt::format("{}", time_rate);
+                add_action(submenu, QString::fromStdString(text), {},
+                           [this, time_rate] { set_time_rate_slider(time_rate); });
+            }
+        }
     }
 
     {
@@ -386,37 +439,14 @@ auto MainWidget::create_menu() -> void {
     }
 }
 
-namespace detail::time_slider {
-
-constexpr static int SLIDER_MIN_VALUE = 0;
-constexpr static int SLIDER_MAX_VALUE = 700'000;
-constexpr static auto SLIDER_START_VALUE = time_rate_t {2ms};
-
-auto from_slider_scale(int value) -> time_rate_t {
-    if (value == SLIDER_MIN_VALUE) {
-        return time_rate_t {0us};
-    }
-
-    const double value_ns = std::pow(10.0, value / double {100'000.0}) * 1000.0;
-    return time_rate_t {1ns * gsl::narrow<int64_t>(std::round(value_ns))};
-};
-
-auto to_slider_scale(time_rate_t rate) -> int {
-    const auto value_log =
-        std::log10(rate.rate_per_second.value.count() / 1000.0) * 100'000;
-    return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
-                      SLIDER_MAX_VALUE);
-};
-
-}  // namespace detail::time_slider
-
 auto MainWidget::create_toolbar() -> void {
     const auto icon_size = QSize {18, 18};
 
-    // Standard
+    // Standard Toolbar
     {
         auto* toolbar = this->addToolBar("Standard");
         toolbar->setIconSize(icon_size);
+        menu_toolbars_->addAction(toolbar->toggleViewAction());
 
         // file actions
         toolbar->addAction(actions_.new_file);
@@ -430,9 +460,12 @@ auto MainWidget::create_toolbar() -> void {
         toolbar->addAction(actions_.paste);
         toolbar->addSeparator();
     }
+
+    // Simulation Toolbar
     {
         auto* toolbar = this->addToolBar("Simulation");
         toolbar->setIconSize(icon_size);
+        menu_toolbars_->addAction(toolbar->toggleViewAction());
 
         // start simulation
         {
@@ -474,11 +507,11 @@ auto MainWidget::create_toolbar() -> void {
         }
     }
 
-    this->addToolBarBreak();
-
+    // Speed Toolbar
     {
         auto* toolbar = this->addToolBar("Speed");
         toolbar->setIconSize(icon_size);
+        menu_toolbars_->addAction(toolbar->toggleViewAction());
 
         {
             using namespace detail::time_slider;
@@ -497,12 +530,17 @@ auto MainWidget::create_toolbar() -> void {
             slider->setMaximum(SLIDER_MAX_VALUE);
             slider->setValue(to_slider_scale(SLIDER_START_VALUE));
 
-            slider->setTickInterval(100'000);
+            slider->setTickInterval(SLIDER_TICK_INTERVAL);
             slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
             label->setMinimumWidth(70);
 
+            slider->setToolTip(
+                tr("Set the speed at which the\n"
+                   "simulation is running per second."));
+
             toolbar->addWidget(slider);
             toolbar->addWidget(label);
+            time_rate_slider_ = slider;
         }
     }
 }
@@ -856,6 +894,14 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
     }
 
     return save_result_t::canceled;
+}
+
+auto MainWidget::set_time_rate_slider(time_rate_t time_rate) -> void {
+    using namespace detail::time_slider;
+
+    if (time_rate_slider_) {
+        time_rate_slider_->setValue(to_slider_scale(time_rate));
+    }
 }
 
 auto MainWidget::closeEvent(QCloseEvent* event) -> void {
