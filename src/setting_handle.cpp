@@ -26,19 +26,23 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
         using enum ElementType;
 
         case clock_generator: {
-            constexpr auto overdraw = defaults::logic_item_body_overdraw;
+            // constexpr auto overdraw = defaults::logic_item_body_overdraw;
             constexpr auto handle_size = defaults::setting_handle_size;
-            constexpr auto margin = defaults::setting_handle_margin;
+            // constexpr auto margin = defaults::setting_handle_margin;
 
-            const auto width = 3.0;
-            const auto height = 2.0;
+            const auto width = 5.0;
+            const auto height = 4.0;
 
             return setting_handle_t {
-                .position = transform(element.position(), element.orientation(),
-                                      point_fine_t {
-                                          width - handle_size / 2.0 - margin,
-                                          height + overdraw - handle_size / 2.0 - margin,
-                                      }),
+                .position =
+                    transform(element.position(), element.orientation(),
+                              point_fine_t {
+                                  // width - handle_size / 2.0 - margin,
+                                  // margin + handle_size / 2.0,
+                                  // height + overdraw - handle_size / 2.0 - margin,
+                                  width / 2.0,
+                                  height / 2.0 + handle_size / 2.0,
+                              }),
                 .icon = icon_t::setting_handle_clock_generator,
                 .element_id = element_id,
             };

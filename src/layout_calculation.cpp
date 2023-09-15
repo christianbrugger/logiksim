@@ -420,7 +420,7 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
         }
 
         case clock_generator: {
-            return transform(data.position, data.orientation, {0, 0}, {3, 2});
+            return transform(data.position, data.orientation, {0, 0}, {5, 4});
         }
         case flipflop_jk: {
             return transform(data.position, data.orientation, {0, 0}, {4, 2});

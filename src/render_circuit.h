@@ -58,7 +58,7 @@ constexpr static inline auto clock_name_color = defaults::color_black;
 constexpr static inline auto clock_name_style = FontStyle::bold;
 constexpr static inline auto clock_period_size = 0.7;  // grid values
 constexpr static inline auto clock_period_color = defaults::color_black;
-constexpr static inline auto clock_period_style = FontStyle::bold;
+constexpr static inline auto clock_period_style = FontStyle::regular;
 
 constexpr static inline auto display_ascii_controll_color = defaults::color_dark_orange;
 constexpr static inline auto display_normal_color = defaults::color_black;

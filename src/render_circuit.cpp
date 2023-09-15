@@ -841,7 +841,7 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., 0. - padding},
-        point_fine_t {3., 2. + padding},
+        point_fine_t {5., 4. + padding},
     };
     draw_logic_item_rect(ctx, rect, element, state);
 
@@ -852,7 +852,7 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           state);
 
     // name
-    draw_logic_item_label(ctx, point_fine_t {1.5, -1}, attrs.name, element, state,
+    draw_logic_item_label(ctx, point_fine_t {2.5, 0}, attrs.name, element, state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_name_size,
                               .custom_text_color = defaults::font::clock_name_color,
@@ -863,7 +863,7 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
 
     // generator delay
     const auto duration_text = attrs.format_period();
-    draw_logic_item_label(ctx, point_fine_t {1.5, 0}, duration_text, element, state,
+    draw_logic_item_label(ctx, point_fine_t {2.5, 1}, duration_text, element, state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,
