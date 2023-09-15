@@ -92,7 +92,8 @@ auto get_icon_path_relative(icon_t icon) {
             return QString("icons/lucide/play.svg");
         }
         case simulation_stop: {
-            return QString("icons/lucide/square.svg");
+            // return QString("icons/lucide/square.svg");
+            return QString("icons/own/stop_button_clean.svg");
         }
 
         case benchmark: {
