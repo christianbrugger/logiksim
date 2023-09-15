@@ -15,6 +15,7 @@ class QString;
 class QSlider;
 class QAbstractButton;
 class QHBoxLayout;
+class QCheckBox;
 
 namespace logicsim {
 
@@ -30,6 +31,24 @@ class ElementButton : public QPushButton {
 
 constexpr static inline auto app_name = std::string_view {"LogicSim 2"};
 
+struct MainActions {
+    // file
+    QAction* new_file;
+    QAction* open_file;
+    QAction* save_file;
+
+    // edit
+    QAction* cut;
+    QAction* copy;
+    QAction* paste;
+
+    // simulation
+    QAction* simulation_start;
+    QAction* simulation_stop;
+    QAction* wire_delay;
+    QCheckBox* wire_delay_checkbox;
+};
+
 class MainWidget : public QMainWindow {
     Q_OBJECT
 
@@ -38,6 +57,7 @@ class MainWidget : public QMainWindow {
 
    private:
     auto create_menu() -> void;
+    auto create_toolbar() -> void;
 
     [[nodiscard]] auto build_delay_slider() -> QWidget*;
     [[nodiscard]] auto build_time_rate_slider() -> QWidget*;
@@ -78,6 +98,8 @@ class MainWidget : public QMainWindow {
 
     std::string last_saved_filename_ {};
     std::string last_saved_data_ {};
+
+    MainActions actions_ {};
 };
 
 }  // namespace logicsim

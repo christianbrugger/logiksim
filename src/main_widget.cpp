@@ -21,6 +21,8 @@
 #include <QSlider>
 #include <QSpinBox>
 #include <QString>
+#include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 #include <locale>
@@ -56,7 +58,11 @@ MainWidget::MainWidget(QWidget* parent)
       last_saved_data_ {render_widget_->serialize_circuit()} {
     setAcceptDrops(true);
 
+    // disable context menu to show/hide toolbars
+    this->setContextMenuPolicy(Qt::PreventContextMenu);
+
     create_menu();
+    create_toolbar();
 
     const auto layout = new QVBoxLayout();
     layout->addWidget(build_delay_slider());
@@ -108,7 +114,12 @@ auto add_action_impl(QMenu* menu, const QString& text, ActionAttributes attribut
                      action_callable auto callable) -> QAction* {
     auto* action = menu->addAction(text);
     auto* widget = menu->parentWidget();
-    widget->connect(action, &QAction::triggered, widget, callable);
+
+    if constexpr (std::invocable<decltype(callable), bool>) {
+        widget->connect(action, &QAction::toggled, widget, callable);
+    } else {
+        widget->connect(action, &QAction::triggered, widget, callable);
+    }
 
     if (attributes.shortcut) {
         action->setShortcut(*attributes.shortcut);
@@ -174,15 +185,15 @@ auto MainWidget::create_menu() -> void {
         // File
         auto* menu = menuBar()->addMenu(tr("&File"));
 
-        add_action(
+        actions_.new_file = add_action(
             menu, tr("&New"),
             ActionAttributes {.shortcut = QKeySequence::New, .icon = icon_t::new_file},
             [this] { new_circuit(); });
-        add_action(
+        actions_.open_file = add_action(
             menu, tr("&Open..."),
             ActionAttributes {.shortcut = QKeySequence::Open, .icon = icon_t::open_file},
             [this] { open_circuit(); });
-        add_action(
+        actions_.save_file = add_action(
             menu, tr("&Save"),
             ActionAttributes {.shortcut = QKeySequence::Save, .icon = icon_t::save_file},
             [this] { save_circuit(filename_choice_t::same_as_last); });
@@ -201,14 +212,15 @@ auto MainWidget::create_menu() -> void {
         // Edit
         auto* menu = menuBar()->addMenu(tr("&Edit"));
 
-        add_action(menu, tr("Cu&t"),
-                   ActionAttributes {.shortcut = QKeySequence::Cut, .icon = icon_t::cut},
-                   [this] { render_widget_->cut_selected_items(); });
-        add_action(
+        actions_.cut = add_action(
+            menu, tr("Cu&t"),
+            ActionAttributes {.shortcut = QKeySequence::Cut, .icon = icon_t::cut},
+            [this] { render_widget_->cut_selected_items(); });
+        actions_.copy = add_action(
             menu, tr("&Copy"),
             ActionAttributes {.shortcut = QKeySequence::Copy, .icon = icon_t::copy},
             [this] { render_widget_->copy_selected_items(); });
-        add_action(
+        actions_.paste = add_action(
             menu, tr("&Paste"),
             ActionAttributes {.shortcut = QKeySequence::Paste, .icon = icon_t::paste},
             [this] { render_widget_->paste_clipboard_items(); });
@@ -238,6 +250,46 @@ auto MainWidget::create_menu() -> void {
                    [this] { render_widget_->zoom(-1); });
         add_action(menu, tr("&Reset Zoom"), ActionAttributes {.icon = icon_t::reset_zoom},
                    [this] { render_widget_->reset_view_config(); });
+    }
+
+    {
+        // Simulation
+        auto* menu = menuBar()->addMenu(tr("&Simulation"));
+
+        // Benchmark
+        actions_.simulation_start = add_action(
+            menu, tr("Start &Simulation"),
+            ActionAttributes {.icon = icon_t::simulation_start}, [this]() {
+                render_widget_->set_interaction_state(InteractionState::simulation);
+            });
+
+        actions_.simulation_stop = add_action(
+            menu, tr("Stop &Simulation"),
+            ActionAttributes {.icon = icon_t::simulation_stop}, [this]() {
+                using enum InteractionState;
+                if (render_widget_->interaction_state() == InteractionState::simulation) {
+                    render_widget_->set_interaction_state(InteractionState::selection);
+                };
+            });
+
+        actions_.wire_delay = add_action_checkable(
+            menu, tr("Wire &Delay"), ActionAttributes {},
+            CheckableAttributes {.start_state = true}, [this](bool checked) {
+                const auto delay = checked ? Schematic::defaults::wire_delay_per_distance
+                                           : delay_t {0ns};
+                render_widget_->set_wire_delay_per_distance(delay);
+            });
+
+        const auto tooltip_fmt =
+            tr("When enabled wires have visible delay of {}/unit.\n"
+               "Wire delay can be very useful when understanding circuits.\n"
+               "One the other hand it can be a hindrance when designing large\n"
+               "sequential circuits.")
+                .toStdString();
+        const auto tooltip = fmt::format(fmt::runtime(tooltip_fmt),
+                                         Schematic::defaults::wire_delay_per_distance);
+
+        actions_.wire_delay->setToolTip(QString::fromStdString(tooltip));
     }
 
     {
@@ -331,6 +383,67 @@ auto MainWidget::create_menu() -> void {
                    ActionAttributes {.shortcut = QKeySequence::Preferences,
                                      .icon = icon_t::options},
                    [] { print("options"); });
+    }
+}
+
+auto MainWidget::create_toolbar() -> void {
+    auto* toolbar = this->addToolBar("Toolbar");
+    toolbar->setIconSize(QSize {18, 18});
+
+    // make static
+    toolbar->setMovable(false);
+    toolbar->setFloatable(false);
+    toolbar->toggleViewAction()->setEnabled(false);
+
+    // file actions
+    toolbar->addAction(actions_.new_file);
+    toolbar->addAction(actions_.open_file);
+    toolbar->addAction(actions_.save_file);
+    toolbar->addSeparator();
+
+    // edit actions
+    toolbar->addAction(actions_.cut);
+    toolbar->addAction(actions_.copy);
+    toolbar->addAction(actions_.paste);
+    toolbar->addSeparator();
+
+    // start simulation
+    {
+        auto* button = new QToolButton(this);
+        button->setDefaultAction(actions_.simulation_start);
+        button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
+        toolbar->addWidget(button);
+        toolbar->addSeparator();
+    }
+    // stop simulation
+    {
+        auto* button = new QToolButton(this);
+        button->setDefaultAction(actions_.simulation_stop);
+        button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
+        toolbar->addWidget(button);
+        toolbar->addSeparator();
+    }
+
+    // wire delay
+    {
+        auto* action = actions_.wire_delay;
+
+        auto* check_box = new QCheckBox(tr("Wire Delay"), this);
+        check_box->setChecked(action->isChecked());
+        check_box->setToolTip(action->toolTip());
+
+        toolbar->addWidget(check_box);
+        toolbar->addSeparator();
+        actions_.wire_delay_checkbox = check_box;
+
+        connect(check_box, &QCheckBox::stateChanged, this, [this](int state) {
+            const auto checked = state == Qt::Checked;
+            actions_.wire_delay->setChecked(checked);
+        });
+        connect(action, &QAction::toggled, this,
+                [check_box](bool checked) { check_box->setChecked(checked); });
     }
 }
 
@@ -563,6 +676,22 @@ void MainWidget::on_interaction_state_changed(InteractionState new_state) {
     // delay slider
     if (delay_panel_ != nullptr) {
         delay_panel_->setEnabled(new_state != InteractionState::simulation);
+    }
+
+    // simulation active
+    bool simulation_active = new_state == InteractionState::simulation;
+
+    if (actions_.simulation_start) {
+        actions_.simulation_start->setEnabled(!simulation_active);
+    }
+    if (actions_.simulation_stop) {
+        actions_.simulation_stop->setEnabled(simulation_active);
+    }
+    if (actions_.wire_delay) {
+        actions_.wire_delay->setEnabled(!simulation_active);
+    }
+    if (actions_.wire_delay_checkbox) {
+        actions_.wire_delay_checkbox->setEnabled(!simulation_active);
     }
 }
 

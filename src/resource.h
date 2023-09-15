@@ -15,36 +15,44 @@ enum class font_t : uint8_t {
 auto get_font_path(font_t font) -> QString;
 
 enum class icon_t {
-    // menus
+    // file
     new_file,
     open_file,
     save_file,
     exit,
 
+    // edit
     cut,
     copy,
     paste,
     delete_selected,
     select_all,
 
+    // view
     reset_zoom,
     zoom_in,
     zoom_out,
 
+    // simulation
+    simulation_start,
+    simulation_stop,
+
+    // debug
     benchmark,
     show_circuit,
     show_collision_cache,
     show_connection_cache,
     show_selection_cache,
-
+    // --
     reload_circuit,
     load_simple_example,
     load_wire_example,
     load_element_example,
     load_elements_and_wires_example,
-
+    // --
     direct_rendering,
 
+    // options
     options,
 
     // circuit rendering

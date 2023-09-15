@@ -88,6 +88,13 @@ auto get_icon_path_relative(icon_t icon) {
             return QString("icons/lucide/zoom-out.svg");
         }
 
+        case simulation_start: {
+            return QString("icons/lucide/play.svg");
+        }
+        case simulation_stop: {
+            return QString("icons/lucide/square.svg");
+        }
+
         case benchmark: {
             return QString("icons/lucide/infinity.svg");
         }
