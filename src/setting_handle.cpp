@@ -149,7 +149,8 @@ auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle)
     }
     // create new
     const auto element = editable_circuit_.layout().element(setting_handle.element_id);
-    auto* widget = new ClockGeneratorDialog {parent_, AttributeSetter {this}, element};
+    auto* widget = new ClockGeneratorDialog {parent_, AttributeSetter {this},
+                                             element.attrs_clock_generator()};
     widget->setWindowFlags(Qt::Dialog);
     widget->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -324,12 +325,10 @@ auto DelayInput::delay_unit_changed() -> void {
 }
 
 ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, AttributeSetter setter,
-                                           layout::ConstElement element)
+                                           layout::attributes_clock_generator attrs)
     : QWidget {parent}, setter_ {setter} {
     setWindowTitle(tr("Clock Generator"));
     setWindowIcon(QIcon(get_icon_path(icon_t::setting_handle_clock_generator)));
-
-    const auto& attrs = element.attrs_clock_generator();
 
     auto* layout = new QFormLayout(this);
     layout_ = layout;

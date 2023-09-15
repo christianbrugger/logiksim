@@ -131,7 +131,7 @@ class DelayInput : public QObject {
 class ClockGeneratorDialog : public QWidget {
    public:
     explicit ClockGeneratorDialog(QWidget* parent, AttributeSetter setter,
-                                  layout::ConstElement element);
+                                  layout::attributes_clock_generator attrs);
 
    private:
     auto value_changed() -> void;

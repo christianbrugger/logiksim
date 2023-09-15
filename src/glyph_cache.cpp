@@ -122,8 +122,8 @@ auto BaselineOffset::format() const -> std::string {
     -> ScaledBaselineOffset {
     return ScaledBaselineOffset {
         .baseline_center = baseline_center * font_size,
-        .baseline_top = baseline_center * font_size,
-        .baseline_bottom = baseline_center * font_size,
+        .baseline_top = baseline_top * font_size,
+        .baseline_bottom = baseline_bottom * font_size,
     };
 }
 

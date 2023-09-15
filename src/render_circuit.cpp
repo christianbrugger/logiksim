@@ -857,7 +857,7 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                               .custom_font_size = defaults::font::clock_name_size,
                               .custom_text_color = defaults::font::clock_name_color,
                               .horizontal_alignment = HorizontalAlignment::center,
-                              .vertical_alignment = VerticalAlignment::top,
+                              .vertical_alignment = VerticalAlignment::top_baseline,
                               .style = defaults::font::clock_name_style,
                           });
 
@@ -868,7 +868,7 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,
                               .horizontal_alignment = HorizontalAlignment::center,
-                              .vertical_alignment = VerticalAlignment::top,
+                              .vertical_alignment = VerticalAlignment::top_baseline,
                               .style = defaults::font::clock_period_style,
                           });
 }
