@@ -517,6 +517,13 @@ target_link_libraries(${MAIN_GUI_TARGET} PRIVATE
 )
 target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE LS_EXCEPTION_MESSAGE_BOX)
+    if (WIN32)
+    #    set_property(TARGET ${MAIN_GUI_TARGET} PROPERTY WIN32_EXECUTABLE true)
+    endif ()
+endif ()
+
 # Google Test
 
 set(MAIN_TEST_TARGET "simulation_srp_test")

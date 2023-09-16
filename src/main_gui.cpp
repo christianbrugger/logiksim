@@ -4,20 +4,37 @@
 #include "main_widget.h"
 
 #include <QApplication>
-#include <QDir>
+#include <QMessageBox>
+
+#include <fstream>
+#include <iostream>
+
+auto main_impl(int argc, char* argv[]) -> int {
+    auto app = QApplication {argc, argv};
+
+    auto frame = logicsim::MainWidget {};
+    frame.show();
+
+    return app.exec();
+}
 
 auto main(int argc, char* argv[]) -> int {
-    {
-        auto app = QApplication {argc, argv};
+#ifdef LS_EXCEPTION_MESSAGE_BOX
+    try {
+#endif
 
-        auto frame = logicsim::MainWidget {};
-        frame.show();
+        return main_impl(argc, argv);
 
-        return app.exec();
+#ifdef LS_EXCEPTION_MESSAGE_BOX
     }
 
-    // catch (std::runtime_error& exc) {
-    //     fmt::print("{}\n", exc.what());
-    //     throw;
-    // }
+    catch (std::runtime_error& exc) {
+        fmt::print("{}\n", exc.what());
+
+        auto _ [[maybe_unused]] = QApplication {argc, argv};
+        QMessageBox::critical(nullptr, "Critical Error", QString(exc.what()));
+
+        return -1;
+    }
+#endif
 }
