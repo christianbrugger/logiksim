@@ -337,7 +337,6 @@ auto is_logic_item_position_representable_private(const Layout& layout,
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
-    throw_exception("invalid element");
 
     const auto position = layout.position(element_id);
 
