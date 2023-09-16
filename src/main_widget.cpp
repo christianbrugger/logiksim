@@ -705,6 +705,8 @@ auto MainWidget::new_circuit() -> void {
 
         last_saved_filename_.clear();
         last_saved_data_ = render_widget_->serialize_circuit();
+
+        update_simulation_settings();  // TODO use signal & slots
     }
 }
 
@@ -771,6 +773,8 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
     }
     last_saved_filename_ = *filename;
     last_saved_data_ = render_widget_->serialize_circuit();
+
+    update_simulation_settings();  // TODO use signal & slots
 }
 
 auto MainWidget::ensure_circuit_saved() -> save_result_t {
@@ -797,6 +801,13 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
     }
 
     return save_result_t::canceled;
+}
+
+auto MainWidget::update_simulation_settings() -> void {
+    set_time_rate_slider(render_widget_->simulation_time_rate());
+    if (actions_.wire_delay) {
+        actions_.wire_delay->setChecked(render_widget_->use_wire_delay());
+    }
 }
 
 auto MainWidget::set_time_rate_slider(time_rate_t time_rate) -> void {

@@ -49,6 +49,8 @@ class LoadLayoutResult {
 
     auto apply(ViewConfig& view_config) const -> void;
 
+    auto simulation_settings() const -> SimulationSettings;
+
    private:
     std::unique_ptr<SerializedLayout> data_;
 };

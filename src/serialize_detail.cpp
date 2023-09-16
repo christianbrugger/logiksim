@@ -122,18 +122,32 @@ struct glz::meta<SerializedViewConfig> {
     );
 };
 
+using logicsim::serialize::SerializedSimulationSettings;
+
+template <>
+struct glz::meta<SerializedSimulationSettings> {
+    using T = SerializedSimulationSettings;
+
+    static constexpr auto value = glz::object(                   //
+        "simulation_time_rate_ns", &T::simulation_time_rate_ns,  //
+        "use_wire_delay", &T::use_wire_delay                     //
+    );
+};
+
 using logicsim::serialize::SerializedLayout;
 
 template <>
 struct glz::meta<SerializedLayout> {
     using T = SerializedLayout;
 
-    static constexpr auto value = glz::object(  //
-        "version", &T::version,                 //
-        "save_position", &T::save_position,     //
-        "view_config", &T::view_config,         //
-        "logic_items", &T::logic_items,         //
-        "wire_segments", &T::wire_segments      //
+    static constexpr auto value = glz::object(           //
+        "version", &T::version,                          //
+        "save_position", &T::save_position,              //
+        "view_config", &T::view_config,                  //
+        "simulation_settings", &T::simulation_settings,  //
+
+        "logic_items", &T::logic_items,     //
+        "wire_segments", &T::wire_segments  //
     );
 };
 

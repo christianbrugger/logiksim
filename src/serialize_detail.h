@@ -45,12 +45,18 @@ struct SerializedViewConfig {
     double grid_offset_y {};
 };
 
+struct SerializedSimulationSettings {
+    int64_t simulation_time_rate_ns {10'000};
+    bool use_wire_delay {true};
+};
+
 struct SerializedLayout {
     int version {CURRENT_VERSION};
     // used for copy & paste
     point_t save_position {0, 0};
     // view config
     SerializedViewConfig view_config {};
+    SerializedSimulationSettings simulation_settings {};
 
     std::vector<SerializedLogicItem> logic_items {};
     std::vector<SerializedLine> wire_segments {};
@@ -59,7 +65,6 @@ struct SerializedLayout {
 }  // namespace logicsim::serialize
 
 namespace logicsim {
-
 auto json_dumps(const serialize::SerializedLayout& data) -> std::string;
 auto json_loads(std::string value) -> std::optional<serialize::SerializedLayout>;
 

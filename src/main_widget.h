@@ -85,6 +85,7 @@ class MainWidget : public QMainWindow {
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
     auto open_circuit(std::optional<std::string> filename = {}) -> void;
     auto ensure_circuit_saved() -> save_result_t;
+    auto update_simulation_settings() -> void;
     auto set_time_rate_slider(time_rate_t time_rate) -> void;
     auto show_about_dialog() -> void;
 

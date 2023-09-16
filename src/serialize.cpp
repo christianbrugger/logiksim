@@ -191,6 +191,36 @@ auto apply_view_config(const SerializedViewConfig& serialized, ViewConfig& view_
     });
 }
 
+auto serialize_simulation_settings(const SimulationSettings settings)
+    -> SerializedSimulationSettings {
+    const auto time_rate = settings.simulation_time_rate.rate_per_second.value;
+
+    static_assert(std::is_same_v<decltype(time_rate)::period, std::nano>);
+
+    return SerializedSimulationSettings {
+        .simulation_time_rate_ns = time_rate.count(),
+        .use_wire_delay = settings.use_wire_delay,
+    };
+};
+
+auto unserialize_simulation_settings(const SerializedSimulationSettings& settings)
+    -> SimulationSettings {
+    using namespace std::chrono_literals;
+
+    const auto rate_stored =
+        time_rate_t {time_t {settings.simulation_time_rate_ns * 1ns}};
+
+    static_assert(std::is_same_v<decltype(rate_stored.rate_per_second.value)::rep,
+                                 decltype(settings.simulation_time_rate_ns)>);
+
+    // const auto rate = std::clamp(rate_stored, time_rate_t {1us}, time_rate_t {10s});
+
+    return SimulationSettings {
+        .simulation_time_rate = rate_stored,
+        .use_wire_delay = settings.use_wire_delay,
+    };
+}
+
 }  // namespace logicsim::serialize
 
 namespace logicsim {
@@ -201,6 +231,10 @@ auto serialize_inserted(const Layout& layout, const ViewConfig* view_config,
 
     if (view_config != nullptr) {
         data.view_config = serialize::serialize_view_config(*view_config);
+    }
+    if (simulation_settings != nullptr) {
+        data.simulation_settings =
+            serialize::serialize_simulation_settings(*simulation_settings);
     }
 
     for (const auto element : layout.elements()) {
@@ -298,6 +332,13 @@ auto LoadLayoutResult::apply(ViewConfig& view_config) const -> void {
     }
 
     apply_view_config(data_->view_config, view_config);
+}
+
+auto LoadLayoutResult::simulation_settings() const -> SimulationSettings {
+    if (!data_) {
+        throw_exception("no layout data");
+    }
+    return unserialize_simulation_settings(data_->simulation_settings);
 }
 
 }  // namespace serialize

@@ -261,7 +261,7 @@ class RendererWidget : public RendererWidgetBase {
     auto set_simulation_time_rate(time_rate_t time_rate) -> void;
     auto set_use_wire_delay(bool value) -> void;
     [[nodiscard]] auto interaction_state() const -> InteractionState;
-    [[nodiscard]] auto time_rate() const -> time_rate_t;
+    [[nodiscard]] auto simulation_time_rate() const -> time_rate_t;
     [[nodiscard]] auto use_wire_delay() const -> bool;
 
     // actions

@@ -684,7 +684,7 @@ auto RendererWidget::interaction_state() const -> InteractionState {
     return interaction_state_;
 }
 
-auto RendererWidget::time_rate() const -> time_rate_t {
+auto RendererWidget::simulation_time_rate() const -> time_rate_t {
     return simulation_settings_.simulation_time_rate;
 }
 
@@ -737,6 +737,7 @@ auto RendererWidget::pixel_scale() const -> double {
 auto RendererWidget::reset_circuit(Layout&& layout) -> void {
     reset_interaction_state();
     reset_context();
+    simulation_settings_ = SimulationSettings {};  // TODO signal change
 
     setting_widget_registry_.reset();
     editable_circuit_.reset();
@@ -771,14 +772,19 @@ auto RendererWidget::reload_circuit() -> void {
 
 auto RendererWidget::save_circuit(std::string filename) -> bool {
     mouse_logic_.reset();
-    const auto binary =
-        serialize_inserted(editable_circuit_.value().layout(), &view_config());
+    const auto binary = serialize_inserted(editable_circuit_.value().layout(),
+                                           &view_config(), &simulation_settings_);
     return save_file(filename, binary);
 }
 
 auto RendererWidget::serialize_circuit() -> std::string {
     mouse_logic_.reset();
-    return serialize_inserted(editable_circuit_.value().layout());
+
+    auto relevant_settings = SimulationSettings {};
+    relevant_settings.use_wire_delay = simulation_settings_.use_wire_delay;
+
+    return serialize_inserted(editable_circuit_.value().layout(), nullptr,
+                              &relevant_settings);
 }
 
 auto RendererWidget::load_circuit(std::string filename) -> bool {
@@ -800,6 +806,10 @@ auto RendererWidget::load_circuit(std::string filename) -> bool {
 
     // view config
     loaded.value().apply(context_.ctx.settings.view_config);
+
+    // simulation settings
+    simulation_settings_ = loaded.value().simulation_settings();
+    // TODO emit signal settings changed
 
     return true;
 }
