@@ -1,5 +1,6 @@
 ﻿#include "main_widget.h"
 
+#include "file.h"
 #include "render_widget.h"
 #include "resource.h"
 #include "serialize.h"
@@ -97,6 +98,8 @@ MainWidget::MainWidget(QWidget* parent)
 
     new_circuit();
     resize(914, 500);
+
+    restore_gui_state();
 }
 
 namespace detail::time_slider {
@@ -297,16 +300,19 @@ auto MainWidget::create_menu() -> void {
         // Simulation
         auto* menu = menuBar()->addMenu(tr("&Simulation"));
 
-        // Benchmark
         actions_.simulation_start = add_action(
             menu, tr("Start &Simulation"),
-            ActionAttributes {.icon = icon_t::simulation_start}, [this]() {
+            ActionAttributes {.shortcut = QKeySequence {Qt::Key_F5},
+                              .icon = icon_t::simulation_start},
+            [this]() {
                 render_widget_->set_interaction_state(InteractionState::simulation);
             });
 
         actions_.simulation_stop = add_action(
             menu, tr("Stop &Simulation"),
-            ActionAttributes {.icon = icon_t::simulation_stop}, [this]() {
+            ActionAttributes {.shortcut = QKeySequence {Qt::Key_F6},
+                              .icon = icon_t::simulation_stop},
+            [this]() {
                 using enum InteractionState;
                 if (render_widget_->interaction_state() == InteractionState::simulation) {
                     render_widget_->set_interaction_state(InteractionState::selection);
@@ -456,6 +462,7 @@ auto MainWidget::create_toolbar() -> void {
     // Standard Toolbar
     {
         auto* toolbar = this->addToolBar("Standard");
+        toolbar->setObjectName("toolbar_standard");
         toolbar->setIconSize(icon_size);
         menu_toolbars_->addAction(toolbar->toggleViewAction());
 
@@ -475,6 +482,7 @@ auto MainWidget::create_toolbar() -> void {
     // Simulation Toolbar
     {
         auto* toolbar = this->addToolBar("Simulation");
+        toolbar->setObjectName("toolbar_simulation");
         toolbar->setIconSize(icon_size);
         menu_toolbars_->addAction(toolbar->toggleViewAction());
 
@@ -521,6 +529,7 @@ auto MainWidget::create_toolbar() -> void {
     // Speed Toolbar
     {
         auto* toolbar = this->addToolBar("Speed");
+        toolbar->setObjectName("toolbar_speed");
         toolbar->setIconSize(icon_size);
         menu_toolbars_->addAction(toolbar->toggleViewAction());
 
@@ -928,11 +937,48 @@ auto MainWidget::show_about_dialog() -> void {
     QMessageBox::about(this, tr("About"), QString::fromStdString(text));
 }
 
+namespace {
+constexpr static inline auto geometry_filename = "gui_geometry.bin";
+constexpr static inline auto state_filename = "gui_state.bin";
+
+}  // namespace
+
+auto MainWidget::save_gui_state() -> void {
+    // geometry
+    {
+        const auto bytes = saveGeometry();
+        const auto string = std::string {bytes.data(), gsl::narrow<size_t>(bytes.size())};
+        save_file(to_absolute_path(geometry_filename), string);
+    }
+
+    // state
+    {
+        const auto bytes = saveState();
+        const auto string = std::string {bytes.data(), gsl::narrow<size_t>(bytes.size())};
+        save_file(to_absolute_path(state_filename), string);
+    }
+}
+
+auto MainWidget::restore_gui_state() -> void {
+    // geometry
+    if (const auto str = load_file(QString {geometry_filename}); !str.empty()) {
+        const auto bytes = QByteArray {str.data(), gsl::narrow<qsizetype>(str.size())};
+        restoreGeometry(bytes);
+    }
+
+    // state
+    if (const auto str = load_file(QString {state_filename}); !str.empty()) {
+        const auto bytes = QByteArray {str.data(), gsl::narrow<qsizetype>(str.size())};
+        restoreState(bytes);
+    }
+}
+
 auto MainWidget::closeEvent(QCloseEvent* event) -> void {
     event->ignore();
 
     if (ensure_circuit_saved() == save_result_t::success) {
         event->accept();
+        save_gui_state();
     }
 }
 

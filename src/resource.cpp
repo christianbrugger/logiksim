@@ -9,6 +9,15 @@
 
 namespace logicsim {
 
+auto to_absolute_path(QString relative) -> QString {
+    if (relative.isEmpty()) {
+        return QString {};
+    }
+
+    const auto app_dir = QApplication::instance()->applicationDirPath();
+    return QFileInfo(app_dir + '/' + relative).absoluteFilePath();
+}
+
 auto to_absolute_resource_path(QString relative) -> QString {
     if (relative.isEmpty()) {
         return QString {};

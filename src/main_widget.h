@@ -90,6 +90,9 @@ class MainWidget : public QMainWindow {
     auto set_time_rate_slider(time_rate_t time_rate) -> void;
     auto show_about_dialog() -> void;
 
+    auto save_gui_state() -> void;
+    auto restore_gui_state() -> void;
+
    protected:
     auto closeEvent(QCloseEvent* event) -> void;
     auto dragEnterEvent(QDragEnterEvent* event) -> void;

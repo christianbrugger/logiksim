@@ -5,6 +5,8 @@
 
 namespace logicsim {
 
+auto to_absolute_path(QString relative) -> QString;
+
 enum class font_t : uint8_t {
     regular,
     italic,
