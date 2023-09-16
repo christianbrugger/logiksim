@@ -923,8 +923,8 @@ auto RendererWidget::load_circuit_example(int id) -> void {
         if (layout.element_count() < 10) {
             print(editable_circuit);
         }
-        fmt::print("Added {} elements and {} wire segments in {}.\n", element_count,
-                   segment_count, timer_str);
+        print_fmt("Added {} elements and {} wire segments in {}.\n", element_count,
+                  segment_count, timer_str);
     }
 
 #ifndef NDEBUG
@@ -1174,7 +1174,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     }
     const auto& editable_circuit = editable_circuit_.value();
 
-    // fmt::print("{:.3f} MB\n", get_allocated_size(*this) / 1024. / 1024.);
+    // print_fmt("{:.3f} MB\n", get_allocated_size(*this) / 1024. / 1024.);
     // print(render_settings_.text);
 
     render_background(context_.ctx);

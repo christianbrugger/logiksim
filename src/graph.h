@@ -192,8 +192,8 @@ struct dfs_backtrack_memory_t {
 struct PrintingGraphVisitor {
     template <typename index_t>
     auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) {
-        fmt::print("tree_edge: index {} {} - points {} {}\n", a, b, graph.point(a),
-                   graph.point(b));
+        print_fmt("tree_edge: index {} {} - points {} {}\n", a, b, graph.point(a),
+                  graph.point(b));
     }
 };
 

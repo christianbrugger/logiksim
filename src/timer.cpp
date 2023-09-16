@@ -2,6 +2,7 @@
 #include "timer.h"
 
 #include "exception.h"
+#include "format.h"
 
 #include <numeric>
 
@@ -16,7 +17,7 @@ Timer::Timer(std::string description, Unit unit, int precision)
 Timer::~Timer() {
     if (!description_.empty()) {
         const auto str = format();
-        fmt::print("{}\n", str);
+        print_fmt("{}\n", str);
     }
 }
 

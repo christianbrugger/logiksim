@@ -289,7 +289,7 @@ auto swap_and_delete_single_element(Layout& layout, MessageSender sender,
                                     element_id_t& element_id,
                                     element_id_t* preserve_element) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "swap_and_delete_single_element(element_id = {}, preserve_element = "
             "{});\n"
@@ -316,7 +316,7 @@ auto swap_and_delete_multiple_elements(Layout& layout, MessageSender sender,
                                        std::span<const element_id_t> element_ids,
                                        element_id_t* preserve_element) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "swap_and_delete_multiple_elements(element_id = {}, preserve_element = "
             "{});\n"
@@ -337,6 +337,7 @@ auto is_logic_item_position_representable_private(const Layout& layout,
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
+    throw_exception("invalid element");
 
     const auto position = layout.position(element_id);
 
@@ -354,7 +355,7 @@ auto is_logic_item_position_representable(const Layout& layout,
                                           const element_id_t element_id, int dx, int dy)
     -> bool {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "is_logic_item_position_representable(element_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
@@ -384,7 +385,7 @@ auto move_or_delete_logic_item_private(Layout& layout, MessageSender sender,
 auto move_or_delete_logic_item(Layout& layout, MessageSender sender,
                                element_id_t& element_id, int dx, int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "move_or_delete_logic_item(element_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
@@ -402,7 +403,7 @@ auto move_logic_item_unchecked_private(Layout& layout, const element_id_t elemen
 auto move_logic_item_unchecked(Layout& layout, const element_id_t element_id, int dx,
                                int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "move_logic_item_unchecked(element_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
@@ -448,7 +449,7 @@ auto toggle_inverter_private(Layout& layout, const CacheProvider& cache, point_t
 
 auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "toggle_inverter(point = {});\n"
             "==========================================================\n\n",
@@ -620,7 +621,7 @@ auto change_logic_item_insertion_mode_private(State state, element_id_t& element
 auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
                                       InsertionMode new_mode) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "change_logic_item_insertion_mode(element_id = {}, new_mode = {});\n"
             "==========================================================\n\n",
@@ -670,7 +671,7 @@ auto add_logic_item_private(State state, LogicItemDefinition definition, point_t
 auto add_logic_item(State state, LogicItemDefinition definition, point_t position,
                     InsertionMode insertion_mode) -> element_id_t {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "add_logic_item(definition = {}, position = {}, insertion_mode = {});\n"
             "==========================================================\n\n",
@@ -1914,7 +1915,7 @@ auto change_wire_insertion_mode_private(State state, segment_part_t& segment_par
 auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
                                 InsertionMode new_mode) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "change_wire_insertion_mode(segment_part = {}, new_mode = {});\n"
             "==========================================================\n\n",
@@ -1938,7 +1939,7 @@ auto add_wire_segment_private(State state, ordered_line_t line,
 auto add_wire_segment(State state, ordered_line_t line, InsertionMode new_mode)
     -> segment_part_t {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "add_wire_segment(line = {}, new_mode = {});\n"
             "==========================================================\n\n",
@@ -1992,7 +1993,7 @@ auto add_wire_private(State state, point_t p0, point_t p1, LineInsertionType seg
 auto add_wire(State state, point_t p0, point_t p1, LineInsertionType segment_type,
               InsertionMode insertion_mode, Selection* selection) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "add_wire(p0 = {}, p1 = {}, segment_type = {}, "
             "insertion_mode = {}, *selection = {});\n"
@@ -2019,7 +2020,7 @@ auto delete_wire_segment_private(Layout& layout, MessageSender sender,
 auto delete_wire_segment(Layout& layout, MessageSender sender,
                          segment_part_t& segment_part) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "delete_wire_segment(segment_part = {});\n"
             "==========================================================\n\n",
@@ -2043,7 +2044,7 @@ auto is_wire_position_representable(const Layout& layout,
                                     const segment_part_t segment_part, int dx, int dy)
     -> bool {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "is_wire_position_representable(segment_part = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
@@ -2094,7 +2095,7 @@ auto move_or_delete_wire_private(Layout& layout, MessageSender sender,
 auto move_or_delete_wire(Layout& layout, MessageSender sender,
                          segment_part_t& segment_part, int dx, int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "move_or_delete_wire(segment_part = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
@@ -2121,7 +2122,7 @@ auto move_wire_unchecked_private(Layout& layout, segment_t segment,
 auto move_wire_unchecked(Layout& layout, segment_t segment, part_t verify_full_part,
                          int dx, int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "move_or_delete_wire(segment = {}, verify_full_part = {}, "
             "dx = {}, dy = {});\n"
@@ -2229,7 +2230,7 @@ auto toggle_inserted_wire_crosspoint_private(State state, point_t point) -> void
 
 auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        fmt::print(
+        print_fmt(
             "\n==========================================================\n{}\n"
             "toggle_inserted_wire_crosspoint(point = {});\n"
             "==========================================================\n\n",

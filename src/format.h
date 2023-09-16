@@ -10,6 +10,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <fmt/core.h>
+#include <fmt/os.h>
 
 #include <QString>
 
@@ -30,12 +31,36 @@ concept format_string_type = std::same_as<T, fmt::basic_string_view<Char>> ||
                              std::same_as<T, std::basic_string<Char>> ||
                              std::same_as<T, std::basic_string_view<Char>>;
 
+}
+
+//
+// print_fmt
+//
+
+namespace logicsim {
+
+namespace detail::format {
+thread_local inline fmt::ostream *file_stream = nullptr;
+}
+
+template <typename... T>
+auto print_fmt(fmt::format_string<T...> fmt, T &&...args) -> void {
+    if (detail::format::file_stream == nullptr) {
+        fmt::print(fmt, std::forward<T>(args)...);
+    } else {
+        detail::format::file_stream->print(fmt, std::forward<T>(args)...);
+    }
+}
+
+}  // namespace logicsim
+
 //
 // print
 //
 
-namespace detail {
+namespace logicsim {
 
+namespace detail {
 // repeats {} count times: 2 -> "{} {}\n"
 template <std::size_t count>
 constexpr auto repeat_format_string() {
@@ -59,12 +84,12 @@ constexpr auto repeat_format_string() {
 }  // namespace detail
 
 template <typename... Args>
-auto print(Args &&...args) {
+auto print(Args &&...args) -> void {
     constexpr static std::size_t count = sizeof...(Args);
     constexpr static auto buffer = detail::repeat_format_string<count>();
 
     constexpr static auto fmt_str = std::string_view {buffer.data(), buffer.size()};
-    fmt::print(fmt_str, std::forward<Args>(args)...);
+    print_fmt(fmt_str, std::forward<Args>(args)...);
 }
 
 }  // namespace logicsim
@@ -99,6 +124,8 @@ auto escape_non_ascii(const std::basic_string<CharT, Traits, Allocator> &input)
 // time
 //
 
+namespace logicsim {
+
 template <class Rep, class Period>
 auto format_microsecond_time(std::chrono::duration<Rep, Period> time_value) {
     using namespace std::chrono_literals;
@@ -132,6 +159,8 @@ auto format_time(std::chrono::duration<Rep, Period> time_value) {
     auto time_s = std::chrono::duration<double, std::ratio<1>> {time_value};
     return fmt::format("{:.2f}s", time_s.count());
 }
+
+}  // namespace logicsim
 
 //
 // QString

@@ -351,11 +351,11 @@ auto character_width(const GlyphCache& glyph_cache, char character, FontStyle st
 
 auto print_character_metrics(const GlyphCache& glyph_cache) -> void {
     for (const auto& style : all_font_styles) {
-        fmt::print("{}:\n", style);
+        print_fmt("{}:\n", style);
 
         for (const auto& character : "gJ0123456789,.-") {
             const auto width = character_width(glyph_cache, character, style);
-            fmt::print("{}: {} grid\n", character, width);
+            print_fmt("{}: {} grid\n", character, width);
         }
 
         print("");

@@ -14,7 +14,6 @@
 #include <QCoreApplication>
 
 #include <exception>
-#include <iostream>
 
 namespace logicsim {
 
@@ -188,7 +187,7 @@ auto main(int argc, char** argv) -> int {
             //                                            BENCHMARK_DEFAULT_EVENTS, true);
 
             auto count = logicsim::benchmark_line_renderer(100, true);
-            fmt::print("count = {}\n", count);
+            print_fmt("count = {}\n", count);
 
         } catch (const std::exception& exc) {
             std::cerr << exc.what() << '\n';

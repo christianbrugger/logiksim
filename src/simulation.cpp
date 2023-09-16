@@ -617,7 +617,7 @@ auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &in
 
 auto Simulation::process_event_group(event_group_t &&events) -> void {
     if (print_events) {
-        fmt::print("events: {:n}\n", events);
+        print_fmt("events: {:n}\n", events);
     }
     if (events.empty()) {
         return;
@@ -1228,10 +1228,9 @@ auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
     if (do_print) {
         auto output_values {simulation.output_values()};
 
-        fmt::print("events simulated = {}\n", simulated_event_count);
-        fmt::print("input_values = {}\n",
-                   fmt_join("", simulation.input_values(), "{:b}"));
-        fmt::print("output_values = {}\n", fmt_join("", output_values, "{:b}"));
+        print_fmt("events simulated = {}\n", simulated_event_count);
+        print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(), "{:b}"));
+        print_fmt("output_values = {}\n", fmt_join("", output_values, "{:b}"));
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
                 auto hist = simulation.input_history(Schematic::ConstElement {element});
@@ -1291,10 +1290,9 @@ auto benchmark_simulation_pure(Schematic &schematic, const int n_events,
     if (do_print) {
         auto output_values {simulation.output_values()};
 
-        fmt::print("events simulated = {}\n", simulated_event_count);
-        fmt::print("input_values = {}\n",
-                   fmt_join("", simulation.input_values(), "{:b}"));
-        fmt::print("output_values = {}\n", fmt_join("", output_values, "{:b}"));
+        print_fmt("events simulated = {}\n", simulated_event_count);
+        print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(), "{:b}"));
+        print_fmt("output_values = {}\n", fmt_join("", output_values, "{:b}"));
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
                 auto hist = simulation.input_history(Schematic::ConstElement {element});
