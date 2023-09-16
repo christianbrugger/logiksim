@@ -21,6 +21,12 @@ class QSlider;
 
 namespace logicsim {
 
+constexpr static auto inline APP_NAME = "LogikSim";
+constexpr static auto inline APP_VERSION_STR = "2.1.0";
+constexpr static auto inline APP_AUTHOR = "Christian Brugger";
+constexpr static auto inline APP_EMAIL = "brugger.chr@gmail.com";
+constexpr static auto inline APP_YEAR_STR = " 2023 ";
+
 class RendererWidget;
 struct time_rate_t;
 
@@ -82,6 +88,7 @@ class MainWidget : public QMainWindow {
     auto open_circuit(std::optional<std::string> filename = {}) -> void;
     auto ensure_circuit_saved() -> save_result_t;
     auto set_time_rate_slider(time_rate_t time_rate) -> void;
+    auto show_about_dialog() -> void;
 
    protected:
     auto closeEvent(QCloseEvent* event) -> void;

@@ -53,6 +53,10 @@ auto get_icon_path_relative(icon_t icon) {
     switch (icon) {
         using enum icon_t;
 
+        case app_icon: {
+            return QString("icons/own/cpu.svg");
+        }
+
         case new_file: {
             return QString("icons/lucide/file.svg");
         }
@@ -99,6 +103,9 @@ auto get_icon_path_relative(icon_t icon) {
         case simulation_stop: {
             return QString("icons/own/stop_15x15_r0_r.svg");
         }
+        case simulation_speed: {
+            return QString("icons/lucide/gauge.svg");
+        }
 
         case benchmark: {
             return QString("icons/lucide/infinity.svg");
@@ -140,6 +147,10 @@ auto get_icon_path_relative(icon_t icon) {
 
         case options: {
             return QString("icons/lucide/settings.svg");
+        }
+
+        case about: {
+            return QString("icons/lucide/info.svg");
         }
 
         case setting_handle_clock_generator: {

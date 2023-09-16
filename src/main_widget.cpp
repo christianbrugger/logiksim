@@ -1,4 +1,4 @@
-#include "main_widget.h"
+﻿#include "main_widget.h"
 
 #include "render_widget.h"
 #include "resource.h"
@@ -57,6 +57,7 @@ MainWidget::MainWidget(QWidget* parent)
     : QMainWindow(parent),
       render_widget_ {new RendererWidget(this)},
       last_saved_data_ {render_widget_->serialize_circuit()} {
+    setWindowIcon(QIcon(get_icon_path(icon_t::app_icon)));
     setAcceptDrops(true);
 
     create_menu();
@@ -336,6 +337,7 @@ auto MainWidget::create_menu() -> void {
 
         {
             auto* submenu = menu->addMenu(tr("Simulation Speed"));
+            submenu->setIcon(QIcon(get_icon_path(icon_t::simulation_speed)));
 
             for (auto time_rate : detail::time_slider::TIME_RATE_MENU_ITEMS) {
                 const auto text = fmt::format("{}", time_rate);
@@ -432,10 +434,19 @@ auto MainWidget::create_menu() -> void {
     {
         // Tools
         auto* menu = menuBar()->addMenu(tr("&Tools"));
+        menu->menuAction()->setVisible(false);
+
         add_action(menu, tr("&Options..."),
                    ActionAttributes {.shortcut = QKeySequence::Preferences,
                                      .icon = icon_t::options},
                    [] { print("options"); });
+    }
+    {
+        // About
+        auto* menu = menuBar()->addMenu(tr("&Help"));
+
+        add_action(menu, tr("&About"), ActionAttributes {.icon = icon_t::about},
+                   [this] { show_about_dialog(); });
     }
 }
 
@@ -902,6 +913,19 @@ auto MainWidget::set_time_rate_slider(time_rate_t time_rate) -> void {
     if (time_rate_slider_) {
         time_rate_slider_->setValue(to_slider_scale(time_rate));
     }
+}
+
+auto MainWidget::show_about_dialog() -> void {
+    const auto text_fmt = tr("<h1>{}</h1>\n"
+                             "<p>Version {}</p>"
+                             "<p>Author: {}<br>"
+                             "Contact: <a href=\"mailto:{}\">{}</a></p>"
+                             "<p>© {}</p>")
+                              .toStdString();
+    const auto text = fmt::format(fmt::runtime(text_fmt), APP_NAME, APP_VERSION_STR,
+                                  APP_AUTHOR, APP_EMAIL, APP_EMAIL, APP_YEAR_STR);
+
+    QMessageBox::about(this, tr("About"), QString::fromStdString(text));
 }
 
 auto MainWidget::closeEvent(QCloseEvent* event) -> void {

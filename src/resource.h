@@ -15,6 +15,8 @@ enum class font_t : uint8_t {
 auto get_font_path(font_t font) -> QString;
 
 enum class icon_t {
+    app_icon,
+
     // file
     new_file,
     open_file,
@@ -36,6 +38,7 @@ enum class icon_t {
     // simulation
     simulation_start,
     simulation_stop,
+    simulation_speed,
 
     // debug
     benchmark,
@@ -54,6 +57,9 @@ enum class icon_t {
 
     // options
     options,
+
+    // help
+    about,
 
     // circuit rendering
     setting_handle_clock_generator,
