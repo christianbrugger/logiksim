@@ -69,8 +69,6 @@ class MainWidget : public QMainWindow {
     auto create_toolbar() -> void;
     auto create_statusbar() -> void;
 
-    [[nodiscard]] auto build_delay_slider() -> QWidget*;
-    [[nodiscard]] auto build_time_rate_slider() -> QWidget*;
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
 
     [[nodiscard]] auto element_button(QString label, InteractionState state) -> QWidget*;

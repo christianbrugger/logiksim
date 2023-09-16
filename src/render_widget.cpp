@@ -666,18 +666,18 @@ auto RendererWidget::set_interaction_state(InteractionState state) -> void {
 }
 
 auto RendererWidget::set_simulation_time_rate(time_rate_t time_rate) -> void {
-    simulation_time_rate_ = time_rate;
+    simulation_settings_.simulation_time_rate = time_rate;
 
     if (simulation_) {
         simulation_->set_simulation_time_rate(time_rate);
     }
 }
 
-auto RendererWidget::set_wire_delay_per_distance(delay_t value) -> void {
+auto RendererWidget::set_use_wire_delay(bool value) -> void {
     if (interaction_state_ == InteractionState::simulation) [[unlikely]] {
         throw_exception("cannot set wire delay during active simulation");
     }
-    wire_delay_per_distance_ = value;
+    simulation_settings_.use_wire_delay = value;
 }
 
 auto RendererWidget::interaction_state() const -> InteractionState {
@@ -685,11 +685,11 @@ auto RendererWidget::interaction_state() const -> InteractionState {
 }
 
 auto RendererWidget::time_rate() const -> time_rate_t {
-    return simulation_time_rate_;
+    return simulation_settings_.simulation_time_rate;
 }
 
-auto RendererWidget::wire_delay_per_distance() const -> delay_t {
-    return wire_delay_per_distance_;
+auto RendererWidget::use_wire_delay() const -> bool {
+    return simulation_settings_.use_wire_delay;
 }
 
 auto RendererWidget::reset_interaction_state() -> void {
@@ -984,8 +984,7 @@ auto RendererWidget::on_simulation_timeout_impl() -> void {
     }
     if (!simulation_) {
         auto t = Timer {"Generate simulation", Timer::Unit::ms, 3};
-        simulation_.emplace(editable_circuit_->layout(), simulation_time_rate_,
-                            wire_delay_per_distance_);
+        simulation_.emplace(editable_circuit_->layout(), simulation_settings_);
 
         if (simulation_->schematic().element_count() < 30) {
             print(simulation_->schematic());

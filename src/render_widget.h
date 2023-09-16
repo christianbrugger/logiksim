@@ -7,6 +7,7 @@
 #include "render_widget_type.h"
 #include "scene.h"
 #include "setting_handle.h"
+#include "simulation_type.h"
 #include "size_handle.h"
 #include "timer.h"
 
@@ -258,10 +259,10 @@ class RendererWidget : public RendererWidgetBase {
 
     auto set_interaction_state(InteractionState state) -> void;
     auto set_simulation_time_rate(time_rate_t time_rate) -> void;
-    auto set_wire_delay_per_distance(delay_t value) -> void;
+    auto set_use_wire_delay(bool value) -> void;
     [[nodiscard]] auto interaction_state() const -> InteractionState;
     [[nodiscard]] auto time_rate() const -> time_rate_t;
-    [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
+    [[nodiscard]] auto use_wire_delay() const -> bool;
 
     // actions
     auto delete_selected_items() -> void;
@@ -332,13 +333,12 @@ class RendererWidget : public RendererWidgetBase {
     QTimer simulation_timer_;
     constexpr static int simulation_timer_interval_ms_ = 20;  // ms
     bool simulation_image_update_requested_ {false};
-    time_rate_t simulation_time_rate_ {50us};
-    delay_t wire_delay_per_distance_ {Schematic::defaults::wire_delay_per_distance};
 
     // new circuit
     std::optional<EditableCircuit> editable_circuit_ {};
 
     // simulation
+    SimulationSettings simulation_settings_ {};
     std::optional<InteractiveSimulation> simulation_ {};
 
     // mouse logic

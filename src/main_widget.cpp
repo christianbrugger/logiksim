@@ -322,11 +322,8 @@ auto MainWidget::create_menu() -> void {
         menu->addSeparator();
         actions_.wire_delay = add_action_checkable(
             menu, tr("Wire &Delay"), ActionAttributes {},
-            CheckableAttributes {.start_state = true}, [this](bool checked) {
-                const auto delay = checked ? Schematic::defaults::wire_delay_per_distance
-                                           : delay_t {0ns};
-                render_widget_->set_wire_delay_per_distance(delay);
-            });
+            CheckableAttributes {.start_state = true},
+            [this](bool checked) { render_widget_->set_use_wire_delay(checked); });
 
         const auto tooltip_fmt =
             tr("When enabled wires have visible delay of {}/unit.\n"
@@ -334,8 +331,8 @@ auto MainWidget::create_menu() -> void {
                "One the other hand it can be a hindrance when designing large\n"
                "sequential circuits.")
                 .toStdString();
-        const auto tooltip = fmt::format(fmt::runtime(tooltip_fmt),
-                                         Schematic::defaults::wire_delay_per_distance);
+        const auto tooltip =
+            fmt::format(fmt::runtime(tooltip_fmt), defaults::wire_delay_per_distance);
 
         actions_.wire_delay->setToolTip(QString::fromStdString(tooltip));
 
@@ -575,120 +572,6 @@ auto MainWidget::create_statusbar() -> void {
     }
 
     this->setStatusBar(statusbar);
-}
-
-namespace detail::delay_slider {
-
-constexpr static int SLIDER_MIN_VALUE = 0;
-constexpr static int SLIDER_MAX_VALUE = 400'000;
-constexpr static auto SLIDER_START_VALUE = Schematic::defaults::wire_delay_per_distance;
-
-auto from_slider_scale(int value) -> delay_t {
-    const double value_ns = std::pow(10.0, value / double {100'000.0});
-    return delay_t {1ns * gsl::narrow<int64_t>(std::round(value_ns))};
-};
-
-auto to_slider_scale(delay_t delay) -> int {
-    const auto value_log = std::log10(delay.value.count()) * 100'000;
-    return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
-                      SLIDER_MAX_VALUE);
-};
-
-auto to_text(delay_t delay) -> QString {
-    if (delay > delay_t {0ns}) {
-        return QString::fromStdString(fmt::format("{}/unit", delay));
-    }
-    return QString::fromStdString("1ns flat");
-}
-
-}  // namespace detail::delay_slider
-
-auto MainWidget::build_delay_slider() -> QWidget* {
-    using namespace detail::delay_slider;
-
-    const auto checkbox = new QCheckBox("Zero");
-    const auto slider = new QSlider(Qt::Orientation::Horizontal);
-    const auto label = new QLabel();
-
-    connect(slider, &QSlider::valueChanged, this, [&, label](int value) {
-        const auto delay = from_slider_scale(value);
-
-        render_widget_->set_wire_delay_per_distance(delay);
-        label->setText(to_text(delay));
-    });
-    connect(checkbox, &QCheckBox::stateChanged, this, [&, slider, label](int value) {
-        bool ignore = value == Qt::Checked;
-
-        slider->setEnabled(!ignore);
-        const auto delay = ignore ? delay_t {0ns} : from_slider_scale(slider->value());
-
-        render_widget_->set_wire_delay_per_distance(delay);
-        label->setText(to_text(delay));
-    });
-
-    slider->setMinimum(SLIDER_MIN_VALUE);
-    slider->setMaximum(SLIDER_MAX_VALUE);
-    slider->setValue(to_slider_scale(SLIDER_START_VALUE));
-
-    slider->setTickInterval(100'000);
-    slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
-    label->setMinimumWidth(70);
-
-    const auto layout = new QHBoxLayout();
-    layout->addWidget(checkbox);
-    layout->addWidget(slider);
-    layout->addWidget(label);
-
-    const auto panel = new QWidget();
-    panel->setLayout(layout);
-
-    delay_slider_ = slider;
-    delay_panel_ = panel;
-
-    return panel;
-}
-
-auto MainWidget::build_time_rate_slider() -> QWidget* {
-    using namespace detail::time_slider;
-
-    const auto button = new QPushButton("Simulate");
-    connect(button, &QPushButton::clicked, this, [this](bool checked) {
-        if (checked) {
-            render_widget_->set_interaction_state(InteractionState::simulation);
-        } else {
-            render_widget_->set_interaction_state(InteractionState::selection);
-        }
-    });
-    button->setShortcut(QKeySequence(Qt::Key_F5));
-    button->setCheckable(true);
-    button_map_[InteractionState::simulation] = button;
-
-    const auto slider = new QSlider(Qt::Orientation::Horizontal);
-    const auto label = new QLabel();
-
-    connect(slider, &QSlider::valueChanged, this, [this, label](int value) {
-        const auto rate = from_slider_scale(value);
-        render_widget_->set_simulation_time_rate(rate);
-
-        label->setText(QString::fromStdString(fmt::format("{}", rate)));
-    });
-
-    slider->setMinimum(SLIDER_MIN_VALUE);
-    slider->setMaximum(SLIDER_MAX_VALUE);
-    slider->setValue(to_slider_scale(SLIDER_START_VALUE));
-
-    slider->setTickInterval(100'000);
-    slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
-    label->setMinimumWidth(70);
-
-    const auto layout = new QHBoxLayout();
-    layout->addWidget(button);
-    layout->addWidget(slider);
-    layout->addWidget(label);
-
-    const auto panel = new QWidget();
-    panel->setLayout(layout);
-    return panel;
 }
 
 auto MainWidget::element_button(QString label, InteractionState state) -> QWidget* {

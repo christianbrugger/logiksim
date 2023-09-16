@@ -2,6 +2,7 @@
 
 #include "layout.h"
 #include "schematic_generation.h"
+#include "simulation_type.h"
 
 namespace logicsim {
 
@@ -42,12 +43,12 @@ auto InteractionCache::find(point_t position) const -> std::optional<element_id_
 // Interactive Simulation
 //
 
-InteractiveSimulation::InteractiveSimulation(const Layout& layout, time_rate_t time_rate,
-                                             delay_t wire_delay_per_distance)
-    : schematic_ {generate_schematic(layout, wire_delay_per_distance)},
+InteractiveSimulation::InteractiveSimulation(const Layout& layout,
+                                             const SimulationSettings& settings)
+    : schematic_ {generate_schematic(layout, settings.wire_delay_per_distance())},
       simulation_ {schematic_},
       interaction_cache_ {layout},
-      simulation_time_rate_ {time_rate},
+      simulation_time_rate_ {settings.simulation_time_rate},
       simulation_time_reference_ {simulation_.time()},
       realtime_reference_ {timer_t::now()} {
     set_default_outputs(simulation_);

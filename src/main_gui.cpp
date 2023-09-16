@@ -7,7 +7,7 @@
 #include <QDir>
 
 auto main(int argc, char* argv[]) -> int {
-    try {
+    {
         auto app = QApplication {argc, argv};
 
         auto frame = logicsim::MainWidget {};
@@ -16,8 +16,8 @@ auto main(int argc, char* argv[]) -> int {
         return app.exec();
     }
 
-    catch (std::runtime_error& exc) {
-        fmt::print("{}\n", exc.what());
-        throw;
-    }
+    // catch (std::runtime_error& exc) {
+    //     fmt::print("{}\n", exc.what());
+    //     throw;
+    // }
 }

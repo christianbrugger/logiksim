@@ -99,4 +99,5 @@ auto ConstElement::wire_delay_per_distance() const -> delay_t {
 }
 
 }  // namespace simulation_view
+
 }  // namespace logicsim

@@ -3,6 +3,7 @@
 #include "editable_circuit/cache/connection_cache.h"
 #include "editable_circuit/cache/helper.h"
 #include "layout_calculation.h"
+#include "simulation_type.h"
 
 namespace logicsim {
 
@@ -40,7 +41,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
             using enum ElementType;
 
             case button: {
-                return {Schematic::defaults::button_delay};
+                return {defaults::button_delay};
             }
 
             case clock_generator: {
@@ -54,7 +55,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
 
             default: {
                 return std::vector<delay_t>(element.output_count(),
-                                            Schematic::defaults::logic_item_delay);
+                                            defaults::logic_item_delay);
             }
         }
         throw_exception("invalid");
@@ -80,10 +81,13 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
         if (element.output_count() > connection_id_t::max()) {
             add_unused_element(schematic);
         } else {
+            const auto output_count = element.segment_tree().output_count();
+
             schematic.add_element(Schematic::ElementData {
                 .element_type = element.element_type(),
                 .input_count = 0,
-                .output_count = element.segment_tree().output_count(),
+                .output_count = output_count,
+                .output_delays = std::vector<delay_t>(output_count, delay_t::epsilon()),
             });
         }
 

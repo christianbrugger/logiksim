@@ -247,9 +247,7 @@ auto Schematic::add_element(ElementData &&data) -> Element {
         }
         input_inverters_.emplace_back(data.input_inverters);
     }
-    if (data.output_delays.size() == 0) {
-        output_delays_.emplace_back(data.output_count, defaults::logic_item_delay);
-    } else {
+    {
         if (std::size(data.output_delays) != data.output_count) [[unlikely]] {
             throw_exception("Need as many output_delays as outputs.");
         }

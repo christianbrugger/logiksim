@@ -22,6 +22,7 @@
 #include "layout_calculation.h"
 #include "scene.h"
 #include "serialize_detail.h"
+#include "simulation_type.h"
 #include "timer.h"
 
 namespace logicsim::serialize {
@@ -194,8 +195,8 @@ auto apply_view_config(const SerializedViewConfig& serialized, ViewConfig& view_
 
 namespace logicsim {
 
-auto serialize_inserted(const Layout& layout, const ViewConfig* view_config)
-    -> std::string {
+auto serialize_inserted(const Layout& layout, const ViewConfig* view_config,
+                        const SimulationSettings* simulation_settings) -> std::string {
     auto data = serialize::SerializedLayout {};
 
     if (view_config != nullptr) {

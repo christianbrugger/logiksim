@@ -11,6 +11,7 @@
 namespace logicsim {
 
 class Layout;
+struct SimulationSettings;
 
 namespace detail::interactive_simulation {
 
@@ -48,8 +49,7 @@ class InteractiveSimulation {
     };
 
    public:
-    InteractiveSimulation(const Layout& layout, time_rate_t time_rate,
-                          delay_t wire_delay_per_distance);
+    InteractiveSimulation(const Layout& layout, const SimulationSettings& settings);
 
     [[nodiscard]] auto schematic() const -> const Schematic&;
     [[nodiscard]] auto simulation() const -> const Simulation&;

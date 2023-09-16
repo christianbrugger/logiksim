@@ -16,12 +16,14 @@ class Selection;
 class EditableCircuit;
 class selection_handle_t;
 class ViewConfig;
+struct SimulationSettings;
 
 using binary_t = std::vector<uint8_t>;
 
-[[nodiscard]] auto serialize_inserted(const Layout& layout,
-                                      const ViewConfig* view_config = nullptr)
-    -> std::string;
+[[nodiscard]] auto serialize_inserted(
+    const Layout& layout, const ViewConfig* view_config = nullptr,
+    const SimulationSettings* simulation_settings = nullptr) -> std::string;
+
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
                                       point_t save_position = {0, 0}) -> std::string;
 

@@ -50,6 +50,7 @@ set(LS_CORE_SOURCES
     src/serialize_detail.cpp
     src/setting_handle.cpp
     src/simulation.cpp
+    src/simulation_type.cpp
     src/simulation_view.cpp
     src/size_handle.cpp
     src/svg_cache.cpp
