@@ -341,8 +341,8 @@ auto update_internal_state(const logic_small_vector_t &old_input,
 
         case clock_generator: {
             // first input is enable signal
-            // second input & output are internal signals to loop the clock
-            // third input & output are internal signals to loop the clock
+            // second input & output are internal signals to loop the enalbe phase
+            // third input & output are internal signals to loop the disable phase
 
             const auto state_map = state_mapping_clock_generator<false> {state};
 

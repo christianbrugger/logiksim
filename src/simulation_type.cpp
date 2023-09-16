@@ -1,5 +1,7 @@
 #include "simulation_type.h"
 
+#include "schematic.h"
+
 namespace logicsim {
 
 auto SimulationSettings::wire_delay_per_distance() const -> delay_t {

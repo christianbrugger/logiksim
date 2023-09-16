@@ -19,6 +19,12 @@
 
 namespace logicsim {
 
+namespace defaults {
+constexpr static inline auto button_delay = delay_t::epsilon();
+constexpr static inline auto logic_item_delay = delay_t {3us};
+constexpr static inline auto wire_delay_per_distance = delay_t {1us};
+}  // namespace defaults
+
 class Schematic {
    public:
     template <bool Const>
@@ -69,10 +75,6 @@ class Schematic {
     using OutputIterator = OutputIteratorTemplate<false>;
     using ConstOutputIterator = OutputIteratorTemplate<true>;
 
-    struct defaults {
-        constexpr static inline auto no_history = delay_t {0ns};
-    };
-
     explicit constexpr Schematic() = default;
     explicit Schematic(circuit_id_t circuit_id);
     explicit Schematic(delay_t wire_delay_per_distance);
@@ -104,6 +106,8 @@ class Schematic {
 
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
+    constexpr static inline auto no_history = delay_t {0ns};
+
     struct ElementData {
         ElementType element_type {ElementType::unused};
         std::size_t input_count {0};
@@ -112,7 +116,7 @@ class Schematic {
         circuit_id_t circuit_id {null_circuit};
         logic_small_vector_t input_inverters {};
         std::vector<delay_t> output_delays {};
-        delay_t history_length = defaults::no_history;
+        delay_t history_length = no_history;
     };
 
     auto add_element(ElementData &&data) -> Element;
@@ -159,7 +163,7 @@ class Schematic {
     std::size_t output_count_ {0};
     circuit_id_t circuit_id_ {0};
 
-    delay_t wire_delay_per_distance_ {0us};
+    delay_t wire_delay_per_distance_ {defaults::wire_delay_per_distance};
 };
 
 auto swap(Schematic &a, Schematic &b) noexcept -> void;

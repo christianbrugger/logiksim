@@ -1287,6 +1287,7 @@ auto benchmark_schematic(const int n_elements) -> Schematic {
         .element_type = ElementType::and_element,
         .input_count = 2,
         .output_count = 1,
+        .output_delays = {defaults::logic_item_delay},
     });
 
     for ([[maybe_unused]] auto count : range(n_elements - 1)) {
@@ -1294,11 +1295,13 @@ auto benchmark_schematic(const int n_elements) -> Schematic {
             .element_type = ElementType::wire,
             .input_count = 1,
             .output_count = 2,
+            .output_delays = {defaults::logic_item_delay, defaults::logic_item_delay},
         });
         auto elem1 = schematic.add_element(Schematic::ElementData {
             .element_type = ElementType::and_element,
             .input_count = 2,
             .output_count = 1,
+            .output_delays = {defaults::logic_item_delay},
         });
 
         elem0.output(connection_id_t {0}).connect(wire0.input(connection_id_t {0}));
@@ -1339,6 +1342,7 @@ void add_random_element(Schematic &schematic, G &rng) {
         .input_inverters = element_type == ElementType::buffer_element
                                ? logic_small_vector_t {true}
                                : logic_small_vector_t {},
+        .output_delays = std::vector<delay_t>(output_count, defaults::logic_item_delay),
     });
 }
 
