@@ -43,7 +43,12 @@ auto get_font_path(font_t font) -> QString {
     return to_absolute_resource_path(get_font_path_relative(font));
 }
 
-// Browse Icons: https://lucide.dev/icons/
+// Browse Icons:
+//
+// https://lucide.dev/icons/
+//
+// https://jam-icons.com/
+//
 auto get_icon_path_relative(icon_t icon) {
     switch (icon) {
         using enum icon_t;
@@ -89,11 +94,10 @@ auto get_icon_path_relative(icon_t icon) {
         }
 
         case simulation_start: {
-            return QString("icons/lucide/play.svg");
+            return QString("icons/own/play.svg");
         }
         case simulation_stop: {
-            // return QString("icons/lucide/square.svg");
-            return QString("icons/own/stop_button_clean.svg");
+            return QString("icons/own/stop_15x15_r0_r.svg");
         }
 
         case benchmark: {

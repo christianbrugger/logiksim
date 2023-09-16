@@ -3,11 +3,11 @@
   width="24"
   height="24"
   viewBox="0 0 24 24"
-  fill="none"
+  fill="lawngreen"
   stroke="currentColor"
-  stroke-width="2"
+  stroke-width="1"
   stroke-linecap="round"
   stroke-linejoin="round"
 >
-  <rect width="18" height="18" x="3" y="3" rx="2" />
+  <polygon points="5 3 19 12 5 21 5 3" />
 </svg>
