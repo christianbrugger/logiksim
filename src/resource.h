@@ -6,7 +6,7 @@
 namespace logicsim {
 
 constexpr static auto inline LS_APP_NAME = "LogikSim";
-constexpr static auto inline LS_APP_VERSION_STR = "2.1.0";
+constexpr static auto inline LS_APP_VERSION_STR = "2.2.0";
 
 enum class font_t : uint8_t {
     regular,
