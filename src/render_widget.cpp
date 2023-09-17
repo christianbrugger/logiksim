@@ -999,6 +999,8 @@ auto RendererWidget::on_simulation_timeout_impl() -> void {
         if (simulation_->schematic().element_count() < 30) {
             print(simulation_->schematic());
         }
+
+        this->update();
 #ifndef NDEBUG
         simulation_->validate();
 #endif

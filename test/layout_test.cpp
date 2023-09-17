@@ -43,7 +43,6 @@ TEST(Layout, ElementProperties) {
         .output_count = 1,
         .position = point_t {2, 3},
         .orientation = orientation_t::right,
-        .color = defaults::color_green,
 
         .circuit_id = circuit_id_t {10},
     });
@@ -59,7 +58,6 @@ TEST(Layout, ElementProperties) {
     auto p = point_t {2, 3};
     EXPECT_EQ(element.position(), p);
     EXPECT_EQ(element.orientation(), orientation_t::right);
-    EXPECT_EQ(element.color(), defaults::color_green);
 
     layout.validate();
     layout_const.validate();

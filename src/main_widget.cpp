@@ -732,7 +732,7 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
     if (!render_widget_->save_circuit(filename)) {
         const auto message = fmt::format("Failed to save \"{}\".", filename);
         QMessageBox::warning(this,                         //
-                             QString::fromUtf8(app_name),  //
+                             QString::fromUtf8(APP_NAME),  //
                              QString::fromUtf8(message)    //
         );
         return save_circuit(filename_choice_t::ask_new);
@@ -767,7 +767,7 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
     if (!render_widget_->load_circuit(*filename)) {
         const auto message = fmt::format("Failed to load \"{}\".", filename);
         QMessageBox::warning(this,                         //
-                             QString::fromUtf8(app_name),  //
+                             QString::fromUtf8(APP_NAME),  //
                              QString::fromUtf8(message)    //
         );
     }
@@ -787,7 +787,7 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
     const auto message = fmt::format("Save file \"{}\"?", name);
     const auto result = QMessageBox::question(
         this,                                                      //
-        QString::fromUtf8(app_name),                               //
+        QString::fromUtf8(APP_NAME),                               //
         QString::fromUtf8(message),                                //
         QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,  //
         QMessageBox::Yes);

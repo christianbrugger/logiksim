@@ -38,8 +38,6 @@ class ElementButton : public QPushButton {
     auto minimumSizeHint() const -> QSize override;
 };
 
-constexpr static inline auto app_name = std::string_view {"LogicSim 2"};
-
 struct MainActions {
     // file
     QAction* new_file;

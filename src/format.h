@@ -34,7 +34,7 @@ concept format_string_type = std::same_as<T, fmt::basic_string_view<Char>> ||
 }
 
 //
-// print_fmt
+// Logging
 //
 
 namespace logicsim {
@@ -42,6 +42,31 @@ namespace logicsim {
 namespace detail::format {
 thread_local inline fmt::ostream *file_stream = nullptr;
 }
+
+class LogFile {
+   public:
+    [[nodiscard]] explicit LogFile(fmt::cstring_view filename);
+    ~LogFile();
+
+    LogFile(LogFile &&) = default;
+    LogFile(const LogFile &) = delete;
+    auto operator=(LogFile &&) -> LogFile & = delete;
+    auto operator=(const LogFile &) -> LogFile & = delete;
+
+   private:
+    fmt::ostream file_;
+};
+
+[[nodiscard]] auto try_create_logfile(fmt::cstring_view filename)
+    -> std::optional<LogFile>;
+
+}  // namespace logicsim
+
+//
+// print_fmt
+//
+
+namespace logicsim {
 
 template <typename... T>
 auto print_fmt(fmt::format_string<T...> fmt, T &&...args) -> void {
