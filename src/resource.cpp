@@ -6,19 +6,11 @@
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QStandardPaths>
 
 namespace logicsim {
 
-auto to_absolute_path(QString relative) -> QString {
-    if (relative.isEmpty()) {
-        return QString {};
-    }
-
-    const auto app_dir = QApplication::instance()->applicationDirPath();
-    return QFileInfo(app_dir + '/' + relative).absoluteFilePath();
-}
-
-auto to_absolute_resource_path(QString relative) -> QString {
+[[nodiscard]] auto to_absolute_resource_path(QString relative) -> QString {
     if (relative.isEmpty()) {
         return QString {};
     }
@@ -27,7 +19,15 @@ auto to_absolute_resource_path(QString relative) -> QString {
     return QFileInfo(app_dir + '/' + "resources" + '/' + relative).absoluteFilePath();
 }
 
-auto get_font_path_relative(font_t font) -> QString {
+[[nodiscard]] auto writable_standard_path(QStandardPaths::StandardLocation location,
+                                          QString relative) -> QString {
+    const auto folder = QStandardPaths::writableLocation(location);
+    const auto file = QFileInfo(folder + '/' + LS_APP_VERSION_STR + '/' + relative);
+    file.absoluteDir().mkpath(".");
+    return file.absoluteFilePath();
+}
+
+[[nodiscard]] auto get_font_path_relative(font_t font) -> QString {
     switch (font) {
         using enum font_t;
 
@@ -52,13 +52,34 @@ auto get_font_path(font_t font) -> QString {
     return to_absolute_resource_path(get_font_path_relative(font));
 }
 
+auto get_writable_setting_path(setting_t config) -> QString {
+    switch (config) {
+        using enum setting_t;
+
+        case gui_geometry: {
+            return writable_standard_path(QStandardPaths::AppConfigLocation,
+                                          "gui_geometry.bin");
+        }
+        case gui_state: {
+            return writable_standard_path(QStandardPaths::AppConfigLocation,
+                                          "gui_state.bin");
+        }
+        case logfile: {
+            return writable_standard_path(QStandardPaths::AppConfigLocation,
+                                          "logging.txt");
+        }
+    };
+
+    throw_exception("unknown font_t");
+}
+
 // Browse Icons:
 //
 // https://lucide.dev/icons/
 //
 // https://jam-icons.com/
 //
-auto get_icon_path_relative(icon_t icon) {
+[[nodiscard]] auto get_icon_path_relative(icon_t icon) -> QString {
     switch (icon) {
         using enum icon_t;
 

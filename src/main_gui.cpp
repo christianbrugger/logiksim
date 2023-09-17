@@ -13,8 +13,12 @@ auto main(int argc, char* argv[]) -> int {
     using namespace logicsim;
     auto app = QApplication {argc, argv};
 
+    app.setApplicationName(LS_APP_NAME);
+    app.setApplicationVersion(LS_APP_VERSION_STR);
+    app.setOrganizationName(LS_APP_NAME);
+
 #ifdef LS_LOG_TO_FILE
-    const auto log_filename = to_absolute_path("logging.txt").toStdString();
+    const auto log_filename = get_writable_setting_path(setting_t::logfile).toStdString();
     const auto log_file [[maybe_unused]] = try_create_logfile(log_filename);
 #endif
 

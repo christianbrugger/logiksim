@@ -5,7 +5,8 @@
 
 namespace logicsim {
 
-auto to_absolute_path(QString relative) -> QString;
+constexpr static auto inline LS_APP_NAME = "LogikSim";
+constexpr static auto inline LS_APP_VERSION_STR = "2.1.0";
 
 enum class font_t : uint8_t {
     regular,
@@ -14,7 +15,16 @@ enum class font_t : uint8_t {
     monospace,
 };
 
-auto get_font_path(font_t font) -> QString;
+[[nodiscard]] auto get_font_path(font_t font) -> QString;
+
+enum class setting_t {
+    gui_geometry,
+    gui_state,
+
+    logfile,
+};
+
+[[nodiscard]] auto get_writable_setting_path(setting_t config) -> QString;
 
 enum class icon_t {
     app_icon,
@@ -67,7 +77,7 @@ enum class icon_t {
     setting_handle_clock_generator,
 };
 
-auto get_icon_path(icon_t icon) -> QString;
+[[nodiscard]] auto get_icon_path(icon_t icon) -> QString;
 
 }  // namespace logicsim
 

@@ -731,9 +731,9 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
 
     if (!render_widget_->save_circuit(filename)) {
         const auto message = fmt::format("Failed to save \"{}\".", filename);
-        QMessageBox::warning(this,                         //
-                             QString::fromUtf8(APP_NAME),  //
-                             QString::fromUtf8(message)    //
+        QMessageBox::warning(this,                            //
+                             QString::fromUtf8(LS_APP_NAME),  //
+                             QString::fromUtf8(message)       //
         );
         return save_circuit(filename_choice_t::ask_new);
     }
@@ -766,9 +766,9 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
 
     if (!render_widget_->load_circuit(*filename)) {
         const auto message = fmt::format("Failed to load \"{}\".", filename);
-        QMessageBox::warning(this,                         //
-                             QString::fromUtf8(APP_NAME),  //
-                             QString::fromUtf8(message)    //
+        QMessageBox::warning(this,                            //
+                             QString::fromUtf8(LS_APP_NAME),  //
+                             QString::fromUtf8(message)       //
         );
     }
     last_saved_filename_ = *filename;
@@ -787,7 +787,7 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
     const auto message = fmt::format("Save file \"{}\"?", name);
     const auto result = QMessageBox::question(
         this,                                                      //
-        QString::fromUtf8(APP_NAME),                               //
+        QString::fromUtf8(LS_APP_NAME),                            //
         QString::fromUtf8(message),                                //
         QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,  //
         QMessageBox::Yes);
@@ -825,43 +825,40 @@ auto MainWidget::show_about_dialog() -> void {
                              "Contact: <a href=\"mailto:{}\">{}</a></p>"
                              "<p>© {}</p>")
                               .toStdString();
-    const auto text = fmt::format(fmt::runtime(text_fmt), APP_NAME, APP_VERSION_STR,
-                                  APP_AUTHOR, APP_EMAIL, APP_EMAIL, APP_YEAR_STR);
+    const auto text =
+        fmt::format(fmt::runtime(text_fmt), LS_APP_NAME, LS_APP_VERSION_STR,
+                    LS_APP_AUTHOR, LS_APP_EMAIL, LS_APP_EMAIL, LS_APP_YEAR_STR);
 
     QMessageBox::about(this, tr("About"), QString::fromStdString(text));
 }
-
-namespace {
-constexpr static inline auto geometry_filename = "gui_geometry.bin";
-constexpr static inline auto state_filename = "gui_state.bin";
-
-}  // namespace
 
 auto MainWidget::save_gui_state() -> void {
     // geometry
     {
         const auto bytes = saveGeometry();
         const auto string = std::string {bytes.data(), gsl::narrow<size_t>(bytes.size())};
-        save_file(to_absolute_path(geometry_filename), string);
+        save_file(get_writable_setting_path(setting_t::gui_geometry), string);
     }
 
     // state
     {
         const auto bytes = saveState();
         const auto string = std::string {bytes.data(), gsl::narrow<size_t>(bytes.size())};
-        save_file(to_absolute_path(state_filename), string);
+        save_file(get_writable_setting_path(setting_t::gui_state), string);
     }
 }
 
 auto MainWidget::restore_gui_state() -> void {
     // geometry
-    if (const auto str = load_file(QString {geometry_filename}); !str.empty()) {
+    if (const auto str = load_file(get_writable_setting_path(setting_t::gui_geometry));
+        !str.empty()) {
         const auto bytes = QByteArray {str.data(), gsl::narrow<qsizetype>(str.size())};
         restoreGeometry(bytes);
     }
 
     // state
-    if (const auto str = load_file(QString {state_filename}); !str.empty()) {
+    if (const auto str = load_file(get_writable_setting_path(setting_t::gui_state));
+        !str.empty()) {
         const auto bytes = QByteArray {str.data(), gsl::narrow<qsizetype>(str.size())};
         restoreState(bytes);
     }
