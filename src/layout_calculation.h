@@ -97,6 +97,7 @@ constexpr static inline auto height = grid_t {value_inputs - 1};
 constexpr static inline auto enable_position = point_t {2, height};
 }  // namespace display_ascii
 
+
 /// next_point(point_t position) -> bool;
 auto iter_element_body_points(layout_calculation_data_t data,
                               std::invocable<point_t> auto next_point) -> bool {

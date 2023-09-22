@@ -51,8 +51,6 @@ template <>
 auto format(ElementType type) -> std::string;
 
 [[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
-// enables are always at input 0
-[[nodiscard]] auto has_enable(ElementType element_type) -> bool;
 
 struct circuit_id_t {
     using value_type = int16_t;

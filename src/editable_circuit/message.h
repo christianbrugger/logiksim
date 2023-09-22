@@ -198,10 +198,10 @@ class AdaptableReceiver {
     EditableCircuit *editable_circuit_ {nullptr};
 };
 
-#ifndef LOGIKSIM_TESTING_MESSEGE_SENDER
-using MessageReceiver = TransparentReceiver;
-#else
+#ifdef LOGIKSIM_TESTING_MESSEGE_SENDER
 using MessageReceiver = AdaptableReceiver;
+#else
+using MessageReceiver = TransparentReceiver;
 #endif
 
 class MessageSender {
@@ -214,7 +214,8 @@ class MessageSender {
     MessageReceiver receiver_;
 };
 
-#ifndef LOGIKSIM_TESTING_MESSEGE_SENDER
+#ifdef LOGIKSIM_TESTING_MESSEGE_SENDER
+#else
 static_assert(sizeof(MessageSender) == 8);
 #endif
 

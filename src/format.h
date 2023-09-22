@@ -134,7 +134,7 @@ auto escape_non_ascii(const std::basic_string<CharT, Traits, Allocator> &input)
     auto result = std::string {};
     for (const auto &character : input) {
         const auto index = static_cast<unsigned_integer_type>(character);
-        if (index > unsigned_integer_type {127}) {
+        if (index <= 31 || index >= 127) {
             fmt::format_to(std::back_inserter(result), "\\x{:0{}x}", index, hex_zeros);
         } else {
             result.push_back(character);

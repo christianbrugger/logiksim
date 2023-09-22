@@ -275,6 +275,10 @@ inline auto Layout::elements() const {
     });
 }
 
+[[nodiscard]] auto to_layout_calculation_data(const Layout &layout,
+                                              element_id_t element_id)
+    -> layout_calculation_data_t;
+
 }  // namespace logicsim
 
 #endif

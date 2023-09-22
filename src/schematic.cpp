@@ -20,6 +20,14 @@
 
 namespace logicsim {
 
+auto has_enable(ElementType element_type) -> bool {
+    using enum ElementType;
+
+    static_assert(display::enable_input_id == connection_id_t {0});
+    return element_type == clock_generator || element_type == display_number ||
+           element_type == display_ascii;
+}
+
 //
 // Schematic
 //

@@ -1,4 +1,4 @@
-#include "render_widget.h"
+﻿#include "render_widget.h"
 
 #include "collision.h"
 #include "editable_circuit/cache.h"

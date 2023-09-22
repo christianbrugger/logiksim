@@ -25,6 +25,10 @@ constexpr static inline auto logic_item_delay = delay_t {3us};
 constexpr static inline auto wire_delay_per_distance = delay_t {1us};
 }  // namespace defaults
 
+
+// enables are always at input 0
+[[nodiscard]] auto has_enable(ElementType element_type) -> bool;
+
 class Schematic {
    public:
     template <bool Const>

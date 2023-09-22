@@ -565,7 +565,7 @@ auto SegmentTree::validate() const -> void {
 
 auto SegmentTree::validate_inserted() const -> void {
     validate();
-    const auto line_tree = LineTree::from_segment_tree(*this);
+    const auto line_tree = to_line_tree(*this);
 
     if (!line_tree) [[unlikely]] {
         throw_exception("Could not convert segment tree to line tree.");
@@ -651,6 +651,18 @@ auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {
         }
     }
     return rect_t {p_min, p_max};
+}
+
+auto to_line_tree(const SegmentTree& segment_tree) -> std::optional<LineTree> {
+    // convert to line_tree
+    const auto segments =
+        transform_to_vector(segment_tree.segment_infos(),
+                            [](const segment_info_t& segment) { return segment.line; });
+
+    const auto root = segment_tree.has_input()
+                          ? std::make_optional(segment_tree.input_position())
+                          : std::nullopt;
+    return LineTree::from_segments(segments, root);
 }
 
 }  // namespace logicsim

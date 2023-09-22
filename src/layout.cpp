@@ -474,7 +474,7 @@ auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
     if (line_tree.empty() && element.is_wire() &&
         element.display_state() == display_state_t::normal &&
         element.segment_tree().has_input()) {
-        line_tree = LineTree::from_segment_tree(element.segment_tree()).value();
+        line_tree = to_line_tree(element.segment_tree()).value();
 
         if (line_tree.empty()) {
             throw_exception("generated line tree is empty");
@@ -758,5 +758,19 @@ template auto ElementTemplate<true>::operator==
     <true>(ElementTemplate<true>) const noexcept -> bool;
 
 }  // namespace layout
+
+auto to_layout_calculation_data(const Layout &layout, element_id_t element_id)
+    -> layout_calculation_data_t {
+    const auto element = layout.element(element_id);
+
+    return layout_calculation_data_t {
+        .input_count = element.input_count(),
+        .output_count = element.output_count(),
+        .internal_state_count = 0,  // TODO get count fromm schematic when implemented
+        .position = element.position(),
+        .orientation = element.orientation(),
+        .element_type = element.element_type(),
+    };
+}
 
 }  // namespace logicsim

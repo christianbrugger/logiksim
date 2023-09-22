@@ -1,7 +1,6 @@
 #include "vocabulary.h"
 
 #include "format.h"
-#include "layout_calculation.h"
 
 #include <blend2d/rgba.h>
 
@@ -60,14 +59,6 @@ auto format(ElementType type) -> std::string {
 auto is_logic_item(ElementType element_type) -> bool {
     using enum ElementType;
     return element_type != unused && element_type != placeholder && element_type != wire;
-}
-
-auto has_enable(ElementType element_type) -> bool {
-    using enum ElementType;
-
-    static_assert(display::enable_input_id == connection_id_t {0});
-    return element_type == clock_generator || element_type == display_number ||
-           element_type == display_ascii;
 }
 
 template <>

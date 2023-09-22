@@ -53,7 +53,6 @@ class InvalidLineTreeException : public std::exception {
 //
 
 class LineTree;
-class SegmentTree;
 
 using line_tree_vector_t = std::vector<std::reference_wrapper<const LineTree>>;
 
@@ -106,9 +105,6 @@ class LineTree {
     [[nodiscard]] static auto from_points(I begin, S end) -> std::optional<LineTree>;
 
     [[nodiscard]] static auto from_graph(point_t root, const Graph &graph)
-        -> std::optional<LineTree>;
-
-    [[nodiscard]] static auto from_segment_tree(const SegmentTree &)
         -> std::optional<LineTree>;
 
     auto swap(LineTree &other) noexcept -> void;
