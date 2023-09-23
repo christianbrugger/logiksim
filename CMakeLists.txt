@@ -18,13 +18,10 @@ set(LS_CORE_SOURCES
     src/editable_circuit/type.cpp
 
     src/algorithm.cpp
-    src/circuit.cpp
     src/circuit_description.cpp
-    src/circuit_index.cpp
     src/collision.cpp
     src/exception.cpp
     src/file.cpp
-    src/flat_schematic.cpp
     src/format.cpp
     src/geometry.cpp
     src/glyph_cache.cpp

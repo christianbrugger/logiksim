@@ -21,7 +21,7 @@ auto save_file(const QString &filename, const std::string &binary) -> bool {
 }
 
 auto save_file(const std::string &filename, const std::string &binary) -> bool {
-    return save_file(QString::fromUtf8(filename), std::move(binary));
+    return save_file(QString::fromUtf8(filename), binary);
 }
 
 auto load_file(const QString &filename) -> std::string {

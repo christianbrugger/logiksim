@@ -83,7 +83,7 @@ auto EventCounter::events_per_second() const -> double {
         return 0;
     }
 
-    auto time_delta = std::chrono::duration<double>(now - deque_.front()).count();
+    const auto time_delta = std::chrono::duration<double>(now - deque_.front()).count();
 
     if (time_delta == 0) {
         return 0;
@@ -135,8 +135,8 @@ auto MultiEventCounter::events_per_second() const -> double {
     const auto time_delta = std::chrono::duration<double>(now - times_.front()).count();
     const auto total_count = std::accumulate(counts_.begin(), counts_.end(), int64_t {0});
 
-    if (time_delta == 0) {
-        return 0;
+    if (time_delta == double {0}) {
+        return double {0};
     }
     return total_count / time_delta;
 }

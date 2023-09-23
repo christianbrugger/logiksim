@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_CONCEPT_H
 #define LOGIKSIM_CONCEPT_H
 
+#include <ranges>
+
 namespace logicsim {
 
 template <class T, class U>

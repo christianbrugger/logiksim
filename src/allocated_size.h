@@ -1,8 +1,6 @@
 #ifndef LOGIKSIM_ALLOCATED_SIZE_H
 #define LOGIKSIM_ALLOCATED_SIZE_H
 
-#include "vocabulary.h"
-
 namespace logicsim {
 
 template <typename T>
