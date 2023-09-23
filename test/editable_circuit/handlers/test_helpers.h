@@ -19,7 +19,7 @@ class MessageRecorder {
 
     MessageRecorder(CacheProvider &cache_provider) : cache_provider_ {&cache_provider} {}
 
-    inline auto submit(editable_circuit::InfoMessage message) -> void {
+    inline auto submit(const editable_circuit::InfoMessage &message) -> void {
         messages_.push_back(message);
         if (cache_provider_) {
             cache_provider_->submit(message);
@@ -42,7 +42,7 @@ class MessageRecorder {
 };
 
 inline auto make_sender(MessageRecorder &recorder) -> editable_circuit::MessageSender {
-    const auto callback = [recorder = &recorder](editable_circuit::InfoMessage message) {
+    const auto callback = [recorder = &recorder](const auto &message) {
         recorder->submit(message);
     };
     return editable_circuit::MessageSender {callback};

@@ -148,14 +148,14 @@ auto SpatialTree::format() const -> std::string {
     return fmt::format("SpatialTree = {}", tree_->value);
 }
 
-auto SpatialTree::handle(editable_circuit::info_message::LogicItemInserted message)
+auto SpatialTree::handle(const editable_circuit::info_message::LogicItemInserted& message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.data);
     tree_->value.insert({box, {message.element_id, null_segment_index}});
 }
 
-auto SpatialTree::handle(editable_circuit::info_message::LogicItemUninserted message)
-    -> void {
+auto SpatialTree::handle(
+    const editable_circuit::info_message::LogicItemUninserted& message) -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.data);
     const auto remove_count =
         tree_->value.remove({box, {message.element_id, null_segment_index}});
@@ -166,7 +166,7 @@ auto SpatialTree::handle(editable_circuit::info_message::LogicItemUninserted mes
 }
 
 auto SpatialTree::handle(
-    editable_circuit::info_message::InsertedLogicItemIdUpdated message) -> void {
+    const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
     using namespace editable_circuit::info_message;
 
     // r-tree data is immutable
@@ -174,14 +174,14 @@ auto SpatialTree::handle(
     handle(LogicItemInserted {message.new_element_id, message.data});
 }
 
-auto SpatialTree::handle(editable_circuit::info_message::SegmentInserted message)
+auto SpatialTree::handle(const editable_circuit::info_message::SegmentInserted& message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
     tree_->value.insert(
         {box, {message.segment.element_id, message.segment.segment_index}});
 }
 
-auto SpatialTree::handle(editable_circuit::info_message::SegmentUninserted message)
+auto SpatialTree::handle(const editable_circuit::info_message::SegmentUninserted& message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
 
@@ -193,8 +193,8 @@ auto SpatialTree::handle(editable_circuit::info_message::SegmentUninserted messa
     }
 }
 
-auto SpatialTree::handle(editable_circuit::info_message::InsertedSegmentIdUpdated message)
-    -> void {
+auto SpatialTree::handle(
+    const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
     using namespace editable_circuit::info_message;
 
     // r-tree data is immutable
@@ -202,7 +202,7 @@ auto SpatialTree::handle(editable_circuit::info_message::InsertedSegmentIdUpdate
     handle(SegmentInserted {message.new_segment, message.segment_info});
 }
 
-auto SpatialTree::submit(editable_circuit::InfoMessage message) -> void {
+auto SpatialTree::submit(const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
 
     // logic items

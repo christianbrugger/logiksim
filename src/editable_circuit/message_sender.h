@@ -14,12 +14,13 @@ constexpr static inline auto DEBUG_PRINT_MESSAGES = false;
 
 class MessageSender {
    public:
-    [[nodiscard]] explicit MessageSender(std::function<void(InfoMessage)> callback);
+    [[nodiscard]] explicit MessageSender(
+        std::function<void(const InfoMessage &)> callback);
 
-    auto submit(InfoMessage message) -> void;
+    auto submit(const InfoMessage &message) -> void;
 
    private:
-    std::function<void(InfoMessage)> callback_;
+    std::function<void(const InfoMessage &)> callback_;
 };
 
 }  // namespace editable_circuit

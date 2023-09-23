@@ -107,7 +107,7 @@ auto get_remove_entry(detail::connection_cache::map_type& map, element_id_t elem
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::LogicItemInserted message) -> void {
+    const editable_circuit::info_message::LogicItemInserted& message) -> void {
     const auto add_entry = get_add_entry(map_, message.element_id);
 
     if constexpr (IsInput) {
@@ -119,7 +119,7 @@ auto ConnectionCache<IsInput>::handle(
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::InsertedLogicItemIdUpdated message) -> void {
+    const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
     const auto update_entry =
         get_update_entry(map_, message.new_element_id, message.old_element_id);
 
@@ -132,7 +132,7 @@ auto ConnectionCache<IsInput>::handle(
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::LogicItemUninserted message) -> void {
+    const editable_circuit::info_message::LogicItemUninserted& message) -> void {
     const auto remove_entry = get_remove_entry(map_, message.element_id);
 
     if constexpr (IsInput) {
@@ -169,7 +169,7 @@ auto iter_connection_location_and_id(segment_info_t segment_info, Func next_conn
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::SegmentInserted message) -> void {
+    const editable_circuit::info_message::SegmentInserted& message) -> void {
     const auto add_entry =
         get_add_entry(map_, message.segment.element_id, message.segment.segment_index);
     iter_connection_location_and_id(message.segment_info, add_entry, IsInput);
@@ -177,7 +177,7 @@ auto ConnectionCache<IsInput>::handle(
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void {
+    const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
     if (message.new_segment == message.old_segment) {
         return;
     }
@@ -190,7 +190,7 @@ auto ConnectionCache<IsInput>::handle(
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::InsertedEndPointsUpdated message) -> void {
+    const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
     using namespace editable_circuit::info_message;
 
     handle(SegmentUninserted {message.segment, message.old_segment_info});
@@ -199,14 +199,15 @@ auto ConnectionCache<IsInput>::handle(
 
 template <bool IsInput>
 auto ConnectionCache<IsInput>::handle(
-    editable_circuit::info_message::SegmentUninserted message) -> void {
+    const editable_circuit::info_message::SegmentUninserted& message) -> void {
     const auto remove_entry =
         get_remove_entry(map_, message.segment.element_id, message.segment.segment_index);
     iter_connection_location_and_id(message.segment_info, remove_entry, IsInput);
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::submit(editable_circuit::InfoMessage message) -> void {
+auto ConnectionCache<IsInput>::submit(const editable_circuit::InfoMessage& message)
+    -> void {
     using namespace editable_circuit::info_message;
 
     // logic items

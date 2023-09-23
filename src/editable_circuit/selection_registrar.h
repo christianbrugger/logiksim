@@ -60,7 +60,7 @@ class SelectionRegistrar {
    public:
     [[nodiscard]] auto format() const -> std::string;
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
+    auto submit(const editable_circuit::InfoMessage& message) -> void;
     auto validate(const Layout& layout) const -> void;
 
     [[nodiscard]] auto get_handle() const -> selection_handle_t;

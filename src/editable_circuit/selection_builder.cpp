@@ -20,7 +20,7 @@ SelectionBuilder::SelectionBuilder(const Layout& layout,
                                    const CacheProvider& cache_provider)
     : layout_ {&layout}, cache_provider_ {&cache_provider} {}
 
-auto SelectionBuilder::submit(editable_circuit::InfoMessage message) -> void {
+auto SelectionBuilder::submit(const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
 
     // we only keep the inital selection updated

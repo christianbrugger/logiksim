@@ -360,7 +360,7 @@ auto update_impl(CollisionCache::map_type& map, element_id_t new_element_id,
 }
 
 auto CollisionCache::handle(
-    editable_circuit::info_message::InsertedEndPointsUpdated message) -> void {
+    const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
     const auto element_id = message.segment.element_id;
     const auto check_and_delete = get_check_and_delete(element_id);
     const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
@@ -380,28 +380,28 @@ auto CollisionCache::format() const -> std::string {
     return "!!! NOT IMPLEMENTED !!!";
 }
 
-auto CollisionCache::handle(editable_circuit::info_message::LogicItemInserted message)
-    -> void {
+auto CollisionCache::handle(
+    const editable_circuit::info_message::LogicItemInserted& message) -> void {
     insert_impl(map_, message.element_id, message.data);
 }
 
 auto CollisionCache::handle(
-    editable_circuit::info_message::InsertedLogicItemIdUpdated message) -> void {
+    const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
     update_impl(map_, message.new_element_id, message.old_element_id, message.data);
 }
 
-auto CollisionCache::handle(editable_circuit::info_message::LogicItemUninserted message)
-    -> void {
+auto CollisionCache::handle(
+    const editable_circuit::info_message::LogicItemUninserted& message) -> void {
     remove_impl(map_, message.element_id, message.data);
 }
 
-auto CollisionCache::handle(editable_circuit::info_message::SegmentInserted message)
-    -> void {
+auto CollisionCache::handle(
+    const editable_circuit::info_message::SegmentInserted& message) -> void {
     insert_impl(map_, message.segment.element_id, message.segment_info);
 }
 
 auto CollisionCache::handle(
-    editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void {
+    const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
     if (message.new_segment.element_id == message.old_segment.element_id) {
         return;
     }
@@ -409,12 +409,12 @@ auto CollisionCache::handle(
                 message.segment_info);
 }
 
-auto CollisionCache::handle(editable_circuit::info_message::SegmentUninserted message)
-    -> void {
+auto CollisionCache::handle(
+    const editable_circuit::info_message::SegmentUninserted& message) -> void {
     remove_impl(map_, message.segment.element_id, message.segment_info);
 }
 
-auto CollisionCache::submit(editable_circuit::InfoMessage message) -> void {
+auto CollisionCache::submit(const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
 
     // logic items

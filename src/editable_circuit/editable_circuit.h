@@ -93,9 +93,9 @@ class EditableCircuit {
     [[nodiscard]] auto selection_builder() noexcept -> SelectionBuilder&;
 
     [[nodiscard]] auto caches() const -> const CacheProvider&;
-    auto _submit(editable_circuit::InfoMessage message) -> void;
 
    private:
+    auto submit(const editable_circuit::InfoMessage& message) -> void;
     auto get_sender() -> editable_circuit::MessageSender&;
     auto get_state() -> editable_circuit::State;
 

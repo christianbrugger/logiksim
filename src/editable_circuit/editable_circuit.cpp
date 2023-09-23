@@ -18,7 +18,7 @@ EditableCircuit::EditableCircuit(Layout&& layout)
     : layout_ {std::move(layout)},
       cache_provider_ {layout_.value()},
       selection_builder_ {layout_.value(), cache_provider_},
-      sender_ {[this](auto message) { this->_submit(message); }} {}
+      sender_ {[this](const auto& message) { this->submit(message); }} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", layout_);
@@ -229,7 +229,7 @@ auto EditableCircuit::caches() const -> const CacheProvider& {
     return cache_provider_;
 }
 
-auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
+auto EditableCircuit::submit(const editable_circuit::InfoMessage& message) -> void {
     cache_provider_.submit(message);
     registrar_.submit(message);
     selection_builder_.submit(message);

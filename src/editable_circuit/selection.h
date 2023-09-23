@@ -65,16 +65,18 @@ class Selection {
     [[nodiscard]] auto selected_segments(segment_t segment) const
         -> std::span<const part_t>;
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
+    auto submit(const editable_circuit::InfoMessage &message) -> void;
     auto validate(const Layout &layout) const -> void;
 
    private:
-    auto handle(editable_circuit::info_message::LogicItemDeleted message) -> void;
-    auto handle(editable_circuit::info_message::LogicItemIdUpdated message) -> void;
+    auto handle(const editable_circuit::info_message::LogicItemDeleted &message) -> void;
+    auto handle(const editable_circuit::info_message::LogicItemIdUpdated &message)
+        -> void;
 
-    auto handle(editable_circuit::info_message::SegmentIdUpdated message) -> void;
-    auto handle(editable_circuit::info_message::SegmentPartMoved message) -> void;
-    auto handle(editable_circuit::info_message::SegmentPartDeleted message) -> void;
+    auto handle(const editable_circuit::info_message::SegmentIdUpdated &message) -> void;
+    auto handle(const editable_circuit::info_message::SegmentPartMoved &message) -> void;
+    auto handle(const editable_circuit::info_message::SegmentPartDeleted &message)
+        -> void;
 
     detail::selection::logicitems_set_t selected_logicitems_ {};
     detail::selection::segment_map_t selected_segments_ {};

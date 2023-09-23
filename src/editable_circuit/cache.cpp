@@ -32,7 +32,7 @@ auto CacheProvider::validate(const Layout& layout) -> void {
     output_connections_.validate(layout);
 }
 
-auto CacheProvider::submit(editable_circuit::InfoMessage message) -> void {
+auto CacheProvider::submit(const editable_circuit::InfoMessage& message) -> void {
     input_connections_.submit(message);
     output_connections_.submit(message);
     collision_cache_.submit(message);

@@ -87,8 +87,8 @@ auto Selection::format() const -> std::string {
 }
 
 auto Selection::format_info() const -> std::string {
-    return fmt::format("Slection({} logic items, {} segments)", selected_logicitems_.size(),
-                       selected_segments_.size());
+    return fmt::format("Slection({} logic items, {} segments)",
+                       selected_logicitems_.size(), selected_segments_.size());
 }
 
 auto Selection::empty() const noexcept -> bool {
@@ -228,11 +228,12 @@ namespace logicsim {
 // Updates
 //
 
-auto Selection::handle(editable_circuit::info_message::LogicItemDeleted message) -> void {
+auto Selection::handle(const editable_circuit::info_message::LogicItemDeleted &message)
+    -> void {
     remove_logicitem(message.element_id);
 }
 
-auto Selection::handle(editable_circuit::info_message::LogicItemIdUpdated message)
+auto Selection::handle(const editable_circuit::info_message::LogicItemIdUpdated &message)
     -> void {
     const auto found = selected_logicitems_.erase(message.old_element_id);
     if (found) {
@@ -244,7 +245,8 @@ auto Selection::handle(editable_circuit::info_message::LogicItemIdUpdated messag
     }
 }
 
-auto Selection::handle(editable_circuit::info_message::SegmentIdUpdated message) -> void {
+auto Selection::handle(const editable_circuit::info_message::SegmentIdUpdated &message)
+    -> void {
     const auto it = selected_segments_.find(message.old_segment);
 
     if (it != selected_segments_.end()) {
@@ -333,7 +335,8 @@ auto handle_move_same_segment(detail::selection::segment_map_t &map,
     map.insert_or_assign(message.segment_part_destination.segment, std::move(result));
 }
 
-auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message) -> void {
+auto Selection::handle(const editable_circuit::info_message::SegmentPartMoved &message)
+    -> void {
     if (message.segment_part_source.segment == message.segment_part_destination.segment) {
         handle_move_same_segment(selected_segments_, message);
     } else {
@@ -341,12 +344,12 @@ auto Selection::handle(editable_circuit::info_message::SegmentPartMoved message)
     }
 }
 
-auto Selection::handle(editable_circuit::info_message::SegmentPartDeleted message)
+auto Selection::handle(const editable_circuit::info_message::SegmentPartDeleted &message)
     -> void {
     remove_segment(message.segment_part);
 }
 
-auto Selection::submit(editable_circuit::InfoMessage message) -> void {
+auto Selection::submit(const editable_circuit::InfoMessage &message) -> void {
     using namespace editable_circuit::info_message;
 
     // logic item

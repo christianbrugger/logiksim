@@ -43,7 +43,7 @@ class SelectionBuilder {
     [[nodiscard]] auto all_operations_applied() const -> bool;
     auto apply_all_operations() -> void;
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
+    auto submit(const editable_circuit::InfoMessage &message) -> void;
     auto validate(const Layout &layout) const -> void;
 
    private:

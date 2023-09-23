@@ -19,7 +19,7 @@ class CacheProvider {
     [[nodiscard]] auto collision_cache() const -> const CollisionCache&;
     [[nodiscard]] auto spatial_cache() const -> const SpatialTree&;
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
+    auto submit(const editable_circuit::InfoMessage& message) -> void;
     auto validate(const Layout& layout) -> void;
 
    public:

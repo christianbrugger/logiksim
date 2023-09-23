@@ -53,18 +53,20 @@ class SpatialTree {
 
     auto rects() const -> std::vector<rect_fine_t>;
 
-    auto submit(editable_circuit::InfoMessage message) -> void;
+    auto submit(const editable_circuit::InfoMessage &message) -> void;
     auto validate(const Layout &layout) const -> void;
 
    private:
-    auto handle(editable_circuit::info_message::LogicItemInserted message) -> void;
-    auto handle(editable_circuit::info_message::LogicItemUninserted message) -> void;
-    auto handle(editable_circuit::info_message::InsertedLogicItemIdUpdated message)
+    auto handle(const editable_circuit::info_message::LogicItemInserted &message) -> void;
+    auto handle(const editable_circuit::info_message::LogicItemUninserted &message)
+        -> void;
+    auto handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated &message)
         -> void;
 
-    auto handle(editable_circuit::info_message::SegmentInserted message) -> void;
-    auto handle(editable_circuit::info_message::SegmentUninserted message) -> void;
-    auto handle(editable_circuit::info_message::InsertedSegmentIdUpdated message) -> void;
+    auto handle(const editable_circuit::info_message::SegmentInserted &message) -> void;
+    auto handle(const editable_circuit::info_message::SegmentUninserted &message) -> void;
+    auto handle(const editable_circuit::info_message::InsertedSegmentIdUpdated &message)
+        -> void;
 
     std::unique_ptr<detail::spatial_tree::tree_container> tree_;
 };

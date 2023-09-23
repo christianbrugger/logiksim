@@ -50,7 +50,7 @@ auto SelectionRegistrar::format() const -> std::string {
     return fmt::format("SelectionRegistrar({})", item_str);
 }
 
-auto SelectionRegistrar::submit(editable_circuit::InfoMessage message) -> void {
+auto SelectionRegistrar::submit(const editable_circuit::InfoMessage& message) -> void {
     for (auto& selection : selections()) {
         selection.submit(message);
     }
