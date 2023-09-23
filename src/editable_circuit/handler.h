@@ -2,6 +2,7 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_HANDLER_H
 
 #include "editable_circuit/message.h"
+#include "editable_circuit/message_sender.h"
 #include "editable_circuit/type.h"
 #include "layout.h"
 #include "vocabulary.h"

@@ -17,7 +17,8 @@ namespace logicsim {
 EditableCircuit::EditableCircuit(Layout&& layout)
     : layout_ {std::move(layout)},
       cache_provider_ {layout_.value()},
-      selection_builder_ {layout_.value(), cache_provider_} {}
+      selection_builder_ {layout_.value(), cache_provider_},
+      sender_ {[this](auto message) { this->_submit(message); }} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", layout_);
@@ -235,12 +236,7 @@ auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
 }
 
 auto EditableCircuit::get_sender() -> editable_circuit::MessageSender& {
-    const auto callback = [this](editable_circuit::InfoMessage message) {
-        this->_submit(message);
-    };
-    static auto sender = editable_circuit::MessageSender {callback};
-
-    return sender;
+    return sender_;
 }
 
 auto EditableCircuit::get_state() -> editable_circuit::State {

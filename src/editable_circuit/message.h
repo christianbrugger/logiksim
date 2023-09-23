@@ -14,12 +14,7 @@
 
 namespace logicsim {
 
-class EditableCircuit;
-
 namespace editable_circuit {
-
-constexpr static inline auto DEBUG_PRINT_HANDLER_INPUTS = false;
-constexpr static inline auto DEBUG_PRINT_MESSAGES = false;
 
 //
 // Info Messages
@@ -164,20 +159,6 @@ using Message = std::variant<                                                //
 
 using InfoMessage = info_message::Message;
 static_assert(sizeof(InfoMessage) == 48);
-
-//
-// MessageSender
-//
-
-class MessageSender {
-   public:
-    [[nodiscard]] explicit MessageSender(std::function<void(InfoMessage)> callback);
-
-    auto submit(InfoMessage message) -> void;
-
-   private:
-    std::function<void(InfoMessage)> callback_;
-};
 
 }  // namespace editable_circuit
 

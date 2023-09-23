@@ -2,6 +2,7 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_H
 
 #include "editable_circuit/cache.h"
+#include "editable_circuit/message_sender.h"
 #include "editable_circuit/selection_builder.h"
 #include "editable_circuit/selection_registrar.h"
 #include "editable_circuit/type.h"
@@ -104,6 +105,7 @@ class EditableCircuit {
     SelectionRegistrar registrar_ {};
 
     SelectionBuilder selection_builder_;
+    editable_circuit::MessageSender sender_;
 };
 
 auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)

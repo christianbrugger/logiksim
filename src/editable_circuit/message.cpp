@@ -90,18 +90,4 @@ auto SegmentUninserted::format() const -> std::string {
 
 }  // namespace info_message
 
-//
-// Message Sender
-//
-
-MessageSender::MessageSender(std::function<void(InfoMessage)> callback)
-    : callback_ {std::move(callback)} {}
-
-auto MessageSender::submit(InfoMessage message) -> void {
-    if constexpr (DEBUG_PRINT_MESSAGES) {
-        print(message);
-    }
-    callback_(message);
-}
-
 }  // namespace logicsim::editable_circuit
