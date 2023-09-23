@@ -23,7 +23,7 @@ namespace editable_circuit {
 
 struct State {
     Layout& layout;
-    MessageSender sender;
+    MessageSender& sender;
     const CacheProvider& cache;
 };
 
@@ -33,11 +33,11 @@ struct State {
 
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
-auto swap_and_delete_multiple_elements(Layout& layout, MessageSender sender,
+auto swap_and_delete_multiple_elements(Layout& layout, MessageSender& sender,
                                        std::span<const element_id_t> element_ids,
                                        element_id_t* preserve_element = nullptr) -> void;
 
-auto swap_and_delete_single_element(Layout& layout, MessageSender sender,
+auto swap_and_delete_single_element(Layout& layout, MessageSender& sender,
                                     element_id_t& element_id,
                                     element_id_t* preserve_element = nullptr) -> void;
 
@@ -58,7 +58,7 @@ auto is_logic_item_position_representable(const Layout& Layout,
                                           const element_id_t element_id, int dx, int dy)
     -> bool;
 
-auto move_or_delete_logic_item(Layout& Layout, MessageSender sender,
+auto move_or_delete_logic_item(Layout& Layout, MessageSender& sender,
                                element_id_t& element_id, int dx, int dy) -> void;
 
 // Assumptions:
@@ -72,7 +72,7 @@ auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) 
 // Wire - High level Methods
 //
 
-auto delete_wire_segment(Layout& layout, MessageSender sender,
+auto delete_wire_segment(Layout& layout, MessageSender& sender,
                          segment_part_t& segment_part) -> void;
 
 auto add_wire(State state, point_t p0, point_t p1, LineInsertionType segment_type,
@@ -87,7 +87,7 @@ auto change_wire_insertion_mode(State state, segment_part_t& segment_part,
 auto is_wire_position_representable(const Layout& layout, segment_part_t segment_part,
                                     int dx, int dy) -> bool;
 
-auto move_or_delete_wire(Layout& layout, MessageSender sender,
+auto move_or_delete_wire(Layout& layout, MessageSender& sender,
                          segment_part_t& segment_part, int dx, int dy) -> void;
 
 // Assumptions:
@@ -101,18 +101,18 @@ auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void;
 // Wire - Low level Methods
 //
 
-auto move_segment_between_trees(Layout& layout, MessageSender sender,
+auto move_segment_between_trees(Layout& layout, MessageSender& sender,
                                 segment_part_t& segment_part,
                                 const element_id_t destination_element_id) -> void;
 
-auto remove_segment_from_tree(Layout& layout, MessageSender sender,
+auto remove_segment_from_tree(Layout& layout, MessageSender& sender,
                               segment_part_t& segment_part) -> void;
 
-auto merge_and_delete_tree(Layout& Layout, MessageSender sender,
+auto merge_and_delete_tree(Layout& Layout, MessageSender& sender,
                            element_id_t& tree_destination, element_id_t& tree_source)
     -> void;
 
-auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment_0,
+auto merge_line_segments(Layout& layout, MessageSender& sender, segment_t segment_0,
                          segment_t segment_1, segment_part_t* preserve_segment) -> void;
 
 auto fix_and_merge_segments(State state, const point_t position,
@@ -132,7 +132,7 @@ auto new_positions_representable(const Selection& selection, const Layout& Layou
                                  int delta_x, int delta_y) -> bool;
 
 auto move_or_delete_elements(selection_handle_t handle, Layout& Layout,
-                             MessageSender sender, int delta_x, int delta_y) -> void;
+                             MessageSender& sender, int delta_x, int delta_y) -> void;
 
 // Assumptions:
 //   * all new positions are representable
@@ -145,7 +145,7 @@ auto delete_all(selection_handle_t handle, State state) -> void;
 // Wire Mode Change Helpers
 //
 
-auto regularize_temporary_selection(Layout& layout, MessageSender sender,
+auto regularize_temporary_selection(Layout& layout, MessageSender& sender,
                                     const Selection& selection,
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t>;
@@ -153,7 +153,7 @@ auto regularize_temporary_selection(Layout& layout, MessageSender sender,
 auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& cache,
                                    const Selection& selection) -> std::vector<point_t>;
 
-auto split_temporary_segments(Layout& layout, MessageSender sender,
+auto split_temporary_segments(Layout& layout, MessageSender& sender,
                               std::span<const point_t> split_points,
                               const Selection& selection) -> void;
 

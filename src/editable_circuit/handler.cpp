@@ -109,7 +109,7 @@ auto assert_equal_type(SegmentPointType type, SegmentPointType expected) -> void
     }
 }
 
-auto convert_from_to(Layout& layout, MessageSender sender, wire_connection_t output,
+auto convert_from_to(Layout& layout, MessageSender& sender, wire_connection_t output,
                      SegmentPointType from_type, SegmentPointType to_type) {
     const auto element = layout.element(output.segment.element_id);
 
@@ -144,17 +144,18 @@ auto convert_from_to(Layout& layout, MessageSender sender, wire_connection_t out
     });
 }
 
-auto convert_to_input(Layout& layout, MessageSender sender, wire_connection_t output) {
+auto convert_to_input(Layout& layout, MessageSender& sender, wire_connection_t output) {
     convert_from_to(layout, sender, output, SegmentPointType::output,
                     SegmentPointType::input);
 }
 
-auto convert_to_output(Layout& layout, MessageSender sender, wire_connection_t output) {
+auto convert_to_output(Layout& layout, MessageSender& sender, wire_connection_t output) {
     convert_from_to(layout, sender, output, SegmentPointType::input,
                     SegmentPointType::output);
 }
 
-auto convert_to_inputs(Layout& layout, MessageSender sender, wire_connections_t outputs) {
+auto convert_to_inputs(Layout& layout, MessageSender& sender,
+                       wire_connections_t outputs) {
     for (auto output : outputs) {
         convert_to_input(layout, sender, output);
     }
@@ -171,7 +172,7 @@ auto is_wire_with_segments(const Layout& layout, const element_id_t element_id) 
     return element.is_wire() && !element.segment_tree().empty();
 }
 
-auto notify_element_deleted(const Layout& layout, MessageSender sender,
+auto notify_element_deleted(const Layout& layout, MessageSender& sender,
                             element_id_t element_id) {
     const auto element = layout.element(element_id);
 
@@ -180,7 +181,7 @@ auto notify_element_deleted(const Layout& layout, MessageSender sender,
     }
 }
 
-auto notify_element_id_change(const Layout& layout, MessageSender sender,
+auto notify_element_id_change(const Layout& layout, MessageSender& sender,
                               const element_id_t new_element_id,
                               const element_id_t old_element_id) {
     const auto element = layout.element(new_element_id);
@@ -232,7 +233,7 @@ auto notify_element_id_change(const Layout& layout, MessageSender sender,
     }
 }
 
-auto swap_elements(Layout& layout, MessageSender sender, const element_id_t element_id_0,
+auto swap_elements(Layout& layout, MessageSender& sender, const element_id_t element_id_0,
                    const element_id_t element_id_1) -> void {
     if (element_id_0 == element_id_1) {
         return;
@@ -250,7 +251,7 @@ auto swap_elements(Layout& layout, MessageSender sender, const element_id_t elem
     notify_element_id_change(layout, sender, element_id_1, element_id_0);
 }
 
-auto swap_and_delete_single_element_private(Layout& layout, MessageSender sender,
+auto swap_and_delete_single_element_private(Layout& layout, MessageSender& sender,
                                             element_id_t& element_id,
                                             element_id_t* preserve_element = nullptr)
     -> void {
@@ -285,7 +286,7 @@ auto swap_and_delete_single_element_private(Layout& layout, MessageSender sender
     element_id = null_element;
 }
 
-auto swap_and_delete_single_element(Layout& layout, MessageSender sender,
+auto swap_and_delete_single_element(Layout& layout, MessageSender& sender,
                                     element_id_t& element_id,
                                     element_id_t* preserve_element) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
@@ -299,7 +300,7 @@ auto swap_and_delete_single_element(Layout& layout, MessageSender sender,
     swap_and_delete_single_element_private(layout, sender, element_id, preserve_element);
 }
 
-auto swap_and_delete_multiple_elements_private(Layout& layout, MessageSender sender,
+auto swap_and_delete_multiple_elements_private(Layout& layout, MessageSender& sender,
                                                std::span<const element_id_t> element_ids,
                                                element_id_t* preserve_element) -> void {
     // sort descending, so we don't invalidate our ids
@@ -312,7 +313,7 @@ auto swap_and_delete_multiple_elements_private(Layout& layout, MessageSender sen
     }
 }
 
-auto swap_and_delete_multiple_elements(Layout& layout, MessageSender sender,
+auto swap_and_delete_multiple_elements(Layout& layout, MessageSender& sender,
                                        std::span<const element_id_t> element_ids,
                                        element_id_t* preserve_element) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
@@ -363,7 +364,7 @@ auto is_logic_item_position_representable(const Layout& layout,
     return is_logic_item_position_representable_private(layout, element_id, dx, dy);
 }
 
-auto move_or_delete_logic_item_private(Layout& layout, MessageSender sender,
+auto move_or_delete_logic_item_private(Layout& layout, MessageSender& sender,
                                        element_id_t& element_id, int dx, int dy) -> void {
     if (!element_id) [[unlikely]] {
         throw_exception("element id is invalid");
@@ -381,7 +382,7 @@ auto move_or_delete_logic_item_private(Layout& layout, MessageSender sender,
     layout.set_position(element_id, position);
 }
 
-auto move_or_delete_logic_item(Layout& layout, MessageSender sender,
+auto move_or_delete_logic_item(Layout& layout, MessageSender& sender,
                                element_id_t& element_id, int dx, int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
@@ -514,13 +515,13 @@ auto uninsert_logic_item_wire_conversion(State state, element_id_t element_id) -
     });
 }
 
-auto notify_logic_item_inserted(const Layout& layout, MessageSender sender,
+auto notify_logic_item_inserted(const Layout& layout, MessageSender& sender,
                                 const element_id_t element_id) {
     const auto data = to_layout_calculation_data(layout, element_id);
     sender.submit(info_message::LogicItemInserted {element_id, data});
 }
 
-auto notify_logic_item_uninserted(const Layout& layout, MessageSender sender,
+auto notify_logic_item_uninserted(const Layout& layout, MessageSender& sender,
                                   const element_id_t element_id) {
     const auto data = to_layout_calculation_data(layout, element_id);
     sender.submit(info_message::LogicItemUninserted {element_id, data});
@@ -542,7 +543,7 @@ auto _element_change_temporary_to_colliding(State state, const element_id_t elem
     }
 };
 
-auto _element_change_colliding_to_insert(Layout& layout, MessageSender sender,
+auto _element_change_colliding_to_insert(Layout& layout, MessageSender& sender,
                                          element_id_t& element_id) -> void {
     const auto display_state = layout.display_state(element_id);
 
@@ -730,7 +731,7 @@ auto find_wire(const Layout& layout, display_state_t display_state) -> element_i
     return it == element_ids.end() ? null_element : *it;
 }
 
-auto create_aggregate_tree_at(Layout& layout, MessageSender sender,
+auto create_aggregate_tree_at(Layout& layout, MessageSender& sender,
                               display_state_t display_state, const element_id_t target_id)
     -> void {
     auto element_id = find_wire(layout, display_state);
@@ -747,13 +748,13 @@ auto create_aggregate_tree_at(Layout& layout, MessageSender sender,
 constexpr inline static auto TEMPORARY_AGGREGATE_ID = element_id_t {0};
 constexpr inline static auto COLLIDING_AGGREGATE_ID = element_id_t {1};
 
-auto create_aggregate_wires(Layout& layout, MessageSender sender) -> void {
+auto create_aggregate_wires(Layout& layout, MessageSender& sender) -> void {
     using enum display_state_t;
     create_aggregate_tree_at(layout, sender, temporary, TEMPORARY_AGGREGATE_ID);
     create_aggregate_tree_at(layout, sender, colliding, COLLIDING_AGGREGATE_ID);
 }
 
-auto get_or_create_aggregate(Layout& layout, MessageSender sender,
+auto get_or_create_aggregate(Layout& layout, MessageSender& sender,
                              display_state_t display_state) -> element_id_t {
     using enum display_state_t;
 
@@ -778,7 +779,7 @@ auto get_or_create_aggregate(Layout& layout, MessageSender sender,
     throw_exception("display state has no aggregate");
 }
 
-auto add_segment_to_tree(Layout& layout, MessageSender sender,
+auto add_segment_to_tree(Layout& layout, MessageSender& sender,
                          const element_id_t element_id, ordered_line_t line)
     -> segment_part_t {
     // insert new segment
@@ -835,7 +836,7 @@ auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t poi
     m_tree.update_segment(segment.segment_index, info);
 }
 
-auto add_segment_to_aggregate(Layout& layout, MessageSender sender,
+auto add_segment_to_aggregate(Layout& layout, MessageSender& sender,
                               const ordered_line_t line,
                               const display_state_t aggregate_type) -> segment_part_t {
     const auto element_id = get_or_create_aggregate(layout, sender, aggregate_type);
@@ -948,7 +949,7 @@ auto get_insertion_modes(const Layout& layout, const segment_part_t segment_part
 }
 
 // segment already moved
-auto notify_segment_insertion_status_changed(Layout& layout, MessageSender sender,
+auto notify_segment_insertion_status_changed(Layout& layout, MessageSender& sender,
                                              const segment_t source_segment,
                                              const segment_t destination_segment,
                                              const segment_t last_segment) {
@@ -989,7 +990,7 @@ auto notify_segment_insertion_status_changed(Layout& layout, MessageSender sende
 }
 
 // segment already moved
-auto notify_segment_id_changed(MessageSender sender, const segment_t source_segment,
+auto notify_segment_id_changed(MessageSender& sender, const segment_t source_segment,
                                const segment_t destination_segment,
                                const segment_t last_segment) {
     sender.submit(info_message::SegmentIdUpdated {
@@ -1006,7 +1007,7 @@ auto notify_segment_id_changed(MessageSender sender, const segment_t source_segm
     }
 }
 
-auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
+auto _move_full_segment_between_trees(Layout& layout, MessageSender& sender,
                                       segment_t& source_segment,
                                       const element_id_t destination_element_id) {
     if (source_segment.element_id == destination_element_id) {
@@ -1037,7 +1038,7 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender sender,
 
 namespace detail::move_segment {
 
-auto copy_segment(Layout& layout, MessageSender sender,
+auto copy_segment(Layout& layout, MessageSender& sender,
                   const segment_part_t source_segment_part,
                   const element_id_t destination_element_id) -> segment_part_t {
     auto& m_tree_source =
@@ -1103,7 +1104,7 @@ auto copy_segment(Layout& layout, MessageSender sender,
     return destination_segment_part;
 }
 
-auto shrink_segment_begin(Layout& layout, MessageSender sender, const segment_t segment)
+auto shrink_segment_begin(Layout& layout, MessageSender& sender, const segment_t segment)
     -> void {
     using namespace info_message;
 
@@ -1114,7 +1115,7 @@ auto shrink_segment_begin(Layout& layout, MessageSender sender, const segment_t 
     }
 }
 
-auto shrink_segment_end(Layout& layout, MessageSender sender, const segment_t segment,
+auto shrink_segment_end(Layout& layout, MessageSender& sender, const segment_t segment,
                         const part_t part_kept) -> segment_part_t {
     using namespace info_message;
     auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
@@ -1133,7 +1134,7 @@ auto shrink_segment_end(Layout& layout, MessageSender sender, const segment_t se
 
 }  // namespace detail::move_segment
 
-auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
+auto _move_touching_segment_between_trees(Layout& layout, MessageSender& sender,
                                           segment_part_t& source_segment_part,
                                           const element_id_t destination_element_id) {
     const auto full_part = to_part(get_line(layout, source_segment_part.segment));
@@ -1165,7 +1166,7 @@ auto _move_touching_segment_between_trees(Layout& layout, MessageSender sender,
     source_segment_part = destination_segment_part;
 }
 
-auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
+auto _move_splitting_segment_between_trees(Layout& layout, MessageSender& sender,
                                            segment_part_t& source_segment_part,
                                            const element_id_t destination_element_id) {
     const auto full_part = to_part(get_line(layout, source_segment_part.segment));
@@ -1200,7 +1201,7 @@ auto _move_splitting_segment_between_trees(Layout& layout, MessageSender sender,
 
 //  * trees can become empty
 //  * inserts new endpoints as shaddow points
-auto move_segment_between_trees(Layout& layout, MessageSender sender,
+auto move_segment_between_trees(Layout& layout, MessageSender& sender,
                                 segment_part_t& segment_part,
                                 const element_id_t destination_element_id) -> void {
     const auto moving_part = segment_part.part;
@@ -1221,7 +1222,7 @@ auto move_segment_between_trees(Layout& layout, MessageSender sender,
     }
 }
 
-auto _remove_full_segment_from_tree(Layout& layout, MessageSender sender,
+auto _remove_full_segment_from_tree(Layout& layout, MessageSender& sender,
                                     segment_part_t& full_segment_part) {
     const auto element_id = full_segment_part.segment.element_id;
     const auto segment_index = full_segment_part.segment.segment_index;
@@ -1244,7 +1245,7 @@ auto _remove_full_segment_from_tree(Layout& layout, MessageSender sender,
     full_segment_part = null_segment_part;
 }
 
-auto _remove_touching_segment_from_tree(Layout& layout, MessageSender sender,
+auto _remove_touching_segment_from_tree(Layout& layout, MessageSender& sender,
                                         segment_part_t& segment_part) {
     const auto element_id = segment_part.segment.element_id;
     const auto index = segment_part.segment.segment_index;
@@ -1274,7 +1275,7 @@ auto _remove_touching_segment_from_tree(Layout& layout, MessageSender sender,
     segment_part = null_segment_part;
 }
 
-auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender sender,
+auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender& sender,
                                          segment_part_t& segment_part) {
     const auto element_id = segment_part.segment.element_id;
     const auto index = segment_part.segment.segment_index;
@@ -1307,7 +1308,7 @@ auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender sender,
 //  * trees can become empty
 //  * inserts new endpoints as shaddow points
 //  * will not send insert / uninsert messages
-auto remove_segment_from_tree(Layout& layout, MessageSender sender,
+auto remove_segment_from_tree(Layout& layout, MessageSender& sender,
                               segment_part_t& segment_part) -> void {
     if (is_inserted(layout, segment_part.segment.element_id)) [[unlikely]] {
         throw_exception("can only remove from non-inserted segments");
@@ -1328,7 +1329,7 @@ auto remove_segment_from_tree(Layout& layout, MessageSender sender,
     }
 }
 
-auto merge_and_delete_tree(Layout& layout, MessageSender sender,
+auto merge_and_delete_tree(Layout& layout, MessageSender& sender,
                            element_id_t& tree_destination, element_id_t& tree_source)
     -> void {
     if (tree_destination >= tree_source) [[unlikely]] {
@@ -1387,7 +1388,7 @@ auto updated_segment_info(segment_info_t segment_info, const point_t position,
 using point_update_t =
     std::initializer_list<const std::pair<segment_index_t, SegmentPointType>>;
 
-auto update_segment_point_types(Layout& layout, MessageSender sender,
+auto update_segment_point_types(Layout& layout, MessageSender& sender,
                                 element_id_t element_id, point_update_t data,
                                 const point_t position) -> void {
     if (data.size() == 0) {
@@ -1431,7 +1432,7 @@ auto sort_through_lines_first(std::span<std::pair<ordered_line_t, segment_index_
                       });
 }
 
-auto _merge_line_segments_ordered(Layout& layout, MessageSender sender,
+auto _merge_line_segments_ordered(Layout& layout, MessageSender& sender,
                                   const segment_t segment_0, const segment_t segment_1,
                                   segment_part_t* preserve_segment) -> void {
     if (segment_0.element_id != segment_1.element_id) [[unlikely]] {
@@ -1510,7 +1511,7 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender sender,
     }
 }
 
-auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment_0,
+auto merge_line_segments(Layout& layout, MessageSender& sender, segment_t segment_0,
                          segment_t segment_1, segment_part_t* preserve_segment) -> void {
     if (segment_0.segment_index < segment_1.segment_index) {
         _merge_line_segments_ordered(layout, sender, segment_0, segment_1,
@@ -1521,7 +1522,7 @@ auto merge_line_segments(Layout& layout, MessageSender sender, segment_t segment
     }
 }
 
-auto merge_all_line_segments(Layout& layout, MessageSender sender,
+auto merge_all_line_segments(Layout& layout, MessageSender& sender,
                              std::vector<std::pair<segment_t, segment_t>>& pairs) {
     // merging deletes the segment with highest segment index,
     // so for this to work with multiple segments
@@ -1556,7 +1557,7 @@ auto merge_all_line_segments(Layout& layout, MessageSender sender,
     }
 }
 
-auto split_line_segment(Layout& layout, MessageSender sender, const segment_t segment,
+auto split_line_segment(Layout& layout, MessageSender& sender, const segment_t segment,
                         const point_t position) -> segment_part_t {
     const auto full_line = get_line(layout, segment);
     const auto line_moved = ordered_line_t {position, full_line.p1};
@@ -1774,7 +1775,7 @@ auto _wire_change_temporary_to_colliding(State state, segment_part_t& segment_pa
     }
 }
 
-auto _wire_change_colliding_to_insert(Layout& layout, MessageSender sender,
+auto _wire_change_colliding_to_insert(Layout& layout, MessageSender& sender,
                                       segment_part_t& segment_part) -> void {
     using enum display_state_t;
     const auto element_id = segment_part.segment.element_id;
@@ -1796,7 +1797,7 @@ auto _wire_change_colliding_to_insert(Layout& layout, MessageSender sender,
     }
 }
 
-auto delete_empty_tree(Layout& layout, MessageSender sender, element_id_t element_id,
+auto delete_empty_tree(Layout& layout, MessageSender& sender, element_id_t element_id,
                        element_id_t* preserve_element = nullptr) {
     if (!is_inserted(layout, element_id) || !layout.segment_tree(element_id).empty()) {
         throw_exception("can only delete empty inserted segment trees");
@@ -2003,7 +2004,7 @@ auto add_wire(State state, point_t p0, point_t p1, LineInsertionType segment_typ
     return add_wire_private(state, p0, p1, segment_type, insertion_mode, selection);
 }
 
-auto delete_wire_segment_private(Layout& layout, MessageSender sender,
+auto delete_wire_segment_private(Layout& layout, MessageSender& sender,
                                  segment_part_t& segment_part) -> void {
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
@@ -2016,7 +2017,7 @@ auto delete_wire_segment_private(Layout& layout, MessageSender sender,
     remove_segment_from_tree(layout, sender, segment_part);
 }
 
-auto delete_wire_segment(Layout& layout, MessageSender sender,
+auto delete_wire_segment(Layout& layout, MessageSender& sender,
                          segment_part_t& segment_part) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
@@ -2052,7 +2053,7 @@ auto is_wire_position_representable(const Layout& layout,
     return is_wire_position_representable_private(layout, segment_part, dx, dy);
 }
 
-auto move_or_delete_wire_private(Layout& layout, MessageSender sender,
+auto move_or_delete_wire_private(Layout& layout, MessageSender& sender,
                                  segment_part_t& segment_part, int dx, int dy) -> void {
     if (!segment_part) [[unlikely]] {
         throw_exception("segment part is invalid");
@@ -2091,7 +2092,7 @@ auto move_or_delete_wire_private(Layout& layout, MessageSender sender,
     }
 }
 
-auto move_or_delete_wire(Layout& layout, MessageSender sender,
+auto move_or_delete_wire(Layout& layout, MessageSender& sender,
                          segment_part_t& segment_part, int dx, int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
@@ -2301,7 +2302,7 @@ auto new_positions_representable(const Selection& selection, const Layout& layou
 }
 
 auto move_or_delete_elements(selection_handle_t handle, Layout& layout,
-                             MessageSender sender, int delta_x, int delta_y) -> void {
+                             MessageSender& sender, int delta_x, int delta_y) -> void {
     if (!handle) {
         return;
     }
@@ -2515,7 +2516,7 @@ auto build_endpoint_map(const Layout& layout, const Selection& selection)
     return map;
 }
 
-auto regularize_temporary_selection(Layout& layout, MessageSender sender,
+auto regularize_temporary_selection(Layout& layout, MessageSender& sender,
                                     const Selection& selection,
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t> {
@@ -2578,7 +2579,7 @@ auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& ca
     return cross_points;
 }
 
-auto split_temporary_segments(Layout& layout, MessageSender sender,
+auto split_temporary_segments(Layout& layout, MessageSender& sender,
                               std::span<const point_t> split_points,
                               const Selection& selection) -> void {
     const auto cache = SplitPointCache {split_points};

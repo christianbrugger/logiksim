@@ -95,7 +95,7 @@ class EditableCircuit {
     auto _submit(editable_circuit::InfoMessage message) -> void;
 
    private:
-    auto get_sender() -> editable_circuit::MessageSender;
+    auto get_sender() -> editable_circuit::MessageSender&;
     auto get_state() -> editable_circuit::State;
 
     std::optional<Layout> layout_ {};

@@ -234,11 +234,13 @@ auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
     selection_builder_.submit(message);
 }
 
-auto EditableCircuit::get_sender() -> editable_circuit::MessageSender {
-    auto callback = [this](editable_circuit::InfoMessage message) {
+auto EditableCircuit::get_sender() -> editable_circuit::MessageSender& {
+    const auto callback = [this](editable_circuit::InfoMessage message) {
         this->_submit(message);
     };
-    return editable_circuit::MessageSender {callback};
+    static auto sender = editable_circuit::MessageSender {callback};
+
+    return sender;
 }
 
 auto EditableCircuit::get_state() -> editable_circuit::State {
