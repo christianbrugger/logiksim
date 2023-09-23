@@ -8,6 +8,7 @@
 
 #include <gsl/gsl>
 
+#include <functional>
 #include <string>
 #include <variant>
 
@@ -168,56 +169,15 @@ static_assert(sizeof(InfoMessage) == 48);
 // MessageSender
 //
 
-class TransparentReceiver {
-   public:
-    TransparentReceiver(EditableCircuit &editable_circuit);
-
-    auto submit(InfoMessage message) -> void;
-
-   private:
-    gsl::not_null<EditableCircuit *> editable_circuit_;
-};
-
-// used for Testing
-class VirtualReceiver {
-   public:
-    virtual ~VirtualReceiver() = default;
-    virtual auto submit(InfoMessage message) -> void = 0;
-};
-
-// used for Testing
-class AdaptableReceiver {
-   public:
-    AdaptableReceiver(VirtualReceiver &receiver);
-    AdaptableReceiver(EditableCircuit &editable_circuit);
-
-    auto submit(InfoMessage message) -> void;
-
-   private:
-    VirtualReceiver *receiver_ {nullptr};
-    EditableCircuit *editable_circuit_ {nullptr};
-};
-
-#ifdef LOGIKSIM_TESTING_MESSEGE_SENDER
-using MessageReceiver = AdaptableReceiver;
-#else
-using MessageReceiver = TransparentReceiver;
-#endif
-
 class MessageSender {
    public:
-    [[nodiscard]] explicit MessageSender(MessageReceiver) noexcept;
+    [[nodiscard]] explicit MessageSender(std::function<void(InfoMessage)> callback);
 
     auto submit(InfoMessage message) -> void;
 
    private:
-    MessageReceiver receiver_;
+    std::function<void(InfoMessage)> callback_;
 };
-
-#ifdef LOGIKSIM_TESTING_MESSEGE_SENDER
-#else
-static_assert(sizeof(MessageSender) == 8);
-#endif
 
 }  // namespace editable_circuit
 

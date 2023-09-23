@@ -44,6 +44,7 @@ class Selection {
 
     auto swap(Selection &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto format_info() const -> std::string;
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     auto clear() -> void;

@@ -13,13 +13,13 @@
 namespace logicsim {
 
 // forward message to cache and store them
-class MessageRecorder : public editable_circuit::VirtualReceiver {
+class MessageRecorder {
    public:
     MessageRecorder() = default;
 
     MessageRecorder(CacheProvider &cache_provider) : cache_provider_ {&cache_provider} {}
 
-    inline auto submit(editable_circuit::InfoMessage message) -> void override {
+    inline auto submit(editable_circuit::InfoMessage message) -> void {
         messages_.push_back(message);
         if (cache_provider_) {
             cache_provider_->submit(message);
@@ -41,6 +41,13 @@ class MessageRecorder : public editable_circuit::VirtualReceiver {
     std::vector<editable_circuit::InfoMessage> messages_ {};
 };
 
+inline auto make_sender(MessageRecorder &recorder) -> editable_circuit::MessageSender {
+    const auto callback = [recorder = &recorder](editable_circuit::InfoMessage message) {
+        recorder->submit(message);
+    };
+    return editable_circuit::MessageSender {callback};
+}
+
 struct HandlerSetup {
     Layout &layout;
     CacheProvider cache;
@@ -52,7 +59,7 @@ struct HandlerSetup {
         : layout {layout_},
           cache {layout_},
           recorder {cache},
-          sender {editable_circuit::MessageSender {recorder}},
+          sender {make_sender(recorder)},
           state {layout_, sender, cache} {
         validate();
     }
@@ -67,7 +74,7 @@ struct SenderSetup {
     MessageRecorder recorder;
     editable_circuit::MessageSender sender;
 
-    SenderSetup() : recorder {}, sender {editable_circuit::MessageSender {recorder}} {}
+    SenderSetup() : recorder {}, sender {make_sender(recorder)} {}
 };
 
 inline auto add_and_element(Layout &layout, display_state_t display_type,

@@ -235,7 +235,10 @@ auto EditableCircuit::_submit(editable_circuit::InfoMessage message) -> void {
 }
 
 auto EditableCircuit::get_sender() -> editable_circuit::MessageSender {
-    return editable_circuit::MessageSender {*this};
+    auto callback = [this](editable_circuit::InfoMessage message) {
+        this->_submit(message);
+    };
+    return editable_circuit::MessageSender {callback};
 }
 
 auto EditableCircuit::get_state() -> editable_circuit::State {

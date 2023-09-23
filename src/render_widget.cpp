@@ -288,6 +288,7 @@ auto MouseMoveSelectionLogic::move_selection(point_fine_t point) -> void {
     if (delta_x == 0 && delta_y == 0) {
         return;
     }
+    const auto t [[maybe_unused]] = Timer {"uninsert selection"};
 
     const auto& selection = get_selection();
 
@@ -320,6 +321,8 @@ auto MouseMoveSelectionLogic::mouse_release(point_fine_t point) -> void {
     if (state_ != State::move_selection) {
         return;
     }
+    const auto t [[maybe_unused]] = Timer {"insert moved selection"};
+
     move_selection(point);
 
     convert_to(InsertionMode::collisions);
@@ -1233,13 +1236,16 @@ auto RendererWidget::delete_selected_items() -> void {
 
     auto& editable_circuit = editable_circuit_.value();
 
+    const auto t2 = Timer {fmt::format(
+        "Deleted {}:", editable_circuit.selection_builder().selection().format_info(),
+        "")};
+
     auto copy_handle =
         editable_circuit.get_handle(editable_circuit.selection_builder().selection());
     editable_circuit.selection_builder().clear();
 
     editable_circuit_.value().delete_all(std::move(copy_handle));
     update();
-
 #ifndef NDEBUG
     editable_circuit_->validate();
 #endif

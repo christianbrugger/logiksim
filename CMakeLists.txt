@@ -516,15 +516,14 @@ target_include_directories(${MAIN_GUI_TARGET} PRIVATE
 )
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
     ${LS_CORE_LIBRARIES}
-
 )
 target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE LS_EXCEPTION_MESSAGE_BOX)
     if (WIN32)
-        set_property(TARGET ${MAIN_GUI_TARGET} PROPERTY WIN32_EXECUTABLE true)
-        target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE LS_LOG_TO_FILE)
+        # set_property(TARGET ${MAIN_GUI_TARGET} PROPERTY WIN32_EXECUTABLE true)
+        # target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE LS_LOG_TO_FILE)
     endif ()
 endif ()
 
@@ -548,9 +547,6 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     GTest::gtest_main
 )
 target_compile_options(${MAIN_TEST_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
-target_compile_definitions(${MAIN_TEST_TARGET} PRIVATE
-    LOGIKSIM_TESTING_MESSEGE_SENDER
-)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE MATCHES Debug)
     message(NOTICE "LOGIKSIM: Enabling Clang Coverage for Tests.")

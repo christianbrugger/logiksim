@@ -1,6 +1,5 @@
 #include "editable_circuit/message.h"
 
-#include "editable_circuit.h"
 #include "exception.h"
 #include "format.h"
 
@@ -95,44 +94,14 @@ auto SegmentUninserted::format() const -> std::string {
 // Message Sender
 //
 
-// TransparentReceiver
-
-TransparentReceiver::TransparentReceiver(EditableCircuit &editable_circuit)
-    : editable_circuit_ {&editable_circuit} {}
-
-auto TransparentReceiver::submit(InfoMessage message) -> void {
-    editable_circuit_->_submit(message);
-}
-
-// Recording Reciever
-
-AdaptableReceiver::AdaptableReceiver(VirtualReceiver &receiver) : receiver_ {&receiver} {}
-
-AdaptableReceiver::AdaptableReceiver(EditableCircuit &editable_circuit)
-    : editable_circuit_ {&editable_circuit} {}
-
-auto AdaptableReceiver::submit(InfoMessage message) -> void {
-#ifndef LOGIKSIM_TESTING_MESSEGE_SENDER
-    throw_exception("using adaptable receiver in non-testing code");
-#endif
-
-    if (receiver_ != nullptr) {
-        receiver_->submit(message);
-    }
-    if (editable_circuit_ != nullptr) {
-        editable_circuit_->_submit(message);
-    }
-}
-
-// Message Sender
-
-MessageSender::MessageSender(MessageReceiver receiver) noexcept : receiver_ {receiver} {}
+MessageSender::MessageSender(std::function<void(InfoMessage)> callback)
+    : callback_ {std::move(callback)} {}
 
 auto MessageSender::submit(InfoMessage message) -> void {
     if constexpr (DEBUG_PRINT_MESSAGES) {
         print(message);
     }
-    receiver_.submit(message);
+    callback_(message);
 }
 
 }  // namespace logicsim::editable_circuit

@@ -80,10 +80,15 @@ auto Selection::clear() -> void {
 auto Selection::format() const -> std::string {
     return fmt::format(
         "Slection(\n"
-        "  elements = {},\n"
+        "  logic_items = {},\n"
         "  segments = {},\n"
         ")",
         selected_logicitems_.values(), selected_segments_.values());
+}
+
+auto Selection::format_info() const -> std::string {
+    return fmt::format("Slection({} logic items, {} segments)", selected_logicitems_.size(),
+                       selected_segments_.size());
 }
 
 auto Selection::empty() const noexcept -> bool {
