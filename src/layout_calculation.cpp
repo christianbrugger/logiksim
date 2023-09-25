@@ -486,7 +486,7 @@ auto element_selection_rect(ordered_line_t line) -> rect_fine_t {
 }
 
 auto element_selection_rect_rounded(ordered_line_t line) -> rect_fine_t {
-    constexpr auto padding = grid_fine_t {0.3};
+    constexpr auto padding = grid_fine_t {defaults::line_selection_padding};
 
     const auto p0 = point_fine_t {line.p0};
     const auto p1 = point_fine_t {line.p1};

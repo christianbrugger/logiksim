@@ -1,7 +1,6 @@
 #include "resource.h"
 
 #include "exception.h"
-#include "format.h"
 
 #include <QApplication>
 #include <QDir>

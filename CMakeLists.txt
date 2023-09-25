@@ -18,6 +18,13 @@ set(LS_CORE_SOURCES
     src/editable_circuit/selection_registrar.cpp
     src/editable_circuit/type.cpp
 
+    src/format/concept_string_view.cpp
+    src/format/enum.cpp
+    src/format/struct.cpp
+
+    src/vocabulary/element_id.cpp
+    src/vocabulary/element_type.cpp
+
     src/algorithm.cpp
     src/circuit_description.cpp
     src/collision.cpp
@@ -390,11 +397,6 @@ if (LS_ENABLE_PCH)
         <utility>
         <variant>
         <vector>
-        
-        "src/algorithm.h"
-        "src/exception.h"
-        "src/iterator_adaptor.h"
-        "src/format.h"
     )
 else()
     message(NOTICE "LOGIKSIM: Disabling pre-compiled headers.")
@@ -438,9 +440,9 @@ set(LS_CORE_LIBRARIES
 file(GLOB_RECURSE
     LS_RESOURCE_FILES
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
-    CONFIGURE_DEPENDS
+    # CONFIGURE_DEPENDS
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.ttf    # adapt these to your needs
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.ttf
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.svg
 )
 FOREACH(LS_RESOURCE_FILE ${LS_RESOURCE_FILES})

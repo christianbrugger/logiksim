@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_RENDER_HELPER_H
 #define LOGIKSIM_RENDER_HELPER_H
 
+#include <blend2d.h>
+
 namespace logicsim {
 
 class ContextGuard {

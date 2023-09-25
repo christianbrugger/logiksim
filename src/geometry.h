@@ -36,10 +36,6 @@ auto is_vertical(orientation_t orientation) noexcept -> bool;
 [[nodiscard]] auto is_vertical(ordered_line_t line) noexcept -> bool;
 
 // order points within lines
-// auto order_points(line_t line) noexcept -> line_t;
-// order lines and points within lines
-// auto order_points(const line_t line0, const line_t line1) noexcept
-//    -> std::tuple<line_t, line_t>;
 [[nodiscard]] auto order_points(const line_t line0, const line_t line1) noexcept
     -> std::tuple<ordered_line_t, ordered_line_t>;
 
