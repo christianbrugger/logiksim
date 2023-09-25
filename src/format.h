@@ -7,6 +7,9 @@
 #include "algorithm.h"
 #include "exception.h"
 #include "iterator_adaptor.h"
+#include "format/enum.h"
+#include "format/struct.h"
+#include "format/concept_string_view.h"
 
 #include <boost/algorithm/string/join.hpp>
 #include <fmt/core.h>
@@ -218,35 +221,6 @@ struct fmt::formatter<std::pair<T1, T2>, Char> {
 };
 
 //
-// Enum
-//
-
-namespace logicsim {
-template <typename T>
-auto format(T) -> std::string;
-}  // namespace logicsim
-
-// clang-format off
-template <typename T>
-concept HasFormatFunction = requires(T x) {
-    { logicsim::format(x) } -> std::convertible_to<std::string>;
-};
-
-// clang-format on
-
-template <typename T, typename Char>
-    requires std::is_enum_v<T> && HasFormatFunction<T>
-struct fmt::formatter<T, Char> {
-    static constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    static auto format(const T &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", logicsim::format(obj));
-    }
-};
-
-//
 // std::optional
 //
 
@@ -310,32 +284,6 @@ struct fmt::formatter<std::unique_ptr<T>, Char> {
             return fmt::format_to(ctx.out(), "{}", *obj);
         }
         return fmt::format_to(ctx.out(), "nullptr");
-    }
-};
-
-//
-// struct with format()
-//
-
-namespace logicsim {
-template <typename T, typename Char = char>
-concept format_obj_with_member_format_function = (!format_string_type<T, Char>) &&
-                                                 requires(T obj) {
-                                                     {
-                                                         obj.format()
-                                                         } -> std::same_as<std::string>;
-                                                 };
-}  // namespace logicsim
-
-template <typename T, typename Char>
-    requires logicsim::format_obj_with_member_format_function<T, Char>
-struct fmt::formatter<T, Char> {
-    constexpr auto parse(fmt::format_parse_context &ctx) {
-        return ctx.begin();
-    }
-
-    inline auto format(const T &obj, fmt::format_context &ctx) {
-        return fmt::format_to(ctx.out(), "{}", obj.format());
     }
 };
 

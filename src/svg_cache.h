@@ -6,6 +6,7 @@
 
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>
+#include <blend2d.h>
 
 #include <memory>
 

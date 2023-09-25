@@ -5,9 +5,12 @@
 #include "format.h"
 #include "hashing.h"
 #include "range.h"
+#include "vocabulary/element_id.h"
+#include "vocabulary/element_type.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
+#include <folly/small_vector.h>
 #include <gsl/gsl>
 
 #include <chrono>
@@ -21,36 +24,6 @@ namespace logicsim {
 //
 // Schematic Types
 //
-
-enum class ElementType : uint8_t {
-    unused,       // has no inputs and no logic
-    placeholder,  // has no logic                 // TODO rename to ???
-    wire,
-
-    buffer_element,
-    and_element,
-    or_element,
-    xor_element,
-
-    button,
-    led,
-    display_number,
-    display_ascii,
-
-    clock_generator,
-    flipflop_jk,
-    shift_register,
-    latch_d,
-    flipflop_d,
-    flipflop_ms_d,  // master slave
-
-    sub_circuit,
-};
-
-template <>
-auto format(ElementType type) -> std::string;
-
-[[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
 
 struct circuit_id_t {
     using value_type = int16_t;
@@ -71,56 +44,6 @@ struct circuit_id_t {
 };
 
 static_assert(std::is_trivial<circuit_id_t>::value);
-
-struct element_id_t {
-    using value_type = int32_t;
-    value_type value;
-
-    explicit constexpr element_id_t() = default;
-    explicit constexpr element_id_t(value_type value_) noexcept : value {value_} {};
-
-    // explicit constexpr element_id_t(int value_)
-    //     : value {gsl::narrow<value_type>(value_)} {};
-    explicit constexpr element_id_t(unsigned int value_)
-        : value {gsl::narrow<value_type>(value_)} {};
-    explicit constexpr element_id_t(long value_)
-        : value {gsl::narrow<value_type>(value_)} {};
-    explicit constexpr element_id_t(unsigned long value_)
-        : value {gsl::narrow<value_type>(value_)} {};
-    explicit constexpr element_id_t(long long value_)
-        : value {gsl::narrow<value_type>(value_)} {};
-    explicit constexpr element_id_t(unsigned long long value_)
-        : value {gsl::narrow<value_type>(value_)} {};
-
-    using difference_type = range_difference_t<value_type>;
-    static_assert(sizeof(difference_type) > sizeof(value_type));
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto operator==(const element_id_t &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const element_id_t &other) const = default;
-
-    [[nodiscard]] static constexpr auto max() noexcept {
-        return std::numeric_limits<value_type>::max();
-    };
-
-    [[nodiscard]] explicit constexpr operator bool() const noexcept {
-        return value >= 0;
-    }
-
-    auto operator++() noexcept -> element_id_t & {
-        ++value;
-        return *this;
-    }
-
-    auto operator++(int) noexcept -> element_id_t {
-        auto tmp = *this;
-        operator++();
-        return tmp;
-    }
-};
-
-static_assert(std::is_trivial<element_id_t>::value);
 
 struct connection_id_t {
     using value_type = int8_t;
@@ -207,7 +130,6 @@ struct segment_index_t {
 };
 
 inline constexpr auto null_circuit = circuit_id_t {-1};
-inline constexpr auto null_element = element_id_t {-1};
 inline constexpr auto null_connection = connection_id_t {-1};
 
 inline constexpr auto null_segment_index = segment_index_t {-1};

@@ -3,6 +3,7 @@
 
 #include "iterator_adaptor.h"
 
+#include <boost/random/uniform_int_distribution.hpp>
 #include <gsl/gsl>
 
 #include <algorithm>

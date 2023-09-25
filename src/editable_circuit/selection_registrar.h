@@ -4,6 +4,8 @@
 #include "editable_circuit/message_forward.h"
 #include "iterator_adaptor.h"
 
+#include <ankerl/unordered_dense.h>
+
 #include <type_traits>
 #include <utility>
 

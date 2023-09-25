@@ -4,7 +4,7 @@
 /**
  * Add fmt formatting to structs and classes that provide `format()` member function.
  *
- *     struct Foo {
+ *     struct/class Foo {
  *       public:
  *         auto format() const -> std::string;
  *     };

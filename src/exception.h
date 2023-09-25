@@ -12,7 +12,7 @@ namespace detail {
 }
 
 [[noreturn]] constexpr auto throw_exception(const char* msg) -> void {
-    if constexpr (std::is_constant_evaluated()) {
+    if (std::is_constant_evaluated()) {
         // to make it not ill-formed until P2448R2 is implemented in C++23
         if (msg != nullptr) {
             detail::throw_exception_impl(msg);

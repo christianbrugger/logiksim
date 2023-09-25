@@ -1,6 +1,9 @@
 #ifndef LOGIKSIM_ALLOCATED_SIZE_H
 #define LOGIKSIM_ALLOCATED_SIZE_H
 
+#include <concepts>
+#include <vector>
+
 namespace logicsim {
 
 template <typename T>

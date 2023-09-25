@@ -129,7 +129,7 @@ cmake_print_variables(CMAKE_CXX_COMPILER)
 option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
-option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
+option(LS_ENABLE_PCH "Enable pre-compiled headers." OFF)
 
 
 

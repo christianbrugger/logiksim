@@ -14,6 +14,7 @@
 #include <QCoreApplication>
 
 #include <exception>
+#include <iostream>
 
 namespace logicsim {
 
