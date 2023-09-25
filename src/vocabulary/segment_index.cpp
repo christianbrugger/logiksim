@@ -1,10 +1,10 @@
-#include "vocabulary/element_id.h"
+#include "vocabulary/segment_index.h"
 
 #include <fmt/core.h>
 
 namespace logicsim {
 
-auto element_id_t::format() const -> std::string {
+auto segment_index_t::format() const -> std::string {
     return fmt::format("{}", value);
 }
 

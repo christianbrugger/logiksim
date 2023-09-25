@@ -21,9 +21,24 @@ set(LS_CORE_SOURCES
     src/format/concept_string_view.cpp
     src/format/enum.cpp
     src/format/struct.cpp
-
+    src/format/time.cpp
+    
+    src/vocabulary/circuit_id.cpp
+    src/vocabulary/color.cpp
+    src/vocabulary/connection.cpp
+    src/vocabulary/connection_id.cpp
+    src/vocabulary/delay.cpp
+    src/vocabulary/display_state.cpp
     src/vocabulary/element_id.cpp
     src/vocabulary/element_type.cpp
+    src/vocabulary/insertion_mode.cpp
+    src/vocabulary/logic_small_vector.cpp
+    src/vocabulary/orientation.cpp
+    src/vocabulary/segment.cpp
+    src/vocabulary/segment_index.cpp
+    src/vocabulary/time.cpp
+    src/vocabulary/time_literal.cpp
+    src/vocabulary/time_rate.cpp
 
     src/algorithm.cpp
     src/circuit_description.cpp
@@ -129,7 +144,7 @@ cmake_print_variables(CMAKE_CXX_COMPILER)
 option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF)
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
-option(LS_ENABLE_PCH "Enable pre-compiled headers." OFF)
+option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
 
 
 
@@ -359,6 +374,7 @@ endif()
 add_library(logicsim_pch INTERFACE)
 if (LS_ENABLE_PCH)
     message(NOTICE "LOGIKSIM: Enabling pre-compiled headers.")
+
     target_precompile_headers(logicsim_pch INTERFACE
         <ankerl/unordered_dense.h>
         <blend2d.h>
@@ -440,7 +456,7 @@ set(LS_CORE_LIBRARIES
 file(GLOB_RECURSE
     LS_RESOURCE_FILES
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
-    # CONFIGURE_DEPENDS
+    CONFIGURE_DEPENDS
 
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.ttf
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/**.svg

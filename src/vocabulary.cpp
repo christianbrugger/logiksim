@@ -6,105 +6,6 @@
 
 namespace logicsim {
 
-template <>
-auto format(orientation_t orientation) -> std::string {
-    switch (orientation) {
-        using enum orientation_t;
-
-        case right:
-            return "right";
-        case left:
-            return "left";
-        case up:
-            return "up";
-        case down:
-            return "down";
-
-        case undirected:
-            return "undirected";
-    }
-    throw_exception("Don't know how to convert orientation_t to string.");
-}
-
-template <>
-auto format(display_state_t state) -> std::string {
-    switch (state) {
-        using enum display_state_t;
-
-        case normal:
-            return "normal";
-
-        case valid:
-            return "valid";
-        case colliding:
-            return "colliding";
-
-        case temporary:
-            return "temporary";
-    }
-    throw_exception("Don't know how to convert display_state_t to string.");
-}
-
-auto is_inserted(display_state_t display_state) -> bool {
-    return display_state == display_state_t::normal ||
-           display_state == display_state_t::valid;
-}
-
-template <>
-auto format(InsertionMode mode) -> std::string {
-    switch (mode) {
-        using enum InsertionMode;
-
-        case insert_or_discard:
-            return "insert_or_discard";
-        case collisions:
-            return "collisions";
-        case temporary:
-            return "temporary";
-    }
-    throw_exception("Don't know how to convert insertion mode to string.");
-}
-
-auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
-    switch (display_state) {
-        using enum display_state_t;
-
-        case normal:
-            return InsertionMode::insert_or_discard;
-        case colliding:
-            return InsertionMode::collisions;
-        case valid:
-            return InsertionMode::collisions;
-        case temporary:
-            return InsertionMode::temporary;
-    };
-
-    throw_exception("Unknown display state.");
-};
-
-auto circuit_id_t::format() const -> std::string {
-    return fmt::format("{}", value);
-}
-
-auto connection_id_t::format() const -> std::string {
-    return fmt::format("{}", value);
-}
-
-auto connection_t::format() const -> std::string {
-    return fmt::format("<Element {}, Conection {}>", element_id, connection_id);
-}
-
-auto segment_index_t::format() const -> std::string {
-    return fmt::format("{}", value);
-}
-
-auto segment_t::format() const -> std::string {
-    if (!*this) {
-        return fmt::format("<NullSegment>", segment_index, element_id);
-    }
-    return fmt::format("<Element {}, Segment {}>", element_id, segment_index);
-}
-
 auto part_t::format() const -> std::string {
     return fmt::format("<part {}-{}>", begin, end);
 }
@@ -117,27 +18,6 @@ auto part_copy_definition_t::format() const -> std::string {
 auto segment_part_t::format() const -> std::string {
     return fmt::format("<Element {}, Segment {}, part {}-{}>", segment.element_id,
                        segment.segment_index, part.begin, part.end);
-}
-
-auto time_t::format() const -> std::string {
-    return format_microsecond_time(value);
-}
-
-auto delay_t::format() const -> std::string {
-    // return format_microsecond_time(value);
-    return format_time(value);
-}
-
-auto time_rate_t::format() const -> std::string {
-    return fmt::format("{}/s", format_time(rate_per_second.value));
-}
-
-auto color_t::format() const -> std::string {
-    return fmt::format("{:X}", value);
-}
-
-color_t::operator BLRgba32() const noexcept {
-    return BLRgba32 {value};
 }
 
 auto grid_t::format() const -> std::string {

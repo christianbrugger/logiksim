@@ -5,12 +5,13 @@
 
 #include <gsl/gsl>
 
+#include <compare>
 #include <cstdint>
 #include <limits>
 #include <type_traits>
-#include <compare>
 
 namespace logicsim {
+
 /**
  * @brief: Identifier to an element in the circuit, schematic or layout.
  */
