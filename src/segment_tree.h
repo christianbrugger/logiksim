@@ -3,12 +3,15 @@
 
 #include "format.h"
 #include "geometry.h"
+#include "iterator_adaptor.h"
+#include "range.h"
 #include "segment_tree_type.h"
 #include "vocabulary.h"
 
 #include <boost/container/vector.hpp>
 #include <folly/small_vector.h>
 
+#include <compare>
 #include <optional>
 #include <span>
 #include <vector>

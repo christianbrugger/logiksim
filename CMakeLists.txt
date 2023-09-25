@@ -31,11 +31,24 @@ set(LS_CORE_SOURCES
     src/vocabulary/display_state.cpp
     src/vocabulary/element_id.cpp
     src/vocabulary/element_type.cpp
+    src/vocabulary/grid.cpp
+    src/vocabulary/grid_fine.cpp
     src/vocabulary/insertion_mode.cpp
+    src/vocabulary/line.cpp
+    src/vocabulary/line_fine.cpp
     src/vocabulary/logic_small_vector.cpp
+    src/vocabulary/offset.cpp
+    src/vocabulary/ordered_line.cpp
     src/vocabulary/orientation.cpp
+    src/vocabulary/part.cpp
+    src/vocabulary/part_copy_definition.cpp
+    src/vocabulary/point.cpp
+    src/vocabulary/point_fine.cpp
+    src/vocabulary/rect.cpp
+    src/vocabulary/rect_fine.cpp
     src/vocabulary/segment.cpp
     src/vocabulary/segment_index.cpp
+    src/vocabulary/segment_part.cpp
     src/vocabulary/time.cpp
     src/vocabulary/time_literal.cpp
     src/vocabulary/time_rate.cpp
@@ -43,6 +56,7 @@ set(LS_CORE_SOURCES
     src/algorithm.cpp
     src/circuit_description.cpp
     src/collision.cpp
+    src/difference_type.cpp
     src/exception.cpp
     src/file.cpp
     src/format.cpp
@@ -78,6 +92,7 @@ set(LS_CORE_SOURCES
     src/text_shaping.cpp
     src/timer.cpp
     src/vocabulary.cpp
+    src/wyhash.cpp
     
     src/main_widget.cpp
     src/render_widget.cpp

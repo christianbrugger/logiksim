@@ -1,5 +1,7 @@
 #include "serialize_detail.h"
 
+#include "format.h"
+
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <cppcodec/base64_rfc4648.hpp>

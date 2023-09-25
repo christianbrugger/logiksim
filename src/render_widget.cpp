@@ -112,7 +112,7 @@ auto MouseLineInsertLogic::mouse_move(std::optional<point_t> position) -> void {
         }
 
         if (position != first_position_ &&
-            (!insertion_type_ || is_orthogonal(*position, *first_position_))) {
+            (!insertion_type_ || is_orthogonal_line(*position, *first_position_))) {
             insertion_type_ = is_horizontal(*position, *first_position_)
                                   ? LineInsertionType::horizontal_first
                                   : LineInsertionType::vertical_first;

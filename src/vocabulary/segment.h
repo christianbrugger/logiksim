@@ -4,6 +4,9 @@
 #include "format/struct.h"
 #include "vocabulary/element_id.h"
 #include "vocabulary/segment_index.h"
+#include "wyhash.h"
+
+#include <ankerl/unordered_dense.h>
 
 #include <compare>
 #include <stdexcept>
@@ -40,5 +43,22 @@ struct segment_t {
 constexpr inline auto null_segment = segment_t {};
 
 }  // namespace logicsim
+
+//
+// Hash function
+//
+
+template <>
+struct ankerl::unordered_dense::hash<logicsim::segment_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::segment_t &obj) const noexcept
+        -> uint64_t {
+        static_assert(std::is_same_v<int32_t, logicsim::element_id_t::value_type>);
+        static_assert(std::is_same_v<int32_t, logicsim::segment_index_t::value_type>);
+
+        return logicsim::wyhash_64_bit(obj.element_id.value, obj.segment_index.value);
+    }
+};
 
 #endif

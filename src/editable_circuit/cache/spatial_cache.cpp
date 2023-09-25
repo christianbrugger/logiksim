@@ -4,6 +4,7 @@
 #include "editable_circuit/message.h"
 #include "layout.h"
 #include "layout_calculation.h"
+#include "wyhash.h"
 
 #include <boost/geometry.hpp>
 
@@ -51,8 +52,10 @@ struct ankerl::unordered_dense::hash<logicsim::detail::spatial_tree::tree_payloa
     using type = logicsim::detail::spatial_tree::tree_payload_t;
 
     [[nodiscard]] auto operator()(const type& obj) const noexcept -> uint64_t {
-        return logicsim::hash_8_byte(static_cast<uint32_t>(obj.element_id.value),
-                                     static_cast<uint32_t>(obj.segment_index.value));
+        static_assert(std::is_same_v<int32_t, logicsim::element_id_t::value_type>);
+        static_assert(std::is_same_v<int32_t, logicsim::segment_index_t::value_type>);
+
+        return logicsim::wyhash_64_bit(obj.element_id.value, obj.segment_index.value);
     }
 };
 

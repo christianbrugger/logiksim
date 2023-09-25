@@ -496,7 +496,7 @@ auto LineTree::validate_points_error() const -> std::optional<InvalidLineTreeExc
 auto LineTree::validate_segments_horizontal_or_vertical() const -> bool {
     const auto is_segment_orthogonal = [this](std::size_t index) {
         auto [p0, p1] = segment_points(gsl::narrow_cast<int>(index));  // TODO remove cast
-        return is_orthogonal(p0, p1);
+        return is_orthogonal_line(p0, p1);
     };
     return std::ranges::all_of(range(segment_count()), is_segment_orthogonal);
 }

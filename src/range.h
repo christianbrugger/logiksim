@@ -4,6 +4,7 @@
 
 #include "concept.h"
 #include "exception.h"
+#include "difference_type.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>
@@ -21,13 +22,8 @@ template <class T>
 inline constexpr T range_type_zero_value = T {0};
 template <class T>
 inline constexpr T range_type_one_value = T {1};
-
-// if T is not integral define difference_type in your custom type
 template <class T>
-using range_difference_t =
-    std::conditional_t<std::is_integral_v<T>,
-                       std::conditional_t<sizeof(T) < sizeof(int), int, long long>,
-                       std::iter_difference_t<T>>;
+using range_difference_t = safe_difference_t<T>;
 
 namespace detail {
 

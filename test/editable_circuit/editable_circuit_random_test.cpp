@@ -46,7 +46,7 @@ auto validate_inserted_lines(const AddResult &result) {
         if (result.p0 == result.p1) {
             return std::size_t {0};
         }
-        if (is_orthogonal(result.p0, result.p1)) {
+        if (is_orthogonal_line(result.p0, result.p1)) {
             return std::size_t {1};
         }
         return std::size_t {2};

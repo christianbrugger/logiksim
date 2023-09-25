@@ -5,6 +5,7 @@
 #include "glyph_cache_type.h"
 #include "layout_calculation_type.h"
 #include "vocabulary.h"
+#include "range.h"
 
 #include <array>
 #include <vector>

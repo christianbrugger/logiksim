@@ -3,6 +3,7 @@
 
 #include "iterator_adaptor.h"
 #include "vocabulary.h"
+#include "range.h"
 
 #include <gsl/gsl>
 

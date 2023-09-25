@@ -39,7 +39,7 @@ struct LogicItemData {
 
 auto to_line(const SerializedLine& obj, move_delta_t delta = {})
     -> std::optional<line_t> {
-    if (!is_orthogonal(obj.p0, obj.p1)) [[unlikely]] {
+    if (!is_orthogonal_line(obj.p0, obj.p1)) [[unlikely]] {
         return std::nullopt;
     }
 

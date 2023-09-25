@@ -3,6 +3,7 @@
 
 #include "editable_circuit/message_forward.h"
 #include "vocabulary.h"
+#include "iterator_adaptor.h"
 
 #include <ankerl/unordered_dense.h>
 

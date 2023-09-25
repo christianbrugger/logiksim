@@ -1,0 +1,68 @@
+#ifndef LOGICSIM_VOCABULARY_POINT_H
+#define LOGICSIM_VOCABULARY_POINT_H
+
+#include "format/struct.h"
+#include "vocabulary/grid.h"
+
+#include <ankerl/unordered_dense.h>
+
+#include <compare>
+#include <type_traits>
+
+namespace logicsim {
+
+/**
+ * @brief: A discrete 2-d position on the grid.
+ */
+struct point_t {
+    grid_t x;
+    grid_t y;
+
+    point_t() = default;
+
+    constexpr point_t(grid_t x_, grid_t y_) noexcept : x {x_}, y {y_} {};
+
+    [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] constexpr auto operator==(const point_t &other) const -> bool = default;
+    [[nodiscard]] constexpr auto operator<=>(const point_t &other) const = default;
+
+    [[nodiscard]] constexpr auto operator+(point_t other) const -> point_t {
+        return {x + other.x, y + other.y};
+    }
+
+    [[nodiscard]] constexpr auto operator-(point_t other) const -> point_t {
+        return {x - other.x, y - other.y};
+    }
+};
+
+static_assert(std::is_trivial<point_t>::value);
+
+constexpr auto is_orthogonal_line(point_t p0, point_t p1) noexcept -> bool {
+    // xor disallows zero length lines
+    return (p0.x == p1.x) ^ (p0.y == p1.y);
+}
+
+}  // namespace logicsim
+
+//
+// Hash function
+//
+
+template <>
+struct ankerl::unordered_dense::hash<logicsim::point_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::point_t &obj) const noexcept
+        -> uint64_t {
+        using value_type = logicsim::point_t;
+        using bit_type = uint32_t;
+
+        static_assert(std::has_unique_object_representations_v<value_type>);
+        static_assert(sizeof(value_type) == sizeof(bit_type));
+
+        return logicsim::wyhash(std::bit_cast<bit_type>(obj));
+    }
+};
+
+#endif

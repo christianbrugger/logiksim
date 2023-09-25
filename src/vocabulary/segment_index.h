@@ -2,6 +2,7 @@
 #define LOGICSIM_VOCABULARY_SEGMENT_INDEX_H
 
 #include "format/struct.h"
+#include "difference_type.h"
 
 #include <compare>
 #include <cstdint>
@@ -17,8 +18,8 @@ struct segment_index_t {
     using value_type = int32_t;
     value_type value;
 
-    using difference_type = value_type;
-    static_assert(std::is_signed_v<difference_type>);
+    using difference_type = safe_difference_t<value_type>;
+    static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] auto format() const -> std::string;
 

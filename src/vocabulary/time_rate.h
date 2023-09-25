@@ -9,6 +9,11 @@
 
 namespace logicsim {
 
+/**
+ * @brief: The rate at which the simulation time is advacing.
+ *
+ * The unit is simulation seconds / realtime seconds.
+ */
 struct time_rate_t {
     time_t rate_per_second;
 

@@ -6,6 +6,8 @@
 
 #include "random.h"
 
+#include "algorithm.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

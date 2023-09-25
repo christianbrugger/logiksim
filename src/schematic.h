@@ -3,6 +3,7 @@
 
 #include "format.h"
 #include "vocabulary.h"
+#include "range.h"
 
 #include <fmt/core.h>
 #include <folly/small_vector.h>
