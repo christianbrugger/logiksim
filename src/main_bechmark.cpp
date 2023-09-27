@@ -10,6 +10,7 @@
 #include "schematic.h"
 #include "simulation.h"
 #include "simulation_view.h"
+#include "vocabulary.h"
 
 #include <benchmark/benchmark.h>
 #include <blend2d.h>
@@ -80,7 +81,7 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
 
         const auto definition = LogicItemDefinition {
             .element_type = ElementType::and_element,
-            .input_count = 3,
+            .input_count = connection_count_t {3},
         };
 
         auto handle = ec.add_logic_item(definition, point_t {grid_t {x}, grid_t {y}},
@@ -147,15 +148,15 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
         for (auto __ [[maybe_unused]] : range(8)) {
             auto inverter = schematic.add_element(Schematic::ElementData {
                 .element_type = ElementType::buffer_element,
-                .input_count = 1,
-                .output_count = 1,
+                .input_count = connection_count_t {1},
+                .output_count = connection_count_t {1},
                 .input_inverters = {false},
                 .output_delays = {delay_t {3us}},
             });
             auto wire = schematic.add_element(Schematic::ElementData {
                 .element_type = ElementType::wire,
-                .input_count = 1,
-                .output_count = 1,
+                .input_count = connection_count_t {1},
+                .output_count = connection_count_t {1},
                 .input_inverters = {true},
                 .output_delays = {delay_t {1ns}},
             });

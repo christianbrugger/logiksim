@@ -39,8 +39,8 @@ TEST(Layout, ElementProperties) {
         .display_state = display_state_t::normal,
         .element_type = ElementType::and_element,
 
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .position = point_t {2, 3},
         .orientation = orientation_t::right,
 
@@ -53,8 +53,8 @@ TEST(Layout, ElementProperties) {
     EXPECT_EQ(element.element_id(), element_id_t {0});
     EXPECT_EQ(element.element_type(), ElementType::and_element);
 
-    EXPECT_EQ(element.input_count(), 3);
-    EXPECT_EQ(element.output_count(), 1);
+    EXPECT_EQ(element.input_count(), connection_count_t {3});
+    EXPECT_EQ(element.output_count(), connection_count_t {1});
     auto p = point_t {2, 3};
     EXPECT_EQ(element.position(), p);
     EXPECT_EQ(element.orientation(), orientation_t::right);
@@ -69,14 +69,14 @@ TEST(Layout, EqualityOperators) {
 
     auto element_0 = layout.add_element(Layout::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     });
     auto element_1 = layout.add_element(Layout::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     });
 
@@ -94,8 +94,8 @@ TEST(Layout, ElementConversions) {
 
     auto element = layout.add_element(Layout::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     });
 
@@ -129,14 +129,14 @@ TEST(Layout, ElementViewSome) {
 
     auto and_element = layout.add_element(Layout::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     });
     auto inverter = layout.add_element(Layout::ElementData {
         .element_type = ElementType::buffer_element,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     });
 

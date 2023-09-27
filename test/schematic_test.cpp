@@ -13,8 +13,8 @@ TEST(Schematic, EmptySchematic) {
     const Schematic schematic;
 
     EXPECT_EQ(schematic.element_count(), 0);
-    EXPECT_EQ(schematic.input_count(), 0);
-    EXPECT_EQ(schematic.output_count(), 0);
+    EXPECT_EQ(schematic.total_input_count(), 0);
+    EXPECT_EQ(schematic.total_output_count(), 0);
     EXPECT_EQ(std::ranges::distance(schematic.elements()), 0);
 
     schematic.validate();
@@ -25,14 +25,14 @@ TEST(Schematic, SchematicSingleElement) {
 
     schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 5,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
         .output_delays = std::vector<delay_t>(5, delay_t {1us}),
     });
 
     EXPECT_EQ(schematic.element_count(), 1);
-    EXPECT_EQ(schematic.input_count(), 1);
-    EXPECT_EQ(schematic.output_count(), 5);
+    EXPECT_EQ(schematic.total_input_count(), 1);
+    EXPECT_EQ(schematic.total_output_count(), 5);
     EXPECT_EQ(std::ranges::distance(schematic.elements()), 1);
 
     schematic.validate();
@@ -42,8 +42,8 @@ TEST(Schematic, ElementProperties) {
     Schematic schematic;
     schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -52,8 +52,8 @@ TEST(Schematic, ElementProperties) {
 
     EXPECT_EQ(element.element_id(), element_id_t {0});
     EXPECT_EQ(element.element_type(), ElementType::and_element);
-    EXPECT_EQ(element.input_count(), 3);
-    EXPECT_EQ(element.output_count(), 1);
+    EXPECT_EQ(element.input_count(), connection_count_t {3});
+    EXPECT_EQ(element.output_count(), connection_count_t {1});
 
     EXPECT_EQ(std::ranges::distance(element.inputs()), 3);
     EXPECT_EQ(std::ranges::distance(element.outputs()), 1);
@@ -67,14 +67,14 @@ TEST(Schematic, EqualityOperators) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 3,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {3},
         .output_delays = std::vector<delay_t>(3, delay_t {1us}),
     });
     auto inverter = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::buffer_element,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -102,14 +102,14 @@ TEST(Schematic, ConnectionProperties) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 3,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {3},
         .output_delays = std::vector<delay_t>(3, delay_t {1us}),
     });
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -133,14 +133,14 @@ TEST(Schematic, ConnectedOutput) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 5,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
         .output_delays = std::vector<delay_t>(5, delay_t {1us}),
     });
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -165,14 +165,14 @@ TEST(Schematic, ConnectInput) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 5,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
         .output_delays = std::vector<delay_t>(5, delay_t {1us}),
     });
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -197,14 +197,14 @@ TEST(Schematic, ClearedInput) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 5,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
         .output_delays = std::vector<delay_t>(5, delay_t {1us}),
     });
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -223,14 +223,14 @@ TEST(Schematic, ClearedOutput) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 5,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
         .output_delays = std::vector<delay_t>(5, delay_t {1us}),
     });
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -249,20 +249,20 @@ TEST(Schematic, ReconnectInput) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 5,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
         .output_delays = std::vector<delay_t>(5, delay_t {1us}),
     });
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
     auto inverter = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::buffer_element,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -282,20 +282,20 @@ TEST(Schematic, ReconnectOutput) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 5,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
         .output_delays = std::vector<delay_t>(5, delay_t {1us}),
     });
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
     auto or_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::or_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -314,8 +314,8 @@ TEST(Schematic, TestPlaceholders) {
     Schematic schematic;
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 5,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
         .output_delays = std::vector<delay_t>(5, delay_t {1us}),
     });
     EXPECT_EQ(schematic.element_count(), 1);
@@ -350,14 +350,14 @@ TEST(Schematic, ElementViewFull) {
 
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .output_delays = {delay_t {1us}},
     });
     auto inverter = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::buffer_element,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -372,14 +372,14 @@ TEST(Schematic, ElementViewRanges) {
     Schematic schematic;
     schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .output_delays = {delay_t {1us}},
     });
     schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::buffer_element,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -398,8 +398,8 @@ TEST(Schematic, InputsViewEmpty) {
     Schematic schematic;
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 0,
-        .output_count = 1,
+        .input_count = connection_count_t {0},
+        .output_count = connection_count_t {1},
         .output_delays = {delay_t {1us}},
     });
     auto view = Schematic::InputView {wire};
@@ -413,8 +413,8 @@ TEST(Schematic, InputsViewFull) {
     Schematic schematic;
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
     auto view = Schematic::InputView {and_element};
@@ -429,8 +429,8 @@ TEST(Schematic, InputsViewRanges) {
     Schematic schematic;
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
     auto view = Schematic::InputView {and_element};

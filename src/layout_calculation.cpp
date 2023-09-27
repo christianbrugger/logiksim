@@ -8,19 +8,19 @@
 
 namespace logicsim {
 
-auto require_min(std::size_t value, std::size_t count) -> void {
+auto require_min(connection_count_t value, connection_count_t count) -> void {
     if (value < count) [[unlikely]] {
         throw_exception("Object has not enough elements.");
     }
 }
 
-auto require_max(std::size_t value, std::size_t count) -> void {
+auto require_max(connection_count_t value, connection_count_t count) -> void {
     if (value > count) [[unlikely]] {
         throw_exception("Object has not enough elements.");
     }
 }
 
-auto require_equal(std::size_t value, std::size_t count) -> void {
+auto require_equal(connection_count_t value, connection_count_t count) -> void {
     if (value != count) [[unlikely]] {
         throw_exception("Object has wrong number of elements.");
     }
@@ -174,27 +174,27 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
     throw_exception("unknown orientation");
 }
 
-auto logicsim::standard_element::height(std::size_t input_count) -> grid_t {
+auto logicsim::standard_element::height(connection_count_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
-    return grid_t {input_count - std::size_t {1}};
+    return grid_t {(input_count - connection_count_t {1}).value};
 }
 
 namespace display_number {
-constexpr auto value_inputs_(std::size_t input_count) -> std::size_t {
+constexpr auto value_inputs_(connection_count_t input_count) -> connection_count_t {
     if (input_count < control_inputs) {
         throw_exception("input count too small");
     }
     return input_count - control_inputs;
 }
 
-auto value_inputs(std::size_t input_count) -> std::size_t {
+auto value_inputs(connection_count_t input_count) -> connection_count_t {
     return value_inputs_(input_count);
 }
 
 namespace {
 
 // WARNING: changing this function will make saves incompatible
-constexpr auto _width(std::size_t input_count) -> grid_t {
+constexpr auto _width(connection_count_t input_count) -> grid_t {
     using gcem::ceil;
     using gcem::floor;
     using gcem::log10;
@@ -215,7 +215,7 @@ constexpr auto _width(std::size_t input_count) -> grid_t {
     static_assert(padding == 0.25);
     static_assert(margin == 0.2);
 
-    const auto digit_count_2 = gsl::narrow<double>(value_inputs_(input_count));
+    const auto digit_count_2 = gsl::narrow<double>(value_inputs_(input_count).value);
     const auto digit_count_10 = ceil(max(1., digit_count_2) * log10(2));
     const auto digit_count_10_neg = ceil(max(1., digit_count_2 - 1.) * log10(2));
 
@@ -236,9 +236,10 @@ constexpr auto _width(std::size_t input_count) -> grid_t {
 }
 
 constexpr auto _generate_widths() {
-    auto result = std::array<grid_t, max_inputs - min_inputs + 1> {};
-    for (std::size_t i = min_inputs; i <= max_inputs; ++i) {
-        result[i - min_inputs] = _width(i);
+    constexpr auto count = (max_inputs - min_inputs + connection_count_t {1}).value;
+    auto result = std::array<grid_t, count> {};
+    for (connection_count_t i = min_inputs; i <= max_inputs; ++i) {
+        result[(i - min_inputs).value] = _width(i);
     }
     return result;
 }
@@ -255,37 +256,39 @@ static_assert(generated_widths ==
 
 }  // namespace
 
-auto width(std::size_t input_count) -> grid_t {
+auto width(connection_count_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
     require_max(input_count, max_inputs);
 
-    return generated_widths.at(input_count - min_inputs);
+    return generated_widths.at((input_count - min_inputs).value);
 }
 
-auto height(std::size_t input_count) -> grid_t {
+auto height(connection_count_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
     require_max(input_count, max_inputs);
 
-    return grid_t {std::max(std::size_t {2}, input_count - std::size_t {3})};
+    return grid_t {
+        std::max(connection_count_t {2}, input_count - connection_count_t {3}).value};
 }
 
-auto input_shift(std::size_t input_count) -> grid_t {
-    const auto space = width(input_count) - grid_t {1} - display_number::control_inputs;
+auto input_shift(connection_count_t input_count) -> grid_t {
+    const auto space =
+        width(input_count) - grid_t {1} - grid_t {display_number::control_inputs.value};
     return grid_t {(int {space.value} + 1) / 2};
 }
 
-auto negative_position(std::size_t input_count) -> point_t {
+auto negative_position(connection_count_t input_count) -> point_t {
     return point_t {grid_t {1} + input_shift(input_count), height(input_count)};
 }
 
-auto enable_position(std::size_t input_count) -> point_t {
+auto enable_position(connection_count_t input_count) -> point_t {
     return point_t {grid_t {2} + input_shift(input_count), height(input_count)};
 }
 
 }  // namespace display_number
 
-auto is_input_output_count_valid(ElementType element_type, std::size_t input_count,
-                                 std::size_t output_count) -> bool {
+auto is_input_output_count_valid(ElementType element_type, connection_count_t input_count,
+                                 connection_count_t output_count) -> bool {
     if (input_count > connection_id_t::max()) {
         return false;
     }
@@ -297,61 +300,77 @@ auto is_input_output_count_valid(ElementType element_type, std::size_t input_cou
         using enum ElementType;
 
         case unused: {
-            return input_count == 0 && output_count == 0;
+            return input_count == connection_count_t {0} &&
+                   output_count == connection_count_t {0};
         }
         case placeholder: {
-            return input_count == 1 && output_count == 0;
+            return input_count == connection_count_t {1} &&
+                   output_count == connection_count_t {0};
         }
         case wire: {
-            return input_count <= 1 && output_count >= 1;
+            return input_count <= connection_count_t {1} &&
+                   output_count >= connection_count_t {1};
         }
 
         case buffer_element: {
-            return input_count == 1 && output_count == 1;
+            return input_count == connection_count_t {1} &&
+                   output_count == connection_count_t {1};
         }
         case and_element:
         case or_element:
         case xor_element: {
             return input_count >= standard_element::min_inputs &&
-                   input_count <= standard_element::max_inputs && output_count == 1;
+                   input_count <= standard_element::max_inputs &&
+                   output_count == connection_count_t {1};
         }
 
         case button: {
-            return input_count == 0 && output_count == 1;
+            return input_count == connection_count_t {0} &&
+                   output_count == connection_count_t {1};
         }
         case led: {
-            return input_count == 1 && output_count == 0;
+            return input_count == connection_count_t {1} &&
+                   output_count == connection_count_t {0};
         }
         case display_number: {
             return input_count >= display_number::min_inputs &&
-                   input_count <= display_number::max_inputs && output_count == 0;
+                   input_count <= display_number::max_inputs &&
+                   output_count == connection_count_t {0};
         }
         case display_ascii: {
-            return input_count == display_ascii::input_count && output_count == 0;
+            return input_count == display_ascii::input_count &&
+                   output_count == connection_count_t {0};
         }
 
         case clock_generator: {
-            return input_count == 3 && output_count == 3;
+            return input_count == connection_count_t {3} &&
+                   output_count == connection_count_t {3};
         }
         case flipflop_jk: {
-            return input_count == 5 && output_count == 2;
+            return input_count == connection_count_t {5} &&
+                   output_count == connection_count_t {2};
         }
         case shift_register: {
-            return input_count >= 2 && output_count >= 1 &&
-                   input_count == output_count + 1;
+            return input_count >= connection_count_t {2} &&
+                   output_count >= connection_count_t {1} &&
+                   input_count == output_count + connection_count_t {1};
         }
         case latch_d: {
-            return input_count == 2 && output_count == 1;
+            return input_count == connection_count_t {2} &&
+                   output_count == connection_count_t {1};
         }
         case flipflop_d: {
-            return input_count == 4 && output_count == 1;
+            return input_count == connection_count_t {4} &&
+                   output_count == connection_count_t {1};
         }
         case flipflop_ms_d: {
-            return input_count == 4 && output_count == 1;
+            return input_count == connection_count_t {4} &&
+                   output_count == connection_count_t {1};
         }
 
         case sub_circuit: {
-            return input_count > 0 || output_count > 0;
+            return input_count > connection_count_t {0} ||
+                   output_count > connection_count_t {0};
         }
     }
 
@@ -396,7 +415,7 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             require_min(data.input_count, standard_element::min_inputs);
 
             const auto height = data.input_count;
-            const auto y2 = grid_t {height - std::size_t {1}};
+            const auto y2 = grid_t {(height - connection_count_t {1}).value};
             return transform(data.position, data.orientation, {0, 0}, {2, y2});
         }
 
@@ -426,14 +445,16 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             return transform(data.position, data.orientation, {0, 0}, {4, 2});
         }
         case shift_register: {
-            require_min(data.output_count, 1);
+            require_min(data.output_count, connection_count_t {1});
 
             // TODO width depends on internal state
             const auto width = 2 * 4;
 
             const auto x2 = grid_t {width};
-            const auto y2 = data.output_count == 1 ? grid_t {1}
-                                                   : grid_t {2 * (data.output_count - 1)};
+            const auto y2 =
+                data.output_count == connection_count_t {1}
+                    ? grid_t {1}
+                    : grid_t {((data.output_count - connection_count_t {1}) * 2).value};
             return transform(data.position, data.orientation, {0, 0}, {x2, y2});
         }
         case latch_d: {

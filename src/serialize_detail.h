@@ -27,8 +27,8 @@ struct SerializedAttributesClockGenerator {
 
 struct SerializedLogicItem {
     ElementType element_type;
-    std::size_t input_count;
-    std::size_t output_count;
+    connection_count_t input_count;
+    connection_count_t output_count;
 
     logic_small_vector_t input_inverters;
     logic_small_vector_t output_inverters;

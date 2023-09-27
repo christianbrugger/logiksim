@@ -51,6 +51,13 @@ struct glz::meta<logicsim::orientation_t> {
 };
 
 template <>
+struct glz::meta<logicsim::connection_count_t> {
+    using T = logicsim::connection_count_t;
+
+    static constexpr auto value = &T::value;
+};
+
+template <>
 struct glz::meta<logicsim::grid_t> {
     using T = logicsim::grid_t;
 

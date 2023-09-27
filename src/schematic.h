@@ -2,8 +2,8 @@
 #define LOGIKSIM_SCHEMATIC_H
 
 #include "format.h"
-#include "vocabulary.h"
 #include "range.h"
+#include "vocabulary.h"
 
 #include <fmt/core.h>
 #include <folly/small_vector.h>
@@ -25,7 +25,6 @@ constexpr static inline auto button_delay = delay_t::epsilon();
 constexpr static inline auto logic_item_delay = delay_t {3us};
 constexpr static inline auto wire_delay_per_distance = delay_t {1us};
 }  // namespace defaults
-
 
 // enables are always at input 0
 [[nodiscard]] auto has_enable(ElementType element_type) -> bool;
@@ -94,9 +93,8 @@ class Schematic {
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
-    // TODO rename to total_...
-    [[nodiscard]] auto input_count() const noexcept -> std::size_t;
-    [[nodiscard]] auto output_count() const noexcept -> std::size_t;
+    [[nodiscard]] auto total_input_count() const noexcept -> std::size_t;
+    [[nodiscard]] auto total_output_count() const noexcept -> std::size_t;
 
     [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;
     [[nodiscard]] auto element(element_id_t element_id) -> Element;
@@ -115,8 +113,8 @@ class Schematic {
 
     struct ElementData {
         ElementType element_type {ElementType::unused};
-        std::size_t input_count {0};
-        std::size_t output_count {0};
+        connection_count_t input_count {0};
+        connection_count_t output_count {0};
 
         circuit_id_t circuit_id {null_circuit};
         logic_small_vector_t input_inverters {};
@@ -164,8 +162,8 @@ class Schematic {
     std::vector<output_delays_t> output_delays_ {};
     std::vector<delay_t> history_lengths_ {};
 
-    std::size_t input_count_ {0};
-    std::size_t output_count_ {0};
+    std::size_t total_input_count_ {0};
+    std::size_t total_output_count_ {0};
     circuit_id_t circuit_id_ {0};
 
     delay_t wire_delay_per_distance_ {defaults::wire_delay_per_distance};
@@ -303,8 +301,8 @@ class Schematic::ElementTemplate {
     [[nodiscard]] auto output_delays() const -> const output_delays_t &;
     [[nodiscard]] auto history_length() const -> delay_t;
 
-    [[nodiscard]] auto input_count() const -> std::size_t;
-    [[nodiscard]] auto output_count() const -> std::size_t;
+    [[nodiscard]] auto input_count() const -> connection_count_t;
+    [[nodiscard]] auto output_count() const -> connection_count_t;
 
     [[nodiscard]] auto input(connection_id_t input) const -> InputTemplate<Const>;
     [[nodiscard]] auto output(connection_id_t output) const -> OutputTemplate<Const>;

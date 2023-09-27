@@ -16,8 +16,8 @@ namespace {
 auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
     return schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::placeholder,
-        .input_count = 1,
-        .output_count = 0,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {0},
         .history_length = Schematic::no_history,
     });
 }
@@ -25,8 +25,8 @@ auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
 auto add_unused_element(Schematic& schematic) -> void {
     schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::unused,
-        .input_count = 0,
-        .output_count = 0,
+        .input_count = connection_count_t {0},
+        .output_count = connection_count_t {0},
 
         .circuit_id = null_circuit,
         .input_inverters = {},
@@ -54,7 +54,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
             }
 
             default: {
-                return std::vector<delay_t>(element.output_count(),
+                return std::vector<delay_t>(element.output_count().value,
                                             defaults::logic_item_delay);
             }
         }
@@ -85,9 +85,10 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
 
             schematic.add_element(Schematic::ElementData {
                 .element_type = element.element_type(),
-                .input_count = 0,
+                .input_count = connection_count_t {0},
                 .output_count = output_count,
-                .output_delays = std::vector<delay_t>(output_count, delay_t::epsilon()),
+                .output_delays =
+                    std::vector<delay_t>(output_count.value, delay_t::epsilon()),
             });
         }
 
@@ -96,7 +97,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
 
         auto delays =
             ignore_delay
-                ? std::vector<delay_t>(line_tree.output_count(), delay_t::epsilon())
+                ? std::vector<delay_t>(line_tree.output_count().value, delay_t::epsilon())
                 : calculate_output_delays(line_tree, schematic.wire_delay_per_distance());
         const auto tree_max_delay =
             ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
@@ -107,7 +108,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
         } else {
             schematic.add_element(Schematic::ElementData {
                 .element_type = element.element_type(),
-                .input_count = 1,
+                .input_count = connection_count_t {1},
                 .output_count = line_tree.output_count(),
 
                 .circuit_id = null_circuit,
@@ -185,7 +186,7 @@ auto connect_line_tree(const GenerationCache& cache, const LineTree& line_tree,
 // wires without inputs have no LineTree
 auto connect_segment_tree(const GenerationCache& cache, const SegmentTree& segment_tree,
                           Schematic::Element element) -> void {
-    if (element.input_count() != 0) [[unlikely]] {
+    if (element.input_count() != connection_count_t {0}) [[unlikely]] {
         throw_exception("can only connect segment trees without inputs");
     }
     auto& schematic = element.schematic();

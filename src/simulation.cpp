@@ -268,7 +268,7 @@ Simulation::Simulation(const Schematic &schematic)
     internal_states_.reserve(schematic.element_count());
 
     for (auto element : schematic.elements()) {
-        input_values_.emplace_back(element.input_count(), false);
+        input_values_.emplace_back(element.input_count().value, false);
         internal_states_.emplace_back(internal_state_size(element.element_type()), false);
     }
     first_input_histories_.resize(schematic.element_count());
@@ -289,7 +289,7 @@ auto Simulation::submit_event(Schematic::ConstInput input, time_t::value_type of
 
 auto Simulation::submit_events(Schematic::ConstElement element, time_t::value_type offset,
                                logic_small_vector_t values) -> void {
-    if (std::size(values) != element.input_count()) [[unlikely]] {
+    if (connection_count_t {std::size(values)} != element.input_count()) [[unlikely]] {
         throw_exception("Need to provide number of input values.");
     }
     for (auto input : element.inputs()) {
@@ -470,7 +470,7 @@ auto update_internal_state(const logic_small_vector_t &old_input,
 }
 
 auto calculate_outputs_from_state(const logic_small_vector_t &state,
-                                  std::size_t output_count, const ElementType type)
+                                  connection_count_t output_count, const ElementType type)
     -> logic_small_vector_t {
     switch (type) {
         using enum ElementType;
@@ -492,11 +492,11 @@ auto calculate_outputs_from_state(const logic_small_vector_t &state,
         }
 
         case shift_register: {
-            if (std::size(state) < output_count) [[unlikely]] {
+            if (connection_count_t {std::size(state)} < output_count) [[unlikely]] {
                 throw_exception(
                     "need at least output count internal state for shift register");
             }
-            return logic_small_vector_t(std::prev(state.end(), output_count),
+            return logic_small_vector_t(std::prev(state.end(), output_count.value),
                                         state.end());
         }
 
@@ -522,12 +522,12 @@ auto calculate_outputs_from_state(const logic_small_vector_t &state,
 }
 
 auto calculate_outputs_from_inputs(const logic_small_vector_t &input,
-                                   std::size_t output_count, const ElementType type)
-    -> logic_small_vector_t {
+                                   connection_count_t output_count,
+                                   const ElementType type) -> logic_small_vector_t {
     if (input.empty()) [[unlikely]] {
         throw_exception("Input size cannot be zero.");
     }
-    if (output_count <= 0) [[unlikely]] {
+    if (output_count <= connection_count_t {0}) [[unlikely]] {
         throw_exception("Output count cannot be zero or negative.");
     }
 
@@ -535,7 +535,7 @@ auto calculate_outputs_from_inputs(const logic_small_vector_t &input,
         using enum ElementType;
 
         case wire:
-            return logic_small_vector_t(output_count, input.at(0));
+            return logic_small_vector_t(output_count.value, input.at(0));
 
         case buffer_element:
             return {input.at(0)};
@@ -761,7 +761,7 @@ auto Simulation::initialize() -> void {
             continue;
         }
 
-        if (element.output_count() == 0) {
+        if (element.output_count() == connection_count_t {0}) {
             continue;
         }
 
@@ -916,7 +916,7 @@ auto Simulation::output_values(const Schematic::ConstElement element) const
 }
 
 auto Simulation::output_values() const -> logic_vector_t {
-    logic_vector_t result(schematic_->output_count());
+    logic_vector_t result(schematic_->total_output_count());
 
     for (auto element : schematic_->elements()) {
         std::ranges::copy(output_values(element), std::back_inserter(result));

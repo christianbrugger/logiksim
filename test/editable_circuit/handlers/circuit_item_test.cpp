@@ -56,8 +56,10 @@ TEST(EditableCircuitHandler, DeletePreserving1) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
-    auto element_id_1 = add_and_element(layout, temporary, 3, point_t {2, 2});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
+    auto element_id_1 =
+        add_and_element(layout, temporary, connection_count_t {3}, point_t {2, 2});
 
     ASSERT_EQ(element_id_0, element_id_t {0});
     ASSERT_EQ(element_id_1, element_id_t {1});
@@ -72,7 +74,8 @@ TEST(EditableCircuitHandler, DeletePreserving1) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 3, point_t {2, 2});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {3},
+                         point_t {2, 2});
 
     // messages
     const auto message0 = Message {LogicItemDeleted {element_id_t {0}}};
@@ -90,9 +93,12 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
-    auto element_id_1 = add_and_element(layout, temporary, 3, point_t {2, 2});
-    auto element_id_2 = add_and_element(layout, valid, 5, point_t {4, 4});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
+    auto element_id_1 =
+        add_and_element(layout, temporary, connection_count_t {3}, point_t {2, 2});
+    auto element_id_2 =
+        add_and_element(layout, valid, connection_count_t {5}, point_t {4, 4});
 
     ASSERT_EQ(element_id_0, element_id_t {0});
     ASSERT_EQ(element_id_1, element_id_t {1});
@@ -108,8 +114,10 @@ TEST(EditableCircuitHandler, DeletePreserving2) {
 
     // layout
     assert_element_count(layout, 2);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {1, 1});
-    assert_element_equal(layout, element_id_t {1}, 5, point_t {4, 4});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {1, 1});
+    assert_element_equal(layout, element_id_t {1}, connection_count_t {5},
+                         point_t {4, 4});
 
     // messages
     const auto message0 = Message {LogicItemDeleted {element_id_t {1}}};
@@ -133,10 +141,14 @@ TEST(EditableCircuitHandler, DeleteMultipleElements) {
     using namespace editable_circuit::info_message;
     using enum display_state_t;
     auto layout = Layout {};
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
-    auto element_id_1 = add_and_element(layout, temporary, 3, point_t {2, 2});
-    auto element_id_2 = add_and_element(layout, temporary, 4, point_t {3, 3});  //
-    auto element_id_3 = add_and_element(layout, temporary, 5, point_t {4, 4});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
+    auto element_id_1 =
+        add_and_element(layout, temporary, connection_count_t {3}, point_t {2, 2});
+    auto element_id_2 =
+        add_and_element(layout, temporary, connection_count_t {4}, point_t {3, 3});  //
+    auto element_id_3 =
+        add_and_element(layout, temporary, connection_count_t {5}, point_t {4, 4});
 
     ASSERT_EQ(element_id_0, element_id_t {0});
     ASSERT_EQ(element_id_1, element_id_t {1});
@@ -155,7 +167,8 @@ TEST(EditableCircuitHandler, DeleteMultipleElements) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 4, point_t {3, 3});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {4},
+                         point_t {3, 3});
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 5);
@@ -182,7 +195,8 @@ TEST(EditableCircuitHandler, IsRepresentableAndElement) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {0, 0});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {0, 0});
 
     constexpr static auto overflow = int {grid_t::max()} + 100;
 
@@ -210,7 +224,8 @@ TEST(EditableCircuitHandler, MoveLogicItemSuccess) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(element_id_0, element_id_t {0});
 
     auto setup = HandlerSetup {layout};
@@ -222,7 +237,8 @@ TEST(EditableCircuitHandler, MoveLogicItemSuccess) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {10, -10});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {10, -10});
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 0);
@@ -233,7 +249,8 @@ TEST(EditableCircuitHandler, MoveLogicItemUnchecked) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(element_id_0, element_id_t {0});
 
     auto setup = HandlerSetup {layout};
@@ -245,7 +262,8 @@ TEST(EditableCircuitHandler, MoveLogicItemUnchecked) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {10, -10});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {10, -10});
 
     // messages
     ASSERT_EQ(setup.recorder.messages().size(), 0);
@@ -256,7 +274,8 @@ TEST(EditableCircuitHandler, MoveLogicItemDeleted) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(element_id_0, element_id_t {0});
 
     auto setup = HandlerSetup {layout};
@@ -285,7 +304,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToTempValid) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(element_id_0, element_id_t {0});
 
     auto setup = HandlerSetup {layout};
@@ -298,7 +318,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToTempValid) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {1, 1});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {1, 1});
     ASSERT_EQ(layout.display_state(element_id_t {0}), valid);
 
     // messages
@@ -315,7 +336,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToInsert) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, temporary, 2, point_t {1, 1});
+    auto element_id_0 =
+        add_and_element(layout, temporary, connection_count_t {2}, point_t {1, 1});
     ASSERT_EQ(element_id_0, element_id_t {0});
 
     auto setup = HandlerSetup {layout};
@@ -328,7 +350,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToInsert) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {1, 1});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {1, 1});
     ASSERT_EQ(layout.display_state(element_id_t {0}), normal);
 
     // messages
@@ -344,8 +367,10 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToTempColliding) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, normal, 2, point_t {1, 1});
-    auto element_id_1 = add_and_element(layout, temporary, 3, point_t {2, 2});
+    auto element_id_0 =
+        add_and_element(layout, normal, connection_count_t {2}, point_t {1, 1});
+    auto element_id_1 =
+        add_and_element(layout, temporary, connection_count_t {3}, point_t {2, 2});
     assert_element_count(layout, 2);
     ASSERT_EQ(element_id_0, element_id_t {0});
     ASSERT_EQ(element_id_1, element_id_t {1});
@@ -360,8 +385,10 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToTempColliding) {
 
     // layout
     assert_element_count(layout, 2);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {1, 1});
-    assert_element_equal(layout, element_id_t {1}, 3, point_t {2, 2});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {1, 1});
+    assert_element_equal(layout, element_id_t {1}, connection_count_t {3},
+                         point_t {2, 2});
     ASSERT_EQ(layout.display_state(element_id_t {0}), normal);
     ASSERT_EQ(layout.display_state(element_id_t {1}), colliding);
 
@@ -374,8 +401,10 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToDiscard) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, normal, 2, point_t {1, 1});
-    auto element_id_1 = add_and_element(layout, temporary, 3, point_t {2, 2});
+    auto element_id_0 =
+        add_and_element(layout, normal, connection_count_t {2}, point_t {1, 1});
+    auto element_id_1 =
+        add_and_element(layout, temporary, connection_count_t {3}, point_t {2, 2});
     assert_element_count(layout, 2);
     ASSERT_EQ(element_id_0, element_id_t {0});
     ASSERT_EQ(element_id_1, element_id_t {1});
@@ -390,7 +419,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeToDiscard) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {1, 1});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {1, 1});
     ASSERT_EQ(layout.display_state(element_id_t {0}), normal);
 
     // messages
@@ -408,7 +438,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToValid) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, normal, 2, point_t {1, 1});
+    auto element_id_0 =
+        add_and_element(layout, normal, connection_count_t {2}, point_t {1, 1});
     assert_element_count(layout, 1);
     ASSERT_EQ(element_id_0, element_id_t {0});
 
@@ -422,7 +453,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToValid) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {1, 1});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {1, 1});
     ASSERT_EQ(layout.display_state(element_id_t {0}), valid);
 
     // messages
@@ -434,7 +466,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporary) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, normal, 2, point_t {1, 1});
+    auto element_id_0 =
+        add_and_element(layout, normal, connection_count_t {2}, point_t {1, 1});
     assert_element_count(layout, 1);
     ASSERT_EQ(element_id_0, element_id_t {0});
 
@@ -447,7 +480,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporary) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {1, 1});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {1, 1});
     ASSERT_EQ(layout.display_state(element_id_t {0}), temporary);
 
     // messages
@@ -463,7 +497,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
     using enum display_state_t;
     auto layout = Layout {};
 
-    auto element_id_0 = add_and_element(layout, normal, 2, point_t {1, 1});
+    auto element_id_0 =
+        add_and_element(layout, normal, connection_count_t {2}, point_t {1, 1});
 
     assert_element_count(layout, 1);
     ASSERT_EQ(element_id_0, element_id_t {0});
@@ -478,7 +513,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 2, point_t {1, 1});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {2},
+                         point_t {1, 1});
     ASSERT_EQ(layout.display_state(element_id_t {0}), temporary);
 
     // messages
@@ -502,8 +538,8 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
 
     const auto definition = LogicItemDefinition {
         .element_type = ElementType::xor_element,
-        .input_count = 7,
-        .output_count = 1,
+        .input_count = connection_count_t {7},
+        .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     };
     const auto element_id = add_logic_item(setup.state, definition, point_t {2, 3},
@@ -515,7 +551,8 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
 
     // layout
     assert_element_count(layout, 1);
-    assert_element_equal(layout, element_id_t {0}, 7, point_t {2, 3});
+    assert_element_equal(layout, element_id_t {0}, connection_count_t {7},
+                         point_t {2, 3});
     ASSERT_EQ(layout.display_state(element_id_t {0}), normal);
 
     // messages
@@ -536,8 +573,8 @@ auto add_xor_element(editable_circuit::State &state, point_t position,
                      InsertionMode insertion_mode) -> element_id_t {
     const auto definition = LogicItemDefinition {
         .element_type = ElementType::xor_element,
-        .input_count = 3,
-        .output_count = 1,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     };
     return add_logic_item(state, definition, position, insertion_mode);

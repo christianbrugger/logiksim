@@ -20,8 +20,8 @@ template <>
 
 struct LogicItemDefinition {
     ElementType element_type {ElementType::or_element};
-    std::size_t input_count {3};
-    std::size_t output_count {1};
+    connection_count_t input_count {3};
+    connection_count_t output_count {1};
     orientation_t orientation {orientation_t::right};
     logic_small_vector_t input_inverters {};
     logic_small_vector_t output_inverters {};

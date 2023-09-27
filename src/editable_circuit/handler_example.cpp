@@ -23,8 +23,8 @@ auto add_random_button(Rng& rng, State state, grid_t min, grid_t max, bool rando
     add_logic_item(state,
                    LogicItemDefinition {
                        .element_type = ElementType::button,
-                       .input_count = 0,
-                       .output_count = 1,
+                       .input_count = connection_count_t {0},
+                       .output_count = connection_count_t {1},
                        .orientation = orientation_t::undirected,
                    },
                    position, mode);

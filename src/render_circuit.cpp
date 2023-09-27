@@ -508,7 +508,8 @@ constexpr auto standard_element_label(ElementType element_type) -> std::string_v
 auto draw_standard_element(Context& ctx, layout::ConstElement element,
                            ElementDrawState state) -> void {
     const auto element_height =
-        std::max(element.input_count(), element.output_count()) - std::size_t {1};
+        std::size_t {std::max(element.input_count(), element.output_count()).value} -
+        std::size_t {1};
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., -padding},
@@ -564,8 +565,10 @@ constexpr static auto power_of_two_labels = string_array<64> {
 
 namespace {
 
-static_assert(display_number::max_value_inputs <= power_of_two_labels.size());
-static_assert(display_ascii::value_inputs <= power_of_two_labels.size());
+static_assert(display_number::max_value_inputs <=
+              connection_count_t {power_of_two_labels.size()});
+static_assert(display_ascii::value_inputs <=
+              connection_count_t {power_of_two_labels.size()});
 
 auto _is_display_enabled(layout::ConstElement element,
                          std::optional<simulation_view::ConstElement> logic_state)
@@ -592,8 +595,9 @@ auto _is_display_twos_complement(layout::ConstElement element,
 auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement element,
                                        ElementDrawState state, bool two_complement) {
     const auto input_count = element.input_count();
-    const auto last_input_id = connection_id_t {
-        gsl::narrow<connection_id_t::value_type>(input_count - std::size_t {1})};
+    // TODO can we simplify this?
+    const auto last_input_id = connection_id_t {gsl::narrow<connection_id_t::value_type>(
+        (input_count - connection_count_t {1}).value)};
     const auto has_space =
         display_number::input_shift(element.input_count()) > grid_t {0};
 
@@ -609,7 +613,7 @@ auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement elemen
             return has_space ? "sign" : "s";
         }
         const auto index = gsl::narrow<std::size_t>(input_id.value);
-        return power_of_two_labels.at(index - display_number::control_inputs);
+        return power_of_two_labels.at(index - display_number::control_inputs.value);
     };
 
     draw_input_connector_labels(ctx, element, state, to_label);
@@ -621,8 +625,9 @@ auto _draw_ascii_display_input_labels(Context& ctx, layout::ConstElement element
         if (input_id == display::enable_input_id) {
             return "En";
         }
-        const auto index = gsl::narrow<std::size_t>(input_id.value);
-        return power_of_two_labels.at(index - display_ascii::control_inputs);
+        const auto index = connection_count_t {
+            gsl::narrow<connection_count_t::value_type>(input_id.value)};
+        return power_of_two_labels.at((index - display_ascii::control_inputs).value);
     };
 
     draw_input_connector_labels(ctx, element, state, to_label);
@@ -630,18 +635,18 @@ auto _draw_ascii_display_input_labels(Context& ctx, layout::ConstElement element
 
 auto _inputs_to_number(layout::ConstElement element,
                        simulation_view::ConstElement logic_state,
-                       const std::size_t control_inputs) -> uint64_t {
+                       const connection_count_t control_inputs) -> uint64_t {
     const auto& values = logic_state.input_values();
     const auto& inverters = element.input_inverters();
 
-    if (values.size() > 64 + control_inputs) {
+    if (values.size() > 64 + control_inputs.value) {
         throw_exception("input size too large");
     }
 
     auto number = uint64_t {0};
-    for (const auto& i : range(control_inputs, values.size())) {
+    for (const auto& i : range(control_inputs.value, values.size())) {
         const auto value = values.at(i) ^ inverters.at(i);
-        number |= (static_cast<uint64_t>(value) << (i - control_inputs));
+        number |= (static_cast<uint64_t>(value) << (i - control_inputs.value));
     }
     return number;
 }
@@ -660,7 +665,7 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
                           ElementDrawState state, grid_fine_t element_width,
                           grid_fine_t element_height, Func to_text,
                           std::string_view interactive_mode_text,
-                          std::size_t control_inputs,
+                          connection_count_t control_inputs,
                           std::optional<simulation_view::ConstElement> logic_state) {
     // white background
     const auto text_x = 1. + (element_width - 1.) / 2.;
@@ -756,7 +761,7 @@ auto draw_display_number(Context& ctx, layout::ConstElement element,
     const auto edit_mode_text = "0";
     const auto control_inputs = display_number::control_inputs;
     const auto to_text =
-        _number_value_to_text(two_complement, input_count - control_inputs);
+        _number_value_to_text(two_complement, (input_count - control_inputs).value);
     _draw_number_display(ctx, element, state, element_width, element_height, to_text,
                          edit_mode_text, control_inputs, logic_state);
     _draw_number_display_input_labels(ctx, element, state, two_complement);
@@ -900,7 +905,7 @@ auto draw_shift_register(Context& ctx, layout::ConstElement element,
     draw_logic_item_rect(ctx, rect, element, state);
 
     // content
-    const auto output_count = element.output_count();
+    const auto output_count = std::size_t {element.output_count().value};
     const auto state_size = std::size_t {10};
 
     for (auto n : range(output_count, state_size)) {

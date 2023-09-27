@@ -323,10 +323,10 @@ auto Layout::is_element_id_valid(element_id_t element_id) const noexcept -> bool
 }
 
 auto Layout::add_element(ElementData &&data) -> layout::Element {
-    if (data.input_count > connection_id_t::max()) [[unlikely]] {
+    if (data.input_count > connection_count_t::max()) [[unlikely]] {
         throw_exception("Input count needs to be positive and not too large.");
     }
-    if (data.output_count > connection_id_t::max()) [[unlikely]] {
+    if (data.output_count > connection_count_t::max()) [[unlikely]] {
         throw_exception("Output count needs to be positive and not too large.");
     }
     if (element_count() + 1 >= element_id_t::max()) [[unlikely]] {
@@ -339,21 +339,24 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
     // extend vectors
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.circuit_id);
-    input_counts_.push_back(gsl::narrow_cast<connection_size_t>(data.input_count));
-    output_counts_.push_back(gsl::narrow_cast<connection_size_t>(data.output_count));
+    input_counts_.push_back(gsl::narrow_cast<connection_size_t>(data.input_count.value));
+    output_counts_.push_back(
+        gsl::narrow_cast<connection_size_t>(data.output_count.value));
 
     if (data.input_inverters.empty()) {
-        input_inverters_.emplace_back(data.input_count, false);
+        input_inverters_.emplace_back(data.input_count.value, false);
     } else {
-        if (data.input_inverters.size() != data.input_count) [[unlikely]] {
+        if (connection_count_t {data.input_inverters.size()} != data.input_count)
+            [[unlikely]] {
             throw_exception("number of input inverters need to match input count");
         }
         input_inverters_.emplace_back(data.input_inverters);
     }
     if (data.output_inverters.empty()) {
-        output_inverters_.emplace_back(data.output_count, false);
+        output_inverters_.emplace_back(data.output_count.value, false);
     } else {
-        if (data.output_inverters.size() != data.output_count) [[unlikely]] {
+        if (connection_count_t {data.output_inverters.size()} != data.output_count)
+            [[unlikely]] {
             throw_exception("number of output inverters need to match output count");
         }
         output_inverters_.emplace_back(data.output_inverters);
@@ -445,12 +448,12 @@ auto Layout::sub_circuit_id(element_id_t element_id) const -> circuit_id_t {
     return sub_circuit_ids_.at(element_id.value);
 }
 
-auto Layout::input_count(element_id_t element_id) const -> std::size_t {
-    return input_counts_.at(element_id.value);
+auto Layout::input_count(element_id_t element_id) const -> connection_count_t {
+    return connection_count_t {input_counts_.at(element_id.value)};
 }
 
-auto Layout::output_count(element_id_t element_id) const -> std::size_t {
-    return output_counts_.at(element_id.value);
+auto Layout::output_count(element_id_t element_id) const -> connection_count_t {
+    return connection_count_t {output_counts_.at(element_id.value)};
 }
 
 auto Layout::input_inverters(element_id_t element_id) const
@@ -648,12 +651,12 @@ auto ElementTemplate<Const>::is_sub_circuit() const -> bool {
 }
 
 template <bool Const>
-auto ElementTemplate<Const>::input_count() const -> std::size_t {
+auto ElementTemplate<Const>::input_count() const -> connection_count_t {
     return layout_->input_count(element_id_);
 }
 
 template <bool Const>
-auto ElementTemplate<Const>::output_count() const -> std::size_t {
+auto ElementTemplate<Const>::output_count() const -> connection_count_t {
     return layout_->output_count(element_id_);
 }
 

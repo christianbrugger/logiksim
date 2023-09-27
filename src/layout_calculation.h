@@ -4,8 +4,8 @@
 #include "exception.h"
 #include "glyph_cache_type.h"
 #include "layout_calculation_type.h"
-#include "vocabulary.h"
 #include "range.h"
+#include "vocabulary.h"
 
 #include <array>
 #include <vector>
@@ -21,10 +21,9 @@ constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
 }  // namespace defaults
 
 namespace standard_element {
-constexpr static inline auto min_inputs = std::size_t {2};
-constexpr static inline auto max_inputs =
-    static_cast<std::size_t>(connection_id_t::max());
-[[nodiscard]] auto height(std::size_t input_count) -> grid_t;
+constexpr static inline auto min_inputs = connection_count_t {2};
+constexpr static inline auto max_inputs = connection_count_t::max();
+[[nodiscard]] auto height(connection_count_t input_count) -> grid_t;
 constexpr static inline auto width = grid_t {2};
 }  // namespace standard_element
 
@@ -41,24 +40,24 @@ constexpr static inline auto padding_horizontal = grid_fine_t {0.25};
 
 // Display Number
 namespace display_number {
-constexpr static inline auto control_inputs = std::size_t {2};
-[[nodiscard]] auto value_inputs(std::size_t input_count) -> std::size_t;
-constexpr static inline auto min_value_inputs = std::size_t {1};
-constexpr static inline auto max_value_inputs = std::size_t {64};
+constexpr static inline auto control_inputs = connection_count_t {2};
+[[nodiscard]] auto value_inputs(connection_count_t input_count) -> connection_count_t;
+constexpr static inline auto min_value_inputs = connection_count_t {1};
+constexpr static inline auto max_value_inputs = connection_count_t {64};
 constexpr static inline auto min_inputs = control_inputs + min_value_inputs;
 constexpr static inline auto max_inputs = control_inputs + max_value_inputs;
-[[nodiscard]] auto width(std::size_t input_count) -> grid_t;
-[[nodiscard]] auto height(std::size_t input_count) -> grid_t;
+[[nodiscard]] auto width(connection_count_t input_count) -> grid_t;
+[[nodiscard]] auto height(connection_count_t input_count) -> grid_t;
 
-[[nodiscard]] auto input_shift(std::size_t input_count) -> grid_t;
-[[nodiscard]] auto enable_position(std::size_t input_count) -> point_t;
-[[nodiscard]] auto negative_position(std::size_t input_count) -> point_t;
+[[nodiscard]] auto input_shift(connection_count_t input_count) -> grid_t;
+[[nodiscard]] auto enable_position(connection_count_t input_count) -> point_t;
+[[nodiscard]] auto negative_position(connection_count_t input_count) -> point_t;
 constexpr static inline auto negative_input_id = connection_id_t {1};
 }  // namespace display_number
 
 [[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
-                                               std::size_t input_count,
-                                               std::size_t output_count) -> bool;
+                                               connection_count_t input_count,
+                                               connection_count_t output_count) -> bool;
 [[nodiscard]] auto is_orientation_valid(ElementType element_type,
                                         orientation_t orientation) -> bool;
 
@@ -71,9 +70,9 @@ constexpr static inline auto negative_input_id = connection_id_t {1};
 [[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;
 [[nodiscard]] auto orientations_compatible(orientation_t a, orientation_t b) -> bool;
 
-auto require_min(std::size_t value, std::size_t count) -> void;
-auto require_max(std::size_t value, std::size_t count) -> void;
-auto require_equal(std::size_t value, std::size_t count) -> void;
+auto require_min(connection_count_t value, connection_count_t count) -> void;
+auto require_max(connection_count_t value, connection_count_t count) -> void;
+auto require_equal(connection_count_t value, connection_count_t count) -> void;
 
 [[nodiscard]] auto transform(point_t element_position, orientation_t orientation,
                              point_t offset) -> point_t;
@@ -90,14 +89,14 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
 
 // Display ASCII
 namespace display_ascii {
-constexpr static inline auto control_inputs = std::size_t {1};
-constexpr static inline auto value_inputs = std::size_t {7};
+constexpr static inline auto control_inputs = connection_count_t {1};
+constexpr static inline auto value_inputs = connection_count_t {7};
 constexpr static inline auto input_count = control_inputs + value_inputs;
 constexpr static inline auto width = grid_t {4};
-constexpr static inline auto height = grid_t {value_inputs - 1};
+constexpr static inline auto height =
+    grid_t {(value_inputs - connection_count_t {1}).value};
 constexpr static inline auto enable_position = point_t {2, height};
 }  // namespace display_ascii
-
 
 /// next_point(point_t position) -> bool;
 auto iter_element_body_points(layout_calculation_data_t data,
@@ -118,8 +117,8 @@ auto iter_element_body_points(layout_calculation_data_t data,
         case xor_element: {
             require_min(data.input_count, standard_element::min_inputs);
 
-            const auto height = data.input_count;
-            const auto output_offset = (height - data.output_count) / 2;
+            const auto height = data.input_count.value;
+            const auto output_offset = (height - data.output_count.value) / 2;
 
             for (auto i : range(height)) {
                 const auto y = grid_t {i};
@@ -156,7 +155,8 @@ auto iter_element_body_points(layout_calculation_data_t data,
             const auto negative_pos = display_number::negative_position(data.input_count);
             const auto enable_pos = display_number::enable_position(data.input_count);
             const auto max_input_y =
-                grid_t {display_number::value_inputs(data.input_count) - 1};
+                grid_t {display_number::value_inputs(data.input_count).value} -
+                grid_t {1};
 
             for (const auto y : range(int {height} + 1)) {
                 for (const auto x : range(int {width} + 1)) {
@@ -229,12 +229,14 @@ auto iter_element_body_points(layout_calculation_data_t data,
             return true;
         }
         case shift_register: {
-            require_min(data.input_count, 2);
+            require_min(data.input_count, connection_count_t {2});
 
             // TODO width depends on internal state
             const auto width = 2 * 4;
             const auto height =
-                data.output_count <= 1 ? 1 : 2 * (data.output_count - std::size_t {1});
+                data.output_count <= connection_count_t {1}
+                    ? grid_t {1}
+                    : grid_t {((data.output_count - connection_count_t {1}) * 2).value};
 
             for (auto i : range(1, width)) {
                 for (auto j : range(height + 1)) {
@@ -247,7 +249,7 @@ auto iter_element_body_points(layout_calculation_data_t data,
                 }
             }
 
-            for (auto j = std::size_t {1}; j < height; j += 2) {
+            for (auto j = grid_t {1}; j < height; j = j + grid_t {2}) {
                 const auto x = grid_t {width};
                 const auto y = grid_t {j};
                 if (!next_point(
@@ -321,7 +323,7 @@ auto iter_input_location(layout_calculation_data_t data,
         }
 
         case placeholder: {
-            require_equal(data.input_count, 1);
+            require_equal(data.input_count, connection_count_t {1});
             return next_input(data.position, orientation_t::undirected);
         }
 
@@ -330,7 +332,7 @@ auto iter_input_location(layout_calculation_data_t data,
         }
 
         case buffer_element: {
-            require_equal(data.input_count, 1);
+            require_equal(data.input_count, connection_count_t {1});
             return next_input(data.position,
                               transform(data.orientation, orientation_t::left));
         }
@@ -340,7 +342,7 @@ auto iter_input_location(layout_calculation_data_t data,
         case xor_element: {
             require_min(data.input_count, standard_element::min_inputs);
 
-            for (auto i : range(data.input_count)) {
+            for (auto i : range(data.input_count.value)) {
                 const auto y = grid_t {i};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
@@ -352,11 +354,11 @@ auto iter_input_location(layout_calculation_data_t data,
         }
 
         case led: {
-            require_equal(data.input_count, 1);
+            require_equal(data.input_count, connection_count_t {1});
             return next_input(data.position, orientation_t::undirected);
         }
         case button: {
-            require_equal(data.input_count, 0);
+            require_equal(data.input_count, connection_count_t {0});
             return true;
         }
         case display_number: {
@@ -384,7 +386,7 @@ auto iter_input_location(layout_calculation_data_t data,
 
             // number inputs
             for (auto i : range(display_number::value_inputs(data.input_count))) {
-                const auto y = grid_t {i};
+                const auto y = grid_t {i.value};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
                         transform(data.orientation, orientation_t::left))) {
@@ -407,7 +409,7 @@ auto iter_input_location(layout_calculation_data_t data,
 
             // number inputs
             for (auto i : range(display_ascii::value_inputs)) {
-                const auto y = grid_t {i};
+                const auto y = grid_t {i.value};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
                         transform(data.orientation, orientation_t::left))) {
@@ -418,7 +420,7 @@ auto iter_input_location(layout_calculation_data_t data,
         }
 
         case clock_generator: {
-            require_equal(data.input_count, 3);
+            require_equal(data.input_count, connection_count_t {3});
 
             // the second input is used only for simulation
             // not for any drawing or any types of collisions
@@ -427,7 +429,7 @@ auto iter_input_location(layout_calculation_data_t data,
                               transform(data.orientation, orientation_t::down));
         }
         case flipflop_jk: {
-            require_equal(data.input_count, 5);
+            require_equal(data.input_count, connection_count_t {5});
 
             auto points = std::array {
                 // clock
@@ -449,7 +451,7 @@ auto iter_input_location(layout_calculation_data_t data,
             return true;
         }
         case shift_register: {
-            require_min(data.input_count, 2);
+            require_min(data.input_count, connection_count_t {2});
 
             // clock
             if (!next_input(transform(data.position, data.orientation, point_t {0, 1}),
@@ -458,8 +460,8 @@ auto iter_input_location(layout_calculation_data_t data,
             }
 
             // memory row rows
-            for (auto i : range(data.input_count - 1)) {
-                const auto y = grid_t {2 * i};
+            for (auto i : range(data.input_count - connection_count_t {1})) {
+                const auto y = grid_t {2 * i.value};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
                         transform(data.orientation, orientation_t::left))) {
@@ -470,7 +472,7 @@ auto iter_input_location(layout_calculation_data_t data,
             return true;
         }
         case latch_d: {
-            require_min(data.input_count, 2);
+            require_min(data.input_count, connection_count_t {2});
 
             auto points = std::array {
                 // clock
@@ -488,7 +490,7 @@ auto iter_input_location(layout_calculation_data_t data,
             return true;
         }
         case flipflop_d: {
-            require_min(data.input_count, 4);
+            require_min(data.input_count, connection_count_t {4});
 
             auto points = std::array {
                 // clock
@@ -509,7 +511,7 @@ auto iter_input_location(layout_calculation_data_t data,
             return true;
         }
         case flipflop_ms_d: {
-            require_min(data.input_count, 4);
+            require_min(data.input_count, connection_count_t {4});
 
             auto points = std::array {
                 // clock
@@ -550,7 +552,7 @@ auto iter_output_location(layout_calculation_data_t data,
         }
 
         case placeholder: {
-            require_equal(data.output_count, 0);
+            require_equal(data.output_count, connection_count_t {0});
             return true;
         }
 
@@ -559,7 +561,7 @@ auto iter_output_location(layout_calculation_data_t data,
         }
 
         case buffer_element: {
-            require_equal(data.output_count, 1);
+            require_equal(data.output_count, connection_count_t {1});
             return next_output(transform(data.position, data.orientation, point_t {1, 0}),
                                transform(data.orientation, orientation_t::right));
         }
@@ -567,34 +569,34 @@ auto iter_output_location(layout_calculation_data_t data,
         case and_element:
         case or_element:
         case xor_element: {
-            require_equal(data.output_count, 1);
+            require_equal(data.output_count, connection_count_t {1});
 
             const auto height = data.input_count;
-            const auto output_offset = grid_t {(height - data.output_count) / 2};
+            const auto output_offset = grid_t {(height - data.output_count).value / 2};
             return next_output(
                 transform(data.position, data.orientation, point_t {2, output_offset}),
                 transform(data.orientation, orientation_t::right));
         }
 
         case led: {
-            require_equal(data.output_count, 0);
+            require_equal(data.output_count, connection_count_t {0});
             return true;
         }
         case button: {
-            require_equal(data.output_count, 1);
+            require_equal(data.output_count, connection_count_t {1});
             return next_output(data.position, data.orientation);
         }
         case display_number: {
-            require_equal(data.output_count, 0);
+            require_equal(data.output_count, connection_count_t {0});
             return true;
         }
         case display_ascii: {
-            require_equal(data.output_count, 0);
+            require_equal(data.output_count, connection_count_t {0});
             return true;
         }
 
         case clock_generator: {
-            require_equal(data.output_count, 3);
+            require_equal(data.output_count, connection_count_t {3});
 
             // the second output is used only for simulation
             // not for any drawing or any types of collisions
@@ -603,7 +605,7 @@ auto iter_output_location(layout_calculation_data_t data,
                                transform(data.orientation, orientation_t::right));
         }
         case flipflop_jk: {
-            require_equal(data.output_count, 2);
+            require_equal(data.output_count, connection_count_t {2});
 
             auto points = std::array {
                 // Q and !Q
@@ -620,15 +622,15 @@ auto iter_output_location(layout_calculation_data_t data,
             return true;
         }
         case shift_register: {
-            require_min(data.output_count, 1);
-            require_equal(data.output_count, data.input_count - 1);
+            require_min(data.output_count, connection_count_t {1});
+            require_equal(data.output_count, data.input_count - connection_count_t {1});
 
             // TODO width depends on internal state
             const auto width = 2 * 4;
 
             // for each memory row
             for (auto i : range(data.output_count)) {
-                const auto y = grid_t {2 * i};
+                const auto y = grid_t {2 * i.value};
                 if (!next_output(
                         transform(data.position, data.orientation, point_t {width, y}),
                         transform(data.orientation, orientation_t::right))) {
@@ -638,7 +640,7 @@ auto iter_output_location(layout_calculation_data_t data,
             return true;
         }
         case latch_d: {
-            require_equal(data.output_count, 1);
+            require_equal(data.output_count, connection_count_t {1});
 
             // data
             return next_output(transform(data.position, data.orientation, point_t {2, 0}),
@@ -646,14 +648,14 @@ auto iter_output_location(layout_calculation_data_t data,
         }
 
         case flipflop_d: {
-            require_equal(data.output_count, 1);
+            require_equal(data.output_count, connection_count_t {1});
 
             // data
             return next_output(transform(data.position, data.orientation, point_t {3, 0}),
                                transform(data.orientation, orientation_t::right));
         }
         case flipflop_ms_d: {
-            require_equal(data.output_count, 1);
+            require_equal(data.output_count, connection_count_t {1});
 
             // data
             return next_output(transform(data.position, data.orientation, point_t {4, 0}),

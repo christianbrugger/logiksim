@@ -20,7 +20,7 @@ auto size_handle_positions(const layout::ConstElement element)
         case xor_element: {
             require_min(element.input_count(), standard_element::min_inputs);
 
-            const auto height = element.input_count() - 1.0;
+            const auto height = element.input_count().value - 1.0;
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
             return {
@@ -38,9 +38,9 @@ auto size_handle_positions(const layout::ConstElement element)
 
             return {
                 size_handle_t {
-                    1,
-                    transform(element.position(), element.orientation(),
-                              point_fine_t {0.5 * width, value_inputs - 1.0 + overdraw})},
+                    1, transform(element.position(), element.orientation(),
+                                 point_fine_t {0.5 * width,
+                                               value_inputs.value - 1.0 + overdraw})},
             };
         }
 
@@ -148,9 +148,21 @@ auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
 
 namespace size_handle {
 
+auto clamp_connection_count(connection_count_t count, int delta, connection_count_t min,
+                            connection_count_t max) -> connection_count_t {
+    // TODO remove cast when type has constructor
+    const auto new_count = gsl::narrow<int64_t>(count.value) - int64_t {delta};
+
+    const auto clamped_count = std::clamp(new_count, gsl::narrow<int64_t>(min.value),
+                                          gsl::narrow<int64_t>(max.value));
+
+    return connection_count_t {
+        gsl::narrow<connection_count_t::value_type>(clamped_count)};
+}
+
 auto adjust_height(const logic_item_t original, size_handle_t handle, int delta,
-                   std::size_t min_inputs, std::size_t max_inputs,
-                   std::invocable<std::size_t> auto get_height) {
+                   connection_count_t min_inputs, connection_count_t max_inputs,
+                   std::invocable<connection_count_t> auto get_height) {
     if (handle.index != 0 && handle.index != 1) {
         throw_exception("unknown handle index");
     }
@@ -159,13 +171,11 @@ auto adjust_height(const logic_item_t original, size_handle_t handle, int delta,
 
     // input count
     if (handle.index == 0) {
-        result.definition.input_count =
-            std::clamp(gsl::narrow<int>(original.definition.input_count) - delta,
-                       gsl::narrow<int>(min_inputs), gsl::narrow<int>(max_inputs));
+        result.definition.input_count = clamp_connection_count(
+            original.definition.input_count, -delta, min_inputs, max_inputs);
     } else if (handle.index == 1) {
-        result.definition.input_count =
-            std::clamp(gsl::narrow<int>(original.definition.input_count) + delta,
-                       gsl::narrow<int>(min_inputs), gsl::narrow<int>(max_inputs));
+        result.definition.input_count = clamp_connection_count(
+            original.definition.input_count, +delta, min_inputs, max_inputs);
     }
 
     // position adjustment
@@ -182,7 +192,7 @@ auto adjust_height(const logic_item_t original, size_handle_t handle, int delta,
     }
 
     // inverters
-    result.definition.input_inverters.resize(result.definition.input_count);
+    result.definition.input_inverters.resize(result.definition.input_count.value);
     return result;
 }
 

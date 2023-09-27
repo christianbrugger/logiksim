@@ -26,6 +26,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/circuit_id.cpp
     src/vocabulary/color.cpp
     src/vocabulary/connection.cpp
+    src/vocabulary/connection_count.cpp
     src/vocabulary/connection_id.cpp
     src/vocabulary/delay.cpp
     src/vocabulary/display_state.cpp

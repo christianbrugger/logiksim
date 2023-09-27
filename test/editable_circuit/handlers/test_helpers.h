@@ -78,14 +78,14 @@ struct SenderSetup {
 };
 
 inline auto add_and_element(Layout &layout, display_state_t display_type,
-                            std::size_t input_count = 3,
+                            connection_count_t input_count = connection_count_t {3},
                             point_t position = point_t {0, 0}) -> element_id_t {
     return layout.add_element({
         .display_state = display_type,
         .element_type = ElementType::and_element,
 
         .input_count = input_count,
-        .output_count = 1,
+        .output_count = connection_count_t {1},
         .position = position,
         .orientation = orientation_t::right,
     });
@@ -96,7 +96,7 @@ inline auto assert_element_count(const Layout &layout, std::size_t count) -> voi
 }
 
 inline auto assert_element_equal(const Layout &layout, element_id_t element_id,
-                                 std::size_t input_count = 3,
+                                 connection_count_t input_count = connection_count_t {3},
                                  point_t position = point_t {0, 0}) -> void {
     ASSERT_EQ(layout.element(element_id).input_count(), input_count);
     ASSERT_EQ(layout.position(element_id), position);

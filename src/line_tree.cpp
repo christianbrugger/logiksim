@@ -386,8 +386,8 @@ auto LineTree::sized_segments() const noexcept -> SegmentSizeView {
     return SegmentSizeView {*this};
 }
 
-auto LineTree::output_count() const -> std::size_t {
-    return output_indices_.size();
+auto LineTree::output_count() const -> connection_count_t {
+    return connection_count_t {output_indices_.size()};
 }
 
 auto LineTree::output_position(std::size_t index) const -> point_t {

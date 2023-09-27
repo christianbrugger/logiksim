@@ -78,8 +78,8 @@ TEST(SimulationTest, InitializeSimulation) {
     Schematic schematic;
     auto inverter = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::buffer_element,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
         .output_delays = {defaults::logic_item_delay},
     });
@@ -108,14 +108,14 @@ TEST(SimulationTest, SimulationProcessAllEventsForTime) {
     Schematic schematic;
     auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
     auto xor_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::xor_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
     auto simulation = get_initialized_simulation(schematic);
@@ -138,15 +138,15 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     Schematic schematic;
     auto inverter = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::buffer_element,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
         .output_delays = {defaults::logic_item_delay},
     });
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .output_delays = {delay_t {100us}},
     });
     inverter.output(connection_id_t {0}).connect(wire.input(connection_id_t {0}));
@@ -167,15 +167,15 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     Schematic schematic;
     auto inverter = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::buffer_element,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
         .output_delays = {defaults::logic_item_delay},
     });
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 1,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {1},
         .output_delays = {delay_t {1us}},
     });
     inverter.output(connection_id_t {0}).connect(wire.input(connection_id_t {0}));
@@ -198,8 +198,8 @@ TEST(SimulationTest, AdditionalEvents) {
     Schematic schematic;
     auto xor_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::xor_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -231,8 +231,8 @@ TEST(SimulationTest, SimulatanousEvents) {
     Schematic schematic;
     auto xor_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::xor_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -259,26 +259,26 @@ TEST(SimulationTest, HalfAdder) {
 
     auto input0 = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 2,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {2},
         .output_delays = {delay_t {1us}, delay_t {1us}},
     });
     auto input1 = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 2,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {2},
         .output_delays = {delay_t {1us}, delay_t {1us}},
     });
     auto carry = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
     auto output = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::xor_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
@@ -337,8 +337,8 @@ TEST(SimulationTest, OutputDelayTest) {
     Schematic schematic;
     auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 3,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {3},
         .output_delays = {delay_t {1ms}, delay_t {2ms}, delay_t {3ms}},
     });
     auto simulation = get_initialized_simulation(schematic);
@@ -366,8 +366,8 @@ TEST(SimulationTest, JKFlipFlop) {
     Schematic schematic;
     const auto flipflop = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::flipflop_jk,
-        .input_count = 5,
-        .output_count = 2,
+        .input_count = connection_count_t {5},
+        .output_count = connection_count_t {2},
         .output_delays = {defaults::logic_item_delay, defaults::logic_item_delay},
     });
     auto simulation = get_initialized_simulation(schematic);
@@ -420,8 +420,8 @@ TEST(SimulationTest, AndInputInverters1) {
     Schematic schematic;
     const auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .input_inverters = {true, true},
         .output_delays = {defaults::logic_item_delay},
     });
@@ -445,8 +445,8 @@ TEST(SimulationTest, AndInputInverters2) {
     Schematic schematic;
     const auto and_element = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .input_inverters = {false, true},
         .output_delays = {defaults::logic_item_delay},
     });
@@ -470,8 +470,8 @@ TEST(SimulationTest, TestInputHistory) {
     Schematic schematic;
     const auto wire = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::wire,
-        .input_count = 1,
-        .output_count = 2,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {2},
         .output_delays = {delay_t {10us}, delay_t {100us}},
         .history_length = delay_t {100us},
     });
@@ -513,8 +513,8 @@ TEST(SimulationTest, TestClockGenerator) {
     Schematic schematic;
     auto clock = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::clock_generator,
-        .input_count = 3,
-        .output_count = 3,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {3},
         .output_delays = {delay_t {100us}, delay_t {100us}, delay_t {100us}},
     });
     clock.output(connection_id_t {1}).connect(clock.input(connection_id_t {1}));
@@ -541,8 +541,8 @@ TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
     Schematic schematic;
     auto clock = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::clock_generator,
-        .input_count = 3,
-        .output_count = 3,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {3},
         .output_delays = {delay_t {100us}, delay_t {500us}, delay_t {500us}},
     });
     clock.output(connection_id_t {1}).connect(clock.input(connection_id_t {1}));
@@ -575,8 +575,8 @@ TEST(SimulationTest, TestClockReset) {
     Schematic schematic;
     auto clock = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::clock_generator,
-        .input_count = 3,
-        .output_count = 3,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {3},
         .output_delays = {delay_t {1ns}, delay_t {1ms}, delay_t {1ms}},
     });
     clock.output(connection_id_t {1}).connect(clock.input(connection_id_t {1}));
@@ -612,8 +612,8 @@ TEST(SimulationTest, TestShiftRegister) {
     Schematic schematic;
     auto shift_register = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::shift_register,
-        .input_count = 3,
-        .output_count = 2,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {2},
         .output_delays = {defaults::logic_item_delay, defaults::logic_item_delay},
     });
 

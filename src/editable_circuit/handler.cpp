@@ -716,8 +716,8 @@ auto add_new_wire_element(Layout& layout, display_state_t display_state) -> elem
             .display_state = display_state,
             .element_type = ElementType::wire,
 
-            .input_count = 0,
-            .output_count = 0,
+            .input_count = connection_count_t {0},
+            .output_count = connection_count_t {0},
         })
         .element_id();
 }
@@ -2198,7 +2198,7 @@ auto add_wire_crosspoint(State state, point_t point) -> void {
     }
     if (layout.segment_tree(element_id_0).input_count() +
             layout.segment_tree(element_id_1).input_count() >
-        1) {
+        connection_count_t {1}) {
         return;
     }
 

@@ -5,6 +5,7 @@
 #include "vocabulary/color.h"
 #include "vocabulary/connection.h"
 #include "vocabulary/connection_id.h"
+#include "vocabulary/connection_count.h"
 #include "vocabulary/delay.h"
 #include "vocabulary/display_state.h"
 #include "vocabulary/element_id.h"

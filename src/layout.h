@@ -92,8 +92,8 @@ class Layout {
         display_state_t display_state {display_state_t::temporary};
         ElementType element_type {ElementType::unused};
 
-        std::size_t input_count {0};
-        std::size_t output_count {0};
+        connection_count_t input_count {0};
+        connection_count_t output_count {0};
         point_t position {point_t {0, 0}};
         orientation_t orientation {orientation_t::undirected};
 
@@ -126,8 +126,8 @@ class Layout {
 
     [[nodiscard]] auto element_type(element_id_t element_id) const -> ElementType;
     [[nodiscard]] auto sub_circuit_id(element_id_t element_id) const -> circuit_id_t;
-    [[nodiscard]] auto input_count(element_id_t element_id) const -> std::size_t;
-    [[nodiscard]] auto output_count(element_id_t element_id) const -> std::size_t;
+    [[nodiscard]] auto input_count(element_id_t element_id) const -> connection_count_t;
+    [[nodiscard]] auto output_count(element_id_t element_id) const -> connection_count_t;
     [[nodiscard]] auto input_inverters(element_id_t element_id) const
         -> const logic_small_vector_t &;
     [[nodiscard]] auto output_inverters(element_id_t element_id) const
@@ -231,8 +231,8 @@ class ElementTemplate {
     [[nodiscard]] auto display_state() const -> display_state_t;
     [[nodiscard]] auto is_inserted() const -> bool;
 
-    [[nodiscard]] auto input_count() const -> std::size_t;
-    [[nodiscard]] auto output_count() const -> std::size_t;
+    [[nodiscard]] auto input_count() const -> connection_count_t;
+    [[nodiscard]] auto output_count() const -> connection_count_t;
     [[nodiscard]] auto input_inverters() const -> const logic_small_vector_t &;
     [[nodiscard]] auto output_inverters() const -> const logic_small_vector_t &;
     [[nodiscard]] auto input_inverted(connection_id_t index) const -> bool;

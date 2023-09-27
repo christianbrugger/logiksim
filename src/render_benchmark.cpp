@@ -111,8 +111,8 @@ auto create_first_line_tree_segment(const RenderBenchmarkConfig& config, G& rng)
 }
 
 template <std::uniform_random_bit_generator G>
-auto create_random_line_tree(std::size_t n_outputs, const RenderBenchmarkConfig& config,
-                             G& rng) -> LineTree {
+auto create_random_line_tree(connection_count_t n_outputs,
+                             const RenderBenchmarkConfig& config, G& rng) -> LineTree {
     auto line_tree = create_first_line_tree_segment(config, rng);
 
     while (line_tree.output_count() < n_outputs) {
@@ -152,13 +152,16 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     auto& schematic = scene.schematic;
     for (auto _ [[maybe_unused]] : range(n_lines)) {
         UDist<int> output_dist {config.n_outputs_min, config.n_outputs_max};
-        const auto output_count = gsl::narrow<std::size_t>(output_dist(rng));
+        // TODO can we simplify this?
+        const auto output_count = connection_count_t {
+            gsl::narrow<connection_count_t::value_type>(output_dist(rng))};
+
         schematic.add_element(Schematic::ElementData {
             .element_type = ElementType::wire,
-            .input_count = 1,
+            .input_count = connection_count_t {1},
             .output_count = output_count,
             .output_delays =
-                std::vector<delay_t>(output_count, defaults::logic_item_delay),
+                std::vector<delay_t>(output_count.value, defaults::logic_item_delay),
         });
     }
     add_output_placeholders(schematic);
@@ -206,7 +209,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
 
             // delays
             auto lengths = line_tree.calculate_output_lengths();
-            assert(lengths.size() == element.output_count());
+            assert(connection_count_t {lengths.size()} == element.output_count());
             auto delays =
                 transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
                     return delay_t {schematic.wire_delay_per_distance().value * length};

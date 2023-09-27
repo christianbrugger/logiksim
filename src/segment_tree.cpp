@@ -400,8 +400,8 @@ auto SegmentTree::has_input() const noexcept -> bool {
     return has_input_;
 }
 
-auto SegmentTree::input_count() const noexcept -> std::size_t {
-    return has_input_ ? 1 : 0;
+auto SegmentTree::input_count() const noexcept -> connection_count_t {
+    return has_input_ ? connection_count_t {1} : connection_count_t {0};
 }
 
 auto SegmentTree::input_position() const -> point_t {
@@ -411,8 +411,8 @@ auto SegmentTree::input_position() const -> point_t {
     return input_position_;
 }
 
-auto SegmentTree::output_count() const noexcept -> std::size_t {
-    return output_count_;
+auto SegmentTree::output_count() const noexcept -> connection_count_t {
+    return connection_count_t {output_count_};
 }
 
 auto SegmentTree::format() const -> std::string {
@@ -520,12 +520,13 @@ auto recalculate_first_input_position(const SegmentTree& tree) -> std::optional<
     return std::nullopt;
 }
 
-auto count_point_type(const SegmentTree& tree, SegmentPointType type) -> std::size_t {
-    const auto proj = [&](segment_info_t info) -> int {
-        return (info.p0_type == type ? std::size_t {1} : std::size_t {0}) +
-               (info.p1_type == type ? std::size_t {1} : std::size_t {0});
+auto count_point_type(const SegmentTree& tree, SegmentPointType type)
+    -> connection_count_t {
+    const auto proj = [&](segment_info_t info) -> connection_count_t {
+        return (info.p0_type == type ? connection_count_t {1} : connection_count_t {0}) +
+               (info.p1_type == type ? connection_count_t {1} : connection_count_t {0});
     };
-    return accumulate(transform_view(tree.segment_infos(), proj), std::size_t {0});
+    return accumulate(transform_view(tree.segment_infos(), proj), connection_count_t {0});
 }
 
 auto validate_output_count(const SegmentTree& tree) -> void {

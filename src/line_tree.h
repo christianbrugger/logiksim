@@ -126,7 +126,7 @@ class LineTree {
 
     [[nodiscard]] auto input_position() const -> point_t;
     [[nodiscard]] auto input_orientation() const -> orientation_t;
-    [[nodiscard]] auto output_count() const -> std::size_t;
+    [[nodiscard]] auto output_count() const -> connection_count_t;
 
     [[nodiscard]] auto output_positions() const {
         return transform_view(output_indices_,

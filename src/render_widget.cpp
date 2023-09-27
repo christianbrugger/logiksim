@@ -842,8 +842,8 @@ auto RendererWidget::load_circuit_example(int id) -> void {
         constexpr auto max_value = debug_build ? debug_max : release_max;
         const auto definition = LogicItemDefinition {
             .element_type = ElementType::or_element,
-            .input_count = 3,
-            .output_count = 1,
+            .input_count = connection_count_t {3},
+            .output_count = connection_count_t {1},
             .orientation = orientation_t::right,
             .output_inverters = {true},
         };
@@ -871,8 +871,8 @@ auto RendererWidget::load_circuit_example(int id) -> void {
         constexpr auto max_value = debug_build ? debug_max : release_max;
         const auto definition = LogicItemDefinition {
             .element_type = ElementType::or_element,
-            .input_count = 3,
-            .output_count = 1,
+            .input_count = connection_count_t {3},
+            .output_count = connection_count_t {1},
             .orientation = orientation_t::right,
             .output_inverters = {true},
         };

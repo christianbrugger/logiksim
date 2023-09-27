@@ -49,8 +49,8 @@ auto Schematic::clear() -> void {
     output_delays_.clear();
     history_lengths_.clear();
 
-    input_count_ = 0;
-    output_count_ = 0;
+    total_input_count_ = 0;
+    total_output_count_ = 0;
 }
 
 auto Schematic::swap(Schematic &other) noexcept -> void {
@@ -64,8 +64,8 @@ auto Schematic::swap(Schematic &other) noexcept -> void {
     output_delays_.swap(other.output_delays_);
     history_lengths_.swap(other.history_lengths_);
 
-    swap(input_count_, other.input_count_);
-    swap(output_count_, other.output_count_);
+    swap(total_input_count_, other.total_input_count_);
+    swap(total_output_count_, other.total_output_count_);
     swap(circuit_id_, other.circuit_id_);
 }
 
@@ -114,12 +114,12 @@ auto Schematic::delete_last_element(bool clear_connections) -> void {
 
     const auto last_input_count = input_connections_.back().size();
     const auto last_output_count = output_connections_.back().size();
-    if (input_count_ < last_input_count || output_count_ < last_output_count)
+    if (total_input_count_ < last_input_count || total_output_count_ < last_output_count)
         [[unlikely]] {
         throw_exception("input or output count underflows");
     }
-    input_count_ -= last_input_count;
-    output_count_ -= last_output_count;
+    total_input_count_ -= last_input_count;
+    total_output_count_ -= last_output_count;
 
     // delete
     input_connections_.pop_back();
@@ -231,32 +231,34 @@ auto Schematic::add_element(ElementData &&data) -> Element {
     if (element_types_.size() + 1 >= element_id_t::max()) [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
-    if (input_count_ >= std::numeric_limits<decltype(input_count_)>::max() -
-                            data.input_count) [[unlikely]] {
+    if (total_input_count_ >= std::numeric_limits<std::size_t>::max() -
+                                  std::size_t {data.input_count.value}) [[unlikely]] {
         throw_exception("Reached maximum number of inputs.");
     }
-    if (output_count_ >= std::numeric_limits<decltype(input_count_)>::max() -
-                             data.output_count) [[unlikely]] {
+    if (total_output_count_ >= std::numeric_limits<std::size_t>::max() -
+                                   std::size_t {data.output_count.value}) [[unlikely]] {
         throw_exception("Reached maximum number of outputs.");
     }
 
     // extend vectors
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.circuit_id);
-    input_connections_.emplace_back(data.input_count,
+    input_connections_.emplace_back(data.input_count.value,
                                     connection_t {null_element, null_connection});
-    output_connections_.emplace_back(data.output_count,
+    output_connections_.emplace_back(data.output_count.value,
                                      connection_t {null_element, null_connection});
     if (data.input_inverters.size() == 0) {
-        input_inverters_.emplace_back(data.input_count, false);
+        input_inverters_.emplace_back(data.input_count.value, false);
     } else {
-        if (data.input_inverters.size() != data.input_count) [[unlikely]] {
+        if (connection_count_t {data.input_inverters.size()} != data.input_count)
+            [[unlikely]] {
             throw_exception("Need as many values for input_inverters as inputs.");
         }
         input_inverters_.emplace_back(data.input_inverters);
     }
     {
-        if (std::size(data.output_delays) != data.output_count) [[unlikely]] {
+        if (connection_count_t {std::size(data.output_delays)} != data.output_count)
+            [[unlikely]] {
             throw_exception("Need as many output_delays as outputs.");
         }
         output_delays_.emplace_back(std::begin(data.output_delays),
@@ -268,8 +270,8 @@ auto Schematic::add_element(ElementData &&data) -> Element {
     auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
         element_types_.size() - std::size_t {1})};
 
-    input_count_ += data.input_count;
-    output_count_ += data.output_count;
+    total_input_count_ += std::size_t {data.input_count.value};
+    total_output_count_ += std::size_t {data.output_count.value};
 
     return element(element_id);
 }
@@ -334,12 +336,12 @@ auto Schematic::update_swapped_connections(element_id_t new_element_id,
     }
 }
 
-auto Schematic::input_count() const noexcept -> std::size_t {
-    return input_count_;
+auto Schematic::total_input_count() const noexcept -> std::size_t {
+    return total_input_count_;
 }
 
-auto Schematic::output_count() const noexcept -> std::size_t {
-    return output_count_;
+auto Schematic::total_output_count() const noexcept -> std::size_t {
+    return total_output_count_;
 }
 
 auto validate_input_connected(const Schematic::ConstInput input) -> void {
@@ -530,15 +532,23 @@ auto Schematic::validate(ValidationSettings settings) const -> void {
     if (!circuit_id_) [[unlikely]] {
         throw_exception("invalid circuit id");
     }
-    const auto input_count = accumulate(
-        transform_view(elements(), &ConstElement::input_count), std::size_t {0});
-    const auto output_count = accumulate(
-        transform_view(elements(), &ConstElement::output_count), std::size_t {0});
 
-    if (input_count != input_count_) [[unlikely]] {
+    const auto to_input_size = [](const ConstElement &element) -> std::size_t {
+        return element.input_count().value;
+    };
+    const auto to_output_size = [](const ConstElement &element) -> std::size_t {
+        return element.output_count().value;
+    };
+
+    const auto input_count =
+        accumulate(transform_view(elements(), to_input_size), std::size_t {0});
+    const auto output_count =
+        accumulate(transform_view(elements(), to_output_size), std::size_t {0});
+
+    if (input_count != total_input_count_) [[unlikely]] {
         throw_exception("input count is wrong");
     }
-    if (output_count != output_count_) [[unlikely]] {
+    if (output_count != total_output_count_) [[unlikely]] {
         throw_exception("input count is wrong");
     }
 }
@@ -729,13 +739,15 @@ auto Schematic::ElementTemplate<Const>::history_length() const -> delay_t {
 }
 
 template <bool Const>
-auto Schematic::ElementTemplate<Const>::input_count() const -> std::size_t {
-    return schematic_->input_connections_.at(element_id_.value).size();
+auto Schematic::ElementTemplate<Const>::input_count() const -> connection_count_t {
+    return connection_count_t {
+        schematic_->input_connections_.at(element_id_.value).size()};
 }
 
 template <bool Const>
-auto Schematic::ElementTemplate<Const>::output_count() const -> std::size_t {
-    return schematic_->output_connections_.at(element_id_.value).size();
+auto Schematic::ElementTemplate<Const>::output_count() const -> connection_count_t {
+    return connection_count_t {
+        schematic_->output_connections_.at(element_id_.value).size()};
 }
 
 template <bool Const>
@@ -782,7 +794,7 @@ auto Schematic::ElementTemplate<Const>::set_output_delays(
     std::vector<delay_t> delays) const -> void
     requires(!Const)
 {
-    if (std::size(delays) != output_count()) [[unlikely]] {
+    if (connection_count_t {std::size(delays)} != output_count()) [[unlikely]] {
         throw_exception("Need as many delays as outputs.");
     }
     schematic_->output_delays_.at(element_id_.value) =
@@ -879,15 +891,15 @@ auto Schematic::ConnectionViewTemplate<Const, IsInput>::end() const -> iterator_
 template <bool Const, bool IsInput>
 auto Schematic::ConnectionViewTemplate<Const, IsInput>::size() const -> std::size_t {
     if constexpr (IsInput) {
-        return element_.input_count();
+        return std::size_t {element_.input_count().value};
     } else {
-        return element_.output_count();
+        return std::size_t {element_.output_count().value};
     }
 }
 
 template <bool Const, bool IsInput>
 auto Schematic::ConnectionViewTemplate<Const, IsInput>::empty() const -> bool {
-    return size() == 0;
+    return size() == std::size_t {0};
 }
 
 template <bool Const, bool IsInput>
@@ -1264,8 +1276,8 @@ auto add_placeholder(Schematic::Output output) -> void {
     if (!output.has_connected_element()) {
         auto placeholder = output.schematic().add_element(Schematic::ElementData {
             .element_type = ElementType::placeholder,
-            .input_count = 1,
-            .output_count = 0,
+            .input_count = connection_count_t {1},
+            .output_count = connection_count_t {0},
         });
         output.connect(placeholder.input(connection_id_t {0}));
     }
@@ -1293,22 +1305,22 @@ auto benchmark_schematic(const int n_elements) -> Schematic {
 
     auto elem0 = schematic.add_element(Schematic::ElementData {
         .element_type = ElementType::and_element,
-        .input_count = 2,
-        .output_count = 1,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
 
     for ([[maybe_unused]] auto count : range(n_elements - 1)) {
         auto wire0 = schematic.add_element(Schematic::ElementData {
             .element_type = ElementType::wire,
-            .input_count = 1,
-            .output_count = 2,
+            .input_count = connection_count_t {1},
+            .output_count = connection_count_t {2},
             .output_delays = {defaults::logic_item_delay, defaults::logic_item_delay},
         });
         auto elem1 = schematic.add_element(Schematic::ElementData {
             .element_type = ElementType::and_element,
-            .input_count = 2,
-            .output_count = 1,
+            .input_count = connection_count_t {2},
+            .output_count = connection_count_t {1},
             .output_delays = {defaults::logic_item_delay},
         });
 
@@ -1343,10 +1355,13 @@ void add_random_element(Schematic &schematic, G &rng) {
     const auto output_count =
         element_type == ElementType::wire ? connection_dist(rng) : 1;
 
+    // TODO remove narrow
     schematic.add_element(Schematic::ElementData {
         .element_type = element_type,
-        .input_count = gsl::narrow<std::size_t>(input_count),
-        .output_count = gsl::narrow<std::size_t>(output_count),
+        .input_count =
+            connection_count_t {gsl::narrow<connection_count_t::value_type>(input_count)},
+        .output_count = connection_count_t {gsl::narrow<connection_count_t::value_type>(
+            output_count)},
         .input_inverters = element_type == ElementType::buffer_element
                                ? logic_small_vector_t {true}
                                : logic_small_vector_t {},
@@ -1372,7 +1387,7 @@ void create_random_connections(Schematic &schematic, G &rng, double connection_r
 
     // collect inputs
     std::vector<Schematic::Input> all_inputs;
-    all_inputs.reserve(schematic.input_count());
+    all_inputs.reserve(schematic.total_input_count());
     for (auto element : schematic.elements()) {
         for (auto input : element.inputs()) {
             all_inputs.push_back(input);
@@ -1381,7 +1396,7 @@ void create_random_connections(Schematic &schematic, G &rng, double connection_r
 
     // collect outputs
     std::vector<Schematic::Output> all_outputs;
-    all_outputs.reserve(schematic.output_count());
+    all_outputs.reserve(schematic.total_output_count());
     for (auto element : schematic.elements()) {
         for (auto output : element.outputs()) {
             all_outputs.push_back(output);

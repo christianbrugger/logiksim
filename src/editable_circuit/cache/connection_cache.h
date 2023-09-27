@@ -6,6 +6,8 @@
 
 #include <ankerl/unordered_dense.h>
 
+#include <ranges>
+
 namespace logicsim {
 
 class Layout;

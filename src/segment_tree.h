@@ -97,9 +97,9 @@ class SegmentTree {
 
     // input & outputs
     [[nodiscard]] auto has_input() const noexcept -> bool;
-    [[nodiscard]] auto input_count() const noexcept -> std::size_t;
+    [[nodiscard]] auto input_count() const noexcept -> connection_count_t;
     [[nodiscard]] auto input_position() const -> point_t;
-    [[nodiscard]] auto output_count() const noexcept -> std::size_t;
+    [[nodiscard]] auto output_count() const noexcept -> connection_count_t;
 
     [[nodiscard]] auto format() const -> std::string;
     auto validate() const -> void;
