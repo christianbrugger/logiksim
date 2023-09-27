@@ -19,31 +19,40 @@ struct delay_t {
     value_type value {};
 
     [[nodiscard]] constexpr explicit delay_t() noexcept = default;
-
     [[nodiscard]] constexpr explicit delay_t(
-        std::chrono::duration<int64_t, std::nano> delay)
-        : value {delay} {
-        if (value != delay) {
-            throw std::runtime_error("delay cannot be represented.");
-        }
-    };
-
-    [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t {
-        return delay_t {++value_type::zero()};
-    };
+        std::chrono::duration<int64_t, std::nano> delay);
 
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const delay_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const delay_t &other) const = default;
 
-    [[nodiscard]] static constexpr auto min() noexcept -> delay_t {
-        return delay_t {value_type::min()};
-    };
+    [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t;
+    [[nodiscard]] static constexpr auto min() noexcept -> delay_t;
+    [[nodiscard]] static constexpr auto max() noexcept -> delay_t;
+};
 
-    [[nodiscard]] static constexpr auto max() noexcept -> delay_t {
-        return delay_t {value_type::max()};
-    };
+//
+// Implementation
+//
+
+constexpr delay_t::delay_t(std::chrono::duration<int64_t, std::nano> delay)
+    : value {delay} {
+    if (value != delay) {
+        throw std::runtime_error("delay cannot be represented.");
+    }
+};
+
+constexpr auto delay_t::epsilon() noexcept -> delay_t {
+    return delay_t {++value_type::zero()};
+};
+
+constexpr auto delay_t::min() noexcept -> delay_t {
+    return delay_t {value_type::min()};
+};
+
+constexpr auto delay_t::max() noexcept -> delay_t {
+    return delay_t {value_type::max()};
 };
 
 }  // namespace logicsim

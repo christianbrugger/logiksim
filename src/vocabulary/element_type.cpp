@@ -1,7 +1,7 @@
 #include "vocabulary/element_type.h"
 
 #include <string>
-#include <stdexcept>
+#include <exception>
 
 namespace logicsim {
 
@@ -52,7 +52,7 @@ auto format(ElementType type) -> std::string {
         case sub_circuit:
             return "SubCircuit";
     }
-    throw std::runtime_error("Don't know how to convert ElementType to string.");
+    std::terminate();
 }
 
 auto is_logic_item(ElementType element_type) -> bool {

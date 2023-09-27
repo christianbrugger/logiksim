@@ -1,6 +1,6 @@
 #include "vocabulary/insertion_mode.h"
 
-#include <stdexcept>
+#include <exception>
 #include <string>
 
 namespace logicsim {
@@ -17,7 +17,7 @@ auto format(InsertionMode mode) -> std::string {
         case temporary:
             return "temporary";
     }
-    throw std::runtime_error("Don't know how to convert insertion mode to string.");
+    std::terminate();
 }
 
 auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
@@ -33,8 +33,7 @@ auto to_insertion_mode(display_state_t display_state) -> InsertionMode {
         case temporary:
             return InsertionMode::temporary;
     };
-
-    throw std::runtime_error("Unknown display state.");
+    std::terminate();
 };
 
 }  // namespace logicsim

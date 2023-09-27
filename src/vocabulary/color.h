@@ -5,6 +5,7 @@
 
 #include <compare>
 #include <cstdint>
+#include <type_traits>
 
 struct BLRgba32;
 
@@ -17,40 +18,59 @@ struct color_t {
     using value_type = uint32_t;
     value_type value;
 
-    color_t() = default;
-
-    constexpr explicit color_t(uint32_t value_) noexcept : value {value_} {}
-
-    constexpr explicit color_t(uint32_t r, uint32_t g, uint32_t b,
-                               uint32_t a = 0xFFu) noexcept
-        : value((r << 16) | (g << 8) | b | (a << 24)) {}
+    [[nodiscard]] constexpr explicit color_t() = default;
+    [[nodiscard]] constexpr explicit color_t(uint32_t value_) noexcept;
+    [[nodiscard]] constexpr explicit color_t(uint32_t r, uint32_t g, uint32_t b,
+                                             uint32_t a = 0xFFu) noexcept;
 
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const color_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const color_t &other) const = default;
 
-    [[nodiscard]] constexpr auto r() const noexcept -> uint32_t {
-        return (value >> 16) & 0xFFu;
-    }
-
-    [[nodiscard]] constexpr auto g() const noexcept -> uint32_t {
-        return (value >> 8) & 0xFFu;
-    }
-
-    [[nodiscard]] constexpr auto b() const noexcept -> uint32_t {
-        return (value >> 0) & 0xFFu;
-    }
-
-    [[nodiscard]] constexpr auto a() const noexcept -> uint32_t {
-        return (value >> 24);
-    }
+    [[nodiscard]] constexpr auto r() const noexcept -> uint32_t;
+    [[nodiscard]] constexpr auto g() const noexcept -> uint32_t;
+    [[nodiscard]] constexpr auto b() const noexcept -> uint32_t;
+    [[nodiscard]] constexpr auto a() const noexcept -> uint32_t;
 
     [[nodiscard]] operator BLRgba32() const noexcept;
 };
 
+static_assert(std::is_trivial_v<color_t>);
+static_assert(std::is_trivially_copyable_v<color_t>);
+
+//
+// Implementation
+//
+
+constexpr color_t::color_t(uint32_t value_) noexcept : value {value_} {}
+
+constexpr color_t::color_t(uint32_t r, uint32_t g, uint32_t b, uint32_t a) noexcept
+    : value((r << 16) | (g << 8) | b | (a << 24)) {}
+
+constexpr auto color_t::r() const noexcept -> uint32_t {
+    return (value >> 16) & 0xFFu;
+}
+
+constexpr auto color_t::g() const noexcept -> uint32_t {
+    return (value >> 8) & 0xFFu;
+}
+
+constexpr auto color_t::b() const noexcept -> uint32_t {
+    return (value >> 0) & 0xFFu;
+}
+
+constexpr auto color_t::a() const noexcept -> uint32_t {
+    return (value >> 24);
+}
+
+//
+// Constants
+//
+
 namespace defaults {
-constexpr static inline auto no_color = ::logicsim::color_t {0x00000000};
+constexpr static inline auto color_transparent_black = ::logicsim::color_t {0x00000000};
+constexpr static inline auto color_transparent_white = ::logicsim::color_t {0x00FFFFFF};
 
 constexpr static inline auto color_black = ::logicsim::color_t {0xFF000000};
 constexpr static inline auto color_white = ::logicsim::color_t {0xFFFFFFFF};

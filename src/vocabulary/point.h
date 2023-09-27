@@ -38,8 +38,12 @@ struct point_t {
 
 static_assert(std::is_trivial<point_t>::value);
 
+/**
+ * @brief: Returns if the line from p0 to p1 is horizontal or vertical.
+ * 
+ * Returns false for zero length lines.
+ */
 constexpr auto is_orthogonal_line(point_t p0, point_t p1) noexcept -> bool {
-    // xor disallows zero length lines
     return (p0.x == p1.x) ^ (p0.y == p1.y);
 }
 

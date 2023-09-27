@@ -23,7 +23,7 @@ struct connection_t {
     [[nodiscard]] auto operator<=>(const connection_t &other) const = default;
 };
 
-static_assert(std::is_trivial<connection_t>::value);
+static_assert(std::is_trivial_v<connection_t>);
 
 }  // namespace logicsim
 

@@ -1,6 +1,6 @@
 #include "vocabulary/orientation.h"
 
-#include <stdexcept>
+#include <exception>
 #include <string>
 
 namespace logicsim {
@@ -22,7 +22,7 @@ auto format(orientation_t orientation) -> std::string {
         case undirected:
             return "undirected";
     }
-    throw std::runtime_error("Don't know how to convert orientation_t to string.");
+    std::terminate();
 }
 
 }  // namespace logicsim

@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_TIME_LITERAL_H
 #define LOGICSIM_VOCABULARY_TIME_LITERAL_H
 
+#include <chrono>
+
 namespace logicsim {
 
 #ifdef _MSC_VER
@@ -16,6 +18,6 @@ using std::literals::chrono_literals::operator""ns;
 #pragma warning(pop)
 #endif
 
-}
+}  // namespace logicsim
 
 #endif

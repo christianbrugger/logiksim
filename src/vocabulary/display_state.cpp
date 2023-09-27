@@ -1,7 +1,7 @@
 #include "vocabulary/display_state.h"
 
-#include <stdexcept>
 #include <string>
+#include <exception>
 
 namespace logicsim {
 
@@ -21,7 +21,7 @@ auto format(display_state_t state) -> std::string {
         case temporary:
             return "temporary";
     }
-    throw std::runtime_error("Don't know how to convert display_state_t to string.");
+    std::terminate();
 }
 
 auto is_inserted(display_state_t display_state) -> bool {
