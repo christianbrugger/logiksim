@@ -289,13 +289,6 @@ auto enable_position(connection_count_t input_count) -> point_t {
 
 auto is_input_output_count_valid(ElementType element_type, connection_count_t input_count,
                                  connection_count_t output_count) -> bool {
-    if (input_count > connection_id_t::max()) {
-        return false;
-    }
-    if (output_count > connection_id_t::max()) {
-        return false;
-    }
-
     switch (element_type) {
         using enum ElementType;
 

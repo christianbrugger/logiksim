@@ -323,12 +323,6 @@ auto Layout::is_element_id_valid(element_id_t element_id) const noexcept -> bool
 }
 
 auto Layout::add_element(ElementData &&data) -> layout::Element {
-    if (data.input_count > connection_id_t::max()) [[unlikely]] {
-        throw_exception("Input count needs to be positive and not too large.");
-    }
-    if (data.output_count > connection_id_t::max()) [[unlikely]] {
-        throw_exception("Output count needs to be positive and not too large.");
-    }
     if (element_count() + 1 >= element_id_t::max()) [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }

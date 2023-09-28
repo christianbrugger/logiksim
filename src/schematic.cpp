@@ -220,13 +220,6 @@ auto Schematic::wire_delay_per_distance() const -> delay_t {
 }
 
 auto Schematic::add_element(ElementData &&data) -> Element {
-    if (data.input_count > connection_id_t::max()) [[unlikely]] {
-        throw_exception("Input count needs to be positive and not too large.");
-    }
-    if (data.output_count > connection_id_t::max()) [[unlikely]] {
-        throw_exception("Output count needs to be positive and not too large.");
-    }
-
     // make sure we can represent all ids
     if (element_types_.size() + 1 >= element_id_t::max()) [[unlikely]] {
         throw_exception("Reached maximum number of elements.");

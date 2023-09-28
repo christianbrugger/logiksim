@@ -2,7 +2,11 @@
 #define LOGICSIM_SAFE_NUMERIC_H
 
 #include <boost/safe_numerics/automatic.hpp>
+#include <boost/safe_numerics/exception_policies.hpp>
+#include <boost/safe_numerics/safe_base.hpp>
 #include <boost/safe_numerics/safe_integer.hpp>
+
+#include <limits>
 
 namespace logicsim {
 
@@ -17,6 +21,10 @@ using ls_exception_policy = boost::safe_numerics::exception_policy<
 
 template <class T>
 using ls_safe = boost::safe_numerics::safe<T, ls_promotion, ls_exception_policy>;
+
+template <class T, T Min, T Max>
+using ls_safe_range =
+    boost::safe_numerics::safe_base<T, Min, Max, ls_promotion, ls_exception_policy>;
 
 // TODO move to the right position
 template <typename T>
