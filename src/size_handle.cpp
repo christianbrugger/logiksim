@@ -151,7 +151,8 @@ namespace size_handle {
 auto clamp_connection_count(connection_count_t count, int delta, connection_count_t min,
                             connection_count_t max) -> connection_count_t {
     // TODO remove cast when type has constructor
-    const auto new_count = gsl::narrow<int64_t>(count.value) - int64_t {delta};
+    // static_assert(sizeof(connection_count_t::value_type) < sizeof(int64_t));
+    const auto new_count = gsl::narrow<int64_t>(count.value) + int64_t {delta};
 
     const auto clamped_count = std::clamp(new_count, gsl::narrow<int64_t>(min.value),
                                           gsl::narrow<int64_t>(max.value));

@@ -37,7 +37,6 @@ struct connection_count_t {
     [[nodiscard]] auto operator<=>(const connection_id_t &other) const
         -> std::strong_ordering;
 
-    [[nodiscard]] static constexpr auto min() noexcept -> connection_count_t;
     [[nodiscard]] static constexpr auto max() noexcept -> connection_count_t;
 
     [[nodiscard]] constexpr auto operator+(connection_count_t other) const
@@ -56,14 +55,16 @@ static_assert(std::is_trivial<connection_id_t>::value);
 // Implementation
 //
 
-inline constexpr auto connection_count_t::min() noexcept -> connection_count_t {
-    return connection_count_t {0};
-}
-
 // TODO check who is using this !!!
 constexpr auto connection_count_t::max() noexcept -> connection_count_t {
-    return connection_count_t {connection_id_t::max().value};
+    constexpr auto value = value_type {connection_id_t::max().value} + 1;
+    return connection_count_t {value};
 };
+
+//constexpr auto connection_count_t::max() noexcept -> connection_count_t {
+//    constexpr auto value = value_type {connection_id_t::max().value} + 1;
+//    return connection_count_t {value};
+//};
 
 constexpr auto connection_count_t::operator+(connection_count_t other) const
     -> connection_count_t {

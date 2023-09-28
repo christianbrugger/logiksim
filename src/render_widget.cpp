@@ -288,7 +288,8 @@ auto MouseMoveSelectionLogic::move_selection(point_fine_t point) -> void {
     if (delta_x == 0 && delta_y == 0) {
         return;
     }
-    // const auto t [[maybe_unused]] = Timer {"uninsert selection"};
+    const auto t [[maybe_unused]] =
+        Timer {insertion_mode_ == InsertionMode::temporary ? "" : "uninsert selection"};
 
     const auto& selection = get_selection();
 

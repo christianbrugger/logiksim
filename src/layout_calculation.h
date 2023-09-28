@@ -22,7 +22,8 @@ constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
 
 namespace standard_element {
 constexpr static inline auto min_inputs = connection_count_t {2};
-constexpr static inline auto max_inputs = connection_count_t::max();
+constexpr static inline auto max_inputs =
+    connection_count_t {connection_id_t::max().value};
 [[nodiscard]] auto height(connection_count_t input_count) -> grid_t;
 constexpr static inline auto width = grid_t {2};
 }  // namespace standard_element
