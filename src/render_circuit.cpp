@@ -644,7 +644,7 @@ auto _inputs_to_number(layout::ConstElement element,
     }
 
     auto number = uint64_t {0};
-    for (const auto& i : range(control_inputs.value, values.size())) {
+    for (const auto& i : range(std::size_t {control_inputs}, values.size())) {
         const auto value = values.at(i) ^ inverters.at(i);
         number |= (static_cast<uint64_t>(value) << (i - control_inputs.value));
     }

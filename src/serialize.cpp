@@ -109,9 +109,9 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
     const auto moved_position = add_unchecked(obj.position, delta.x, delta.y);
 
     const auto data = layout_calculation_data_t {
+        .position = moved_position,
         .input_count = obj.input_count,
         .output_count = obj.output_count,
-        .position = moved_position,
         .orientation = obj.orientation,
         .element_type = obj.element_type,
     };

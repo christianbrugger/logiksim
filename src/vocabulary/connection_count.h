@@ -16,16 +16,29 @@ namespace logicsim {
 /**
  * @brief: Defines the number of inputs or outputs of an unspecified circuit element.
  */
-// TODO: Use this from Layout
-// using connection_size_t = std::make_unsigned<connection_id_t::value_type>::type;
-// static_assert(sizeof(connection_size_t) == sizeof(connection_id_t));
+// TODO: remove connection_size_t in layout
 struct connection_count_t {
-    using value_type = std::size_t;
+    // using value_type = std::size_t;
+    using value_type = std::make_unsigned_t<connection_id_t::value_type>;
+    static_assert(sizeof(value_type) == sizeof(connection_id_t));
+
+   public:
     value_type value;
 
+   public:
     using difference_type = safe_difference_t<value_type>;
-    // TODO enable
-    // static_assert(sizeof(difference_type) > sizeof(value_type));
+    static_assert(sizeof(difference_type) > sizeof(value_type));
+
+    [[nodiscard]] explicit constexpr connection_count_t() = default;
+    [[nodiscard]] explicit constexpr connection_count_t(value_type value_) noexcept;
+    [[nodiscard]] explicit constexpr connection_count_t(int value_);
+    [[nodiscard]] explicit constexpr connection_count_t(unsigned int value_);
+    [[nodiscard]] explicit constexpr connection_count_t(long value_);
+    [[nodiscard]] explicit constexpr connection_count_t(unsigned long value_);
+    [[nodiscard]] explicit constexpr connection_count_t(long long value_);
+    [[nodiscard]] explicit constexpr connection_count_t(unsigned long long value_);
+
+    [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
 
     // TODO add constructor
     // TODO check input count is not bigger than MAX
@@ -54,6 +67,30 @@ static_assert(std::is_trivial<connection_id_t>::value);
 //
 // Implementation
 //
+constexpr connection_count_t::connection_count_t(value_type value_) noexcept
+    : value {value_} {};
+
+constexpr connection_count_t::connection_count_t(int value_)
+    : value {gsl::narrow<value_type>(value_)} {};
+
+constexpr connection_count_t::connection_count_t(unsigned int value_)
+    : value {gsl::narrow<value_type>(value_)} {};
+
+constexpr connection_count_t::connection_count_t(long value_)
+    : value {gsl::narrow<value_type>(value_)} {};
+
+constexpr connection_count_t::connection_count_t(unsigned long value_)
+    : value {gsl::narrow<value_type>(value_)} {};
+
+constexpr connection_count_t::connection_count_t(long long value_)
+    : value {gsl::narrow<value_type>(value_)} {};
+
+constexpr connection_count_t::connection_count_t(unsigned long long value_)
+    : value {gsl::narrow<value_type>(value_)} {};
+
+constexpr connection_count_t::operator std::size_t() const noexcept {
+    return std::size_t {value};
+}
 
 // TODO check who is using this !!!
 constexpr auto connection_count_t::max() noexcept -> connection_count_t {
@@ -61,10 +98,10 @@ constexpr auto connection_count_t::max() noexcept -> connection_count_t {
     return connection_count_t {value};
 };
 
-//constexpr auto connection_count_t::max() noexcept -> connection_count_t {
-//    constexpr auto value = value_type {connection_id_t::max().value} + 1;
-//    return connection_count_t {value};
-//};
+// constexpr auto connection_count_t::max() noexcept -> connection_count_t {
+//     constexpr auto value = value_type {connection_id_t::max().value} + 1;
+//     return connection_count_t {value};
+// };
 
 constexpr auto connection_count_t::operator+(connection_count_t other) const
     -> connection_count_t {
