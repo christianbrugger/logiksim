@@ -232,23 +232,23 @@ auto Schematic::add_element(ElementData &&data) -> Element {
         throw_exception("Reached maximum number of elements.");
     }
     if (total_input_count_ >= std::numeric_limits<std::size_t>::max() -
-                                  std::size_t {data.input_count.value}) [[unlikely]] {
+                                  std::size_t {data.input_count.count()}) [[unlikely]] {
         throw_exception("Reached maximum number of inputs.");
     }
     if (total_output_count_ >= std::numeric_limits<std::size_t>::max() -
-                                   std::size_t {data.output_count.value}) [[unlikely]] {
+                                   std::size_t {data.output_count.count()}) [[unlikely]] {
         throw_exception("Reached maximum number of outputs.");
     }
 
     // extend vectors
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.circuit_id);
-    input_connections_.emplace_back(data.input_count.value,
+    input_connections_.emplace_back(data.input_count.count(),
                                     connection_t {null_element, null_connection});
-    output_connections_.emplace_back(data.output_count.value,
+    output_connections_.emplace_back(data.output_count.count(),
                                      connection_t {null_element, null_connection});
     if (data.input_inverters.size() == 0) {
-        input_inverters_.emplace_back(data.input_count.value, false);
+        input_inverters_.emplace_back(data.input_count.count(), false);
     } else {
         if (connection_count_t {data.input_inverters.size()} != data.input_count)
             [[unlikely]] {
@@ -270,8 +270,8 @@ auto Schematic::add_element(ElementData &&data) -> Element {
     auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
         element_types_.size() - std::size_t {1})};
 
-    total_input_count_ += std::size_t {data.input_count.value};
-    total_output_count_ += std::size_t {data.output_count.value};
+    total_input_count_ += std::size_t {data.input_count};
+    total_output_count_ += std::size_t {data.output_count};
 
     return element(element_id);
 }
@@ -534,10 +534,10 @@ auto Schematic::validate(ValidationSettings settings) const -> void {
     }
 
     const auto to_input_size = [](const ConstElement &element) -> std::size_t {
-        return element.input_count().value;
+        return std::size_t {element.input_count()};
     };
     const auto to_output_size = [](const ConstElement &element) -> std::size_t {
-        return element.output_count().value;
+        return std::size_t {element.output_count()};
     };
 
     const auto input_count =
@@ -891,9 +891,9 @@ auto Schematic::ConnectionViewTemplate<Const, IsInput>::end() const -> iterator_
 template <bool Const, bool IsInput>
 auto Schematic::ConnectionViewTemplate<Const, IsInput>::size() const -> std::size_t {
     if constexpr (IsInput) {
-        return std::size_t {element_.input_count().value};
+        return std::size_t {element_.input_count()};
     } else {
-        return std::size_t {element_.output_count().value};
+        return std::size_t {element_.output_count()};
     }
 }
 

@@ -268,7 +268,7 @@ Simulation::Simulation(const Schematic &schematic)
     internal_states_.reserve(schematic.element_count());
 
     for (auto element : schematic.elements()) {
-        input_values_.emplace_back(element.input_count().value, false);
+        input_values_.emplace_back(element.input_count().count(), false);
         internal_states_.emplace_back(internal_state_size(element.element_type()), false);
     }
     first_input_histories_.resize(schematic.element_count());
@@ -492,11 +492,11 @@ auto calculate_outputs_from_state(const logic_small_vector_t &state,
         }
 
         case shift_register: {
-            if (connection_count_t {std::size(state)} < output_count) [[unlikely]] {
+            if (std::size(state) < std::size_t {output_count}) [[unlikely]] {
                 throw_exception(
                     "need at least output count internal state for shift register");
             }
-            return logic_small_vector_t(std::prev(state.end(), output_count.value),
+            return logic_small_vector_t(std::prev(state.end(), output_count.count()),
                                         state.end());
         }
 
@@ -535,7 +535,7 @@ auto calculate_outputs_from_inputs(const logic_small_vector_t &input,
         using enum ElementType;
 
         case wire:
-            return logic_small_vector_t(output_count.value, input.at(0));
+            return logic_small_vector_t(output_count.count(), input.at(0));
 
         case buffer_element:
             return {input.at(0)};

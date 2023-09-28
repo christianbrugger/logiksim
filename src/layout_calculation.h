@@ -14,6 +14,9 @@ struct BLPoint;
 
 namespace logicsim {
 
+[[nodiscard]] constexpr auto to_grid(connection_count_t count) -> grid_t;
+[[nodiscard]] constexpr auto to_grid_fine(connection_count_t count) -> grid_fine_t;
+
 // General
 namespace defaults {
 constexpr static inline auto line_selection_padding = 0.3;    // grid values
@@ -95,9 +98,17 @@ constexpr static inline auto value_inputs = connection_count_t {7};
 constexpr static inline auto input_count = control_inputs + value_inputs;
 constexpr static inline auto width = grid_t {4};
 constexpr static inline auto height =
-    grid_t {(value_inputs - connection_count_t {1}).value};
+    grid_t {std::size_t {value_inputs - connection_count_t {1}}};  // TODO simplify
 constexpr static inline auto enable_position = point_t {2, height};
 }  // namespace display_ascii
+
+constexpr auto to_grid(connection_count_t count) -> grid_t {
+    return grid_t {count.count()};
+}
+
+constexpr auto to_grid_fine(connection_count_t count) -> grid_fine_t {
+    return grid_fine_t {to_grid(count)};
+}
 
 /// next_point(point_t position) -> bool;
 auto iter_element_body_points(layout_calculation_data_t data,
@@ -118,8 +129,8 @@ auto iter_element_body_points(layout_calculation_data_t data,
         case xor_element: {
             require_min(data.input_count, standard_element::min_inputs);
 
-            const auto height = data.input_count.value;
-            const auto output_offset = (height - data.output_count.value) / 2;
+            const auto height = to_grid(data.input_count);
+            const auto output_offset = (height - to_grid(data.output_count)) / 2;
 
             for (auto i : range(height)) {
                 const auto y = grid_t {i};
@@ -156,8 +167,7 @@ auto iter_element_body_points(layout_calculation_data_t data,
             const auto negative_pos = display_number::negative_position(data.input_count);
             const auto enable_pos = display_number::enable_position(data.input_count);
             const auto max_input_y =
-                grid_t {display_number::value_inputs(data.input_count).value} -
-                grid_t {1};
+                to_grid(display_number::value_inputs(data.input_count)) - grid_t {1};
 
             for (const auto y : range(int {height} + 1)) {
                 for (const auto x : range(int {width} + 1)) {
@@ -237,10 +247,10 @@ auto iter_element_body_points(layout_calculation_data_t data,
             const auto height =
                 data.output_count <= connection_count_t {1}
                     ? grid_t {1}
-                    : grid_t {((data.output_count - connection_count_t {1}) * 2).value};
+                    : 2 * to_grid(data.output_count - connection_count_t {1});
 
             for (auto i : range(1, width)) {
-                for (auto j : range(height + 1)) {
+                for (auto j : range(height + grid_t {1})) {
                     const auto x = grid_t {i};
                     const auto y = grid_t {j};
                     if (!next_point(
@@ -343,8 +353,7 @@ auto iter_input_location(layout_calculation_data_t data,
         case xor_element: {
             require_min(data.input_count, standard_element::min_inputs);
 
-            for (auto i : range(data.input_count.value)) {
-                const auto y = grid_t {i};
+            for (auto y : range(to_grid(data.input_count))) {
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
                         transform(data.orientation, orientation_t::left))) {
@@ -386,8 +395,8 @@ auto iter_input_location(layout_calculation_data_t data,
             }
 
             // number inputs
-            for (auto i : range(display_number::value_inputs(data.input_count))) {
-                const auto y = grid_t {i.value};
+            for (auto y :
+                 range(to_grid(display_number::value_inputs(data.input_count)))) {
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
                         transform(data.orientation, orientation_t::left))) {
@@ -409,8 +418,7 @@ auto iter_input_location(layout_calculation_data_t data,
             }
 
             // number inputs
-            for (auto i : range(display_ascii::value_inputs)) {
-                const auto y = grid_t {i.value};
+            for (auto y : range(to_grid(display_ascii::value_inputs))) {
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
                         transform(data.orientation, orientation_t::left))) {
@@ -461,7 +469,8 @@ auto iter_input_location(layout_calculation_data_t data,
             }
 
             // memory row rows
-            for (auto i : range(data.input_count - connection_count_t {1})) {
+            for (auto i : range(to_grid(data.input_count - connection_count_t {1}))) {
+                // TODO overload grid for multiplications
                 const auto y = grid_t {2 * i.value};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
@@ -572,8 +581,8 @@ auto iter_output_location(layout_calculation_data_t data,
         case xor_element: {
             require_equal(data.output_count, connection_count_t {1});
 
-            const auto height = data.input_count;
-            const auto output_offset = grid_t {(height - data.output_count).value / 2};
+            const auto height = to_grid(data.input_count);
+            const auto output_offset = (height - to_grid(data.output_count)) / 2;
             return next_output(
                 transform(data.position, data.orientation, point_t {2, output_offset}),
                 transform(data.orientation, orientation_t::right));
@@ -631,7 +640,7 @@ auto iter_output_location(layout_calculation_data_t data,
 
             // for each memory row
             for (auto i : range(data.output_count)) {
-                const auto y = grid_t {2 * i.value};
+                const auto y = to_grid(i) * 2;
                 if (!next_output(
                         transform(data.position, data.orientation, point_t {width, y}),
                         transform(data.orientation, orientation_t::right))) {

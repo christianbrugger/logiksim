@@ -157,14 +157,11 @@ class Layout {
     constexpr static auto empty_bounding_rect =
         rect_t {point_t {-10'000, -10'000}, point_t {-10'000, -10'000}};
 
-    using connection_size_t = std::make_unsigned<connection_id_t::value_type>::type;
-    static_assert(sizeof(connection_size_t) == sizeof(connection_id_t));
-
     std::vector<ElementType> element_types_ {};
     // TODO create two lists for lines and logic items or use a variant
     std::vector<circuit_id_t> sub_circuit_ids_ {};
-    std::vector<connection_size_t> input_counts_ {};
-    std::vector<connection_size_t> output_counts_ {};
+    std::vector<connection_count_t> input_counts_ {};
+    std::vector<connection_count_t> output_counts_ {};
     std::vector<logic_small_vector_t> input_inverters_ {};
     std::vector<logic_small_vector_t> output_inverters_ {};
 

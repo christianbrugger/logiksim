@@ -176,7 +176,7 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
 
 auto logicsim::standard_element::height(connection_count_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
-    return grid_t {(input_count - connection_count_t {1}).value};
+    return to_grid((input_count - connection_count_t {1}));
 }
 
 namespace display_number {
@@ -215,7 +215,7 @@ constexpr auto _width(connection_count_t input_count) -> grid_t {
     static_assert(padding == 0.25);
     static_assert(margin == 0.2);
 
-    const auto digit_count_2 = gsl::narrow<double>(value_inputs_(input_count).value);
+    const auto digit_count_2 = gsl::narrow<double>(value_inputs_(input_count).count());
     const auto digit_count_10 = ceil(max(1., digit_count_2) * log10(2));
     const auto digit_count_10_neg = ceil(max(1., digit_count_2 - 1.) * log10(2));
 
@@ -236,10 +236,10 @@ constexpr auto _width(connection_count_t input_count) -> grid_t {
 }
 
 constexpr auto _generate_widths() {
-    constexpr auto count = (max_inputs - min_inputs + connection_count_t {1}).value;
+    constexpr auto count = std::size_t {max_inputs - min_inputs + connection_count_t {1}};
     auto result = std::array<grid_t, count> {};
     for (connection_count_t i = min_inputs; i <= max_inputs; ++i) {
-        result[(i - min_inputs).value] = _width(i);
+        result[std::size_t {i - min_inputs}] = _width(i);
     }
     return result;
 }
@@ -260,20 +260,20 @@ auto width(connection_count_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
     require_max(input_count, max_inputs);
 
-    return generated_widths.at((input_count - min_inputs).value);
+    return generated_widths.at((input_count - min_inputs).count());
 }
 
 auto height(connection_count_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
     require_max(input_count, max_inputs);
 
-    return grid_t {
-        std::max(connection_count_t {2}, input_count - connection_count_t {3}).value};
+    return to_grid(
+        std::max(connection_count_t {2}, input_count - connection_count_t {3}));
 }
 
 auto input_shift(connection_count_t input_count) -> grid_t {
     const auto space =
-        width(input_count) - grid_t {1} - grid_t {display_number::control_inputs.value};
+        width(input_count) - grid_t {1} - to_grid(display_number::control_inputs);
     return grid_t {(int {space.value} + 1) / 2};
 }
 
@@ -415,7 +415,7 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             require_min(data.input_count, standard_element::min_inputs);
 
             const auto height = data.input_count;
-            const auto y2 = grid_t {(height - connection_count_t {1}).value};
+            const auto y2 = to_grid(height - connection_count_t {1});
             return transform(data.position, data.orientation, {0, 0}, {2, y2});
         }
 
@@ -451,10 +451,9 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             const auto width = 2 * 4;
 
             const auto x2 = grid_t {width};
-            const auto y2 =
-                data.output_count == connection_count_t {1}
-                    ? grid_t {1}
-                    : grid_t {((data.output_count - connection_count_t {1}) * 2).value};
+            const auto y2 = data.output_count == connection_count_t {1}
+                                ? grid_t {1}
+                                : to_grid(data.output_count - connection_count_t {1}) * 2;
             return transform(data.position, data.orientation, {0, 0}, {x2, y2});
         }
         case latch_d: {

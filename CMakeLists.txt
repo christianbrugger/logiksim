@@ -77,6 +77,7 @@ set(LS_CORE_SOURCES
     src/render_generic.cpp
     src/render_helper.cpp
     src/resource.cpp
+    src/safe_numeric.cpp
     src/scene.cpp
     src/schematic.cpp
     src/schematic_generation.cpp
@@ -290,6 +291,7 @@ set(BOOST_INCLUDE_LIBRARIES
     container 
     geometry
     iostreams
+    logic # for safe_numerics
     mpl 
     random 
     stacktrace
@@ -307,6 +309,9 @@ else()
     add_library(boost_stacktrace ALIAS boost_stacktrace_basic)   
 endif()
 
+
+# Safe Numerics
+add_subdirectory(external/my_safe_numerics EXCLUDE_FROM_ALL SYSTEM)
 
 # Qt 6
 set(CMAKE_AUTOMOC FALSE)  # takes too much time, not parallelized
@@ -400,6 +405,7 @@ if (LS_ENABLE_PCH)
         <boost/geometry.hpp>
         <boost/random/mersenne_twister.hpp>
         <boost/random/uniform_int_distribution.hpp>
+        <boost/safe_numerics/safe_integer.hpp>
         <fmt/core.h>
         <fmt/format.h>
         <folly/small_vector.h>
@@ -446,6 +452,7 @@ set(LS_CORE_LIBRARIES
     Boost::iostreams
     Boost::mpl
     Boost::random
+	Boost::safe_numerics
     boost_stacktrace 
     Boost::unordered
     

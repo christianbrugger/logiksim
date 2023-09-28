@@ -3,6 +3,8 @@
 
 #include "format/struct.h"
 
+#include <gsl/gsl>
+
 #include <compare>
 #include <cstdint>
 #include <limits>
@@ -19,6 +21,7 @@ struct connection_id_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
+    [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
     [[nodiscard]] explicit constexpr operator bool() const noexcept;
     [[nodiscard]] auto operator==(const connection_id_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const connection_id_t &other) const = default;
@@ -37,6 +40,10 @@ constexpr inline auto null_connection = connection_id_t {-1};
 //
 // Implementation
 //
+
+constexpr connection_id_t::operator std::size_t() const noexcept {
+    return gsl::narrow<std::size_t>(value);
+}
 
 constexpr connection_id_t::operator bool() const noexcept {
     return value >= 0;

@@ -82,3 +82,6 @@
 	path = external/svg2b2d
 	url = https://github.com/christianbrugger/svg2b2d
 	ignore = dirty
+[submodule "external/my_safe_numerics"]
+	path = external/my_safe_numerics
+	url = https://github.com/christianbrugger/my_safe_numerics.git

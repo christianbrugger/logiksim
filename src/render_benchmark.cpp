@@ -161,7 +161,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             .input_count = connection_count_t {1},
             .output_count = output_count,
             .output_delays =
-                std::vector<delay_t>(output_count.value, defaults::logic_item_delay),
+                std::vector<delay_t>(output_count.count(), defaults::logic_item_delay),
         });
     }
     add_output_placeholders(schematic);

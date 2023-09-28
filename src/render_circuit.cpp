@@ -507,9 +507,8 @@ constexpr auto standard_element_label(ElementType element_type) -> std::string_v
 
 auto draw_standard_element(Context& ctx, layout::ConstElement element,
                            ElementDrawState state) -> void {
-    const auto element_height =
-        std::size_t {std::max(element.input_count(), element.output_count()).value} -
-        std::size_t {1};
+    const auto connector_count = std::max(element.input_count(), element.output_count());
+    const auto element_height = to_grid_fine(connector_count) - grid_fine_t {1};
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
         point_fine_t {0., -padding},
@@ -596,8 +595,7 @@ auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement elemen
                                        ElementDrawState state, bool two_complement) {
     const auto input_count = element.input_count();
     // TODO can we simplify this?
-    const auto last_input_id = connection_id_t {gsl::narrow<connection_id_t::value_type>(
-        (input_count - connection_count_t {1}).value)};
+    const auto last_input_id = last_connection_id(input_count);
     const auto has_space =
         display_number::input_shift(element.input_count()) > grid_t {0};
 
@@ -612,8 +610,9 @@ auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement elemen
         if (two_complement && input_id == last_input_id) {
             return has_space ? "sign" : "s";
         }
-        const auto index = gsl::narrow<std::size_t>(input_id.value);
-        return power_of_two_labels.at(index - display_number::control_inputs.value);
+        // TODO checked math
+        return power_of_two_labels.at(std::size_t {input_id} -
+                                      std::size_t {display_number::control_inputs});
     };
 
     draw_input_connector_labels(ctx, element, state, to_label);
@@ -625,9 +624,9 @@ auto _draw_ascii_display_input_labels(Context& ctx, layout::ConstElement element
         if (input_id == display::enable_input_id) {
             return "En";
         }
-        const auto index = connection_count_t {
-            gsl::narrow<connection_count_t::value_type>(input_id.value)};
-        return power_of_two_labels.at((index - display_ascii::control_inputs).value);
+        // TODO checked math
+        return power_of_two_labels.at(std::size_t {input_id} -
+                                      std::size_t {display_ascii::control_inputs});
     };
 
     draw_input_connector_labels(ctx, element, state, to_label);
@@ -639,14 +638,14 @@ auto _inputs_to_number(layout::ConstElement element,
     const auto& values = logic_state.input_values();
     const auto& inverters = element.input_inverters();
 
-    if (values.size() > 64 + control_inputs.value) {
+    if (values.size() - std::size_t {control_inputs} > std::size_t {64}) {
         throw_exception("input size too large");
     }
 
     auto number = uint64_t {0};
     for (const auto& i : range(std::size_t {control_inputs}, values.size())) {
         const auto value = values.at(i) ^ inverters.at(i);
-        number |= (static_cast<uint64_t>(value) << (i - control_inputs.value));
+        number |= (static_cast<uint64_t>(value) << (i - std::size_t {control_inputs}));
     }
     return number;
 }
@@ -760,8 +759,9 @@ auto draw_display_number(Context& ctx, layout::ConstElement element,
     const auto two_complement = _is_display_twos_complement(element, logic_state);
     const auto edit_mode_text = "0";
     const auto control_inputs = display_number::control_inputs;
+    const auto value_inputs = display_number::value_inputs(input_count);
     const auto to_text =
-        _number_value_to_text(two_complement, (input_count - control_inputs).value);
+        _number_value_to_text(two_complement, std::size_t {value_inputs});
     _draw_number_display(ctx, element, state, element_width, element_height, to_text,
                          edit_mode_text, control_inputs, logic_state);
     _draw_number_display_input_labels(ctx, element, state, two_complement);
@@ -905,7 +905,7 @@ auto draw_shift_register(Context& ctx, layout::ConstElement element,
     draw_logic_item_rect(ctx, rect, element, state);
 
     // content
-    const auto output_count = std::size_t {element.output_count().value};
+    const auto output_count = std::size_t {element.output_count()};
     const auto state_size = std::size_t {10};
 
     for (auto n : range(output_count, state_size)) {

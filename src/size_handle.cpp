@@ -6,6 +6,7 @@
 #include "exception.h"
 #include "layout.h"
 #include "layout_calculation.h"
+#include "safe_numeric.h"
 #include "scene.h"
 
 namespace logicsim {
@@ -20,7 +21,7 @@ auto size_handle_positions(const layout::ConstElement element)
         case xor_element: {
             require_min(element.input_count(), standard_element::min_inputs);
 
-            const auto height = element.input_count().value - 1.0;
+            const auto height = to_grid_fine(element.input_count()) - grid_fine_t {1};
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
             return {
@@ -32,15 +33,20 @@ auto size_handle_positions(const layout::ConstElement element)
         }
 
         case display_number: {
-            const auto width = display_number::width(element.input_count()).value;
-            constexpr auto overdraw = defaults::logic_item_body_overdraw;
             const auto value_inputs = display_number::value_inputs(element.input_count());
 
+            const auto width = display_number::width(element.input_count()).value;
+            const auto height = to_grid_fine(value_inputs) - grid_fine_t {1};
+
+            constexpr auto overdraw = defaults::logic_item_body_overdraw;
+
             return {
-                size_handle_t {
-                    1, transform(element.position(), element.orientation(),
-                                 point_fine_t {0.5 * width,
-                                               value_inputs.value - 1.0 + overdraw})},
+
+                size_handle_t {1, transform(element.position(), element.orientation(),
+                                            point_fine_t {
+                                                0.5 * width,
+                                                height - 1.0 + overdraw,
+                                            })},
             };
         }
 
@@ -150,15 +156,12 @@ namespace size_handle {
 
 auto clamp_connection_count(connection_count_t count, int delta, connection_count_t min,
                             connection_count_t max) -> connection_count_t {
-    // TODO remove cast when type has constructor
-    // static_assert(sizeof(connection_count_t::value_type) < sizeof(int64_t));
-    const auto new_count = gsl::narrow<int64_t>(count.value) + int64_t {delta};
+    const auto new_count = count.safe_value() + ls_safe<int> {delta};
 
-    const auto clamped_count = std::clamp(new_count, gsl::narrow<int64_t>(min.value),
-                                          gsl::narrow<int64_t>(max.value));
+    const auto clamped_count =
+        std::clamp<decltype(new_count)>(new_count, min.safe_value(), max.safe_value());
 
-    return connection_count_t {
-        gsl::narrow<connection_count_t::value_type>(clamped_count)};
+    return connection_count_t {clamped_count};
 }
 
 auto adjust_height(const logic_item_t original, size_handle_t handle, int delta,
@@ -193,7 +196,7 @@ auto adjust_height(const logic_item_t original, size_handle_t handle, int delta,
     }
 
     // inverters
-    result.definition.input_inverters.resize(result.definition.input_count.value);
+    result.definition.input_inverters.resize(result.definition.input_count.count());
     return result;
 }
 

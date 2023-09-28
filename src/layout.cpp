@@ -339,12 +339,11 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
     // extend vectors
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.circuit_id);
-    input_counts_.push_back(gsl::narrow_cast<connection_size_t>(data.input_count.value));
-    output_counts_.push_back(
-        gsl::narrow_cast<connection_size_t>(data.output_count.value));
+    input_counts_.push_back(data.input_count);
+    output_counts_.push_back(data.output_count);
 
     if (data.input_inverters.empty()) {
-        input_inverters_.emplace_back(data.input_count.value, false);
+        input_inverters_.emplace_back(data.input_count.count(), false);
     } else {
         if (connection_count_t {data.input_inverters.size()} != data.input_count)
             [[unlikely]] {
@@ -353,7 +352,7 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
         input_inverters_.emplace_back(data.input_inverters);
     }
     if (data.output_inverters.empty()) {
-        output_inverters_.emplace_back(data.output_count.value, false);
+        output_inverters_.emplace_back(data.output_count.count(), false);
     } else {
         if (connection_count_t {data.output_inverters.size()} != data.output_count)
             [[unlikely]] {

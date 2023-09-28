@@ -54,7 +54,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
             }
 
             default: {
-                return std::vector<delay_t>(element.output_count().value,
+                return std::vector<delay_t>(element.output_count().count(),
                                             defaults::logic_item_delay);
             }
         }
@@ -88,7 +88,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
                 .input_count = connection_count_t {0},
                 .output_count = output_count,
                 .output_delays =
-                    std::vector<delay_t>(output_count.value, delay_t::epsilon()),
+                    std::vector<delay_t>(output_count.count(), delay_t::epsilon()),
             });
         }
 
@@ -97,7 +97,8 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
 
         auto delays =
             ignore_delay
-                ? std::vector<delay_t>(line_tree.output_count().value, delay_t::epsilon())
+                ? std::vector<delay_t>(line_tree.output_count().count(),
+                                       delay_t::epsilon())
                 : calculate_output_delays(line_tree, schematic.wire_delay_per_distance());
         const auto tree_max_delay =
             ignore_delay ? delay_t {0ns} : std::ranges::max(delays);

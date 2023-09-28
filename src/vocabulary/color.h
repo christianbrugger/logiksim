@@ -37,7 +37,9 @@ struct color_t {
 };
 
 static_assert(std::is_trivial_v<color_t>);
+static_assert(std::is_trivially_constructible_v<color_t>);
 static_assert(std::is_trivially_copyable_v<color_t>);
+static_assert(std::is_trivially_copy_assignable_v<color_t>);
 
 //
 // Implementation

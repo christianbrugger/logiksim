@@ -25,6 +25,8 @@
 #include "simulation_type.h"
 #include "timer.h"
 
+#include <optional>
+
 namespace logicsim::serialize {
 
 struct move_delta_t {
@@ -79,6 +81,17 @@ auto parse_attr_clock_generator(
     return std::nullopt;
 }
 
+namespace {
+auto to_connection_count(connection_count_t::value_type_rep value)
+    -> std::optional<connection_count_t> {
+    if (connection_count_t::min().count() <= value &&
+        value <= connection_count_t::max().count()) {
+        return connection_count_t {value};
+    }
+    return std::nullopt;
+}
+}  // namespace
+
 auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
     -> std::optional<LogicItemData> {
     // element type
@@ -86,11 +99,18 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
         return std::nullopt;
     }
 
+    const auto input_count = to_connection_count(obj.input_count);
+    const auto output_count = to_connection_count(obj.output_count);
+
+    if (!input_count || !output_count) {
+        return std::nullopt;
+    }
+
     // definition
     const auto definition = LogicItemDefinition {
         .element_type = obj.element_type,
-        .input_count = obj.input_count,
-        .output_count = obj.output_count,
+        .input_count = input_count.value(),
+        .output_count = output_count.value(),
         .orientation = obj.orientation,
         .input_inverters = obj.input_inverters,
         .output_inverters = obj.output_inverters,
@@ -110,8 +130,8 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
 
     const auto data = layout_calculation_data_t {
         .position = moved_position,
-        .input_count = obj.input_count,
-        .output_count = obj.output_count,
+        .input_count = input_count.value(),
+        .output_count = output_count.value(),
         .orientation = obj.orientation,
         .element_type = obj.element_type,
     };
@@ -151,8 +171,8 @@ auto add_element(SerializedLayout& data, const layout::ConstElement element) -> 
     if (element.is_logic_item()) {
         data.logic_items.push_back(SerializedLogicItem {
             .element_type = element.element_type(),
-            .input_count = element.input_count(),
-            .output_count = element.output_count(),
+            .input_count = element.input_count().count(),
+            .output_count = element.output_count().count(),
             .input_inverters = element.input_inverters(),
             .output_inverters = element.output_inverters(),
             .position = element.position(),
