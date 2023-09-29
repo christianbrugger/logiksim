@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_DELAY_H
 #define LOGICSIM_VOCABULARY_DELAY_H
 
+#include "concept/integral.h"
 #include "format/struct.h"
 #include "vocabulary/time_literal.h"
 
@@ -19,8 +20,6 @@ struct delay_t {
     value_type value;
 
     [[nodiscard]] explicit constexpr delay_t() noexcept = default;
-    // TODO Can we make this possible?
-    // [[nodiscard]] explicit constexpr delay_t(value_type delay) noexcept;
     [[nodiscard]] explicit constexpr delay_t(
         std::chrono::duration<int64_t, std::nano> delay);
 
@@ -39,8 +38,6 @@ static_assert(std::is_trivial_v<delay_t>);
 //
 // Implementation
 //
-
-// constexpr delay_t::delay_t(value_type delay) noexcept : value {delay} {}
 
 constexpr delay_t::delay_t(std::chrono::duration<int64_t, std::nano> delay)
     : value {delay} {

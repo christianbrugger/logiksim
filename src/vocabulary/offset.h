@@ -29,45 +29,83 @@ struct offset_t {
     [[nodiscard]] auto operator==(const offset_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const offset_t &other) const = default;
 
-    constexpr auto operator++() -> offset_t & {
-        return *this = *this + offset_t {1};
-    }
+    constexpr auto operator+=(const offset_t &other) -> offset_t &;
+    constexpr auto operator-=(const offset_t &other) -> offset_t &;
 
-    constexpr auto operator++(int) -> offset_t {
-        auto tmp = *this;
-        operator++();
-        return tmp;
-    }
+    constexpr auto operator++() -> offset_t &;
+    constexpr auto operator++(int) -> offset_t;
 
-    constexpr auto operator--() -> offset_t & {
-        return *this = *this - offset_t {1};
-    }
-
-    constexpr auto operator--(int) -> offset_t {
-        auto tmp = *this;
-        operator--();
-        return tmp;
-    }
-
-    [[nodiscard]] constexpr auto operator+(offset_t other) const -> offset_t {
-        auto result = value + other.value;
-
-        static_assert(sizeof(result) > sizeof(value));
-        return {gsl::narrow<offset_t::value_type>(result)};
-    }
-
-    [[nodiscard]] constexpr auto operator-(offset_t other) const -> offset_t {
-        auto result = value - other.value;
-
-        static_assert(sizeof(result) > sizeof(value));
-        return {gsl::narrow<offset_t::value_type>(result)};
-    }
+    constexpr auto operator--() -> offset_t &;
+    constexpr auto operator--(int) -> offset_t;
 };
 
 static_assert(std::is_aggregate<offset_t>::value);
 static_assert(std::is_trivial<offset_t>::value);
 static_assert(std::is_standard_layout<offset_t>::value);
 static_assert(std::is_nothrow_default_constructible<offset_t>::value);
+
+[[nodiscard]] constexpr auto operator+(const offset_t &left, const offset_t &right)
+    -> offset_t;
+[[nodiscard]] constexpr auto operator-(const offset_t &left, const offset_t &right)
+    -> offset_t;
+
+//
+// Implementation
+//
+
+constexpr auto offset_t::operator++() -> offset_t & {
+    *this += offset_t {1};
+    return *this;
+}
+
+constexpr auto offset_t::operator++(int) -> offset_t {
+    auto tmp = *this;
+    operator++();
+    return tmp;
+}
+
+constexpr auto offset_t::operator--() -> offset_t & {
+    *this -= offset_t {1};
+    return *this;
+}
+
+constexpr auto offset_t::operator--(int) -> offset_t {
+    auto tmp = *this;
+    operator--();
+    return tmp;
+}
+
+constexpr auto offset_t::operator+=(const offset_t &other) -> offset_t & {
+    auto result = value + other.value;
+
+    static_assert(sizeof(result) > sizeof(value));
+    value = gsl::narrow<offset_t::value_type>(result);
+
+    return *this;
+}
+
+constexpr auto offset_t::operator-=(const offset_t &other) -> offset_t & {
+    auto result = value - other.value;
+
+    static_assert(sizeof(result) > sizeof(value));
+    value = gsl::narrow<offset_t::value_type>(result);
+
+    return *this;
+}
+
+[[nodiscard]] constexpr auto operator+(const offset_t &left, const offset_t &right)
+    -> offset_t {
+    auto result = left;
+    result += right;
+    return result;
+}
+
+[[nodiscard]] constexpr auto operator-(const offset_t &left, const offset_t &right)
+    -> offset_t {
+    auto result = left;
+    result -= right;
+    return result;
+}
 
 }  // namespace logicsim
 

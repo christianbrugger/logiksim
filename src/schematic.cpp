@@ -221,7 +221,8 @@ auto Schematic::wire_delay_per_distance() const -> delay_t {
 
 auto Schematic::add_element(ElementData &&data) -> Element {
     // make sure we can represent all ids
-    if (element_types_.size() + 1 >= element_id_t::max()) [[unlikely]] {
+    if (element_types_.size() >= std::size_t {element_id_t::max()} - std::size_t {1})
+        [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
     if (total_input_count_ >= std::numeric_limits<std::size_t>::max() -

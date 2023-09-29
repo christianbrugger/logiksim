@@ -19,20 +19,34 @@ struct segment_part_t {
     segment_t segment;
     part_t part;
 
+    /**
+     * @brief: The bool cast tests if this segment part is valid.
+     */
+    [[nodiscard]] explicit constexpr operator bool() const noexcept;
+
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const segment_part_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const segment_part_t &other) const = default;
-
-    [[nodiscard]] explicit constexpr operator bool() const noexcept {
-        return bool {segment};
-    }
 };
 
 static_assert(std::is_aggregate_v<segment_part_t>);
 
+/**
+ * @brief: Defines the canonical null segment
+ *
+ * Note that the part is arbitrary.
+ */
 constexpr inline auto null_segment_part =
     segment_part_t {null_segment, part_t {offset_t {0}, offset_t {1}}};
+
+//
+// Implementation
+//
+
+constexpr segment_part_t::operator bool() const noexcept {
+    return bool {segment};
+}
 
 }  // namespace logicsim
 

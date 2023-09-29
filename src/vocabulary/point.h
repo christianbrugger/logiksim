@@ -19,7 +19,6 @@ struct point_t {
     grid_t y;
 
     [[nodiscard]] explicit constexpr point_t() = default;
-    [[nodiscard]] explicit constexpr point_t(grid_t x_, grid_t y_) noexcept;
     [[nodiscard]] explicit constexpr point_t(grid_like auto x_, grid_like auto y_);
 
     [[nodiscard]] auto format() const -> std::string;
@@ -27,19 +26,19 @@ struct point_t {
     [[nodiscard]] constexpr auto operator==(const point_t &other) const -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const point_t &other) const = default;
 
-    [[nodiscard]] constexpr auto operator+(point_t other) const -> point_t {
-        return point_t {x + other.x, y + other.y};
-    }
-
-    [[nodiscard]] constexpr auto operator-(point_t other) const -> point_t {
-        return point_t {x - other.x, y - other.y};
-    }
+    constexpr auto operator+=(const point_t &other) -> point_t &;
+    constexpr auto operator-=(const point_t &other) -> point_t &;
 };
 
 static_assert(std::is_trivial_v<point_t>);
 static_assert(std::is_trivially_constructible_v<point_t>);
 static_assert(std::is_trivially_copyable_v<point_t>);
 static_assert(std::is_trivially_copy_assignable_v<point_t>);
+
+[[nodiscard]] constexpr auto operator+(const point_t &left, const point_t &right)
+    -> point_t;
+[[nodiscard]] constexpr auto operator-(const point_t &left, const point_t &right)
+    -> point_t;
 
 /**
  * @brief: Returns if the line from p0 to p1 is horizontal or vertical.
@@ -52,15 +51,36 @@ constexpr auto is_orthogonal_line(point_t p0, point_t p1) noexcept -> bool;
 // Implementation
 //
 
-constexpr point_t::point_t(grid_t x_, grid_t y_) noexcept : x {x_}, y {y_} {};
-
 constexpr point_t::point_t(grid_like auto x_, grid_like auto y_)
     : x {grid_t {x_}}, y {grid_t {y_}} {};
+
+constexpr auto point_t::operator+=(const point_t &other) -> point_t & {
+    x += other.x;
+    y += other.y;
+    return *this;
+}
+
+constexpr auto point_t::operator-=(const point_t &other) -> point_t & {
+    x -= other.x;
+    y -= other.y;
+    return *this;
+}
+
+constexpr auto operator+(const point_t &left, const point_t &right) -> point_t {
+    auto result = left;
+    result += right;
+    return result;
+}
+
+constexpr auto operator-(const point_t &left, const point_t &right) -> point_t {
+    auto result = left;
+    result -= right;
+    return result;
+}
 
 constexpr auto is_orthogonal_line(point_t p0, point_t p1) noexcept -> bool {
     return (p0.x == p1.x) ^ (p0.y == p1.y);
 }
-
 }  // namespace logicsim
 
 //

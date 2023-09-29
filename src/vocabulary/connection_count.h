@@ -37,6 +37,7 @@ struct connection_count_t {
 
     // We offer this conversion to std::size_t for indexing into vectors.
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
+
     // returns safe_numerics value
     [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
     // returns underlying representation

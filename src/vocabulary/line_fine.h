@@ -21,38 +21,40 @@ struct line_fine_t {
 
     [[nodiscard]] explicit constexpr line_fine_t() = default;
 
-    [[nodiscard]] explicit constexpr line_fine_t(point_fine_t p0_, point_fine_t p1_)
-        : p0 {p0_}, p1 {p1_} {
-        if (!is_orthogonal_line(p0_, p1_)) [[unlikely]] {
-            throw std::runtime_error("line needs to be horizontal or vertical.");
-        }
-    };
+    [[nodiscard]] explicit constexpr line_fine_t(line_t line) noexcept;
+    [[nodiscard]] explicit constexpr line_fine_t(ordered_line_t line) noexcept;
 
-    [[nodiscard]] explicit constexpr line_fine_t(line_t line) noexcept
-        : p0 {point_fine_t {line.p0}}, p1 {point_fine_t {line.p1}} {}
-
-    [[nodiscard]] explicit constexpr line_fine_t(ordered_line_t line) noexcept
-        : p0 {point_fine_t {line.p0}}, p1 {point_fine_t {line.p1}} {}
-
-    [[nodiscard]] explicit constexpr line_fine_t(point_t p0_, point_t p1_)
-        : line_fine_t {point_fine_t {p0_}, point_fine_t {p1_}} {};
-
-    [[nodiscard]] explicit constexpr line_fine_t(point_fine_t p0_, point_t p1_)
-        : line_fine_t {p0_, point_fine_t {p1_}} {};
-
-    [[nodiscard]] explicit constexpr line_fine_t(point_t p0_, point_fine_t p1_)
-        : line_fine_t {point_fine_t {p0_}, p1_} {};
+    [[nodiscard]] explicit constexpr line_fine_t(point_fine_like auto p0_,
+                                                 point_fine_like auto p1_);
 
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const line_fine_t &other) const
         -> bool = default;
+    // operator<=>: Not camparables, as points are not ordered
 };
 
 static_assert(std::is_trivial_v<line_fine_t>);
 static_assert(std::is_trivially_constructible_v<line_fine_t>);
 static_assert(std::is_trivially_copyable_v<line_fine_t>);
 static_assert(std::is_trivially_copy_assignable_v<line_fine_t>);
+
+//
+// Implementation
+//
+
+constexpr line_fine_t::line_fine_t(line_t line) noexcept
+    : p0 {point_fine_t {line.p0}}, p1 {point_fine_t {line.p1}} {}
+
+constexpr line_fine_t::line_fine_t(ordered_line_t line) noexcept
+    : p0 {point_fine_t {line.p0}}, p1 {point_fine_t {line.p1}} {}
+
+constexpr line_fine_t::line_fine_t(point_fine_like auto p0_, point_fine_like auto p1_)
+    : p0 {point_fine_t {p0_}}, p1 {point_fine_t {p1_}} {
+    if (!is_orthogonal_line(p0, p1)) [[unlikely]] {
+        throw std::runtime_error("line needs to be horizontal or vertical.");
+    }
+};
 
 }  // namespace logicsim
 

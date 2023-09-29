@@ -23,6 +23,9 @@ struct color_t {
     [[nodiscard]] constexpr explicit color_t(uint32_t r, uint32_t g, uint32_t b,
                                              uint32_t a = 0xFFu) noexcept;
 
+    // we make this operator implicit so we can pass color_t to the Blend2D API
+    [[nodiscard]] /* non-explicit */ operator BLRgba32() const noexcept;
+
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const color_t &other) const -> bool = default;
@@ -32,8 +35,6 @@ struct color_t {
     [[nodiscard]] constexpr auto g() const noexcept -> uint32_t;
     [[nodiscard]] constexpr auto b() const noexcept -> uint32_t;
     [[nodiscard]] constexpr auto a() const noexcept -> uint32_t;
-
-    [[nodiscard]] operator BLRgba32() const noexcept;
 };
 
 static_assert(std::is_trivial_v<color_t>);

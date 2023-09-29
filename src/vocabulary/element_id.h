@@ -1,6 +1,8 @@
 #ifndef LOGIKSIM_VOCABULARY_ELEMENT_ID_H
 #define LOGIKSIM_VOCABULARY_ELEMENT_ID_H
 
+#include "algorithm/narrow_integral.h"
+#include "concept/integral.h"
 #include "difference_type.h"
 #include "format/struct.h"
 #include "wyhash.h"
@@ -26,54 +28,53 @@ struct element_id_t {
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] explicit constexpr element_id_t() = default;
-    [[nodiscard]] explicit constexpr element_id_t(value_type value_) noexcept;
-    [[nodiscard]] explicit constexpr element_id_t(unsigned int value_);
-    [[nodiscard]] explicit constexpr element_id_t(long value_);
-    [[nodiscard]] explicit constexpr element_id_t(unsigned long value_);
-    [[nodiscard]] explicit constexpr element_id_t(long long value_);
-    [[nodiscard]] explicit constexpr element_id_t(unsigned long long value_);
+    [[nodiscard]] explicit constexpr element_id_t(integral auto value);
+
+    /**
+     * @brief: The conversion to std::size_t is used for indexing into vectors.
+     *
+     * An exception is thrown, if the id is not valid.
+     */
+    [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
+    /**
+     * @brief: The bool cast tests if this ID is valid.
+     */
+    [[nodiscard]] explicit constexpr operator bool() const noexcept;
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] explicit constexpr operator bool() const noexcept;
     [[nodiscard]] auto operator==(const element_id_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const element_id_t &other) const = default;
 
-    [[nodiscard]] static constexpr auto max() noexcept;
+    [[nodiscard]] static constexpr auto max() noexcept -> element_id_t;
 
     constexpr auto operator++() noexcept -> element_id_t &;
     constexpr auto operator++(int) noexcept -> element_id_t;
 };
 
 static_assert(std::is_trivial_v<element_id_t>);
+static_assert(std::is_trivially_constructible_v<element_id_t>);
+static_assert(std::is_trivially_copyable_v<element_id_t>);
+static_assert(std::is_trivially_copy_assignable_v<element_id_t>);
 
 //
 // Implementation
 //
 
-constexpr element_id_t::element_id_t(value_type value_) noexcept : value {value_} {};
+constexpr element_id_t::element_id_t(integral auto value)
+    : value {narrow_integral<value_type>(value)} {}
 
-constexpr element_id_t::element_id_t(unsigned int value_)
-    : value {gsl::narrow<value_type>(value_)} {};
-
-constexpr element_id_t::element_id_t(long value_)
-    : value {gsl::narrow<value_type>(value_)} {};
-
-constexpr element_id_t::element_id_t(unsigned long value_)
-    : value {gsl::narrow<value_type>(value_)} {};
-
-constexpr element_id_t::element_id_t(long long value_)
-    : value {gsl::narrow<value_type>(value_)} {};
-
-constexpr element_id_t::element_id_t(unsigned long long value_)
-    : value {gsl::narrow<value_type>(value_)} {};
+constexpr element_id_t::operator std::size_t() const noexcept {
+    // throws error for negative / invalid ids
+    return gsl::narrow<std::size_t>(value);
+}
 
 constexpr element_id_t::operator bool() const noexcept {
     return value >= 0;
 }
 
-constexpr auto element_id_t::max() noexcept {
-    return std::numeric_limits<value_type>::max();
+constexpr auto element_id_t::max() noexcept -> element_id_t {
+    return element_id_t {std::numeric_limits<value_type>::max()};
 };
 
 constexpr auto element_id_t::operator++() noexcept -> element_id_t & {

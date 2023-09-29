@@ -18,23 +18,28 @@ struct line_t {
     point_t p1;
 
     [[nodiscard]] explicit constexpr line_t() = default;
-
-    [[nodiscard]] explicit constexpr line_t(point_t p0_, point_t p1_)
-        : p0 {p0_}, p1 {p1_} {
-        if (!is_orthogonal_line(p0_, p1_)) [[unlikely]] {
-            throw std::runtime_error("line needs to be horizontal or vertical.");
-        }
-    };
+    [[nodiscard]] explicit constexpr line_t(point_t p0_, point_t p1_);
 
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const line_t &other) const -> bool = default;
+    // operator<=>: Not camparables, as points are not ordered, use ordered_line_t
 };
 
 static_assert(std::is_trivial_v<line_t>);
 static_assert(std::is_trivially_constructible_v<line_t>);
 static_assert(std::is_trivially_copyable_v<line_t>);
 static_assert(std::is_trivially_copy_assignable_v<line_t>);
+
+//
+// Implementation
+//
+
+constexpr line_t::line_t(point_t p0_, point_t p1_) : p0 {p0_}, p1 {p1_} {
+    if (!is_orthogonal_line(p0_, p1_)) [[unlikely]] {
+        throw std::runtime_error("line needs to be horizontal or vertical.");
+    }
+};
 
 }  // namespace logicsim
 

@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_POINT_FINE_H
 #define LOGICSIM_VOCABULARY_POINT_FINE_H
 
+#include "concept/explicitly_convertible.h"
 #include "format/struct.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/grid_fine.h"
@@ -48,9 +49,17 @@ static_assert(std::is_trivially_copy_assignable_v<point_fine_t>);
  *
  * Returns false for zero length lines.
  */
-constexpr auto is_orthogonal_line(point_fine_t p0, point_fine_t p1) noexcept -> bool {
-    return (p0.x == p1.x) ^ (p0.y == p1.y);
-}
+constexpr auto is_orthogonal_line(point_fine_t p0, point_fine_t p1) noexcept -> bool;
+
+//
+// Concepts
+//
+
+/**
+ * @brief: Any type that is explicitely convertible to grid_t
+ */
+template <typename T>
+concept point_fine_like = explicitly_convertible_to<T, point_fine_t>;
 
 //
 // Implementation
@@ -87,6 +96,10 @@ constexpr auto point_fine_t::operator-=(const point_fine_t &other) -> point_fine
     auto result = left;
     result -= right;
     return result;
+}
+
+constexpr auto is_orthogonal_line(point_fine_t p0, point_fine_t p1) noexcept -> bool {
+    return (p0.x == p1.x) ^ (p0.y == p1.y);
 }
 
 }  // namespace logicsim

@@ -21,6 +21,9 @@ struct segment_index_t {
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
+    /**
+     * @brief: The bool cast tests if this index is valid.
+     */
     [[nodiscard]] explicit constexpr operator bool() const noexcept;
     [[nodiscard]] auto format() const -> std::string;
 

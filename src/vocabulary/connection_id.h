@@ -19,12 +19,19 @@ struct connection_id_t {
     using value_type = int8_t;
     value_type value;
 
+    /**
+     * @brief: The conversion to std::size_t is used for indexing into vectors.
+     *
+     * An exception is thrown, if the id is not valid.
+     */
+    [[nodiscard]] explicit constexpr operator std::size_t() const;
+    /**
+     * @brief: The bool cast tests if this ID is valid.
+     */
+    [[nodiscard]] explicit constexpr operator bool() const noexcept;
+
     [[nodiscard]] auto format() const -> std::string;
 
-    // The conversion to std::size_t is used for indexing into vectors.
-    [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
-    // The bool cast tests if this ID is valid.
-    [[nodiscard]] explicit constexpr operator bool() const noexcept;
     [[nodiscard]] auto operator==(const connection_id_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const connection_id_t &other) const = default;
 
@@ -43,7 +50,8 @@ constexpr inline auto null_connection = connection_id_t {-1};
 // Implementation
 //
 
-constexpr connection_id_t::operator std::size_t() const noexcept {
+constexpr connection_id_t::operator std::size_t() const {
+    // throws error for negative / invalid ids
     return gsl::narrow<std::size_t>(value);
 }
 

@@ -71,7 +71,7 @@ static_assert(std::is_trivially_copy_assignable_v<grid_t>);
 // int
 [[nodiscard]] constexpr auto operator*(const grid_t &left, const int &right) -> grid_t;
 [[nodiscard]] constexpr auto operator/(const grid_t &left, const int &right) -> grid_t;
-// TODO once grid_fine_t is a strong type, and int is not implicitely convertible to it
+// TODO do we need these?
 [[nodiscard]] constexpr auto operator*(const int &left, const grid_t &right) -> grid_t;
 [[nodiscard]] constexpr auto operator/(const int &left, const grid_t &right) -> grid_t;
 

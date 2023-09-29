@@ -323,7 +323,8 @@ auto Layout::is_element_id_valid(element_id_t element_id) const noexcept -> bool
 }
 
 auto Layout::add_element(ElementData &&data) -> layout::Element {
-    if (element_count() + 1 >= element_id_t::max()) [[unlikely]] {
+    if (element_count() >= std::size_t {element_id_t::max()} - std::size_t {1})
+        [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
     }
 
