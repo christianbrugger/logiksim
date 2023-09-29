@@ -42,7 +42,7 @@ static_assert(std::is_trivially_copy_assignable_v<rect_fine_t>);
     -> rect_fine_t;
 [[nodiscard]] constexpr auto operator-(const rect_fine_t &left, const point_fine_t &right)
     -> rect_fine_t;
-// TODO do we need these?
+// symmetric
 [[nodiscard]] constexpr auto operator+(const point_fine_t &left, const rect_fine_t &right)
     -> rect_fine_t;
 [[nodiscard]] constexpr auto operator-(const point_fine_t &left, const rect_fine_t &right)

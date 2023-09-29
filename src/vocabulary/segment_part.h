@@ -35,7 +35,7 @@ static_assert(std::is_aggregate_v<segment_part_t>);
 /**
  * @brief: Defines the canonical null segment
  *
- * Note that the part is arbitrary.
+ * Note that the part contains defined, but otherwise arbitrary data.
  */
 constexpr inline auto null_segment_part =
     segment_part_t {null_segment, part_t {offset_t {0}, offset_t {1}}};

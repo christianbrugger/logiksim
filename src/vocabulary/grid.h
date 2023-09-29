@@ -32,7 +32,6 @@ struct grid_t {
     [[nodiscard]] explicit constexpr grid_t() = default;
     [[nodiscard]] explicit constexpr grid_t(integral auto value);
 
-    // TODO remove ???
     [[nodiscard]] explicit constexpr operator int() const noexcept;
 
     [[nodiscard]] auto format() const -> std::string;
@@ -71,7 +70,7 @@ static_assert(std::is_trivially_copy_assignable_v<grid_t>);
 // int
 [[nodiscard]] constexpr auto operator*(const grid_t &left, const int &right) -> grid_t;
 [[nodiscard]] constexpr auto operator/(const grid_t &left, const int &right) -> grid_t;
-// TODO do we need these?
+// symmetric
 [[nodiscard]] constexpr auto operator*(const int &left, const grid_t &right) -> grid_t;
 [[nodiscard]] constexpr auto operator/(const int &left, const grid_t &right) -> grid_t;
 

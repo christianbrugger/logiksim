@@ -12,7 +12,7 @@ namespace logicsim {
  */
 enum class ElementType : uint8_t {
     unused,       // has no inputs and no logic
-    placeholder,  // has no logic                 // TODO rename to ???
+    placeholder,  // output-placeholder - has no logic - only stores output values
     wire,
 
     buffer_element,
@@ -30,7 +30,7 @@ enum class ElementType : uint8_t {
     shift_register,
     latch_d,
     flipflop_d,
-    flipflop_ms_d,  // master slave
+    flipflop_ms_d,  // ms = master slave
 
     sub_circuit,
 };
@@ -40,6 +40,6 @@ auto format(ElementType type) -> std::string;
 
 [[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
 
-}
+}  // namespace logicsim
 
 #endif
