@@ -29,20 +29,18 @@ struct connection_count_t {
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
     [[nodiscard]] explicit constexpr connection_count_t() noexcept;
-    // [[nodiscard]] explicit constexpr connection_count_t(value_type value_) noexcept;
     [[nodiscard]] explicit constexpr connection_count_t(integral auto value);
-
     template <class Stored, Stored Min, Stored Max, class P, class E>
     [[nodiscard]] explicit constexpr connection_count_t(
         boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value);
 
     // We offer this conversion to std::size_t for indexing into vectors.
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
+    // returns safe_numerics value
     [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
+    // returns underlying representation
     [[nodiscard]] constexpr auto count() const noexcept -> value_type_rep;
 
-    // TODO add constructor
-    // TODO check input count is not bigger than MAX
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const connection_count_t &other) const
@@ -55,11 +53,9 @@ struct connection_count_t {
     [[nodiscard]] static constexpr auto min() noexcept -> connection_count_t;
     [[nodiscard]] static constexpr auto max() noexcept -> connection_count_t;
 
-    [[nodiscard]] constexpr auto operator+(connection_count_t other) const
-        -> connection_count_t;
-    [[nodiscard]] constexpr auto operator-(connection_count_t other) const
-        -> connection_count_t;
-    [[nodiscard]] constexpr auto operator*(int other) const -> connection_count_t;
+    constexpr auto operator+=(const connection_count_t &other) -> connection_count_t &;
+    constexpr auto operator-=(const connection_count_t &other) -> connection_count_t &;
+    constexpr auto operator*=(const int &other) -> connection_count_t &;
 
     constexpr auto operator++() -> connection_count_t &;
     constexpr auto operator++(int) -> connection_count_t;
@@ -70,6 +66,18 @@ struct connection_count_t {
 
 static_assert(std::is_trivially_copyable_v<connection_count_t>);
 static_assert(std::is_trivially_copy_assignable_v<connection_count_t>);
+
+[[nodiscard]] constexpr auto operator+(const connection_count_t &left,
+                                       const connection_count_t &right)
+    -> connection_count_t;
+[[nodiscard]] constexpr auto operator-(const connection_count_t &left,
+                                       const connection_count_t &right)
+    -> connection_count_t;
+
+[[nodiscard]] constexpr auto operator*(const connection_count_t &left, const int &right)
+    -> connection_count_t;
+[[nodiscard]] constexpr auto operator*(const int &left, const connection_count_t &right)
+    -> connection_count_t;
 
 [[nodiscard]] auto first_connection_id(connection_count_t count) -> connection_id_t;
 [[nodiscard]] auto last_connection_id(connection_count_t count) -> connection_id_t;
@@ -112,18 +120,21 @@ constexpr auto connection_count_t::max() noexcept -> connection_count_t {
     return value;
 };
 
-constexpr auto connection_count_t::operator+(connection_count_t other) const
-    -> connection_count_t {
-    return connection_count_t {value + other.value};
+constexpr auto connection_count_t::operator+=(const connection_count_t &other)
+    -> connection_count_t & {
+    value += other.value;
+    return *this;
 }
 
-constexpr auto connection_count_t::operator-(connection_count_t other) const
-    -> connection_count_t {
-    return connection_count_t {value - other.value};
+constexpr auto connection_count_t::operator-=(const connection_count_t &other)
+    -> connection_count_t & {
+    value -= other.value;
+    return *this;
 }
 
-constexpr auto connection_count_t::operator*(int other) const -> connection_count_t {
-    return connection_count_t {other * value};
+constexpr auto connection_count_t::operator*=(const int &other) -> connection_count_t & {
+    value *= other;
+    return *this;
 }
 
 constexpr auto connection_count_t::operator++() -> connection_count_t & {
@@ -146,6 +157,32 @@ constexpr auto connection_count_t::operator--(int) -> connection_count_t {
     auto tmp = *this;
     operator--();
     return tmp;
+}
+
+constexpr auto operator+(const connection_count_t &left, const connection_count_t &right)
+    -> connection_count_t {
+    auto result = left;
+    result += right;
+    return result;
+}
+
+constexpr auto operator-(const connection_count_t &left, const connection_count_t &right)
+    -> connection_count_t {
+    auto result = left;
+    result -= right;
+    return result;
+}
+
+constexpr auto operator*(const connection_count_t &left, const int &right)
+    -> connection_count_t {
+    auto result = left;
+    result *= right;
+    return result;
+}
+
+constexpr auto operator*(const int &left, const connection_count_t &right)
+    -> connection_count_t {
+    return operator*(right, left);
 }
 
 }  // namespace logicsim
