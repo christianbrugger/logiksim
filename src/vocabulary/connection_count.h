@@ -17,8 +17,8 @@ namespace logicsim {
  */
 struct connection_count_t {
     using value_type_rep = std::make_unsigned_t<connection_id_t::value_type>;
-    using value_type = ls_safe_range<value_type_rep, 0,
-                                     std::size_t {connection_id_t::max()} + 1>;
+    using value_type =
+        ls_safe_range<value_type_rep, 0, std::size_t {connection_id_t::max()} + 1>;
     static_assert(sizeof(value_type) == sizeof(connection_id_t));
 
    private:
@@ -36,6 +36,7 @@ struct connection_count_t {
     [[nodiscard]] explicit constexpr connection_count_t(
         boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value);
 
+    // We offer this conversion to std::size_t for indexing into vectors.
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
     [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
     [[nodiscard]] constexpr auto count() const noexcept -> value_type_rep;
@@ -46,7 +47,8 @@ struct connection_count_t {
 
     [[nodiscard]] auto operator==(const connection_count_t &other) const
         -> bool = default;
-    [[nodiscard]] auto operator<=>(const connection_count_t &other) const = default;
+    [[nodiscard]] auto operator<=>(const connection_count_t &other) const
+        -> std::strong_ordering = default;
     [[nodiscard]] auto operator<=>(const connection_id_t &other) const
         -> std::strong_ordering;
 

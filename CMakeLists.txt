@@ -291,9 +291,9 @@ set(BOOST_INCLUDE_LIBRARIES
     container 
     geometry
     iostreams
-    logic # for safe_numerics
     mpl 
     random 
+    safe_numerics
     stacktrace
     unordered
 )
@@ -308,10 +308,6 @@ else()
     # Boost::stacktrace_basic
     add_library(boost_stacktrace ALIAS boost_stacktrace_basic)   
 endif()
-
-
-# Safe Numerics
-add_subdirectory(external/my_safe_numerics EXCLUDE_FROM_ALL SYSTEM)
 
 # Qt 6
 set(CMAKE_AUTOMOC FALSE)  # takes too much time, not parallelized

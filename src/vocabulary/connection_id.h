@@ -21,7 +21,9 @@ struct connection_id_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
+    // We offer this conversion to std::size_t for indexing into vectors.
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
+    // The bool cast tests if this ID is valid.
     [[nodiscard]] explicit constexpr operator bool() const noexcept;
     [[nodiscard]] auto operator==(const connection_id_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const connection_id_t &other) const = default;
