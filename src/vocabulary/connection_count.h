@@ -89,7 +89,6 @@ static_assert(std::is_trivially_copy_assignable_v<connection_count_t>);
 
 constexpr connection_count_t::connection_count_t() noexcept : value {0} {};
 
-// TODO remove narrow
 constexpr connection_count_t::connection_count_t(integral auto value_)
     : value {value_} {};
 

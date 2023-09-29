@@ -54,8 +54,8 @@ auto get_colliding_size_handle(point_fine_t position, const Layout& layout,
 namespace size_handle {
 
 struct logic_item_t {
-    LogicItemDefinition definition;
-    point_t position;
+    LogicItemDefinition definition {};
+    point_t position {};
 };
 
 }  // namespace size_handle

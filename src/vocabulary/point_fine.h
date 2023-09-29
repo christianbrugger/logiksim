@@ -34,6 +34,9 @@ struct point_fine_t {
 };
 
 static_assert(std::is_trivial_v<point_fine_t>);
+static_assert(std::is_trivially_constructible_v<point_fine_t>);
+static_assert(std::is_trivially_copyable_v<point_fine_t>);
+static_assert(std::is_trivially_copy_assignable_v<point_fine_t>);
 
 [[nodiscard]] constexpr auto operator+(const point_fine_t &left,
                                        const point_fine_t &right) -> point_fine_t;

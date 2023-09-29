@@ -36,7 +36,10 @@ struct point_t {
     }
 };
 
-static_assert(std::is_trivial<point_t>::value);
+static_assert(std::is_trivial_v<point_t>);
+static_assert(std::is_trivially_constructible_v<point_t>);
+static_assert(std::is_trivially_copyable_v<point_t>);
+static_assert(std::is_trivially_copy_assignable_v<point_t>);
 
 /**
  * @brief: Returns if the line from p0 to p1 is horizontal or vertical.

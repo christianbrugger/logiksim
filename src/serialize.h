@@ -25,7 +25,8 @@ using binary_t = std::vector<uint8_t>;
     const SimulationSettings* simulation_settings = nullptr) -> std::string;
 
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
-                                      point_t save_position = {0, 0}) -> std::string;
+                                      point_t save_position = point_t {0, 0})
+    -> std::string;
 
 [[nodiscard]] auto base64_encode(const std::string& data) -> std::string;
 [[nodiscard]] auto base64_decode(const std::string& data) -> std::string;

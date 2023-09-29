@@ -48,8 +48,9 @@ struct grid_fine_t {
 };
 
 static_assert(std::is_trivial<grid_fine_t>::value);
-static_assert(std::is_standard_layout<grid_fine_t>::value);
-static_assert(std::is_nothrow_default_constructible<grid_fine_t>::value);
+static_assert(std::is_trivially_constructible_v<grid_fine_t>);
+static_assert(std::is_trivially_copyable_v<grid_fine_t>);
+static_assert(std::is_trivially_copy_assignable_v<grid_fine_t>);
 
 // grid_fine_t @ grid_fine_t
 

@@ -9,9 +9,9 @@ namespace logicsim {
 TEST(Graph, DepthFirstSearchSimple) {
     using index_t = uint16_t;
     auto segments = {
-        line_t {{0, 0}, {0, 1}},
-        line_t {{0, 1}, {1, 1}},
-        line_t {{0, 0}, {1, 0}},
+        line_t {point_t {0, 0}, point_t {0, 1}},
+        line_t {point_t {0, 1}, point_t {1, 1}},
+        line_t {point_t {0, 0}, point_t {1, 0}},
     };
     auto graph = AdjacencyGraph<index_t>(segments);
 

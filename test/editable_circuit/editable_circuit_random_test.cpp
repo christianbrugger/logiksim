@@ -75,8 +75,8 @@ auto validate_inserted_lines(const AddResult &result) {
 
 auto add_random_line(Rng &rng, EditableCircuit &editable_circuit, bool random_modes)
     -> AddResult {
-    const auto min = grid_t::value_type {5};
-    const auto max = grid_t::value_type {10};
+    const auto min = grid_t {5};
+    const auto max = grid_t {10};
 
     const auto p0 = get_random_point(rng, min, max);
     const auto p1 = get_random_point(rng, min, max);
