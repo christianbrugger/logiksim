@@ -40,12 +40,11 @@ auto get_random_bool(Rng& rng, double percentage) -> bool {
     return uint_distribution(uint64_t {0}, max_value)(rng) <= threshold;
 }
 
-auto get_random_grid(Rng& rng, grid_t::value_type min, grid_t::value_type max) -> grid_t {
-    return uint_distribution(min, max)(rng);
+auto get_random_grid(Rng& rng, grid_t min, grid_t max) -> grid_t {
+    return grid_t {uint_distribution(min.value, max.value)(rng)};
 }
 
-auto get_random_point(Rng& rng, grid_t::value_type min, grid_t::value_type max)
-    -> point_t {
+auto get_random_point(Rng& rng, grid_t min, grid_t max) -> point_t {
     return point_t {
         get_random_grid(rng, min, max),
         get_random_grid(rng, min, max),
@@ -54,13 +53,12 @@ auto get_random_point(Rng& rng, grid_t::value_type min, grid_t::value_type max)
 
 auto get_random_point(Rng& rng, rect_t rect) -> point_t {
     return point_t {
-        get_random_grid(rng, rect.p0.x.value, rect.p1.x.value),
-        get_random_grid(rng, rect.p0.y.value, rect.p1.y.value),
+        get_random_grid(rng, rect.p0.x, rect.p1.x),
+        get_random_grid(rng, rect.p0.y, rect.p1.y),
     };
 }
 
-auto get_random_line(Rng& rng, grid_t::value_type min, grid_t::value_type max)
-    -> ordered_line_t {
+auto get_random_line(Rng& rng, grid_t min, grid_t max) -> ordered_line_t {
     auto p0 = get_random_point(rng, min, max);
     auto p1 = get_random_point(rng, min, max);
 
@@ -77,28 +75,26 @@ auto get_random_line(Rng& rng, grid_t::value_type min, grid_t::value_type max)
     return ordered_line_t {line_t {p0, p1}};
 }
 
-auto get_random_line(Rng& rng, grid_t::value_type min, grid_t::value_type max,
-                     grid_t::value_type max_length) -> ordered_line_t {
+auto get_random_line(Rng& rng, grid_t min, grid_t max, grid_t max_length)
+    -> ordered_line_t {
     auto p0 = get_random_point(rng, min, max);
 
-    if (max_length <= 0) [[unlikely]] {
+    if (max_length <= grid_t {0}) [[unlikely]] {
         throw_exception("max length needs to be positive");
     }
 
-    const auto N = [](int value) { return gsl::narrow_cast<grid_t::value_type>(value); };
+    const auto rect = rect_t {
+        point_t {
+            std::max(min, p0.x - (max_length + grid_t {1}) / 2),
+            std::max(min, p0.y - (max_length + grid_t {1}) / 2),
+        },
+        point_t {
+            std::min(max, p0.x + max_length / 2),
+            std::min(max, p0.y + max_length / 2),
+        },
+    };
 
-    auto p1 = get_random_point(
-        rng,
-        rect_t {
-            point_t {
-                N(std::max(static_cast<int>(min), p0.x.value - (max_length + 1) / 2)),
-                N(std::max(static_cast<int>(min), p0.y.value - (max_length + 1) / 2)),
-            },
-            point_t {
-                N(std::min(static_cast<int>(max), p0.x.value + max_length / 2)),
-                N(std::min(static_cast<int>(max), p0.y.value + max_length / 2)),
-            },
-        });
+    auto p1 = get_random_point(rng, rect);
 
     if (get_random_bool(rng)) {
         p0.x = p1.x;
@@ -113,8 +109,8 @@ auto get_random_line(Rng& rng, grid_t::value_type min, grid_t::value_type max,
     return ordered_line_t {line_t {p0, p1}};
 }
 
-auto get_random_lines(Rng& rng, std::size_t count, grid_t::value_type min,
-                      grid_t::value_type max) -> std::vector<ordered_line_t> {
+auto get_random_lines(Rng& rng, std::size_t count, grid_t min, grid_t max)
+    -> std::vector<ordered_line_t> {
     auto result = std::vector<ordered_line_t> {};
 
     for (const auto _ [[maybe_unused]] : range(count)) {

@@ -18,9 +18,9 @@ struct point_t {
     grid_t x;
     grid_t y;
 
-    point_t() = default;
-
-    constexpr point_t(grid_t x_, grid_t y_) noexcept : x {x_}, y {y_} {};
+    [[nodiscard]] explicit constexpr point_t() = default;
+    [[nodiscard]] explicit constexpr point_t(grid_t x_, grid_t y_) noexcept;
+    [[nodiscard]] explicit constexpr point_t(grid_like auto x_, grid_like auto y_);
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -28,11 +28,11 @@ struct point_t {
     [[nodiscard]] constexpr auto operator<=>(const point_t &other) const = default;
 
     [[nodiscard]] constexpr auto operator+(point_t other) const -> point_t {
-        return {x + other.x, y + other.y};
+        return point_t {x + other.x, y + other.y};
     }
 
     [[nodiscard]] constexpr auto operator-(point_t other) const -> point_t {
-        return {x - other.x, y - other.y};
+        return point_t {x - other.x, y - other.y};
     }
 };
 
@@ -40,9 +40,20 @@ static_assert(std::is_trivial<point_t>::value);
 
 /**
  * @brief: Returns if the line from p0 to p1 is horizontal or vertical.
- * 
+ *
  * Returns false for zero length lines.
  */
+constexpr auto is_orthogonal_line(point_t p0, point_t p1) noexcept -> bool;
+
+//
+// Implementation
+//
+
+constexpr point_t::point_t(grid_t x_, grid_t y_) noexcept : x {x_}, y {y_} {};
+
+constexpr point_t::point_t(grid_like auto x_, grid_like auto y_)
+    : x {grid_t {x_}}, y {grid_t {y_}} {};
+
 constexpr auto is_orthogonal_line(point_t p0, point_t p1) noexcept -> bool {
     return (p0.x == p1.x) ^ (p0.y == p1.y);
 }

@@ -282,8 +282,8 @@ auto MouseMoveSelectionLogic::move_selection(point_fine_t point) -> void {
         return;
     }
 
-    const auto delta_x = round_to<int>(point.x - last_position_->x);
-    const auto delta_y = round_to<int>(point.y - last_position_->y);
+    const auto delta_x = round_to<int>(double {point.x - last_position_->x});
+    const auto delta_y = round_to<int>(double {point.y - last_position_->y});
 
     if (delta_x == 0 && delta_y == 0) {
         return;
@@ -303,10 +303,7 @@ auto MouseMoveSelectionLogic::move_selection(point_fine_t point) -> void {
         cross_points_ = move_or_delete_points(cross_points_.value(), delta_x, delta_y);
     }
 
-    last_position_ = point_fine_t {
-        last_position_->x + delta_x,
-        last_position_->y + delta_y,
-    };
+    *last_position_ += point_fine_t {delta_x, delta_y};
     total_offsets_.first += delta_x;
     total_offsets_.second += delta_y;
 }

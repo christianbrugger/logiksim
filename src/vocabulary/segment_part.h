@@ -29,6 +29,8 @@ struct segment_part_t {
     }
 };
 
+static_assert(std::is_aggregate_v<segment_part_t>);
+
 constexpr inline auto null_segment_part =
     segment_part_t {null_segment, part_t {offset_t {0}, offset_t {1}}};
 

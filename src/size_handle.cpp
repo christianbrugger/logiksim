@@ -45,7 +45,7 @@ auto size_handle_positions(const layout::ConstElement element)
                 size_handle_t {1, transform(element.position(), element.orientation(),
                                             point_fine_t {
                                                 0.5 * width,
-                                                height - 1.0 + overdraw,
+                                                height - grid_fine_t {1.0} + overdraw,
                                             })},
             };
         }
@@ -292,7 +292,7 @@ auto MouseSizeHandleLogic::move_handle(point_fine_t position) -> void {
         return;
     }
 
-    const auto new_delta = gsl::narrow<int>(round_fast(position.y - first_position_->y));
+    const auto new_delta = round_to<int>(double {position.y - first_position_->y});
     if (new_delta == *last_delta_) {
         return;
     }

@@ -26,19 +26,45 @@ auto is_vertical(orientation_t orientation) noexcept -> bool {
 // grid_t
 //
 
+namespace {
+auto clamp_discrete_to_grid(grid_fine_t grid_fine) -> grid_t {
+    const auto clamped = clamp_to_grid(grid_fine);
+    return grid_t {gsl::narrow_cast<grid_t::value_type>(double {clamped})};
+}
+}  // namespace
+
 auto to_rounded(grid_fine_t v) -> grid_t {
-    return grid_t {gsl::narrow_cast<grid_t::value_type>(std::clamp(
-        round_fast(v), grid_fine_t {grid_t::min()}, grid_fine_t {grid_t::max()}))};
+    return clamp_discrete_to_grid(round(v));
 }
 
 auto to_floored(grid_fine_t v) -> grid_t {
-    return grid_t {gsl::narrow_cast<grid_t::value_type>(std::clamp(
-        std::floor(v), grid_fine_t {grid_t::min()}, grid_fine_t {grid_t::max()}))};
+    return clamp_discrete_to_grid(floor(v));
 }
 
-auto to_truncated(grid_fine_t v) -> grid_t {
-    return grid_t {gsl::narrow_cast<grid_t::value_type>(std::clamp(
-        std::ceil(v), grid_fine_t {grid_t::min()}, grid_fine_t {grid_t::max()}))};
+auto to_ceiled(grid_fine_t v) -> grid_t {
+    return clamp_discrete_to_grid(ceil(v));
+}
+
+//
+// grid_fine_t
+//
+
+auto clamp_to_grid(grid_fine_t grid_fine) -> grid_fine_t {
+    return std::clamp(grid_fine,                    //
+                      grid_fine_t {grid_t::min()},  //
+                      grid_fine_t {grid_t::max()});
+}
+
+auto round(grid_fine_t v) -> grid_fine_t {
+    return grid_fine_t {round_fast(double {v})};
+}
+
+auto floor(grid_fine_t v) -> grid_fine_t {
+    return grid_fine_t {std::floor(double {v})};
+}
+
+auto ceil(grid_fine_t v) -> grid_fine_t {
+    return grid_fine_t {std::ceil(double {v})};
 }
 
 //
@@ -190,8 +216,8 @@ auto enclosing_rect(rect_fine_t rect) -> rect_t {
             to_floored(rect.p0.y),
         },
         point_t {
-            to_truncated(rect.p1.x),
-            to_truncated(rect.p1.y),
+            to_ceiled(rect.p1.x),
+            to_ceiled(rect.p1.y),
         },
     };
 }
@@ -252,8 +278,8 @@ auto to_grid(offset_t offset, grid_t reference) -> grid_t {
 // Interpolation
 //
 
-auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double {
-    return v0.value + (v1.value - v0.value) * ratio;
+auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> grid_fine_t {
+    return grid_fine_t {v0.value + (v1.value - v0.value) * ratio};
 }
 
 auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_select)
@@ -271,10 +297,9 @@ auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_
                          static_cast<double>((t1.value - t0.value).count());
 
     if (is_horizontal(line_t {p0, p1})) {
-        return point_fine_t {interpolate_1d(p0.x, p1.x, alpha),
-                             static_cast<double>(p0.y)};
+        return point_fine_t {interpolate_1d(p0.x, p1.x, alpha), grid_fine_t(p0.y)};
     }
-    return point_fine_t {static_cast<double>(p0.x), interpolate_1d(p0.y, p1.y, alpha)};
+    return point_fine_t {grid_fine_t {p0.x}, interpolate_1d(p0.y, p1.y, alpha)};
 }
 
 //
@@ -293,23 +318,24 @@ auto to_part(ordered_line_t line) -> part_t {
 auto get_segment_reference_begin_end(ordered_line_t line, rect_fine_t rect) {
     if (is_horizontal(line)) {
         // horizontal
-        const auto xmin = clamp_to<grid_t::value_type>(std::floor(rect.p0.x));
-        const auto xmax = clamp_to<grid_t::value_type>(std::ceil(rect.p1.x));
 
-        const auto begin = std::clamp(line.p0.x.value, xmin, xmax);
-        const auto end = std::clamp(line.p1.x.value, xmin, xmax);
+        const auto xmin = to_floored(rect.p0.x);
+        const auto xmax = to_ceiled(rect.p1.x);
 
-        return std::make_tuple(line.p0.x.value, begin, end);
+        const auto begin = std::clamp(line.p0.x, xmin, xmax);
+        const auto end = std::clamp(line.p1.x, xmin, xmax);
+
+        return std::make_tuple(line.p0.x, begin, end);
     }
 
     // vertical
-    const auto ymin = clamp_to<grid_t::value_type>(std::floor(rect.p0.y));
-    const auto ymax = clamp_to<grid_t::value_type>(std::ceil(rect.p1.y));
+    const auto ymin = to_floored(rect.p0.y);
+    const auto ymax = to_ceiled(rect.p1.y);
 
-    const auto begin = std::clamp(line.p0.y.value, ymin, ymax);
-    const auto end = std::clamp(line.p1.y.value, ymin, ymax);
+    const auto begin = std::clamp(line.p0.y, ymin, ymax);
+    const auto end = std::clamp(line.p1.y, ymin, ymax);
 
-    return std::make_tuple(line.p0.y.value, begin, end);
+    return std::make_tuple(line.p0.y, begin, end);
 }
 
 auto to_part(ordered_line_t line, rect_fine_t rect) -> std::optional<part_t> {

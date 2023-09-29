@@ -19,7 +19,7 @@ struct line_fine_t {
     point_fine_t p0;
     point_fine_t p1;
 
-    line_fine_t() = default;
+    [[nodiscard]] explicit constexpr line_fine_t() = default;
 
     [[nodiscard]] explicit constexpr line_fine_t(point_fine_t p0_, point_fine_t p1_)
         : p0 {p0_}, p1 {p1_} {
@@ -28,10 +28,10 @@ struct line_fine_t {
         }
     };
 
-    [[nodiscard]] constexpr line_fine_t(line_t line) noexcept
+    [[nodiscard]] explicit constexpr line_fine_t(line_t line) noexcept
         : p0 {point_fine_t {line.p0}}, p1 {point_fine_t {line.p1}} {}
 
-    [[nodiscard]] constexpr line_fine_t(ordered_line_t line) noexcept
+    [[nodiscard]] explicit constexpr line_fine_t(ordered_line_t line) noexcept
         : p0 {point_fine_t {line.p0}}, p1 {point_fine_t {line.p1}} {}
 
     [[nodiscard]] explicit constexpr line_fine_t(point_t p0_, point_t p1_)

@@ -30,8 +30,8 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
             constexpr auto handle_size = defaults::setting_handle_size;
             // constexpr auto margin = defaults::setting_handle_margin;
 
-            const auto width = 5.0;
-            const auto height = 4.0;
+            const auto width = grid_fine_t {5.0};
+            const auto height = grid_fine_t {4.0};
 
             return setting_handle_t {
                 .position =

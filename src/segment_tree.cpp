@@ -183,7 +183,7 @@ auto SegmentTree::unregister_segment(segment_index_t index) -> void {
                         "Removed segment has wrong input position as stored.");
                 }
                 has_input_ = false;
-                input_position_ = {};
+                input_position_ = point_t {};
                 break;
             }
 

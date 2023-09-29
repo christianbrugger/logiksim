@@ -59,7 +59,7 @@ auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
 [[nodiscard]] auto to_context(point_t position, const Context& context) -> BLPoint;
 [[nodiscard]] auto to_context(point_fine_t position, const Context& context) -> BLPoint;
 [[nodiscard]] auto to_context(grid_t length, const Context& context) -> double;
-[[nodiscard]] auto to_context(double length, const Context& context) -> double;
+[[nodiscard]] auto to_context(grid_fine_t length, const Context& context) -> double;
 
 //
 // Element Draw State
@@ -178,11 +178,11 @@ enum class PointShape {
 template <>
 auto format(PointShape shape) -> std::string;
 
-auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color, double size)
-    -> void;
+auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
+                grid_fine_t size) -> void;
 
 auto draw_points(Context& ctx, std::ranges::input_range auto&& points, PointShape shape,
-                 color_t color, double size) -> void {
+                 color_t color, grid_fine_t size) -> void {
     for (auto&& point : points) {
         draw_point(ctx, point, shape, color, size);
     }
@@ -193,7 +193,7 @@ auto draw_points(Context& ctx, std::ranges::input_range auto&& points, PointShap
 //
 
 auto draw_arrow(Context& ctx, point_t point, color_t color, orientation_t orientation,
-                double size) -> void;
+                grid_fine_t size) -> void;
 
 //
 // Line
@@ -258,7 +258,7 @@ auto draw_circle(Context& ctx, point_fine_t center, grid_fine_t radius,
 //
 
 struct TextAttributes {
-    double font_size {1.0};  // grid size
+    grid_fine_t font_size {1.0};
     color_t color {defaults::color_black};
 
     HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};

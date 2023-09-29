@@ -16,10 +16,12 @@ namespace logicsim {
 struct delay_t {
     using value_type = std::chrono::duration<int32_t, std::nano>;
     using rep = value_type::rep;
-    value_type value {};
+    value_type value;
 
-    [[nodiscard]] constexpr explicit delay_t() noexcept = default;
-    [[nodiscard]] constexpr explicit delay_t(
+    [[nodiscard]] explicit constexpr delay_t() noexcept = default;
+    // TODO Can we make this possible?
+    // [[nodiscard]] explicit constexpr delay_t(value_type delay) noexcept;
+    [[nodiscard]] explicit constexpr delay_t(
         std::chrono::duration<int64_t, std::nano> delay);
 
     [[nodiscard]] auto format() const -> std::string;
@@ -32,9 +34,13 @@ struct delay_t {
     [[nodiscard]] static constexpr auto max() noexcept -> delay_t;
 };
 
+static_assert(std::is_trivial_v<delay_t>);
+
 //
 // Implementation
 //
+
+// constexpr delay_t::delay_t(value_type delay) noexcept : value {delay} {}
 
 constexpr delay_t::delay_t(std::chrono::duration<int64_t, std::nano> delay)
     : value {delay} {

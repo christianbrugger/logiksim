@@ -2,9 +2,10 @@
 #ifndef LOGIKSIM_RANGE_H
 #define LOGIKSIM_RANGE_H
 
-#include "concept.h"
-#include "exception.h"
+#include "concept/explicitly_convertible.h"
+#include "concept/input_range.h"
 #include "difference_type.h"
+#include "exception.h"
 
 #include <fmt/core.h>
 #include <gsl/gsl>

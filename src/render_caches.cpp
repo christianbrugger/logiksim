@@ -9,7 +9,7 @@
 namespace logicsim {
 
 auto _directed_input_marker(Context& ctx, point_t point, color_t color,
-                            orientation_t orientation, double size) -> void {
+                            orientation_t orientation, grid_fine_t size) -> void {
     auto _ [[maybe_unused]] = make_context_guard(ctx);
 
     const auto [x, y] = to_context(point, ctx);
@@ -27,8 +27,8 @@ auto _directed_input_marker(Context& ctx, point_t point, color_t color,
     ctx.bl_ctx.strokeLine(BLLine {-d, +d, 0, +d}, color);
 }
 
-auto _undirected_input_marker(Context& ctx, point_t point, color_t color, double size)
-    -> void {
+auto _undirected_input_marker(Context& ctx, point_t point, color_t color,
+                              grid_fine_t size) -> void {
     auto _ [[maybe_unused]] = make_context_guard(ctx);
 
     ctx.bl_ctx.setStrokeWidth(1);
@@ -54,7 +54,7 @@ auto _undirected_input_marker(Context& ctx, point_t point, color_t color, double
 }
 
 auto render_input_marker(Context& ctx, point_t point, color_t color,
-                         orientation_t orientation, double size) -> void {
+                         orientation_t orientation, grid_fine_t size) -> void {
     if (orientation == orientation_t::undirected) {
         _undirected_input_marker(ctx, point, color, size);
     } else {
@@ -62,7 +62,7 @@ auto render_input_marker(Context& ctx, point_t point, color_t color,
     }
 }
 
-auto render_undirected_output(Context& ctx, point_t position, double size) {
+auto render_undirected_output(Context& ctx, point_t position, grid_fine_t size) {
     draw_point(ctx, position, PointShape::cross, defaults::color_green, size / 4);
     draw_point(ctx, position, PointShape::plus, defaults::color_green, size / 3);
 }
@@ -78,7 +78,7 @@ auto render_editable_circuit_connection_cache(Context& ctx,
             continue;
         }
 
-        const auto size = 1.0 / 3.0;
+        const auto size = grid_fine_t {1.0 / 3.0};
         render_input_marker(ctx, position, defaults::color_green, orientation, size);
     }
 
@@ -87,7 +87,7 @@ auto render_editable_circuit_connection_cache(Context& ctx,
             continue;
         }
 
-        const auto size = 0.8;
+        const auto size = grid_fine_t {0.8};
         if (orientation == orientation_t::undirected) {
             render_undirected_output(ctx, position, size);
         } else {
@@ -100,7 +100,7 @@ auto render_editable_circuit_collision_cache(Context& ctx,
                                              const EditableCircuit& editable_circuit)
     -> void {
     constexpr static auto color = defaults::color_orange;
-    constexpr static auto size = 0.25;
+    constexpr static auto size = grid_fine_t {0.25};
 
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
 

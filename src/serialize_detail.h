@@ -41,8 +41,8 @@ struct SerializedLogicItem {
 
 struct SerializedViewConfig {
     double device_scale {};
-    double grid_offset_x {};
-    double grid_offset_y {};
+    grid_fine_t grid_offset_x {};
+    grid_fine_t grid_offset_y {};
 };
 
 struct SerializedSimulationSettings {

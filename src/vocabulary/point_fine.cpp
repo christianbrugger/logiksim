@@ -5,7 +5,7 @@
 namespace logicsim {
 
 auto point_fine_t::format() const -> std::string {
-    return fmt::format("[{:.3f}, {:.3f}]", x, y);
+    return fmt::format("[{}, {}]", x, y);
 }
 
 }  // namespace logicsim

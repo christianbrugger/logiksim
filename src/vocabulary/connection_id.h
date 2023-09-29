@@ -21,7 +21,7 @@ struct connection_id_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    // We offer this conversion to std::size_t for indexing into vectors.
+    // The conversion to std::size_t is used for indexing into vectors.
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
     // The bool cast tests if this ID is valid.
     [[nodiscard]] explicit constexpr operator bool() const noexcept;
@@ -35,7 +35,7 @@ struct connection_id_t {
     constexpr auto operator++(int) noexcept -> connection_id_t;
 };
 
-static_assert(std::is_trivial<connection_id_t>::value);
+static_assert(std::is_aggregate_v<connection_id_t>);
 
 constexpr inline auto null_connection = connection_id_t {-1};
 

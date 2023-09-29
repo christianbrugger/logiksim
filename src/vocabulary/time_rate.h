@@ -23,6 +23,8 @@ struct time_rate_t {
     [[nodiscard]] auto operator<=>(const time_rate_t &other) const = default;
 };
 
+static_assert(std::is_aggregate_v<time_rate_t>);
+
 }  // namespace logicsim
 
 #endif

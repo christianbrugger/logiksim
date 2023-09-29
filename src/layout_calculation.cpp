@@ -237,9 +237,9 @@ constexpr auto _width(connection_count_t input_count) -> grid_t {
 
 constexpr auto _generate_widths() {
     constexpr auto count = std::size_t {max_inputs - min_inputs + connection_count_t {1}};
-    auto result = std::array<grid_t, count> {};
+    auto result = std::array<grid_t::value_type, count> {};
     for (connection_count_t i = min_inputs; i <= max_inputs; ++i) {
-        result[std::size_t {i - min_inputs}] = _width(i);
+        result[std::size_t {i - min_inputs}] = _width(i).value;
     }
     return result;
 }
@@ -248,7 +248,7 @@ constexpr static inline auto generated_widths = _generate_widths();
 
 // lock in generated values to make sure our saves are compatible
 static_assert(generated_widths ==
-              std::array<grid_t, 64> {
+              std::array<grid_t::value_type, 64> {
                   3,  3,  3,  3,  4,  4,  4,  5,  5,  5,  6,  6,  6,  6,  6,  6,   //
                   6,  7,  7,  7,  8,  8,  8,  8,  8,  8,  8,  9,  9,  9,  10, 10,  //
                   10, 10, 10, 10, 10, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13,  //
@@ -260,7 +260,7 @@ auto width(connection_count_t input_count) -> grid_t {
     require_min(input_count, min_inputs);
     require_max(input_count, max_inputs);
 
-    return generated_widths.at((input_count - min_inputs).count());
+    return grid_t {generated_widths.at((input_count - min_inputs).count())};
 }
 
 auto height(connection_count_t input_count) -> grid_t {
@@ -399,7 +399,8 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
         }
 
         case buffer_element: {
-            return transform(data.position, data.orientation, {0, 0}, {1, 0});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {1, 0});
         }
 
         case and_element:
@@ -409,7 +410,8 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
 
             const auto height = data.input_count;
             const auto y2 = to_grid(height - connection_count_t {1});
-            return transform(data.position, data.orientation, {0, 0}, {2, y2});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {2, y2});
         }
 
         case led: {
@@ -422,20 +424,24 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             const auto w = display_number::width(data.input_count);
             const auto h = display_number::height(data.input_count);
 
-            return transform(data.position, data.orientation, {0, 0}, {w, h});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {w, h});
         }
         case display_ascii: {
             const auto w = display_ascii::width;
             const auto h = display_ascii::height;
 
-            return transform(data.position, data.orientation, {0, 0}, {w, h});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {w, h});
         }
 
         case clock_generator: {
-            return transform(data.position, data.orientation, {0, 0}, {5, 4});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {5, 4});
         }
         case flipflop_jk: {
-            return transform(data.position, data.orientation, {0, 0}, {4, 2});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {4, 2});
         }
         case shift_register: {
             require_min(data.output_count, connection_count_t {1});
@@ -447,16 +453,20 @@ auto element_collision_rect(layout_calculation_data_t data) -> rect_t {
             const auto y2 = data.output_count == connection_count_t {1}
                                 ? grid_t {1}
                                 : to_grid(data.output_count - connection_count_t {1}) * 2;
-            return transform(data.position, data.orientation, {0, 0}, {x2, y2});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {x2, y2});
         }
         case latch_d: {
-            return transform(data.position, data.orientation, {0, 0}, {2, 1});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {2, 1});
         }
         case flipflop_d: {
-            return transform(data.position, data.orientation, {0, 0}, {3, 2});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {3, 2});
         }
         case flipflop_ms_d: {
-            return transform(data.position, data.orientation, {0, 0}, {4, 2});
+            return transform(data.position, data.orientation, point_t {0, 0},
+                             point_t {4, 2});
         }
 
         case sub_circuit: {
@@ -472,8 +482,8 @@ auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t {
     const auto rect = element_collision_rect(data);
 
     return rect_fine_t {
-        point_fine_t {rect.p0.x.value - overdraw, rect.p0.y.value - overdraw},
-        point_fine_t {rect.p1.x.value + overdraw, rect.p1.y.value + overdraw},
+        point_fine_t {rect.p0.x - overdraw, rect.p0.y - overdraw},
+        point_fine_t {rect.p1.x + overdraw, rect.p1.y + overdraw},
     };
 }
 

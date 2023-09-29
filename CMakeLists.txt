@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.25)
 
 set(LS_CORE_SOURCES
+    src/algorithm/narrow_integral.cpp
+    
+    src/concept/explicitly_convertible.cpp
+    src/concept/input_range.cpp
+    src/concept/integral.cpp
+    src/concept/string_view.cpp
+
     src/editable_circuit/cache/collision_cache.cpp
     src/editable_circuit/cache/connection_cache.cpp
     src/editable_circuit/cache/spatial_cache.cpp
@@ -18,7 +25,6 @@ set(LS_CORE_SOURCES
     src/editable_circuit/selection_registrar.cpp
     src/editable_circuit/type.cpp
 
-    src/format/concept_string_view.cpp
     src/format/enum.cpp
     src/format/struct.cpp
     src/format/time.cpp

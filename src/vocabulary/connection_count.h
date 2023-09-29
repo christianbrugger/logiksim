@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 #define LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 
+#include "concept/integral.h"
 #include "difference_type.h"
 #include "format/struct.h"
 #include "safe_numeric.h"

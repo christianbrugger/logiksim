@@ -101,13 +101,13 @@ auto ViewConfig::update() -> void {
 //
 
 auto is_representable(int x, int y) -> bool {
-    return (grid_t::min() <= x && x <= grid_t::max()) &&
-           (grid_t::min() <= y && y <= grid_t::max());
+    return (int {grid_t::min()} <= x && x <= int {grid_t::max()}) &&
+           (int {grid_t::min()} <= y && y <= int {grid_t::max()});
 }
 
-auto is_representable(double x, double y) -> bool {
-    return (grid_t::min() <= x && x <= grid_t::max()) &&
-           (grid_t::min() <= y && y <= grid_t::max());
+auto is_representable(grid_fine_t x, grid_fine_t y) -> bool {
+    return (grid_fine_t {grid_t::min()} <= x && x <= grid_fine_t {grid_t::max()}) &&
+           (grid_fine_t {grid_t::min()} <= y && y <= grid_fine_t {grid_t::max()});
 }
 
 auto is_representable(point_t point, int dx, int dy) -> bool {
@@ -143,10 +143,7 @@ auto to_grid_fine(double x, double y, const ViewConfig &config) -> point_fine_t 
     const auto scale = config.device_scale();
     const auto offset = config.offset();
 
-    return point_fine_t {
-        x / scale - offset.x,
-        y / scale - offset.y,
-    };
+    return point_fine_t {x / scale, y / scale} - offset;
 }
 
 auto to_grid_fine(QPointF position, const ViewConfig &config) -> point_fine_t {
@@ -162,12 +159,12 @@ auto to_grid_fine(QPoint position, const ViewConfig &config) -> point_fine_t {
 auto to_grid(double x_, double y_, const ViewConfig &config) -> std::optional<point_t> {
     const auto fine = to_grid_fine(x_, y_, config);
 
-    const auto x = round_fast(fine.x);
-    const auto y = round_fast(fine.y);
+    const auto x = round(fine.x);
+    const auto y = round(fine.y);
 
     if (is_representable(x, y)) {
-        return point_t {gsl::narrow_cast<grid_t::value_type>(x),
-                        gsl::narrow_cast<grid_t::value_type>(y)};
+        return point_t {gsl::narrow_cast<grid_t::value_type>(double {x}),
+                        gsl::narrow_cast<grid_t::value_type>(double {y})};
     }
     return std::nullopt;
 }
@@ -187,8 +184,8 @@ auto to_widget(point_fine_t position, const ViewConfig &config) -> QPoint {
     const auto offset = config.offset();
 
     return QPoint {
-        round_to<int>((offset.x + position.x) * scale),
-        round_to<int>((offset.y + position.y) * scale),
+        round_to<int>(double {(offset.x + position.x) * scale}),
+        round_to<int>(double {(offset.y + position.y) * scale}),
     };
 }
 
@@ -203,8 +200,8 @@ auto to_context(point_fine_t position, const ViewConfig &config) -> BLPoint {
     const auto offset = config.offset();
 
     return BLPoint {
-        round_fast((offset.x + position.x) * scale),
-        round_fast((offset.y + position.y) * scale),
+        round_fast(double {(offset.x + position.x) * scale}),
+        round_fast(double {(offset.y + position.y) * scale}),
     };
 }
 
@@ -212,13 +209,13 @@ auto to_context(point_t position, const ViewConfig &config) -> BLPoint {
     return to_context(point_fine_t {position}, config);
 }
 
-auto to_context(double length, const ViewConfig &config) -> double {
+auto to_context(grid_fine_t length, const ViewConfig &config) -> double {
     const auto scale = config.pixel_scale();
-    return round_fast(length * scale);
+    return round_fast(double {length * scale});
 }
 
 auto to_context(grid_t length, const ViewConfig &config) -> double {
-    return to_context(length.value, config);
+    return to_context(grid_fine_t {length}, config);
 }
 
 // from blend2d / pixel coordinates
@@ -227,10 +224,7 @@ auto from_context_fine(BLPoint point, const ViewConfig &config) -> point_fine_t 
     const auto scale = config.pixel_scale();
     const auto offset = config.offset();
 
-    return point_fine_t {
-        point.x / scale - offset.x,
-        point.y / scale - offset.y,
-    };
+    return point_fine_t {point.x / scale, point.y / scale} - offset;
 }
 
 }  // namespace logicsim

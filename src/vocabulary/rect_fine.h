@@ -18,7 +18,7 @@ struct rect_fine_t {
     point_fine_t p0;
     point_fine_t p1;
 
-    rect_fine_t() = default;
+    [[nodiscard]] explicit constexpr rect_fine_t() = default;
 
     [[nodiscard]] explicit constexpr rect_fine_t(point_fine_t p0_, point_fine_t p1_)
         : p0 {p0_}, p1 {p1_} {

@@ -1,7 +1,6 @@
 ﻿#include "render_circuit.h"
 
 #include "collision.h"
-#include "concept.h"
 #include "editable_circuit/selection.h"
 #include "layout.h"
 #include "layout_calculation.h"
@@ -47,18 +46,13 @@ constexpr auto monochrome(uint8_t value) -> color_t {
 
 auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int delta,
                                      color_t color, int width) {
-    const auto clamp_to_grid = [](double v_) {
-        return gsl::narrow_cast<grid_t::value_type>(
-            std::clamp(v_, grid_t::min() * 1.0, grid_t::max() * 1.0));
-    };
-
     const auto g0 = point_t {
-        clamp_to_grid(std::floor(scene_rect.p0.x / delta) * delta),
-        clamp_to_grid(std::floor(scene_rect.p0.y / delta) * delta),
+        to_floored(floor(scene_rect.p0.x / delta) * delta),
+        to_floored(floor(scene_rect.p0.y / delta) * delta),
     };
     const auto g1 = point_t {
-        clamp_to_grid(std::ceil(scene_rect.p1.x / delta) * delta),
-        clamp_to_grid(std::ceil(scene_rect.p1.y / delta) * delta),
+        to_ceiled(ceil(scene_rect.p1.x / delta) * delta),
+        to_ceiled(ceil(scene_rect.p1.y / delta) * delta),
     };
 
     /*
@@ -81,12 +75,12 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
 
     // vertical
     for (int x = g0.x.value; x <= g1.x.value; x += delta) {
-        const auto cx = round_fast((x + offset.x) * scale);
+        const auto cx = round_fast(double {(x + offset.x) * scale});
         draw_orthogonal_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width});
     }
     // horizontal
     for (int y = g0.y.value; y <= g1.y.value; y += delta) {
-        const auto cy = round_fast((y + offset.y) * scale);
+        const auto cy = round_fast(double {(y + offset.y) * scale});
         draw_orthogonal_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width});
     }
 }
@@ -668,7 +662,7 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
                           std::optional<simulation_view::ConstElement> logic_state) {
     // white background
     const auto text_x = 1. + (element_width - 1.) / 2.;
-    const auto text_y = std::min(3., (element_height - 1.) / 2.);
+    const auto text_y = std::min(grid_fine_t {3.}, (element_height - 1.) / 2.);
 
     const auto h_margin = display::margin_horizontal;
     const auto v_padding = display::padding_vertical;

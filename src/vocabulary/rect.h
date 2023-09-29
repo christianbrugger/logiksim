@@ -4,8 +4,8 @@
 #include "format/struct.h"
 #include "vocabulary/point.h"
 
-#include <type_traits>
 #include <stdexcept>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -16,7 +16,7 @@ struct rect_t {
     point_t p0;
     point_t p1;
 
-    rect_t() = default;
+    [[nodiscard]] explicit constexpr rect_t() = default;
 
     [[nodiscard]] explicit constexpr rect_t(point_t p0_, point_t p1_)
         : p0 {p0_}, p1 {p1_} {

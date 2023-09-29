@@ -17,7 +17,7 @@ struct line_t {
     point_t p0;
     point_t p1;
 
-    line_t() = default;
+    [[nodiscard]] explicit constexpr line_t() = default;
 
     [[nodiscard]] explicit constexpr line_t(point_t p0_, point_t p1_)
         : p0 {p0_}, p1 {p1_} {

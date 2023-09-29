@@ -19,8 +19,8 @@ namespace logicsim {
 
 // General
 namespace defaults {
-constexpr static inline auto line_selection_padding = 0.3;    // grid values
-constexpr static inline auto logic_item_body_overdraw = 0.4;  // grid values
+constexpr static inline auto line_selection_padding = grid_fine_t {0.3};
+constexpr static inline auto logic_item_body_overdraw = grid_fine_t {0.4};
 }  // namespace defaults
 
 namespace standard_element {
@@ -33,7 +33,7 @@ constexpr static inline auto width = grid_t {2};
 // Display General
 namespace display {
 constexpr static inline auto font_style = FontStyle::monospace;
-constexpr static inline auto font_size = grid_fine_t {0.9};  // grid values
+constexpr static inline auto font_size = grid_fine_t {0.9};
 constexpr static inline auto enable_input_id = connection_id_t {0};
 
 constexpr static inline auto margin_horizontal = grid_fine_t {0.2};
@@ -173,7 +173,7 @@ auto iter_element_body_points(layout_calculation_data_t data,
                     const auto point = point_t {gsl::narrow_cast<grid_t::value_type>(x),
                                                 gsl::narrow_cast<grid_t::value_type>(y)};
 
-                    if (point.x == 0 && point.y <= max_input_y) {
+                    if (point.x == grid_t {0} && point.y <= max_input_y) {
                         continue;
                     }
                     if (point == negative_pos || point == enable_pos) {

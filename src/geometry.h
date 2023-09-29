@@ -23,7 +23,16 @@ auto is_vertical(orientation_t orientation) noexcept -> bool;
 
 [[nodiscard]] auto to_rounded(grid_fine_t v) -> grid_t;
 [[nodiscard]] auto to_floored(grid_fine_t v) -> grid_t;
-[[nodiscard]] auto to_truncated(grid_fine_t v) -> grid_t;
+[[nodiscard]] auto to_ceiled(grid_fine_t v) -> grid_t;
+
+//
+// grid_fine_t
+//
+
+[[nodiscard]] auto clamp_to_grid(grid_fine_t grid_fine) -> grid_fine_t;
+[[nodiscard]] auto round(grid_fine_t v) -> grid_fine_t;
+[[nodiscard]] auto floor(grid_fine_t v) -> grid_fine_t;
+[[nodiscard]] auto ceil(grid_fine_t v) -> grid_fine_t;
 
 //
 // line_t
@@ -88,7 +97,7 @@ auto is_vertical(orientation_t orientation) noexcept -> bool;
 // interpolation
 //
 
-[[nodiscard]] auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> double;
+[[nodiscard]] auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> grid_fine_t;
 [[nodiscard]] auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1,
                                        time_t t_select) -> point_fine_t;
 

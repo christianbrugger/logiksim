@@ -40,7 +40,8 @@ struct time_t {
     };
 };
 
-static_assert(std::is_trivial<time_t>::value);
+static_assert(std::is_aggregate_v<time_t>);
+static_assert(std::is_trivial_v<time_t>);
 
 }  // namespace logicsim
 

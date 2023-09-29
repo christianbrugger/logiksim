@@ -64,6 +64,13 @@ struct glz::meta<logicsim::point_t> {
     static constexpr auto value = array(&T::x, &T::y);
 };
 
+template <>
+struct glz::meta<logicsim::grid_fine_t> {
+    using T = logicsim::grid_fine_t;
+
+    static constexpr auto value = &T::value;
+};
+
 using logicsim::serialize::SerializedLine;
 
 template <>

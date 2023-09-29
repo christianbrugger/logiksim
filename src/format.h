@@ -5,8 +5,8 @@
 #define LOGIKSIM_FORMAT_H
 
 #include "algorithm.h"
+#include "concept/string_view.h"
 #include "exception.h"
-#include "format/concept_string_view.h"
 #include "format/enum.h"
 #include "format/struct.h"
 #include "format/time.h"

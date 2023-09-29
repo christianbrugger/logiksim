@@ -52,7 +52,7 @@ class ViewConfig {
 };
 
 [[nodiscard]] auto is_representable(int x, int y) -> bool;
-[[nodiscard]] auto is_representable(double x, double y) -> bool;
+[[nodiscard]] auto is_representable(grid_fine_t x, grid_fine_t y) -> bool;
 [[nodiscard]] auto is_representable(point_t point, int dx, int dy) -> bool;
 [[nodiscard]] auto is_representable(line_t point, int dx, int dy) -> bool;
 [[nodiscard]] auto is_representable(ordered_line_t point, int dx, int dy) -> bool;
@@ -62,6 +62,7 @@ auto get_scene_rect_fine(const ViewConfig& view_config) -> rect_fine_t;
 auto get_scene_rect(const ViewConfig& view_config) -> rect_t;
 
 // device to grid fine
+// TODO make private ??
 [[nodiscard]] auto to_grid_fine(double x, double y, const ViewConfig& config)
     -> point_fine_t;
 [[nodiscard]] auto to_grid_fine(QPointF position, const ViewConfig& config)
@@ -70,6 +71,7 @@ auto get_scene_rect(const ViewConfig& view_config) -> rect_t;
     -> point_fine_t;
 
 // device to grid
+// TODO make private ??
 [[nodiscard]] auto to_grid(double x, double y, const ViewConfig& config)
     -> std::optional<point_t>;
 [[nodiscard]] auto to_grid(QPointF position, const ViewConfig& config)
@@ -85,8 +87,8 @@ auto get_scene_rect(const ViewConfig& view_config) -> rect_t;
 [[nodiscard]] auto to_context(point_t position, const ViewConfig& config) -> BLPoint;
 [[nodiscard]] auto to_context(point_fine_t position, const ViewConfig& config) -> BLPoint;
 
+[[nodiscard]] auto to_context(grid_fine_t length, const ViewConfig& config) -> double;
 [[nodiscard]] auto to_context(grid_t length, const ViewConfig& config) -> double;
-[[nodiscard]] auto to_context(double length, const ViewConfig& config) -> double;
 
 // from blend2d / pixel coordinates
 [[nodiscard]] auto from_context_fine(BLPoint point, const ViewConfig& config)

@@ -23,6 +23,7 @@ struct part_copy_definition_t {
     [[nodiscard]] auto operator<=>(const part_copy_definition_t &other) const = default;
 };
 
+static_assert(std::is_aggregate_v<part_copy_definition_t>);
 static_assert(std::is_trivially_copyable_v<part_copy_definition_t>);
 static_assert(std::is_trivially_copy_assignable_v<part_copy_definition_t>);
 

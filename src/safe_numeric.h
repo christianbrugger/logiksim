@@ -6,8 +6,6 @@
 #include <boost/safe_numerics/safe_base.hpp>
 #include <boost/safe_numerics/safe_integer.hpp>
 
-#include <limits>
-
 namespace logicsim {
 
 using ls_promotion = boost::safe_numerics::automatic;
@@ -25,10 +23,6 @@ using ls_safe = boost::safe_numerics::safe<T, ls_promotion, ls_exception_policy>
 template <class T, T Min, T Max>
 using ls_safe_range =
     boost::safe_numerics::safe_base<T, Min, Max, ls_promotion, ls_exception_policy>;
-
-// TODO move to the right position
-template <typename T>
-concept integral = std::is_integral_v<T>;
 
 }  // namespace logicsim
 

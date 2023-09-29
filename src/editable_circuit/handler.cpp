@@ -2643,11 +2643,11 @@ auto capture_new_splitpoints(const Layout& layout, const CacheProvider& cache,
         }
 
         if (is_horizontal(full_line)) {
-            for (auto x : range(full_line.p0.x + 1, full_line.p1.x)) {
+            for (auto x : range(full_line.p0.x + grid_t {1}, full_line.p1.x)) {
                 add_candidate(point_t {x, full_line.p0.y});
             }
         } else {
-            for (auto y : range(full_line.p0.y + 1, full_line.p1.y)) {
+            for (auto y : range(full_line.p0.y + grid_t {1}, full_line.p1.y)) {
                 add_candidate(point_t {full_line.p0.x, y});
             }
         }

@@ -17,7 +17,7 @@ struct ordered_line_t {
     point_t p0;
     point_t p1;
 
-    ordered_line_t() = default;
+    [[nodiscard]] explicit constexpr ordered_line_t() = default;
 
     [[nodiscard]] explicit constexpr ordered_line_t(point_t p0_, point_t p1_)
         : p0 {p0_}, p1 {p1_} {
@@ -31,7 +31,6 @@ struct ordered_line_t {
         : p0 {line.p0 < line.p1 ? line.p0 : line.p1},
           p1 {line.p0 < line.p1 ? line.p1 : line.p0} {}
 
-    
     [[nodiscard]] explicit constexpr operator line_t() const noexcept {
         return line_t {p0, p1};
     }

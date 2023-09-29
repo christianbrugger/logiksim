@@ -86,7 +86,7 @@ auto to_context(grid_t length, const Context& context) -> double {
     return to_context(length, context.settings.view_config);
 }
 
-auto to_context(double length, const Context& context) -> double {
+auto to_context(grid_fine_t length, const Context& context) -> double {
     return to_context(length, context.settings.view_config);
 }
 
@@ -340,8 +340,8 @@ auto format(PointShape type) -> std::string {
     throw_exception("cannot convert PointType to string");
 }
 
-auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color, double size)
-    -> void {
+auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
+                grid_fine_t size) -> void {
     constexpr auto stroke_width = 1;
 
     switch (shape) {
@@ -383,8 +383,8 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color, do
         case square: {
             draw_rect(ctx,
                       rect_fine_t {
-                          point_fine_t {point.x.value - size, point.y.value - size},
-                          point_fine_t {point.x.value + size, point.y.value + size},
+                          point_fine_t {point.x - size, point.y - size},
+                          point_fine_t {point.x + size, point.y + size},
                       },
                       RectAttributes {
                           .draw_type = DrawType::stroke,
@@ -397,8 +397,8 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color, do
         case full_square: {
             draw_rect(ctx,
                       rect_fine_t {
-                          point_fine_t {point.x.value - size, point.y.value - size},
-                          point_fine_t {point.x.value + size, point.y.value + size},
+                          point_fine_t {point.x - size, point.y - size},
+                          point_fine_t {point.x + size, point.y + size},
                       },
                       RectAttributes {
                           .draw_type = DrawType::fill,
@@ -445,7 +445,7 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color, do
 //
 
 auto draw_arrow(Context& ctx, point_t point, color_t color, orientation_t orientation,
-                double size) -> void {
+                grid_fine_t size) -> void {
     auto _ [[maybe_unused]] = make_context_guard(ctx);
 
     ctx.bl_ctx.setStrokeWidth(1);
@@ -695,8 +695,7 @@ auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
     if (text.empty()) {
         return;
     }
-    const auto font_size_px =
-        attributes.font_size * ctx.settings.view_config.pixel_scale();
+    const auto font_size_px = to_context(attributes.font_size, ctx);
     if (font_size_px < attributes.cuttoff_size_px) {
         return;
     }

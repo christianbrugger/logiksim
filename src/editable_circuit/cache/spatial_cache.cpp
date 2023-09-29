@@ -15,7 +15,7 @@ namespace logicsim::detail::spatial_tree {
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using tree_point_t = bg::model::d2::point_xy<grid_fine_t>;
+using tree_point_t = bg::model::d2::point_xy<grid_fine_t::value_type>;
 using tree_box_t = bg::model::box<tree_point_t>;
 using tree_value_t = std::pair<tree_box_t, tree_payload_t>;
 
@@ -27,6 +27,7 @@ using tree_t = bgi::rtree<tree_value_t, bgi::rstar<tree_max_node_elements>>;
 
 auto get_selection_box(layout_calculation_data_t data) -> tree_box_t;
 auto get_selection_box(ordered_line_t segment) -> tree_box_t;
+auto to_tree_point(point_fine_t point) -> tree_point_t;
 auto to_rect(tree_box_t box) -> rect_fine_t;
 auto to_box(rect_fine_t rect) -> tree_box_t;
 
@@ -121,6 +122,10 @@ auto get_selection_box(ordered_line_t line) -> tree_box_t {
     return to_box(rect);
 }
 
+auto to_tree_point(point_fine_t point) -> tree_point_t {
+    return tree_point_t {double {point.x}, double {point.y}};
+}
+
 auto to_rect(tree_box_t box) -> rect_fine_t {
     const auto p0 = point_fine_t {box.min_corner().x(), box.min_corner().y()};
     const auto p1 = point_fine_t {box.max_corner().x(), box.max_corner().y()};
@@ -129,8 +134,8 @@ auto to_rect(tree_box_t box) -> rect_fine_t {
 }
 
 auto to_box(rect_fine_t rect) -> tree_box_t {
-    const auto p0 = tree_point_t {rect.p0.x, rect.p0.y};
-    const auto p1 = tree_point_t {rect.p1.x, rect.p1.y};
+    const auto p0 = to_tree_point(rect.p0);
+    const auto p1 = to_tree_point(rect.p1);
 
     return tree_box_t {p0, p1};
 }
@@ -255,15 +260,14 @@ auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_r
 auto SpatialTree::has_element(point_fine_t point) const -> bool {
     using namespace detail::spatial_tree;
 
-    return tree_->value.qbegin(bgi::intersects(tree_point_t {point.x, point.y})) !=
+    return tree_->value.qbegin(bgi::intersects(to_tree_point(point))) !=
            tree_->value.qend();
 }
 
 auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segments_t {
     using namespace detail::spatial_tree;
 
-    const auto grid_point_fine = point_fine_t {grid_point};
-    const auto tree_point = tree_point_t {grid_point_fine.x, grid_point_fine.y};
+    const auto tree_point = to_tree_point(point_fine_t {grid_point});
 
     auto result = std::array {null_segment, null_segment, null_segment, null_segment};
 

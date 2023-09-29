@@ -1,9 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_OFFSET_H
 #define LOGICSIM_VOCABULARY_OFFSET_H
 
+#include "difference_type.h"
 #include "format/struct.h"
 #include "vocabulary/grid.h"
-#include "difference_type.h"
 
 #include <gsl/gsl>
 
@@ -29,17 +29,17 @@ struct offset_t {
     [[nodiscard]] auto operator==(const offset_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const offset_t &other) const = default;
 
-    constexpr auto operator++()->offset_t & {
+    constexpr auto operator++() -> offset_t & {
         return *this = *this + offset_t {1};
     }
 
-    constexpr auto operator++(int)->offset_t {
+    constexpr auto operator++(int) -> offset_t {
         auto tmp = *this;
         operator++();
         return tmp;
     }
 
-    constexpr auto operator--()->offset_t & {
+    constexpr auto operator--() -> offset_t & {
         return *this = *this - offset_t {1};
     }
 
@@ -64,6 +64,7 @@ struct offset_t {
     }
 };
 
+static_assert(std::is_aggregate<offset_t>::value);
 static_assert(std::is_trivial<offset_t>::value);
 static_assert(std::is_standard_layout<offset_t>::value);
 static_assert(std::is_nothrow_default_constructible<offset_t>::value);

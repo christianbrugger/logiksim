@@ -21,8 +21,8 @@ struct segment_index_t {
     using difference_type = safe_difference_t<value_type>;
     static_assert(sizeof(difference_type) > sizeof(value_type));
 
-    [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] explicit constexpr operator bool() const noexcept;
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const segment_index_t &other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const segment_index_t &other) const = default;
@@ -35,7 +35,8 @@ struct segment_index_t {
     constexpr auto operator--(int) noexcept -> segment_index_t;
 };
 
-static_assert(std::is_trivial<segment_index_t>::value);
+static_assert(std::is_aggregate_v<segment_index_t>);
+static_assert(std::is_trivial_v<segment_index_t>);
 
 inline constexpr auto null_segment_index = segment_index_t {-1};
 
