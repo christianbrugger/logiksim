@@ -90,6 +90,10 @@ auto to_context(grid_fine_t length, const Context& context) -> double {
     return to_context(length, context.settings.view_config);
 }
 
+auto to_context_unrounded(grid_fine_t length, const Context& context) -> double {
+    return to_context_unrounded(length, context.settings.view_config);
+}
+
 //
 // Element Draw State
 //
@@ -695,7 +699,7 @@ auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
     if (text.empty()) {
         return;
     }
-    const auto font_size_px = to_context(attributes.font_size, ctx);
+    const auto font_size_px = to_context_unrounded(attributes.font_size, ctx);
     if (font_size_px < attributes.cuttoff_size_px) {
         return;
     }
@@ -709,7 +713,7 @@ auto draw_text(Context& ctx, point_fine_t position, std::string_view text,
 auto draw_icon(Context& ctx, point_fine_t position, icon_t icon,
                IconAttributes attributes) -> void {
     const auto position_px = to_context(position, ctx);
-    const auto icon_height_px = to_context(attributes.icon_height, ctx);
+    const auto icon_height_px = to_context_unrounded(attributes.icon_height, ctx);
 
     ctx.svg_cache.draw_icon(ctx.bl_ctx,
                             SVGCache::IconAttributes {

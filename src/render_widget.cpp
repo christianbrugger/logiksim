@@ -1633,7 +1633,8 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
     constexpr auto standard_scroll_pixel = 45;  // device pixels to scroll for one scroll
     constexpr auto standard_delta = 120.0;      // degree delta for one scroll
 
-    const auto standard_scroll_grid = standard_scroll_pixel / view_config.device_scale();
+    const auto standard_scroll_grid =
+        grid_fine_t {standard_scroll_pixel / view_config.device_scale()};
 
     // zoom
     if (event->modifiers() == Qt::ControlModifier) {
@@ -1646,18 +1647,14 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
         if (event->hasPixelDelta()) {
             // TODO test this
             const auto scale = view_config.device_scale();
-
-            view_config.set_offset(point_fine_t {
-                view_config.offset().x + event->pixelDelta().x() / scale,
-                view_config.offset().y + event->pixelDelta().y() / scale,
-            });
+            const auto moved = point_fine_t {event->pixelDelta().x() / scale,
+                                             event->pixelDelta().y() / scale};
+            view_config.set_offset(view_config.offset() + moved);
         } else {
-            view_config.set_offset(point_fine_t {
-                view_config.offset().x +
-                    standard_scroll_grid * event->angleDelta().x() / standard_delta,
-                view_config.offset().y +
-                    standard_scroll_grid * event->angleDelta().y() / standard_delta,
-            });
+            const auto moved = point_fine_t {
+                standard_scroll_grid * event->angleDelta().x() / standard_delta,
+                standard_scroll_grid * event->angleDelta().y() / standard_delta};
+            view_config.set_offset(view_config.offset() + moved);
         }
         update();
     }

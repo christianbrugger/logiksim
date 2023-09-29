@@ -22,6 +22,7 @@ struct grid_fine_t {
     [[nodiscard]] explicit constexpr grid_fine_t() = default;
     [[nodiscard]] explicit constexpr grid_fine_t(value_type v) noexcept;
     [[nodiscard]] explicit constexpr grid_fine_t(grid_t grid) noexcept;
+    [[nodiscard]] explicit constexpr grid_fine_t(int v) noexcept;
 
     [[nodiscard]] explicit constexpr operator double() const noexcept;
 
@@ -114,6 +115,10 @@ constexpr grid_fine_t::grid_fine_t(value_type v) noexcept : value {v} {}
 constexpr grid_fine_t::grid_fine_t(grid_t grid) noexcept
     : value {static_cast<value_type>(grid.value)} {
     static_assert(sizeof(value_type) > sizeof(grid_t::value_type));
+}
+
+constexpr grid_fine_t::grid_fine_t(int v) noexcept : value {static_cast<value_type>(v)} {
+    static_assert(sizeof(value_type) > sizeof(decltype(v)));
 }
 
 constexpr grid_fine_t::operator double() const noexcept {

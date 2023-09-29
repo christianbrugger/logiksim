@@ -39,43 +39,43 @@ namespace defaults {
 
 constexpr static inline auto connector_cutoff_px = 3.0;  // pixels
 
-constexpr static inline auto button_body_overdraw = 0.5;  // grid values
+constexpr static inline auto button_body_overdraw = grid_fine_t {0.5};
 constexpr static inline auto button_body_color = defaults::color_gray_90;
-constexpr static inline auto led_radius = 0.45;  // grid values
+constexpr static inline auto led_radius = grid_fine_t {0.45};
 
 namespace font {
 constexpr static inline auto logic_item_text_color = defaults::color_black;
 constexpr static inline auto text_cutoff_px = 3.0;  // pixels
 
-constexpr static inline auto logic_item_label_size = 0.9;   // grid values
-constexpr static inline auto binary_value_size = 0.7;       // grid values
-constexpr static inline auto buffer_label_size = 0.6;       // grid values
-constexpr static inline auto connector_label_size = 0.6;    // grid values
-constexpr static inline auto connector_label_margin = 0.2;  // grid values
+constexpr static inline auto logic_item_label_size = grid_fine_t {0.9};
+constexpr static inline auto binary_value_size = grid_fine_t {0.7};
+constexpr static inline auto buffer_label_size = grid_fine_t {0.6};
+constexpr static inline auto connector_label_size = grid_fine_t {0.6};
+constexpr static inline auto connector_label_margin = grid_fine_t {0.2};
 
-constexpr static inline auto clock_name_size = 0.7;  // grid values
+constexpr static inline auto clock_name_size = grid_fine_t {0.7};
 constexpr static inline auto clock_name_color = defaults::color_black;
 constexpr static inline auto clock_name_style = FontStyle::bold;
-constexpr static inline auto clock_period_size = 0.7;  // grid values
+constexpr static inline auto clock_period_size = grid_fine_t {0.7};
 constexpr static inline auto clock_period_color = defaults::color_black;
 constexpr static inline auto clock_period_style = FontStyle::regular;
 
 constexpr static inline auto display_ascii_controll_color = defaults::color_dark_orange;
 constexpr static inline auto display_normal_color = defaults::color_black;
 constexpr static inline auto display_font_style = display::font_style;
-constexpr static inline auto display_font_size = display::font_size;  // grid values
-constexpr static inline auto display_ascii_control_size = 0.7;        // grid values
+constexpr static inline auto display_font_size = display::font_size;
+constexpr static inline auto display_ascii_control_size = grid_fine_t {0.7};
 
 }  // namespace font
 
-constexpr static inline auto connector_length = 0.4;        // grid points
-constexpr static inline auto inverted_circle_radius = 0.2;  // grid points
+constexpr static inline auto connector_length = grid_fine_t {0.4};
+constexpr static inline auto inverted_circle_radius = grid_fine_t {0.2};
 constexpr static inline auto size_handle_color_fill = defaults::color_orange;
 constexpr static inline auto size_handle_color_stroke = defaults::color_dark_orange;
 constexpr static inline auto setting_handle_color_fill = defaults::color_orange;
 constexpr static inline auto setting_handle_color_stroke = defaults::color_dark_orange;
 constexpr static inline auto setting_handle_color_icon = defaults::color_white;
-constexpr static inline auto setting_handle_icon_scale = 0.7;  // ratio
+constexpr static inline auto setting_handle_icon_scale = 0.7;  // ratio vs button size
 
 namespace element_state_alpha {
 constexpr static inline auto normal = color_t::value_type {255};

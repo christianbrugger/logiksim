@@ -211,11 +211,16 @@ auto to_context(point_t position, const ViewConfig &config) -> BLPoint {
 
 auto to_context(grid_fine_t length, const ViewConfig &config) -> double {
     const auto scale = config.pixel_scale();
-    return round_fast(double {length * scale});
+    return round_fast(double {length} * scale);
 }
 
 auto to_context(grid_t length, const ViewConfig &config) -> double {
     return to_context(grid_fine_t {length}, config);
+}
+
+auto to_context_unrounded(grid_fine_t length, const ViewConfig &config) -> double {
+    const auto scale = config.pixel_scale();
+    return double {length} * scale;
 }
 
 // from blend2d / pixel coordinates

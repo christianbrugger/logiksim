@@ -61,6 +61,9 @@ auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
 [[nodiscard]] auto to_context(grid_t length, const Context& context) -> double;
 [[nodiscard]] auto to_context(grid_fine_t length, const Context& context) -> double;
 
+[[nodiscard]] auto to_context_unrounded(grid_fine_t length, const Context& context)
+    -> double;
+
 //
 // Element Draw State
 //

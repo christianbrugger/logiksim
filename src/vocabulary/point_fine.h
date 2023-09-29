@@ -82,7 +82,7 @@ constexpr auto point_fine_t::operator-=(const point_fine_t &other) -> point_fine
 [[nodiscard]] constexpr auto operator-(const point_fine_t &left,
                                        const point_fine_t &right) -> point_fine_t {
     auto result = left;
-    result += right;
+    result -= right;
     return result;
 }
 

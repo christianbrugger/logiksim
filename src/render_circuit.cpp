@@ -30,12 +30,14 @@ namespace {
 
 auto draw_grid_space_limit(Context& ctx) {
     constexpr auto stroke_color = defaults::color_gray;
-    const auto stroke_width = std::max(5.0, to_context(5.0, ctx));
+    constexpr auto stroke_width = grid_fine_t {5.0};
+
+    const auto stroke_width_px = std::max(5.0, to_context(stroke_width, ctx));
 
     const auto p0 = to_context(point_t {grid_t::min(), grid_t::min()}, ctx);
     const auto p1 = to_context(point_t {grid_t::max(), grid_t::max()}, ctx);
 
-    ctx.bl_ctx.setStrokeWidth(stroke_width);
+    ctx.bl_ctx.setStrokeWidth(stroke_width_px);
     ctx.bl_ctx.strokeRect(BLRect {p0.x + 0.5, p0.y + 0.5, p1.x - p0.x, p1.y - p0.y},
                           stroke_color);
 }
@@ -75,12 +77,12 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
 
     // vertical
     for (int x = g0.x.value; x <= g1.x.value; x += delta) {
-        const auto cx = round_fast(double {(x + offset.x) * scale});
+        const auto cx = round_fast(double {(grid_fine_t {x} + offset.x) * scale});
         draw_orthogonal_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width});
     }
     // horizontal
     for (int y = g0.y.value; y <= g1.y.value; y += delta) {
-        const auto cy = round_fast(double {(y + offset.y) * scale});
+        const auto cy = round_fast(double {(grid_fine_t {y} + offset.y) * scale});
         draw_orthogonal_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width});
     }
 }
@@ -131,7 +133,7 @@ auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
     const auto width = ctx.settings.view_config.stroke_width();
     const auto offset = stroke_offset(width);
 
-    const auto r = radius * ctx.settings.view_config.pixel_scale();
+    const auto r = to_context_unrounded(radius, ctx);
     const auto p = to_context(attributes.position, ctx);
     const auto p_center = connector_point(p, attributes.orientation, r + width / 2.0);
     const auto p_adjusted = is_horizontal(attributes.orientation)
@@ -647,7 +649,7 @@ auto _inputs_to_number(layout::ConstElement element,
 struct styled_display_text_t {
     std::string text;
     color_t color {defaults::font::display_normal_color};
-    double font_size {defaults::font::display_font_size};
+    grid_fine_t font_size {defaults::font::display_font_size};
     HorizontalAlignment horizontal_alignment {HorizontalAlignment::center};
     VerticalAlignment vertical_alignment {VerticalAlignment::center};
 };
@@ -661,16 +663,17 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
                           connection_count_t control_inputs,
                           std::optional<simulation_view::ConstElement> logic_state) {
     // white background
-    const auto text_x = 1. + (element_width - 1.) / 2.;
-    const auto text_y = std::min(grid_fine_t {3.}, (element_height - 1.) / 2.);
+    const auto text_x = grid_fine_t {1.} + (element_width - grid_fine_t {1.}) / 2.;
+    const auto text_y =
+        std::min(grid_fine_t {3.}, (element_height - grid_fine_t {1.}) / 2.);
 
     const auto h_margin = display::margin_horizontal;
     const auto v_padding = display::padding_vertical;
 
     const auto rect = rect_fine_t {
         point_fine_t {
-            1. + h_margin,       // x
-            text_y - v_padding,  // y
+            grid_fine_t {1.} + h_margin,  // x
+            text_y - v_padding,           // y
         },
         point_fine_t {
             element_width - h_margin,  // x
@@ -839,8 +842,8 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
 
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
-        point_fine_t {0., 0. - padding},
-        point_fine_t {5., 4. + padding},
+        point_fine_t {0., -padding},
+        point_fine_t {5., grid_fine_t {4.} + padding},
     };
     draw_logic_item_rect(ctx, rect, element, state);
 
@@ -876,8 +879,8 @@ auto draw_flipflop_jk(Context& ctx, layout::ConstElement element, ElementDrawSta
     -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
-        point_fine_t {0., 0. - padding},
-        point_fine_t {4., 2. + padding},
+        point_fine_t {0., -padding},
+        point_fine_t {4., grid_fine_t {2.} + padding},
     };
     draw_logic_item_rect(ctx, rect, element, state);
 
@@ -893,8 +896,8 @@ auto draw_shift_register(Context& ctx, layout::ConstElement element,
     -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
-        point_fine_t {0., 0. - padding},
-        point_fine_t {8., 2. + padding},
+        point_fine_t {0., -padding},
+        point_fine_t {8., grid_fine_t {2.} + padding},
     };
     draw_logic_item_rect(ctx, rect, element, state);
 
@@ -922,8 +925,8 @@ auto draw_latch_d(Context& ctx, layout::ConstElement element, ElementDrawState s
     -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
-        point_fine_t {0., 0. - padding},
-        point_fine_t {2., 1. + padding},
+        point_fine_t {0., -padding},
+        point_fine_t {2., grid_fine_t {1.} + padding},
     };
     draw_logic_item_rect(ctx, rect, element, state);
 
@@ -937,8 +940,8 @@ auto draw_flipflop_d(Context& ctx, layout::ConstElement element, ElementDrawStat
     -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
-        point_fine_t {0., 0. - padding},
-        point_fine_t {3., 2. + padding},
+        point_fine_t {0., -padding},
+        point_fine_t {3., grid_fine_t {2.} + padding},
     };
     draw_logic_item_rect(ctx, rect, element, state);
 
@@ -952,8 +955,8 @@ auto draw_flipflop_ms_d(Context& ctx, layout::ConstElement element,
                         ElementDrawState state) -> void {
     const auto padding = defaults::logic_item_body_overdraw;
     const auto rect = rect_fine_t {
-        point_fine_t {0., 0. - padding},
-        point_fine_t {4., 2. + padding},
+        point_fine_t {0., -padding},
+        point_fine_t {4., grid_fine_t {2.} + padding},
     };
     draw_logic_item_rect(ctx, rect, element, state);
 
@@ -1265,7 +1268,9 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
 //
 
 auto draw_setting_handle(Context& ctx, setting_handle_t handle) -> void {
-    auto rect = setting_handle_rect(handle);
+    const auto rect = setting_handle_rect(handle);
+    const auto icon_height =
+        defaults::setting_handle_size * defaults::setting_handle_icon_scale;
 
     // button rect
     draw_rect(ctx, rect,
@@ -1278,7 +1283,7 @@ auto draw_setting_handle(Context& ctx, setting_handle_t handle) -> void {
     // button icon
     draw_icon(ctx, get_center(rect), handle.icon,
               IconAttributes {
-                  .icon_height = defaults::setting_handle_icon_scale,
+                  .icon_height = icon_height,
                   .color = defaults::setting_handle_color_icon,
                   .horizontal_alignment = HorizontalAlignment::center,
                   .vertical_alignment = VerticalAlignment::center,
@@ -1329,8 +1334,9 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
     throw_exception("unknown shadow type");
 }
 
-auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> double {
-    return type == ElementType::button ? 0. : defaults::line_selection_padding;
+auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> grid_fine_t {
+    return type == ElementType::button ? grid_fine_t {0.}
+                                       : defaults::line_selection_padding;
 }
 
 auto draw_logic_item_shadow(Context& ctx, layout::ConstElement element,
