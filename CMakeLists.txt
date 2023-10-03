@@ -8,6 +8,8 @@ set(LS_CORE_SOURCES
     src/concept/integral.cpp
     src/concept/string_view.cpp
 
+    src/container/circular_buffer.cpp
+
     src/editable_circuit/cache/collision_cache.cpp
     src/editable_circuit/cache/connection_cache.cpp
     src/editable_circuit/cache/spatial_cache.cpp

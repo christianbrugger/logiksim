@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_SIMULATION_H
 #define LOGIKSIM_SIMULATION_H
 
-#include "circular_buffer.h"
+#include "container/circular_buffer.h"
 #include "exception.h"
 #include "schematic.h"
 
