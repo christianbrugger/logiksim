@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_RENDER_GENERIC_H
 #define LOGIKSIM_RENDER_GENERIC_H
 
-#include "allocated_size.h"
 #include "format.h"
 #include "glyph_cache.h"
 #include "glyph_cache_type.h"

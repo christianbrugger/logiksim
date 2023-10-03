@@ -156,6 +156,11 @@ auto SpatialTree::format() const -> std::string {
     return fmt::format("SpatialTree = {}", tree_->value);
 }
 
+auto SpatialTree::allocated_size() const -> std::size_t {
+    // this is a lower estimate, as rtree is linked list based tree with fat nodes
+    return tree_->value.size() * sizeof(decltype(tree_->value)::value_type);
+}
+
 auto SpatialTree::handle(const editable_circuit::info_message::LogicItemInserted& message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.data);

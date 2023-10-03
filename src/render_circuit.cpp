@@ -1,5 +1,7 @@
 ﻿#include "render_circuit.h"
 
+#include "allocated_size/std_vector.h"
+#include "allocated_size/trait.h"
 #include "collision.h"
 #include "editable_circuit/selection.h"
 #include "layout.h"
@@ -1614,6 +1616,10 @@ auto CircuitLayers::clear() -> void {
 auto CircuitLayers::shrink_to_fit() -> void {
     interactive_layers.shrink_to_fit();
     simulation_layers.shrink_to_fit();
+}
+
+auto CircuitLayers::allocated_size() const -> std::size_t {
+    return interactive_layers.allocated_size() + simulation_layers.allocated_size();
 }
 
 auto CircuitContext::clear() -> void {

@@ -1,5 +1,7 @@
 #include "editable_circuit/cache/connection_cache.h"
 
+#include "allocated_size/ankerl_unordered_dense.h"
+#include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
 #include "geometry.h"
@@ -61,6 +63,11 @@ auto ConnectionCache<IsInput>::format() const -> std::string {
     } else {
         return fmt::format("OutputCache = {}", map_);
     }
+}
+
+template <bool IsInput>
+auto ConnectionCache<IsInput>::allocated_size() const -> std::size_t {
+    return get_allocated_size(map_);
 }
 
 auto get_add_entry(detail::connection_cache::map_type& map, element_id_t element_id,

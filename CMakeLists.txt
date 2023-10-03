@@ -3,6 +3,13 @@ cmake_minimum_required(VERSION 3.25)
 set(LS_CORE_SOURCES
     src/algorithm/narrow_integral.cpp
     
+    src/allocated_size/ankerl_unordered_dense.cpp
+    src/allocated_size/folly_small_vector.cpp
+    src/allocated_size/std_pair.cpp
+    src/allocated_size/std_string.cpp
+    src/allocated_size/std_vector.cpp
+    src/allocated_size/trait.cpp
+    
     src/concept/explicitly_convertible.cpp
     src/concept/input_range.cpp
     src/concept/integral.cpp

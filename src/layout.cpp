@@ -1,6 +1,11 @@
 
 #include "layout.h"
 
+#include "allocated_size/ankerl_unordered_dense.h"
+#include "allocated_size/folly_small_vector.h"
+#include "allocated_size/std_string.h"
+#include "allocated_size/std_vector.h"
+#include "allocated_size/trait.h"
 #include "exception.h"
 #include "iterator_adaptor.h"
 #include "layout_calculation.h"
@@ -30,6 +35,10 @@ auto attributes_clock_generator::format_period() const -> std::string {
         return fmt::format("{}", format_time(period));
     }
     return fmt::format("{}/{}", time_on, time_off);
+}
+
+auto attributes_clock_generator::allocated_size() const -> std::size_t {
+    return get_allocated_size(name);
 }
 
 auto attributes_clock_generator::is_valid() const -> bool {
@@ -152,6 +161,24 @@ auto Layout::delete_last_element() -> void {
     bounding_rects_.pop_back();
 
     erase_last_map(map_clock_generator_);
+}
+
+auto Layout::allocated_size() const -> std::size_t {
+    return get_allocated_size(element_types_) +     //
+           get_allocated_size(sub_circuit_ids_) +   //
+           get_allocated_size(input_counts_) +      //
+           get_allocated_size(output_counts_) +     //
+           get_allocated_size(input_inverters_) +   //
+           get_allocated_size(output_inverters_) +  //
+
+           get_allocated_size(segment_trees_) +   //
+           get_allocated_size(line_trees_) +      //
+           get_allocated_size(positions_) +       //
+           get_allocated_size(orientations_) +    //
+           get_allocated_size(display_states_) +  //
+           get_allocated_size(bounding_rects_) +  //
+
+           get_allocated_size(map_clock_generator_);
 }
 
 auto Layout::normalize() -> void {

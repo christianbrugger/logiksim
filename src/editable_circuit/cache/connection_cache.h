@@ -47,6 +47,7 @@ class ConnectionCache {
 
    public:
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto find(point_t position) const -> std::optional<connection_data_t>;
 

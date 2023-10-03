@@ -45,6 +45,7 @@ struct attributes_clock_generator {
    public:
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_period() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto is_valid() const -> bool;
     [[nodiscard]] auto operator==(const attributes_clock_generator &) const
@@ -85,6 +86,7 @@ class Layout {
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto element_count() const -> std::size_t;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
 

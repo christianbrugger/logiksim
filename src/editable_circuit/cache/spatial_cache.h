@@ -46,6 +46,7 @@ class SpatialTree {
     auto operator=(SpatialTree &&) -> SpatialTree &;
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     auto query_selection(rect_fine_t rect) const -> std::vector<query_result_t>;
     auto has_element(point_fine_t point) const -> bool;

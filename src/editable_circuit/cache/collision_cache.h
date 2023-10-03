@@ -2,8 +2,8 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_COLLISION_CACHE_H
 
 #include "editable_circuit/message_forward.h"
-#include "vocabulary.h"
 #include "iterator_adaptor.h"
+#include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -86,6 +86,7 @@ class CollisionCache {
 
    public:
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
     [[nodiscard]] auto is_colliding(ordered_line_t line) const -> bool;

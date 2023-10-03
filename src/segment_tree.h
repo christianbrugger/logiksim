@@ -76,6 +76,7 @@ class SegmentTree {
     [[nodiscard]] auto segment_line(segment_index_t index) const -> ordered_line_t;
     [[nodiscard]] auto segment_part(segment_index_t index) const -> part_t;
     [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     // valid parts
     auto mark_valid(segment_index_t segment_index, part_t part) -> void;

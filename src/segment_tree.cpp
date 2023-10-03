@@ -1,5 +1,7 @@
 #include "segment_tree.h"
 
+#include "allocated_size/folly_small_vector.h"
+#include "allocated_size/trait.h"
 #include "graph.h"
 #include "line_tree.h"
 #include "range.h"
@@ -69,6 +71,11 @@ auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
     swap(output_count_, other.output_count_);
     swap(input_position_, other.input_position_);
     swap(has_input_, other.has_input_);
+}
+
+auto SegmentTree::allocated_size() const -> std::size_t {
+    return get_allocated_size(segments_) +  //
+           get_allocated_size(valid_parts_vector_);
 }
 
 auto SegmentTree::normalize() -> void {

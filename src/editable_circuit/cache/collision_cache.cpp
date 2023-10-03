@@ -1,5 +1,7 @@
 #include "editable_circuit/cache/collision_cache.h"
 
+#include "allocated_size/ankerl_unordered_dense.h"
+#include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
 #include "layout_calculation.h"
@@ -378,6 +380,10 @@ auto CollisionCache::handle(
 auto CollisionCache::format() const -> std::string {
     // return fmt::format("CollisionCache = {}\n", map_);
     return "!!! NOT IMPLEMENTED !!!";
+}
+
+auto CollisionCache::allocated_size() const -> std::size_t {
+    return get_allocated_size(map_);
 }
 
 auto CollisionCache::handle(

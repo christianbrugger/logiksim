@@ -3,6 +3,8 @@
 #include "line_tree.h"
 
 #include "algorithm.h"
+#include "allocated_size/folly_small_vector.h"
+#include "allocated_size/trait.h"
 #include "collision.h"
 #include "exception.h"
 #include "format.h"
@@ -311,6 +313,13 @@ auto LineTree::swap(LineTree& other) noexcept -> void {
     indices_.swap(other.indices_);
     lengths_.swap(other.lengths_);
     output_indices_.swap(other.output_indices_);
+}
+
+auto LineTree::allocated_size() const -> std::size_t {
+    return get_allocated_size(points_) +   //
+           get_allocated_size(indices_) +  //
+           get_allocated_size(lengths_) +  //
+           get_allocated_size(output_indices_);
 }
 
 auto swap(LineTree& a, LineTree& b) noexcept -> void {

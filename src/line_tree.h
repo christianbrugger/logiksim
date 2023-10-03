@@ -116,6 +116,8 @@ class LineTree {
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
+
     [[nodiscard]] auto segment(int index) const -> line_t;
     [[nodiscard]] auto segments() const noexcept -> SegmentView;
     [[nodiscard]] auto sized_segments() const noexcept -> SegmentSizeView;

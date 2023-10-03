@@ -363,12 +363,13 @@ struct CircuitSurfaces {
 };
 
 struct CircuitLayers {
-    // vectors are cached to continuous avoid allocations
+    // vectors are cached to avoid allocations
     InteractiveLayers interactive_layers {};
     SimulationLayers simulation_layers {};
 
     auto clear() -> void;
     auto shrink_to_fit() -> void;
+    auto allocated_size() const -> std::size_t;
 };
 
 struct CircuitContext {

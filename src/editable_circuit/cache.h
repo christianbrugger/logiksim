@@ -13,6 +13,7 @@ class CacheProvider {
     explicit CacheProvider(const Layout& layout);
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto input_cache() const -> const ConnectionCache<true>&;
     [[nodiscard]] auto output_cache() const -> const ConnectionCache<false>&;

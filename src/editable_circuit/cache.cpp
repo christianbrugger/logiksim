@@ -25,6 +25,13 @@ auto CacheProvider::format() const -> std::string {
         input_connections_, output_connections_, collision_cache_, spatial_cache_);
 }
 
+auto CacheProvider::allocated_size() const -> std::size_t {
+    return input_connections_.allocated_size() +   //
+           output_connections_.allocated_size() +  //
+           collision_cache_.allocated_size() +     //
+           spatial_cache_.allocated_size();
+}
+
 auto CacheProvider::validate(const Layout& layout) -> void {
     spatial_cache_.validate(layout);
     collision_cache_.validate(layout);
