@@ -8,6 +8,7 @@ set(LS_CORE_SOURCES
     src/allocated_size/std_pair.cpp
     src/allocated_size/std_string.cpp
     src/allocated_size/std_vector.cpp
+    src/allocated_size/tracked_resource.cpp
     src/allocated_size/trait.cpp
     
     src/concept/explicitly_convertible.cpp

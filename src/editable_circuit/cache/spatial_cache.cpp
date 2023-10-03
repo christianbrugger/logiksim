@@ -1,5 +1,6 @@
 #include "editable_circuit/cache/spatial_cache.h"
 
+#include "allocated_size/tracked_resource.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
 #include "layout.h"
@@ -7,6 +8,8 @@
 #include "wyhash.h"
 
 #include <boost/geometry.hpp>
+
+#include <memory_resource>
 
 namespace logicsim::detail::spatial_tree {
 // Boost R-Tree Documentation:
@@ -23,7 +26,13 @@ static_assert(sizeof(tree_box_t) == 32);
 static_assert(sizeof(tree_value_t) == 40);
 
 constexpr inline static auto tree_max_node_elements = 16;
-using tree_t = bgi::rtree<tree_value_t, bgi::rstar<tree_max_node_elements>>;
+using tree_t = bgi::rtree<                         //
+    tree_value_t,                                  // Value
+    bgi::rstar<tree_max_node_elements>,            // Parameters
+    bgi::indexable<tree_value_t>,                  // IndexableGetter
+    bgi::equal_to<tree_value_t>,                   // EqualTo
+    std::pmr::polymorphic_allocator<tree_value_t>  // Allocator
+    >;
 
 auto get_selection_box(layout_calculation_data_t data) -> tree_box_t;
 auto get_selection_box(ordered_line_t segment) -> tree_box_t;
@@ -35,7 +44,18 @@ auto operator==(const tree_t& a, const tree_t& b) -> bool;
 auto operator!=(const tree_t& a, const tree_t& b) -> bool;
 
 struct tree_container {
+    tracked_resource resource;
     tree_t value;
+
+    tree_container()
+        : resource {},
+          value {tree_t {}, std::pmr::polymorphic_allocator<tree_value_t> {&resource}} {}
+
+    // disable copy & move, as we pass a pointer to resource
+    tree_container(const tree_container&) = delete;
+    tree_container(tree_container&&) = delete;
+    auto operator=(const tree_container&) -> tree_container& = delete;
+    auto operator=(tree_container&&) -> tree_container& = delete;
 };
 
 }  // namespace logicsim::detail::spatial_tree
@@ -157,8 +177,7 @@ auto SpatialTree::format() const -> std::string {
 }
 
 auto SpatialTree::allocated_size() const -> std::size_t {
-    // this is a lower estimate, as rtree is linked list based tree with fat nodes
-    return tree_->value.size() * sizeof(decltype(tree_->value)::value_type);
+    return tree_->resource.allocated_size();
 }
 
 auto SpatialTree::handle(const editable_circuit::info_message::LogicItemInserted& message)
