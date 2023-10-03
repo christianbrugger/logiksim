@@ -45,17 +45,17 @@ class circular_buffer {
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    explicit circular_buffer() = default;
-    explicit circular_buffer(size_type n);
-    explicit circular_buffer(size_type n, value_type const& t);
-    explicit circular_buffer(std::initializer_list<value_type> list);
+    [[nodiscard]] explicit circular_buffer() = default;
+    [[nodiscard]] explicit circular_buffer(size_type n);
+    [[nodiscard]] explicit circular_buffer(size_type n, value_type const& t);
+    [[nodiscard]] explicit circular_buffer(std::initializer_list<value_type> list);
 
+    [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto size() const noexcept -> size_type;
     [[nodiscard]] auto capacity() const -> size_type;
     [[nodiscard]] auto max_size() const -> size_t;
 
     auto clear() noexcept -> void;
-    auto empty() const noexcept -> bool;
     auto reserve(size_type new_size) -> void;
 
     auto push_front(const value_type& value) -> void;
@@ -117,28 +117,29 @@ class circular_buffer<Value, RequestedMaxInline, InternalSizeType>::Iterator {
     using pointer = value_type*;
     using reference = value_type&;
 
-    explicit Iterator() = default;
-    explicit Iterator(container_t& container, std::size_t index);
+    [[nodiscard]] explicit Iterator() = default;
+    [[nodiscard]] explicit Iterator(container_t& container, std::size_t index);
 
-    auto operator*() const -> reference;
-    auto operator->() const -> pointer;
-    auto operator[](difference_type position) const -> reference;
+    [[nodiscard]] auto operator*() const -> reference;
+    [[nodiscard]] auto operator->() const -> pointer;
+    [[nodiscard]] auto operator[](difference_type position) const -> reference;
 
-    auto operator==(const Iterator& right) const -> bool;
-    auto operator<=>(const Iterator& right) const;
-    auto operator-(const Iterator& right) const -> difference_type;
+    [[nodiscard]] auto operator==(const Iterator& right) const -> bool;
+    [[nodiscard]] auto operator<=>(const Iterator& right) const;
+    [[nodiscard]] auto operator-(const Iterator& right) const -> difference_type;
 
     auto operator++() -> Iterator&;
-    auto operator++(int) -> Iterator;
+    [[nodiscard]] auto operator++(int) -> Iterator;
     auto operator--() -> Iterator&;
-    auto operator--(int) -> Iterator;
+    [[nodiscard]] auto operator--(int) -> Iterator;
 
     auto operator+=(difference_type offset) -> Iterator&;
     auto operator-=(difference_type offset) -> Iterator&;
-    auto operator+(difference_type offset) const -> Iterator;
-    auto operator-(difference_type offset) const -> Iterator;
+    [[nodiscard]] auto operator+(difference_type offset) const -> Iterator;
+    [[nodiscard]] auto operator-(difference_type offset) const -> Iterator;
 
-    friend auto operator+(difference_type offset, const Iterator& right) -> Iterator {
+    [[nodiscard]] friend auto operator+(difference_type offset, const Iterator& right)
+        -> Iterator {
         auto result = right;
         result += offset;
         return result;
