@@ -1,5 +1,6 @@
 #include "text_shaping.h"
 
+#include "algorithm/round.h"
 #include "exception.h"
 #include "format.h"
 #include "range.h"

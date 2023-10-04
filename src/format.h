@@ -4,7 +4,6 @@
 #ifndef LOGIKSIM_FORMAT_H
 #define LOGIKSIM_FORMAT_H
 
-#include "algorithm.h"
 #include "concept/string_view.h"
 #include "exception.h"
 #include "format/enum.h"
@@ -18,6 +17,7 @@
 
 #include <QString>
 
+#include <array>
 #include <chrono>
 #include <concepts>
 #include <functional>

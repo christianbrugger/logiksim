@@ -1,5 +1,6 @@
 ﻿#include "main_widget.h"
 
+#include "algorithm/round.h"
 #include "file.h"
 #include "render_widget.h"
 #include "resource.h"

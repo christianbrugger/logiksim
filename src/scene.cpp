@@ -1,5 +1,6 @@
 #include "scene.h"
 
+#include "algorithm/round.h"
 #include "geometry.h"
 
 #include <gsl/gsl>

@@ -1,7 +1,9 @@
 
 #include "schematic.h"
 
-#include "algorithm.h"
+#include "algorithm/accumulate.h"
+#include "algorithm/shuffle.h"
+#include "algorithm/transform_to_vector.h"
 #include "exception.h"
 #include "format.h"
 #include "iterator_adaptor/transform_view.h"

@@ -1,5 +1,7 @@
 #include "editable_circuit/handler.h"
 
+#include "algorithm/sort_pair.h"
+#include "algorithm/transform_to_vector.h"
 #include "collision.h"
 #include "editable_circuit/cache.h"
 #include "editable_circuit/cache/split_point_cache.h"

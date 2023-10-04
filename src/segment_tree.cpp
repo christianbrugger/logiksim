@@ -1,5 +1,8 @@
 #include "segment_tree.h"
 
+#include "algorithm/accumulate.h"
+#include "algorithm/transform_if.h"
+#include "algorithm/transform_to_vector.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/trait.h"
 #include "graph.h"

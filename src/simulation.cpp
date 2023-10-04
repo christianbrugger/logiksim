@@ -1,7 +1,9 @@
 ﻿
 #include "simulation.h"
 
-#include "algorithm.h"
+#include "algorithm/has_duplicates_quadratic.h"
+#include "algorithm/pop_while.h"
+#include "algorithm/transform_to_container.h"
 #include "exception.h"
 #include "format.h"
 #include "range.h"

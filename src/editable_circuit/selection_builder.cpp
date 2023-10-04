@@ -1,7 +1,6 @@
 
 #include "editable_circuit/selection_builder.h"
 
-#include "algorithm.h"
 #include "editable_circuit/cache.h"
 #include "editable_circuit/message.h"
 #include "editable_circuit/sanitizer.h"

@@ -6,8 +6,6 @@
 
 #include "random.h"
 
-#include "algorithm.h"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -57,30 +55,4 @@ TEST(Random, UniformIntStabilityInt8) {
     ASSERT_EQ(numbers(rng), 59);
     ASSERT_EQ(numbers(rng), 72);
     ASSERT_EQ(numbers(rng), 85);
-}
-
-TEST(Random, ShuffleStabilityIterators) {
-    boost::random::mt19937 rng {0};
-
-    std::vector<int> vec(10);
-    std::iota(vec.begin(), vec.end(), 0);
-
-    logicsim::shuffle(std::begin(vec), std::end(vec), rng);
-    ASSERT_THAT(vec, testing::ElementsAre(0, 2, 3, 5, 9, 1, 6, 8, 4, 7));
-
-    logicsim::shuffle(std::begin(vec), std::end(vec), rng);
-    ASSERT_THAT(vec, testing::ElementsAre(8, 1, 7, 3, 2, 5, 6, 0, 4, 9));
-}
-
-TEST(Random, ShuffleStabilityRanges) {
-    boost::random::mt19937 rng {0};
-
-    std::vector<int> vec(10);
-    std::iota(vec.begin(), vec.end(), 0);
-
-    logicsim::shuffle(vec, rng);
-    ASSERT_THAT(vec, testing::ElementsAre(0, 2, 3, 5, 9, 1, 6, 8, 4, 7));
-
-    logicsim::shuffle(vec, rng);
-    ASSERT_THAT(vec, testing::ElementsAre(8, 1, 7, 3, 2, 5, 6, 0, 4, 9));
 }

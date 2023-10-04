@@ -1,5 +1,6 @@
 ﻿#include "render_circuit.h"
 
+#include "algorithm/round.h"
 #include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
 #include "collision.h"

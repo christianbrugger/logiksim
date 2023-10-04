@@ -2,7 +2,9 @@
 
 #include "line_tree.h"
 
-#include "algorithm.h"
+#include "algorithm/accumulate.h"
+#include "algorithm/has_duplicates_quadratic.h"
+#include "algorithm/transform_if.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/trait.h"
 #include "collision.h"
@@ -538,6 +540,7 @@ auto LineTree::validate_no_internal_collisions() const -> bool {
         }
         return line_points_colliding(ordered_line_t {*it0}, ordered_line_t {*it1});
     };
+    // TODO segments can be very large!!!
     return !has_duplicates_quadratic_iterator(segments().begin(), segments().end(),
                                               are_colliding);
 }

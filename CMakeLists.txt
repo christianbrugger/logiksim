@@ -1,7 +1,25 @@
 cmake_minimum_required(VERSION 3.25)
 
 set(LS_CORE_SOURCES
+    src/algorithm/accumulate.cpp
+    src/algorithm/adjacent_count_if.cpp
+    src/algorithm/all_equal.cpp
+    src/algorithm/contains.cpp
+    src/algorithm/copy_adjacent_if.cpp
+    src/algorithm/depth_first_visitor.cpp
+    src/algorithm/distance_fast.cpp
+    src/algorithm/has_duplicates_quadratic.cpp
     src/algorithm/narrow_integral.cpp
+    src/algorithm/overload.cpp
+    src/algorithm/pop_while.cpp
+    src/algorithm/round.cpp
+    src/algorithm/shuffle.cpp
+    src/algorithm/sort_pair.cpp
+    src/algorithm/to_vector.cpp
+    src/algorithm/transform_combine_while.cpp
+    src/algorithm/transform_if.cpp
+    src/algorithm/transform_to_container.cpp
+    src/algorithm/transform_to_vector.cpp
     
     src/allocated_size/ankerl_unordered_dense.cpp
     src/allocated_size/folly_small_vector.cpp
@@ -77,7 +95,6 @@ set(LS_CORE_SOURCES
     src/vocabulary/time_literal.cpp
     src/vocabulary/time_rate.cpp
 
-    src/algorithm.cpp
     src/circuit_description.cpp
     src/collision.cpp
     src/context_guard.cpp
@@ -131,11 +148,13 @@ set(MOC_FILES
 )
 
 set(LS_TEST_SOURCES
+    test/algorithm/shuffle_test.cpp
+    test/algorithm/transform_to_vector_test.cpp
+
     test/container/circular_buffer_test.cpp
 
     test/iterator_adaptor/transform_view_test.cpp
 
-    test/algorithm_test.cpp
     test/collision_test.cpp
     test/format_test.cpp
     test/geometry_test.cpp

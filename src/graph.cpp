@@ -1,5 +1,7 @@
 #include "graph.h"
 
+#include "algorithm/copy_adjacent_if.h"
+
 namespace logicsim {
 
 auto point_and_orientation_t::format() const -> std::string {

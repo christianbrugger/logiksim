@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_GRAPH_H
 #define LOGIKSIM_GRAPH_H
 
+#include "algorithm/depth_first_visitor.h"
 #include "exception.h"
 #include "format.h"
 #include "geometry.h"

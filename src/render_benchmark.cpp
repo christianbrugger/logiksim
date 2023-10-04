@@ -1,9 +1,13 @@
 #include "render_benchmark.h"
 
+#include "algorithm/transform_to_vector.h"
 #include "random.h"
 #include "render_circuit.h"
 #include "simulation_view.h"
 #include "timer.h"
+
+#include <algorithm>
+#include <numeric>
 
 namespace logicsim {
 

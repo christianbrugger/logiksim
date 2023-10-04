@@ -1,5 +1,6 @@
 ﻿#include "setting_handle.h"
 
+#include "algorithm/round.h"
 #include "collision.h"
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
@@ -322,7 +323,7 @@ auto DelayInput::delay_unit_changed() -> void {
     }
 
     // TODO fix overflow
-    double max_ns = gsl::narrow_cast<double> (delay_t::max().value / 1ns) * scale;
+    double max_ns = gsl::narrow_cast<double>(delay_t::max().value / 1ns) * scale;
     double min_ns = 1.0 * scale;
     delay_validator.setRange(min_ns / unit, max_ns / unit);
 }
