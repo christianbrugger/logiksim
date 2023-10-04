@@ -8,6 +8,7 @@ set(LS_CORE_SOURCES
     src/algorithm/copy_adjacent_if.cpp
     src/algorithm/depth_first_visitor.cpp
     src/algorithm/distance_fast.cpp
+    src/algorithm/fmt_join.cpp
     src/algorithm/has_duplicates_quadratic.cpp
     src/algorithm/narrow_integral.cpp
     src/algorithm/overload.cpp

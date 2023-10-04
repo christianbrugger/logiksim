@@ -1,14 +1,13 @@
 #ifndef LOGICSIM_FORMAT_CONTAINER_H
 #define LOGICSIM_FORMAT_CONTAINER_H
 
+#include "algorithm/fmt_join.h"
 #include "concept/member_format_function.h"
 #include "concept/string_view.h"
-#include "iterator_adaptor/transform_view.h"
 
-#include <boost/algorithm/string/join.hpp>
+#include <fmt/core.h>
 
 #include <concepts>
-#include <functional>
 #include <stdexcept>
 #include <string_view>
 
@@ -20,16 +19,6 @@ concept format_range_type = (!string_view<T, Char>) && (!has_member_format_funct
                                 std::begin(container);
                                 std::end(container);
                             };
-
-template <typename T, class Proj = std::identity>
-    requires format_range_type<T>
-[[nodiscard]] constexpr auto fmt_join(std::string_view sep, const T &obj,
-                                      std::string_view fmt = "{}", Proj proj = {}) {
-    auto format_func = [&fmt, proj](const auto &item) {
-        return fmt::format(fmt::runtime(fmt), std::invoke(proj, item));
-    };
-    return boost::join(transform_view(obj, format_func), sep);
-}
 
 }  // namespace logicsim
 
