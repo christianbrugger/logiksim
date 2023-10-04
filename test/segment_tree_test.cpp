@@ -2,8 +2,8 @@
 #include "segment_tree.h"
 
 #include "algorithm/range.h"
-#include "format.h"
 #include "geometry.h"
+#include "logging.h"
 #include "random.h"
 
 #include <gmock/gmock.h>

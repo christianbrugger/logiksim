@@ -2,7 +2,8 @@
 #define LOGIKSIM_RENDER_GENERIC_H
 
 #include "context_guard.h"
-#include "format.h"
+#include "format/enum.h"
+#include "format/struct.h"
 #include "glyph_cache.h"
 #include "glyph_cache_type.h"
 #include "scene.h"

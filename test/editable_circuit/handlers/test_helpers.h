@@ -1,9 +1,10 @@
 #ifndef LOGIKSIM_TEST_EDITABLE_CIRCUIT_HANDLERS_TEST_HELPERS_H
 #define LOGIKSIM_TEST_EDITABLE_CIRCUIT_HANDLERS_TEST_HELPERS_H
 
+#include "algorithm/fmt_join.h"
 #include "editable_circuit/cache.h"
 #include "editable_circuit/handler.h"
-#include "format.h"
+#include "logging.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

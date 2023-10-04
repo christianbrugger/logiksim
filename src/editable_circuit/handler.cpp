@@ -8,9 +8,11 @@
 #include "editable_circuit/cache/split_point_cache.h"
 #include "editable_circuit/selection.h"
 #include "editable_circuit/selection_registrar.h"
-#include "format.h"
+#include "format/container.h"
+#include "format/pointer.h"
 #include "geometry.h"
 #include "layout_calculation.h"
+#include "logging.h"
 #include "scene.h"
 #include "timer.h"
 

@@ -10,6 +10,7 @@
 #include "exception.h"
 #include "file.h"
 #include "layout.h"
+#include "logging.h"
 #include "render_caches.h"
 #include "render_circuit.h"
 #include "schematic.h"

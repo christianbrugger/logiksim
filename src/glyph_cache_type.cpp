@@ -1,5 +1,7 @@
 #include "glyph_cache_type.h"
 
+#include <exception>
+
 namespace logicsim {
 
 template <>
@@ -16,7 +18,7 @@ auto format(FontStyle style) -> std::string {
         case monospace:
             return "monospace";
     }
-    throw_exception("Don't know how to convert FontStyle to string.");
+    std::terminate();
 }
 
 template <>
@@ -31,7 +33,7 @@ auto format(HorizontalAlignment alignment) -> std::string {
         case center:
             return "center";
     }
-    throw_exception("Don't know how to convert HorizontalAlignment to string.");
+    std::terminate();
 }
 
 template <>
@@ -56,7 +58,7 @@ auto format(VerticalAlignment alignment) -> std::string {
         case bottom:
             return "bottom";
     }
-    throw_exception("Don't know how to convert VerticalAlignment to string.");
+    std::terminate();
 }
 
 }  // namespace logicsim

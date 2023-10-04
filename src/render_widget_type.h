@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_RENDER_WIDGET_TYPE_H
 #define LOGIKSIM_RENDER_WIDGET_TYPE_H
 
-#include "format.h"
+#include "format/enum.h"
 
 #include <QWidget>
 

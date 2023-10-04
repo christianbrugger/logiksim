@@ -4,6 +4,8 @@
 #include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
+#include "format/container.h"
+#include "format/std_type.h"
 #include "geometry.h"
 #include "layout_calculation.h"
 

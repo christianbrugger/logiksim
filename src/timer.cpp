@@ -2,7 +2,9 @@
 #include "timer.h"
 
 #include "exception.h"
-#include "format.h"
+#include "logging.h"
+
+#include <fmt/core.h>
 
 #include <numeric>
 

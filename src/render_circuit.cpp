@@ -7,6 +7,8 @@
 #include "collision.h"
 #include "concept/input_range.h"
 #include "editable_circuit/selection.h"
+#include "format/container.h"
+#include "format/std_type.h"
 #include "layout.h"
 #include "layout_calculation.h"
 #include "setting_handle.h"
@@ -16,7 +18,7 @@
 #include "svg_cache.h"
 #include "timer.h"
 
-#include <fmt/format.h>
+#include <fmt/format.h>  // TODO why?
 #include <gsl/gsl>
 
 #include <QDir>

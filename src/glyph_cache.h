@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_GLYPH_CACHE_H
 #define LOGIKSIM_GLYPH_CACHE_H
 
-#include "format.h"
+#include "format/struct.h"
 #include "glyph_cache_type.h"
 #include "text_shaping.h"
 #include "vocabulary.h"

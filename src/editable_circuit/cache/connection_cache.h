@@ -2,6 +2,7 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_CONNECTION_CACHE_H
 
 #include "editable_circuit/message_forward.h"
+#include "format/struct.h"
 #include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>

@@ -1,5 +1,6 @@
 #include "editable_circuit/cache/split_point_cache.h"
 
+#include "format/container.h"
 #include "iterator_adaptor/output_callable.h"
 #include "layout.h"
 

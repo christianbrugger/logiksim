@@ -4,7 +4,6 @@
 #include "editable_circuit/cache.h"
 #include "editable_circuit/message.h"
 #include "editable_circuit/sanitizer.h"
-#include "format.h"
 #include "layout.h"
 #include "timer.h"
 

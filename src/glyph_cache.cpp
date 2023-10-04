@@ -1,11 +1,14 @@
 ﻿#include "glyph_cache.h"
 
+#include "algorithm/fmt_join.h"
 #include "exception.h"
 #include "file.h"
-#include "format.h"
+#include "logging.h"
 #include "resource.h"
 #include "text_shaping.h"
 #include "vocabulary.h"
+
+#include <fmt/core.h>
 
 namespace logicsim {
 

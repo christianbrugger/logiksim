@@ -2,6 +2,7 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_SPATIAL_CACHE_H
 
 #include "editable_circuit/message_forward.h"
+#include "format/struct.h"
 #include "vocabulary.h"
 
 #include <gsl/gsl>

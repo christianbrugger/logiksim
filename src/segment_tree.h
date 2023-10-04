@@ -2,7 +2,7 @@
 #define LOGIKSIM_SEGMENT_TREE_H
 
 #include "algorithm/range.h"
-#include "format.h"
+#include "format/struct.h"
 #include "geometry.h"
 #include "iterator_adaptor/transform_view.h"
 #include "segment_tree_type.h"

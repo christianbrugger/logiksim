@@ -2,9 +2,9 @@
 
 #include "algorithm/range.h"
 #include "algorithm/round.h"
-#include "format.h"
 
 #include <blend2d.h>
+#include <fmt/core.h>
 #include <gsl/gsl>
 #include <hb.h>
 
@@ -93,7 +93,8 @@ HarfbuzzFont::HarfbuzzFont() : hb_font_ {hb_font_get_empty()} {}
 
 HarfbuzzFont::HarfbuzzFont(const HarfbuzzFontFace &face, float font_size)
     : hb_font_ {hb_font_create(face.hb_face())}, font_size_ {font_size} {
-    hb_font_set_ppem(hb_font_, round_fast(font_size), round_fast(font_size));
+    hb_font_set_ppem(hb_font_, clamp_to<unsigned int>(font_size),
+                     clamp_to<unsigned int>(font_size));
     hb_font_make_immutable(hb_font_);
 }
 

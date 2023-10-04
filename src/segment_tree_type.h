@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_SEGMENT_TREE_TYPE_H
 #define LOGIKSIM_SEGMENT_TREE_TYPE_H
 
-#include "format.h"
+#include "format/struct.h"
 #include "vocabulary.h"
 
 namespace logicsim {

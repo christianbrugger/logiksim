@@ -1,6 +1,7 @@
 #include "message_sender.h"
 
 #include "editable_circuit/message.h"
+#include "logging.h"
 
 namespace logicsim {
 

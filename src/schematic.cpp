@@ -2,11 +2,12 @@
 #include "schematic.h"
 
 #include "algorithm/accumulate.h"
+#include "algorithm/fmt_join.h"
 #include "algorithm/range.h"
 #include "algorithm/shuffle.h"
 #include "algorithm/transform_to_vector.h"
 #include "exception.h"
-#include "format.h"
+#include "format/container.h"
 #include "iterator_adaptor/transform_view.h"
 #include "layout_calculation.h"
 #include "line_tree.h"

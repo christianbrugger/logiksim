@@ -1,7 +1,8 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_TYPE_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_TYPE_H
 
-#include "format.h"
+#include "format/enum.h"
+#include "format/struct.h"
 #include "layout.h"
 #include "vocabulary.h"
 

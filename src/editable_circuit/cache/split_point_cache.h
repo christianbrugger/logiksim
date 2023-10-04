@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHE_SPLIT_POINT_CACHE_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_SPLIT_POINT_CACHE_H
 
+#include "format/struct.h"
 #include "vocabulary.h"
 
 namespace logicsim {

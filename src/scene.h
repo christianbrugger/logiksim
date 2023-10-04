@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_SCENE_H
 #define LOGIKSIM_SCENE_H
 
-#include "format.h"
+#include "format/struct.h"
 #include "vocabulary.h"
 
 #include <blend2d.h>

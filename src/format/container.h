@@ -22,6 +22,17 @@ concept format_range_type = (!string_view<T, Char>) && (!has_member_format_funct
 
 }  // namespace logicsim
 
+/**
+ * @brief: Formatter for any container like type.
+ *
+ * Note that each element of the container is formatted according to their type.
+ *
+ * Variation with and without brackets is possible.
+ *
+ *      {}  => [1, 2, 3]
+ *      {n} => 1, 2, 3
+ *
+ */
 template <typename T, typename Char>
     requires logicsim::format_range_type<T, Char>
 struct fmt::formatter<T, Char> {

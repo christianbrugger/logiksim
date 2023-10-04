@@ -4,7 +4,7 @@
 #include "algorithm/depth_first_visitor.h"
 #include "algorithm/range.h"
 #include "exception.h"
-#include "format.h"
+#include "format/struct.h"
 #include "geometry.h"
 #include "vocabulary.h"
 

@@ -6,6 +6,7 @@
 #include "algorithm/transform_to_vector.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/trait.h"
+#include "format/container.h"
 #include "graph.h"
 #include "line_tree.h"
 

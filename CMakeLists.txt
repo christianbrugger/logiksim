@@ -60,8 +60,13 @@ set(LS_CORE_SOURCES
     
     src/format/container.cpp
     src/format/enum.cpp
+    src/format/escape_ascii.cpp
+    src/format/pointer.cpp
+    src/format/qt_type.cpp
+    src/format/std_type.cpp
     src/format/struct.cpp
     src/format/time.cpp
+    src/format/to_hex.cpp
 
     src/iterator_adaptor/enumerate.cpp
     src/iterator_adaptor/filter_output_iterator.cpp
@@ -108,7 +113,6 @@ set(LS_CORE_SOURCES
     src/context_guard.cpp
     src/exception.cpp
     src/file.cpp
-    src/format.cpp
     src/geometry.cpp
     src/glyph_cache.cpp
     src/glyph_cache_type.cpp
@@ -118,6 +122,7 @@ set(LS_CORE_SOURCES
     src/layout_calculation_type.cpp
     src/layout_calculation.cpp
     src/line_tree.cpp
+    src/logging.cpp
     src/random.cpp
     src/render_benchmark.cpp
     src/render_caches.cpp
@@ -155,17 +160,19 @@ set(MOC_FILES
 )
 
 set(LS_TEST_SOURCES
+    test/algorithm/fmt_join_test.cpp
     test/algorithm/shuffle_test.cpp
     test/algorithm/range_test.cpp
     test/algorithm/range_step_test.cpp
     test/algorithm/transform_to_vector_test.cpp
 
     test/container/circular_buffer_test.cpp
+    
+    test/format/container_test.cpp
 
     test/iterator_adaptor/transform_view_test.cpp
 
     test/collision_test.cpp
-    test/format_test.cpp
     test/geometry_test.cpp
     test/graph_test.cpp
     test/layout_test.cpp

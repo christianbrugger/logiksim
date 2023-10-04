@@ -4,6 +4,7 @@
 #include "editable_circuit/cache/collision_cache.h"
 #include "editable_circuit/cache/connection_cache.h"
 #include "editable_circuit/cache/spatial_cache.h"
+#include "format/struct.h"
 
 namespace logicsim {
 

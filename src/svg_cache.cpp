@@ -3,11 +3,13 @@
 #include "blend2d.h"
 #include "context_guard.h"
 #include "file.h"
-#include "format.h"
+#include "logging.h"
 #include "resource.h"
 #include "timer.h"
 #include "vocabulary.h"
 
+#include <exception>
+#include <stdexcept>
 #include <svgshapes.h>
 
 namespace logicsim {
@@ -71,8 +73,7 @@ auto calculate_offset_x(double width, HorizontalAlignment horizontal_alignment)
         case center:
             return -width / 2.0;
     }
-
-    throw_exception("unknown horizontal_alignment in calculate_offset_x");
+    std::terminate();
 }
 
 auto calculate_offset_y(double height, VerticalAlignment vertical_alignment) -> double {
@@ -90,10 +91,9 @@ auto calculate_offset_y(double height, VerticalAlignment vertical_alignment) -> 
         case center_baseline:
         case top_baseline:
         case bottom_baseline:
-            throw_exception("unsupported alignment for svgs");
+            throw std::runtime_error("unsupported alignment for svgs");
     }
-
-    throw_exception("unknown vertical_alignment in calculate_offset_y");
+    std::terminate();
 }
 
 auto calculate_offset(const svg2b2d::SVGDocument &document, double scale,

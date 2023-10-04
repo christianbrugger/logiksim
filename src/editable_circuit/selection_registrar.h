@@ -2,6 +2,7 @@
 #define LOGIKSIM_SELECTION_HANDLE_H
 
 #include "editable_circuit/message_forward.h"
+#include "format/struct.h"
 #include "iterator_adaptor/transform_view.h"
 
 #include <ankerl/unordered_dense.h>

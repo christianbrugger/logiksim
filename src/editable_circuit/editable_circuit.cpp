@@ -5,6 +5,7 @@
 #include "editable_circuit/handler.h"
 #include "editable_circuit/handler_example.h"
 #include "exception.h"
+#include "format/std_type.h"
 #include "scene.h"
 #include "timer.h"
 

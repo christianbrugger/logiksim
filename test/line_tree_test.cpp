@@ -1,8 +1,6 @@
 
 #include "line_tree.h"
 
-#include "format.h"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

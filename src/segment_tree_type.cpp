@@ -1,5 +1,7 @@
 #include "segment_tree_type.h"
 
+#include <exception>
+
 namespace logicsim {
 
 template <>
@@ -21,7 +23,7 @@ auto format(SegmentPointType type) -> std::string {
         case new_unknown:
             return "new_unknown";
     }
-    throw_exception("Don't know how to convert SegmentPointType to string.");
+    std::terminate();
 }
 
 auto is_cross_point(SegmentPointType point_type) -> bool {

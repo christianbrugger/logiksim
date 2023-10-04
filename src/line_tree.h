@@ -1,7 +1,8 @@
 #ifndef LOGIKSIM_LINE_TREE_H
 #define LOGIKSIM_LINE_TREE_H
 
-#include "format.h"
+#include "format/struct.h"
+#include "iterator_adaptor/transform_view.h"
 #include "vocabulary.h"
 
 #include <fmt/core.h>

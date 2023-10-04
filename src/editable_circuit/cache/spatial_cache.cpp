@@ -6,6 +6,7 @@
 #include "iterator_adaptor/output_callable.h"
 #include "layout.h"
 #include "layout_calculation.h"
+#include "logging.h"
 #include "wyhash.h"
 
 #include <boost/geometry.hpp>

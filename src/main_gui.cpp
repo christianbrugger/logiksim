@@ -1,6 +1,6 @@
 ﻿
 
-#include "format.h"
+#include "logging.h"
 #include "main_widget.h"
 #include "resource.h"
 

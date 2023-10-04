@@ -1,12 +1,13 @@
 ﻿
 #include "simulation.h"
 
+#include "algorithm/fmt_join.h"
 #include "algorithm/has_duplicates_quadratic.h"
 #include "algorithm/pop_while.h"
 #include "algorithm/range.h"
 #include "algorithm/transform_to_container.h"
 #include "exception.h"
-#include "format.h"
+#include "logging.h"
 #include "timer.h"
 
 #include <boost/random/mersenne_twister.hpp>

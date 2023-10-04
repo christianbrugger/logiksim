@@ -1,10 +1,11 @@
 #ifndef LOGIKSIM_GLYPH_CACHE_TYPE_H
 #define LOGIKSIM_GLYPH_CACHE_TYPE_H
 
-#include "format.h"
+#include "format/enum.h"
 #include "type_trait.h"
 #include "vocabulary.h"
 
+#include <exception>
 #include <string_view>
 #include <type_traits>
 
@@ -69,7 +70,7 @@ auto get(T& obj, FontStyle style) -> ReturnType {
         case monospace:
             return obj.monospace;
     }
-    throw_exception("unknown FontStyle");
+    std::terminate();
 }
 
 // for style collections, i.e. types that store a value for each style
@@ -91,7 +92,7 @@ auto set(T& obj, FontStyle style, V&& value) -> void {
             obj.monospace = std::move(value);
             return;
     }
-    throw_exception("unknown FontStyle");
+    std::terminate();
 }
 
 }  // namespace logicsim

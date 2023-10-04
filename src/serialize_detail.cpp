@@ -1,6 +1,6 @@
 #include "serialize_detail.h"
 
-#include "format.h"
+#include "logging.h"
 
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>

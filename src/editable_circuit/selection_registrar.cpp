@@ -1,11 +1,14 @@
 
 #include "editable_circuit/selection_registrar.h"
 
+#include "algorithm/fmt_join.h"
 #include "editable_circuit/message.h"
 #include "editable_circuit/selection.h"
 #include "exception.h"
-#include "format.h"
+#include "format/std_type.h"
 #include "layout.h"
+
+#include <fmt/core.h>
 
 namespace logicsim {
 

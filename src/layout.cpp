@@ -1,6 +1,7 @@
 
 #include "layout.h"
 
+#include "algorithm/fmt_join.h"
 #include "algorithm/range.h"
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/folly_small_vector.h"
@@ -8,6 +9,7 @@
 #include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
 #include "exception.h"
+#include "format/time.h"
 #include "layout_calculation.h"
 #include "layout_calculation_type.h"
 #include "scene.h"

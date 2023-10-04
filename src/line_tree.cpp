@@ -1,5 +1,3 @@
-
-
 #include "line_tree.h"
 
 #include "algorithm/accumulate.h"
@@ -10,10 +8,11 @@
 #include "allocated_size/trait.h"
 #include "collision.h"
 #include "exception.h"
-#include "format.h"
+#include "format/container.h"
 #include "graph.h"
 
 #include <boost/container/small_vector.hpp>
+#include <fmt/core.h>
 #include <gsl/gsl>
 
 #include <algorithm>

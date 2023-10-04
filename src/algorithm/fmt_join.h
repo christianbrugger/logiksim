@@ -16,6 +16,10 @@ template <typename T, class Proj = std::identity>
                  std::begin(container);
                  std::end(container);
              }
+
+/**
+ * @brief: Format each projected element of the container with given separator.
+ */
 [[nodiscard]] constexpr auto fmt_join(std::string_view sep, const T &obj,
                                       std::string_view fmt = "{}", Proj proj = {}) {
     auto format_func = [&fmt, proj](const auto &item) {

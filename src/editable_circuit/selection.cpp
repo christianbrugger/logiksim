@@ -3,6 +3,8 @@
 
 #include "collision.h"
 #include "editable_circuit/message.h"
+#include "format/container.h"
+#include "format/std_type.h"
 #include "geometry.h"
 #include "layout.h"
 #include "layout_calculation.h"

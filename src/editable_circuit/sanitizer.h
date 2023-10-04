@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_SANITIZER_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_SANITIZER_H
 
-#include "format.h"
+#include "format/enum.h"
 
 namespace logicsim {
 
