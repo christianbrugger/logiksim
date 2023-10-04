@@ -1,5 +1,6 @@
 #include "render_benchmark.h"
 
+#include "algorithm/range.h"
 #include "algorithm/transform_to_vector.h"
 #include "random.h"
 #include "render_circuit.h"

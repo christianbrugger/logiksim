@@ -1,9 +1,9 @@
 #ifndef LOGIKSIM_GEOMETRY_H
 #define LOGIKSIM_GEOMETRY_H
 
+#include "algorithm/range.h"
 #include "algorithm/transform_combine_while.h"
 #include "exception.h"
-#include "range.h"
 #include "vocabulary.h"
 
 #include <tuple>

@@ -1,4 +1,4 @@
-#include "difference_type.h"
+#include "algorithm/range.h"
 
 namespace logicsim {
 

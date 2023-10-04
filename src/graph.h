@@ -2,10 +2,10 @@
 #define LOGIKSIM_GRAPH_H
 
 #include "algorithm/depth_first_visitor.h"
+#include "algorithm/range.h"
 #include "exception.h"
 #include "format.h"
 #include "geometry.h"
-#include "range.h"
 #include "vocabulary.h"
 
 #include <boost/container/static_vector.hpp>

@@ -1,5 +1,6 @@
 #include "editable_circuit/cache/collision_cache.h"
 
+#include "algorithm/range.h"
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"

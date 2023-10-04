@@ -2,9 +2,9 @@
 #define LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 
 #include "concept/integral.h"
-#include "difference_type.h"
 #include "format/struct.h"
 #include "safe_numeric.h"
+#include "type_trait/safe_difference_type.h"
 #include "vocabulary/connection_id.h"
 
 #include <compare>

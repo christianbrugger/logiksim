@@ -1,6 +1,7 @@
 ﻿#include "render_widget.h"
 
 #include "algorithm/overload.h"
+#include "algorithm/range_step.h"
 #include "algorithm/round.h"
 #include "algorithm/sort_pair.h"
 #include "collision.h"
@@ -9,7 +10,6 @@
 #include "exception.h"
 #include "file.h"
 #include "layout.h"
-#include "range.h"
 #include "render_caches.h"
 #include "render_circuit.h"
 #include "schematic.h"

@@ -1,5 +1,7 @@
 #include "editable_circuit/handler_example.h"
 
+#include "algorithm/range.h"
+
 namespace logicsim::editable_circuit::examples {
 
 auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, grid_t max_length,

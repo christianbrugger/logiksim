@@ -1,10 +1,10 @@
 
 #include "segment_tree.h"
 
+#include "algorithm/range.h"
 #include "format.h"
 #include "geometry.h"
 #include "random.h"
-#include "range.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -1,5 +1,6 @@
 #include "editable_circuit/handler.h"
 
+#include "algorithm/range.h"
 #include "algorithm/sort_pair.h"
 #include "algorithm/transform_to_vector.h"
 #include "collision.h"

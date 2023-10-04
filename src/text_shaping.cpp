@@ -1,9 +1,8 @@
 #include "text_shaping.h"
 
+#include "algorithm/range.h"
 #include "algorithm/round.h"
-#include "exception.h"
 #include "format.h"
-#include "range.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
@@ -36,14 +35,15 @@ class HarfbuzzBlob {
               font_data.data(), gsl::narrow<unsigned int>(font_data.size()),
               hb_memory_mode_t::HB_MEMORY_MODE_READONLY, nullptr, nullptr)} {
         if (!font_data.empty() && hb_blob == hb_blob_get_empty()) [[unlikely]] {
-            throw_exception(fmt::format("Could not load font data in Harfbuzz").c_str());
+            throw std::runtime_error(
+                fmt::format("Could not load font data in Harfbuzz").c_str());
         }
     }
 
     explicit HarfbuzzBlob(const std::string &filename)
         : hb_blob {hb_blob_create_from_file(filename.c_str())} {
         if (!filename.empty() && hb_blob == hb_blob_get_empty()) [[unlikely]] {
-            throw_exception(fmt::format("Font not found {}", filename).c_str());
+            throw std::runtime_error(fmt::format("Font not found {}", filename).c_str());
         }
     }
 

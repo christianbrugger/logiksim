@@ -3,8 +3,8 @@
 
 #include "algorithm/narrow_integral.h"
 #include "concept/integral.h"
-#include "difference_type.h"
 #include "format/struct.h"
+#include "type_trait/safe_difference_type.h"
 #include "wyhash.h"
 
 #include <ankerl/unordered_dense.h>

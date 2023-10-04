@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_LAYOUT_CALCULATION_H
 #define LOGIKSIM_LAYOUT_CALCULATION_H
 
+#include "algorithm/range.h"
 #include "exception.h"
 #include "glyph_cache_type.h"
 #include "layout_calculation_type.h"
-#include "range.h"
 #include "vocabulary.h"
 
 #include <array>

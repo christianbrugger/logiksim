@@ -5,7 +5,6 @@
 #include "editable_circuit/selection.h"
 #include "geometry.h"
 #include "layout.h"
-#include "range.h"
 
 #include <folly/small_vector.h>
 

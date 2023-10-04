@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_SEGMENT_TREE_H
 #define LOGIKSIM_SEGMENT_TREE_H
 
+#include "algorithm/range.h"
 #include "format.h"
 #include "geometry.h"
 #include "iterator_adaptor/transform_view.h"
-#include "range.h"
 #include "segment_tree_type.h"
 #include "vocabulary.h"
 

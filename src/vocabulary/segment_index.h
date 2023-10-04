@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_SEGMENT_INDEX_H
 #define LOGICSIM_VOCABULARY_SEGMENT_INDEX_H
 
-#include "difference_type.h"
 #include "format/struct.h"
+#include "type_trait/safe_difference_type.h"
 
 #include <compare>
 #include <cstdint>

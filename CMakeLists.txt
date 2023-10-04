@@ -12,6 +12,8 @@ set(LS_CORE_SOURCES
     src/algorithm/narrow_integral.cpp
     src/algorithm/overload.cpp
     src/algorithm/pop_while.cpp
+    src/algorithm/range.cpp
+    src/algorithm/range_step.cpp
     src/algorithm/round.cpp
     src/algorithm/shuffle.cpp
     src/algorithm/sort_pair.cpp
@@ -32,6 +34,8 @@ set(LS_CORE_SOURCES
     src/concept/explicitly_convertible.cpp
     src/concept/input_range.cpp
     src/concept/integral.cpp
+    src/concept/member_format_function.cpp
+    src/concept/range_value_type.cpp
     src/concept/string_view.cpp
 
     src/container/circular_buffer.cpp
@@ -52,7 +56,8 @@ set(LS_CORE_SOURCES
     src/editable_circuit/selection_builder.cpp
     src/editable_circuit/selection_registrar.cpp
     src/editable_circuit/type.cpp
-
+    
+    src/format/container.cpp
     src/format/enum.cpp
     src/format/struct.cpp
     src/format/time.cpp
@@ -64,6 +69,8 @@ set(LS_CORE_SOURCES
     src/iterator_adaptor/transform_output_iterator.cpp
     src/iterator_adaptor/transform_view.cpp
     
+    src/type_trait/safe_difference_type.cpp
+
     src/vocabulary/circuit_id.cpp
     src/vocabulary/color.cpp
     src/vocabulary/connection.cpp
@@ -98,7 +105,6 @@ set(LS_CORE_SOURCES
     src/circuit_description.cpp
     src/collision.cpp
     src/context_guard.cpp
-    src/difference_type.cpp
     src/exception.cpp
     src/file.cpp
     src/format.cpp
@@ -149,6 +155,8 @@ set(MOC_FILES
 
 set(LS_TEST_SOURCES
     test/algorithm/shuffle_test.cpp
+    test/algorithm/range_test.cpp
+    test/algorithm/range_step_test.cpp
     test/algorithm/transform_to_vector_test.cpp
 
     test/container/circular_buffer_test.cpp
@@ -162,7 +170,6 @@ set(LS_TEST_SOURCES
     test/layout_test.cpp
     test/line_tree_test.cpp
     test/random_test.cpp
-    test/range_test.cpp
     test/schematic_test.cpp
     test/segment_tree_test.cpp
     test/simulation_test.cpp

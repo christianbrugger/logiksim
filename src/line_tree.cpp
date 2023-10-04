@@ -4,6 +4,7 @@
 
 #include "algorithm/accumulate.h"
 #include "algorithm/has_duplicates_quadratic.h"
+#include "algorithm/range.h"
 #include "algorithm/transform_if.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/trait.h"
@@ -11,7 +12,6 @@
 #include "exception.h"
 #include "format.h"
 #include "graph.h"
-#include "range.h"
 
 #include <boost/container/small_vector.hpp>
 #include <gsl/gsl>

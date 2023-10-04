@@ -1,6 +1,7 @@
 
 #include "layout.h"
 
+#include "algorithm/range.h"
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/std_string.h"
@@ -9,7 +10,6 @@
 #include "exception.h"
 #include "layout_calculation.h"
 #include "layout_calculation_type.h"
-#include "range.h"
 #include "scene.h"
 #include "timer.h"
 

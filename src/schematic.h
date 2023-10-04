@@ -1,8 +1,8 @@
 #ifndef LOGIKSIM_SCHEMATIC_H
 #define LOGIKSIM_SCHEMATIC_H
 
+#include "algorithm/range.h"
 #include "format.h"
-#include "range.h"
 #include "vocabulary.h"
 
 #include <fmt/core.h>

@@ -192,9 +192,11 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     const auto delay = end - start;
 
 #ifndef NDEBUG
+    // debug
     ASSERT_THAT(delay > 4ms, true);
     ASSERT_THAT(delay < 20ms, true);
 #else
+    // release
     ASSERT_THAT(delay > 4.5ms, true);
     ASSERT_THAT(delay < 5.5ms, true);
 #endif

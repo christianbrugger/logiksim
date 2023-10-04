@@ -6,7 +6,6 @@
 #include "editable_circuit/sanitizer.h"
 #include "format.h"
 #include "layout.h"
-#include "range.h"
 #include "timer.h"
 
 namespace logicsim {

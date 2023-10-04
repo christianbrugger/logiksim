@@ -6,7 +6,6 @@
 #include "geometry.h"
 #include "layout.h"
 #include "layout_calculation.h"
-#include "range.h"
 
 namespace logicsim {
 

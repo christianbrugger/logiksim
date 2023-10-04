@@ -1,5 +1,6 @@
 ﻿#include "setting_handle.h"
 
+#include "algorithm/range.h"
 #include "algorithm/round.h"
 #include "collision.h"
 #include "editable_circuit/editable_circuit.h"

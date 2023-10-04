@@ -2,9 +2,9 @@
 // #define _DISABLE_VECTOR_ANNOTATION
 // #define _DISABLE_STRING_ANNOTATION
 
+#include "algorithm/range.h"
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection_registrar.h"
-#include "range.h"
 #include "render_benchmark.h"
 #include "render_circuit.h"
 #include "schematic.h"
