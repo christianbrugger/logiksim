@@ -5,7 +5,6 @@
 #include "editable_circuit/message.h"
 #include "editable_circuit/sanitizer.h"
 #include "layout.h"
-#include "timer.h"
 
 namespace logicsim {
 
@@ -135,7 +134,6 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
 auto apply_function(Selection& selection, const SpatialTree& spatial_cache,
                     const Layout& layout, SelectionBuilder::operation_t operation)
     -> void {
-    // const auto t = Timer {"apply_function", Timer::Unit::ms, 3};
     const auto selected_elements = spatial_cache.query_selection(operation.rect);
 
     for (auto&& element : selected_elements) {

@@ -16,7 +16,6 @@
 #include "simulation_view.h"
 #include "size_handle.h"
 #include "svg_cache.h"
-#include "timer.h"
 
 #include <fmt/format.h>  // TODO why?
 #include <gsl/gsl>

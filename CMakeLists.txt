@@ -115,6 +115,8 @@ set(LS_CORE_SOURCES
     src/circuit_description.cpp
     src/collision.cpp
     src/context_guard.cpp
+    src/event_counter.cpp
+    src/event_counter_multi.cpp
     src/exception.cpp
     src/file.cpp
     src/geometry.cpp

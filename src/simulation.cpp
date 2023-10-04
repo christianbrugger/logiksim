@@ -7,7 +7,6 @@
 #include "algorithm/transform_to_container.h"
 #include "exception.h"
 #include "logging.h"
-#include "timer.h"
 
 #include <gsl/assert>
 #include <gsl/gsl>

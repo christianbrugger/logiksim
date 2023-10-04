@@ -13,7 +13,6 @@
 #include "layout_calculation.h"
 #include "layout_calculation_type.h"
 #include "scene.h"
-#include "timer.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>

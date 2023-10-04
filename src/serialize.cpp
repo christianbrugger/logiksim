@@ -23,7 +23,6 @@
 #include "scene.h"
 #include "serialize_detail.h"
 #include "simulation_type.h"
-#include "timer.h"
 
 #include <optional>
 

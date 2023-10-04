@@ -14,7 +14,6 @@
 #include "layout_calculation.h"
 #include "logging.h"
 #include "scene.h"
-#include "timer.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>

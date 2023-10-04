@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_INTERACTIVE_SIMULATION_H
 #define LOGIKSIM_INTERACTIVE_SIMULATION_H
 
+#include "event_counter_multi.h"
 #include "schematic.h"
 #include "simulation.h"
 #include "timer.h"

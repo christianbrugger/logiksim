@@ -7,7 +7,6 @@
 #include "exception.h"
 #include "format/std_type.h"
 #include "scene.h"
-#include "timer.h"
 
 namespace logicsim {
 

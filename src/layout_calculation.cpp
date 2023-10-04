@@ -2,7 +2,6 @@
 
 #include "geometry.h"
 #include "scene.h"
-#include "timer.h"
 
 #include <gcem.hpp>
 

@@ -5,7 +5,6 @@
 #include "file.h"
 #include "logging.h"
 #include "resource.h"
-#include "timer.h"
 #include "vocabulary.h"
 
 #include <exception>
