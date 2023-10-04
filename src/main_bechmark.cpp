@@ -3,9 +3,11 @@
 // #define _DISABLE_STRING_ANNOTATION
 
 #include "algorithm/range.h"
+#include "benchmark/render_line_scene.h"
+#include "benchmark/schematic_creation.h"
+#include "benchmark/simulation_runtime.h"
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection_registrar.h"
-#include "render_benchmark.h"
 #include "render_circuit.h"
 #include "schematic.h"
 #include "simulation.h"

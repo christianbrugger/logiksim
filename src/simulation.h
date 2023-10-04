@@ -318,22 +318,4 @@ static_assert(std::forward_iterator<logicsim::simulation::HistoryIterator>);
 template <>
 inline constexpr bool std::ranges::enable_view<logicsim::simulation::HistoryView> = true;
 
-// benchmark
-
-namespace logicsim {
-
-constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
-
-template <std::uniform_random_bit_generator G>
-auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
-                          const bool do_print) -> int64_t;
-auto benchmark_simulation(int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
-                          int n_events = BENCHMARK_DEFAULT_EVENTS, bool do_print = false)
-    -> int64_t;
-
-auto benchmark_simulation_pure(Schematic &schematic, const int n_events,
-                               const bool do_print) -> int64_t;
-
-}  // namespace logicsim
-
 #endif

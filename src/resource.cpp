@@ -1,11 +1,11 @@
 #include "resource.h"
 
-#include "exception.h"
-
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QStandardPaths>
+
+#include <exception>
 
 namespace logicsim {
 
@@ -43,8 +43,7 @@ namespace logicsim {
             return QString("fonts/NotoSansMono-Regular.ttf");
         }
     };
-
-    throw_exception("unknown font_t");
+    std::terminate();
 }
 
 auto get_font_path(font_t font) -> QString {
@@ -68,8 +67,7 @@ auto get_writable_setting_path(setting_t config) -> QString {
                                           "logging.txt");
         }
     };
-
-    throw_exception("unknown font_t");
+    std::terminate();
 }
 
 // Browse Icons:
@@ -186,8 +184,7 @@ auto get_writable_setting_path(setting_t config) -> QString {
             return QString("icons/lucide/activity.svg");
         }
     };
-
-    throw_exception("unknown icon_t");
+    std::terminate();
 }
 
 auto get_icon_path(icon_t icon) -> QString {

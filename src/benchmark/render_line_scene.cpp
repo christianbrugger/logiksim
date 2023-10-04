@@ -1,4 +1,4 @@
-#include "render_benchmark.h"
+#include "benchmark/render_line_scene.h"
 
 #include "algorithm/range.h"
 #include "algorithm/transform_to_vector.h"

@@ -100,7 +100,7 @@ struct range_t {
     using reference = value_type&;
 
     using iterator = range_iterator_t<value_type, forward>;
-    using difference_type = iterator::difference_type;
+    using difference_type = typename iterator::difference_type;
 
     range_t() = default;
 

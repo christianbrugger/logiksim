@@ -5,8 +5,6 @@
 
 #include <QString>
 
-namespace logicsim {
-
 //
 // QString
 //
@@ -21,7 +19,5 @@ struct fmt::formatter<QString, Char> {
         return fmt::format_to(ctx.out(), "{}", obj.toStdString());
     }
 };
-
-}  // namespace logicsim
 
 #endif

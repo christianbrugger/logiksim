@@ -23,6 +23,10 @@ set(LS_CORE_SOURCES
     src/algorithm/transform_if.cpp
     src/algorithm/transform_to_container.cpp
     src/algorithm/transform_to_vector.cpp
+
+    src/benchmark/render_line_scene.cpp
+    src/benchmark/schematic_creation.cpp
+    src/benchmark/simulation_runtime.cpp
     
     src/allocated_size/ankerl_unordered_dense.cpp
     src/allocated_size/folly_small_vector.cpp
@@ -124,7 +128,6 @@ set(LS_CORE_SOURCES
     src/line_tree.cpp
     src/logging.cpp
     src/random.cpp
-    src/render_benchmark.cpp
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp

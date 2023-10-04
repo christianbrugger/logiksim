@@ -518,16 +518,6 @@ auto calculate_output_delays(const LineTree &line_tree, delay_t wire_delay_per_d
 
 void add_output_placeholders(Schematic &schematic);
 
-inline constexpr int BENCHMARK_DEFAULT_ELEMENTS {100};
-inline constexpr double BENCHMARK_DEFAULT_CONNECTIVITY {0.75};
-
-auto benchmark_schematic(int n_elements = BENCHMARK_DEFAULT_ELEMENTS) -> Schematic;
-
-template <std::uniform_random_bit_generator G>
-auto create_random_schematic(G &rng, int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
-                             double connection_ratio = BENCHMARK_DEFAULT_CONNECTIVITY)
-    -> Schematic;
-
 }  // namespace logicsim
 
 #endif

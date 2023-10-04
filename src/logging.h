@@ -72,7 +72,10 @@ auto print_fmt(fmt::format_string<T...> fmt, T &&...args) -> void {
 //
 
 namespace detail {
-// repeats {} count times: 2 -> "{} {}\n"
+
+/**
+ * @brief: repeats format string "{}" count times: 2 -> "{} {}\n"
+ */
 template <std::size_t count>
 constexpr auto repeat_format_string() {
     constexpr auto buffer_size = count == 0 ? 1 : count * 3;
