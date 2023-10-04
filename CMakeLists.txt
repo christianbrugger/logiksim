@@ -79,9 +79,19 @@ set(LS_CORE_SOURCES
     src/format/struct.cpp
     src/format/time.cpp
     src/format/to_hex.cpp
-
+    
+    src/geometry/grid.cpp
+    src/geometry/line.cpp
+    src/geometry/offset.cpp
+    src/geometry/orientation.cpp
+    src/geometry/part.cpp
+    src/geometry/part_list.cpp
+    src/geometry/part_list_copying.cpp
+    src/geometry/point.cpp
+    src/geometry/rect.cpp
     src/geometry/to_points_sorted_unique.cpp
     src/geometry/to_points_with_both_orientation.cpp
+    src/geometry/_test.cpp
 
     src/iterator_adaptor/enumerate.cpp
     src/iterator_adaptor/filter_output_iterator.cpp

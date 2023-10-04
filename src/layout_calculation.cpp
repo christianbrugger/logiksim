@@ -15,7 +15,7 @@ auto require_min(connection_count_t value, connection_count_t count) -> void {
 
 auto require_max(connection_count_t value, connection_count_t count) -> void {
     if (value > count) [[unlikely]] {
-        throw_exception("Object has not enough elements.");
+        throw_exception("Object has too many elements.");
     }
 }
 
