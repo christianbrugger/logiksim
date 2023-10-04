@@ -190,8 +190,14 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
 
     EXPECT_GT(simulation.time(), time_t {1ms});
     const auto delay = end - start;
+
+#ifndef NDEBUG
     ASSERT_THAT(delay > 4ms, true);
-    ASSERT_THAT(delay < 6.5ms, true);
+    ASSERT_THAT(delay < 20ms, true);
+#else
+    ASSERT_THAT(delay > 4.5ms, true);
+    ASSERT_THAT(delay < 5.5ms, true);
+#endif
 }
 
 TEST(SimulationTest, AdditionalEvents) {
