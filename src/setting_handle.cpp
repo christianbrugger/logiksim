@@ -321,7 +321,8 @@ auto DelayInput::delay_unit_changed() -> void {
         throw_exception("unexpected unit");
     }
 
-    double max_ns = double {delay_t::max().value / 1ns} * scale;
+    // TODO fix overflow
+    double max_ns = gsl::narrow_cast<double> (delay_t::max().value / 1ns) * scale;
     double min_ns = 1.0 * scale;
     delay_validator.setRange(min_ns / unit, max_ns / unit);
 }

@@ -41,11 +41,10 @@ auto size_handle_positions(const layout::ConstElement element)
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
             return {
-
                 size_handle_t {1, transform(element.position(), element.orientation(),
                                             point_fine_t {
                                                 0.5 * width,
-                                                height - grid_fine_t {1.0} + overdraw,
+                                                height + overdraw,
                                             })},
             };
         }

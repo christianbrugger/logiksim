@@ -110,7 +110,9 @@ class Simulation {
     // 8>;
 
     using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
-    using con_index_small_vector_t = folly::small_vector<connection_id_t, 20, policy>;
+    using con_index_small_vector_t = folly::small_vector<connection_id_t, 10, policy>;
+    static_assert(con_index_small_vector_t::max_size() >=
+                  std::size_t {connection_count_t::max()});
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
     struct defaults {

@@ -30,7 +30,7 @@ auto tracked_resource::do_deallocate(void* p, std::size_t bytes, std::size_t ali
     upstream_->deallocate(p, bytes, alignment);
 
     // deallocate should never throw, still we increment afterwards
-    assert(bytes > allocated_size_);
+    assert(bytes <= allocated_size_);
     allocated_size_ -= bytes;
 }
 

@@ -16,7 +16,7 @@ namespace logicsim {
  * @brief: Identifies an input or output of an unspecified circuit element.
  */
 struct connection_id_t {
-    using value_type = int8_t;
+    using value_type = int16_t;
     value_type value;
 
     /**
