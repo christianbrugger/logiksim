@@ -6,8 +6,10 @@
 #include "algorithm/transform_to_vector.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/trait.h"
+#include "container/graph/adjacency_graph.h"
+#include "container/graph/depth_first_search.h"
+#include "container/graph/visitor/empty_visitor.h"
 #include "format/container.h"
-#include "graph.h"
 #include "line_tree.h"
 
 #include <range/v3/algorithm/sort.hpp>

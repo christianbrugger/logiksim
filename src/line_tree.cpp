@@ -7,9 +7,13 @@
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/trait.h"
 #include "collision.h"
+#include "container/graph/adjacency_graph.h"
+#include "container/graph/depth_first_search.h"
+#include "container/graph/visitor/length_recorder_visitor.h"
 #include "exception.h"
 #include "format/container.h"
-#include "graph.h"
+#include "geometry/to_points_sorted_unique.h"
+#include "geometry/to_points_with_both_orientation.h"
 
 #include <boost/container/small_vector.hpp>
 #include <fmt/core.h>
@@ -136,7 +140,7 @@ auto merge_split_segments(std::span<const ordered_line_t> segments)
     // TODO can this be simplified?
     const auto points1 = to_points_sorted_unique(segments);
     const auto segments_split = split_lines(segments_merged, points1);
-    const auto points2 = points_with_both_orientations(segments_split);
+    const auto points2 = to_points_with_both_orientations(segments_split);
     return split_lines(segments_merged, points2);
 }
 

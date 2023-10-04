@@ -15,6 +15,8 @@
 #include <span>
 
 namespace logicsim {
+template <typename index_t>
+class AdjacencyGraph;
 
 class InvalidLineTreeException : public std::exception {
    public:

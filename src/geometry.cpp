@@ -2,6 +2,7 @@
 
 #include "algorithm/round.h"
 #include "exception.h"
+#include "geometry.h"
 #include "vocabulary.h"
 
 #include <numbers>

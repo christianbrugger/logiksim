@@ -3,8 +3,10 @@
 
 #include "algorithm/narrow_integral.h"
 #include "algorithm/range.h"
+#include "concept/input_range.h"
 #include "format/container.h"
 #include "format/struct.h"
+#include "geometry/to_points_sorted_unique.h"
 #include "vocabulary/point.h"
 
 #include <boost/container/static_vector.hpp>
@@ -18,9 +20,6 @@
 #include <vector>
 
 namespace logicsim {
-
-[[nodiscard]] inline auto to_points_sorted_unique(
-    std::ranges::input_range auto&& segments) -> std::vector<point_t>;
 
 /**
  * @brief: A graph that stores for each vertex the connected vertices.
@@ -40,7 +39,10 @@ class AdjacencyGraph {
 
    public:
     AdjacencyGraph() = default;
-    [[nodiscard]] explicit AdjacencyGraph(std::ranges::input_range auto&& segments);
+
+    template <typename R>
+        requires input_range_of2<R, line_t, ordered_line_t>
+    [[nodiscard]] explicit AdjacencyGraph(R&& segments);
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -57,7 +59,7 @@ class AdjacencyGraph {
     // assumes point is part of graph
     [[nodiscard]] auto to_index_unchecked(point_t _point) const -> size_t;
     // assumes both endpoints are part of graph
-    auto add_edge_unchecked(point_t p0, point_t p1) -> void;
+    auto add_edge_unchecked(const line_t& segment) -> void;
     auto sort_adjacency() -> void;
 
    private:
@@ -69,29 +71,15 @@ class AdjacencyGraph {
 // Implementation
 //
 
-auto to_points_sorted_unique(std::ranges::input_range auto&& segments)
-    -> std::vector<point_t> {
-    auto points = std::vector<point_t> {};
-    points.reserve(2 * std::size(segments));
-
-    for (auto segment : segments) {
-        points.push_back(segment.p0);
-        points.push_back(segment.p1);
-    }
-
-    std::ranges::sort(points);
-    points.erase(std::ranges::unique(points).begin(), points.end());
-
-    return points;
-}
-
 template <typename index_t>
-AdjacencyGraph<index_t>::AdjacencyGraph(std::ranges::input_range auto&& segments)
+template <typename R>
+    requires input_range_of2<R, line_t, ordered_line_t>
+AdjacencyGraph<index_t>::AdjacencyGraph(R&& segments)
     : points_ {to_points_sorted_unique(segments)} {
     neighbors_.resize(points_.size());
 
     for (auto segment : segments) {
-        add_edge_unchecked(segment.p0, segment.p1);
+        add_edge_unchecked(line_t {segment});
     }
 
     // to normalize the representation
@@ -149,16 +137,9 @@ auto AdjacencyGraph<index_t>::to_index_unchecked(point_t _point) const -> size_t
 
 // assumes both endpoints are part of graph
 template <typename index_t>
-auto AdjacencyGraph<index_t>::add_edge_unchecked(point_t p0, point_t p1) -> void {
-    if (p0 == p1) [[unlikely]] {
-        throw std::runtime_error("Cannot add segment with zero length.");
-    }
-    if (!is_orthogonal_line(p0, p1)) [[unlikely]] {
-        throw std::runtime_error("p0 and p1 need to form orthogonal line.");
-    }
-
-    auto index0 = to_index_unchecked(p0);
-    auto index1 = to_index_unchecked(p1);
+auto AdjacencyGraph<index_t>::add_edge_unchecked(const line_t& segment) -> void {
+    auto index0 = to_index_unchecked(segment.p0);
+    auto index1 = to_index_unchecked(segment.p1);
 
     auto& adjacency0 = neighbors_[index0];
     auto& adjacency1 = neighbors_[index1];

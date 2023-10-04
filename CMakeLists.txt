@@ -80,6 +80,9 @@ set(LS_CORE_SOURCES
     src/format/time.cpp
     src/format/to_hex.cpp
 
+    src/geometry/to_points_sorted_unique.cpp
+    src/geometry/to_points_with_both_orientation.cpp
+
     src/iterator_adaptor/enumerate.cpp
     src/iterator_adaptor/filter_output_iterator.cpp
     src/iterator_adaptor/output_callable.cpp
@@ -130,7 +133,6 @@ set(LS_CORE_SOURCES
     src/geometry.cpp
     src/glyph_cache.cpp
     src/glyph_cache_type.cpp
-    src/graph.cpp
     src/interactive_simulation.cpp
     src/layout.cpp
     src/layout_calculation_type.cpp
