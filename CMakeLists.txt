@@ -42,7 +42,15 @@ set(LS_CORE_SOURCES
     src/concept/member_format_function.cpp
     src/concept/range_value_type.cpp
     src/concept/string_view.cpp
-
+    
+    src/container/graph/visitor/calling_visitor.cpp
+    src/container/graph/visitor/empty_visitor.cpp
+    src/container/graph/visitor/length_recorder_visitor.cpp
+    src/container/graph/visitor/printing_visitor.cpp
+    src/container/graph/adjacency_graph.cpp
+    src/container/graph/combine_visitor.cpp
+    src/container/graph/depth_first_search.cpp
+    src/container/graph/visitor_concept.cpp
     src/container/circular_buffer.cpp
 
     src/editable_circuit/cache/collision_cache.cpp
@@ -170,7 +178,8 @@ set(LS_TEST_SOURCES
     test/algorithm/range_test.cpp
     test/algorithm/range_step_test.cpp
     test/algorithm/transform_to_vector_test.cpp
-
+    
+    test/container/graph/depth_first_search_test.cpp
     test/container/circular_buffer_test.cpp
     
     test/format/container_test.cpp
@@ -179,7 +188,6 @@ set(LS_TEST_SOURCES
 
     test/collision_test.cpp
     test/geometry_test.cpp
-    test/graph_test.cpp
     test/layout_test.cpp
     test/line_tree_test.cpp
     test/random_test.cpp

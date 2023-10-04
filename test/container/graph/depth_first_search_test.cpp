@@ -1,5 +1,10 @@
 
-#include "graph.h"
+#include "container/graph/depth_first_search.h"
+
+#include "container/graph/adjacency_graph.h"
+#include "container/graph/visitor/calling_visitor.h"
+#include "vocabulary/line.h"
+#include "vocabulary/point.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -17,7 +22,7 @@ TEST(Graph, DepthFirstSearchSimple) {
 
     auto edges = std::vector<std::pair<index_t, index_t>> {};
     auto visitor =
-        TreeEdgeVisitor([&](index_t a, index_t b, auto graph_ [[maybe_unused]]) {
+        CallingVisitor([&](index_t a, index_t b, auto graph_ [[maybe_unused]]) {
             edges.push_back({a, b});
         });
 
