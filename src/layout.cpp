@@ -7,7 +7,6 @@
 #include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
 #include "exception.h"
-#include "iterator_adaptor.h"
 #include "layout_calculation.h"
 #include "layout_calculation_type.h"
 #include "range.h"

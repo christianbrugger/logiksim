@@ -3,6 +3,7 @@
 #include "allocated_size/tracked_resource.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
+#include "iterator_adaptor/output_callable.h"
 #include "layout.h"
 #include "layout_calculation.h"
 #include "wyhash.h"

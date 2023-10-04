@@ -1,9 +1,9 @@
 #include "svg_cache.h"
 
 #include "blend2d.h"
+#include "context_guard.h"
 #include "file.h"
 #include "format.h"
-#include "render_helper.h"
 #include "resource.h"
 #include "timer.h"
 #include "vocabulary.h"

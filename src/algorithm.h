@@ -1,7 +1,8 @@
 #ifndef LOGIKSIM_ALGORITHMS_H
 #define LOGIKSIM_ALGORITHMS_H
 
-#include "iterator_adaptor.h"
+#include "iterator_adaptor/transform_if_output_iterator.h"
+#include "iterator_adaptor/transform_output_iterator.h"
 
 #include <boost/random/uniform_int_distribution.hpp>
 #include <gsl/gsl>

@@ -2,7 +2,6 @@
 #define LOGIKSIM_LINE_TREE_H
 
 #include "format.h"
-#include "iterator_adaptor.h"
 #include "vocabulary.h"
 
 #include <fmt/core.h>

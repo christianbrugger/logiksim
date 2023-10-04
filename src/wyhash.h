@@ -16,10 +16,18 @@ constexpr inline auto wyhash_secret = std::array {
     uint64_t {0x589965cc75374cc3},
 };
 
+//
+// 2 x 64 bit
+//
+
 [[nodiscard]] inline auto wyhash_128_bit(uint64_t a, uint64_t b) -> uint64_t {
     return ankerl::unordered_dense::detail::wyhash::mix(a ^ wyhash_secret[1],
                                                         b ^ wyhash_secret[0]);
 }
+
+//
+// 2 x 32 bit
+//
 
 [[nodiscard]] inline auto wyhash_64_bit(uint32_t a, uint32_t b) -> uint64_t {
     auto packed = (uint64_t {a} << 32) + uint64_t {b};

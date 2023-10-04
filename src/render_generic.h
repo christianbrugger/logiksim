@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_RENDER_GENERIC_H
 #define LOGIKSIM_RENDER_GENERIC_H
 
+#include "context_guard.h"
 #include "format.h"
 #include "glyph_cache.h"
 #include "glyph_cache_type.h"
-#include "render_helper.h"
 #include "scene.h"
 #include "segment_tree_type.h"
 #include "svg_cache.h"
@@ -54,6 +54,8 @@ struct Context {
 auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool;
 
 auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
+
+[[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard;
 
 [[nodiscard]] auto to_context(point_t position, const Context& context) -> BLPoint;
 [[nodiscard]] auto to_context(point_fine_t position, const Context& context) -> BLPoint;
@@ -121,19 +123,6 @@ auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRe
 auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
                      std::function<void(Context&, bool)> render_func) -> void;
 
-//
-// Error checks
-//
-
-auto check_errors(BLContext& ctx) -> void;
-
-auto checked_sync(BLContext& ctx) -> void;
-
-//
-// Context Guard
-//
-
-[[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard;
 [[nodiscard]] auto make_context_guard(LayerSurface& surface) -> ContextGuard;
 
 //

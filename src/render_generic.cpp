@@ -227,27 +227,6 @@ auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_r
 }
 
 //
-// Error checks
-//
-
-auto check_errors(BLContext& ctx) -> void {
-    if (ctx.accumulatedErrorFlags() != BL_CONTEXT_ERROR_NO_FLAGS) [[unlikely]] {
-        throw_exception(
-            fmt::format("Error in BLContext {}", uint32_t {ctx.accumulatedErrorFlags()})
-                .c_str());
-    }
-}
-
-auto checked_sync(BLContext& ctx) -> void {
-    if (ctx.savedStateCount() != 0) {
-        throw_exception("context has saved state at sync");
-    }
-
-    ctx.flush(BL_CONTEXT_FLUSH_SYNC);
-    check_errors(ctx);
-}
-
-//
 // Context Guard
 //
 

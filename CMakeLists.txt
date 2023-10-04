@@ -38,6 +38,13 @@ set(LS_CORE_SOURCES
     src/format/enum.cpp
     src/format/struct.cpp
     src/format/time.cpp
+
+    src/iterator_adaptor/enumerate.cpp
+    src/iterator_adaptor/filter_output_iterator.cpp
+    src/iterator_adaptor/output_callable.cpp
+    src/iterator_adaptor/transform_if_output_iterator.cpp
+    src/iterator_adaptor/transform_output_iterator.cpp
+    src/iterator_adaptor/transform_view.cpp
     
     src/vocabulary/circuit_id.cpp
     src/vocabulary/color.cpp
@@ -73,6 +80,7 @@ set(LS_CORE_SOURCES
     src/algorithm.cpp
     src/circuit_description.cpp
     src/collision.cpp
+    src/context_guard.cpp
     src/difference_type.cpp
     src/exception.cpp
     src/file.cpp
@@ -91,7 +99,6 @@ set(LS_CORE_SOURCES
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
-    src/render_helper.cpp
     src/resource.cpp
     src/safe_numeric.cpp
     src/scene.cpp

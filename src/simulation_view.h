@@ -1,9 +1,9 @@
 #ifndef LOGIKSIM_SIMULATION_VIEW_H
 #define LOGIKSIM_SIMULATION_VIEW_H
 
-#include "iterator_adaptor.h"
-#include "vocabulary.h"
+#include "iterator_adaptor/transform_view.h"
 #include "range.h"
+#include "vocabulary.h"
 
 #include <gsl/gsl>
 
