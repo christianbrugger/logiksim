@@ -131,13 +131,15 @@ set(MOC_FILES
 )
 
 set(LS_TEST_SOURCES
+    test/container/circular_buffer_test.cpp
+
+    test/iterator_adaptor/transform_view_test.cpp
+
     test/algorithm_test.cpp
-    test/circular_buffer_test.cpp
     test/collision_test.cpp
     test/format_test.cpp
     test/geometry_test.cpp
     test/graph_test.cpp
-    test/iterator_adaptor_test.cpp
     test/layout_test.cpp
     test/line_tree_test.cpp
     test/random_test.cpp
