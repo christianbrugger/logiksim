@@ -1178,10 +1178,10 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
     const auto& editable_circuit = editable_circuit_.value();
 
     // print_fmt("Layers: {:.3f} MB\n", context_.layers.allocated_size() / 1024. / 1024.);
-    print_fmt("Layout: {:.3f} MB\n",
-              editable_circuit_.value().layout().allocated_size() / 1024. / 1024.);
-    print_fmt("Caches: {:.3f} MB\n",
-              editable_circuit_.value().caches().allocated_size() / 1024. / 1024.);
+    // print_fmt("Layout: {:.3f} MB\n",
+    //           editable_circuit_.value().layout().allocated_size() / 1024. / 1024.);
+    // print_fmt("Caches: {:.3f} MB\n",
+    //           editable_circuit_.value().caches().allocated_size() / 1024. / 1024.);
 
     render_background(context_.ctx);
 

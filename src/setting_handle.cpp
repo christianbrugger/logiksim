@@ -257,6 +257,8 @@ DelayInput::DelayInput(QWidget* parent, QString text, delay_t initial_value,
     label = new QLabel(parent);
     label->setText(text);
 
+    // TODO handle overflow
+
     layout = new QHBoxLayout();
     auto* line_edit = new QLineEdit(parent);
     auto* combo_box = new QComboBox(parent);
@@ -319,7 +321,7 @@ auto DelayInput::delay_unit_changed() -> void {
         throw_exception("unexpected unit");
     }
 
-    double max_ns = delay_t::max().value / 1ns * scale;
+    double max_ns = double {delay_t::max().value / 1ns} * scale;
     double min_ns = 1.0 * scale;
     delay_validator.setRange(min_ns / unit, max_ns / unit);
 }

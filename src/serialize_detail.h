@@ -17,9 +17,9 @@ constexpr static inline auto name_max_size = 100;
 struct SerializedAttributesClockGenerator {
     std::string name;
 
-    int32_t time_symmetric_ns;
-    int32_t time_on_ns;
-    int32_t time_off_ns;
+    int64_t time_symmetric_ns;
+    int64_t time_on_ns;
+    int64_t time_off_ns;
 
     bool is_symmetric;
     bool show_simulation_controls;

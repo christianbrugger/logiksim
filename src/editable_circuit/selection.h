@@ -14,12 +14,12 @@ class Layout;
 namespace detail::selection {
 
 using map_key_t = segment_t;
-using policy = folly::small_vector_policy::policy_size_type<uint16_t>;
+using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
 using map_value_t = folly::small_vector<part_t, 3, policy>;
 using map_pair_t = std::pair<map_key_t, map_value_t>;
 
 static_assert(sizeof(map_key_t) == 8);
-static_assert(sizeof(map_value_t) == 14);
+static_assert(sizeof(map_value_t) == 16);
 static_assert(sizeof(map_pair_t) == 24);
 
 using logicitems_set_t = ankerl::unordered_dense::set<element_id_t>;

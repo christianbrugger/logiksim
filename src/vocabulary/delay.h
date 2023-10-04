@@ -15,10 +15,11 @@ namespace logicsim {
  * @brief: Specifies a delay in simulation time for wires or events
  */
 struct delay_t {
-    using value_type = std::chrono::duration<int32_t, std::nano>;
+    using value_type = std::chrono::duration<int64_t, std::nano>;
     using rep = value_type::rep;
     value_type value;
 
+    // TODO re-work constructors, same as time_t
     [[nodiscard]] explicit constexpr delay_t() noexcept = default;
     [[nodiscard]] explicit constexpr delay_t(
         std::chrono::duration<int64_t, std::nano> delay);

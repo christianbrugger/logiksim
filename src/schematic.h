@@ -145,9 +145,9 @@ class Schematic {
     auto delete_last_element(bool clear_connections) -> void;
 
     // output_delays type
-    using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
-    using output_delays_t = folly::small_vector<delay_t, 5, policy>;
-    static_assert(sizeof(output_delays_t) == 24);
+    using policy = folly::small_vector_policy::policy_size_type<uint64_t>;
+    using output_delays_t = folly::small_vector<delay_t, 3, policy>;
+    static_assert(sizeof(output_delays_t) == 32);
 
     // TODO use connection_id_t as counter
     using connection_vector_t = folly::small_vector<connection_t, 3>;

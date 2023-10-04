@@ -583,6 +583,7 @@ void Simulation::create_event(const Schematic::ConstOutput output,
                               const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
         const auto delay = output.delay();
+        // TODO add addition to types
         queue_.submit_event({.time = time_t {queue_.time().value + delay.value},
                              .element_id = output.connected_element_id(),
                              .input_index = output.connected_input_index(),
@@ -1197,7 +1198,7 @@ auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
     for (const auto element : schematic.elements()) {
         for (const auto output : element.outputs()) {
             auto delay_dist =
-                boost::random::uniform_int_distribution<time_t::rep> {5, 500};
+                boost::random::uniform_int_distribution<delay_t::rep> {5, 500};
             output.set_delay(delay_t {1us * delay_dist(rng)});
         }
     }

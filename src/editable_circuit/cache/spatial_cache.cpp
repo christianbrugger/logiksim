@@ -18,7 +18,8 @@ namespace logicsim::detail::spatial_tree {
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-using tree_point_t = bg::model::d2::point_xy<grid_fine_t::value_type>;
+using tree_coordinate_type = grid_fine_t::value_type;
+using tree_point_t = bg::model::d2::point_xy<tree_coordinate_type>;
 using tree_box_t = bg::model::box<tree_point_t>;
 using tree_value_t = std::pair<tree_box_t, tree_payload_t>;
 
