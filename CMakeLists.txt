@@ -541,63 +541,53 @@ list(TRANSFORM LS_RESOURCE_FILES PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
 # target_precompile_headers(logicsim_core PUBLIC external/range-v3/include/range/v3/all.hpp)
 
 
+# MAIN LIBRARY
+
+set(MAIN_LIBRARY "simulation_srp")
+add_library(${MAIN_LIBRARY} 
+    ${LS_CORE_SOURCES}
+    ${MOC_SOURCES}
+    ${LS_RESOURCE_FILES}
+)
+target_include_directories(${MAIN_LIBRARY} PUBLIC
+    ${LS_CORE_INCLUDE_DIRS}
+)
+target_link_libraries(${MAIN_LIBRARY} PUBLIC 
+    ${LS_CORE_LIBRARIES}
+)
+target_compile_options(${MAIN_LIBRARY} PUBLIC ${MAIN_COMPILE_OPTIONS})
+
 
 # MAIN BENCHMARK
 
 set(MAIN_BENCHMARK_TARGET "simulation_srp_benchmark")
-add_executable(${MAIN_BENCHMARK_TARGET} 
-    ${LS_CORE_SOURCES}
-    ${MOC_SOURCES}
-    ${LS_RESOURCE_FILES}
-    
+add_executable(${MAIN_BENCHMARK_TARGET}
     src/main_bechmark.cpp
 )
-target_include_directories(${MAIN_BENCHMARK_TARGET} PRIVATE
-    ${LS_CORE_INCLUDE_DIRS}
-)
 target_link_libraries(${MAIN_BENCHMARK_TARGET} PRIVATE 
-    ${LS_CORE_LIBRARIES}
-    
+    ${MAIN_LIBRARY}
     benchmark::benchmark
 )
-target_compile_options(${MAIN_BENCHMARK_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
 # MAIN
 
 set(MAIN_TARGET "simulation_srp_main")
-add_executable(${MAIN_TARGET} 
-    ${LS_CORE_SOURCES}
-    ${MOC_SOURCES}
-    ${LS_RESOURCE_FILES}
-    
+add_executable(${MAIN_TARGET}
     src/main.cpp
 )
-target_include_directories(${MAIN_TARGET} PRIVATE
-    ${LS_CORE_INCLUDE_DIRS}
-)
 target_link_libraries(${MAIN_TARGET} PRIVATE 
-    ${LS_CORE_LIBRARIES}
+    ${MAIN_LIBRARY} 
 )
-target_compile_options(${MAIN_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
 
 # MAIN GUI
 
 set(MAIN_GUI_TARGET "simulation_srp_gui")
-add_executable(${MAIN_GUI_TARGET} 
-    ${LS_CORE_SOURCES}
-    ${MOC_SOURCES}
-    ${LS_RESOURCE_FILES}
-
+add_executable(${MAIN_GUI_TARGET}
     src/main_gui.cpp
 )
-target_include_directories(${MAIN_GUI_TARGET} PRIVATE
-    ${LS_CORE_INCLUDE_DIRS}
-)
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
-    ${LS_CORE_LIBRARIES}
+    ${MAIN_LIBRARY} 
 )
-target_compile_options(${MAIN_GUI_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
-
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE LS_EXCEPTION_MESSAGE_BOX)
     if (WIN32)
@@ -609,24 +599,15 @@ endif ()
 # Google Test
 
 set(MAIN_TEST_TARGET "simulation_srp_test")
-add_executable(${MAIN_TEST_TARGET} 
-    ${LS_CORE_SOURCES}
-    ${MOC_SOURCES}
+add_executable(${MAIN_TEST_TARGET}
     ${LS_TEST_SOURCES}
-    ${LS_RESOURCE_FILES}
 )
-target_include_directories(${MAIN_TEST_TARGET} PRIVATE
-    ${LS_CORE_INCLUDE_DIRS}
-)
-target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
-    ${LS_CORE_LIBRARIES}
-    
+target_link_libraries(${MAIN_TEST_TARGET} PRIVATE 
+    ${MAIN_LIBRARY} 
     GTest::gtest
     GTest::gmock
     GTest::gtest_main
 )
-target_compile_options(${MAIN_TEST_TARGET} PRIVATE ${MAIN_COMPILE_OPTIONS})
-
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE MATCHES Debug)
     message(NOTICE "LOGIKSIM: Enabling Clang Coverage for Tests.")
     target_compile_options(${MAIN_TEST_TARGET} PRIVATE -fprofile-instr-generate -fcoverage-mapping)
