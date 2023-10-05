@@ -3,6 +3,7 @@
 
 #include "editable_circuit/cache/collision_cache.h"
 #include "editable_circuit/selection.h"
+#include "exception.h"
 #include "geometry.h"
 #include "layout.h"
 

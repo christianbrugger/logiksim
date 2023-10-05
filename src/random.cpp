@@ -4,6 +4,7 @@
 #include "algorithm/round.h"
 #include "geometry.h"
 #include "layout.h"
+#include "exception.h"
 
 #include <boost/random/seed_seq.hpp>
 

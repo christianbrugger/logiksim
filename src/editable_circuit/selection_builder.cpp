@@ -5,6 +5,7 @@
 #include "editable_circuit/message.h"
 #include "editable_circuit/sanitizer.h"
 #include "layout.h"
+#include "exception.h"
 
 namespace logicsim {
 

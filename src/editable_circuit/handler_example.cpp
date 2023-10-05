@@ -1,6 +1,7 @@
 #include "editable_circuit/handler_example.h"
 
 #include "algorithm/range.h"
+#include "exception.h"
 
 namespace logicsim::editable_circuit::examples {
 

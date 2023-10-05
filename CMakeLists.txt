@@ -81,6 +81,7 @@ set(LS_CORE_SOURCES
     src/format/to_hex.cpp
     
     src/geometry/grid.cpp
+    src/geometry/interpolation.cpp
     src/geometry/line.cpp
     src/geometry/offset.cpp
     src/geometry/orientation.cpp

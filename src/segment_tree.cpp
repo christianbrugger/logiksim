@@ -9,6 +9,7 @@
 #include "container/graph/adjacency_graph.h"
 #include "container/graph/depth_first_search.h"
 #include "container/graph/visitor/empty_visitor.h"
+#include "exception.h"
 #include "format/container.h"
 #include "line_tree.h"
 

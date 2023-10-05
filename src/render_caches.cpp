@@ -3,6 +3,7 @@
 #include "collision.h"
 #include "editable_circuit/editable_circuit.h"
 #include "geometry.h"
+#include "exception.h"
 
 #include <numbers>
 
