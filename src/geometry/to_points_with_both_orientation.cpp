@@ -2,7 +2,7 @@
 
 #include "algorithm/copy_adjacent_if.h"
 #include "format/struct.h"
-#include "geometry.h"  // TODO !!! remove
+#include "geometry/orientation.h"
 #include "vocabulary/line.h"
 #include "vocabulary/ordered_line.h"
 #include "vocabulary/point.h"

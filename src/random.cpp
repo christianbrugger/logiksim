@@ -2,7 +2,6 @@
 
 #include "algorithm/range.h"
 #include "algorithm/round.h"
-#include "geometry.h"
 #include "layout.h"
 #include "exception.h"
 

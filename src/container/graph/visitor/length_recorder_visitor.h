@@ -2,7 +2,6 @@
 #define LOGICSIM_CONTAINER_GRAPH_VISITOR_LENGTH_RECORDER_VISITOR_H
 
 #include "container/graph/adjacency_graph.h"
-#include "geometry.h"
 #include "vocabulary/line.h"
 
 #include <vector>

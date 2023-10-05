@@ -6,6 +6,7 @@
 #include "editable_circuit/handler_example.h"
 #include "exception.h"
 #include "format/std_type.h"
+#include "geometry/point.h"
 #include "scene.h"
 
 namespace logicsim {

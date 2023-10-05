@@ -135,13 +135,11 @@ set(LS_CORE_SOURCES
     src/vocabulary/time_rate.cpp
 
     src/circuit_description.cpp
-    src/collision.cpp
     src/context_guard.cpp
     src/event_counter.cpp
     src/event_counter_multi.cpp
     src/exception.cpp
     src/file.cpp
-    src/geometry.cpp
     src/glyph_cache.cpp
     src/glyph_cache_type.cpp
     src/interactive_simulation.cpp

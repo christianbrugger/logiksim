@@ -1,9 +1,9 @@
 #include "render_caches.h"
 
-#include "collision.h"
 #include "editable_circuit/editable_circuit.h"
-#include "geometry.h"
 #include "exception.h"
+#include "geometry/orientation.h"
+#include "geometry/rect.h"
 
 #include <numbers>
 

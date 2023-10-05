@@ -4,8 +4,8 @@
 #include "editable_circuit/cache/collision_cache.h"
 #include "editable_circuit/selection.h"
 #include "exception.h"
-#include "geometry.h"
 #include "layout.h"
+#include "geometry/offset.h"
 
 #include <folly/small_vector.h>
 

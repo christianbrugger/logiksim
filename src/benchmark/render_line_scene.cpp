@@ -2,6 +2,7 @@
 
 #include "algorithm/range.h"
 #include "algorithm/transform_to_vector.h"
+#include "geometry/orientation.h"
 #include "random.h"
 #include "render_circuit.h"
 #include "simulation_view.h"

@@ -10,6 +10,7 @@
 #include "allocated_size/trait.h"
 #include "exception.h"
 #include "format/time.h"
+#include "geometry/point.h"
 #include "layout_calculation.h"
 #include "layout_calculation_type.h"
 #include "scene.h"

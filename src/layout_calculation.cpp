@@ -1,6 +1,7 @@
 #include "layout_calculation.h"
 
-#include "geometry.h"
+#include "geometry/orientation.h"
+#include "geometry/rect.h"
 #include "scene.h"
 
 #include <gcem.hpp>

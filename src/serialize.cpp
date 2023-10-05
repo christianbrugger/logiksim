@@ -17,7 +17,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "file.h"
-#include "geometry.h"
+#include "geometry/point.h"
 #include "layout.h"
 #include "layout_calculation.h"
 #include "scene.h"

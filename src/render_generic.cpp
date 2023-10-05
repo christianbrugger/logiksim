@@ -1,7 +1,7 @@
 #include "render_generic.h"
 
 #include "exception.h"
-#include "geometry.h"
+#include "geometry/orientation.h"
 
 #include <blend2d.h>
 

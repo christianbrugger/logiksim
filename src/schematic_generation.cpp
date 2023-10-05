@@ -2,6 +2,7 @@
 
 #include "editable_circuit/cache/connection_cache.h"
 #include "editable_circuit/cache/helper.h"
+#include "geometry/orientation.h"
 #include "layout_calculation.h"
 #include "simulation_type.h"
 

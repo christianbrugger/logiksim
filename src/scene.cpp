@@ -1,7 +1,8 @@
 #include "scene.h"
 
 #include "algorithm/round.h"
-#include "geometry.h"
+#include "geometry/grid.h"
+#include "geometry/rect.h"
 
 #include <gsl/gsl>
 
