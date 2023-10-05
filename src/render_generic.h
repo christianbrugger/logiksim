@@ -67,45 +67,6 @@ auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
     -> double;
 
 //
-// Element Draw State
-//
-
-enum class ElementDrawState : uint32_t {
-    // inserted
-    normal,
-    normal_selected,
-    valid,
-    simulated,
-
-    // uninserted
-    colliding,
-    temporary_selected,
-};
-
-template <>
-auto format(ElementDrawState) -> std::string;
-
-[[nodiscard]] auto is_inserted(ElementDrawState state) noexcept -> bool;
-
-[[nodiscard]] auto has_overlay(ElementDrawState state) noexcept -> bool;
-
-//
-// Drawable Element
-//
-
-struct DrawableElement {
-    element_id_t element_id;
-    ElementDrawState state;
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto operator==(const DrawableElement& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const DrawableElement& other) const = default;
-};
-
-static_assert(sizeof(DrawableElement) == 8);
-
-//
 // Layer Surface
 //
 

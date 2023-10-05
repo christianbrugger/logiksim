@@ -95,53 +95,6 @@ auto to_context_unrounded(grid_fine_t length, const Context& context) -> double 
 }
 
 //
-// Element Draw State
-//
-
-template <>
-auto format(ElementDrawState state) -> std::string {
-    switch (state) {
-        using enum ElementDrawState;
-
-        case normal:
-            return "normal";
-        case normal_selected:
-            return "normal_selected";
-        case valid:
-            return "valid";
-        case simulated:
-            return "simulated";
-
-        case colliding:
-            return "colliding";
-        case temporary_selected:
-            return "temporary_selected";
-    }
-
-    throw_exception("cannot convert ElementDrawState to string");
-}
-
-auto is_inserted(ElementDrawState state) noexcept -> bool {
-    using enum ElementDrawState;
-    return state == normal || state == normal_selected || state == valid ||
-           state == simulated;
-}
-
-auto has_overlay(ElementDrawState state) noexcept -> bool {
-    using enum ElementDrawState;
-    return state == normal_selected || state == valid || state == colliding ||
-           state == temporary_selected;
-}
-
-//
-// Drawable Element
-//
-
-auto DrawableElement::format() const -> std::string {
-    return fmt::format("{}-{}", element_id, state);
-}
-
-//
 // Layer Surface
 //
 

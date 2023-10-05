@@ -5,6 +5,8 @@
 #include "render_generic.h"
 #include "simulation_view.h"
 #include "vocabulary.h"
+#include "vocabulary/drawable_element.h"
+#include "vocabulary/element_draw_state.h"
 
 #include <gsl/gsl>
 
