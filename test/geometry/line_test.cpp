@@ -1,5 +1,6 @@
+#include "geometry/line.h"
 
-#include "collision.h"
+#include "vocabulary.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

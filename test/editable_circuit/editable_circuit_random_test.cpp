@@ -1,7 +1,6 @@
 
 #include "editable_circuit/editable_circuit.h"
 #include "format/container.h"
-#include "geometry.h"
 #include "random.h"
 #include "render_circuit.h"
 #include "timer.h"

@@ -2,6 +2,7 @@
 #define LOGICSIM_GEOMETRY_PART_LIST_COPYING_H
 
 #include "geometry/part.h"
+#include "geometry/part_list.h"
 #include "vocabulary/offset.h"
 #include "vocabulary/part.h"
 #include "vocabulary/part_copy_definition.h"

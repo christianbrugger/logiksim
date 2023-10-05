@@ -2,7 +2,6 @@
 #include "segment_tree.h"
 
 #include "algorithm/range.h"
-#include "geometry.h"
 #include "logging.h"
 #include "random.h"
 
