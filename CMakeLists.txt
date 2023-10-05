@@ -111,12 +111,14 @@ set(LS_CORE_SOURCES
     src/vocabulary/delay.cpp
     src/vocabulary/display_state.cpp
     src/vocabulary/drawable_element.cpp
+    src/vocabulary/element_definition.cpp
     src/vocabulary/element_draw_state.cpp
     src/vocabulary/element_id.cpp
     src/vocabulary/element_type.cpp
     src/vocabulary/grid.cpp
     src/vocabulary/grid_fine.cpp
     src/vocabulary/insertion_mode.cpp
+    src/vocabulary/layout_calculation_data.cpp
     src/vocabulary/line.cpp
     src/vocabulary/line_fine.cpp
     src/vocabulary/logic_small_vector.cpp
@@ -125,6 +127,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/orientation.cpp
     src/vocabulary/part.cpp
     src/vocabulary/part_copy_definition.cpp
+    src/vocabulary/placed_element.cpp
     src/vocabulary/point.cpp
     src/vocabulary/point_fine.cpp
     src/vocabulary/rect.cpp

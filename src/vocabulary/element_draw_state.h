@@ -9,7 +9,11 @@
 namespace logicsim {
 
 /**
- * @brief:
+ * @brief: A collection of all draw states an element can be in.
+ *
+ * It combines selection, display_state and simulated.
+ *
+ * Note that certain combinations are not present, as they are not drawn differently.
  */
 enum class ElementDrawState : uint32_t {
     // inserted

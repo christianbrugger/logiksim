@@ -1,0 +1,10 @@
+#ifndef LOGICSIM_VOCABULARY_LAYOUT_CALCULATION_DATA_H
+#define LOGICSIM_VOCABULARY_LAYOUT_CALCULATION_DATA_H
+
+namespace logicsim {
+
+//
+
+}
+
+#endif

@@ -1,0 +1,10 @@
+#ifndef LOGICSIM_VOCABULARY_PLACED_ELEMENT_H
+#define LOGICSIM_VOCABULARY_PLACED_ELEMENT_H
+
+namespace logicsim {
+
+//
+
+}
+
+#endif

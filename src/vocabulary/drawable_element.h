@@ -9,6 +9,9 @@
 
 namespace logicsim {
 
+/**
+ * @brief: All information needed to draw a layout element.
+ */
 struct DrawableElement {
     element_id_t element_id;
     ElementDrawState state;
