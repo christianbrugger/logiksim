@@ -70,7 +70,7 @@ auto _add_intersecting_parts(const Container &source_entries,
                              Container &destination_entries, part_copy_definition_t parts)
     -> void {
     if (distance(parts.destination) != distance(parts.source)) {
-        throw std::domain_error("source and destination need to have the same size");
+        throw std::runtime_error("source and destination need to have the same size");
     }
 
     using V = offset_t::difference_type;

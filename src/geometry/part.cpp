@@ -74,7 +74,7 @@ auto difference_touching_one_side(part_t full_part, part_t b) -> part_t {
     }
 
     if (full_part.end != b.end) [[unlikely]] {
-        throw std::domain_error("part needs to be touching one side");
+        throw std::runtime_error("part needs to be touching one side");
     }
 
     return part_t {full_part.begin, b.begin};
@@ -135,7 +135,7 @@ auto to_part(ordered_line_t full_line, ordered_line_t sub_line) -> part_t {
     const auto full_end = to_part(full_line).end;
 
     if (end > full_end) [[unlikely]] {
-        throw std::domain_error("sub_line needs to be within line");
+        throw std::runtime_error("sub_line needs to be within line");
     }
 
     return part_t {begin, end};
@@ -143,7 +143,7 @@ auto to_part(ordered_line_t full_line, ordered_line_t sub_line) -> part_t {
 
 auto to_line(ordered_line_t full_line, part_t part) -> ordered_line_t {
     if (!is_part_valid(part, full_line)) {
-        throw std::domain_error("part needs to be within line");
+        throw std::runtime_error("part needs to be within line");
     }
 
     const auto x = full_line.p0.x;

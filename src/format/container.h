@@ -49,7 +49,7 @@ struct fmt::formatter<T, Char> {
             return it;
         }
 
-        throw std::domain_error("no other range formatting supported");
+        throw std::runtime_error("no other range formatting supported");
     }
 
     auto format(const T &obj, fmt::format_context &ctx) const {

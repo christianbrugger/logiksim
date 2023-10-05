@@ -37,10 +37,10 @@ auto to_offset(ordered_line_t full_line, point_t point) -> offset_t {
     const auto line = ordered_line_t {full_line.p0, point};
 
     if (is_horizontal(full_line) != is_horizontal(line)) {
-        throw std::domain_error("point is not on full_line");
+        throw std::runtime_error("point is not on full_line");
     }
     if (line.p1 > full_line.p1) [[unlikely]] {
-        throw std::domain_error("point is not part of full_line");
+        throw std::runtime_error("point is not part of full_line");
     }
 
     return to_offset(line);
@@ -50,14 +50,14 @@ auto to_point(ordered_line_t full_line, offset_t offset) -> point_t {
     if (is_horizontal(full_line)) {
         const auto x = to_grid(offset, full_line.p0.x);
         if (x > full_line.p1.x) [[unlikely]] {
-            throw std::domain_error("offset is not within line");
+            throw std::runtime_error("offset is not within line");
         }
         return point_t {x, full_line.p0.y};
     }
 
     const auto y = to_grid(offset, full_line.p0.y);
     if (y > full_line.p1.y) [[unlikely]] {
-        throw std::domain_error("offset is not within line");
+        throw std::runtime_error("offset is not within line");
     }
     return point_t {full_line.p0.x, y};
 }

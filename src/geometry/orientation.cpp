@@ -60,7 +60,7 @@ auto to_orientation(point_t p0, point_t p1) -> orientation_t {
         return orientation_t::down;
     }
 
-    throw std::domain_error("p0 and p1 cannot be qual");
+    throw std::runtime_error("p0 and p1 cannot be qual");
 }
 
 auto to_orientation_p0(ordered_line_t line) -> orientation_t {
@@ -83,7 +83,7 @@ auto to_angle(orientation_t orientation) -> double {
         case down:
             return std::numbers::pi * 3 / 2;
         case undirected:
-            throw std::domain_error("undirected orientation has no angle");
+            throw std::runtime_error("undirected orientation has no angle");
     };
     std::terminate();
 }

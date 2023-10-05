@@ -1,5 +1,7 @@
 #include "geometry/part_list.h"
 
+#include <folly/small_vector.h>
+
 namespace logicsim {
 
 auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t line)
@@ -7,7 +9,7 @@ auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t lin
     // part inside line
     for (const auto part : parts) {
         if (!is_part_valid(part, line)) [[unlikely]] {
-            std::domain_error("part is not part of line");
+            throw std::runtime_error("part is not part of line");
         }
     }
 
@@ -17,7 +19,7 @@ auto sort_and_validate_segment_parts(std::span<part_t> parts, ordered_line_t lin
         return part0.end >= part1.begin;
     };
     if (std::ranges::adjacent_find(parts, part_overlapping) != parts.end()) {
-        std::domain_error("some parts are overlapping");
+        throw std::runtime_error("some parts are overlapping");
     }
 }
 

@@ -41,7 +41,7 @@ auto sort_and_merge_parts(Container &entries) -> void {
         });
 
     if (result.size() == 0) [[unlikely]] {
-        std::runtime_error("algorithm result should not be empty");
+        throw std::runtime_error("algorithm result should not be empty");
     }
 
     using std::swap;
@@ -87,7 +87,7 @@ auto remove_part(Container &entries, part_t removing) -> void {
         }
 
         else {
-            std::runtime_error("unknown case in remove_segment");
+            throw std::runtime_error("unknown case in remove_segment");
         }
     }
 }

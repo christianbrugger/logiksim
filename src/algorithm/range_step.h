@@ -110,7 +110,7 @@ struct range_step_t {
                                                   value_type step)
         : start_ {std::move(start)}, stop_ {std::move(stop)}, step_ {std::move(step)} {
         if (step_ == zero_) {
-            throw std::domain_error("Step cannot be zero.");
+            throw std::runtime_error("Step cannot be zero.");
         }
     }
 

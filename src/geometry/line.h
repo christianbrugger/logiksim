@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_GEOMETRY_LINE_H
 #define LOGICSIM_GEOMETRY_LINE_H
 
+#include <tuple>
+
 namespace logicsim {
 
 struct grid_t;
