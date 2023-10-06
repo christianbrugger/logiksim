@@ -34,9 +34,9 @@ struct time_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const time_t &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const time_t &other) const
-        -> std::strong_ordering = default;
+    [[nodiscard]] constexpr auto operator==(const time_t &other) const -> bool = default;
+    [[nodiscard]] constexpr auto operator<=>(const time_t &other) const
+        -> std::strong_ordering;
 
     [[nodiscard]] static constexpr auto zero() noexcept -> time_t;
     [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t;
@@ -75,6 +75,12 @@ constexpr time_t::time_t(std::chrono::duration<rep, period> time) noexcept
 
 constexpr auto time_t::safe_value() const noexcept -> value_type {
     return value;
+}
+
+constexpr auto time_t::operator<=>(const time_t &other) const -> std::strong_ordering {
+    const auto a = rep {value.count()};
+    const auto b = rep {other.value.count()};
+    return a <=> b;
 }
 
 constexpr auto time_t::zero() noexcept -> time_t {

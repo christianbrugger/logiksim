@@ -36,9 +36,9 @@ struct delay_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const delay_t &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const delay_t &other) const
-        -> std::strong_ordering = default;
+    [[nodiscard]] constexpr auto operator==(const delay_t &other) const -> bool = default;
+    [[nodiscard]] constexpr auto operator<=>(const delay_t &other) const
+        -> std::strong_ordering;
 
     [[nodiscard]] static constexpr auto zero() noexcept -> delay_t;
     [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t;
@@ -83,8 +83,14 @@ constexpr auto delay_t::safe_value() const noexcept -> value_type {
     return value;
 }
 
-inline constexpr auto delay_t::count_ns() const noexcept -> rep {
+constexpr auto delay_t::count_ns() const noexcept -> rep {
     return value.count();
+}
+
+constexpr auto delay_t::operator<=>(const delay_t &other) const -> std::strong_ordering {
+    const auto a = rep {value.count()};
+    const auto b = rep {other.value.count()};
+    return a <=> b;
 }
 
 constexpr auto delay_t::zero() noexcept -> delay_t {
@@ -112,22 +118,22 @@ constexpr auto delay_t::max() noexcept -> delay_t {
 };
 
 constexpr auto delay_t::operator+=(const delay_t &right) -> delay_t & {
-    value += right.value;
+    value = value + right.value;
     return *this;
 }
 
 constexpr auto delay_t::operator-=(const delay_t &right) -> delay_t & {
-    value -= right.value;
+    value = value - right.value;
     return *this;
 }
 
 constexpr auto delay_t::operator*=(const int &right) -> delay_t & {
-    value *= right;
+    value = value_type {rep_safe {value.count() * rep_safe {right}}};
     return *this;
 }
 
 constexpr auto delay_t::operator/=(const int &right) -> delay_t & {
-    value /= right;
+    value = value_type {rep_safe {value.count() / rep_safe {right}}};
     return *this;
 }
 
@@ -144,6 +150,7 @@ constexpr auto delay_t::operator-() const -> delay_t {
 //
 // Free functions
 //
+
 constexpr auto operator+(const delay_t &left, const delay_t &right) -> delay_t {
     auto result = left;
     result += right;

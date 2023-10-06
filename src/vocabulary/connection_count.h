@@ -45,10 +45,10 @@ struct connection_count_t {
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto operator==(const connection_count_t &other) const
+    [[nodiscard]] constexpr auto operator==(const connection_count_t &other) const
         -> bool = default;
-    [[nodiscard]] auto operator<=>(const connection_count_t &other) const
-        -> std::strong_ordering = default;
+    [[nodiscard]] constexpr auto operator<=>(const connection_count_t &other) const
+        -> std::strong_ordering;
     [[nodiscard]] auto operator<=>(const connection_id_t &other) const
         -> std::strong_ordering;
 
@@ -110,6 +110,11 @@ constexpr connection_count_t::operator std::size_t() const noexcept {
 
 constexpr auto connection_count_t::count() const noexcept -> value_type_rep {
     return value_type_rep {value};
+}
+
+constexpr auto connection_count_t::operator<=>(const connection_count_t &other) const
+    -> std::strong_ordering {
+    return value_type_rep {value} <=> value_type_rep {other.value};
 }
 
 constexpr auto connection_count_t::min() noexcept -> connection_count_t {
