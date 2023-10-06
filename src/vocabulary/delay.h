@@ -3,6 +3,7 @@
 
 #include "concept/integral.h"
 #include "format/struct.h"
+#include "safe_numeric.h"
 #include "vocabulary/time_literal.h"
 
 #include <chrono>
@@ -15,17 +16,15 @@ namespace logicsim {
  * @brief: Specifies a time duration of the simulation time.
  */
 struct delay_t {
-    // TODO use ls_safe
-    // TODO check where .value is used
     using rep = int64_t;
     using period = std::nano;
 
    private:
-    using value_type = std::chrono::duration<rep, period>;
+    using rep_safe = ls_safe<rep>;
+    using value_type = std::chrono::duration<rep_safe, period>;
     value_type value;
 
    public:
-    //  TODO re-work constructors, same as time_t
     [[nodiscard]] explicit constexpr delay_t() noexcept;
     [[nodiscard]] explicit constexpr delay_t(
         std::chrono::duration<rep, period> delay) noexcept;
@@ -38,8 +37,10 @@ struct delay_t {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const delay_t &other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const delay_t &other) const = default;
+    [[nodiscard]] auto operator<=>(const delay_t &other) const
+        -> std::strong_ordering = default;
 
+    [[nodiscard]] static constexpr auto zero() noexcept -> delay_t;
     [[nodiscard]] static constexpr auto epsilon() noexcept -> delay_t;
     [[nodiscard]] static constexpr auto min() noexcept -> delay_t;
     [[nodiscard]] static constexpr auto max() noexcept -> delay_t;
@@ -72,10 +73,11 @@ static_assert(std::is_trivially_copy_assignable_v<delay_t>);
 //
 // Implementation
 //
-constexpr delay_t::delay_t() noexcept : value {0ns} {};
+
+constexpr delay_t::delay_t() noexcept : value {rep_safe {0}} {};
 
 constexpr delay_t::delay_t(std::chrono::duration<rep, period> delay) noexcept
-    : value {delay} {};
+    : value {rep_safe {delay.count()}} {};
 
 constexpr auto delay_t::safe_value() const noexcept -> value_type {
     return value;
@@ -85,38 +87,46 @@ inline constexpr auto delay_t::count_ns() const noexcept -> rep {
     return value.count();
 }
 
+constexpr auto delay_t::zero() noexcept -> delay_t {
+    auto result = delay_t {};
+    result.value = value_type::zero();
+    return result;
+};
+
 constexpr auto delay_t::epsilon() noexcept -> delay_t {
-    return delay_t {++value_type::zero()};
+    auto result = delay_t {};
+    result.value = ++value_type::zero();
+    return result;
 };
 
 constexpr auto delay_t::min() noexcept -> delay_t {
-    return delay_t {value_type::min()};
+    auto result = delay_t {};
+    result.value = value_type::min();
+    return result;
 };
 
 constexpr auto delay_t::max() noexcept -> delay_t {
-    return delay_t {value_type::max()};
+    auto result = delay_t {};
+    result.value = value_type::max();
+    return result;
 };
 
 constexpr auto delay_t::operator+=(const delay_t &right) -> delay_t & {
-    // TODO use ls_safe
     value += right.value;
     return *this;
 }
 
 constexpr auto delay_t::operator-=(const delay_t &right) -> delay_t & {
-    // TODO use ls_safe
     value -= right.value;
     return *this;
 }
 
 constexpr auto delay_t::operator*=(const int &right) -> delay_t & {
-    // TODO use ls_safe
     value *= right;
     return *this;
 }
 
 constexpr auto delay_t::operator/=(const int &right) -> delay_t & {
-    // TODO use ls_safe
     value /= right;
     return *this;
 }
@@ -126,8 +136,9 @@ constexpr auto delay_t::operator+() const -> delay_t {
 }
 
 constexpr auto delay_t::operator-() const -> delay_t {
-    // TODO use ls_safe
-    return delay_t {-value};
+    auto result = delay_t {};
+    result.value = -value;
+    return result;
 }
 
 //
