@@ -244,14 +244,14 @@ auto Schematic::add_element(ElementData &&data) -> Element {
     if (data.input_inverters.size() == 0) {
         input_inverters_.emplace_back(data.input_count.count(), false);
     } else {
-        if (connection_count_t {data.input_inverters.size()} != data.input_count)
+        if (data.input_inverters.size() != std::size_t {data.input_count})
             [[unlikely]] {
             throw_exception("Need as many values for input_inverters as inputs.");
         }
         input_inverters_.emplace_back(data.input_inverters);
     }
     {
-        if (connection_count_t {std::size(data.output_delays)} != data.output_count)
+        if (data.output_delays.size() != std::size_t {data.output_count})
             [[unlikely]] {
             throw_exception("Need as many output_delays as outputs.");
         }

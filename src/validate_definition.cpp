@@ -39,19 +39,20 @@ auto is_valid(const ElementDefinition& d) -> bool {
         return false;
     }
     if (!d.input_inverters.empty() &&
-        connection_count_t {d.input_inverters.size()} != d.input_count) {
+        d.input_inverters.size() != std::size_t {d.input_count}) {
         return false;
     }
     if (!d.output_inverters.empty() &&
-        connection_count_t {d.output_inverters.size()} != d.output_count) {
+        d.output_inverters.size() != std::size_t {d.output_count}) {
         return false;
     }
 
     // clock generator
-    if (d.element_type == clock_generator) {
-        if (!d.attrs_clock_generator || !is_valid(*d.attrs_clock_generator)) {
-            return false;
-        }
+    if ((d.element_type == clock_generator) != d.attrs_clock_generator.has_value()) {
+        return false;
+    }
+    if (d.attrs_clock_generator.has_value() && !is_valid(*d.attrs_clock_generator)) {
+        return false;
     }
 
     return true;

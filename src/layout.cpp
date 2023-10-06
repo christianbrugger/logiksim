@@ -345,8 +345,8 @@ auto Layout::add_element(const ElementDefinition &definition, point_t position,
     if (definition.input_inverters.empty()) {
         input_inverters_.emplace_back(definition.input_count.count(), false);
     } else {
-        if (connection_count_t {definition.input_inverters.size()} !=
-            definition.input_count) [[unlikely]] {
+        if (definition.input_inverters.size() != std::size_t {definition.input_count})
+            [[unlikely]] {
             throw_exception("number of input inverters need to match input count");
         }
         input_inverters_.emplace_back(definition.input_inverters);
@@ -354,8 +354,8 @@ auto Layout::add_element(const ElementDefinition &definition, point_t position,
     if (definition.output_inverters.empty()) {
         output_inverters_.emplace_back(definition.output_count.count(), false);
     } else {
-        if (connection_count_t {definition.output_inverters.size()} !=
-            definition.output_count) [[unlikely]] {
+        if (definition.output_inverters.size() != std::size_t {definition.output_count})
+            [[unlikely]] {
             throw_exception("number of output inverters need to match output count");
         }
         output_inverters_.emplace_back(definition.output_inverters);
@@ -448,11 +448,11 @@ auto Layout::sub_circuit_id(element_id_t element_id) const -> circuit_id_t {
 }
 
 auto Layout::input_count(element_id_t element_id) const -> connection_count_t {
-    return connection_count_t {input_counts_.at(element_id.value)};
+    return input_counts_.at(element_id.value);
 }
 
 auto Layout::output_count(element_id_t element_id) const -> connection_count_t {
-    return connection_count_t {output_counts_.at(element_id.value)};
+    return output_counts_.at(element_id.value);
 }
 
 auto Layout::input_inverters(element_id_t element_id) const
