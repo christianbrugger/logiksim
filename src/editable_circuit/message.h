@@ -2,9 +2,9 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_MESSAGE_H
 
 #include "format/struct.h"
-#include "layout_calculation_type.h"
 #include "segment_tree_type.h"
 #include "vocabulary.h"
+#include "vocabulary/layout_calculation_data.h"
 
 #include <gsl/gsl>
 

@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_VOCABULARY_LOGIC_SMALL_VECTOR_H
 #define LOGICSIM_VOCABULARY_LOGIC_SMALL_VECTOR_H
 
+#include "format/container.h"
+
 #include <folly/small_vector.h>
 
 #include <cstdint>

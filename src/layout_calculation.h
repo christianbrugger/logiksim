@@ -4,8 +4,8 @@
 #include "algorithm/range.h"
 #include "exception.h"
 #include "glyph_cache_type.h"
-#include "layout_calculation_type.h"
 #include "vocabulary.h"
+#include "vocabulary/layout_calculation_data.h"
 
 #include <array>
 #include <vector>

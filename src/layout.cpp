@@ -12,8 +12,8 @@
 #include "format/time.h"
 #include "geometry/point.h"
 #include "layout_calculation.h"
-#include "layout_calculation_type.h"
 #include "scene.h"
+#include "vocabulary/layout_calculation_data.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>

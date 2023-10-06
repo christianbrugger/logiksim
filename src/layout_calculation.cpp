@@ -528,11 +528,8 @@ auto element_bounding_rect(layout_calculation_data_t data) -> rect_t {
 }
 
 auto is_representable(layout_calculation_data_t data) -> bool {
-    if (is_placeholder(data)) {
-        return true;
-    }
-    if (data.element_type == ElementType::wire) {
-        throw_exception("Not supported for wires.");
+    if (!is_logic_item(data.element_type)) {
+        throw_exception("Only supported for logic items.");
     }
 
     const auto position = data.position;

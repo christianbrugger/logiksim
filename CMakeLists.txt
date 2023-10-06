@@ -149,7 +149,6 @@ set(LS_CORE_SOURCES
     src/glyph_cache_type.cpp
     src/interactive_simulation.cpp
     src/layout.cpp
-    src/layout_calculation_type.cpp
     src/layout_calculation.cpp
     src/line_tree.cpp
     src/logging.cpp

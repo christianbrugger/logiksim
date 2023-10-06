@@ -3,7 +3,6 @@
 
 #include "format/struct.h"
 #include "iterator_adaptor/transform_view.h"
-#include "layout_calculation_type.h"
 #include "line_tree.h"
 #include "segment_tree.h"
 #include "vocabulary.h"
@@ -17,6 +16,8 @@
 #include <vector>
 
 namespace logicsim {
+
+struct layout_calculation_data_t;
 
 class Layout;
 

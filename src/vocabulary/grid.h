@@ -44,8 +44,8 @@ struct grid_t {
 
     // arithmetic (overflow is checked)
 
-    constexpr auto operator+=(const grid_t &other) -> grid_t &;
-    constexpr auto operator-=(const grid_t &other) -> grid_t &;
+    constexpr auto operator+=(const grid_t &right) -> grid_t &;
+    constexpr auto operator-=(const grid_t &right) -> grid_t &;
 
     constexpr auto operator*=(const int &right) -> grid_t &;
     constexpr auto operator/=(const int &right) -> grid_t &;
@@ -99,8 +99,8 @@ constexpr auto grid_t::max() noexcept -> grid_t {
     return grid_t {std::numeric_limits<value_type>::max()};
 };
 
-constexpr auto grid_t::operator+=(const grid_t &other) -> grid_t & {
-    auto result = value + other.value;
+constexpr auto grid_t::operator+=(const grid_t &right) -> grid_t & {
+    auto result = value + right.value;
 
     static_assert(sizeof(result) > sizeof(value));
     value = gsl::narrow<grid_t::value_type>(result);
@@ -108,8 +108,8 @@ constexpr auto grid_t::operator+=(const grid_t &other) -> grid_t & {
     return *this;
 }
 
-constexpr auto grid_t::operator-=(const grid_t &other) -> grid_t & {
-    auto result = value - other.value;
+constexpr auto grid_t::operator-=(const grid_t &right) -> grid_t & {
+    auto result = value - right.value;
 
     static_assert(sizeof(result) > sizeof(value));
     value = gsl::narrow<grid_t::value_type>(result);
