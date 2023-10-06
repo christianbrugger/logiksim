@@ -42,7 +42,6 @@ class HistoryIterator;
 struct history_entry_t;
 }  // namespace simulation
 
-// TODO packing
 struct SimulationEvent {
     time_t time;
     element_id_t element_id;
@@ -62,9 +61,10 @@ struct SimulationEvent {
 
 static_assert(sizeof(SimulationEvent) == 16);
 
-static_assert(std::is_trivial<SimulationEvent>::value);
-static_assert(std::is_trivially_copyable<SimulationEvent>::value);
-static_assert(std::is_standard_layout<SimulationEvent>::value);
+static_assert(std::is_standard_layout_v<SimulationEvent>);
+static_assert(std::is_trivially_copyable_v<SimulationEvent>);
+static_assert(std::is_trivially_copy_constructible_v<SimulationEvent>);
+static_assert(std::is_trivially_copy_assignable_v<SimulationEvent>);
 
 auto make_event(Schematic::ConstInput input, time_t time, bool value) -> SimulationEvent;
 
@@ -117,7 +117,7 @@ class Simulation {
 
     struct defaults {
         constexpr static auto no_timeout = timeout_t::max();
-        constexpr static auto infinite_simulation_time = time_t::value_type::max();
+        constexpr static auto infinite_simulation_time = delay_t::max();
         constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
                                                 connection_count_t::max().count()};
 
@@ -135,9 +135,8 @@ class Simulation {
     [[nodiscard]] auto time() const noexcept -> time_t;
 
     // submit custom events
-    auto submit_event(Schematic::ConstInput input, time_t::value_type offset, bool value)
-        -> void;
-    auto submit_events(Schematic::ConstElement element, time_t::value_type offset,
+    auto submit_event(Schematic::ConstInput input, delay_t offset, bool value) -> void;
+    auto submit_events(Schematic::ConstElement element, delay_t offset,
                        logic_small_vector_t values) -> void;
 
     // Initialize logic elements in the simulation
@@ -149,7 +148,7 @@ class Simulation {
     ///                          run until no more new events are generated
     /// @param timeout           return if simulation takes longer than this in realtime
     /// @param max_events        return after simulating this many events
-    auto run(time_t::value_type simulation_time = defaults::infinite_simulation_time,
+    auto run(delay_t simulation_time = defaults::infinite_simulation_time,
              timeout_t timeout = defaults::no_timeout,
              int64_t max_events = defaults::no_max_events) -> int64_t;
     // Runs simulation for a very short time

@@ -67,6 +67,7 @@ struct connection_count_t {
 };
 
 static_assert(std::is_trivially_copyable_v<connection_count_t>);
+static_assert(std::is_trivially_copy_constructible_v<connection_count_t>);
 static_assert(std::is_trivially_copy_assignable_v<connection_count_t>);
 
 [[nodiscard]] constexpr auto operator+(const connection_count_t &left,

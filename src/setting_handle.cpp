@@ -271,7 +271,7 @@ DelayInput::DelayInput(QWidget* parent, QString text, delay_t initial_value,
     combo_box->addItem(tr("µs"), qint64 {1'000});
     combo_box->addItem(tr("ms"), qint64 {1'000'000});
 
-    const auto value_ns = initial_value.value / 1ns * scale;
+    const auto value_ns = initial_value.count_ns() * scale;
     for (auto index : range(combo_box->count())) {
         const auto unit = combo_box->itemData(index).toLongLong();
         if (round_to<int64_t>(value_ns) >= int64_t {unit}) {
@@ -324,8 +324,8 @@ auto DelayInput::delay_unit_changed() -> void {
     }
 
     // TODO fix overflow
-    double max_ns = gsl::narrow_cast<double>(delay_t::max().value / 1ns) * scale;
-    double min_ns = 1.0 * scale;
+    double max_ns = gsl::narrow_cast<double>(delay_t::max().count_ns()) * scale;
+    double min_ns = delay_t::epsilon().count_ns() * scale;
     delay_validator.setRange(min_ns / unit, max_ns / unit);
 }
 

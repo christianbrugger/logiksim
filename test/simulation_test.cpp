@@ -96,7 +96,7 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
     auto simulation = get_initialized_simulation(schematic);
 
     EXPECT_EQ(simulation.time(), time_t {0us});
-    simulation.run(3s);
+    simulation.run(delay_t {3s});
     EXPECT_EQ(simulation.time(), time_t {3s});
 }
 
@@ -118,8 +118,8 @@ TEST(SimulationTest, SimulationProcessAllEventsForTime) {
     });
     auto simulation = get_initialized_simulation(schematic);
 
-    simulation.submit_event(and_element.input(connection_id_t {0}), 10us, true);
-    simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, true);
+    simulation.submit_event(and_element.input(connection_id_t {0}), delay_t {10us}, true);
+    simulation.submit_event(xor_element.input(connection_id_t {0}), delay_t {10us}, true);
 
     const auto max_events = 1;
     const auto event_count =
@@ -154,7 +154,7 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     simulation.initialize();
 
     EXPECT_EQ(simulation.time(), time_t {0us});
-    simulation.run(5ms);
+    simulation.run(delay_t {5ms});
     EXPECT_EQ(simulation.time(), time_t {5ms});
 }
 
@@ -217,7 +217,7 @@ TEST(SimulationTest, AdditionalEvents) {
     EXPECT_EQ(simulation.output_value(xor_element.output(connection_id_t {0})), false);
 
     // enable first input
-    simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {0}), delay_t {10us}, true);
     simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), true);
@@ -225,7 +225,7 @@ TEST(SimulationTest, AdditionalEvents) {
     EXPECT_EQ(simulation.output_value(xor_element.output(connection_id_t {0})), true);
 
     // enable second input
-    simulation.submit_event(xor_element.input(connection_id_t {1}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {1}), delay_t {10us}, true);
     simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), true);
@@ -243,7 +243,7 @@ TEST(SimulationTest, SimulatanousEvents) {
     });
 
     auto simulation = get_initialized_simulation(schematic);
-    simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {0}), delay_t {10us}, true);
     simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), true);
@@ -251,8 +251,9 @@ TEST(SimulationTest, SimulatanousEvents) {
     EXPECT_EQ(simulation.output_value(xor_element.output(connection_id_t {0})), true);
 
     // flip inputs at the same time
-    simulation.submit_event(xor_element.input(connection_id_t {0}), 10us, false);
-    simulation.submit_event(xor_element.input(connection_id_t {1}), 10us, true);
+    simulation.submit_event(xor_element.input(connection_id_t {0}), delay_t {10us},
+                            false);
+    simulation.submit_event(xor_element.input(connection_id_t {1}), delay_t {10us}, true);
     simulation.run();
 
     EXPECT_EQ(simulation.input_value(xor_element.input(connection_id_t {0})), false);
@@ -298,8 +299,8 @@ TEST(SimulationTest, HalfAdder) {
 
     // 0 + 0 -> 00
     {
-        simulation.submit_event(input0.input(connection_id_t {0}), 10us, false);
-        simulation.submit_event(input1.input(connection_id_t {0}), 10us, false);
+        simulation.submit_event(input0.input(connection_id_t {0}), delay_t {10us}, false);
+        simulation.submit_event(input1.input(connection_id_t {0}), delay_t {10us}, false);
         simulation.run();
 
         EXPECT_EQ(simulation.output_value(output.output(connection_id_t {0})), false);
@@ -308,8 +309,8 @@ TEST(SimulationTest, HalfAdder) {
 
     // 0 + 1 = 01
     {
-        simulation.submit_event(input0.input(connection_id_t {0}), 10us, true);
-        simulation.submit_event(input1.input(connection_id_t {0}), 10us, false);
+        simulation.submit_event(input0.input(connection_id_t {0}), delay_t {10us}, true);
+        simulation.submit_event(input1.input(connection_id_t {0}), delay_t {10us}, false);
         simulation.run();
 
         EXPECT_EQ(simulation.output_value(output.output(connection_id_t {0})), true);
@@ -318,8 +319,8 @@ TEST(SimulationTest, HalfAdder) {
 
     // 1 + 0 = 01
     {
-        simulation.submit_event(input0.input(connection_id_t {0}), 10us, false);
-        simulation.submit_event(input1.input(connection_id_t {0}), 10us, true);
+        simulation.submit_event(input0.input(connection_id_t {0}), delay_t {10us}, false);
+        simulation.submit_event(input1.input(connection_id_t {0}), delay_t {10us}, true);
         simulation.run();
 
         EXPECT_EQ(simulation.output_value(output.output(connection_id_t {0})), true);
@@ -328,8 +329,8 @@ TEST(SimulationTest, HalfAdder) {
 
     // 1 + 1 = 10
     {
-        simulation.submit_event(input0.input(connection_id_t {0}), 10us, true);
-        simulation.submit_event(input1.input(connection_id_t {0}), 10us, true);
+        simulation.submit_event(input0.input(connection_id_t {0}), delay_t {10us}, true);
+        simulation.submit_event(input1.input(connection_id_t {0}), delay_t {10us}, true);
         simulation.run();
 
         EXPECT_EQ(simulation.output_value(output.output(connection_id_t {0})), false);
@@ -349,20 +350,20 @@ TEST(SimulationTest, OutputDelayTest) {
     });
     auto simulation = get_initialized_simulation(schematic);
 
-    simulation.submit_event(wire.input(connection_id_t {0}), 1us, true);
-    simulation.run(1us);
+    simulation.submit_event(wire.input(connection_id_t {0}), delay_t {1us}, true);
+    simulation.run(delay_t {1us});
 
     // after 0.5 seconds
-    simulation.run(500us);
+    simulation.run(delay_t {500us});
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(0, 0, 0));
     // after 1.5 seconds
-    simulation.run(1ms);
+    simulation.run(delay_t {1ms});
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 0, 0));
     // after 2.5 seconds
-    simulation.run(1ms);
+    simulation.run(delay_t {1ms});
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 1, 0));
     // after 3.5 seconds
-    simulation.run(1ms);
+    simulation.run(delay_t {1ms});
     ASSERT_THAT(simulation.output_values(wire), testing::ElementsAre(1, 1, 1));
 }
 
@@ -384,34 +385,35 @@ TEST(SimulationTest, JKFlipFlop) {
     // clk, j, k, set, reset
 
     // switch to j state
-    simulation.submit_events(flipflop, 1ms, {true, true, false, false, false});
+    simulation.submit_events(flipflop, delay_t {1ms}, {true, true, false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
-    simulation.submit_events(flipflop, 1ms, {false, true, false, false, false});
+    simulation.submit_events(flipflop, delay_t {1ms}, {false, true, false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
 
     // switch to k state
-    simulation.submit_events(flipflop, 1ms, {true, false, true, false, false});
+    simulation.submit_events(flipflop, delay_t {1ms}, {true, false, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
-    simulation.submit_events(flipflop, 1ms, {false, false, true, false, false});
+    simulation.submit_events(flipflop, delay_t {1ms}, {false, false, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 
     // toggle state
-    simulation.submit_events(flipflop, 1ms, {true, true, true, false, false});
-    simulation.submit_events(flipflop, 2ms, {false, true, true, false, false});
+    simulation.submit_events(flipflop, delay_t {1ms}, {true, true, true, false, false});
+    simulation.submit_events(flipflop, delay_t {2ms}, {false, true, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(1, 0));
-    simulation.submit_events(flipflop, 1ms, {true, true, true, false, false});
-    simulation.submit_events(flipflop, 2ms, {false, true, true, false, false});
+    simulation.submit_events(flipflop, delay_t {1ms}, {true, true, true, false, false});
+    simulation.submit_events(flipflop, delay_t {2ms}, {false, true, true, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 
     // steady state
-    simulation.submit_events(flipflop, 1ms, {true, false, false, false, false});
-    simulation.submit_events(flipflop, 2ms, {false, false, false, false, false});
+    simulation.submit_events(flipflop, delay_t {1ms}, {true, false, false, false, false});
+    simulation.submit_events(flipflop, delay_t {2ms},
+                             {false, false, false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));
 
@@ -439,7 +441,7 @@ TEST(SimulationTest, AndInputInverters1) {
     ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(false, false));
     ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(true));
 
-    simulation.submit_event(and_element.input(connection_id_t {0}), 1ms, true);
+    simulation.submit_event(and_element.input(connection_id_t {0}), delay_t {1ms}, true);
     simulation.run();
     ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(true, false));
     ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(false));
@@ -464,7 +466,7 @@ TEST(SimulationTest, AndInputInverters2) {
     ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(false, false));
     ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(false));
 
-    simulation.submit_event(and_element.input(connection_id_t {0}), 1ms, true);
+    simulation.submit_event(and_element.input(connection_id_t {0}), delay_t {1ms}, true);
     simulation.run();
     ASSERT_THAT(simulation.input_values(and_element), testing::ElementsAre(true, false));
     ASSERT_THAT(simulation.output_values(and_element), testing::ElementsAre(true));
@@ -492,13 +494,14 @@ TEST(SimulationTest, TestInputHistory) {
     ASSERT_THAT(simulation.input_history(wire),
                 testing::ElementsAre(entry_t {time_t::min(), time_t {0us}, false}));
 
-    simulation.submit_event(wire.input(connection_id_t {0}), 10us, true);
-    simulation.submit_event(wire.input(connection_id_t {0}), 20us, true);  // ignored
-    simulation.submit_event(wire.input(connection_id_t {0}), 40us, false);
-    simulation.submit_event(wire.input(connection_id_t {0}), 60us, true);
-    simulation.submit_event(wire.input(connection_id_t {0}), 180us, false);
+    simulation.submit_event(wire.input(connection_id_t {0}), delay_t {10us}, true);
+    // ignored
+    simulation.submit_event(wire.input(connection_id_t {0}), delay_t {20us}, true);
+    simulation.submit_event(wire.input(connection_id_t {0}), delay_t {40us}, false);
+    simulation.submit_event(wire.input(connection_id_t {0}), delay_t {60us}, true);
+    simulation.submit_event(wire.input(connection_id_t {0}), delay_t {180us}, false);
 
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.time(), time_t {100us});
     ASSERT_THAT(simulation.input_history(wire),
                 testing::ElementsAre(entry_t {time_t::min(), time_t {10us}, false},
@@ -506,7 +509,7 @@ TEST(SimulationTest, TestInputHistory) {
                                      entry_t {time_t {40us}, time_t {60us}, false},
                                      entry_t {time_t {60us}, time_t {100us}, true}));
 
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.time(), time_t {200us});
     ASSERT_THAT(simulation.input_history(wire),
                 testing::ElementsAre(entry_t {time_t::min(), time_t {180us}, true},
@@ -529,15 +532,15 @@ TEST(SimulationTest, TestClockGenerator) {
     auto simulation = get_uninitialized_simulation(schematic);
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_id_t {0}), 50us, true);
+    simulation.submit_event(clock.input(connection_id_t {0}), delay_t {50us}, true);
 
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
 }
 
@@ -557,21 +560,21 @@ TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
     auto simulation = get_uninitialized_simulation(schematic);
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_id_t {0}), 50us, true);
+    simulation.submit_event(clock.input(connection_id_t {0}), delay_t {50us}, true);
 
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
-    simulation.run(100us);
+    simulation.run(delay_t {100us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
-    simulation.run(100us);  // 600 us
+    simulation.run(delay_t {100us});  // 600 us
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
-    simulation.run(100us);  // 700 us
+    simulation.run(delay_t {100us});  // 700 us
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
 }
 
@@ -591,24 +594,24 @@ TEST(SimulationTest, TestClockReset) {
     auto simulation = get_uninitialized_simulation(schematic);
 
     simulation.initialize();
-    simulation.submit_event(clock.input(connection_id_t {0}), 1000us, true);
-    simulation.submit_event(clock.input(connection_id_t {0}), 1100us, false);
-    simulation.run(10ns);
+    simulation.submit_event(clock.input(connection_id_t {0}), delay_t {1000us}, true);
+    simulation.submit_event(clock.input(connection_id_t {0}), delay_t {1100us}, false);
+    simulation.run(delay_t {10ns});
 
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
-    simulation.run(1ms);
+    simulation.run(delay_t {1ms});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
 
-    simulation.run(999us);
+    simulation.run(delay_t {999us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), true);
-    simulation.run(1us);
+    simulation.run(delay_t {1us});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
 
-    simulation.run(1ms);
+    simulation.run(delay_t {1ms});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
-    simulation.run(1ms);
+    simulation.run(delay_t {1ms});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
-    simulation.run(1ms);
+    simulation.run(delay_t {1ms});
     ASSERT_EQ(simulation.output_value(clock.output(connection_id_t {0})), false);
 }
 
@@ -637,50 +640,50 @@ TEST(SimulationTest, TestShiftRegister) {
     ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
 
     // insert first element
-    simulation.submit_events(shift_register, 1ms, {true, true, false});
-    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.submit_events(shift_register, delay_t {1ms}, {true, true, false});
+    simulation.submit_events(shift_register, delay_t {2ms}, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
     ASSERT_THAT(get_relevant_state(), testing::ElementsAre(1, 0, 0, 0, 0, 0, 0, 0));
 
     // insert second element
-    simulation.submit_events(shift_register, 1ms, {true, false, true});
-    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.submit_events(shift_register, delay_t {1ms}, {true, false, true});
+    simulation.submit_events(shift_register, delay_t {2ms}, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
     ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 1, 1, 0, 0, 0, 0, 0));
 
     // insert third element
-    simulation.submit_events(shift_register, 1ms, {true, true, true});
-    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.submit_events(shift_register, delay_t {1ms}, {true, true, true});
+    simulation.submit_events(shift_register, delay_t {2ms}, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
     ASSERT_THAT(get_relevant_state(), testing::ElementsAre(1, 1, 0, 1, 1, 0, 0, 0));
 
     // insert forth element  &  receive first element
-    simulation.submit_events(shift_register, 1ms, {true, false, false});
-    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.submit_events(shift_register, delay_t {1ms}, {true, false, false});
+    simulation.submit_events(shift_register, delay_t {2ms}, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(1, 0));
     ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 1, 1, 0, 1, 1, 0));
 
     // receive second element
-    simulation.submit_events(shift_register, 1ms, {true, false, false});
-    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.submit_events(shift_register, delay_t {1ms}, {true, false, false});
+    simulation.submit_events(shift_register, delay_t {2ms}, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 1));
     ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 0, 0, 1, 1, 0, 1));
 
     // receive third element
-    simulation.submit_events(shift_register, 1ms, {true, false, false});
-    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.submit_events(shift_register, delay_t {1ms}, {true, false, false});
+    simulation.submit_events(shift_register, delay_t {2ms}, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(1, 1));
     ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 0, 0, 0, 0, 1, 1));
 
     // receive fourth element
-    simulation.submit_events(shift_register, 1ms, {true, false, false});
-    simulation.submit_events(shift_register, 2ms, {false, false, false});
+    simulation.submit_events(shift_register, delay_t {1ms}, {true, false, false});
+    simulation.submit_events(shift_register, delay_t {2ms}, {false, false, false});
     simulation.run();
     ASSERT_THAT(simulation.output_values(shift_register), testing::ElementsAre(0, 0));
     ASSERT_THAT(get_relevant_state(), testing::ElementsAre(0, 0, 0, 0, 0, 0, 0, 0));
@@ -912,14 +915,14 @@ TEST(SimulationTest, HistoryViewUntilExact) {
     auto history_length = delay_t {10us};
     auto history = simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto epsilon = time_t::epsilon().value;
+    constexpr auto epsilon = time_t::epsilon();
 
     auto view = simulation::HistoryView {history, time, last_value, history_length};
 
     auto from = view.from(time_t {90us});
     ASSERT_THAT(view.end() - from, 2);
 
-    ASSERT_THAT(view.until(time_t {95us + epsilon}) - from, 2);
+    ASSERT_THAT(view.until(time_t {95us} + epsilon) - from, 2);
     ASSERT_THAT(view.until(time_t {95us}) - from, 1);
 }
 
@@ -952,7 +955,7 @@ TEST(SimulationTest, HistoryViewValueFull) {
     auto history_length = delay_t {50us};
     auto history = simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto epsilon = time_t::epsilon().value;
+    constexpr auto epsilon = time_t::epsilon();
 
     auto view = simulation::HistoryView {history, time, last_value, history_length};
 
@@ -960,10 +963,10 @@ TEST(SimulationTest, HistoryViewValueFull) {
     ASSERT_THAT(view.value(time_t {-100us}), false);
     ASSERT_THAT(view.value(time_t {0us}), false);
 
-    ASSERT_THAT(view.value(time_t {90us - epsilon}), false);
+    ASSERT_THAT(view.value(time_t {90us} - epsilon), false);
     ASSERT_THAT(view.value(time_t {90us}), true);
 
-    ASSERT_THAT(view.value(time_t {95us - epsilon}), true);
+    ASSERT_THAT(view.value(time_t {95us} - epsilon), true);
     ASSERT_THAT(view.value(time_t {95us}), false);
 
     ASSERT_THAT(view.value(time_t {100us}), false);
@@ -974,7 +977,7 @@ TEST(SimulationTest, HistoryViewValuePartialHistory) {
     auto history_length = delay_t {10us};
     auto history = simulation::history_buffer_t {time_t {90us}, time_t {95us}};
     auto last_value = false;
-    constexpr auto epsilon = time_t::epsilon().value;
+    constexpr auto epsilon = time_t::epsilon();
 
     auto view = simulation::HistoryView {history, time, last_value, history_length};
 
@@ -982,10 +985,10 @@ TEST(SimulationTest, HistoryViewValuePartialHistory) {
     ASSERT_THAT(view.value(time_t {-100us}), true);
     ASSERT_THAT(view.value(time_t {0us}), true);
 
-    ASSERT_THAT(view.value(time_t {90us - epsilon}), true);
+    ASSERT_THAT(view.value(time_t {90us} - epsilon), true);
     ASSERT_THAT(view.value(time_t {90us}), true);
 
-    ASSERT_THAT(view.value(time_t {95us - epsilon}), true);
+    ASSERT_THAT(view.value(time_t {95us} - epsilon), true);
     ASSERT_THAT(view.value(time_t {95us}), false);
 
     ASSERT_THAT(view.value(time_t {100us}), false);

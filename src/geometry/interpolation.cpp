@@ -3,9 +3,9 @@
 #include "geometry/orientation.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/grid_fine.h"
+#include "vocabulary/line.h"
 #include "vocabulary/point.h"
 #include "vocabulary/point_fine.h"
-#include "vocabulary/line.h"
 #include "vocabulary/time.h"
 
 #include <cassert>
@@ -27,8 +27,9 @@ auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_
         return point_fine_t {p1};
     }
 
-    const double alpha = static_cast<double>((t_select.value - t0.value).count()) /
-                         static_cast<double>((t1.value - t0.value).count());
+    // TODO check cast ???
+    const double alpha = static_cast<double>((t_select - t0).count_ns()) /
+                         static_cast<double>((t1 - t0).count_ns());
 
     if (is_horizontal(line_t {p0, p1})) {
         return point_fine_t {interpolate_1d(p0.x, p1.x, alpha), grid_fine_t(p0.y)};

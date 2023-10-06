@@ -53,10 +53,10 @@ auto parse_attr_clock_generator(
     const std::optional<SerializedAttributesClockGenerator>& obj)
     -> std::optional<attributes_clock_generator_t> {
     if (obj.has_value()) {
-        using rep = delay_t::value_type::rep;
-        static_assert(std::is_same_v<rep, decltype(obj->time_symmetric_ns)>);
-        static_assert(std::is_same_v<rep, decltype(obj->time_on_ns)>);
-        static_assert(std::is_same_v<rep, decltype(obj->time_off_ns)>);
+        static_assert(std::is_same_v<delay_t::period, std::nano>);
+        static_assert(std::is_same_v<delay_t::rep, decltype(obj->time_symmetric_ns)>);
+        static_assert(std::is_same_v<delay_t::rep, decltype(obj->time_on_ns)>);
+        static_assert(std::is_same_v<delay_t::rep, decltype(obj->time_off_ns)>);
 
         auto limited_name = obj->name;
         if (limited_name.size() > name_max_size) {
@@ -148,14 +148,14 @@ auto serialize_attr_clock_generator(const layout::ConstElement element)
     if (element.element_type() == ElementType::clock_generator) {
         const auto& attr = element.attrs_clock_generator();
 
-        static_assert(std::is_same_v<delay_t::value_type::period, std::nano>);
+        static_assert(std::is_same_v<delay_t::period, std::nano>);
 
         return SerializedAttributesClockGenerator {
             .name = attr.name,
 
-            .time_symmetric_ns = attr.time_symmetric.value.count(),
-            .time_on_ns = attr.time_on.value.count(),
-            .time_off_ns = attr.time_off.value.count(),
+            .time_symmetric_ns = attr.time_symmetric.count_ns(),
+            .time_on_ns = attr.time_on.count_ns(),
+            .time_off_ns = attr.time_off.count_ns(),
 
             .is_symmetric = attr.is_symmetric,
             .show_simulation_controls = attr.show_simulation_controls,
@@ -211,12 +211,10 @@ auto apply_view_config(const SerializedViewConfig& serialized, ViewConfig& view_
 
 auto serialize_simulation_settings(const SimulationSettings settings)
     -> SerializedSimulationSettings {
-    const auto time_rate = settings.simulation_time_rate.rate_per_second.value;
-
-    static_assert(std::is_same_v<decltype(time_rate)::period, std::nano>);
+    const auto rate = settings.simulation_time_rate.rate_per_second;
 
     return SerializedSimulationSettings {
-        .simulation_time_rate_ns = time_rate.count(),
+        .simulation_time_rate_ns = rate.count_ns(),
         .use_wire_delay = settings.use_wire_delay,
     };
 };
@@ -225,10 +223,9 @@ auto unserialize_simulation_settings(const SerializedSimulationSettings& setting
     -> SimulationSettings {
     using namespace std::chrono_literals;
 
-    const auto rate_stored =
-        time_rate_t {time_t {settings.simulation_time_rate_ns * 1ns}};
+    const auto rate_stored = time_rate_t {settings.simulation_time_rate_ns * 1ns};
 
-    static_assert(std::is_same_v<decltype(rate_stored.rate_per_second.value)::rep,
+    static_assert(std::is_same_v<decltype(rate_stored.rate_per_second)::rep,
                                  decltype(settings.simulation_time_rate_ns)>);
 
     // const auto rate = std::clamp(rate_stored, time_rate_t {1us}, time_rate_t {10s});

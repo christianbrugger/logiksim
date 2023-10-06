@@ -1,5 +1,6 @@
 #include "interactive_simulation.h"
 
+#include "algorithm/round.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "layout.h"
@@ -91,9 +92,9 @@ auto InteractiveSimulation::run(timeout_t timeout) -> void {
     const auto start_simulation_time = simulation_.time();
 
     const auto expected_time = expected_simulation_time(start_realtime);
-    const auto time_to_simulate = expected_time.value - start_simulation_time.value;
+    const auto time_to_simulate = expected_time - start_simulation_time;
 
-    if (time_to_simulate <= 0us) {
+    if (time_to_simulate <= delay_t {0us}) {
         return;
     }
 
@@ -133,12 +134,11 @@ auto InteractiveSimulation::validate() const -> void {
 
 auto InteractiveSimulation::expected_simulation_time(realtime_t now) const -> time_t {
     const auto realtime_delta = std::chrono::duration<double> {now - realtime_reference_};
-    const auto time_delta_double =
-        realtime_delta / 1000ms * simulation_time_rate_.rate_per_second.value;
+    const auto time_delta_ns = realtime_delta / std::chrono::seconds {1} *
+                               simulation_time_rate_.rate_per_second.count_ns();
 
-    const auto time_delta_int =
-        std::chrono::duration_cast<time_t::value_type>(time_delta_double);
-    return time_t {simulation_time_reference_.value + time_delta_int};
+    const auto time_delta = delay_t {round_to<delay_t::rep>(time_delta_ns) * 1ns};
+    return time_t {simulation_time_reference_ + time_delta};
 }
 
 }  // namespace logicsim

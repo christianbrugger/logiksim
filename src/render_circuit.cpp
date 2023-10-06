@@ -1155,10 +1155,8 @@ auto _draw_wire_with_history(Context& ctx, layout::ConstElement element,
     }
 
     const auto to_time =
-        [time = logic_state.time(),
-         delay = logic_state.wire_delay_per_distance()](LineTree::length_t length_) {
-            return time_t {time.value - static_cast<int64_t>(length_) * delay.value};
-        };
+        [time = logic_state.time(), delay = logic_state.wire_delay_per_distance()](
+            LineTree::length_t length_) { return time - length_ * delay; };
 
     for (auto&& segment : element.line_tree().sized_segments()) {
         _draw_line_segment_with_history(ctx, segment.line.p1, segment.line.p0,

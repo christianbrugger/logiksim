@@ -5,7 +5,7 @@
 namespace logicsim {
 
 auto time_rate_t::format() const -> std::string {
-    return fmt::format("{}/s", format_time(rate_per_second.value));
+    return fmt::format("{}/s", rate_per_second);
 }
 
 }  // namespace logicsim

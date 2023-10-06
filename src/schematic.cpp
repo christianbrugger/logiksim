@@ -1285,8 +1285,7 @@ auto calculate_output_delays(const LineTree &line_tree, delay_t wire_delay_per_d
     -> std::vector<delay_t> {
     auto lengths = line_tree.calculate_output_lengths();
     return transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
-        // TODO handle overflow
-        return delay_t {wire_delay_per_distance.value * length};
+        return wire_delay_per_distance * length;
     });
 }
 

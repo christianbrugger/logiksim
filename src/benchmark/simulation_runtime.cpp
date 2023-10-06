@@ -15,7 +15,8 @@ void _generate_random_events(G &rng, Simulation &simulation) {
     for (auto element : simulation.schematic().elements()) {
         for (auto input : element.inputs()) {
             if (trigger_distribution(rng) == 0) {
-                simulation.submit_event(input, 1us, !simulation.input_value(input));
+                simulation.submit_event(input, delay_t {1us},
+                                        !simulation.input_value(input));
             }
         }
     }
@@ -40,7 +41,7 @@ auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
     for (const auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
             const auto delay = element.output(connection_id_t {0}).delay();
-            element.set_history_length(delay_t {delay.value * 10});
+            element.set_history_length(delay * 10);
         }
     }
 

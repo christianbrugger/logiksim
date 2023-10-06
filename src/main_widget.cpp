@@ -134,8 +134,7 @@ auto to_slider_scale(time_rate_t rate) -> int {
         return SLIDER_MIN_VALUE;
     }
 
-    const auto value_log =
-        std::log10(rate.rate_per_second.value.count() / 1000.0) * 100'000;
+    const auto value_log = std::log10(rate.rate_per_second.count_ns() / 1000.0) * 100'000;
     return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
                       SLIDER_MAX_VALUE);
 };

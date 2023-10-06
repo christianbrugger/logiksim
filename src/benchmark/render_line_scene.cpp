@@ -219,13 +219,13 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             assert(connection_count_t {lengths.size()} == element.output_count());
             auto delays =
                 transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
-                    return delay_t {schematic.wire_delay_per_distance().value * length};
+                    return delay_t {schematic.wire_delay_per_distance() * length};
                 });
             element.set_output_delays(delays);
 
             // history
             auto tree_max_delay = std::ranges::max(delays);
-            element.set_history_length(delay_t {tree_max_delay.value});
+            element.set_history_length(tree_max_delay);
 
             // sum
             tree_length_sum += calculate_tree_length(line_tree);
@@ -242,7 +242,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             max_delay = std::max(max_delay, output.delay());
         }
     }
-    auto max_time {max_delay.value};
+    auto max_time = max_delay;
 
     // add events
     for (auto element : schematic.elements()) {
@@ -250,14 +250,14 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             auto spacing_dist_us =
                 UDist<int> {config.min_event_spacing_us, config.max_event_spacing_us};
             bool next_value = true;
-            auto next_time = spacing_dist_us(rng) * 1us;
+            auto next_time = delay_t {spacing_dist_us(rng) * 1us};
 
             while (next_time < max_time) {
                 simulation.submit_event(element.input(connection_id_t {0}), next_time,
                                         next_value);
 
                 next_value = next_value ^ true;
-                next_time = next_time + spacing_dist_us(rng) * 1us;
+                next_time = next_time + delay_t {spacing_dist_us(rng) * 1us};
             }
         }
     }

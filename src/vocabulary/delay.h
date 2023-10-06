@@ -17,14 +17,23 @@ namespace logicsim {
 struct delay_t {
     // TODO use ls_safe
     // TODO check where .value is used
-    using value_type = std::chrono::duration<int64_t, std::nano>;
-    using rep = value_type::rep;
+    using rep = int64_t;
+    using period = std::nano;
+
+   private:
+    using value_type = std::chrono::duration<rep, period>;
     value_type value;
 
-    // TODO re-work constructors, same as time_t
-    [[nodiscard]] explicit constexpr delay_t() noexcept = default;
+   public:
+    //  TODO re-work constructors, same as time_t
+    [[nodiscard]] explicit constexpr delay_t() noexcept;
     [[nodiscard]] explicit constexpr delay_t(
-        std::chrono::duration<int64_t, std::nano> delay);
+        std::chrono::duration<rep, period> delay) noexcept;
+
+    // returns safe_numerics time type
+    [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
+    // returns nanosecond count
+    [[nodiscard]] constexpr auto count_ns() const noexcept -> rep;
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -45,7 +54,9 @@ struct delay_t {
     [[nodiscard]] constexpr auto operator-() const -> delay_t;
 };
 
-static_assert(std::is_trivial_v<delay_t>);
+static_assert(std::is_trivially_copyable_v<delay_t>);
+static_assert(std::is_trivially_copy_constructible_v<delay_t>);
+static_assert(std::is_trivially_copy_assignable_v<delay_t>);
 
 [[nodiscard]] constexpr auto operator+(const delay_t &left, const delay_t &right)
     -> delay_t;
@@ -61,13 +72,18 @@ static_assert(std::is_trivial_v<delay_t>);
 //
 // Implementation
 //
+constexpr delay_t::delay_t() noexcept : value {0ns} {};
 
-constexpr delay_t::delay_t(std::chrono::duration<int64_t, std::nano> delay)
-    : value {delay} {
-    if (value != delay) {
-        throw std::runtime_error("delay cannot be represented.");
-    }
-};
+constexpr delay_t::delay_t(std::chrono::duration<rep, period> delay) noexcept
+    : value {delay} {};
+
+constexpr auto delay_t::safe_value() const noexcept -> value_type {
+    return value;
+}
+
+inline constexpr auto delay_t::count_ns() const noexcept -> rep {
+    return value.count();
+}
 
 constexpr auto delay_t::epsilon() noexcept -> delay_t {
     return delay_t {++value_type::zero()};

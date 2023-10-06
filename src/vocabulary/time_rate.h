@@ -2,10 +2,11 @@
 #define LOGICSIM_VOCABULARY_TIME_RATE_H
 
 #include "format/struct.h"
-#include "vocabulary/time.h"
+#include "vocabulary/delay.h"
 #include "vocabulary/time_literal.h"
 
 #include <compare>
+#include <type_traits>
 
 namespace logicsim {
 
@@ -15,7 +16,11 @@ namespace logicsim {
  * The unit is simulation seconds / realtime seconds.
  */
 struct time_rate_t {
-    time_t rate_per_second;
+    delay_t rate_per_second {};
+
+    [[nodiscard]] explicit constexpr time_rate_t() = default;
+    [[nodiscard]] explicit constexpr time_rate_t(
+        std::chrono::duration<delay_t::rep, delay_t::period> time_rate) noexcept;
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -23,7 +28,17 @@ struct time_rate_t {
     [[nodiscard]] auto operator<=>(const time_rate_t &other) const = default;
 };
 
-static_assert(std::is_aggregate_v<time_rate_t>);
+static_assert(std::is_trivially_copyable_v<time_rate_t>);
+static_assert(std::is_trivially_copy_constructible_v<time_rate_t>);
+static_assert(std::is_trivially_copy_assignable_v<time_rate_t>);
+
+//
+// Implementation
+//
+
+constexpr time_rate_t::time_rate_t(
+    std::chrono::duration<delay_t::rep, delay_t::period> time_rate) noexcept
+    : rate_per_second {delay_t {time_rate}} {}
 
 }  // namespace logicsim
 

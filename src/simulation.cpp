@@ -281,18 +281,19 @@ auto Simulation::time() const noexcept -> time_t {
     return queue_.time();
 }
 
-auto Simulation::submit_event(Schematic::ConstInput input, time_t::value_type offset,
-                              bool value) -> void {
-    queue_.submit_event(make_event(input, time_t {queue_.time().value + offset}, value));
+auto Simulation::submit_event(Schematic::ConstInput input, delay_t offset, bool value)
+    -> void {
+    queue_.submit_event(make_event(input, time_t {queue_.time() + offset}, value));
 }
 
-auto Simulation::submit_events(Schematic::ConstElement element, time_t::value_type offset,
+auto Simulation::submit_events(Schematic::ConstElement element, delay_t offset,
                                logic_small_vector_t values) -> void {
     if (connection_count_t {std::size(values)} != element.input_count()) [[unlikely]] {
         throw_exception("Need to provide number of input values.");
     }
     for (auto input : element.inputs()) {
-        submit_event(input, offset, values.at(input.input_index().value));
+        const auto value = values.at(std::size_t {input.input_index()});
+        submit_event(input, offset, value);
     }
 }
 
@@ -581,9 +582,7 @@ auto get_changed_outputs(const logic_small_vector_t &old_outputs,
 void Simulation::create_event(const Schematic::ConstOutput output,
                               const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
-        const auto delay = output.delay();
-        // TODO add addition to types
-        queue_.submit_event({.time = time_t {queue_.time().value + delay.value},
+        queue_.submit_event({.time = queue_.time() + output.delay(),
                              .element_id = output.connected_element_id(),
                              .input_index = output.connected_input_index(),
                              .value = output_values.at(output.output_index().value)});
@@ -685,12 +684,12 @@ class Timer {
 };
 }  // namespace simulation
 
-auto Simulation::run(const time_t::value_type simulation_time, const timeout_t timeout,
+auto Simulation::run(const delay_t simulation_time, const timeout_t timeout,
                      const int64_t max_events) -> int64_t {
     if (!is_initialized_) {
         throw_exception("Simulation first needs to be initialized.");
     }
-    if (simulation_time <= 0us) [[unlikely]] {
+    if (simulation_time <= delay_t {0us}) [[unlikely]] {
         throw_exception("simulation_time needs to be positive.");
     }
     if (max_events < 0) [[unlikely]] {
@@ -698,21 +697,21 @@ auto Simulation::run(const time_t::value_type simulation_time, const timeout_t t
     }
     check_counts_valid();
 
-    if (simulation_time == 0us) {
+    if (simulation_time == delay_t {0us}) {
         return 0;
     }
 
     const auto timer = simulation::Timer {timeout};
     const auto queue_end_time = simulation_time == defaults::infinite_simulation_time
                                     ? time_t::max()
-                                    : time_t {queue_.time().value + simulation_time};
+                                    : queue_.time() + simulation_time;
     int64_t event_count = 0;
 
     // only check time after this many events
     constexpr int64_t check_interval = 1'000;
-    int64_t next_check = std::min(max_events, timeout != Simulation::defaults::no_timeout
-                                                  ? check_interval
-                                                  : std::numeric_limits<int64_t>::max());
+    int64_t next_check = std::min(max_events, timeout == Simulation::defaults::no_timeout
+                                                  ? std::numeric_limits<int64_t>::max()
+                                                  : check_interval);
 
     while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
         auto event_group = queue_.pop_event_group();
@@ -741,7 +740,7 @@ auto Simulation::run(const time_t::value_type simulation_time, const timeout_t t
 }
 
 auto Simulation::run_infinitesimal() -> int64_t {
-    return run(time_t::epsilon().value);
+    return run(delay_t::epsilon());
 }
 
 auto Simulation::finished() const -> bool {
@@ -826,14 +825,13 @@ auto Simulation::record_input_history(const Schematic::ConstInput input,
     history.push_back(time());
 
     // update largest history event
-    largest_history_event_ =
-        std::max(largest_history_event_, time_t {time().value + history_length.value});
+    largest_history_event_ = std::max(largest_history_event_, time() + history_length);
 }
 
 auto Simulation::clean_history(history_buffer_t &history, delay_t history_length)
     -> void {
-    while (!history.empty() &&
-           history.front().value < time().value - history_length.value) {
+    const auto min_time = time() - history_length;
+    while (!history.empty() && history.front() < min_time) {
         history.pop_front();
     }
 }
@@ -936,7 +934,7 @@ auto Simulation::set_input_value(Schematic::ConstInput input, bool value) -> voi
         input_value = value;
     } else {
         if (input_value != value) {
-            submit_event(input, time_t::epsilon().value, value);
+            submit_event(input, delay_t::epsilon(), value);
             run_infinitesimal();
         }
     }
@@ -1018,7 +1016,7 @@ HistoryView::HistoryView(const history_buffer_t &history, time_t simulation_time
     // ascending without duplicates
     assert(std::ranges::is_sorted(history, std::ranges::less_equal {}));
     // calculate first valid index
-    const auto first_time = time_t {simulation_time.value - history_length.value};
+    const auto first_time = simulation_time - history_length;
     const auto first_index = find_index(first_time);
     min_index_ = gsl::narrow<decltype(min_index_)>(first_index);
 
@@ -1061,7 +1059,7 @@ auto HistoryView::until(time_t value) const -> HistoryIterator {
     }
 
     const auto last_time = value > time_t::min()  //
-                               ? time_t {value.value - time_t::epsilon().value}
+                               ? value - delay_t::epsilon()
                                : value;
     const auto index = find_index(last_time) + 1;
     return HistoryIterator {*this, index};
