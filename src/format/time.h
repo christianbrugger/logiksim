@@ -38,7 +38,7 @@ auto format_time(std::chrono::duration<Rep, Period> time_value) {
     }
 
     auto time_s = std::chrono::duration<double, std::ratio<1>> {time_value};
-    return fmt::format("{:.2f}s", time_s.count());
+    return fmt::format("{:.3g}s", time_s.count());
 }
 
 }  // namespace logicsim

@@ -7,6 +7,7 @@
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_calculation.h"
+#include "logging.h"  // TODO remove
 #include "resource.h"
 #include "scene.h"
 #include "vocabulary/element_definition.h"
@@ -19,6 +20,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QRegularExpression>
+
+#include <cassert>
 
 namespace logicsim {
 auto setting_handle_position(const Layout& layout, element_id_t element_id)
@@ -323,9 +326,14 @@ auto DelayInput::delay_unit_changed() -> void {
         throw_exception("unexpected unit");
     }
 
-    // TODO fix overflow
-    double max_ns = gsl::narrow_cast<double>(delay_t::max().count_ns()) * scale;
-    double min_ns = delay_t::epsilon().count_ns() * scale;
+    // stored value range
+    constexpr auto min_time = delay_t {1ns};
+    constexpr auto max_time = delay_t {500 * std::chrono::seconds {1}};
+    assert(max_time > min_time);
+
+    double min_ns = gsl::narrow<double>(min_time.count_ns()) * scale;
+    double max_ns = gsl::narrow<double>(max_time.count_ns()) * scale;
+    print(min_time, max_time, min_ns, max_ns);
     delay_validator.setRange(min_ns / unit, max_ns / unit);
 }
 
