@@ -4,8 +4,8 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "exception.h"
-#include "geometry/rect.h"
 #include "geometry/point.h"
+#include "geometry/rect.h"
 #include "layout.h"
 #include "layout_calculation.h"
 #include "safe_numeric.h"
@@ -165,14 +165,14 @@ auto clamp_connection_count(connection_count_t count, int delta, connection_coun
     return connection_count_t {clamped_count};
 }
 
-auto adjust_height(const logic_item_t original, size_handle_t handle, int delta,
+auto adjust_height(const PlacedElement& original, size_handle_t handle, int delta,
                    connection_count_t min_inputs, connection_count_t max_inputs,
                    std::invocable<connection_count_t> auto get_height) {
     if (handle.index != 0 && handle.index != 1) {
         throw_exception("unknown handle index");
     }
 
-    auto result = logic_item_t {original};
+    auto result = PlacedElement {original};
 
     // input count
     if (handle.index == 0) {
@@ -201,8 +201,8 @@ auto adjust_height(const logic_item_t original, size_handle_t handle, int delta,
     return result;
 }
 
-auto transform_item(const logic_item_t original, size_handle_t handle, int delta)
-    -> logic_item_t {
+auto transform_item(const PlacedElement& original, size_handle_t handle, int delta)
+    -> PlacedElement {
     switch (original.definition.element_type) {
         using enum ElementType;
 
@@ -240,14 +240,11 @@ auto transform_item(const logic_item_t original, size_handle_t handle, int delta
     throw_exception("unknown ElementType in size_handle::transform_item");
 }
 
-auto get_logic_item(const EditableCircuit& editable_circuit) -> logic_item_t {
+auto get_logic_item(const EditableCircuit& editable_circuit) -> PlacedElement {
     const auto& selection = editable_circuit.selection_builder().selection();
     const auto& element_id = get_single_logic_item(selection);
 
-    return logic_item_t {
-        .definition = editable_circuit.get_logic_item_definition(element_id),
-        .position = editable_circuit.layout().position(element_id),
-    };
+    return to_placed_element(editable_circuit.layout(), element_id);
 }
 
 }  // namespace size_handle

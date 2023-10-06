@@ -9,6 +9,7 @@
 #include "layout_calculation.h"
 #include "resource.h"
 #include "scene.h"
+#include "vocabulary/element_definition.h"
 
 #include <QBoxLayout>
 #include <QCheckBox>
@@ -199,8 +200,7 @@ auto SettingWidgetRegistry::get_element_id(QWidget* dialog) const -> element_id_
 }
 
 auto SettingWidgetRegistry::set_attributes(QWidget* widget,
-                                           layout::attributes_clock_generator attrs)
-    -> void {
+                                           attributes_clock_generator_t attrs) -> void {
     if (!widget) {
         throw_exception("widget sender cannot be nullptr");
     }
@@ -236,14 +236,14 @@ auto SettingWidgetRegistry::on_cleanup_timeout() -> void {
 AttributeSetter::AttributeSetter(SettingWidgetRegistry* receiver)
     : receiver_ {receiver} {}
 
-auto AttributeSetter::set_attributes(QWidget* sender,
-                                     layout::attributes_clock_generator attrs) -> void {
+auto AttributeSetter::set_attributes(QWidget* sender, attributes_clock_generator_t attrs)
+    -> void {
     if (!sender) {
         throw_exception("sender cannot be nullptr");
     }
 
     if (receiver_) {
-        receiver_->set_attributes(sender, attrs);
+        receiver_->set_attributes(sender, std::move(attrs));
     } else {
         sender->deleteLater();
     }
@@ -330,7 +330,7 @@ auto DelayInput::delay_unit_changed() -> void {
 }
 
 ClockGeneratorDialog::ClockGeneratorDialog(QWidget* parent, AttributeSetter setter,
-                                           layout::attributes_clock_generator attrs)
+                                           attributes_clock_generator_t attrs)
     : QWidget {parent}, setter_ {setter} {
     setWindowTitle(tr("Clock Generator"));
     setWindowIcon(QIcon(get_icon_path(icon_t::setting_handle_clock_generator)));
@@ -422,7 +422,7 @@ auto ClockGeneratorDialog::value_changed() -> void {
     }
 
     setter_.set_attributes(
-        this, layout::attributes_clock_generator {
+        this, attributes_clock_generator_t {
                   .name = name_->text().toStdString(),
 
                   .time_symmetric = time_symmetric_->last_valid_delay,

@@ -85,7 +85,7 @@ auto EditableCircuit::add_example() -> void {
     //     });
 }
 
-auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
+auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t position,
                                      InsertionMode insertion_mode) -> selection_handle_t {
     const auto element_id = editable_circuit::add_logic_item(get_state(), definition,
                                                              position, insertion_mode);
@@ -97,7 +97,7 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
     return handle;
 }
 
-auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
+auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t position,
                                      InsertionMode insertion_mode,
                                      const selection_handle_t& handle) -> void {
     const auto element_id = editable_circuit::add_logic_item(get_state(), definition,
@@ -106,11 +106,6 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
     if (element_id) {
         handle.value().add_logicitem(element_id);
     }
-}
-
-auto EditableCircuit::get_logic_item_definition(element_id_t element_id) const
-    -> LogicItemDefinition {
-    return editable_circuit::get_logic_item_definition(layout_.value(), element_id);
 }
 
 auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
@@ -185,7 +180,7 @@ auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
 }
 
 auto EditableCircuit::set_attributes(element_id_t element_id,
-                                     layout::attributes_clock_generator attrs) -> void {
+                                     attributes_clock_generator_t attrs) -> void {
     layout_.value().set_attributes(element_id, std::move(attrs));
 }
 

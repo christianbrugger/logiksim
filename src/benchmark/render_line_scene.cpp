@@ -7,6 +7,7 @@
 #include "render_circuit.h"
 #include "simulation_view.h"
 #include "timer.h"
+#include "vocabulary/element_definition.h"
 
 #include <algorithm>
 #include <numeric>
@@ -175,12 +176,12 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
     // create layout
     auto& layout = scene.layout = Layout {};
     for (auto element : schematic.elements()) {
-        layout.add_element(Layout::ElementData {
-            .display_state = display_state_t::normal,
+        const auto definition = ElementDefinition {
             .element_type = element.element_type(),
             .input_count = element.input_count(),
             .output_count = element.output_count(),
-        });
+        };
+        layout.add_element(definition, point_t {}, display_state_t::normal);
     }
 
     // add line trees

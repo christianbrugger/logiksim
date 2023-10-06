@@ -10,6 +10,7 @@
 #include "setting_handle.h"
 #include "simulation_type.h"
 #include "size_handle.h"
+#include "vocabulary/element_definition.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
@@ -49,7 +50,7 @@ class MouseElementInsertLogic {
    public:
     struct Args {
         EditableCircuit& editable_circuit;
-        LogicItemDefinition element_definition;
+        ElementDefinition element_definition;
     };
 
     MouseElementInsertLogic(Args args) noexcept;
@@ -70,7 +71,7 @@ class MouseElementInsertLogic {
 
    private:
     EditableCircuit& editable_circuit_;
-    LogicItemDefinition element_definition_;
+    ElementDefinition element_definition_;
 
     selection_handle_t temp_element_ {};
 };

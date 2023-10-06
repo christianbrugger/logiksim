@@ -7,6 +7,7 @@
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
 
+#include <compare>
 #include <cstddef>
 #include <string>
 #include <type_traits>
@@ -30,6 +31,8 @@ struct layout_calculation_data_t {
 
     [[nodiscard]] auto operator==(const layout_calculation_data_t& other) const
         -> bool = default;
+    [[nodiscard]] auto operator<=>(const layout_calculation_data_t& other) const =
+        default;
 };
 
 static_assert(std::is_aggregate_v<layout_calculation_data_t>);

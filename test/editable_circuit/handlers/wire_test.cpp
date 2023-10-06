@@ -1,5 +1,6 @@
 #include "./test_helpers.h"
 #include "editable_circuit/handler.h"
+#include "vocabulary/element_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -7,12 +8,16 @@
 namespace logicsim {
 
 namespace {
+
+auto add_test_wire(Layout &layout, display_state_t display_state) -> element_id_t {
+    return layout
+        .add_element(ElementDefinition {ElementType::wire}, point_t {}, display_state)
+        .element_id();
+}
+
 auto add_test_wire(Layout &layout, display_state_t display_state,
                    SegmentPointType point_type, std::span<const ordered_line_t> lines) {
-    const auto element_id = layout.add_element({
-        .display_state = display_state,
-        .element_type = ElementType::wire,
-    });
+    const auto element_id = add_test_wire(layout, display_state);
 
     auto &m_tree = layout.modifyable_segment_tree(element_id);
     for (const auto line : lines) {
@@ -22,15 +27,6 @@ auto add_test_wire(Layout &layout, display_state_t display_state,
             .p1_type = point_type,
         });
     }
-}
-
-auto add_test_wire(Layout &layout, display_state_t display_state) -> element_id_t {
-    return layout
-        .add_element({
-            .display_state = display_state,
-            .element_type = ElementType::wire,
-        })
-        .element_id();
 }
 
 inline auto part(offset_t::value_type begin, offset_t::value_type end) -> part_t {

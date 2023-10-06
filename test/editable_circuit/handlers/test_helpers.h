@@ -5,6 +5,7 @@
 #include "editable_circuit/cache.h"
 #include "editable_circuit/handler.h"
 #include "logging.h"
+#include "vocabulary/element_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -81,15 +82,14 @@ struct SenderSetup {
 inline auto add_and_element(Layout &layout, display_state_t display_type,
                             connection_count_t input_count = connection_count_t {3},
                             point_t position = point_t {0, 0}) -> element_id_t {
-    return layout.add_element({
-        .display_state = display_type,
+    const auto definition = ElementDefinition {
         .element_type = ElementType::and_element,
 
         .input_count = input_count,
         .output_count = connection_count_t {1},
-        .position = position,
         .orientation = orientation_t::right,
-    });
+    };
+    return layout.add_element(definition, position, display_type);
 }
 
 inline auto assert_element_count(const Layout &layout, std::size_t count) -> void {

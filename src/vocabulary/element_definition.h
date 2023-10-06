@@ -9,6 +9,7 @@
 #include "vocabulary/logic_small_vector.h"
 #include "vocabulary/orientation.h"
 
+#include <compare>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -29,9 +30,12 @@ struct attributes_clock_generator_t {
     bool show_simulation_controls {true};
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto format_period() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto operator==(const attributes_clock_generator_t& other) const
         -> bool = default;
+    [[nodiscard]] auto operator<=>(const attributes_clock_generator_t&) const = default;
 };
 
 static_assert(std::is_aggregate_v<attributes_clock_generator_t>);
@@ -45,7 +49,7 @@ struct ElementDefinition {
     connection_count_t output_count {0};
     orientation_t orientation {orientation_t::undirected};
 
-    circuit_id_t circuit_id {null_circuit};
+    circuit_id_t circuit_id {null_circuit};  // TODO rename to sub_circuit_id ?
     logic_small_vector_t input_inverters {};
     logic_small_vector_t output_inverters {};
 
@@ -54,6 +58,7 @@ struct ElementDefinition {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto operator==(const ElementDefinition& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const ElementDefinition& other) const = default;
 };
 
 static_assert(std::is_aggregate_v<ElementDefinition>);

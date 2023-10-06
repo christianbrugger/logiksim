@@ -17,6 +17,7 @@ class element_handle_t;
 class SelectionRegistrar;
 class CacheProvider;
 class SplitPointCache;
+struct PlacedElement;
 
 namespace editable_circuit {
 
@@ -46,11 +47,8 @@ auto swap_and_delete_single_element(Layout& layout, MessageSender& sender,
 // Logic Item Handling
 //
 
-auto add_logic_item(State state, LogicItemDefinition definition, point_t position,
+auto add_logic_item(State state, const ElementDefinition& definition, point_t position,
                     InsertionMode insertion_mode) -> element_id_t;
-
-auto get_logic_item_definition(const Layout& layout, const element_id_t element_id)
-    -> LogicItemDefinition;
 
 auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
                                       InsertionMode new_insertion_mode) -> void;

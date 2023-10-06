@@ -13,6 +13,7 @@
 #include "simulation.h"
 #include "simulation_view.h"
 #include "vocabulary.h"
+#include "vocabulary/element_definition.h"
 
 #include <benchmark/benchmark.h>
 #include <blend2d.h>
@@ -81,9 +82,11 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
             x = 0;
         }
 
-        const auto definition = LogicItemDefinition {
+        const auto definition = ElementDefinition {
             .element_type = ElementType::and_element,
             .input_count = connection_count_t {3},
+            .output_count = connection_count_t {1},
+            .orientation = orientation_t::right,
         };
 
         auto handle = ec.add_logic_item(definition, point_t {grid_t {x}, grid_t {y}},

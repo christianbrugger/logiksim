@@ -634,45 +634,30 @@ auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
     change_logic_item_insertion_mode_private(state, element_id, new_mode);
 }
 
-auto add_logic_item_private(State state, LogicItemDefinition definition, point_t position,
-                            InsertionMode insertion_mode) -> element_id_t {
-    if (!definition.is_valid()) [[unlikely]] {
-        throw_exception("Invalid Logic Item Definition");
-    }
+auto add_logic_item_private(State state, const ElementDefinition& definition,
+                            point_t position, InsertionMode insertion_mode)
+    -> element_id_t {
     if (!is_logic_item(definition.element_type)) [[unlikely]] {
         throw_exception("Definition is not a logic item");
     }
 
     // insert into underlyings
-    auto element_id = state.layout
-                          .add_element({
-                              .display_state = display_state_t::temporary,
-                              .element_type = definition.element_type,
-
-                              .input_count = definition.input_count,
-                              .output_count = definition.output_count,
-                              .position = point_t {0, 0},
-                              .orientation = definition.orientation,
-
-                              .input_inverters = definition.input_inverters,
-                              .output_inverters = definition.output_inverters,
-
-                              .attrs_clock_generator = definition.attrs_clock_generator,
-                          })
-                          .element_id();
+    auto element_id =
+        state.layout.add_element(definition, point_t {0, 0}, display_state_t::temporary)
+            .element_id();
     state.sender.submit(info_message::LogicItemCreated {element_id});
 
     // validates our position
     move_or_delete_logic_item_private(state.layout, state.sender, element_id,  //
-                                      position.x.value,                        //
-                                      position.y.value);
+                                      int {position.x},                        //
+                                      int {position.y});
     if (element_id) {
         change_logic_item_insertion_mode_private(state, element_id, insertion_mode);
     }
     return element_id;
 }
 
-auto add_logic_item(State state, LogicItemDefinition definition, point_t position,
+auto add_logic_item(State state, const ElementDefinition& definition, point_t position,
                     InsertionMode insertion_mode) -> element_id_t {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
@@ -682,24 +667,6 @@ auto add_logic_item(State state, LogicItemDefinition definition, point_t positio
             state.layout, definition, position, insertion_mode);
     }
     return add_logic_item_private(state, definition, position, insertion_mode);
-}
-
-auto get_logic_item_definition(const Layout& layout, const element_id_t element_id)
-    -> LogicItemDefinition {
-    const auto element = layout.element(element_id);
-
-    return LogicItemDefinition {
-        .element_type = element.element_type(),
-        .input_count = element.input_count(),
-        .output_count = element.output_count(),
-        .orientation = element.orientation(),
-        .input_inverters = element.input_inverters(),
-        .output_inverters = element.output_inverters(),
-
-        .attrs_clock_generator = element.element_type() == ElementType::clock_generator
-                                     ? std::make_optional(element.attrs_clock_generator())
-                                     : std::nullopt,
-    };
 }
 
 //
@@ -715,15 +682,14 @@ auto is_wire_aggregate(const Layout& layout, const element_id_t element_id,
 }
 
 auto add_new_wire_element(Layout& layout, display_state_t display_state) -> element_id_t {
-    return layout
-        .add_element(Layout::ElementData {
-            .display_state = display_state,
-            .element_type = ElementType::wire,
+    const auto definition = ElementDefinition {
+        .element_type = ElementType::wire,
 
-            .input_count = connection_count_t {0},
-            .output_count = connection_count_t {0},
-        })
-        .element_id();
+        .input_count = connection_count_t {0},
+        .output_count = connection_count_t {0},
+    };
+
+    return layout.add_element(definition, point_t {}, display_state).element_id();
 }
 
 auto find_wire(const Layout& layout, display_state_t display_state) -> element_id_t {

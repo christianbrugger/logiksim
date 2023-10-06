@@ -1,6 +1,7 @@
 
 #include "./test_helpers.h"
 #include "editable_circuit/handler.h"
+#include "vocabulary/element_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -536,7 +537,7 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
 
     auto setup = HandlerSetup {layout};
 
-    const auto definition = LogicItemDefinition {
+    const auto definition = ElementDefinition {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {7},
         .output_count = connection_count_t {1},
@@ -571,7 +572,7 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
 
 auto add_xor_element(editable_circuit::State &state, point_t position,
                      InsertionMode insertion_mode) -> element_id_t {
-    const auto definition = LogicItemDefinition {
+    const auto definition = ElementDefinition {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},

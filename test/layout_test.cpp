@@ -1,6 +1,8 @@
 
 #include "layout.h"
 
+#include "vocabulary/element_definition.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -23,7 +25,7 @@ TEST(Layout, EmptyLayout) {
 TEST(Layout, LayoutSingleElement) {
     Layout layout;
 
-    layout.add_element(Layout::ElementData {});
+    layout.add_element(ElementDefinition {}, point_t {}, display_state_t::temporary);
 
     EXPECT_EQ(layout.element_count(), 1);
     EXPECT_EQ(std::ranges::distance(layout.element_ids()), 1);
@@ -35,17 +37,17 @@ TEST(Layout, LayoutSingleElement) {
 TEST(Layout, ElementProperties) {
     Layout layout;
 
-    layout.add_element(Layout::ElementData {
-        .display_state = display_state_t::normal,
-        .element_type = ElementType::and_element,
+    layout.add_element(
+        ElementDefinition {
+            .element_type = ElementType::and_element,
 
-        .input_count = connection_count_t {3},
-        .output_count = connection_count_t {1},
-        .position = point_t {2, 3},
-        .orientation = orientation_t::right,
+            .input_count = connection_count_t {3},
+            .output_count = connection_count_t {1},
+            .orientation = orientation_t::right,
 
-        .circuit_id = circuit_id_t {10},
-    });
+            .circuit_id = circuit_id_t {10},
+        },
+        point_t {2, 3}, display_state_t::normal);
 
     const Layout& layout_const {layout};
     const layout::ConstElement element {layout_const.element(element_id_t {0})};
@@ -67,18 +69,10 @@ TEST(Layout, EqualityOperators) {
     Layout layout;
     const Layout& layout_const {layout};
 
-    auto element_0 = layout.add_element(Layout::ElementData {
-        .element_type = ElementType::and_element,
-        .input_count = connection_count_t {2},
-        .output_count = connection_count_t {1},
-        .orientation = orientation_t::right,
-    });
-    auto element_1 = layout.add_element(Layout::ElementData {
-        .element_type = ElementType::and_element,
-        .input_count = connection_count_t {2},
-        .output_count = connection_count_t {1},
-        .orientation = orientation_t::right,
-    });
+    auto element_0 =
+        layout.add_element(ElementDefinition {}, point_t {}, display_state_t::temporary);
+    auto element_1 =
+        layout.add_element(ElementDefinition {}, point_t {}, display_state_t::temporary);
 
     EXPECT_NE(element_0, element_1);
     EXPECT_EQ(element_0, layout.element(element_id_t {0}));
@@ -92,12 +86,14 @@ TEST(Layout, EqualityOperators) {
 TEST(Layout, ElementConversions) {
     Layout layout;
 
-    auto element = layout.add_element(Layout::ElementData {
-        .element_type = ElementType::and_element,
-        .input_count = connection_count_t {2},
-        .output_count = connection_count_t {1},
-        .orientation = orientation_t::right,
-    });
+    auto element = layout.add_element(
+        ElementDefinition {
+            .element_type = ElementType::and_element,
+            .input_count = connection_count_t {2},
+            .output_count = connection_count_t {1},
+            .orientation = orientation_t::right,
+        },
+        point_t {}, display_state_t::temporary);
 
     const auto element_const = layout::ConstElement {element};
     const auto element_id = element_id_t {element};
@@ -127,18 +123,22 @@ TEST(Layout, ElementViewEmpty) {
 TEST(Layout, ElementViewSome) {
     Layout layout;
 
-    auto and_element = layout.add_element(Layout::ElementData {
-        .element_type = ElementType::and_element,
-        .input_count = connection_count_t {2},
-        .output_count = connection_count_t {1},
-        .orientation = orientation_t::right,
-    });
-    auto inverter = layout.add_element(Layout::ElementData {
-        .element_type = ElementType::buffer_element,
-        .input_count = connection_count_t {1},
-        .output_count = connection_count_t {1},
-        .orientation = orientation_t::right,
-    });
+    auto and_element = layout.add_element(
+        ElementDefinition {
+            .element_type = ElementType::and_element,
+            .input_count = connection_count_t {2},
+            .output_count = connection_count_t {1},
+            .orientation = orientation_t::right,
+        },
+        point_t {}, display_state_t::temporary);
+    auto inverter = layout.add_element(
+        ElementDefinition {
+            .element_type = ElementType::buffer_element,
+            .input_count = connection_count_t {1},
+            .output_count = connection_count_t {1},
+            .orientation = orientation_t::right,
+        },
+        point_t {}, display_state_t::temporary);
 
     auto view = layout.elements();
 

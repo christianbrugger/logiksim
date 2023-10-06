@@ -19,18 +19,17 @@ auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, grid_t max_l
 }
 
 auto add_random_button(Rng& rng, State state, grid_t min, grid_t max, bool random_modes) {
+    const auto definition = ElementDefinition {
+        .element_type = ElementType::button,
+        .input_count = connection_count_t {0},
+        .output_count = connection_count_t {1},
+        .orientation = orientation_t::undirected,
+    };
     const auto position = get_random_point(rng, min, max);
     const auto mode =
         random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 
-    add_logic_item(state,
-                   LogicItemDefinition {
-                       .element_type = ElementType::button,
-                       .input_count = connection_count_t {0},
-                       .output_count = connection_count_t {1},
-                       .orientation = orientation_t::undirected,
-                   },
-                   position, mode);
+    add_logic_item(state, definition, position, mode);
 }
 
 auto add_many_wires(Rng& rng, State state, bool random_modes, int max_tries) -> void {

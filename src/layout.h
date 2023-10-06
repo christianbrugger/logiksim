@@ -6,6 +6,8 @@
 #include "line_tree.h"
 #include "segment_tree.h"
 #include "vocabulary.h"
+#include "vocabulary/element_definition.h"
+#include "vocabulary/placed_element.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
@@ -34,26 +36,6 @@ namespace layout {
 template <typename T>
 using data_map_t = ankerl::unordered_dense::map<element_id_t, T>;
 
-struct attributes_clock_generator {
-    std::string name {"clock"};
-
-    delay_t time_symmetric {500us};
-    delay_t time_on {500us};
-    delay_t time_off {500us};
-
-    bool is_symmetric {true};
-    bool show_simulation_controls {true};
-
-   public:
-    [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto format_period() const -> std::string;
-    [[nodiscard]] auto allocated_size() const -> std::size_t;
-
-    [[nodiscard]] auto is_valid() const -> bool;
-    [[nodiscard]] auto operator==(const attributes_clock_generator &) const
-        -> bool = default;
-    [[nodiscard]] auto operator<=>(const attributes_clock_generator &) const = default;
-};
 }  // namespace layout
 
 [[nodiscard]] auto is_inserted(const Layout &layout, element_id_t element_id) -> bool;
@@ -70,6 +52,16 @@ struct attributes_clock_generator {
 
 [[nodiscard]] auto moved_layout(Layout layout, int delta_x, int delta_y)
     -> std::optional<Layout>;
+
+[[nodiscard]] auto to_layout_calculation_data(const Layout &layout,
+                                              element_id_t element_id)
+    -> layout_calculation_data_t;
+
+[[nodiscard]] auto to_element_definition(const Layout &layout, element_id_t element_id)
+    -> ElementDefinition;
+
+[[nodiscard]] auto to_placed_element(const Layout &layout, element_id_t element_id)
+    -> PlacedElement;
 
 class Layout {
     template <bool Const>
@@ -92,23 +84,8 @@ class Layout {
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
 
-    struct ElementData {
-        display_state_t display_state {display_state_t::temporary};
-        ElementType element_type {ElementType::unused};
-
-        connection_count_t input_count {0};
-        connection_count_t output_count {0};
-        point_t position {point_t {0, 0}};
-        orientation_t orientation {orientation_t::undirected};
-
-        circuit_id_t circuit_id {null_circuit};
-        logic_small_vector_t input_inverters {};
-        logic_small_vector_t output_inverters {};
-
-        std::optional<layout::attributes_clock_generator> attrs_clock_generator {};
-    };
-
-    auto add_element(ElementData &&data) -> layout::Element;
+    auto add_element(const ElementDefinition &definition, point_t position,
+                     display_state_t display_state) -> layout::Element;
 
     // swaps the element with last one and deletes it, returns deleted id
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
@@ -117,7 +94,7 @@ class Layout {
     auto set_position(element_id_t element_id, point_t point) -> void;
     auto set_display_state(element_id_t element_id, display_state_t display_state)
         -> void;
-    auto set_attributes(element_id_t element_id, layout::attributes_clock_generator attrs)
+    auto set_attributes(element_id_t element_id, attributes_clock_generator_t attrs)
         -> void;
 
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
@@ -145,7 +122,7 @@ class Layout {
     [[nodiscard]] auto bounding_rect(element_id_t element_id) const -> rect_t;
 
     [[nodiscard]] auto attrs_clock_generator(element_id_t element_id) const
-        -> const layout::attributes_clock_generator &;
+        -> const attributes_clock_generator_t &;
 
     [[nodiscard]] auto modifyable_segment_tree(element_id_t element_id) -> SegmentTree &;
 
@@ -177,7 +154,7 @@ class Layout {
     mutable std::vector<rect_t> bounding_rects_ {};
 
     // element type specific data
-    layout::data_map_t<layout::attributes_clock_generator> map_clock_generator_ {};
+    layout::data_map_t<attributes_clock_generator_t> map_clock_generator_ {};
 
     circuit_id_t circuit_id_ {0};
 };
@@ -217,6 +194,8 @@ class ElementTemplate {
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto to_layout_calculation_data() const -> layout_calculation_data_t;
+    [[nodiscard]] auto to_element_definition() const -> ElementDefinition;
+    [[nodiscard]] auto to_placed_element() const -> PlacedElement;
 
     [[nodiscard]] auto layout() const noexcept -> LayoutType &;
     [[nodiscard]] auto element_id() const noexcept -> element_id_t;
@@ -247,7 +226,7 @@ class ElementTemplate {
     [[nodiscard]] auto bounding_rect() const -> rect_t;
 
     [[nodiscard]] auto attrs_clock_generator() const
-        -> const layout::attributes_clock_generator &;
+        -> const attributes_clock_generator_t &;
 
     // modification
     [[nodiscard]] auto modifyable_segment_tree() const -> SegmentTree &
@@ -275,10 +254,6 @@ inline auto Layout::elements() const {
         return this->element(element_id);
     });
 }
-
-[[nodiscard]] auto to_layout_calculation_data(const Layout &layout,
-                                              element_id_t element_id)
-    -> layout_calculation_data_t;
 
 }  // namespace logicsim
 

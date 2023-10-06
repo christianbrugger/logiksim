@@ -302,7 +302,7 @@ auto is_input_output_count_valid(ElementType element_type, connection_count_t in
         }
         case wire: {
             return input_count <= connection_count_t {1} &&
-                   output_count >= connection_count_t {1};
+                   output_count >= connection_count_t {0};
         }
 
         case buffer_element: {
@@ -372,7 +372,8 @@ auto is_input_output_count_valid(ElementType element_type, connection_count_t in
 
 [[nodiscard]] auto is_orientation_valid(ElementType element_type,
                                         orientation_t orientation) -> bool {
-    if (element_type == ElementType::unused || element_type == ElementType::placeholder) {
+    if (element_type == ElementType::unused || element_type == ElementType::placeholder ||
+        element_type == ElementType::wire) {
         return true;
     }
 

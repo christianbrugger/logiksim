@@ -32,14 +32,11 @@ class EditableCircuit {
     // adding
     auto add_example() -> void;
 
-    auto add_logic_item(LogicItemDefinition definition, point_t position,
+    auto add_logic_item(ElementDefinition definition, point_t position,
                         InsertionMode insertion_mode) -> selection_handle_t;
-    auto add_logic_item(LogicItemDefinition definition, point_t position,
+    auto add_logic_item(ElementDefinition definition, point_t position,
                         InsertionMode insertion_mode, const selection_handle_t& handle)
         -> void;
-
-    [[nodiscard]] auto get_logic_item_definition(element_id_t element_id) const
-        -> LogicItemDefinition;
 
     auto add_line_segment(line_t line, InsertionMode insertion_mode)
         -> selection_handle_t;
@@ -70,7 +67,7 @@ class EditableCircuit {
 
     auto toggle_wire_crosspoint(point_t point) -> void;
 
-    auto set_attributes(element_id_t element_id, layout::attributes_clock_generator attrs)
+    auto set_attributes(element_id_t element_id, attributes_clock_generator_t attrs)
         -> void;
 
     // Wire Mode Change Helpers

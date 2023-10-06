@@ -23,6 +23,9 @@
 #include "scene.h"
 #include "serialize_detail.h"
 #include "simulation_type.h"
+#include "validate_definition.h"
+#include "vocabulary/element_definition.h"
+#include "vocabulary/placed_element.h"
 
 #include <optional>
 
@@ -31,11 +34,6 @@ namespace logicsim::serialize {
 struct move_delta_t {
     int x;
     int y;
-};
-
-struct LogicItemData {
-    LogicItemDefinition definition;
-    point_t position;
 };
 
 auto to_line(const SerializedLine& obj, move_delta_t delta = {})
@@ -53,7 +51,7 @@ auto to_line(const SerializedLine& obj, move_delta_t delta = {})
 
 auto parse_attr_clock_generator(
     const std::optional<SerializedAttributesClockGenerator>& obj)
-    -> std::optional<layout::attributes_clock_generator> {
+    -> std::optional<attributes_clock_generator_t> {
     if (obj.has_value()) {
         using rep = delay_t::value_type::rep;
         static_assert(std::is_same_v<rep, decltype(obj->time_symmetric_ns)>);
@@ -65,7 +63,7 @@ auto parse_attr_clock_generator(
             limited_name.resize(name_max_size);
         }
 
-        return layout::attributes_clock_generator {
+        return attributes_clock_generator_t {
             .name = limited_name,
 
             .time_symmetric = delay_t {obj->time_symmetric_ns * 1ns},
@@ -91,13 +89,14 @@ auto to_connection_count(connection_count_t::value_type_rep value)
 }
 }  // namespace
 
-auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
-    -> std::optional<LogicItemData> {
+auto to_placed_element(const SerializedLogicItem& obj, move_delta_t delta = {})
+    -> std::optional<PlacedElement> {
     // element type
     if (!is_logic_item(obj.element_type)) {
         return std::nullopt;
     }
 
+    // definition
     const auto input_count = to_connection_count(obj.input_count);
     const auto output_count = to_connection_count(obj.output_count);
 
@@ -105,8 +104,7 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
         return std::nullopt;
     }
 
-    // definition
-    const auto definition = LogicItemDefinition {
+    const auto definition = ElementDefinition {
         .element_type = obj.element_type,
         .input_count = input_count.value(),
         .output_count = output_count.value(),
@@ -117,7 +115,7 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
         .attrs_clock_generator =
             parse_attr_clock_generator(obj.attributes_clock_generator),
     };
-    if (!definition.is_valid()) {
+    if (!is_valid(definition)) {
         return std::nullopt;
     }
 
@@ -128,6 +126,7 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
     const auto moved_position = add_unchecked(obj.position, delta.x, delta.y);
 
     const auto data = layout_calculation_data_t {
+        .internal_state_count = std::size_t {0},  // TODO ???
         .position = moved_position,
         .input_count = input_count.value(),
         .output_count = output_count.value(),
@@ -138,7 +137,7 @@ auto to_definition(const SerializedLogicItem& obj, move_delta_t delta = {})
         return std::nullopt;
     }
 
-    return LogicItemData {
+    return PlacedElement {
         .definition = definition,
         .position = moved_position,
     };
@@ -329,8 +328,8 @@ auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
 
     // logic items
     for (const auto& item : data_->logic_items) {
-        if (const auto definition = to_definition(item, delta)) {
-            editable_circuit.add_logic_item(definition->definition, definition->position,
+        if (const auto data = to_placed_element(item, delta)) {
+            editable_circuit.add_logic_item(data->definition, data->position,
                                             insertion_mode, handle);
         }
     }

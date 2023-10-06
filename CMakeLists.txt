@@ -173,6 +173,7 @@ set(LS_CORE_SOURCES
     src/svg_cache.cpp
     src/text_shaping.cpp
     src/timer.cpp
+    src/validate_definition.cpp
     src/vocabulary.cpp
     src/wyhash.cpp
     

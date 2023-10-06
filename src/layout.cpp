@@ -1,18 +1,18 @@
-
 #include "layout.h"
 
 #include "algorithm/fmt_join.h"
 #include "algorithm/range.h"
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/folly_small_vector.h"
-#include "allocated_size/std_string.h"
 #include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
 #include "exception.h"
 #include "format/time.h"
 #include "geometry/point.h"
+#include "layout.h"
 #include "layout_calculation.h"
 #include "scene.h"
+#include "validate_definition.h"
 #include "vocabulary/layout_calculation_data.h"
 
 #include <range/v3/algorithm/sort.hpp>
@@ -21,33 +21,6 @@
 #include <tuple>
 
 namespace logicsim {
-
-namespace layout {
-auto attributes_clock_generator::format() const -> std::string {
-    return fmt::format("<Clock: '{}', Symmetric: {}, Period: {}, Controls: {}>", name,
-                       is_symmetric, format_period(), show_simulation_controls);
-}
-
-auto attributes_clock_generator::format_period() const -> std::string {
-    if (is_symmetric) {
-        const auto period =
-            2 * std::chrono::duration<int64_t, delay_t::value_type::period> {
-                    time_symmetric.value};
-        return fmt::format("{}", format_time(period));
-    }
-    return fmt::format("{}/{}", time_on, time_off);
-}
-
-auto attributes_clock_generator::allocated_size() const -> std::size_t {
-    return get_allocated_size(name);
-}
-
-auto attributes_clock_generator::is_valid() const -> bool {
-    return time_symmetric > delay_t {0ns} && time_on > delay_t {0ns} &&
-           time_off > delay_t {0ns};
-}
-
-}  // namespace layout
 
 //
 // Layout
@@ -350,7 +323,11 @@ auto Layout::is_element_id_valid(element_id_t element_id) const noexcept -> bool
     return element_id.value >= 0 && element_id.value < size;
 }
 
-auto Layout::add_element(ElementData &&data) -> layout::Element {
+auto Layout::add_element(const ElementDefinition &definition, point_t position,
+                         display_state_t display_state) -> layout::Element {
+    if (!is_valid(definition)) [[unlikely]] {
+        throw_exception("Invalid element definition.");
+    }
     if (element_count() >= std::size_t {element_id_t::max()} - std::size_t {1})
         [[unlikely]] {
         throw_exception("Reached maximum number of elements.");
@@ -360,45 +337,45 @@ auto Layout::add_element(ElementData &&data) -> layout::Element {
         element_id_t {gsl::narrow_cast<element_id_t::value_type>(element_types_.size())};
 
     // extend vectors
-    element_types_.push_back(data.element_type);
-    sub_circuit_ids_.push_back(data.circuit_id);
-    input_counts_.push_back(data.input_count);
-    output_counts_.push_back(data.output_count);
+    element_types_.push_back(definition.element_type);
+    sub_circuit_ids_.push_back(definition.circuit_id);
+    input_counts_.push_back(definition.input_count);
+    output_counts_.push_back(definition.output_count);
 
-    if (data.input_inverters.empty()) {
-        input_inverters_.emplace_back(data.input_count.count(), false);
+    if (definition.input_inverters.empty()) {
+        input_inverters_.emplace_back(definition.input_count.count(), false);
     } else {
-        if (connection_count_t {data.input_inverters.size()} != data.input_count)
-            [[unlikely]] {
+        if (connection_count_t {definition.input_inverters.size()} !=
+            definition.input_count) [[unlikely]] {
             throw_exception("number of input inverters need to match input count");
         }
-        input_inverters_.emplace_back(data.input_inverters);
+        input_inverters_.emplace_back(definition.input_inverters);
     }
-    if (data.output_inverters.empty()) {
-        output_inverters_.emplace_back(data.output_count.count(), false);
+    if (definition.output_inverters.empty()) {
+        output_inverters_.emplace_back(definition.output_count.count(), false);
     } else {
-        if (connection_count_t {data.output_inverters.size()} != data.output_count)
-            [[unlikely]] {
+        if (connection_count_t {definition.output_inverters.size()} !=
+            definition.output_count) [[unlikely]] {
             throw_exception("number of output inverters need to match output count");
         }
-        output_inverters_.emplace_back(data.output_inverters);
+        output_inverters_.emplace_back(definition.output_inverters);
     }
 
     segment_trees_.emplace_back();
     line_trees_.emplace_back();
-    positions_.push_back(data.position);
-    orientations_.push_back(data.orientation);
-    display_states_.push_back(data.display_state);
+    positions_.push_back(position);
+    orientations_.push_back(definition.orientation);
+    display_states_.push_back(display_state);
     bounding_rects_.push_back(empty_bounding_rect);
 
     // maps
-    const auto add_map_entry = [element_id](auto &map, auto &&optional) {
-        if (optional && !map.emplace(element_id, std::move(*optional)).second) {
+    const auto add_map_entry = [element_id](auto &map, const auto &optional) {
+        if (optional && !map.emplace(element_id, *optional).second) {
             throw_exception("element_id already exists in map");
         }
     };
 
-    add_map_entry(map_clock_generator_, std::move(data.attrs_clock_generator));
+    add_map_entry(map_clock_generator_, definition.attrs_clock_generator);
 
     return element(element_id);
 }
@@ -426,13 +403,13 @@ auto Layout::set_display_state(element_id_t element_id, display_state_t display_
     display_states_.at(element_id.value) = display_state;
 }
 
-auto Layout::set_attributes(element_id_t element_id,
-                            layout::attributes_clock_generator attrs) -> void {
+auto Layout::set_attributes(element_id_t element_id, attributes_clock_generator_t attrs)
+    -> void {
     const auto it = map_clock_generator_.find(element_id);
     if (it == map_clock_generator_.end()) [[unlikely]] {
         throw_exception("could not find attribute");
     }
-    if (!attrs.is_valid()) [[unlikely]] {
+    if (!is_valid(attrs)) [[unlikely]] {
         throw_exception("attributes not valid");
     }
     it->second = std::move(attrs);
@@ -529,7 +506,7 @@ auto Layout::bounding_rect(element_id_t element_id) const -> rect_t {
 }
 
 auto Layout::attrs_clock_generator(element_id_t element_id) const
-    -> const layout::attributes_clock_generator & {
+    -> const attributes_clock_generator_t & {
     const auto it = map_clock_generator_.find(element_id);
     if (it == map_clock_generator_.end()) {
         throw_exception("could not find attribute");
@@ -625,6 +602,16 @@ template <bool Const>
 auto ElementTemplate<Const>::to_layout_calculation_data() const
     -> layout_calculation_data_t {
     return logicsim::to_layout_calculation_data(layout(), element_id());
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::to_element_definition() const -> ElementDefinition {
+    return logicsim::to_element_definition(layout(), element_id());
+}
+
+template <bool Const>
+auto ElementTemplate<Const>::to_placed_element() const -> PlacedElement {
+    return logicsim::to_placed_element(layout(), element_id());
 }
 
 template <bool Const>
@@ -739,7 +726,7 @@ auto ElementTemplate<Const>::bounding_rect() const -> rect_t {
 
 template <bool Const>
 auto ElementTemplate<Const>::attrs_clock_generator() const
-    -> const layout::attributes_clock_generator & {
+    -> const attributes_clock_generator_t & {
     return layout_->attrs_clock_generator(element_id_);
 }
 
@@ -795,6 +782,33 @@ auto to_layout_calculation_data(const Layout &layout, element_id_t element_id)
         .output_count = element.output_count(),
         .orientation = element.orientation(),
         .element_type = element.element_type(),
+    };
+}
+
+auto to_element_definition(const Layout &layout, element_id_t element_id)
+    -> ElementDefinition {
+    const auto element = layout.element(element_id);
+
+    return ElementDefinition {
+        .element_type = element.element_type(),
+        .input_count = element.input_count(),
+        .output_count = element.output_count(),
+        .orientation = element.orientation(),
+
+        .circuit_id = element.sub_circuit_id(),
+        .input_inverters = element.input_inverters(),
+        .output_inverters = element.output_inverters(),
+
+        .attrs_clock_generator = element.element_type() == ElementType::clock_generator
+                                     ? std::make_optional(element.attrs_clock_generator())
+                                     : std::nullopt,
+    };
+}
+
+auto to_placed_element(const Layout &layout, element_id_t element_id) -> PlacedElement {
+    return PlacedElement {
+        .definition = to_element_definition(layout, element_id),
+        .position = layout.position(element_id),
     };
 }
 

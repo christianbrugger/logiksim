@@ -29,12 +29,12 @@ class Layout;
 class Selection;
 class EditableCircuit;
 class ViewConfig;
+struct attributes_clock_generator_t;
 
 namespace layout {
 template <bool Const>
 class ElementTemplate;
 using ConstElement = ElementTemplate<true>;
-struct attributes_clock_generator;
 }  // namespace layout
 
 namespace defaults {
@@ -78,8 +78,7 @@ class SettingWidgetRegistry : public QObject {
 
     auto show_setting_dialog(setting_handle_t setting_handle) -> void;
     auto close_all() -> void;
-    auto set_attributes(QWidget* widget, layout::attributes_clock_generator attrs)
-        -> void;
+    auto set_attributes(QWidget* widget, attributes_clock_generator_t attrs) -> void;
 
    private:
     [[nodiscard]] auto get_element_id(QWidget* dialog) const -> element_id_t;
@@ -98,8 +97,7 @@ class AttributeSetter {
    public:
     explicit AttributeSetter(SettingWidgetRegistry* receiver);
 
-    auto set_attributes(QWidget* sender, layout::attributes_clock_generator attrs)
-        -> void;
+    auto set_attributes(QWidget* sender, attributes_clock_generator_t attrs) -> void;
 
    private:
     QPointer<SettingWidgetRegistry> receiver_ {};
@@ -131,7 +129,7 @@ class DelayInput : public QObject {
 class ClockGeneratorDialog : public QWidget {
    public:
     explicit ClockGeneratorDialog(QWidget* parent, AttributeSetter setter,
-                                  layout::attributes_clock_generator attrs);
+                                  attributes_clock_generator_t attrs);
 
    private:
     auto value_changed() -> void;

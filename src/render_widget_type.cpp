@@ -1,8 +1,8 @@
 
 #include "render_widget_type.h"
 
-#include "editable_circuit/type.h"
 #include "layout_calculation.h"
+#include "vocabulary/element_definition.h"
 
 namespace logicsim {
 
@@ -66,7 +66,7 @@ auto is_inserting_state(InteractionState state) -> bool {
     return state != not_interactive && state != selection && state != simulation;
 }
 
-auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition {
+auto to_logic_item_definition(InteractionState state) -> ElementDefinition {
     switch (state) {
         using enum InteractionState;
 
@@ -76,35 +76,35 @@ auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition {
             throw_exception("non-inserting states don't have a definition");
 
         case insert_wire:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::wire,
                 .input_count = connection_count_t {0},
                 .output_count = connection_count_t {0},
                 .orientation = orientation_t::undirected,
             };
         case insert_button:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::button,
                 .input_count = connection_count_t {0},
                 .output_count = connection_count_t {1},
                 .orientation = orientation_t::undirected,
             };
         case insert_led:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::led,
                 .input_count = connection_count_t {1},
                 .output_count = connection_count_t {0},
                 .orientation = orientation_t::undirected,
             };
         case insert_display_number:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::display_number,
                 .input_count = connection_count_t {3} + display_number::control_inputs,
                 .output_count = connection_count_t {0},
                 .orientation = orientation_t::right,
             };
         case insert_display_ascii:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::display_ascii,
                 .input_count = display_ascii::input_count,
                 .output_count = connection_count_t {0},
@@ -112,28 +112,28 @@ auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition {
             };
 
         case insert_and_element:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::and_element,
                 .input_count = connection_count_t {2},
                 .output_count = connection_count_t {1},
                 .orientation = orientation_t::right,
             };
         case insert_or_element:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::or_element,
                 .input_count = connection_count_t {2},
                 .output_count = connection_count_t {1},
                 .orientation = orientation_t::right,
             };
         case insert_xor_element:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::xor_element,
                 .input_count = connection_count_t {2},
                 .output_count = connection_count_t {1},
                 .orientation = orientation_t::right,
             };
         case insert_nand_element:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::and_element,
                 .input_count = connection_count_t {2},
                 .output_count = connection_count_t {1},
@@ -141,7 +141,7 @@ auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition {
                 .output_inverters = logic_small_vector_t {true},
             };
         case insert_nor_element:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::or_element,
                 .input_count = connection_count_t {2},
                 .output_count = connection_count_t {1},
@@ -150,14 +150,14 @@ auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition {
             };
 
         case insert_buffer_element:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::buffer_element,
                 .input_count = connection_count_t {1},
                 .output_count = connection_count_t {1},
                 .orientation = orientation_t::right,
             };
         case insert_inverter_element:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::buffer_element,
                 .input_count = connection_count_t {1},
                 .output_count = connection_count_t {1},
@@ -166,28 +166,28 @@ auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition {
             };
 
         case insert_flipflop_jk:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::flipflop_jk,
                 .input_count = connection_count_t {5},
                 .output_count = connection_count_t {2},
                 .orientation = orientation_t::right,
             };
         case insert_latch_d:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::latch_d,
                 .input_count = connection_count_t {2},
                 .output_count = connection_count_t {1},
                 .orientation = orientation_t::right,
             };
         case insert_flipflop_d:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::flipflop_d,
                 .input_count = connection_count_t {4},
                 .output_count = connection_count_t {1},
                 .orientation = orientation_t::right,
             };
         case insert_flipflop_ms_d:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::flipflop_ms_d,
                 .input_count = connection_count_t {4},
                 .output_count = connection_count_t {1},
@@ -195,16 +195,16 @@ auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition {
             };
 
         case insert_clock_generator:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::clock_generator,
                 .input_count = connection_count_t {3},
                 .output_count = connection_count_t {3},
                 .orientation = orientation_t::right,
 
-                .attrs_clock_generator = layout::attributes_clock_generator {},
+                .attrs_clock_generator = attributes_clock_generator_t {},
             };
         case insert_shift_register:
-            return LogicItemDefinition {
+            return ElementDefinition {
                 .element_type = ElementType::shift_register,
                 .input_count = connection_count_t {3},
                 .output_count = connection_count_t {2},

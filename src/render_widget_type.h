@@ -9,7 +9,7 @@
 
 namespace logicsim {
 
-struct LogicItemDefinition;
+struct ElementDefinition;
 
 enum class InteractionState {
     not_interactive,
@@ -44,8 +44,7 @@ auto format(InteractionState type) -> std::string;
 
 [[nodiscard]] auto is_inserting_state(InteractionState state) -> bool;
 
-[[nodiscard]] auto to_logic_item_definition(InteractionState state)
-    -> LogicItemDefinition;
+[[nodiscard]] auto to_logic_item_definition(InteractionState state) -> ElementDefinition;
 
 class RendererWidgetBase : public QWidget {
     Q_OBJECT
