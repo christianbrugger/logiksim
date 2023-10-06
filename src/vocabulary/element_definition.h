@@ -22,6 +22,7 @@ namespace logicsim {
 struct attributes_clock_generator_t {
     std::string name {"clock"};
 
+    // all times are for half the clock period
     delay_t time_symmetric {500us};
     delay_t time_on {500us};
     delay_t time_off {500us};

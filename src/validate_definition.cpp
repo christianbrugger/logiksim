@@ -1,15 +1,32 @@
 #include "validate_definition.h"
 
 #include "layout_calculation.h"
+#include "validate_definition.h"
+#include "vocabulary/delay.h"
 #include "vocabulary/element_definition.h"
 #include "vocabulary/element_type.h"
 
 namespace logicsim {
 
+auto clock_generator_min_time() -> delay_t {
+    return delay_t::epsilon();
+}
+
+auto clock_generator_max_time() -> delay_t {
+    return delay_t {std::chrono::seconds {500}};
+}
+
+namespace {
+[[nodiscard]] auto valid_clock_generator_time(delay_t time) -> bool {
+    assert(clock_generator_max_time() > clock_generator_min_time());
+    return clock_generator_min_time() <= time && time <= clock_generator_max_time();
+}
+}  // namespace
+
 auto is_valid(const attributes_clock_generator_t& a) -> bool {
-    return a.time_symmetric > delay_t {0ns} &&  //
-           a.time_on > delay_t {0ns} &&         //
-           a.time_off > delay_t {0ns};
+    return valid_clock_generator_time(a.time_symmetric) &&
+           valid_clock_generator_time(a.time_on) &&
+           valid_clock_generator_time(a.time_off);
 }
 
 auto is_valid(const ElementDefinition& d) -> bool {

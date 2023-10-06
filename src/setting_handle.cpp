@@ -7,9 +7,9 @@
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_calculation.h"
-#include "logging.h"  // TODO remove
 #include "resource.h"
 #include "scene.h"
+#include "validate_definition.h"
 #include "vocabulary/element_definition.h"
 
 #include <QBoxLayout>
@@ -327,13 +327,11 @@ auto DelayInput::delay_unit_changed() -> void {
     }
 
     // stored value range
-    constexpr auto min_time = delay_t {1ns};
-    constexpr auto max_time = delay_t {500 * std::chrono::seconds {1}};
-    assert(max_time > min_time);
+    const auto min_time = clock_generator_min_time();
+    const auto max_time = clock_generator_max_time();
 
     double min_ns = gsl::narrow<double>(min_time.count_ns()) * scale;
     double max_ns = gsl::narrow<double>(max_time.count_ns()) * scale;
-    print(min_time, max_time, min_ns, max_ns);
     delay_validator.setRange(min_ns / unit, max_ns / unit);
 }
 
