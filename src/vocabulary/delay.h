@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <compare>
+#include <cstdint>
 #include <stdexcept>
 
 namespace logicsim {
@@ -100,8 +101,9 @@ constexpr auto delay_t::zero() noexcept -> delay_t {
 };
 
 constexpr auto delay_t::epsilon() noexcept -> delay_t {
+    constexpr auto epsilon = ++value_type::zero();
     auto result = delay_t {};
-    result.value = ++value_type::zero();
+    result.value = epsilon;
     return result;
 };
 
