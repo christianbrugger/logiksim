@@ -46,7 +46,8 @@ auto ceil(grid_fine_t v) -> grid_fine_t {
 }
 
 auto add_unchecked(grid_t grid, int delta) -> grid_t {
-    return grid_t {gsl::narrow_cast<grid_t::value_type>(grid.value + delta)};
+    static_assert(sizeof(int) > sizeof(grid_t::value_type));
+    return grid_t {gsl::narrow_cast<grid_t::value_type>(int {grid} + delta)};
 }
 
 }  // namespace logicsim

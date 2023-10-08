@@ -39,10 +39,10 @@ struct offset_t {
     constexpr auto operator--(int) -> offset_t;
 };
 
-static_assert(std::is_aggregate<offset_t>::value);
-static_assert(std::is_trivial<offset_t>::value);
-static_assert(std::is_standard_layout<offset_t>::value);
-static_assert(std::is_nothrow_default_constructible<offset_t>::value);
+static_assert(std::is_aggregate_v<offset_t>);
+static_assert(std::is_trivial_v<offset_t>);
+static_assert(std::is_standard_layout_v<offset_t>);
+static_assert(std::is_nothrow_default_constructible_v<offset_t>);
 
 [[nodiscard]] constexpr auto operator+(const offset_t &left, const offset_t &right)
     -> offset_t;

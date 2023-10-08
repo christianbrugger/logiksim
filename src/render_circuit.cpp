@@ -66,11 +66,11 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
     };
 
     /*
-    for (int x = g0.x.value; x <= g1.x.value; x += delta) {
+    for (int x = int {g0.x}; x <= int {g1.x}; x += delta) {
         const auto x_grid = grid_t {x};
         draw_line(ctx, line_t {{x_grid, g0.y}, {x_grid, g1.y}}, {color, width}, settings);
     }
-    for (int y = g0.y.value; y <= g1.y.value; y += delta) {
+    for (int y = int {g0.y}; y <= int {g1.y}; y += delta) {
         const auto y_grid = grid_t {y};
         draw_line(ctx, line_t {{g0.x, y_grid}, {g1.x, y_grid}}, {color, width}, settings);
     }
