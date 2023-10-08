@@ -21,11 +21,13 @@ struct connection_id_t {
     value_type value;
 
     /**
-     * @brief: The conversion to std::size_t is used for indexing into vectors.
+     * @brief: The conversion to std::size_t
+     * 
+     * Note When indexing arrays use .at(id.value) instead, due to performance reasons.
      *
-     * Not that negative values wrap around.
+     * Throws exception for negative / invalid ids.
      */
-    [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
+    [[nodiscard]] explicit constexpr operator std::size_t() const;
     /**
      * @brief: The bool cast tests if this ID is valid.
      */
@@ -51,8 +53,11 @@ constexpr inline auto null_connection = connection_id_t {-1};
 // Implementation
 //
 
-constexpr connection_id_t::operator std::size_t() const noexcept {
-    // negative values wrap around
+constexpr connection_id_t::operator std::size_t() const {
+    if (value < value_type {0}) [[unlikely]] {
+        throw std::runtime_error(
+            "connection id cannot be negative when converting to std::size_t");
+    }
     return static_cast<std::size_t>(value);
 }
 

@@ -32,11 +32,13 @@ struct element_id_t {
     [[nodiscard]] explicit constexpr element_id_t(integral auto value);
 
     /**
-     * @brief: The conversion to std::size_t is used for indexing into vectors.
+     * @brief: The conversion to std::size_t
+     * 
+     * Note When indexing arrays use .at(id.value) instead, due to performance reasons.
      *
-     * Not that negative values wrap around.
+     * Throws exception for negative / invalid ids.
      */
-    [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
+    [[nodiscard]] explicit constexpr operator std::size_t() const;
     /**
      * @brief: The bool cast tests if this ID is valid.
      */
@@ -65,8 +67,11 @@ static_assert(std::is_trivially_copy_assignable_v<element_id_t>);
 constexpr element_id_t::element_id_t(integral auto value)
     : value {narrow_integral<value_type>(value)} {}
 
-constexpr element_id_t::operator std::size_t() const noexcept {
-    // negative values wrap around
+constexpr element_id_t::operator std::size_t() const {
+    if (value < value_type {0}) [[unlikely]] {
+        throw std::runtime_error(
+            "element id cannot be negative when converting to std::size_t");
+    }
     return static_cast<std::size_t>(value);
 }
 

@@ -58,8 +58,7 @@ auto Layout::swap_element_data(element_id_t element_id_1, element_id_t element_i
 
     const auto swap_ids = [element_id_1, element_id_2](auto &container) {
         using std::swap;
-        swap(container.at(std::size_t {element_id_1}),
-             container.at(std::size_t {element_id_2}));
+        swap(container.at(element_id_1.value), container.at(element_id_2.value));
     };
 
     // TODO put in algorithm
@@ -186,7 +185,7 @@ auto Layout::normalize() -> void {
 
 auto Layout::update_bounding_rect(element_id_t element_id) const -> void {
     const auto element = this->element(element_id);
-    auto &rect = bounding_rects_.at(std::size_t {element_id});
+    auto &rect = bounding_rects_.at(element_id.value);
 
     if (element.is_logic_item()) {
         const auto data = element.to_layout_calculation_data();
@@ -395,13 +394,13 @@ auto Layout::swap_elements(element_id_t element_id_0, element_id_t element_id_1)
 }
 
 auto Layout::set_position(element_id_t element_id, point_t position) -> void {
-    positions_.at(std::size_t {element_id}) = position;
-    bounding_rects_.at(std::size_t {element_id}) = empty_bounding_rect;
+    positions_.at(element_id.value) = position;
+    bounding_rects_.at(element_id.value) = empty_bounding_rect;
 }
 
 auto Layout::set_display_state(element_id_t element_id, display_state_t display_state)
     -> void {
-    display_states_.at(std::size_t {element_id}) = display_state;
+    display_states_.at(element_id.value) = display_state;
 }
 
 auto Layout::set_attributes(element_id_t element_id, attributes_clock_generator_t attrs)
@@ -441,37 +440,37 @@ auto Layout::circuit_id() const noexcept -> circuit_id_t {
 }
 
 auto Layout::element_type(element_id_t element_id) const -> ElementType {
-    return element_types_.at(std::size_t {element_id});
+    return element_types_.at(element_id.value);
 }
 
 auto Layout::sub_circuit_id(element_id_t element_id) const -> circuit_id_t {
-    return sub_circuit_ids_.at(std::size_t {element_id});
+    return sub_circuit_ids_.at(element_id.value);
 }
 
 auto Layout::input_count(element_id_t element_id) const -> connection_count_t {
-    return input_counts_.at(std::size_t {element_id});
+    return input_counts_.at(element_id.value);
 }
 
 auto Layout::output_count(element_id_t element_id) const -> connection_count_t {
-    return output_counts_.at(std::size_t {element_id});
+    return output_counts_.at(element_id.value);
 }
 
 auto Layout::input_inverters(element_id_t element_id) const
     -> const logic_small_vector_t & {
-    return input_inverters_.at(std::size_t {element_id});
+    return input_inverters_.at(element_id.value);
 }
 
 auto Layout::output_inverters(element_id_t element_id) const
     -> const logic_small_vector_t & {
-    return output_inverters_.at(std::size_t {element_id});
+    return output_inverters_.at(element_id.value);
 }
 
 auto Layout::segment_tree(element_id_t element_id) const -> const SegmentTree & {
-    return segment_trees_.at(std::size_t {element_id});
+    return segment_trees_.at(element_id.value);
 }
 
 auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
-    auto &line_tree = line_trees_.at(std::size_t {element_id});
+    auto &line_tree = line_trees_.at(element_id.value);
     auto element = this->element(element_id);
 
     if (line_tree.empty() && element.is_wire() &&
@@ -488,22 +487,22 @@ auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
 }
 
 auto Layout::position(element_id_t element_id) const -> point_t {
-    return positions_.at(std::size_t {element_id});
+    return positions_.at(element_id.value);
 }
 
 auto Layout::orientation(element_id_t element_id) const -> orientation_t {
-    return orientations_.at(std::size_t {element_id});
+    return orientations_.at(element_id.value);
 }
 
 auto Layout::display_state(element_id_t element_id) const -> display_state_t {
-    return display_states_.at(std::size_t {element_id});
+    return display_states_.at(element_id.value);
 }
 
 auto Layout::bounding_rect(element_id_t element_id) const -> rect_t {
-    if (bounding_rects_.at(std::size_t {element_id}) == empty_bounding_rect) {
+    if (bounding_rects_.at(element_id.value) == empty_bounding_rect) {
         update_bounding_rect(element_id);
     }
-    return bounding_rects_.at(std::size_t {element_id});
+    return bounding_rects_.at(element_id.value);
 }
 
 auto Layout::attrs_clock_generator(element_id_t element_id) const
@@ -517,11 +516,11 @@ auto Layout::attrs_clock_generator(element_id_t element_id) const
 
 auto Layout::modifyable_segment_tree(element_id_t element_id) -> SegmentTree & {
     // reset line tree
-    line_trees_.at(std::size_t {element_id}) = LineTree {};
+    line_trees_.at(element_id.value) = LineTree {};
     // reset bounding rect
-    bounding_rects_.at(std::size_t {element_id}) = empty_bounding_rect;
+    bounding_rects_.at(element_id.value) = empty_bounding_rect;
 
-    return segment_trees_.at(std::size_t {element_id});
+    return segment_trees_.at(element_id.value);
 }
 
 auto validate_segment_tree_display_state(const SegmentTree &tree,
@@ -682,12 +681,12 @@ auto ElementTemplate<Const>::output_inverters() const -> const logic_small_vecto
 
 template <bool Const>
 auto ElementTemplate<Const>::input_inverted(connection_id_t index) const -> bool {
-    return input_inverters().at(std::size_t {index});
+    return input_inverters().at(index.value);
 }
 
 template <bool Const>
 auto ElementTemplate<Const>::output_inverted(connection_id_t index) const -> bool {
-    return output_inverters().at(std::size_t {index});
+    return output_inverters().at(index.value);
 }
 
 template <bool Const>
@@ -743,7 +742,7 @@ auto ElementTemplate<Const>::set_input_inverter(connection_id_t index, bool valu
     -> void
     requires(!Const)
 {
-    layout_->input_inverters_.at(std::size_t {element_id_}).at(std::size_t {index}) =
+    layout_->input_inverters_.at(element_id_.value).at(index.value) =
         value;
 }
 
@@ -752,7 +751,7 @@ auto ElementTemplate<Const>::set_output_inverter(connection_id_t index, bool val
     -> void
     requires(!Const)
 {
-    layout_->output_inverters_.at(std::size_t {element_id_}).at(std::size_t {index}) =
+    layout_->output_inverters_.at(element_id_.value).at(index.value) =
         value;
 }
 

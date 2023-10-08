@@ -292,7 +292,7 @@ auto Simulation::submit_events(Schematic::ConstElement element, delay_t offset,
         throw_exception("Need to provide number of input values.");
     }
     for (auto input : element.inputs()) {
-        const auto value = values.at(std::size_t {input.input_index()});
+        const auto value = values.at(input.input_index().value);
         submit_event(input, offset, value);
     }
 }
@@ -586,7 +586,7 @@ void Simulation::create_event(const Schematic::ConstOutput output,
             {.time = queue_.time() + output.delay(),
              .element_id = output.connected_element_id(),
              .input_index = output.connected_input_index(),
-             .value = output_values.at(std::size_t {output.output_index()})});
+             .value = output_values.at(output.output_index().value)});
     }
 }
 
@@ -645,7 +645,7 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     }
 
     if (has_internal_state(element_type)) {
-        auto &internal_state = internal_states_.at(std::size_t {element.element_id()});
+        auto &internal_state = internal_states_.at(element.element_id().value);
 
         const auto old_outputs = calculate_outputs_from_state(
             internal_state, element.output_count(), element_type);
@@ -775,7 +775,7 @@ auto Simulation::initialize() -> void {
             if (std::ranges::any_of(new_inputs, std::identity {})) {
                 const auto old_inputs = logic_small_vector_t(new_inputs.size(), false);
                 auto &internal_state =
-                    internal_states_.at(std::size_t {element.element_id()});
+                    internal_states_.at(element.element_id().value);
                 update_internal_state(old_inputs, new_inputs, element_type,
                                       internal_state);
             }
@@ -815,7 +815,7 @@ auto Simulation::record_input_history(const Schematic::ConstInput input,
     if (new_value == input_value(input)) {
         return;
     }
-    auto &history = first_input_histories_.at(std::size_t {input.element_id()});
+    auto &history = first_input_histories_.at(input.element_id().value);
     if (!history.empty() && history.back() == time()) {
         throw_exception("Cannot have two transitions recorded at the same time.");
     }
@@ -840,7 +840,7 @@ auto Simulation::clean_history(history_buffer_t &history, delay_t history_length
 
 auto Simulation::input_value(element_id_t element_id, connection_id_t index) const
     -> bool {
-    return input_values_.at(std::size_t {element_id}).at(std::size_t {index});
+    return input_values_.at(element_id.value).at(index.value);
 }
 
 auto Simulation::input_value(const Schematic::ConstInput input) const -> bool {
@@ -849,7 +849,7 @@ auto Simulation::input_value(const Schematic::ConstInput input) const -> bool {
 
 auto Simulation::input_values(element_id_t element_id) const
     -> const logic_small_vector_t & {
-    return input_values_.at(std::size_t {element_id});
+    return input_values_.at(element_id.value);
 }
 
 auto Simulation::input_values(Schematic::Element element) const
@@ -876,8 +876,7 @@ auto Simulation::set_input_internal(const Schematic::ConstInput input, bool valu
     -> void {
     record_input_history(input, value);
 
-    input_values_.at(std::size_t {input.element_id()})
-        .at(std::size_t {input.input_index()}) = value;
+    input_values_.at(input.element_id().value).at(input.input_index().value) = value;
 }
 
 auto Simulation::set_output_value(Schematic::ConstOutput output, bool value) -> void {
@@ -887,8 +886,8 @@ auto Simulation::set_output_value(Schematic::ConstOutput output, bool value) -> 
 
     const auto input = output.connected_input();
 
-    auto &input_value = input_values_.at(std::size_t {input.element_id()})
-                            .at(std::size_t {input.input_index()});
+    auto &input_value =
+        input_values_.at(input.element_id().value).at(input.input_index().value);
     input_value = value ^ input.is_inverted();
 }
 
@@ -930,8 +929,8 @@ auto Simulation::set_input_value(Schematic::ConstInput input, bool value) -> voi
     if (input.has_connected_element()) [[unlikely]] {
         throw_exception("cannot input-value for connected inputs");
     }
-    auto &input_value = input_values_.at(std::size_t {input.element_id()})
-                            .at(std::size_t {input.input_index()});
+    auto &input_value =
+        input_values_.at(input.element_id().value).at(input.input_index().value);
 
     if (!is_initialized_) {
         input_value = value;
@@ -945,7 +944,7 @@ auto Simulation::set_input_value(Schematic::ConstInput input, bool value) -> voi
 
 auto Simulation::set_internal_state(Schematic::ConstElement element, std::size_t index,
                                     bool value) -> void {
-    auto &state = internal_states_.at(std::size_t {element.element_id()}).at(index);
+    auto &state = internal_states_.at(element.element_id().value).at(index);
 
     if (!is_initialized_) {
         state = value;
@@ -963,7 +962,7 @@ auto Simulation::set_internal_state(Schematic::ConstElement element, std::size_t
 
 auto Simulation::internal_state(element_id_t element_id) const
     -> const logic_small_vector_t & {
-    return internal_states_.at(std::size_t {element_id});
+    return internal_states_.at(element_id.value);
 }
 
 auto Simulation::internal_state(Schematic::Element element) const
@@ -1000,7 +999,7 @@ auto Simulation::input_history(Schematic::ConstElement element) const -> History
         static_cast<bool>(input_values.at(0) ^ element.input_inverters().at(0));
 
     return HistoryView {
-        first_input_histories_.at(std::size_t {element.element_id()}),
+        first_input_histories_.at(element.element_id().value),
         this->time(),
         last_value,
         element.history_length(),

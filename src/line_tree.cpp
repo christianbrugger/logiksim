@@ -407,11 +407,11 @@ auto LineTree::output_count() const -> connection_count_t {
 }
 
 auto LineTree::output_position(connection_id_t index) const -> point_t {
-    return points_.at(output_indices_.at(std::size_t {index}));
+    return points_.at(output_indices_.at(index.value));
 }
 
 auto LineTree::output_orientation(connection_id_t index) const -> orientation_t {
-    const auto segment_index = output_indices_.at(std::size_t {index}) - index_t {1};
+    const auto segment_index = output_indices_.at(index.value) - index_t {1};
     const auto line = segment(segment_index);
     return to_orientation(line.p0, line.p1);
 }

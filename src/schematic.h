@@ -346,7 +346,7 @@ class Schematic::ConnectionIteratorTemplate {
 
     [[nodiscard]] auto operator==(const ConnectionIteratorTemplate &right) const noexcept
         -> bool;
-    [[nodiscard]] auto operator-(const ConnectionIteratorTemplate &right) const noexcept
+    [[nodiscard]] auto operator-(const ConnectionIteratorTemplate &right) const
         -> difference_type;
 };
 
