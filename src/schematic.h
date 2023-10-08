@@ -220,8 +220,8 @@ class Schematic::ElementIteratorTemplate {
 
     [[nodiscard]] auto operator==(const ElementIteratorTemplate &right) const noexcept
         -> bool;
-    [[nodiscard]] auto operator-(const Schematic::ElementIteratorTemplate<Const> &right)
-        const noexcept -> difference_type;
+    [[nodiscard]] auto operator-(
+        const Schematic::ElementIteratorTemplate<Const> &right) const -> difference_type;
 
    private:
     schematic_type *schematic_ {};  // can be null, because default constructable

@@ -730,7 +730,7 @@ auto get_or_create_aggregate(Layout& layout, MessageSender& sender,
 
     // temporary
     if (display_state == temporary) {
-        if (layout.element_count() <= TEMPORARY_AGGREGATE_ID.value ||
+        if (layout.element_count() <= std::size_t {TEMPORARY_AGGREGATE_ID} ||
             !is_wire_aggregate(layout, TEMPORARY_AGGREGATE_ID, temporary)) {
             create_aggregate_wires(layout, sender);
         }
@@ -739,7 +739,7 @@ auto get_or_create_aggregate(Layout& layout, MessageSender& sender,
 
     // colliding
     else if (display_state == colliding) {
-        if (layout.element_count() <= COLLIDING_AGGREGATE_ID.value ||
+        if (layout.element_count() <= std::size_t {COLLIDING_AGGREGATE_ID} ||
             !is_wire_aggregate(layout, COLLIDING_AGGREGATE_ID, temporary)) {
             create_aggregate_wires(layout, sender);
         }

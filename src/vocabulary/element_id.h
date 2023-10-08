@@ -22,6 +22,7 @@ namespace logicsim {
  */
 struct element_id_t {
     using value_type = int32_t;
+    // we expose the value, as the type has no invariant
     value_type value;
 
     using difference_type = safe_difference_t<value_type>;
@@ -33,7 +34,7 @@ struct element_id_t {
     /**
      * @brief: The conversion to std::size_t is used for indexing into vectors.
      *
-     * An exception is thrown, if the id is not valid.
+     * Not that negative values wrap around.
      */
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
     /**
@@ -65,8 +66,8 @@ constexpr element_id_t::element_id_t(integral auto value)
     : value {narrow_integral<value_type>(value)} {}
 
 constexpr element_id_t::operator std::size_t() const noexcept {
-    // throws error for negative / invalid ids
-    return gsl::narrow<std::size_t>(value);
+    // negative values wrap around
+    return static_cast<std::size_t>(value);
 }
 
 constexpr element_id_t::operator bool() const noexcept {

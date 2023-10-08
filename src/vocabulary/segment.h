@@ -52,7 +52,7 @@ constexpr segment_t::segment_t(element_id_t element_id_, segment_index_t segment
 }
 
 constexpr segment_t::operator bool() const noexcept {
-    return element_id.value >= 0;
+    return bool {element_id};
 }
 
 }  // namespace logicsim
