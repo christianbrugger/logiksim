@@ -2,8 +2,8 @@
 
 #include "algorithm/accumulate.h"
 #include "algorithm/has_duplicates_quadratic.h"
-#include "algorithm/transform_combine_while.h"
 #include "algorithm/range.h"
+#include "algorithm/transform_combine_while.h"
 #include "algorithm/transform_if.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/trait.h"
@@ -406,12 +406,12 @@ auto LineTree::output_count() const -> connection_count_t {
     return connection_count_t {output_indices_.size()};
 }
 
-auto LineTree::output_position(std::size_t index) const -> point_t {
-    return points_.at(output_indices_.at(index));
+auto LineTree::output_position(connection_id_t index) const -> point_t {
+    return points_.at(output_indices_.at(std::size_t {index}));
 }
 
-auto LineTree::output_orientation(std::size_t index) const -> orientation_t {
-    const auto segment_index = output_indices_.at(index) - 1;
+auto LineTree::output_orientation(connection_id_t index) const -> orientation_t {
+    const auto segment_index = output_indices_.at(std::size_t {index}) - index_t {1};
     const auto line = segment(segment_index);
     return to_orientation(line.p0, line.p1);
 }

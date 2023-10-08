@@ -171,7 +171,7 @@ auto connect_line_tree(const GenerationCache& cache, const LineTree& line_tree,
 
     // connect outputs
     for (auto output : element.outputs()) {
-        const auto output_index = output.output_index().value;
+        const auto output_index = output.output_index();
         const auto position = line_tree.output_position(output_index);
 
         if (const auto entry = cache.inputs.find(position)) {

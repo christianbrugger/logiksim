@@ -17,6 +17,8 @@ namespace logicsim {
  */
 struct connection_id_t {
     using value_type = int16_t;
+
+    // we expose the value, as the type has no invariant
     value_type value;
 
     /**

@@ -16,6 +16,7 @@ namespace logicsim {
  */
 struct color_t {
     using value_type = uint32_t;
+    // we expose the value, as the type has no invariant
     value_type value;
 
     [[nodiscard]] constexpr explicit color_t() = default;

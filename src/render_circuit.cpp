@@ -330,7 +330,7 @@ auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
         layout_data,
         [&](connection_id_t input_id, point_t position, orientation_t orientation) {
             draw_connector_label(ctx, position, orientation,
-                                 labels.input_labels[input_id.value], state);
+                                 labels.input_labels[std::size_t {input_id}], state);
             return true;
         });
 
@@ -338,7 +338,7 @@ auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
         layout_data,
         [&](connection_id_t output_id, point_t position, orientation_t orientation) {
             draw_connector_label(ctx, position, orientation,
-                                 labels.output_labels[output_id.value], state);
+                                 labels.output_labels[std::size_t {output_id}], state);
             return true;
         });
 }

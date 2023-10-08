@@ -244,15 +244,13 @@ auto Schematic::add_element(ElementData &&data) -> Element {
     if (data.input_inverters.size() == 0) {
         input_inverters_.emplace_back(data.input_count.count(), false);
     } else {
-        if (data.input_inverters.size() != std::size_t {data.input_count})
-            [[unlikely]] {
+        if (data.input_inverters.size() != std::size_t {data.input_count}) [[unlikely]] {
             throw_exception("Need as many values for input_inverters as inputs.");
         }
         input_inverters_.emplace_back(data.input_inverters);
     }
     {
-        if (data.output_delays.size() != std::size_t {data.output_count})
-            [[unlikely]] {
+        if (data.output_delays.size() != std::size_t {data.output_count}) [[unlikely]] {
             throw_exception("Need as many output_delays as outputs.");
         }
         output_delays_.emplace_back(std::begin(data.output_delays),
@@ -832,7 +830,7 @@ auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator*() const
 template <bool Const, bool IsInput>
 auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator++() noexcept
     -> Schematic::ConnectionIteratorTemplate<Const, IsInput> & {
-    ++connection_id.value;
+    ++connection_id;
     return *this;
 }
 
@@ -853,7 +851,8 @@ auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator==(
 template <bool Const, bool IsInput>
 auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator-(
     const ConnectionIteratorTemplate &right) const noexcept -> difference_type {
-    return connection_id.value - right.connection_id.value;
+    return difference_type {connection_id.value} -
+           difference_type {right.connection_id.value};
 }
 
 template class Schematic::ConnectionIteratorTemplate<false, false>;
@@ -1014,7 +1013,7 @@ void Schematic::InputTemplate<Const>::clear_connection() const
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data {
             schematic_->output_connections_.at(connection_data.element_id.value)
-                .at(connection_data.connection_id.value)};
+                .at(std::size_t {connection_data.connection_id})};
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.connection_id = null_connection;
@@ -1037,7 +1036,7 @@ void Schematic::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output)
     // get data before we modify anything, for exception safety
     auto &destination_connection_data =
         schematic_->output_connections_.at(output.element_id().value)
-            .at(output.output_index().value);
+            .at(std::size_t {output.output_index()});
 
     auto &connection_data {connection_data_()};
 
@@ -1050,19 +1049,22 @@ void Schematic::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output)
 
 template <bool Const>
 auto Schematic::InputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
-    return schematic_->input_connections_.at(element_id_.value).at(input_index_.value);
+    return schematic_->input_connections_.at(element_id_.value)
+        .at(std::size_t {input_index_});
 }
 
 template <bool Const>
 auto Schematic::InputTemplate<Const>::is_inverted() const -> bool {
-    return schematic_->input_inverters_.at(element_id_.value).at(input_index_.value);
+    return schematic_->input_inverters_.at(element_id_.value)
+        .at(std::size_t {input_index_});
 }
 
 template <bool Const>
 void Schematic::InputTemplate<Const>::set_inverted(bool value) const
     requires(!Const)
 {
-    schematic_->input_inverters_.at(element_id_.value).at(input_index_.value) = value;
+    schematic_->input_inverters_.at(element_id_.value).at(std::size_t {input_index_}) =
+        value;
 }
 
 // Template Instanciations
@@ -1188,7 +1190,7 @@ void Schematic::OutputTemplate<Const>::clear_connection() const
     if (connection_data.element_id != null_element) {
         auto &destination_connection_data =
             schematic_->input_connections_.at(connection_data.element_id.value)
-                .at(connection_data.connection_id.value);
+                .at(std::size_t {connection_data.connection_id});
 
         destination_connection_data.element_id = null_element;
         destination_connection_data.connection_id = null_connection;
@@ -1212,7 +1214,7 @@ void Schematic::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) 
     auto &connection_data {connection_data_()};
     auto &destination_connection_data =
         schematic_->input_connections_.at(input.element_id().value)
-            .at(input.input_index().value);
+            .at(std::size_t {input.input_index()});
 
     connection_data.element_id = input.element_id();
     connection_data.connection_id = input.input_index();
@@ -1223,19 +1225,22 @@ void Schematic::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) 
 
 template <bool Const>
 auto Schematic::OutputTemplate<Const>::delay() const -> const delay_t {
-    return schematic_->output_delays_.at(element_id_.value).at(output_index_.value);
+    return schematic_->output_delays_.at(element_id_.value)
+        .at(std::size_t {output_index_});
 }
 
 template <bool Const>
 auto Schematic::OutputTemplate<Const>::set_delay(delay_t value) const -> void
     requires(!Const)
 {
-    schematic_->output_delays_.at(element_id_.value).at(output_index_.value) = value;
+    schematic_->output_delays_.at(element_id_.value).at(std::size_t {output_index_}) =
+        value;
 }
 
 template <bool Const>
 auto Schematic::OutputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
-    return schematic_->output_connections_.at(element_id_.value).at(output_index_.value);
+    return schematic_->output_connections_.at(element_id_.value)
+        .at(std::size_t {output_index_});
 }
 
 // Template Instanciations

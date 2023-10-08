@@ -582,10 +582,11 @@ auto get_changed_outputs(const logic_small_vector_t &old_outputs,
 void Simulation::create_event(const Schematic::ConstOutput output,
                               const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
-        queue_.submit_event({.time = queue_.time() + output.delay(),
-                             .element_id = output.connected_element_id(),
-                             .input_index = output.connected_input_index(),
-                             .value = output_values.at(output.output_index().value)});
+        queue_.submit_event(
+            {.time = queue_.time() + output.delay(),
+             .element_id = output.connected_element_id(),
+             .input_index = output.connected_input_index(),
+             .value = output_values.at(std::size_t {output.output_index()})});
     }
 }
 
@@ -838,7 +839,7 @@ auto Simulation::clean_history(history_buffer_t &history, delay_t history_length
 
 auto Simulation::input_value(element_id_t element_id, connection_id_t index) const
     -> bool {
-    return input_values_.at(element_id.value).at(index.value);
+    return input_values_.at(element_id.value).at(std::size_t {index});
 }
 
 auto Simulation::input_value(const Schematic::ConstInput input) const -> bool {
@@ -874,7 +875,8 @@ auto Simulation::set_input_internal(const Schematic::ConstInput input, bool valu
     -> void {
     record_input_history(input, value);
 
-    input_values_.at(input.element_id().value).at(input.input_index().value) = value;
+    input_values_.at(input.element_id().value).at(std::size_t {input.input_index()}) =
+        value;
 }
 
 auto Simulation::set_output_value(Schematic::ConstOutput output, bool value) -> void {
@@ -885,7 +887,7 @@ auto Simulation::set_output_value(Schematic::ConstOutput output, bool value) -> 
     const auto input = output.connected_input();
 
     auto &input_value =
-        input_values_.at(input.element_id().value).at(input.input_index().value);
+        input_values_.at(input.element_id().value).at(std::size_t {input.input_index()});
     input_value = value ^ input.is_inverted();
 }
 
@@ -928,7 +930,7 @@ auto Simulation::set_input_value(Schematic::ConstInput input, bool value) -> voi
         throw_exception("cannot input-value for connected inputs");
     }
     auto &input_value =
-        input_values_.at(input.element_id().value).at(input.input_index().value);
+        input_values_.at(input.element_id().value).at(std::size_t {input.input_index()});
 
     if (!is_initialized_) {
         input_value = value;

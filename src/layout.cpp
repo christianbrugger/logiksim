@@ -681,12 +681,12 @@ auto ElementTemplate<Const>::output_inverters() const -> const logic_small_vecto
 
 template <bool Const>
 auto ElementTemplate<Const>::input_inverted(connection_id_t index) const -> bool {
-    return input_inverters().at(index.value);
+    return input_inverters().at(std::size_t {index});
 }
 
 template <bool Const>
 auto ElementTemplate<Const>::output_inverted(connection_id_t index) const -> bool {
-    return output_inverters().at(index.value);
+    return output_inverters().at(std::size_t {index});
 }
 
 template <bool Const>
@@ -742,7 +742,7 @@ auto ElementTemplate<Const>::set_input_inverter(connection_id_t index, bool valu
     -> void
     requires(!Const)
 {
-    layout_->input_inverters_.at(element_id_.value).at(index.value) = value;
+    layout_->input_inverters_.at(element_id_.value).at(std::size_t {index}) = value;
 }
 
 template <bool Const>
@@ -750,7 +750,7 @@ auto ElementTemplate<Const>::set_output_inverter(connection_id_t index, bool val
     -> void
     requires(!Const)
 {
-    layout_->output_inverters_.at(element_id_.value).at(index.value) = value;
+    layout_->output_inverters_.at(element_id_.value).at(std::size_t {index}) = value;
 }
 
 // Template Instanciations
