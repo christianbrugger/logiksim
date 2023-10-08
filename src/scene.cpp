@@ -113,7 +113,7 @@ auto is_representable(grid_fine_t x, grid_fine_t y) -> bool {
 }
 
 auto is_representable(point_t point, int dx, int dy) -> bool {
-    return is_representable(point.x.value + dx, point.y.value + dy);
+    return is_representable(int {point.x} + dx, int {point.y} + dy);
 }
 
 auto is_representable(line_t line, int dx, int dy) -> bool {

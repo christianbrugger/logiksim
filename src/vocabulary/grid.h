@@ -91,6 +91,10 @@ concept grid_like = explicitly_convertible_to<T, grid_t>;
 constexpr grid_t::grid_t(integral auto value)
     : value {narrow_integral<value_type>(value)} {}
 
+constexpr grid_t::operator int() const noexcept {
+    return int {value};
+}
+
 constexpr auto grid_t::min() noexcept -> grid_t {
     return grid_t {std::numeric_limits<value_type>::min()};
 };
@@ -168,10 +172,6 @@ constexpr auto grid_t::operator-() const -> grid_t {
     const auto res = -int {value};
     static_assert(sizeof(res) > sizeof(value));
     return grid_t {res};
-}
-
-constexpr grid_t::operator int() const noexcept {
-    return int {value};
 }
 
 constexpr auto operator+(const grid_t &left, const grid_t &right) -> grid_t {

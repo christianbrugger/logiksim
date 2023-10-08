@@ -13,7 +13,8 @@
 namespace logicsim {
 
 auto interpolate_1d(grid_t v0, grid_t v1, double ratio) -> grid_fine_t {
-    return grid_fine_t {v0.value + (v1.value - v0.value) * ratio};
+    static_assert(sizeof(int) > sizeof(grid_t::value_type));
+    return grid_fine_t {int {v0} + (int {v1} - int {v0}) * ratio};
 }
 
 auto interpolate_line_1d(point_t p0, point_t p1, time_t t0, time_t t1, time_t t_select)

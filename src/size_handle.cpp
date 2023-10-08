@@ -37,7 +37,7 @@ auto size_handle_positions(const layout::ConstElement element)
         case display_number: {
             const auto value_inputs = display_number::value_inputs(element.input_count());
 
-            const auto width = display_number::width(element.input_count()).value;
+            const auto width = display_number::width(element.input_count());
             const auto height = to_grid_fine(value_inputs) - grid_fine_t {1};
 
             constexpr auto overdraw = defaults::logic_item_body_overdraw;

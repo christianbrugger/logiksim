@@ -299,8 +299,8 @@ auto calculate_move_delta(point_t save_position, std::optional<point_t> load_pos
     if (!load_position) {
         return move_delta_t {0, 0};
     }
-    return {load_position->x.value - save_position.x.value,
-            load_position->y.value - save_position.y.value};
+    return {int {load_position->x} - int {save_position.x},
+            int {load_position->y} - int {save_position.y}};
 }
 
 LoadLayoutResult::LoadLayoutResult(SerializedLayout&& layout)

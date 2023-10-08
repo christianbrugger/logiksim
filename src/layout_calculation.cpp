@@ -274,7 +274,9 @@ auto height(connection_count_t input_count) -> grid_t {
 auto input_shift(connection_count_t input_count) -> grid_t {
     const auto space =
         width(input_count) - grid_t {1} - to_grid(display_number::control_inputs);
-    return grid_t {(int {space.value} + 1) / 2};
+
+    static_assert(sizeof(int) > sizeof(grid_t::value_type));
+    return grid_t {(int {space} + 1) / 2};
 }
 
 auto negative_position(connection_count_t input_count) -> point_t {
@@ -537,10 +539,11 @@ auto is_representable(layout_calculation_data_t data) -> bool {
     data.position = point_t {0, 0};
     const auto rect = element_collision_rect(data);
 
-    return is_representable(position.x.value + rect.p0.x.value,
-                            position.y.value + rect.p0.y.value) &&
-           is_representable(position.x.value + rect.p1.x.value,
-                            position.y.value + rect.p1.y.value);
+    static_assert(sizeof(int) > sizeof(grid_t::value_type));
+    return is_representable(int {position.x} + int {rect.p0.x},
+                            int {position.y} + int {rect.p0.y}) &&
+           is_representable(int {position.x} + int {rect.p1.x},
+                            int {position.y} + int {rect.p1.y});
 }
 
 auto orientations_compatible(orientation_t a, orientation_t b) -> bool {

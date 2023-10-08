@@ -470,7 +470,7 @@ auto iter_input_location(layout_calculation_data_t data,
             // memory row rows
             for (auto i : range(to_grid(data.input_count - connection_count_t {1}))) {
                 // TODO overload grid for multiplications
-                const auto y = grid_t {2 * i.value};
+                const auto y = 2 * grid_t {i};
                 if (!next_input(
                         transform(data.position, data.orientation, point_t {0, y}),
                         transform(data.orientation, orientation_t::left))) {

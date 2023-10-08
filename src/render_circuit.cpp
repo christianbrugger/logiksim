@@ -84,12 +84,12 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
     const auto scale = ctx.settings.view_config.pixel_scale();
 
     // vertical
-    for (int x = g0.x.value; x <= g1.x.value; x += delta) {
+    for (int x = int {g0.x}; x <= int {g1.x}; x += delta) {
         const auto cx = round_fast(double {(grid_fine_t {x} + offset.x) * scale});
         draw_orthogonal_line(ctx, BLLine {cx, p0.y, cx, p1.y}, {color, width});
     }
     // horizontal
-    for (int y = g0.y.value; y <= g1.y.value; y += delta) {
+    for (int y = int {g0.y}; y <= int {g1.y}; y += delta) {
         const auto cy = round_fast(double {(grid_fine_t {y} + offset.y) * scale});
         draw_orthogonal_line(ctx, BLLine {p0.x, cy, p1.x, cy}, {color, width});
     }
