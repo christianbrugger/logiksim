@@ -17,6 +17,14 @@ constexpr inline auto wyhash_secret = std::array {
 };
 
 //
+// string
+//
+
+[[nodiscard]] inline auto wyhash(std::string_view text) noexcept -> uint64_t {
+    return ankerl::unordered_dense::hash<std::string_view> {}(text);
+}
+
+//
 // 2 x 64 bit
 //
 

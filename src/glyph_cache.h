@@ -3,14 +3,16 @@
 
 #include "format/struct.h"
 #include "text_shaping.h"
-#include "vocabulary.h"
+#include "vocabulary/color.h"
 #include "vocabulary/font_style.h"
 #include "vocabulary/text_alignment.h"
+#include "wyhash.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>
 
 #include <bit>
+#include <string>
 #include <string_view>
 
 namespace logicsim {
@@ -24,13 +26,9 @@ struct font_locations_t {
     [[nodiscard]] auto get(FontStyle style) const -> std::string_view;
 };
 
-auto get_default_font_locations() -> font_locations_t;
+[[nodiscard]] auto get_default_font_locations() -> font_locations_t;
 
-}  // namespace logicsim
-
-namespace logicsim::glyph_cache {
-
-auto hash(std::string_view text) noexcept -> uint64_t;
+namespace glyph_cache {
 
 struct glyph_key_t {
     uint64_t text_hash;
@@ -51,7 +49,8 @@ struct glyph_entry_t {
     [[nodiscard]] auto operator==(const glyph_entry_t &other) const -> bool = default;
 };
 
-}  // namespace logicsim::glyph_cache
+}  // namespace glyph_cache
+}  // namespace logicsim
 
 template <>
 struct ankerl::unordered_dense::hash<logicsim::glyph_cache::glyph_key_t> {
@@ -66,7 +65,7 @@ struct ankerl::unordered_dense::hash<logicsim::glyph_cache::glyph_key_t> {
             (static_cast<uint64_t>(obj.vertical_alignment) << 0);
 
         const uint64_t v0 = ankerl::unordered_dense::hash<uint64_t> {}(numerics);
-        return ankerl::unordered_dense::detail::wyhash::mix(v0, obj.text_hash);
+        return logicsim::wyhash_128_bit(v0, obj.text_hash);
     }
 };
 
@@ -196,7 +195,7 @@ class GlyphCache {
                    VTextAlignment vertical_alignment = VTextAlignment::baseline,
                    FontStyle style = FontStyle::regular) const -> void;
 
-    auto calculate_bounding_box(std::string_view text, float font_size,
+    [[nodiscard]] auto calculate_bounding_box(std::string_view text, float font_size,
                                 FontStyle style) const -> BLBox;
 
    private:

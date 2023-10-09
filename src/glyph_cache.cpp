@@ -1,15 +1,13 @@
 ﻿#include "glyph_cache.h"
 
 #include "algorithm/fmt_join.h"
-#include "exception.h"
 #include "file.h"
 #include "font_style_property.h"
 #include "logging.h"
 #include "resource.h"
-#include "text_shaping.h"
-#include "vocabulary.h"
 
 #include <fmt/core.h>
+#include <exception>
 
 namespace logicsim {
 
@@ -27,10 +25,6 @@ auto get_default_font_locations() -> font_locations_t {
 }
 
 namespace glyph_cache {
-
-auto hash(std::string_view text) noexcept -> uint64_t {
-    return ankerl::unordered_dense::hash<std::string_view> {}(text);
-}
 
 auto glyph_key_t::format() const -> std::string {
     return fmt::format("({}, {}, {}, {}, {})", text_hash, font_size, style,
@@ -58,13 +52,13 @@ FontFace::FontFace(std::string font_file)
         const auto status =
             bl_font_data_.createFromData(font_data_.data(), font_data_.size());
         if (!font_data_.empty() && status != BL_SUCCESS) [[unlikely]] {
-            throw_exception("Could not create BLFontData");
+            throw std::runtime_error("Could not create BLFontData");
         }
     }
     {
         const auto status = bl_font_face_.createFromData(bl_font_data_, 0);
         if (!font_data_.empty() && status != BL_SUCCESS) [[unlikely]] {
-            throw_exception("Could not create BLFontFace");
+            throw std::runtime_error("Could not create BLFontFace");
         }
     }
 }
@@ -154,7 +148,7 @@ auto calculate_horizontal_offset(const BLBox& bounding_box,
         case center:
             return (box.x0 + box.x1) / 2.0;
     }
-    throw_exception("Unknown HTextAlignment in calculate_horizontal_offset");
+    std::terminate();
 }
 
 auto calculate_vertical_offset(const BLBox& bounding_box,
@@ -182,7 +176,7 @@ auto calculate_vertical_offset(const BLBox& bounding_box,
         case bottom:
             return box.y1;
     }
-    throw_exception("Unknown VTextAlignment in calculate_vertical_offset");
+    std::terminate();
 }
 
 auto calculate_offset(const BLBox& bounding_box,
@@ -282,7 +276,7 @@ auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle sty
                            VTextAlignment vertical_alignment) const
     -> const glyph_entry_t& {
     const auto [it, inserted] = glyph_map_.try_emplace(glyph_key_t {
-        .text_hash = glyph_cache::hash(text),
+        .text_hash = wyhash(text),
         .font_size = font_size,
         .style = style,
         .horizontal_alignment = horizontal_alignment,
