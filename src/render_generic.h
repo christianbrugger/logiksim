@@ -9,6 +9,7 @@
 #include "svg_cache.h"
 #include "vocabulary.h"
 #include "vocabulary/font_style.h"
+#include "vocabulary/shape_draw_type.h"
 #include "vocabulary/text_alignment.h"
 
 #include <blend2d.h>
@@ -86,22 +87,6 @@ auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_r
                      std::function<void(Context&, bool)> render_func) -> void;
 
 [[nodiscard]] auto make_context_guard(LayerSurface& surface) -> ContextGuard;
-
-//
-// Draw Type
-//
-
-enum class DrawType {
-    fill,
-    stroke,
-    fill_and_stroke,
-};
-
-template <>
-auto format(DrawType type) -> std::string;
-
-[[nodiscard]] auto do_fill(DrawType type) -> bool;
-[[nodiscard]] auto do_stroke(DrawType type) -> bool;
 
 //
 // Strokes

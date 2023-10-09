@@ -139,6 +139,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/segment_info.cpp
     src/vocabulary/segment_part.cpp
     src/vocabulary/segment_point_type.cpp
+    src/vocabulary/shape_draw_type.cpp
     src/vocabulary/simulation_setting.cpp
     src/vocabulary/text_alignment.cpp
     src/vocabulary/time.cpp
