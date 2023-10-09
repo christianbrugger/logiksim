@@ -72,7 +72,6 @@ static_assert(std::is_trivially_copy_assignable_v<grid_t>);
 [[nodiscard]] constexpr auto operator/(const grid_t &left, const int &right) -> grid_t;
 // symmetric
 [[nodiscard]] constexpr auto operator*(const int &left, const grid_t &right) -> grid_t;
-[[nodiscard]] constexpr auto operator/(const int &left, const grid_t &right) -> grid_t;
 
 //
 // Concepts
@@ -124,8 +123,10 @@ constexpr auto grid_t::operator-=(const grid_t &right) -> grid_t & {
 constexpr auto grid_t::operator*=(const int &right) -> grid_t & {
     auto result = int64_t {value} * int64_t {right};
 
-    static_assert(sizeof(result) > sizeof(value) && sizeof(result) > sizeof(right));
-    value = gsl::narrow<grid_t::value_type>(result);
+    static_assert(sizeof(result) > sizeof(value));
+    static_assert(sizeof(result) > sizeof(right));
+
+    value = gsl::narrow<value_type>(result);
 
     return *this;
 }
@@ -136,9 +137,10 @@ constexpr auto grid_t::operator/=(const int &right) -> grid_t & {
     }
     auto result = int64_t {value} / int64_t {right};
 
-    static_assert(sizeof(result) > sizeof(value) && sizeof(result) > sizeof(right));
-    value = gsl::narrow<grid_t::value_type>(result);
+    static_assert(sizeof(result) > sizeof(value));
+    static_assert(sizeof(result) > sizeof(right));
 
+    value = gsl::narrow<value_type>(result);
     return *this;
 }
 
@@ -200,10 +202,6 @@ constexpr auto operator/(const grid_t &left, const int &right) -> grid_t {
 
 constexpr auto operator*(const int &left, const grid_t &right) -> grid_t {
     return operator*(right, left);
-}
-
-constexpr auto operator/(const int &left, const grid_t &right) -> grid_t {
-    return operator/(right, left);
 }
 
 }  // namespace logicsim

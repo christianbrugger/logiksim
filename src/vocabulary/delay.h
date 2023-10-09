@@ -69,7 +69,6 @@ static_assert(std::is_trivially_copy_assignable_v<delay_t>);
 [[nodiscard]] constexpr auto operator/(const delay_t &left, const int &right) -> delay_t;
 // symmetric
 [[nodiscard]] constexpr auto operator*(const int &left, const delay_t &right) -> delay_t;
-[[nodiscard]] constexpr auto operator/(const int &left, const delay_t &right) -> delay_t;
 
 //
 // Implementation
@@ -179,10 +178,6 @@ constexpr auto operator/(const delay_t &left, const int &right) -> delay_t {
 
 constexpr auto operator*(const int &left, const delay_t &right) -> delay_t {
     return operator*(right, left);
-}
-
-constexpr auto operator/(const int &left, const delay_t &right) -> delay_t {
-    return operator/(right, left);
 }
 
 }  // namespace logicsim

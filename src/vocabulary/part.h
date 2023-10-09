@@ -17,7 +17,8 @@ struct part_t {
     offset_t begin;
     offset_t end;
 
-    [[nodiscard]] explicit constexpr part_t(offset_t begin_, offset_t end_);
+    [[nodiscard]] explicit constexpr part_t(offset_like auto begin_,
+                                            offset_like auto end_);
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -32,7 +33,8 @@ static_assert(std::is_trivially_copy_assignable_v<part_t>);
 // Implementation
 //
 
-constexpr part_t::part_t(offset_t begin_, offset_t end_) : begin {begin_}, end {end_} {
+constexpr part_t::part_t(offset_like auto begin_, offset_like auto end_)
+    : begin {offset_t {begin_}}, end {offset_t {end_}} {
     if (!(begin_ < end_)) [[unlikely]] {
         throw std::runtime_error("begin needs to be smaller than end.");
     }

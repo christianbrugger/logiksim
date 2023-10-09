@@ -23,7 +23,7 @@ struct line_t {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const line_t &other) const -> bool = default;
-    // operator<=>: Not camparables, as points are not ordered, use ordered_line_t
+    [[nodiscard]] constexpr auto operator<=>(const line_t &other) const = default;
 };
 
 static_assert(std::is_trivial_v<line_t>);

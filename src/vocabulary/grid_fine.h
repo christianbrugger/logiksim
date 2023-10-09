@@ -30,6 +30,7 @@ struct grid_fine_t {
     [[nodiscard]] constexpr auto operator==(const grid_fine_t &other) const
         -> bool = default;
     [[nodiscard]] constexpr auto operator<=>(const grid_fine_t &other) const = default;
+    [[nodiscard]] constexpr auto operator==(const grid_t &other) const -> bool;
     [[nodiscard]] constexpr auto operator<=>(const grid_t &other) const
         -> std::partial_ordering;
 
@@ -40,6 +41,9 @@ struct grid_fine_t {
 
     constexpr auto operator+=(const grid_fine_t &right) -> grid_fine_t &;
     constexpr auto operator-=(const grid_fine_t &right) -> grid_fine_t &;
+
+    constexpr auto operator+=(const grid_t &right) -> grid_fine_t &;
+    constexpr auto operator-=(const grid_t &right) -> grid_fine_t &;
 
     // @= grid_fine_t::value_type
 
@@ -69,8 +73,6 @@ static_assert(std::is_trivially_copy_assignable_v<grid_fine_t>);
 [[nodiscard]] constexpr auto operator/(const grid_fine_t &left,
                                        const grid_fine_t::value_type &right)
     -> grid_fine_t;
-[[nodiscard]] constexpr auto operator/(const grid_fine_t::value_type &left,
-                                       const grid_fine_t &right) -> grid_fine_t;
 
 // grid_t @ grid_fine_t
 
@@ -94,8 +96,6 @@ static_assert(std::is_trivially_copy_assignable_v<grid_fine_t>);
 [[nodiscard]] constexpr auto operator/(const grid_t &left,
                                        const grid_fine_t::value_type &right)
     -> grid_fine_t;
-[[nodiscard]] constexpr auto operator/(const grid_fine_t::value_type &left,
-                                       const grid_t &right) -> grid_fine_t;
 
 //
 // Concepts
@@ -126,6 +126,10 @@ constexpr grid_fine_t::operator double() const noexcept {
     return double {value};
 }
 
+constexpr auto grid_fine_t::operator==(const grid_t &other) const -> bool {
+    return *this == grid_fine_t {other};
+}
+
 constexpr auto grid_fine_t::operator<=>(const grid_t &other) const
     -> std::partial_ordering {
     return *this <=> grid_fine_t {other};
@@ -149,6 +153,16 @@ constexpr auto grid_fine_t::operator+=(const grid_fine_t &right) -> grid_fine_t 
 constexpr auto grid_fine_t::operator-=(const grid_fine_t &right) -> grid_fine_t & {
     value -= right.value;
     return *this;
+}
+
+// @= grid_t
+
+constexpr auto grid_fine_t::operator+=(const grid_t &right) -> grid_fine_t & {
+    return operator+=(grid_fine_t {right});
+}
+
+constexpr auto grid_fine_t::operator-=(const grid_t &right) -> grid_fine_t & {
+    return operator-=(grid_fine_t {right});
 }
 
 // @= value_type
@@ -200,11 +214,6 @@ constexpr auto operator/(const grid_fine_t &left, const grid_fine_t::value_type 
     return result;
 }
 
-constexpr auto operator/(const grid_fine_t::value_type &left, const grid_fine_t &right)
-    -> grid_fine_t {
-    return operator/(right, left);
-}
-
 // grid_t @ grid_fine_t
 
 [[nodiscard]] constexpr auto operator+(const grid_t &left, const grid_fine_t &right)
@@ -214,7 +223,7 @@ constexpr auto operator/(const grid_fine_t::value_type &left, const grid_fine_t 
 
 [[nodiscard]] constexpr auto operator+(const grid_fine_t &left, const grid_t &right)
     -> grid_fine_t {
-    return operator+(right, left);
+    return operator+(left, grid_fine_t {right});
 }
 
 [[nodiscard]] constexpr auto operator-(const grid_t &left, const grid_fine_t &right)
@@ -224,7 +233,7 @@ constexpr auto operator/(const grid_fine_t::value_type &left, const grid_fine_t 
 
 [[nodiscard]] constexpr auto operator-(const grid_fine_t &left, const grid_t &right)
     -> grid_fine_t {
-    return operator-(right, left);
+    return operator-(left, grid_fine_t {right});
 }
 
 // grid_t @ grid_fine_t::value_type
@@ -236,17 +245,12 @@ constexpr auto operator*(const grid_t &left, const grid_fine_t::value_type &righ
 
 constexpr auto operator*(const grid_fine_t::value_type &left, const grid_t &right)
     -> grid_fine_t {
-    return operator*(right, left);
+    return operator*(left, grid_fine_t {right});
 }
 
 constexpr auto operator/(const grid_t &left, const grid_fine_t::value_type &right)
     -> grid_fine_t {
     return operator/(grid_fine_t {left}, right);
-}
-
-constexpr auto operator/(const grid_fine_t::value_type &left, const grid_t &right)
-    -> grid_fine_t {
-    return operator*(right, left);
 }
 
 }  // namespace logicsim
