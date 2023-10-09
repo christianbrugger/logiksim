@@ -68,7 +68,6 @@ set(LS_CORE_SOURCES
     src/editable_circuit/selection.cpp
     src/editable_circuit/selection_builder.cpp
     src/editable_circuit/selection_registrar.cpp
-    src/editable_circuit/type.cpp
     
     src/format/container.cpp
     src/format/enum.cpp
@@ -123,6 +122,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/layout_calculation_data.cpp
     src/vocabulary/line.cpp
     src/vocabulary/line_fine.cpp
+    src/vocabulary/line_insertion_type.cpp
     src/vocabulary/logic_small_vector.cpp
     src/vocabulary/offset.cpp
     src/vocabulary/ordered_line.cpp

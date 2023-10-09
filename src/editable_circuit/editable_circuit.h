@@ -5,9 +5,9 @@
 #include "editable_circuit/message_sender.h"
 #include "editable_circuit/selection_builder.h"
 #include "editable_circuit/selection_registrar.h"
-#include "editable_circuit/type.h"
 #include "format/struct.h"
 #include "layout.h"
+#include "vocabulary/line_insertion_type.h"
 
 #include <optional>
 

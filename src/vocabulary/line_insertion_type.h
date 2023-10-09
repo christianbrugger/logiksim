@@ -1,12 +1,9 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_TYPE_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_TYPE_H
+#ifndef LOGICSIM_VOCABULARY_LINE_INSERTION_TYPE_H
+#define LOGICSIM_VOCABULARY_LINE_INSERTION_TYPE_H
 
 #include "format/enum.h"
-#include "layout.h"
-#include "vocabulary.h"
 
-#include <cstddef>
-#include <optional>
+#include <string>
 
 namespace logicsim {
 

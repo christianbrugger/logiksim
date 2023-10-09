@@ -3,9 +3,9 @@
 
 #include "editable_circuit/message.h"
 #include "editable_circuit/message_sender.h"
-#include "editable_circuit/type.h"
 #include "layout.h"
 #include "vocabulary.h"
+#include "vocabulary/line_insertion_type.h"
 
 #include <span>
 

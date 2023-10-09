@@ -1,9 +1,6 @@
-#include "editable_circuit/type.h"
+#include "vocabulary/line_insertion_type.h"
 
-#include "exception.h"
-#include "layout_calculation.h"
-
-#include <fmt/core.h>
+#include <exception>
 
 namespace logicsim {
 
@@ -17,7 +14,7 @@ auto format(LineInsertionType type) -> std::string {
         case vertical_first:
             return "vertical_first";
     }
-    throw_exception("unknown LineInsertionType");
+    std::terminate();
 }
 
 }  // namespace logicsim
