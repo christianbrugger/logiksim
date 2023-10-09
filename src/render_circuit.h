@@ -20,6 +20,7 @@ class Layout;
 class Selection;
 class SimulationView;
 struct size_handle_t;
+struct segment_info_t;
 
 namespace layout {
 template <bool Const>

@@ -57,10 +57,6 @@ auto merge_touching(const segment_info_t segment_info_0,
     };
 }
 
-auto segment_info_t::format() const -> std::string {
-    return fmt::format("Segment({} {} - {} {})", p0_type, line.p0, line.p1, p1_type);
-}
-
 //
 // Segment Tree
 //

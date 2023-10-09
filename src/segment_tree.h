@@ -3,13 +3,13 @@
 
 #include "algorithm/range.h"
 #include "format/struct.h"
-#include "iterator_adaptor/transform_view.h"
-#include "segment_tree_type.h"
-#include "vocabulary.h"
-#include "geometry/part.h"
 #include "geometry/line.h"
+#include "geometry/part.h"
 #include "geometry/part_list.h"
 #include "geometry/part_list_copying.h"
+#include "iterator_adaptor/transform_view.h"
+#include "vocabulary.h"
+#include "vocabulary/segment_info.h"
 
 #include <boost/container/vector.hpp>
 #include <folly/small_vector.h>

@@ -136,7 +136,9 @@ set(LS_CORE_SOURCES
     src/vocabulary/rect_fine.cpp
     src/vocabulary/segment.cpp
     src/vocabulary/segment_index.cpp
+    src/vocabulary/segment_info.cpp
     src/vocabulary/segment_part.cpp
+    src/vocabulary/segment_point_type.cpp
     src/vocabulary/text_alignment.cpp
     src/vocabulary/time.cpp
     src/vocabulary/time_literal.cpp
@@ -165,7 +167,6 @@ set(LS_CORE_SOURCES
     src/schematic.cpp
     src/schematic_generation.cpp
     src/segment_tree.cpp
-    src/segment_tree_type.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
     src/setting_handle.cpp

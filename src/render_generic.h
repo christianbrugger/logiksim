@@ -6,7 +6,6 @@
 #include "format/struct.h"
 #include "glyph_cache.h"
 #include "scene.h"
-#include "segment_tree_type.h"
 #include "svg_cache.h"
 #include "vocabulary.h"
 #include "vocabulary/font_style.h"

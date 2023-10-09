@@ -1,29 +1,13 @@
-#ifndef LOGIKSIM_SEGMENT_TREE_TYPE_H
-#define LOGIKSIM_SEGMENT_TREE_TYPE_H
+#ifndef LOGICSIM_VOCABULARY_SEGMENT_INFO_H
+#define LOGICSIM_VOCABULARY_SEGMENT_INFO_H
 
 #include "format/struct.h"
-#include "vocabulary.h"
+#include "vocabulary/ordered_line.h"
+#include "vocabulary/segment_point_type.h"
+
+#include <string>
 
 namespace logicsim {
-
-enum class SegmentPointType : uint8_t {
-    // has collision
-    input,
-    output,
-    corner_point,
-    cross_point,
-
-    // no collision
-    shadow_point,
-    // unknown state
-    new_unknown,
-};
-
-template <>
-auto format(SegmentPointType type) -> std::string;
-
-auto is_cross_point(SegmentPointType point_type) -> bool;
-auto is_connection(SegmentPointType point_type) -> bool;
 
 struct segment_info_t {
     ordered_line_t line {};
