@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_TYPE_TRAIT_H
-#define LOGIKSIM_TYPE_TRAIT_H
+#ifndef LOGICSIM_TYPE_TRAIT_ADD_CONST_TO_REFERENCE_H
+#define LOGICSIM_TYPE_TRAIT_ADD_CONST_TO_REFERENCE_H
 
 #include <type_traits>
 #include <utility>

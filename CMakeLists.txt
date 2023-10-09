@@ -100,6 +100,7 @@ set(LS_CORE_SOURCES
     src/iterator_adaptor/transform_output_iterator.cpp
     src/iterator_adaptor/transform_view.cpp
     
+    src/type_trait/add_const_to_reference.cpp
     src/type_trait/safe_difference_type.cpp
     
     src/vocabulary/alignment.cpp
