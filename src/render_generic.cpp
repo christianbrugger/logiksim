@@ -293,7 +293,7 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
                           point_fine_t {point.x + size, point.y + size},
                       },
                       RectAttributes {
-                          .draw_type = DrawType::stroke,
+                          .draw_type = ShapeDrawType::stroke,
                           .stroke_width = stroke_width,
                           .stroke_color = color,
                       });
@@ -307,7 +307,7 @@ auto draw_point(Context& ctx, point_t point, PointShape shape, color_t color,
                           point_fine_t {point.x + size, point.y + size},
                       },
                       RectAttributes {
-                          .draw_type = DrawType::fill,
+                          .draw_type = ShapeDrawType::fill,
                           .stroke_width = stroke_width,
                           .fill_color = color,
                       });
@@ -486,15 +486,15 @@ auto _draw_rect_fill_and_stroke(Context& ctx, rect_fine_t rect,
 
 auto draw_rect(Context& ctx, rect_fine_t rect, RectAttributes attributes) -> void {
     switch (attributes.draw_type) {
-        case DrawType::fill:
+        case ShapeDrawType::fill:
             return _draw_rect_fill(ctx, rect, attributes);
-        case DrawType::stroke:
+        case ShapeDrawType::stroke:
             return _draw_rect_stroke(ctx, rect, attributes);
-        case DrawType::fill_and_stroke:
+        case ShapeDrawType::fill_and_stroke:
             return _draw_rect_fill_and_stroke(ctx, rect, attributes);
     }
 
-    throw_exception("unknown DrawType in draw_rect");
+    throw_exception("unknown ShapeDrawType in draw_rect");
 }
 
 auto draw_round_rect(Context& ctx, rect_fine_t rect, RoundRectAttributes attributes)
@@ -505,7 +505,7 @@ auto draw_round_rect(Context& ctx, rect_fine_t rect, RoundRectAttributes attribu
     auto w = x1 - x0;
     auto h = y1 - y0;
 
-    if (attributes.draw_type == DrawType::fill) {
+    if (attributes.draw_type == ShapeDrawType::fill) {
         ++w;
         ++h;
     }
@@ -578,7 +578,7 @@ auto _draw_circle_stroke(Context& ctx, point_fine_t center, grid_fine_t radius,
 auto draw_circle(Context& ctx, point_fine_t center, grid_fine_t radius,
                  CircleAttributes attributes) -> void {
     switch (attributes.draw_type) {
-        using enum DrawType;
+        using enum ShapeDrawType;
 
         case fill_and_stroke:
             _draw_circle_fill_and_stroke(ctx, center, radius, attributes);

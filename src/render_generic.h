@@ -158,7 +158,7 @@ auto draw_line(Context& ctx, const line_fine_t line, LineAttributes attributes) 
 //
 
 struct RectAttributes {
-    DrawType draw_type {DrawType::fill_and_stroke};
+    ShapeDrawType draw_type {ShapeDrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
     color_t fill_color {defaults::color_white};
     color_t stroke_color {defaults::color_black};
@@ -167,7 +167,7 @@ struct RectAttributes {
 auto draw_rect(Context& ctx, rect_fine_t rect, RectAttributes attributes) -> void;
 
 struct RoundRectAttributes {
-    DrawType draw_type {DrawType::fill_and_stroke};
+    ShapeDrawType draw_type {ShapeDrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
     grid_fine_t rounding {defaults::maximum_rounding};
     color_t fill_color {defaults::color_white};
@@ -182,7 +182,7 @@ auto draw_round_rect(Context& ctx, rect_fine_t rect, RoundRectAttributes attribu
 //
 
 struct CircleAttributes {
-    DrawType draw_type {DrawType::fill_and_stroke};
+    ShapeDrawType draw_type {ShapeDrawType::fill_and_stroke};
     int stroke_width {defaults::use_view_config_stroke_width};
     color_t fill_color {defaults::color_white};
     color_t stroke_color {defaults::color_black};

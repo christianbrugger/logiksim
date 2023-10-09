@@ -7,17 +7,17 @@
 
 namespace logicsim {
 
-enum class DrawType {
+enum class ShapeDrawType {
     fill,
     stroke,
     fill_and_stroke,
 };
 
 template <>
-auto format(DrawType type) -> std::string;
+auto format(ShapeDrawType type) -> std::string;
 
-[[nodiscard]] auto do_fill(DrawType type) -> bool;
-[[nodiscard]] auto do_stroke(DrawType type) -> bool;
+[[nodiscard]] auto do_fill(ShapeDrawType type) -> bool;
+[[nodiscard]] auto do_stroke(ShapeDrawType type) -> bool;
 
 }  // namespace logicsim
 

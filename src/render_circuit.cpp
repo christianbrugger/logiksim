@@ -437,7 +437,7 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement e
 
     draw_rect(ctx, final_rect,
               RectAttributes {
-                  .draw_type = DrawType::fill_and_stroke,
+                  .draw_type = ShapeDrawType::fill_and_stroke,
                   .fill_color = fill_color,
                   .stroke_color = stroke_color,
               });
@@ -1281,7 +1281,7 @@ auto draw_setting_handle(Context& ctx, setting_handle_t handle) -> void {
     // button rect
     draw_rect(ctx, rect,
               RectAttributes {
-                  .draw_type = DrawType::fill_and_stroke,
+                  .draw_type = ShapeDrawType::fill_and_stroke,
                   .fill_color = defaults::setting_handle_color_fill,
                   .stroke_color = defaults::setting_handle_color_stroke,
               });
@@ -1352,7 +1352,7 @@ auto draw_logic_item_shadow(Context& ctx, layout::ConstElement element,
 
     draw_round_rect(ctx, selection_rect,
                     {
-                        .draw_type = DrawType::fill,
+                        .draw_type = ShapeDrawType::fill,
                         .rounding = element_shadow_rounding(data.element_type),
                         .fill_color = shadow_color(shadow_type),
                     });
@@ -1374,7 +1374,7 @@ auto draw_wire_shadows_impl(Context& ctx, View lines, shadow_t shadow_type) -> v
         const auto selection_rect = element_selection_rect_rounded(line);
         draw_round_rect(ctx, selection_rect,
                         {
-                            .draw_type = DrawType::fill,
+                            .draw_type = ShapeDrawType::fill,
                             .stroke_width = defaults::use_view_config_stroke_width,
                             .fill_color = color,
 

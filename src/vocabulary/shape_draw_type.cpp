@@ -5,9 +5,9 @@
 namespace logicsim {
 
 template <>
-auto format(DrawType type) -> std::string {
+auto format(ShapeDrawType type) -> std::string {
     switch (type) {
-        using enum DrawType;
+        using enum ShapeDrawType;
 
         case fill:
             return "fill";
@@ -19,13 +19,13 @@ auto format(DrawType type) -> std::string {
     std::terminate();
 }
 
-auto do_fill(DrawType type) -> bool {
-    using enum DrawType;
+auto do_fill(ShapeDrawType type) -> bool {
+    using enum ShapeDrawType;
     return type == fill || type == fill_and_stroke;
 }
 
-auto do_stroke(DrawType type) -> bool {
-    using enum DrawType;
+auto do_stroke(ShapeDrawType type) -> bool {
+    using enum ShapeDrawType;
     return type == stroke || type == fill_and_stroke;
 }
 

@@ -169,7 +169,7 @@ auto render_editable_circuit_selection_cache(Context& ctx,
 
         draw_rect(ctx, rect,
                   RectAttributes {
-                      .draw_type = DrawType::stroke,
+                      .draw_type = ShapeDrawType::stroke,
                       .stroke_width = 1,
                       .stroke_color = defaults::color_lime,
                   });
