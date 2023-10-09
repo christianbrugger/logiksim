@@ -31,7 +31,7 @@ struct line_fine_t {
 
     [[nodiscard]] constexpr auto operator==(const line_fine_t &other) const
         -> bool = default;
-    // operator<=>: Not camparables, as points are not ordered
+    [[nodiscard]] constexpr auto operator<=>(const line_fine_t &other) const = default;
 };
 
 static_assert(std::is_trivial_v<line_fine_t>);

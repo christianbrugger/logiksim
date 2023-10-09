@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ankerl/unordered_dense.h>
+
 namespace logicsim {
 
 TEST(VocabularyGrid, Overflow) {
@@ -81,6 +83,17 @@ TEST(VocabularyGrid, Overflow) {
     EXPECT_EQ(-grid_t {100}, grid_t {-100});
     EXPECT_EQ(-grid_t {-100}, grid_t {100});
     EXPECT_THROW(static_cast<void>(-grid_t::min()), std::exception);
+}
+
+TEST(VocabularyGrid, Hashing) {
+    const auto hash = ankerl::unordered_dense::hash<grid_t> {};
+
+    EXPECT_TRUE(hash(grid_t(1)) != hash(grid_t(0)));
+    EXPECT_TRUE(hash(grid_t(1)) != hash(grid_t(-1)));
+    EXPECT_TRUE(hash(grid_t(1)) == hash(grid_t(1)));
+
+    // avalanching
+    EXPECT_TRUE(hash(grid_t(1)) != 1);
 }
 
 }  // namespace logicsim

@@ -47,8 +47,6 @@ struct connection_id_t {
 
 static_assert(std::is_aggregate_v<connection_id_t>);
 
-constexpr inline auto null_connection = connection_id_t {-1};
-
 //
 // Implementation
 //
@@ -89,6 +87,12 @@ constexpr auto connection_id_t::operator++(int) -> connection_id_t {
     operator++();
     return tmp;
 }
+
+//
+// Constants
+//
+
+constexpr inline auto null_connection = connection_id_t {-1};
 
 }  // namespace logicsim
 

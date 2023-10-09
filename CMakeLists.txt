@@ -214,12 +214,17 @@ set(LS_TEST_SOURCES
     test/vocabulary/element_id_test.cpp
     test/vocabulary/grid_fine_test.cpp
     test/vocabulary/grid_test.cpp
+    test/vocabulary/line_fine_test.cpp
     test/vocabulary/line_test.cpp
     test/vocabulary/offset_test.cpp
     test/vocabulary/ordered_line_test.cpp
     test/vocabulary/part_test.cpp
+    test/vocabulary/point_fine_test.cpp
     test/vocabulary/point_test.cpp
+    test/vocabulary/rect_fine_test.cpp
+    test/vocabulary/rect_test.cpp
     test/vocabulary/segment_index_test.cpp
+    test/vocabulary/segment_test.cpp
     test/vocabulary/time_test.cpp
 
     test/layout_test.cpp

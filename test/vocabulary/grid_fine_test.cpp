@@ -1,7 +1,5 @@
 #include "vocabulary/grid_fine.h"
 
-#include "logging.h"
-
 #include <gtest/gtest.h>
 
 #include <cmath>

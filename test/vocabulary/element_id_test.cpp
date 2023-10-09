@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <ankerl/unordered_dense.h>
+
 namespace logicsim {
 
 TEST(VocabularyElementId, Overflow) {
@@ -26,6 +28,17 @@ TEST(VocabularyElementId, Overflow) {
         EXPECT_EQ(id++, element_id_t {10});
         EXPECT_EQ(id, element_id_t {11});
     }
+}
+
+TEST(VocabularyElementId, Hashing) {
+    const auto hash = ankerl::unordered_dense::hash<element_id_t> {};
+
+    EXPECT_TRUE(hash(element_id_t(1)) != hash(element_id_t(0)));
+    EXPECT_TRUE(hash(element_id_t(1)) != hash(element_id_t(-1)));
+    EXPECT_TRUE(hash(element_id_t(1)) == hash(element_id_t(1)));
+
+    // avalanching
+    EXPECT_TRUE(hash(element_id_t(1)) != 1);
 }
 
 }  // namespace logicsim

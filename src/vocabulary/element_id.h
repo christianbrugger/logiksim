@@ -87,8 +87,8 @@ constexpr auto element_id_t::operator++() -> element_id_t & {
     if (value < value_type {0}) [[unlikely]] {
         throw std::runtime_error("element id cannot be negative when incrementing");
     }
-    if (value >= element_id_t::max().value) [[unlikely]] {
-        throw std::overflow_error("cannot increment overflow");
+    if (value >= max().value) [[unlikely]] {
+        throw std::overflow_error("cannot increment, overflow");
     }
     ++value;
     return *this;

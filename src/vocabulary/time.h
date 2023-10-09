@@ -61,8 +61,6 @@ static_assert(std::is_trivially_copy_assignable_v<time_t>);
 // symmetric
 [[nodiscard]] constexpr auto operator+(const delay_t &left, const time_t &right)
     -> time_t;
-[[nodiscard]] constexpr auto operator-(const delay_t &left, const time_t &right)
-    -> time_t;
 
 //
 // Implementation
@@ -143,10 +141,6 @@ constexpr auto operator-(const time_t &left, const delay_t &right) -> time_t {
 
 constexpr auto operator+(const delay_t &left, const time_t &right) -> time_t {
     return operator+(right, left);
-}
-
-constexpr auto operator-(const delay_t &left, const time_t &right) -> time_t {
-    return operator-(right, left);
 }
 
 }  // namespace logicsim

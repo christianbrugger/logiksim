@@ -56,10 +56,10 @@ constexpr auto is_orthogonal_line(point_fine_t p0, point_fine_t p1) noexcept -> 
 //
 
 /**
- * @brief: Any type that is explicitely convertible to grid_t
+ * @brief: Any type that is explicitely convertible to point_fine_t
  */
 template <typename T>
-concept point_fine_like = explicitly_convertible_to<T, point_fine_t>;
+concept point_fine_like = std::same_as<T, point_fine_t> || std::same_as<T, point_t>;
 
 //
 // Implementation
