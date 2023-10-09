@@ -139,6 +139,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/segment_info.cpp
     src/vocabulary/segment_part.cpp
     src/vocabulary/segment_point_type.cpp
+    src/vocabulary/simulation_setting.cpp
     src/vocabulary/text_alignment.cpp
     src/vocabulary/time.cpp
     src/vocabulary/time_literal.cpp
@@ -171,7 +172,6 @@ set(LS_CORE_SOURCES
     src/serialize_detail.cpp
     src/setting_handle.cpp
     src/simulation.cpp
-    src/simulation_type.cpp
     src/simulation_view.cpp
     src/size_handle.cpp
     src/svg_cache.cpp

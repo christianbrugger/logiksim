@@ -23,7 +23,6 @@ namespace logicsim {
 namespace defaults {
 constexpr static inline auto button_delay = delay_t::epsilon();
 constexpr static inline auto logic_item_delay = delay_t {3us};
-constexpr static inline auto wire_delay_per_distance = delay_t {1us};
 }  // namespace defaults
 
 // enables are always at input 0
@@ -166,7 +165,7 @@ class Schematic {
     std::size_t total_output_count_ {0};
     circuit_id_t circuit_id_ {0};
 
-    delay_t wire_delay_per_distance_ {defaults::wire_delay_per_distance};
+    delay_t wire_delay_per_distance_ {0ns};
 };
 
 auto swap(Schematic &a, Schematic &b) noexcept -> void;

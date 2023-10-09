@@ -7,6 +7,7 @@
 #include "render_widget.h"
 #include "resource.h"
 #include "serialize.h"
+#include "vocabulary/simulation_setting.h"
 
 #include <QActionGroup>
 #include <QCheckBox>
@@ -334,7 +335,7 @@ auto MainWidget::create_menu() -> void {
                "sequential circuits.")
                 .toStdString();
         const auto tooltip =
-            fmt::format(fmt::runtime(tooltip_fmt), defaults::wire_delay_per_distance);
+            fmt::format(fmt::runtime(tooltip_fmt), default_wire_delay_per_distance());
 
         actions_.wire_delay->setToolTip(QString::fromStdString(tooltip));
 

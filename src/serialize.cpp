@@ -22,10 +22,10 @@
 #include "layout_calculation.h"
 #include "scene.h"
 #include "serialize_detail.h"
-#include "simulation_type.h"
 #include "validate_definition.h"
 #include "vocabulary/element_definition.h"
 #include "vocabulary/placed_element.h"
+#include "vocabulary/simulation_setting.h"
 
 #include <optional>
 

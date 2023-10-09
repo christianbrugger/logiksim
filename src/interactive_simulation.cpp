@@ -5,7 +5,7 @@
 #include "format/std_type.h"
 #include "layout.h"
 #include "schematic_generation.h"
-#include "simulation_type.h"
+#include "vocabulary/simulation_setting.h"
 
 namespace logicsim {
 

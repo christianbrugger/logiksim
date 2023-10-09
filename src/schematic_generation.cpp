@@ -4,7 +4,6 @@
 #include "editable_circuit/cache/helper.h"
 #include "geometry/orientation.h"
 #include "layout_calculation.h"
-#include "simulation_type.h"
 
 namespace logicsim {
 

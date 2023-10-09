@@ -8,9 +8,9 @@
 #include "render_widget_type.h"
 #include "scene.h"
 #include "setting_handle.h"
-#include "simulation_type.h"
 #include "size_handle.h"
 #include "vocabulary/element_definition.h"
+#include "vocabulary/simulation_setting.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
