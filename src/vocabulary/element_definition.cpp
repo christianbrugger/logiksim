@@ -29,10 +29,10 @@ auto ElementDefinition::format() const -> std::string {
     return fmt::format(
         "ElementDefinition("
         "{}x{} {}, {}, "
-        "circuit_id={}, input_inverters={}, output_inverters={}{}"
+        "sub_circuit_id={}, input_inverters={}, output_inverters={}{}"
         ")",
         input_count, output_count, element_type, orientation,  //
-        circuit_id, input_inverters, output_inverters, attr_str);
+        sub_circuit_id, input_inverters, output_inverters, attr_str);
 }
 
 }  // namespace logicsim

@@ -3,6 +3,15 @@
 #include <gtest/gtest.h>
 
 namespace logicsim {
+TEST(VocabularyRectFine, Constructor) {
+    // constructor
+    EXPECT_THROW(
+        static_cast<void>(rect_fine_t {point_fine_t {2, 2}, point_fine_t {1, 2}}),
+        std::exception);
+    EXPECT_THROW(
+        static_cast<void>(rect_fine_t {point_fine_t {2, 2}, point_fine_t {2, 1}}),
+        std::exception);
+}
 
 TEST(VocabularyRectFine, PointFineOperator) {
     // add

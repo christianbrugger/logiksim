@@ -116,7 +116,7 @@ class Schematic {
         connection_count_t input_count {0};
         connection_count_t output_count {0};
 
-        circuit_id_t circuit_id {null_circuit};
+        circuit_id_t sub_circuit_id {null_circuit};
         logic_small_vector_t input_inverters {};
         std::vector<delay_t> output_delays {};
         delay_t history_length = no_history;

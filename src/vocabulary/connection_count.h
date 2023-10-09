@@ -138,7 +138,7 @@ constexpr auto connection_count_t::operator-=(const connection_count_t &other)
 }
 
 constexpr auto connection_count_t::operator*=(const int &other) -> connection_count_t & {
-    value *= other;
+    value *= ls_safe<int>(other);
     return *this;
 }
 

@@ -236,7 +236,7 @@ auto Schematic::add_element(ElementData &&data) -> Element {
 
     // extend vectors
     element_types_.push_back(data.element_type);
-    sub_circuit_ids_.push_back(data.circuit_id);
+    sub_circuit_ids_.push_back(data.sub_circuit_id);
     input_connections_.emplace_back(data.input_count.count(),
                                     connection_t {null_element, null_connection});
     output_connections_.emplace_back(data.output_count.count(),

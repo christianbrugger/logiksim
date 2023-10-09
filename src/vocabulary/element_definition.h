@@ -42,7 +42,7 @@ struct attributes_clock_generator_t {
 static_assert(std::is_aggregate_v<attributes_clock_generator_t>);
 
 /**
- * @brief: Defines all attributes of an circuit element.
+ * @brief: Defines all attributes of a circuit element.
  */
 struct ElementDefinition {
     ElementType element_type {ElementType::unused};
@@ -50,7 +50,7 @@ struct ElementDefinition {
     connection_count_t output_count {0};
     orientation_t orientation {orientation_t::undirected};
 
-    circuit_id_t circuit_id {null_circuit};  // TODO rename to sub_circuit_id ?
+    circuit_id_t sub_circuit_id {null_circuit};
     logic_small_vector_t input_inverters {};
     logic_small_vector_t output_inverters {};
 

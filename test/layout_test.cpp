@@ -45,7 +45,7 @@ TEST(Layout, ElementProperties) {
             .output_count = connection_count_t {1},
             .orientation = orientation_t::right,
 
-            .circuit_id = circuit_id_t {10},
+            .sub_circuit_id = circuit_id_t {10},
         },
         point_t {2, 3}, display_state_t::normal);
 

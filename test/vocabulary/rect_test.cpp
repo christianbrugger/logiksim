@@ -5,6 +5,12 @@
 namespace logicsim {
 
 TEST(VocabularyRect, Overflow) {
+    // constructor
+    EXPECT_THROW(static_cast<void>(rect_t {point_t {2, 2}, point_t {1, 2}}),
+                 std::exception);
+    EXPECT_THROW(static_cast<void>(rect_t {point_t {2, 2}, point_t {2, 1}}),
+                 std::exception);
+
     // add
     EXPECT_EQ(point_t(10, 20) + point_t(1, 2), point_t(11, 22));
     {

@@ -338,7 +338,7 @@ auto Layout::add_element(const ElementDefinition &definition, point_t position,
 
     // extend vectors
     element_types_.push_back(definition.element_type);
-    sub_circuit_ids_.push_back(definition.circuit_id);
+    sub_circuit_ids_.push_back(definition.sub_circuit_id);
     input_counts_.push_back(definition.input_count);
     output_counts_.push_back(definition.output_count);
 
@@ -742,8 +742,7 @@ auto ElementTemplate<Const>::set_input_inverter(connection_id_t index, bool valu
     -> void
     requires(!Const)
 {
-    layout_->input_inverters_.at(element_id_.value).at(index.value) =
-        value;
+    layout_->input_inverters_.at(element_id_.value).at(index.value) = value;
 }
 
 template <bool Const>
@@ -751,8 +750,7 @@ auto ElementTemplate<Const>::set_output_inverter(connection_id_t index, bool val
     -> void
     requires(!Const)
 {
-    layout_->output_inverters_.at(element_id_.value).at(index.value) =
-        value;
+    layout_->output_inverters_.at(element_id_.value).at(index.value) = value;
 }
 
 // Template Instanciations
@@ -797,7 +795,7 @@ auto to_element_definition(const Layout &layout, element_id_t element_id)
         .output_count = element.output_count(),
         .orientation = element.orientation(),
 
-        .circuit_id = element.sub_circuit_id(),
+        .sub_circuit_id = element.sub_circuit_id(),
         .input_inverters = element.input_inverters(),
         .output_inverters = element.output_inverters(),
 

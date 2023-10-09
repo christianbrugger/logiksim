@@ -29,7 +29,7 @@ auto add_unused_element(Schematic& schematic) -> void {
         .input_count = connection_count_t {0},
         .output_count = connection_count_t {0},
 
-        .circuit_id = null_circuit,
+        .sub_circuit_id = null_circuit,
         .input_inverters = {},
         .output_delays = {},
         .history_length = Schematic::no_history,
@@ -67,7 +67,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
         .input_count = element.input_count(),
         .output_count = element.output_count(),
 
-        .circuit_id = element.sub_circuit_id(),
+        .sub_circuit_id = element.sub_circuit_id(),
         .input_inverters = element.input_inverters(),
         .output_delays = output_delays,
         .history_length = Schematic::no_history,
@@ -113,7 +113,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
                 .input_count = connection_count_t {1},
                 .output_count = line_tree.output_count(),
 
-                .circuit_id = null_circuit,
+                .sub_circuit_id = null_circuit,
                 .output_delays = std::move(delays),
                 .history_length = tree_max_delay,
             });
