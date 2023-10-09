@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_MAIN_WIDGET_H
 #define LOGIKSIM_MAIN_WIDGET_H
 
-#include "render_widget_type.h"
+#include "render_widget_base.h"
 
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>

@@ -5,7 +5,7 @@
 #include "event_counter.h"
 #include "interactive_simulation.h"
 #include "render_circuit.h"
-#include "render_widget_type.h"
+#include "render_widget_base.h"
 #include "scene.h"
 #include "setting_handle.h"
 #include "size_handle.h"

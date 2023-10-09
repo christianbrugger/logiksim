@@ -1,15 +1,11 @@
-#ifndef LOGIKSIM_RENDER_WIDGET_TYPE_H
-#define LOGIKSIM_RENDER_WIDGET_TYPE_H
+#ifndef LOGICSIM_VOCABULARY_WIDGET_INTERACTION_STATE_H
+#define LOGICSIM_VOCABULARY_WIDGET_INTERACTION_STATE_H
 
 #include "format/enum.h"
-
-#include <QWidget>
 
 #include <string>
 
 namespace logicsim {
-
-struct ElementDefinition;
 
 enum class InteractionState {
     not_interactive,
@@ -43,20 +39,6 @@ template <>
 auto format(InteractionState type) -> std::string;
 
 [[nodiscard]] auto is_inserting_state(InteractionState state) -> bool;
-
-[[nodiscard]] auto to_logic_item_definition(InteractionState state) -> ElementDefinition;
-
-class RendererWidgetBase : public QWidget {
-    Q_OBJECT
-
-   public:
-    using QWidget::QWidget;
-
-    Q_SIGNAL void interaction_state_changed(InteractionState new_state);
-
-   protected:
-    auto emit_interaction_state_changed(InteractionState new_state) -> void;
-};
 
 }  // namespace logicsim
 

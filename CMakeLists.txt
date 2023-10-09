@@ -144,6 +144,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/time.cpp
     src/vocabulary/time_literal.cpp
     src/vocabulary/time_rate.cpp
+    src/vocabulary/widget_interaction_state.cpp
 
     src/circuit_description.cpp
     src/context_guard.cpp
@@ -158,10 +159,13 @@ set(LS_CORE_SOURCES
     src/layout_calculation.cpp
     src/line_tree.cpp
     src/logging.cpp
+    src/main_widget.cpp
     src/random.cpp
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
+    src/render_widget.cpp
+    src/render_widget_base.cpp
     src/resource.cpp
     src/safe_numeric.cpp
     src/scene.cpp
@@ -181,15 +185,13 @@ set(LS_CORE_SOURCES
     src/vocabulary.cpp
     src/wyhash.cpp
     
-    src/main_widget.cpp
-    src/render_widget.cpp
-    src/render_widget_type.cpp
 )
 
 # any file that contains Q_OBJECT
+# list them manually to speedup compilation
 set(MOC_FILES
     src/main_widget.h 
-    src/render_widget_type.h
+    src/render_widget_base.h
 )
 
 set(LS_TEST_SOURCES
