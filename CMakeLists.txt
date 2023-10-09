@@ -207,6 +207,21 @@ set(LS_TEST_SOURCES
 
     test/iterator_adaptor/transform_view_test.cpp
 
+    test/vocabulary/color_test.cpp
+    test/vocabulary/connection_count_test.cpp
+    test/vocabulary/connection_id_test.cpp
+    test/vocabulary/delay_test.cpp
+    test/vocabulary/element_id_test.cpp
+    test/vocabulary/grid_fine_test.cpp
+    test/vocabulary/grid_test.cpp
+    test/vocabulary/line_test.cpp
+    test/vocabulary/offset_test.cpp
+    test/vocabulary/ordered_line_test.cpp
+    test/vocabulary/part_test.cpp
+    test/vocabulary/point_test.cpp
+    test/vocabulary/segment_index_test.cpp
+    test/vocabulary/time_test.cpp
+
     test/layout_test.cpp
     test/line_tree_test.cpp
     test/random_test.cpp

@@ -22,7 +22,7 @@ struct connection_id_t {
 
     /**
      * @brief: The conversion to std::size_t
-     * 
+     *
      * Note When indexing arrays use .at(id.value) instead, due to performance reasons.
      *
      * Throws exception for negative / invalid ids.
@@ -41,8 +41,8 @@ struct connection_id_t {
     [[nodiscard]] static constexpr auto min() noexcept -> connection_id_t;
     [[nodiscard]] static constexpr auto max() noexcept -> connection_id_t;
 
-    constexpr auto operator++() noexcept -> connection_id_t &;
-    constexpr auto operator++(int) noexcept -> connection_id_t;
+    constexpr auto operator++() -> connection_id_t &;
+    constexpr auto operator++(int) -> connection_id_t;
 };
 
 static_assert(std::is_aggregate_v<connection_id_t>);
@@ -73,12 +73,18 @@ constexpr auto connection_id_t::max() noexcept -> connection_id_t {
     return connection_id_t {std::numeric_limits<value_type>::max()};
 };
 
-constexpr auto connection_id_t::operator++() noexcept -> connection_id_t & {
+constexpr auto connection_id_t::operator++() -> connection_id_t & {
+    if (value < value_type {0}) [[unlikely]] {
+        throw std::runtime_error("connection id cannot be negative when incrementing");
+    }
+    if (value >= connection_id_t::max().value) [[unlikely]] {
+        throw std::overflow_error("cannot increment, overflow");
+    }
     ++value;
     return *this;
 }
 
-constexpr auto connection_id_t::operator++(int) noexcept -> connection_id_t {
+constexpr auto connection_id_t::operator++(int) -> connection_id_t {
     auto tmp = *this;
     operator++();
     return tmp;

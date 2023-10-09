@@ -33,7 +33,7 @@ struct element_id_t {
 
     /**
      * @brief: The conversion to std::size_t
-     * 
+     *
      * Note When indexing arrays use .at(id.value) instead, due to performance reasons.
      *
      * Throws exception for negative / invalid ids.
@@ -51,8 +51,8 @@ struct element_id_t {
 
     [[nodiscard]] static constexpr auto max() noexcept -> element_id_t;
 
-    constexpr auto operator++() noexcept -> element_id_t &;
-    constexpr auto operator++(int) noexcept -> element_id_t;
+    constexpr auto operator++() -> element_id_t &;
+    constexpr auto operator++(int) -> element_id_t;
 };
 
 static_assert(std::is_trivial_v<element_id_t>);
@@ -83,12 +83,18 @@ constexpr auto element_id_t::max() noexcept -> element_id_t {
     return element_id_t {std::numeric_limits<value_type>::max()};
 };
 
-constexpr auto element_id_t::operator++() noexcept -> element_id_t & {
+constexpr auto element_id_t::operator++() -> element_id_t & {
+    if (value < value_type {0}) [[unlikely]] {
+        throw std::runtime_error("element id cannot be negative when incrementing");
+    }
+    if (value >= element_id_t::max().value) [[unlikely]] {
+        throw std::overflow_error("cannot increment overflow");
+    }
     ++value;
     return *this;
 }
 
-constexpr auto element_id_t::operator++(int) noexcept -> element_id_t {
+constexpr auto element_id_t::operator++(int) -> element_id_t {
     auto tmp = *this;
     operator++();
     return tmp;

@@ -35,9 +35,7 @@ struct connection_count_t {
     [[nodiscard]] explicit constexpr connection_count_t(
         boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value);
 
-    // We offer this conversion to std::size_t for indexing into vectors.
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
-
     // returns safe_numerics value
     [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
     // returns underlying representation
@@ -156,7 +154,7 @@ constexpr auto connection_count_t::operator++(int) -> connection_count_t {
 }
 
 constexpr auto connection_count_t::operator--() -> connection_count_t & {
-    ++value;
+    --value;
     return *this;
 }
 
