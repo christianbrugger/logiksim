@@ -115,6 +115,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/element_draw_state.cpp
     src/vocabulary/element_id.cpp
     src/vocabulary/element_type.cpp
+    src/vocabulary/font_style.cpp
     src/vocabulary/grid.cpp
     src/vocabulary/grid_fine.cpp
     src/vocabulary/insertion_mode.cpp
@@ -135,6 +136,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/segment.cpp
     src/vocabulary/segment_index.cpp
     src/vocabulary/segment_part.cpp
+    src/vocabulary/text_alignment.cpp
     src/vocabulary/time.cpp
     src/vocabulary/time_literal.cpp
     src/vocabulary/time_rate.cpp
@@ -145,8 +147,8 @@ set(LS_CORE_SOURCES
     src/event_counter_multi.cpp
     src/exception.cpp
     src/file.cpp
+    src/font_style_property.cpp
     src/glyph_cache.cpp
-    src/glyph_cache_type.cpp
     src/interactive_simulation.cpp
     src/layout.cpp
     src/layout_calculation.cpp

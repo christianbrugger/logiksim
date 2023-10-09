@@ -3,8 +3,8 @@
 
 #include "algorithm/range.h"
 #include "exception.h"
-#include "glyph_cache_type.h"
 #include "vocabulary.h"
+#include "vocabulary/font_style.h"
 #include "vocabulary/layout_calculation_data.h"
 
 #include <array>

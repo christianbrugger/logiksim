@@ -2,9 +2,10 @@
 #define LOGIKSIM_GLYPH_CACHE_H
 
 #include "format/struct.h"
-#include "glyph_cache_type.h"
 #include "text_shaping.h"
 #include "vocabulary.h"
+#include "vocabulary/font_style.h"
+#include "vocabulary/text_alignment.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>

@@ -1,12 +1,13 @@
 #ifndef LOGIKSIM_SVG_CACHE_H
 #define LOGIKSIM_SVG_CACHE_H
 
-#include "glyph_cache_type.h"  // TODO move HorizontalAlignment to different header?
 #include "resource.h"
+#include "vocabulary.h"
+#include "vocabulary/text_alignment.h"  // TODO !!! USE SVG ALIGNMENT
 
 #include <ankerl/unordered_dense.h>
-#include <gsl/gsl>
 #include <blend2d.h>
+#include <gsl/gsl>
 
 #include <memory>
 

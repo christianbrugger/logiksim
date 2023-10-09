@@ -3,6 +3,7 @@
 #include "algorithm/fmt_join.h"
 #include "exception.h"
 #include "file.h"
+#include "font_style_property.h"
 #include "logging.h"
 #include "resource.h"
 #include "text_shaping.h"

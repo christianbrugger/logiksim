@@ -5,11 +5,12 @@
 #include "format/enum.h"
 #include "format/struct.h"
 #include "glyph_cache.h"
-#include "glyph_cache_type.h"
 #include "scene.h"
 #include "segment_tree_type.h"
 #include "svg_cache.h"
 #include "vocabulary.h"
+#include "vocabulary/font_style.h"
+#include "vocabulary/text_alignment.h"
 
 #include <blend2d.h>
 
