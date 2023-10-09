@@ -1,13 +1,13 @@
-#include "vocabulary/text_alignment.h"
+#include "vocabulary/alignment.h"
 
 #include <exception>
 
 namespace logicsim {
 
 template <>
-auto format(HTextAlignment alignment) -> std::string {
+auto format(HorizontalAlignment alignment) -> std::string {
     switch (alignment) {
-        using enum HTextAlignment;
+        using enum HorizontalAlignment;
 
         case left:
             return "left";
@@ -20,19 +20,9 @@ auto format(HTextAlignment alignment) -> std::string {
 }
 
 template <>
-auto format(VTextAlignment alignment) -> std::string {
+auto format(VerticalAlignment alignment) -> std::string {
     switch (alignment) {
-        using enum VTextAlignment;
-
-        case baseline:
-            return "baseline";
-
-        case center_baseline:
-            return "center_baseline";
-        case top_baseline:
-            return "top_baseline";
-        case bottom_baseline:
-            return "bottom_baseline";
+        using enum VerticalAlignment;
 
         case center:
             return "center";

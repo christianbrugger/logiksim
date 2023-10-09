@@ -8,16 +8,16 @@
 
 namespace logicsim {
 
-enum class HorizontalAlignment : uint8_t {
+enum class HTextAlignment : uint8_t {
     left,
     right,
     center,
 };
 
 template <>
-auto format(HorizontalAlignment alignment) -> std::string;
+auto format(HTextAlignment alignment) -> std::string;
 
-enum class VerticalAlignment : uint8_t {
+enum class VTextAlignment : uint8_t {
     baseline,
     // adjusts the baseline
     center_baseline,
@@ -30,7 +30,7 @@ enum class VerticalAlignment : uint8_t {
 };
 
 template <>
-auto format(VerticalAlignment alignment) -> std::string;
+auto format(VTextAlignment alignment) -> std::string;
 
 }  // namespace logicsim
 

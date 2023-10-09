@@ -3,7 +3,7 @@
 
 #include "resource.h"
 #include "vocabulary.h"
-#include "vocabulary/text_alignment.h"  // TODO !!! USE SVG ALIGNMENT
+#include "vocabulary/alignment.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>

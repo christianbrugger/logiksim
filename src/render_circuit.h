@@ -212,8 +212,8 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement e
 struct LogicItemTextAttributes {
     std::optional<grid_fine_t> custom_font_size {};
     std::optional<color_t> custom_text_color {};
-    HorizontalAlignment horizontal_alignment {HorizontalAlignment::center};
-    VerticalAlignment vertical_alignment {VerticalAlignment::center};
+    HTextAlignment horizontal_alignment {HTextAlignment::center};
+    VTextAlignment vertical_alignment {VTextAlignment::center};
     FontStyle style {FontStyle::regular};
 };
 

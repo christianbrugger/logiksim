@@ -270,36 +270,36 @@ auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
     }
 }
 
-auto connector_horizontal_alignment(orientation_t orientation) -> HorizontalAlignment {
+auto connector_horizontal_alignment(orientation_t orientation) -> HTextAlignment {
     switch (orientation) {
         using enum orientation_t;
 
         case right:
-            return HorizontalAlignment::right;
+            return HTextAlignment::right;
         case left:
-            return HorizontalAlignment::left;
+            return HTextAlignment::left;
         case up:
-            return HorizontalAlignment::center;
+            return HTextAlignment::center;
         case down:
-            return HorizontalAlignment::center;
+            return HTextAlignment::center;
 
         default:
             throw_exception("orienation has no horizontal alignment");
     };
 }
 
-auto connector_vertical_alignment(orientation_t orientation) -> VerticalAlignment {
+auto connector_vertical_alignment(orientation_t orientation) -> VTextAlignment {
     switch (orientation) {
         using enum orientation_t;
 
         case right:
-            return VerticalAlignment::center;
+            return VTextAlignment::center;
         case left:
-            return VerticalAlignment::center;
+            return VTextAlignment::center;
         case up:
-            return VerticalAlignment::top;
+            return VTextAlignment::top;
         case down:
-            return VerticalAlignment::baseline;
+            return VTextAlignment::baseline;
 
         default:
             throw_exception("orienation has no vertical alignment");
@@ -658,8 +658,8 @@ struct styled_display_text_t {
     std::string text;
     color_t color {defaults::font::display_normal_color};
     grid_fine_t font_size {defaults::font::display_font_size};
-    HorizontalAlignment horizontal_alignment {HorizontalAlignment::center};
-    VerticalAlignment vertical_alignment {VerticalAlignment::center};
+    HTextAlignment horizontal_alignment {HTextAlignment::center};
+    VTextAlignment vertical_alignment {VTextAlignment::center};
 };
 
 // to_text = [](uint64_t number) -> styled_display_text_t { ... };
@@ -774,7 +774,7 @@ auto draw_display_number(Context& ctx, layout::ConstElement element,
 
 namespace {
 auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
-    constexpr auto vertical_alignment = VerticalAlignment::center_baseline;
+    constexpr auto vertical_alignment = VTextAlignment::center_baseline;
 
     if (number > 127) [[unlikely]] {
         throw_exception("value out of range");
@@ -866,8 +866,8 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_name_size,
                               .custom_text_color = defaults::font::clock_name_color,
-                              .horizontal_alignment = HorizontalAlignment::center,
-                              .vertical_alignment = VerticalAlignment::top_baseline,
+                              .horizontal_alignment = HTextAlignment::center,
+                              .vertical_alignment = VTextAlignment::top_baseline,
                               .style = defaults::font::clock_name_style,
                           });
 
@@ -877,8 +877,8 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,
-                              .horizontal_alignment = HorizontalAlignment::center,
-                              .vertical_alignment = VerticalAlignment::top_baseline,
+                              .horizontal_alignment = HTextAlignment::center,
+                              .vertical_alignment = VTextAlignment::top_baseline,
                               .style = defaults::font::clock_period_style,
                           });
 }

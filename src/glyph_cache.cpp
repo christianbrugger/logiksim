@@ -141,11 +141,11 @@ auto ScaledBaselineOffset::format() const -> std::string {
 namespace {
 
 auto calculate_horizontal_offset(const BLBox& bounding_box,
-                                 HorizontalAlignment horizontal_alignment) -> double {
+                                 HTextAlignment horizontal_alignment) -> double {
     const auto& box = bounding_box;
 
     switch (horizontal_alignment) {
-        using enum HorizontalAlignment;
+        using enum HTextAlignment;
 
         case left:
             return box.x0;
@@ -154,16 +154,16 @@ auto calculate_horizontal_offset(const BLBox& bounding_box,
         case center:
             return (box.x0 + box.x1) / 2.0;
     }
-    throw_exception("Unknown HorizontalAlignment in calculate_horizontal_offset");
+    throw_exception("Unknown HTextAlignment in calculate_horizontal_offset");
 }
 
 auto calculate_vertical_offset(const BLBox& bounding_box,
                                const ScaledBaselineOffset& baseline_offsets,
-                               VerticalAlignment vertical_alignment) -> double {
+                               VTextAlignment vertical_alignment) -> double {
     const auto& box = bounding_box;
 
     switch (vertical_alignment) {
-        using enum VerticalAlignment;
+        using enum VTextAlignment;
 
         case baseline:
             return 0;
@@ -182,13 +182,13 @@ auto calculate_vertical_offset(const BLBox& bounding_box,
         case bottom:
             return box.y1;
     }
-    throw_exception("Unknown VerticalAlignment in calculate_vertical_offset");
+    throw_exception("Unknown VTextAlignment in calculate_vertical_offset");
 }
 
 auto calculate_offset(const BLBox& bounding_box,
                       const ScaledBaselineOffset& baseline_offsets,
-                      HorizontalAlignment horizontal_alignment,
-                      VerticalAlignment vertical_alignment) -> BLPoint {
+                      HTextAlignment horizontal_alignment,
+                      VTextAlignment vertical_alignment) -> BLPoint {
     return BLPoint {
         calculate_horizontal_offset(bounding_box, horizontal_alignment),
         calculate_vertical_offset(bounding_box, baseline_offsets, vertical_alignment),
@@ -205,7 +205,7 @@ auto calculate_baseline_offset(FontStyle style, const FontFace& face) -> Baselin
     const auto box =
         HarfbuzzShapedText {text, face.hb_font_face(), font_size}.bounding_box();
 
-    using enum VerticalAlignment;
+    using enum VTextAlignment;
     return BaselineOffset {
         .baseline_center = calculate_vertical_offset(box, {}, center) / font_size,
         .baseline_top = calculate_vertical_offset(box, {}, top) / font_size,
@@ -278,8 +278,8 @@ auto GlyphCache::calculate_bounding_box(std::string_view text, float font_size,
 }
 
 auto GlyphCache::get_entry(std::string_view text, float font_size, FontStyle style,
-                           HorizontalAlignment horizontal_alignment,
-                           VerticalAlignment vertical_alignment) const
+                           HTextAlignment horizontal_alignment,
+                           VTextAlignment vertical_alignment) const
     -> const glyph_entry_t& {
     const auto [it, inserted] = glyph_map_.try_emplace(glyph_key_t {
         .text_hash = glyph_cache::hash(text),
@@ -327,8 +327,8 @@ auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_
 
 auto GlyphCache::draw_text(BLContext& ctx, const BLPoint& position, std::string_view text,
                            float font_size, color_t color,
-                           HorizontalAlignment horizontal_alignment,
-                           VerticalAlignment vertical_alignment, FontStyle style) const
+                           HTextAlignment horizontal_alignment,
+                           VTextAlignment vertical_alignment, FontStyle style) const
     -> void {
     draw_text(ctx, position, text, font_size,
               TextAttributes {color, horizontal_alignment, vertical_alignment, style});

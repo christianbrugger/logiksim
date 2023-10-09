@@ -36,8 +36,8 @@ struct glyph_key_t {
     uint64_t text_hash;
     float font_size;
     FontStyle style;
-    HorizontalAlignment horizontal_alignment;
-    VerticalAlignment vertical_alignment;
+    HTextAlignment horizontal_alignment;
+    VTextAlignment vertical_alignment;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const glyph_key_t &other) const -> bool = default;
@@ -182,8 +182,8 @@ class GlyphCache {
 
     struct TextAttributes {
         color_t color {defaults::color_black};
-        HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};
-        VerticalAlignment vertical_alignment {VerticalAlignment::baseline};
+        HTextAlignment horizontal_alignment {HTextAlignment::left};
+        VTextAlignment vertical_alignment {VTextAlignment::baseline};
         FontStyle style {FontStyle::regular};
     };
 
@@ -192,8 +192,8 @@ class GlyphCache {
 
     auto draw_text(BLContext &ctx, const BLPoint &position, std::string_view text,
                    float font_size, color_t color = defaults::color_black,
-                   HorizontalAlignment horizontal_alignment = HorizontalAlignment::left,
-                   VerticalAlignment vertical_alignment = VerticalAlignment::baseline,
+                   HTextAlignment horizontal_alignment = HTextAlignment::left,
+                   VTextAlignment vertical_alignment = VTextAlignment::baseline,
                    FontStyle style = FontStyle::regular) const -> void;
 
     auto calculate_bounding_box(std::string_view text, float font_size,
@@ -202,8 +202,8 @@ class GlyphCache {
    private:
     [[nodiscard]] auto get_font(float font_size, FontStyle style) const -> const BLFont &;
     [[nodiscard]] auto get_entry(std::string_view text, float font_size, FontStyle style,
-                                 HorizontalAlignment horizontal_alignment,
-                                 VerticalAlignment vertical_alignment) const
+                                 HTextAlignment horizontal_alignment,
+                                 VTextAlignment vertical_alignment) const
         -> const glyph_entry_t &;
 
    private:

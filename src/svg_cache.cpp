@@ -85,12 +85,6 @@ auto calculate_offset_y(double height, VerticalAlignment vertical_alignment) -> 
             return -height;
         case center:
             return -height / 2.0;
-
-        case baseline:
-        case center_baseline:
-        case top_baseline:
-        case bottom_baseline:
-            throw std::runtime_error("unsupported alignment for svgs");
     }
     std::terminate();
 }

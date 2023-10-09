@@ -215,8 +215,8 @@ struct TextAttributes {
     grid_fine_t font_size {1.0};
     color_t color {defaults::color_black};
 
-    HorizontalAlignment horizontal_alignment {HorizontalAlignment::left};
-    VerticalAlignment vertical_alignment {VerticalAlignment::baseline};
+    HTextAlignment horizontal_alignment {HTextAlignment::left};
+    VTextAlignment vertical_alignment {VTextAlignment::baseline};
     FontStyle style {FontStyle::regular};
 
     // don't render, if scaled font size is smaller

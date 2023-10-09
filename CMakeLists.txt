@@ -102,7 +102,8 @@ set(LS_CORE_SOURCES
     src/iterator_adaptor/transform_view.cpp
     
     src/type_trait/safe_difference_type.cpp
-
+    
+    src/vocabulary/alignment.cpp
     src/vocabulary/circuit_id.cpp
     src/vocabulary/color.cpp
     src/vocabulary/connection.cpp
