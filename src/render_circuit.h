@@ -7,6 +7,7 @@
 #include "vocabulary.h"
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/element_draw_state.h"
+#include "vocabulary/segment_info.h"
 
 #include <gsl/gsl>
 

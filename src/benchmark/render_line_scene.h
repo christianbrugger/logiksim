@@ -4,6 +4,7 @@
 #include "layout.h"
 #include "schematic.h"
 #include "simulation.h"
+#include "vocabulary/simulation_setting.h"
 
 #include <cstdint>
 
@@ -11,7 +12,7 @@ namespace logicsim {
 
 struct BenchmarkScene {
    public:
-    Schematic schematic {};
+    Schematic schematic {default_wire_delay_per_distance()};
     Layout layout {};
     Simulation simulation {schematic};
 };

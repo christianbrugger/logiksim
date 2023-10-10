@@ -1,11 +1,11 @@
 
 #include "algorithm/fmt_join.h"
+#include "benchmark/render_line_scene.h"
 #include "editable_circuit/cache/connection_cache.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/editable_circuit.h"
 #include "layout_calculation.h"
 #include "logging.h"
-#include "render_benchmark.h"
 #include "render_circuit.h"
 #include "simulation.h"
 #include "timer.h"

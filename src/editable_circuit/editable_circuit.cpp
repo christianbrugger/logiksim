@@ -3,10 +3,10 @@
 #include "editable_circuit/cache.h"
 #include "editable_circuit/cache/split_point_cache.h"
 #include "editable_circuit/handler.h"
-#include "editable_circuit/handler_example.h"
 #include "exception.h"
 #include "format/std_type.h"
 #include "geometry/point.h"
+#include "random/wire.h"
 #include "scene.h"
 
 namespace logicsim {
@@ -72,9 +72,9 @@ auto EditableCircuit::validate() -> void {
 
 auto EditableCircuit::add_example() -> void {
     auto rng = get_random_number_generator();
-    editable_circuit::examples::add_many_wires_and_buttons(rng, get_state());
+    editable_circuit::add_many_wires_and_buttons(rng, get_state());
 
-    // editable_circuit::examples::add_many_wires_and_buttons(
+    // editable_circuit::add_many_wires_and_buttons(
     //     rng, get_state(),
     //     editable_circuit::examples::WiresButtonsParams {
     //         .tries_start = 10,

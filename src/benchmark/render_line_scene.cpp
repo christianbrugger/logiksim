@@ -3,7 +3,8 @@
 #include "algorithm/range.h"
 #include "algorithm/transform_to_vector.h"
 #include "geometry/orientation.h"
-#include "random.h"
+#include "random/generator.h"
+#include "random/uniform_int_distribution.h"
 #include "render_circuit.h"
 #include "simulation_view.h"
 #include "timer.h"
@@ -11,6 +12,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <stdexcept>
 
 namespace logicsim {
 
@@ -32,13 +34,10 @@ struct RenderBenchmarkConfig {
 
 namespace {
 
-template <typename T>
-using UDist = boost::random::uniform_int_distribution<T>;
-
 template <std::uniform_random_bit_generator G>
 auto get_udist(grid_t a, grid_t b, G& rng) {
     return [a, b, &rng]() -> grid_t {
-        return grid_t {UDist<grid_t::value_type> {a.value, b.value}(rng)};
+        return grid_t {uint_distribution<grid_t::value_type>(a.value, b.value)(rng)};
     };
 }
 
@@ -85,8 +84,8 @@ auto pick_line_point(ordered_line_t line, G& rng) -> point_t {
 template <std::uniform_random_bit_generator G>
 auto create_line_tree_segment(point_t start_point, bool horizontal,
                               const RenderBenchmarkConfig& config, G& rng) -> LineTree {
-    auto segment_count_dist =
-        UDist<std::size_t> {config.min_line_segments, config.max_line_segments};
+    auto segment_count_dist = uint_distribution<std::size_t>(config.min_line_segments,
+                                                             config.max_line_segments);
     auto n_segments = segment_count_dist(rng);
 
     auto line_tree = std::optional<LineTree> {};
@@ -113,7 +112,7 @@ auto create_first_line_tree_segment(const RenderBenchmarkConfig& config, G& rng)
     const auto grid_dist = get_udist(config.min_grid, config.max_grid, rng);
     const auto p0 = point_t {grid_dist(), grid_dist()};
 
-    const auto is_horizontal = UDist<int> {0, 1}(rng);
+    const auto is_horizontal = uint_distribution<int>(0, 1)(rng);
     return create_line_tree_segment(p0, is_horizontal, config, rng);
 }
 
@@ -126,8 +125,8 @@ auto create_random_line_tree(connection_count_t n_outputs,
         auto new_tree = std::optional<LineTree> {};
         // TODO flatten loop
         do {
-            const auto segment_index =
-                UDist<int> {0, gsl::narrow<int>(line_tree.segment_count()) - 1}(rng);
+            const auto segment_index = uint_distribution<int>(
+                0, gsl::narrow<int>(line_tree.segment_count()) - 1)(rng);
             const auto segment = line_tree.segment(segment_index);
             const auto origin = pick_line_point(ordered_line_t {segment}, rng);
 
@@ -151,14 +150,15 @@ auto calculate_tree_length(const LineTree& line_tree) -> int {
 }  // namespace
 
 auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
-    auto rng = boost::random::mt19937 {0};
+    auto rng = get_random_number_generator(0);
     const auto config = RenderBenchmarkConfig();
     auto tree_length_sum = int64_t {0};
 
     // create initial schematics
     auto& schematic = scene.schematic;
     for (auto _ [[maybe_unused]] : range(n_lines)) {
-        UDist<int> output_dist {config.n_outputs_min, config.n_outputs_max};
+        const auto output_dist =
+            uint_distribution<int>(config.n_outputs_min, config.n_outputs_max);
         // TODO can we simplify this?
         const auto output_count = connection_count_t {
             gsl::narrow<connection_count_t::value_type>(output_dist(rng))};
@@ -242,13 +242,16 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
             max_delay = std::max(max_delay, output.delay());
         }
     }
+    if (max_delay == delay_t {0ns}) {
+        throw std::runtime_error("delay should not be zero");
+    }
     auto max_time = max_delay;
 
     // add events
     for (auto element : schematic.elements()) {
         if (element.element_type() == ElementType::wire) {
-            auto spacing_dist_us =
-                UDist<int> {config.min_event_spacing_us, config.max_event_spacing_us};
+            auto spacing_dist_us = uint_distribution<int>(config.min_event_spacing_us,
+                                                          config.max_event_spacing_us);
             bool next_value = true;
             auto next_time = delay_t {spacing_dist_us(rng) * 1us};
 

@@ -582,11 +582,10 @@ auto get_changed_outputs(const logic_small_vector_t &old_outputs,
 void Simulation::create_event(const Schematic::ConstOutput output,
                               const logic_small_vector_t &output_values) {
     if (output.has_connected_element()) {
-        queue_.submit_event(
-            {.time = queue_.time() + output.delay(),
-             .element_id = output.connected_element_id(),
-             .input_index = output.connected_input_index(),
-             .value = output_values.at(output.output_index().value)});
+        queue_.submit_event({.time = queue_.time() + output.delay(),
+                             .element_id = output.connected_element_id(),
+                             .input_index = output.connected_input_index(),
+                             .value = output_values.at(output.output_index().value)});
     }
 }
 
@@ -690,13 +689,13 @@ auto Simulation::run(const delay_t simulation_time, const timeout_t timeout,
     if (!is_initialized_) {
         throw_exception("Simulation first needs to be initialized.");
     }
-    if (simulation_time <= delay_t {0us}) [[unlikely]] {
+    if (simulation_time < delay_t {0us}) [[unlikely]] {
         throw_exception("simulation_time needs to be positive.");
     }
     if (max_events < 0) [[unlikely]] {
         throw_exception("max events needs to be positive or zero.");
     }
-    check_counts_valid();
+    check_counts_valid();  // TODO remove after using value types
 
     if (simulation_time == delay_t {0us}) {
         return 0;
@@ -774,8 +773,7 @@ auto Simulation::initialize() -> void {
             const auto new_inputs = input_values(element);
             if (std::ranges::any_of(new_inputs, std::identity {})) {
                 const auto old_inputs = logic_small_vector_t(new_inputs.size(), false);
-                auto &internal_state =
-                    internal_states_.at(element.element_id().value);
+                auto &internal_state = internal_states_.at(element.element_id().value);
                 update_internal_state(old_inputs, new_inputs, element_type,
                                       internal_state);
             }

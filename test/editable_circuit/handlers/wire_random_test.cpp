@@ -1,9 +1,13 @@
 #include "./test_helpers.h"
 #include "editable_circuit/handler.h"
-#include "editable_circuit/handler_example.h"
 #include "editable_circuit/sanitizer.h"
 #include "exception.h"
 #include "line_tree.h"
+#include "random/bool.h"
+#include "random/ordered_line.h"
+#include "random/segment.h"
+#include "random/uniform_int_distribution.h"
+#include "random/wire.h"
 #include "timer.h"
 
 #include <gmock/gmock.h>
@@ -22,7 +26,7 @@ auto test_add_many_wires(Rng& rng, bool random_modes) {
     auto layout = Layout {};
     auto setup = HandlerSetup {layout};
 
-    editable_circuit::examples::add_many_wires(rng, setup.state, random_modes);
+    editable_circuit::add_many_wires(rng, setup.state, random_modes);
 
     setup.validate();
 }
@@ -237,7 +241,7 @@ auto test_remove_many_wires(Rng& rng, bool random_modes) {
     auto layout = Layout {};
     auto setup = HandlerSetup {layout};
 
-    editable_circuit::examples::add_many_wires(rng, setup.state, random_modes);
+    editable_circuit::add_many_wires(rng, setup.state, random_modes);
 
     while (true) {
         const auto segment = get_random_segment(rng, layout);
@@ -293,7 +297,7 @@ auto test_remove_partial_wires(Rng& rng, bool random_modes) {
     auto layout = Layout {};
     auto setup = HandlerSetup {layout};
 
-    editable_circuit::examples::add_many_wires(rng, setup.state, random_modes);
+    editable_circuit::add_many_wires(rng, setup.state, random_modes);
 
     while (true) {
         auto segment_part = get_random_segment_part(rng, layout);
@@ -345,10 +349,9 @@ auto test_add_wires_buttons(Rng& rng, bool random_modes) {
     auto layout = Layout {};
     auto setup = HandlerSetup {layout};
 
-    using namespace editable_circuit::examples;
-
-    add_many_wires_and_buttons(rng, setup.state,
-                               WiresButtonsParams {.random_modes = random_modes});
+    editable_circuit::add_many_wires_and_buttons(
+        rng, setup.state,
+        editable_circuit::WiresButtonsParams {.random_modes = random_modes});
 
     setup.validate();
 }

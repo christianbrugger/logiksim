@@ -1,12 +1,23 @@
-#include "editable_circuit/handler_example.h"
+#include "random/wire.h"
 
 #include "algorithm/range.h"
-#include "exception.h"
+#include "editable_circuit/handler.h"
+#include "random/bool.h"
+#include "random/insertion_mode.h"
+#include "random/ordered_line.h"
+#include "random/point.h"
+#include "random/uniform_int_distribution.h"
+#include "vocabulary/connection_count.h"
+#include "vocabulary/element_type.h"
+#include "vocabulary/insertion_mode.h"
+#include "vocabulary/orientation.h"
 
-namespace logicsim::editable_circuit::examples {
+#include <exception>
+
+namespace logicsim::editable_circuit {
 
 auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, grid_t max_length,
-                     bool random_modes) {
+                     bool random_modes) -> void {
     const auto line = get_random_line(rng, min, max, max_length);
     const auto mode =
         random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
@@ -14,11 +25,12 @@ auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, grid_t max_l
     const auto segment_part = add_wire_segment(state, line, mode);
 
     if (bool {segment_part} && distance(segment_part.part) != distance(to_part(line))) {
-        throw_exception("parts have different sizes");
+        throw std::runtime_error("parts have different sizes");
     }
 }
 
-auto add_random_button(Rng& rng, State state, grid_t min, grid_t max, bool random_modes) {
+auto add_random_button(Rng& rng, State state, grid_t min, grid_t max, bool random_modes)
+    -> void {
     const auto definition = ElementDefinition {
         .element_type = ElementType::button,
         .input_count = connection_count_t {0},
@@ -61,4 +73,4 @@ auto add_many_wires_and_buttons(Rng& rng, State state, WiresButtonsParams params
     }
 }
 
-}  // namespace logicsim::editable_circuit::examples
+}  // namespace logicsim::editable_circuit

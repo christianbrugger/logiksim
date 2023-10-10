@@ -60,7 +60,6 @@ set(LS_CORE_SOURCES
 
     src/editable_circuit/cache.cpp
     src/editable_circuit/editable_circuit.cpp
-    src/editable_circuit/handler_example.cpp
     src/editable_circuit/handler.cpp
     src/editable_circuit/message.cpp
     src/editable_circuit/message_sender.cpp
@@ -91,7 +90,6 @@ set(LS_CORE_SOURCES
     src/geometry/rect.cpp
     src/geometry/to_points_sorted_unique.cpp
     src/geometry/to_points_with_both_orientation.cpp
-    src/geometry/_test.cpp
 
     src/iterator_adaptor/enumerate.cpp
     src/iterator_adaptor/filter_output_iterator.cpp
@@ -99,6 +97,17 @@ set(LS_CORE_SOURCES
     src/iterator_adaptor/transform_if_output_iterator.cpp
     src/iterator_adaptor/transform_output_iterator.cpp
     src/iterator_adaptor/transform_view.cpp
+
+    src/random/bool.cpp
+    src/random/generator.cpp
+    src/random/grid.cpp
+    src/random/insertion_mode.cpp
+    src/random/ordered_line.cpp
+    src/random/part.cpp
+    src/random/point.cpp
+    src/random/segment.cpp
+    src/random/uniform_int_distribution.cpp
+    src/random/wire.cpp
     
     src/type_trait/add_const_to_reference.cpp
     src/type_trait/safe_difference_type.cpp
@@ -162,7 +171,6 @@ set(LS_CORE_SOURCES
     src/line_tree.cpp
     src/logging.cpp
     src/main_widget.cpp
-    src/random.cpp
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
@@ -214,6 +222,9 @@ set(LS_TEST_SOURCES
     test/geometry/part_test.cpp
 
     test/iterator_adaptor/transform_view_test.cpp
+    
+    test/random/generator_test.cpp
+    test/random/uniform_int_distribution_test.cpp
 
     test/vocabulary/color_test.cpp
     test/vocabulary/connection_count_test.cpp
@@ -237,7 +248,6 @@ set(LS_TEST_SOURCES
 
     test/layout_test.cpp
     test/line_tree_test.cpp
-    test/random_test.cpp
     test/schematic_test.cpp
     test/segment_tree_test.cpp
     test/simulation_test.cpp

@@ -3,13 +3,14 @@
 
 #include "algorithm/range.h"
 #include "logging.h"
-#include "random.h"
+#include "random/bool.h"
+#include "random/generator.h"
+#include "random/part.h"
+#include "random/segment.h"
+#include "random/uniform_int_distribution.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
 
 namespace logicsim {
 
@@ -87,56 +88,6 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
 //
 // Random Tests
 //
-
-auto add_random_segment(Rng& rng, SegmentTree& tree) -> segment_index_t {
-    const auto [type0, type1] = [&]() {
-        using enum SegmentPointType;
-        if (get_random_bool(rng)) {
-            if (get_random_bool(rng)) {
-                return std::make_pair(output, shadow_point);
-            }
-            return std::make_pair(shadow_point, output);
-        }
-        return std::make_pair(shadow_point, shadow_point);
-    }();
-
-    auto p0 = point_t {get_random_grid(rng), get_random_grid(rng)};
-    auto p1 = point_t {get_random_grid(rng), get_random_grid(rng)};
-
-    if (get_random_bool(rng)) {
-        p0.x = p1.x;
-    } else {
-        p0.y = p1.y;
-    }
-
-    if (p0 == p1) {
-        return add_random_segment(rng, tree);
-    }
-
-    const auto line = ordered_line_t {line_t {p0, p1}};
-
-    const auto info = segment_info_t {
-        .line = line,
-        .p0_type = type0,
-        .p1_type = type1,
-    };
-
-    auto orignal_count = tree.segment_count();
-    const auto new_index = tree.add_segment(info);
-
-    // invariant
-    if (tree.segment_count() != orignal_count + 1) {
-        throw std::runtime_error("assert failed");
-    }
-    if (tree.segment_info(new_index) != info) {
-        throw std::runtime_error("assert failed");
-    }
-
-    const auto part = get_random_part(rng, line);
-
-    tree.mark_valid(new_index, part);
-    return new_index;
-}
 
 auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2, bool expected_equal = true) {
     tree1.validate();
