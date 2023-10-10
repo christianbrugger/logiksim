@@ -17,15 +17,6 @@ namespace logicsim {
 // Context
 //
 
-auto RenderSettings::format() const -> std::string {
-    return fmt::format(
-        "RenderSettings(\n"
-        "  view_config = {},\n"
-        "  background_grid_min_distance = {},\n"
-        "  thread_count = {})",
-        view_config, background_grid_min_distance, thread_count);
-}
-
 auto Context::begin() -> void {
     settings.view_config.set_size(bl_image.size());
     bl_ctx.begin(bl_image, context_info(settings));

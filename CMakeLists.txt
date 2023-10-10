@@ -145,6 +145,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/point_fine.cpp
     src/vocabulary/rect.cpp
     src/vocabulary/rect_fine.cpp
+    src/vocabulary/render_setting.cpp
     src/vocabulary/segment.cpp
     src/vocabulary/segment_index.cpp
     src/vocabulary/segment_info.cpp

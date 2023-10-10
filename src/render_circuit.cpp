@@ -109,7 +109,7 @@ auto draw_background_patterns(Context& ctx) {
 
     for (auto&& [delta, color, width] : grid_definition) {
         if (delta * ctx.settings.view_config.device_scale() >=
-            ctx.settings.background_grid_min_distance) {
+            ctx.settings.background_grid_min_distance_device) {
             const auto draw_width_f =
                 width * ctx.settings.view_config.device_pixel_ratio();
             // we substract a little, as we want 150% scaling to round down

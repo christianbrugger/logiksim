@@ -8,6 +8,7 @@
 #include "svg_cache.h"
 #include "vocabulary.h"
 #include "vocabulary/font_style.h"
+#include "vocabulary/render_setting.h"
 #include "vocabulary/shape_draw_type.h"
 #include "vocabulary/text_alignment.h"
 #include "vocabulary/view_config.h"
@@ -28,15 +29,6 @@ constexpr inline static auto maximum_rounding = grid_fine_t {-1};
 //
 // Context & Settings
 //
-
-struct RenderSettings {
-    ViewConfig view_config {};
-
-    int background_grid_min_distance {10};  // device pixels
-    int thread_count {4};
-
-    auto format() const -> std::string;
-};
 
 struct Context {
     BLImage bl_image {};
