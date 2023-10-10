@@ -11,23 +11,73 @@
 
 namespace logicsim {
 
+/**
+ * brief: Defines the rendered area of the grid and how it relates to
+ *        device coordinates and real pixels.
+ */
 struct ViewConfig {
    public:
     ViewConfig();
 
+    /**
+     * brief: Set the offset of the viewed area in grid coordinates.
+     */
     auto set_offset(point_fine_t offset) -> void;
+
+    /**
+     * brief: Set how large two grid points appear on screen.
+     *
+     * Note this is in device coordinates.
+     */
     auto set_device_scale(double device_scale) -> void;
+
+    /**
+     * brief:  Set how many pixels a device coordinate occupies.
+     *
+     * Note this is to support high DPI screens.
+     */
     auto set_device_pixel_ratio(double device_pixel_ratio) -> void;
+
+    /**
+     * brief: Set the size of the viewed area in pixels.
+     *
+     * Note that objects are clipped outside of this size.
+     */
     auto set_size(BLSizeI size) -> void;
 
-    // TODO maybe rename some
+    /**
+     * brief: The offset of the viewed area in grid coordinates.
+     */
     [[nodiscard]] auto offset() const noexcept -> point_fine_t;
+
+    /**
+     * brief: How large the grid is in pixels.
+     */
     [[nodiscard]] auto pixel_scale() const noexcept -> double;
+
+    /**
+     * brief: How large two grid points appear on screen.
+     */
     [[nodiscard]] auto device_scale() const noexcept -> double;
+
+    /**
+     * brief: How many pixels a device coordinate occupies.
+     */
     [[nodiscard]] auto device_pixel_ratio() const noexcept -> double;
+
+    /**
+     * brief: Get size of drawable area in pixels.
+     */
     [[nodiscard]] auto size() const noexcept -> BLSizeI;
 
+    /**
+     * brief: Width of standard strokes of rects, or lines in pixels.
+     */
     [[nodiscard]] auto stroke_width() const noexcept -> int;
+
+    /**
+     * brief: Width of line cross point in pixels.
+     */
     [[nodiscard]] auto line_cross_width() const noexcept -> int;
 
     [[nodiscard]] auto operator==(const ViewConfig& other) const -> bool = default;
