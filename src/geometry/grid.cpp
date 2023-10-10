@@ -8,6 +8,21 @@
 
 namespace logicsim {
 
+auto is_representable(int x, int y) -> bool {
+    return (int {grid_t::min()} <= x && x <= int {grid_t::max()}) &&
+           (int {grid_t::min()} <= y && y <= int {grid_t::max()});
+}
+
+auto is_representable(grid_fine_t x, grid_fine_t y) -> bool {
+    return (grid_fine_t {grid_t::min()} <= x && x <= grid_fine_t {grid_t::max()}) &&
+           (grid_fine_t {grid_t::min()} <= y && y <= grid_fine_t {grid_t::max()});
+}
+
+auto add_unchecked(grid_t grid, int delta) -> grid_t {
+    static_assert(sizeof(int) > sizeof(grid_t::value_type));
+    return grid_t {gsl::narrow_cast<grid_t::value_type>(int {grid} + delta)};
+}
+
 namespace {
 auto clamp_discrete_to_grid(grid_fine_t grid_fine) -> grid_t {
     const auto clamped = clamp_to_grid(grid_fine);
@@ -43,11 +58,6 @@ auto floor(grid_fine_t v) -> grid_fine_t {
 
 auto ceil(grid_fine_t v) -> grid_fine_t {
     return grid_fine_t {std::ceil(double {v})};
-}
-
-auto add_unchecked(grid_t grid, int delta) -> grid_t {
-    static_assert(sizeof(int) > sizeof(grid_t::value_type));
-    return grid_t {gsl::narrow_cast<grid_t::value_type>(int {grid} + delta)};
 }
 
 }  // namespace logicsim

@@ -117,8 +117,8 @@ auto size_handle_rect_grid(size_handle_t handle, const ViewConfig& config)
     -> rect_fine_t {
     const auto rect = size_handle_rect_px(handle, config);
     return rect_fine_t {
-        from_context_fine(BLPoint {rect.x, rect.y}, config),
-        from_context_fine(BLPoint {rect.x + rect.w, rect.y + rect.h}, config),
+        to_grid_fine(BLPoint {rect.x, rect.y}, config),
+        to_grid_fine(BLPoint {rect.x + rect.w, rect.y + rect.h}, config),
     };
 }
 

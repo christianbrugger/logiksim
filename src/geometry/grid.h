@@ -6,6 +6,9 @@ namespace logicsim {
 struct grid_fine_t;
 struct grid_t;
 
+[[nodiscard]] auto is_representable(int x, int y) -> bool;
+[[nodiscard]] auto is_representable(grid_fine_t x, grid_fine_t y) -> bool;
+
 [[nodiscard]] auto add_unchecked(grid_t grid, int delta) -> grid_t;
 
 [[nodiscard]] auto to_rounded(grid_fine_t v) -> grid_t;

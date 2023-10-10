@@ -1,5 +1,6 @@
 #include "layout_calculation.h"
 
+#include "geometry/grid.h"
 #include "geometry/orientation.h"
 #include "geometry/rect.h"
 #include "scene.h"

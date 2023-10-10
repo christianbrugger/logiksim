@@ -2,7 +2,7 @@
 #define LOGIKSIM_SCENE_H
 
 #include "format/struct.h"
-#include "vocabulary.h"
+#include "vocabulary/point_fine.h"
 
 #include <blend2d.h>
 
@@ -12,6 +12,12 @@
 
 namespace logicsim {
 
+struct grid_fine_t;
+struct grid_t;
+struct point_t;
+struct rect_fine_t;
+struct rect_t;
+
 class ViewConfig {
    public:
     ViewConfig();
@@ -19,7 +25,7 @@ class ViewConfig {
     [[nodiscard]] auto operator==(const ViewConfig& other) const -> bool = default;
     [[nodiscard]] auto operator<=>(const ViewConfig& other) const = default;
 
-    auto format() const -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] auto offset() const noexcept -> point_fine_t;
     [[nodiscard]] auto pixel_scale() const noexcept -> double;
@@ -51,51 +57,36 @@ class ViewConfig {
     int line_cross_width_ {};
 };
 
-[[nodiscard]] auto is_representable(int x, int y) -> bool;
-[[nodiscard]] auto is_representable(grid_fine_t x, grid_fine_t y) -> bool;
-[[nodiscard]] auto is_representable(point_t point, int dx, int dy) -> bool;
-[[nodiscard]] auto is_representable(line_t point, int dx, int dy) -> bool;
-[[nodiscard]] auto is_representable(ordered_line_t point, int dx, int dy) -> bool;
-
 // scene rect
-auto get_scene_rect_fine(const ViewConfig& view_config) -> rect_fine_t;
-auto get_scene_rect(const ViewConfig& view_config) -> rect_t;
+[[nodiscard]] auto get_scene_rect_fine(const ViewConfig& view_config) -> rect_fine_t;
+[[nodiscard]] auto get_scene_rect(const ViewConfig& view_config) -> rect_t;
 
-// device to grid fine
-// TODO make private ??
-[[nodiscard]] auto to_grid_fine(double x, double y, const ViewConfig& config)
-    -> point_fine_t;
+// to grid fine
 [[nodiscard]] auto to_grid_fine(QPointF position, const ViewConfig& config)
     -> point_fine_t;
 [[nodiscard]] auto to_grid_fine(QPoint position, const ViewConfig& config)
     -> point_fine_t;
+[[nodiscard]] auto to_grid_fine(BLPoint point, const ViewConfig& config) -> point_fine_t;
 
-// device to grid
-// TODO make private ??
-[[nodiscard]] auto to_grid(double x, double y, const ViewConfig& config)
-    -> std::optional<point_t>;
+// to grid
 [[nodiscard]] auto to_grid(QPointF position, const ViewConfig& config)
     -> std::optional<point_t>;
 [[nodiscard]] auto to_grid(QPoint position, const ViewConfig& config)
     -> std::optional<point_t>;
 
 // to Qt widget / device coordinates
-[[nodiscard]] auto to_widget(point_t position, const ViewConfig& config) -> QPoint;
 [[nodiscard]] auto to_widget(point_fine_t position, const ViewConfig& config) -> QPoint;
+[[nodiscard]] auto to_widget(point_t position, const ViewConfig& config) -> QPoint;
 
 // to blend2d / pixel coordinates
-[[nodiscard]] auto to_context(point_t position, const ViewConfig& config) -> BLPoint;
 [[nodiscard]] auto to_context(point_fine_t position, const ViewConfig& config) -> BLPoint;
+[[nodiscard]] auto to_context(point_t position, const ViewConfig& config) -> BLPoint;
 
 [[nodiscard]] auto to_context(grid_fine_t length, const ViewConfig& config) -> double;
 [[nodiscard]] auto to_context(grid_t length, const ViewConfig& config) -> double;
 
 [[nodiscard]] auto to_context_unrounded(grid_fine_t length, const ViewConfig& config)
     -> double;
-
-// from blend2d / pixel coordinates
-[[nodiscard]] auto from_context_fine(BLPoint point, const ViewConfig& config)
-    -> point_fine_t;
 
 }  // namespace logicsim
 

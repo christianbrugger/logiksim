@@ -2,16 +2,14 @@
 #define LOGIKSIM_SVG_CACHE_H
 
 #include "resource.h"
-#include "vocabulary.h"
 #include "vocabulary/alignment.h"
+#include "vocabulary/color.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>
 #include <gsl/gsl>
 
 #include <memory>
-
-class BLContext;
 
 namespace logicsim {
 
@@ -20,7 +18,7 @@ namespace svg_cache {
 struct svg_data_t;
 
 struct svg_entry_t {
-    std::unique_ptr<const svg_data_t> data {};
+    std::unique_ptr<const svg_data_t> data {};  // Pimpl
 
     [[nodiscard]] explicit svg_entry_t();
     [[nodiscard]] explicit svg_entry_t(svg_data_t &&data);

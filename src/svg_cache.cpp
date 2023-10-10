@@ -1,11 +1,9 @@
 #include "svg_cache.h"
 
-#include "blend2d.h"
 #include "context_guard.h"
 #include "file.h"
 #include "logging.h"
 #include "resource.h"
-#include "vocabulary.h"
 
 #include <exception>
 #include <stdexcept>

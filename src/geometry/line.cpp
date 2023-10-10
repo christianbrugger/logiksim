@@ -44,6 +44,14 @@ auto is_endpoint(point_t point, ordered_line_t line) -> bool {
     return is_endpoint(point, line_t {line});
 }
 
+auto is_representable(line_t line, int dx, int dy) -> bool {
+    return is_representable(line.p0, dx, dy) && is_representable(line.p1, dx, dy);
+}
+
+auto is_representable(ordered_line_t line, int dx, int dy) -> bool {
+    return is_representable(line_t {line}, dx, dy);
+}
+
 auto add_unchecked(line_t line, int dx, int dy) -> line_t {
     return line_t {
         add_unchecked(line.p0, dx, dy),

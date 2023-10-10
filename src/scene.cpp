@@ -3,6 +3,8 @@
 #include "algorithm/round.h"
 #include "geometry/grid.h"
 #include "geometry/rect.h"
+#include "vocabulary/rect.h"
+#include "vocabulary/rect_fine.h"
 
 #include <gsl/gsl>
 
@@ -98,38 +100,12 @@ auto ViewConfig::update() -> void {
     }
 }
 
-//
-// Free functions
-//
-
-auto is_representable(int x, int y) -> bool {
-    return (int {grid_t::min()} <= x && x <= int {grid_t::max()}) &&
-           (int {grid_t::min()} <= y && y <= int {grid_t::max()});
-}
-
-auto is_representable(grid_fine_t x, grid_fine_t y) -> bool {
-    return (grid_fine_t {grid_t::min()} <= x && x <= grid_fine_t {grid_t::max()}) &&
-           (grid_fine_t {grid_t::min()} <= y && y <= grid_fine_t {grid_t::max()});
-}
-
-auto is_representable(point_t point, int dx, int dy) -> bool {
-    return is_representable(int {point.x} + dx, int {point.y} + dy);
-}
-
-auto is_representable(line_t line, int dx, int dy) -> bool {
-    return is_representable(line.p0, dx, dy) && is_representable(line.p1, dx, dy);
-}
-
-auto is_representable(ordered_line_t line, int dx, int dy) -> bool {
-    return is_representable(line_t {line}, dx, dy);
-}
-
 // scene rect
 
 auto get_scene_rect_fine(const ViewConfig &view_config) -> rect_fine_t {
     return rect_fine_t {
-        from_context_fine(BLPoint {0, 0}, view_config),
-        from_context_fine(BLPoint {gsl::narrow<double>(view_config.width()),
+        to_grid_fine(BLPoint {0, 0}, view_config),
+        to_grid_fine(BLPoint {gsl::narrow<double>(view_config.width()),
                                    gsl::narrow<double>(view_config.height())},
                           view_config),
     };
@@ -139,7 +115,9 @@ auto get_scene_rect(const ViewConfig &view_config) -> rect_t {
     return enclosing_rect(get_scene_rect_fine(view_config));
 }
 
-// device to grid fine
+// to grid fine
+
+namespace {
 
 auto to_grid_fine(double x, double y, const ViewConfig &config) -> point_fine_t {
     const auto scale = config.device_scale();
@@ -147,6 +125,8 @@ auto to_grid_fine(double x, double y, const ViewConfig &config) -> point_fine_t 
 
     return point_fine_t {x / scale, y / scale} - offset;
 }
+
+}  // namespace
 
 auto to_grid_fine(QPointF position, const ViewConfig &config) -> point_fine_t {
     return to_grid_fine(position.x(), position.y(), config);
@@ -156,7 +136,16 @@ auto to_grid_fine(QPoint position, const ViewConfig &config) -> point_fine_t {
     return to_grid_fine(position.x(), position.y(), config);
 }
 
-// device to grid
+auto to_grid_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
+    const auto scale = config.pixel_scale();
+    const auto offset = config.offset();
+
+    return point_fine_t {point.x / scale, point.y / scale} - offset;
+}
+
+// to grid
+
+namespace {
 
 auto to_grid(double x_, double y_, const ViewConfig &config) -> std::optional<point_t> {
     const auto fine = to_grid_fine(x_, y_, config);
@@ -170,6 +159,8 @@ auto to_grid(double x_, double y_, const ViewConfig &config) -> std::optional<po
     }
     return std::nullopt;
 }
+
+}  // namespace
 
 auto to_grid(QPointF position, const ViewConfig &config) -> std::optional<point_t> {
     return to_grid(position.x(), position.y(), config);
@@ -223,15 +214,6 @@ auto to_context(grid_t length, const ViewConfig &config) -> double {
 auto to_context_unrounded(grid_fine_t length, const ViewConfig &config) -> double {
     const auto scale = config.pixel_scale();
     return double {length} * scale;
-}
-
-// from blend2d / pixel coordinates
-
-auto from_context_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
-    const auto scale = config.pixel_scale();
-    const auto offset = config.offset();
-
-    return point_fine_t {point.x / scale, point.y / scale} - offset;
 }
 
 }  // namespace logicsim
