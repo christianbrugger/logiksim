@@ -9,11 +9,13 @@ ViewConfig::ViewConfig() {
 auto ViewConfig::format() const -> std::string {
     return fmt::format(
         "OldRenderSettings(\n"
-        "  offset = {},\n"
-        "  pixel_scale = {},\n"
-        "  device_scale = {},\n"
-        "  device_pixel_ratio = {})",
-        offset(), pixel_scale(), device_scale(), device_pixel_ratio());
+        "  offset = {} grid,\n"
+        "  size = {} x {} px,\n"
+        "  pixel_scale = {} px,\n"
+        "  device_scale = {} coord,\n"
+        "  device_pixel_ratio = {} px)",
+        offset(), size().w, size().h, pixel_scale(), device_scale(),
+        device_pixel_ratio());
 }
 
 auto ViewConfig::offset() const noexcept -> point_fine_t {
