@@ -110,6 +110,13 @@ set(LS_CORE_SOURCES
     src/random/uniform_int_distribution.cpp
     src/random/wire.cpp
     
+    src/render/bl_error_check.cpp
+    src/render/context.cpp
+    src/render/context_guard.cpp
+    src/render/context_info.cpp
+    src/render/glyph_cache.cpp
+    src/render/svg_cache.cpp
+    
     src/type_trait/add_const_to_reference.cpp
     src/type_trait/safe_difference_type.cpp
     
@@ -162,13 +169,11 @@ set(LS_CORE_SOURCES
     
     src/base64.cpp
     src/circuit_description.cpp
-    src/context_guard.cpp
     src/event_counter.cpp
     src/event_counter_multi.cpp
     src/exception.cpp
     src/file.cpp
     src/font_style_property.cpp
-    src/glyph_cache.cpp
     src/gzip.cpp
     src/interactive_simulation.cpp
     src/layout.cpp
@@ -192,13 +197,11 @@ set(LS_CORE_SOURCES
     src/simulation.cpp
     src/simulation_view.cpp
     src/size_handle.cpp
-    src/svg_cache.cpp
     src/text_shaping.cpp
     src/timer.cpp
     src/validate_definition.cpp
     src/vocabulary.cpp
     src/wyhash.cpp
-    
 )
 
 # any file that contains Q_OBJECT

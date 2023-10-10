@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_GLYPH_CACHE_H
-#define LOGIKSIM_GLYPH_CACHE_H
+#ifndef LOGIKSIM_RENDER_GLYPH_CACHE_H
+#define LOGIKSIM_RENDER_GLYPH_CACHE_H
 
 #include "format/struct.h"
 #include "text_shaping.h"
@@ -196,7 +196,7 @@ class GlyphCache {
                    FontStyle style = FontStyle::regular) const -> void;
 
     [[nodiscard]] auto calculate_bounding_box(std::string_view text, float font_size,
-                                FontStyle style) const -> BLBox;
+                                              FontStyle style) const -> BLBox;
 
    private:
     [[nodiscard]] auto get_font(float font_size, FontStyle style) const -> const BLFont &;

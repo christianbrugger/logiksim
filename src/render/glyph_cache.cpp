@@ -1,4 +1,4 @@
-﻿#include "glyph_cache.h"
+﻿#include "render/glyph_cache.h"
 
 #include "algorithm/fmt_join.h"
 #include "file.h"
@@ -7,6 +7,7 @@
 #include "resource.h"
 
 #include <fmt/core.h>
+
 #include <exception>
 
 namespace logicsim {

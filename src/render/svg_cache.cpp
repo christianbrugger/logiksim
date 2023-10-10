@@ -1,8 +1,8 @@
-#include "svg_cache.h"
+#include "render/svg_cache.h"
 
-#include "context_guard.h"
 #include "file.h"
 #include "logging.h"
+#include "render/context_guard.h"
 #include "resource.h"
 
 #include <exception>

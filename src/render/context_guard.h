@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_CONTEXT_GUARD_H
-#define LOGICSIM_CONTEXT_GUARD_H
+#ifndef LOGICSIM_RENDER_CONTEXT_GUARD_H
+#define LOGICSIM_RENDER_CONTEXT_GUARD_H
 
 class BLContext;
 
@@ -25,20 +25,6 @@ class ContextGuard {
  * This exists so guards can be created from other context types via ADL.
  */
 [[nodiscard]] auto make_context_guard(BLContext& bl_ctx) -> ContextGuard;
-
-/**
- * @brief: Check the error flags of the context.
- *
- * Raises a std::runtime_error on errror.
- */
-auto check_errors(const BLContext& ctx) -> void;
-
-/**
- * @brief: Sync and check for errors flags.
- *
- * Raises a std::runtime_error on errror.
- */
-auto checked_sync(BLContext& ctx) -> void;
 
 }  // namespace logicsim
 

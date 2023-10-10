@@ -1,11 +1,10 @@
 #ifndef LOGIKSIM_RENDER_GENERIC_H
 #define LOGIKSIM_RENDER_GENERIC_H
 
-#include "context_guard.h"
 #include "format/enum.h"
 #include "format/struct.h"
-#include "glyph_cache.h"
-#include "svg_cache.h"
+#include "render/context.h"
+#include "render/context_guard.h"
 #include "vocabulary.h"
 #include "vocabulary/font_style.h"
 #include "vocabulary/render_setting.h"
@@ -27,39 +26,6 @@ constexpr inline static auto maximum_rounding = grid_fine_t {-1};
 }  // namespace defaults
 
 //
-// Context & Settings
-//
-
-struct Context {
-    BLImage bl_image {};
-    BLContext bl_ctx {};
-    RenderSettings settings {};
-    GlyphCache text_cache {};
-    SVGCache svg_cache {};
-
-    auto begin() -> void;
-    auto sync() -> void;
-    auto end() -> void;
-
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
-};
-
-auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool;
-
-auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
-
-[[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard;
-
-[[nodiscard]] auto to_context(point_t position, const Context& context) -> BLPoint;
-[[nodiscard]] auto to_context(point_fine_t position, const Context& context) -> BLPoint;
-[[nodiscard]] auto to_context(grid_t length, const Context& context) -> double;
-[[nodiscard]] auto to_context(grid_fine_t length, const Context& context) -> double;
-
-[[nodiscard]] auto to_context_unrounded(grid_fine_t length, const Context& context)
-    -> double;
-
-//
 // Layer Surface
 //
 
@@ -72,8 +38,6 @@ struct LayerSurface {
     auto clear() -> void;
     auto shrink_to_fit() -> void;
 };
-
-auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI;
 
 auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
                      std::function<void(Context&, bool)> render_func) -> void;

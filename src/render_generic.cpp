@@ -3,6 +3,7 @@
 #include "exception.h"
 #include "geometry/orientation.h"
 #include "geometry/scene.h"
+#include "render/context_info.h"
 
 #include <blend2d.h>
 #include <gsl/gsl>
@@ -12,81 +13,6 @@
 #include <type_traits>
 
 namespace logicsim {
-
-//
-// Context
-//
-
-auto Context::begin() -> void {
-    settings.view_config.set_size(bl_image.size());
-    bl_ctx.begin(bl_image, context_info(settings));
-}
-
-auto Context::sync() -> void {
-    checked_sync(bl_ctx);
-}
-
-auto Context::end() -> void {
-    bl_ctx.end();
-    check_errors(bl_ctx);
-}
-
-auto Context::clear() -> void {
-    text_cache.clear();
-    svg_cache.clear();
-}
-
-auto Context::shrink_to_fit() -> void {
-    text_cache.shrink_to_fit();
-    svg_cache.shrink_to_fit();
-}
-
-auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool {
-    static_assert(sizeof(BLContextCreateInfo) ==
-                  sizeof(BLContextCreateInfo::flags) +
-                      sizeof(BLContextCreateInfo::threadCount) +
-                      sizeof(BLContextCreateInfo::cpuFeatures) +
-                      sizeof(BLContextCreateInfo::commandQueueLimit) +
-                      sizeof(BLContextCreateInfo::savedStateLimit) +
-                      sizeof(BLContextCreateInfo::pixelOrigin) +
-                      sizeof(BLContextCreateInfo::reserved));
-    static_assert(std::extent_v<decltype(a.reserved)> == 1);
-
-    return a.flags == b.flags &&                          //
-           a.threadCount == b.threadCount &&              //
-           a.cpuFeatures == b.cpuFeatures &&              //
-           a.commandQueueLimit == b.commandQueueLimit &&  //
-           a.savedStateLimit == b.savedStateLimit &&      //
-           a.pixelOrigin == b.pixelOrigin &&              //
-           a.reserved[0] == b.reserved[0];
-}
-
-auto context_info(const RenderSettings& settings) -> BLContextCreateInfo {
-    auto info = BLContextCreateInfo {};
-    info.commandQueueLimit = 2048;
-    info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
-    return info;
-}
-
-auto to_context(point_t position, const Context& context) -> BLPoint {
-    return to_context(position, context.settings.view_config);
-}
-
-auto to_context(point_fine_t position, const Context& context) -> BLPoint {
-    return to_context(position, context.settings.view_config);
-}
-
-auto to_context(grid_t length, const Context& context) -> double {
-    return to_context(length, context.settings.view_config);
-}
-
-auto to_context(grid_fine_t length, const Context& context) -> double {
-    return to_context(length, context.settings.view_config);
-}
-
-auto to_context_unrounded(grid_fine_t length, const Context& context) -> double {
-    return to_context_unrounded(length, context.settings.view_config);
-}
 
 //
 // Layer Surface
@@ -124,33 +50,6 @@ auto LayerSurface::shrink_to_fit() -> void {
     ctx.shrink_to_fit();
 }
 
-auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI {
-    const auto clamp_x = [&](double x_) {
-        return std::clamp(x_, 0., view_config.size().w * 1.0);
-    };
-    const auto clamp_y = [&](double y_) {
-        return std::clamp(y_, 0., view_config.size().h * 1.0);
-    };
-
-    const auto p0 = to_context(bounding_rect.p0, view_config);
-    const auto p1 = to_context(bounding_rect.p1, view_config);
-
-    const auto padding = view_config.pixel_scale() * 0.5 + 2;
-
-    const auto x0 = clamp_x(std::trunc(p0.x - padding));
-    const auto y0 = clamp_y(std::trunc(p0.y - padding));
-
-    const auto x1 = clamp_x(std::ceil(p1.x + padding + 1));
-    const auto y1 = clamp_y(std::ceil(p1.y + padding + 1));
-
-    return BLRectI {
-        gsl::narrow<int>(x0),
-        gsl::narrow<int>(y0),
-        gsl::narrow<int>(x1 - x0),
-        gsl::narrow<int>(y1 - y0),
-    };
-}
-
 auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
                      std::function<void(Context&, bool)> render_func) -> void {
     auto _ [[maybe_unused]] = make_context_guard(target_ctx);
@@ -170,14 +69,6 @@ auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_r
     } else {
         render_func(target_ctx, surface.enabled);
     }
-}
-
-//
-// Context Guard
-//
-
-[[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard {
-    return make_context_guard(ctx.bl_ctx);
 }
 
 [[nodiscard]] auto make_context_guard(LayerSurface& surface) -> ContextGuard {

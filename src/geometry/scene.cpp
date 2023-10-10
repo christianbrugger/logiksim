@@ -26,6 +26,33 @@ auto get_scene_rect(const ViewConfig &view_config) -> rect_t {
     return enclosing_rect(get_scene_rect_fine(view_config));
 }
 
+auto get_dirty_rect(rect_t bounding_rect, const ViewConfig &view_config) -> BLRectI {
+    const auto clamp_x = [&](double x_) {
+        return std::clamp(x_, 0., view_config.size().w * 1.0);
+    };
+    const auto clamp_y = [&](double y_) {
+        return std::clamp(y_, 0., view_config.size().h * 1.0);
+    };
+
+    const auto p0 = to_context(bounding_rect.p0, view_config);
+    const auto p1 = to_context(bounding_rect.p1, view_config);
+
+    const auto padding = view_config.pixel_scale() * 0.5 + 2;
+
+    const auto x0 = clamp_x(std::trunc(p0.x - padding));
+    const auto y0 = clamp_y(std::trunc(p0.y - padding));
+
+    const auto x1 = clamp_x(std::ceil(p1.x + padding + 1));
+    const auto y1 = clamp_y(std::ceil(p1.y + padding + 1));
+
+    return BLRectI {
+        gsl::narrow<int>(x0),
+        gsl::narrow<int>(y0),
+        gsl::narrow<int>(x1 - x0),
+        gsl::narrow<int>(y1 - y0),
+    };
+}
+
 // to grid fine
 
 auto to_grid_fine(QPointF position, const ViewConfig &config) -> point_fine_t {

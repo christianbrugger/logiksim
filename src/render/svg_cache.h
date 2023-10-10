@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_SVG_CACHE_H
-#define LOGIKSIM_SVG_CACHE_H
+#ifndef LOGIKSIM_RENDER_SVG_CACHE_H
+#define LOGIKSIM_RENDER_SVG_CACHE_H
 
 #include "resource.h"
 #include "vocabulary/alignment.h"

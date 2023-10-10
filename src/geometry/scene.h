@@ -21,6 +21,11 @@ struct rect_t;
 // scene rect
 [[nodiscard]] auto get_scene_rect_fine(const ViewConfig& view_config) -> rect_fine_t;
 [[nodiscard]] auto get_scene_rect(const ViewConfig& view_config) -> rect_t;
+/**
+ * @brief: pixels that need to be rendered within bounding rect and view.
+ */
+[[nodiscard]] auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config)
+    -> BLRectI;
 
 // to grid fine
 [[nodiscard]] auto to_grid_fine(QPointF position, const ViewConfig& config)
