@@ -156,7 +156,8 @@ set(LS_CORE_SOURCES
     src/vocabulary/time_literal.cpp
     src/vocabulary/time_rate.cpp
     src/vocabulary/widget_interaction_state.cpp
-
+    
+    src/base64.cpp
     src/circuit_description.cpp
     src/context_guard.cpp
     src/event_counter.cpp
@@ -165,6 +166,7 @@ set(LS_CORE_SOURCES
     src/file.cpp
     src/font_style_property.cpp
     src/glyph_cache.cpp
+    src/gzip.cpp
     src/interactive_simulation.cpp
     src/layout.cpp
     src/layout_calculation.cpp

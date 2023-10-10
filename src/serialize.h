@@ -28,9 +28,6 @@ using binary_t = std::vector<uint8_t>;
                                       point_t save_position = point_t {0, 0})
     -> std::string;
 
-[[nodiscard]] auto base64_encode(const std::string& data) -> std::string;
-[[nodiscard]] auto base64_decode(const std::string& data) -> std::string;
-
 namespace serialize {
 struct SerializedLayout;
 

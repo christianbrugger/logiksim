@@ -4,6 +4,7 @@
 #include "algorithm/range_step.h"
 #include "algorithm/round.h"
 #include "algorithm/sort_pair.h"
+#include "base64.h"
 #include "editable_circuit/cache.h"
 #include "editable_circuit/cache/spatial_cache.h"
 #include "exception.h"

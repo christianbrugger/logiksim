@@ -2,9 +2,6 @@
 
 #include "logging.h"
 
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <cppcodec/base64_rfc4648.hpp>
 #include <glaze/glaze.hpp>
 
 template <>
@@ -200,42 +197,6 @@ auto json_loads(std::string text) -> std::optional<serialize::SerializedLayout> 
     }
 
     return result;
-}
-
-auto gzip_compress(const std::string& input) -> std::string {
-    auto output = std::ostringstream {};
-    {
-        auto filter_stream = boost::iostreams::filtering_ostream {};
-        filter_stream.push(boost::iostreams::gzip_compressor());
-        filter_stream.push(output);
-        filter_stream.write(input.data(), input.size());
-        filter_stream.flush();
-    }
-    return output.str();
-}
-
-auto gzip_decompress(const std::string& input) -> std::string {
-    auto output = std::ostringstream {};
-    {
-        auto filter_stream = boost::iostreams::filtering_ostream {};
-        filter_stream.push(boost::iostreams::gzip_decompressor());
-        filter_stream.push(output);
-        filter_stream.write(input.data(), input.size());
-        filter_stream.flush();
-    }
-    return output.str();
-}
-
-auto base64_encode(const std::string& data) -> std::string {
-    return cppcodec::base64_rfc4648::encode(data);
-}
-
-auto base64_decode(const std::string& data) -> std::string {
-    try {
-        return cppcodec::base64_rfc4648::decode<std::string>(data);
-    } catch (cppcodec::parse_error&) {
-    }
-    return "";
 }
 
 }  // namespace logicsim
