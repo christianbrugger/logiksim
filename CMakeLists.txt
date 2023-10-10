@@ -110,6 +110,15 @@ set(LS_CORE_SOURCES
     src/random/uniform_int_distribution.cpp
     src/random/wire.cpp
     
+    src/render/primitive/arrow.cpp
+    src/render/primitive/circle.cpp
+    src/render/primitive/icon.cpp
+    src/render/primitive/line.cpp
+    src/render/primitive/point.cpp
+    src/render/primitive/rect.cpp
+    src/render/primitive/round_rect.cpp
+    src/render/primitive/stroke.cpp
+    src/render/primitive/text.cpp
     src/render/bl_error_check.cpp
     src/render/context.cpp
     src/render/context_guard.cpp

@@ -81,8 +81,6 @@ struct ViewConfig {
     [[nodiscard]] auto line_cross_width() const noexcept -> int;
 
     [[nodiscard]] auto operator==(const ViewConfig& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const ViewConfig& other) const = default;
-
     [[nodiscard]] auto format() const -> std::string;
 
    private:
