@@ -28,7 +28,7 @@ namespace logicsim {
 class Layout;
 class Selection;
 class EditableCircuit;
-class ViewConfig;
+struct ViewConfig;
 struct attributes_clock_generator_t;
 
 namespace layout {

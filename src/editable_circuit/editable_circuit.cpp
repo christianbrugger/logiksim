@@ -7,7 +7,6 @@
 #include "format/std_type.h"
 #include "geometry/point.h"
 #include "random/wire.h"
-#include "scene.h"
 
 namespace logicsim {
 

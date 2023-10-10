@@ -1,8 +1,5 @@
-#ifndef LOGIKSIM_SCENE_H
-#define LOGIKSIM_SCENE_H
-
-#include "format/struct.h"
-#include "vocabulary/point_fine.h"
+#ifndef LOGICSIM_GEOMETRY_SCENE_H
+#define LOGICSIM_GEOMETRY_SCENE_H
 
 #include <blend2d.h>
 
@@ -12,50 +9,14 @@
 
 namespace logicsim {
 
+struct ViewConfig;
+
 struct grid_fine_t;
 struct grid_t;
 struct point_t;
+struct point_fine_t;
 struct rect_fine_t;
 struct rect_t;
-
-class ViewConfig {
-   public:
-    ViewConfig();
-
-    [[nodiscard]] auto operator==(const ViewConfig& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const ViewConfig& other) const = default;
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto offset() const noexcept -> point_fine_t;
-    [[nodiscard]] auto pixel_scale() const noexcept -> double;
-    [[nodiscard]] auto device_scale() const noexcept -> double;
-    [[nodiscard]] auto device_pixel_ratio() const noexcept -> double;
-    [[nodiscard]] auto width() const noexcept -> int;
-    [[nodiscard]] auto height() const noexcept -> int;
-
-    auto set_offset(point_fine_t offset) -> void;
-    auto set_device_scale(double device_scale) -> void;
-    auto set_device_pixel_ratio(double device_pixel_ratio) -> void;
-    auto set_size(int width, int height) -> void;
-
-    [[nodiscard]] auto stroke_width() const noexcept -> int;
-    [[nodiscard]] auto line_cross_width() const noexcept -> int;
-
-   private:
-    auto update() -> void;
-
-    point_fine_t offset_ {};
-    double device_pixel_ratio_ {1.};
-    double device_scale_ {18.};
-    int width_ {};  // in device pixels
-    int height_ {};
-
-    // updated internally
-    double pixel_scale_ {};
-    int stroke_width_ {};
-    int line_cross_width_ {};
-};
 
 // scene rect
 [[nodiscard]] auto get_scene_rect_fine(const ViewConfig& view_config) -> rect_fine_t;

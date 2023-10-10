@@ -4,6 +4,7 @@
 #include "exception.h"
 #include "geometry/orientation.h"
 #include "geometry/rect.h"
+#include "geometry/scene.h"
 
 #include <numbers>
 

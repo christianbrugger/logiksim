@@ -3,8 +3,8 @@
 #include "geometry/grid.h"
 #include "geometry/orientation.h"
 #include "geometry/rect.h"
-#include "scene.h"
 
+#include <blend2d.h>
 #include <gcem.hpp>
 
 namespace logicsim {

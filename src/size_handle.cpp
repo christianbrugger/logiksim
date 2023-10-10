@@ -6,10 +6,13 @@
 #include "exception.h"
 #include "geometry/point.h"
 #include "geometry/rect.h"
+#include "geometry/scene.h"
 #include "layout.h"
 #include "layout_calculation.h"
 #include "safe_numeric.h"
-#include "scene.h"
+#include "vocabulary/view_config.h"
+
+#include <blend2d.h>
 
 namespace logicsim {
 

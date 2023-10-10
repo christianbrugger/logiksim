@@ -88,6 +88,7 @@ set(LS_CORE_SOURCES
     src/geometry/part_list_copying.cpp
     src/geometry/point.cpp
     src/geometry/rect.cpp
+    src/geometry/scene.cpp
     src/geometry/to_points_sorted_unique.cpp
     src/geometry/to_points_with_both_orientation.cpp
 
@@ -155,6 +156,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/time.cpp
     src/vocabulary/time_literal.cpp
     src/vocabulary/time_rate.cpp
+    src/vocabulary/view_config.cpp
     src/vocabulary/widget_interaction_state.cpp
     
     src/base64.cpp
@@ -180,7 +182,6 @@ set(LS_CORE_SOURCES
     src/render_widget_base.cpp
     src/resource.cpp
     src/safe_numeric.cpp
-    src/scene.cpp
     src/schematic.cpp
     src/schematic_generation.cpp
     src/segment_tree.cpp

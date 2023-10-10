@@ -8,7 +8,6 @@
 #include "layout.h"
 #include "layout_calculation.h"
 #include "resource.h"
-#include "scene.h"
 #include "validate_definition.h"
 #include "vocabulary/element_definition.h"
 

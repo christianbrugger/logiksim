@@ -10,6 +10,7 @@
 #include "exception.h"
 #include "file.h"
 #include "geometry/orientation.h"
+#include "geometry/scene.h"
 #include "layout.h"
 #include "logging.h"
 #include "render_caches.h"

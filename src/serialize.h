@@ -15,7 +15,7 @@ class Layout;
 class Selection;
 class EditableCircuit;
 class selection_handle_t;
-class ViewConfig;
+struct ViewConfig;
 struct SimulationSettings;
 
 using binary_t = std::vector<uint8_t>;

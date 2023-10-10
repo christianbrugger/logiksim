@@ -21,7 +21,7 @@ using ConstElement = ElementTemplate<true>;
 class Layout;
 class Selection;
 class EditableCircuit;
-class ViewConfig;
+struct ViewConfig;
 
 namespace defaults {
 constexpr static inline auto size_handle_stroke_width_device = 1;  // device coordinates

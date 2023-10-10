@@ -6,7 +6,6 @@
 #include "interactive_simulation.h"
 #include "render_circuit.h"
 #include "render_widget_base.h"
-#include "scene.h"
 #include "setting_handle.h"
 #include "size_handle.h"
 #include "vocabulary/element_definition.h"

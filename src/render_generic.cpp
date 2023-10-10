@@ -2,10 +2,13 @@
 
 #include "exception.h"
 #include "geometry/orientation.h"
+#include "geometry/scene.h"
 
 #include <blend2d.h>
+#include <gsl/gsl>
 
 #include <array>
+#include <cmath>
 #include <type_traits>
 
 namespace logicsim {
@@ -24,7 +27,7 @@ auto RenderSettings::format() const -> std::string {
 }
 
 auto Context::begin() -> void {
-    settings.view_config.set_size(bl_image.width(), bl_image.height());
+    settings.view_config.set_size(bl_image.size());
     bl_ctx.begin(bl_image, context_info(settings));
 }
 
@@ -99,14 +102,13 @@ auto to_context_unrounded(grid_fine_t length, const Context& context) -> double 
 //
 
 auto LayerSurface::initialize(const RenderSettings& new_settings) -> void {
-    const auto new_width = new_settings.view_config.width();
-    const auto new_height = new_settings.view_config.height();
+    const auto new_size = new_settings.view_config.size();
 
     // image size changed
-    if (ctx.bl_image.width() != new_width || ctx.bl_image.height() != new_height) {
+    if (ctx.bl_image.size() != new_size) {
         ctx.end();
         ctx.settings = new_settings;
-        ctx.bl_image = BLImage {new_width, new_height, BL_FORMAT_PRGB32};
+        ctx.bl_image = BLImage {new_size.w, new_size.h, BL_FORMAT_PRGB32};
         ctx.begin();
     }
 
@@ -133,10 +135,10 @@ auto LayerSurface::shrink_to_fit() -> void {
 
 auto get_dirty_rect(rect_t bounding_rect, const ViewConfig& view_config) -> BLRectI {
     const auto clamp_x = [&](double x_) {
-        return std::clamp(x_, 0., view_config.width() * 1.0);
+        return std::clamp(x_, 0., view_config.size().w * 1.0);
     };
     const auto clamp_y = [&](double y_) {
-        return std::clamp(y_, 0., view_config.height() * 1.0);
+        return std::clamp(y_, 0., view_config.size().h * 1.0);
     };
 
     const auto p0 = to_context(bounding_rect.p0, view_config);

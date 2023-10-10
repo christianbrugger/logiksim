@@ -12,6 +12,7 @@
 #include "geometry/interpolation.h"
 #include "geometry/orientation.h"
 #include "geometry/rect.h"
+#include "geometry/scene.h"
 #include "layout.h"
 #include "layout_calculation.h"
 #include "setting_handle.h"

@@ -13,7 +13,6 @@
 #include "geometry/point.h"
 #include "layout_calculation.h"
 #include "logging.h"
-#include "scene.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
