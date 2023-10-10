@@ -115,6 +115,7 @@ set(LS_CORE_SOURCES
     src/render/context_guard.cpp
     src/render/context_info.cpp
     src/render/glyph_cache.cpp
+    src/render/layer_surface.cpp
     src/render/svg_cache.cpp
     
     src/type_trait/add_const_to_reference.cpp

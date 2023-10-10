@@ -5,6 +5,7 @@
 #include "format/struct.h"
 #include "render/context.h"
 #include "render/context_guard.h"
+#include "render/layer_surface.h"
 #include "vocabulary.h"
 #include "vocabulary/font_style.h"
 #include "vocabulary/render_setting.h"
@@ -13,8 +14,6 @@
 #include "vocabulary/view_config.h"
 
 #include <blend2d.h>
-
-#include <functional>
 
 namespace logicsim {
 
@@ -28,21 +27,6 @@ constexpr inline static auto maximum_rounding = grid_fine_t {-1};
 //
 // Layer Surface
 //
-
-struct LayerSurface {
-    bool enabled {true};
-    Context ctx {};
-
-    auto initialize(const RenderSettings& settings) -> void;
-
-    auto clear() -> void;
-    auto shrink_to_fit() -> void;
-};
-
-auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_rect,
-                     std::function<void(Context&, bool)> render_func) -> void;
-
-[[nodiscard]] auto make_context_guard(LayerSurface& surface) -> ContextGuard;
 
 //
 // Strokes

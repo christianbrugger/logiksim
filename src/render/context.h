@@ -31,7 +31,7 @@ struct Context {
 
 [[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard;
 
-// short-hand scene geometry
+// short-hand scene geometry that forwards settings.view_config
 [[nodiscard]] auto to_context(point_t position, const Context& context) -> BLPoint;
 [[nodiscard]] auto to_context(point_fine_t position, const Context& context) -> BLPoint;
 [[nodiscard]] auto to_context(grid_t length, const Context& context) -> double;
