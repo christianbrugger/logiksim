@@ -117,23 +117,15 @@ auto get_scene_rect(const ViewConfig &view_config) -> rect_t {
 
 // to grid fine
 
-namespace {
-
-auto to_grid_fine(double x, double y, const ViewConfig &config) -> point_fine_t {
+auto to_grid_fine(QPointF position, const ViewConfig &config) -> point_fine_t {
     const auto scale = config.device_scale();
     const auto offset = config.offset();
 
-    return point_fine_t {x / scale, y / scale} - offset;
-}
-
-}  // namespace
-
-auto to_grid_fine(QPointF position, const ViewConfig &config) -> point_fine_t {
-    return to_grid_fine(position.x(), position.y(), config);
+    return point_fine_t {position.x() / scale, position.y() / scale} - offset;
 }
 
 auto to_grid_fine(QPoint position, const ViewConfig &config) -> point_fine_t {
-    return to_grid_fine(position.x(), position.y(), config);
+    return to_grid_fine(QPointF {position}, config);
 }
 
 auto to_grid_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
@@ -145,10 +137,8 @@ auto to_grid_fine(BLPoint point, const ViewConfig &config) -> point_fine_t {
 
 // to grid
 
-namespace {
-
-auto to_grid(double x_, double y_, const ViewConfig &config) -> std::optional<point_t> {
-    const auto fine = to_grid_fine(x_, y_, config);
+auto to_grid(QPointF position, const ViewConfig &config) -> std::optional<point_t> {
+    const auto fine = to_grid_fine(position, config);
 
     const auto x = round(fine.x);
     const auto y = round(fine.y);
@@ -160,14 +150,8 @@ auto to_grid(double x_, double y_, const ViewConfig &config) -> std::optional<po
     return std::nullopt;
 }
 
-}  // namespace
-
-auto to_grid(QPointF position, const ViewConfig &config) -> std::optional<point_t> {
-    return to_grid(position.x(), position.y(), config);
-}
-
 auto to_grid(QPoint position, const ViewConfig &config) -> std::optional<point_t> {
-    return to_grid(position.x(), position.y(), config);
+    return to_grid(QPointF {position}, config);
 }
 
 // to Qt widget / device coordinates
