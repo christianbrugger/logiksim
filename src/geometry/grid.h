@@ -5,6 +5,7 @@ namespace logicsim {
 
 struct grid_fine_t;
 struct grid_t;
+struct connection_count_t;
 
 [[nodiscard]] auto is_representable(int x, int y) -> bool;
 [[nodiscard]] auto is_representable(grid_fine_t x, grid_fine_t y) -> bool;

@@ -78,6 +78,7 @@ set(LS_CORE_SOURCES
     src/format/time.cpp
     src/format/to_hex.cpp
     
+    src/geometry/connection_count.cpp
     src/geometry/grid.cpp
     src/geometry/interpolation.cpp
     src/geometry/line.cpp
@@ -98,6 +99,11 @@ set(LS_CORE_SOURCES
     src/iterator_adaptor/transform_if_output_iterator.cpp
     src/iterator_adaptor/transform_output_iterator.cpp
     src/iterator_adaptor/transform_view.cpp
+    
+    src/logic_item/layout.cpp
+    src/logic_item/layout_display.cpp
+    src/logic_item/layout_display_number.cpp
+    src/logic_item/layout_display_ascii.cpp
 
     src/random/bool.cpp
     src/random/generator.cpp

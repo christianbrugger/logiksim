@@ -3,6 +3,10 @@
 
 #include "algorithm/range.h"
 #include "exception.h"
+#include "geometry/connection_count.h"
+#include "logic_item/layout_display.h"
+#include "logic_item/layout_display_ascii.h"
+#include "logic_item/layout_display_number.h"
 #include "vocabulary.h"
 #include "vocabulary/font_style.h"
 #include "vocabulary/layout_calculation_data.h"
@@ -13,9 +17,6 @@
 struct BLPoint;
 
 namespace logicsim {
-
-[[nodiscard]] constexpr auto to_grid(connection_count_t count) -> grid_t;
-[[nodiscard]] constexpr auto to_grid_fine(connection_count_t count) -> grid_fine_t;
 
 // General
 namespace defaults {
@@ -30,45 +31,19 @@ constexpr static inline auto max_inputs = connection_count_t {128};
 constexpr static inline auto width = grid_t {2};
 }  // namespace standard_element
 
-// Display General
-namespace display {
-constexpr static inline auto font_style = FontStyle::monospace;
-constexpr static inline auto font_size = grid_fine_t {0.9};
-constexpr static inline auto enable_input_id = connection_id_t {0};
-
-constexpr static inline auto margin_horizontal = grid_fine_t {0.2};
-constexpr static inline auto padding_vertical = grid_fine_t {0.7};
-constexpr static inline auto padding_horizontal = grid_fine_t {0.25};
-}  // namespace display
-
-// Display Number
-namespace display_number {
-constexpr static inline auto control_inputs = connection_count_t {2};
-[[nodiscard]] auto value_inputs(connection_count_t input_count) -> connection_count_t;
-constexpr static inline auto min_value_inputs = connection_count_t {1};
-constexpr static inline auto max_value_inputs = connection_count_t {64};
-constexpr static inline auto min_inputs = control_inputs + min_value_inputs;
-constexpr static inline auto max_inputs = control_inputs + max_value_inputs;
-[[nodiscard]] auto width(connection_count_t input_count) -> grid_t;
-[[nodiscard]] auto height(connection_count_t input_count) -> grid_t;
-
-[[nodiscard]] auto input_shift(connection_count_t input_count) -> grid_t;
-[[nodiscard]] auto enable_position(connection_count_t input_count) -> point_t;
-[[nodiscard]] auto negative_position(connection_count_t input_count) -> point_t;
-constexpr static inline auto negative_input_id = connection_id_t {1};
-}  // namespace display_number
-
 [[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
                                                connection_count_t input_count,
                                                connection_count_t output_count) -> bool;
 [[nodiscard]] auto is_orientation_valid(ElementType element_type,
                                         orientation_t orientation) -> bool;
 
-[[nodiscard]] auto element_collision_rect(layout_calculation_data_t data) -> rect_t;
-[[nodiscard]] auto element_selection_rect(layout_calculation_data_t data) -> rect_fine_t;
+[[nodiscard]] auto element_collision_rect(const layout_calculation_data_t &data)
+    -> rect_t;
+[[nodiscard]] auto element_selection_rect(const layout_calculation_data_t &data)
+    -> rect_fine_t;
 [[nodiscard]] auto element_selection_rect(ordered_line_t line) -> rect_fine_t;
 [[nodiscard]] auto element_selection_rect_rounded(ordered_line_t line) -> rect_fine_t;
-[[nodiscard]] auto element_bounding_rect(layout_calculation_data_t data) -> rect_t;
+[[nodiscard]] auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t;
 
 [[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;
 [[nodiscard]] auto orientations_compatible(orientation_t a, orientation_t b) -> bool;
@@ -90,27 +65,8 @@ auto connector_point(point_t position, orientation_t orientation, grid_fine_t of
 auto connector_point(BLPoint position, orientation_t orientation, double offset)
     -> BLPoint;
 
-// Display ASCII
-namespace display_ascii {
-constexpr static inline auto control_inputs = connection_count_t {1};
-constexpr static inline auto value_inputs = connection_count_t {7};
-constexpr static inline auto input_count = control_inputs + value_inputs;
-constexpr static inline auto width = grid_t {4};
-constexpr static inline auto height =
-    grid_t {std::size_t {value_inputs - connection_count_t {1}}};  // TODO simplify
-constexpr static inline auto enable_position = point_t {2, height};
-}  // namespace display_ascii
-
-constexpr auto to_grid(connection_count_t count) -> grid_t {
-    return grid_t {count.count()};
-}
-
-constexpr auto to_grid_fine(connection_count_t count) -> grid_fine_t {
-    return grid_fine_t {to_grid(count)};
-}
-
 /// next_point(point_t position) -> bool;
-auto iter_element_body_points(layout_calculation_data_t data,
+auto iter_element_body_points(const layout_calculation_data_t &data,
                               std::invocable<point_t> auto next_point) -> bool {
     switch (data.element_type) {
         using enum ElementType;
@@ -323,7 +279,7 @@ auto iter_element_body_points(layout_calculation_data_t data,
 }
 
 // next_input(point_t position, orientation_t orientation) -> bool;
-auto iter_input_location(layout_calculation_data_t data,
+auto iter_input_location(const layout_calculation_data_t &data,
                          std::invocable<point_t, orientation_t> auto next_input) -> bool {
     switch (data.element_type) {
         using enum ElementType;
@@ -550,7 +506,7 @@ auto iter_input_location(layout_calculation_data_t data,
 }
 
 // next_output(point_t position, orientation_t orientation) -> bool;
-auto iter_output_location(layout_calculation_data_t data,
+auto iter_output_location(const layout_calculation_data_t &data,
                           std::invocable<point_t, orientation_t> auto next_output)
     -> bool {
     switch (data.element_type) {
@@ -681,7 +637,7 @@ auto iter_output_location(layout_calculation_data_t data,
 // next_input(connection_id_t input_id, point_t position,
 //            orientation_t orientation) -> bool;
 auto iter_input_location_and_id(
-    layout_calculation_data_t data,
+    const layout_calculation_data_t &data,
     std::invocable<connection_id_t, point_t, orientation_t> auto next_input) -> bool {
     return iter_input_location(
         data, [&, input_id = connection_id_t {0}](point_t position,
@@ -693,7 +649,7 @@ auto iter_input_location_and_id(
 // next_output(connection_id_t output_id, point_t position,
 //             orientation_t orientation) -> bool;
 auto iter_output_location_and_id(
-    layout_calculation_data_t data,
+    const layout_calculation_data_t &data,
     std::invocable<connection_id_t, point_t, orientation_t> auto next_output) -> bool {
     return iter_output_location(
         data, [&, output_id = connection_id_t {0}](point_t position,

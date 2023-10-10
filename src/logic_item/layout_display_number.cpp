@@ -1,0 +1,118 @@
+#include "logic_item/layout_display_number.h"
+
+#include "geometry/connection_count.h"
+#include "logic_item/layout_display.h"
+#include "vocabulary/point.h"
+#include "vocabulary/grid.h"
+
+#include <gcem.hpp>
+
+#include <stdexcept>
+
+namespace logicsim {
+
+namespace display_number {
+constexpr auto value_inputs_(connection_count_t input_count) -> connection_count_t {
+    if (input_count < control_inputs) {
+        throw std::runtime_error("input count too small");
+    }
+    return input_count - control_inputs;
+}
+
+auto value_inputs(connection_count_t input_count) -> connection_count_t {
+    return value_inputs_(input_count);
+}
+
+namespace {
+
+// WARNING: changing this function will make saves incompatible
+constexpr auto _width(connection_count_t input_count) -> grid_t {
+    using gcem::ceil;
+    using gcem::floor;
+    using gcem::log10;
+    using gcem::max;
+
+    // font dependent, gathered by running print_character_metrics()
+    constexpr auto digit_size = 0.6;
+    constexpr auto sign_width = 0.6;
+    constexpr auto separator_width = 0.6;
+    static_assert(display::font_style == FontStyle::monospace);
+
+    // independent
+    constexpr auto font_size = double {display::font_size};
+    constexpr auto padding = double {display::padding_horizontal};
+    constexpr auto margin = double {display::margin_horizontal};
+    // lock in values we depend on
+    static_assert(font_size == 0.9);
+    static_assert(padding == 0.25);
+    static_assert(margin == 0.2);
+
+    const auto digit_count_2 = gsl::narrow<double>(value_inputs_(input_count).count());
+    const auto digit_count_10 = ceil(max(1., digit_count_2) * log10(2));
+    const auto digit_count_10_neg = ceil(max(1., digit_count_2 - 1.) * log10(2));
+
+    // without sign
+    const auto digit_width = [&](double digit_count_10_) {
+        const auto separator_count_ = floor((digit_count_10_ - 1.) / 3.);
+        return digit_count_10_ * digit_size + separator_count_ * separator_width;
+    };
+
+    const auto sign_effective_width = max(
+        0., digit_width(digit_count_10_neg) + sign_width - digit_width(digit_count_10));
+
+    const auto digit_width_grid =
+        ceil((digit_width(digit_count_10) + sign_effective_width) * font_size +
+             2 * padding + 2 * margin);
+
+    return grid_t {gsl::narrow<grid_t::value_type>(max(3., 1. + digit_width_grid))};
+}
+
+constexpr auto _generate_widths() {
+    constexpr auto count = std::size_t {max_inputs - min_inputs + connection_count_t {1}};
+    auto result = std::array<grid_t::value_type, count> {};
+    for (connection_count_t i = min_inputs; i <= max_inputs; ++i) {
+        result[std::size_t {i - min_inputs}] = _width(i).value;
+    }
+    return result;
+}
+
+constexpr static inline auto generated_widths = _generate_widths();
+
+// lock in generated values to make sure our saves are compatible
+static_assert(generated_widths ==
+              std::array<grid_t::value_type, 64> {
+                  3,  3,  3,  3,  4,  4,  4,  5,  5,  5,  6,  6,  6,  6,  6,  6,   //
+                  6,  7,  7,  7,  8,  8,  8,  8,  8,  8,  8,  9,  9,  9,  10, 10,  //
+                  10, 10, 10, 10, 10, 11, 11, 12, 12, 12, 12, 12, 13, 13, 13, 13,  //
+                  13, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 16, 16, 16, 16, 16});
+
+}  // namespace
+
+auto width(connection_count_t input_count) -> grid_t {
+    return grid_t {generated_widths.at((input_count - min_inputs).count())};
+}
+
+auto height(connection_count_t input_count) -> grid_t {
+    return to_grid(
+        std::max(connection_count_t {2}, input_count - connection_count_t {3}));
+}
+
+auto input_shift(connection_count_t input_count) -> grid_t {
+    const auto space =
+        width(input_count) - grid_t {1} - to_grid(display_number::control_inputs);
+
+    static_assert(sizeof(int) > sizeof(grid_t::value_type));
+    return grid_t {(int {space} + 1) / 2};
+}
+
+auto negative_position(connection_count_t input_count) -> point_t {
+    return point_t {grid_t {1} + input_shift(input_count), height(input_count)};
+}
+
+auto enable_position(connection_count_t input_count) -> point_t {
+    return point_t {grid_t {2} + input_shift(input_count), height(input_count)};
+}
+
+}  // namespace display_number
+
+}  // namespace logicsim
