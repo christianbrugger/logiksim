@@ -144,6 +144,8 @@ set(LS_CORE_SOURCES
     src/vocabulary/connection.cpp
     src/vocabulary/connection_count.cpp
     src/vocabulary/connection_id.cpp
+    src/vocabulary/connector_info.cpp
+    src/vocabulary/connector_static.cpp
     src/vocabulary/delay.cpp
     src/vocabulary/display_state.cpp
     src/vocabulary/drawable_element.cpp

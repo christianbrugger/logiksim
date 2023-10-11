@@ -175,11 +175,6 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
     throw_exception("unknown orientation");
 }
 
-auto logicsim::standard_element::height(connection_count_t input_count) -> grid_t {
-    require_min(input_count, min_inputs);
-    return to_grid((input_count - connection_count_t {1}));
-}
-
 auto is_input_output_count_valid(ElementType element_type, connection_count_t input_count,
                                  connection_count_t output_count) -> bool {
     switch (element_type) {

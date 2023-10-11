@@ -6,9 +6,7 @@ namespace logicsim {
 
 namespace standard_element {
 
-auto height(connection_count_t input_count) -> grid_t {
-    return to_grid((input_count - connection_count_t {1}));
-}
+//
 
 }  // namespace standard_element
 

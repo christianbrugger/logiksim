@@ -40,17 +40,16 @@ class static_vector {
     internal_size_t size_;
 
    public:
-    using iterator = buffer_t::iterator;
-    using const_iterator = buffer_t::const_iterator;
-    using reverse_iterator = buffer_t::reverse_iterator;
-    using const_reverse_iterator = buffer_t::const_reverse_iterator;
+    using iterator = typename buffer_t::iterator;
+    using const_iterator = typename buffer_t::const_iterator;
+    using reverse_iterator = typename buffer_t::reverse_iterator;
+    using const_reverse_iterator = typename buffer_t::const_reverse_iterator;
 
    public:
-    [[nodiscard]] explicit constexpr static_vector() = default;
+    [[nodiscard]] constexpr static_vector() = default;
     [[nodiscard]] explicit constexpr static_vector(size_type n);
-    [[nodiscard]] explicit constexpr static_vector(size_type n, value_type const& t);
-    [[nodiscard]] explicit constexpr static_vector(
-        std::initializer_list<value_type> list);
+    [[nodiscard]] constexpr static_vector(size_type n, value_type const& t);
+    [[nodiscard]] constexpr static_vector(std::initializer_list<value_type> list);
 
     [[nodiscard]] constexpr auto empty() const noexcept -> bool;
     [[nodiscard]] constexpr auto size() const noexcept -> size_type;
@@ -100,7 +99,8 @@ constexpr static_vector<Value, Capacity, SizeType>::static_vector(size_type n)
 
 template <typename Value, std::size_t Capacity, typename SizeType>
 constexpr static_vector<Value, Capacity, SizeType>::static_vector(size_type n,
-                                                                  value_type const& t) {
+                                                                  value_type const& t)
+    : buffer_ {} {
     if (n > capacity()) {
         throw std::runtime_error("static_vector: not enough capacity");
     }
@@ -110,7 +110,8 @@ constexpr static_vector<Value, Capacity, SizeType>::static_vector(size_type n,
 
 template <typename Value, std::size_t Capacity, typename SizeType>
 constexpr static_vector<Value, Capacity, SizeType>::static_vector(
-    std::initializer_list<value_type> list) {
+    std::initializer_list<value_type> list)
+    : buffer_ {} {
     if (list.size() > capacity()) {
         throw std::runtime_error("static_vector: not enough capacity");
     }

@@ -178,4 +178,21 @@ TEST(ContainerStaticVector, Exception) {
     }
 }
 
+TEST(ContainerStaticVector, ConstexprConstruction) {
+    {
+        constexpr static auto buffer = static_vector<int, 4>(2, 10);
+        constexpr static auto size = buffer.size();
+        ASSERT_EQ(size, 2);
+    }
+    {
+        constexpr static auto buffer = static_vector<int, 4>(4, 10);
+        constexpr static auto size = buffer.size();
+        ASSERT_EQ(size, 4);
+    }
+    {
+        constexpr static auto buffer = static_vector<int, 4> {1, 2, 3};
+        constexpr static auto size = buffer.size();
+        ASSERT_EQ(size, 3);
+    }
+
 }  // namespace logicsim

@@ -6,11 +6,12 @@
 #include "logic_item/layout_display_number.h"
 #include "logic_item/layout_standard_element.h"
 #include "vocabulary/connection_count.h"
+#include "vocabulary/connector_info.h"
+#include "vocabulary/connector_static.h"
 #include "vocabulary/element_type.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
-
-#include <boost/container/static_vector.hpp>
+#include "vocabulary/point.h"
 
 #include <exception>
 
@@ -23,13 +24,6 @@ enum class DirectionType {
 };
 
 // TODO format
-
-struct connector_info_t {};
-
-constexpr inline auto position_vector_size = 10;
-
-using position_vector_t =
-    boost::container::static_vector<connector_info_t, position_vector_size>;
 
 struct layout_info_t {
     connection_count_t input_count_min {0};
@@ -47,6 +41,9 @@ struct layout_info_t {
 
     grid_t (*variable_width)(const layout_calculation_data_t&) {nullptr};
     grid_t (*variable_height)(const layout_calculation_data_t&) {nullptr};
+
+    static_connectors input_connectors_fixed {};
+    static_connectors output_connectors_fixed {};
 };
 
 constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
@@ -107,6 +104,11 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {1},
                 .fixed_height = grid_t {0},
+
+                .input_connectors_fixed = {{.position = point_t {0, 0},
+                                            .orientation = orientation_t::left}},
+                .output_connectors_fixed = {{.position = point_t {1, 0},
+                                             .orientation = orientation_t::right}},
             };
         }
         case and_element:
@@ -145,6 +147,10 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {0},
                 .fixed_height = grid_t {0},
+
+                .input_connectors_fixed = {},
+                .output_connectors_fixed = {{.position = point_t {0, 0},
+                                             .orientation = orientation_t::undirected}},
             };
         }
         case led: {
@@ -161,6 +167,10 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {0},
                 .fixed_height = grid_t {0},
+
+                .input_connectors_fixed = {{.position = point_t {0, 0},
+                                            .orientation = orientation_t::undirected}},
+                .output_connectors_fixed = {},
 
             };
         }
@@ -200,6 +210,9 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = display_ascii::width,
                 .fixed_height = display_ascii::height,
+
+                .input_connectors_fixed = display_ascii::input_connectors,
+                .output_connectors_fixed = {},
             };
         }
 
@@ -217,6 +230,12 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {5},
                 .fixed_height = grid_t {4},
+
+                // the second annd third inputs and outputs are used only for simulation
+                .input_connectors_fixed = {{.position = point_t {3, 4},
+                                            .orientation = orientation_t::down}},
+                .output_connectors_fixed = {{.position = point_t {5, 2},
+                                             .orientation = orientation_t::right}},
             };
         }
         case flipflop_jk: {
@@ -233,6 +252,24 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {4},
                 .fixed_height = grid_t {2},
+
+                .input_connectors_fixed =
+                    {
+                        // clock
+                        {.position = point_t {0, 1}, .orientation = orientation_t::left},
+                        // j & k
+                        {.position = point_t {0, 0}, .orientation = orientation_t::left},
+                        {.position = point_t {0, 2}, .orientation = orientation_t::left},
+                        // set & reset
+                        {.position = point_t {2, 0}, .orientation = orientation_t::up},
+                        {.position = point_t {2, 2}, .orientation = orientation_t::down},
+                    },
+                .output_connectors_fixed =
+                    {
+                        // Q and !Q
+                        {.position = point_t {4, 0}, .orientation = orientation_t::right},
+                        {.position = point_t {4, 2}, .orientation = orientation_t::right},
+                    },
             };
         }
         case shift_register: {
@@ -249,6 +286,21 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {8},
                 .fixed_height = grid_t {2},
+
+                .input_connectors_fixed =
+                    {
+                        // clock
+                        {.position = point_t {0, 1}, .orientation = orientation_t::left},
+                        // inputs
+                        {.position = point_t {0, 0}, .orientation = orientation_t::left},
+                        {.position = point_t {0, 2}, .orientation = orientation_t::left},
+                    },
+                .output_connectors_fixed =
+                    {
+                        // Q and !Q
+                        {.position = point_t {8, 0}, .orientation = orientation_t::right},
+                        {.position = point_t {8, 2}, .orientation = orientation_t::right},
+                    },
             };
         }
         case latch_d: {
@@ -265,6 +317,19 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {2},
                 .fixed_height = grid_t {1},
+
+                .input_connectors_fixed =
+                    {
+                        // clock
+                        {.position = point_t {0, 1}, .orientation = orientation_t::left},
+                        // data
+                        {.position = point_t {0, 0}, .orientation = orientation_t::left},
+                    },
+                .output_connectors_fixed =
+                    {
+                        // data
+                        {.position = point_t {2, 0}, .orientation = orientation_t::right},
+                    },
             };
         }
         case flipflop_d: {
@@ -281,6 +346,22 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {3},
                 .fixed_height = grid_t {2},
+
+                .input_connectors_fixed =
+                    {
+                        // clock
+                        {.position = point_t {0, 1}, .orientation = orientation_t::left},
+                        // data
+                        {.position = point_t {0, 0}, .orientation = orientation_t::left},
+                        // set & reset
+                        {.position = point_t {2, 0}, .orientation = orientation_t::up},
+                        {.position = point_t {2, 2}, .orientation = orientation_t::down},
+                    },
+                .output_connectors_fixed =
+                    {
+                        // data
+                        {.position = point_t {3, 0}, .orientation = orientation_t::right},
+                    },
             };
         }
         case flipflop_ms_d: {
@@ -297,6 +378,22 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .fixed_width = grid_t {4},
                 .fixed_height = grid_t {2},
+
+                .input_connectors_fixed =
+                    {
+                        // clock
+                        {.position = point_t {0, 1}, .orientation = orientation_t::left},
+                        // data
+                        {.position = point_t {0, 0}, .orientation = orientation_t::left},
+                        // set & reset
+                        {.position = point_t {2, 0}, .orientation = orientation_t::up},
+                        {.position = point_t {2, 2}, .orientation = orientation_t::down},
+                    },
+                .output_connectors_fixed =
+                    {
+                        // data
+                        {.position = point_t {4, 0}, .orientation = orientation_t::right},
+                    },
             };
         }
 
