@@ -4,6 +4,7 @@
 #include "file.h"
 #include "format/std_type.h"
 #include "logging.h"
+#include "logic_item/layout.h"  // TODO !!! remove
 #include "render_widget.h"
 #include "resource.h"
 #include "serialize.h"
@@ -104,6 +105,10 @@ MainWidget::MainWidget(QWidget* parent)
     resize(914, 500);
 
     restore_gui_state();
+
+    for (const auto type : all_element_types) {
+        print(type, get_static_body_points(type));
+    }
 }
 
 namespace detail::time_slider {

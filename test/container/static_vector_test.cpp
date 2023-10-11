@@ -194,5 +194,6 @@ TEST(ContainerStaticVector, ConstexprConstruction) {
         constexpr static auto size = buffer.size();
         ASSERT_EQ(size, 3);
     }
+}
 
 }  // namespace logicsim

@@ -11,7 +11,7 @@ TEST(VocabularyConnectionId, Overflow) {
 
     // size_t
     EXPECT_EQ(std::size_t {connection_id_t {10}}, std::size_t {10});
-    EXPECT_THROW(std::size_t {null_connection}, std::runtime_error);
+    EXPECT_THROW(static_cast<void>(std::size_t {null_connection}), std::runtime_error);
 
     // comparison
     EXPECT_EQ(connection_id_t {10} < connection_id_t {11}, true);

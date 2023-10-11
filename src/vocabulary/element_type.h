@@ -40,6 +40,31 @@ auto format(ElementType type) -> std::string;
 
 [[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
 
+constexpr inline auto all_element_types = {
+    ElementType::unused,       //
+    ElementType::placeholder,  //
+    ElementType::wire,         //
+
+    ElementType::buffer_element,  //
+    ElementType::and_element,     //
+    ElementType::or_element,      //
+    ElementType::xor_element,     //
+
+    ElementType::button,          //
+    ElementType::led,             //
+    ElementType::display_number,  //
+    ElementType::display_ascii,   //
+
+    ElementType::clock_generator,  //
+    ElementType::flipflop_jk,      //
+    ElementType::shift_register,   //
+    ElementType::latch_d,          //
+    ElementType::flipflop_d,       //
+    ElementType::flipflop_ms_d,    //
+
+    ElementType::sub_circuit,  //
+};
+
 }  // namespace logicsim
 
 #endif

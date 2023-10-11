@@ -83,15 +83,15 @@ inline auto iter_output_location(const layout_calculation_data_t& data,
 // next_point = [](point_t position) -> bool
 inline auto iter_element_body_points(const layout_calculation_data_t& data,
                                      std::invocable<point_t> auto next_point) -> bool {
-    const auto width = width(data.input_count);
-    const auto height = height(data.input_count);
+    const auto w = width(data.input_count);
+    const auto h = height(data.input_count);
 
     const auto negative_pos = negative_position(data.input_count);
     const auto enable_pos = enable_position(data.input_count);
     const auto max_input_y = to_grid(value_inputs(data.input_count)) - grid_t {1};
 
-    for (const auto y : range(height + grid_t {1})) {
-        for (const auto x : range(width + grid_t {1})) {
+    for (const auto y : range(h + grid_t {1})) {
+        for (const auto x : range(w + grid_t {1})) {
             const auto point = point_t {x, y};
 
             if (point.x == grid_t {0} && point.y <= max_input_y) {

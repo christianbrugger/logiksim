@@ -17,6 +17,8 @@
 
 namespace logicsim {
 
+// TODO vocabulary type ?
+
 enum class DirectionType {
     undirected,
     directed,
@@ -107,8 +109,10 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
 
                 .input_connectors = {{.position = point_t {0, 0},
                                       .orientation = orientation_t::left}},
-                .output_connectors = {{.position = point_t {1, 0},
-                                       .orientation = orientation_t::right}},
+                .output_connectors =
+                    {
+                        {.position = point_t {1, 0}, .orientation = orientation_t::right},
+                    },
             };
         }
         case and_element:
@@ -415,7 +419,11 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
     std::terminate();
 }
 
-// TODO put somewhere else
+using static_body_points = static_vector<point_t, 28, uint32_t>;
+
+[[nodiscard]] auto get_static_body_points(ElementType element_type)
+    -> const static_body_points&;
+
 constexpr auto iter_connectors(const static_connectors& connectors,
                                std::invocable<point_t, orientation_t> auto next_connector)
     -> bool {
@@ -427,9 +435,23 @@ constexpr auto iter_connectors(const static_connectors& connectors,
     return true;
 }
 
-constexpr auto iter_input_location(const layout_calculation_data_t& data,
-                                   std::invocable<point_t, orientation_t> auto next_input)
-    -> bool {
+constexpr auto iter_body_points(const static_body_points& body_points,
+                                std::invocable<point_t> auto next_point) -> bool {
+    for (const point_t& point : body_points) {
+        if (!next_point(point)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+//
+// Iterators
+//
+
+constexpr auto iter_input_location_base(
+    const layout_calculation_data_t& data,
+    std::invocable<point_t, orientation_t> auto next_input) -> bool {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -438,8 +460,8 @@ constexpr auto iter_input_location(const layout_calculation_data_t& data,
         case xor_element:
             return standard_element::iter_input_location(data, next_input);
 
-        case display_ascii:
-            return display_ascii::iter_input_location(data, next_input);
+        case display_number:
+            return display_number::iter_input_location(data, next_input);
 
         default: {
             const auto connectors = get_layout_info(data.element_type).input_connectors;
@@ -449,7 +471,7 @@ constexpr auto iter_input_location(const layout_calculation_data_t& data,
     std::terminate();
 }
 
-constexpr auto iter_output_location(
+constexpr auto iter_output_location_base(
     const layout_calculation_data_t& data,
     std::invocable<point_t, orientation_t> auto next_output) -> bool {
     switch (data.element_type) {
@@ -460,8 +482,8 @@ constexpr auto iter_output_location(
         case xor_element:
             return standard_element::iter_output_location(data, next_output);
 
-        case display_ascii:
-            return display_ascii::iter_output_location(data, next_output);
+        case display_number:
+            return display_number::iter_output_location(data, next_output);
 
         default: {
             const auto connectors = get_layout_info(data.element_type).output_connectors;
@@ -471,8 +493,9 @@ constexpr auto iter_output_location(
     std::terminate();
 }
 
-inline auto iter_element_body_points(const layout_calculation_data_t& data,
-                                     std::invocable<point_t> auto next_point) -> bool {
+inline auto iter_element_body_points_base(const layout_calculation_data_t& data,
+                                          std::invocable<point_t> auto next_point)
+    -> bool {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -481,12 +504,12 @@ inline auto iter_element_body_points(const layout_calculation_data_t& data,
         case xor_element:
             return standard_element::iter_element_body_points(data, next_point);
 
-        case display_ascii:
-            return display_ascii::iter_element_body_points(data, next_point);
+        case display_number:
+            return display_number::iter_element_body_points(data, next_point);
 
         default: {
-            // return iter_connectors(connectors, next_input);
-            return true;
+            const auto& body_points = get_static_body_points(data.element_type);
+            return iter_body_points(body_points, next_point);
         }
     }
     std::terminate();

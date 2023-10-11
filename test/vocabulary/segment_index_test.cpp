@@ -11,7 +11,7 @@ TEST(VocabularySegmentIndex, Overflow) {
 
     // size_t
     EXPECT_EQ(std::size_t {segment_index_t {10}}, std::size_t {10});
-    EXPECT_THROW(std::size_t {null_segment_index}, std::runtime_error);
+    EXPECT_THROW(static_cast<void>(std::size_t {null_segment_index}), std::runtime_error);
 
     // comparison
     EXPECT_EQ(segment_index_t {10} < segment_index_t {11}, true);

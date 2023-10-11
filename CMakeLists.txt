@@ -18,6 +18,7 @@ set(LS_CORE_SOURCES
     src/algorithm/round.cpp
     src/algorithm/shuffle.cpp
     src/algorithm/sort_pair.cpp
+    src/algorithm/to_underlying.cpp
     src/algorithm/to_vector.cpp
     src/algorithm/transform_combine_while.cpp
     src/algorithm/transform_if.cpp

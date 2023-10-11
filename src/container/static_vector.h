@@ -53,8 +53,8 @@ class static_vector {
 
     [[nodiscard]] constexpr auto empty() const noexcept -> bool;
     [[nodiscard]] constexpr auto size() const noexcept -> size_type;
-    [[nodiscard]] constexpr auto capacity() const -> size_type;
-    [[nodiscard]] constexpr auto max_size() const -> size_type;
+    [[nodiscard]] constexpr static auto capacity() -> size_type;
+    [[nodiscard]] constexpr static auto max_size() -> size_type;
 
     constexpr auto clear() noexcept -> void;
     constexpr auto push_back(const value_type& value) -> void;
@@ -95,28 +95,28 @@ template <typename T1, std::size_t N1, typename S1,  //
 
 template <typename Value, std::size_t Capacity, typename SizeType>
 constexpr static_vector<Value, Capacity, SizeType>::static_vector(size_type n)
-    : static_vector(n, Value {}) {};
+    : static_vector(n, Value()) {};
 
 template <typename Value, std::size_t Capacity, typename SizeType>
 constexpr static_vector<Value, Capacity, SizeType>::static_vector(size_type n,
-                                                                  value_type const& t)
-    : buffer_ {} {
+                                                                  value_type const& t) {
     if (n > capacity()) {
         throw std::runtime_error("static_vector: not enough capacity");
     }
     size_ = static_cast<internal_size_t>(n);
     std::ranges::fill(*this, t);
+    std::ranges::fill(end(), buffer_.end(), Value());
 }
 
 template <typename Value, std::size_t Capacity, typename SizeType>
 constexpr static_vector<Value, Capacity, SizeType>::static_vector(
-    std::initializer_list<value_type> list)
-    : buffer_ {} {
+    std::initializer_list<value_type> list) {
     if (list.size() > capacity()) {
         throw std::runtime_error("static_vector: not enough capacity");
     }
     size_ = static_cast<internal_size_t>(list.size());
     std::ranges::copy(list, begin());
+    std::ranges::fill(end(), buffer_.end(), Value());
 }
 
 //
@@ -150,12 +150,12 @@ constexpr auto static_vector<Value, Capacity, SizeType>::size() const noexcept
 }
 
 template <typename Value, std::size_t Capacity, typename SizeType>
-constexpr auto static_vector<Value, Capacity, SizeType>::capacity() const -> size_type {
+constexpr auto static_vector<Value, Capacity, SizeType>::capacity() -> size_type {
     return Capacity;
 }
 
 template <typename Value, std::size_t Capacity, typename SizeType>
-constexpr auto static_vector<Value, Capacity, SizeType>::max_size() const -> size_t {
+constexpr auto static_vector<Value, Capacity, SizeType>::max_size() -> size_t {
     return Capacity;
 }
 
