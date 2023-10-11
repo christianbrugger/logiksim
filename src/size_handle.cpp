@@ -36,8 +36,6 @@ auto size_handle_positions(const layout::ConstElement element)
         }
 
         case display_number: {
-            const auto value_inputs = display_number::value_inputs(element.input_count());
-
             const auto width = display_number::width(element.input_count());
             const auto height = display_number::height(element.input_count());
 
