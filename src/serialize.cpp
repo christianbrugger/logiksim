@@ -17,6 +17,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "file.h"
+#include "geometry/layout.h"
 #include "geometry/point.h"
 #include "gzip.h"
 #include "layout.h"
@@ -126,14 +127,8 @@ auto to_placed_element(const SerializedLogicItem& obj, move_delta_t delta = {})
     }
     const auto moved_position = add_unchecked(obj.position, delta.x, delta.y);
 
-    const auto data = layout_calculation_data_t {
-        .internal_state_count = std::size_t {0},  // TODO ???
-        .position = moved_position,
-        .input_count = input_count.value(),
-        .output_count = output_count.value(),
-        .orientation = obj.orientation,
-        .element_type = obj.element_type,
-    };
+    // layout
+    const auto data = to_layout_calculation_data(definition, moved_position);
     if (!is_representable(data)) {
         return std::nullopt;
     }

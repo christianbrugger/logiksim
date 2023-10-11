@@ -45,7 +45,8 @@ auto transform(point_t element_position, orientation_t orientation, point_t offs
             throw_exception("Please implement.");
         }
         case undirected: {
-            throw_exception("Cannot transform undirected elements.");
+            return element_position + offset;
+            // throw_exception("Cannot transform undirected elements.");
         }
     }
     throw_exception("Don't know how to transform position.");
@@ -69,7 +70,8 @@ auto transform(point_t element_position, orientation_t orientation, point_fine_t
             throw_exception("Please implement.");
         }
         case undirected: {
-            throw_exception("Cannot transform undirected elements.");
+            return point_fine_t {element_position} + offset;
+            // throw_exception("Cannot transform undirected elements.");
         }
     }
     throw_exception("Don't know how to transform position.");
@@ -93,7 +95,8 @@ auto transform(orientation_t element_orientation, orientation_t connector)
             throw_exception("Please implement.");
         }
         case undirected: {
-            throw_exception("Cannot transform undirected element.");
+            return connector;
+            // throw_exception("Cannot transform undirected element.");
         }
     }
     throw_exception("Don't know how to transform connector.");
@@ -117,7 +120,8 @@ auto transform(point_t position, orientation_t orientation, point_t p0, point_t 
             throw_exception("Please implement.");
         }
         case undirected: {
-            throw_exception("Cannot transform undirected element.");
+            return rect_t {position + p0, position + p1};
+            // throw_exception("Cannot transform undirected element.");
         }
     }
     throw_exception("Don't know how to transform position.");

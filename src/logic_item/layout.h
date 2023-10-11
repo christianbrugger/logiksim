@@ -458,10 +458,10 @@ constexpr auto iter_input_location_base(
         case and_element:
         case or_element:
         case xor_element:
-            return standard_element::iter_input_location(data, next_input);
+            return ::logicsim::standard_element::iter_input_location(data, next_input);
 
         case display_number:
-            return display_number::iter_input_location(data, next_input);
+            return ::logicsim::display_number::iter_input_location(data, next_input);
 
         default: {
             const auto connectors = get_layout_info(data.element_type).input_connectors;
@@ -480,10 +480,10 @@ constexpr auto iter_output_location_base(
         case and_element:
         case or_element:
         case xor_element:
-            return standard_element::iter_output_location(data, next_output);
+            return ::logicsim::standard_element::iter_output_location(data, next_output);
 
         case display_number:
-            return display_number::iter_output_location(data, next_output);
+            return ::logicsim::display_number::iter_output_location(data, next_output);
 
         default: {
             const auto connectors = get_layout_info(data.element_type).output_connectors;
@@ -502,10 +502,12 @@ inline auto iter_element_body_points_base(const layout_calculation_data_t& data,
         case and_element:
         case or_element:
         case xor_element:
-            return standard_element::iter_element_body_points(data, next_point);
+            return ::logicsim::standard_element::iter_element_body_points(data,
+                                                                          next_point);
 
         case display_number:
-            return display_number::iter_element_body_points(data, next_point);
+            // TODO why do we need this?
+            return ::logicsim::display_number::iter_element_body_points(data, next_point);
 
         default: {
             const auto& body_points = get_static_body_points(data.element_type);

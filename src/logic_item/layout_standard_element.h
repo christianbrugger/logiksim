@@ -42,8 +42,7 @@ constexpr auto height(connection_count_t input_count) -> grid_t {
 }
 
 constexpr auto output_height(connection_count_t input_count) -> grid_t {
-    // we substract connection_count, so it is checked for underflow
-    return height(input_count - connection_count_t {1}) / 2;
+    return height(input_count) / 2;
 }
 
 // next_input = [](point_t position, orientation_t orientation) -> bool
@@ -64,9 +63,10 @@ constexpr auto iter_output_location(
     std::invocable<point_t, orientation_t> auto next_output) -> bool {
     const auto output_y = output_height(data.input_count);
 
-    if (!next_output(point_t {2, output_y}, orientation_t::left)) {
+    if (!next_output(point_t {2, output_y}, orientation_t::right)) {
         return false;
     }
+    return true;
 }
 
 // next_point = [](point_t position) -> bool
@@ -74,7 +74,7 @@ constexpr auto iter_element_body_points(const layout_calculation_data_t& data,
                                         std::invocable<point_t> auto next_point) -> bool {
     const auto output_y = output_height(data.input_count);
 
-    for (auto y : range(height(data.input_count))) {
+    for (auto y : range(to_grid(data.input_count))) {
         if (!next_point(point_t {1, y})) {
             return false;
         }

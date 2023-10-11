@@ -4,6 +4,7 @@
 #include "algorithm/range.h"
 #include "exception.h"
 #include "geometry/connection_count.h"
+#include "logic_item/layout.h"
 #include "logic_item/layout_display.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
@@ -59,9 +60,42 @@ auto connector_point(point_t position, orientation_t orientation, grid_fine_t of
 auto connector_point(BLPoint position, orientation_t orientation, double offset)
     -> BLPoint;
 
-/// next_point(point_t position) -> bool;
+// next_input = [](point_t position, orientation_t orientation) -> bool
+auto iter_input_location(const layout_calculation_data_t &data,
+                         std::invocable<point_t, orientation_t> auto next_input) -> bool {
+    return iter_input_location_base(
+        data, [&](point_t position, orientation_t orientation) {
+            return std::invoke(next_input,
+                               transform(data.position, data.orientation, position),
+                               transform(data.orientation, orientation));
+        });
+}
+
+// next_output = [](point_t position, orientation_t orientation) -> bool
+auto iter_output_location(const layout_calculation_data_t &data,
+                          std::invocable<point_t, orientation_t> auto next_output)
+    -> bool {
+    return iter_output_location_base(
+        data, [&](point_t position, orientation_t orientation) {
+            return std::invoke(next_output,
+                               transform(data.position, data.orientation, position),
+                               transform(data.orientation, orientation));
+        });
+}
+
+// next_point = [](point_t position) -> bool
 auto iter_element_body_points(const layout_calculation_data_t &data,
                               std::invocable<point_t> auto next_point) -> bool {
+    return iter_element_body_points_base(data, [&](point_t position) {
+        return std::invoke(next_point,
+                           transform(data.position, data.orientation, position));
+    });
+}
+
+/*
+/// next_point(point_t position) -> bool;
+auto iter_element_body_points_2(const layout_calculation_data_t &data,
+                                std::invocable<point_t> auto next_point) -> bool {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -273,8 +307,9 @@ auto iter_element_body_points(const layout_calculation_data_t &data,
 }
 
 // next_input(point_t position, orientation_t orientation) -> bool;
-auto iter_input_location(const layout_calculation_data_t &data,
-                         std::invocable<point_t, orientation_t> auto next_input) -> bool {
+auto iter_input_location_2(const layout_calculation_data_t &data,
+                           std::invocable<point_t, orientation_t> auto next_input)
+    -> bool {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -500,8 +535,8 @@ auto iter_input_location(const layout_calculation_data_t &data,
 }
 
 // next_output(point_t position, orientation_t orientation) -> bool;
-auto iter_output_location(const layout_calculation_data_t &data,
-                          std::invocable<point_t, orientation_t> auto next_output)
+auto iter_output_location_2(const layout_calculation_data_t &data,
+                            std::invocable<point_t, orientation_t> auto next_output)
     -> bool {
     switch (data.element_type) {
         using enum ElementType;
@@ -627,6 +662,7 @@ auto iter_output_location(const layout_calculation_data_t &data,
     }
     throw_exception("'Don't know to calculate output locations.");
 }
+*/
 
 // next_input(connection_id_t input_id, point_t position,
 //            orientation_t orientation) -> bool;

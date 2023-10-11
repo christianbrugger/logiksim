@@ -3,6 +3,7 @@
 #include "algorithm/round.h"
 #include "file.h"
 #include "format/std_type.h"
+#include "geometry/layout.h"
 #include "logging.h"
 #include "logic_item/layout.h"  // TODO !!! remove
 #include "render_widget.h"
@@ -106,9 +107,17 @@ MainWidget::MainWidget(QWidget* parent)
 
     restore_gui_state();
 
+    // TODO remove
     for (const auto type : all_element_types) {
         print(type, get_static_body_points(type));
     }
+    auto def = to_logic_item_definition(InteractionState::insert_and_element);
+    def.input_count = connection_count_t {3};
+    const auto d = to_layout_calculation_data(def, point_t {100, 100});
+    iter_element_body_points(d, [](point_t position) -> bool {
+        print(position);
+        return true;
+    });
 }
 
 namespace detail::time_slider {
