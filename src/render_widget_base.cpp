@@ -4,7 +4,23 @@
 #include "layout_calculation.h"
 #include "vocabulary/element_definition.h"
 
+#include <exception>
+#include <stdexcept>
+
 namespace logicsim {
+
+namespace {
+auto default_element_definition(ElementType element_type) -> ElementDefinition {
+    return ElementDefinition {
+        .element_type = element_type,
+        .input_count = default_input_count(element_type),
+        .output_count = default_output_count(element_type),
+        .orientation = get_direction_type(element_type) == DirectionType::directed
+                           ? orientation_t::right
+                           : orientation_t::undirected,
+    };
+}
+}  // namespace
 
 auto to_logic_item_definition(InteractionState state) -> ElementDefinition {
     switch (state) {
@@ -13,145 +29,63 @@ auto to_logic_item_definition(InteractionState state) -> ElementDefinition {
         case not_interactive:
         case selection:
         case simulation:
-            throw_exception("non-inserting states don't have a definition");
+            throw std::runtime_error("non-inserting states don't have a definition");
 
         case insert_wire:
-            return ElementDefinition {
-                .element_type = ElementType::wire,
-                .input_count = connection_count_t {0},
-                .output_count = connection_count_t {0},
-                .orientation = orientation_t::undirected,
-            };
+            return default_element_definition(ElementType::wire);
         case insert_button:
-            return ElementDefinition {
-                .element_type = ElementType::button,
-                .input_count = connection_count_t {0},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::undirected,
-            };
+            return default_element_definition(ElementType::button);
         case insert_led:
-            return ElementDefinition {
-                .element_type = ElementType::led,
-                .input_count = connection_count_t {1},
-                .output_count = connection_count_t {0},
-                .orientation = orientation_t::undirected,
-            };
+            return default_element_definition(ElementType::led);
         case insert_display_number:
-            return ElementDefinition {
-                .element_type = ElementType::display_number,
-                .input_count = connection_count_t {3} + display_number::control_inputs,
-                .output_count = connection_count_t {0},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::display_number);
         case insert_display_ascii:
-            return ElementDefinition {
-                .element_type = ElementType::display_ascii,
-                .input_count = display_ascii::input_count,
-                .output_count = connection_count_t {0},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::display_ascii);
 
         case insert_and_element:
-            return ElementDefinition {
-                .element_type = ElementType::and_element,
-                .input_count = connection_count_t {2},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::and_element);
         case insert_or_element:
-            return ElementDefinition {
-                .element_type = ElementType::or_element,
-                .input_count = connection_count_t {2},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::or_element);
         case insert_xor_element:
-            return ElementDefinition {
-                .element_type = ElementType::xor_element,
-                .input_count = connection_count_t {2},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-            };
-        case insert_nand_element:
-            return ElementDefinition {
-                .element_type = ElementType::and_element,
-                .input_count = connection_count_t {2},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-                .output_inverters = logic_small_vector_t {true},
-            };
-        case insert_nor_element:
-            return ElementDefinition {
-                .element_type = ElementType::or_element,
-                .input_count = connection_count_t {2},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-                .output_inverters = logic_small_vector_t {true},
-            };
+            return default_element_definition(ElementType::xor_element);
+
+        case insert_nand_element: {
+            auto definition = default_element_definition(ElementType::xor_element);
+            definition.output_inverters = logic_small_vector_t {true};
+            return definition;
+        }
+        case insert_nor_element: {
+            auto definition = default_element_definition(ElementType::or_element);
+            definition.output_inverters = logic_small_vector_t {true};
+            return definition;
+        }
 
         case insert_buffer_element:
-            return ElementDefinition {
-                .element_type = ElementType::buffer_element,
-                .input_count = connection_count_t {1},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-            };
-        case insert_inverter_element:
-            return ElementDefinition {
-                .element_type = ElementType::buffer_element,
-                .input_count = connection_count_t {1},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-                .output_inverters = logic_small_vector_t {true},
-            };
+            return default_element_definition(ElementType::buffer_element);
+        case insert_inverter_element: {
+            auto definition = default_element_definition(ElementType::buffer_element);
+            definition.output_inverters = logic_small_vector_t {true};
+            return definition;
+        }
 
         case insert_flipflop_jk:
-            return ElementDefinition {
-                .element_type = ElementType::flipflop_jk,
-                .input_count = connection_count_t {5},
-                .output_count = connection_count_t {2},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::flipflop_jk);
         case insert_latch_d:
-            return ElementDefinition {
-                .element_type = ElementType::latch_d,
-                .input_count = connection_count_t {2},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::latch_d);
         case insert_flipflop_d:
-            return ElementDefinition {
-                .element_type = ElementType::flipflop_d,
-                .input_count = connection_count_t {4},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::flipflop_d);
         case insert_flipflop_ms_d:
-            return ElementDefinition {
-                .element_type = ElementType::flipflop_ms_d,
-                .input_count = connection_count_t {4},
-                .output_count = connection_count_t {1},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::flipflop_ms_d);
 
-        case insert_clock_generator:
-            return ElementDefinition {
-                .element_type = ElementType::clock_generator,
-                .input_count = connection_count_t {3},
-                .output_count = connection_count_t {3},
-                .orientation = orientation_t::right,
-
-                .attrs_clock_generator = attributes_clock_generator_t {},
-            };
+        case insert_clock_generator: {
+            auto definition = default_element_definition(ElementType::clock_generator);
+            definition.attrs_clock_generator = attributes_clock_generator_t {};
+            return definition;
+        }
         case insert_shift_register:
-            return ElementDefinition {
-                .element_type = ElementType::shift_register,
-                .input_count = connection_count_t {3},
-                .output_count = connection_count_t {2},
-                .orientation = orientation_t::right,
-            };
+            return default_element_definition(ElementType::shift_register);
     }
-    throw_exception("Don't know how to convert InteractionState to definition.");
+    std::terminate();
 }
 
 auto RendererWidgetBase::emit_interaction_state_changed(InteractionState new_state)

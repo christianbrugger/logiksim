@@ -9,24 +9,6 @@
 
 namespace logicsim {
 
-auto require_min(connection_count_t value, connection_count_t count) -> void {
-    if (value < count) [[unlikely]] {
-        throw_exception("Object has not enough elements.");
-    }
-}
-
-auto require_max(connection_count_t value, connection_count_t count) -> void {
-    if (value > count) [[unlikely]] {
-        throw_exception("Object has too many elements.");
-    }
-}
-
-auto require_equal(connection_count_t value, connection_count_t count) -> void {
-    if (value != count) [[unlikely]] {
-        throw_exception("Object has wrong number of elements.");
-    }
-}
-
 auto transform(point_t element_position, orientation_t orientation, point_t offset)
     -> point_t {
     switch (orientation) {
@@ -181,192 +163,36 @@ auto connector_point(BLPoint position, orientation_t orientation, double offset)
 
 auto is_input_output_count_valid(ElementType element_type, connection_count_t input_count,
                                  connection_count_t output_count) -> bool {
-    switch (element_type) {
-        using enum ElementType;
+    const auto info = get_layout_info(element_type);
 
-        case unused: {
-            return input_count == connection_count_t {0} &&
-                   output_count == connection_count_t {0};
-        }
-        case placeholder: {
-            return input_count == connection_count_t {1} &&
-                   output_count == connection_count_t {0};
-        }
-        case wire: {
-            return input_count <= connection_count_t {1} &&
-                   output_count >= connection_count_t {0};
-        }
-
-        case buffer_element: {
-            return input_count == connection_count_t {1} &&
-                   output_count == connection_count_t {1};
-        }
-        case and_element:
-        case or_element:
-        case xor_element: {
-            return input_count >= standard_element::min_inputs &&
-                   input_count <= standard_element::max_inputs &&
-                   output_count == connection_count_t {1};
-        }
-
-        case button: {
-            return input_count == connection_count_t {0} &&
-                   output_count == connection_count_t {1};
-        }
-        case led: {
-            return input_count == connection_count_t {1} &&
-                   output_count == connection_count_t {0};
-        }
-        case display_number: {
-            return input_count >= display_number::min_inputs &&
-                   input_count <= display_number::max_inputs &&
-                   output_count == connection_count_t {0};
-        }
-        case display_ascii: {
-            return input_count == display_ascii::input_count &&
-                   output_count == connection_count_t {0};
-        }
-
-        case clock_generator: {
-            return input_count == connection_count_t {3} &&
-                   output_count == connection_count_t {3};
-        }
-        case flipflop_jk: {
-            return input_count == connection_count_t {5} &&
-                   output_count == connection_count_t {2};
-        }
-        case shift_register: {
-            return input_count >= connection_count_t {2} &&
-                   output_count >= connection_count_t {1} &&
-                   input_count == output_count + connection_count_t {1};
-        }
-        case latch_d: {
-            return input_count == connection_count_t {2} &&
-                   output_count == connection_count_t {1};
-        }
-        case flipflop_d: {
-            return input_count == connection_count_t {4} &&
-                   output_count == connection_count_t {1};
-        }
-        case flipflop_ms_d: {
-            return input_count == connection_count_t {4} &&
-                   output_count == connection_count_t {1};
-        }
-
-        case sub_circuit: {
-            return input_count > connection_count_t {0} ||
-                   output_count > connection_count_t {0};
-        }
-    }
-
-    throw_exception("invalid element");
+    return info.input_count_min <= input_count && input_count <= info.input_count_max &&
+           info.output_count_min <= output_count && output_count <= info.output_count_max;
 }
 
-[[nodiscard]] auto is_orientation_valid(ElementType element_type,
-                                        orientation_t orientation) -> bool {
-    if (element_type == ElementType::unused || element_type == ElementType::placeholder ||
-        element_type == ElementType::wire) {
-        return true;
-    }
+auto is_orientation_valid(ElementType element_type, orientation_t orientation) -> bool {
+    const auto info = get_layout_info(element_type);
 
-    if (element_type == ElementType::button || element_type == ElementType::led) {
-        return orientation == orientation_t::undirected;
+    switch (info.direction_type) {
+        using enum DirectionType;
+        case undirected:
+            return orientation == orientation_t::undirected;
+        case directed:
+            return orientation != orientation_t::undirected;
+        case any:
+            return true;
     }
-
-    return orientation != orientation_t::undirected;
+    std::terminate();
 }
 
 auto element_collision_rect(const layout_calculation_data_t &data) -> rect_t {
-    switch (data.element_type) {
-        using enum ElementType;
+    const auto info = get_layout_info(data.element_type);
 
-        case unused: {
-            throw_exception("unused doesn't have a collision body");
-        }
-        case placeholder: {
-            throw_exception("placeholder doesn't have a collision body");
-        }
+    const auto width = info.variable_width ? info.variable_width(data) : info.fixed_width;
+    const auto height =
+        info.variable_height ? info.variable_height(data) : info.fixed_height;
 
-        case wire: {
-            throw_exception("not supported");
-        }
-
-        case buffer_element: {
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {1, 0});
-        }
-
-        case and_element:
-        case or_element:
-        case xor_element: {
-            require_min(data.input_count, standard_element::min_inputs);
-
-            const auto height = data.input_count;
-            const auto y2 = to_grid(height - connection_count_t {1});
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {2, y2});
-        }
-
-        case led: {
-            return rect_t {data.position, data.position};
-        }
-        case button: {
-            return rect_t {data.position, data.position};
-        }
-        case display_number: {
-            const auto w = display_number::width(data.input_count);
-            const auto h = display_number::height(data.input_count);
-
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {w, h});
-        }
-        case display_ascii: {
-            const auto w = display_ascii::width;
-            const auto h = display_ascii::height;
-
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {w, h});
-        }
-
-        case clock_generator: {
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {5, 4});
-        }
-        case flipflop_jk: {
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {4, 2});
-        }
-        case shift_register: {
-            require_min(data.output_count, connection_count_t {1});
-
-            // TODO width depends on internal state
-            const auto width = 2 * 4;
-
-            const auto x2 = grid_t {width};
-            const auto y2 = data.output_count == connection_count_t {1}
-                                ? grid_t {1}
-                                : to_grid(data.output_count - connection_count_t {1}) * 2;
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {x2, y2});
-        }
-        case latch_d: {
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {2, 1});
-        }
-        case flipflop_d: {
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {3, 2});
-        }
-        case flipflop_ms_d: {
-            return transform(data.position, data.orientation, point_t {0, 0},
-                             point_t {4, 2});
-        }
-
-        case sub_circuit: {
-            throw_exception("not implemented");
-        }
-    }
-    throw_exception("'Don't know to calculate collision rect.");
+    return transform(data.position, data.orientation, point_t {0, 0},
+                     point_t {width, height});
 }
 
 auto element_selection_rect(const layout_calculation_data_t &data) -> rect_fine_t {

@@ -24,9 +24,7 @@ auto size_handle_positions(const layout::ConstElement element)
         case and_element:
         case or_element:
         case xor_element: {
-            require_min(element.input_count(), standard_element::min_inputs);
-
-            const auto height = to_grid_fine(element.input_count()) - grid_fine_t {1};
+            const auto height = standard_element::height(element.input_count());
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
             return {
@@ -41,7 +39,7 @@ auto size_handle_positions(const layout::ConstElement element)
             const auto value_inputs = display_number::value_inputs(element.input_count());
 
             const auto width = display_number::width(element.input_count());
-            const auto height = to_grid_fine(value_inputs) - grid_fine_t {1};
+            const auto height = display_number::height(element.input_count());
 
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
