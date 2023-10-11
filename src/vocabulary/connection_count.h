@@ -10,6 +10,7 @@
 #include <compare>
 #include <stdexcept>
 #include <type_traits>
+#include <limits>
 
 namespace logicsim {
 

@@ -12,18 +12,12 @@
 namespace logicsim {
 
 namespace display_number {
-constexpr auto value_inputs_(connection_count_t input_count) -> connection_count_t {
-    if (input_count < control_inputs) {
-        throw std::runtime_error("input count too small");
-    }
-    return input_count - control_inputs;
-}
-
-auto value_inputs(connection_count_t input_count) -> connection_count_t {
-    return value_inputs_(input_count);
-}
 
 namespace {
+
+constexpr auto value_inputs_(connection_count_t input_count) -> connection_count_t {
+    return input_count - control_inputs;
+}
 
 // WARNING: changing this function will make saves incompatible
 constexpr auto _width(connection_count_t input_count) -> grid_t {
@@ -88,6 +82,10 @@ static_assert(generated_widths ==
 
 }  // namespace
 
+auto value_inputs(connection_count_t input_count) -> connection_count_t {
+    return value_inputs_(input_count);
+}
+
 auto width(connection_count_t input_count) -> grid_t {
     return grid_t {generated_widths.at((input_count - min_inputs).count())};
 }
@@ -105,12 +103,12 @@ auto input_shift(connection_count_t input_count) -> grid_t {
     return grid_t {(int {space} + 1) / 2};
 }
 
-auto negative_position(connection_count_t input_count) -> point_t {
-    return point_t {grid_t {1} + input_shift(input_count), height(input_count)};
-}
-
 auto enable_position(connection_count_t input_count) -> point_t {
     return point_t {grid_t {2} + input_shift(input_count), height(input_count)};
+}
+
+auto negative_position(connection_count_t input_count) -> point_t {
+    return point_t {grid_t {1} + input_shift(input_count), height(input_count)};
 }
 
 }  // namespace display_number

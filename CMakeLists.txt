@@ -52,6 +52,7 @@ set(LS_CORE_SOURCES
     src/container/graph/depth_first_search.cpp
     src/container/graph/visitor_concept.cpp
     src/container/circular_buffer.cpp
+    src/container/static_vector.cpp
 
     src/editable_circuit/cache/collision_cache.cpp
     src/editable_circuit/cache/connection_cache.cpp
@@ -104,6 +105,7 @@ set(LS_CORE_SOURCES
     src/logic_item/layout_display.cpp
     src/logic_item/layout_display_number.cpp
     src/logic_item/layout_display_ascii.cpp
+    src/logic_item/layout_standard_element.cpp
 
     src/random/bool.cpp
     src/random/generator.cpp
@@ -236,6 +238,7 @@ set(LS_TEST_SOURCES
     
     test/container/graph/depth_first_search_test.cpp
     test/container/circular_buffer_test.cpp
+    test/container/static_vector_test.cpp
     
     test/format/container_test.cpp
     

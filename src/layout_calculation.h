@@ -7,6 +7,7 @@
 #include "logic_item/layout_display.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
+#include "logic_item/layout_standard_element.h"
 #include "vocabulary.h"
 #include "vocabulary/font_style.h"
 #include "vocabulary/layout_calculation_data.h"
@@ -23,13 +24,6 @@ namespace defaults {
 constexpr static inline auto line_selection_padding = grid_fine_t {0.3};
 constexpr static inline auto logic_item_body_overdraw = grid_fine_t {0.4};
 }  // namespace defaults
-
-namespace standard_element {
-constexpr static inline auto min_inputs = connection_count_t {2};
-constexpr static inline auto max_inputs = connection_count_t {128};
-[[nodiscard]] auto height(connection_count_t input_count) -> grid_t;
-constexpr static inline auto width = grid_t {2};
-}  // namespace standard_element
 
 [[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
                                                connection_count_t input_count,
