@@ -1,6 +1,9 @@
 #ifndef LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_NUMBER_H
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_NUMBER_H
 
+#include "algorithm/range.h"
+#include "geometry/connection_count.h"
+#include "logic_item/layout_display.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
@@ -31,49 +34,79 @@ constexpr static inline auto default_inputs = control_inputs + default_value_inp
 [[nodiscard]] auto negative_position(connection_count_t input_count) -> point_t;
 constexpr static inline auto negative_input_id = connection_id_t {1};
 
+// connector iterators
+inline auto iter_input_location(const layout_calculation_data_t& data,
+                                std::invocable<point_t, orientation_t> auto next_input)
+    -> bool;
+inline auto iter_output_location(const layout_calculation_data_t& data,
+                                 std::invocable<point_t, orientation_t> auto next_output)
+    -> bool;
+inline auto iter_element_body_points(const layout_calculation_data_t& data,
+                                     std::invocable<point_t> auto next_point) -> bool;
+
 //
 // Implementation
 //
 
 // next_input = [](point_t position, orientation_t orientation) -> bool
-auto iter_input_location(const layout_calculation_data_t& data,
-                         std::invocable<point_t, orientation_t> auto next_input) -> bool {
-    // for (auto y : range(to_grid(data.input_count))) {
-    //     if (!next_input(point_t {0, y}, orientation_t::left)) {
-    //         return false;
-    //     }
-    // }
-    // return true;
+inline auto iter_input_location(const layout_calculation_data_t& data,
+                                std::invocable<point_t, orientation_t> auto next_input)
+    -> bool {
+    // enable
+    static_assert(display::enable_input_id == connection_id_t {0});
+    if (!next_input(enable_position(data.input_count), orientation_t::down)) {
+        return false;
+    }
+
+    // negative
+    static_assert(display_number::negative_input_id == connection_id_t {1});
+    if (!next_input(negative_position(data.input_count), orientation_t::down)) {
+        return false;
+    }
+
+    // number inputs
+    for (auto y : range(to_grid(value_inputs(data.input_count)))) {
+        if (!next_input(point_t {0, y}, orientation_t::left)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 // next_output = [](point_t position, orientation_t orientation) -> bool
-auto iter_output_location(const layout_calculation_data_t& data,
-                          std::invocable<point_t, orientation_t> auto next_output)
+inline auto iter_output_location(const layout_calculation_data_t& data,
+                                 std::invocable<point_t, orientation_t> auto next_output)
     -> bool {
-    // const auto output_y = output_height(data.input_count);
-
-    // if (!next_output(point_t {2, output_y}, orientation_t::left)) {
-    //     return false;
-    // }
+    return true;
 }
 
 // next_point = [](point_t position) -> bool
-auto iter_element_body_points(const layout_calculation_data_t& data,
-                              std::invocable<point_t> auto next_point) -> bool {
-    // const auto output_y = output_height(data.input_count);
+inline auto iter_element_body_points(const layout_calculation_data_t& data,
+                                     std::invocable<point_t> auto next_point) -> bool {
+    const auto width = width(data.input_count);
+    const auto height = height(data.input_count);
 
-    // for (auto y : range(height(data.input_count))) {
-    //     if (!next_point(point_t {1, y})) {
-    //         return false;
-    //     }
+    const auto negative_pos = negative_position(data.input_count);
+    const auto enable_pos = enable_position(data.input_count);
+    const auto max_input_y = to_grid(value_inputs(data.input_count)) - grid_t {1};
 
-    //    if (y != output_y) {
-    //        if (!next_point(point_t {2, y})) {
-    //            return false;
-    //        }
-    //    }
-    //}
-    // return true;
+    for (const auto y : range(height + grid_t {1})) {
+        for (const auto x : range(width + grid_t {1})) {
+            const auto point = point_t {x, y};
+
+            if (point.x == grid_t {0} && point.y <= max_input_y) {
+                continue;
+            }
+            if (point == negative_pos || point == enable_pos) {
+                continue;
+            }
+
+            if (!next_point(point)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 }  // namespace display_number
