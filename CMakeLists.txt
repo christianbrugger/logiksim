@@ -84,7 +84,6 @@ set(LS_CORE_SOURCES
     src/geometry/grid.cpp
     src/geometry/interpolation.cpp
     src/geometry/layout_calculation.cpp
-    src/geometry/layout2.cpp
     src/geometry/line.cpp
     src/geometry/offset.cpp
     src/geometry/orientation.cpp

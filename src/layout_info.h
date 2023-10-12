@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_LAYOUT_INFO_H
 #define LOGIKSIM_LAYOUT_INFO_H
 
-#include "geometry/layout2.h"  // TODO rename & remove
 #include "vocabulary/direction_type.h"
 #include "vocabulary/element_type.h"
 #include "vocabulary/grid_fine.h"  // TODO remove
@@ -11,12 +10,13 @@
 
 namespace logicsim {
 
-struct connection_count_t;
 struct grid_t;
 struct point_t;
 struct rect_t;
 struct rect_fine_t;
 struct ordered_line_t;
+struct connection_count_t;
+struct layout_calculation_data_t;
 
 // TODO put in cpp file
 namespace defaults {

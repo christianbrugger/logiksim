@@ -14,6 +14,9 @@
 
 namespace logicsim {
 
+struct ElementDefinition;
+struct PlacedElement;
+
 /**
  * @brief: Element data required to calculate its layout.
  *
@@ -36,6 +39,13 @@ struct layout_calculation_data_t {
 };
 
 static_assert(std::is_aggregate_v<layout_calculation_data_t>);
+
+[[nodiscard]] auto to_layout_calculation_data(const ElementDefinition& definition,
+                                              point_t position)
+    -> layout_calculation_data_t;
+
+[[nodiscard]] auto to_layout_calculation_data(const PlacedElement& element)
+    -> layout_calculation_data_t;
 
 }  // namespace logicsim
 

@@ -4,13 +4,13 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "exception.h"
-#include "geometry/layout2.h"
 #include "geometry/layout_calculation.h"
 #include "geometry/point.h"
 #include "geometry/rect.h"
 #include "geometry/scene.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "logic_item/layout_display_number.h"
 #include "safe_numeric.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/view_config.h"
@@ -28,9 +28,9 @@ auto size_handle_positions(const layout::ConstElement element)
         case or_element:
         case xor_element: {
             // TODO redo this calculation
+            constexpr auto overdraw = defaults::logic_item_body_overdraw;
             const auto data = element.to_layout_calculation_data();
             const auto height = element_height(data);
-            constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
             return {
                 size_handle_t {0, transform(element.position(), element.orientation(),
@@ -42,16 +42,19 @@ auto size_handle_positions(const layout::ConstElement element)
 
         case display_number: {
             // TODO redo this calculation
-            const auto data = element.to_layout_calculation_data();
-            const auto width = element_width(data);
-            const auto height = element_height(data);
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
+            const auto input_count = element.input_count();
+            const auto width = display_number::width(input_count);
+
+            static_assert(display_number::min_value_inputs >= connection_count_t {1});
+            const auto last_input_y = to_grid(display_number::value_inputs(input_count) -
+                                              connection_count_t {1});
 
             return {
                 size_handle_t {1, transform(element.position(), element.orientation(),
                                             point_fine_t {
                                                 0.5 * width,
-                                                height + overdraw,
+                                                last_input_y + overdraw,
                                             })},
             };
         }
