@@ -34,13 +34,38 @@ constexpr static inline auto default_inputs = control_inputs + default_value_inp
 [[nodiscard]] auto negative_position(connection_count_t input_count) -> point_t;
 constexpr static inline auto negative_input_id = connection_id_t {1};
 
-// connector iterators
+/**
+ * @brief: Iterate over the inputs of standard elements
+ *         not considering position or orientation.
+ *
+ *  next_input = [](point_t position, orientation_t orientation) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
 inline auto iter_input_location(const layout_calculation_data_t& data,
                                 std::invocable<point_t, orientation_t> auto next_input)
     -> bool;
+
+/**
+ * @brief: Iterate over the outputs of standard elements
+ *         not considering position or orientation.
+ *
+ *  next_output = [](point_t position, orientation_t orientation) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
 inline auto iter_output_location(const layout_calculation_data_t& data,
                                  std::invocable<point_t, orientation_t> auto next_output)
     -> bool;
+
+/**
+ * @brief: Iterate over the body points of standard elements
+ *         not considering position or orientation.
+ *
+ *  next_point = [](point_t position) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
 inline auto iter_element_body_points(const layout_calculation_data_t& data,
                                      std::invocable<point_t> auto next_point) -> bool;
 

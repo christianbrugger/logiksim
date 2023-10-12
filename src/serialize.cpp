@@ -17,7 +17,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "file.h"
-#include "geometry/layout.h"
+#include "geometry/layout2.h"
 #include "geometry/point.h"
 #include "gzip.h"
 #include "layout.h"
@@ -313,7 +313,7 @@ auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
                            std::optional<point_t> load_position) const
     -> selection_handle_t {
     if (!data_) {
-        throw_exception("no layout data");
+        throw std::runtime_error("no layout data");
     }
 
     auto handle = editable_circuit.get_handle();
@@ -339,15 +339,14 @@ auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
 
 auto LoadLayoutResult::apply(ViewConfig& view_config) const -> void {
     if (!data_) {
-        throw_exception("no layout data");
+        throw std::runtime_error("no layout data");
     }
-
     apply_view_config(data_->view_config, view_config);
 }
 
 auto LoadLayoutResult::simulation_settings() const -> SimulationSettings {
     if (!data_) {
-        throw_exception("no layout data");
+        throw std::runtime_error("no layout data");
     }
     return unserialize_simulation_settings(data_->simulation_settings);
 }

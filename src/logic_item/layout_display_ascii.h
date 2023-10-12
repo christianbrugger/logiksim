@@ -24,7 +24,10 @@ constexpr static inline auto width = grid_t {4};
 constexpr static inline auto height = to_grid(value_inputs - connection_count_t {1});
 constexpr static inline auto enable_position = point_t {2, height};
 
-constexpr static inline auto input_connectors = []() {
+/**
+ * @brief: List of static input connectors.
+ */
+constexpr static inline auto input_connectors = []() -> static_connectors {
     auto inputs = static_connectors {};
 
     // enable as first input
@@ -33,7 +36,7 @@ constexpr static inline auto input_connectors = []() {
 
     // number inputs
     for (auto y : range(to_grid(value_inputs))) {
-        inputs.push_back({point_t {0, y}, orientation_t::left});
+        inputs.push_back(connector_info_t {point_t {0, y}, orientation_t::left});
     }
 
     return inputs;

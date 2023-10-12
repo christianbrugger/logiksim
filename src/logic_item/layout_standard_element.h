@@ -20,35 +20,33 @@ constexpr static inline auto max_inputs = connection_count_t {128};
 constexpr static inline auto default_inputs = connection_count_t {2};
 
 constexpr static inline auto width = grid_t {2};
-[[nodiscard]] constexpr auto height(connection_count_t input_count) -> grid_t;
-[[nodiscard]] constexpr auto output_height(connection_count_t input_count) -> grid_t;
 
-// connector iterators
-constexpr auto iter_input_location(const layout_calculation_data_t& data,
-                                   std::invocable<point_t, orientation_t> auto next_input)
-    -> bool;
-constexpr auto iter_output_location(
-    const layout_calculation_data_t& data,
-    std::invocable<point_t, orientation_t> auto next_output) -> bool;
-constexpr auto iter_element_body_points(const layout_calculation_data_t& data,
-                                        std::invocable<point_t> auto next_point) -> bool;
-
-//
-// Implementation
-//
-
-constexpr auto height(connection_count_t input_count) -> grid_t {
+/**
+ * @brief: Returns the dynamic height of the standard element.
+ */
+[[nodiscard]] constexpr inline auto height(connection_count_t input_count) -> grid_t {
     return to_grid((input_count - connection_count_t {1}));
 }
 
-constexpr auto output_height(connection_count_t input_count) -> grid_t {
+/**
+ * @brief: Returns the dynamic y-coordinate of the output of the standard element.
+ */
+[[nodiscard]] constexpr inline auto output_height(connection_count_t input_count)
+    -> grid_t {
     return height(input_count) / 2;
 }
 
-// next_input = [](point_t position, orientation_t orientation) -> bool
-constexpr auto iter_input_location(const layout_calculation_data_t& data,
-                                   std::invocable<point_t, orientation_t> auto next_input)
-    -> bool {
+/**
+ * @brief: Iterate over the inputs of standard elements
+ *         not considering position or orientation.
+ *
+ *  next_input = [](point_t position, orientation_t orientation) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
+constexpr inline auto iter_input_location(
+    const layout_calculation_data_t& data,
+    std::invocable<point_t, orientation_t> auto next_input) -> bool {
     for (auto y : range(to_grid(data.input_count))) {
         if (!next_input(point_t {0, y}, orientation_t::left)) {
             return false;
@@ -57,8 +55,15 @@ constexpr auto iter_input_location(const layout_calculation_data_t& data,
     return true;
 }
 
-// next_output = [](point_t position, orientation_t orientation) -> bool
-constexpr auto iter_output_location(
+/**
+ * @brief: Iterate over the outputs of standard elements
+ *         not considering position or orientation.
+ *
+ *  next_output = [](point_t position, orientation_t orientation) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
+constexpr inline auto iter_output_location(
     const layout_calculation_data_t& data,
     std::invocable<point_t, orientation_t> auto next_output) -> bool {
     const auto output_y = output_height(data.input_count);
@@ -69,9 +74,17 @@ constexpr auto iter_output_location(
     return true;
 }
 
-// next_point = [](point_t position) -> bool
-constexpr auto iter_element_body_points(const layout_calculation_data_t& data,
-                                        std::invocable<point_t> auto next_point) -> bool {
+/**
+ * @brief: Iterate over the body points of standard elements
+ *         not considering position or orientation.
+ *
+ *  next_point = [](point_t position) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
+constexpr inline auto iter_element_body_points(const layout_calculation_data_t& data,
+                                               std::invocable<point_t> auto next_point)
+    -> bool {
     const auto output_y = output_height(data.input_count);
 
     for (auto y : range(to_grid(data.input_count))) {

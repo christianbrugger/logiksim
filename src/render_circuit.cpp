@@ -1349,9 +1349,9 @@ auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> grid_fine_t {
 auto draw_logic_item_shadow(Context& ctx, layout::ConstElement element,
                             shadow_t shadow_type) -> void {
     const auto data = to_layout_calculation_data(element.layout(), element);
-    const auto selection_rect = element_selection_rect(data);
+    const auto rect = element_shadow_rect(data);
 
-    draw_round_rect(ctx, selection_rect,
+    draw_round_rect(ctx, rect,
                     {
                         .draw_type = ShapeDrawType::fill,
                         .rounding = element_shadow_rounding(data.element_type),
@@ -1372,7 +1372,7 @@ auto draw_wire_shadows_impl(Context& ctx, View lines, shadow_t shadow_type) -> v
     const auto color = shadow_color(shadow_type);
 
     for (const ordered_line_t line : lines) {
-        const auto selection_rect = element_selection_rect_rounded(line);
+        const auto selection_rect = element_shadow_rect(line);
         draw_round_rect(ctx, selection_rect,
                         {
                             .draw_type = ShapeDrawType::fill,

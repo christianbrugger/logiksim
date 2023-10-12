@@ -2,8 +2,8 @@
 
 #include "geometry/connection_count.h"
 #include "logic_item/layout_display.h"
-#include "vocabulary/point.h"
 #include "vocabulary/grid.h"
+#include "vocabulary/point.h"
 
 #include <gcem.hpp>
 
@@ -104,11 +104,17 @@ auto input_shift(connection_count_t input_count) -> grid_t {
 }
 
 auto enable_position(connection_count_t input_count) -> point_t {
-    return point_t {grid_t {2} + input_shift(input_count), height(input_count)};
+    return point_t {
+        grid_t {2} + input_shift(input_count),
+        height(input_count),
+    };
 }
 
 auto negative_position(connection_count_t input_count) -> point_t {
-    return point_t {grid_t {1} + input_shift(input_count), height(input_count)};
+    return point_t {
+        grid_t {1} + input_shift(input_count),
+        height(input_count),
+    };
 }
 
 }  // namespace display_number

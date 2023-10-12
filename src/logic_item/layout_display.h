@@ -7,7 +7,9 @@
 
 namespace logicsim {
 
-// Display General
+/**
+ * @brief: Commont between all displays.
+ */
 namespace display {
 
 constexpr static inline auto font_style = FontStyle::monospace;

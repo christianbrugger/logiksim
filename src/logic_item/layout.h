@@ -1,32 +1,26 @@
 #ifndef LOGICSIM_LOGIC_ITEM_LAYOUT_H
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_H
 
-#include "geometry/grid.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
 #include "logic_item/layout_standard_element.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/connector_info.h"
 #include "vocabulary/connector_static.h"
+#include "vocabulary/direction_type.h"
 #include "vocabulary/element_type.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/point.h"
 
+#include <concepts>
 #include <exception>
 
 namespace logicsim {
 
-// TODO vocabulary type ?
-
-enum class DirectionType {
-    undirected,
-    directed,
-    any,
-};
-
-// TODO format
-
+/**
+ * @brief: Local type to store all layout information of a specific element type.
+ */
 struct layout_info_t {
     connection_count_t input_count_min {0};
     connection_count_t input_count_max {0};
@@ -48,7 +42,15 @@ struct layout_info_t {
     static_connectors output_connectors {};
 };
 
-constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
+/**
+ * @brief: Get the basic layout information about the type.
+ *
+ * Note that if an element has dynamic inputs / outputs those cannot be
+ * defined here and need to befined in the base methods below.
+ *
+ * Everything else should be defined here.
+ */
+constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t {
     switch (element_type) {
         using enum ElementType;
 
@@ -415,18 +417,34 @@ constexpr auto get_layout_info(ElementType element_type) -> layout_info_t {
             };
         }
     }
-
     std::terminate();
 }
 
-using static_body_points = static_vector<point_t, 28, uint32_t>;
+/**
+ * @brief: The maximum number of static body points of any logic element.
+ *
+ * We generate all static body points at compile time.
+ * We use this array-type to store up to the largest amount we need.
+ *
+ * Later in the c++ file we statically check if this number matches the maximum
+ * amount. If necessary adapt this number here.
+ */
+constexpr static inline auto static_body_point_count = 28;
+using static_body_points = static_vector<point_t, static_body_point_count, uint32_t>;
 
+/**
+ * @brief: Return the static body points.
+ *
+ * Note that elements with dynamic width or height don't have static body points.
+ *
+ * Returns empty array for element types with dynamic body points.
+ */
 [[nodiscard]] auto get_static_body_points(ElementType element_type)
     -> const static_body_points&;
 
-constexpr auto iter_connectors(const static_connectors& connectors,
-                               std::invocable<point_t, orientation_t> auto next_connector)
-    -> bool {
+constexpr inline auto iter_connectors(
+    const static_connectors& connectors,
+    std::invocable<point_t, orientation_t> auto next_connector) -> bool {
     for (const connector_info_t& con : connectors) {
         if (!next_connector(con.position, con.orientation)) {
             return false;
@@ -435,8 +453,8 @@ constexpr auto iter_connectors(const static_connectors& connectors,
     return true;
 }
 
-constexpr auto iter_body_points(const static_body_points& body_points,
-                                std::invocable<point_t> auto next_point) -> bool {
+constexpr inline auto iter_body_points(const static_body_points& body_points,
+                                       std::invocable<point_t> auto next_point) -> bool {
     for (const point_t& point : body_points) {
         if (!next_point(point)) {
             return false;
@@ -449,7 +467,14 @@ constexpr auto iter_body_points(const static_body_points& body_points,
 // Iterators
 //
 
-constexpr auto iter_input_location_base(
+/**
+ * @brief: Iterate over the inputs not considering position or orientation.
+ *
+ *  next_input = [](point_t position, orientation_t orientation) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
+constexpr inline auto iter_input_location_base(
     const layout_calculation_data_t& data,
     std::invocable<point_t, orientation_t> auto next_input) -> bool {
     switch (data.element_type) {
@@ -471,7 +496,14 @@ constexpr auto iter_input_location_base(
     std::terminate();
 }
 
-constexpr auto iter_output_location_base(
+/**
+ * @brief: Iterate over the outputs not considering position or orientation.
+ *
+ *  next_output = [](point_t position, orientation_t orientation) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
+constexpr inline auto iter_output_location_base(
     const layout_calculation_data_t& data,
     std::invocable<point_t, orientation_t> auto next_output) -> bool {
     switch (data.element_type) {
@@ -493,6 +525,13 @@ constexpr auto iter_output_location_base(
     std::terminate();
 }
 
+/**
+ * @brief: Iterate over the body points not considering position or orientation.
+ *
+ *  next_point = [](point_t position) -> bool
+ *
+ * The callable is called for each point or until it returns false.
+ */
 inline auto iter_element_body_points_base(const layout_calculation_data_t& data,
                                           std::invocable<point_t> auto next_point)
     -> bool {
@@ -506,7 +545,6 @@ inline auto iter_element_body_points_base(const layout_calculation_data_t& data,
                                                                           next_point);
 
         case display_number:
-            // TODO why do we need this?
             return ::logicsim::display_number::iter_element_body_points(data, next_point);
 
         default: {

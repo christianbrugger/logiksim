@@ -3,7 +3,6 @@
 #include "algorithm/round.h"
 #include "file.h"
 #include "format/std_type.h"
-#include "geometry/layout.h"
 #include "logging.h"
 #include "render_widget.h"
 #include "resource.h"

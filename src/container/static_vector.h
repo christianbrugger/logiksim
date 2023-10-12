@@ -8,6 +8,7 @@
 #include <iterator>
 #include <limits>
 #include <stdexcept>
+#include <ranges>
 
 namespace logicsim {
 

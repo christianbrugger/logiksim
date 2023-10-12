@@ -2,6 +2,7 @@
 #include "editable_circuit/selection.h"
 
 #include "editable_circuit/message.h"
+#include "exception.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/rect.h"

@@ -1,6 +1,7 @@
 #ifndef LOGIKSIM_RENDER_CIRCUIT_H
 #define LOGIKSIM_RENDER_CIRCUIT_H
 
+#include "exception.h"
 #include "layout_calculation.h"
 #include "render_generic.h"
 #include "simulation_view.h"

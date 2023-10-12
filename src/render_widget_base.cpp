@@ -1,6 +1,7 @@
 
 #include "render_widget_base.h"
 
+#include "exception.h"
 #include "layout_calculation.h"
 #include "vocabulary/element_definition.h"
 
@@ -13,9 +14,9 @@ namespace {
 auto default_element_definition(ElementType element_type) -> ElementDefinition {
     return ElementDefinition {
         .element_type = element_type,
-        .input_count = default_input_count(element_type),
-        .output_count = default_output_count(element_type),
-        .orientation = get_direction_type(element_type) == DirectionType::directed
+        .input_count = element_input_count_default(element_type),
+        .output_count = element_output_count_default(element_type),
+        .orientation = element_direction_type(element_type) == DirectionType::directed
                            ? orientation_t::right
                            : orientation_t::undirected,
     };

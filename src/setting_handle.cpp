@@ -4,6 +4,7 @@
 #include "algorithm/round.h"
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
+#include "exception.h"
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_calculation.h"
@@ -35,8 +36,8 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
             constexpr auto handle_size = defaults::setting_handle_size;
             // constexpr auto margin = defaults::setting_handle_margin;
 
-            constexpr static auto width = get_fixed_width(clock_generator);
-            constexpr static auto height = get_fixed_height(clock_generator);
+            constexpr static auto width = element_fixed_width(clock_generator);
+            constexpr static auto height = element_fixed_height(clock_generator);
 
             return setting_handle_t {
                 .position =

@@ -5,6 +5,7 @@
 #include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
+#include "exception.h"
 #include "geometry/orientation.h"
 #include "layout_calculation.h"
 

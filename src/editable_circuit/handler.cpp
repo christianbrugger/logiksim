@@ -7,6 +7,7 @@
 #include "editable_circuit/cache/split_point_cache.h"
 #include "editable_circuit/selection.h"
 #include "editable_circuit/selection_registrar.h"
+#include "exception.h"
 #include "format/container.h"
 #include "format/pointer.h"
 #include "geometry/orientation.h"

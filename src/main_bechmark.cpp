@@ -98,6 +98,18 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
 
 BENCHMARK(BM_Benchmark_Add_Element_Delete);  // NOLINT
 
+static void BM_Benchmark_Input_Output_Valid(benchmark::State& state) {
+    using namespace logicsim;
+
+    for ([[maybe_unused]] auto _ : state) {
+        auto res = is_input_output_count_valid(
+            ElementType::and_element, connection_count_t {2}, connection_count_t {3});
+        benchmark::DoNotOptimize(res);
+    }
+}
+
+BENCHMARK(BM_Benchmark_Input_Output_Valid);  // NOLINT
+
 static void BM_Benchmark_Graph_v2(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
         using namespace logicsim;

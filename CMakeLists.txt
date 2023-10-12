@@ -83,7 +83,8 @@ set(LS_CORE_SOURCES
     src/geometry/connection_count.cpp
     src/geometry/grid.cpp
     src/geometry/interpolation.cpp
-    src/geometry/layout.cpp
+    src/geometry/layout1.cpp
+    src/geometry/layout2.cpp
     src/geometry/line.cpp
     src/geometry/offset.cpp
     src/geometry/orientation.cpp
@@ -149,6 +150,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/connector_info.cpp
     src/vocabulary/connector_static.cpp
     src/vocabulary/delay.cpp
+    src/vocabulary/direction_type.cpp
     src/vocabulary/display_state.cpp
     src/vocabulary/drawable_element.cpp
     src/vocabulary/element_definition.cpp
