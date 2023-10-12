@@ -19,10 +19,11 @@
 
 namespace logicsim {
 
+// TODO move to layou_info & logic_item/layout.h
 auto has_enable(ElementType element_type) -> bool {
     using enum ElementType;
 
-    static_assert(display::enable_input_id == connection_id_t {0});
+    // static_assert(display::enable_input_id == connection_id_t {0});
     return element_type == clock_generator || element_type == display_number ||
            element_type == display_ascii;
 }

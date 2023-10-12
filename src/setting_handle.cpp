@@ -11,6 +11,7 @@
 #include "resource.h"
 #include "validate_definition.h"
 #include "vocabulary/element_definition.h"
+#include "geometry/layout_calculation.h"
 
 #include <QBoxLayout>
 #include <QCheckBox>
@@ -32,12 +33,14 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
         using enum ElementType;
 
         case clock_generator: {
+            // TODO redo this calculatioin
+            
             // constexpr auto overdraw = defaults::logic_item_body_overdraw;
             constexpr auto handle_size = defaults::setting_handle_size;
             // constexpr auto margin = defaults::setting_handle_margin;
 
-            constexpr static auto width = element_fixed_width(clock_generator);
-            constexpr static auto height = element_fixed_height(clock_generator);
+            const auto width = element_fixed_width(clock_generator);
+            const auto height = element_fixed_height(clock_generator);
 
             return setting_handle_t {
                 .position =

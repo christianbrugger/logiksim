@@ -4,13 +4,16 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "exception.h"
+#include "geometry/layout2.h"
+#include "geometry/layout_calculation.h"
 #include "geometry/point.h"
 #include "geometry/rect.h"
 #include "geometry/scene.h"
 #include "layout.h"
-#include "safe_numeric.h"
-#include "vocabulary/view_config.h"
 #include "layout_info.h"
+#include "safe_numeric.h"
+#include "vocabulary/layout_calculation_data.h"
+#include "vocabulary/view_config.h"
 
 #include <blend2d.h>
 
@@ -24,7 +27,9 @@ auto size_handle_positions(const layout::ConstElement element)
         case and_element:
         case or_element:
         case xor_element: {
-            const auto height = standard_element::height(element.input_count());
+            // TODO redo this calculation
+            const auto data = element.to_layout_calculation_data();
+            const auto height = element_height(data);
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
             return {
@@ -36,9 +41,10 @@ auto size_handle_positions(const layout::ConstElement element)
         }
 
         case display_number: {
-            const auto width = display_number::width(element.input_count());
-            const auto height = display_number::height(element.input_count());
-
+            // TODO redo this calculation
+            const auto data = element.to_layout_calculation_data();
+            const auto width = element_width(data);
+            const auto height = element_height(data);
             constexpr auto overdraw = defaults::logic_item_body_overdraw;
 
             return {
@@ -164,14 +170,20 @@ auto clamp_connection_count(connection_count_t count, int delta, connection_coun
     return connection_count_t {clamped_count};
 }
 
-auto adjust_height(const PlacedElement& original, size_handle_t handle, int delta,
-                   connection_count_t min_inputs, connection_count_t max_inputs,
-                   std::invocable<connection_count_t> auto get_height) {
+auto element_height(const PlacedElement& element) -> grid_t {
+    const auto data = to_layout_calculation_data(element);
+    return element_height(data);
+}
+
+auto adjust_height(const PlacedElement& original, size_handle_t handle, int delta) {
     if (handle.index != 0 && handle.index != 1) {
         throw_exception("unknown handle index");
     }
 
     auto result = PlacedElement {original};
+
+    const auto min_inputs = element_input_count_min(original.definition.element_type);
+    const auto max_inputs = element_input_count_max(original.definition.element_type);
 
     // input count
     if (handle.index == 0) {
@@ -184,8 +196,8 @@ auto adjust_height(const PlacedElement& original, size_handle_t handle, int delt
 
     // position adjustment
     if (handle.index == 0) {
-        const auto old_height = get_height(original.definition.input_count);
-        const auto new_height = get_height(result.definition.input_count);
+        const auto old_height = element_height(original);
+        const auto new_height = element_height(result);
         const auto delta_height = int {old_height} - int {new_height};
 
         if (is_representable(original.position, 0, delta_height)) {
@@ -208,12 +220,10 @@ auto transform_item(const PlacedElement& original, size_handle_t handle, int del
         case and_element:
         case or_element:
         case xor_element: {
-            return adjust_height(original, handle, delta, standard_element::min_inputs,
-                                 standard_element::max_inputs, standard_element::height);
+            return adjust_height(original, handle, delta);
         }
         case display_number: {
-            return adjust_height(original, handle, delta, display_number::min_inputs,
-                                 display_number::max_inputs, display_number::height);
+            return adjust_height(original, handle, delta);
         }
 
         case unused:

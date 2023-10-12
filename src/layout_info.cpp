@@ -1,9 +1,14 @@
 #include "layout_info.h"
 
 #include "geometry/grid.h"
+#include "geometry/layout_calculation.h"
 #include "geometry/orientation.h"
 #include "geometry/rect.h"
+#include "logic_item/layout.h"
+#include "vocabulary/grid.h"
+#include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/ordered_line.h"
+#include "vocabulary/point.h"
 #include "vocabulary/rect.h"
 #include "vocabulary/rect_fine.h"
 
@@ -54,18 +59,73 @@ auto is_representable(layout_calculation_data_t data) -> bool {
 //
 //
 
-auto element_size(const layout_calculation_data_t &data) -> point_t {
+auto element_input_count_min(ElementType element_type) -> connection_count_t {
+    return get_layout_info(element_type).input_count_min;
+}
+
+auto element_input_count_max(ElementType element_type) -> connection_count_t {
+    return get_layout_info(element_type).input_count_max;
+}
+
+auto element_input_count_default(ElementType element_type) -> connection_count_t {
+    return get_layout_info(element_type).input_count_default;
+}
+
+auto element_output_count_min(ElementType element_type) -> connection_count_t {
+    return get_layout_info(element_type).output_count_min;
+}
+
+auto element_output_count_max(ElementType element_type) -> connection_count_t {
+    return get_layout_info(element_type).output_count_max;
+}
+
+auto element_output_count_default(ElementType element_type) -> connection_count_t {
+    return get_layout_info(element_type).output_count_default;
+}
+
+auto element_direction_type(ElementType element_type) -> DirectionType {
+    return get_layout_info(element_type).direction_type;
+}
+
+auto element_fixed_width(ElementType element_type) -> grid_t {
+    const auto info = get_layout_info(element_type);
+    if (info.variable_width) [[unlikely]] {
+        throw std::runtime_error("element has variable width");
+    }
+    return info.fixed_width;
+}
+
+auto element_fixed_height(ElementType element_type) -> grid_t {
+    const auto info = get_layout_info(element_type);
+    if (info.variable_height) [[unlikely]] {
+        throw std::runtime_error("element has variable height");
+    }
+    return info.fixed_height;
+}
+
+auto element_fixed_size(ElementType element_type) -> point_t {
+    return point_t {element_fixed_width(element_type),
+                    element_fixed_height(element_type)};
+}
+
+auto element_width(const layout_calculation_data_t &data) -> grid_t {
     if (!is_logic_item(data.element_type)) {
         throw std::runtime_error("Only supported for logic items");
     }
-
     const auto info = get_layout_info(data.element_type);
+    return info.variable_width ? info.variable_width(data) : info.fixed_width;
+}
 
-    const auto width = info.variable_width ? info.variable_width(data) : info.fixed_width;
-    const auto height =
-        info.variable_height ? info.variable_height(data) : info.fixed_height;
+auto element_height(const layout_calculation_data_t &data) -> grid_t {
+    if (!is_logic_item(data.element_type)) {
+        throw std::runtime_error("Only supported for logic items");
+    }
+    const auto info = get_layout_info(data.element_type);
+    return info.variable_height ? info.variable_height(data) : info.fixed_height;
+}
 
-    return point_t {width, height};
+auto element_size(const layout_calculation_data_t &data) -> point_t {
+    return point_t {element_width(data), element_height(data)};
 }
 
 auto element_body_rect(const layout_calculation_data_t &data) -> rect_fine_t {

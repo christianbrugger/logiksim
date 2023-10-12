@@ -7,7 +7,7 @@
 #include "editable_circuit/message.h"
 #include "exception.h"
 #include "geometry/orientation.h"
-#include "layout_info.h"
+#include "layout_info_iter.h"
 
 namespace logicsim {
 

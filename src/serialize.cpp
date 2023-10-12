@@ -25,6 +25,7 @@
 #include "serialize_detail.h"
 #include "validate_definition.h"
 #include "vocabulary/element_definition.h"
+#include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/placed_element.h"
 #include "vocabulary/simulation_setting.h"
 #include "vocabulary/view_config.h"

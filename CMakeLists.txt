@@ -202,6 +202,7 @@ set(LS_CORE_SOURCES
     src/interactive_simulation.cpp
     src/layout.cpp
     src/layout_info.cpp
+    src/layout_info_iter.cpp
     src/line_tree.cpp
     src/logging.cpp
     src/main_widget.cpp
