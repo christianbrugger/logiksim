@@ -14,7 +14,7 @@
 #include "geometry/rect.h"
 #include "geometry/scene.h"
 #include "layout.h"
-#include "layout_calculation.h"
+#include "layout_info.h"
 #include "setting_handle.h"
 #include "simulation.h"
 #include "simulation_view.h"

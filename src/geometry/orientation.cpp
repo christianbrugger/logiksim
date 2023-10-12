@@ -88,4 +88,11 @@ auto to_angle(orientation_t orientation) -> double {
     std::terminate();
 }
 
+auto orientations_compatible(orientation_t a, orientation_t b) -> bool {
+    using enum orientation_t;
+    return (a == left && b == right) || (a == right && b == left) ||
+           (a == up && b == down) || (a == down && b == up) || (a == undirected) ||
+           (b == undirected);
+}
+
 }  // namespace logicsim

@@ -1,6 +1,6 @@
 #include "validate_definition.h"
 
-#include "layout_calculation.h"
+#include "layout_info.h"
 #include "validate_definition.h"
 #include "vocabulary/delay.h"
 #include "vocabulary/element_definition.h"

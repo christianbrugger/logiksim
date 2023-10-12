@@ -2,7 +2,7 @@
 #include "render_widget_base.h"
 
 #include "exception.h"
-#include "layout_calculation.h"
+#include "layout_info.h"
 #include "vocabulary/element_definition.h"
 
 #include <exception>

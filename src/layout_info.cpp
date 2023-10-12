@@ -1,4 +1,4 @@
-#include "layout_calculation.h"
+#include "layout_info.h"
 
 #include "geometry/grid.h"
 #include "geometry/orientation.h"

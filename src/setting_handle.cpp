@@ -7,7 +7,7 @@
 #include "exception.h"
 #include "geometry/rect.h"
 #include "layout.h"
-#include "layout_calculation.h"
+#include "layout_info.h"
 #include "resource.h"
 #include "validate_definition.h"
 #include "vocabulary/element_definition.h"

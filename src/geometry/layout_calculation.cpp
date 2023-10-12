@@ -1,4 +1,4 @@
-#include "geometry/layout1.h"
+#include "geometry/layout_calculation.h"
 
 #include "vocabulary/grid_fine.h"
 #include "vocabulary/point.h"
@@ -10,13 +10,6 @@
 #include <exception>
 
 namespace logicsim {
-
-auto orientations_compatible(orientation_t a, orientation_t b) -> bool {
-    using enum orientation_t;
-    return (a == left && b == right) || (a == right && b == left) ||
-           (a == up && b == down) || (a == down && b == up) || (a == undirected) ||
-           (b == undirected);
-}
 
 auto connector_point(point_t position, orientation_t orientation, grid_fine_t offset)
     -> point_fine_t {

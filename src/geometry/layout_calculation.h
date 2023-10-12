@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_GEOMETRY_LAYOUT1_H
-#define LOGICSIM_GEOMETRY_LAYOUT1_H
+#ifndef LOGICSIM_GEOMETRY_LAYOUT_CALCULATION_H
+#define LOGICSIM_GEOMETRY_LAYOUT_CALCULATION_H
 
 #include "vocabulary/orientation.h"
 
@@ -11,8 +11,6 @@ struct grid_fine_t;
 struct point_t;
 struct point_fine_t;
 struct rect_t;
-
-[[nodiscard]] auto orientations_compatible(orientation_t a, orientation_t b) -> bool;
 
 [[nodiscard]] auto connector_point(point_t position, orientation_t orientation,
                                    grid_fine_t offset) -> point_fine_t;

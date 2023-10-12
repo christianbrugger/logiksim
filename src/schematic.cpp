@@ -8,7 +8,7 @@
 #include "exception.h"
 #include "format/container.h"
 #include "iterator_adaptor/transform_view.h"
-#include "layout_calculation.h"
+#include "layout_info.h"
 #include "line_tree.h"
 
 #include <fmt/core.h>

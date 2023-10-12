@@ -83,7 +83,7 @@ set(LS_CORE_SOURCES
     src/geometry/connection_count.cpp
     src/geometry/grid.cpp
     src/geometry/interpolation.cpp
-    src/geometry/layout1.cpp
+    src/geometry/layout_calculation.cpp
     src/geometry/layout2.cpp
     src/geometry/line.cpp
     src/geometry/offset.cpp
@@ -201,7 +201,7 @@ set(LS_CORE_SOURCES
     src/gzip.cpp
     src/interactive_simulation.cpp
     src/layout.cpp
-    src/layout_calculation.cpp
+    src/layout_info.cpp
     src/line_tree.cpp
     src/logging.cpp
     src/main_widget.cpp

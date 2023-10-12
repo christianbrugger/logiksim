@@ -1,9 +1,9 @@
-#ifndef LOGIKSIM_LAYOUT_CALCULATION_H
-#define LOGIKSIM_LAYOUT_CALCULATION_H
+#ifndef LOGIKSIM_LAYOUT_INFO_H
+#define LOGIKSIM_LAYOUT_INFO_H
 
 #include "geometry/connection_count.h"
-#include "geometry/layout1.h"  // TODO rename & remove
 #include "geometry/layout2.h"  // TODO rename & remove
+#include "geometry/layout_calculation.h"
 #include "logic_item/layout.h"
 #include "vocabulary/connection_id.h"
 #include "vocabulary/element_type.h"
@@ -22,7 +22,7 @@ struct rect_t;
 struct rect_fine_t;
 struct ordered_line_t;
 
-// TODO put in c++ file
+// TODO put in cpp file
 namespace defaults {
 constexpr static inline auto line_selection_padding = grid_fine_t {0.3};
 constexpr static inline auto logic_item_body_overdraw = grid_fine_t {0.4};

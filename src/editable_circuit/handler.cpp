@@ -12,7 +12,7 @@
 #include "format/pointer.h"
 #include "geometry/orientation.h"
 #include "geometry/point.h"
-#include "layout_calculation.h"
+#include "layout_info.h"
 #include "logging.h"
 
 #include <ankerl/unordered_dense.h>

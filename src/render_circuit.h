@@ -2,7 +2,7 @@
 #define LOGIKSIM_RENDER_CIRCUIT_H
 
 #include "exception.h"
-#include "layout_calculation.h"
+#include "logic_item/layout_display.h"  // TODO remove
 #include "render_generic.h"
 #include "simulation_view.h"
 #include "vocabulary.h"

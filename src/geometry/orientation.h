@@ -29,6 +29,8 @@ struct ordered_line_t;
 // angle in respect to left orientation
 [[nodiscard]] auto to_angle(orientation_t orientation) -> double;
 
+[[nodiscard]] auto orientations_compatible(orientation_t a, orientation_t b) -> bool;
+
 }  // namespace logicsim
 
 #endif

@@ -6,7 +6,7 @@
 #include "exception.h"
 #include "iterator_adaptor/output_callable.h"
 #include "layout.h"
-#include "layout_calculation.h"
+#include "layout_info.h"
 #include "logging.h"
 #include "wyhash.h"
 

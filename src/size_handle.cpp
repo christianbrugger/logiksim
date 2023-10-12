@@ -8,9 +8,9 @@
 #include "geometry/rect.h"
 #include "geometry/scene.h"
 #include "layout.h"
-#include "layout_calculation.h"
 #include "safe_numeric.h"
 #include "vocabulary/view_config.h"
+#include "layout_info.h"
 
 #include <blend2d.h>
 
