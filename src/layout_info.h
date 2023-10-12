@@ -3,14 +3,12 @@
 
 #include "vocabulary/direction_type.h"
 #include "vocabulary/element_type.h"
-#include "vocabulary/grid_fine.h"  // TODO remove
 #include "vocabulary/orientation.h"
-
-#include <concepts>
 
 namespace logicsim {
 
 struct grid_t;
+struct grid_fine_t;
 struct point_t;
 struct rect_t;
 struct rect_fine_t;
@@ -18,11 +16,13 @@ struct ordered_line_t;
 struct connection_count_t;
 struct layout_calculation_data_t;
 
-// TODO put in cpp file
-namespace defaults {
-constexpr static inline auto line_selection_padding = grid_fine_t {0.3};
-constexpr static inline auto logic_item_body_overdraw = grid_fine_t {0.4};
-}  // namespace defaults
+//
+// Constants
+//
+
+[[nodiscard]] auto line_selection_padding() -> grid_fine_t;
+[[nodiscard]] auto logic_item_body_overdraw() -> grid_fine_t;
+[[nodiscard]] auto button_body_overdraw() -> grid_fine_t;
 
 //
 // Validation
@@ -72,7 +72,9 @@ constexpr static inline auto logic_item_body_overdraw = grid_fine_t {0.4};
 [[nodiscard]] auto element_height(const layout_calculation_data_t &data) -> grid_t;
 [[nodiscard]] auto element_size(const layout_calculation_data_t &data) -> point_t;
 
-[[nodiscard]] auto element_body_rect(const layout_calculation_data_t &data)
+[[nodiscard]] auto element_body_draw_rect_untransformed(const layout_calculation_data_t &data)
+    -> rect_fine_t;
+[[nodiscard]] auto element_body_draw_rect(const layout_calculation_data_t &data)
     -> rect_fine_t;
 
 [[nodiscard]] auto element_collision_rect(const layout_calculation_data_t &data)

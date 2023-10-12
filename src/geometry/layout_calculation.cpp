@@ -4,6 +4,7 @@
 #include "vocabulary/point.h"
 #include "vocabulary/point_fine.h"
 #include "vocabulary/rect.h"
+#include "vocabulary/rect_fine.h"
 
 #include <blend2d.h>
 
@@ -135,13 +136,13 @@ auto transform(orientation_t element_orientation, orientation_t connector)
     std::terminate();
 }
 
-auto transform(point_t position, orientation_t orientation, point_t p0, point_t p1)
+auto transform(point_t position, orientation_t orientation, rect_t rect)
     -> rect_t {
     switch (orientation) {
         using enum orientation_t;
 
         case right: {
-            return rect_t {position + p0, position + p1};
+            return rect_t {position + rect.p0, position + rect.p1};
         }
         case left: {
             throw std::runtime_error("Please implement.");
@@ -153,7 +154,33 @@ auto transform(point_t position, orientation_t orientation, point_t p0, point_t 
             throw std::runtime_error("Please implement.");
         }
         case undirected: {
-            return rect_t {position + p0, position + p1};
+            return rect_t {position + rect.p0, position + rect.p1};
+        }
+    }
+    std::terminate();
+}
+
+auto transform(point_t position, orientation_t orientation, rect_fine_t rect)
+    -> rect_fine_t {
+    switch (orientation) {
+        using enum orientation_t;
+
+        case right: {
+            return rect_fine_t {point_fine_t {position} + rect.p0,
+                                point_fine_t {position} + rect.p1};
+        }
+        case left: {
+            throw std::runtime_error("Please implement.");
+        }
+        case up: {
+            throw std::runtime_error("Please implement.");
+        }
+        case down: {
+            throw std::runtime_error("Please implement.");
+        }
+        case undirected: {
+            return rect_fine_t {point_fine_t {position} + rect.p0,
+                                point_fine_t {position} + rect.p1};
         }
     }
     std::terminate();

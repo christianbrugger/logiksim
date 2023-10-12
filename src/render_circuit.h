@@ -44,7 +44,6 @@ namespace defaults {
 
 constexpr static inline auto connector_cutoff_px = 3.0;  // pixels
 
-constexpr static inline auto button_body_overdraw = grid_fine_t {0.5};
 constexpr static inline auto button_body_color = defaults::color_gray_90;
 constexpr static inline auto led_radius = grid_fine_t {0.45};
 
@@ -203,10 +202,16 @@ auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
 [[nodiscard]] auto get_logic_item_stroke_color(ElementDrawState state) -> color_t;
 [[nodiscard]] auto get_logic_item_text_color(ElementDrawState state) -> color_t;
 
+[[nodiscard]] auto get_logic_item_center(layout::ConstElement element) -> point_fine_t;
+
 struct LogicItemRectAttributes {
     std::optional<color_t> custom_fill_color {};
     std::optional<color_t> custom_stroke_color {};
 };
+
+auto draw_logic_item_rect(Context& ctx, layout::ConstElement element,
+                          ElementDrawState state, LogicItemRectAttributes attributes = {})
+    -> void;
 
 auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement element,
                           ElementDrawState state, LogicItemRectAttributes attributes = {})
@@ -219,6 +224,10 @@ struct LogicItemTextAttributes {
     VTextAlignment vertical_alignment {VTextAlignment::center};
     FontStyle style {FontStyle::regular};
 };
+
+auto draw_logic_item_label(Context& ctx, std::string_view text,
+                           layout::ConstElement element, ElementDrawState state,
+                           LogicItemTextAttributes attributes = {}) -> void;
 
 auto draw_logic_item_label(Context& ctx, point_fine_t point, std::string_view text,
                            layout::ConstElement element, ElementDrawState state,

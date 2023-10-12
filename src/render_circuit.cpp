@@ -424,10 +424,18 @@ auto get_logic_item_text_color(ElementDrawState state) -> color_t {
     return with_alpha_runtime(defaults::font::logic_item_text_color, state);
 }
 
-auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement element,
+auto draw_logic_item_rect(Context& ctx, layout::ConstElement element,
                           ElementDrawState state, LogicItemRectAttributes attributes)
     -> void {
-    const auto final_rect = rect + point_fine_t {element.position()};
+    const auto rect = element_body_draw_rect(element.to_layout_calculation_data());
+    draw_logic_item_rect(ctx, rect, element, state, std::move(attributes));
+}
+
+auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement element,
+                          ElementDrawState state, LogicItemRectAttributes attributes)
+
+    -> void {
+    // TODO remove elemnt from call signature
 
     const auto fill_color = attributes.custom_fill_color
                                 ? with_alpha_runtime(*attributes.custom_fill_color, state)
@@ -437,7 +445,7 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement e
             ? with_alpha_runtime(*attributes.custom_stroke_color, state)
             : get_logic_item_stroke_color(state);
 
-    draw_rect(ctx, final_rect,
+    draw_rect(ctx, rect,
               RectAttributes {
                   .draw_type = ShapeDrawType::fill_and_stroke,
                   .fill_color = fill_color,
@@ -445,14 +453,26 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement e
               });
 }
 
-auto draw_logic_item_label(Context& ctx, point_fine_t point, std::string_view text,
+auto get_logic_item_center(layout::ConstElement element) -> point_fine_t {
+    const auto rect = element_body_draw_rect(element.to_layout_calculation_data());
+    return get_center(rect);
+}
+
+auto draw_logic_item_label(Context& ctx, std::string_view text,
+                           layout::ConstElement element, ElementDrawState state,
+                           LogicItemTextAttributes attributes) -> void {
+    const auto center = get_logic_item_center(element);
+    draw_logic_item_label(ctx, center, text, element, state, std::move(attributes));
+}
+
+auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view text,
                            layout::ConstElement element, ElementDrawState state,
                            LogicItemTextAttributes attributes) -> void {
     if (text.empty()) {
         return;
     }
 
-    const auto center = point + point_fine_t {element.position()};
+    // TODO remove elemnt from call signature
 
     const auto font_size = attributes.custom_font_size
                                ? *attributes.custom_font_size
@@ -513,32 +533,20 @@ constexpr auto standard_element_label(ElementType element_type) -> std::string_v
 
 auto draw_standard_element(Context& ctx, layout::ConstElement element,
                            ElementDrawState state) -> void {
-    const auto connector_count = std::max(element.input_count(), element.output_count());
-    const auto element_height = to_grid_fine(connector_count) - grid_fine_t {1};
-    const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {2., element_height + padding},
-    };
-
-    draw_logic_item_rect(ctx, rect, element, state);
-    draw_logic_item_label(ctx, point_fine_t {1., element_height / 2.0},
-                          standard_element_label(element.element_type()), element, state);
+    draw_logic_item_rect(ctx, element, state);
+    draw_logic_item_label(ctx, standard_element_label(element.element_type()), element,
+                          state);
 }
 
 auto draw_button(Context& ctx, layout::ConstElement element, ElementDrawState state,
 
                  std::optional<simulation_view::ConstElement> logic_state) -> void {
-    const auto padding = defaults::button_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {-padding, -padding},
-        point_fine_t {+padding, +padding},
-    };
     const auto logic_value = logic_state ? logic_state->internal_state(0) : false;
+    const auto center = get_logic_item_center(element);
 
-    draw_logic_item_rect(ctx, rect, element, state,
+    draw_logic_item_rect(ctx, element, state,
                          {.custom_fill_color = defaults::button_body_color});
-    draw_binary_value(ctx, point_fine_t {0, 0}, logic_value, element, state);
+    draw_binary_value(ctx, center, logic_value, element, state);
 }
 
 auto draw_led(Context& ctx, layout::ConstElement element, ElementDrawState state,
@@ -672,6 +680,8 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
                           std::string_view interactive_mode_text,
                           connection_count_t control_inputs,
                           std::optional<simulation_view::ConstElement> logic_state) {
+    // TODO handle width / height differently
+
     // white background
     const auto text_x = grid_fine_t {1.} + (element_width - grid_fine_t {1.}) / 2.;
     const auto text_y =
@@ -690,8 +700,11 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
             text_y + v_padding,        // y
         },
     };
+    const auto position = element.position();
+    const auto text_position = point_fine_t {text_x, text_y} + position;
+
     draw_logic_item_rect(
-        ctx, rect, element, state,
+        ctx, rect + position, element, state,
         LogicItemRectAttributes {.custom_fill_color = defaults::color_white});
 
     // number
@@ -699,8 +712,7 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
         if (_is_display_enabled(element, logic_state)) {
             auto number = _inputs_to_number(element, *logic_state, control_inputs);
             const auto text = styled_display_text_t {to_text(number)};
-            draw_logic_item_label(ctx, point_fine_t {text_x, text_y}, text.text, element,
-                                  state,
+            draw_logic_item_label(ctx, text_position, text.text, element, state,
                                   LogicItemTextAttributes {
                                       .custom_font_size = text.font_size,
                                       .custom_text_color = text.color,
@@ -710,7 +722,7 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
         }
     } else {
         draw_logic_item_label(
-            ctx, point_fine_t {text_x, text_y}, interactive_mode_text, element, state,
+            ctx, text_position, interactive_mode_text, element, state,
             LogicItemTextAttributes {
                 .custom_font_size = defaults::font::display_font_size,
                 .custom_text_color = defaults::font::display_normal_color,
@@ -753,15 +765,11 @@ auto draw_display_number(Context& ctx, layout::ConstElement element,
                          std::optional<simulation_view::ConstElement> logic_state)
     -> void {
     const auto input_count = element.input_count();
+    // TODO remove
     const auto element_width = grid_fine_t {display_number::width(input_count)};
     const auto element_height = grid_fine_t {display_number::height(input_count)};
-    const auto padding = defaults::logic_item_body_overdraw;
 
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {element_width, element_height + padding},
-    };
-    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_rect(ctx, element, state);
 
     const auto two_complement = _is_display_twos_complement(element, logic_state);
     const auto edit_mode_text = "0";
@@ -815,15 +823,11 @@ auto draw_display_ascii(Context& ctx, layout::ConstElement element,
                         ElementDrawState state,
                         std::optional<simulation_view::ConstElement> logic_state)
     -> void {
+    // TODO remove
     const auto element_width = grid_fine_t {display_ascii::width};
     const auto element_height = grid_fine_t {display_ascii::height};
-    const auto padding = defaults::logic_item_body_overdraw;
 
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {element_width, element_height + padding},
-    };
-    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_rect(ctx, element, state);
 
     const auto edit_mode_text = "A";
     const auto control_inputs = display_ascii::control_inputs;
@@ -835,27 +839,17 @@ auto draw_display_ascii(Context& ctx, layout::ConstElement element,
 
 auto draw_buffer(Context& ctx, layout::ConstElement element, ElementDrawState state)
     -> void {
-    const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {1., +padding},
-    };
-
-    draw_logic_item_rect(ctx, rect, element, state);
-    draw_logic_item_label(ctx, point_fine_t {0.5, 0.}, "1", element, state,
+    draw_logic_item_rect(ctx, element, state);
+    draw_logic_item_label(ctx, "1", element, state,
                           {.custom_font_size = defaults::font::buffer_label_size});
 }
 
 auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           ElementDrawState state) -> void {
     const auto& attrs = element.attrs_clock_generator();
+    const auto position = element.position();
 
-    const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {5., grid_fine_t {4.} + padding},
-    };
-    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_rect(ctx, element, state);
 
     // labels
     static constexpr auto input_labels = string_array<1> {"En"};
@@ -864,7 +858,8 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           state);
 
     // name
-    draw_logic_item_label(ctx, point_fine_t {2.5, 0}, attrs.name, element, state,
+    draw_logic_item_label(ctx, position + point_fine_t {2.5, 0}, attrs.name, element,
+                          state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_name_size,
                               .custom_text_color = defaults::font::clock_name_color,
@@ -875,7 +870,8 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
 
     // generator delay
     const auto duration_text = attrs.format_period();
-    draw_logic_item_label(ctx, point_fine_t {2.5, 1}, duration_text, element, state,
+    draw_logic_item_label(ctx, position + point_fine_t {2.5, 1}, duration_text, element,
+                          state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,
@@ -887,12 +883,7 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
 
 auto draw_flipflop_jk(Context& ctx, layout::ConstElement element, ElementDrawState state)
     -> void {
-    const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {4., grid_fine_t {2.} + padding},
-    };
-    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_rect(ctx, element, state);
 
     static constexpr auto input_labels = string_array<5> {"> C", "J", "K", "S", "R"};
     static constexpr auto output_labels = string_array<2> {"Q", "Q\u0305"};
@@ -904,24 +895,20 @@ auto draw_shift_register(Context& ctx, layout::ConstElement element,
                          ElementDrawState state,
                          std::optional<simulation_view::ConstElement> logic_state)
     -> void {
-    const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {8., grid_fine_t {2.} + padding},
-    };
-    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_rect(ctx, element, state);
 
     // content
     const auto output_count = std::size_t {element.output_count()};
     const auto state_size = std::size_t {10};
 
+    const auto position = element.position();
     for (auto n : range(output_count, state_size)) {
         const auto point = point_fine_t {
             -1 + 2.0 * (n / output_count),
             0.25 + 1.5 * (n % output_count),
         };
         const auto logic_value = logic_state ? logic_state->internal_state(n) : false;
-        draw_binary_value(ctx, point, logic_value, element, state);
+        draw_binary_value(ctx, position + point, logic_value, element, state);
     }
 
     // labels
@@ -933,12 +920,7 @@ auto draw_shift_register(Context& ctx, layout::ConstElement element,
 
 auto draw_latch_d(Context& ctx, layout::ConstElement element, ElementDrawState state)
     -> void {
-    const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {2., grid_fine_t {1.} + padding},
-    };
-    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_rect(ctx, element, state);
 
     static constexpr auto input_labels = string_array<2> {"E", "D"};
     static constexpr auto output_labels = string_array<1> {"Q"};
@@ -948,12 +930,7 @@ auto draw_latch_d(Context& ctx, layout::ConstElement element, ElementDrawState s
 
 auto draw_flipflop_d(Context& ctx, layout::ConstElement element, ElementDrawState state)
     -> void {
-    const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {3., grid_fine_t {2.} + padding},
-    };
-    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_rect(ctx, element, state);
 
     static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
     static constexpr auto output_labels = string_array<1> {"Q"};
@@ -963,12 +940,7 @@ auto draw_flipflop_d(Context& ctx, layout::ConstElement element, ElementDrawStat
 
 auto draw_flipflop_ms_d(Context& ctx, layout::ConstElement element,
                         ElementDrawState state) -> void {
-    const auto padding = defaults::logic_item_body_overdraw;
-    const auto rect = rect_fine_t {
-        point_fine_t {0., -padding},
-        point_fine_t {4., grid_fine_t {2.} + padding},
-    };
-    draw_logic_item_rect(ctx, rect, element, state);
+    draw_logic_item_rect(ctx, element, state);
 
     static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
     static constexpr auto output_labels = string_array<1> {"Q"};
@@ -1343,8 +1315,7 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
 }
 
 auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> grid_fine_t {
-    return type == ElementType::button ? grid_fine_t {0.}
-                                       : defaults::line_selection_padding;
+    return type == ElementType::button ? grid_fine_t {0.} : line_selection_padding();
 }
 
 auto draw_logic_item_shadow(Context& ctx, layout::ConstElement element,

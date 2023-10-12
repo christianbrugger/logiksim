@@ -27,22 +27,22 @@ auto size_handle_positions(const layout::ConstElement element)
         case and_element:
         case or_element:
         case xor_element: {
-            // TODO redo this calculation
-            constexpr auto overdraw = defaults::logic_item_body_overdraw;
+            const auto overdraw = logic_item_body_overdraw();
             const auto data = element.to_layout_calculation_data();
+            const auto width = element_width(data);
             const auto height = element_height(data);
 
             return {
                 size_handle_t {0, transform(element.position(), element.orientation(),
-                                            point_fine_t {1.0, -overdraw})},
-                size_handle_t {1, transform(element.position(), element.orientation(),
-                                            point_fine_t {1.0, height + overdraw})},
+                                            point_fine_t {width / 2., -overdraw})},
+                size_handle_t {1,
+                               transform(element.position(), element.orientation(),
+                                         point_fine_t {width / 2., height + overdraw})},
             };
         }
 
         case display_number: {
-            // TODO redo this calculation
-            constexpr auto overdraw = defaults::logic_item_body_overdraw;
+            const auto overdraw = logic_item_body_overdraw();
             const auto input_count = element.input_count();
             const auto width = display_number::width(input_count);
 
