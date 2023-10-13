@@ -4,6 +4,6 @@
 
 namespace logicsim {
 
-//
+namespace standard_element {}  // namespace standard_element
 
 }  // namespace logicsim

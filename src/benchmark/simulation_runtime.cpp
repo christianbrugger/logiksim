@@ -1,16 +1,16 @@
 #include "benchmark/simulation_runtime.h"
 
 #include "algorithm/fmt_join.h"
+#include "algorithm/uniform_int_distribution.h"
 #include "logging.h"
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
+#include "random/bool.h"
 
 namespace logicsim {
 
-template <std::uniform_random_bit_generator G>
-void _generate_random_events(G &rng, Simulation &simulation) {
-    boost::random::uniform_int_distribution<int32_t> trigger_distribution {0, 1};
+namespace {
+
+void _generate_random_events(Rng &rng, Simulation &simulation) {
+    const auto trigger_distribution = uint_distribution(0, 1);
 
     for (auto element : simulation.schematic().elements()) {
         for (auto input : element.inputs()) {
@@ -22,8 +22,9 @@ void _generate_random_events(G &rng, Simulation &simulation) {
     }
 }
 
-template <std::uniform_random_bit_generator G>
-auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
+}  // namespace
+
+auto benchmark_simulation(Rng &rng, Schematic &schematic, const int n_events,
                           const bool do_print) -> int64_t {
     Simulation simulation {schematic};
     simulation.print_events = do_print;
@@ -31,8 +32,7 @@ auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
     // set custom delays
     for (const auto element : schematic.elements()) {
         for (const auto output : element.outputs()) {
-            auto delay_dist =
-                boost::random::uniform_int_distribution<delay_t::rep> {5, 500};
+            auto delay_dist = uint_distribution<delay_t::rep>(5, 500);
             output.set_delay(delay_t {1us * delay_dist(rng)});
         }
     }
@@ -78,12 +78,9 @@ auto benchmark_simulation(G &rng, Schematic &schematic, const int n_events,
     return simulated_event_count;
 }
 
-template auto benchmark_simulation(boost::random::mt19937 &rng, Schematic &schematic,
-                                   const int n_events, const bool do_print) -> int64_t;
-
 auto benchmark_simulation(const int n_elements, const int n_events, const bool do_print)
     -> int64_t {
-    boost::random::mt19937 rng {0};
+    auto rng = Rng {0};
 
     auto schematic = create_random_schematic(rng, n_elements);
     if (do_print) {

@@ -2,9 +2,9 @@
 
 #include "algorithm/range.h"
 #include "algorithm/transform_to_vector.h"
+#include "algorithm/uniform_int_distribution.h"
 #include "geometry/orientation.h"
 #include "random/generator.h"
-#include "random/uniform_int_distribution.h"
 #include "render_circuit.h"
 #include "simulation_view.h"
 #include "timer.h"

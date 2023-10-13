@@ -1,7 +1,7 @@
 #include "random/part.h"
 
+#include "algorithm/uniform_int_distribution.h"
 #include "geometry/part.h"
-#include "random/uniform_int_distribution.h"
 #include "vocabulary/ordered_line.h"
 #include "vocabulary/part.h"
 

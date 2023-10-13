@@ -5,8 +5,8 @@
 
 namespace logicsim {
 
-auto get_random_bool(Rng& rng) -> bool;
-auto get_random_bool(Rng& rng, double percentage) -> bool;
+[[nodiscard]] auto get_random_bool(Rng& rng) -> bool;
+[[nodiscard]] auto get_random_bool(Rng& rng, double percentage) -> bool;
 
 }
 

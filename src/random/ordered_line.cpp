@@ -1,12 +1,12 @@
 #include "random/ordered_line.h"
 
+#include "algorithm/range.h"
 #include "random/bool.h"
 #include "random/point.h"
 #include "vocabulary/grid.h"
-#include "vocabulary/ordered_line.h"
 #include "vocabulary/line.h"
+#include "vocabulary/ordered_line.h"
 #include "vocabulary/rect.h"
-#include "algorithm/range.h"
 
 #include <stdexcept>
 
@@ -73,4 +73,4 @@ auto get_random_lines(Rng& rng, std::size_t count, grid_t min, grid_t max)
     return result;
 }
 
-}
+}  // namespace logicsim

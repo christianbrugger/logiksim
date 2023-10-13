@@ -1,12 +1,12 @@
 #include "random/wire.h"
 
 #include "algorithm/range.h"
+#include "algorithm/uniform_int_distribution.h"
 #include "editable_circuit/handler.h"
 #include "random/bool.h"
 #include "random/insertion_mode.h"
 #include "random/ordered_line.h"
 #include "random/point.h"
-#include "random/uniform_int_distribution.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/element_type.h"
 #include "vocabulary/insertion_mode.h"

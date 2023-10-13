@@ -10,13 +10,12 @@ namespace logicsim {
 struct grid_t;
 struct ordered_line_t;
 
-auto get_random_line(Rng& rng) -> ordered_line_t;
-auto get_random_line(Rng& rng, grid_t min, grid_t max) -> ordered_line_t;
-auto get_random_line(Rng& rng, grid_t min, grid_t max, grid_t max_length)
+[[nodiscard]] auto get_random_line(Rng& rng, grid_t min, grid_t max) -> ordered_line_t;
+[[nodiscard]] auto get_random_line(Rng& rng, grid_t min, grid_t max, grid_t max_length)
     -> ordered_line_t;
 
-auto get_random_lines(Rng& rng, std::size_t count) -> std::vector<ordered_line_t>;
-auto get_random_lines(Rng& rng, std::size_t count, grid_t min, grid_t max)
+
+[[nodiscard]] auto get_random_lines(Rng& rng, std::size_t count, grid_t min, grid_t max)
     -> std::vector<ordered_line_t>;
 
 }  // namespace logicsim

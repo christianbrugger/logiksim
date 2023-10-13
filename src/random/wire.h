@@ -29,6 +29,6 @@ struct WiresButtonsParams {
 auto add_many_wires_and_buttons(Rng& rng, State state, WiresButtonsParams params = {})
     -> void;
 
-}  // namespace logicsim
+}  // namespace logicsim::editable_circuit
 
 #endif

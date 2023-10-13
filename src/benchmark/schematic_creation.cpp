@@ -2,9 +2,7 @@
 
 #include "algorithm/range.h"
 #include "algorithm/shuffle.h"
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
+#include "algorithm/uniform_int_distribution.h"
 
 #include <stdexcept>
 
@@ -47,12 +45,10 @@ auto benchmark_schematic(const int n_elements) -> Schematic {
 
 namespace details {
 
-template <std::uniform_random_bit_generator G>
-void add_random_element(Schematic &schematic, G &rng) {
+void add_random_element(Schematic &schematic, Rng &rng) {
     static constexpr auto max_connections = 8;
-    auto connection_dist =
-        boost::random::uniform_int_distribution<int> {1, max_connections};
-    auto element_dist = boost::random::uniform_int_distribution<int8_t> {0, 2};
+    auto connection_dist = uint_distribution(1, max_connections);
+    auto element_dist = uint_distribution<int8_t>(0, 2);
 
     const auto element_type =
         element_dist(rng) == 0
@@ -79,15 +75,13 @@ void add_random_element(Schematic &schematic, G &rng) {
     });
 }
 
-template <std::uniform_random_bit_generator G>
-void create_random_elements(Schematic &schematic, G &rng, int n_elements) {
+void create_random_elements(Schematic &schematic, Rng &rng, int n_elements) {
     for (auto _ [[maybe_unused]] : range(n_elements)) {
         add_random_element(schematic, rng);
     }
 }
 
-template <std::uniform_random_bit_generator G>
-void create_random_connections(Schematic &schematic, G &rng, double connection_ratio) {
+void create_random_connections(Schematic &schematic, Rng &rng, double connection_ratio) {
     if (connection_ratio == 0) {
         return;
     }
@@ -127,8 +121,7 @@ void create_random_connections(Schematic &schematic, G &rng, double connection_r
 }
 }  // namespace details
 
-template <std::uniform_random_bit_generator G>
-auto create_random_schematic(G &rng, int n_elements, double connection_ratio)
+auto create_random_schematic(Rng &rng, int n_elements, double connection_ratio)
     -> Schematic {
     Schematic schematic;
     details::create_random_elements(schematic, rng, n_elements);
@@ -136,10 +129,5 @@ auto create_random_schematic(G &rng, int n_elements, double connection_ratio)
 
     return schematic;
 }
-
-// template instatiations
-
-template auto create_random_schematic(boost::random::mt19937 &rng, int n_elements,
-                                      double connection_ratio) -> Schematic;
 
 }  // namespace logicsim

@@ -13,6 +13,7 @@ set(LS_CORE_SOURCES
     src/algorithm/narrow_integral.cpp
     src/algorithm/overload.cpp
     src/algorithm/pop_while.cpp
+    src/algorithm/random_select.cpp
     src/algorithm/range.cpp
     src/algorithm/range_step.cpp
     src/algorithm/round.cpp
@@ -24,6 +25,7 @@ set(LS_CORE_SOURCES
     src/algorithm/transform_if.cpp
     src/algorithm/transform_to_container.cpp
     src/algorithm/transform_to_vector.cpp
+    src/algorithm/uniform_int_distribution.cpp
 
     src/benchmark/render_line_scene.cpp
     src/benchmark/schematic_creation.cpp
@@ -99,6 +101,7 @@ set(LS_CORE_SOURCES
     src/iterator_adaptor/enumerate.cpp
     src/iterator_adaptor/filter_output_iterator.cpp
     src/iterator_adaptor/output_callable.cpp
+    src/iterator_adaptor/polling_iterator.cpp
     src/iterator_adaptor/transform_if_output_iterator.cpp
     src/iterator_adaptor/transform_output_iterator.cpp
     src/iterator_adaptor/transform_view.cpp
@@ -110,14 +113,18 @@ set(LS_CORE_SOURCES
     src/logic_item/layout_standard_element.cpp
 
     src/random/bool.cpp
+    src/random/connection_count.cpp
+    src/random/element_type.cpp
     src/random/generator.cpp
     src/random/grid.cpp
     src/random/insertion_mode.cpp
+    src/random/internal_state_count.cpp
+    src/random/layout_calculation_data.cpp
     src/random/ordered_line.cpp
+    src/random/orientation.cpp
     src/random/part.cpp
     src/random/point.cpp
     src/random/segment.cpp
-    src/random/uniform_int_distribution.cpp
     src/random/wire.cpp
     
     src/render/primitive/arrow.cpp
@@ -241,6 +248,7 @@ set(LS_TEST_SOURCES
     test/algorithm/range_test.cpp
     test/algorithm/range_step_test.cpp
     test/algorithm/transform_to_vector_test.cpp
+    test/algorithm/uniform_int_distribution_test.cpp
     
     test/container/graph/depth_first_search_test.cpp
     test/container/circular_buffer_test.cpp
@@ -253,10 +261,10 @@ set(LS_TEST_SOURCES
     test/geometry/part_list_test.cpp
     test/geometry/part_test.cpp
 
+    test/iterator_adaptor/polling_iterator_test.cpp
     test/iterator_adaptor/transform_view_test.cpp
     
     test/random/generator_test.cpp
-    test/random/uniform_int_distribution_test.cpp
 
     test/vocabulary/color_test.cpp
     test/vocabulary/connection_count_test.cpp
@@ -526,6 +534,9 @@ add_subdirectory(external/gcem EXCLUDE_FROM_ALL SYSTEM)
 # svg2b2d
 add_subdirectory(external/svg2b2d EXCLUDE_FROM_ALL SYSTEM)
 
+# cppcoro
+add_subdirectory(external/cppcoro EXCLUDE_FROM_ALL SYSTEM)
+
 
 
 
@@ -627,6 +638,7 @@ set(LS_CORE_LIBRARIES
     harfbuzz
     gcem
     svg2b2d
+    cppcoro
     
     Qt6::Core
     Qt6::Widgets

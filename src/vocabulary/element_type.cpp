@@ -2,6 +2,7 @@
 
 #include <string>
 #include <exception>
+#include "element_type.h"
 
 namespace logicsim {
 

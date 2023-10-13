@@ -1,10 +1,10 @@
 #include "random/segment.h"
 
+#include "algorithm/uniform_int_distribution.h"
 #include "layout.h"
 #include "random/bool.h"
 #include "random/grid.h"
 #include "random/part.h"
-#include "random/uniform_int_distribution.h"
 #include "vocabulary/element_id.h"
 #include "vocabulary/segment_index.h"
 

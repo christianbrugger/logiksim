@@ -25,4 +25,12 @@ auto format(orientation_t orientation) -> std::string {
     std::terminate();
 }
 
+auto is_directed(orientation_t orientation) -> bool {
+    return orientation != orientation_t::undirected;
+}
+
+auto is_undirected(orientation_t orientation) -> bool {
+    return orientation == orientation_t::undirected;
+}
+
 }  // namespace logicsim

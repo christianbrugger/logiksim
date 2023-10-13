@@ -36,6 +36,11 @@ struct layout_calculation_data_t;
 
 [[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;
 
+/**
+ * brief: Checks if input / output count, orientation and position is valid.
+ */
+[[nodiscard]] auto is_valid(const layout_calculation_data_t &data) -> bool;
+
 //
 // Connection Count
 //
@@ -72,8 +77,8 @@ struct layout_calculation_data_t;
 [[nodiscard]] auto element_height(const layout_calculation_data_t &data) -> grid_t;
 [[nodiscard]] auto element_size(const layout_calculation_data_t &data) -> point_t;
 
-[[nodiscard]] auto element_body_draw_rect_untransformed(const layout_calculation_data_t &data)
-    -> rect_fine_t;
+[[nodiscard]] auto element_body_draw_rect_untransformed(
+    const layout_calculation_data_t &data) -> rect_fine_t;
 [[nodiscard]] auto element_body_draw_rect(const layout_calculation_data_t &data)
     -> rect_fine_t;
 

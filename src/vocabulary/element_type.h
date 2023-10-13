@@ -4,6 +4,7 @@
 #include "format/enum.h"
 
 #include <cstdint>
+#include <array>
 
 namespace logicsim {
 
@@ -40,7 +41,7 @@ auto format(ElementType type) -> std::string;
 
 [[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
 
-constexpr inline auto all_element_types = {
+constexpr inline auto all_element_types = std::array {
     ElementType::unused,       //
     ElementType::placeholder,  //
     ElementType::wire,         //

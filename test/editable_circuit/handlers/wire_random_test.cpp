@@ -1,4 +1,5 @@
 #include "./test_helpers.h"
+#include "algorithm/uniform_int_distribution.h"
 #include "editable_circuit/handler.h"
 #include "editable_circuit/sanitizer.h"
 #include "exception.h"
@@ -6,7 +7,6 @@
 #include "random/bool.h"
 #include "random/ordered_line.h"
 #include "random/segment.h"
-#include "random/uniform_int_distribution.h"
 #include "random/wire.h"
 #include "timer.h"
 

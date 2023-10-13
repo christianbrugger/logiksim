@@ -6,10 +6,11 @@
 namespace logicsim {
 
 template <typename T>
-auto uint_distribution(T min, T max) -> boost::random::uniform_int_distribution<T> {
+[[nodiscard]] auto uint_distribution(T min, T max)
+    -> boost::random::uniform_int_distribution<T> {
     return boost::random::uniform_int_distribution<T> {min, max};
 }
 
-}
+}  // namespace logicsim
 
 #endif

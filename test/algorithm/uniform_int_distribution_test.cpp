@@ -4,7 +4,7 @@
 /// to make sense these need to be deterministic on all platforms.
 /// We test here that random numbers are still the same.
 
-#include "random/uniform_int_distribution.h"
+#include "algorithm/uniform_int_distribution.h"
 
 #include "random/generator.h"
 
@@ -14,7 +14,7 @@
 
 namespace logicsim {
 
-TEST(RandomUniformIntDistribution, StabilityInt32) {
+TEST(AlgorithmUniformIntDistribution, StabilityInt32) {
     auto rng = Rng {0};
 
     const auto numbers = uint_distribution<int32_t>(0, 1'000'000);
@@ -25,7 +25,7 @@ TEST(RandomUniformIntDistribution, StabilityInt32) {
     ASSERT_EQ(numbers(rng), 844455);
 }
 
-TEST(RandomUniformIntDistribution, StabilityInt64) {
+TEST(AlgorithmUniformIntDistribution, StabilityInt64) {
     auto rng = Rng {0};
 
     const auto numbers = uint_distribution<int64_t>(10'000'000'000, 20'000'000'000);
@@ -36,7 +36,7 @@ TEST(RandomUniformIntDistribution, StabilityInt64) {
     ASSERT_EQ(numbers(rng), 11879422756);
 }
 
-TEST(RandomUniformIntDistribution, StabilityInt8) {
+TEST(AlgorithmUniformIntDistribution, StabilityInt8) {
     auto rng = Rng {0};
 
     const auto numbers = uint_distribution<int8_t>(0, 100);

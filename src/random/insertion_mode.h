@@ -6,7 +6,7 @@
 
 namespace logicsim {
 
-auto get_random_insertion_mode(Rng& rng) -> InsertionMode;
+[[nodiscard]] auto get_random_insertion_mode(Rng& rng) -> InsertionMode;
 
 }
 

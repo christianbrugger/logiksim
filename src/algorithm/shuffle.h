@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_ALGORITHM_SHUFFLE_H
 #define LOGICSIM_ALGORITHM_SHUFFLE_H
 
-#include <boost/random/uniform_int_distribution.hpp>
+#include "algorithm/uniform_int_distribution.h"
 
 #include <algorithm>
 #include <iterator>
@@ -33,7 +33,7 @@ void shuffle(const Iterator first, const Iterator last, Generator& generator) {
     diff_t pivot_index = 1;
 
     for (; pivot != last; ++pivot, ++pivot_index) {
-        boost::random::uniform_int_distribution<diff_t> distribution(0, pivot_index);
+        const auto distribution = uint_distribution(diff_t {0}, pivot_index);
         diff_t offset_index = distribution(generator);
 
         if (offset_index != pivot_index) {  // avoid self-move-assignment

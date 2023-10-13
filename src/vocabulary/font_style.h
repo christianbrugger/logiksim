@@ -3,6 +3,7 @@
 
 #include "format/enum.h"
 
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -15,7 +16,7 @@ enum class FontStyle : uint8_t {
     monospace,
 };
 
-constexpr inline auto all_font_styles = {
+constexpr inline auto all_font_styles = std::array {
     FontStyle::regular,
     FontStyle::italic,
     FontStyle::bold,

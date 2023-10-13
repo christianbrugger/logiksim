@@ -1,12 +1,12 @@
 
 #include "algorithm/range.h"
+#include "algorithm/uniform_int_distribution.h"
 #include "editable_circuit/editable_circuit.h"
 #include "format/container.h"
 #include "random/bool.h"
 #include "random/generator.h"
 #include "random/insertion_mode.h"
 #include "random/point.h"
-#include "random/uniform_int_distribution.h"
 #include "render_circuit.h"
 #include "timer.h"
 

@@ -2,12 +2,12 @@
 #include "segment_tree.h"
 
 #include "algorithm/range.h"
+#include "algorithm/uniform_int_distribution.h"
 #include "logging.h"
 #include "random/bool.h"
 #include "random/generator.h"
 #include "random/part.h"
 #include "random/segment.h"
-#include "random/uniform_int_distribution.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

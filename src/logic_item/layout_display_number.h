@@ -3,6 +3,7 @@
 
 #include "algorithm/range.h"
 #include "geometry/connection_count.h"
+#include "iterator_adaptor/polling_iterator.h"
 #include "logic_item/layout_display.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/grid.h"
@@ -11,6 +12,7 @@
 #include "vocabulary/point.h"
 
 #include <concepts>
+#include <cppcoro/generator.hpp>
 
 namespace logicsim {
 
@@ -68,6 +70,9 @@ inline auto iter_output_location(const layout_calculation_data_t& data,
  */
 inline auto iter_element_body_points(const layout_calculation_data_t& data,
                                      std::invocable<point_t> auto next_point) -> bool;
+
+[[nodiscard]] inline auto iter_element_body_points(const layout_calculation_data_t& data)
+    -> cppcoro::generator<const point_t>;
 
 //
 // Implementation
@@ -132,6 +137,113 @@ inline auto iter_element_body_points(const layout_calculation_data_t& data,
         }
     }
     return true;
+}
+
+inline auto iter_element_body_points(const layout_calculation_data_t& data)
+    -> cppcoro::generator<const point_t> {
+    const auto w = width(data.input_count);
+    const auto h = height(data.input_count);
+
+    const auto negative_pos = negative_position(data.input_count);
+    const auto enable_pos = enable_position(data.input_count);
+    const auto max_input_y = to_grid(value_inputs(data.input_count)) - grid_t {1};
+
+    for (const auto y : range(h + grid_t {1})) {
+        for (const auto x : range(w + grid_t {1})) {
+            const auto point = point_t {x, y};
+
+            if (point.x == grid_t {0} && point.y <= max_input_y) {
+                continue;
+            }
+            if (point == negative_pos || point == enable_pos) {
+                continue;
+            }
+
+            co_yield point;
+        }
+    }
+}
+
+inline auto iter_element_body_points_vector(const layout_calculation_data_t& data)
+    -> std::vector<point_t> {
+    auto result = std::vector<point_t> {};
+
+    const auto w = width(data.input_count);
+    const auto h = height(data.input_count);
+
+    const auto negative_pos = negative_position(data.input_count);
+    const auto enable_pos = enable_position(data.input_count);
+    const auto max_input_y = to_grid(value_inputs(data.input_count)) - grid_t {1};
+
+    for (const auto y : range(h + grid_t {1})) {
+        for (const auto x : range(w + grid_t {1})) {
+            const auto point = point_t {x, y};
+
+            if (point.x == grid_t {0} && point.y <= max_input_y) {
+                continue;
+            }
+            if (point == negative_pos || point == enable_pos) {
+                continue;
+            }
+
+            result.push_back(point);
+        }
+    }
+
+    return result;
+}
+
+struct bp_state {
+    point_t point {};
+    grid_t width {};
+    grid_t height {};
+
+    point_t negative_pos {};
+    point_t enable_pos {};
+    grid_t max_input_y {};
+
+    auto operator==(const bp_state&) const -> bool = default;
+};
+
+using bp_view = polling_view<point_t, bp_state>;
+
+inline auto iter_element_body_points_polling(const layout_calculation_data_t& data)
+    -> bp_view {
+    const auto state = bp_state {
+        .point = point_t {1, 0},
+        .width = width(data.input_count),
+        .height = height(data.input_count),
+
+        .negative_pos = negative_position(data.input_count),
+        .enable_pos = enable_position(data.input_count),
+        .max_input_y = to_grid(value_inputs(data.input_count)) - grid_t {1},
+    };
+
+    const auto mutator = [](bp_state& state) -> polling_status {
+        const auto inc = [&] {
+            ++state.point.x;
+            if (state.point.x > state.width) {
+                state.point.x = grid_t {0};
+                ++state.point.y;
+            }
+        };
+
+        inc();
+
+        while (state.point.x == grid_t {0} && state.point.y <= state.max_input_y) {
+            inc();
+        }
+        while (state.point == state.negative_pos || state.point == state.enable_pos) {
+            inc();
+        }
+
+        return state.point.y > state.height ? polling_status::stop
+                                            : polling_status::iterate;
+    };
+
+    const auto getter = [](const bp_state& s) { return s.point; };
+
+    return bp_view {mutator, getter, state, polling_status::iterate};
 }
 
 }  // namespace display_number

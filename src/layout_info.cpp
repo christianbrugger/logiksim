@@ -80,6 +80,13 @@ auto is_representable(layout_calculation_data_t data) -> bool {
                             int {position.y} + int {rect.p1.y});
 }
 
+auto is_valid(const layout_calculation_data_t &data) -> bool {
+    return is_input_output_count_valid(data.element_type, data.input_count,
+                                       data.output_count) &&
+           is_orientation_valid(data.element_type, data.orientation) &&
+           is_representable(data);
+}
+
 //
 //
 //

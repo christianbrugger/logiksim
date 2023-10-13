@@ -9,8 +9,8 @@ namespace logicsim {
 
 using Rng = boost::random::mt19937;
 
-auto get_random_number_generator() -> Rng;
-auto get_random_number_generator(uint32_t seed) -> Rng;
+[[nodiscard]] auto get_random_number_generator() -> Rng;
+[[nodiscard]] auto get_random_number_generator(uint32_t seed) -> Rng;
 
 }  // namespace logicsim
 
