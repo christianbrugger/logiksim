@@ -193,6 +193,41 @@ inline auto iter_element_body_points_vector(const layout_calculation_data_t& dat
     return result;
 }
 
+using bp_small_policy = folly::small_vector_policy::policy_size_type<uint32_t>;
+using bp_small = folly::small_vector<point_t, 28, bp_small_policy>;
+
+inline auto iter_element_body_points_smallvector(const layout_calculation_data_t& data)
+    -> bp_small {
+    auto result = bp_small {};
+
+    const auto w = width(data.input_count);
+    const auto h = height(data.input_count);
+
+    const auto negative_pos = negative_position(data.input_count);
+    const auto enable_pos = enable_position(data.input_count);
+    const auto max_input_y = to_grid(value_inputs(data.input_count)) - grid_t {1};
+
+    for (const auto y : range(h + grid_t {1})) {
+        for (const auto x : range(w + grid_t {1})) {
+            const auto point = point_t {x, y};
+
+            if (point.x == grid_t {0} && point.y <= max_input_y) {
+                continue;
+            }
+            if (point == negative_pos || point == enable_pos) {
+                continue;
+            }
+
+            result.push_back(point);
+        }
+    }
+
+    return result;
+}
+
+auto iter_element_body_points_smallvector_private(const layout_calculation_data_t& data)
+    -> bp_small;
+
 struct bp_state {
     point_t point {};
     grid_t width {};

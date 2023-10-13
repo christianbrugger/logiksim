@@ -565,36 +565,36 @@ inline auto iter_element_body_points_base(const layout_calculation_data_t& data,
 // Generators
 //
 
-inline auto iter_body_points(const static_body_points& body_points)
-    -> cppcoro::generator<const point_t> {
-    for (const point_t& point : body_points) {
-        co_yield point;
-    }
-}
+// inline auto iter_body_points(const static_body_points& body_points)
+//     -> cppcoro::generator<const point_t> {
+//     for (const point_t& point : body_points) {
+//         co_yield point;
+//     }
+// }
+
+// inline auto iter_element_body_points_base(const layout_calculation_data_t& data)
+//     -> cppcoro::generator<const point_t> {
+//     switch (data.element_type) {
+//         using enum ElementType;
+//
+//         case and_element:
+//         case or_element:
+//         case xor_element: {
+//             return standard_element::iter_element_body_points(data);
+//         }
+//
+//         case display_number: {
+//             return display_number::iter_element_body_points(data);
+//         }
+//
+//         default: {
+//             return iter_body_points(get_static_body_points(data.element_type));
+//         }
+//     }
+//     std::terminate();
+// }
 
 inline auto iter_element_body_points_base(const layout_calculation_data_t& data)
-    -> cppcoro::generator<const point_t> {
-    switch (data.element_type) {
-        using enum ElementType;
-
-        case and_element:
-        case or_element:
-        case xor_element: {
-            return standard_element::iter_element_body_points(data);
-        }
-
-        case display_number: {
-            return display_number::iter_element_body_points(data);
-        }
-
-        default: {
-            return iter_body_points(get_static_body_points(data.element_type));
-        }
-    }
-    std::terminate();
-}
-
-inline auto iter_element_body_points_base_2(const layout_calculation_data_t& data)
     -> cppcoro::generator<const point_t> {
     switch (data.element_type) {
         using enum ElementType;
@@ -647,6 +647,34 @@ inline auto iter_element_body_points_base_vector(const layout_calculation_data_t
     }
     std::terminate();
 }
+
+using bp_small = standard_element::bp_small;
+
+inline auto iter_element_body_points_base_smallvector(
+    const layout_calculation_data_t& data) -> bp_small {
+    switch (data.element_type) {
+        using enum ElementType;
+
+        case and_element:
+        case or_element:
+        case xor_element: {
+            return standard_element::iter_element_body_points_smallvector(data);
+        }
+
+        case display_number: {
+            return display_number::iter_element_body_points_smallvector(data);
+        }
+
+        default: {
+            const auto& points = get_static_body_points(data.element_type);
+            return bp_small(points.begin(), points.end());
+        }
+    }
+    std::terminate();
+}
+
+auto iter_element_body_points_base_smallvector_private(
+    const layout_calculation_data_t& data) -> bp_small;
 
 struct bp_state {
     std::optional<standard_element::bp_view::const_iterator> standard_element;
