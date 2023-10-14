@@ -154,7 +154,6 @@ set(LS_CORE_SOURCES
     src/vocabulary/connection_count.cpp
     src/vocabulary/connection_id.cpp
     src/vocabulary/connector_info.cpp
-    src/vocabulary/connector_static.cpp
     src/vocabulary/delay.cpp
     src/vocabulary/direction_type.cpp
     src/vocabulary/display_state.cpp
@@ -168,6 +167,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/grid_fine.cpp
     src/vocabulary/insertion_mode.cpp
     src/vocabulary/layout_calculation_data.cpp
+    src/vocabulary/layout_info_small_vector.cpp
     src/vocabulary/line.cpp
     src/vocabulary/line_fine.cpp
     src/vocabulary/line_insertion_type.cpp

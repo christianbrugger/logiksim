@@ -7,11 +7,11 @@
 #include "logic_item/layout_standard_element.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/connector_info.h"
-#include "vocabulary/connector_static.h"
 #include "vocabulary/direction_type.h"
 #include "vocabulary/element_type.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
+#include "vocabulary/layout_info_small_vector.h"
 #include "vocabulary/point.h"
 
 #include <concepts>
@@ -648,10 +648,8 @@ inline auto iter_element_body_points_base_vector(const layout_calculation_data_t
     std::terminate();
 }
 
-using bp_small = standard_element::bp_small;
-
 inline auto iter_element_body_points_base_smallvector(
-    const layout_calculation_data_t& data) -> bp_small {
+    const layout_calculation_data_t& data) -> body_points_vector {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -667,14 +665,14 @@ inline auto iter_element_body_points_base_smallvector(
 
         default: {
             const auto& points = get_static_body_points(data.element_type);
-            return bp_small(points.begin(), points.end());
+            return body_points_vector(points.begin(), points.end());
         }
     }
     std::terminate();
 }
 
 auto iter_element_body_points_base_smallvector_private(
-    const layout_calculation_data_t& data) -> bp_small;
+    const layout_calculation_data_t& data) -> body_points_vector;
 
 struct bp_state {
     std::optional<standard_element::bp_view::const_iterator> standard_element;

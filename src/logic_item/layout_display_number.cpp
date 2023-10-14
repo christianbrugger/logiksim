@@ -122,9 +122,7 @@ auto negative_position(connection_count_t input_count) -> point_t {
 //
 
 auto iter_element_body_points_smallvector_private(const layout_calculation_data_t& data)
-    -> bp_small {
-    auto result = bp_small {};
-
+    -> body_points_vector {
     const auto w = width(data.input_count);
     const auto h = height(data.input_count);
 
@@ -132,6 +130,7 @@ auto iter_element_body_points_smallvector_private(const layout_calculation_data_
     const auto enable_pos = enable_position(data.input_count);
     const auto max_input_y = to_grid(value_inputs(data.input_count)) - grid_t {1};
 
+    auto result = body_points_vector {};
     for (const auto y : range(h + grid_t {1})) {
         for (const auto x : range(w + grid_t {1})) {
             const auto point = point_t {x, y};

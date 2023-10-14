@@ -7,8 +7,8 @@
 #include "vocabulary/connection_count.h"
 #include "vocabulary/connection_id.h"
 #include "vocabulary/connector_info.h"
-#include "vocabulary/connector_static.h"
 #include "vocabulary/grid.h"
+#include "vocabulary/layout_info_small_vector.h"
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
 

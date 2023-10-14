@@ -101,7 +101,7 @@ auto get_static_body_points(ElementType element_type) -> const static_body_point
 //
 
 auto iter_element_body_points_base_smallvector_private(
-    const layout_calculation_data_t& data) -> bp_small {
+    const layout_calculation_data_t& data) -> body_points_vector {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -117,7 +117,7 @@ auto iter_element_body_points_base_smallvector_private(
 
         default: {
             const auto& points = get_static_body_points(data.element_type);
-            return bp_small(points.begin(), points.end());
+            return body_points_vector(points.begin(), points.end());
         }
     }
     std::terminate();

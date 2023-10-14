@@ -8,6 +8,7 @@
 #include "vocabulary/connection_count.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
+#include "vocabulary/layout_info_small_vector.h"
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
 
@@ -197,8 +198,8 @@ using bp_small_policy = folly::small_vector_policy::policy_size_type<uint32_t>;
 using bp_small = folly::small_vector<point_t, 28, bp_small_policy>;
 
 inline auto iter_element_body_points_smallvector(const layout_calculation_data_t& data)
-    -> bp_small {
-    auto result = bp_small {};
+    -> body_points_vector {
+    auto result = body_points_vector {};
 
     const auto w = width(data.input_count);
     const auto h = height(data.input_count);
@@ -226,7 +227,7 @@ inline auto iter_element_body_points_smallvector(const layout_calculation_data_t
 }
 
 auto iter_element_body_points_smallvector_private(const layout_calculation_data_t& data)
-    -> bp_small;
+    -> body_points_vector;
 
 struct bp_state {
     point_t point {};
