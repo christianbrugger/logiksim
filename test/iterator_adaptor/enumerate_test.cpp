@@ -11,6 +11,7 @@
 
 namespace logicsim {
 
+namespace {
 template <typename C>
 auto pair_equal(const std::pair<C, int&>& a, const std::pair<C, int>& b) -> bool {
     return a.first == b.first && a.second == b.second;
@@ -21,6 +22,7 @@ auto const_pair_equal(const std::pair<C, const int&>& a, const std::pair<C, int>
     -> bool {
     return a.first == b.first && a.second == b.second;
 }
+}  // namespace
 
 TEST(IteratorAdaptorEnumerate, View) {
     auto container = std::vector<int> {1, 2, 3};
@@ -28,6 +30,9 @@ TEST(IteratorAdaptorEnumerate, View) {
         std::pair {0, 1}, std::pair {1, 2}, std::pair {2, 3}};
 
     auto view = enumerate(container);
+
+    static_assert(std::ranges::sized_range<decltype(view)>);
+    static_assert(std::sized_sentinel_for<decltype(view.end()), decltype(view.begin())>);
 
     EXPECT_TRUE(std::ranges::equal(view, expected, pair_equal<std::size_t>));
     EXPECT_TRUE(std::ranges::equal(view.begin(), view.end(),  //

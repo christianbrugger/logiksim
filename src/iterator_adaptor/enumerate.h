@@ -28,23 +28,24 @@ struct enumerate_iterator {
     I iterator {};
     counter_value_type counter {0};
 
-    auto operator++() -> enumerate_iterator& {
+    constexpr auto operator++() -> enumerate_iterator& {
         ++counter;
         ++iterator;
         return *this;
     }
 
-    auto operator++(int) -> enumerate_iterator {
+    [[nodiscard]] constexpr auto operator++(int) -> enumerate_iterator {
         auto tmp = *this;
         operator++();
         return tmp;
     }
 
-    auto operator*() const -> reference {
+    [[nodiscard]] constexpr auto operator*() const -> reference {
         return reference {counter, *iterator};
     }
 
-    auto operator==(const enumerate_iterator& other) const -> bool {
+    [[nodiscard]] constexpr auto operator==(const enumerate_iterator& other) const
+        -> bool {
         return iterator == other.iterator;
     }
 };
@@ -53,14 +54,26 @@ template <std::input_iterator I, std::sentinel_for<I> S, typename C>
 struct enumerate_sentinel {
     S sentinel {};
 
-    friend auto operator==(const enumerate_iterator<I, C>& it,
-                           const enumerate_sentinel<I, S, C>& s) -> bool {
+    [[nodiscard]] friend constexpr auto operator==(const enumerate_iterator<I, C>& it,
+                                                   const enumerate_sentinel<I, S, C>& s)
+        -> bool {
         return it.iterator == s.sentinel;
     }
 
-    friend auto operator==(const enumerate_sentinel<I, S, C>& s,
-                           const enumerate_iterator<I, C>& it) -> bool {
-        return it.iterator == s.sentinel;
+    [[nodiscard]] friend constexpr auto operator==(const enumerate_sentinel<I, S, C>& s,
+                                                   const enumerate_iterator<I, C>& it)
+        -> bool {
+        return s.sentinel == it.iterator;
+    }
+
+    [[nodiscard]] friend constexpr auto operator-(const enumerate_iterator<I, C>& it,
+                                                  const enumerate_sentinel<I, S, C>& s) {
+        return it.iterator - s.sentinel;
+    }
+
+    [[nodiscard]] friend constexpr auto operator-(const enumerate_sentinel<I, S, C>& s,
+                                                  const enumerate_iterator<I, C>& it) {
+        return s.sentinel - it.iterator;
     }
 };
 
@@ -74,11 +87,11 @@ struct enumerate_view {
 
     using value_type = typename iterator::value_type;
 
-    auto begin() const {
+    [[nodiscard]] constexpr auto begin() const {
         return iterator {first};
     }
 
-    auto end() const {
+    [[nodiscard]] constexpr auto end() const {
         return sentinel {last};
     }
 
@@ -98,15 +111,15 @@ struct enumerate_range {
 
     R range;
 
-    auto begin() {
+    [[nodiscard]] constexpr auto begin() {
         return iterator {std::ranges::begin(range)};
     }
 
-    auto end() {
+    [[nodiscard]] constexpr auto end() {
         return sentinel {std::ranges::end(range)};
     }
 
-    auto begin() const {
+    [[nodiscard]] constexpr auto begin() const {
         using I_ = decltype(std::ranges::begin(range));
 
         using const_iterator_ = enumerate_iterator<I_, C>;
@@ -115,7 +128,7 @@ struct enumerate_range {
         return const_iterator_ {std::ranges::begin(range)};
     }
 
-    auto end() const {
+    [[nodiscard]] constexpr auto end() const {
         using I_ = decltype(std::ranges::begin(range));
         using S_ = decltype(std::ranges::end(range));
 
@@ -124,6 +137,14 @@ struct enumerate_range {
         static_assert(std::sentinel_for<const_sentinel_, const_iterator_>);
 
         return const_sentinel_ {std::ranges::end(range)};
+    }
+
+    [[nodiscard]] constexpr auto empty() const {
+        return begin() == end();
+    }
+
+    [[nodiscard]] constexpr auto size() const {
+        return end() - begin();
     }
 
     static_assert(std::forward_iterator<iterator>);
@@ -145,7 +166,7 @@ concept enumerate_counter = std::incrementable<std::remove_cvref_t<C>>;
  */
 template <typename C = std::size_t, std::input_iterator I, std::sentinel_for<I> S>
     requires detail::enumerate_counter<C>
-constexpr auto enumerate(I first, S last) {
+[[nodiscard]] constexpr auto enumerate(I first, S last) {
     using view_t = detail::enumerate_view<I, S, C>;
     static_assert(std::ranges::forward_range<view_t>);
 
@@ -162,7 +183,7 @@ constexpr auto enumerate(I first, S last) {
  */
 template <typename C = std::size_t, std::ranges::input_range R>
     requires detail::enumerate_counter<C>
-constexpr auto enumerate(R& r) {
+[[nodiscard]] constexpr auto enumerate(R& r) {
     return enumerate<C>(std::ranges::begin(r), std::ranges::end(r));
 }
 
@@ -176,7 +197,7 @@ constexpr auto enumerate(R& r) {
  */
 template <typename C = std::size_t, std::ranges::input_range R>
     requires detail::enumerate_counter<C>
-constexpr auto enumerate(R&& r) {
+[[nodiscard]] constexpr auto enumerate(R&& r) {
     static_assert(!std::is_lvalue_reference_v<R>, "bad call");
 
     using range_t = detail::enumerate_range<R, C>;
