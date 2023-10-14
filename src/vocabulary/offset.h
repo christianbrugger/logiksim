@@ -58,6 +58,7 @@ static_assert(std::is_trivially_copyable_v<offset_t>);
 static_assert(std::is_trivially_copy_assignable_v<offset_t>);
 static_assert(std::is_standard_layout_v<offset_t>);
 static_assert(std::is_nothrow_default_constructible_v<offset_t>);
+static_assert(explicitly_convertible_to<offset_t, offset_t::difference_type>);
 
 [[nodiscard]] constexpr auto operator+(const offset_t &left, const offset_t &right)
     -> offset_t;

@@ -2,6 +2,7 @@
 #define LOGIKSIM_VOCABULARY_ELEMENT_ID_H
 
 #include "algorithm/narrow_integral.h"
+#include "concept/explicitly_convertible.h"
 #include "concept/integral.h"
 #include "format/struct.h"
 #include "type_trait/safe_difference_type.h"
@@ -39,6 +40,9 @@ struct element_id_t {
      * Throws exception for negative / invalid ids.
      */
     [[nodiscard]] explicit constexpr operator std::size_t() const;
+
+    [[nodiscard]] explicit constexpr operator difference_type() const;
+
     /**
      * @brief: The bool cast tests if this ID is valid.
      */
@@ -59,6 +63,7 @@ static_assert(std::is_trivial_v<element_id_t>);
 static_assert(std::is_trivially_constructible_v<element_id_t>);
 static_assert(std::is_trivially_copyable_v<element_id_t>);
 static_assert(std::is_trivially_copy_assignable_v<element_id_t>);
+static_assert(explicitly_convertible_to<element_id_t, element_id_t::difference_type>);
 
 //
 // Implementation
@@ -73,6 +78,10 @@ constexpr element_id_t::operator std::size_t() const {
             "element id cannot be negative when converting to std::size_t");
     }
     return static_cast<std::size_t>(value);
+}
+
+constexpr element_id_t::operator difference_type() const {
+    return difference_type {value};
 }
 
 constexpr element_id_t::operator bool() const noexcept {

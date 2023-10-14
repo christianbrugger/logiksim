@@ -2,6 +2,7 @@
 #define LOGICSIM_VOCABULARY_SEGMENT_INDEX_H
 
 #include "algorithm/narrow_integral.h"
+#include "concept/explicitly_convertible.h"
 #include "concept/integral.h"
 #include "format/struct.h"
 #include "type_trait/safe_difference_type.h"
@@ -34,6 +35,8 @@ struct segment_index_t {
      * Throws exception for negative / invalid ids.
      */
     [[nodiscard]] explicit constexpr operator std::size_t() const;
+
+    [[nodiscard]] explicit constexpr operator difference_type() const;
     /**
      * @brief: The bool cast tests if this index is valid.
      */
@@ -56,6 +59,8 @@ static_assert(std::is_trivial_v<segment_index_t>);
 static_assert(std::is_trivially_constructible_v<segment_index_t>);
 static_assert(std::is_trivially_copyable_v<segment_index_t>);
 static_assert(std::is_trivially_copy_assignable_v<segment_index_t>);
+static_assert(
+    explicitly_convertible_to<segment_index_t, segment_index_t::difference_type>);
 
 //
 // Implementation
@@ -70,6 +75,10 @@ constexpr segment_index_t::operator std::size_t() const {
             "segment index cannot be negative when converting to std::size_t");
     }
     return static_cast<std::size_t>(value);
+}
+
+constexpr segment_index_t::operator difference_type() const {
+    return difference_type {value};
 }
 
 constexpr segment_index_t::operator bool() const noexcept {

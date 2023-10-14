@@ -97,9 +97,7 @@ class TransformView {
         return const_iterator {proj_, end_};
     }
 
-    [[nodiscard]] auto size() const
-        requires requires(I it_) { it_ - it_; }
-    {
+    [[nodiscard]] auto size() const {
         return end_ - begin_;
     }
 
@@ -177,12 +175,24 @@ template <std::input_iterator I, std::copy_constructible Proj>
 template <std::ranges::input_range R, std::copy_constructible Proj>
     requires std::is_object_v<Proj> &&
              std::regular_invocable<Proj &, std::ranges::range_reference_t<R>>
-[[nodiscard]] auto transform_view(R &&range, Proj proj) {
+[[nodiscard]] auto transform_view(R &range, Proj proj) {
     using I = decltype(std::ranges::begin(range));
     using view_t = detail::TransformView<I, Proj>;
     static_assert(std::ranges::forward_range<view_t>);
 
     return view_t {std::ranges::begin(range), std::ranges::end(range), proj};
+}
+
+template <std::ranges::input_range R, std::copy_constructible Proj>
+    requires std::is_object_v<Proj> &&
+             std::regular_invocable<Proj &&, std::ranges::range_reference_t<R>>
+[[nodiscard]] auto transform_view(R &&range, Proj proj) {
+    static_assert(!std::is_lvalue_reference_v<R>, "bad call");
+
+    using range_t = detail::TransformRange<R, Proj>;
+    static_assert(std::ranges::forward_range<range_t>);
+
+    return range_t {std::move(range), proj};
 }
 
 }  // namespace logicsim

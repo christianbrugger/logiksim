@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 #define LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 
+#include "concept/explicitly_convertible.h"
 #include "concept/integral.h"
 #include "format/struct.h"
 #include "safe_numeric.h"
@@ -8,9 +9,9 @@
 #include "vocabulary/connection_id.h"
 
 #include <compare>
+#include <limits>
 #include <stdexcept>
 #include <type_traits>
-#include <limits>
 
 namespace logicsim {
 
@@ -37,6 +38,8 @@ struct connection_count_t {
         boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value);
 
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
+
+    [[nodiscard]] explicit constexpr operator difference_type() const noexcept;
     // returns safe_numerics value
     [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
     // returns underlying representation
@@ -68,6 +71,8 @@ struct connection_count_t {
 static_assert(std::is_trivially_copyable_v<connection_count_t>);
 static_assert(std::is_trivially_copy_constructible_v<connection_count_t>);
 static_assert(std::is_trivially_copy_assignable_v<connection_count_t>);
+static_assert(
+    explicitly_convertible_to<connection_count_t, connection_count_t::difference_type>);
 
 [[nodiscard]] constexpr auto operator+(const connection_count_t &left,
                                        const connection_count_t &right)
@@ -100,6 +105,10 @@ constexpr connection_count_t::connection_count_t(
 
 constexpr connection_count_t::operator std::size_t() const noexcept {
     return std::size_t {value};
+}
+
+constexpr connection_count_t::operator difference_type() const noexcept {
+    return difference_type {value};
 }
 
 [[nodiscard]] constexpr auto connection_count_t::safe_value() const noexcept

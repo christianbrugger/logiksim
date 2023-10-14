@@ -64,6 +64,7 @@ static_assert(std::is_trivial_v<grid_t>);
 static_assert(std::is_trivially_constructible_v<grid_t>);
 static_assert(std::is_trivially_copyable_v<grid_t>);
 static_assert(std::is_trivially_copy_assignable_v<grid_t>);
+static_assert(explicitly_convertible_to<grid_t, grid_t::difference_type>);
 
 [[nodiscard]] constexpr auto operator+(const grid_t &left, const grid_t &right) -> grid_t;
 [[nodiscard]] constexpr auto operator-(const grid_t &left, const grid_t &right) -> grid_t;
