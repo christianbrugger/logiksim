@@ -260,7 +260,8 @@ set(LS_TEST_SOURCES
     test/geometry/part_list_copying_test.cpp
     test/geometry/part_list_test.cpp
     test/geometry/part_test.cpp
-
+    
+    test/iterator_adaptor/enumerate_test.cpp
     test/iterator_adaptor/polling_iterator_test.cpp
     test/iterator_adaptor/transform_view_test.cpp
     

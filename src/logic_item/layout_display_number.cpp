@@ -121,7 +121,32 @@ auto negative_position(connection_count_t input_count) -> point_t {
 // Iterator
 //
 
-auto iter_element_body_points(const layout_calculation_data_t& data)
+auto iter_input_location_base(const layout_calculation_data_t& data)
+    -> connectors_vector {
+    auto connectors = connectors_vector {};
+    connectors.reserve(data.input_count.count());
+
+    // enable
+    static_assert(display::enable_input_id == connection_id_t {0});
+    connectors.push_back({enable_position(data.input_count), orientation_t::down});
+
+    // negative
+    connectors.push_back({negative_position(data.input_count), orientation_t::down});
+
+    // number inputs
+    for (auto y : range(to_grid(value_inputs(data.input_count)))) {
+        connectors.push_back({point_t {0, y}, orientation_t::left});
+    }
+
+    return connectors;
+}
+
+auto iter_output_location_base(const layout_calculation_data_t& data)
+    -> connectors_vector {
+    return connectors_vector {};
+}
+
+auto iter_element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector {
     const auto w = width(data.input_count);
     const auto h = height(data.input_count);
@@ -131,6 +156,8 @@ auto iter_element_body_points(const layout_calculation_data_t& data)
     const auto max_input_y = to_grid(value_inputs(data.input_count)) - grid_t {1};
 
     auto result = body_points_vector {};
+    // TODO reserve
+
     for (const auto y : range(h + grid_t {1})) {
         for (const auto x : range(w + grid_t {1})) {
             const auto point = point_t {x, y};

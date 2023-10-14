@@ -40,7 +40,12 @@ constexpr auto max_static_body_point_count() -> int {
     return result;
 }
 
+/**
+ * @brief make sure we have sensible capacities for our static and small vectors
+ */
 static_assert(static_body_points::capacity() == max_static_body_point_count());
+static_assert(body_points_vector_size >= max_static_body_point_count());
+static_assert(connectors_vector_size >= static_connectors::capacity());
 
 constexpr auto calculate_static_body_points(ElementType element_type)
     -> static_body_points {
@@ -92,13 +97,55 @@ constexpr static inline auto all_static_body_points = calculate_all_static_body_
 
 }  // namespace
 
-auto get_static_body_points(ElementType element_type) -> const static_body_points& {
+auto get_static_body_points_base(ElementType element_type) -> const static_body_points& {
     return all_static_body_points[to_underlying(element_type)];
 }
 
 //
 // Iterator
 //
+
+auto iter_input_location_base(const layout_calculation_data_t& data)
+    -> connectors_vector {
+    switch (data.element_type) {
+        using enum ElementType;
+
+        case and_element:
+        case or_element:
+        case xor_element:
+            return ::logicsim::standard_element::iter_input_location_base(data);
+
+        case display_number:
+            return ::logicsim::display_number::iter_input_location_base(data);
+
+        default: {
+            const auto connectors = get_layout_info(data.element_type).input_connectors;
+            return connectors_vector(connectors.begin(), connectors.end());
+        }
+    }
+    std::terminate();
+}
+
+auto iter_output_location_base(const layout_calculation_data_t& data)
+    -> connectors_vector {
+    switch (data.element_type) {
+        using enum ElementType;
+
+        case and_element:
+        case or_element:
+        case xor_element:
+            return ::logicsim::standard_element::iter_output_location_base(data);
+
+        case display_number:
+            return ::logicsim::display_number::iter_output_location_base(data);
+
+        default: {
+            const auto connectors = get_layout_info(data.element_type).output_connectors;
+            return connectors_vector(connectors.begin(), connectors.end());
+        }
+    }
+    std::terminate();
+}
 
 auto iter_element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector {
@@ -108,15 +155,15 @@ auto iter_element_body_points_base(const layout_calculation_data_t& data)
         case and_element:
         case or_element:
         case xor_element: {
-            return standard_element::iter_element_body_points(data);
+            return standard_element::iter_element_body_points_base(data);
         }
 
         case display_number: {
-            return display_number::iter_element_body_points(data);
+            return display_number::iter_element_body_points_base(data);
         }
 
         default: {
-            const auto& points = get_static_body_points(data.element_type);
+            const auto& points = get_static_body_points_base(data.element_type);
             return body_points_vector(points.begin(), points.end());
         }
     }

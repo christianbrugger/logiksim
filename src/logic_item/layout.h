@@ -440,7 +440,7 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
  *
  * Returns empty array for element types with dynamic body points.
  */
-[[nodiscard]] auto get_static_body_points(ElementType element_type)
+[[nodiscard]] auto get_static_body_points_base(ElementType element_type)
     -> const static_body_points&;
 
 constexpr inline auto iter_connectors(
@@ -549,12 +549,18 @@ inline auto iter_element_body_points_base(const layout_calculation_data_t& data,
             return ::logicsim::display_number::iter_element_body_points(data, next_point);
 
         default: {
-            const auto& body_points = get_static_body_points(data.element_type);
+            const auto& body_points = get_static_body_points_base(data.element_type);
             return iter_body_points(body_points, next_point);
         }
     }
     std::terminate();
 }
+
+[[nodiscard]] auto iter_input_location_base(const layout_calculation_data_t& data)
+    -> connectors_vector;
+
+[[nodiscard]] auto iter_output_location_base(const layout_calculation_data_t& data)
+    -> connectors_vector;
 
 [[nodiscard]] auto iter_element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector;

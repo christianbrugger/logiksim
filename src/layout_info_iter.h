@@ -82,6 +82,33 @@ inline auto iter_output_location_and_id(
 // Implementation
 //
 
+[[nodiscard]] auto iter_input_location(const layout_calculation_data_t &data)
+    -> connectors_vector;
+
+[[nodiscard]] auto iter_output_location(const layout_calculation_data_t &data)
+    -> connectors_vector;
+
+[[nodiscard]] auto iter_element_body_points(const layout_calculation_data_t &data)
+    -> body_points_vector;
+
+// inline auto iter_input_location_and_id(
+//     const layout_calculation_data_t &data) -> bool {
+//     return iter_input_location(
+//         data, [&, input_id = connection_id_t {0}](point_t position,
+//                                                   orientation_t orientation) mutable {
+//             return std::invoke(next_input, input_id++, position, orientation);
+//         });
+// }
+//
+// inline auto iter_output_location_and_id(
+//     const layout_calculation_data_t &data) -> bool {
+//     return iter_output_location(
+//         data, [&, output_id = connection_id_t {0}](point_t position,
+//                                                    orientation_t orientation) mutable {
+//             return std::invoke(next_output, output_id++, position, orientation);
+//         });
+// }
+
 inline auto iter_input_location(const layout_calculation_data_t &data,
                                 std::invocable<point_t, orientation_t> auto next_input)
     -> bool {

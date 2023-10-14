@@ -102,7 +102,13 @@ constexpr inline auto iter_element_body_points(const layout_calculation_data_t& 
     return true;
 }
 
-[[nodiscard]] auto iter_element_body_points(const layout_calculation_data_t& data)
+[[nodiscard]] auto iter_input_location_base(const layout_calculation_data_t& data)
+    -> connectors_vector;
+
+[[nodiscard]] auto iter_output_location_base(const layout_calculation_data_t& data)
+    -> connectors_vector;
+
+[[nodiscard]] auto iter_element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector;
 
 }  // namespace standard_element
