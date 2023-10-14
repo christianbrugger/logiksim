@@ -104,11 +104,13 @@ struct enumerate_view {
     }
 
     [[nodiscard]] constexpr auto empty() const {
-        return begin() == end();
+        return first == last;
     }
 
-    [[nodiscard]] constexpr auto size() const {
-        return end() - begin();
+    [[nodiscard]] constexpr auto size() const
+        requires requires(I it_, S s_) { it_ - s_; }
+    {
+        return last - first;
     }
 
     static_assert(std::forward_iterator<iterator>);

@@ -50,7 +50,7 @@ TEST(Iterator, TransformViewTypeChange) {
 
     auto transform = detail::TransformView(vec.begin(), vec.end(), proj);
 
-    static_assert(std::is_same_v<double, decltype(transform)::value_type>);
+    static_assert(std::is_same_v<double, typename decltype(transform)::value_type>);
     ASSERT_THAT(transform, testing::ElementsAre(1.5, 2.5, 3.5));
 }
 
@@ -120,6 +120,22 @@ TEST(Iterator, TransformViewPassMemberFunctionDirectly) {
     auto transform = transform_view(vec, &MemberTest::proj_times_three);
 
     ASSERT_THAT(transform, testing::ElementsAre(3, 6, 9));
+}
+
+TEST(Iterator, TransformViewLambda) {
+    auto vec = std::vector<int> {1, 2, 3};
+
+    auto proj = [offset = int {10}](int v) { return v + offset; };
+    // auto transform = transform_view(vec, proj);
+    auto transform = std::ranges::transform_view(vec, proj);
+    const auto ctransform = std::ranges::transform_view(vec, proj);
+
+    auto it = transform.begin();
+    auto cit = ctransform.begin();
+
+    // ASSERT_TRUE(std::ranges::equal(transform, std::vector<int> {11, 12, 13}));
+
+    // ASSERT_THAT(transform, testing::ElementsAre(11, 12, 13));
 }
 
 }  // namespace logicsim

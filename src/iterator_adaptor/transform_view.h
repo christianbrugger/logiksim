@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_ITERATOR_ADAPTOR_TRANSFORM_VIEW_H
 #define LOGICSIM_ITERATOR_ADAPTOR_TRANSFORM_VIEW_H
 
+#include "type_trait/const_iterator.h"
+
 #include <cassert>
 #include <functional>  // std::invoke
 #include <iterator>
@@ -11,32 +13,28 @@ namespace logicsim {
 
 namespace detail {
 
-template <typename Iterator, class Proj>
-class TransformView;
-
-template <typename Iterator, class Proj>
+template <bool Const, std::input_iterator I, std::copy_constructible Proj>
 class TransformIterator {
+    using P = std::conditional_t<Const, const Proj, Proj>;
+
    public:
     using iterator_concept = std::forward_iterator_tag;
     using iterator_category = std::forward_iterator_tag;
 
-    using reference = std::indirect_result_t<Proj, Iterator>;
+    using reference = std::indirect_result_t<Proj &, I>;
     using value_type = std::remove_cvref_t<reference>;
-    using difference_type = typename std::conditional_t<std::is_pointer_v<Iterator>,
-                                                        std::pointer_traits<Iterator>,
-                                                        Iterator>::difference_type;
+    using difference_type = std::iter_difference_t<I>;
     using pointer = void;
 
     // needs to be default constructable, so ElementView can become a range and view
     TransformIterator() = default;
 
-    [[nodiscard]] explicit TransformIterator(const TransformView<Iterator, Proj> &parent,
-                                             Iterator iterator)
-        : parent_ {&parent}, iterator_ {iterator} {};
+    [[nodiscard]] explicit TransformIterator(P &proj, I iterator)
+        : proj_ {&proj}, iterator_ {iterator} {};
 
     [[nodiscard]] auto operator*() const -> reference {
-        assert(parent_ != nullptr);
-        return std::invoke(parent_->proj_, *iterator_);
+        assert(proj_);
+        return std::invoke(*proj_, *iterator_);
     }
 
     // Prefix increment
@@ -59,68 +57,118 @@ class TransformIterator {
 
     [[nodiscard]] auto operator-(const TransformIterator &right) const
         noexcept(noexcept(this->iterator_ - right.iterator_)) -> difference_type
-        requires requires(Iterator it_) { it_ - it_; }
+        requires requires(I it_) { it_ - it_; }
     {
         return this->iterator_ - right.iterator_;
     }
 
    private:
-    const TransformView<Iterator, Proj> *parent_ {};
-    Iterator iterator_ {};
+    P *proj_ {};
+    I iterator_ {};
 };
 
-template <typename Iterator, class Proj>
+template <std::input_iterator I, std::copy_constructible Proj>
 class TransformView {
    public:
-    friend class TransformIterator<Iterator, Proj>;
+    using iterator = TransformIterator<false, I, Proj>;
+    using const_iterator = TransformIterator<true, I, Proj>;
+    using iterator_type = iterator;
 
-   public:
-    using iterator_type = TransformIterator<Iterator, Proj>;
+    using value_type = typename iterator::value_type;
+    using pointer = typename iterator::pointer;
+    using reference = typename iterator::reference;
 
-    using value_type = typename iterator_type::value_type;
-    using pointer = typename iterator_type::pointer;
-    using reference = typename iterator_type::reference;
+    [[nodiscard]] explicit TransformView(I begin, I end, Proj proj)
+        : begin_ {begin}, end_ {end}, proj_ {std::move(proj)} {};
 
-    using iterator = iterator_type;
-    using const_iterator = iterator_type;
-
-    [[nodiscard]] explicit TransformView(Iterator begin, Iterator end, Proj proj)
-        : begin_ {begin}, end_ {end}, proj_ {proj} {};
-
-    [[nodiscard]] auto begin() const {
-        return iterator_type {*this, begin_};
+    [[nodiscard]] auto begin() -> iterator {
+        return iterator {proj_, begin_};
     }
 
-    [[nodiscard]] auto end() const -> iterator_type {
-        return iterator_type {*this, end_};
+    [[nodiscard]] auto end() -> iterator {
+        return iterator {proj_, end_};
     }
 
-    [[nodiscard]] auto size() const noexcept(noexcept(end_ - begin_)) ->
-        typename iterator::difference_type
-        requires requires(Iterator it_) { it_ - it_; }
+    [[nodiscard]] auto begin() const -> const_iterator {
+        return const_iterator {proj_, begin_};
+    }
+
+    [[nodiscard]] auto end() const -> const_iterator {
+        return const_iterator {proj_, end_};
+    }
+
+    [[nodiscard]] auto size() const
+        requires requires(I it_) { it_ - it_; }
     {
         return end_ - begin_;
     }
 
-    [[nodiscard]] auto empty() const noexcept(noexcept(begin_ == end_)) -> bool {
+    [[nodiscard]] auto empty() const {
         return begin_ == end_;
     }
 
-    static_assert(std::forward_iterator<iterator_type>);
+    static_assert(std::forward_iterator<iterator>);
+    static_assert(std::forward_iterator<const_iterator>);
 
    private:
-    Iterator begin_;
-    Iterator end_;
+    I begin_;
+    I end_;
+    Proj proj_;
+};
+
+template <std::ranges::input_range R, std::copy_constructible Proj>
+class TransformRange {
+   public:
+    using iterator = TransformIterator<false, std::ranges::iterator_t<R>, Proj>;
+    using const_iterator = TransformIterator<true, const_iterator_t<R>, Proj>;
+    using iterator_type = iterator;
+
+    using value_type = typename iterator::value_type;
+    using pointer = typename iterator::pointer;
+    using reference = typename iterator::reference;
+
+    [[nodiscard]] explicit TransformRange(R &&range, Proj proj)
+        : range_ {std::move(range)}, proj_ {std::move(proj)} {};
+
+    [[nodiscard]] auto begin() -> iterator {
+        return iterator {proj_, std::ranges::begin(range_)};
+    }
+
+    [[nodiscard]] auto end() -> iterator {
+        return iterator {proj_, std::ranges::end(range_)};
+    }
+
+    [[nodiscard]] auto begin() const -> const_iterator {
+        return const_iterator {proj_, std::ranges::begin(range_)};
+    }
+
+    [[nodiscard]] auto end() const -> const_iterator {
+        return const_iterator {proj_, std::ranges::end(range_)};
+    }
+
+    [[nodiscard]] auto size() const {
+        return std::ranges::size(range_);
+    }
+
+    [[nodiscard]] auto empty() const {
+        return std::ranges::empty(range_);
+    }
+
+    static_assert(std::forward_iterator<iterator>);
+    static_assert(std::forward_iterator<const_iterator>);
+
+   private:
+    R range_;
     Proj proj_;
 };
 
 }  // namespace detail
 
-template <std::input_iterator Iterator, std::copy_constructible Proj>
+template <std::input_iterator I, std::copy_constructible Proj>
     requires std::is_object_v<Proj> &&
-             std::regular_invocable<Proj &, std::iter_reference_t<Iterator>>
-[[nodiscard]] auto transform_view(Iterator begin, Iterator end, Proj proj) {
-    using view_t = detail::TransformView<Iterator, Proj>;
+             std::regular_invocable<Proj &, std::iter_reference_t<I>>
+[[nodiscard]] auto transform_view(I begin, I end, Proj proj) {
+    using view_t = detail::TransformView<I, Proj>;
     static_assert(std::ranges::forward_range<view_t>);
 
     return view_t {begin, end, proj};
@@ -130,8 +178,8 @@ template <std::ranges::input_range R, std::copy_constructible Proj>
     requires std::is_object_v<Proj> &&
              std::regular_invocable<Proj &, std::ranges::range_reference_t<R>>
 [[nodiscard]] auto transform_view(R &&range, Proj proj) {
-    using Iterator = decltype(std::ranges::begin(range));
-    using view_t = detail::TransformView<decltype(std::ranges::begin(range)), Proj>;
+    using I = decltype(std::ranges::begin(range));
+    using view_t = detail::TransformView<I, Proj>;
     static_assert(std::ranges::forward_range<view_t>);
 
     return view_t {std::ranges::begin(range), std::ranges::end(range), proj};
@@ -139,13 +187,12 @@ template <std::ranges::input_range R, std::copy_constructible Proj>
 
 }  // namespace logicsim
 
-template <typename Iterator, class Proj>
-inline constexpr bool
-    std::ranges::enable_view<logicsim::detail::TransformView<Iterator, Proj>> = true;
+template <typename I, class Proj>
+inline constexpr bool std::ranges::enable_view<logicsim::detail::TransformView<I, Proj>> =
+    true;
 
-template <typename Iterator, class Proj>
+template <typename I, class Proj>
 inline constexpr bool
-    std::ranges::enable_borrowed_range<logicsim::detail::TransformView<Iterator, Proj>> =
-        true;
+    std::ranges::enable_borrowed_range<logicsim::detail::TransformView<I, Proj>> = true;
 
 #endif

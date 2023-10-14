@@ -145,6 +145,7 @@ set(LS_CORE_SOURCES
     src/render/svg_cache.cpp
     
     src/type_trait/add_const_to_reference.cpp
+    src/type_trait/const_iterator.cpp
     src/type_trait/safe_difference_type.cpp
     
     src/vocabulary/alignment.cpp
