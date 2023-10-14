@@ -36,7 +36,7 @@ constexpr static inline auto input_connectors = []() -> static_connectors {
 
     // number inputs
     for (auto y : range(to_grid(value_inputs))) {
-        inputs.push_back(connector_info_t {point_t {0, y}, orientation_t::left});
+        inputs.push_back({point_t {0, y}, orientation_t::left});
     }
 
     return inputs;

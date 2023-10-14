@@ -16,13 +16,14 @@ namespace logicsim {
  * Increase this as needed, when defining a new type with more connections.
  */
 constexpr inline auto static_connectors_size = 8;
-using static_connectors = static_vector<connector_info_t, static_connectors_size>;
+using static_connectors = static_vector<simple_connector_info_t, static_connectors_size>;
 
 /**
  * @brief:  Hold the input or output connections of a logic item.
  */
 constexpr inline auto connectors_vector_size = 14;
-using connectors_vector = folly::small_vector<connector_info_t, connectors_vector_size>;
+using connectors_vector =
+    folly::small_vector<simple_connector_info_t, connectors_vector_size>;
 
 /**
  * @brief:  Hold the body points connections of a logic item.

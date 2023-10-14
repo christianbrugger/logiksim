@@ -446,7 +446,7 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
 constexpr inline auto iter_connectors(
     const static_connectors& connectors,
     std::invocable<point_t, orientation_t> auto next_connector) -> bool {
-    for (const connector_info_t& con : connectors) {
+    for (const simple_connector_info_t& con : connectors) {
         if (!next_connector(con.position, con.orientation)) {
             return false;
         }

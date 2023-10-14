@@ -54,6 +54,14 @@ template <std::input_iterator I, std::sentinel_for<I> S, typename C>
 struct enumerate_sentinel {
     S sentinel {};
 
+    /**
+     * @brief: Implicite conversion to the iterator type, so enumerate
+     *         can be used in old-style iterator pair algorithms.
+     */
+    [[nodiscard]] constexpr operator enumerate_iterator<I, C>() {
+        return enumerate_iterator<I, C> {sentinel};
+    }
+
     [[nodiscard]] friend constexpr auto operator==(const enumerate_iterator<I, C>& it,
                                                    const enumerate_sentinel<I, S, C>& s)
         -> bool {

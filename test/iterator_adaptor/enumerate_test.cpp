@@ -83,6 +83,22 @@ TEST(IteratorAdaptorEnumerate, ViewInt) {
                                    expected.begin(), expected.end(), pair_equal<int>));
 }
 
+TEST(IteratorAdaptorEnumerate, SentinelConvertible) {
+    auto container = std::vector<int> {};
+
+    auto view = enumerate(container);
+
+    auto begin = view.begin();
+    using iterator = decltype(begin);
+
+    auto sentinel = view.end();
+    auto end = static_cast<iterator>(sentinel);
+
+    EXPECT_EQ(begin, sentinel);
+    EXPECT_EQ(begin, end);
+    EXPECT_EQ(sentinel, end);
+}
+
 //
 // Modify
 //

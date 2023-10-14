@@ -6,7 +6,7 @@ namespace {
 auto transform_connectors_inplace(const layout_calculation_data_t &data,
                                   connectors_vector &connectors) {
     for (auto &connector : connectors) {
-        connector = connector_info_t {
+        connector = simple_connector_info_t {
             .position = transform(data.position, data.orientation, connector.position),
             .orientation = transform(data.orientation, connector.orientation),
         };

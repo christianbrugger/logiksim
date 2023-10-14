@@ -2,6 +2,7 @@
 #define LOGICSIM_LAYOUT_INFO_ITER_H
 
 #include "geometry/layout_calculation.h"
+#include "iterator_adaptor/enumerate.h"
 #include "logic_item/layout.h"
 #include "vocabulary/connection_id.h"
 #include "vocabulary/layout_calculation_data.h"
@@ -90,6 +91,16 @@ inline auto iter_output_location_and_id(
 
 [[nodiscard]] auto iter_element_body_points(const layout_calculation_data_t &data)
     -> body_points_vector;
+
+[[nodiscard]] inline auto iter_input_location_and_id(
+    const layout_calculation_data_t &data) {
+    return enumerate<connection_count_t>(iter_input_location(data));
+}
+
+[[nodiscard]] inline auto iter_output_location_and_id(
+    const layout_calculation_data_t &data) {
+    return enumerate<connection_count_t>(iter_input_location(data));
+}
 
 // inline auto iter_input_location_and_id(
 //     const layout_calculation_data_t &data) -> bool {

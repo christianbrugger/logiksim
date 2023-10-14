@@ -55,7 +55,9 @@ constexpr auto calculate_static_body_points(ElementType element_type)
         return {};
     }
 
-    const auto to_position = [](const connector_info_t& info) { return info.position; };
+    const auto to_position = [](const simple_connector_info_t& info) {
+        return info.position;
+    };
 
     auto result = static_body_points {};
 
