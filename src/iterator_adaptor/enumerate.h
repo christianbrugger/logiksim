@@ -135,6 +135,14 @@ concept enumerate_counter = std::incrementable<std::remove_cvref_t<C>>;
 
 }  // namespace detail
 
+/**
+ * @brief Returns non-owning enumerated view of the iterator pairs.
+ *
+ * For each value in the iterator a pair is returned with the counter index
+ * and a reference to the value.
+ *
+ * Note that enumerate supports custom counter types.
+ */
 template <typename C = std::size_t, std::input_iterator I, std::sentinel_for<I> S>
     requires detail::enumerate_counter<C>
 constexpr auto enumerate(I first, S last) {
@@ -144,12 +152,28 @@ constexpr auto enumerate(I first, S last) {
     return view_t {first, last};
 }
 
+/**
+ * @brief Returns non-owning enumerated view of the range.
+ *
+ * For each value in the iterator a pair is returned with the counter index
+ * and a reference to the value.
+ *
+ * Note that enumerate supports custom counter types.
+ */
 template <typename C = std::size_t, std::ranges::input_range R>
     requires detail::enumerate_counter<C>
 constexpr auto enumerate(R& r) {
     return enumerate<C>(std::ranges::begin(r), std::ranges::end(r));
 }
 
+/**
+ * @brief Returns owning enumerated range.
+ *
+ * For each value in the iterator a pair is returned with the counter index
+ * and a reference to the value.
+ *
+ * Note that enumerate supports custom counter types.
+ */
 template <typename C = std::size_t, std::ranges::input_range R>
     requires detail::enumerate_counter<C>
 constexpr auto enumerate(R&& r) {
@@ -162,5 +186,13 @@ constexpr auto enumerate(R&& r) {
 }
 
 }  // namespace logicsim
+
+template <std::input_iterator I, std::sentinel_for<I> S, typename C>
+inline constexpr bool
+    std::ranges::enable_view<logicsim::detail::enumerate_view<I, S, C>> = true;
+
+template <std::input_iterator I, std::sentinel_for<I> S, typename C>
+inline constexpr bool
+    std::ranges::enable_borrowed_range<logicsim::detail::enumerate_view<I, S, C>> = true;
 
 #endif

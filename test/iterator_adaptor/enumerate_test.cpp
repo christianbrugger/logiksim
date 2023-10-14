@@ -166,10 +166,6 @@ TEST(IteratorAdaptorEnumerate, CustomType) {
 
     auto view = enumerate<CustomType>(container);
 
-    using I = typename decltype(container.cbegin());
-    using test = std::iter_value_t<I>;
-    using foobar = std::iter_reference_t<I>;
-
     EXPECT_TRUE(std::ranges::equal(view, expected, pair_equal<CustomType>));
     EXPECT_TRUE(std::ranges::equal(view.begin(), view.end(),  //
                                    expected.begin(), expected.end(),
