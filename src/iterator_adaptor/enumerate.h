@@ -10,33 +10,23 @@ namespace logicsim {
 
 namespace detail {
 
-template <std::input_iterator I, std::sentinel_for<I> S>
+template <std::input_iterator I, std::sentinel_for<I> S, typename C>
 struct enumerate_sentinel;
 
-template <std::input_iterator I>
+template <std::input_iterator I, typename C>
 struct enumerate_iterator {
     using iterator_concept = std::forward_iterator_tag;
     using iterator_category = std::forward_iterator_tag;
 
-    using difference_type = std::ptrdiff_t;
-    // using value_type = std::pair<int, int>;
-    // using reference = std::pair<int, int>;
-    // using pointer = void;
+    using counter_value_type = std::remove_cvref_t<C>;
 
-    // using value_type = std::pair<int, typename std::iter_value_t<I>>;
-    // using reference = std::pair<int&, typename std::iter_reference_t<I>>;
-
-    using value_type = std::pair<int, std::iter_value_t<I>>;
+    using difference_type = std::iter_difference_t<counter_value_type>;
+    using value_type = std::pair<counter_value_type, std::iter_value_t<I>>;
     using reference = value_type;
     using pointer = void;
 
-    // using difference_type = std::ranges::range_difference_t<T>;
-    // using value_type = std::pair<difference_type, std::ranges::range_value_t<T>>;
-    // using reference = std::pair<difference_type, std::ranges::range_reference_t<T>>;
-    // using pointer = void;
-
     I iterator {};
-    difference_type counter {};
+    counter_value_type counter {0};
 
     auto operator++() -> enumerate_iterator& {
         ++counter;
@@ -59,28 +49,28 @@ struct enumerate_iterator {
     }
 };
 
-template <std::input_iterator I, std::sentinel_for<I> S>
+template <std::input_iterator I, std::sentinel_for<I> S, typename C>
 struct enumerate_sentinel {
     S sentinel {};
 
-    friend auto operator==(const enumerate_iterator<I>& it,
-                           const enumerate_sentinel<I, S>& s) -> bool {
+    friend auto operator==(const enumerate_iterator<I, C>& it,
+                           const enumerate_sentinel<I, S, C>& s) -> bool {
         return it.iterator == s.sentinel;
     }
 
-    friend auto operator==(const enumerate_sentinel<I, S>& s,
-                           const enumerate_iterator<I>& it) -> bool {
+    friend auto operator==(const enumerate_sentinel<I, S, C>& s,
+                           const enumerate_iterator<I, C>& it) -> bool {
         return it.iterator == s.sentinel;
     }
 };
 
-template <std::input_iterator I, std::sentinel_for<I> S>
+template <std::input_iterator I, std::sentinel_for<I> S, typename C>
 struct enumerate_view {
     I first {};
     S last {};
 
-    using iterator = enumerate_iterator<I>;
-    using sentinel = enumerate_sentinel<I, S>;
+    using iterator = enumerate_iterator<I, C>;
+    using sentinel = enumerate_sentinel<I, S, C>;
 
     using value_type = typename iterator::value_type;
 
@@ -96,13 +86,13 @@ struct enumerate_view {
     static_assert(std::sentinel_for<sentinel, iterator>);
 };
 
-template <std::ranges::input_range R>
+template <std::ranges::input_range R, typename C>
 struct enumerate_range {
     using I = std::ranges::iterator_t<R>;
     using S = std::ranges::sentinel_t<R>;
 
-    using iterator = enumerate_iterator<I>;
-    using sentinel = enumerate_sentinel<I, S>;
+    using iterator = enumerate_iterator<I, C>;
+    using sentinel = enumerate_sentinel<I, S, C>;
 
     using value_type = typename iterator::value_type;
 
@@ -119,7 +109,7 @@ struct enumerate_range {
     auto begin() const {
         using I_ = decltype(std::ranges::begin(range));
 
-        using const_iterator_ = enumerate_iterator<I_>;
+        using const_iterator_ = enumerate_iterator<I_, C>;
         static_assert(std::forward_iterator<const_iterator_>);
 
         return const_iterator_ {std::ranges::begin(range)};
@@ -129,8 +119,8 @@ struct enumerate_range {
         using I_ = decltype(std::ranges::begin(range));
         using S_ = decltype(std::ranges::end(range));
 
-        using const_iterator_ = enumerate_iterator<I_>;
-        using const_sentinel_ = enumerate_sentinel<I_, S_>;
+        using const_iterator_ = enumerate_iterator<I_, C>;
+        using const_sentinel_ = enumerate_sentinel<I_, S_, C>;
         static_assert(std::sentinel_for<const_sentinel_, const_iterator_>);
 
         return const_sentinel_ {std::ranges::end(range)};
@@ -140,26 +130,32 @@ struct enumerate_range {
     static_assert(std::sentinel_for<sentinel, iterator>);
 };
 
+template <typename C>
+concept enumerate_counter = std::incrementable<std::remove_cvref_t<C>>;
+
 }  // namespace detail
 
-template <std::input_iterator I, std::sentinel_for<I> S>
+template <typename C = std::size_t, std::input_iterator I, std::sentinel_for<I> S>
+    requires detail::enumerate_counter<C>
 constexpr auto enumerate(I first, S last) {
-    using view_t = detail::enumerate_view<I, S>;
+    using view_t = detail::enumerate_view<I, S, C>;
     static_assert(std::ranges::forward_range<view_t>);
 
     return view_t {first, last};
 }
 
-template <std::ranges::input_range R>
+template <typename C = std::size_t, std::ranges::input_range R>
+    requires detail::enumerate_counter<C>
 constexpr auto enumerate(R& r) {
-    return enumerate(std::ranges::begin(r), std::ranges::end(r));
+    return enumerate<C>(std::ranges::begin(r), std::ranges::end(r));
 }
 
-template <std::ranges::input_range R>
+template <typename C = std::size_t, std::ranges::input_range R>
+    requires detail::enumerate_counter<C>
 constexpr auto enumerate(R&& r) {
     static_assert(!std::is_lvalue_reference_v<R>, "bad call");
 
-    using range_t = detail::enumerate_range<R>;
+    using range_t = detail::enumerate_range<R, C>;
     static_assert(std::ranges::forward_range<range_t>);
 
     return range_t {std::move(r)};
