@@ -95,6 +95,14 @@ struct enumerate_view {
         return sentinel {last};
     }
 
+    [[nodiscard]] constexpr auto empty() const {
+        return begin() == end();
+    }
+
+    [[nodiscard]] constexpr auto size() const {
+        return end() - begin();
+    }
+
     static_assert(std::forward_iterator<iterator>);
     static_assert(std::sentinel_for<sentinel, iterator>);
 };
@@ -140,11 +148,11 @@ struct enumerate_range {
     }
 
     [[nodiscard]] constexpr auto empty() const {
-        return begin() == end();
+        return std::ranges::empty(range);
     }
 
     [[nodiscard]] constexpr auto size() const {
-        return end() - begin();
+        return std::ranges::size(range);
     }
 
     static_assert(std::forward_iterator<iterator>);

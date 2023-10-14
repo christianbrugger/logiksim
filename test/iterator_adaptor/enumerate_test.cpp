@@ -34,6 +34,9 @@ TEST(IteratorAdaptorEnumerate, View) {
     static_assert(std::ranges::sized_range<decltype(view)>);
     static_assert(std::sized_sentinel_for<decltype(view.end()), decltype(view.begin())>);
 
+    EXPECT_EQ(std::size(view), expected.size());
+    EXPECT_EQ(view.empty(), false);
+
     EXPECT_TRUE(std::ranges::equal(view, expected, pair_equal<std::size_t>));
     EXPECT_TRUE(std::ranges::equal(view.begin(), view.end(),  //
                                    expected.begin(), expected.end(),
@@ -45,6 +48,9 @@ TEST(IteratorAdaptorEnumerate, EmptyView) {
     auto expected = std::array<std::pair<std::size_t, int>, 0> {};
 
     auto view = enumerate(container);
+
+    EXPECT_EQ(std::size(view), expected.size());
+    EXPECT_EQ(view.empty(), true);
 
     EXPECT_TRUE(std::ranges::equal(view, expected, pair_equal<std::size_t>));
     EXPECT_TRUE(std::ranges::equal(view.begin(), view.end(),  //
@@ -76,6 +82,10 @@ TEST(IteratorAdaptorEnumerate, ViewInt) {
     EXPECT_TRUE(std::ranges::equal(view.begin(), view.end(),  //
                                    expected.begin(), expected.end(), pair_equal<int>));
 }
+
+//
+// Modify
+//
 
 TEST(IteratorAdaptorEnumerate, ModifyingView) {
     auto container = std::vector<int> {5, 5, 5};
@@ -110,13 +120,22 @@ TEST(IteratorAdaptorEnumerate, ModifyingView) {
                                    pair_equal<int>));
 }
 
+//
+// Owning
+//
+
 TEST(IteratorAdaptorEnumerate, Owning) {
     auto range = [] { return enumerate(std::vector<int> {1, 2, 3}); }();
 
     auto expected = std::array<std::pair<std::size_t, int>, 3> {
         std::pair {0, 1}, std::pair {1, 2}, std::pair {2, 3}};
 
-    // ASSERT_EQ(std::ranges::equal(range, expected), true);
+    static_assert(std::ranges::sized_range<decltype(range)>);
+    static_assert(
+        std::sized_sentinel_for<decltype(range.end()), decltype(range.begin())>);
+
+    EXPECT_EQ(std::size(range), expected.size());
+    EXPECT_EQ(range.empty(), false);
 
     EXPECT_TRUE(std::ranges::equal(range, expected, pair_equal<std::size_t>));
     EXPECT_TRUE(std::ranges::equal(range.begin(), range.end(),  //
@@ -129,6 +148,9 @@ TEST(IteratorAdaptorEnumerate, OwningConst) {
 
     const auto expected = std::array<std::pair<std::size_t, int>, 3> {
         std::pair {0, 1}, std::pair {1, 2}, std::pair {2, 3}};
+
+    EXPECT_EQ(std::size(range), expected.size());
+    EXPECT_EQ(range.empty(), false);
 
     EXPECT_TRUE(std::ranges::equal(range, expected, const_pair_equal<std::size_t>));
     EXPECT_TRUE(std::ranges::equal(range.begin(), range.end(),  //
