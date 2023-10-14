@@ -15,7 +15,7 @@ namespace logicsim {
 TEST(Iterator, TransformViewSimple) {
     auto vec = std::vector<int> {1, 2, 3};
     auto proj = [](auto val) { return val * 2; };
-    auto transform = TransformView(vec.begin(), vec.end(), proj);
+    auto transform = detail::TransformView(vec.begin(), vec.end(), proj);
 
     ASSERT_THAT(transform, testing::ElementsAre(2, 4, 6));
 }
@@ -23,7 +23,7 @@ TEST(Iterator, TransformViewSimple) {
 TEST(Iterator, TransformViewBoost) {
     auto vec = std::vector<int> {1, 2, 3};
     auto proj = [](auto val) { return val * 2; };
-    auto transform = TransformView(vec.begin(), vec.end(), proj);
+    auto transform = detail::TransformView(vec.begin(), vec.end(), proj);
 
     static_assert(boost::has_range_iterator<decltype(transform)>::value);
 }
@@ -31,7 +31,7 @@ TEST(Iterator, TransformViewBoost) {
 TEST(Iterator, TransformViewStl) {
     auto vec = std::vector<int> {1, 2, 3};
     auto proj = [](auto val) { return val * 2; };
-    auto transform = TransformView(vec.begin(), vec.end(), proj);
+    auto transform = detail::TransformView(vec.begin(), vec.end(), proj);
 
     ASSERT_EQ(std::distance(std::begin(transform), std::end(transform)), 3);
 }
@@ -39,7 +39,7 @@ TEST(Iterator, TransformViewStl) {
 TEST(Iterator, TransformViewStlRanges) {
     auto vec = std::vector<int> {1, 2, 3};
     auto proj = [](auto val) { return val * 2; };
-    auto transform = TransformView(vec.begin(), vec.end(), proj);
+    auto transform = detail::TransformView(vec.begin(), vec.end(), proj);
 
     ASSERT_EQ(std::ranges::distance(transform), 3);
 }
@@ -48,7 +48,7 @@ TEST(Iterator, TransformViewTypeChange) {
     auto vec = std::vector<int> {1, 2, 3};
     auto proj = [](int val) -> double { return val + 0.5; };
 
-    auto transform = TransformView(vec.begin(), vec.end(), proj);
+    auto transform = detail::TransformView(vec.begin(), vec.end(), proj);
 
     static_assert(std::is_same_v<double, decltype(transform)::value_type>);
     ASSERT_THAT(transform, testing::ElementsAre(1.5, 2.5, 3.5));
