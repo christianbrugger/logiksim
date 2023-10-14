@@ -1,7 +1,9 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_ID_H
 #define LOGICSIM_VOCABULARY_CONNECTION_ID_H
 
+#include "concept/explicitly_convertible.h"
 #include "format/struct.h"
+#include "type_trait/safe_difference_type.h"
 
 #include <gsl/gsl>
 
@@ -20,6 +22,9 @@ struct connection_id_t {
     // we expose the value, as the type has no invariant
     value_type value;
 
+    using difference_type = safe_difference_t<value_type>;
+    static_assert(sizeof(difference_type) > sizeof(value_type));
+
     /**
      * @brief: The conversion to std::size_t
      *
@@ -28,6 +33,9 @@ struct connection_id_t {
      * Throws exception for negative / invalid ids.
      */
     [[nodiscard]] explicit constexpr operator std::size_t() const;
+
+    [[nodiscard]] explicit constexpr operator difference_type() const noexcept;
+
     /**
      * @brief: The bool cast tests if this ID is valid.
      */
@@ -46,6 +54,8 @@ struct connection_id_t {
 };
 
 static_assert(std::is_aggregate_v<connection_id_t>);
+static_assert(
+    explicitly_convertible_to<connection_id_t, connection_id_t::difference_type>);
 
 //
 // Implementation
@@ -57,6 +67,10 @@ constexpr connection_id_t::operator std::size_t() const {
             "connection id cannot be negative when converting to std::size_t");
     }
     return static_cast<std::size_t>(value);
+}
+
+constexpr connection_id_t::operator difference_type() const noexcept {
+    return difference_type {value};
 }
 
 constexpr connection_id_t::operator bool() const noexcept {

@@ -80,7 +80,7 @@ inline auto iter_output_location_and_id(
     std::invocable<connection_id_t, point_t, orientation_t> auto next_output) -> bool;
 
 //
-// Implementation
+// New
 //
 
 [[nodiscard]] auto iter_input_location(const layout_calculation_data_t &data)
@@ -93,32 +93,38 @@ inline auto iter_output_location_and_id(
     -> body_points_vector;
 
 [[nodiscard]] inline auto iter_input_location_and_id(
+    const layout_calculation_data_t &data);
+
+[[nodiscard]] inline auto iter_output_location_and_id(
+    const layout_calculation_data_t &data);
+
+//
+// Implementation
+//
+
+[[nodiscard]] inline auto iter_input_location_and_id(
     const layout_calculation_data_t &data) {
-    return enumerate<connection_count_t>(iter_input_location(data));
+    return transform_view(enumerate<connection_id_t>(iter_input_location(data)),
+                          [](auto pair) {
+                              return extended_connector_info_t {
+                                  .position = pair.second.position,
+                                  .id = pair.first,
+                                  .orientation = pair.second.orientation,
+                              };
+                          });
 }
 
 [[nodiscard]] inline auto iter_output_location_and_id(
     const layout_calculation_data_t &data) {
-    return enumerate<connection_count_t>(iter_input_location(data));
+    return transform_view(enumerate<connection_id_t>(iter_input_location(data)),
+                          [](auto pair) {
+                              return extended_connector_info_t {
+                                  .position = pair.second.position,
+                                  .id = pair.first,
+                                  .orientation = pair.second.orientation,
+                              };
+                          });
 }
-
-// inline auto iter_input_location_and_id(
-//     const layout_calculation_data_t &data) -> bool {
-//     return iter_input_location(
-//         data, [&, input_id = connection_id_t {0}](point_t position,
-//                                                   orientation_t orientation) mutable {
-//             return std::invoke(next_input, input_id++, position, orientation);
-//         });
-// }
-//
-// inline auto iter_output_location_and_id(
-//     const layout_calculation_data_t &data) -> bool {
-//     return iter_output_location(
-//         data, [&, output_id = connection_id_t {0}](point_t position,
-//                                                    orientation_t orientation) mutable {
-//             return std::invoke(next_output, output_id++, position, orientation);
-//         });
-// }
 
 inline auto iter_input_location(const layout_calculation_data_t &data,
                                 std::invocable<point_t, orientation_t> auto next_input)
