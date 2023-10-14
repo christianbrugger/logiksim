@@ -121,7 +121,7 @@ auto negative_position(connection_count_t input_count) -> point_t {
 // Iterator
 //
 
-auto iter_element_body_points_smallvector_private(const layout_calculation_data_t& data)
+auto iter_element_body_points(const layout_calculation_data_t& data)
     -> body_points_vector {
     const auto w = width(data.input_count);
     const auto h = height(data.input_count);

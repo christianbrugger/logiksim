@@ -12,9 +12,8 @@
 #include "vocabulary/rect.h"
 #include "vocabulary/rect_fine.h"
 
-#include <blend2d.h>
-
 namespace logicsim {
+
 //
 // Constants
 //

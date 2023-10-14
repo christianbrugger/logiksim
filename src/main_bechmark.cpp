@@ -154,58 +154,6 @@ static void BM_Benchmark_Iter_Callable(benchmark::State& state) {
 
 BENCHMARK(BM_Benchmark_Iter_Callable);  // NOLINT
 
-static void BM_Benchmark_Iter_Vector(benchmark::State& state) {
-    constexpr static auto N = 1024;
-
-    auto data = get_layout_test_data(N);
-    auto index = 0;
-    // auto sum = int64_t {0};
-
-    auto buffer = std::array<point_t, 100>();
-    auto p_index = 0;
-
-    for ([[maybe_unused]] auto _ : state) {
-        index = (index + 1) % N;
-        p_index = 0;
-
-        for (const auto point : iter_element_body_points_base_vector(data[index])) {
-            buffer[p_index++] = point;
-            // sum += int {point.x} + int {point.y};
-        }
-
-        benchmark::DoNotOptimize(buffer);
-    }
-    // print(sum);
-}
-
-BENCHMARK(BM_Benchmark_Iter_Vector);  // NOLINT
-
-static void BM_Benchmark_Iter_SmallVector(benchmark::State& state) {
-    constexpr static auto N = 1024;
-
-    auto data = get_layout_test_data(N);
-    auto index = 0;
-    // auto sum = int64_t {0};
-
-    auto buffer = std::array<point_t, 100>();
-    auto p_index = 0;
-
-    for ([[maybe_unused]] auto _ : state) {
-        index = (index + 1) % N;
-        p_index = 0;
-
-        for (const auto point : iter_element_body_points_base_smallvector(data[index])) {
-            buffer[p_index++] = point;
-            // sum += int {point.x} + int {point.y};
-        }
-
-        benchmark::DoNotOptimize(buffer);
-    }
-    // print(sum);
-}
-
-BENCHMARK(BM_Benchmark_Iter_SmallVector);  // NOLINT
-
 static void BM_Benchmark_Iter_SmallVector_Private(benchmark::State& state) {
     constexpr static auto N = 1024;
 
@@ -220,8 +168,7 @@ static void BM_Benchmark_Iter_SmallVector_Private(benchmark::State& state) {
         index = (index + 1) % N;
         p_index = 0;
 
-        for (const auto point :
-             iter_element_body_points_base_smallvector_private(data[index])) {
+        for (const auto point : iter_element_body_points_base(data[index])) {
             buffer[p_index++] = point;
             // sum += int {point.x} + int {point.y};
         }
@@ -232,72 +179,6 @@ static void BM_Benchmark_Iter_SmallVector_Private(benchmark::State& state) {
 }
 
 BENCHMARK(BM_Benchmark_Iter_SmallVector_Private);  // NOLINT
-
-static void BM_Benchmark_Iter_Polling(benchmark::State& state) {
-    constexpr static auto N = 1024;
-
-    auto data = get_layout_test_data(N);
-    auto index = 0;
-    // auto sum = int64_t {0};
-
-    auto buffer = std::array<point_t, 100>();
-    auto p_index = 0;
-
-    // for (auto i : range(10)) {
-    //     print(i, data[i]);
-    //     print("v", iter_element_body_points_base_vector(data[i]));
-
-    //    const auto view = iter_element_body_points_base_polling(data[i]);
-    //    auto result = std::vector<point_t> {};
-    //    std::ranges::copy(view.begin(), view.end(), std::back_inserter(result));
-
-    //    print("p", result);
-    //}
-
-    for ([[maybe_unused]] auto _ : state) {
-        index = (index + 1) % N;
-        p_index = 0;
-
-        for (const auto point : iter_element_body_points_base_polling(data[index])) {
-            buffer[p_index++] = point;
-            // sum += int {point.x} + int {point.y};
-        }
-
-        benchmark::DoNotOptimize(buffer);
-    }
-
-    // print(sum);
-}
-
-BENCHMARK(BM_Benchmark_Iter_Polling);  // NOLINT
-
-static void BM_Benchmark_Iter_Generator(benchmark::State& state) {
-    using namespace logicsim;
-
-    constexpr static auto N = 1024;
-
-    auto data = get_layout_test_data(N);
-    auto index = 0;
-    // auto sum = int64_t {0};
-
-    auto buffer = std::array<point_t, 100>();
-
-    for ([[maybe_unused]] auto _ : state) {
-        index = (index + 1) % N;
-        auto p_index = 0;
-
-        for (const auto point : iter_element_body_points_base(data[index])) {
-            buffer[p_index++] = point;
-
-            // sum += int {p.x} + int {p.y};
-        }
-
-        benchmark::DoNotOptimize(buffer);
-        // benchmark::DoNotOptimize(sum);
-    }
-}
-
-BENCHMARK(BM_Benchmark_Iter_Generator);  // NOLINT
 
 static void BM_Benchmark_Graph_v2(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {

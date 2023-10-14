@@ -534,8 +534,8 @@ add_subdirectory(external/gcem EXCLUDE_FROM_ALL SYSTEM)
 # svg2b2d
 add_subdirectory(external/svg2b2d EXCLUDE_FROM_ALL SYSTEM)
 
-# cppcoro
-add_subdirectory(external/cppcoro EXCLUDE_FROM_ALL SYSTEM)
+# cppcoro (cppcoro)
+# add_subdirectory(external/cppcoro EXCLUDE_FROM_ALL SYSTEM)
 
 
 
@@ -638,7 +638,6 @@ set(LS_CORE_LIBRARIES
     harfbuzz
     gcem
     svg2b2d
-    cppcoro
     
     Qt6::Core
     Qt6::Widgets

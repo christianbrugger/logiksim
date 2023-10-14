@@ -100,19 +100,19 @@ auto get_static_body_points(ElementType element_type) -> const static_body_point
 // Iterator
 //
 
-auto iter_element_body_points_base_smallvector_private(
-    const layout_calculation_data_t& data) -> body_points_vector {
+auto iter_element_body_points_base(const layout_calculation_data_t& data)
+    -> body_points_vector {
     switch (data.element_type) {
         using enum ElementType;
 
         case and_element:
         case or_element:
         case xor_element: {
-            return standard_element::iter_element_body_points_smallvector(data);
+            return standard_element::iter_element_body_points(data);
         }
 
         case display_number: {
-            return display_number::iter_element_body_points_smallvector(data);
+            return display_number::iter_element_body_points(data);
         }
 
         default: {

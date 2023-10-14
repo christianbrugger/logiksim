@@ -6,7 +6,7 @@ namespace logicsim {
 
 namespace standard_element {
 
-auto iter_element_body_points_smallvector_private(const layout_calculation_data_t& data)
+auto iter_element_body_points(const layout_calculation_data_t& data)
     -> body_points_vector {
     const auto output_y = output_height(data.input_count);
 
