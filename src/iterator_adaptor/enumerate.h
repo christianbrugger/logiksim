@@ -4,7 +4,7 @@
 #include <iterator>
 #include <ranges>
 #include <type_traits>
-#include <utility>  // std::pair, std::forward
+#include <utility>  // std::pair
 
 namespace logicsim {
 
@@ -19,9 +19,9 @@ struct enumerate_iterator {
     using iterator_category = std::forward_iterator_tag;
 
     using counter_value_type = std::remove_cvref_t<C>;
-
     using difference_type = std::iter_difference_t<counter_value_type>;
-    using value_type = std::pair<counter_value_type, std::iter_value_t<I>>;
+
+    using value_type = std::pair<counter_value_type, std::iter_reference_t<I>>;
     using reference = value_type;
     using pointer = void;
 
@@ -41,7 +41,7 @@ struct enumerate_iterator {
     }
 
     auto operator*() const -> reference {
-        return reference(counter, *iterator);
+        return reference {counter, *iterator};
     }
 
     auto operator==(const enumerate_iterator& other) const -> bool {
