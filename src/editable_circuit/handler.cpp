@@ -20,6 +20,7 @@
 #include <fmt/core.h>
 
 #include <algorithm>
+#include <cassert>
 #include <ranges>
 
 namespace logicsim {
@@ -83,29 +84,38 @@ struct convertible_inputs_result_t {
     }
 };
 
-auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cache,
-                                  layout_calculation_data_t data)
+auto find_convertible_wire_input_candiates(const CacheProvider& cache,
+                                           const layout_calculation_data_t& data)
     -> convertible_inputs_result_t {
-    auto candidates = wire_connections_t {};
+    auto result = convertible_inputs_result_t {};
 
-    bool all_good =
-        iter_output_location(data, [&](point_t position, orientation_t orientation) {
-            if (const auto entry = cache.output_cache().find(position)) {
-                if (!entry->is_wire_segment() ||
-                    !orientations_compatible(orientation, entry->orientation)) {
-                    return false;
-                }
-                candidates.push_back({position, entry->segment()});
+    for (const auto& info : iter_output_location(data)) {
+        if (const auto entry = cache.output_cache().find(info.position)) {
+            // not compatible
+            if (!entry->is_wire_segment() ||
+                !orientations_compatible(info.orientation, entry->orientation)) {
+                return {.any_collisions = true};
             }
-            return true;
-        });
 
-    if (!all_good || has_duplicate_element_ids(candidates) ||
-        !all_convertible_to_input(layout, candidates)) {
-        return {.convertible_inputs = {}, .any_collisions = true};
+            result.convertible_inputs.push_back({info.position, entry->segment()});
+        }
     }
 
-    return {.convertible_inputs = std::move(candidates), .any_collisions = false};
+    return result;
+}
+
+auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cache,
+                                  const layout_calculation_data_t& data)
+    -> convertible_inputs_result_t {
+    auto candidates = find_convertible_wire_input_candiates(cache, data);
+
+    if (candidates.any_collisions ||
+        has_duplicate_element_ids(candidates.convertible_inputs) ||
+        !all_convertible_to_input(layout, candidates.convertible_inputs)) {
+        return {.any_collisions = true};
+    }
+
+    return candidates;
 }
 
 auto assert_equal_type(SegmentPointType type, SegmentPointType expected) -> void {
@@ -422,33 +432,29 @@ auto toggle_inverter_private(Layout& layout, const CacheProvider& cache, point_t
     if (const auto entry = cache.input_cache().find(point);
         entry.has_value() && entry->is_connection()) {
         const auto element = layout.element(entry->element_id);
-        const auto data = element.to_layout_calculation_data();
 
-        iter_input_location_and_id(data, [&](connection_id_t connection_id, point_t,
-                                             orientation_t orientation) {
-            if (connection_id == entry->connection_id &&
-                orientation != orientation_t::undirected) {
-                element.set_input_inverter(entry->connection_id,
-                                           !element.input_inverted(entry->connection_id));
-            }
-            return true;
-        });
+        const auto info = iter_input_location(element.to_layout_calculation_data())
+                              .at(std::size_t {entry->connection_id});
+        assert(info.position == point);
+
+        if (is_directed(info.orientation)) {
+            element.set_input_inverter(entry->connection_id,
+                                       !element.input_inverted(entry->connection_id));
+        }
     }
 
     if (const auto entry = cache.output_cache().find(point);
         entry.has_value() && entry->is_connection()) {
         const auto element = layout.element(entry->element_id);
-        const auto data = element.to_layout_calculation_data();
 
-        iter_output_location_and_id(data, [&](connection_id_t connection_id, point_t,
-                                              orientation_t orientation) {
-            if (connection_id == entry->connection_id &&
-                orientation != orientation_t::undirected) {
-                element.set_output_inverter(
-                    entry->connection_id, !element.output_inverted(entry->connection_id));
-            }
-            return true;
-        });
+        const auto info = iter_output_location(element.to_layout_calculation_data())
+                              .at(std::size_t {entry->connection_id});
+        assert(info.position == point);
+
+        if (is_directed(info.orientation)) {
+            element.set_output_inverter(entry->connection_id,
+                                        !element.output_inverted(entry->connection_id));
+        }
     }
 }
 
@@ -468,20 +474,20 @@ auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) 
 //
 
 auto any_circuit_item_inputs_colliding(const CacheProvider& cache,
-                                       layout_calculation_data_t data) -> bool {
-    const auto compatible = [&](point_t position, orientation_t orientation) -> bool {
-        if (const auto entry = cache.output_cache().find(position)) {
+                                       const layout_calculation_data_t& data) -> bool {
+    const auto compatible = [&](simple_input_info_t info) -> bool {
+        if (const auto entry = cache.output_cache().find(info.position)) {
             return entry->is_wire_segment() &&
-                   orientations_compatible(orientation, entry->orientation);
+                   orientations_compatible(info.orientation, entry->orientation);
         }
         return true;
     };
 
-    return !iter_input_location(data, compatible);
+    return !std::ranges::all_of(iter_input_location(data), compatible);
 }
 
 auto any_circuit_item_outputs_colliding(const Layout& layout, const CacheProvider& cache,
-                                        layout_calculation_data_t data) -> bool {
+                                        const layout_calculation_data_t& data) -> bool {
     return find_convertible_wire_inputs(layout, cache, data).any_collisions;
 }
 
@@ -511,13 +517,12 @@ auto insert_logic_item_wire_conversion(State state, const element_id_t element_i
 auto uninsert_logic_item_wire_conversion(State state, element_id_t element_id) -> void {
     const auto data = to_layout_calculation_data(state.layout, element_id);
 
-    iter_output_location(data, [&](point_t position, orientation_t) {
-        if (const auto entry = state.cache.input_cache().find(position)) {
-            const auto connection = wire_connection_t {position, entry->segment()};
+    for (auto info : iter_output_location(data)) {
+        if (const auto entry = state.cache.input_cache().find(info.position)) {
+            const auto connection = wire_connection_t {info.position, entry->segment()};
             convert_to_output(state.layout, state.sender, connection);
         }
-        return true;
-    });
+    }
 }
 
 auto notify_logic_item_inserted(const Layout& layout, MessageSender& sender,

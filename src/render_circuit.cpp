@@ -183,31 +183,25 @@ auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
                                 ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
-    iter_input_location_and_id(
-        layout_data,
-        [&](connection_id_t input_id, point_t position, orientation_t orientation) {
-            draw_connector(ctx, ConnectorAttributes {
-                                    .state = state,
-                                    .position = position,
-                                    .orientation = orientation,
-                                    .is_inverted = element.input_inverted(input_id),
-                                    .is_enabled = false,
-                                });
-            return true;
-        });
+    for (auto info : iter_input_location_and_id(layout_data)) {
+        draw_connector(ctx, ConnectorAttributes {
+                                .state = state,
+                                .position = info.position,
+                                .orientation = info.orientation,
+                                .is_inverted = element.input_inverted(info.input_id),
+                                .is_enabled = false,
+                            });
+    }
 
-    iter_output_location_and_id(
-        layout_data,
-        [&](connection_id_t output_id, point_t position, orientation_t orientation) {
-            draw_connector(ctx, ConnectorAttributes {
-                                    .state = state,
-                                    .position = position,
-                                    .orientation = orientation,
-                                    .is_inverted = element.output_inverted(output_id),
-                                    .is_enabled = false,
-                                });
-            return true;
-        });
+    for (auto info : iter_output_location_and_id(layout_data)) {
+        draw_connector(ctx, ConnectorAttributes {
+                                .state = state,
+                                .position = info.position,
+                                .orientation = info.orientation,
+                                .is_inverted = element.output_inverted(info.output_id),
+                                .is_enabled = false,
+                            });
+    }
 }
 
 auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
@@ -215,39 +209,34 @@ auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
                                 simulation_view::ConstElement logic_state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
-    iter_input_location_and_id(
-        layout_data,
-        [&](connection_id_t input_id, point_t position, orientation_t orientation) {
-            const auto is_inverted = element.input_inverted(input_id);
+    for (auto info : iter_input_location_and_id(layout_data)) {
+        const auto is_inverted = element.input_inverted(info.input_id);
 
-            if (is_inverted || !logic_state.has_connected_input(input_id)) {
-                draw_connector(ctx, ConnectorAttributes {
-                                        .state = state,
-                                        .position = position,
-                                        .orientation = orientation,
-                                        .is_inverted = is_inverted,
-                                        .is_enabled = logic_state.input_value(input_id),
-                                    });
-            }
-            return true;
-        });
+        if (is_inverted || !logic_state.has_connected_input(info.input_id)) {
+            draw_connector(ctx, ConnectorAttributes {
+                                    .state = state,
+                                    .position = info.position,
+                                    .orientation = info.orientation,
+                                    .is_inverted = is_inverted,
+                                    .is_enabled = logic_state.input_value(info.input_id),
+                                });
+        }
+    }
 
-    iter_output_location_and_id(
-        layout_data,
-        [&](connection_id_t output_id, point_t position, orientation_t orientation) {
-            const auto is_inverted = element.output_inverted(output_id);
+    for (auto info : iter_output_location_and_id(layout_data)) {
+        const auto is_inverted = element.output_inverted(info.output_id);
 
-            if (is_inverted || !logic_state.has_connected_output(output_id)) {
-                draw_connector(ctx, ConnectorAttributes {
-                                        .state = state,
-                                        .position = position,
-                                        .orientation = orientation,
-                                        .is_inverted = is_inverted,
-                                        .is_enabled = logic_state.output_value(output_id),
-                                    });
-            }
-            return true;
-        });
+        if (is_inverted || !logic_state.has_connected_output(info.output_id)) {
+            draw_connector(ctx,
+                           ConnectorAttributes {
+                               .state = state,
+                               .position = info.position,
+                               .orientation = info.orientation,
+                               .is_inverted = is_inverted,
+                               .is_enabled = logic_state.output_value(info.output_id),
+                           });
+        }
+    }
 }
 
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
@@ -328,21 +317,15 @@ auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
                            layout::ConstElement element, ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
-    iter_input_location_and_id(
-        layout_data,
-        [&](connection_id_t input_id, point_t position, orientation_t orientation) {
-            draw_connector_label(ctx, position, orientation,
-                                 labels.input_labels[std::size_t {input_id}], state);
-            return true;
-        });
+    for (auto info : iter_input_location_and_id(layout_data)) {
+        draw_connector_label(ctx, info.position, info.orientation,
+                             labels.input_labels[std::size_t {info.input_id}], state);
+    }
 
-    iter_output_location_and_id(
-        layout_data,
-        [&](connection_id_t output_id, point_t position, orientation_t orientation) {
-            draw_connector_label(ctx, position, orientation,
-                                 labels.output_labels[std::size_t {output_id}], state);
-            return true;
-        });
+    for (auto info : iter_output_location_and_id(layout_data)) {
+        draw_connector_label(ctx, info.position, info.orientation,
+                             labels.output_labels[std::size_t {info.output_id}], state);
+    }
 }
 
 template <typename Func>
