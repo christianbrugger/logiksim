@@ -18,7 +18,7 @@ namespace logicsim::editable_circuit {
 
 auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, grid_t max_length,
                      bool random_modes) -> void {
-    const auto line = get_random_line(rng, min, max, max_length);
+    const auto line = get_random_ordered_line(rng, min, max, max_length);
     const auto mode =
         random_modes ? get_random_insertion_mode(rng) : InsertionMode::insert_or_discard;
 

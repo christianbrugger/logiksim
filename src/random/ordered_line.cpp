@@ -12,7 +12,7 @@
 
 namespace logicsim {
 
-auto get_random_line(Rng& rng, grid_t min, grid_t max) -> ordered_line_t {
+auto get_random_ordered_line(Rng& rng, grid_t min, grid_t max) -> ordered_line_t {
     auto p0 = get_random_point(rng, min, max);
     auto p1 = get_random_point(rng, min, max);
 
@@ -23,13 +23,13 @@ auto get_random_line(Rng& rng, grid_t min, grid_t max) -> ordered_line_t {
     }
 
     if (p0 == p1) {
-        return get_random_line(rng, min, max);
+        return get_random_ordered_line(rng, min, max);
     }
 
     return ordered_line_t {line_t {p0, p1}};
 }
 
-auto get_random_line(Rng& rng, grid_t min, grid_t max, grid_t max_length)
+auto get_random_ordered_line(Rng& rng, grid_t min, grid_t max, grid_t max_length)
     -> ordered_line_t {
     auto p0 = get_random_point(rng, min, max);
 
@@ -57,18 +57,18 @@ auto get_random_line(Rng& rng, grid_t min, grid_t max, grid_t max_length)
     }
 
     if (p0 == p1) {
-        return get_random_line(rng, min, max, max_length);
+        return get_random_ordered_line(rng, min, max, max_length);
     }
 
     return ordered_line_t {line_t {p0, p1}};
 }
 
-auto get_random_lines(Rng& rng, std::size_t count, grid_t min, grid_t max)
+auto get_random_ordered_lines(Rng& rng, std::size_t count, grid_t min, grid_t max)
     -> std::vector<ordered_line_t> {
     auto result = std::vector<ordered_line_t> {};
 
     for (const auto _ [[maybe_unused]] : range(count)) {
-        result.push_back(get_random_line(rng, min, max));
+        result.push_back(get_random_ordered_line(rng, min, max));
     }
     return result;
 }

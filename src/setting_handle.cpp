@@ -5,13 +5,13 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "exception.h"
+#include "geometry/layout_calculation.h"
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
 #include "resource.h"
 #include "validate_definition.h"
 #include "vocabulary/element_definition.h"
-#include "geometry/layout_calculation.h"
 
 #include <QBoxLayout>
 #include <QCheckBox>
@@ -33,8 +33,8 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
         using enum ElementType;
 
         case clock_generator: {
-            // TODO redo this calculatioin
-            
+            // TODO move to logic_item/layout.h
+
             // constexpr auto overdraw = defaults::logic_item_body_overdraw;
             constexpr auto handle_size = defaults::setting_handle_size;
             // constexpr auto margin = defaults::setting_handle_margin;

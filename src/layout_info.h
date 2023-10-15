@@ -85,12 +85,8 @@ struct layout_calculation_data_t;
 [[nodiscard]] auto element_body_draw_rect(const layout_calculation_data_t &data)
     -> rect_fine_t;
 
-[[nodiscard]] auto element_collision_rect(const layout_calculation_data_t &data)
-    -> rect_t;
-// TODO collision rect for lines
-
 [[nodiscard]] auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t;
-// TODO bounding rect for lines
+[[nodiscard]] auto element_bounding_rect(ordered_line_t line) -> rect_t;
 
 [[nodiscard]] auto element_selection_rect(const layout_calculation_data_t &data)
     -> rect_fine_t;

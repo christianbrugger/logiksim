@@ -70,7 +70,7 @@ auto is_representable(layout_calculation_data_t data) -> bool {
 
     const auto position = data.position;
     data.position = point_t {0, 0};
-    const auto rect = element_collision_rect(data);
+    const auto rect = element_bounding_rect(data);
 
     static_assert(sizeof(int) > sizeof(grid_t::value_type));
     return is_representable(int {position.x} + int {rect.p0.x},
@@ -182,7 +182,7 @@ auto element_body_draw_rect(const layout_calculation_data_t &data) -> rect_fine_
     return transform(data.position, data.orientation, rect);
 }
 
-auto element_collision_rect(const layout_calculation_data_t &data) -> rect_t {
+auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t {
     if (!is_logic_item(data.element_type)) {
         throw std::runtime_error("Only supported for logic items");
     }
@@ -191,17 +191,14 @@ auto element_collision_rect(const layout_calculation_data_t &data) -> rect_t {
     return transform(data.position, data.orientation, rect);
 }
 
-auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t {
-    if (!is_logic_item(data.element_type)) {
-        throw std::runtime_error("Only supported for logic items");
-    }
-    return enclosing_rect(element_selection_rect(data));
+auto element_bounding_rect(ordered_line_t line) -> rect_t {
+    return rect_t {line.p0, line.p1};
 }
 
 auto element_selection_rect(const layout_calculation_data_t &data) -> rect_fine_t {
     constexpr static auto overdraw = grid_fine_t {0.5};
 
-    const auto rect = element_collision_rect(data);
+    const auto rect = element_bounding_rect(data);
 
     return rect_fine_t {
         point_fine_t {rect.p0.x - overdraw, rect.p0.y - overdraw},
@@ -252,7 +249,6 @@ auto element_shadow_rect(ordered_line_t line) -> rect_fine_t {
 //
 // Input & Outputs & Body Points
 //
-
 
 auto input_locations(const layout_calculation_data_t &data) -> inputs_vector {
     auto connectors = input_locations_base(data);

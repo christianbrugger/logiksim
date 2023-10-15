@@ -28,6 +28,7 @@ auto size_handle_positions(const layout::ConstElement element)
         case and_element:
         case or_element:
         case xor_element: {
+            // TODO move to logic_item/layout.h
             const auto overdraw = logic_item_body_overdraw();
             const auto data = element.to_layout_calculation_data();
             const auto width = element_width(data);
@@ -43,6 +44,7 @@ auto size_handle_positions(const layout::ConstElement element)
         }
 
         case display_number: {
+            // TODO move to logic_item/layout.h
             const auto overdraw = logic_item_body_overdraw();
             const auto input_count = element.input_count();
             const auto width = display_number::width(input_count);
