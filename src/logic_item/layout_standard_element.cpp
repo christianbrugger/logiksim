@@ -9,7 +9,7 @@ namespace logicsim {
 
 namespace standard_element {
 
-auto iter_input_location_base(const layout_calculation_data_t& data) -> inputs_vector {
+auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vector {
     auto connectors = inputs_vector {};
     connectors.reserve(data.input_count.count());
 
@@ -20,7 +20,7 @@ auto iter_input_location_base(const layout_calculation_data_t& data) -> inputs_v
     return connectors;
 }
 
-auto iter_output_location_base(const layout_calculation_data_t& data) -> outputs_vector {
+auto output_locations_base(const layout_calculation_data_t& data) -> outputs_vector {
     const auto output_y = output_height(data.input_count);
 
     return outputs_vector {
@@ -28,7 +28,7 @@ auto iter_output_location_base(const layout_calculation_data_t& data) -> outputs
     };
 }
 
-auto iter_element_body_points_base(const layout_calculation_data_t& data)
+auto element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector {
     const auto output_y = output_height(data.input_count);
 

@@ -89,7 +89,7 @@ auto find_convertible_wire_input_candiates(const CacheProvider& cache,
     -> convertible_inputs_result_t {
     auto result = convertible_inputs_result_t {};
 
-    for (const auto& info : iter_output_location(data)) {
+    for (const auto& info : output_locations(data)) {
         if (const auto entry = cache.output_cache().find(info.position)) {
             // not compatible
             if (!entry->is_wire_segment() ||
@@ -433,7 +433,7 @@ auto toggle_inverter_private(Layout& layout, const CacheProvider& cache, point_t
         entry.has_value() && entry->is_connection()) {
         const auto element = layout.element(entry->element_id);
 
-        const auto info = iter_input_location(element.to_layout_calculation_data())
+        const auto info = input_locations(element.to_layout_calculation_data())
                               .at(std::size_t {entry->connection_id});
         assert(info.position == point);
 
@@ -447,7 +447,7 @@ auto toggle_inverter_private(Layout& layout, const CacheProvider& cache, point_t
         entry.has_value() && entry->is_connection()) {
         const auto element = layout.element(entry->element_id);
 
-        const auto info = iter_output_location(element.to_layout_calculation_data())
+        const auto info = output_locations(element.to_layout_calculation_data())
                               .at(std::size_t {entry->connection_id});
         assert(info.position == point);
 
@@ -483,7 +483,7 @@ auto any_circuit_item_inputs_colliding(const CacheProvider& cache,
         return true;
     };
 
-    return !std::ranges::all_of(iter_input_location(data), compatible);
+    return !std::ranges::all_of(input_locations(data), compatible);
 }
 
 auto any_circuit_item_outputs_colliding(const Layout& layout, const CacheProvider& cache,
@@ -517,7 +517,7 @@ auto insert_logic_item_wire_conversion(State state, const element_id_t element_i
 auto uninsert_logic_item_wire_conversion(State state, element_id_t element_id) -> void {
     const auto data = to_layout_calculation_data(state.layout, element_id);
 
-    for (auto info : iter_output_location(data)) {
+    for (auto info : output_locations(data)) {
         if (const auto entry = state.cache.input_cache().find(info.position)) {
             const auto connection = wire_connection_t {info.position, entry->segment()};
             convert_to_output(state.layout, state.sender, connection);

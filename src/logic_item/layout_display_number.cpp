@@ -123,7 +123,7 @@ auto negative_position(connection_count_t input_count) -> point_t {
 // Iterator
 //
 
-auto iter_input_location_base(const layout_calculation_data_t& data) -> inputs_vector {
+auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vector {
     auto connectors = inputs_vector {};
     connectors.reserve(data.input_count.count());
 
@@ -142,11 +142,11 @@ auto iter_input_location_base(const layout_calculation_data_t& data) -> inputs_v
     return connectors;
 }
 
-auto iter_output_location_base(const layout_calculation_data_t& data) -> outputs_vector {
+auto output_locations_base(const layout_calculation_data_t& data) -> outputs_vector {
     return outputs_vector {};
 }
 
-auto iter_element_body_points_base(const layout_calculation_data_t& data)
+auto element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector {
     const auto w = width(data.input_count);
     const auto h = height(data.input_count);

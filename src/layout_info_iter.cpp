@@ -6,8 +6,8 @@
 
 namespace logicsim {
 
-auto iter_input_location(const layout_calculation_data_t &data) -> inputs_vector {
-    auto connectors = iter_input_location_base(data);
+auto input_locations(const layout_calculation_data_t &data) -> inputs_vector {
+    auto connectors = input_locations_base(data);
 
     for (auto &connector : connectors) {
         connector = simple_input_info_t {
@@ -19,8 +19,8 @@ auto iter_input_location(const layout_calculation_data_t &data) -> inputs_vector
     return connectors;
 }
 
-auto iter_output_location(const layout_calculation_data_t &data) -> outputs_vector {
-    auto connectors = iter_output_location_base(data);
+auto output_locations(const layout_calculation_data_t &data) -> outputs_vector {
+    auto connectors = output_locations_base(data);
 
     for (auto &connector : connectors) {
         connector = simple_output_info_t {
@@ -32,9 +32,9 @@ auto iter_output_location(const layout_calculation_data_t &data) -> outputs_vect
     return connectors;
 }
 
-auto iter_element_body_points(const layout_calculation_data_t &data)
+auto element_body_points(const layout_calculation_data_t &data)
     -> body_points_vector {
-    auto body_points = iter_element_body_points_base(data);
+    auto body_points = element_body_points_base(data);
 
     for (auto &point : body_points) {
         point = transform(data.position, data.orientation, point);

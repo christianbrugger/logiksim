@@ -187,7 +187,7 @@ auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
                                 ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
-    for (auto info : iter_input_location_and_id(layout_data)) {
+    for (auto info : input_locations_and_id(layout_data)) {
         draw_connector(ctx, ConnectorAttributes {
                                 .state = state,
                                 .position = info.position,
@@ -197,7 +197,7 @@ auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
                             });
     }
 
-    for (auto info : iter_output_location_and_id(layout_data)) {
+    for (auto info : output_locations_and_id(layout_data)) {
         draw_connector(ctx, ConnectorAttributes {
                                 .state = state,
                                 .position = info.position,
@@ -213,7 +213,7 @@ auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
                                 simulation_view::ConstElement logic_state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
-    for (auto info : iter_input_location_and_id(layout_data)) {
+    for (auto info : input_locations_and_id(layout_data)) {
         const auto is_inverted = element.input_inverted(info.input_id);
 
         if (is_inverted || !logic_state.has_connected_input(info.input_id)) {
@@ -227,7 +227,7 @@ auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
         }
     }
 
-    for (auto info : iter_output_location_and_id(layout_data)) {
+    for (auto info : output_locations_and_id(layout_data)) {
         const auto is_inverted = element.output_inverted(info.output_id);
 
         if (is_inverted || !logic_state.has_connected_output(info.output_id)) {
@@ -321,12 +321,12 @@ auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
                            layout::ConstElement element, ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
-    for (auto info : iter_input_location_and_id(layout_data)) {
+    for (auto info : input_locations_and_id(layout_data)) {
         draw_connector_label(ctx, info.position, info.orientation,
                              labels.input_labels[std::size_t {info.input_id}], state);
     }
 
-    for (auto info : iter_output_location_and_id(layout_data)) {
+    for (auto info : output_locations_and_id(layout_data)) {
         draw_connector_label(ctx, info.position, info.orientation,
                              labels.output_labels[std::size_t {info.output_id}], state);
     }
@@ -337,7 +337,7 @@ auto draw_input_connector_labels(Context& ctx, layout::ConstElement element,
                                  ElementDrawState state, Func to_input_label) -> void {
     const auto layout_data = element.to_layout_calculation_data();
 
-    for (const auto&& info : iter_input_location_and_id(layout_data)) {
+    for (const auto&& info : input_locations_and_id(layout_data)) {
         draw_connector_label(ctx, info.position, info.orientation,
                              to_input_label(info.input_id), state);
     }

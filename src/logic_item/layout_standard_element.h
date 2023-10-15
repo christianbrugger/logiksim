@@ -37,21 +37,21 @@ constexpr static inline auto width = grid_t {2};
  * @brief: Vector of the inputs of standard elements
  *         not considering position or orientation.
  */
-[[nodiscard]] auto iter_input_location_base(const layout_calculation_data_t& data)
+[[nodiscard]] auto input_locations_base(const layout_calculation_data_t& data)
     -> inputs_vector;
 
 /**
  * @brief: Vector of the outputs of standard elements
  *         not considering position or orientation.
  */
-[[nodiscard]] auto iter_output_location_base(const layout_calculation_data_t& data)
+[[nodiscard]] auto output_locations_base(const layout_calculation_data_t& data)
     -> outputs_vector;
 
 /**
  * @brief: Vector of the body points of standard elements
  *         not considering position or orientation.
  */
-[[nodiscard]] auto iter_element_body_points_base(const layout_calculation_data_t& data)
+[[nodiscard]] auto element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector;
 
 }  // namespace standard_element

@@ -440,7 +440,7 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
  *
  * Returns empty array for element types with dynamic body points.
  */
-[[nodiscard]] auto get_static_body_points_base(ElementType element_type)
+[[nodiscard]] auto static_body_points_base(ElementType element_type)
     -> const static_body_points&;
 
 /**
@@ -448,7 +448,7 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
  *
  * Note this is the base version, not considering element position or orientation.
  */
-[[nodiscard]] auto iter_input_location_base(const layout_calculation_data_t& data)
+[[nodiscard]] auto input_locations_base(const layout_calculation_data_t& data)
     -> inputs_vector;
 
 /**
@@ -456,7 +456,7 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
  *
  * Note this is the base version, not considering element position or orientation.
  */
-[[nodiscard]] auto iter_output_location_base(const layout_calculation_data_t& data)
+[[nodiscard]] auto output_locations_base(const layout_calculation_data_t& data)
     -> outputs_vector;
 
 /**
@@ -464,7 +464,7 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
  *
  * Note this is the base version, not considering element position or orientation.
  */
-[[nodiscard]] auto iter_element_body_points_base(const layout_calculation_data_t& data)
+[[nodiscard]] auto element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector;
 
 }  // namespace logicsim

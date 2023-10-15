@@ -106,7 +106,7 @@ auto ConnectionCache<IsInput>::handle(
     using namespace detail::connection_cache;
 
     if constexpr (IsInput) {
-        for (auto info : iter_input_location_and_id(message.data)) {
+        for (auto info : input_locations_and_id(message.data)) {
             add_entry(map_, info.position,
                       connection_data_t {
                           .element_id = message.element_id,
@@ -116,7 +116,7 @@ auto ConnectionCache<IsInput>::handle(
                       });
         }
     } else {
-        for (auto info : iter_output_location_and_id(message.data)) {
+        for (auto info : output_locations_and_id(message.data)) {
             add_entry(map_, info.position,
                       connection_data_t {
                           .element_id = message.element_id,
@@ -134,7 +134,7 @@ auto ConnectionCache<IsInput>::handle(
     using namespace detail::connection_cache;
 
     if constexpr (IsInput) {
-        for (auto info : iter_input_location_and_id(message.data)) {
+        for (auto info : input_locations_and_id(message.data)) {
             update_entry(map_, info.position,
                          connection_data_t {
                              .element_id = message.old_element_id,
@@ -145,7 +145,7 @@ auto ConnectionCache<IsInput>::handle(
                          message.new_element_id);
         }
     } else {
-        for (auto info : iter_output_location_and_id(message.data)) {
+        for (auto info : output_locations_and_id(message.data)) {
             update_entry(map_, info.position,
                          connection_data_t {
                              .element_id = message.old_element_id,
@@ -164,7 +164,7 @@ auto ConnectionCache<IsInput>::handle(
     using namespace detail::connection_cache;
 
     if constexpr (IsInput) {
-        for (auto info : iter_input_location_and_id(message.data)) {
+        for (auto info : input_locations_and_id(message.data)) {
             remove_entry(map_, info.position,
                          connection_data_t {
                              .element_id = message.element_id,
@@ -174,7 +174,7 @@ auto ConnectionCache<IsInput>::handle(
                          });
         }
     } else {
-        for (auto info : iter_output_location_and_id(message.data)) {
+        for (auto info : output_locations_and_id(message.data)) {
             remove_entry(map_, info.position,
                          connection_data_t {
                              .element_id = message.element_id,
@@ -349,14 +349,12 @@ auto ConnectionCache<IsInput>::is_colliding(const layout_calculation_data_t& dat
     };
 
     if constexpr (IsInput) {
-        return !std::ranges::all_of(iter_input_location(data), same_type_not_colliding) ||
-               !std::ranges::all_of(iter_output_location(data),
-                                    different_type_compatible);
+        return !std::ranges::all_of(input_locations(data), same_type_not_colliding) ||
+               !std::ranges::all_of(output_locations(data), different_type_compatible);
 
     } else {
-        return !std::ranges::all_of(iter_output_location(data),
-                                    same_type_not_colliding) ||
-               !std::ranges::all_of(iter_input_location(data), different_type_compatible);
+        return !std::ranges::all_of(input_locations(data), different_type_compatible) ||
+               !std::ranges::all_of(output_locations(data), same_type_not_colliding);
     }
 }
 

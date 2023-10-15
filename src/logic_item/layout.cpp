@@ -91,25 +91,21 @@ constexpr static inline auto all_static_body_points = calculate_all_static_body_
 
 }  // namespace
 
-auto get_static_body_points_base(ElementType element_type) -> const static_body_points& {
+auto static_body_points_base(ElementType element_type) -> const static_body_points& {
     return all_static_body_points[to_underlying(element_type)];
 }
 
-//
-// Iterator
-//
-
-auto iter_input_location_base(const layout_calculation_data_t& data) -> inputs_vector {
+auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vector {
     switch (data.element_type) {
         using enum ElementType;
 
         case and_element:
         case or_element:
         case xor_element:
-            return ::logicsim::standard_element::iter_input_location_base(data);
+            return ::logicsim::standard_element::input_locations_base(data);
 
         case display_number:
-            return ::logicsim::display_number::iter_input_location_base(data);
+            return ::logicsim::display_number::input_locations_base(data);
 
         default: {
             const auto connectors = get_layout_info(data.element_type).input_connectors;
@@ -119,17 +115,17 @@ auto iter_input_location_base(const layout_calculation_data_t& data) -> inputs_v
     std::terminate();
 }
 
-auto iter_output_location_base(const layout_calculation_data_t& data) -> outputs_vector {
+auto output_locations_base(const layout_calculation_data_t& data) -> outputs_vector {
     switch (data.element_type) {
         using enum ElementType;
 
         case and_element:
         case or_element:
         case xor_element:
-            return ::logicsim::standard_element::iter_output_location_base(data);
+            return ::logicsim::standard_element::output_locations_base(data);
 
         case display_number:
-            return ::logicsim::display_number::iter_output_location_base(data);
+            return ::logicsim::display_number::output_locations_base(data);
 
         default: {
             const auto connectors = get_layout_info(data.element_type).output_connectors;
@@ -139,7 +135,7 @@ auto iter_output_location_base(const layout_calculation_data_t& data) -> outputs
     std::terminate();
 }
 
-auto iter_element_body_points_base(const layout_calculation_data_t& data)
+auto element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector {
     switch (data.element_type) {
         using enum ElementType;
@@ -147,15 +143,15 @@ auto iter_element_body_points_base(const layout_calculation_data_t& data)
         case and_element:
         case or_element:
         case xor_element: {
-            return standard_element::iter_element_body_points_base(data);
+            return standard_element::element_body_points_base(data);
         }
 
         case display_number: {
-            return display_number::iter_element_body_points_base(data);
+            return display_number::element_body_points_base(data);
         }
 
         default: {
-            const auto& points = get_static_body_points_base(data.element_type);
+            const auto& points = static_body_points_base(data.element_type);
             return body_points_vector(points.begin(), points.end());
         }
     }

@@ -126,19 +126,19 @@ auto iter_body_collision_state(const layout_calculation_data_t& data, Func next_
     -> bool {
     using collision_cache::ItemType;
 
-    for (const auto& info : iter_input_location(data)) {
+    for (const auto& info : input_locations(data)) {
         if (!next_state(info.position, ItemType::element_connection)) {
             return false;
         }
     }
 
-    for (const point_t& position : iter_element_body_points(data)) {
+    for (const point_t& position : element_body_points(data)) {
         if (!next_state(position, ItemType::element_connection)) {
             return false;
         }
     }
 
-    for (const auto& info : iter_output_location(data)) {
+    for (const auto& info : output_locations(data)) {
         if (!next_state(info.position, ItemType::element_connection)) {
             return false;
         }

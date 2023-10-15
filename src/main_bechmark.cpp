@@ -141,7 +141,7 @@ static void BM_Benchmark_Iter_Callable(benchmark::State& state) {
         index = (index + 1) % N;
         p_index = 0;
 
-        iter_element_body_points_base(data[index], [&](point_t point) {
+        element_body_points_base(data[index], [&](point_t point) {
             buffer[p_index++] = point;
 
             // sum += int {p.x} + int {p.y};
@@ -169,7 +169,7 @@ static void BM_Benchmark_Iter_SmallVector_Private(benchmark::State& state) {
         index = (index + 1) % N;
         p_index = 0;
 
-        for (const auto point : iter_element_body_points_base(data[index])) {
+        for (const auto point : element_body_points_base(data[index])) {
             buffer[p_index++] = point;
             // sum += int {point.x} + int {point.y};
         }
