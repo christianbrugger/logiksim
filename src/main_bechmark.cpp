@@ -11,6 +11,7 @@
 #include "layout_info.h"
 #include "layout_info_iter.h"
 #include "logging.h"
+#include "logic_item/layout.h"
 #include "random/generator.h"
 #include "random/layout_calculation_data.h"
 #include "render_circuit.h"

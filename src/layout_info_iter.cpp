@@ -1,5 +1,9 @@
 #include "layout_info_iter.h"
 
+#include "geometry/layout_calculation.h"
+#include "logic_item/layout.h"
+#include "vocabulary/layout_calculation_data.h"
+
 namespace logicsim {
 
 auto iter_input_location(const layout_calculation_data_t &data) -> inputs_vector {
