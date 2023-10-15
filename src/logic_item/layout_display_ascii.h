@@ -27,8 +27,8 @@ constexpr static inline auto enable_position = point_t {2, height};
 /**
  * @brief: List of static input connectors.
  */
-constexpr static inline auto input_connectors = []() -> static_connectors {
-    auto inputs = static_connectors {};
+constexpr static inline auto input_connectors = []() -> static_inputs {
+    auto inputs = static_inputs {};
 
     // enable as first input
     static_assert(display::enable_input_id == connection_id_t {0});

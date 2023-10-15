@@ -45,7 +45,8 @@ constexpr auto max_static_body_point_count() -> int {
  */
 static_assert(static_body_points::capacity() == max_static_body_point_count());
 static_assert(body_points_vector_size >= max_static_body_point_count());
-static_assert(connectors_vector_size >= static_connectors::capacity());
+static_assert(inputs_vector_size >= static_inputs::capacity());
+static_assert(outputs_vector_size >= static_outputs::capacity());
 
 constexpr auto calculate_static_body_points(ElementType element_type)
     -> static_body_points {
@@ -55,9 +56,7 @@ constexpr auto calculate_static_body_points(ElementType element_type)
         return {};
     }
 
-    const auto to_position = [](const simple_connector_info_t& info) {
-        return info.position;
-    };
+    const auto to_position = [](const auto& info) { return info.position; };
 
     auto result = static_body_points {};
 
@@ -107,8 +106,7 @@ auto get_static_body_points_base(ElementType element_type) -> const static_body_
 // Iterator
 //
 
-auto iter_input_location_base(const layout_calculation_data_t& data)
-    -> connectors_vector {
+auto iter_input_location_base(const layout_calculation_data_t& data) -> inputs_vector {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -122,14 +120,13 @@ auto iter_input_location_base(const layout_calculation_data_t& data)
 
         default: {
             const auto connectors = get_layout_info(data.element_type).input_connectors;
-            return connectors_vector(connectors.begin(), connectors.end());
+            return inputs_vector(connectors.begin(), connectors.end());
         }
     }
     std::terminate();
 }
 
-auto iter_output_location_base(const layout_calculation_data_t& data)
-    -> connectors_vector {
+auto iter_output_location_base(const layout_calculation_data_t& data) -> outputs_vector {
     switch (data.element_type) {
         using enum ElementType;
 
@@ -143,7 +140,7 @@ auto iter_output_location_base(const layout_calculation_data_t& data)
 
         default: {
             const auto connectors = get_layout_info(data.element_type).output_connectors;
-            return connectors_vector(connectors.begin(), connectors.end());
+            return outputs_vector(connectors.begin(), connectors.end());
         }
     }
     std::terminate();

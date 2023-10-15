@@ -71,10 +71,10 @@ inline auto iter_element_body_points(const layout_calculation_data_t& data,
                                      std::invocable<point_t> auto next_point) -> bool;
 
 [[nodiscard]] auto iter_input_location_base(const layout_calculation_data_t& data)
-    -> connectors_vector;
+    -> inputs_vector;
 
 [[nodiscard]] auto iter_output_location_base(const layout_calculation_data_t& data)
-    -> connectors_vector;
+    -> outputs_vector;
 
 [[nodiscard]] auto iter_element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector;

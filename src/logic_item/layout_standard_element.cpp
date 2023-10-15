@@ -6,9 +6,8 @@ namespace logicsim {
 
 namespace standard_element {
 
-auto iter_input_location_base(const layout_calculation_data_t& data)
-    -> connectors_vector {
-    auto connectors = connectors_vector {};
+auto iter_input_location_base(const layout_calculation_data_t& data) -> inputs_vector {
+    auto connectors = inputs_vector {};
     connectors.reserve(data.input_count.count());
 
     for (auto y : range(to_grid(data.input_count))) {
@@ -18,11 +17,10 @@ auto iter_input_location_base(const layout_calculation_data_t& data)
     return connectors;
 }
 
-auto iter_output_location_base(const layout_calculation_data_t& data)
-    -> connectors_vector {
+auto iter_output_location_base(const layout_calculation_data_t& data) -> outputs_vector {
     const auto output_y = output_height(data.input_count);
 
-    return connectors_vector {
+    return outputs_vector {
         {point_t {2, output_y}, orientation_t::right},
     };
 }

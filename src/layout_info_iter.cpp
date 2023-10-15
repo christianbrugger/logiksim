@@ -2,27 +2,29 @@
 
 namespace logicsim {
 
-namespace {
-auto transform_connectors_inplace(const layout_calculation_data_t &data,
-                                  connectors_vector &connectors) {
+auto iter_input_location(const layout_calculation_data_t &data) -> inputs_vector {
+    auto connectors = iter_input_location_base(data);
+
     for (auto &connector : connectors) {
-        connector = simple_connector_info_t {
+        connector = simple_input_info_t {
             .position = transform(data.position, data.orientation, connector.position),
             .orientation = transform(data.orientation, connector.orientation),
         };
     }
-}
-}  // namespace
 
-auto iter_input_location(const layout_calculation_data_t &data) -> connectors_vector {
-    auto connectors = iter_input_location_base(data);
-    transform_connectors_inplace(data, connectors);
     return connectors;
 }
 
-auto iter_output_location(const layout_calculation_data_t &data) -> connectors_vector {
+auto iter_output_location(const layout_calculation_data_t &data) -> outputs_vector {
     auto connectors = iter_output_location_base(data);
-    transform_connectors_inplace(data, connectors);
+
+    for (auto &connector : connectors) {
+        connector = simple_output_info_t {
+            .position = transform(data.position, data.orientation, connector.position),
+            .orientation = transform(data.orientation, connector.orientation),
+        };
+    }
+
     return connectors;
 }
 

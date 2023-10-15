@@ -11,19 +11,32 @@
 namespace logicsim {
 
 /**
- * @brief:  Constexpr friendly vector able to hold statically defined connections
+ * @brief:  Constexpr friendly vector able to hold statically defined inputs
  *
- * Increase this as needed, when defining a new type with more connections.
+ * Increase this as needed, when defining a new type with more inputs.
  */
-constexpr inline auto static_connectors_size = 8;
-using static_connectors = static_vector<simple_connector_info_t, static_connectors_size>;
+constexpr inline auto static_inputs_size = 8;
+using static_inputs = static_vector<simple_input_info_t, static_inputs_size>;
 
 /**
- * @brief:  Hold the input or output connections of a logic item.
+ * @brief:  Constexpr friendly vector able to hold statically defined outputs
+ *
+ * Increase this as needed, when defining a new type with more outputs.
  */
-constexpr inline auto connectors_vector_size = 14;
-using connectors_vector =
-    folly::small_vector<simple_connector_info_t, connectors_vector_size>;
+constexpr inline auto static_outputs_size = 8;
+using static_outputs = static_vector<simple_output_info_t, static_outputs_size>;
+
+/**
+ * @brief:  Hold the input connections of a logic item.
+ */
+constexpr inline auto inputs_vector_size = 14;
+using inputs_vector = folly::small_vector<simple_input_info_t, inputs_vector_size>;
+
+/**
+ * @brief:  Hold the output connections of a logic item.
+ */
+constexpr inline auto outputs_vector_size = 14;
+using outputs_vector = folly::small_vector<simple_output_info_t, outputs_vector_size>;
 
 /**
  * @brief:  Hold the body points connections of a logic item.

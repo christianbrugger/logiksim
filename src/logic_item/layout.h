@@ -39,8 +39,8 @@ struct layout_info_t {
     grid_t (*variable_width)(const layout_calculation_data_t&) {nullptr};
     grid_t (*variable_height)(const layout_calculation_data_t&) {nullptr};
 
-    static_connectors input_connectors {};
-    static_connectors output_connectors {};
+    static_inputs input_connectors {};
+    static_outputs output_connectors {};
 };
 
 /**
@@ -443,10 +443,21 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
 [[nodiscard]] auto get_static_body_points_base(ElementType element_type)
     -> const static_body_points&;
 
-constexpr inline auto iter_connectors(
-    const static_connectors& connectors,
+constexpr inline auto iter_static_inputs(
+    const static_inputs& connectors,
     std::invocable<point_t, orientation_t> auto next_connector) -> bool {
-    for (const simple_connector_info_t& con : connectors) {
+    for (const simple_input_info_t& con : connectors) {
+        if (!next_connector(con.position, con.orientation)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+constexpr inline auto iter_static_outputs(
+    const static_outputs& connectors,
+    std::invocable<point_t, orientation_t> auto next_connector) -> bool {
+    for (const simple_output_info_t& con : connectors) {
         if (!next_connector(con.position, con.orientation)) {
             return false;
         }
@@ -491,7 +502,7 @@ constexpr inline auto iter_input_location_base(
 
         default: {
             const auto connectors = get_layout_info(data.element_type).input_connectors;
-            return iter_connectors(connectors, next_input);
+            return iter_static_inputs(connectors, next_input);
         }
     }
     std::terminate();
@@ -520,7 +531,7 @@ constexpr inline auto iter_output_location_base(
 
         default: {
             const auto connectors = get_layout_info(data.element_type).output_connectors;
-            return iter_connectors(connectors, next_output);
+            return iter_static_outputs(connectors, next_output);
         }
     }
     std::terminate();
@@ -557,10 +568,10 @@ inline auto iter_element_body_points_base(const layout_calculation_data_t& data,
 }
 
 [[nodiscard]] auto iter_input_location_base(const layout_calculation_data_t& data)
-    -> connectors_vector;
+    -> inputs_vector;
 
 [[nodiscard]] auto iter_output_location_base(const layout_calculation_data_t& data)
-    -> connectors_vector;
+    -> outputs_vector;
 
 [[nodiscard]] auto iter_element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector;

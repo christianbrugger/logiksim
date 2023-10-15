@@ -84,10 +84,10 @@ inline auto iter_output_location_and_id(
 //
 
 [[nodiscard]] auto iter_input_location(const layout_calculation_data_t &data)
-    -> connectors_vector;
+    -> inputs_vector;
 
 [[nodiscard]] auto iter_output_location(const layout_calculation_data_t &data)
-    -> connectors_vector;
+    -> outputs_vector;
 
 [[nodiscard]] auto iter_element_body_points(const layout_calculation_data_t &data)
     -> body_points_vector;
@@ -106,14 +106,14 @@ inline auto iter_output_location_and_id(
     const layout_calculation_data_t &data) {
     return transform_view(
         enumerate<connection_id_t>(iter_input_location(data)),
-        [](auto pair) { return extend_connector_info(pair.first, pair.second); });
+        [](auto pair) { return extend_input_info(pair.first, pair.second); });
 }
 
 [[nodiscard]] inline auto iter_output_location_and_id(
     const layout_calculation_data_t &data) {
     return transform_view(
-        enumerate<connection_id_t>(iter_input_location(data)),
-        [](auto pair) { return extend_connector_info(pair.first, pair.second); });
+        enumerate<connection_id_t>(iter_output_location(data)),
+        [](auto pair) { return extend_output_info(pair.first, pair.second); });
 }
 
 //
