@@ -16,6 +16,11 @@ struct layout_calculation_data_t;
 
 namespace collision_cache {
 
+/**
+ * @brief: The type of item when adding a new item at a specific position.
+ *
+ * Note that some states cannot be inserted into the cache.
+ */
 enum class ItemType {
     element_body,
     element_connection,
@@ -29,6 +34,11 @@ enum class ItemType {
     wire_new_unknown_point,
 };
 
+/**
+ * @brief: The state of the cache at a specific positions.
+ *
+ * Note that some states are a combination of multiple items inserted at this positions.
+ */
 enum class CacheState {
     element_body,
     element_connection,
@@ -38,13 +48,19 @@ enum class CacheState {
     wire_corner_point,
     wire_cross_point,
 
-    // inferred states
+    // combination states
     wire_crossing,
     element_wire_connection,
 
+    // TODO remove this?
     invalid_state,
 };
 
+/**
+ * @brief: The stored cache value type.
+ *
+ * For each state a CacheState can be derived.
+ */
 struct collision_data_t {
     /**
      * @brief: element_id || wire_corner_point_tag || wire_cross_point_tag
@@ -115,6 +131,9 @@ static_assert(wire_cross_point_tag < element_id_t {0});
 [[nodiscard]] auto is_wire_crossing(collision_data_t data) -> bool;
 [[nodiscard]] auto is_element_wire_connection(collision_data_t data) -> bool;
 
+/**
+ * @brief: Converts cache state value to enum type.
+ */
 [[nodiscard]] auto to_state(collision_data_t data) -> CacheState;
 
 }  // namespace collision_cache
