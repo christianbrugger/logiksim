@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_LOGIC_ITEM_LAYOUT_H
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_H
 
+#include "container/static_vector.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
 #include "logic_item/layout_standard_element.h"
@@ -15,7 +16,6 @@
 
 #include <concepts>
 #include <exception>
-#include <optional>
 
 namespace logicsim {
 
@@ -443,136 +443,27 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
 [[nodiscard]] auto get_static_body_points_base(ElementType element_type)
     -> const static_body_points&;
 
-constexpr inline auto iter_static_inputs(
-    const static_inputs& connectors,
-    std::invocable<point_t, orientation_t> auto next_connector) -> bool {
-    for (const simple_input_info_t& con : connectors) {
-        if (!next_connector(con.position, con.orientation)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-constexpr inline auto iter_static_outputs(
-    const static_outputs& connectors,
-    std::invocable<point_t, orientation_t> auto next_connector) -> bool {
-    for (const simple_output_info_t& con : connectors) {
-        if (!next_connector(con.position, con.orientation)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-constexpr inline auto iter_body_points(const static_body_points& body_points,
-                                       std::invocable<point_t> auto next_point) -> bool {
-    for (const point_t& point : body_points) {
-        if (!next_point(point)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-//
-// Iterators
-//
-
 /**
- * @brief: Iterate over the inputs not considering position or orientation.
+ * @brief: Returns vector of simple_input_info_t.
  *
- *  next_input = [](point_t position, orientation_t orientation) -> bool
- *
- * The callable is called for each point or until it returns false.
+ * Note this is the base version, not considering element position or orientation.
  */
-constexpr inline auto iter_input_location_base(
-    const layout_calculation_data_t& data,
-    std::invocable<point_t, orientation_t> auto next_input) -> bool {
-    switch (data.element_type) {
-        using enum ElementType;
-
-        case and_element:
-        case or_element:
-        case xor_element:
-            return ::logicsim::standard_element::iter_input_location(data, next_input);
-
-        case display_number:
-            return ::logicsim::display_number::iter_input_location(data, next_input);
-
-        default: {
-            const auto connectors = get_layout_info(data.element_type).input_connectors;
-            return iter_static_inputs(connectors, next_input);
-        }
-    }
-    std::terminate();
-}
-
-/**
- * @brief: Iterate over the outputs not considering position or orientation.
- *
- *  next_output = [](point_t position, orientation_t orientation) -> bool
- *
- * The callable is called for each point or until it returns false.
- */
-constexpr inline auto iter_output_location_base(
-    const layout_calculation_data_t& data,
-    std::invocable<point_t, orientation_t> auto next_output) -> bool {
-    switch (data.element_type) {
-        using enum ElementType;
-
-        case and_element:
-        case or_element:
-        case xor_element:
-            return ::logicsim::standard_element::iter_output_location(data, next_output);
-
-        case display_number:
-            return ::logicsim::display_number::iter_output_location(data, next_output);
-
-        default: {
-            const auto connectors = get_layout_info(data.element_type).output_connectors;
-            return iter_static_outputs(connectors, next_output);
-        }
-    }
-    std::terminate();
-}
-
-/**
- * @brief: Iterate over the body points not considering position or orientation.
- *
- *  next_point = [](point_t position) -> bool
- *
- * The callable is called for each point or until it returns false.
- */
-inline auto iter_element_body_points_base(const layout_calculation_data_t& data,
-                                          std::invocable<point_t> auto next_point)
-    -> bool {
-    switch (data.element_type) {
-        using enum ElementType;
-
-        case and_element:
-        case or_element:
-        case xor_element:
-            return ::logicsim::standard_element::iter_element_body_points(data,
-                                                                          next_point);
-
-        case display_number:
-            return ::logicsim::display_number::iter_element_body_points(data, next_point);
-
-        default: {
-            const auto& body_points = get_static_body_points_base(data.element_type);
-            return iter_body_points(body_points, next_point);
-        }
-    }
-    std::terminate();
-}
-
 [[nodiscard]] auto iter_input_location_base(const layout_calculation_data_t& data)
     -> inputs_vector;
 
+/**
+ * @brief: Returns vector of simple_output_info_t.
+ *
+ * Note this is the base version, not considering element position or orientation.
+ */
 [[nodiscard]] auto iter_output_location_base(const layout_calculation_data_t& data)
     -> outputs_vector;
 
+/**
+ * @brief: Returns vector of body points, type point_t.
+ *
+ * Note this is the base version, not considering element position or orientation.
+ */
 [[nodiscard]] auto iter_element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector;
 

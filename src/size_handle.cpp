@@ -4,6 +4,7 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection.h"
 #include "exception.h"
+#include "geometry/connection_count.h"
 #include "geometry/layout_calculation.h"
 #include "geometry/point.h"
 #include "geometry/rect.h"

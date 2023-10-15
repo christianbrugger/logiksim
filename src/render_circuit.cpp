@@ -23,6 +23,7 @@
 #include "simulation.h"
 #include "simulation_view.h"
 #include "size_handle.h"
+#include "vocabulary/layout_calculation_data.h"
 
 #include <blend2d.h>
 #include <fmt/format.h>  // TODO why?

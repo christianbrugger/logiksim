@@ -2,15 +2,12 @@
 
 #include "algorithm/contains.h"
 #include "algorithm/to_underlying.h"
-#include "container/static_vector.h"
 
 #include <gsl/gsl>
 
 #include <utility>
 
 namespace logicsim {
-
-using static_body_points = static_vector<point_t, 28, uint32_t>;
 
 namespace {
 
@@ -80,10 +77,6 @@ constexpr auto calculate_static_body_points(ElementType element_type)
 }
 
 constexpr auto calculate_all_static_body_points() {
-    // constexpr auto max_id =
-    //     std::ranges::max(all_element_types, {}, to_underlying<ElementType>);
-    //  constexpr auto size = to_underlying(max_id) + 1;
-
     constexpr auto size = all_element_types.size();
     auto result = std::array<static_body_points, size> {};
 
