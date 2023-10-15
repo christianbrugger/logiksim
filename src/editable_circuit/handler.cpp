@@ -13,7 +13,6 @@
 #include "geometry/orientation.h"
 #include "geometry/point.h"
 #include "layout_info.h"
-#include "layout_info_iter.h"
 #include "logging.h"
 
 #include <ankerl/unordered_dense.h>

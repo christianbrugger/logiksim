@@ -9,7 +9,6 @@
 #include "editable_circuit/editable_circuit.h"
 #include "editable_circuit/selection_registrar.h"
 #include "layout_info.h"
-#include "layout_info_iter.h"
 #include "logging.h"
 #include "logic_item/layout.h"
 #include "random/generator.h"

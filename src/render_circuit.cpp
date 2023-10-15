@@ -16,7 +16,6 @@
 #include "geometry/scene.h"
 #include "layout.h"
 #include "layout_info.h"
-#include "layout_info_iter.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
 #include "setting_handle.h"

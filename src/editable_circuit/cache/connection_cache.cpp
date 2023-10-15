@@ -8,7 +8,7 @@
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/orientation.h"
-#include "layout_info_iter.h"
+#include "layout_info.h"
 
 namespace logicsim {
 

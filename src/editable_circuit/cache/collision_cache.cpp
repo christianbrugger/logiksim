@@ -7,7 +7,7 @@
 #include "editable_circuit/message.h"
 #include "exception.h"
 #include "geometry/orientation.h"
-#include "layout_info_iter.h"
+#include "layout_info.h"
 
 namespace logicsim {
 
@@ -122,7 +122,7 @@ auto collision_data_t::format() const -> std::string {
 
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
-auto iter_body_collision_state(const layout_calculation_data_t& data, Func next_state)
+auto iter_collision_state(const layout_calculation_data_t& data, Func next_state)
     -> bool {
     using collision_cache::ItemType;
 
@@ -145,19 +145,6 @@ auto iter_body_collision_state(const layout_calculation_data_t& data, Func next_
     }
 
     return true;
-}
-
-// next_state(point_t position, ItemType state) -> bool
-template <typename Func>
-auto iter_collision_state(const layout_calculation_data_t& data, Func next_state)
-    -> bool {
-    if (data.element_type == ElementType::placeholder) {
-        return true;
-    }
-    if (data.element_type == ElementType::wire) [[unlikely]] {
-        throw_exception("not supported");
-    }
-    return iter_body_collision_state(data, next_state);
 }
 
 // next_state(point_t position, ItemType state) -> bool
