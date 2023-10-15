@@ -77,14 +77,13 @@ struct range_iterator_t {
         }
     }
 
+    //    requires requires(T v_) { v_ - v_; }
     [[nodiscard]] auto operator-(const range_iterator_t<T, forward>& right) const
-        noexcept(noexcept(this->current_ - right.current_)) -> difference_type
-        requires requires(T v_) { v_ - v_; }
-    {
+        -> difference_type {
         if constexpr (forward) {
-            return this->current_ - right.current_;
+            return difference_type {this->current_} - difference_type {right.current_};
         }
-        return right.current_ - this->current_;
+        return difference_type {right.current_} - difference_type {this->current_};
     }
 };
 

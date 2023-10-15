@@ -126,16 +126,11 @@ TEST(Iterator, TransformViewLambda) {
     auto vec = std::vector<int> {1, 2, 3};
 
     auto proj = [offset = int {10}](int v) { return v + offset; };
-    // auto transform = transform_view(vec, proj);
-    auto transform = std::ranges::transform_view(vec, proj);
-    const auto ctransform = std::ranges::transform_view(vec, proj);
+    auto transform = transform_view(vec, proj);
 
-    auto it = transform.begin();
-    auto cit = ctransform.begin();
+    ASSERT_TRUE(std::ranges::equal(transform, std::vector<int> {11, 12, 13}));
 
-    // ASSERT_TRUE(std::ranges::equal(transform, std::vector<int> {11, 12, 13}));
-
-    // ASSERT_THAT(transform, testing::ElementsAre(11, 12, 13));
+    ASSERT_THAT(transform, testing::ElementsAre(11, 12, 13));
 }
 
 }  // namespace logicsim

@@ -20,6 +20,8 @@ struct simple_connector_info_t {
     [[nodiscard]] auto format() -> std::string;
 };
 
+static_assert(std::is_aggregate_v<simple_connector_info_t>);
+
 /**
  * @brief: Connector id, position and orientation.
  */
@@ -30,6 +32,23 @@ struct extended_connector_info_t {
 
     [[nodiscard]] auto format() -> std::string;
 };
+
+static_assert(std::is_aggregate_v<extended_connector_info_t>);
+
+/**
+ * @brief: Converts simple to extended info.
+ *
+ * Note we don't use a constructor, so  extended_connector_info stays an aggregate.
+ */
+[[nodiscard]] constexpr inline auto extend_connector_info(
+    connection_id_t id, simple_connector_info_t simple_info)
+    -> extended_connector_info_t {
+    return extended_connector_info_t {
+        .position = simple_info.position,
+        .id = id,
+        .orientation = simple_info.orientation,
+    };
+}
 
 }  // namespace logicsim
 

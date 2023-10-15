@@ -27,39 +27,38 @@ class TransformIterator {
     using pointer = void;
 
     // needs to be default constructable, so ElementView can become a range and view
-    TransformIterator() = default;
+    constexpr TransformIterator() = default;
 
-    [[nodiscard]] explicit TransformIterator(P &proj, I iterator)
+    [[nodiscard]] explicit constexpr TransformIterator(P &proj, I iterator)
         : proj_ {&proj}, iterator_ {iterator} {};
 
-    [[nodiscard]] auto operator*() const -> reference {
+    [[nodiscard]] constexpr auto operator*() const -> reference {
         assert(proj_);
         return std::invoke(*proj_, *iterator_);
     }
 
     // Prefix increment
-    auto operator++() noexcept(noexcept(++iterator_)) -> TransformIterator & {
+    constexpr auto operator++() noexcept(noexcept(++iterator_)) -> TransformIterator & {
         ++iterator_;
         return *this;
     }
 
     // Postfix increment
-    auto operator++(int) noexcept(noexcept(iterator_++)) -> TransformIterator {
+    [[nodiscard]] constexpr auto operator++(int) noexcept(noexcept(iterator_++))
+        -> TransformIterator {
         auto tmp = *this;
         operator++();
         return tmp;
     }
 
-    [[nodiscard]] auto operator==(const TransformIterator &right) const
-        noexcept(noexcept(this->iterator_ == right.iterator_)) -> bool {
-        return this->iterator_ == right.iterator_;
+    [[nodiscard]] friend constexpr auto operator==(const TransformIterator &left,
+                                                   const TransformIterator &right) {
+        return left.iterator_ == right.iterator_;
     }
 
-    [[nodiscard]] auto operator-(const TransformIterator &right) const
-        noexcept(noexcept(this->iterator_ - right.iterator_)) -> difference_type
-        requires requires(I it_) { it_ - it_; }
-    {
-        return this->iterator_ - right.iterator_;
+    [[nodiscard]] friend constexpr auto operator-(const TransformIterator &left,
+                                                  const TransformIterator &right) {
+        return left.iterator_ - right.iterator_;
     }
 
    private:
@@ -78,30 +77,30 @@ class TransformView {
     using pointer = typename iterator::pointer;
     using reference = typename iterator::reference;
 
-    [[nodiscard]] explicit TransformView(I begin, I end, Proj proj)
+    [[nodiscard]] explicit constexpr TransformView(I begin, I end, Proj proj)
         : begin_ {begin}, end_ {end}, proj_ {std::move(proj)} {};
 
-    [[nodiscard]] auto begin() -> iterator {
+    [[nodiscard]] constexpr auto begin() -> iterator {
         return iterator {proj_, begin_};
     }
 
-    [[nodiscard]] auto end() -> iterator {
+    [[nodiscard]] constexpr auto end() -> iterator {
         return iterator {proj_, end_};
     }
 
-    [[nodiscard]] auto begin() const -> const_iterator {
+    [[nodiscard]] constexpr auto begin() const -> const_iterator {
         return const_iterator {proj_, begin_};
     }
 
-    [[nodiscard]] auto end() const -> const_iterator {
+    [[nodiscard]] constexpr auto end() const -> const_iterator {
         return const_iterator {proj_, end_};
     }
 
-    [[nodiscard]] auto size() const {
+    [[nodiscard]] constexpr auto size() const {
         return end_ - begin_;
     }
 
-    [[nodiscard]] auto empty() const {
+    [[nodiscard]] constexpr auto empty() const {
         return begin_ == end_;
     }
 
@@ -125,30 +124,30 @@ class TransformRange {
     using pointer = typename iterator::pointer;
     using reference = typename iterator::reference;
 
-    [[nodiscard]] explicit TransformRange(R &&range, Proj proj)
+    [[nodiscard]] explicit constexpr TransformRange(R &&range, Proj proj)
         : range_ {std::move(range)}, proj_ {std::move(proj)} {};
 
-    [[nodiscard]] auto begin() -> iterator {
+    [[nodiscard]] constexpr auto begin() -> iterator {
         return iterator {proj_, std::ranges::begin(range_)};
     }
 
-    [[nodiscard]] auto end() -> iterator {
+    [[nodiscard]] constexpr auto end() -> iterator {
         return iterator {proj_, std::ranges::end(range_)};
     }
 
-    [[nodiscard]] auto begin() const -> const_iterator {
+    [[nodiscard]] constexpr auto begin() const -> const_iterator {
         return const_iterator {proj_, std::ranges::begin(range_)};
     }
 
-    [[nodiscard]] auto end() const -> const_iterator {
+    [[nodiscard]] constexpr auto end() const -> const_iterator {
         return const_iterator {proj_, std::ranges::end(range_)};
     }
 
-    [[nodiscard]] auto size() const {
+    [[nodiscard]] constexpr auto size() const {
         return std::ranges::size(range_);
     }
 
-    [[nodiscard]] auto empty() const {
+    [[nodiscard]] constexpr auto empty() const {
         return std::ranges::empty(range_);
     }
 
@@ -162,20 +161,30 @@ class TransformRange {
 
 }  // namespace detail
 
+/**
+ * @brief Returns non-owning transform view of the iterator pairs.
+ *
+ * For each value in the iterator the proj is applied.
+ */
 template <std::input_iterator I, std::copy_constructible Proj>
     requires std::is_object_v<Proj> &&
              std::regular_invocable<Proj &, std::iter_reference_t<I>>
-[[nodiscard]] auto transform_view(I begin, I end, Proj proj) {
+[[nodiscard]] constexpr auto transform_view(I begin, I end, Proj proj) {
     using view_t = detail::TransformView<I, Proj>;
     static_assert(std::ranges::forward_range<view_t>);
 
     return view_t {begin, end, proj};
 }
 
+/**
+ * @brief Returns non-owning transform view of the range.
+ *
+ * For each value in the iterator the proj is applied.
+ */
 template <std::ranges::input_range R, std::copy_constructible Proj>
     requires std::is_object_v<Proj> &&
              std::regular_invocable<Proj &, std::ranges::range_reference_t<R>>
-[[nodiscard]] auto transform_view(R &range, Proj proj) {
+[[nodiscard]] constexpr auto transform_view(R &range, Proj proj) {
     using I = decltype(std::ranges::begin(range));
     using view_t = detail::TransformView<I, Proj>;
     static_assert(std::ranges::forward_range<view_t>);
@@ -183,10 +192,15 @@ template <std::ranges::input_range R, std::copy_constructible Proj>
     return view_t {std::ranges::begin(range), std::ranges::end(range), proj};
 }
 
+/**
+ * @brief Returns owning transforming range.
+ *
+ * For each value in the iterator the proj is applied.
+ */
 template <std::ranges::input_range R, std::copy_constructible Proj>
     requires std::is_object_v<Proj> &&
              std::regular_invocable<Proj &&, std::ranges::range_reference_t<R>>
-[[nodiscard]] auto transform_view(R &&range, Proj proj) {
+[[nodiscard]] constexpr auto transform_view(R &&range, Proj proj) {
     static_assert(!std::is_lvalue_reference_v<R>, "bad call");
 
     using range_t = detail::TransformRange<R, Proj>;

@@ -80,7 +80,7 @@ inline auto iter_output_location_and_id(
     std::invocable<connection_id_t, point_t, orientation_t> auto next_output) -> bool;
 
 //
-// New
+// New - TODO use comments above
 //
 
 [[nodiscard]] auto iter_input_location(const layout_calculation_data_t &data)
@@ -104,27 +104,21 @@ inline auto iter_output_location_and_id(
 
 [[nodiscard]] inline auto iter_input_location_and_id(
     const layout_calculation_data_t &data) {
-    return transform_view(enumerate<connection_id_t>(iter_input_location(data)),
-                          [](auto pair) {
-                              return extended_connector_info_t {
-                                  .position = pair.second.position,
-                                  .id = pair.first,
-                                  .orientation = pair.second.orientation,
-                              };
-                          });
+    return transform_view(
+        enumerate<connection_id_t>(iter_input_location(data)),
+        [](auto pair) { return extend_connector_info(pair.first, pair.second); });
 }
 
 [[nodiscard]] inline auto iter_output_location_and_id(
     const layout_calculation_data_t &data) {
-    return transform_view(enumerate<connection_id_t>(iter_input_location(data)),
-                          [](auto pair) {
-                              return extended_connector_info_t {
-                                  .position = pair.second.position,
-                                  .id = pair.first,
-                                  .orientation = pair.second.orientation,
-                              };
-                          });
+    return transform_view(
+        enumerate<connection_id_t>(iter_input_location(data)),
+        [](auto pair) { return extend_connector_info(pair.first, pair.second); });
 }
+
+//
+// Old - TODO delete
+//
 
 inline auto iter_input_location(const layout_calculation_data_t &data,
                                 std::invocable<point_t, orientation_t> auto next_input)

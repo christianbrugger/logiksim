@@ -48,6 +48,11 @@ struct enumerate_iterator {
         -> bool {
         return iterator == other.iterator;
     }
+
+    [[nodiscard]] friend constexpr auto operator-(const enumerate_iterator<I, C>& left,
+                                                  const enumerate_iterator<I, C>& right) {
+        return left.iterator - right.iterator;
+    }
 };
 
 template <std::input_iterator I, std::sentinel_for<I> S, typename C>
