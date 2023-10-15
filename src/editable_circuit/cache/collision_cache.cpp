@@ -1,15 +1,17 @@
 #include "editable_circuit/cache/collision_cache.h"
 
+#include "algorithm/fmt_join.h"
 #include "algorithm/range.h"
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
+#include "exception.h"
 #include "format/container.h"
 #include "format/std_type.h"
-#include "exception.h"
 #include "geometry/orientation.h"
 #include "layout_info.h"
+#include "logging.h"
 
 #include <folly/small_vector.h>
 
@@ -38,7 +40,6 @@ static_assert(std::is_aggregate_v<collision_point_t>);
 constexpr inline auto collision_points_size =
     inputs_vector_size + outputs_vector_size + body_points_vector_size;
 using collision_points_t = folly::small_vector<collision_point_t, collision_points_size>;
-
 
 }  // namespace
 }  // namespace collision_cache
@@ -151,8 +152,8 @@ auto collision_point_t::format() const -> std::string {
 }
 
 auto collision_data_t::format() const -> std::string {
-    return fmt::format("<collision_data: {}, {}, {}>", element_id_body,
-                       element_id_horizontal, element_id_vertical);
+    return fmt::format("<collision_data: {}, {}, {}, {}>", element_id_body,
+                       element_id_horizontal, element_id_vertical, to_state(*this));
 }
 
 }  // namespace collision_cache
@@ -428,7 +429,12 @@ auto get_check_and_update(element_id_t new_element_id, element_id_t old_element_
 }  // namespace collision_cache
 
 auto CollisionCache::format() const -> std::string {
-    return fmt::format("CollisionCache = {}\n", map_);
+    if (map_.empty()) {
+        return std::string("CollisionCache = []\n");
+    }
+
+    return fmt::format("CollisionCache ({} elements) = [\n  {}\n]\n", map_.size(),
+                       fmt_join(",\n  ", map_));
 }
 
 auto CollisionCache::allocated_size() const -> std::size_t {

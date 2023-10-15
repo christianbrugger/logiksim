@@ -2,8 +2,8 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_COLLISION_CACHE_H
 
 #include "editable_circuit/message_forward.h"
-#include "format/struct.h"
 #include "format/enum.h"
+#include "format/struct.h"
 #include "iterator_adaptor/transform_view.h"
 #include "vocabulary.h"
 
@@ -45,10 +45,18 @@ enum class CacheState {
     invalid_state,
 };
 
-
 struct collision_data_t {
+    /**
+     * @brief: element_id || wire_corner_point_tag || wire_cross_point_tag
+     */
     element_id_t element_id_body {null_element};
+    /**
+     * @brief: horizontal wire
+     */
     element_id_t element_id_horizontal {null_element};
+    /**
+     * @brief: vertical wire || connection_tag
+     */
     element_id_t element_id_vertical {null_element};
 
     auto operator==(const collision_data_t& other) const -> bool = default;
@@ -59,8 +67,34 @@ static_assert(std::is_aggregate_v<collision_data_t>);
 
 using map_type = ankerl::unordered_dense::map<point_t, collision_cache::collision_data_t>;
 
+/**
+ * @brief: Indicates element input / output || wire input / output
+ *         is at this position.
+ *
+ * Set for:
+ *      input_location() / output_location() at this position
+ *      ItemType::element_connection
+ *
+ *      SegmentPointType::input
+ *      SegmentPointType::output
+ *      ItemType::wire_connection
+ */
 constexpr static inline auto connection_tag = element_id_t {-2};
+/**
+ * @brief: Indicates a wire corner is at this position.
+ *
+ * Set for:
+ *      SegmentPointType::corner_point
+ *      ItemType::wire_corner_point
+ */
 constexpr static inline auto wire_corner_point_tag = element_id_t {-3};
+/**
+ * @brief: Indicates a wire cross-point is at this position.
+ *
+ * Set for:
+ *      SegmentPointType::cross_point
+ *      ItemType::wire_cross_point
+ */
 constexpr static inline auto wire_cross_point_tag = element_id_t {-4};
 
 static_assert(connection_tag != null_element);
