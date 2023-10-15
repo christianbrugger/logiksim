@@ -2,12 +2,16 @@
 
 #include "algorithm/range.h"
 #include "allocated_size/ankerl_unordered_dense.h"
+#include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
 #include "exception.h"
 #include "geometry/orientation.h"
 #include "layout_info.h"
+#include "logging.h"  // TODO remove
+
+#include <exception>
 
 namespace logicsim {
 
@@ -109,6 +113,10 @@ auto to_state(collision_data_t data) -> CacheState {
     return invalid_state;
 }
 
+auto collision_point_t::format() const -> std::string {
+    return fmt::format("<collision_point: {}, {}>", position, type);
+}
+
 auto collision_data_t::format() const -> std::string {
     return fmt::format("<collision_data: {}, {}, {}>", element_id_body,
                        element_id_horizontal, element_id_vertical);
@@ -116,111 +124,166 @@ auto collision_data_t::format() const -> std::string {
 
 }  // namespace collision_cache
 
+template <>
+auto format(collision_cache::ItemType type) -> std::string {
+    switch (type) {
+        using enum collision_cache::ItemType;
+
+        case element_body:
+            return "element_body";
+        case element_connection:
+            return "element_connection";
+        case wire_connection:
+            return "wire_connection";
+        case wire_horizontal:
+            return "wire_horizontal";
+        case wire_vertical:
+            return "wire_vertical";
+        case wire_corner_point:
+            return "wire_corner_point";
+        case wire_cross_point:
+            return "wire_cross_point";
+
+        case wire_new_unknown_point:
+            return "wire_new_unknown_point";
+    }
+    std::terminate();
+}
+
+template <>
+auto format(collision_cache::CacheState state) -> std::string {
+    switch (state) {
+        using enum collision_cache::CacheState;
+
+        case element_body:
+            return "element_body";
+        case element_connection:
+            return "element_connection";
+        case wire_connection:
+            return "wire_connection";
+        case wire_horizontal:
+            return "wire_horizontal";
+        case wire_vertical:
+            return "wire_vertical";
+        case wire_corner_point:
+            return "wire_corner_point";
+        case wire_cross_point:
+            return "wire_cross_point";
+
+        case wire_crossing:
+            return "wire_crossing";
+        case element_wire_connection:
+            return "element_wire_connection";
+
+        case invalid_state:
+            return "invalid_state";
+    }
+    std::terminate();
+}
+
 //
 //
 //
 
-// next_state(point_t position, ItemType state) -> bool
-template <typename Func>
-auto iter_collision_state(const layout_calculation_data_t& data, Func next_state)
-    -> bool {
-    using collision_cache::ItemType;
+namespace collision_cache {
+
+namespace {
+
+/**
+ * @brief: Clears the given buffer and adds collision points of the logic item.
+ */
+auto collision_points(collision_points_t& buffer, const layout_calculation_data_t& data)
+    -> collision_points_t& {
+    buffer.clear();
 
     for (const auto& info : input_locations(data)) {
-        if (!next_state(info.position, ItemType::element_connection)) {
-            return false;
-        }
-    }
-
-    for (const point_t& position : element_body_points(data)) {
-        if (!next_state(position, ItemType::element_connection)) {
-            return false;
-        }
+        buffer.push_back({info.position, ItemType::element_connection});
     }
 
     for (const auto& info : output_locations(data)) {
-        if (!next_state(info.position, ItemType::element_connection)) {
-            return false;
-        }
+        buffer.push_back({info.position, ItemType::element_connection});
     }
 
-    return true;
+    for (const point_t& position : element_body_points(data)) {
+        buffer.push_back({position, ItemType::element_body});
+    }
+
+    return buffer;
 }
 
-// next_state(point_t position, ItemType state) -> bool
-template <typename Func>
-auto iter_collision_state_endpoints(segment_info_t segment, Func next_state) -> bool {
-    using collision_cache::ItemType;
+/**
+ * @brief: Returns collision item type of the endpoints.
+ *
+ * Note that not all endpoints have a collision type.
+ */
+auto collision_item_type(SegmentPointType type) -> std::optional<ItemType> {
+    switch (type) {
+        using enum SegmentPointType;
 
-    const auto to_state = [](SegmentPointType type) -> std::optional<ItemType> {
-        switch (type) {
-            using enum SegmentPointType;
+        case input:
+        case output:
+            return ItemType::wire_connection;
+        case corner_point:
+            return ItemType::wire_corner_point;
+        case cross_point:
+            return ItemType::wire_cross_point;
 
-            case input:
-            case output:
-                return ItemType::wire_connection;
-            case corner_point:
-                return ItemType::wire_corner_point;
-            case cross_point:
-                return ItemType::wire_cross_point;
+        case shadow_point:
+            return std::nullopt;
 
-            case shadow_point:
-                return std::nullopt;
-
-            case new_unknown:
-                return ItemType::wire_new_unknown_point;
-        }
-        throw_exception("unknown point type");
-    };
-
-    const auto p0_state = to_state(segment.p0_type);
-    const auto p1_state = to_state(segment.p1_type);
-
-    if (p0_state) {
-        if (!next_state(segment.line.p0, *p0_state)) {
-            return false;
-        }
+        case new_unknown:
+            return ItemType::wire_new_unknown_point;
     }
-    if (p1_state) {
-        if (!next_state(segment.line.p1, *p1_state)) {
-            return false;
-        }
-    }
+    std::terminate();
+};
 
-    return true;
+/**
+ * @brief: Adds collision points to the segment endpoints.
+ */
+auto add_collision_end_points(collision_points_t& buffer, segment_info_t segment)
+    -> void {
+    if (const auto p0_type = collision_item_type(segment.p0_type)) {
+        buffer.push_back({segment.line.p0, *p0_type});
+    }
+    if (const auto p1_type = collision_item_type(segment.p1_type)) {
+        buffer.push_back({segment.line.p1, *p1_type});
+    }
 }
 
-// next_state(point_t position, ItemType state) -> bool
-template <typename Func>
-auto iter_collision_state(segment_info_t segment, Func next_state) -> bool {
-    using enum collision_cache::ItemType;
+/**
+ * @brief: Clears the given buffer and adds collision points of the segment endpoints.
+ */
+auto collision_end_points(collision_points_t& buffer, segment_info_t segment)
+    -> collision_points_t& {
+    buffer.clear();
+    add_collision_end_points(buffer, segment);
+    return buffer;
+}
 
-    {
-        const auto line = segment.line;
+auto collision_points(collision_points_t& buffer, segment_info_t segment)
+    -> collision_points_t& {
+    buffer.clear();
 
-        if (is_horizontal(line)) {
-            for (auto x : range(line.p0.x + grid_t {1}, line.p1.x)) {
-                if (!next_state(point_t {x, line.p0.y}, wire_horizontal)) {
-                    return false;
-                }
-            }
-        } else {
-            for (auto y : range(line.p0.y + grid_t {1}, line.p1.y)) {
-                if (!next_state(point_t {line.p0.x, y}, wire_vertical)) {
-                    return false;
-                }
-            }
+    const auto line = segment.line;
+
+    if (is_horizontal(line)) {
+        for (auto x : range(line.p0.x + grid_t {1}, line.p1.x)) {
+            buffer.push_back({point_t {x, line.p0.y}, ItemType::wire_horizontal});
+        }
+    } else {
+        for (auto y : range(line.p0.y + grid_t {1}, line.p1.y)) {
+            buffer.push_back({point_t {line.p0.x, y}, ItemType::wire_vertical});
         }
     }
 
-    return iter_collision_state_endpoints(segment, next_state);
+    add_collision_end_points(buffer, segment);
+
+    return buffer;
 }
 
-namespace {
-// apply_func(element_id_t& obj) -> void
 template <typename Apply>
 auto apply_function(CollisionCache::map_type& map, point_t position,
-                    collision_cache::ItemType state, Apply apply_func) -> bool {
+                    collision_cache::ItemType item_type, Apply apply_func) -> void {
     auto& data = map[position];
 
     const auto set_connection_tag = [&]() {
@@ -244,7 +307,7 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
         data.element_id_body = collision_cache::wire_cross_point_tag;
     };
 
-    switch (state) {
+    switch (item_type) {
         using enum collision_cache::ItemType;
 
         case element_body: {
@@ -292,9 +355,7 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
         !data.element_id_vertical) {
         map.erase(position);
     }
-    return true;
 }
-}  // namespace
 
 auto get_check_empty_and_assign(element_id_t element_id) {
     return [element_id](element_id_t& obj) {
@@ -323,51 +384,9 @@ auto get_check_and_update(element_id_t new_element_id, element_id_t old_element_
     };
 }
 
-template <class Data>
-auto insert_impl(CollisionCache::map_type& map, element_id_t element_id, Data data)
-    -> void {
-    const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
+}  // namespace
 
-    iter_collision_state(data, [&](point_t position, collision_cache::ItemType state) {
-        return apply_function(map, position, state, check_empty_and_assign);
-    });
-}
-
-template <class Data>
-auto remove_impl(CollisionCache::map_type& map, element_id_t element_id, Data data)
-    -> void {
-    const auto check_and_delete = get_check_and_delete(element_id);
-
-    iter_collision_state(data, [&](point_t position, collision_cache::ItemType state) {
-        return apply_function(map, position, state, check_and_delete);
-    });
-}
-
-template <class Data>
-auto update_impl(CollisionCache::map_type& map, element_id_t new_element_id,
-                 element_id_t old_element_id, Data data) -> void {
-    const auto check_and_update = get_check_and_update(new_element_id, old_element_id);
-
-    iter_collision_state(data, [&](point_t position, collision_cache::ItemType state) {
-        return apply_function(map, position, state, check_and_update);
-    });
-}
-
-auto CollisionCache::handle(
-    const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
-    const auto element_id = message.segment.element_id;
-    const auto check_and_delete = get_check_and_delete(element_id);
-    const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
-
-    iter_collision_state_endpoints(
-        message.old_segment_info, [&](point_t position, collision_cache::ItemType state) {
-            return apply_function(map_, position, state, check_and_delete);
-        });
-    iter_collision_state_endpoints(
-        message.new_segment_info, [&](point_t position, collision_cache::ItemType state) {
-            return apply_function(map_, position, state, check_empty_and_assign);
-        });
-}
+}  // namespace collision_cache
 
 auto CollisionCache::format() const -> std::string {
     // return fmt::format("CollisionCache = {}\n", map_);
@@ -375,41 +394,96 @@ auto CollisionCache::format() const -> std::string {
 }
 
 auto CollisionCache::allocated_size() const -> std::size_t {
-    return get_allocated_size(map_);
+    return get_allocated_size(map_) + get_allocated_size(buffer_);
 }
 
 auto CollisionCache::handle(
     const editable_circuit::info_message::LogicItemInserted& message) -> void {
-    insert_impl(map_, message.element_id, message.data);
+    using namespace collision_cache;
+
+    const auto check_empty_and_assign = get_check_empty_and_assign(message.element_id);
+
+    for (const auto& item : collision_points(buffer_, message.data)) {
+        apply_function(map_, item.position, item.type, check_empty_and_assign);
+    }
 }
 
 auto CollisionCache::handle(
     const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
-    update_impl(map_, message.new_element_id, message.old_element_id, message.data);
+    using namespace collision_cache;
+
+    const auto check_and_update =
+        get_check_and_update(message.new_element_id, message.old_element_id);
+
+    for (const auto& item : collision_points(buffer_, message.data)) {
+        apply_function(map_, item.position, item.type, check_and_update);
+    }
 }
 
 auto CollisionCache::handle(
     const editable_circuit::info_message::LogicItemUninserted& message) -> void {
-    remove_impl(map_, message.element_id, message.data);
+    using namespace collision_cache;
+
+    const auto check_and_delete = get_check_and_delete(message.element_id);
+
+    for (const auto& item : collision_points(buffer_, message.data)) {
+        apply_function(map_, item.position, item.type, check_and_delete);
+    }
 }
 
 auto CollisionCache::handle(
     const editable_circuit::info_message::SegmentInserted& message) -> void {
-    insert_impl(map_, message.segment.element_id, message.segment_info);
+    using namespace collision_cache;
+
+    const auto check_empty_and_assign =
+        get_check_empty_and_assign(message.segment.element_id);
+
+    for (const auto& item : collision_points(buffer_, message.segment_info)) {
+        apply_function(map_, item.position, item.type, check_empty_and_assign);
+    }
 }
 
 auto CollisionCache::handle(
     const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
+    using namespace collision_cache;
+
     if (message.new_segment.element_id == message.old_segment.element_id) {
         return;
     }
-    update_impl(map_, message.new_segment.element_id, message.old_segment.element_id,
-                message.segment_info);
+
+    const auto check_and_update = get_check_and_update(message.new_segment.element_id,
+                                                       message.old_segment.element_id);
+
+    for (const auto& item : collision_points(buffer_, message.segment_info)) {
+        apply_function(map_, item.position, item.type, check_and_update);
+    }
+}
+
+auto CollisionCache::handle(
+    const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
+    using namespace collision_cache;
+
+    const auto element_id = message.segment.element_id;
+    const auto check_and_delete = get_check_and_delete(element_id);
+    const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
+
+    for (const auto& item : collision_end_points(buffer_, message.old_segment_info)) {
+        apply_function(map_, item.position, item.type, check_and_delete);
+    }
+    for (const auto& item : collision_end_points(buffer_, message.new_segment_info)) {
+        apply_function(map_, item.position, item.type, check_empty_and_assign);
+    }
 }
 
 auto CollisionCache::handle(
     const editable_circuit::info_message::SegmentUninserted& message) -> void {
-    remove_impl(map_, message.segment.element_id, message.segment_info);
+    using namespace collision_cache;
+
+    const auto check_and_delete = get_check_and_delete(message.segment.element_id);
+
+    for (const auto& item : collision_points(buffer_, message.segment_info)) {
+        apply_function(map_, item.position, item.type, check_and_delete);
+    }
 }
 
 auto CollisionCache::submit(const editable_circuit::InfoMessage& message) -> void {
@@ -488,10 +562,13 @@ auto CollisionCache::state_colliding(point_t position,
 };
 
 auto CollisionCache::is_colliding(const layout_calculation_data_t& data) const -> bool {
-    const auto not_colliding = [&](point_t position, collision_cache::ItemType state) {
-        return !state_colliding(position, state);
+    using namespace collision_cache;
+
+    const auto is_colliding = [&](const collision_point_t& item) {
+        return state_colliding(item.position, item.type);
     };
-    return !iter_collision_state(data, not_colliding);
+
+    return std::ranges::any_of(collision_points(buffer_, data), is_colliding);
 }
 
 auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
@@ -509,16 +586,19 @@ auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
 }
 
 auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
+    using namespace collision_cache;
+
     const auto segment = segment_info_t {
         .line = line,
         .p0_type = SegmentPointType::new_unknown,
         .p1_type = SegmentPointType::new_unknown,
     };
 
-    const auto not_colliding = [&](point_t position, collision_cache::ItemType state) {
-        return !state_colliding(position, state);
+    const auto is_colliding = [&](const collision_point_t& item) {
+        return state_colliding(item.position, item.type);
     };
-    return !iter_collision_state(segment, not_colliding);
+
+    return std::ranges::any_of(collision_points(buffer_, segment), is_colliding);
 }
 
 auto CollisionCache::is_wires_crossing(point_t point) const -> bool {

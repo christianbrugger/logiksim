@@ -3,10 +3,13 @@
 
 #include "editable_circuit/message_forward.h"
 #include "format/struct.h"
+#include "format/enum.h"
 #include "iterator_adaptor/transform_view.h"
 #include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>
+
+#include <vector>
 
 namespace logicsim {
 
@@ -14,6 +17,7 @@ class Layout;
 struct layout_calculation_data_t;
 
 namespace collision_cache {
+
 enum class ItemType {
     element_body,
     element_connection,
@@ -26,6 +30,18 @@ enum class ItemType {
     // for collisions not insertions
     wire_new_unknown_point,
 };
+
+struct collision_point_t {
+    point_t position;
+    ItemType type;
+
+    auto operator==(const collision_point_t& other) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+static_assert(std::is_aggregate_v<collision_point_t>);
+
+using collision_points_t = std::vector<collision_point_t>;
 
 enum class CacheState {
     element_body,
@@ -43,6 +59,7 @@ enum class CacheState {
     invalid_state,
 };
 
+
 struct collision_data_t {
     element_id_t element_id_body {null_element};
     element_id_t element_id_horizontal {null_element};
@@ -53,6 +70,8 @@ struct collision_data_t {
 };
 
 static_assert(std::is_aggregate_v<collision_data_t>);
+
+using map_type = ankerl::unordered_dense::map<point_t, collision_cache::collision_data_t>;
 
 constexpr static inline auto connection_tag = element_id_t {-2};
 constexpr static inline auto wire_corner_point_tag = element_id_t {-3};
@@ -80,10 +99,16 @@ static_assert(wire_cross_point_tag < element_id_t {0});
 
 }  // namespace collision_cache
 
+template <>
+auto format(collision_cache::ItemType type) -> std::string;
+
+template <>
+auto format(collision_cache::CacheState state) -> std::string;
+
 class CollisionCache {
    public:
-    using map_type =
-        ankerl::unordered_dense::map<point_t, collision_cache::collision_data_t>;
+    using map_type = collision_cache::map_type;
+    using collision_points_t = collision_cache::collision_points_t;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
@@ -126,6 +151,7 @@ class CollisionCache {
                                        collision_cache::ItemType item_type) const -> bool;
 
     map_type map_ {};
+    mutable collision_points_t buffer_ {};
 };
 
 }  // namespace logicsim

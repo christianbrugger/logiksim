@@ -123,36 +123,7 @@ auto get_layout_test_data(std::size_t count) {
     std::ranges::generate(data, [&] { return get_random_layout_calculation_data(rng); });
     return data;
 }
-
 }  // namespace
-
-static void BM_Benchmark_Iter_Callable(benchmark::State& state) {
-    constexpr static auto N = 1024;
-
-    auto data = get_layout_test_data(N);
-    auto index = 0;
-    // auto sum = int64_t {0};
-
-    auto buffer = std::array<point_t, 100>();
-    auto p_index = 0;
-
-    for ([[maybe_unused]] auto _ : state) {
-        index = (index + 1) % N;
-        p_index = 0;
-
-        element_body_points_base(data[index], [&](point_t point) {
-            buffer[p_index++] = point;
-
-            // sum += int {p.x} + int {p.y};
-            return true;
-        });
-
-        benchmark::DoNotOptimize(buffer);
-        // benchmark::DoNotOptimize(sum);
-    }
-}
-
-BENCHMARK(BM_Benchmark_Iter_Callable);  // NOLINT
 
 static void BM_Benchmark_Iter_SmallVector_Private(benchmark::State& state) {
     constexpr static auto N = 1024;
