@@ -13,71 +13,72 @@
 
 namespace logicsim {
 
-/**
- * @brief: Iterate the input locations.
- *
- *  next_input = [](point_t position, orientation_t orientation) -> bool
- *
- * The callable is called for each point or until it returns false.
- *
- * Returns the value of the last callable result.
- */
-inline auto iter_input_location(const layout_calculation_data_t &data,
-                                std::invocable<point_t, orientation_t> auto next_input)
-    -> bool;
-
-/**
- * @brief: Iterate the outputs locations.
- *
- *  next_output = [](point_t position, orientation_t orientation) -> bool
- *
- * The callable is called for each point or until it returns false.
- *
- * Returns the value of the last callable result.
- */
-inline auto iter_output_location(const layout_calculation_data_t &data,
-                                 std::invocable<point_t, orientation_t> auto next_output)
-    -> bool;
-
-/**
- * @brief: Iterate over the body points not considering position or orientation.
- *
- *  next_point = [](point_t position) -> bool
- *
- * The callable is called for each point or until it returns false.
- *
- * Returns the value of the last callable result.
- */
-inline auto iter_element_body_points(const layout_calculation_data_t &data,
-                                     std::invocable<point_t> auto next_point) -> bool;
-
-/**
- * @brief: Iterate the input locations and IDs
- *
- *  next_input = [](connection_id_t input_id, point_t position,
- *                  orientation_t orientation) -> bool
- *
- * The callable is called for each point or until it returns false.
- *
- * Returns the value of the last callable result.
- */
-inline auto iter_input_location_and_id(
-    const layout_calculation_data_t &data,
-    std::invocable<connection_id_t, point_t, orientation_t> auto next_input) -> bool;
-
-/**
- * @brief: Iterate the output locations and IDs
- *
- *  next_output = [](connection_id_t output_id, point_t position,
- *                   orientation_t orientation) -> bool
- *
- * The callable is called for each point or until it returns false.
- *
- * Returns the value of the last callable result.
- */
-inline auto iter_output_location_and_id(
-    const layout_calculation_data_t &data,
-    std::invocable<connection_id_t, point_t, orientation_t> auto next_output) -> bool;
+///**
+// * @brief: Iterate the input locations.
+// *
+// *  next_input = [](point_t position, orientation_t orientation) -> bool
+// *
+// * The callable is called for each point or until it returns false.
+// *
+// * Returns the value of the last callable result.
+// */
+// inline auto iter_input_location(const layout_calculation_data_t &data,
+//                                std::invocable<point_t, orientation_t> auto next_input)
+//    -> bool;
+//
+///**
+// * @brief: Iterate the outputs locations.
+// *
+// *  next_output = [](point_t position, orientation_t orientation) -> bool
+// *
+// * The callable is called for each point or until it returns false.
+// *
+// * Returns the value of the last callable result.
+// */
+// inline auto iter_output_location(const layout_calculation_data_t &data,
+//                                 std::invocable<point_t, orientation_t> auto
+//                                 next_output)
+//    -> bool;
+//
+///**
+// * @brief: Iterate over the body points not considering position or orientation.
+// *
+// *  next_point = [](point_t position) -> bool
+// *
+// * The callable is called for each point or until it returns false.
+// *
+// * Returns the value of the last callable result.
+// */
+// inline auto iter_element_body_points(const layout_calculation_data_t &data,
+//                                     std::invocable<point_t> auto next_point) -> bool;
+//
+///**
+// * @brief: Iterate the input locations and IDs
+// *
+// *  next_input = [](connection_id_t input_id, point_t position,
+// *                  orientation_t orientation) -> bool
+// *
+// * The callable is called for each point or until it returns false.
+// *
+// * Returns the value of the last callable result.
+// */
+// inline auto iter_input_location_and_id(
+//    const layout_calculation_data_t &data,
+//    std::invocable<connection_id_t, point_t, orientation_t> auto next_input) -> bool;
+//
+///**
+// * @brief: Iterate the output locations and IDs
+// *
+// *  next_output = [](connection_id_t output_id, point_t position,
+// *                   orientation_t orientation) -> bool
+// *
+// * The callable is called for each point or until it returns false.
+// *
+// * Returns the value of the last callable result.
+// */
+// inline auto iter_output_location_and_id(
+//    const layout_calculation_data_t &data,
+//    std::invocable<connection_id_t, point_t, orientation_t> auto next_output) -> bool;
 
 //
 // New - TODO use comments above
@@ -120,6 +121,7 @@ inline auto iter_output_location_and_id(
 // Old - TODO delete
 //
 
+/*
 inline auto iter_input_location(const layout_calculation_data_t &data,
                                 std::invocable<point_t, orientation_t> auto next_input)
     -> bool {
@@ -169,6 +171,7 @@ inline auto iter_output_location_and_id(
             return std::invoke(next_output, output_id++, position, orientation);
         });
 }
+*/
 
 }  // namespace logicsim
 

@@ -334,7 +334,7 @@ auto ConnectionCache<IsInput>::find(point_t position) const
 }
 
 template <bool IsInput>
-auto ConnectionCache<IsInput>::is_colliding(layout_calculation_data_t data) const
+auto ConnectionCache<IsInput>::is_colliding(const layout_calculation_data_t& data) const
     -> bool {
     const auto same_type_not_colliding = [&](const auto& info) -> bool {
         return !map_.contains(info.position);

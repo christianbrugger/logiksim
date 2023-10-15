@@ -122,25 +122,26 @@ auto collision_data_t::format() const -> std::string {
 
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
-auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
+auto iter_body_collision_state(const layout_calculation_data_t& data, Func next_state)
+    -> bool {
     using collision_cache::ItemType;
 
-    if (!iter_input_location(data, [=](point_t position, orientation_t) {
-            return next_state(position, ItemType::element_connection);
-        })) {
-        return false;
+    for (const auto& info : iter_input_location(data)) {
+        if (!next_state(info.position, ItemType::element_connection)) {
+            return false;
+        }
     }
 
-    if (!iter_element_body_points(data, [=](point_t position) {
-            return next_state(position, ItemType::element_body);
-        })) {
-        return false;
+    for (const point_t& position : iter_element_body_points(data)) {
+        if (!next_state(position, ItemType::element_connection)) {
+            return false;
+        }
     }
 
-    if (!iter_output_location(data, [=](point_t position, orientation_t) {
-            return next_state(position, ItemType::element_connection);
-        })) {
-        return false;
+    for (const auto& info : iter_output_location(data)) {
+        if (!next_state(info.position, ItemType::element_connection)) {
+            return false;
+        }
     }
 
     return true;
@@ -148,7 +149,8 @@ auto iter_body_collision_state(layout_calculation_data_t data, Func next_state) 
 
 // next_state(point_t position, ItemType state) -> bool
 template <typename Func>
-auto iter_collision_state(layout_calculation_data_t data, Func next_state) -> bool {
+auto iter_collision_state(const layout_calculation_data_t& data, Func next_state)
+    -> bool {
     if (data.element_type == ElementType::placeholder) {
         return true;
     }
@@ -498,7 +500,7 @@ auto CollisionCache::state_colliding(point_t position,
     return false;
 };
 
-auto CollisionCache::is_colliding(layout_calculation_data_t data) const -> bool {
+auto CollisionCache::is_colliding(const layout_calculation_data_t& data) const -> bool {
     const auto not_colliding = [&](point_t position, collision_cache::ItemType state) {
         return !state_colliding(position, state);
     };

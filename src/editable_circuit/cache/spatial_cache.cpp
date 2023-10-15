@@ -38,7 +38,7 @@ using tree_t = bgi::rtree<                         //
     std::pmr::polymorphic_allocator<tree_value_t>  // Allocator
     >;
 
-auto get_selection_box(layout_calculation_data_t data) -> tree_box_t;
+auto get_selection_box(const layout_calculation_data_t& data) -> tree_box_t;
 auto get_selection_box(ordered_line_t segment) -> tree_box_t;
 auto to_tree_point(point_fine_t point) -> tree_point_t;
 auto to_rect(tree_box_t box) -> rect_fine_t;
@@ -136,7 +136,7 @@ auto tree_payload_t::format() const -> std::string {
     return fmt::format("<Element {}, Segment {}>", element_id, segment_index);
 }
 
-auto get_selection_box(layout_calculation_data_t data) -> tree_box_t {
+auto get_selection_box(const layout_calculation_data_t& data) -> tree_box_t {
     const auto rect = element_selection_rect(data);
     return to_box(rect);
 }

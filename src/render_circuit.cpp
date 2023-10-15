@@ -331,14 +331,12 @@ auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
 template <typename Func>
 auto draw_input_connector_labels(Context& ctx, layout::ConstElement element,
                                  ElementDrawState state, Func to_input_label) -> void {
-    const auto layout_data = to_layout_calculation_data(element.layout(), element);
+    const auto layout_data = element.to_layout_calculation_data();
 
-    iter_input_location_and_id(layout_data, [&](connection_id_t input_id,
-                                                point_t position,
-                                                orientation_t orientation) {
-        draw_connector_label(ctx, position, orientation, to_input_label(input_id), state);
-        return true;
-    });
+    for (const auto&& info : iter_input_location_and_id(layout_data)) {
+        draw_connector_label(ctx, info.position, info.orientation,
+                             to_input_label(info.input_id), state);
+    }
 }
 
 //

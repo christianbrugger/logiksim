@@ -89,7 +89,7 @@ class CollisionCache {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
+    [[nodiscard]] auto is_colliding(const layout_calculation_data_t& data) const -> bool;
     [[nodiscard]] auto is_colliding(ordered_line_t line) const -> bool;
     [[nodiscard]] auto is_wires_crossing(point_t point) const -> bool;
     [[nodiscard]] auto is_wire_cross_point(point_t point) const -> bool;
