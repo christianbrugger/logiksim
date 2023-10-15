@@ -9,8 +9,6 @@
 
 #include <ankerl/unordered_dense.h>
 
-#include <vector>
-
 namespace logicsim {
 
 class Layout;
@@ -30,18 +28,6 @@ enum class ItemType {
     // for collisions not insertions
     wire_new_unknown_point,
 };
-
-struct collision_point_t {
-    point_t position;
-    ItemType type;
-
-    auto operator==(const collision_point_t& other) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-static_assert(std::is_aggregate_v<collision_point_t>);
-
-using collision_points_t = std::vector<collision_point_t>;
 
 enum class CacheState {
     element_body,
@@ -108,7 +94,6 @@ auto format(collision_cache::CacheState state) -> std::string;
 class CollisionCache {
    public:
     using map_type = collision_cache::map_type;
-    using collision_points_t = collision_cache::collision_points_t;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
@@ -151,7 +136,6 @@ class CollisionCache {
                                        collision_cache::ItemType item_type) const -> bool;
 
     map_type map_ {};
-    mutable collision_points_t buffer_ {};
 };
 
 }  // namespace logicsim

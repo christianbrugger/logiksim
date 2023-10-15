@@ -2,20 +2,53 @@
 
 #include "algorithm/range.h"
 #include "allocated_size/ankerl_unordered_dense.h"
-#include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
+#include "format/container.h"
+#include "format/std_type.h"
 #include "exception.h"
 #include "geometry/orientation.h"
 #include "layout_info.h"
-#include "logging.h"  // TODO remove
+
+#include <folly/small_vector.h>
 
 #include <exception>
+
+//
+// Local Definitions
+//
 
 namespace logicsim {
 
 namespace collision_cache {
+
+namespace {
+
+struct collision_point_t {
+    point_t position;
+    ItemType type;
+
+    auto operator==(const collision_point_t& other) const -> bool = default;
+    [[nodiscard]] auto format() const -> std::string;
+};
+
+static_assert(std::is_aggregate_v<collision_point_t>);
+
+constexpr inline auto collision_points_size =
+    inputs_vector_size + outputs_vector_size + body_points_vector_size;
+using collision_points_t = folly::small_vector<collision_point_t, collision_points_size>;
+
+
+}  // namespace
+}  // namespace collision_cache
+
+//
+// Implementation
+//
+
+namespace collision_cache {
+
 auto is_element_body(collision_data_t data) -> bool {
     return data.element_id_body                           //
            && data.element_id_horizontal == null_element  //
@@ -190,25 +223,27 @@ namespace collision_cache {
 namespace {
 
 /**
- * @brief: Clears the given buffer and adds collision points of the logic item.
+ * @brief: Returns all collision points of the logic item.
  */
-auto collision_points(collision_points_t& buffer, const layout_calculation_data_t& data)
-    -> collision_points_t& {
-    buffer.clear();
+auto collision_points(const layout_calculation_data_t& data) -> collision_points_t {
+    const auto& inputs = input_locations(data);
+    const auto& outputs = output_locations(data);
+    const auto& body_points = element_body_points(data);
 
-    for (const auto& info : input_locations(data)) {
-        buffer.push_back({info.position, ItemType::element_connection});
+    auto result = collision_points_t {};
+    result.reserve(inputs.size() + outputs.size() + body_points.size());
+
+    for (const auto& info : inputs) {
+        result.push_back({info.position, ItemType::element_connection});
+    }
+    for (const auto& info : outputs) {
+        result.push_back({info.position, ItemType::element_connection});
+    }
+    for (const point_t& position : body_points) {
+        result.push_back({position, ItemType::element_body});
     }
 
-    for (const auto& info : output_locations(data)) {
-        buffer.push_back({info.position, ItemType::element_connection});
-    }
-
-    for (const point_t& position : element_body_points(data)) {
-        buffer.push_back({position, ItemType::element_body});
-    }
-
-    return buffer;
+    return result;
 }
 
 /**
@@ -238,7 +273,7 @@ auto collision_item_type(SegmentPointType type) -> std::optional<ItemType> {
 };
 
 /**
- * @brief: Adds collision points to the segment endpoints.
+ * @brief: Adds collision points of the segment endpoints to the buffer.
  */
 auto add_collision_end_points(collision_points_t& buffer, segment_info_t segment)
     -> void {
@@ -251,34 +286,38 @@ auto add_collision_end_points(collision_points_t& buffer, segment_info_t segment
 }
 
 /**
- * @brief: Clears the given buffer and adds collision points of the segment endpoints.
+ * @brief: Returns collision points of the segment endpoints.
  */
-auto collision_end_points(collision_points_t& buffer, segment_info_t segment)
-    -> collision_points_t& {
-    buffer.clear();
-    add_collision_end_points(buffer, segment);
-    return buffer;
+auto collision_end_points(segment_info_t segment) -> collision_points_t {
+    auto result = collision_points_t {};
+    static_assert(collision_points_size >= 2);  // static capacity check
+
+    add_collision_end_points(result, segment);
+    return result;
 }
 
-auto collision_points(collision_points_t& buffer, segment_info_t segment)
-    -> collision_points_t& {
-    buffer.clear();
+/**
+ * @brief: Returns all points of the line segment.
+ */
+auto collision_points(segment_info_t segment) -> collision_points_t {
+    auto result = collision_points_t {};
+    result.reserve(distance(segment.line) + 1);
 
     const auto line = segment.line;
 
     if (is_horizontal(line)) {
         for (auto x : range(line.p0.x + grid_t {1}, line.p1.x)) {
-            buffer.push_back({point_t {x, line.p0.y}, ItemType::wire_horizontal});
+            result.push_back({point_t {x, line.p0.y}, ItemType::wire_horizontal});
         }
     } else {
         for (auto y : range(line.p0.y + grid_t {1}, line.p1.y)) {
-            buffer.push_back({point_t {line.p0.x, y}, ItemType::wire_vertical});
+            result.push_back({point_t {line.p0.x, y}, ItemType::wire_vertical});
         }
     }
 
-    add_collision_end_points(buffer, segment);
+    add_collision_end_points(result, segment);
 
-    return buffer;
+    return result;
 }
 
 template <typename Apply>
@@ -389,12 +428,11 @@ auto get_check_and_update(element_id_t new_element_id, element_id_t old_element_
 }  // namespace collision_cache
 
 auto CollisionCache::format() const -> std::string {
-    // return fmt::format("CollisionCache = {}\n", map_);
-    return "!!! NOT IMPLEMENTED !!!";
+    return fmt::format("CollisionCache = {}\n", map_);
 }
 
 auto CollisionCache::allocated_size() const -> std::size_t {
-    return get_allocated_size(map_) + get_allocated_size(buffer_);
+    return get_allocated_size(map_);
 }
 
 auto CollisionCache::handle(
@@ -403,7 +441,7 @@ auto CollisionCache::handle(
 
     const auto check_empty_and_assign = get_check_empty_and_assign(message.element_id);
 
-    for (const auto& item : collision_points(buffer_, message.data)) {
+    for (const auto& item : collision_points(message.data)) {
         apply_function(map_, item.position, item.type, check_empty_and_assign);
     }
 }
@@ -415,7 +453,7 @@ auto CollisionCache::handle(
     const auto check_and_update =
         get_check_and_update(message.new_element_id, message.old_element_id);
 
-    for (const auto& item : collision_points(buffer_, message.data)) {
+    for (const auto& item : collision_points(message.data)) {
         apply_function(map_, item.position, item.type, check_and_update);
     }
 }
@@ -426,7 +464,7 @@ auto CollisionCache::handle(
 
     const auto check_and_delete = get_check_and_delete(message.element_id);
 
-    for (const auto& item : collision_points(buffer_, message.data)) {
+    for (const auto& item : collision_points(message.data)) {
         apply_function(map_, item.position, item.type, check_and_delete);
     }
 }
@@ -438,7 +476,7 @@ auto CollisionCache::handle(
     const auto check_empty_and_assign =
         get_check_empty_and_assign(message.segment.element_id);
 
-    for (const auto& item : collision_points(buffer_, message.segment_info)) {
+    for (const auto& item : collision_points(message.segment_info)) {
         apply_function(map_, item.position, item.type, check_empty_and_assign);
     }
 }
@@ -454,7 +492,7 @@ auto CollisionCache::handle(
     const auto check_and_update = get_check_and_update(message.new_segment.element_id,
                                                        message.old_segment.element_id);
 
-    for (const auto& item : collision_points(buffer_, message.segment_info)) {
+    for (const auto& item : collision_points(message.segment_info)) {
         apply_function(map_, item.position, item.type, check_and_update);
     }
 }
@@ -467,10 +505,10 @@ auto CollisionCache::handle(
     const auto check_and_delete = get_check_and_delete(element_id);
     const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
 
-    for (const auto& item : collision_end_points(buffer_, message.old_segment_info)) {
+    for (const auto& item : collision_end_points(message.old_segment_info)) {
         apply_function(map_, item.position, item.type, check_and_delete);
     }
-    for (const auto& item : collision_end_points(buffer_, message.new_segment_info)) {
+    for (const auto& item : collision_end_points(message.new_segment_info)) {
         apply_function(map_, item.position, item.type, check_empty_and_assign);
     }
 }
@@ -481,7 +519,7 @@ auto CollisionCache::handle(
 
     const auto check_and_delete = get_check_and_delete(message.segment.element_id);
 
-    for (const auto& item : collision_points(buffer_, message.segment_info)) {
+    for (const auto& item : collision_points(message.segment_info)) {
         apply_function(map_, item.position, item.type, check_and_delete);
     }
 }
@@ -568,7 +606,7 @@ auto CollisionCache::is_colliding(const layout_calculation_data_t& data) const -
         return state_colliding(item.position, item.type);
     };
 
-    return std::ranges::any_of(collision_points(buffer_, data), is_colliding);
+    return std::ranges::any_of(collision_points(data), is_colliding);
 }
 
 auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
@@ -598,7 +636,7 @@ auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
         return state_colliding(item.position, item.type);
     };
 
-    return std::ranges::any_of(collision_points(buffer_, segment), is_colliding);
+    return std::ranges::any_of(collision_points(segment), is_colliding);
 }
 
 auto CollisionCache::is_wires_crossing(point_t point) const -> bool {
