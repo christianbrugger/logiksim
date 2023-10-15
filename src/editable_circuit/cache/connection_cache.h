@@ -52,7 +52,7 @@ class ConnectionCache {
 
     [[nodiscard]] auto find(point_t position) const -> std::optional<connection_data_t>;
 
-    [[nodiscard]] auto is_colliding(layout_calculation_data_t data) const -> bool;
+    [[nodiscard]] auto is_colliding(const layout_calculation_data_t& data) const -> bool;
     [[nodiscard]] auto is_colliding(point_t position, orientation_t orientation) const
         -> bool;
 
