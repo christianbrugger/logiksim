@@ -1,5 +1,5 @@
-#ifndef LOGIKSIM_MAIN_WIDGET_H
-#define LOGIKSIM_MAIN_WIDGET_H
+#ifndef LOGIKSIM_TOP_WIDGET_H
+#define LOGIKSIM_TOP_WIDGET_H
 
 #include "render_widget_base.h"
 

@@ -26,7 +26,7 @@ set(LS_CORE_SOURCES
     src/algorithm/transform_to_container.cpp
     src/algorithm/transform_to_vector.cpp
     src/algorithm/uniform_int_distribution.cpp
-    
+
     src/allocated_size/ankerl_unordered_dense.cpp
     src/allocated_size/folly_small_vector.cpp
     src/allocated_size/std_pair.cpp
@@ -40,14 +40,14 @@ set(LS_CORE_SOURCES
     src/benchmark/simulation_runtime.cpp
 
     src/component/schematic/container_data.cpp
-    
+
     src/concept/explicitly_convertible.cpp
     src/concept/input_range.cpp
     src/concept/integral.cpp
     src/concept/member_format_function.cpp
     src/concept/range_value_type.cpp
     src/concept/string_view.cpp
-    
+
     src/container/graph/visitor/calling_visitor.cpp
     src/container/graph/visitor/empty_visitor.cpp
     src/container/graph/visitor/length_recorder_visitor.cpp
@@ -63,7 +63,6 @@ set(LS_CORE_SOURCES
     src/editable_circuit/cache/connection_cache.cpp
     src/editable_circuit/cache/spatial_cache.cpp
     src/editable_circuit/cache/split_point_cache.cpp
-
     src/editable_circuit/cache.cpp
     src/editable_circuit/editable_circuit.cpp
     src/editable_circuit/handler.cpp
@@ -73,7 +72,7 @@ set(LS_CORE_SOURCES
     src/editable_circuit/selection.cpp
     src/editable_circuit/selection_builder.cpp
     src/editable_circuit/selection_registrar.cpp
-    
+
     src/format/container.cpp
     src/format/enum.cpp
     src/format/escape_ascii.cpp
@@ -83,7 +82,7 @@ set(LS_CORE_SOURCES
     src/format/struct.cpp
     src/format/time.cpp
     src/format/to_hex.cpp
-    
+
     src/geometry/connection_count.cpp
     src/geometry/grid.cpp
     src/geometry/interpolation.cpp
@@ -107,11 +106,11 @@ set(LS_CORE_SOURCES
     src/iterator_adaptor/transform_if_output_iterator.cpp
     src/iterator_adaptor/transform_output_iterator.cpp
     src/iterator_adaptor/transform_view.cpp
-    
+
     src/logic_item/layout.cpp
     src/logic_item/layout_display.cpp
-    src/logic_item/layout_display_number.cpp
     src/logic_item/layout_display_ascii.cpp
+    src/logic_item/layout_display_number.cpp
     src/logic_item/layout_standard_element.cpp
 
     src/random/bool.cpp
@@ -128,7 +127,7 @@ set(LS_CORE_SOURCES
     src/random/point.cpp
     src/random/segment.cpp
     src/random/wire.cpp
-    
+
     src/render/primitive/arrow.cpp
     src/render/primitive/circle.cpp
     src/render/primitive/icon.cpp
@@ -145,11 +144,11 @@ set(LS_CORE_SOURCES
     src/render/glyph_cache.cpp
     src/render/layer_surface.cpp
     src/render/svg_cache.cpp
-    
+
     src/type_trait/add_const_to_reference.cpp
     src/type_trait/const_iterator.cpp
     src/type_trait/safe_difference_type.cpp
-    
+
     src/vocabulary/alignment.cpp
     src/vocabulary/circuit_id.cpp
     src/vocabulary/color.cpp
@@ -200,7 +199,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/time_rate.cpp
     src/vocabulary/view_config.cpp
     src/vocabulary/widget_interaction_state.cpp
-    
+
     src/base64.cpp
     src/circuit_description.cpp
     src/event_counter.cpp
@@ -214,7 +213,6 @@ set(LS_CORE_SOURCES
     src/layout_info.cpp
     src/line_tree.cpp
     src/logging.cpp
-    src/main_widget.cpp
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
@@ -234,6 +232,7 @@ set(LS_CORE_SOURCES
     src/size_handle.cpp
     src/text_shaping.cpp
     src/timer.cpp
+    src/top_widget.cpp
     src/validate_definition.cpp
     src/vocabulary.cpp
     src/wyhash.cpp
@@ -242,34 +241,39 @@ set(LS_CORE_SOURCES
 # any file that contains Q_OBJECT
 # list them manually to speedup compilation
 set(MOC_FILES
-    src/main_widget.h 
+    src/top_widget.h 
     src/render_widget_base.h
 )
 
 set(LS_TEST_SOURCES
     test/algorithm/fmt_join_test.cpp
-    test/algorithm/shuffle_test.cpp
-    test/algorithm/range_test.cpp
     test/algorithm/range_step_test.cpp
+    test/algorithm/range_test.cpp
+    test/algorithm/shuffle_test.cpp
     test/algorithm/transform_to_vector_test.cpp
     test/algorithm/uniform_int_distribution_test.cpp
-    
+
     test/container/graph/depth_first_search_test.cpp
     test/container/circular_buffer_test.cpp
     test/container/static_vector_test.cpp
-    
+
+    test/editable_circuit/handlers/circuit_item_test.cpp
+    test/editable_circuit/handlers/wire_random_test.cpp
+    test/editable_circuit/handlers/wire_test.cpp
+    test/editable_circuit/editable_circuit_random_test.cpp
+
     test/format/container_test.cpp
-    
+
     test/geometry/line_test.cpp
     test/geometry/part_list_copying_test.cpp
     test/geometry/part_list_test.cpp
     test/geometry/part_test.cpp
-    
+
     test/iterator_adaptor/enumerate_test.cpp
     test/iterator_adaptor/enumerate_transform_view_test.cpp
     test/iterator_adaptor/polling_iterator_test.cpp
     test/iterator_adaptor/transform_view_test.cpp
-    
+
     test/logic_item/layout_test.cpp
 
     test/random/generator_test.cpp
@@ -299,11 +303,6 @@ set(LS_TEST_SOURCES
     test/schematic_test.cpp
     test/segment_tree_test.cpp
     test/simulation_test.cpp
-    
-    test/editable_circuit/handlers/circuit_item_test.cpp
-    test/editable_circuit/handlers/wire_random_test.cpp
-    test/editable_circuit/handlers/wire_test.cpp
-    test/editable_circuit/editable_circuit_random_test.cpp
 )
 
 cmake_policy(PUSH)

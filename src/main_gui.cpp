@@ -1,8 +1,8 @@
 ﻿
 
 #include "logging.h"
-#include "main_widget.h"
 #include "resource.h"
+#include "top_widget.h"
 
 #include <fmt/os.h>
 
