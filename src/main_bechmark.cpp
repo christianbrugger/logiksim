@@ -15,6 +15,7 @@
 #include "random/layout_calculation_data.h"
 #include "render_circuit.h"
 #include "schematic.h"
+#include "schematic_validation.h"
 #include "simulation.h"
 #include "simulation_view.h"
 #include "vocabulary.h"
@@ -159,9 +160,9 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
 
         benchmark::ClobberMemory();
 
-        schematic.validate();
+        validate(schematic);
         add_output_placeholders(schematic);
-        schematic.validate(Schematic::validate_all);
+        validate(schematic, schematic::validate_all);
 
         benchmark::DoNotOptimize(schematic);
     }
@@ -222,7 +223,7 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
             inverter.output(id_0).connect(wire.input(id_0));
             wire.output(id_0).connect(inverter.input(id_0));
         }
-        schematic.validate(Schematic::validate_all);
+        validate(schematic, schematic::validate_all);
 
         benchmark::DoNotOptimize(schematic);
         benchmark::ClobberMemory();

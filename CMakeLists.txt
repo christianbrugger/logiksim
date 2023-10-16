@@ -221,6 +221,7 @@ set(LS_CORE_SOURCES
     src/safe_numeric.cpp
     src/schematic.cpp
     src/schematic_generation.cpp
+    src/schematic_validation.cpp
     src/segment_tree.cpp
     src/serialize.cpp
     src/serialize_detail.cpp

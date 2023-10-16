@@ -1,6 +1,8 @@
 
 #include "schematic.h"
 
+#include "schematic_validation.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -17,7 +19,7 @@ TEST(Schematic, EmptySchematic) {
     EXPECT_EQ(schematic.total_output_count(), 0);
     EXPECT_EQ(std::ranges::distance(schematic.elements()), 0);
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, SchematicSingleElement) {
@@ -35,7 +37,7 @@ TEST(Schematic, SchematicSingleElement) {
     EXPECT_EQ(schematic.total_output_count(), 5);
     EXPECT_EQ(std::ranges::distance(schematic.elements()), 1);
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, ElementProperties) {
@@ -58,8 +60,8 @@ TEST(Schematic, ElementProperties) {
     EXPECT_EQ(std::ranges::distance(element.inputs()), 3);
     EXPECT_EQ(std::ranges::distance(element.outputs()), 1);
 
-    schematic.validate();
-    schematic_const.validate();
+    validate(schematic);
+    validate(schematic_const);
 }
 
 TEST(Schematic, EqualityOperators) {
@@ -93,8 +95,8 @@ TEST(Schematic, EqualityOperators) {
     EXPECT_NE(wire.output(id_0), wire.output(id_1));
     EXPECT_NE(wire.output(id_0), schematic_const.element(element_id_t {0}).output(id_1));
 
-    schematic_const.validate();
-    schematic.validate();
+    validate(schematic);
+    validate(schematic_const);
 }
 
 TEST(Schematic, ConnectionProperties) {
@@ -125,7 +127,7 @@ TEST(Schematic, ConnectionProperties) {
     EXPECT_EQ(and_element.input(id_1).element(), and_element);
     EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, ConnectedOutput) {
@@ -157,7 +159,7 @@ TEST(Schematic, ConnectedOutput) {
     EXPECT_EQ(and_element.input(id_1).connected_element(), wire);
     EXPECT_EQ(and_element.input(id_1).connected_output(), wire.output(id_1));
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, ConnectInput) {
@@ -189,7 +191,7 @@ TEST(Schematic, ConnectInput) {
     EXPECT_EQ(and_element.input(id_1).connected_element(), wire);
     EXPECT_EQ(and_element.input(id_1).connected_output(), wire.output(id_1));
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, ClearedInput) {
@@ -215,7 +217,7 @@ TEST(Schematic, ClearedInput) {
     EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
     EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, ClearedOutput) {
@@ -241,7 +243,7 @@ TEST(Schematic, ClearedOutput) {
     EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
     EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, ReconnectInput) {
@@ -274,7 +276,7 @@ TEST(Schematic, ReconnectInput) {
     EXPECT_EQ(and_element.input(id_0).has_connected_element(), true);
     EXPECT_EQ(inverter.output(id_0).has_connected_element(), true);
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, ReconnectOutput) {
@@ -307,7 +309,7 @@ TEST(Schematic, ReconnectOutput) {
     EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
     EXPECT_EQ(or_element.input(id_1).has_connected_element(), true);
 
-    schematic.validate();
+    validate(schematic);
 }
 
 TEST(Schematic, TestPlaceholders) {
@@ -327,8 +329,8 @@ TEST(Schematic, TestPlaceholders) {
     EXPECT_EQ(wire.output(connection_id_t {3}).connected_element().element_type(),
               ElementType::placeholder);
 
-    schematic.validate();
-    schematic.validate(Schematic::validate_all);
+    validate(schematic);
+    validate(schematic, schematic::validate_all);
 }
 
 //

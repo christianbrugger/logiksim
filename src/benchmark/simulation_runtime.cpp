@@ -4,6 +4,7 @@
 #include "algorithm/uniform_int_distribution.h"
 #include "logging.h"
 #include "random/bool.h"
+#include "schematic_validation.h"
 
 namespace logicsim {
 
@@ -87,7 +88,7 @@ auto benchmark_simulation(const int n_elements, const int n_events, const bool d
         print(schematic);
     }
     add_output_placeholders(schematic);
-    schematic.validate(Schematic::validate_all);
+    validate(schematic, schematic::validate_all);
 
     return benchmark_simulation(rng, schematic, n_events, do_print);
 }

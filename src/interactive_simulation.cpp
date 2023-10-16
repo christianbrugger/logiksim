@@ -5,6 +5,7 @@
 #include "format/std_type.h"
 #include "layout.h"
 #include "schematic_generation.h"
+#include "schematic_validation.h"
 #include "vocabulary/simulation_setting.h"
 
 namespace logicsim {
@@ -129,7 +130,7 @@ auto InteractiveSimulation::events_per_second() const -> double {
 }
 
 auto InteractiveSimulation::validate() const -> void {
-    schematic_.validate(Schematic::validate_all);
+    ::logicsim::validate(schematic_, schematic::validate_all);
 }
 
 auto InteractiveSimulation::expected_simulation_time(realtime_t now) const -> time_t {

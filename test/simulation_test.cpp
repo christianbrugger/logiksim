@@ -1,6 +1,8 @@
 
 #include "simulation.h"
 
+#include "schematic_validation.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -58,14 +60,14 @@ TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
 
 [[nodiscard]] auto get_uninitialized_simulation(Schematic& schematic) -> Simulation {
     add_output_placeholders(schematic);
-    schematic.validate(Schematic::validate_all);
+    validate(schematic, schematic::validate_all);
 
     return Simulation {schematic};
 }
 
 [[nodiscard]] auto get_initialized_simulation(Schematic& schematic) -> Simulation {
     add_output_placeholders(schematic);
-    schematic.validate(Schematic::validate_all);
+    validate(schematic, schematic::validate_all);
 
     Simulation simulation {schematic};
     simulation.initialize();

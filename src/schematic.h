@@ -5,7 +5,6 @@
 #include "format/struct.h"
 #include "vocabulary.h"
 
-#include <fmt/core.h>
 #include <folly/small_vector.h>
 
 #include <concepts>
@@ -125,16 +124,6 @@ class Schematic {
     // swaps the element with last one and deletes it
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
     auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
-
-    struct ValidationSettings {
-        bool require_all_outputs_connected {false};
-        bool require_all_placeholders_connected {false};
-    };
-
-    constexpr static auto validate_basic = ValidationSettings {false, false};
-    constexpr static auto validate_all = ValidationSettings {true, true};
-
-    void validate(ValidationSettings settings = validate_basic) const;
 
    private:
     auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2,
@@ -505,11 +494,6 @@ class Schematic::OutputTemplate {
 //
 
 namespace logicsim {
-
-auto validate_has_no_placeholders(const Schematic::ConstElement element) -> void;
-auto validate_all_outputs_connected(const Schematic::ConstElement element) -> void;
-auto validate_all_inputs_disconnected(const Schematic::ConstElement element) -> void;
-auto validate_all_outputs_disconnected(const Schematic::ConstElement element) -> void;
 
 class LineTree;
 auto calculate_output_delays(const LineTree &line_tree, delay_t wire_delay_per_distance)
