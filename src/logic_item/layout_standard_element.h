@@ -4,7 +4,7 @@
 #include "geometry/connection_count.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/grid.h"
-#include "vocabulary/layout_info_small_vector.h"
+#include "vocabulary/layout_info_vector.h"
 
 namespace logicsim {
 

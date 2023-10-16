@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_VOCABULARY_LAYOUT_INFO_SMALL_VECTOR_H
-#define LOGICSIM_VOCABULARY_LAYOUT_INFO_SMALL_VECTOR_H
+#ifndef LOGICSIM_VOCABULARY_LAYOUT_INFO_VECTOR_H
+#define LOGICSIM_VOCABULARY_LAYOUT_INFO_VECTOR_H
 
 #include "container/static_vector.h"
 #include "format/container.h"
@@ -16,7 +16,7 @@ namespace logicsim {
  * Increase this as needed, when defining a new type with more inputs.
  */
 constexpr inline auto static_inputs_size = 8;
-using static_inputs = static_vector<simple_input_info_t, static_inputs_size>;
+using static_inputs_t = static_vector<simple_input_info_t, static_inputs_size>;
 
 /**
  * @brief:  Constexpr friendly vector able to hold statically defined outputs
@@ -24,7 +24,7 @@ using static_inputs = static_vector<simple_input_info_t, static_inputs_size>;
  * Increase this as needed, when defining a new type with more outputs.
  */
 constexpr inline auto static_outputs_size = 8;
-using static_outputs = static_vector<simple_output_info_t, static_outputs_size>;
+using static_outputs_t = static_vector<simple_output_info_t, static_outputs_size>;
 
 /**
  * @brief:  Hold the input connections of a logic item.

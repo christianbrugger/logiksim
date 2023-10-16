@@ -2,7 +2,7 @@
 #define LOGICSIM_LOGIC_ITEM_LAYOUT_DISPLAY_NUMBER_H
 
 #include "vocabulary/connection_count.h"
-#include "vocabulary/layout_info_small_vector.h"
+#include "vocabulary/layout_info_vector.h"
 
 namespace logicsim {
 

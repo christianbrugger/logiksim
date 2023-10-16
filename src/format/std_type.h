@@ -38,7 +38,7 @@ struct fmt::formatter<std::optional<T>, Char> {
         if (obj.has_value()) {
             return fmt::format_to(ctx.out(), "{}", *obj);
         }
-        return fmt::format_to(ctx.out(), "std::nullopt<{}>", typeid(T).name());
+        return fmt::format_to(ctx.out(), "std::nullopt");
     }
 };
 

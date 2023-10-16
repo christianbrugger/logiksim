@@ -5,7 +5,7 @@
 #include "iterator_adaptor/transform_view.h"
 #include "vocabulary/direction_type.h"
 #include "vocabulary/element_type.h"
-#include "vocabulary/layout_info_small_vector.h"
+#include "vocabulary/layout_info_vector.h"
 #include "vocabulary/orientation.h"
 
 namespace logicsim {
@@ -31,16 +31,31 @@ struct layout_calculation_data_t;
 // Validation
 //
 
+/**
+ * brief: Checks if the input and output count is valid.
+ */
 [[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
                                                connection_count_t input_count,
                                                connection_count_t output_count) -> bool;
+
+/**
+ * brief: Checks if an element can be fully placed on the grid.
+ */
 [[nodiscard]] auto is_orientation_valid(ElementType element_type,
                                         orientation_t orientation) -> bool;
 
+/**
+ * brief: Checks if an element can be fully placed on the grid.
+ */
 [[nodiscard]] auto is_representable(layout_calculation_data_t data) -> bool;
 
 /**
- * brief: Checks if input / output count, orientation and position is valid.
+ * brief: Checks if an element is valid.
+ *
+ * Not this checks all of the above methods:
+ *   * is_input_output_count_valid
+ *   * is_orientation_valid
+ *   * is_representable
  */
 [[nodiscard]] auto is_valid(const layout_calculation_data_t &data) -> bool;
 
@@ -48,6 +63,9 @@ struct layout_calculation_data_t;
 // Connection Count
 //
 
+/**
+ * @brief: Input count information of an element.
+ */
 [[nodiscard]] auto element_input_count_min(ElementType element_type)
     -> connection_count_t;
 [[nodiscard]] auto element_input_count_max(ElementType element_type)
@@ -55,6 +73,9 @@ struct layout_calculation_data_t;
 [[nodiscard]] auto element_input_count_default(ElementType element_type)
     -> connection_count_t;
 
+/**
+ * @brief: Output count information of an element.
+ */
 [[nodiscard]] auto element_output_count_min(ElementType element_type)
     -> connection_count_t;
 [[nodiscard]] auto element_output_count_max(ElementType element_type)
@@ -72,26 +93,49 @@ struct layout_calculation_data_t;
 // Element Size
 //
 
+/**
+ * @brief: returns the fixed demensions of an element.
+ *
+ * Throws an exception if the element type has variable width.
+ */
 [[nodiscard]] auto element_fixed_width(ElementType element_type) -> grid_t;
 [[nodiscard]] auto element_fixed_height(ElementType element_type) -> grid_t;
 [[nodiscard]] auto element_fixed_size(ElementType element_type) -> point_t;
 
+/**
+ * @brief: calculates the demensions of an element.
+ */
 [[nodiscard]] auto element_width(const layout_calculation_data_t &data) -> grid_t;
 [[nodiscard]] auto element_height(const layout_calculation_data_t &data) -> grid_t;
 [[nodiscard]] auto element_size(const layout_calculation_data_t &data) -> point_t;
 
+/**
+ * @brief: The untransformed drawing rect of the logic item, if it has one.
+ */
 [[nodiscard]] auto element_body_draw_rect_untransformed(
     const layout_calculation_data_t &data) -> rect_fine_t;
+/**
+ * @brief: The transformed drawing rect of the logic item, if it has one.
+ */
 [[nodiscard]] auto element_body_draw_rect(const layout_calculation_data_t &data)
     -> rect_fine_t;
 
+/**
+ * @brief: A rect covering all grid points that the element occupies.
+ */
 [[nodiscard]] auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t;
 [[nodiscard]] auto element_bounding_rect(ordered_line_t line) -> rect_t;
 
+/**
+ * @brief: The selection rect of an element.
+ */
 [[nodiscard]] auto element_selection_rect(const layout_calculation_data_t &data)
     -> rect_fine_t;
 [[nodiscard]] auto element_selection_rect(ordered_line_t line) -> rect_fine_t;
 
+/**
+ * @brief: The shadow rect of an element.
+ */
 [[nodiscard]] auto element_shadow_rect(const layout_calculation_data_t &data)
     -> rect_fine_t;
 [[nodiscard]] auto element_shadow_rect(ordered_line_t line) -> rect_fine_t;

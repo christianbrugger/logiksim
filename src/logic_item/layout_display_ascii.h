@@ -8,7 +8,7 @@
 #include "vocabulary/connection_id.h"
 #include "vocabulary/connector_info.h"
 #include "vocabulary/grid.h"
-#include "vocabulary/layout_info_small_vector.h"
+#include "vocabulary/layout_info_vector.h"
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
 
@@ -27,8 +27,8 @@ constexpr static inline auto enable_position = point_t {2, height};
 /**
  * @brief: List of static input connectors.
  */
-constexpr static inline auto input_connectors = []() -> static_inputs {
-    auto inputs = static_inputs {};
+constexpr static inline auto static_inputs = []() -> static_inputs_t {
+    auto inputs = static_inputs_t {};
 
     // enable as first input
     static_assert(display::enable_input_id == connection_id_t {0});

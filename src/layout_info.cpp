@@ -120,18 +120,22 @@ auto element_direction_type(ElementType element_type) -> DirectionType {
 
 auto element_fixed_width(ElementType element_type) -> grid_t {
     const auto info = get_layout_info(element_type);
-    if (info.variable_width) [[unlikely]] {
+
+    if (!info.fixed_width || info.variable_width) [[unlikely]] {
         throw std::runtime_error("element has variable width");
     }
-    return info.fixed_width;
+
+    return info.fixed_width.value();
 }
 
 auto element_fixed_height(ElementType element_type) -> grid_t {
     const auto info = get_layout_info(element_type);
-    if (info.variable_height) [[unlikely]] {
+
+    if (!info.fixed_height || info.variable_height) [[unlikely]] {
         throw std::runtime_error("element has variable height");
     }
-    return info.fixed_height;
+
+    return info.fixed_height.value();
 }
 
 auto element_fixed_size(ElementType element_type) -> point_t {
@@ -140,19 +144,13 @@ auto element_fixed_size(ElementType element_type) -> point_t {
 }
 
 auto element_width(const layout_calculation_data_t &data) -> grid_t {
-    if (!is_logic_item(data.element_type)) {
-        throw std::runtime_error("Only supported for logic items");
-    }
     const auto info = get_layout_info(data.element_type);
-    return info.variable_width ? info.variable_width(data) : info.fixed_width;
+    return info.variable_width ? info.variable_width(data) : info.fixed_width.value();
 }
 
 auto element_height(const layout_calculation_data_t &data) -> grid_t {
-    if (!is_logic_item(data.element_type)) {
-        throw std::runtime_error("Only supported for logic items");
-    }
     const auto info = get_layout_info(data.element_type);
-    return info.variable_height ? info.variable_height(data) : info.fixed_height;
+    return info.variable_height ? info.variable_height(data) : info.fixed_height.value();
 }
 
 auto element_size(const layout_calculation_data_t &data) -> point_t {
@@ -183,11 +181,7 @@ auto element_body_draw_rect(const layout_calculation_data_t &data) -> rect_fine_
 }
 
 auto element_bounding_rect(const layout_calculation_data_t &data) -> rect_t {
-    if (!is_logic_item(data.element_type)) {
-        throw std::runtime_error("Only supported for logic items");
-    }
     const auto rect = rect_t {point_t {0, 0}, element_size(data)};
-
     return transform(data.position, data.orientation, rect);
 }
 
@@ -228,9 +222,6 @@ auto element_selection_rect(ordered_line_t line) -> rect_fine_t {
 }
 
 auto element_shadow_rect(const layout_calculation_data_t &data) -> rect_fine_t {
-    if (!is_logic_item(data.element_type)) {
-        throw std::runtime_error("Only supported for logic items");
-    }
     return element_selection_rect(data);
 }
 

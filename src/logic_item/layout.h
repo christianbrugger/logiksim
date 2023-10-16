@@ -11,11 +11,12 @@
 #include "vocabulary/element_type.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
-#include "vocabulary/layout_info_small_vector.h"
+#include "vocabulary/layout_info_vector.h"
 #include "vocabulary/point.h"
 
 #include <concepts>
 #include <exception>
+#include <optional>
 
 namespace logicsim {
 
@@ -33,14 +34,18 @@ struct layout_info_t {
 
     DirectionType direction_type {DirectionType::any};
 
-    grid_t fixed_width {0};
-    grid_t fixed_height {0};
-
+    std::optional<grid_t> fixed_width {};
+    std::optional<grid_t> fixed_height {};
     grid_t (*variable_width)(const layout_calculation_data_t&) {nullptr};
     grid_t (*variable_height)(const layout_calculation_data_t&) {nullptr};
 
-    static_inputs input_connectors {};
-    static_outputs output_connectors {};
+    /**
+     * @brief: static inputs and outputs with positions and orientation.
+     *
+     * Note simulation only connectors without positions are ommitted.
+     */
+    std::optional<static_inputs_t> static_inputs {};
+    std::optional<static_outputs_t> static_outputs {};
 };
 
 /**
@@ -106,14 +111,15 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .output_count_default = connection_count_t {1},
 
                 .direction_type = DirectionType::directed,
-
                 .fixed_width = grid_t {1},
                 .fixed_height = grid_t {0},
 
-                .input_connectors = {{.position = point_t {0, 0},
-                                      .orientation = orientation_t::left}},
-                .output_connectors =
-                    {
+                .static_inputs =
+                    static_inputs_t {
+                        {.position = point_t {0, 0}, .orientation = orientation_t::left},
+                    },
+                .static_outputs =
+                    static_outputs_t {
                         {.position = point_t {1, 0}, .orientation = orientation_t::right},
                     },
             };
@@ -155,9 +161,12 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_width = grid_t {0},
                 .fixed_height = grid_t {0},
 
-                .input_connectors = {},
-                .output_connectors = {{.position = point_t {0, 0},
-                                       .orientation = orientation_t::undirected}},
+                .static_inputs = static_inputs_t {},
+                .static_outputs =
+                    static_outputs_t {
+                        {.position = point_t {0, 0},
+                         .orientation = orientation_t::undirected},
+                    },
             };
         }
         case led: {
@@ -175,9 +184,12 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_width = grid_t {0},
                 .fixed_height = grid_t {0},
 
-                .input_connectors = {{.position = point_t {0, 0},
-                                      .orientation = orientation_t::undirected}},
-                .output_connectors = {},
+                .static_inputs =
+                    static_inputs_t {
+                        {.position = point_t {0, 0},
+                         .orientation = orientation_t::undirected},
+                    },
+                .static_outputs = static_outputs_t {},
 
             };
         }
@@ -218,8 +230,8 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_width = display_ascii::width,
                 .fixed_height = display_ascii::height,
 
-                .input_connectors = display_ascii::input_connectors,
-                .output_connectors = {},
+                .static_inputs = display_ascii::static_inputs,
+                .static_outputs = static_outputs_t {},
             };
         }
 
@@ -239,10 +251,14 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_height = grid_t {4},
 
                 // the second annd third inputs and outputs are used only for simulation
-                .input_connectors = {{.position = point_t {3, 4},
-                                      .orientation = orientation_t::down}},
-                .output_connectors = {{.position = point_t {5, 2},
-                                       .orientation = orientation_t::right}},
+                .static_inputs =
+                    static_inputs_t {
+                        {.position = point_t {3, 4}, .orientation = orientation_t::down},
+                    },
+                .static_outputs =
+                    static_outputs_t {
+                        {.position = point_t {5, 2}, .orientation = orientation_t::right},
+                    },
             };
         }
         case flipflop_jk: {
@@ -260,8 +276,8 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_width = grid_t {4},
                 .fixed_height = grid_t {2},
 
-                .input_connectors =
-                    {
+                .static_inputs =
+                    static_inputs_t {
                         // clock
                         {.position = point_t {0, 1}, .orientation = orientation_t::left},
                         // j & k
@@ -271,8 +287,8 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                         {.position = point_t {2, 0}, .orientation = orientation_t::up},
                         {.position = point_t {2, 2}, .orientation = orientation_t::down},
                     },
-                .output_connectors =
-                    {
+                .static_outputs =
+                    static_outputs_t {
                         // Q and !Q
                         {.position = point_t {4, 0}, .orientation = orientation_t::right},
                         {.position = point_t {4, 2}, .orientation = orientation_t::right},
@@ -294,16 +310,16 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_width = grid_t {8},
                 .fixed_height = grid_t {2},
 
-                .input_connectors =
-                    {
+                .static_inputs =
+                    static_inputs_t {
                         // clock
                         {.position = point_t {0, 1}, .orientation = orientation_t::left},
                         // inputs
                         {.position = point_t {0, 0}, .orientation = orientation_t::left},
                         {.position = point_t {0, 2}, .orientation = orientation_t::left},
                     },
-                .output_connectors =
-                    {
+                .static_outputs =
+                    static_outputs_t {
                         // Q and !Q
                         {.position = point_t {8, 0}, .orientation = orientation_t::right},
                         {.position = point_t {8, 2}, .orientation = orientation_t::right},
@@ -325,15 +341,15 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_width = grid_t {2},
                 .fixed_height = grid_t {1},
 
-                .input_connectors =
-                    {
+                .static_inputs =
+                    static_inputs_t {
                         // clock
                         {.position = point_t {0, 1}, .orientation = orientation_t::left},
                         // data
                         {.position = point_t {0, 0}, .orientation = orientation_t::left},
                     },
-                .output_connectors =
-                    {
+                .static_outputs =
+                    static_outputs_t {
                         // data
                         {.position = point_t {2, 0}, .orientation = orientation_t::right},
                     },
@@ -354,8 +370,8 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_width = grid_t {3},
                 .fixed_height = grid_t {2},
 
-                .input_connectors =
-                    {
+                .static_inputs =
+                    static_inputs_t {
                         // clock
                         {.position = point_t {0, 1}, .orientation = orientation_t::left},
                         // data
@@ -364,8 +380,8 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                         {.position = point_t {2, 0}, .orientation = orientation_t::up},
                         {.position = point_t {2, 2}, .orientation = orientation_t::down},
                     },
-                .output_connectors =
-                    {
+                .static_outputs =
+                    static_outputs_t {
                         // data
                         {.position = point_t {3, 0}, .orientation = orientation_t::right},
                     },
@@ -386,8 +402,8 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .fixed_width = grid_t {4},
                 .fixed_height = grid_t {2},
 
-                .input_connectors =
-                    {
+                .static_inputs =
+                    static_inputs_t {
                         // clock
                         {.position = point_t {0, 1}, .orientation = orientation_t::left},
                         // data
@@ -396,8 +412,8 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                         {.position = point_t {2, 0}, .orientation = orientation_t::up},
                         {.position = point_t {2, 2}, .orientation = orientation_t::down},
                     },
-                .output_connectors =
-                    {
+                .static_outputs =
+                    static_outputs_t {
                         // data
                         {.position = point_t {4, 0}, .orientation = orientation_t::right},
                     },
@@ -431,7 +447,7 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
  * amount. If necessary adapt this number here.
  */
 constexpr static inline auto static_body_point_count = 28;
-using static_body_points = static_vector<point_t, static_body_point_count, uint32_t>;
+using static_body_points_t = static_vector<point_t, static_body_point_count, uint32_t>;
 
 /**
  * @brief: Return the static body points.
@@ -441,7 +457,7 @@ using static_body_points = static_vector<point_t, static_body_point_count, uint3
  * Returns empty array for element types with dynamic body points.
  */
 [[nodiscard]] auto static_body_points_base(ElementType element_type)
-    -> const static_body_points&;
+    -> const std::optional<static_body_points_t>&;
 
 /**
  * @brief: Returns vector of simple_input_info_t.

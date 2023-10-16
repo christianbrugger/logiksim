@@ -17,7 +17,7 @@ struct simple_input_info_t {
     point_t position;
     orientation_t orientation;
 
-    [[nodiscard]] auto format() -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::is_aggregate_v<simple_input_info_t>);
@@ -29,7 +29,7 @@ struct simple_output_info_t {
     point_t position;
     orientation_t orientation;
 
-    [[nodiscard]] auto format() -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::is_aggregate_v<simple_output_info_t>);
@@ -42,7 +42,7 @@ struct extended_input_info_t {
     connection_id_t input_id;
     orientation_t orientation;
 
-    [[nodiscard]] auto format() -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::is_aggregate_v<extended_input_info_t>);
@@ -64,7 +64,7 @@ struct extended_output_info_t {
     connection_id_t output_id;
     orientation_t orientation;
 
-    [[nodiscard]] auto format() -> std::string;
+    [[nodiscard]] auto format() const -> std::string;
 };
 
 static_assert(std::is_aggregate_v<extended_output_info_t>);

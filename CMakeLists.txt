@@ -168,7 +168,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/grid_fine.cpp
     src/vocabulary/insertion_mode.cpp
     src/vocabulary/layout_calculation_data.cpp
-    src/vocabulary/layout_info_small_vector.cpp
+    src/vocabulary/layout_info_vector.cpp
     src/vocabulary/line.cpp
     src/vocabulary/line_fine.cpp
     src/vocabulary/line_insertion_type.cpp
@@ -266,6 +266,8 @@ set(LS_TEST_SOURCES
     test/iterator_adaptor/polling_iterator_test.cpp
     test/iterator_adaptor/transform_view_test.cpp
     
+    test/logic_item/layout_test.cpp
+
     test/random/generator_test.cpp
 
     test/vocabulary/color_test.cpp
