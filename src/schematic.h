@@ -19,16 +19,19 @@
 
 namespace logicsim {
 
+// TODO move to logic_item/schematic_info.h file & to cpp file
 namespace defaults {
 constexpr static inline auto button_delay = delay_t::epsilon();
 constexpr static inline auto logic_item_delay = delay_t {3us};
 }  // namespace defaults
 
+// TODO move to logic_item/schematic_info.h file
 // enables are always at input 0
 [[nodiscard]] auto has_enable(ElementType element_type) -> bool;
 
 class Schematic {
    public:
+    // TODO move to schematic namespace
     template <bool Const>
     class ElementTemplate;
     template <bool Const>

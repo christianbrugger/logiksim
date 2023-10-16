@@ -26,10 +26,6 @@ set(LS_CORE_SOURCES
     src/algorithm/transform_to_container.cpp
     src/algorithm/transform_to_vector.cpp
     src/algorithm/uniform_int_distribution.cpp
-
-    src/benchmark/render_line_scene.cpp
-    src/benchmark/schematic_creation.cpp
-    src/benchmark/simulation_runtime.cpp
     
     src/allocated_size/ankerl_unordered_dense.cpp
     src/allocated_size/folly_small_vector.cpp
@@ -38,6 +34,12 @@ set(LS_CORE_SOURCES
     src/allocated_size/std_vector.cpp
     src/allocated_size/tracked_resource.cpp
     src/allocated_size/trait.cpp
+
+    src/benchmark/render_line_scene.cpp
+    src/benchmark/schematic_creation.cpp
+    src/benchmark/simulation_runtime.cpp
+
+    src/component/schematic/container_data.cpp
     
     src/concept/explicitly_convertible.cpp
     src/concept/input_range.cpp
@@ -176,6 +178,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/offset.cpp
     src/vocabulary/ordered_line.cpp
     src/vocabulary/orientation.cpp
+    src/vocabulary/output_delays.cpp
     src/vocabulary/part.cpp
     src/vocabulary/part_copy_definition.cpp
     src/vocabulary/placed_element.cpp

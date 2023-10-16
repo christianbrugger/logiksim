@@ -25,6 +25,8 @@ struct connection_t {
 
 static_assert(std::is_aggregate_v<connection_t>);
 
+constexpr inline auto empty_connection = connection_t {null_element, null_connection};
+
 }  // namespace logicsim
 
 #endif
