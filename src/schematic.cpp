@@ -240,9 +240,9 @@ auto Schematic::add_element(ElementData &&data) -> Element {
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.sub_circuit_id);
     input_connections_.emplace_back(data.input_count.count(),
-                                    connection_t {null_element, null_connection});
+                                    connection_t {null_element, null_connection_id});
     output_connections_.emplace_back(data.output_count.count(),
-                                     connection_t {null_element, null_connection});
+                                     connection_t {null_element, null_connection_id});
     if (data.input_inverters.size() == 0) {
         input_inverters_.emplace_back(data.input_count.count(), false);
     } else {
@@ -740,7 +740,7 @@ auto Schematic::InputTemplate<Const>::operator==(
 
 template <bool Const>
 Schematic::InputTemplate<Const>::operator connection_t() const noexcept {
-    return {element_id(), input_index()};
+    return connection_t {element_id(), input_index()};
 }
 
 template <bool Const>
@@ -817,10 +817,10 @@ void Schematic::InputTemplate<Const>::clear_connection() const
                 .at(connection_data.connection_id.value)};
 
         destination_connection_data.element_id = null_element;
-        destination_connection_data.connection_id = null_connection;
+        destination_connection_data.connection_id = null_connection_id;
 
         connection_data.element_id = null_element;
-        connection_data.connection_id = null_connection;
+        connection_data.connection_id = null_connection_id;
     }
 }
 
@@ -914,7 +914,7 @@ auto Schematic::OutputTemplate<Const>::operator==(
 
 template <bool Const>
 Schematic::OutputTemplate<Const>::operator connection_t() const noexcept {
-    return {element_id(), output_index()};
+    return connection_t {element_id(), output_index()};
 }
 
 template <bool Const>
@@ -991,10 +991,10 @@ void Schematic::OutputTemplate<Const>::clear_connection() const
                 .at(connection_data.connection_id.value);
 
         destination_connection_data.element_id = null_element;
-        destination_connection_data.connection_id = null_connection;
+        destination_connection_data.connection_id = null_connection_id;
 
         connection_data.element_id = null_element;
-        connection_data.connection_id = null_connection;
+        connection_data.connection_id = null_connection_id;
     }
 }
 

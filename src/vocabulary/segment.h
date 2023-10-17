@@ -45,8 +45,7 @@ constexpr inline auto null_segment = segment_t {};
 
 constexpr segment_t::segment_t(element_id_t element_id_, segment_index_t segment_index_)
     : element_id {element_id_}, segment_index {segment_index_} {
-    if ((element_id == null_element) ^ (segment_index == null_segment_index))
-        [[unlikely]] {
+    if (bool {element_id} != bool {segment_index}) [[unlikely]] {
         throw std::runtime_error("Segment cannot be partially null.");
     }
 }

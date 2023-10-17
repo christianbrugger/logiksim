@@ -39,6 +39,15 @@ static_assert(sizeof(connection_t) == 8);
 static_assert(sizeof(connection_vector_t) == 32);
 }  // namespace detail
 
+/**
+ * brief: Stores the schematic data.
+ *
+ * Class invariants:
+ *   - all vectors have same size
+ *   - connection point to a valid element_id / connection_id
+ *   - forward and backward connections match
+ *   - total connection counts match sum all input / output connections
+ */
 class ContainerData {
    public:
     using connection_vector_t = schematic::detail::connection_vector_t;

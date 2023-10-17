@@ -211,8 +211,8 @@ auto ContainerData::add_element(schematic::NewElement &&data) -> element_id_t {
     // add new data
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.sub_circuit_id);
-    input_connections_.emplace_back(data.input_count.count(), empty_connection);
-    output_connections_.emplace_back(data.output_count.count(), empty_connection);
+    input_connections_.emplace_back(data.input_count.count(), null_connection);
+    output_connections_.emplace_back(data.output_count.count(), null_connection);
     input_inverters_.emplace_back(std::move(data.input_inverters));
     output_delays_.emplace_back(std::move(data.output_delays));
     history_lengths_.push_back(data.history_length);

@@ -167,14 +167,15 @@ auto validate_input_output_count(const Schematic::ConstElement element) -> void 
 
 auto validate_connection_data(const connection_t connection_data) -> void {
     if (connection_data.element_id != null_element &&
-        connection_data.connection_id == null_connection) [[unlikely]] {
-        throw std::runtime_error("Connection to an element cannot have null_connection.");
+        connection_data.connection_id == null_connection_id) [[unlikely]] {
+        throw std::runtime_error(
+            "Connection to an element cannot have null_connection_id.");
     }
 
     if (connection_data.element_id == null_element &&
-        connection_data.connection_id != null_connection) [[unlikely]] {
+        connection_data.connection_id != null_connection_id) [[unlikely]] {
         throw std::runtime_error(
-            "Connection with null_element requires null_connection.");
+            "Connection with null_element requires null_connection_id.");
     }
 }
 

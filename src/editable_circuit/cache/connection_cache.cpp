@@ -199,7 +199,7 @@ auto ConnectionCache<IsInput>::handle(
                   connection_data_t {
                       .element_id = message.segment.element_id,
                       .segment_index = message.segment.segment_index,
-                      .connection_id = null_connection,
+                      .connection_id = null_connection_id,
                       .orientation = to_orientation_p0(message.segment_info.line),
                   });
     }
@@ -208,7 +208,7 @@ auto ConnectionCache<IsInput>::handle(
                   connection_data_t {
                       .element_id = message.segment.element_id,
                       .segment_index = message.segment.segment_index,
-                      .connection_id = null_connection,
+                      .connection_id = null_connection_id,
                       .orientation = to_orientation_p1(message.segment_info.line),
                   });
     }
@@ -230,7 +230,7 @@ auto ConnectionCache<IsInput>::handle(
                      connection_data_t {
                          .element_id = message.old_segment.element_id,
                          .segment_index = message.old_segment.segment_index,
-                         .connection_id = null_connection,
+                         .connection_id = null_connection_id,
                          .orientation = to_orientation_p0(message.segment_info.line),
                      },
                      message.new_segment.element_id,  //
@@ -241,7 +241,7 @@ auto ConnectionCache<IsInput>::handle(
                      connection_data_t {
                          .element_id = message.old_segment.element_id,
                          .segment_index = message.old_segment.segment_index,
-                         .connection_id = null_connection,
+                         .connection_id = null_connection_id,
                          .orientation = to_orientation_p1(message.segment_info.line),
                      },
                      message.new_segment.element_id,  //
@@ -271,7 +271,7 @@ auto ConnectionCache<IsInput>::handle(
                      connection_data_t {
                          .element_id = message.segment.element_id,
                          .segment_index = message.segment.segment_index,
-                         .connection_id = null_connection,
+                         .connection_id = null_connection_id,
                          .orientation = to_orientation_p0(message.segment_info.line),
                      });
     }
@@ -280,7 +280,7 @@ auto ConnectionCache<IsInput>::handle(
                      connection_data_t {
                          .element_id = message.segment.element_id,
                          .segment_index = message.segment.segment_index,
-                         .connection_id = null_connection,
+                         .connection_id = null_connection_id,
                          .orientation = to_orientation_p1(message.segment_info.line),
                      });
     }

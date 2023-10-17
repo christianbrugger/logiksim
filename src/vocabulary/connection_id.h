@@ -106,7 +106,7 @@ constexpr auto connection_id_t::operator++(int) -> connection_id_t {
 // Constants
 //
 
-constexpr inline auto null_connection = connection_id_t {-1};
+constexpr inline auto null_connection_id = connection_id_t {-1};
 
 }  // namespace logicsim
 
