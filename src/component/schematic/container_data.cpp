@@ -1,5 +1,8 @@
 #include "component/schematic/container_data.h"
 
+#include <cassert>
+#include <exception>
+
 namespace logicsim {
 
 namespace schematic {
@@ -60,9 +63,13 @@ auto ContainerData::swap(ContainerData &other) noexcept -> void {
     swap(total_output_count_, other.total_output_count_);
 }
 
+/**
+ * @brief: swaps element data
+ *
+ * Warning connection invariant are broken for the swapped ids
+ */
 auto ContainerData::swap_element_data(element_id_t element_id_1,
-                                      element_id_t element_id_2, bool update_connections)
-    -> void {
+                                      element_id_t element_id_2) -> void {
     if (element_id_1 == element_id_2) {
         return;
     }
@@ -79,38 +86,35 @@ auto ContainerData::swap_element_data(element_id_t element_id_1,
     swap_ids(input_inverters_);
     swap_ids(output_delays_);
     swap_ids(history_lengths_);
-
-    if (update_connections) {
-        update_swapped_connections(element_id_1, element_id_2);
-        update_swapped_connections(element_id_2, element_id_1);
-    }
 }
 
-auto ContainerData::delete_last_element(bool clear_connections) -> void {
+/**
+ * @brief: Deletes the last element
+ *
+ * Throws exception if container is empty.
+ *
+ * pre-condition:
+ *   1) last element has no connections
+ */
+auto ContainerData::delete_last_unconnected_element() -> void {
+    // pre-condition
+    assert(!has_input_connections(*this, last_element_id()));
+    assert(!has_output_connections(*this, last_element_id()));
+
+    // exceptions
     if (empty()) [[unlikely]] {
         throw std::runtime_error("Cannot delete from empty schematics.");
     }
 
-    // TODO implement
-    throw std::runtime_error("implement");
-    /*
-    if (clear_connections) {
-        const auto last_id = last_element_id();
-        element(last_id).clear_all_connection();
-    }
-    */
-
     // decrease counts
     const auto last_input_count = input_connections_.back().size();
     const auto last_output_count = output_connections_.back().size();
-    if (total_input_count_ < last_input_count || total_output_count_ < last_output_count)
-        [[unlikely]] {
-        throw std::runtime_error("input or output count underflows");
-    }
+    assert(total_input_count_ >= last_input_count);
+    assert(total_output_count_ >= last_output_count);
     total_input_count_ -= last_input_count;
     total_output_count_ -= last_output_count;
 
-    // delete element
+    // shrink vectors
     element_types_.pop_back();
     sub_circuit_ids_.pop_back();
     input_connections_.pop_back();
@@ -121,74 +125,29 @@ auto ContainerData::delete_last_element(bool clear_connections) -> void {
 }
 
 auto ContainerData::swap_and_delete_element(element_id_t element_id) -> element_id_t {
+    clear_all(element_id);
+
     const auto last_id = last_element_id();
-
-    // TODO implement
-    throw std::runtime_error("implement");
-    /*
-    element(element_id).clear_all_connection();
-    */
-
     if (element_id != last_id) {
-        swap_element_data(element_id, last_id, false);
+        swap_element_data(element_id, last_id);
         update_swapped_connections(element_id, last_id);
     }
 
-    delete_last_element(false);
+    delete_last_unconnected_element();
     return last_id;
 }
 
 auto ContainerData::swap_elements(element_id_t element_id_0, element_id_t element_id_1)
     -> void {
-    swap_element_data(element_id_0, element_id_1, true);
-}
+    swap_element_data(element_id_0, element_id_1);
 
-auto ContainerData::update_swapped_connections(element_id_t new_element_id,
-                                               element_id_t old_element_id) -> void {
-    if (new_element_id == old_element_id) {
-        return;
-    }
-
-    // TODO implement
-    throw std::runtime_error("implement");
-    /*
-    const auto old_element = element(old_element_id);
-    const auto new_element = element(new_element_id);
-
-    for (auto input : new_element.inputs()) {
-        if (input.has_connected_element()) {
-            if (input.connected_element_id() == old_element_id) {
-                // self connection?
-                input.connect(new_element.output(input.connected_output_index()));
-            } else if (input.connected_element_id() == new_element_id) {
-                // swapped connection?
-                input.connect(old_element.output(input.connected_output_index()));
-            } else {
-                // fix back connection
-                input.connect(input.connected_output());
-            }
-        }
-    }
-
-    for (auto output : new_element.outputs()) {
-        if (output.has_connected_element()) {
-            if (output.connected_element_id() == old_element_id) {
-                // self connection?
-                output.connect(new_element.input(output.connected_input_index()));
-            } else if (output.connected_element_id() == new_element_id) {
-                // swapped connection?
-                output.connect(old_element.input(output.connected_input_index()));
-            } else {
-                // fix back connection
-                output.connect(output.connected_input());
-            }
-        }
-    }
-    */
+    // TODO do we need both ?
+    update_swapped_connections(element_id_0, element_id_1);
+    update_swapped_connections(element_id_1, element_id_0);
 }
 
 auto ContainerData::add_element(schematic::NewElement &&data) -> element_id_t {
-    // check ids available
+    // check enough space for IDs
     if (element_types_.size() >= std::size_t {element_id_t::max()}) [[unlikely]] {
         throw std::runtime_error("Reached maximum number of elements.");
     }
@@ -200,7 +159,7 @@ auto ContainerData::add_element(schematic::NewElement &&data) -> element_id_t {
                                    std::size_t {data.output_count.count()}) [[unlikely]] {
         throw std::runtime_error("Reached maximum number of outputs.");
     }
-    // check sizes match
+    // check that sizes match
     if (data.input_inverters.size() != std::size_t {data.input_count}) [[unlikely]] {
         throw std::runtime_error("Need as many values for input_inverters as inputs.");
     }
@@ -211,8 +170,8 @@ auto ContainerData::add_element(schematic::NewElement &&data) -> element_id_t {
     // add new data
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.sub_circuit_id);
-    input_connections_.emplace_back(data.input_count.count(), null_connection);
-    output_connections_.emplace_back(data.output_count.count(), null_connection);
+    input_connections_.emplace_back(data.input_count.count(), null_output);
+    output_connections_.emplace_back(data.output_count.count(), null_input);
     input_inverters_.emplace_back(std::move(data.input_inverters));
     output_delays_.emplace_back(std::move(data.output_delays));
     history_lengths_.push_back(data.history_length);
@@ -224,9 +183,117 @@ auto ContainerData::add_element(schematic::NewElement &&data) -> element_id_t {
     return last_element_id();
 }
 
+auto ContainerData::connection(input_t input) const -> output_t {
+    input_connections_.at(input.element_id.value).at(input.element_id.value);
+}
+
+auto ContainerData::connection(output_t output) const -> input_t {
+    output_connections_.at(output.element_id.value).at(output.element_id.value);
+}
+
+auto ContainerData::connect(input_t input, output_t output) -> void {
+    clear(input);
+    clear(output);
+
+    output_connections_.at(output.element_id.value).at(output.element_id.value) = input;
+    input_connections_.at(input.element_id.value).at(input.element_id.value) = output;
+}
+
+auto ContainerData::connect(output_t output, input_t input) -> void {
+    connect(input, output);
+}
+
+auto ContainerData::clear(input_t input) -> void {
+    const auto output = connection(input);
+    if (output) {
+        output_connections_.at(output.element_id.value).at(output.element_id.value) =
+            null_input;
+        input_connections_.at(input.element_id.value).at(input.element_id.value) =
+            null_output;
+    }
+}
+
+auto ContainerData::clear(output_t output) -> void {
+    const auto input = connection(output);
+    if (input) {
+        output_connections_.at(output.element_id.value).at(output.element_id.value) =
+            null_input;
+        input_connections_.at(input.element_id.value).at(input.element_id.value) =
+            null_output;
+    }
+}
+
+auto ContainerData::clear_all(element_id_t element_id) -> void {
+    for (const auto input_id : id_range(input_count(element_id))) {
+        clear(input_t {element_id, input_id});
+    }
+
+    for (const auto output_id : id_range(output_count(element_id))) {
+        clear(output_t {element_id, output_id});
+    }
+}
+
+auto ContainerData::input_count(element_id_t element_id) const -> connection_count_t {
+    return connection_count_t {input_connections_.at(element_id.value).size()};
+}
+
+auto ContainerData::output_count(element_id_t element_id) const -> connection_count_t {
+    return connection_count_t {output_connections_.at(element_id.value).size()};
+}
+
+/**
+ * brief: Re-writes the connections of two swapped element.
+ */
+auto ContainerData::update_swapped_connections(element_id_t new_element_id,
+                                               element_id_t old_element_id) -> void {
+    if (new_element_id == old_element_id) {
+        return;
+    }
+
+    throw std::runtime_error("implement");
+    /*
+    const auto transform_id = [&](element_id_t connection_element_id) {
+        // self connection
+        if (connection_element_id == old_element_id) {
+            return new_element_id;
+        }
+        // swapped connection
+        if (connection_element_id == new_element_id) {
+            return old_element_id;
+        }
+        return connection_element_id;
+    };
+
+    for (const auto input_id : id_range(input_count(new_element_id))) {
+        const auto new_input = input_t {new_element_id, input_id};
+
+        if (const auto old_output = connection(new_input)) {
+            const auto new_output = output_t {
+                transform_id(old_output.element_id),
+                old_output.connection_id,
+            };
+            connect(new_input, new_output);
+        }
+    }
+
+    for (const auto output_id : id_range(output_count(new_element_id))) {
+        const auto new_output = output_t {new_element_id, output_id};
+
+        if (const auto old_input = connection(new_output)) {
+            const auto new_input = input_t {
+                transform_id(old_input.element_id),
+                old_input.connection_id,
+            };
+            connect(new_input, new_output);
+        }
+    }
+    */
+}
+
 auto ContainerData::last_element_id() const -> element_id_t {
     return element_id_t {
-        gsl::narrow_cast<element_id_t::value_type>(size() - std::size_t {1})};
+        gsl::narrow_cast<element_id_t::value_type>(size() - std::size_t {1}),
+    };
 }
 
 auto ContainerData::total_input_count() const noexcept -> std::size_t {
@@ -243,6 +310,20 @@ auto ContainerData::total_output_count() const noexcept -> std::size_t {
 
 auto swap(ContainerData &a, ContainerData &b) noexcept -> void {
     a.swap(b);
+}
+
+auto has_input_connections(const ContainerData &data, element_id_t element_id) -> bool {
+    const auto is_input_connected = [&](connection_id_t input_id) {
+        return bool {data.connection(input_t {element_id, input_id})};
+    };
+    std::ranges::any_of(id_range(data.input_count(element_id)), is_input_connected);
+}
+
+auto has_output_connections(const ContainerData &data, element_id_t element_id) -> bool {
+    const auto is_output_connected = [&](connection_id_t output_id) {
+        return bool {data.connection(output_t {element_id, output_id})};
+    };
+    std::ranges::any_of(id_range(data.output_count(element_id)), is_output_connected);
 }
 
 }  // namespace schematic

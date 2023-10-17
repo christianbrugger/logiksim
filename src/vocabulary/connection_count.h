@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 #define LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 
+#include "algorithm/range.h"
 #include "concept/explicitly_convertible.h"
 #include "concept/integral.h"
 #include "format/struct.h"
@@ -19,12 +20,12 @@ namespace logicsim {
  * @brief: Defines the number of inputs or outputs of an unspecified circuit element.
  *
  * Class invariants:
- *     * connection_count is in range [0, connection_id_t::max()]
+ *     * connection_count is in range [0, connection_id_t::max())
  */
 struct connection_count_t {
     using value_type_rep = std::make_unsigned_t<connection_id_t::value_type>;
     using value_type =
-        ls_safe_range<value_type_rep, 0, std::size_t {connection_id_t::max()} + 1>;
+        ls_safe_range<value_type_rep, 0, std::size_t {connection_id_t::max()}>;
     static_assert(sizeof(value_type) == sizeof(connection_id_t));
 
    private:
@@ -41,8 +42,8 @@ struct connection_count_t {
         boost::safe_numerics::safe_base<Stored, Min, Max, P, E> value);
 
     [[nodiscard]] explicit constexpr operator std::size_t() const noexcept;
-
     [[nodiscard]] explicit constexpr operator difference_type() const noexcept;
+
     // returns safe_numerics value
     [[nodiscard]] constexpr auto safe_value() const noexcept -> value_type;
     // returns underlying representation
@@ -91,6 +92,8 @@ static_assert(
 
 [[nodiscard]] auto first_connection_id(connection_count_t count) -> connection_id_t;
 [[nodiscard]] auto last_connection_id(connection_count_t count) -> connection_id_t;
+
+[[nodiscard]] auto id_range(connection_count_t count) -> forward_range_t<connection_id_t>;
 
 //
 // Implementation

@@ -39,7 +39,23 @@ struct connection_t {
 static_assert(std::is_trivially_copyable_v<connection_t>);
 static_assert(std::is_trivially_copy_assignable_v<connection_t>);
 
+struct input_t : public connection_t {
+    using connection_t::connection_t;
+};
+
+static_assert(std::is_trivially_copyable_v<input_t>);
+static_assert(std::is_trivially_copy_assignable_v<input_t>);
+
+struct output_t : public connection_t {
+    using connection_t::connection_t;
+};
+
+static_assert(std::is_trivially_copyable_v<output_t>);
+static_assert(std::is_trivially_copy_assignable_v<output_t>);
+
 constexpr inline auto null_connection = connection_t {};
+constexpr inline auto null_input = input_t {};
+constexpr inline auto null_output = output_t {};
 
 //
 // Implemention

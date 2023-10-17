@@ -34,9 +34,12 @@ struct NewElement {
 
 namespace detail {
 constexpr inline auto connection_vector_size = 3;
-using connection_vector_t = folly::small_vector<connection_t, connection_vector_size>;
+using input_vector_t = folly::small_vector<output_t, connection_vector_size>;
+using output_vector_t = folly::small_vector<input_t, connection_vector_size>;
+
 static_assert(sizeof(connection_t) == 8);
-static_assert(sizeof(connection_vector_t) == 32);
+static_assert(sizeof(input_vector_t) == 32);
+static_assert(sizeof(output_vector_t) == 32);
 }  // namespace detail
 
 /**
@@ -50,7 +53,8 @@ static_assert(sizeof(connection_vector_t) == 32);
  */
 class ContainerData {
    public:
-    using connection_vector_t = schematic::detail::connection_vector_t;
+    using input_vector_t = schematic::detail::input_vector_t;
+    using output_vector_t = schematic::detail::output_vector_t;
 
    public:
     auto swap(ContainerData &other) noexcept -> void;
@@ -65,19 +69,30 @@ class ContainerData {
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
     auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
 
+    [[nodiscard]] auto connection(input_t input) const -> output_t;
+    [[nodiscard]] auto connection(output_t output) const -> input_t;
+    auto connect(input_t input, output_t output) -> void;
+    auto connect(output_t output, input_t input) -> void;
+    auto clear(input_t input) -> void;
+    auto clear(output_t output) -> void;
+    auto clear_all(element_id_t element_id) -> void;
+
+    [[nodiscard]] auto input_count(element_id_t element_id) const -> connection_count_t;
+    [[nodiscard]] auto output_count(element_id_t element_id) const -> connection_count_t;
+
    private:
-    auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2,
-                           bool update_connections) -> void;
+    auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
     auto update_swapped_connections(element_id_t new_element_id,
                                     element_id_t old_element_id) -> void;
-    auto delete_last_element(bool clear_connections) -> void;
+    auto delete_last_unconnected_element() -> void;
+
     [[nodiscard]] auto last_element_id() const -> element_id_t;
 
    private:
     std::vector<ElementType> element_types_ {};
     std::vector<circuit_id_t> sub_circuit_ids_ {};
-    std::vector<connection_vector_t> input_connections_ {};
-    std::vector<connection_vector_t> output_connections_ {};
+    std::vector<input_vector_t> input_connections_ {};
+    std::vector<output_vector_t> output_connections_ {};
     std::vector<logic_small_vector_t> input_inverters_ {};
     std::vector<output_delays_t> output_delays_ {};
     std::vector<delay_t> history_lengths_ {};
@@ -87,6 +102,11 @@ class ContainerData {
 };
 
 auto swap(ContainerData &a, ContainerData &b) noexcept -> void;
+
+[[nodiscard]] auto has_input_connections(const ContainerData &data,
+                                         element_id_t element_id) -> bool;
+[[nodiscard]] auto has_output_connections(const ContainerData &data,
+                                          element_id_t element_id) -> bool;
 
 }  // namespace schematic
 
