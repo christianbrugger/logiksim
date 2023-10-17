@@ -14,6 +14,17 @@ namespace logicsim {
 /**
  * brief: Defines the rendered area of the grid and how it relates to
  *        device coordinates and real pixels.
+ *
+ * Class invariants:
+ *     * dependent variable are updated on each change:
+ *          * scale_px_
+ *          * stroke_width_px_
+ *          * line_cross_width_px_
+ *     * the following properties have bounds
+ *          * device_ratio_px_ >  0
+ *          * scale_device_    >  0
+ *          * size_px_.w       >= 0
+ *          * size_px_.h       >= 0
  */
 struct ViewConfig {
    public:
@@ -89,7 +100,7 @@ struct ViewConfig {
     point_fine_t offset_ {};
     double device_ratio_px_ {1.};  // pixels of one device coordinates
     double scale_device_ {18.};    // distance of grid in device coordinates
-    BLSizeI size_px_ {};           // view size in pixels
+    BLSizeI size_px_ {};           // image size or the rendered area
 
     // updated internally
     double scale_px_ {};          // distance of grid in pixel coordinates

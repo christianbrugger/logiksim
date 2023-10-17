@@ -1,5 +1,7 @@
 #include "vocabulary/view_config.h"
 
+#include <exception>
+
 namespace logicsim {
 
 ViewConfig::ViewConfig() {
@@ -43,16 +45,25 @@ auto ViewConfig::set_offset(point_fine_t offset) -> void {
 }
 
 auto ViewConfig::set_device_scale(double device_scale) -> void {
+    if (device_scale <= 0) [[unlikely]] {
+        throw std::runtime_error("device_scale needs to be positive");
+    }
     scale_device_ = device_scale;
     update();
 }
 
 auto ViewConfig::set_device_pixel_ratio(double device_pixel_ratio) -> void {
+    if (device_pixel_ratio <= 0) [[unlikely]] {
+        throw std::runtime_error("device_pixel_ratio needs to be positive");
+    }
     device_ratio_px_ = device_pixel_ratio;
     update();
 }
 
 auto ViewConfig::set_size(BLSizeI size) -> void {
+    if (size.w < int {0} || size.h < int {0}) [[unlikely]] {
+        throw std::runtime_error("size needs to be positive or zero");
+    }
     size_px_ = size;
 }
 

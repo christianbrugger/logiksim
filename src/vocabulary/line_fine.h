@@ -14,6 +14,10 @@ namespace logicsim {
 
 /**
  * @brief: A continuous horizontal or vertical line.
+ *
+ * Class invariants:
+ *     * line [p0, p1] is either horizontal or vertical, not diagonal.
+ *     * line has positive length, p0 != p1
  */
 struct line_fine_t {
     point_fine_t p0;

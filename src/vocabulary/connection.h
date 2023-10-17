@@ -13,6 +13,9 @@ namespace logicsim {
 
 /**
  * @brief: Identifies an input or output of a specific circuit element.
+ *
+ * Class invariants:
+ *     * element_id and connection_id are either both valid or null.
  */
 struct connection_t {
     element_id_t element_id {null_element};

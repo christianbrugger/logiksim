@@ -17,6 +17,9 @@ namespace logicsim {
 
 /**
  * @brief: Defines the number of inputs or outputs of an unspecified circuit element.
+ *
+ * Class invariants:
+ *     * connection_count is in range [0, connection_id_t::max()]
  */
 struct connection_count_t {
     using value_type_rep = std::make_unsigned_t<connection_id_t::value_type>;

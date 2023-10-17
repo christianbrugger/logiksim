@@ -13,6 +13,11 @@ namespace logicsim {
 
 /**
  * @brief: A continuous 2-d rect defined by two ordered points p0 and p1.
+ *
+ * Class invariants:
+ *     * both coordinates are ordered:
+ *         * p0.x <= p1.x
+ *         * p0.y <= p1.y
  */
 struct rect_fine_t {
     point_fine_t p0;

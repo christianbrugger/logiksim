@@ -12,6 +12,9 @@ namespace logicsim {
 
 /**
  * @brief: Part defines a sub-segment of an ordered line from [p0 + begin, p1 + end].
+ *
+ * Class invariants:
+ *     * begin and end are ordered & length is positive: end > begin
  */
 struct part_t {
     offset_t begin;

@@ -15,6 +15,9 @@ namespace logicsim {
 
 /**
  * @brief: Identifier line segment in the circuit.
+ *
+ * Class invariants:
+ *     * element_id and connection_id are either both valid or null.
  */
 struct segment_t {
     element_id_t element_id {null_element};

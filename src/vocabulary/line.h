@@ -12,6 +12,10 @@ namespace logicsim {
 
 /**
  * @brief: A discrete horizontal or vertical line.
+ *
+ * Class invariants:
+ *     * line [p0, p1] is either horizontal or vertical, not diagonal.
+ *     * line has positive length, p0 != p1
  */
 struct line_t {
     point_t p0;

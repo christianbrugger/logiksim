@@ -43,10 +43,10 @@ static_assert(sizeof(connection_vector_t) == 32);
  * brief: Stores the schematic data.
  *
  * Class invariants:
- *   - all vectors have same size
- *   - connection point to a valid element_id / connection_id
- *   - forward and backward connections match
- *   - total connection counts match sum all input / output connections
+ *   * all vectors have same size
+ *   * connection point to a valid element_id / connection_id
+ *   * forward and backward connections point to each other
+ *   * total connection counts match sum of all input / output connections
  */
 class ContainerData {
    public:

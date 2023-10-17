@@ -79,7 +79,7 @@ constexpr auto operator-(const point_t &left, const point_t &right) -> point_t {
 }
 
 constexpr auto is_orthogonal_line(point_t p0, point_t p1) noexcept -> bool {
-    return (p0.x == p1.x) ^ (p0.y == p1.y);
+    return (p0.x == p1.x) != (p0.y == p1.y);
 }
 }  // namespace logicsim
 

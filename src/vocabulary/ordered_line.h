@@ -12,6 +12,11 @@ namespace logicsim {
 
 /**
  * @brief: A horizontal or vertical line where the points are ordered.
+ *
+ * Class invariants:
+ *     * points are ordered, p0 < p1
+ *     * line [p0, p1] is either horizontal or vertical, not diagonal.
+ *     * line has positive length, p0 != p1
  */
 struct ordered_line_t {
     point_t p0;
