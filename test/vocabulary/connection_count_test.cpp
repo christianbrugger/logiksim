@@ -82,8 +82,8 @@ TEST(VocabularyConnectionCount, FreeFunction) {
     const auto id = connection_id_t {10};
     const auto count = connection_count_t {std::size_t {id} + 1};
 
-    EXPECT_EQ(first_connection_id(count), connection_id_t {0});
-    EXPECT_EQ(last_connection_id(count), id);
+    EXPECT_EQ(first_id(count), connection_id_t {0});
+    EXPECT_EQ(last_id(count), id);
 }
 
 }  // namespace logicsim

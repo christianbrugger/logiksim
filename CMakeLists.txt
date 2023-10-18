@@ -15,6 +15,7 @@ set(LS_CORE_SOURCES
     src/algorithm/pop_while.cpp
     src/algorithm/random_select.cpp
     src/algorithm/range.cpp
+    src/algorithm/range_extended.cpp
     src/algorithm/range_step.cpp
     src/algorithm/round.cpp
     src/algorithm/shuffle.cpp
@@ -147,6 +148,7 @@ set(LS_CORE_SOURCES
 
     src/type_trait/add_const_to_reference.cpp
     src/type_trait/const_iterator.cpp
+    src/type_trait/numeric_limits_template.cpp
     src/type_trait/safe_difference_type.cpp
 
     src/vocabulary/alignment.cpp
@@ -247,6 +249,7 @@ set(MOC_FILES
 
 set(LS_TEST_SOURCES
     test/algorithm/fmt_join_test.cpp
+    test/algorithm/range_extended_test.cpp
     test/algorithm/range_step_test.cpp
     test/algorithm/range_test.cpp
     test/algorithm/shuffle_test.cpp

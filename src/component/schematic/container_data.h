@@ -80,6 +80,14 @@ class ContainerData {
     [[nodiscard]] auto input_count(element_id_t element_id) const -> connection_count_t;
     [[nodiscard]] auto output_count(element_id_t element_id) const -> connection_count_t;
 
+    [[nodiscard]] auto element_type(element_id_t element_id) const -> ElementType;
+    [[nodiscard]] auto sub_circuit_id(element_id_t element_id) const -> circuit_id_t;
+    [[nodiscard]] auto input_inverters(element_id_t element_id) const
+        -> const logic_small_vector_t &;
+    [[nodiscard]] auto output_delays(element_id_t element_id) const
+        -> const output_delays_t &;
+    [[nodiscard]] auto history_length(element_id_t element_id) const -> delay_t;
+
    private:
     auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
     auto update_swapped_connections(element_id_t new_element_id,

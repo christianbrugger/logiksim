@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 #define LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 
-#include "algorithm/range.h"
+#include "algorithm/range_extended.h"
 #include "concept/explicitly_convertible.h"
 #include "concept/integral.h"
 #include "format/struct.h"
@@ -24,8 +24,11 @@ namespace logicsim {
  */
 struct connection_count_t {
     using value_type_rep = std::make_unsigned_t<connection_id_t::value_type>;
-    using value_type =
-        ls_safe_range<value_type_rep, 0, std::size_t {connection_id_t::max()}>;
+    constexpr static inline auto value_type_min = value_type_rep {0};
+    constexpr static inline auto value_type_max =
+        value_type_rep {connection_id_t::max().value} + 1;
+
+    using value_type = ls_safe_range<value_type_rep, value_type_min, value_type_max>;
     static_assert(sizeof(value_type) == sizeof(connection_id_t));
 
    private:
@@ -90,10 +93,11 @@ static_assert(
 [[nodiscard]] constexpr auto operator*(const int &left, const connection_count_t &right)
     -> connection_count_t;
 
-[[nodiscard]] auto first_connection_id(connection_count_t count) -> connection_id_t;
-[[nodiscard]] auto last_connection_id(connection_count_t count) -> connection_id_t;
+[[nodiscard]] auto first_id(connection_count_t count) -> connection_id_t;
+[[nodiscard]] auto last_id(connection_count_t count) -> connection_id_t;
 
-[[nodiscard]] auto id_range(connection_count_t count) -> forward_range_t<connection_id_t>;
+[[nodiscard]] auto id_range(connection_count_t count)
+    -> range_extended_t<connection_id_t>;
 
 //
 // Implementation

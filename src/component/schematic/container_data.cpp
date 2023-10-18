@@ -184,11 +184,11 @@ auto ContainerData::add_element(schematic::NewElement &&data) -> element_id_t {
 }
 
 auto ContainerData::connection(input_t input) const -> output_t {
-    input_connections_.at(input.element_id.value).at(input.element_id.value);
+    return input_connections_.at(input.element_id.value).at(input.element_id.value);
 }
 
 auto ContainerData::connection(output_t output) const -> input_t {
-    output_connections_.at(output.element_id.value).at(output.element_id.value);
+    return output_connections_.at(output.element_id.value).at(output.element_id.value);
 }
 
 auto ContainerData::connect(input_t input, output_t output) -> void {
@@ -231,14 +231,6 @@ auto ContainerData::clear_all(element_id_t element_id) -> void {
     for (const auto output_id : id_range(output_count(element_id))) {
         clear(output_t {element_id, output_id});
     }
-}
-
-auto ContainerData::input_count(element_id_t element_id) const -> connection_count_t {
-    return connection_count_t {input_connections_.at(element_id.value).size()};
-}
-
-auto ContainerData::output_count(element_id_t element_id) const -> connection_count_t {
-    return connection_count_t {output_connections_.at(element_id.value).size()};
 }
 
 /**
@@ -304,6 +296,36 @@ auto ContainerData::total_output_count() const noexcept -> std::size_t {
     return total_output_count_;
 }
 
+auto ContainerData::input_count(element_id_t element_id) const -> connection_count_t {
+    return connection_count_t {input_connections_.at(element_id.value).size()};
+}
+
+auto ContainerData::output_count(element_id_t element_id) const -> connection_count_t {
+    return connection_count_t {output_connections_.at(element_id.value).size()};
+}
+
+auto ContainerData::element_type(element_id_t element_id) const -> ElementType {
+    return element_types_.at(element_id.value);
+}
+
+auto ContainerData::sub_circuit_id(element_id_t element_id) const -> circuit_id_t {
+    return sub_circuit_ids_.at(element_id.value);
+}
+
+auto ContainerData::input_inverters(element_id_t element_id) const
+    -> const logic_small_vector_t & {
+    return input_inverters_.at(element_id.value);
+}
+
+auto ContainerData::output_delays(element_id_t element_id) const
+    -> const output_delays_t & {
+    return output_delays_.at(element_id.value);
+}
+
+auto ContainerData::history_length(element_id_t element_id) const -> delay_t {
+    return history_lengths_.at(element_id.value);
+}
+
 //
 // Free Functions
 //
@@ -316,14 +338,16 @@ auto has_input_connections(const ContainerData &data, element_id_t element_id) -
     const auto is_input_connected = [&](connection_id_t input_id) {
         return bool {data.connection(input_t {element_id, input_id})};
     };
-    std::ranges::any_of(id_range(data.input_count(element_id)), is_input_connected);
+    return std::ranges::any_of(id_range(data.input_count(element_id)),
+                               is_input_connected);
 }
 
 auto has_output_connections(const ContainerData &data, element_id_t element_id) -> bool {
     const auto is_output_connected = [&](connection_id_t output_id) {
         return bool {data.connection(output_t {element_id, output_id})};
     };
-    std::ranges::any_of(id_range(data.output_count(element_id)), is_output_connected);
+    return std::ranges::any_of(id_range(data.output_count(element_id)),
+                               is_output_connected);
 }
 
 }  // namespace schematic

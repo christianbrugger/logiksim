@@ -593,7 +593,7 @@ auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement elemen
                                        ElementDrawState state, bool two_complement) {
     const auto input_count = element.input_count();
     // TODO can we simplify this?
-    const auto last_input_id = last_connection_id(input_count);
+    const auto last_input_id = last_id(input_count);
     const auto has_space =
         display_number::input_shift(element.input_count()) > grid_t {0};
 

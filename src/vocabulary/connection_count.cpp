@@ -17,7 +17,7 @@ auto connection_count_t::operator<=>(const connection_id_t& other) const
     return *this <=> id_converted;
 }
 
-auto first_connection_id(connection_count_t count) -> connection_id_t {
+auto first_id(connection_count_t count) -> connection_id_t {
     if (count == connection_count_t {0}) {
         throw std::runtime_error("has no first id");
     }
@@ -25,7 +25,7 @@ auto first_connection_id(connection_count_t count) -> connection_id_t {
     return connection_id_t {0};
 }
 
-auto last_connection_id(connection_count_t count) -> connection_id_t {
+auto last_id(connection_count_t count) -> connection_id_t {
     if (count == connection_count_t {0}) {
         throw std::runtime_error("has no last id");
     }
@@ -33,10 +33,8 @@ auto last_connection_id(connection_count_t count) -> connection_id_t {
     return connection_id_t {gsl::narrow_cast<connection_id_t::value_type>(value)};
 }
 
-auto id_range(connection_count_t count) -> forward_range_t<connection_id_t> {
-    const auto stop_id =
-        connection_id_t {gsl::narrow_cast<connection_id_t::value_type>(count.count())};
-    return range(stop_id);
+auto id_range(connection_count_t count) -> range_extended_t<connection_id_t> {
+    return range_extended<connection_id_t>(std::size_t {count.count()});
 }
 
 }  // namespace logicsim
