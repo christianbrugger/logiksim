@@ -50,6 +50,16 @@ auto ContainerData::clear() -> void {
     total_output_count_ = 0;
 }
 
+auto ContainerData::shrink_to_fit() -> void {
+    element_types_.shrink_to_fit();
+    sub_circuit_ids_.shrink_to_fit();
+    input_connections_.shrink_to_fit();
+    output_connections_.shrink_to_fit();
+    input_inverters_.shrink_to_fit();
+    output_delays_.shrink_to_fit();
+    history_lengths_.shrink_to_fit();
+}
+
 auto ContainerData::swap(ContainerData &other) noexcept -> void {
     using std::swap;
 
@@ -63,89 +73,6 @@ auto ContainerData::swap(ContainerData &other) noexcept -> void {
 
     swap(total_input_count_, other.total_input_count_);
     swap(total_output_count_, other.total_output_count_);
-}
-
-/**
- * @brief: swaps element data
- *
- * Warning connection invariant are broken for the swapped ids
- */
-auto ContainerData::swap_element_data(element_id_t element_id_1,
-                                      element_id_t element_id_2) -> void {
-    if (element_id_1 == element_id_2) {
-        return;
-    }
-
-    const auto swap_ids = [element_id_1, element_id_2](auto &container) {
-        using std::swap;
-        swap(container.at(element_id_1.value), container.at(element_id_2.value));
-    };
-
-    swap_ids(element_types_);
-    swap_ids(sub_circuit_ids_);
-    swap_ids(input_connections_);
-    swap_ids(output_connections_);
-    swap_ids(input_inverters_);
-    swap_ids(output_delays_);
-    swap_ids(history_lengths_);
-}
-
-/**
- * @brief: Deletes the last element
- *
- * Throws exception if container is empty.
- *
- * pre-condition:
- *   1) last element has no connections
- */
-auto ContainerData::delete_last_unconnected_element() -> void {
-    // pre-condition
-    assert(!has_input_connections(*this, last_element_id()));
-    assert(!has_output_connections(*this, last_element_id()));
-
-    // exceptions
-    if (empty()) [[unlikely]] {
-        throw std::runtime_error("Cannot delete from empty schematics.");
-    }
-
-    // decrease counts
-    const auto last_input_count = input_connections_.back().size();
-    const auto last_output_count = output_connections_.back().size();
-    assert(total_input_count_ >= last_input_count);
-    assert(total_output_count_ >= last_output_count);
-    total_input_count_ -= last_input_count;
-    total_output_count_ -= last_output_count;
-
-    // shrink vectors
-    element_types_.pop_back();
-    sub_circuit_ids_.pop_back();
-    input_connections_.pop_back();
-    output_connections_.pop_back();
-    input_inverters_.pop_back();
-    output_delays_.pop_back();
-    history_lengths_.pop_back();
-}
-
-auto ContainerData::swap_and_delete_element(element_id_t element_id) -> element_id_t {
-    clear_all(element_id);
-
-    const auto last_id = last_element_id();
-    if (element_id != last_id) {
-        swap_element_data(element_id, last_id);
-        update_swapped_connections(element_id, last_id);
-    }
-
-    delete_last_unconnected_element();
-    return last_id;
-}
-
-auto ContainerData::swap_elements(element_id_t element_id_0, element_id_t element_id_1)
-    -> void {
-    swap_element_data(element_id_0, element_id_1);
-
-    // TODO do we need both ?
-    update_swapped_connections(element_id_0, element_id_1);
-    update_swapped_connections(element_id_1, element_id_0);
 }
 
 auto ContainerData::add_element(schematic::NewElement &&data) -> element_id_t {
@@ -206,6 +133,8 @@ auto ContainerData::connect(output_t output, input_t input) -> void {
 }
 
 auto ContainerData::clear(input_t input) -> void {
+    assert(input);
+
     if (const auto output = this->output(input)) {
         clear_connection(input, output);
     }
@@ -218,9 +147,6 @@ auto ContainerData::clear(output_t output) -> void {
 }
 
 auto ContainerData::clear_connection(input_t input, output_t output) -> void {
-    assert(input);
-    assert(output);
-
     input_connections_.at(input.element_id.value).at(input.connection_id.value) =
         null_output;
     output_connections_.at(output.element_id.value).at(output.connection_id.value) =
@@ -235,57 +161,6 @@ auto ContainerData::clear_all(element_id_t element_id) -> void {
     for (const auto output_id : id_range(output_count(element_id))) {
         clear(output_t {element_id, output_id});
     }
-}
-
-/**
- * brief: Re-writes the connections of two swapped element.
- */
-auto ContainerData::update_swapped_connections(element_id_t new_element_id,
-                                               element_id_t old_element_id) -> void {
-    if (new_element_id == old_element_id) {
-        return;
-    }
-
-    throw std::runtime_error("implement");
-    /*
-    const auto transform_id = [&](element_id_t connection_element_id) {
-        // self connection
-        if (connection_element_id == old_element_id) {
-            return new_element_id;
-        }
-        // swapped connection
-        if (connection_element_id == new_element_id) {
-            return old_element_id;
-        }
-        return connection_element_id;
-    };
-
-    for (const auto input_id : id_range(input_count(new_element_id))) {
-        const auto new_input = input_t {new_element_id, input_id};
-
-        if (const auto old_output = connection(new_input)) {
-            const auto new_output = output_t {
-                transform_id(old_output.element_id),
-                old_output.connection_id,
-            };
-            // TODO only use connect when transformed != old & new
-            // TODO otherwise directly write only this side of the connection
-            connect(new_input, new_output);
-        }
-    }
-
-    for (const auto output_id : id_range(output_count(new_element_id))) {
-        const auto new_output = output_t {new_element_id, output_id};
-
-        if (const auto old_input = connection(new_output)) {
-            const auto new_input = input_t {
-                transform_id(old_input.element_id),
-                old_input.connection_id,
-            };
-            connect(new_input, new_output);
-        }
-    }
-    */
 }
 
 auto ContainerData::last_element_id() const -> element_id_t {
@@ -341,6 +216,8 @@ auto swap(ContainerData &a, ContainerData &b) noexcept -> void {
 }
 
 auto has_input_connections(const ContainerData &data, element_id_t element_id) -> bool {
+    assert(element_id);
+
     const auto is_input_connected = [&](connection_id_t input_id) {
         return bool {data.output(input_t {element_id, input_id})};
     };
@@ -349,6 +226,8 @@ auto has_input_connections(const ContainerData &data, element_id_t element_id) -
 }
 
 auto has_output_connections(const ContainerData &data, element_id_t element_id) -> bool {
+    assert(element_id);
+
     const auto is_output_connected = [&](connection_id_t output_id) {
         return bool {data.input(output_t {element_id, output_id})};
     };

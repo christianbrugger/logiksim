@@ -65,9 +65,8 @@ class ContainerData {
     [[nodiscard]] auto total_output_count() const noexcept -> std::size_t;
 
     auto clear() -> void;
+    auto shrink_to_fit() -> void;
     auto add_element(schematic::NewElement &&data) -> element_id_t;
-    auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
-    auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
 
     [[nodiscard]] auto output(input_t input) const -> output_t;
     [[nodiscard]] auto input(output_t output) const -> input_t;
@@ -89,10 +88,6 @@ class ContainerData {
     [[nodiscard]] auto history_length(element_id_t element_id) const -> delay_t;
 
    private:
-    auto swap_element_data(element_id_t element_id_1, element_id_t element_id_2) -> void;
-    auto update_swapped_connections(element_id_t new_element_id,
-                                    element_id_t old_element_id) -> void;
-    auto delete_last_unconnected_element() -> void;
     auto clear_connection(input_t input, output_t output) -> void;
     [[nodiscard]] auto last_element_id() const -> element_id_t;
 
