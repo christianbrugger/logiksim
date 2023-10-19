@@ -1,10 +1,13 @@
 #ifndef LOGICSIM_COMPONENTS_SCHEMATIC_CONTAINER_DATA_H
 #define LOGICSIM_COMPONENTS_SCHEMATIC_CONTAINER_DATA_H
 
+#include "algorithm/range_extended.h"
+#include "geometry/connection.h"
 #include "vocabulary/circuit_id.h"
 #include "vocabulary/connection.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/delay.h"
+#include "vocabulary/element_id.h"
 #include "vocabulary/element_type.h"
 #include "vocabulary/logic_small_vector.h"
 #include "vocabulary/output_delays.h"
@@ -110,6 +113,20 @@ auto swap(ContainerData &a, ContainerData &b) noexcept -> void;
                                          element_id_t element_id) -> bool;
 [[nodiscard]] auto has_output_connections(const ContainerData &data,
                                           element_id_t element_id) -> bool;
+
+[[nodiscard]] auto element_ids(const ContainerData &schematic)
+    -> range_extended_t<element_id_t>;
+
+[[nodiscard]] constexpr auto inputs(const ContainerData &schematic,
+                                    element_id_t element_id)
+    -> range_extended_t<element_id_t> {
+    return inputs(element_id, schematic.input_count(element_id));
+}
+
+[[nodiscard]] constexpr auto outputs(const ContainerData &schematic,
+                                     element_id_t element_id) {
+    return inputs(element_id, schematic.output_count(element_id));
+}
 
 }  // namespace schematic
 

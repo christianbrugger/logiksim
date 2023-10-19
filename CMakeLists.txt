@@ -84,6 +84,7 @@ set(LS_CORE_SOURCES
     src/format/time.cpp
     src/format/to_hex.cpp
 
+    src/geometry/connection.cpp
     src/geometry/connection_count.cpp
     src/geometry/grid.cpp
     src/geometry/interpolation.cpp

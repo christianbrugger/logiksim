@@ -235,6 +235,10 @@ auto has_output_connections(const ContainerData &data, element_id_t element_id) 
                                is_output_connected);
 }
 
+auto element_ids(const ContainerData &schematic) -> range_extended_t<element_id_t> {
+    return range_extended<element_id_t>(schematic.size());
+}
+
 }  // namespace schematic
 
 }  // namespace logicsim
