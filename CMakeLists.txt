@@ -267,6 +267,7 @@ set(LS_TEST_SOURCES
 
     test/format/container_test.cpp
 
+    test/geometry/connection_count_test.cpp
     test/geometry/line_test.cpp
     test/geometry/part_list_copying_test.cpp
     test/geometry/part_list_test.cpp

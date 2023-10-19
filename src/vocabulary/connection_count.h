@@ -1,7 +1,6 @@
 #ifndef LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 #define LOGICSIM_VOCABULARY_CONNECTION_COUNT_H
 
-#include "algorithm/range_extended.h"
 #include "concept/explicitly_convertible.h"
 #include "concept/integral.h"
 #include "format/struct.h"
@@ -92,12 +91,6 @@ static_assert(
     -> connection_count_t;
 [[nodiscard]] constexpr auto operator*(const int &left, const connection_count_t &right)
     -> connection_count_t;
-
-[[nodiscard]] auto first_id(connection_count_t count) -> connection_id_t;
-[[nodiscard]] auto last_id(connection_count_t count) -> connection_id_t;
-
-[[nodiscard]] auto id_range(connection_count_t count)
-    -> range_extended_t<connection_id_t>;
 
 //
 // Implementation

@@ -1,5 +1,7 @@
 #include "component/schematic/container_data.h"
 
+#include "geometry/connection_count.h"
+
 #include <cassert>
 #include <exception>
 
@@ -183,11 +185,11 @@ auto ContainerData::add_element(schematic::NewElement &&data) -> element_id_t {
     return last_element_id();
 }
 
-auto ContainerData::connection(input_t input) const -> output_t {
+auto ContainerData::output(input_t input) const -> output_t {
     return input_connections_.at(input.element_id.value).at(input.element_id.value);
 }
 
-auto ContainerData::connection(output_t output) const -> input_t {
+auto ContainerData::input(output_t output) const -> input_t {
     return output_connections_.at(output.element_id.value).at(output.element_id.value);
 }
 
@@ -204,23 +206,25 @@ auto ContainerData::connect(output_t output, input_t input) -> void {
 }
 
 auto ContainerData::clear(input_t input) -> void {
-    const auto output = connection(input);
-    if (output) {
-        output_connections_.at(output.element_id.value).at(output.element_id.value) =
-            null_input;
-        input_connections_.at(input.element_id.value).at(input.element_id.value) =
-            null_output;
+    if (const auto output = this->output(input)) {
+        clear_connection(input, output);
     }
 }
 
 auto ContainerData::clear(output_t output) -> void {
-    const auto input = connection(output);
-    if (input) {
-        output_connections_.at(output.element_id.value).at(output.element_id.value) =
-            null_input;
-        input_connections_.at(input.element_id.value).at(input.element_id.value) =
-            null_output;
+    if (const auto input = this->input(output)) {
+        clear_connection(input, output);
     }
+}
+
+auto ContainerData::clear_connection(input_t input, output_t output) -> void {
+    assert(input);
+    assert(output);
+
+    input_connections_.at(input.element_id.value).at(input.connection_id.value) =
+        null_output;
+    output_connections_.at(output.element_id.value).at(output.connection_id.value) =
+        null_input;
 }
 
 auto ContainerData::clear_all(element_id_t element_id) -> void {
@@ -264,6 +268,8 @@ auto ContainerData::update_swapped_connections(element_id_t new_element_id,
                 transform_id(old_output.element_id),
                 old_output.connection_id,
             };
+            // TODO only use connect when transformed != old & new
+            // TODO otherwise directly write only this side of the connection
             connect(new_input, new_output);
         }
     }
@@ -336,7 +342,7 @@ auto swap(ContainerData &a, ContainerData &b) noexcept -> void {
 
 auto has_input_connections(const ContainerData &data, element_id_t element_id) -> bool {
     const auto is_input_connected = [&](connection_id_t input_id) {
-        return bool {data.connection(input_t {element_id, input_id})};
+        return bool {data.output(input_t {element_id, input_id})};
     };
     return std::ranges::any_of(id_range(data.input_count(element_id)),
                                is_input_connected);
@@ -344,7 +350,7 @@ auto has_input_connections(const ContainerData &data, element_id_t element_id) -
 
 auto has_output_connections(const ContainerData &data, element_id_t element_id) -> bool {
     const auto is_output_connected = [&](connection_id_t output_id) {
-        return bool {data.connection(output_t {element_id, output_id})};
+        return bool {data.input(output_t {element_id, output_id})};
     };
     return std::ranges::any_of(id_range(data.output_count(element_id)),
                                is_output_connected);

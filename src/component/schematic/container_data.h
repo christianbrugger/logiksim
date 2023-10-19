@@ -69,8 +69,8 @@ class ContainerData {
     auto swap_and_delete_element(element_id_t element_id) -> element_id_t;
     auto swap_elements(element_id_t element_id_0, element_id_t element_id_1) -> void;
 
-    [[nodiscard]] auto connection(input_t input) const -> output_t;
-    [[nodiscard]] auto connection(output_t output) const -> input_t;
+    [[nodiscard]] auto output(input_t input) const -> output_t;
+    [[nodiscard]] auto input(output_t output) const -> input_t;
     auto connect(input_t input, output_t output) -> void;
     auto connect(output_t output, input_t input) -> void;
     auto clear(input_t input) -> void;
@@ -93,7 +93,7 @@ class ContainerData {
     auto update_swapped_connections(element_id_t new_element_id,
                                     element_id_t old_element_id) -> void;
     auto delete_last_unconnected_element() -> void;
-
+    auto clear_connection(input_t input, output_t output) -> void;
     [[nodiscard]] auto last_element_id() const -> element_id_t;
 
    private:
