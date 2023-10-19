@@ -2,7 +2,7 @@
 #define LOGICSIM_BENCHMARK_RENDER_LINE_SCENE_H
 
 #include "layout.h"
-#include "schematic.h"
+#include "schematic_old.h"
 #include "simulation.h"
 #include "vocabulary/simulation_setting.h"
 
@@ -12,7 +12,7 @@ namespace logicsim {
 
 struct BenchmarkScene {
    public:
-    Schematic schematic {default_wire_delay_per_distance()};
+    SchematicOld schematic {default_wire_delay_per_distance()};
     Layout layout {};
     Simulation simulation {schematic};
 };

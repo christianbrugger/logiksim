@@ -1,52 +1,47 @@
-
 #include "schematic.h"
 
-#include "algorithm/accumulate.h"
-#include "algorithm/fmt_join.h"
-#include "algorithm/range.h"
-#include "algorithm/transform_to_vector.h"
-#include "exception.h"
-#include "format/container.h"
-#include "iterator_adaptor/transform_view.h"
-#include "layout_info.h"
-#include "line_tree.h"
-
-#include <fmt/core.h>
-#include <gsl/gsl>
+#include "geometry/connection_count.h"
 
 #include <algorithm>
-#include <utility>
+#include <cassert>
+#include <exception>
+#include <ranges>
 
 namespace logicsim {
 
-// TODO move to layou_info & logic_item/layout.h
-// optional<connection_id_t> enable_id
-// optional<connection_id_t> clock_id
-auto has_enable(ElementType element_type) -> bool {
-    using enum ElementType;
+auto Schematic::size() const noexcept -> std::size_t {
+    const auto size = element_types_.size();
 
-    // static_assert(display::enable_input_id == connection_id_t {0});
-    return element_type == clock_generator || element_type == display_number ||
-           element_type == display_ascii;
+    assert(size == element_types_.size());
+    assert(size == sub_circuit_ids_.size());
+    assert(size == input_connections_.size());
+    assert(size == output_connections_.size());
+    assert(size == input_inverters_.size());
+    assert(size == output_delays_.size());
+    assert(size == history_lengths_.size());
+
+    return size;
 }
 
-//
-// Schematic
-//
+auto Schematic::empty() const noexcept -> bool {
+    const auto empty = element_types_.empty();
 
-Schematic::Schematic(circuit_id_t circuit_id) : circuit_id_ {circuit_id} {}
+    assert(empty == element_types_.empty());
+    assert(empty == sub_circuit_ids_.empty());
+    assert(empty == input_connections_.empty());
+    assert(empty == output_connections_.empty());
+    assert(empty == input_inverters_.empty());
+    assert(empty == output_delays_.empty());
+    assert(empty == history_lengths_.empty());
 
-Schematic::Schematic(delay_t wire_delay_per_distance)
-    : wire_delay_per_distance_ {wire_delay_per_distance} {}
-
-Schematic::Schematic(circuit_id_t circuit_id, delay_t wire_delay_per_distance)
-    : circuit_id_ {circuit_id}, wire_delay_per_distance_ {wire_delay_per_distance} {}
+    return empty;
+}
 
 auto Schematic::clear() -> void {
+    element_types_.clear();
+    sub_circuit_ids_.clear();
     input_connections_.clear();
     output_connections_.clear();
-    sub_circuit_ids_.clear();
-    element_types_.clear();
     input_inverters_.clear();
     output_delays_.clear();
     history_lengths_.clear();
@@ -55,279 +50,123 @@ auto Schematic::clear() -> void {
     total_output_count_ = 0;
 }
 
+auto Schematic::shrink_to_fit() -> void {
+    element_types_.shrink_to_fit();
+    sub_circuit_ids_.shrink_to_fit();
+    input_connections_.shrink_to_fit();
+    output_connections_.shrink_to_fit();
+    input_inverters_.shrink_to_fit();
+    output_delays_.shrink_to_fit();
+    history_lengths_.shrink_to_fit();
+}
+
 auto Schematic::swap(Schematic &other) noexcept -> void {
     using std::swap;
 
+    element_types_.swap(other.element_types_);
+    sub_circuit_ids_.swap(other.sub_circuit_ids_);
     input_connections_.swap(other.input_connections_);
     output_connections_.swap(other.output_connections_);
-    sub_circuit_ids_.swap(other.sub_circuit_ids_);
-    element_types_.swap(other.element_types_);
     input_inverters_.swap(other.input_inverters_);
     output_delays_.swap(other.output_delays_);
     history_lengths_.swap(other.history_lengths_);
 
     swap(total_input_count_, other.total_input_count_);
     swap(total_output_count_, other.total_output_count_);
-    swap(circuit_id_, other.circuit_id_);
 }
 
-auto Schematic::swap_element_data(element_id_t element_id_1, element_id_t element_id_2,
-                                  bool update_connections) -> void {
-    if (element_id_1 == element_id_2) {
-        return;
-    }
-
-    const auto swap_ids = [element_id_1, element_id_2](auto &container) {
-        using std::swap;
-        swap(container.at(element_id_1.value), container.at(element_id_2.value));
-    };
-
-    swap_ids(input_connections_);
-    swap_ids(output_connections_);
-    swap_ids(sub_circuit_ids_);
-    swap_ids(element_types_);
-    swap_ids(input_inverters_);
-    swap_ids(output_delays_);
-    swap_ids(history_lengths_);
-
-    if (update_connections) {
-        update_swapped_connections(element_id_1, element_id_2);
-        update_swapped_connections(element_id_2, element_id_1);
-    }
-}
-
-auto Schematic::delete_last_element(bool clear_connections) -> void {
-    if (input_connections_.empty()      //
-        || output_connections_.empty()  //
-        || sub_circuit_ids_.empty()     //
-        || element_types_.empty()       //
-        || input_inverters_.empty()     //
-        || output_delays_.empty()       //
-        || history_lengths_.empty()     //
-        ) [[unlikely]] {
-        throw_exception("Cannot delete last element of empty schematics.");
-    }
-
-    if (clear_connections) {
-        const auto last_id = element_id_t {
-            gsl::narrow_cast<element_id_t::value_type>(element_count() - 1)};
-        element(last_id).clear_all_connection();
-    }
-
-    const auto last_input_count = input_connections_.back().size();
-    const auto last_output_count = output_connections_.back().size();
-    if (total_input_count_ < last_input_count || total_output_count_ < last_output_count)
-        [[unlikely]] {
-        throw_exception("input or output count underflows");
-    }
-    total_input_count_ -= last_input_count;
-    total_output_count_ -= last_output_count;
-
-    // delete
-    input_connections_.pop_back();
-    output_connections_.pop_back();
-    sub_circuit_ids_.pop_back();
-    element_types_.pop_back();
-    input_inverters_.pop_back();
-    output_delays_.pop_back();
-    history_lengths_.pop_back();
-}
-
-auto swap(Schematic &a, Schematic &b) noexcept -> void {
-    a.swap(b);
-}
-
-}  // namespace logicsim
-
-template <>
-auto std::swap(logicsim::Schematic &a, logicsim::Schematic &b) noexcept -> void {
-    a.swap(b);
-}
-
-namespace logicsim {
-
-auto Schematic::format() const -> std::string {
-    std::string inner {};
-    if (!empty()) {
-        auto format_true = [](auto element) { return element.format(true); };
-        inner =
-            fmt::format(": [\n  {}\n]", fmt_join(",\n  ", elements(), "{}", format_true));
-    }
-    return fmt::format("<Schematic with {} elements{}>", element_count(), inner);
-}
-
-auto Schematic::circuit_id() const noexcept -> circuit_id_t {
-    return circuit_id_;
-}
-
-auto Schematic::element_count() const noexcept -> std::size_t {
-    return element_types_.size();
-}
-
-auto Schematic::empty() const noexcept -> bool {
-    return element_types_.empty();
-}
-
-auto Schematic::is_element_id_valid(element_id_t element_id) const noexcept -> bool {
-    auto size = gsl::narrow_cast<element_id_t::value_type>(element_count());
-    return element_id >= element_id_t {0} && element_id < element_id_t {size};
-}
-
-auto Schematic::element_ids() const noexcept -> forward_range_t<element_id_t> {
-    const auto count =
-        element_id_t {gsl::narrow_cast<element_id_t::value_type>(element_count())};
-    return range(count);
-}
-
-auto Schematic::element(element_id_t element_id) -> Element {
-    if (!is_element_id_valid(element_id)) [[unlikely]] {
-        throw_exception("Element id is invalid");
-    }
-    return Element {*this, element_id};
-}
-
-auto Schematic::element(element_id_t element_id) const -> ConstElement {
-    if (!is_element_id_valid(element_id)) [[unlikely]] {
-        throw_exception("Element id is invalid");
-    }
-    return ConstElement {*this, element_id};
-}
-
-auto Schematic::elements() noexcept -> ElementView {
-    return ElementView {*this};
-}
-
-auto Schematic::elements() const noexcept -> ConstElementView {
-    return ConstElementView {*this};
-}
-
-auto Schematic::input(connection_t connection) -> Input {
-    return element(connection.element_id).input(connection.connection_id);
-}
-
-auto Schematic::input(connection_t connection) const -> ConstInput {
-    return element(connection.element_id).input(connection.connection_id);
-}
-
-auto Schematic::output(connection_t connection) -> Output {
-    return element(connection.element_id).output(connection.connection_id);
-}
-
-auto Schematic::output(connection_t connection) const -> ConstOutput {
-    return element(connection.element_id).output(connection.connection_id);
-}
-
-auto Schematic::wire_delay_per_distance() const -> delay_t {
-    return wire_delay_per_distance_;
-}
-
-auto Schematic::add_element(ElementData &&data) -> Element {
-    // make sure we can represent all ids
-    if (element_types_.size() >= std::size_t {element_id_t::max()} - std::size_t {1})
-        [[unlikely]] {
-        throw_exception("Reached maximum number of elements.");
+auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
+    // check enough space for IDs
+    if (element_types_.size() >= std::size_t {element_id_t::max()}) [[unlikely]] {
+        throw std::runtime_error("Reached maximum number of elements.");
     }
     if (total_input_count_ >= std::numeric_limits<std::size_t>::max() -
                                   std::size_t {data.input_count.count()}) [[unlikely]] {
-        throw_exception("Reached maximum number of inputs.");
+        throw std::runtime_error("Reached maximum number of inputs.");
     }
     if (total_output_count_ >= std::numeric_limits<std::size_t>::max() -
                                    std::size_t {data.output_count.count()}) [[unlikely]] {
-        throw_exception("Reached maximum number of outputs.");
+        throw std::runtime_error("Reached maximum number of outputs.");
+    }
+    // check that sizes match
+    if (data.input_inverters.size() != std::size_t {data.input_count}) [[unlikely]] {
+        throw std::runtime_error("Need as many values for input_inverters as inputs.");
+    }
+    if (data.output_delays.size() != std::size_t {data.output_count}) [[unlikely]] {
+        throw std::runtime_error("Need as many output_delays as outputs.");
     }
 
-    // extend vectors
+    // add new data
     element_types_.push_back(data.element_type);
     sub_circuit_ids_.push_back(data.sub_circuit_id);
-    input_connections_.emplace_back(data.input_count.count(),
-                                    connection_t {null_element, null_connection_id});
-    output_connections_.emplace_back(data.output_count.count(),
-                                     connection_t {null_element, null_connection_id});
-    if (data.input_inverters.size() == 0) {
-        input_inverters_.emplace_back(data.input_count.count(), false);
-    } else {
-        if (data.input_inverters.size() != std::size_t {data.input_count}) [[unlikely]] {
-            throw_exception("Need as many values for input_inverters as inputs.");
-        }
-        input_inverters_.emplace_back(data.input_inverters);
-    }
-    {
-        if (data.output_delays.size() != std::size_t {data.output_count}) [[unlikely]] {
-            throw_exception("Need as many output_delays as outputs.");
-        }
-        output_delays_.emplace_back(std::begin(data.output_delays),
-                                    std::end(data.output_delays));
-    }
+    input_connections_.emplace_back(data.input_count.count(), null_output);
+    output_connections_.emplace_back(data.output_count.count(), null_input);
+    input_inverters_.emplace_back(std::move(data.input_inverters));
+    output_delays_.emplace_back(std::move(data.output_delays));
     history_lengths_.push_back(data.history_length);
 
-    // return element
-    auto element_id = element_id_t {gsl::narrow_cast<element_id_t::value_type>(
-        element_types_.size() - std::size_t {1})};
-
+    // increase counts
     total_input_count_ += std::size_t {data.input_count};
     total_output_count_ += std::size_t {data.output_count};
 
-    return element(element_id);
+    return last_element_id();
 }
 
-auto Schematic::swap_and_delete_element(element_id_t element_id) -> element_id_t {
-    const auto last_element_id = element_id_t {
-        gsl::narrow_cast<element_id_t::value_type>(element_count() - std::size_t {1})};
-
-    element(element_id).clear_all_connection();
-
-    if (element_id != last_element_id) {
-        swap_element_data(element_id, last_element_id, false);
-        update_swapped_connections(element_id, last_element_id);
-    }
-
-    delete_last_element(false);
-    return last_element_id;
+auto Schematic::output(input_t input) const -> output_t {
+    return input_connections_.at(input.element_id.value).at(input.element_id.value);
 }
 
-auto Schematic::swap_elements(element_id_t element_id_0, element_id_t element_id_1)
-    -> void {
-    swap_element_data(element_id_0, element_id_1, true);
+auto Schematic::input(output_t output) const -> input_t {
+    return output_connections_.at(output.element_id.value).at(output.element_id.value);
 }
 
-auto Schematic::update_swapped_connections(element_id_t new_element_id,
-                                           element_id_t old_element_id) -> void {
-    if (new_element_id == old_element_id) {
-        return;
+auto Schematic::connect(input_t input, output_t output) -> void {
+    clear(input);
+    clear(output);
+
+    output_connections_.at(output.element_id.value).at(output.element_id.value) = input;
+    input_connections_.at(input.element_id.value).at(input.element_id.value) = output;
+}
+
+auto Schematic::connect(output_t output, input_t input) -> void {
+    connect(input, output);
+}
+
+auto Schematic::clear(input_t input) -> void {
+    assert(input);
+
+    if (const auto output = this->output(input)) {
+        clear_connection(input, output);
+    }
+}
+
+auto Schematic::clear(output_t output) -> void {
+    if (const auto input = this->input(output)) {
+        clear_connection(input, output);
+    }
+}
+
+auto Schematic::clear_connection(input_t input, output_t output) -> void {
+    input_connections_.at(input.element_id.value).at(input.connection_id.value) =
+        null_output;
+    output_connections_.at(output.element_id.value).at(output.connection_id.value) =
+        null_input;
+}
+
+auto Schematic::clear_all_connections(element_id_t element_id) -> void {
+    for (const auto input_id : id_range(input_count(element_id))) {
+        clear(input_t {element_id, input_id});
     }
 
-    const auto old_element = element(old_element_id);
-    const auto new_element = element(new_element_id);
-
-    for (auto input : new_element.inputs()) {
-        if (input.has_connected_element()) {
-            if (input.connected_element_id() == old_element_id) {
-                // self connection?
-                input.connect(new_element.output(input.connected_output_index()));
-            } else if (input.connected_element_id() == new_element_id) {
-                // swapped connection?
-                input.connect(old_element.output(input.connected_output_index()));
-            } else {
-                // fix back connection
-                input.connect(input.connected_output());
-            }
-        }
+    for (const auto output_id : id_range(output_count(element_id))) {
+        clear(output_t {element_id, output_id});
     }
+}
 
-    for (auto output : new_element.outputs()) {
-        if (output.has_connected_element()) {
-            if (output.connected_element_id() == old_element_id) {
-                // self connection?
-                output.connect(new_element.input(output.connected_input_index()));
-            } else if (output.connected_element_id() == new_element_id) {
-                // swapped connection?
-                output.connect(old_element.input(output.connected_input_index()));
-            } else {
-                // fix back connection
-                output.connect(output.connected_input());
-            }
-        }
-    }
+auto Schematic::last_element_id() const -> element_id_t {
+    return element_id_t {
+        gsl::narrow_cast<element_id_t::value_type>(size() - std::size_t {1}),
+    };
 }
 
 auto Schematic::total_input_count() const noexcept -> std::size_t {
@@ -338,759 +177,71 @@ auto Schematic::total_output_count() const noexcept -> std::size_t {
     return total_output_count_;
 }
 
-//
-// Element Iterator
-//
-
-template <bool Const>
-Schematic::ElementIteratorTemplate<Const>::ElementIteratorTemplate(
-    schematic_type &schematic, element_id_t element_id) noexcept
-    : schematic_(&schematic), element_id_(element_id) {}
-
-template <bool Const>
-auto Schematic::ElementIteratorTemplate<Const>::operator*() const -> value_type {
-    if (schematic_ == nullptr) [[unlikely]] {
-        throw_exception("schematic cannot be null when dereferencing element iterator");
-    }
-    return schematic_->element(element_id_);
+auto Schematic::input_count(element_id_t element_id) const -> connection_count_t {
+    return connection_count_t {input_connections_.at(element_id.value).size()};
 }
 
-template <bool Const>
-auto Schematic::ElementIteratorTemplate<Const>::operator++() noexcept
-    -> Schematic::ElementIteratorTemplate<Const> & {
-    ++element_id_;
-    return *this;
+auto Schematic::output_count(element_id_t element_id) const -> connection_count_t {
+    return connection_count_t {output_connections_.at(element_id.value).size()};
 }
 
-template <bool Const>
-auto Schematic::ElementIteratorTemplate<Const>::operator++(int) noexcept
-    -> Schematic::ElementIteratorTemplate<Const> {
-    auto tmp = *this;
-    ++(*this);
-    return tmp;
+auto Schematic::element_type(element_id_t element_id) const -> ElementType {
+    return element_types_.at(element_id.value);
 }
 
-template <bool Const>
-auto Schematic::ElementIteratorTemplate<Const>::operator==(
-    const ElementIteratorTemplate &right) const noexcept -> bool {
-    return element_id_ >= right.element_id_;
+auto Schematic::sub_circuit_id(element_id_t element_id) const -> circuit_id_t {
+    return sub_circuit_ids_.at(element_id.value);
 }
 
-template <bool Const>
-auto Schematic::ElementIteratorTemplate<Const>::operator-(
-    const ElementIteratorTemplate &right) const -> difference_type {
-    if (!element_id_ || !right.element_id_) [[unlikely]] {
-        throw std::runtime_error("element ids need to be valid");
-    }
-    return difference_type {element_id_.value} -
-           difference_type {right.element_id_.value};
-}
-
-template class Schematic::ElementIteratorTemplate<false>;
-template class Schematic::ElementIteratorTemplate<true>;
-
-//
-// Element View
-//
-
-template <bool Const>
-Schematic::ElementViewTemplate<Const>::ElementViewTemplate(
-    schematic_type &schematic) noexcept
-    : schematic_(&schematic) {}
-
-template <bool Const>
-auto Schematic::ElementViewTemplate<Const>::begin() const noexcept -> iterator_type {
-    return iterator_type {*schematic_, element_id_t {0}};
-}
-
-template <bool Const>
-auto Schematic::ElementViewTemplate<Const>::end() const noexcept -> iterator_type {
-    return iterator_type {*schematic_,
-                          element_id_t {gsl::narrow_cast<element_id_t::value_type>(
-                              schematic_->element_count())}};
-}
-
-template <bool Const>
-auto Schematic::ElementViewTemplate<Const>::size() const noexcept -> std::size_t {
-    return schematic_->element_count();
-}
-
-template <bool Const>
-auto Schematic::ElementViewTemplate<Const>::empty() const noexcept -> bool {
-    return schematic_->empty();
-}
-
-template class Schematic::ElementViewTemplate<false>;
-template class Schematic::ElementViewTemplate<true>;
-
-static_assert(std::ranges::input_range<Schematic::ElementView>);
-static_assert(std::ranges::input_range<Schematic::ConstElementView>);
-
-//
-// Schematic::Element
-//
-
-template <bool Const>
-Schematic::ElementTemplate<Const>::ElementTemplate(SchematicType &schematic,
-                                                   element_id_t element_id) noexcept
-    : schematic_(&schematic), element_id_(element_id) {}
-
-template <bool Const>
-template <bool ConstOther>
-Schematic::ElementTemplate<Const>::ElementTemplate(
-    ElementTemplate<ConstOther> element) noexcept
-    requires Const && (!ConstOther)
-    : schematic_(element.schematic_), element_id_(element.element_id_) {}
-
-template <bool Const>
-Schematic::ElementTemplate<Const>::operator element_id_t() const noexcept {
-    return element_id_;
-}
-
-template <bool Const>
-template <bool ConstOther>
-auto Schematic::ElementTemplate<Const>::operator==(
-    ElementTemplate<ConstOther> other) const noexcept -> bool {
-    return schematic_ == other.schematic_ && element_id_ == other.element_id_;
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::format(bool with_connections) const
-    -> std::string {
-    auto connections = !with_connections
-                           ? ""
-                           : fmt::format(", inputs = {}, outputs = {}", inputs().format(),
-                                         outputs().format());
-
-    return fmt::format("<Element {}: {}x{} {}{}>", element_id(), input_count(),
-                       output_count(), element_type(), connections);
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::schematic() const noexcept -> SchematicType & {
-    return *schematic_;
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::element_id() const noexcept -> element_id_t {
-    return element_id_;
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::element_type() const -> ElementType {
-    return schematic_->element_types_.at(element_id_.value);
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::is_unused() const -> bool {
-    return element_type() == ElementType::unused;
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::is_placeholder() const -> bool {
-    return element_type() == ElementType::placeholder;
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::is_wire() const -> bool {
-    return element_type() == ElementType::wire;
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::is_logic_item() const -> bool {
-    return ::logicsim::is_logic_item(element_type());
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::is_sub_circuit() const -> bool {
-    return element_type() == ElementType::sub_circuit;
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::sub_circuit_id() const -> circuit_id_t {
-    return schematic_->sub_circuit_ids_.at(element_id_.value);
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::input_inverters() const
+auto Schematic::input_inverters(element_id_t element_id) const
     -> const logic_small_vector_t & {
-    return schematic_->input_inverters_.at(element_id_.value);
+    return input_inverters_.at(element_id.value);
 }
 
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::output_delays() const -> const output_delays_t & {
-    return schematic_->output_delays_.at(element_id_.value);
+auto Schematic::output_delays(element_id_t element_id) const
+    -> const output_delays_t & {
+    return output_delays_.at(element_id.value);
 }
 
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::history_length() const -> delay_t {
-    return schematic_->history_lengths_.at(element_id_.value);
+auto Schematic::history_length(element_id_t element_id) const -> delay_t {
+    return history_lengths_.at(element_id.value);
 }
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::input_count() const -> connection_count_t {
-    return connection_count_t {
-        schematic_->input_connections_.at(element_id_.value).size()};
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::output_count() const -> connection_count_t {
-    return connection_count_t {
-        schematic_->output_connections_.at(element_id_.value).size()};
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::input(connection_id_t input) const
-    -> InputTemplate<Const> {
-    return InputTemplate<Const> {*schematic_, element_id_, input};
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::output(connection_id_t output) const
-    -> OutputTemplate<Const> {
-    return OutputTemplate<Const> {*schematic_, element_id_, output};
-}
-
-template <bool Const>
-inline auto Schematic::ElementTemplate<Const>::inputs() const
-    -> InputViewTemplate<Const> {
-    return InputViewTemplate<Const> {*this};
-}
-
-template <bool Const>
-inline auto Schematic::ElementTemplate<Const>::outputs() const
-    -> OutputViewTemplate<Const> {
-    return OutputViewTemplate<Const> {*this};
-}
-
-template <bool Const>
-void Schematic::ElementTemplate<Const>::clear_all_connection() const
-    requires(!Const)
-{
-    std::ranges::for_each(inputs(), &Input::clear_connection);
-    std::ranges::for_each(outputs(), &Output::clear_connection);
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::set_history_length(delay_t value) const -> void
-    requires(!Const)
-{
-    schematic_->history_lengths_.at(element_id_.value) = value;
-}
-
-template <bool Const>
-auto Schematic::ElementTemplate<Const>::set_output_delays(
-    std::vector<delay_t> delays) const -> void
-    requires(!Const)
-{
-    if (connection_count_t {std::size(delays)} != output_count()) [[unlikely]] {
-        throw_exception("Need as many delays as outputs.");
-    }
-    schematic_->output_delays_.at(element_id_.value) =
-        output_delays_t {std::begin(delays), std::end(delays)};
-}
-
-// Template Instanciations
-
-template class Schematic::ElementTemplate<true>;
-template class Schematic::ElementTemplate<false>;
-
-template Schematic::ElementTemplate<true>::ElementTemplate(
-    ElementTemplate<false>) noexcept;
-
-template auto Schematic::ElementTemplate<false>::operator==
-    <false>(ElementTemplate<false>) const noexcept -> bool;
-template auto Schematic::ElementTemplate<false>::operator==
-    <true>(ElementTemplate<true>) const noexcept -> bool;
-template auto Schematic::ElementTemplate<true>::operator==
-    <false>(ElementTemplate<false>) const noexcept -> bool;
-template auto Schematic::ElementTemplate<true>::operator==
-    <true>(ElementTemplate<true>) const noexcept -> bool;
-
-//
-// Connection Iterator
-//
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator*() const
-    -> value_type {
-    if (!element.has_value()) [[unlikely]] {
-        throw_exception("iterator needs a valid element");
-    }
-    if constexpr (IsInput) {
-        return element->input(connection_id);
-    } else {
-        return element->output(connection_id);
-    }
-}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator++() noexcept
-    -> Schematic::ConnectionIteratorTemplate<Const, IsInput> & {
-    ++connection_id;
-    return *this;
-}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator++(int) noexcept
-    -> ConnectionIteratorTemplate {
-    auto tmp = *this;
-    ++(*this);
-    return tmp;
-}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator==(
-    const ConnectionIteratorTemplate &right) const noexcept -> bool {
-    // TODO why not equal?
-    return connection_id >= right.connection_id;
-}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionIteratorTemplate<Const, IsInput>::operator-(
-    const ConnectionIteratorTemplate &right) const -> difference_type {
-    if (!connection_id || !right.connection_id) [[unlikely]] {
-        throw std::runtime_error("connection ids need to be valid");
-    }
-    return difference_type {connection_id.value} -
-           difference_type {right.connection_id.value};
-}
-
-template class Schematic::ConnectionIteratorTemplate<false, false>;
-template class Schematic::ConnectionIteratorTemplate<true, false>;
-template class Schematic::ConnectionIteratorTemplate<false, true>;
-template class Schematic::ConnectionIteratorTemplate<true, true>;
-
-//
-// Connection View
-//
-
-template <bool Const, bool IsInput>
-Schematic::ConnectionViewTemplate<Const, IsInput>::ConnectionViewTemplate(
-    ElementTemplate<Const> element) noexcept
-    : element_(element) {}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionViewTemplate<Const, IsInput>::begin() const -> iterator_type {
-    return iterator_type {element_, connection_id_t {0}};
-}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionViewTemplate<Const, IsInput>::end() const -> iterator_type {
-    return iterator_type {
-        element_,
-        connection_id_t {gsl::narrow_cast<connection_id_t::value_type>(size())}};
-}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionViewTemplate<Const, IsInput>::size() const -> std::size_t {
-    if constexpr (IsInput) {
-        return std::size_t {element_.input_count()};
-    } else {
-        return std::size_t {element_.output_count()};
-    }
-}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionViewTemplate<Const, IsInput>::empty() const -> bool {
-    return size() == std::size_t {0};
-}
-
-template <bool Const, bool IsInput>
-auto Schematic::ConnectionViewTemplate<Const, IsInput>::format() const -> std::string {
-    auto connections = transform_view(*this, &value_type::format_connection);
-    return fmt::format("{}", connections);
-}
-
-template class Schematic::ConnectionViewTemplate<false, false>;
-template class Schematic::ConnectionViewTemplate<true, false>;
-template class Schematic::ConnectionViewTemplate<false, true>;
-template class Schematic::ConnectionViewTemplate<true, true>;
-
-static_assert(std::ranges::input_range<Schematic::InputView>);
-static_assert(std::ranges::input_range<Schematic::ConstInputView>);
-static_assert(std::ranges::input_range<Schematic::OutputView>);
-static_assert(std::ranges::input_range<Schematic::ConstOutputView>);
-
-//
-// Schematic::Input
-//
-
-template <bool Const>
-Schematic::InputTemplate<Const>::InputTemplate(SchematicType &schematic,
-                                               element_id_t element_id,
-                                               connection_id_t input_index) noexcept
-    : schematic_(&schematic), element_id_(element_id), input_index_(input_index) {}
-
-template <bool Const>
-template <bool ConstOther>
-Schematic::InputTemplate<Const>::InputTemplate(InputTemplate<ConstOther> input) noexcept
-    requires Const && (!ConstOther)
-    : schematic_(input.schematic_),
-      element_id_(input.element_id_),
-      input_index_(input.input_index_) {}
-
-template <bool Const>
-template <bool ConstOther>
-auto Schematic::InputTemplate<Const>::operator==(
-    InputTemplate<ConstOther> other) const noexcept -> bool {
-    return schematic_ == other.schematic_ && element_id_ == other.element_id_ &&
-           input_index_ == other.input_index_;
-}
-
-template <bool Const>
-Schematic::InputTemplate<Const>::operator connection_t() const noexcept {
-    return connection_t {element_id(), input_index()};
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::format() const -> std::string {
-    const auto element = this->element();
-    return fmt::format("<Input {} of Element {}: {} {} x {}>", input_index(),
-                       element_id(), element.element_type(), element.input_count(),
-                       element.output_count());
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::format_connection() const -> std::string {
-    if (has_connected_element()) {
-        return fmt::format("Element_{}-{}", connected_element_id(),
-                           connected_output_index());
-    }
-    return "---";
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::schematic() const noexcept -> SchematicType & {
-    return *schematic_;
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::element_id() const noexcept -> element_id_t {
-    return element_id_;
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::input_index() const noexcept -> connection_id_t {
-    return input_index_;
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::element() const -> ElementTemplate<Const> {
-    return schematic_->element(element_id_);
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::has_connected_element() const -> bool {
-    return connected_element_id() != null_element;
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::connected_element_id() const -> element_id_t {
-    return connection_data_().element_id;
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::connected_output_index() const -> connection_id_t {
-    return connection_data_().connection_id;
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::connected_element() const
-    -> ElementTemplate<Const> {
-    return schematic_->element(connected_element_id());
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::connected_output() const -> OutputTemplate<Const> {
-    return connected_element().output(connected_output_index());
-}
-
-template <bool Const>
-void Schematic::InputTemplate<Const>::clear_connection() const
-    requires(!Const)
-{
-    auto &connection_data {connection_data_()};
-    if (connection_data.element_id != null_element) {
-        auto &destination_connection_data {
-            schematic_->output_connections_.at(connection_data.element_id.value)
-                .at(connection_data.connection_id.value)};
-
-        destination_connection_data.element_id = null_element;
-        destination_connection_data.connection_id = null_connection_id;
-
-        connection_data.element_id = null_element;
-        connection_data.connection_id = null_connection_id;
-    }
-}
-
-template <bool Const>
-template <bool ConstOther>
-void Schematic::InputTemplate<Const>::connect(OutputTemplate<ConstOther> output) const
-    requires(!Const)
-{
-    clear_connection();
-    schematic_->output(output).clear_connection();
-    assert(!has_connected_element());
-    assert(!output.has_connected_element());
-
-    // get data before we modify anything, for exception safety
-    auto &destination_connection_data =
-        schematic_->output_connections_.at(output.element_id().value)
-            .at(output.output_index().value);
-
-    auto &connection_data {connection_data_()};
-
-    connection_data.element_id = output.element_id();
-    connection_data.connection_id = output.output_index();
-
-    destination_connection_data.element_id = element_id();
-    destination_connection_data.connection_id = input_index();
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
-    return schematic_->input_connections_.at(element_id_.value).at(input_index_.value);
-}
-
-template <bool Const>
-auto Schematic::InputTemplate<Const>::is_inverted() const -> bool {
-    return schematic_->input_inverters_.at(element_id_.value).at(input_index_.value);
-}
-
-template <bool Const>
-void Schematic::InputTemplate<Const>::set_inverted(bool value) const
-    requires(!Const)
-{
-    schematic_->input_inverters_.at(element_id_.value).at(input_index_.value) = value;
-}
-
-// Template Instanciations
-
-template class Schematic::InputTemplate<true>;
-template class Schematic::InputTemplate<false>;
-
-template Schematic::InputTemplate<true>::InputTemplate(InputTemplate<false>) noexcept;
-
-template auto Schematic::InputTemplate<false>::operator==
-    <false>(InputTemplate<false>) const noexcept -> bool;
-template auto Schematic::InputTemplate<false>::operator==
-    <true>(InputTemplate<true>) const noexcept -> bool;
-template auto Schematic::InputTemplate<true>::operator==
-    <false>(InputTemplate<false>) const noexcept -> bool;
-template auto Schematic::InputTemplate<true>::operator==
-    <true>(InputTemplate<true>) const noexcept -> bool;
-
-template void Schematic::InputTemplate<false>::connect<false>(
-    OutputTemplate<false>) const;
-template void Schematic::InputTemplate<false>::connect<true>(OutputTemplate<true>) const;
-
-//
-// Schematic::Output
-//
-
-template <bool Const>
-Schematic::OutputTemplate<Const>::OutputTemplate(SchematicType &schematic,
-                                                 element_id_t element_id,
-                                                 connection_id_t output_index) noexcept
-    : schematic_(&schematic), element_id_(element_id), output_index_(output_index) {}
-
-template <bool Const>
-template <bool ConstOther>
-Schematic::OutputTemplate<Const>::OutputTemplate(
-    OutputTemplate<ConstOther> output) noexcept
-    requires Const && (!ConstOther)
-    : schematic_(output.schematic_),
-      element_id_(output.element_id_),
-      output_index_(output.output_index_) {}
-
-template <bool Const>
-template <bool ConstOther>
-auto Schematic::OutputTemplate<Const>::operator==(
-    Schematic::OutputTemplate<ConstOther> other) const noexcept -> bool {
-    return schematic_ == other.schematic_ && element_id_ == other.element_id_ &&
-           output_index_ == other.output_index_;
-}
-
-template <bool Const>
-Schematic::OutputTemplate<Const>::operator connection_t() const noexcept {
-    return connection_t {element_id(), output_index()};
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::format() const -> std::string {
-    const auto element = this->element();
-    return fmt::format("<Output {} of Element {}: {} {} x {}>", output_index(),
-                       element_id(), element.element_type(), element.input_count(),
-                       element.output_count());
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::format_connection() const -> std::string {
-    if (has_connected_element()) {
-        return fmt::format("Element_{}-{}", connected_element_id(),
-                           connected_input_index());
-    }
-    return "---";
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::schematic() const noexcept -> SchematicType & {
-    return *schematic_;
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::element_id() const noexcept -> element_id_t {
-    return element_id_;
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::output_index() const noexcept -> connection_id_t {
-    return output_index_;
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::element() const -> ElementTemplate<Const> {
-    return schematic_->element(element_id_);
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::has_connected_element() const -> bool {
-    return connected_element_id() != null_element;
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::connected_element_id() const -> element_id_t {
-    return connection_data_().element_id;
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::connected_input_index() const -> connection_id_t {
-    return connection_data_().connection_id;
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::connected_element() const
-    -> ElementTemplate<Const> {
-    return schematic_->element(connected_element_id());
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::connected_input() const -> InputTemplate<Const> {
-    return connected_element().input(connected_input_index());
-}
-
-template <bool Const>
-void Schematic::OutputTemplate<Const>::clear_connection() const
-    requires(!Const)
-{
-    auto &connection_data {connection_data_()};
-    if (connection_data.element_id != null_element) {
-        auto &destination_connection_data =
-            schematic_->input_connections_.at(connection_data.element_id.value)
-                .at(connection_data.connection_id.value);
-
-        destination_connection_data.element_id = null_element;
-        destination_connection_data.connection_id = null_connection_id;
-
-        connection_data.element_id = null_element;
-        connection_data.connection_id = null_connection_id;
-    }
-}
-
-template <bool Const>
-template <bool ConstOther>
-void Schematic::OutputTemplate<Const>::connect(InputTemplate<ConstOther> input) const
-    requires(!Const)
-{
-    clear_connection();
-    schematic_->input(input).clear_connection();
-    assert(!has_connected_element());
-    assert(!input.has_connected_element());
-
-    // get data before we modify anything, for exception safety
-    auto &connection_data {connection_data_()};
-    auto &destination_connection_data =
-        schematic_->input_connections_.at(input.element_id().value)
-            .at(input.input_index().value);
-
-    connection_data.element_id = input.element_id();
-    connection_data.connection_id = input.input_index();
-
-    destination_connection_data.element_id = element_id();
-    destination_connection_data.connection_id = output_index();
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::delay() const -> const delay_t {
-    return schematic_->output_delays_.at(element_id_.value).at(output_index_.value);
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::set_delay(delay_t value) const -> void
-    requires(!Const)
-{
-    schematic_->output_delays_.at(element_id_.value).at(output_index_.value) = value;
-}
-
-template <bool Const>
-auto Schematic::OutputTemplate<Const>::connection_data_() const -> ConnectionDataType & {
-    return schematic_->output_connections_.at(element_id_.value).at(output_index_.value);
-}
-
-// Template Instanciations
-
-template class Schematic::OutputTemplate<true>;
-template class Schematic::OutputTemplate<false>;
-
-template Schematic::OutputTemplate<true>::OutputTemplate(OutputTemplate<false>) noexcept;
-
-template auto Schematic::OutputTemplate<false>::operator==
-    <false>(OutputTemplate<false>) const noexcept -> bool;
-template auto Schematic::OutputTemplate<false>::operator==
-    <true>(OutputTemplate<true>) const noexcept -> bool;
-template auto Schematic::OutputTemplate<true>::operator==
-    <false>(OutputTemplate<false>) const noexcept -> bool;
-template auto Schematic::OutputTemplate<true>::operator==
-    <true>(OutputTemplate<true>) const noexcept -> bool;
-
-template void Schematic::OutputTemplate<false>::connect<false>(
-    InputTemplate<false>) const;
-template void Schematic::OutputTemplate<false>::connect<true>(InputTemplate<true>) const;
-
-}  // namespace logicsim
 
 //
 // Free Functions
 //
 
-namespace logicsim {
-
-auto add_placeholder(Schematic::Output output) -> void {
-    if (!output.has_connected_element()) {
-        auto placeholder = output.schematic().add_element(Schematic::ElementData {
-            .element_type = ElementType::placeholder,
-            .input_count = connection_count_t {1},
-            .output_count = connection_count_t {0},
-        });
-        output.connect(placeholder.input(connection_id_t {0}));
-    }
+auto swap(Schematic &a, Schematic &b) noexcept -> void {
+    a.swap(b);
 }
 
-auto add_element_placeholders(Schematic::Element element) -> void {
-    std::ranges::for_each(element.outputs(), add_placeholder);
+auto has_input_connections(const Schematic &data, element_id_t element_id) -> bool {
+    assert(element_id);
+
+    const auto is_input_connected = [&](connection_id_t input_id) {
+        return bool {data.output(input_t {element_id, input_id})};
+    };
+    return std::ranges::any_of(id_range(data.input_count(element_id)),
+                               is_input_connected);
 }
 
-auto calculate_output_delays(const LineTree &line_tree, delay_t wire_delay_per_distance)
-    -> std::vector<delay_t> {
-    auto lengths = line_tree.calculate_output_lengths();
-    return transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
-        return wire_delay_per_distance * length;
-    });
+auto has_output_connections(const Schematic &data, element_id_t element_id) -> bool {
+    assert(element_id);
+
+    const auto is_output_connected = [&](connection_id_t output_id) {
+        return bool {data.input(output_t {element_id, output_id})};
+    };
+    return std::ranges::any_of(id_range(data.output_count(element_id)),
+                               is_output_connected);
 }
 
-auto add_output_placeholders(Schematic &schematic) -> void {
-    std::ranges::for_each(schematic.elements(), add_element_placeholders);
+auto element_ids(const Schematic &schematic) -> range_extended_t<element_id_t> {
+    return range_extended<element_id_t>(schematic.size());
 }
 
 }  // namespace logicsim
+
+template <>
+auto std::swap(logicsim::Schematic &a, logicsim::Schematic &b) noexcept -> void {
+    a.swap(b);
+}

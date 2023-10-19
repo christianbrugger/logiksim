@@ -40,8 +40,6 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
-    src/component/schematic/container_data.cpp
-
     src/concept/explicitly_convertible.cpp
     src/concept/input_range.cpp
     src/concept/integral.cpp
@@ -225,6 +223,7 @@ set(LS_CORE_SOURCES
     src/safe_numeric.cpp
     src/schematic.cpp
     src/schematic_generation.cpp
+    src/schematic_old.cpp
     src/schematic_validation.cpp
     src/segment_tree.cpp
     src/serialize.cpp

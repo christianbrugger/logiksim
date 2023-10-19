@@ -163,7 +163,7 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
         const auto output_count = connection_count_t {
             gsl::narrow<connection_count_t::value_type>(output_dist(rng))};
 
-        schematic.add_element(Schematic::ElementData {
+        schematic.add_element(SchematicOld::ElementData {
             .element_type = ElementType::wire,
             .input_count = connection_count_t {1},
             .output_count = output_count,

@@ -14,7 +14,7 @@
 #include "random/generator.h"
 #include "random/layout_calculation_data.h"
 #include "render_circuit.h"
-#include "schematic.h"
+#include "schematic_old.h"
 #include "schematic_validation.h"
 #include "simulation.h"
 #include "simulation_view.h"
@@ -180,7 +180,7 @@ static void BM_Simulation_0(benchmark::State& state) {
         auto schematic = create_random_schematic(rng, 100);
         add_output_placeholders(schematic);
         // TODO fix bug and re-enable?
-        // schematic.validate(Schematic::validate_all);
+        // schematic.validate(SchematicOld::validate_all);
 
         benchmark::DoNotOptimize(schematic);
         benchmark::ClobberMemory();
@@ -203,16 +203,16 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
         state.PauseTiming();
 
-        auto schematic = Schematic {};
+        auto schematic = SchematicOld {};
         for (auto __ [[maybe_unused]] : range(8)) {
-            auto inverter = schematic.add_element(Schematic::ElementData {
+            auto inverter = schematic.add_element(SchematicOld::ElementData {
                 .element_type = ElementType::buffer_element,
                 .input_count = connection_count_t {1},
                 .output_count = connection_count_t {1},
                 .input_inverters = {false},
                 .output_delays = {delay_t {3us}},
             });
-            auto wire = schematic.add_element(Schematic::ElementData {
+            auto wire = schematic.add_element(SchematicOld::ElementData {
                 .element_type = ElementType::wire,
                 .input_count = connection_count_t {1},
                 .output_count = connection_count_t {1},

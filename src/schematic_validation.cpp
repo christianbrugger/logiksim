@@ -3,41 +3,41 @@
 #include "algorithm/accumulate.h"
 #include "iterator_adaptor/transform_view.h"
 #include "layout_info.h"
-#include "schematic.h"
+#include "schematic_old.h"
 
 #include <stdexcept>
 
 namespace logicsim {
 
-auto validate_input_connected(const Schematic::ConstInput input) -> void {
+auto validate_input_connected(const SchematicOld::ConstInput input) -> void {
     if (!input.has_connected_element()) [[unlikely]] {
         throw std::runtime_error("Element has unconnected input.");
     }
 }
 
-auto validate_output_connected(const Schematic::ConstOutput output) -> void {
+auto validate_output_connected(const SchematicOld::ConstOutput output) -> void {
     if (!output.has_connected_element()) [[unlikely]] {
         throw std::runtime_error("Element has unconnected output.");
     }
 }
 
-auto validate_input_disconnected(const Schematic::ConstInput input) -> void {
+auto validate_input_disconnected(const SchematicOld::ConstInput input) -> void {
     if (input.has_connected_element()) [[unlikely]] {
         throw std::runtime_error("Element has connected input.");
     }
 }
 
-auto validate_output_disconnected(const Schematic::ConstOutput output) -> void {
+auto validate_output_disconnected(const SchematicOld::ConstOutput output) -> void {
     if (output.has_connected_element()) [[unlikely]] {
         throw std::runtime_error("Element has connected output.");
     }
 }
 
-auto validate_all_outputs_connected(const Schematic::ConstElement element) -> void {
+auto validate_all_outputs_connected(const SchematicOld::ConstElement element) -> void {
     std::ranges::for_each(element.outputs(), validate_output_connected);
 }
 
-auto validate_all_non_wire_outputs_connected(const Schematic::ConstElement element)
+auto validate_all_non_wire_outputs_connected(const SchematicOld::ConstElement element)
     -> void {
     for (const auto output : element.outputs()) {
         if (!element.is_wire()) {
@@ -46,23 +46,23 @@ auto validate_all_non_wire_outputs_connected(const Schematic::ConstElement eleme
     }
 }
 
-auto validate_all_inputs_disconnected(const Schematic::ConstElement element) -> void {
+auto validate_all_inputs_disconnected(const SchematicOld::ConstElement element) -> void {
     std::ranges::for_each(element.inputs(), validate_input_disconnected);
 }
 
-auto validate_all_outputs_disconnected(const Schematic::ConstElement element) -> void {
+auto validate_all_outputs_disconnected(const SchematicOld::ConstElement element) -> void {
     std::ranges::for_each(element.outputs(), validate_output_disconnected);
 }
 
-auto validate_placeholder_connected(const Schematic::ConstElement element) -> void {
+auto validate_placeholder_connected(const SchematicOld::ConstElement element) -> void {
     if (element.element_type() == ElementType::placeholder) {
         std::ranges::for_each(element.inputs(), validate_input_connected);
         std::ranges::for_each(element.outputs(), validate_output_connected);
     }
 }
 
-auto validate_has_no_placeholders(const Schematic::ConstElement element) -> void {
-    const auto is_placeholder = [](const Schematic::ConstOutput output) {
+auto validate_has_no_placeholders(const SchematicOld::ConstElement element) -> void {
+    const auto is_placeholder = [](const SchematicOld::ConstOutput output) {
         return output.has_connected_element() &&
                output.connected_element().is_placeholder();
     };
@@ -71,26 +71,27 @@ auto validate_has_no_placeholders(const Schematic::ConstElement element) -> void
     }
 }
 
-auto validate_input_has_connection_valid(const Schematic::ConstInput input) -> void {
+auto validate_input_has_connection_valid(const SchematicOld::ConstInput input) -> void {
     if (input.has_connected_element() != bool {input.connected_element_id()} ||
         input.has_connected_element() != bool {input.connected_output_index()}) {
         throw std::runtime_error("has_connected_element is inconsistent");
     }
 }
 
-auto validate_output_has_connection_valid(const Schematic::ConstOutput output) -> void {
+auto validate_output_has_connection_valid(const SchematicOld::ConstOutput output)
+    -> void {
     if (output.has_connected_element() != bool {output.connected_element_id()} ||
         output.has_connected_element() != bool {output.connected_input_index()}) {
         throw std::runtime_error("has_connected_element is inconsistent");
     }
 }
 
-auto validate_has_connection_valid(const Schematic::ConstElement element) -> void {
+auto validate_has_connection_valid(const SchematicOld::ConstElement element) -> void {
     std::ranges::for_each(element.inputs(), validate_input_has_connection_valid);
     std::ranges::for_each(element.outputs(), validate_output_has_connection_valid);
 }
 
-auto validate_input_consistent(const Schematic::ConstInput input) -> void {
+auto validate_input_consistent(const SchematicOld::ConstInput input) -> void {
     if (input.has_connected_element()) {
         if (!input.connected_output().has_connected_element()) [[unlikely]] {
             throw std::runtime_error("Back reference is missing.");
@@ -102,7 +103,7 @@ auto validate_input_consistent(const Schematic::ConstInput input) -> void {
     }
 }
 
-auto validate_output_consistent(const Schematic::ConstOutput output) -> void {
+auto validate_output_consistent(const SchematicOld::ConstOutput output) -> void {
     if (output.has_connected_element()) {
         if (!output.connected_input().has_connected_element()) [[unlikely]] {
             throw std::runtime_error("Back reference is missing.");
@@ -114,13 +115,13 @@ auto validate_output_consistent(const Schematic::ConstOutput output) -> void {
     }
 }
 
-auto validate_element_connections_consistent(const Schematic::ConstElement element)
+auto validate_element_connections_consistent(const SchematicOld::ConstElement element)
     -> void {
     std::ranges::for_each(element.inputs(), validate_input_consistent);
     std::ranges::for_each(element.outputs(), validate_output_consistent);
 }
 
-auto validate_no_input_loops(const Schematic::ConstInput input) -> void {
+auto validate_no_input_loops(const SchematicOld::ConstInput input) -> void {
     // clocks have an internal loop, that's allowed.
     const auto clock_loop = [=]() {
         return input.element().element_type() == ElementType::clock_generator &&
@@ -136,7 +137,7 @@ auto validate_no_input_loops(const Schematic::ConstInput input) -> void {
     }
 }
 
-auto validate_no_output_loops(const Schematic::ConstOutput output) -> void {
+auto validate_no_output_loops(const SchematicOld::ConstOutput output) -> void {
     // clocks have an internal loop, that's allowed.
     const auto clock_loop = [=]() {
         return output.element().element_type() == ElementType::clock_generator &&
@@ -152,13 +153,13 @@ auto validate_no_output_loops(const Schematic::ConstOutput output) -> void {
     }
 }
 
-auto validate_element_connections_no_loops(const Schematic::ConstElement element)
+auto validate_element_connections_no_loops(const SchematicOld::ConstElement element)
     -> void {
     std::ranges::for_each(element.inputs(), validate_no_input_loops);
     std::ranges::for_each(element.outputs(), validate_no_output_loops);
 }
 
-auto validate_input_output_count(const Schematic::ConstElement element) -> void {
+auto validate_input_output_count(const SchematicOld::ConstElement element) -> void {
     if (!is_input_output_count_valid(element.element_type(), element.input_count(),
                                      element.output_count())) [[unlikely]] {
         throw std::runtime_error("element has wrong input or output count.");
@@ -179,13 +180,13 @@ auto validate_connection_data(const connection_t connection_data) -> void {
     }
 }
 
-auto validate_sub_circuit_ids(const Schematic::ConstElement element) -> void {
+auto validate_sub_circuit_ids(const SchematicOld::ConstElement element) -> void {
     if (!(element.is_sub_circuit() == bool {element.sub_circuit_id()})) [[unlikely]] {
         throw std::runtime_error("Not a sub-circuit or no circuit id.");
     }
 }
 
-auto validate(const Schematic &schematic, schematic::ValidationSettings settings)
+auto validate(const SchematicOld &schematic, schematic::ValidationSettings settings)
     -> void {
     // connections
     std::ranges::for_each(schematic.elements(), validate_input_output_count);
@@ -215,11 +216,12 @@ auto validate(const Schematic &schematic, schematic::ValidationSettings settings
         throw std::runtime_error("invalid circuit id");
     }
 
-    const auto to_input_size = [](const Schematic::ConstElement &element) -> std::size_t {
+    const auto to_input_size =
+        [](const SchematicOld::ConstElement &element) -> std::size_t {
         return std::size_t {element.input_count()};
     };
     const auto to_output_size =
-        [](const Schematic::ConstElement &element) -> std::size_t {
+        [](const SchematicOld::ConstElement &element) -> std::size_t {
         return std::size_t {element.output_count()};
     };
 

@@ -58,14 +58,14 @@ TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
 
 // Simulation
 
-[[nodiscard]] auto get_uninitialized_simulation(Schematic& schematic) -> Simulation {
+[[nodiscard]] auto get_uninitialized_simulation(SchematicOld& schematic) -> Simulation {
     add_output_placeholders(schematic);
     validate(schematic, schematic::validate_all);
 
     return Simulation {schematic};
 }
 
-[[nodiscard]] auto get_initialized_simulation(Schematic& schematic) -> Simulation {
+[[nodiscard]] auto get_initialized_simulation(SchematicOld& schematic) -> Simulation {
     add_output_placeholders(schematic);
     validate(schematic, schematic::validate_all);
 
@@ -75,8 +75,8 @@ TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
 }
 
 TEST(SimulationTest, InitializeSimulation) {
-    Schematic schematic;
-    auto inverter = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto inverter = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
@@ -93,7 +93,7 @@ TEST(SimulationTest, InitializeSimulation) {
 
 TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
     using namespace std::chrono_literals;
-    Schematic schematic;
+    SchematicOld schematic;
 
     auto simulation = get_initialized_simulation(schematic);
 
@@ -105,14 +105,14 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
 TEST(SimulationTest, SimulationProcessAllEventsForTime) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    auto and_element = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto and_element = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
-    auto xor_element = schematic.add_element(Schematic::ElementData {
+    auto xor_element = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
@@ -135,15 +135,15 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
     using namespace std::chrono_literals;
 
     // create infinite loop
-    Schematic schematic;
-    auto inverter = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto inverter = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
         .output_delays = {defaults::logic_item_delay},
     });
-    auto wire = schematic.add_element(Schematic::ElementData {
+    auto wire = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
@@ -164,15 +164,15 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     using namespace std::chrono_literals;
 
     // create infinite loop
-    Schematic schematic;
-    auto inverter = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto inverter = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
         .output_delays = {defaults::logic_item_delay},
     });
-    auto wire = schematic.add_element(Schematic::ElementData {
+    auto wire = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
@@ -203,8 +203,8 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
 }
 
 TEST(SimulationTest, AdditionalEvents) {
-    Schematic schematic;
-    auto xor_element = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto xor_element = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
@@ -236,8 +236,8 @@ TEST(SimulationTest, AdditionalEvents) {
 }
 
 TEST(SimulationTest, SimulatanousEvents) {
-    Schematic schematic;
-    auto xor_element = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto xor_element = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
@@ -264,27 +264,27 @@ TEST(SimulationTest, SimulatanousEvents) {
 }
 
 TEST(SimulationTest, HalfAdder) {
-    Schematic schematic;
+    SchematicOld schematic;
 
-    auto input0 = schematic.add_element(Schematic::ElementData {
+    auto input0 = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {2},
         .output_delays = {delay_t {1us}, delay_t {1us}},
     });
-    auto input1 = schematic.add_element(Schematic::ElementData {
+    auto input1 = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {2},
         .output_delays = {delay_t {1us}, delay_t {1us}},
     });
-    auto carry = schematic.add_element(Schematic::ElementData {
+    auto carry = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .output_delays = {defaults::logic_item_delay},
     });
-    auto output = schematic.add_element(Schematic::ElementData {
+    auto output = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
@@ -343,8 +343,8 @@ TEST(SimulationTest, HalfAdder) {
 TEST(SimulationTest, OutputDelayTest) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    auto wire = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto wire = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {3},
@@ -372,8 +372,8 @@ TEST(SimulationTest, OutputDelayTest) {
 TEST(SimulationTest, JKFlipFlop) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    const auto flipflop = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    const auto flipflop = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::flipflop_jk,
         .input_count = connection_count_t {5},
         .output_count = connection_count_t {2},
@@ -427,8 +427,8 @@ TEST(SimulationTest, JKFlipFlop) {
 TEST(SimulationTest, AndInputInverters1) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    const auto and_element = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    const auto and_element = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
@@ -452,8 +452,8 @@ TEST(SimulationTest, AndInputInverters1) {
 TEST(SimulationTest, AndInputInverters2) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    const auto and_element = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    const auto and_element = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
@@ -477,8 +477,8 @@ TEST(SimulationTest, AndInputInverters2) {
 TEST(SimulationTest, TestInputHistory) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    const auto wire = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    const auto wire = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {2},
@@ -521,8 +521,8 @@ TEST(SimulationTest, TestInputHistory) {
 TEST(SimulationTest, TestClockGenerator) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    auto clock = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto clock = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::clock_generator,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {3},
@@ -549,8 +549,8 @@ TEST(SimulationTest, TestClockGenerator) {
 TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    auto clock = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto clock = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::clock_generator,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {3},
@@ -583,8 +583,8 @@ TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
 TEST(SimulationTest, TestClockReset) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    auto clock = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto clock = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::clock_generator,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {3},
@@ -620,8 +620,8 @@ TEST(SimulationTest, TestClockReset) {
 TEST(SimulationTest, TestShiftRegister) {
     using namespace std::chrono_literals;
 
-    Schematic schematic;
-    auto shift_register = schematic.add_element(Schematic::ElementData {
+    SchematicOld schematic;
+    auto shift_register = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::shift_register,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {2},

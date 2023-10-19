@@ -25,7 +25,7 @@ void _generate_random_events(Rng &rng, Simulation &simulation) {
 
 }  // namespace
 
-auto benchmark_simulation(Rng &rng, Schematic &schematic, const int n_events,
+auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
                           const bool do_print) -> int64_t {
     Simulation simulation {schematic};
     simulation.print_events = do_print;
@@ -69,7 +69,8 @@ auto benchmark_simulation(Rng &rng, Schematic &schematic, const int n_events,
         print_fmt("output_values = {}\n", fmt_join("", output_values, "{:b}"));
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
-                auto hist = simulation.input_history(Schematic::ConstElement {element});
+                auto hist =
+                    simulation.input_history(SchematicOld::ConstElement {element});
                 print(element, hist);
             }
         }
@@ -93,7 +94,7 @@ auto benchmark_simulation(const int n_elements, const int n_events, const bool d
     return benchmark_simulation(rng, schematic, n_events, do_print);
 }
 
-auto benchmark_simulation_pure(Schematic &schematic, const int n_events,
+auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
                                const bool do_print) -> int64_t {
     Simulation simulation {schematic};
     simulation.print_events = do_print;
@@ -128,7 +129,8 @@ auto benchmark_simulation_pure(Schematic &schematic, const int n_events,
         print_fmt("output_values = {}\n", fmt_join("", output_values, "{:b}"));
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
-                auto hist = simulation.input_history(Schematic::ConstElement {element});
+                auto hist =
+                    simulation.input_history(SchematicOld::ConstElement {element});
                 print(element, hist);
             }
         }

@@ -8,10 +8,10 @@
 
 namespace logicsim {
 
-auto benchmark_schematic(const int n_elements) -> Schematic {
-    Schematic schematic {};
+auto benchmark_schematic(const int n_elements) -> SchematicOld {
+    SchematicOld schematic {};
 
-    auto elem0 = schematic.add_element(Schematic::ElementData {
+    auto elem0 = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
@@ -19,13 +19,13 @@ auto benchmark_schematic(const int n_elements) -> Schematic {
     });
 
     for ([[maybe_unused]] auto count : range(n_elements - 1)) {
-        auto wire0 = schematic.add_element(Schematic::ElementData {
+        auto wire0 = schematic.add_element(SchematicOld::ElementData {
             .element_type = ElementType::wire,
             .input_count = connection_count_t {1},
             .output_count = connection_count_t {2},
             .output_delays = {defaults::logic_item_delay, defaults::logic_item_delay},
         });
-        auto elem1 = schematic.add_element(Schematic::ElementData {
+        auto elem1 = schematic.add_element(SchematicOld::ElementData {
             .element_type = ElementType::and_element,
             .input_count = connection_count_t {2},
             .output_count = connection_count_t {1},
@@ -45,7 +45,7 @@ auto benchmark_schematic(const int n_elements) -> Schematic {
 
 namespace details {
 
-void add_random_element(Schematic &schematic, Rng &rng) {
+void add_random_element(SchematicOld &schematic, Rng &rng) {
     static constexpr auto max_connections = 8;
     auto connection_dist = uint_distribution(1, max_connections);
     auto element_dist = uint_distribution<int8_t>(0, 2);
@@ -62,7 +62,7 @@ void add_random_element(Schematic &schematic, Rng &rng) {
         element_type == ElementType::wire ? connection_dist(rng) : 1;
 
     // TODO remove narrow
-    schematic.add_element(Schematic::ElementData {
+    schematic.add_element(SchematicOld::ElementData {
         .element_type = element_type,
         .input_count =
             connection_count_t {gsl::narrow<connection_count_t::value_type>(input_count)},
@@ -75,13 +75,14 @@ void add_random_element(Schematic &schematic, Rng &rng) {
     });
 }
 
-void create_random_elements(Schematic &schematic, Rng &rng, int n_elements) {
+void create_random_elements(SchematicOld &schematic, Rng &rng, int n_elements) {
     for (auto _ [[maybe_unused]] : range(n_elements)) {
         add_random_element(schematic, rng);
     }
 }
 
-void create_random_connections(Schematic &schematic, Rng &rng, double connection_ratio) {
+void create_random_connections(SchematicOld &schematic, Rng &rng,
+                               double connection_ratio) {
     if (connection_ratio == 0) {
         return;
     }
@@ -90,7 +91,7 @@ void create_random_connections(Schematic &schematic, Rng &rng, double connection
     }
 
     // collect inputs
-    std::vector<Schematic::Input> all_inputs;
+    std::vector<SchematicOld::Input> all_inputs;
     all_inputs.reserve(schematic.total_input_count());
     for (auto element : schematic.elements()) {
         for (auto input : element.inputs()) {
@@ -99,7 +100,7 @@ void create_random_connections(Schematic &schematic, Rng &rng, double connection
     }
 
     // collect outputs
-    std::vector<Schematic::Output> all_outputs;
+    std::vector<SchematicOld::Output> all_outputs;
     all_outputs.reserve(schematic.total_output_count());
     for (auto element : schematic.elements()) {
         for (auto output : element.outputs()) {
@@ -122,8 +123,8 @@ void create_random_connections(Schematic &schematic, Rng &rng, double connection
 }  // namespace details
 
 auto create_random_schematic(Rng &rng, int n_elements, double connection_ratio)
-    -> Schematic {
-    Schematic schematic;
+    -> SchematicOld {
+    SchematicOld schematic;
     details::create_random_elements(schematic, rng, n_elements);
     details::create_random_connections(schematic, rng, connection_ratio);
 

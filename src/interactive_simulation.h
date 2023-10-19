@@ -2,7 +2,7 @@
 #define LOGIKSIM_INTERACTIVE_SIMULATION_H
 
 #include "event_counter_multi.h"
-#include "schematic.h"
+#include "schematic_old.h"
 #include "simulation.h"
 #include "timer.h"
 #include "vocabulary.h"
@@ -52,7 +52,7 @@ class InteractiveSimulation {
    public:
     InteractiveSimulation(const Layout& layout, const SimulationSettings& settings);
 
-    [[nodiscard]] auto schematic() const -> const Schematic&;
+    [[nodiscard]] auto schematic() const -> const SchematicOld&;
     [[nodiscard]] auto simulation() const -> const Simulation&;
 
     auto set_simulation_time_rate(time_rate_t time_rate) -> void;
@@ -71,7 +71,7 @@ class InteractiveSimulation {
     [[nodiscard]] auto expected_simulation_time(realtime_t now) const -> time_t;
 
    private:
-    Schematic schematic_;
+    SchematicOld schematic_;
     Simulation simulation_;
     detail::interactive_simulation::InteractionCache interaction_cache_;
     time_rate_t simulation_time_rate_;

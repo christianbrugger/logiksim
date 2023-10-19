@@ -60,7 +60,7 @@ InteractiveSimulation::InteractiveSimulation(const Layout& layout,
     simulation_.initialize();
 }
 
-auto InteractiveSimulation::schematic() const -> const Schematic& {
+auto InteractiveSimulation::schematic() const -> const SchematicOld& {
     return schematic_;
 }
 

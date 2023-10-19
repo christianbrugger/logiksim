@@ -9,7 +9,7 @@
 
 namespace logicsim {
 
-class Schematic;
+class SchematicOld;
 class Simulation;
 
 namespace simulation {
@@ -42,7 +42,7 @@ class SimulationView {
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
    private:
-    gsl::not_null<const Schematic *> schematic_;
+    gsl::not_null<const SchematicOld *> schematic_;
     gsl::not_null<const Simulation *> simulation_;
 };
 

@@ -1,5 +1,6 @@
 #include "schematic_generation.h"
 
+#include "algorithm/transform_to_vector.h"
 #include "editable_circuit/cache/connection_cache.h"
 #include "editable_circuit/cache/helper.h"
 #include "exception.h"
@@ -7,23 +8,31 @@
 
 namespace logicsim {
 
+auto calculate_output_delays(const LineTree& line_tree, delay_t wire_delay_per_distance)
+    -> std::vector<delay_t> {
+    auto lengths = line_tree.calculate_output_lengths();
+    return transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
+        return wire_delay_per_distance * length;
+    });
+}
+
 namespace {
 
 //
 // Layout Elements
 //
 
-auto add_placeholder_element(Schematic& schematic) -> Schematic::Element {
-    return schematic.add_element(Schematic::ElementData {
+auto add_placeholder_element(SchematicOld& schematic) -> SchematicOld::Element {
+    return schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::placeholder,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {0},
-        .history_length = Schematic::no_history,
+        .history_length = SchematicOld::no_history,
     });
 }
 
-auto add_unused_element(Schematic& schematic) -> void {
-    schematic.add_element(Schematic::ElementData {
+auto add_unused_element(SchematicOld& schematic) -> void {
+    schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::unused,
         .input_count = connection_count_t {0},
         .output_count = connection_count_t {0},
@@ -31,11 +40,11 @@ auto add_unused_element(Schematic& schematic) -> void {
         .sub_circuit_id = null_circuit,
         .input_inverters = {},
         .output_delays = {},
-        .history_length = Schematic::no_history,
+        .history_length = SchematicOld::no_history,
     });
 }
 
-auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void {
+auto add_logic_item(SchematicOld& schematic, layout::ConstElement element) -> void {
     const auto output_delays = [&]() -> std::vector<delay_t> {
         switch (element.element_type()) {
             using enum ElementType;
@@ -61,7 +70,7 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
         throw_exception("invalid");
     }();
 
-    schematic.add_element(Schematic::ElementData {
+    schematic.add_element(SchematicOld::ElementData {
         .element_type = element.element_type(),
         .input_count = element.input_count(),
         .output_count = element.output_count(),
@@ -69,11 +78,11 @@ auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void 
         .sub_circuit_id = element.sub_circuit_id(),
         .input_inverters = element.input_inverters(),
         .output_delays = output_delays,
-        .history_length = Schematic::no_history,
+        .history_length = SchematicOld::no_history,
     });
 }
 
-auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
+auto add_wire(SchematicOld& schematic, layout::ConstElement element) -> void {
     const auto& line_tree = element.line_tree();
 
     if (line_tree.empty()) {
@@ -83,7 +92,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
         } else {
             const auto output_count = element.segment_tree().output_count();
 
-            schematic.add_element(Schematic::ElementData {
+            schematic.add_element(SchematicOld::ElementData {
                 .element_type = element.element_type(),
                 .input_count = connection_count_t {0},
                 .output_count = output_count,
@@ -107,7 +116,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
         if (line_tree.output_count() > connection_count_t::max()) {
             add_unused_element(schematic);
         } else {
-            schematic.add_element(Schematic::ElementData {
+            schematic.add_element(SchematicOld::ElementData {
                 .element_type = element.element_type(),
                 .input_count = connection_count_t {1},
                 .output_count = line_tree.output_count(),
@@ -120,7 +129,7 @@ auto add_wire(Schematic& schematic, layout::ConstElement element) -> void {
     }
 }
 
-auto add_layout_elements(Schematic& schematic, const Layout& layout) -> void {
+auto add_layout_elements(SchematicOld& schematic, const Layout& layout) -> void {
     for (const auto element : layout.elements()) {
         bool inserted = element.is_inserted();
 
@@ -153,7 +162,7 @@ struct GenerationCache {
 };
 
 auto connect_line_tree(const GenerationCache& cache, const LineTree& line_tree,
-                       Schematic::Element element) -> void {
+                       SchematicOld::Element element) -> void {
     auto& schematic = element.schematic();
 
     // connect input
@@ -186,7 +195,7 @@ auto connect_line_tree(const GenerationCache& cache, const LineTree& line_tree,
 
 // wires without inputs have no LineTree
 auto connect_segment_tree(const GenerationCache& cache, const SegmentTree& segment_tree,
-                          Schematic::Element element) -> void {
+                          SchematicOld::Element element) -> void {
     if (element.input_count() != connection_count_t {0}) [[unlikely]] {
         throw_exception("can only connect segment trees without inputs");
     }
@@ -218,7 +227,7 @@ auto connect_segment_tree(const GenerationCache& cache, const SegmentTree& segme
     }
 }
 
-auto create_connections(Schematic& schematic, const Layout& layout) -> void {
+auto create_connections(SchematicOld& schematic, const Layout& layout) -> void {
     const auto cache = GenerationCache {layout};
 
     for (auto element : schematic.elements()) {
@@ -247,7 +256,7 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
 // Missing Placeholders
 //
 
-auto add_missing_placeholders(Schematic& schematic) -> void {
+auto add_missing_placeholders(SchematicOld& schematic) -> void {
     for (auto element : schematic.elements()) {
         if (element.is_logic_item()) {
             for (auto output : element.outputs()) {
@@ -264,7 +273,7 @@ auto add_missing_placeholders(Schematic& schematic) -> void {
 // Output Inverters
 //
 
-auto set_output_inverters(Schematic& schematic, layout::ConstElement element) -> void {
+auto set_output_inverters(SchematicOld& schematic, layout::ConstElement element) -> void {
     for (auto output : schematic.element(element).outputs()) {
         if (element.output_inverted(output.output_index())) {
             output.connected_input().set_inverted(true);
@@ -272,7 +281,7 @@ auto set_output_inverters(Schematic& schematic, layout::ConstElement element) ->
     }
 }
 
-auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
+auto set_output_inverters(SchematicOld& schematic, const Layout& layout) -> void {
     for (const auto element : layout.elements()) {
         if (element.is_inserted() && element.is_logic_item()) {
             set_output_inverters(schematic, element);
@@ -286,8 +295,9 @@ auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
 // Main
 //
 
-auto generate_schematic(const Layout& layout, delay_t wire_delay_per_unit) -> Schematic {
-    auto schematic = Schematic {layout.circuit_id(), wire_delay_per_unit};
+auto generate_schematic(const Layout& layout, delay_t wire_delay_per_unit)
+    -> SchematicOld {
+    auto schematic = SchematicOld {layout.circuit_id(), wire_delay_per_unit};
 
     add_layout_elements(schematic, layout);
     create_connections(schematic, layout);

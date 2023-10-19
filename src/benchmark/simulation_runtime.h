@@ -9,14 +9,14 @@ namespace logicsim {
 
 constexpr int BENCHMARK_DEFAULT_EVENTS {10'000};
 
-auto benchmark_simulation(Rng &rng, Schematic &schematic, const int n_events,
+auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
                           const bool do_print) -> int64_t;
 
 auto benchmark_simulation(int n_elements = BENCHMARK_DEFAULT_ELEMENTS,
                           int n_events = BENCHMARK_DEFAULT_EVENTS, bool do_print = false)
     -> int64_t;
 
-auto benchmark_simulation_pure(Schematic &schematic, const int n_events,
+auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
                                const bool do_print) -> int64_t;
 
 }  // namespace logicsim
