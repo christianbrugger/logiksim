@@ -4,6 +4,7 @@
 #include "format/container.h"
 #include "format/std_type.h"
 #include "layout.h"
+#include "schematic.h"
 #include "schematic_generation.h"
 #include "schematic_validation.h"
 #include "vocabulary/simulation_setting.h"
@@ -49,7 +50,9 @@ auto InteractionCache::find(point_t position) const -> std::optional<element_id_
 
 InteractiveSimulation::InteractiveSimulation(const Layout& layout,
                                              const SimulationSettings& settings)
-    : schematic_ {generate_schematic(layout, settings.wire_delay_per_distance())},
+    : schematic_ {generate_schematic(
+          generate_schematic(layout, settings.wire_delay_per_distance()),
+          settings.wire_delay_per_distance())},
       simulation_ {schematic_},
       interaction_cache_ {layout},
       simulation_time_rate_ {settings.simulation_time_rate},

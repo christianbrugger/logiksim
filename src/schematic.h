@@ -2,6 +2,8 @@
 #define LOGICSIM_SCHEMATIC_H
 
 #include "algorithm/range_extended.h"
+#include "format/struct.h"
+#include "format/container.h"
 #include "geometry/connection.h"
 #include "vocabulary/circuit_id.h"
 #include "vocabulary/connection.h"
@@ -63,6 +65,8 @@ class Schematic {
 
    public:
     auto swap(Schematic &other) noexcept -> void;
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const Schematic &) const -> bool = default;
 
     [[nodiscard]] auto size() const noexcept -> std::size_t;
     [[nodiscard]] auto empty() const noexcept -> bool;
@@ -91,6 +95,8 @@ class Schematic {
         -> const output_delays_t &;
     [[nodiscard]] auto history_length(element_id_t element_id) const -> delay_t;
 
+    auto set_input_inverter(input_t input, bool value) -> void;
+
    private:
     auto clear_connection(input_t input, output_t output) -> void;
     [[nodiscard]] auto last_element_id() const -> element_id_t;
@@ -110,23 +116,30 @@ class Schematic {
 
 auto swap(Schematic &a, Schematic &b) noexcept -> void;
 
-[[nodiscard]] auto has_input_connections(const Schematic &data,
-                                         element_id_t element_id) -> bool;
-[[nodiscard]] auto has_output_connections(const Schematic &data,
-                                          element_id_t element_id) -> bool;
+[[nodiscard]] auto has_input_connections(const Schematic &data, element_id_t element_id)
+    -> bool;
+[[nodiscard]] auto has_output_connections(const Schematic &data, element_id_t element_id)
+    -> bool;
 
 [[nodiscard]] auto element_ids(const Schematic &schematic)
     -> range_extended_t<element_id_t>;
 
-[[nodiscard]] constexpr auto inputs(const Schematic &schematic,
-                                    element_id_t element_id) {
+[[nodiscard]] constexpr auto inputs(const Schematic &schematic, element_id_t element_id) {
     return inputs(element_id, schematic.input_count(element_id));
 }
 
 [[nodiscard]] constexpr auto outputs(const Schematic &schematic,
                                      element_id_t element_id) {
-    return inputs(element_id, schematic.output_count(element_id));
+    return outputs(element_id, schematic.output_count(element_id));
 }
+
+[[nodiscard]] auto input_inverted(const Schematic &schematic, input_t input) -> bool;
+
+[[nodiscard]] auto format_element(const Schematic &schematic, element_id_t element)
+    -> std::string;
+[[nodiscard]] auto format_element_with_connections(const Schematic &schematic,
+                                                   element_id_t element_id)
+    -> std::string;
 
 }  // namespace logicsim
 

@@ -1,6 +1,11 @@
 #include "schematic.h"
 
+#include "algorithm/fmt_join.h"
 #include "geometry/connection_count.h"
+#include "iterator_adaptor/transform_view.h"
+#include "logging.h"
+
+#include <fmt/core.h>
 
 #include <algorithm>
 #include <cassert>
@@ -75,6 +80,18 @@ auto Schematic::swap(Schematic &other) noexcept -> void {
     swap(total_output_count_, other.total_output_count_);
 }
 
+auto Schematic::format() const -> std::string {
+    if (empty()) {
+        return fmt::format("<Schematic with {} elements>", size());
+    }
+
+    const auto proj = [&](element_id_t element_id) -> std::string {
+        return format_element_with_connections(*this, element_id);
+    };
+    const auto list = fmt_join(",\n  ", element_ids(*this), "{}", proj);
+    return fmt::format("<Schematic with {} elements: [\n  {}\n]>", size(), list);
+}
+
 auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
     // check enough space for IDs
     if (element_types_.size() >= std::size_t {element_id_t::max()}) [[unlikely]] {
@@ -113,19 +130,20 @@ auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
 }
 
 auto Schematic::output(input_t input) const -> output_t {
-    return input_connections_.at(input.element_id.value).at(input.element_id.value);
+    return input_connections_.at(input.element_id.value).at(input.connection_id.value);
 }
 
 auto Schematic::input(output_t output) const -> input_t {
-    return output_connections_.at(output.element_id.value).at(output.element_id.value);
+    return output_connections_.at(output.element_id.value).at(output.connection_id.value);
 }
 
 auto Schematic::connect(input_t input, output_t output) -> void {
     clear(input);
     clear(output);
 
-    output_connections_.at(output.element_id.value).at(output.element_id.value) = input;
-    input_connections_.at(input.element_id.value).at(input.element_id.value) = output;
+    output_connections_.at(output.element_id.value).at(output.connection_id.value) =
+        input;
+    input_connections_.at(input.element_id.value).at(input.connection_id.value) = output;
 }
 
 auto Schematic::connect(output_t output, input_t input) -> void {
@@ -196,13 +214,16 @@ auto Schematic::input_inverters(element_id_t element_id) const
     return input_inverters_.at(element_id.value);
 }
 
-auto Schematic::output_delays(element_id_t element_id) const
-    -> const output_delays_t & {
+auto Schematic::output_delays(element_id_t element_id) const -> const output_delays_t & {
     return output_delays_.at(element_id.value);
 }
 
 auto Schematic::history_length(element_id_t element_id) const -> delay_t {
     return history_lengths_.at(element_id.value);
+}
+
+auto Schematic::set_input_inverter(input_t input, bool value) -> void {
+    input_inverters_.at(input.element_id.value).at(input.connection_id.value) = value;
 }
 
 //
@@ -231,6 +252,31 @@ auto has_output_connections(const Schematic &data, element_id_t element_id) -> b
 
 auto element_ids(const Schematic &schematic) -> range_extended_t<element_id_t> {
     return range_extended<element_id_t>(schematic.size());
+}
+
+auto input_inverted(const Schematic &schematic, input_t input) -> bool {
+    return schematic.input_inverters(input.element_id).at(input.connection_id.value);
+}
+
+auto format_element(const Schematic &schematic, element_id_t element_id) -> std::string {
+    return fmt::format(
+        "<Element {}: {}x{} {}>", element_id, schematic.input_count(element_id),
+        schematic.output_count(element_id), schematic.element_type(element_id));
+}
+
+auto format_element_with_connections(const Schematic &schematic, element_id_t element_id)
+    -> std::string {
+    const auto input_connections =
+        transform_view(inputs(schematic, element_id),
+                       [&](input_t input) { return schematic.output(input); });
+    const auto output_connections =
+        transform_view(outputs(schematic, element_id),
+                       [&](output_t output) { return schematic.input(output); });
+
+    return fmt::format(
+        "<Element {}: {}x{} {}, inputs = {}, outputs = {}>", element_id,
+        schematic.input_count(element_id), schematic.output_count(element_id),
+        schematic.element_type(element_id), input_connections, output_connections);
 }
 
 }  // namespace logicsim

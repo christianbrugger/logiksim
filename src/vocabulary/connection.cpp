@@ -5,7 +5,10 @@
 namespace logicsim {
 
 auto connection_t::format() const -> std::string {
-    return fmt::format("<Element {}, Conection {}>", element_id, connection_id);
+    if (*this) {
+        return fmt::format("Elemen_{}-{}", element_id, connection_id);
+    }
+    return "---";
 }
 
 }  // namespace logicsim
