@@ -112,6 +112,7 @@ set(LS_CORE_SOURCES
     src/logic_item/layout_display_ascii.cpp
     src/logic_item/layout_display_number.cpp
     src/logic_item/layout_standard_element.cpp
+    src/logic_item/schematic_info.cpp
 
     src/random/bool.cpp
     src/random/connection_count.cpp

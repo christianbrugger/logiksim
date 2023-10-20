@@ -118,6 +118,10 @@ auto element_direction_type(ElementType element_type) -> DirectionType {
     return get_layout_info(element_type).direction_type;
 }
 
+auto element_enable_input_id(ElementType element_type) -> std::optional<connection_id_t> {
+    return get_layout_info(element_type).enable_input_id;
+}
+
 auto element_fixed_width(ElementType element_type) -> grid_t {
     const auto info = get_layout_info(element_type);
 

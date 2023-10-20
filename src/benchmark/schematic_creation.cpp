@@ -3,6 +3,7 @@
 #include "algorithm/range.h"
 #include "algorithm/shuffle.h"
 #include "algorithm/uniform_int_distribution.h"
+#include "logic_item/schematic_info.h"
 
 #include <stdexcept>
 
@@ -11,11 +12,13 @@ namespace logicsim {
 auto benchmark_schematic(const int n_elements) -> SchematicOld {
     SchematicOld schematic {};
 
+    auto wire_delay = element_output_delay(ElementType::and_element);
+
     auto elem0 = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     for ([[maybe_unused]] auto count : range(n_elements - 1)) {
@@ -23,13 +26,13 @@ auto benchmark_schematic(const int n_elements) -> SchematicOld {
             .element_type = ElementType::wire,
             .input_count = connection_count_t {1},
             .output_count = connection_count_t {2},
-            .output_delays = {defaults::logic_item_delay, defaults::logic_item_delay},
+            .output_delays = {wire_delay, wire_delay},
         });
         auto elem1 = schematic.add_element(SchematicOld::ElementData {
             .element_type = ElementType::and_element,
             .input_count = connection_count_t {2},
             .output_count = connection_count_t {1},
-            .output_delays = {defaults::logic_item_delay},
+            .output_delays = {element_output_delay(ElementType::and_element)},
         });
 
         elem0.output(connection_id_t {0}).connect(wire0.input(connection_id_t {0}));
@@ -71,7 +74,8 @@ void add_random_element(SchematicOld &schematic, Rng &rng) {
         .input_inverters = element_type == ElementType::buffer_element
                                ? logic_small_vector_t {true}
                                : logic_small_vector_t {},
-        .output_delays = std::vector<delay_t>(output_count, defaults::logic_item_delay),
+        .output_delays =
+            std::vector<delay_t>(output_count, element_output_delay(element_type)),
     });
 }
 

@@ -5,6 +5,7 @@
 #include "editable_circuit/cache/helper.h"
 #include "exception.h"
 #include "geometry/orientation.h"
+#include "logic_item/schematic_info.h"
 
 namespace logicsim {
 
@@ -46,25 +47,21 @@ auto add_unused_element(SchematicOld& schematic) -> void {
 
 auto add_logic_item(SchematicOld& schematic, layout::ConstElement element) -> void {
     const auto output_delays = [&]() -> std::vector<delay_t> {
+        const auto delay = element_output_delay(element.element_type());
+
         switch (element.element_type()) {
             using enum ElementType;
-
-            case button: {
-                return {defaults::button_delay};
-            }
 
             case clock_generator: {
                 const auto& attrs = element.attrs_clock_generator();
                 if (attrs.is_symmetric) {
-                    return {delay_t::epsilon(), attrs.time_symmetric,
-                            attrs.time_symmetric};
+                    return {delay, attrs.time_symmetric, attrs.time_symmetric};
                 }
-                return {delay_t::epsilon(), attrs.time_on, attrs.time_off};
+                return {delay, attrs.time_on, attrs.time_off};
             }
 
             default: {
-                return std::vector<delay_t>(element.output_count().count(),
-                                            defaults::logic_item_delay);
+                return std::vector<delay_t>(element.output_count().count(), delay);
             }
         }
         throw_exception("invalid");

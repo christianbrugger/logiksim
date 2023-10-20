@@ -46,6 +46,11 @@ struct layout_info_t {
      */
     std::optional<static_inputs_t> static_inputs {};
     std::optional<static_outputs_t> static_outputs {};
+
+    /**
+     * @brief: enable inputs are turned on automatically during simulation
+     */
+    std::optional<connection_id_t> enable_input_id {};
 };
 
 /**
@@ -213,6 +218,8 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                     [](const layout_calculation_data_t& data) {
                         return display_number::height(data.input_count);
                     },
+
+                .enable_input_id = connection_id_t {0},
             };
         }
         case display_ascii: {
@@ -232,6 +239,7 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
 
                 .static_inputs = display_ascii::static_inputs,
                 .static_outputs = static_outputs_t {},
+                .enable_input_id = display::enable_input_id,
             };
         }
 
@@ -259,6 +267,7 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                     static_outputs_t {
                         {.position = point_t {5, 2}, .orientation = orientation_t::right},
                     },
+                .enable_input_id = display::enable_input_id,
             };
         }
         case flipflop_jk: {

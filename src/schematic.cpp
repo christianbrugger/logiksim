@@ -133,8 +133,6 @@ auto Schematic::connect(output_t output, input_t input) -> void {
 }
 
 auto Schematic::clear(input_t input) -> void {
-    assert(input);
-
     if (const auto output = this->output(input)) {
         clear_connection(input, output);
     }
@@ -216,8 +214,6 @@ auto swap(Schematic &a, Schematic &b) noexcept -> void {
 }
 
 auto has_input_connections(const Schematic &data, element_id_t element_id) -> bool {
-    assert(element_id);
-
     const auto is_input_connected = [&](connection_id_t input_id) {
         return bool {data.output(input_t {element_id, input_id})};
     };
@@ -226,8 +222,6 @@ auto has_input_connections(const Schematic &data, element_id_t element_id) -> bo
 }
 
 auto has_output_connections(const Schematic &data, element_id_t element_id) -> bool {
-    assert(element_id);
-
     const auto is_output_connected = [&](connection_id_t output_id) {
         return bool {data.input(output_t {element_id, output_id})};
     };

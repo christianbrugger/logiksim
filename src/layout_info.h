@@ -8,6 +8,8 @@
 #include "vocabulary/layout_info_vector.h"
 #include "vocabulary/orientation.h"
 
+#include <optional>
+
 namespace logicsim {
 
 struct grid_t;
@@ -88,6 +90,13 @@ struct layout_calculation_data_t;
 //
 
 [[nodiscard]] auto element_direction_type(ElementType element_type) -> DirectionType;
+
+//
+// Connection Ids
+//
+
+[[nodiscard]] auto element_enable_input_id(ElementType element_type)
+    -> std::optional<connection_id_t>;
 
 //
 // Element Size

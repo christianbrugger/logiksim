@@ -7,6 +7,7 @@
 #include "algorithm/transform_to_container.h"
 #include "exception.h"
 #include "logging.h"
+#include "layout_info.h"
 
 #include <gsl/assert>
 #include <gsl/gsl>
@@ -135,8 +136,8 @@ auto set_default_inputs(Simulation &simulation) -> void {
         */
 
         // activate unconnected enable
-        if (has_enable(element.element_type())) {
-            const auto input = element.input(connection_id_t {0});
+        if (const auto enable_id = element_enable_input_id(element.element_type())) {
+            const auto input = element.input(*enable_id);
             if (!input.has_connected_element() && !input.is_inverted()) {
                 simulation.set_input_value(input, true);
             }
