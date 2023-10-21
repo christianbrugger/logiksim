@@ -7,6 +7,7 @@
 #include "logging.h"
 #include "random/bool.h"
 #include "schematic_validation.h"
+#include "simulation.h"
 
 namespace logicsim {
 
@@ -28,9 +29,8 @@ void _generate_random_events(Rng &rng, Simulation &simulation) {
 }  // namespace
 
 auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
-                          const bool do_print) -> int64_t {
-    Simulation simulation {schematic};
-    simulation.print_events = do_print;
+                          const PrintEvents do_print) -> int64_t {
+    Simulation simulation {schematic, do_print};
 
     // set custom delays
     for (const auto element : schematic.elements()) {
@@ -63,7 +63,7 @@ auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
         _generate_random_events(rng, simulation);
     }
 
-    if (do_print) {
+    if (do_print == PrintEvents::yes) {
         // auto output_values {simulation.output_values()};
 
         print_fmt("events simulated = {}\n", simulated_event_count);
@@ -83,12 +83,12 @@ auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
     return simulated_event_count;
 }
 
-auto benchmark_simulation(const int n_elements, const int n_events, const bool do_print)
-    -> int64_t {
+auto benchmark_simulation(const int n_elements, const int n_events,
+                          const PrintEvents do_print) -> int64_t {
     auto rng = Rng {0};
 
     auto schematic = create_random_schematic(rng, n_elements);
-    if (do_print) {
+    if (do_print == PrintEvents::yes) {
         print(schematic);
     }
     add_output_placeholders(schematic);
@@ -98,9 +98,8 @@ auto benchmark_simulation(const int n_elements, const int n_events, const bool d
 }
 
 auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
-                               const bool do_print) -> int64_t {
-    Simulation simulation {schematic};
-    simulation.print_events = do_print;
+                               const PrintEvents do_print) -> int64_t {
+    Simulation simulation {schematic, do_print};
 
     set_default_inputs(simulation);
     set_default_outputs(simulation);
@@ -124,7 +123,7 @@ auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
         }
     }
 
-    if (do_print) {
+    if (do_print == PrintEvents::yes) {
         // auto output_values {simulation.output_values()};
 
         print_fmt("events simulated = {}\n", simulated_event_count);

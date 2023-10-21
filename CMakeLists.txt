@@ -195,6 +195,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/placed_element.cpp
     src/vocabulary/point.cpp
     src/vocabulary/point_fine.cpp
+    src/vocabulary/print_events.cpp
     src/vocabulary/rect.cpp
     src/vocabulary/rect_fine.cpp
     src/vocabulary/render_setting.cpp

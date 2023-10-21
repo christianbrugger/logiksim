@@ -66,11 +66,12 @@ auto set_default_inputs(Simulation &simulation) -> void {
 // Simulation
 //
 
-Simulation::Simulation(const SchematicOld &schematic)
+Simulation::Simulation(const SchematicOld &schematic, const PrintEvents print_events)
     : schematic_ {&schematic},
       queue_ {},
       largest_history_event_ {queue_.time()},
-      is_initialized_ {false} {
+      is_initialized_ {false},
+      print_events_ {print_events == PrintEvents::yes} {
     input_values_.reserve(schematic.element_count());
     internal_states_.reserve(schematic.element_count());
 
@@ -186,7 +187,7 @@ auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &in
 }
 
 auto Simulation::process_event_group(simulation::event_group_t &&events) -> void {
-    if (print_events) {
+    if (print_events_) {
         print_fmt("events: {:n}\n", events);
     }
     if (events.empty()) {

@@ -5,6 +5,7 @@
 #include "component/simulation/simulation_queue.h"
 #include "schematic_old.h"
 #include "timeout_timer.h"
+#include "vocabulary/print_events.h"
 
 #include <folly/small_vector.h>
 
@@ -28,6 +29,9 @@ class HistoryView;
 }
 
 namespace simulation {
+/**
+ * brief:: Realtime simulation timeout
+ */
 using timeout_t = TimeoutTimer::timeout_t;
 
 namespace defaults {
@@ -40,11 +44,9 @@ constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
 
 class Simulation {
    public:
-    // Remove and put into run parameters
-    bool print_events {false};
+    [[nodiscard]] explicit Simulation(const SchematicOld &schematic,
+                                      PrintEvents print_events = PrintEvents::no);
 
-   public:
-    [[nodiscard]] explicit Simulation(const SchematicOld &schematic);
     [[nodiscard]] auto schematic() const noexcept -> const SchematicOld &;
     [[nodiscard]] auto time() const noexcept -> time_t;
 
@@ -68,11 +70,13 @@ class Simulation {
     auto run(delay_t simulation_time = simulation::defaults::infinite_simulation_time,
              simulation::timeout_t timeout = simulation::defaults::no_timeout,
              int64_t max_events = simulation::defaults::no_max_events) -> int64_t;
-
     /**
      * @brief: Runs simulation for a very short time
      */
     auto run_infinitesimal() -> int64_t;
+    /**
+     * @brief: Check if simulation is finished.
+     */
     auto finished() const -> bool;
 
     // input values
@@ -139,6 +143,7 @@ class Simulation {
     simulation::SimulationQueue queue_;
     time_t largest_history_event_;
     bool is_initialized_;
+    bool print_events_;
 
     std::vector<logic_small_vector_t> input_values_ {};
     std::vector<logic_small_vector_t> internal_states_ {};

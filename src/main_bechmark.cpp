@@ -187,7 +187,7 @@ static void BM_Simulation_0(benchmark::State& state) {
 
         state.ResumeTiming();
 
-        count += benchmark_simulation(rng, schematic, 10'000, false);
+        count += benchmark_simulation(rng, schematic, 10'000);
 
         benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();
@@ -230,7 +230,7 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
 
         state.ResumeTiming();
 
-        count += benchmark_simulation_pure(schematic, 10'000, false);
+        count += benchmark_simulation_pure(schematic, 10'000);
 
         benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();
