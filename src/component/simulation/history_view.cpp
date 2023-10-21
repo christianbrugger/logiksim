@@ -19,9 +19,9 @@ HistoryView::HistoryView(const HistoryBuffer &history, time_t simulation_time,
     assert(std::ranges::is_sorted(history, std::ranges::less_equal {}));
     // calculate first valid index
     const auto first_time = simulation_time - history_length;
-    const auto first_index = find_index(first_time);
-    min_index_ = gsl::narrow<decltype(min_index_)>(first_index);
+    min_index_ = find_index(first_time);
 
+    assert(min_index_ >= history_index_t {0});
     assert(size() >= 1);
 }
 
@@ -29,14 +29,14 @@ auto HistoryView::size() const -> std::size_t {
     if (history_ == nullptr) {
         return 1;
     }
-    return history_->size() + 1 - std::size_t {min_index_};
+    assert(min_index_ >= history_index_t {0});
+    assert(history_->ssize() > std::ptrdiff_t {min_index_});
+
+    return history_->size() + 1 - static_cast<std::size_t>(std::ptrdiff_t {min_index_});
 }
 
 auto HistoryView::ssize() const -> std::ptrdiff_t {
-    if (history_ == nullptr) {
-        return 1;
-    }
-    return history_->size() + 1 - std::size_t {min_index_};
+    return static_cast<std::ptrdiff_t>(size());
 }
 
 auto HistoryView::begin() const -> HistoryIterator {
@@ -44,7 +44,7 @@ auto HistoryView::begin() const -> HistoryIterator {
 }
 
 auto HistoryView::end() const -> HistoryIterator {
-    return HistoryIterator {*this, history_index_t {size() + std::size_t {min_index_}}};
+    return HistoryIterator {*this, size() + min_index_};
 }
 
 auto HistoryView::from(time_t value) const -> HistoryIterator {
@@ -52,7 +52,7 @@ auto HistoryView::from(time_t value) const -> HistoryIterator {
         throw std::runtime_error("cannot query times in the future");
     }
     const auto index = find_index(value);
-    return HistoryIterator {*this, history_index_t {index}};
+    return HistoryIterator {*this, index};
 }
 
 auto HistoryView::until(time_t value) const -> HistoryIterator {
@@ -64,7 +64,7 @@ auto HistoryView::until(time_t value) const -> HistoryIterator {
                                ? value - delay_t::epsilon()
                                : value;
     const auto index = find_index(last_time) + 1;
-    return HistoryIterator {*this, history_index_t {index}};
+    return HistoryIterator {*this, index};
 }
 
 auto HistoryView::value(time_t value) const -> bool {
@@ -79,50 +79,55 @@ auto HistoryView::last_value() const -> bool {
     return last_value_;
 }
 
-auto HistoryView::get_value(std::size_t history_index) const -> bool {
+auto HistoryView::get_value(history_index_t history_index) const -> bool {
     if (history_ == nullptr) {
-        if (history_index != 0) [[unlikely]] {
+        if (history_index != history_index_t {0}) [[unlikely]] {
             throw std::runtime_error("invalid history index");
         }
         return false;
     }
 
-    auto number = history_->size() - history_index;
+    auto number = std::ssize(*history_) - std::ptrdiff_t {history_index};
+    // makes modulo work with negative numbers
+    if (number < std::ptrdiff_t {0}) {
+        number += std::numeric_limits<std::ptrdiff_t>::min();
+    }
     return static_cast<bool>(number % 2) ^ last_value_;
 }
 
 // Returns the index to the first element that is greater to the value,
 // or the history.size() if no such element is found.
-auto HistoryView::find_index(time_t value) const -> std::size_t {
+auto HistoryView::find_index(time_t value) const -> history_index_t {
     if (history_ == nullptr) {
-        return 0;
+        return history_index_t {0};
     }
+    assert(min_index_ >= history_index_t {0});
 
     const auto it =
-        std::ranges::lower_bound(history_->begin() + std::size_t {min_index_},
+        std::ranges::lower_bound(history_->begin() + std::ptrdiff_t {min_index_},
                                  history_->end(), value, std::ranges::less_equal {});
     const auto index = it - history_->begin();
 
-    // TODO !!! REMOVE CASTS
-
-    assert(index >= static_cast<std::ptrdiff_t>(std::size_t {min_index_}));
+    assert(index >= 0);
+    assert(index >= std::ptrdiff_t {min_index_});
     assert(index <= std::ssize(*history_));
-    assert(index == std::ssize(*history_) || history_->at(index) > value);
-    assert(index == static_cast<std::ptrdiff_t>(std::size_t {min_index_}) ||
-           history_->at(index - 1) <= value);
+    assert(index == std::ssize(*history_) ||
+           history_->at(history_index_t {index}) > value);
+    assert(index == std::ptrdiff_t {min_index_} ||
+           history_->at(history_index_t {index - 1}) <= value);
 
-    return gsl::narrow_cast<std::size_t>(index);
+    return history_index_t {index};
 }
 
-auto HistoryView::get_time(std::ptrdiff_t index) const -> time_t {
+auto HistoryView::get_time(history_index_t index) const -> time_t {
     if (history_ == nullptr) {
-        return index < 0 ? time_t::min() : simulation_time_;
+        return index < history_index_t {0} ? time_t::min() : simulation_time_;
     }
 
-    if (index < static_cast<std::ptrdiff_t>(std::size_t {min_index_})) {
+    if (index < min_index_) {
         return time_t::min();
     }
-    if (index >= std::ssize(*history_)) {
+    if (std::ptrdiff_t {index} >= std::ssize(*history_)) {
         return simulation_time_;
     }
     return history_->at(index);

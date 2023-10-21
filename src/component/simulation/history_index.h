@@ -14,19 +14,24 @@
 
 namespace logicsim {
 
+namespace simulation {
+
 /**
  * @brief: Identifier to a history-entry in a history-buffer.
+ *
+ * Note indices can be negative and are clamped.
  */
 struct history_index_t {
-    using value_type = std::size_t;
+    using value_type = std::ptrdiff_t;
     value_type value;
 
     using difference_type = std::ptrdiff_t;
 
-    [[nodiscard]] explicit constexpr operator std::size_t() const;
+    [[nodiscard]] explicit constexpr operator std::ptrdiff_t() const;
 
     [[nodiscard]] auto format() const -> std::string;
 
+    [[nodiscard]] constexpr static auto min() -> history_index_t;
     [[nodiscard]] constexpr static auto max() -> history_index_t;
 
     [[nodiscard]] auto operator==(const history_index_t &other) const -> bool = default;
@@ -62,8 +67,12 @@ static_assert(std::is_trivially_copy_assignable_v<history_index_t>);
 // Implementation
 //
 
-constexpr history_index_t::operator std::size_t() const {
+constexpr history_index_t::operator std::ptrdiff_t() const {
     return value;
+}
+
+constexpr auto history_index_t::min() -> history_index_t {
+    return history_index_t {std::numeric_limits<value_type>::min()};
 }
 
 constexpr auto history_index_t::max() -> history_index_t {
@@ -86,22 +95,24 @@ constexpr auto history_index_t::operator++(int) -> history_index_t {
 
 constexpr auto history_index_t::operator+=(const integral auto &right)
     -> history_index_t & {
+    static_assert(
+        std::is_same_v<history_index_t::value_type, history_index_t::difference_type>);
     using diff_t = history_index_t::difference_type;
     using safe_t = ls_safe<diff_t>;
 
-    const auto res = diff_t {safe_t {value} + safe_t {right}};
-    value = gsl::narrow<std::size_t>(res);
+    value = diff_t {safe_t {value} + safe_t {right}};
 
     return *this;
 }
 
 constexpr auto history_index_t::operator-=(const integral auto &right)
     -> history_index_t & {
+    static_assert(
+        std::is_same_v<history_index_t::value_type, history_index_t::difference_type>);
     using diff_t = history_index_t::difference_type;
     using safe_t = ls_safe<diff_t>;
 
-    const auto res = diff_t {safe_t {value} - safe_t {right}};
-    value = gsl::narrow<std::size_t>(res);
+    value = diff_t {safe_t {value} - safe_t {right}};
 
     return *this;
 }
@@ -142,6 +153,8 @@ constexpr auto history_index_t::operator-=(const integral auto &right)
                                        const history_index_t &right) -> history_index_t {
     return operator+(right, left);
 }
+
+}  // namespace simulation
 
 }  // namespace logicsim
 

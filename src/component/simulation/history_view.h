@@ -47,9 +47,9 @@ class HistoryView {
     [[nodiscard]] auto last_value() const -> bool;
 
    private:
-    [[nodiscard]] auto get_value(std::size_t history_index) const -> bool;
-    [[nodiscard]] auto find_index(time_t value) const -> std::size_t;
-    [[nodiscard]] auto get_time(std::ptrdiff_t index) const -> time_t;
+    [[nodiscard]] auto get_value(history_index_t history_index) const -> bool;
+    [[nodiscard]] auto find_index(time_t value) const -> history_index_t;
+    [[nodiscard]] auto get_time(history_index_t index) const -> time_t;
 
    private:
     const HistoryBuffer *history_ {nullptr};

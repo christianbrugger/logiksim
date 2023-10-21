@@ -52,6 +52,7 @@ class circular_buffer {
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto size() const noexcept -> size_type;
+    [[nodiscard]] auto ssize() const noexcept -> difference_type;
     [[nodiscard]] auto capacity() const -> size_type;
     [[nodiscard]] auto max_size() const -> size_t;
 
@@ -172,6 +173,12 @@ template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeT
 auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::size() const noexcept
     -> size_type {
     return size_;
+}
+
+template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
+auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::ssize() const noexcept
+    -> difference_type {
+    return static_cast<difference_type>(size_);
 }
 
 template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>

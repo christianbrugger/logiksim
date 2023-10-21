@@ -12,6 +12,8 @@ namespace logicsim {
 
 namespace simulation {
 
+struct history_index_t;
+
 /**
  * @brief: Store the history of a logic input by storing transition times.
  *
@@ -32,16 +34,19 @@ class HistoryBuffer {
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size() const -> std::size_t;
+    [[nodiscard]] auto ssize() const -> std::ptrdiff_t;
 
     auto pop_front() -> void;
     auto push_back(time_t transition_time) -> void;
 
-    [[nodiscard]] auto at(std::size_t index) const -> const time_t &;
     [[nodiscard]] auto front() const -> const time_t &;
     [[nodiscard]] auto back() const -> const time_t &;
 
     [[nodiscard]] auto begin() const -> const_iterator;
     [[nodiscard]] auto end() const -> const_iterator;
+
+    // TODO remove at and add HistoryView get_time(index, simulation_time)
+    [[nodiscard]] auto at(history_index_t index) const -> const time_t &;
 
    private:
     container_t buffer_ {};

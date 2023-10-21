@@ -1,5 +1,3 @@
-#include "history_entry.h"
-
 #include "component/simulation/history_entry.h"
 
 #include <fmt/core.h>

@@ -1,11 +1,12 @@
 #include "history_buffer.h"
 
 #include "component/simulation/history_buffer.h"
-#include "history_buffer.h"
+#include "component/simulation/history_index.h"
 
 namespace logicsim {
 
 namespace simulation {
+
 HistoryBuffer::HistoryBuffer(std::initializer_list<value_type> list) : buffer_ {list} {
     if (!std::ranges::is_sorted(list, std::ranges::less_equal {})) {
         throw std::runtime_error("times need to be sorted strictly ascending");
@@ -20,6 +21,10 @@ auto HistoryBuffer::size() const -> std::size_t {
     return buffer_.size();
 }
 
+auto HistoryBuffer::ssize() const -> std::ptrdiff_t {
+    return buffer_.ssize();
+}
+
 auto HistoryBuffer::pop_front() -> void {
     buffer_.pop_front();
 }
@@ -31,8 +36,8 @@ auto HistoryBuffer::push_back(time_t transition_time) -> void {
     return buffer_.push_back(transition_time);
 }
 
-auto HistoryBuffer::at(std::size_t index) const -> const time_t& {
-    return buffer_.at(index);
+auto HistoryBuffer::at(history_index_t index) const -> const time_t& {
+    return buffer_.at(index.value);
 }
 
 auto HistoryBuffer::front() const -> const time_t& {
