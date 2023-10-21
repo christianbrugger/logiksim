@@ -1,6 +1,8 @@
 
 #include "simulation.h"
 
+#include "component/simulation/history_iterator.h"
+#include "component/simulation/history_view.h"
 #include "logic_item/schematic_info.h"
 #include "schematic_validation.h"
 
@@ -80,8 +82,8 @@ TEST(SimulationTest, SimulationProcessAllEventsForTime) {
 
     const auto max_events = 1;
     const auto event_count =
-        simulation.run(Simulation::defaults::infinite_simulation_time,
-                       Simulation::defaults::no_timeout, max_events);
+        simulation.run(simulation::defaults::infinite_simulation_time,
+                       simulation::defaults::no_timeout, max_events);
 
     EXPECT_EQ(event_count, 2);
 }
@@ -140,7 +142,7 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     // run simulation for 5 ms
     EXPECT_EQ(simulation.time(), time_t {0us});
     const auto start = std::chrono::steady_clock::now();
-    simulation.run(Simulation::defaults::infinite_simulation_time, 5ms);
+    simulation.run(simulation::defaults::infinite_simulation_time, 5ms);
     const auto end = std::chrono::steady_clock::now();
 
     EXPECT_GT(simulation.time(), time_t {1ms});

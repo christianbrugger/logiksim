@@ -9,6 +9,8 @@
 #include "schematic_validation.h"
 #include "vocabulary/simulation_setting.h"
 
+#include <stdexcept>
+
 namespace logicsim {
 
 namespace detail::interactive_simulation {
@@ -23,7 +25,7 @@ InteractionCache::InteractionCache(const Layout& layout) {
             auto& data = map_[element.position()];
 
             if (data.element_id != null_element) [[unlikely]] {
-                throw_exception("map entry is not empty");
+                throw std::runtime_error("map entry is not empty");
             }
 
             data.element_id = element;
@@ -73,7 +75,7 @@ auto InteractiveSimulation::simulation() const -> const Simulation& {
 
 auto InteractiveSimulation::set_simulation_time_rate(time_rate_t time_rate) -> void {
     if (time_rate < time_rate_t {0us}) [[unlikely]] {
-        throw_exception("time rate cannot be negative");
+        throw std::runtime_error("time rate cannot be negative");
     }
 
     const auto realtime_now = timer_t::now();
@@ -91,7 +93,7 @@ auto InteractiveSimulation::time() const -> time_t {
     return simulation_.time();
 }
 
-auto InteractiveSimulation::run(Simulation::timeout_t timeout) -> void {
+auto InteractiveSimulation::run(simulation::timeout_t timeout) -> void {
     const auto start_realtime = timer_t::now();
     const auto start_simulation_time = simulation_.time();
 

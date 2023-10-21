@@ -3,6 +3,10 @@
 
 #include "algorithm/range.h"
 #include "algorithm/transform_to_container.h"
+#include "component/simulation/event_group.h"
+#include "component/simulation/history_entry.h"
+#include "component/simulation/history_view.h"
+#include "component/simulation/simulation_event.h"
 #include "exception.h"
 #include "layout_info.h"
 #include "logging.h"
@@ -112,20 +116,31 @@ auto Simulation::check_counts_valid() const -> void {
 }
 
 auto Simulation::apply_events(const SchematicOld::ConstElement element,
-                              const event_group_t &group) -> void {
+                              const simulation::event_group_t &group) -> void {
     for (const auto &event : group) {
         set_input_internal(element.input(event.input_index), event.value);
     }
 }
 
+namespace {
+using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
+
+using con_index_small_vector_t = folly::small_vector<connection_id_t, 10, policy>;
+
+static_assert(sizeof(con_index_small_vector_t) == 24);
+
+static_assert(con_index_small_vector_t::max_size() >=
+              std::size_t {connection_count_t::max()});
+}  // namespace
+
 auto get_changed_outputs(const logic_small_vector_t &old_outputs,
                          const logic_small_vector_t &new_outputs)
-    -> Simulation::con_index_small_vector_t {
+    -> con_index_small_vector_t {
     if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]] {
         throw_exception("old_outputs and new_outputs need to have the same size.");
     }
 
-    Simulation::con_index_small_vector_t result;
+    auto result = con_index_small_vector_t {};
     for (auto index :
          range(gsl::narrow<connection_id_t::value_type>(std::size(old_outputs)))) {
         if (old_outputs[index] != new_outputs[index]) {
@@ -170,7 +185,7 @@ auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &in
     return values;
 }
 
-auto Simulation::process_event_group(event_group_t &&events) -> void {
+auto Simulation::process_event_group(simulation::event_group_t &&events) -> void {
     if (print_events) {
         print_fmt("events: {:n}\n", events);
     }
@@ -220,7 +235,7 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     }
 }
 
-auto Simulation::run(const delay_t simulation_time, const timeout_t timeout,
+auto Simulation::run(const delay_t simulation_time, const simulation::timeout_t timeout,
                      const int64_t max_events) -> int64_t {
     if (!is_initialized_) {
         throw_exception("Simulation first needs to be initialized.");
@@ -238,14 +253,15 @@ auto Simulation::run(const delay_t simulation_time, const timeout_t timeout,
     }
 
     const auto timer = TimeoutTimer {timeout};
-    const auto queue_end_time = simulation_time == defaults::infinite_simulation_time
-                                    ? time_t::max()
-                                    : queue_.time() + simulation_time;
+    const auto queue_end_time =
+        simulation_time == simulation::defaults::infinite_simulation_time
+            ? time_t::max()
+            : queue_.time() + simulation_time;
     int64_t event_count = 0;
 
     // only check time after this many events
     constexpr int64_t check_interval = 1'000;
-    int64_t next_check = std::min(max_events, timeout == Simulation::defaults::no_timeout
+    int64_t next_check = std::min(max_events, timeout == simulation::defaults::no_timeout
                                                   ? std::numeric_limits<int64_t>::max()
                                                   : check_interval);
 
@@ -269,7 +285,7 @@ auto Simulation::run(const delay_t simulation_time, const timeout_t timeout,
         }
     }
 
-    if (simulation_time != defaults::infinite_simulation_time) {
+    if (simulation_time != simulation::defaults::infinite_simulation_time) {
         queue_.set_time(queue_end_time);
     }
     return event_count;
@@ -364,8 +380,8 @@ auto Simulation::record_input_history(const SchematicOld::ConstInput input,
     largest_history_event_ = std::max(largest_history_event_, time() + history_length);
 }
 
-auto Simulation::clean_history(history_buffer_t &history, delay_t history_length)
-    -> void {
+auto Simulation::clean_history(simulation::history_buffer_t &history,
+                               delay_t history_length) -> void {
     const auto min_time = time() - history_length;
     while (!history.empty() && history.front() < min_time) {
         history.pop_front();
@@ -495,25 +511,27 @@ auto Simulation::internal_state(SchematicOld::ConstElement element,
     return internal_state(element).at(index);
 }
 
-auto Simulation::input_history(element_id_t element_id) const -> HistoryView {
+auto Simulation::input_history(element_id_t element_id) const -> simulation::HistoryView {
     return input_history(schematic_->element(element_id));
 }
 
-auto Simulation::input_history(SchematicOld::Element element) const -> HistoryView {
+auto Simulation::input_history(SchematicOld::Element element) const
+    -> simulation::HistoryView {
     return input_history(SchematicOld::ConstElement {element});
 }
 
-auto Simulation::input_history(SchematicOld::ConstElement element) const -> HistoryView {
+auto Simulation::input_history(SchematicOld::ConstElement element) const
+    -> simulation::HistoryView {
     const auto &input_values = this->input_values(element);
 
     if (input_values.empty()) {
-        return HistoryView {};
+        return simulation::HistoryView {};
     }
 
     const auto last_value =
         static_cast<bool>(input_values.at(0) ^ element.input_inverters().at(0));
 
-    return HistoryView {
+    return simulation::HistoryView {
         first_input_histories_.at(element.element_id().value),
         this->time(),
         last_value,

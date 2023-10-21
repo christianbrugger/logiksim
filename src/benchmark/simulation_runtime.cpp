@@ -2,6 +2,8 @@
 
 #include "algorithm/fmt_join.h"
 #include "algorithm/uniform_int_distribution.h"
+#include "component/simulation/history_iterator.h"
+#include "component/simulation/history_view.h"
 #include "logging.h"
 #include "random/bool.h"
 #include "schematic_validation.h"
@@ -51,8 +53,8 @@ auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
     int64_t simulated_event_count {0};
     while (true) {
         simulated_event_count += simulation.run(
-            Simulation::defaults::infinite_simulation_time,
-            Simulation::defaults::no_timeout, n_events - simulated_event_count);
+            simulation::defaults::infinite_simulation_time,
+            simulation::defaults::no_timeout, n_events - simulated_event_count);
 
         if (simulated_event_count >= n_events) {
             break;
@@ -107,8 +109,8 @@ auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
     int64_t simulated_event_count {0};
     while (true) {
         const auto event_count = simulation.run(
-            Simulation::defaults::infinite_simulation_time,
-            Simulation::timeout_t {1000 * 1ms}, n_events - simulated_event_count);
+            simulation::defaults::infinite_simulation_time,
+            simulation::timeout_t {1000 * 1ms}, n_events - simulated_event_count);
         // const auto event_count = simulation.run(
         //     Simulation::defaults::infinite_simulation_time,
         //     Simulation::defaults::no_timeout, n_events - simulated_event_count);

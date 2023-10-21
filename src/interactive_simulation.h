@@ -46,7 +46,7 @@ class InteractiveSimulation {
 
    public:
     struct defaults {
-        constexpr static auto default_timeout = Simulation::timeout_t {1ms};
+        constexpr static auto default_timeout = simulation::timeout_t {1ms};
     };
 
    public:
@@ -59,7 +59,7 @@ class InteractiveSimulation {
     [[nodiscard]] auto time_rate() const -> time_rate_t;
     [[nodiscard]] auto time() const -> time_t;
 
-    auto run(Simulation::timeout_t timeout = defaults::default_timeout) -> void;
+    auto run(simulation::timeout_t timeout = defaults::default_timeout) -> void;
     auto finished() const -> bool;
     auto mouse_press(point_t position) -> void;
 

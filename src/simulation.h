@@ -1,29 +1,12 @@
 #ifndef LOGIKSIM_SIMULATION_H
 #define LOGIKSIM_SIMULATION_H
 
-#include "component/simulation/event_group.h"
 #include "component/simulation/history_buffer.h"
-#include "component/simulation/history_entry.h"
-#include "component/simulation/history_iterator.h"
-#include "component/simulation/history_view.h"
-#include "component/simulation/simulation_event.h"
 #include "component/simulation/simulation_queue.h"
-#include "container/circular_buffer.h"
-#include "exception.h"
 #include "schematic_old.h"
 #include "timeout_timer.h"
 
-#include <boost/container/small_vector.hpp>
-#include <fmt/core.h>
 #include <folly/small_vector.h>
-#include <gsl/gsl>
-
-#include <chrono>
-#include <ostream>
-#include <queue>
-#include <random>
-#include <string>
-#include <type_traits>
 
 /// Done Features
 // * delays for each output, needed for wires
@@ -40,43 +23,25 @@
 
 namespace logicsim {
 
-namespace simulation {}
+namespace simulation {
+class HistoryView;
+}
+
+namespace simulation {
+using timeout_t = TimeoutTimer::timeout_t;
+
+namespace defaults {
+constexpr static auto no_timeout = TimeoutTimer::defaults::no_timeout;
+constexpr static auto infinite_simulation_time = delay_t::max();
+constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
+                                        connection_count_t::max().count()};
+};  // namespace defaults
+}  // namespace simulation
 
 class Simulation {
    public:
     // Remove and put into run parameters
     bool print_events {false};
-
-    using history_buffer_t = simulation::history_buffer_t;
-    using event_group_t = simulation::event_group_t;
-
-    using timeout_t = TimeoutTimer::timeout_t;
-
-    // 8 bytes still fit into a small_vector with 32 byte size.
-    // using logic_small_vector_t = boost::container::small_vector<bool, 8>;
-    // using con_index_small_vector_t = boost::container::small_vector<connection_id_t,
-    // 8>;
-
-    using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
-    using con_index_small_vector_t = folly::small_vector<connection_id_t, 10, policy>;
-    static_assert(con_index_small_vector_t::max_size() >=
-                  std::size_t {connection_count_t::max()});
-    static_assert(sizeof(con_index_small_vector_t) == 24);
-
-    // TODO move out of class
-    struct defaults {
-        constexpr static auto no_timeout = TimeoutTimer::defaults::no_timeout;
-        constexpr static auto infinite_simulation_time = delay_t::max();
-        constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
-                                                connection_count_t::max().count()};
-
-        // TODO remove, now part of editable circuit
-        constexpr static delay_t no_history {0ns};
-    };
-
-    using HistoryView = simulation::HistoryView;
-    using HistoryIterator = simulation::HistoryIterator;
-    using history_entry_t = simulation::history_entry_t;
 
    public:
     [[nodiscard]] explicit Simulation(const SchematicOld &schematic);
@@ -92,15 +57,21 @@ class Simulation {
     auto initialize() -> void;
     [[nodiscard]] auto is_initialized() const -> bool;
 
-    /// @brief Run the simulation by changing the given simulations state
-    /// @param simulation_time   simulate for this time or, when run_until_steady,
-    ///                          run until no more new events are generated
-    /// @param timeout           return if simulation takes longer than this in realtime
-    /// @param max_events        return after simulating this many events
-    auto run(delay_t simulation_time = defaults::infinite_simulation_time,
-             timeout_t timeout = defaults::no_timeout,
-             int64_t max_events = defaults::no_max_events) -> int64_t;
-    // Runs simulation for a very short time
+    /**
+     * @brief: Runs simulation for given times and events
+     *
+     * @param simulation_time   simulate for this time or, when run_until_steady,
+     *                          run until no more new events are generated
+     * @param timeout           return if simulation takes longer than this in realtime
+     * @param max_events        return after simulating this many events
+     */
+    auto run(delay_t simulation_time = simulation::defaults::infinite_simulation_time,
+             simulation::timeout_t timeout = simulation::defaults::no_timeout,
+             int64_t max_events = simulation::defaults::no_max_events) -> int64_t;
+
+    /**
+     * @brief: Runs simulation for a very short time
+     */
     auto run_infinitesimal() -> int64_t;
     auto finished() const -> bool;
 
@@ -141,9 +112,10 @@ class Simulation {
                                       std::size_t index) const -> bool;
 
     // history
-    auto input_history(element_id_t element_id) const -> HistoryView;
-    auto input_history(SchematicOld::Element element) const -> HistoryView;
-    auto input_history(SchematicOld::ConstElement element) const -> HistoryView;
+    auto input_history(element_id_t element_id) const -> simulation::HistoryView;
+    auto input_history(SchematicOld::Element element) const -> simulation::HistoryView;
+    auto input_history(SchematicOld::ConstElement element) const
+        -> simulation::HistoryView;
 
    private:
     auto check_counts_valid() const -> void;
@@ -152,15 +124,16 @@ class Simulation {
                                            const logic_small_vector_t &old_outputs,
                                            const logic_small_vector_t &new_outputs)
         -> void;
-    auto process_event_group(event_group_t &&events) -> void;
+    auto process_event_group(simulation::event_group_t &&events) -> void;
     auto create_event(SchematicOld::ConstOutput output,
                       const logic_small_vector_t &output_values) -> void;
-    auto apply_events(SchematicOld::ConstElement element, const event_group_t &group)
-        -> void;
+    auto apply_events(SchematicOld::ConstElement element,
+                      const simulation::event_group_t &group) -> void;
     auto set_input_internal(SchematicOld::ConstInput input, bool value) -> void;
 
     auto record_input_history(SchematicOld::ConstInput input, bool new_value) -> void;
-    auto clean_history(history_buffer_t &history, delay_t history_length) -> void;
+    auto clean_history(simulation::history_buffer_t &history, delay_t history_length)
+        -> void;
 
     gsl::not_null<const SchematicOld *> schematic_;
     simulation::SimulationQueue queue_;
@@ -169,7 +142,7 @@ class Simulation {
 
     std::vector<logic_small_vector_t> input_values_ {};
     std::vector<logic_small_vector_t> internal_states_ {};
-    std::vector<history_buffer_t> first_input_histories_ {};
+    std::vector<simulation::history_buffer_t> first_input_histories_ {};
 };
 
 auto set_default_outputs(Simulation &simulation) -> void;

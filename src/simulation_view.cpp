@@ -1,5 +1,6 @@
 #include "simulation_view.h"
 
+#include "component/simulation/history_view.h"
 #include "simulation.h"
 
 namespace logicsim {
