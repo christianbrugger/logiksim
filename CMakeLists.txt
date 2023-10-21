@@ -270,6 +270,7 @@ set(LS_TEST_SOURCES
     test/algorithm/transform_to_vector_test.cpp
     test/algorithm/uniform_int_distribution_test.cpp
 
+    test/component/simulation/history_index_test.cpp
     test/component/simulation/simulation_event_test.cpp
 
     test/container/graph/depth_first_search_test.cpp

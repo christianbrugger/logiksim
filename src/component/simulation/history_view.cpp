@@ -103,10 +103,13 @@ auto HistoryView::find_index(time_t value) const -> std::size_t {
                                  history_->end(), value, std::ranges::less_equal {});
     const auto index = it - history_->begin();
 
-    assert(index >= std::size_t {min_index_});
+    // TODO !!! REMOVE CASTS
+
+    assert(index >= static_cast<std::ptrdiff_t>(std::size_t {min_index_}));
     assert(index <= std::ssize(*history_));
     assert(index == std::ssize(*history_) || history_->at(index) > value);
-    assert(index == std::size_t {min_index_} || history_->at(index - 1) <= value);
+    assert(index == static_cast<std::ptrdiff_t>(std::size_t {min_index_}) ||
+           history_->at(index - 1) <= value);
 
     return gsl::narrow_cast<std::size_t>(index);
 }
