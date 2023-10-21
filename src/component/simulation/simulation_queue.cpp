@@ -35,7 +35,7 @@ auto SimulationQueue::empty() const noexcept -> bool {
     return events_.empty();
 }
 
-void SimulationQueue::submit_event(SimulationEvent event) {
+void SimulationQueue::submit_event(simulation_event_t event) {
     if (event.time <= time_) {
         throw std::runtime_error("Event time needs to be in the future.");
     }
@@ -43,12 +43,13 @@ void SimulationQueue::submit_event(SimulationEvent event) {
     events_.push(event);
 }
 
-auto SimulationQueue::pop_event_group() -> event_group_t {
-    event_group_t group;
+auto SimulationQueue::pop_event_group() -> EventGroup {
+    EventGroup group;
     pop_while(
-        events_, [&group](const SimulationEvent &event) { group.push_back(event); },
-        [&group](const SimulationEvent &event) {
-            return group.empty() || group.front() == event;
+        events_, [&group](const simulation_event_t &event) { group.push_back(event); },
+        [&group](const simulation_event_t &event) {
+            return group.empty() || (group.front().element_id == event.element_id &&
+                                     group.front().time == event.time);
         });
     if (!group.empty()) {
         this->set_time(group.front().time);

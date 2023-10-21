@@ -117,9 +117,9 @@ auto Simulation::check_counts_valid() const -> void {
 }
 
 auto Simulation::apply_events(const SchematicOld::ConstElement element,
-                              const simulation::event_group_t &group) -> void {
+                              const simulation::EventGroup &group) -> void {
     for (const auto &event : group) {
-        set_input_internal(element.input(event.input_index), event.value);
+        set_input_internal(element.input(event.input_id), event.value);
     }
 }
 
@@ -156,7 +156,7 @@ void Simulation::create_event(const SchematicOld::ConstOutput output,
     if (output.has_connected_element()) {
         queue_.submit_event({.time = queue_.time() + output.delay(),
                              .element_id = output.connected_element_id(),
-                             .input_index = output.connected_input_index(),
+                             .input_id = output.connected_input_index(),
                              .value = output_values.at(output.output_index().value)});
     }
 }
@@ -186,14 +186,13 @@ auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &in
     return values;
 }
 
-auto Simulation::process_event_group(simulation::event_group_t &&events) -> void {
+auto Simulation::process_event_group(simulation::EventGroup &&events) -> void {
     if (print_events_) {
         print_fmt("events: {:n}\n", events);
     }
     if (events.empty()) {
         return;
     }
-    validate(events);
     const auto element =
         SchematicOld::ConstElement {schematic_->element(events.front().element_id)};
     const auto element_type = element.element_type();

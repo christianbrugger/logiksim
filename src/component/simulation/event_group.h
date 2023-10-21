@@ -9,15 +9,37 @@ namespace logicsim {
 
 namespace simulation {
 
-// TODO make proper class that hold invariant
-
 /**
- * @brief: groups of events for the same element and time from different inputs
+ * @brief: groups of events for the same element and time from different inputs.
+ *
+ * Class invariants:
+ *     * All events need to have same time
+ *     * All events need to have same element_id
+ *     * No two event.input_id are equal
  */
-using event_group_t = folly::small_vector<SimulationEvent, 4>;
+class EventGroup {
+   public:
+    using value_type = simulation_event_t;
+    using container_t = folly::small_vector<value_type, 4>;
 
-// TODO make this part of class invariant
-void validate(const event_group_t &events);
+    using iterator = container_t::const_iterator;
+    using const_iterator = container_t::const_iterator;
+
+   public:
+    [[nodiscard]] auto empty() const -> bool;
+    [[nodiscard]] auto size() const -> std::size_t;
+
+    auto push_back(simulation_event_t event) -> void;
+
+    [[nodiscard]] auto front() const -> const simulation_event_t &;
+    [[nodiscard]] auto back() const -> const simulation_event_t &;
+
+    [[nodiscard]] auto begin() const -> const_iterator;
+    [[nodiscard]] auto end() const -> const_iterator;
+
+   private:
+    container_t group_ {};
+};
 
 }  // namespace simulation
 

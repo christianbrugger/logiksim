@@ -3,44 +3,48 @@
 
 #include "format/struct.h"
 #include "schematic_old.h"  // TODO remove
-#include "vocabulary/connection_id.h"
-#include "vocabulary/element_id.h"
+#include "vocabulary/connection.h"
 #include "vocabulary/time.h"
+
+#include <compare>
 
 namespace logicsim {
 
 namespace simulation {
 
-// TODO rename to simulation_event_t
-struct SimulationEvent {
+/**
+ * @brief: Simulation event defines a future value at a specific time and input.
+ */
+struct simulation_event_t {
     time_t time;
-    // TODO replace with input_t
     element_id_t element_id;
-    connection_id_t input_index;
+    connection_id_t input_id;  // TODO rename input_id
     bool value;
 
-    auto operator==(const SimulationEvent &other) const -> bool;
-    auto operator<(const SimulationEvent &other) const -> bool;
-
-    // TODO replace with <=>
-    auto operator!=(const SimulationEvent &other) const -> bool;
-    auto operator>(const SimulationEvent &other) const -> bool;
-    auto operator<=(const SimulationEvent &other) const -> bool;
-    auto operator>=(const SimulationEvent &other) const -> bool;
-
     [[nodiscard]] auto format() const -> std::string;
+
+    [[nodiscard]] auto operator==(const simulation_event_t &) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const simulation_event_t &) const = default;
 };
 
-static_assert(sizeof(SimulationEvent) == 16);
+static_assert(sizeof(simulation_event_t) == 16);
 
-static_assert(std::is_standard_layout_v<SimulationEvent>);
-static_assert(std::is_trivially_copyable_v<SimulationEvent>);
-static_assert(std::is_trivially_copy_constructible_v<SimulationEvent>);
-static_assert(std::is_trivially_copy_assignable_v<SimulationEvent>);
+static_assert(std::is_aggregate_v<simulation_event_t>);
+static_assert(std::is_trivially_copyable_v<simulation_event_t>);
+static_assert(std::is_trivially_copy_constructible_v<simulation_event_t>);
+static_assert(std::is_trivially_copy_assignable_v<simulation_event_t>);
+
+/**
+ * @brief: Check if time or element_id is greater for two events.
+ */
+struct greater_time_element_id {
+    [[nodiscard]] auto operator()(const simulation_event_t &,
+                                  const simulation_event_t &) const -> bool;
+};
 
 // TODO remove SchematicOld
 auto make_event(SchematicOld::ConstInput input, time_t time, bool value)
-    -> SimulationEvent;
+    -> simulation_event_t;
 
 }  // namespace simulation
 

@@ -9,9 +9,9 @@ HistoryIterator::HistoryIterator(HistoryView view, std::size_t index) noexcept
 
 auto HistoryIterator::operator*() const -> value_type {
     return history_entry_t {
-        .first_time = view_.get_time(static_cast<std::ptrdiff_t>(index_) - 1),
-        .last_time = view_.get_time(index_),
-        .value = view_.get_value(index_),
+        view_.get_time(static_cast<std::ptrdiff_t>(index_) - 1),
+        view_.get_time(index_),
+        view_.get_value(index_),
     };
 }
 

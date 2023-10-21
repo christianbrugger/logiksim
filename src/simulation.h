@@ -128,11 +128,11 @@ class Simulation {
                                            const logic_small_vector_t &old_outputs,
                                            const logic_small_vector_t &new_outputs)
         -> void;
-    auto process_event_group(simulation::event_group_t &&events) -> void;
+    auto process_event_group(simulation::EventGroup &&events) -> void;
     auto create_event(SchematicOld::ConstOutput output,
                       const logic_small_vector_t &output_values) -> void;
     auto apply_events(SchematicOld::ConstElement element,
-                      const simulation::event_group_t &group) -> void;
+                      const simulation::EventGroup &group) -> void;
     auto set_input_internal(SchematicOld::ConstInput input, bool value) -> void;
 
     auto record_input_history(SchematicOld::ConstInput input, bool new_value) -> void;
