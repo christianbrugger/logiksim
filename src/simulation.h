@@ -12,7 +12,6 @@
 #include "exception.h"
 #include "schematic_old.h"
 #include "timeout_timer.h"
-#include "vocabulary/logic_vector.h"
 
 #include <boost/container/small_vector.hpp>
 #include <fmt/core.h>
@@ -42,9 +41,6 @@
 namespace logicsim {
 
 namespace simulation {}
-
-using timeout_clock = std::chrono::steady_clock;
-using timeout_t = timeout_clock::duration;
 
 class Simulation {
    public:
@@ -119,7 +115,6 @@ class Simulation {
         -> const logic_small_vector_t &;
     [[nodiscard]] auto input_values(SchematicOld::ConstElement element) const
         -> const logic_small_vector_t &;
-    [[nodiscard]] auto input_values() const -> const logic_vector_t;
 
     // infers the output values
     auto set_output_value(SchematicOld::ConstOutput output, bool value) -> void;
@@ -132,7 +127,6 @@ class Simulation {
         -> logic_small_vector_t;
     [[nodiscard]] auto output_values(SchematicOld::ConstElement element) const
         -> logic_small_vector_t;
-    [[nodiscard]] auto output_values() const -> logic_vector_t;
 
     // internal states
     auto set_internal_state(SchematicOld::ConstElement element, std::size_t index,

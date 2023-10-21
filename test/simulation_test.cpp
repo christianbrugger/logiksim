@@ -139,9 +139,9 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     auto simulation = get_initialized_simulation(schematic);
     // run simulation for 5 ms
     EXPECT_EQ(simulation.time(), time_t {0us});
-    const auto start = timeout_clock::now();
+    const auto start = std::chrono::steady_clock::now();
     simulation.run(Simulation::defaults::infinite_simulation_time, 5ms);
-    const auto end = timeout_clock::now();
+    const auto end = std::chrono::steady_clock::now();
 
     EXPECT_GT(simulation.time(), time_t {1ms});
     const auto delay = end - start;

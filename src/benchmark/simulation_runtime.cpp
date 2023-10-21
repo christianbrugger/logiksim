@@ -62,11 +62,12 @@ auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
     }
 
     if (do_print) {
-        auto output_values {simulation.output_values()};
+        // auto output_values {simulation.output_values()};
 
         print_fmt("events simulated = {}\n", simulated_event_count);
-        print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(), "{:b}"));
-        print_fmt("output_values = {}\n", fmt_join("", output_values, "{:b}"));
+        // print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(),
+        // "{:b}")); print_fmt("output_values = {}\n", fmt_join("", output_values,
+        // "{:b}"));
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
                 auto hist =
@@ -105,9 +106,9 @@ auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
 
     int64_t simulated_event_count {0};
     while (true) {
-        const auto event_count =
-            simulation.run(Simulation::defaults::infinite_simulation_time,
-                           timeout_t {1000 * 1ms}, n_events - simulated_event_count);
+        const auto event_count = simulation.run(
+            Simulation::defaults::infinite_simulation_time,
+            Simulation::timeout_t {1000 * 1ms}, n_events - simulated_event_count);
         // const auto event_count = simulation.run(
         //     Simulation::defaults::infinite_simulation_time,
         //     Simulation::defaults::no_timeout, n_events - simulated_event_count);
@@ -122,11 +123,12 @@ auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
     }
 
     if (do_print) {
-        auto output_values {simulation.output_values()};
+        // auto output_values {simulation.output_values()};
 
         print_fmt("events simulated = {}\n", simulated_event_count);
-        print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(), "{:b}"));
-        print_fmt("output_values = {}\n", fmt_join("", output_values, "{:b}"));
+        // print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(),
+        // "{:b}")); print_fmt("output_values = {}\n", fmt_join("", output_values,
+        // "{:b}"));
         for (auto element : schematic.elements()) {
             if (element.element_type() == ElementType::wire) {
                 auto hist =

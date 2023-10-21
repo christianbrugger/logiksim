@@ -103,8 +103,7 @@ auto Simulation::submit_events(SchematicOld::ConstElement element, delay_t offse
 }
 
 auto Simulation::check_counts_valid() const -> void {
-    const auto n_elements =
-        static_cast<logic_vector_t::size_type>(schematic_->element_count());
+    const auto n_elements = schematic_->element_count();
 
     if (input_values_.size() != n_elements || internal_states_.size() != n_elements ||
         first_input_histories_.size() != n_elements) [[unlikely]] {
@@ -397,16 +396,6 @@ auto Simulation::input_values(const SchematicOld::ConstElement element) const
     return input_values(element.element_id());
 }
 
-auto Simulation::input_values() const -> const logic_vector_t {
-    auto result = logic_vector_t {};
-
-    for (auto element : schematic_->elements()) {
-        std::ranges::copy(input_values(element), std::back_inserter(result));
-    }
-
-    return result;
-}
-
 auto Simulation::set_input_internal(const SchematicOld::ConstInput input, bool value)
     -> void {
     record_input_history(input, value);
@@ -449,16 +438,6 @@ auto Simulation::output_values(const SchematicOld::ConstElement element) const
     -> logic_small_vector_t {
     return transform_to_container<logic_small_vector_t>(
         element.outputs(), [=, this](auto output) { return output_value(output); });
-}
-
-auto Simulation::output_values() const -> logic_vector_t {
-    logic_vector_t result(schematic_->total_output_count());
-
-    for (auto element : schematic_->elements()) {
-        std::ranges::copy(output_values(element), std::back_inserter(result));
-    }
-
-    return result;
 }
 
 auto Simulation::set_input_value(SchematicOld::ConstInput input, bool value) -> void {

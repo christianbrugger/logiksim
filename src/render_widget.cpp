@@ -1016,7 +1016,7 @@ auto RendererWidget::on_simulation_timeout_impl() -> void {
     const auto was_finished = simulation_->finished();
 
     constexpr auto timeout =
-        timeout_t {std::chrono::milliseconds {simulation_timer_interval_ms_}};
+        Simulation::timeout_t {std::chrono::milliseconds {simulation_timer_interval_ms_}};
     simulation_->run(timeout);
 
     if (!was_finished) {

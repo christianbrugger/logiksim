@@ -91,7 +91,7 @@ auto InteractiveSimulation::time() const -> time_t {
     return simulation_.time();
 }
 
-auto InteractiveSimulation::run(timeout_t timeout) -> void {
+auto InteractiveSimulation::run(Simulation::timeout_t timeout) -> void {
     const auto start_realtime = timer_t::now();
     const auto start_simulation_time = simulation_.time();
 
