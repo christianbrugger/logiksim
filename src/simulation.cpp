@@ -221,26 +221,6 @@ auto Simulation::process_event_group(event_group_t &&events) -> void {
     }
 }
 
-namespace simulation {
-
-class Timer {
-   public:
-    using time_point = timeout_clock::time_point;
-
-    explicit Timer(timeout_t timeout = Simulation::defaults::no_timeout) noexcept
-        : timeout_(timeout), start_time_(timeout_clock::now()) {};
-
-    [[nodiscard]] auto reached_timeout() const noexcept -> bool {
-        return (timeout_ != Simulation::defaults::no_timeout) &&
-               (std::chrono::steady_clock::now() - start_time_) > timeout_;
-    }
-
-   private:
-    timeout_t timeout_;
-    time_point start_time_;
-};
-}  // namespace simulation
-
 auto Simulation::run(const delay_t simulation_time, const timeout_t timeout,
                      const int64_t max_events) -> int64_t {
     if (!is_initialized_) {
@@ -258,7 +238,7 @@ auto Simulation::run(const delay_t simulation_time, const timeout_t timeout,
         return 0;
     }
 
-    const auto timer = simulation::Timer {timeout};
+    const auto timer = TimeoutTimer {timeout};
     const auto queue_end_time = simulation_time == defaults::infinite_simulation_time
                                     ? time_t::max()
                                     : queue_.time() + simulation_time;

@@ -10,7 +10,7 @@ Timer::Timer(std::string description, Unit unit, int precision)
     : precision_ {precision},
       description_(std::move(description)),
       unit_(unit),
-      start_(timer_t::now()) {};
+      start_(clock_t::now()) {};
 
 Timer::~Timer() {
     if (!description_.empty()) {
@@ -20,7 +20,7 @@ Timer::~Timer() {
 }
 
 auto Timer::delta() const -> std::chrono::duration<double> {
-    return delta_t {timer_t::now() - start_};
+    return delta_t {clock_t::now() - start_};
 }
 
 auto Timer::delta_seconds() const -> double {

@@ -244,6 +244,7 @@ set(LS_CORE_SOURCES
     src/simulation_view.cpp
     src/size_handle.cpp
     src/text_shaping.cpp
+    src/timeout_timer.cpp
     src/timer.cpp
     src/top_widget.cpp
     src/validate_definition.cpp

@@ -11,8 +11,8 @@ namespace logicsim {
 
 class Timer {
    public:
-    using timer_t = std::chrono::steady_clock;
-    using timepoint_t = timer_t::time_point;
+    using clock_t = std::chrono::steady_clock;
+    using timepoint_t = clock_t::time_point;
     using delta_t = std::chrono::duration<double>;
 
    public:

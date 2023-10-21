@@ -11,6 +11,7 @@
 #include "container/circular_buffer.h"
 #include "exception.h"
 #include "schematic_old.h"
+#include "timeout_timer.h"
 #include "vocabulary/logic_vector.h"
 
 #include <boost/container/small_vector.hpp>
@@ -40,14 +41,7 @@
 
 namespace logicsim {
 
-auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &inverters)
-    -> logic_small_vector_t;
-
-namespace simulation {
-class HistoryView;
-class HistoryIterator;
-struct history_entry_t;
-}  // namespace simulation
+namespace simulation {}
 
 using timeout_clock = std::chrono::steady_clock;
 using timeout_t = timeout_clock::duration;
@@ -60,6 +54,8 @@ class Simulation {
     using history_buffer_t = simulation::history_buffer_t;
     using event_group_t = simulation::event_group_t;
 
+    using timeout_t = TimeoutTimer::timeout_t;
+
     // 8 bytes still fit into a small_vector with 32 byte size.
     // using logic_small_vector_t = boost::container::small_vector<bool, 8>;
     // using con_index_small_vector_t = boost::container::small_vector<connection_id_t,
@@ -71,8 +67,9 @@ class Simulation {
                   std::size_t {connection_count_t::max()});
     static_assert(sizeof(con_index_small_vector_t) == 24);
 
+    // TODO move out of class
     struct defaults {
-        constexpr static auto no_timeout = timeout_t::max();
+        constexpr static auto no_timeout = TimeoutTimer::defaults::no_timeout;
         constexpr static auto infinite_simulation_time = delay_t::max();
         constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
                                                 connection_count_t::max().count()};
