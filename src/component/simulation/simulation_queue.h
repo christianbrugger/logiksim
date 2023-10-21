@@ -22,7 +22,12 @@ class SimulationQueue {
 
     void set_time(time_t time);
     void submit_event(SimulationEvent event);
-    /// Remove and return all events for the next time and element_id.
+
+    /**
+     * brief: Collects all events for the next timepoint and advances the simulation time.
+     *
+     * Event group contains all input events at the same time and for the same element id.
+     */
     auto pop_event_group() -> event_group_t;
 
    private:

@@ -1,20 +1,17 @@
 ﻿
 #include "simulation.h"
 
-#include "algorithm/has_duplicates_quadratic.h"
-#include "algorithm/pop_while.h"
 #include "algorithm/range.h"
 #include "algorithm/transform_to_container.h"
 #include "exception.h"
 #include "layout_info.h"
 #include "logging.h"
+#include "logic_item/simulation_info.h"
 
-#include <gsl/assert>
 #include <gsl/gsl>
 
 #include <algorithm>
 #include <cmath>
-#include <iterator>
 
 namespace logicsim {
 
@@ -40,17 +37,6 @@ auto set_default_inputs(Simulation &simulation) -> void {
     }
 
     for (const auto element : simulation.schematic().elements()) {
-        /*
-        // and-elements
-        if (element.element_type() == ElementType::and_element) {
-            for (auto input : element.inputs()) {
-                if (!input.has_connected_element()) {
-                    simulation.set_input_value(input, true);
-                }
-            }
-        }
-        */
-
         // activate unconnected enable
         if (const auto enable_id = element_enable_input_id(element.element_type())) {
             const auto input = element.input(*enable_id);
@@ -75,58 +61,6 @@ auto set_default_inputs(Simulation &simulation) -> void {
 //
 // Simulation
 //
-
-[[nodiscard]] constexpr auto has_no_logic(const ElementType type) noexcept -> bool {
-    using enum ElementType;
-    return type == placeholder || type == led || type == display_ascii ||
-           type == display_number;
-}
-
-[[nodiscard]] constexpr auto internal_state_size(const ElementType type) noexcept
-    -> std::size_t {
-    switch (type) {
-        using enum ElementType;
-
-        case unused:
-        case placeholder:
-        case wire:
-
-        case buffer_element:
-        case and_element:
-        case or_element:
-        case xor_element:
-            return 0;
-
-        case button:
-            return 1;
-
-        case led:
-        case display_ascii:
-        case display_number:
-            return 0;
-
-        case clock_generator:
-            return 4;
-        case flipflop_jk:
-            return 2;
-        case shift_register:
-            return 10;
-        case latch_d:
-            return 1;
-        case flipflop_d:
-            return 1;
-        case flipflop_ms_d:
-            return 2;
-
-        case sub_circuit:
-            return 0;
-    }
-    throw_exception("Don't know internal state of given type.");
-}
-
-[[nodiscard]] constexpr auto has_internal_state(const ElementType type) noexcept -> bool {
-    return internal_state_size(type) != 0;
-}
 
 Simulation::Simulation(const SchematicOld &schematic)
     : schematic_ {&schematic},
@@ -175,254 +109,6 @@ auto Simulation::check_counts_valid() const -> void {
     if (input_values_.size() != n_elements || internal_states_.size() != n_elements ||
         first_input_histories_.size() != n_elements) [[unlikely]] {
         throw_exception("size of vector match schematic element count.");
-    }
-}
-
-namespace {
-
-template <bool Const>
-struct state_mapping_clock_generator {
-    using vector_ref =
-        std::conditional_t<!Const, logic_small_vector_t &, const logic_small_vector_t &>;
-    using bool_ref = std::conditional_t<!Const, bool &, const bool &>;
-
-    explicit state_mapping_clock_generator(vector_ref state)
-        : enabled {state.at(0)},
-          output_value {state.at(1)},
-          on_finish_event {state.at(2)},
-          off_finish_event {state.at(3)} {
-        if (state.size() != 4) {
-            throw_exception("invalid state size");
-        }
-    }
-
-    bool_ref enabled;
-    bool_ref output_value;
-    bool_ref on_finish_event;
-    bool_ref off_finish_event;
-};
-
-}  // namespace
-
-auto update_internal_state(const logic_small_vector_t &old_input,
-                           const logic_small_vector_t &new_input, const ElementType type,
-                           logic_small_vector_t &state) {
-    switch (type) {
-        using enum ElementType;
-
-        case clock_generator: {
-            // first input is enable signal
-            // second input & output are internal signals to loop the enalbe phase
-            // third input & output are internal signals to loop the disable phase
-
-            const auto state_map = state_mapping_clock_generator<false> {state};
-
-            bool input_enabled = new_input.at(0);
-            bool on_finished = new_input.at(1) ^ old_input.at(1);
-            bool off_finished = new_input.at(2) ^ old_input.at(2);
-
-            if (!state_map.enabled) {
-                if (input_enabled) {
-                    state_map.enabled = true;
-
-                    state_map.output_value = true;
-                    state_map.on_finish_event = !state_map.on_finish_event;
-                }
-            } else {
-                if (on_finished) {
-                    state_map.output_value = false;
-                    state_map.off_finish_event = !state_map.off_finish_event;
-                } else if (off_finished) {
-                    if (input_enabled) {
-                        state_map.output_value = true;
-                        state_map.on_finish_event = !state_map.on_finish_event;
-                    } else {
-                        state_map.enabled = false;
-                    }
-                }
-            }
-
-            return;
-        }
-
-        case flipflop_jk: {
-            bool input_j = new_input.at(1);
-            bool input_k = new_input.at(2);
-            bool input_set = new_input.at(3);
-            bool input_reset = new_input.at(4);
-
-            if (input_reset) {
-                state.at(0) = false;
-                state.at(1) = false;
-            } else if (input_set) {
-                state.at(0) = true;
-                state.at(1) = true;
-            } else if (new_input.at(0) && !old_input.at(0)) {  // rising edge
-                if (input_j && input_k) {
-                    state.at(0) = !state.at(1);
-                } else if (input_j && !input_k) {
-                    state.at(0) = true;
-                } else if (!input_j && input_k) {
-                    state.at(0) = false;
-                }
-            } else if (!new_input.at(0) && old_input.at(0)) {  // faling edge
-                state.at(1) = state.at(0);
-            }
-            return;
-        }
-
-        case shift_register: {
-            auto n_inputs = std::ssize(new_input) - 1;
-            if (std::ssize(state) < n_inputs) [[unlikely]] {
-                throw_exception(
-                    "need at least as many internal states "
-                    "as inputs for shift register");
-            }
-
-            // rising edge - store new value
-            if (new_input.at(0) && !old_input.at(0)) {
-                std::copy(std::next(new_input.begin()), new_input.end(), state.begin());
-            }
-            // falling edge - shift register
-            if (!new_input.at(0) && old_input.at(0)) {
-                std::shift_right(state.begin(), state.end(), n_inputs);
-            }
-            return;
-        }
-
-        case latch_d: {
-            bool input_clk = new_input.at(0);
-            bool input_d = new_input.at(1);
-
-            if (input_clk) {
-                state.at(0) = input_d;
-            }
-            return;
-        }
-
-        case flipflop_d: {
-            bool input_d = new_input.at(1);
-            bool input_set = new_input.at(2);
-            bool input_reset = new_input.at(3);
-
-            if (input_reset) {
-                state.at(0) = false;
-            } else if (input_set) {
-                state.at(0) = true;
-            } else if (new_input.at(0) && !old_input.at(0)) {  // rising edge
-                state.at(0) = input_d;
-            }
-            return;
-        }
-
-        case flipflop_ms_d: {
-            bool input_d = new_input.at(1);
-            bool input_set = new_input.at(2);
-            bool input_reset = new_input.at(3);
-
-            if (input_reset) {
-                state.at(0) = false;
-                state.at(1) = false;
-            } else if (input_set) {
-                state.at(0) = true;
-                state.at(1) = true;
-            } else if (new_input.at(0) && !old_input.at(0)) {  // rising edge
-                state.at(0) = input_d;
-            } else if (!new_input.at(0) && old_input.at(0)) {  // faling edge
-                state.at(1) = state.at(0);
-            }
-            return;
-        }
-
-        default:
-            [[unlikely]] throw_exception(
-                "Unexpected type encountered in calculate_new_state.");
-    }
-}
-
-auto calculate_outputs_from_state(const logic_small_vector_t &state,
-                                  connection_count_t output_count, const ElementType type)
-    -> logic_small_vector_t {
-    switch (type) {
-        using enum ElementType;
-
-        case button: {
-            return {state.at(0)};
-        }
-
-        case clock_generator: {
-            const auto state_map = state_mapping_clock_generator<true> {state};
-
-            return {state_map.output_value, state_map.on_finish_event,
-                    state_map.off_finish_event};
-        }
-
-        case flipflop_jk: {
-            const bool enabled = state.at(1);
-            return {enabled, !enabled};
-        }
-
-        case shift_register: {
-            if (std::size(state) < std::size_t {output_count}) [[unlikely]] {
-                throw_exception(
-                    "need at least output count internal state for shift register");
-            }
-            return logic_small_vector_t(std::prev(state.end(), output_count.count()),
-                                        state.end());
-        }
-
-        case latch_d: {
-            const bool data = state.at(0);
-            return {data};
-        }
-
-        case flipflop_d: {
-            const bool data = state.at(0);
-            return {data};
-        }
-
-        case flipflop_ms_d: {
-            const bool data = state.at(1);
-            return {data};
-        }
-
-        default:
-            [[unlikely]] throw_exception(
-                "Unexpected type encountered in calculate_new_state.");
-    }
-}
-
-auto calculate_outputs_from_inputs(const logic_small_vector_t &input,
-                                   connection_count_t output_count,
-                                   const ElementType type) -> logic_small_vector_t {
-    if (input.empty()) [[unlikely]] {
-        throw_exception("Input size cannot be zero.");
-    }
-    if (output_count <= connection_count_t {0}) [[unlikely]] {
-        throw_exception("Output count cannot be zero or negative.");
-    }
-
-    switch (type) {
-        using enum ElementType;
-
-        case wire:
-            return logic_small_vector_t(output_count.count(), input.at(0));
-
-        case buffer_element:
-            return {input.at(0)};
-
-        case and_element:
-            return {std::ranges::all_of(input, std::identity {})};
-
-        case or_element:
-            return {std::ranges::any_of(input, std::identity {})};
-
-        case xor_element:
-            return {std::ranges::count_if(input, std::identity {}) == 1};
-
-        default:
-            [[unlikely]] throw_exception(
-                "Unexpected type encountered in calculate_outputs.");
     }
 }
 
