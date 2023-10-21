@@ -136,7 +136,7 @@ class Simulation {
     auto set_input_internal(SchematicOld::ConstInput input, bool value) -> void;
 
     auto record_input_history(SchematicOld::ConstInput input, bool new_value) -> void;
-    auto clean_history(simulation::history_buffer_t &history, delay_t history_length)
+    auto clean_history(simulation::HistoryBuffer &history, delay_t history_length)
         -> void;
 
     gsl::not_null<const SchematicOld *> schematic_;
@@ -147,7 +147,7 @@ class Simulation {
 
     std::vector<logic_small_vector_t> input_values_ {};
     std::vector<logic_small_vector_t> internal_states_ {};
-    std::vector<simulation::history_buffer_t> first_input_histories_ {};
+    std::vector<simulation::HistoryBuffer> first_input_histories_ {};
 };
 
 auto set_default_outputs(Simulation &simulation) -> void;

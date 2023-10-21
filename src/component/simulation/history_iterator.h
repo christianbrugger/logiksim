@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_ITERATOR_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_ITERATOR_H
 
+#include "component/simulation/history_index.h"
 #include "component/simulation/history_view.h"  // TODO remove circular
 
 #include <cstddef>  // std::size_t
@@ -24,7 +25,8 @@ class HistoryIterator {
     using reference = value_type;
 
     [[nodiscard]] explicit HistoryIterator() = default;
-    [[nodiscard]] explicit HistoryIterator(HistoryView view, std::size_t index) noexcept;
+    [[nodiscard]] explicit HistoryIterator(HistoryView view,
+                                           history_index_t index) noexcept;
 
     [[nodiscard]] auto operator*() const -> value_type;
     auto operator++() noexcept -> HistoryIterator &;
@@ -36,8 +38,7 @@ class HistoryIterator {
 
    private:
     HistoryView view_ {};
-    // from 0 to history.size() + 1
-    std::size_t index_ {};
+    history_index_t index_ {};
 };
 
 static_assert(std::forward_iterator<HistoryIterator>);

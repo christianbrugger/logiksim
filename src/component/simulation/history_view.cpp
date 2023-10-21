@@ -12,7 +12,7 @@ namespace logicsim {
 
 namespace simulation {
 
-HistoryView::HistoryView(const history_buffer_t &history, time_t simulation_time,
+HistoryView::HistoryView(const HistoryBuffer &history, time_t simulation_time,
                          bool last_value, delay_t history_length)
     : history_ {&history}, simulation_time_ {simulation_time}, last_value_ {last_value} {
     // ascending without duplicates
@@ -29,14 +29,14 @@ auto HistoryView::size() const -> std::size_t {
     if (history_ == nullptr) {
         return 1;
     }
-    return history_->size() + 1 - min_index_;
+    return history_->size() + 1 - std::size_t {min_index_};
 }
 
 auto HistoryView::ssize() const -> std::ptrdiff_t {
     if (history_ == nullptr) {
         return 1;
     }
-    return history_->size() + 1 - min_index_;
+    return history_->size() + 1 - std::size_t {min_index_};
 }
 
 auto HistoryView::begin() const -> HistoryIterator {
@@ -44,7 +44,7 @@ auto HistoryView::begin() const -> HistoryIterator {
 }
 
 auto HistoryView::end() const -> HistoryIterator {
-    return HistoryIterator {*this, size() + min_index_};
+    return HistoryIterator {*this, history_index_t {size() + std::size_t {min_index_}}};
 }
 
 auto HistoryView::from(time_t value) const -> HistoryIterator {
@@ -52,7 +52,7 @@ auto HistoryView::from(time_t value) const -> HistoryIterator {
         throw std::runtime_error("cannot query times in the future");
     }
     const auto index = find_index(value);
-    return HistoryIterator {*this, index};
+    return HistoryIterator {*this, history_index_t {index}};
 }
 
 auto HistoryView::until(time_t value) const -> HistoryIterator {
@@ -64,7 +64,7 @@ auto HistoryView::until(time_t value) const -> HistoryIterator {
                                ? value - delay_t::epsilon()
                                : value;
     const auto index = find_index(last_time) + 1;
-    return HistoryIterator {*this, index};
+    return HistoryIterator {*this, history_index_t {index}};
 }
 
 auto HistoryView::value(time_t value) const -> bool {
@@ -99,14 +99,14 @@ auto HistoryView::find_index(time_t value) const -> std::size_t {
     }
 
     const auto it =
-        std::ranges::lower_bound(history_->begin() + min_index_, history_->end(), value,
-                                 std::ranges::less_equal {});
+        std::ranges::lower_bound(history_->begin() + std::size_t {min_index_},
+                                 history_->end(), value, std::ranges::less_equal {});
     const auto index = it - history_->begin();
 
-    assert(index >= min_index_);
+    assert(index >= std::size_t {min_index_});
     assert(index <= std::ssize(*history_));
     assert(index == std::ssize(*history_) || history_->at(index) > value);
-    assert(index == min_index_ || history_->at(index - 1) <= value);
+    assert(index == std::size_t {min_index_} || history_->at(index - 1) <= value);
 
     return gsl::narrow_cast<std::size_t>(index);
 }
@@ -116,7 +116,7 @@ auto HistoryView::get_time(std::ptrdiff_t index) const -> time_t {
         return index < 0 ? time_t::min() : simulation_time_;
     }
 
-    if (index < min_index_) {
+    if (index < static_cast<std::ptrdiff_t>(std::size_t {min_index_})) {
         return time_t::min();
     }
     if (index >= std::ssize(*history_)) {

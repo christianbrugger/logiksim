@@ -2,6 +2,7 @@
 #define LOGICSIM_COMPONENT_SIMULATION_EVENT_GROUP_H
 
 #include "component/simulation/simulation_event.h"
+#include "format/container.h"
 
 #include <folly/small_vector.h>
 

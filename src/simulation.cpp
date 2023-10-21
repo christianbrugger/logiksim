@@ -366,9 +366,6 @@ auto Simulation::record_input_history(const SchematicOld::ConstInput input,
         return;
     }
     auto &history = first_input_histories_.at(input.element_id().value);
-    if (!history.empty() && history.back() == time()) {
-        throw_exception("Cannot have two transitions recorded at the same time.");
-    }
 
     // remove old values
     clean_history(history, history_length);
@@ -380,8 +377,8 @@ auto Simulation::record_input_history(const SchematicOld::ConstInput input,
     largest_history_event_ = std::max(largest_history_event_, time() + history_length);
 }
 
-auto Simulation::clean_history(simulation::history_buffer_t &history,
-                               delay_t history_length) -> void {
+auto Simulation::clean_history(simulation::HistoryBuffer &history, delay_t history_length)
+    -> void {
     const auto min_time = time() - history_length;
     while (!history.empty() && history.front() < min_time) {
         history.pop_front();

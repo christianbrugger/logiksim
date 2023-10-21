@@ -3,6 +3,7 @@
 
 #include "component/simulation/history_buffer.h"
 #include "component/simulation/history_entry.h"
+#include "component/simulation/history_index.h"
 #include "vocabulary/time.h"
 
 #include <cstddef>
@@ -29,7 +30,7 @@ class HistoryView {
 
    public:
     [[nodiscard]] explicit HistoryView() = default;
-    [[nodiscard]] explicit HistoryView(const history_buffer_t &history,
+    [[nodiscard]] explicit HistoryView(const HistoryBuffer &history,
                                        time_t simulation_time, bool last_value,
                                        delay_t history_length);
 
@@ -51,9 +52,9 @@ class HistoryView {
     [[nodiscard]] auto get_time(std::ptrdiff_t index) const -> time_t;
 
    private:
-    const history_buffer_t *history_ {nullptr};
+    const HistoryBuffer *history_ {nullptr};
     time_t simulation_time_ {time_t::max()};
-    history_buffer_t::internal_size_t min_index_ {};
+    history_index_t min_index_ {};
     bool last_value_ {};
 };
 

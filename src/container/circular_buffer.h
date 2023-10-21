@@ -64,7 +64,9 @@ class circular_buffer {
     auto pop_front() -> void;
 
     [[nodiscard]] auto front() -> reference;
+    [[nodiscard]] auto front() const -> const_reference;
     [[nodiscard]] auto back() -> reference;
+    [[nodiscard]] auto back() const -> const_reference;
     [[nodiscard]] auto operator[](size_type i) -> reference;
     [[nodiscard]] auto operator[](size_type i) const -> const_reference;
     [[nodiscard]] auto at(size_type i) -> reference;
@@ -237,7 +239,21 @@ auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::front() -> re
 }
 
 template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
+auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::front() const
+    -> const_reference {
+    assert(!empty());
+    return buffer_[start_];
+}
+
+template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
 auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::back() -> reference {
+    assert(!empty());
+    return buffer_[wrap_plus(start_, size_ - 1)];
+}
+
+template <typename Value, std::size_t RequestedMaxInline, typename InternalSizeType>
+auto circular_buffer<Value, RequestedMaxInline, InternalSizeType>::back() const
+    -> const_reference {
     assert(!empty());
     return buffer_[wrap_plus(start_, size_ - 1)];
 }
