@@ -3,6 +3,9 @@
 
 #include <gtest/gtest.h>
 
+#include <gsl/gsl>
+
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <ranges>
@@ -114,14 +117,14 @@ TEST(IteratorAdaptorEnumerate, ModifyingView) {
         std::pair {0, 5}, std::pair {1, 5}, std::pair {2, 5}};
 
     EXPECT_TRUE(std::ranges::equal(container, container_before));
-    EXPECT_TRUE(std::ranges::equal(view, expected_before, pair_equal<int>));
+    EXPECT_TRUE(std::ranges::equal(view, expected_before, pair_equal<std::size_t>));
     EXPECT_TRUE(std::ranges::equal(view.begin(), view.end(),  //
                                    expected_before.begin(), expected_before.end(),
-                                   pair_equal<int>));
+                                   pair_equal<std::size_t>));
 
     // modify
     for (auto pair : view) {
-        pair.second = pair.first;
+        pair.second = gsl::narrow<int>(pair.first);
     }
 
     // after
@@ -130,10 +133,10 @@ TEST(IteratorAdaptorEnumerate, ModifyingView) {
         std::pair {0, 0}, std::pair {1, 1}, std::pair {2, 2}};
 
     EXPECT_TRUE(std::ranges::equal(container, container_after));
-    EXPECT_TRUE(std::ranges::equal(view, expected_after, pair_equal<int>));
+    EXPECT_TRUE(std::ranges::equal(view, expected_after, pair_equal<std::size_t>));
     EXPECT_TRUE(std::ranges::equal(view.begin(), view.end(),  //
                                    expected_after.begin(), expected_after.end(),
-                                   pair_equal<int>));
+                                   pair_equal<std::size_t>));
 }
 
 //

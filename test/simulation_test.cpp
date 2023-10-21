@@ -1,6 +1,7 @@
 
 #include "simulation.h"
 
+#include "logic_item/schematic_info.h"
 #include "schematic_validation.h"
 
 #include <gmock/gmock.h>
@@ -9,52 +10,6 @@
 #include <chrono>
 
 namespace logicsim {
-
-// SimulationEvent
-
-TEST(SimulationEventTest, EqualOperatorTest) {
-    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
-    EXPECT_TRUE(event1 == event2);
-
-    SimulationEvent event3 {time_t {123us}, element_id_t {1}, connection_id_t {3}, true};
-    SimulationEvent event4 {time_t {123us}, element_id_t {1}, connection_id_t {2}, false};
-    EXPECT_TRUE(event3 == event4);
-}
-
-TEST(SimulationEventTest, LessThanOperatorTest) {
-    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
-    EXPECT_TRUE(event1 < event2);
-
-    SimulationEvent event3 {time_t {123us}, element_id_t {1}, connection_id_t {4}, true};
-    SimulationEvent event4 {time_t {123us}, element_id_t {3}, connection_id_t {2}, false};
-    EXPECT_TRUE(event3 < event4);
-}
-
-TEST(SimulationEventTest, NotEqualOperatorTest) {
-    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
-    EXPECT_TRUE(event1 != event2);
-}
-
-TEST(SimulationEventTest, GreaterThanOperatorTest) {
-    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
-    EXPECT_TRUE(event2 > event1);
-}
-
-TEST(SimulationEventTest, LessThanOrEqualOperatorTest) {
-    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
-    EXPECT_TRUE(event1 <= event2);
-}
-
-TEST(SimulationEventTest, GreaterThanOrEqualOperatorTest) {
-    SimulationEvent event1 {time_t {123us}, element_id_t {1}, connection_id_t {2}, true};
-    SimulationEvent event2 {time_t {789us}, element_id_t {3}, connection_id_t {4}, false};
-    EXPECT_TRUE(event2 >= event1);
-}
 
 // Simulation
 
@@ -81,7 +36,7 @@ TEST(SimulationTest, InitializeSimulation) {
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::buffer_element)},
     });
 
     auto simulation = get_initialized_simulation(schematic);
@@ -110,13 +65,13 @@ TEST(SimulationTest, SimulationProcessAllEventsForTime) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
     auto xor_element = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::xor_element)},
     });
     auto simulation = get_initialized_simulation(schematic);
 
@@ -141,7 +96,7 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::buffer_element)},
     });
     auto wire = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::wire,
@@ -170,7 +125,7 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::buffer_element)},
     });
     auto wire = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::wire,
@@ -208,7 +163,7 @@ TEST(SimulationTest, AdditionalEvents) {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::xor_element)},
     });
 
     auto simulation = get_initialized_simulation(schematic);
@@ -241,7 +196,7 @@ TEST(SimulationTest, SimulatanousEvents) {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::xor_element)},
     });
 
     auto simulation = get_initialized_simulation(schematic);
@@ -282,13 +237,13 @@ TEST(SimulationTest, HalfAdder) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
     auto output = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::xor_element)},
     });
 
     input0.output(connection_id_t {0}).connect(carry.input(connection_id_t {0}));
@@ -377,7 +332,8 @@ TEST(SimulationTest, JKFlipFlop) {
         .element_type = ElementType::flipflop_jk,
         .input_count = connection_count_t {5},
         .output_count = connection_count_t {2},
-        .output_delays = {defaults::logic_item_delay, defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::flipflop_jk),
+                          element_output_delay(ElementType::flipflop_jk)},
     });
     auto simulation = get_initialized_simulation(schematic);
 
@@ -433,7 +389,7 @@ TEST(SimulationTest, AndInputInverters1) {
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {true, true},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto simulation = get_uninitialized_simulation(schematic);
@@ -458,7 +414,7 @@ TEST(SimulationTest, AndInputInverters2) {
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {false, true},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto simulation = get_uninitialized_simulation(schematic);
@@ -625,7 +581,8 @@ TEST(SimulationTest, TestShiftRegister) {
         .element_type = ElementType::shift_register,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {2},
-        .output_delays = {defaults::logic_item_delay, defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::shift_register),
+                          element_output_delay(ElementType::shift_register)},
     });
 
     auto simulation = get_uninitialized_simulation(schematic);

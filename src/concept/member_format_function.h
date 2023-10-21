@@ -10,10 +10,9 @@
 namespace logicsim {
 
 template <typename T, typename Char = char>
-concept has_member_format_function = (!string_view<T, Char>) &&
-                                     requires(T obj) {
-                                         { obj.format() } -> std::same_as<std::string>;
-                                     };
+concept has_member_format_function = !string_view<T, Char> && requires(T obj) {
+    { obj.format() } -> std::same_as<std::string>;
+};
 
 }
 

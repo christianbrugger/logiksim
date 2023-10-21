@@ -318,7 +318,7 @@ auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
 
 auto generate_schematic(const Layout& layout, delay_t wire_delay_per_distance)
     -> Schematic {
-    auto schematic = Schematic {};  // {layout.circuit_id(), wire_delay_per_unit};
+    auto schematic = Schematic {};
 
     add_layout_elements(schematic, layout, wire_delay_per_distance);
     create_connections(schematic, layout);
@@ -334,7 +334,7 @@ auto generate_schematic(Schematic&& schematic, delay_t wire_delay_per_distance)
 
     // elements
     for (element_id_t element_id : element_ids(schematic)) {
-        const auto delays = schematic.output_delays(element_id);
+        const auto &delays = schematic.output_delays(element_id);
 
         old_schematic.add_element(SchematicOld::ElementData {
             .element_type = schematic.element_type(element_id),

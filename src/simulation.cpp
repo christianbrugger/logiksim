@@ -6,8 +6,8 @@
 #include "algorithm/range.h"
 #include "algorithm/transform_to_container.h"
 #include "exception.h"
-#include "logging.h"
 #include "layout_info.h"
+#include "logging.h"
 
 #include <gsl/assert>
 #include <gsl/gsl>
@@ -17,90 +17,6 @@
 #include <iterator>
 
 namespace logicsim {
-
-//
-// Simulation Event
-//
-
-auto make_event(SchematicOld::ConstInput input, time_t time, bool value)
-    -> SimulationEvent {
-    return {.time = time,
-            .element_id = input.element_id(),
-            .input_index = input.input_index(),
-            .value = value};
-}
-
-auto SimulationEvent::format() const -> std::string {
-    return fmt::format("<SimulationEvent: at {} set Element_{}[{}] = {}>", time,
-                       element_id, input_index, value);
-}
-
-auto SimulationEvent::operator==(const SimulationEvent &other) const -> bool {
-    return this->element_id == other.element_id && this->time == other.time;
-}
-
-auto SimulationEvent::operator<(const SimulationEvent &other) const -> bool {
-    if (this->time == other.time) {
-        return this->element_id < other.element_id;
-    }
-    return this->time < other.time;
-}
-
-auto SimulationEvent::operator!=(const SimulationEvent &other) const -> bool {
-    return !(this->operator==(other));
-}
-
-auto SimulationEvent::operator>(const SimulationEvent &other) const -> bool {
-    return other.operator<(*this);
-}
-
-auto SimulationEvent::operator<=(const SimulationEvent &other) const -> bool {
-    return !(this->operator>(other));
-}
-
-auto SimulationEvent::operator>=(const SimulationEvent &other) const -> bool {
-    return !(this->operator<(other));
-}
-
-//
-// EventGroup
-//
-
-void validate(const event_group_t &events) {
-    if (events.empty()) {
-        return;
-    }
-
-    const auto &head {events.front()};
-    const auto tail = std::ranges::subrange(events.begin() + 1, events.end());
-
-    if (head.element_id == null_element) {
-        throw_exception("Event element cannot be null.");
-    }
-
-    if (!tail.empty()) {
-        if (!std::ranges::all_of(tail, [time = head.time](const SimulationEvent &event) {
-                return event.time == time;
-            })) {
-            throw_exception("All events in the group need to have the same time.");
-        }
-
-        if (!std::ranges::all_of(
-                tail, [element_id = head.element_id](const SimulationEvent &event) {
-                    return event.element_id == element_id;
-                })) {
-            throw_exception("All events in the group need to have the same time.");
-        }
-
-        const auto to_index = [](const SimulationEvent &event) {
-            return event.input_index;
-        };
-        if (has_duplicates_quadratic(events, to_index)) {
-            throw_exception(
-                "Cannot have two events for the same input at the same time.");
-        }
-    }
-}
 
 auto set_default_outputs(Simulation &simulation) -> void {
     if (simulation.is_initialized()) [[unlikely]] {
@@ -157,54 +73,6 @@ auto set_default_inputs(Simulation &simulation) -> void {
 }
 
 //
-// SimulationQueue
-//
-
-auto SimulationQueue::time() const noexcept -> time_t {
-    return time_;
-}
-
-void SimulationQueue::set_time(time_t time) {
-    if (time < time_) {
-        throw_exception("Cannot set new time to the past.");
-    }
-    if (time > next_event_time()) {
-        throw_exception("New time would be greater than next event.");
-    }
-
-    time_ = time;
-}
-
-auto SimulationQueue::next_event_time() const noexcept -> time_t {
-    return events_.empty() ? time_t::max() : events_.top().time;
-}
-
-auto SimulationQueue::empty() const noexcept -> bool {
-    return events_.empty();
-}
-
-void SimulationQueue::submit_event(SimulationEvent event) {
-    if (event.time <= time_) {
-        throw_exception("Event time needs to be in the future.");
-    }
-
-    events_.push(event);
-}
-
-auto SimulationQueue::pop_event_group() -> event_group_t {
-    event_group_t group;
-    pop_while(
-        events_, [&group](const SimulationEvent &event) { group.push_back(event); },
-        [&group](const SimulationEvent &event) {
-            return group.empty() || group.front() == event;
-        });
-    if (!group.empty()) {
-        this->set_time(group.front().time);
-    }
-    return group;
-}
-
-//
 // Simulation
 //
 
@@ -253,7 +121,7 @@ auto SimulationQueue::pop_event_group() -> event_group_t {
         case sub_circuit:
             return 0;
     }
-    throw_exception("Dont know internal state of given type.");
+    throw_exception("Don't know internal state of given type.");
 }
 
 [[nodiscard]] constexpr auto has_internal_state(const ElementType type) noexcept -> bool {
@@ -285,7 +153,8 @@ auto Simulation::time() const noexcept -> time_t {
 
 auto Simulation::submit_event(SchematicOld::ConstInput input, delay_t offset, bool value)
     -> void {
-    queue_.submit_event(make_event(input, time_t {queue_.time() + offset}, value));
+    queue_.submit_event(
+        simulation::make_event(input, time_t {queue_.time() + offset}, value));
 }
 
 auto Simulation::submit_events(SchematicOld::ConstElement element, delay_t offset,
@@ -1006,169 +875,5 @@ auto Simulation::input_history(SchematicOld::ConstElement element) const -> Hist
         element.history_length(),
     };
 }
-
-//
-// History View
-//
-
-namespace simulation {
-
-HistoryView::HistoryView(const history_buffer_t &history, time_t simulation_time,
-                         bool last_value, delay_t history_length)
-    : history_ {&history}, simulation_time_ {simulation_time}, last_value_ {last_value} {
-    // ascending without duplicates
-    assert(std::ranges::is_sorted(history, std::ranges::less_equal {}));
-    // calculate first valid index
-    const auto first_time = simulation_time - history_length;
-    const auto first_index = find_index(first_time);
-    min_index_ = gsl::narrow<decltype(min_index_)>(first_index);
-
-    assert(size() >= 1);
-}
-
-auto HistoryView::size() const -> std::size_t {
-    if (history_ == nullptr) {
-        return 1;
-    }
-    return history_->size() + 1 - min_index_;
-}
-
-auto HistoryView::ssize() const -> std::ptrdiff_t {
-    if (history_ == nullptr) {
-        return 1;
-    }
-    return history_->size() + 1 - min_index_;
-}
-
-auto HistoryView::begin() const -> HistoryIterator {
-    return HistoryIterator {*this, min_index_};
-}
-
-auto HistoryView::end() const -> HistoryIterator {
-    return HistoryIterator {*this, size() + min_index_};
-}
-
-auto HistoryView::from(time_t value) const -> HistoryIterator {
-    if (value > simulation_time_) [[unlikely]] {
-        throw_exception("cannot query times in the future");
-    }
-    const auto index = find_index(value);
-    return HistoryIterator {*this, index};
-}
-
-auto HistoryView::until(time_t value) const -> HistoryIterator {
-    if (value > simulation_time_) [[unlikely]] {
-        throw_exception("cannot query times in the future");
-    }
-
-    const auto last_time = value > time_t::min()  //
-                               ? value - delay_t::epsilon()
-                               : value;
-    const auto index = find_index(last_time) + 1;
-    return HistoryIterator {*this, index};
-}
-
-auto HistoryView::value(time_t value) const -> bool {
-    if (value > simulation_time_) [[unlikely]] {
-        throw_exception("cannot query times in the future");
-    }
-    const auto index = find_index(value);
-    return get_value(index);
-}
-
-auto HistoryView::last_value() const -> bool {
-    return last_value_;
-}
-
-auto HistoryView::get_value(std::size_t history_index) const -> bool {
-    if (history_ == nullptr) {
-        if (history_index != 0) [[unlikely]] {
-            throw_exception("invalid history index");
-        }
-        return false;
-    }
-
-    auto number = history_->size() - history_index;
-    return static_cast<bool>(number % 2) ^ last_value_;
-}
-
-// Returns the index to the first element that is greater to the value,
-// or the history.size() if no such element is found.
-auto HistoryView::find_index(time_t value) const -> std::size_t {
-    if (history_ == nullptr) {
-        return 0;
-    }
-
-    const auto it =
-        std::ranges::lower_bound(history_->begin() + min_index_, history_->end(), value,
-                                 std::ranges::less_equal {});
-    const auto index = it - history_->begin();
-
-    assert(index >= min_index_);
-    assert(index <= std::ssize(*history_));
-    assert(index == std::ssize(*history_) || history_->at(index) > value);
-    assert(index == min_index_ || history_->at(index - 1) <= value);
-
-    return gsl::narrow_cast<std::size_t>(index);
-}
-
-auto HistoryView::get_time(std::ptrdiff_t index) const -> time_t {
-    if (history_ == nullptr) {
-        return index < 0 ? time_t::min() : simulation_time_;
-    }
-
-    if (index < min_index_) {
-        return time_t::min();
-    }
-    if (index >= std::ssize(*history_)) {
-        return simulation_time_;
-    }
-    return history_->at(index);
-}
-}  // namespace simulation
-
-//
-// History Iterator
-//
-
-namespace simulation {
-
-auto history_entry_t::format() const -> std::string {
-    return fmt::format("HistoryEntry({}, {}, {})", first_time, last_time, value);
-}
-
-HistoryIterator::HistoryIterator(HistoryView view, std::size_t index) noexcept
-    : view_ {std::move(view)}, index_ {index} {}
-
-auto HistoryIterator::operator*() const -> value_type {
-    return history_entry_t {
-        .first_time = view_.get_time(static_cast<std::ptrdiff_t>(index_) - 1),
-        .last_time = view_.get_time(index_),
-        .value = view_.get_value(index_),
-    };
-}
-
-auto HistoryIterator::operator++() noexcept -> HistoryIterator & {
-    ++index_;
-    return *this;
-}
-
-auto HistoryIterator::operator++(int) noexcept -> HistoryIterator {
-    const auto tmp = *this;
-    ++(*this);
-    return tmp;
-}
-
-auto HistoryIterator::operator==(const HistoryIterator &right) const noexcept -> bool {
-    return index_ >= right.index_;
-}
-
-auto HistoryIterator::operator-(const HistoryIterator &right) const noexcept
-    -> difference_type {
-    return static_cast<std::ptrdiff_t>(index_) -
-           static_cast<std::ptrdiff_t>(right.index_);
-}
-
-}  // namespace simulation
 
 }  // namespace logicsim

@@ -12,15 +12,15 @@ namespace logicsim {
 template <class T, typename ApplyFunc, typename WhileFunc>
     requires requires(T q, ApplyFunc apply_func, WhileFunc while_func,
                       const typename T::value_type& v) {
-                 typename T::value_type;
+        typename T::value_type;
 
-                 { q.empty() } -> std::convertible_to<bool>;
-                 { q.top() } -> std::same_as<const typename T::value_type&>;
-                 q.pop();
+        { q.empty() } -> std::convertible_to<bool>;
+        { q.top() } -> std::same_as<const typename T::value_type&>;
+        q.pop();
 
-                 std::invoke(apply_func, v);
-                 { std::invoke(while_func, v) } -> std::convertible_to<bool>;
-             }
+        std::invoke(apply_func, v);
+        { std::invoke(while_func, v) } -> std::convertible_to<bool>;
+    }
 void pop_while(T& queue, ApplyFunc apply_func, WhileFunc while_func) {
     while (!queue.empty()) {
         const auto& top = queue.top();

@@ -40,6 +40,14 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
+    src/component/simulation/event_group.cpp
+    src/component/simulation/history_buffer.cpp
+    src/component/simulation/history_entry.cpp
+    src/component/simulation/history_iterator.cpp
+    src/component/simulation/history_view.cpp
+    src/component/simulation/simulation_event.cpp
+    src/component/simulation/simulation_queue.cpp
+
     src/concept/explicitly_convertible.cpp
     src/concept/input_range.cpp
     src/concept/integral.cpp
@@ -176,6 +184,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/line_fine.cpp
     src/vocabulary/line_insertion_type.cpp
     src/vocabulary/logic_small_vector.cpp
+    src/vocabulary/logic_vector.cpp
     src/vocabulary/offset.cpp
     src/vocabulary/ordered_line.cpp
     src/vocabulary/orientation.cpp
@@ -256,6 +265,8 @@ set(LS_TEST_SOURCES
     test/algorithm/shuffle_test.cpp
     test/algorithm/transform_to_vector_test.cpp
     test/algorithm/uniform_int_distribution_test.cpp
+
+    test/component/simulation/simulation_event_test.cpp
 
     test/container/graph/depth_first_search_test.cpp
     test/container/circular_buffer_test.cpp
@@ -623,9 +634,7 @@ endif()
 set(LS_CORE_INCLUDE_DIRS
     src
 )
-set(LS_CORE_LIBRARIES  
-    logicsim_pch
-
+set(LS_CORE_LIBRARIES
     Boost::algorithm
     Boost::container 
     Boost::geometry
@@ -694,6 +703,9 @@ target_include_directories(${MAIN_LIBRARY} PUBLIC
 )
 target_link_libraries(${MAIN_LIBRARY} PUBLIC 
     ${LS_CORE_LIBRARIES}
+)
+target_link_libraries(${MAIN_LIBRARY} PRIVATE 
+    logicsim_pch
 )
 target_compile_options(${MAIN_LIBRARY} PUBLIC ${MAIN_COMPILE_OPTIONS})
 

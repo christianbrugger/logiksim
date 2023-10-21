@@ -14,11 +14,11 @@
 namespace logicsim {
 
 template <typename T, typename Char = char>
-concept format_range_type = (!string_view<T, Char>) && (!has_member_format_function<T>) &&
-                            requires(T container) {
-                                std::begin(container);
-                                std::end(container);
-                            };
+concept format_range_type =
+    !string_view<T, Char> && !has_member_format_function<T> && requires(T container) {
+        std::begin(container);
+        std::end(container);
+    };
 
 }  // namespace logicsim
 

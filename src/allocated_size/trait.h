@@ -11,17 +11,13 @@ struct AllocatedSizeTrait {};
 
 template <typename T>
 concept HasAllocatedSizeTrait = requires(T obj) {
-                                    {
-                                        AllocatedSizeTrait<T>::allocated_size(obj)
-                                        } -> std::convertible_to<std::size_t>;
-                                };
+    { AllocatedSizeTrait<T>::allocated_size(obj) } -> std::convertible_to<std::size_t>;
+};
 
 template <typename T>
 concept HasAllocatedSizeMember = requires(T obj) {
-                                     {
-                                         obj.allocated_size()
-                                         } -> std::convertible_to<std::size_t>;
-                                 };
+    { obj.allocated_size() } -> std::convertible_to<std::size_t>;
+};
 
 template <typename T>
 concept AllocatedSizeComputable = std::is_trivially_copyable_v<T> ||

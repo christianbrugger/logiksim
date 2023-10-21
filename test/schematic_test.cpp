@@ -1,6 +1,7 @@
 
 #include "schematic_old.h"
 #include "schematic_validation.h"
+#include "logic_item/schematic_info.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -45,7 +46,7 @@ TEST(SchematicOld, ElementProperties) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     const SchematicOld& schematic_const {schematic};
@@ -76,7 +77,7 @@ TEST(SchematicOld, EqualityOperators) {
         .element_type = ElementType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::buffer_element)},
     });
 
     const SchematicOld& schematic_const {schematic};
@@ -111,7 +112,7 @@ TEST(SchematicOld, ConnectionProperties) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -142,7 +143,7 @@ TEST(SchematicOld, ConnectedOutput) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -174,7 +175,7 @@ TEST(SchematicOld, ConnectInput) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -206,7 +207,7 @@ TEST(SchematicOld, ClearedInput) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -232,7 +233,7 @@ TEST(SchematicOld, ClearedOutput) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -258,13 +259,13 @@ TEST(SchematicOld, ReconnectInput) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
     auto inverter = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::buffer_element)},
     });
 
     auto id_0 = connection_id_t {0};
@@ -291,13 +292,13 @@ TEST(SchematicOld, ReconnectOutput) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
     auto or_element = schematic.add_element(SchematicOld::ElementData {
         .element_type = ElementType::or_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::or_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -359,7 +360,7 @@ TEST(SchematicOld, ElementViewFull) {
         .element_type = ElementType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::buffer_element)},
     });
 
     auto view = SchematicOld::ElementView {schematic};
@@ -381,7 +382,7 @@ TEST(SchematicOld, ElementViewRanges) {
         .element_type = ElementType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::buffer_element)},
     });
 
     auto view = SchematicOld::ElementView {schematic};
@@ -416,7 +417,7 @@ TEST(SchematicOld, InputsViewFull) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
     auto view = SchematicOld::InputView {and_element};
 
@@ -432,7 +433,7 @@ TEST(SchematicOld, InputsViewRanges) {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
-        .output_delays = {defaults::logic_item_delay},
+        .output_delays = {element_output_delay(ElementType::and_element)},
     });
     auto view = SchematicOld::InputView {and_element};
 

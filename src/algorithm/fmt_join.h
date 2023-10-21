@@ -13,9 +13,9 @@ namespace logicsim {
 
 template <typename T, class Proj = std::identity>
     requires requires(T container) {
-                 std::begin(container);
-                 std::end(container);
-             }
+        std::begin(container);
+        std::end(container);
+    }
 
 /**
  * @brief: Format each projected element of the container with given separator.
