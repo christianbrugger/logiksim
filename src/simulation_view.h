@@ -54,8 +54,8 @@ class ConstElement {
     explicit ConstElement(const SimulationView &view, element_id_t element_id) noexcept;
 
    public:
-    [[nodiscard]] auto has_connected_input(connection_id_t index) const -> bool;
-    [[nodiscard]] auto has_connected_output(connection_id_t index) const -> bool;
+    [[nodiscard]] auto has_connected_input(connection_id_t input_id) const -> bool;
+    [[nodiscard]] auto has_connected_output(connection_id_t output_id) const -> bool;
 
     [[nodiscard]] auto input_value(connection_id_t index) const -> bool;
     [[nodiscard]] auto input_values() const -> const logic_small_vector_t &;

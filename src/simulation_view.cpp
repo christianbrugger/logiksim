@@ -51,17 +51,17 @@ namespace simulation_view {
 ConstElement::ConstElement(const SimulationView& view, element_id_t element_id) noexcept
     : view_ {&view}, element_id_ {element_id} {}
 
-auto ConstElement::has_connected_input(connection_id_t index) const -> bool {
+auto ConstElement::has_connected_input(connection_id_t input_id) const -> bool {
     const auto& schematic = view_->simulation_->schematic();
-    return bool {schematic.input(output_t {element_id_, index})};
+    return bool {schematic.output(input_t {element_id_, input_id})};
 }
 
-auto ConstElement::has_connected_output(connection_id_t index) const -> bool {
+auto ConstElement::has_connected_output(connection_id_t output_id) const -> bool {
     const auto& schematic = view_->simulation_->schematic();
 
-    const auto output = schematic.output(input_t {element_id_, index});
-    return output &&
-           !(schematic.element_type(output.element_id) == ElementType::placeholder);
+    const auto input = schematic.input(output_t {element_id_, output_id});
+    return input &&
+           !(schematic.element_type(input.element_id) == ElementType::placeholder);
 }
 
 auto ConstElement::input_value(connection_id_t index) const -> bool {

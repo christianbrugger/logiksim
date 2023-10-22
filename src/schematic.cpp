@@ -264,12 +264,14 @@ auto element_ids(const Schematic &schematic) -> range_extended_t<element_id_t> {
 
 auto input_ids(const Schematic &schematic, element_id_t element_id)
     -> range_extended_t<connection_id_t> {
-    return range_extended<connection_id_t>(std::size_t {schematic.input_count(element_id)});
+    return range_extended<connection_id_t>(
+        std::size_t {schematic.input_count(element_id)});
 }
 
 auto output_ids(const Schematic &schematic, element_id_t element_id)
     -> range_extended_t<connection_id_t> {
-    return range_extended<connection_id_t>(std::size_t {schematic.output_count(element_id)});
+    return range_extended<connection_id_t>(
+        std::size_t {schematic.output_count(element_id)});
 }
 
 auto input_inverted(const Schematic &schematic, input_t input) -> bool {
