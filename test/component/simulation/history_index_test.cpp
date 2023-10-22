@@ -83,9 +83,9 @@ TEST(SimulationHistoryIndex, OperatorsNormal) {
     EXPECT_EQ(std::ptrdiff_t {-2} + history_index_t {10} == history_index_t {8}, true);
 }
 
-/*
 TEST(SimulationHistoryIndex, OperatorsOverflow) {
     const auto value_max = history_index_t::max().value;
+    const auto value_min = history_index_t::min().value;
 
     // increment
     EXPECT_THROW(++history_index_t::max(), std::exception);
@@ -97,14 +97,18 @@ TEST(SimulationHistoryIndex, OperatorsOverflow) {
         EXPECT_THROW(index += value_max, std::exception);
     }
     {
-        auto index = history_index_t {10};
-        EXPECT_THROW(index += -11, std::exception);
+        auto index = history_index_t {-5};
+        EXPECT_THROW(index += value_min, std::exception);
     }
 
     // history_index_t -= integral
     {
-        auto index = history_index_t {50};
-        EXPECT_THROW(index -= int8_t {100}, std::exception);
+        auto index = history_index_t {-100};
+        EXPECT_THROW(index -= value_max, std::exception);
+    }
+    {
+        auto index = history_index_t::min();
+        EXPECT_THROW(index -= 1, std::exception);
     }
     {
         auto index = history_index_t::max();
@@ -112,27 +116,27 @@ TEST(SimulationHistoryIndex, OperatorsOverflow) {
     }
 
     // history_index_t - history_index_t
-    EXPECT_THROW(static_cast<void>(history_index_t::max() - history_index_t {0}),
+    EXPECT_THROW(static_cast<void>(history_index_t::max() - history_index_t::min()),
                  std::exception);
-    EXPECT_THROW(static_cast<void>(history_index_t {0} - history_index_t::max()),
+    EXPECT_THROW(static_cast<void>(history_index_t::min() - history_index_t::max()),
                  std::exception);
 
     // history_index_t + integral
     EXPECT_THROW(static_cast<void>(history_index_t::max() + 1), std::exception);
     EXPECT_THROW(static_cast<void>(history_index_t {10} + value_max), std::exception);
-    EXPECT_THROW(static_cast<void>(history_index_t {0} + (-2)), std::exception);
+    EXPECT_THROW(static_cast<void>(history_index_t::min() + (-2)), std::exception);
 
     // history_index_t - integral
-    EXPECT_THROW(static_cast<void>(history_index_t {10} - 12), std::exception);
-    EXPECT_THROW(static_cast<void>(history_index_t {0} - 100), std::exception);
+    EXPECT_THROW(static_cast<void>(history_index_t {10} - value_min), std::exception);
+    EXPECT_THROW(static_cast<void>(history_index_t::min() - 100), std::exception);
 
     // integral + history_index_t
     EXPECT_THROW(static_cast<void>(value_max + history_index_t {1}), std::exception);
     EXPECT_THROW(static_cast<void>(1 + history_index_t::max()), std::exception);
-    EXPECT_THROW(static_cast<void>(std::ptrdiff_t {-2} + history_index_t {0}),
+    EXPECT_THROW(static_cast<void>(value_min + history_index_t {-1}),
                  std::exception);
 }
-*/
 
 }  // namespace simulation
+
 }  // namespace logicsim
