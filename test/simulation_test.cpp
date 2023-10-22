@@ -2,6 +2,7 @@
 #include "simulation.h"
 
 #include "component/simulation/history_view.h"
+#include "logging.h"
 #include "logic_item/schematic_info.h"
 #include "schematic.h"
 #include "schematic_generation.h"

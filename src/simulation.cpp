@@ -70,8 +70,8 @@ auto set_default_inputs(Simulation &simulation) -> void {
 // Simulation
 //
 
-Simulation::Simulation(Schematic &&schematic, const PrintEvents print_events)
-    : schematic_ {std::move(schematic)},
+Simulation::Simulation(Schematic &&schematic__, const PrintEvents print_events)
+    : schematic_ {std::move(schematic__)},
       queue_ {},
       largest_history_event_ {queue_.time()},
       is_initialized_ {false},
@@ -79,12 +79,16 @@ Simulation::Simulation(Schematic &&schematic, const PrintEvents print_events)
     input_values_.reserve(schematic_.size());
     internal_states_.reserve(schematic_.size());
 
-    for (auto element_id : element_ids(schematic)) {
-        input_values_.emplace_back(schematic.input_count(element_id).count(), false);
+    for (auto element_id : element_ids(schematic_)) {
+        input_values_.emplace_back(schematic_.input_count(element_id).count(), false);
         internal_states_.emplace_back(
-            internal_state_size(schematic.element_type(element_id)), false);
+            internal_state_size(schematic_.element_type(element_id)), false);
     }
-    first_input_histories_.resize(schematic.size());
+    first_input_histories_.resize(schematic_.size());
+
+    assert(schematic_.size() == input_values_.size());
+    assert(schematic_.size() == internal_states_.size());
+    assert(schematic_.size() == first_input_histories_.size());
 }
 
 auto Simulation::schematic() const noexcept -> const Schematic & {

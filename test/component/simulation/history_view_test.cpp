@@ -13,7 +13,7 @@ namespace simulation {
 
 // size
 
-TEST(SimulationTest, HistoryViewSize) {
+TEST(SimulationHistoryView, HistoryViewSize) {
     auto time = time_t {100us};
     auto history_length = delay_t {7us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -24,7 +24,7 @@ TEST(SimulationTest, HistoryViewSize) {
     ASSERT_THAT(view.size(), 2);
 }
 
-TEST(SimulationTest, HistoryViewSizeExact) {
+TEST(SimulationHistoryView, HistoryViewSizeExact) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -35,7 +35,7 @@ TEST(SimulationTest, HistoryViewSizeExact) {
     ASSERT_THAT(view.size(), 2);
 }
 
-TEST(SimulationTest, HistoryViewSizeLast) {
+TEST(SimulationHistoryView, HistoryViewSizeLast) {
     auto time = time_t {100us};
     auto history_length = delay_t {20us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -46,7 +46,7 @@ TEST(SimulationTest, HistoryViewSizeLast) {
     ASSERT_THAT(view.size(), 3);
 }
 
-TEST(SimulationTest, HistoryViewSizeEmpty) {
+TEST(SimulationHistoryView, HistoryViewSizeEmpty) {
     auto time = time_t {10us};
     auto history_length = delay_t {20us};
     auto history = HistoryBuffer {};
@@ -57,7 +57,7 @@ TEST(SimulationTest, HistoryViewSizeEmpty) {
     ASSERT_THAT(view.size(), 1);
 }
 
-TEST(SimulationTest, HistoryViewSizeNegative) {
+TEST(SimulationHistoryView, HistoryViewSizeNegative) {
     auto time = time_t {10us};
     auto history_length = delay_t {20us};
     auto history = HistoryBuffer {time_t {5us}, time_t {7us}};
@@ -68,7 +68,7 @@ TEST(SimulationTest, HistoryViewSizeNegative) {
     ASSERT_THAT(view.size(), 3);
 }
 
-TEST(SimulationTest, HistoryViewEmpty) {
+TEST(SimulationHistoryView, HistoryViewEmpty) {
     const auto view = HistoryView {};
 
     ASSERT_THAT(view.size(), 1);
@@ -87,7 +87,7 @@ TEST(SimulationTest, HistoryViewEmpty) {
 
 // begin end iteration
 
-TEST(SimulationTest, HistoryViewBeginEndExact) {
+TEST(SimulationHistoryView, HistoryViewBeginEndExact) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -116,7 +116,7 @@ TEST(SimulationTest, HistoryViewBeginEndExact) {
     ASSERT_THAT(value1.value, false);
 }
 
-TEST(SimulationTest, HistoryViewBeginEndFull) {
+TEST(SimulationHistoryView, HistoryViewBeginEndFull) {
     auto time = time_t {100us};
     auto history_length = delay_t {50us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -153,7 +153,7 @@ TEST(SimulationTest, HistoryViewBeginEndFull) {
 
 // before
 
-TEST(SimulationTest, HistoryViewFromExact) {
+TEST(SimulationHistoryView, HistoryViewFromExact) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -169,7 +169,7 @@ TEST(SimulationTest, HistoryViewFromExact) {
     ASSERT_THAT(value.value, false);
 }
 
-TEST(SimulationTest, HistoryViewFrom) {
+TEST(SimulationHistoryView, HistoryViewFrom) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -185,7 +185,7 @@ TEST(SimulationTest, HistoryViewFrom) {
     ASSERT_THAT(value.value, false);
 }
 
-TEST(SimulationTest, HistoryViewFromSecond) {
+TEST(SimulationHistoryView, HistoryViewFromSecond) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -201,7 +201,7 @@ TEST(SimulationTest, HistoryViewFromSecond) {
     ASSERT_THAT(value.value, true);
 }
 
-TEST(SimulationTest, HistoryViewFromSmall) {
+TEST(SimulationHistoryView, HistoryViewFromSmall) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -214,7 +214,7 @@ TEST(SimulationTest, HistoryViewFromSmall) {
 
 // until
 
-TEST(SimulationTest, HistoryViewUntil) {
+TEST(SimulationHistoryView, HistoryViewUntil) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -228,7 +228,7 @@ TEST(SimulationTest, HistoryViewUntil) {
     ASSERT_THAT(until - from, 2);
 }
 
-TEST(SimulationTest, HistoryViewUntilExact) {
+TEST(SimulationHistoryView, HistoryViewUntilExact) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -244,7 +244,7 @@ TEST(SimulationTest, HistoryViewUntilExact) {
     ASSERT_THAT(view.until(time_t {95us}) - from, 1);
 }
 
-TEST(SimulationTest, HistoryViewFromUntilBounds) {
+TEST(SimulationHistoryView, HistoryViewFromUntilBounds) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -268,7 +268,7 @@ TEST(SimulationTest, HistoryViewFromUntilBounds) {
 
 // value
 
-TEST(SimulationTest, HistoryViewValueFull) {
+TEST(SimulationHistoryView, HistoryViewValueFull) {
     auto time = time_t {100us};
     auto history_length = delay_t {50us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -290,7 +290,7 @@ TEST(SimulationTest, HistoryViewValueFull) {
     ASSERT_THAT(view.value(time_t {100us}), false);
 }
 
-TEST(SimulationTest, HistoryViewValuePartialHistory) {
+TEST(SimulationHistoryView, HistoryViewValuePartialHistory) {
     auto time = time_t {100us};
     auto history_length = delay_t {10us};
     auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
@@ -312,7 +312,7 @@ TEST(SimulationTest, HistoryViewValuePartialHistory) {
     ASSERT_THAT(view.value(time_t {100us}), false);
 }
 
-TEST(SimulationTest, HistoryViewIteratorValues) {
+TEST(SimulationHistoryView, HistoryViewIteratorValues) {
     const auto time = time_t {100us};
     const auto history_length = delay_t {100us};
     const auto history = HistoryBuffer {time_t {90us}, time_t {95us}};
