@@ -2,7 +2,6 @@
 #define LOGIKSIM_INTERACTIVE_SIMULATION_H
 
 #include "event_counter_multi.h"
-#include "schematic_old.h"
 #include "simulation.h"
 #include "timer.h"
 #include "vocabulary.h"
@@ -12,6 +11,7 @@
 namespace logicsim {
 
 class Layout;
+class Schematic;
 struct SimulationSettings;
 
 namespace detail::interactive_simulation {
@@ -52,15 +52,15 @@ class InteractiveSimulation {
    public:
     InteractiveSimulation(const Layout& layout, const SimulationSettings& settings);
 
-    [[nodiscard]] auto schematic() const -> const SchematicOld&;
+    [[nodiscard]] auto schematic() const -> const Schematic&;
     [[nodiscard]] auto simulation() const -> const Simulation&;
 
     auto set_simulation_time_rate(time_rate_t time_rate) -> void;
     [[nodiscard]] auto time_rate() const -> time_rate_t;
     [[nodiscard]] auto time() const -> time_t;
+    [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
-    auto run(simulation::realtime_timeout_t timeout = defaults::standard_timeout)
-        -> void;
+    auto run(simulation::realtime_timeout_t timeout = defaults::standard_timeout) -> void;
     auto finished() const -> bool;
     auto mouse_press(point_t position) -> void;
 
@@ -72,10 +72,10 @@ class InteractiveSimulation {
     [[nodiscard]] auto expected_simulation_time(realtime_t now) const -> time_t;
 
    private:
-    SchematicOld schematic_;
     Simulation simulation_;
     detail::interactive_simulation::InteractionCache interaction_cache_;
     time_rate_t simulation_time_rate_;
+    delay_t wire_delay_per_distance_;
 
     time_t simulation_time_reference_ {};
     realtime_t realtime_reference_ {};

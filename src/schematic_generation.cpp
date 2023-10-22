@@ -270,24 +270,6 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
 }
 
 //
-// Missing Placeholders
-//
-
-auto add_missing_placeholders(Schematic& schematic) -> void {
-    for (auto element_id : element_ids(schematic)) {
-        if (is_logic_item(schematic.element_type(element_id))) {
-            for (auto output : outputs(schematic, element_id)) {
-                if (!schematic.input(output)) {
-                    const auto placeholder_id = add_placeholder_element(schematic);
-                    const auto input = input_t {placeholder_id, connection_id_t {0}};
-                    schematic.connect(output, input);
-                }
-            }
-        }
-    }
-}
-
-//
 // Output Inverters
 //
 
@@ -313,6 +295,24 @@ auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
 }  // namespace
 
 //
+// Missing Placeholders
+//
+
+auto add_missing_placeholders(Schematic& schematic) -> void {
+    for (auto element_id : element_ids(schematic)) {
+        if (is_logic_item(schematic.element_type(element_id))) {
+            for (auto output : outputs(schematic, element_id)) {
+                if (!schematic.input(output)) {
+                    const auto placeholder_id = add_placeholder_element(schematic);
+                    const auto input = input_t {placeholder_id, connection_id_t {0}};
+                    schematic.connect(output, input);
+                }
+            }
+        }
+    }
+}
+
+//
 // Generate Schematic
 //
 
@@ -334,7 +334,7 @@ auto generate_schematic(Schematic&& schematic, delay_t wire_delay_per_distance)
 
     // elements
     for (element_id_t element_id : element_ids(schematic)) {
-        const auto &delays = schematic.output_delays(element_id);
+        const auto& delays = schematic.output_delays(element_id);
 
         old_schematic.add_element(SchematicOld::ElementData {
             .element_type = schematic.element_type(element_id),
@@ -357,6 +357,40 @@ auto generate_schematic(Schematic&& schematic, delay_t wire_delay_per_distance)
     }
 
     return old_schematic;
+}
+
+auto generate_schematic(SchematicOld&& schematic) -> Schematic {
+    auto new_schematic = Schematic {};
+
+    // elements
+    for (const auto element : schematic.elements()) {
+        const auto& delays = element.output_delays();
+
+        new_schematic.add_element(schematic::NewElement {
+            .element_type = element.element_type(),
+            .input_count = element.input_count(),
+            .output_count = element.output_count(),
+
+            .sub_circuit_id = element.sub_circuit_id(),
+            .input_inverters = element.input_inverters(),
+            .output_delays = output_delays_t(delays.begin(), delays.end()),
+            .history_length = element.history_length(),
+        });
+    }
+    // connections
+    for (const auto element : schematic.elements()) {
+        for (const auto input : element.inputs()) {
+            if (input.has_connected_element()) {
+                const auto input_v = input_t {input.element_id(), input.input_index()};
+                const auto output_v = output_t {input.connected_element_id(),
+                                                input.connected_output_index()};
+
+                new_schematic.connect(input_v, output_v);
+            }
+        }
+    }
+
+    return new_schematic;
 }
 
 }  // namespace logicsim

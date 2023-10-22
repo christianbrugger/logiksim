@@ -52,12 +52,11 @@ auto InteractionCache::find(point_t position) const -> std::optional<element_id_
 
 InteractiveSimulation::InteractiveSimulation(const Layout& layout,
                                              const SimulationSettings& settings)
-    : schematic_ {generate_schematic(
-          generate_schematic(layout, settings.wire_delay_per_distance()),
-          settings.wire_delay_per_distance())},
-      simulation_ {schematic_},
+    : simulation_ {generate_schematic(layout, settings.wire_delay_per_distance())},
       interaction_cache_ {layout},
       simulation_time_rate_ {settings.simulation_time_rate},
+      wire_delay_per_distance_ {settings.wire_delay_per_distance()},
+
       simulation_time_reference_ {simulation_.time()},
       realtime_reference_ {timer_t::now()} {
     set_default_outputs(simulation_);
@@ -65,8 +64,8 @@ InteractiveSimulation::InteractiveSimulation(const Layout& layout,
     simulation_.initialize();
 }
 
-auto InteractiveSimulation::schematic() const -> const SchematicOld& {
-    return schematic_;
+auto InteractiveSimulation::schematic() const -> const Schematic& {
+    return simulation_.schematic();
 }
 
 auto InteractiveSimulation::simulation() const -> const Simulation& {
@@ -91,6 +90,10 @@ auto InteractiveSimulation::time_rate() const -> time_rate_t {
 
 auto InteractiveSimulation::time() const -> time_t {
     return simulation_.time();
+}
+
+auto InteractiveSimulation::wire_delay_per_distance() const -> delay_t {
+    return wire_delay_per_distance_;
 }
 
 auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void {
@@ -122,11 +125,10 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
     const auto element_id = interaction_cache_.find(position);
 
     if (element_id) {
-        const auto element = schematic_.element(element_id.value());
         const auto index = std::size_t {0};
-        const auto value = simulation_.internal_state(element, index);
+        const auto value = simulation_.internal_state(*element_id, index);
 
-        simulation_.set_internal_state(element, index, !value);
+        simulation_.set_internal_state(*element_id, index, !value);
     }
 }
 
@@ -135,7 +137,8 @@ auto InteractiveSimulation::events_per_second() const -> double {
 }
 
 auto InteractiveSimulation::validate() const -> void {
-    ::logicsim::validate(schematic_, schematic::validate_all);
+    // TODO do we need validation ???
+    // ::logicsim::validate(simulation_.schematic(), schematic::validate_all);
 }
 
 auto InteractiveSimulation::expected_simulation_time(realtime_t now) const -> time_t {

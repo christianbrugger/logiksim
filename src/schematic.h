@@ -2,8 +2,8 @@
 #define LOGICSIM_SCHEMATIC_H
 
 #include "algorithm/range_extended.h"
-#include "format/struct.h"
 #include "format/container.h"
+#include "format/struct.h"
 #include "geometry/connection.h"
 #include "vocabulary/circuit_id.h"
 #include "vocabulary/connection.h"
@@ -95,6 +95,8 @@ class Schematic {
         -> const output_delays_t &;
     [[nodiscard]] auto history_length(element_id_t element_id) const -> delay_t;
 
+    [[nodiscard]] auto output_delay(output_t output) const -> delay_t;
+    [[nodiscard]] auto is_inverted(input_t input) const -> bool;
     auto set_input_inverter(input_t input, bool value) -> void;
 
    private:
@@ -121,6 +123,10 @@ auto swap(Schematic &a, Schematic &b) noexcept -> void;
 [[nodiscard]] auto has_output_connections(const Schematic &data, element_id_t element_id)
     -> bool;
 
+//
+// Iteration
+//
+
 [[nodiscard]] auto element_ids(const Schematic &schematic)
     -> range_extended_t<element_id_t>;
 
@@ -128,12 +134,22 @@ auto swap(Schematic &a, Schematic &b) noexcept -> void;
     return inputs(element_id, schematic.input_count(element_id));
 }
 
+[[nodiscard]] auto input_ids(const Schematic &schematic, element_id_t element_id)
+    -> range_extended_t<connection_id_t>;
+
 [[nodiscard]] constexpr auto outputs(const Schematic &schematic,
                                      element_id_t element_id) {
     return outputs(element_id, schematic.output_count(element_id));
 }
 
+[[nodiscard]] auto output_ids(const Schematic &schematic, element_id_t element_id)
+    -> range_extended_t<connection_id_t>;
+
 [[nodiscard]] auto input_inverted(const Schematic &schematic, input_t input) -> bool;
+
+//
+// formatting
+//
 
 [[nodiscard]] auto format_element(const Schematic &schematic, element_id_t element)
     -> std::string;

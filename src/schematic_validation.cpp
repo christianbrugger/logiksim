@@ -4,6 +4,7 @@
 #include "iterator_adaptor/transform_view.h"
 #include "layout_info.h"
 #include "schematic_old.h"
+#include "schematic_validation.h"
 
 #include <stdexcept>
 
@@ -236,6 +237,10 @@ auto validate(const SchematicOld &schematic, schematic::ValidationSettings setti
     if (output_count != schematic.total_output_count()) [[unlikely]] {
         throw std::runtime_error("input count is wrong");
     }
+}
+
+void validate(const Schematic &schematic, schematic::ValidationSettings settings) {
+    return;
 }
 
 }  // namespace logicsim

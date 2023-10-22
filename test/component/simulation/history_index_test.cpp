@@ -16,7 +16,8 @@ TEST(SimulationHistoryIndex, Comparisons) {
     EXPECT_EQ(history_index_t {0} < history_index_t {0}, false);
     EXPECT_EQ(history_index_t {0} < history_index_t {1}, true);
 
-    EXPECT_EQ(history_index_t {1'000} < history_index_t::max(), true);
+    EXPECT_EQ(history_index_t {100} < history_index_t::max(), true);
+    EXPECT_EQ(history_index_t {-10} > history_index_t::min(), true);
 }
 
 TEST(SimulationHistoryIndex, Conversions) {

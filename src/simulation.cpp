@@ -22,11 +22,12 @@ auto set_default_outputs(Simulation &simulation) -> void {
     if (simulation.is_initialized()) [[unlikely]] {
         throw_exception("cannot set outputs for initialized simulation");
     }
+    const auto &schematic = simulation.schematic();
 
-    for (const auto element : simulation.schematic().elements()) {
-        if (element.is_logic_item()) {
-            for (auto output : element.outputs()) {
-                if (output.has_connected_element()) {
+    for (const auto element_id : element_ids(schematic)) {
+        if (is_logic_item(schematic.element_type(element_id))) {
+            for (auto output : outputs(schematic, element_id)) {
+                if (schematic.input(output)) {
                     simulation.set_output_value(output, false);
                 }
             }
@@ -38,22 +39,26 @@ auto set_default_inputs(Simulation &simulation) -> void {
     if (simulation.is_initialized()) [[unlikely]] {
         throw_exception("cannot set inputs for initialized simulation");
     }
+    const auto &schematic = simulation.schematic();
 
-    for (const auto element : simulation.schematic().elements()) {
-        // activate unconnected enable
-        if (const auto enable_id = element_enable_input_id(element.element_type())) {
-            const auto input = element.input(*enable_id);
-            if (!input.has_connected_element() && !input.is_inverted()) {
+    for (const auto element_id : element_ids(schematic)) {
+        // activate unconnected enable inputs
+        if (const auto enable_id =
+                element_enable_input_id(schematic.element_type(element_id))) {
+            const auto input = input_t {element_id, *enable_id};
+
+            if (!schematic.output(input) && !schematic.is_inverted(input)) {
                 simulation.set_input_value(input, true);
             }
         }
 
         // activate unconnected j&k flipflops
-        if (element.element_type() == ElementType::flipflop_jk) {
-            const auto input_1 = element.input(connection_id_t {1});
-            const auto input_2 = element.input(connection_id_t {2});
-            if (!input_1.has_connected_element() && !input_1.is_inverted() &&
-                !input_2.has_connected_element() && !input_2.is_inverted()) {
+        if (schematic.element_type(element_id) == ElementType::flipflop_jk) {
+            const auto input_1 = input_t {element_id, connection_id_t {1}};
+            const auto input_2 = input_t {element_id, connection_id_t {2}};
+
+            if (!schematic.output(input_1) && !schematic.is_inverted(input_1) &&
+                !schematic.output(input_2) && !schematic.is_inverted(input_2)) {
                 simulation.set_input_value(input_1, true);
                 simulation.set_input_value(input_2, true);
             }
@@ -65,60 +70,57 @@ auto set_default_inputs(Simulation &simulation) -> void {
 // Simulation
 //
 
-Simulation::Simulation(const SchematicOld &schematic, const PrintEvents print_events)
-    : schematic_ {&schematic},
+Simulation::Simulation(Schematic &&schematic, const PrintEvents print_events)
+    : schematic_ {std::move(schematic)},
       queue_ {},
       largest_history_event_ {queue_.time()},
       is_initialized_ {false},
       print_events_ {print_events == PrintEvents::yes} {
-    input_values_.reserve(schematic.element_count());
-    internal_states_.reserve(schematic.element_count());
+    input_values_.reserve(schematic_.size());
+    internal_states_.reserve(schematic_.size());
 
-    for (auto element : schematic.elements()) {
-        input_values_.emplace_back(element.input_count().count(), false);
-        internal_states_.emplace_back(internal_state_size(element.element_type()), false);
+    for (auto element_id : element_ids(schematic)) {
+        input_values_.emplace_back(schematic.input_count(element_id).count(), false);
+        internal_states_.emplace_back(
+            internal_state_size(schematic.element_type(element_id)), false);
     }
-    first_input_histories_.resize(schematic.element_count());
+    first_input_histories_.resize(schematic.size());
 }
 
-auto Simulation::schematic() const noexcept -> const SchematicOld & {
-    return *schematic_;
+auto Simulation::schematic() const noexcept -> const Schematic & {
+    return schematic_;
 }
 
 auto Simulation::time() const noexcept -> time_t {
     return queue_.time();
 }
 
-auto Simulation::submit_event(SchematicOld::ConstInput input, delay_t offset, bool value)
-    -> void {
-    queue_.submit_event(
-        simulation::make_event(input, time_t {queue_.time() + offset}, value));
+auto Simulation::submit_event(input_t input, delay_t offset, bool value) -> void {
+    queue_.submit_event(simulation::simulation_event_t {
+        .time = queue_.time() + offset,
+        .element_id = input.element_id,
+        .input_id = input.connection_id,
+        .value = value,
+    });
 }
 
-auto Simulation::submit_events(SchematicOld::ConstElement element, delay_t offset,
+auto Simulation::submit_events(element_id_t element_id, delay_t offset,
                                logic_small_vector_t values) -> void {
-    if (connection_count_t {std::size(values)} != element.input_count()) [[unlikely]] {
+    if (connection_count_t {std::size(values)} != schematic_.input_count(element_id))
+        [[unlikely]] {
         throw_exception("Need to provide number of input values.");
     }
-    for (auto input : element.inputs()) {
-        const auto value = values.at(input.input_index().value);
+    for (auto input : inputs(schematic_, element_id)) {
+        const auto value = values.at(input.connection_id.value);
         submit_event(input, offset, value);
     }
 }
 
-auto Simulation::check_counts_valid() const -> void {
-    const auto n_elements = schematic_->element_count();
-
-    if (input_values_.size() != n_elements || internal_states_.size() != n_elements ||
-        first_input_histories_.size() != n_elements) [[unlikely]] {
-        throw_exception("size of vector match schematic element count.");
-    }
-}
-
-auto Simulation::apply_events(const SchematicOld::ConstElement element,
+auto Simulation::apply_events(element_id_t element_id,
                               const simulation::SimulationEventGroup &group) -> void {
     for (const auto &event : group) {
-        set_input_internal(element.input(event.input_id), event.value);
+        const auto input = input_t {element_id, event.input_id};
+        set_input_internal(input, event.value);
     }
 }
 
@@ -150,22 +152,25 @@ auto get_changed_outputs(const logic_small_vector_t &old_outputs,
     return result;
 }
 
-void Simulation::create_event(const SchematicOld::ConstOutput output,
+void Simulation::create_event(output_t output,
                               const logic_small_vector_t &output_values) {
-    if (output.has_connected_element()) {
-        queue_.submit_event({.time = queue_.time() + output.delay(),
-                             .element_id = output.connected_element_id(),
-                             .input_id = output.connected_input_index(),
-                             .value = output_values.at(output.output_index().value)});
+    if (const auto input = schematic_.input(output)) {
+        queue_.submit_event(simulation::simulation_event_t {
+            .time = queue_.time() + schematic_.output_delay(output),
+            .element_id = input.element_id,
+            .input_id = input.connection_id,
+            .value = output_values.at(output.connection_id.value),
+        });
     }
 }
 
 auto Simulation::submit_events_for_changed_outputs(
-    const SchematicOld::ConstElement element, const logic_small_vector_t &old_outputs,
+    element_id_t element_id, const logic_small_vector_t &old_outputs,
     const logic_small_vector_t &new_outputs) -> void {
     const auto changes = get_changed_outputs(old_outputs, new_outputs);
     for (auto output_index : changes) {
-        create_event(element.output(output_index), new_outputs);
+        const auto output = output_t {element_id, output_index};
+        create_event(output, new_outputs);
     }
 }
 
@@ -192,49 +197,51 @@ auto Simulation::process_event_group(simulation::SimulationEventGroup &&events) 
     if (events.empty()) {
         return;
     }
-    const auto element =
-        SchematicOld::ConstElement {schematic_->element(events.front().element_id)};
-    const auto element_type = element.element_type();
+    const auto element_id = events.front().element_id;
+    const auto element_type = schematic_.element_type(element_id);
 
     // short-circuit trivial elements
     if (has_no_logic(element_type)) {
-        apply_events(element, events);
+        apply_events(element_id, events);
         return;
     }
 
     // update inputs
-    auto old_inputs = input_values(element);
-    apply_events(element, events);
-    auto new_inputs = input_values(element);
+    auto old_inputs = input_values(element_id);
+    apply_events(element_id, events);
+    auto new_inputs = input_values(element_id);
 
-    const auto inverters = element.input_inverters();
+    const auto &inverters = schematic_.input_inverters(element_id);
     if (std::ranges::any_of(inverters, std::identity {})) {
         invert_inputs(old_inputs, inverters);
         invert_inputs(new_inputs, inverters);
     }
 
+    const auto output_count = schematic_.output_count(element_id);
+
     if (has_internal_state(element_type)) {
-        auto &internal_state = internal_states_.at(element.element_id().value);
+        auto &internal_state = internal_states_.at(element_id.value);
 
-        const auto old_outputs = calculate_outputs_from_state(
-            internal_state, element.output_count(), element_type);
+        const auto old_outputs =
+            calculate_outputs_from_state(internal_state, output_count, element_type);
         update_internal_state(old_inputs, new_inputs, element_type, internal_state);
-        const auto new_outputs = calculate_outputs_from_state(
-            internal_state, element.output_count(), element_type);
+        const auto new_outputs =
+            calculate_outputs_from_state(internal_state, output_count, element_type);
 
-        submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+        submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
     } else {
         // find changing outputs
-        const auto old_outputs = calculate_outputs_from_inputs(
-            old_inputs, element.output_count(), element_type);
-        const auto new_outputs = calculate_outputs_from_inputs(
-            new_inputs, element.output_count(), element_type);
+        const auto old_outputs =
+            calculate_outputs_from_inputs(old_inputs, output_count, element_type);
+        const auto new_outputs =
+            calculate_outputs_from_inputs(new_inputs, output_count, element_type);
 
-        submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+        submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
     }
 }
 
-auto Simulation::run(const delay_t simulation_time, const simulation::realtime_timeout_t timeout,
+auto Simulation::run(const delay_t simulation_time,
+                     const simulation::realtime_timeout_t timeout,
                      const int64_t max_events) -> int64_t {
     if (!is_initialized_) {
         throw_exception("Simulation first needs to be initialized.");
@@ -245,7 +252,6 @@ auto Simulation::run(const delay_t simulation_time, const simulation::realtime_t
     if (max_events < 0) [[unlikely]] {
         throw_exception("max events needs to be positive or zero.");
     }
-    check_counts_valid();  // TODO remove after using value types
 
     if (simulation_time == delay_t {0us}) {
         return 0;
@@ -260,9 +266,10 @@ auto Simulation::run(const delay_t simulation_time, const simulation::realtime_t
 
     // only check time after this many events
     constexpr int64_t check_interval = 1'000;
-    int64_t next_check = std::min(max_events, timeout == simulation::defaults::no_realtime_timeout
-                                                  ? std::numeric_limits<int64_t>::max()
-                                                  : check_interval);
+    int64_t next_check =
+        std::min(max_events, timeout == simulation::defaults::no_realtime_timeout
+                                 ? std::numeric_limits<int64_t>::max()
+                                 : check_interval);
 
     while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
         auto event_group = queue_.pop_event_group();
@@ -302,44 +309,48 @@ auto Simulation::initialize() -> void {
     if (!queue_.empty()) [[unlikely]] {
         throw_exception("Cannot initialize simulation with scheduled events.");
     }
-    check_counts_valid();
 
-    for (auto &&element : schematic_->elements()) {
-        auto element_type = element.element_type();
+    for (const auto element_id : element_ids(schematic_)) {
+        const auto element_type = schematic_.element_type(element_id);
 
-        if (element.is_wire()) {
+        if (element_type == ElementType::wire) {
             continue;
         }
 
-        if (element.output_count() == connection_count_t {0}) {
+        const auto output_count = schematic_.output_count(element_id);
+
+        if (output_count == connection_count_t {0}) {
             continue;
         }
 
         // existing outputs without inverters
         const auto old_outputs = transform_to_container<logic_small_vector_t>(
-            element.outputs(),
-            [this](auto output) { return input_value(output.connected_input()); });
+            outputs(schematic_, element_id), [&](const output_t output) -> bool {
+                return input_value(schematic_.input(output));
+            });
 
         if (has_internal_state(element_type)) {
-            const auto new_inputs = input_values(element);
+            const auto new_inputs = input_values(element_id);
+
             if (std::ranges::any_of(new_inputs, std::identity {})) {
                 const auto old_inputs = logic_small_vector_t(new_inputs.size(), false);
-                auto &internal_state = internal_states_.at(element.element_id().value);
+                auto &internal_state = internal_states_.at(element_id.value);
+
                 update_internal_state(old_inputs, new_inputs, element_type,
                                       internal_state);
             }
 
             const auto new_outputs = calculate_outputs_from_state(
-                internal_state(element), element.output_count(), element_type);
-            submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+                internal_state(element_id), output_count, element_type);
+            submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
 
         } else {
-            auto curr_inputs = input_values(element);
-            invert_inputs(curr_inputs, element.input_inverters());
-            const auto new_outputs = calculate_outputs_from_inputs(
-                curr_inputs, element.output_count(), element_type);
+            auto curr_inputs = logic_small_vector_t {input_values(element_id)};
+            invert_inputs(curr_inputs, schematic_.input_inverters(element_id));
+            const auto new_outputs =
+                calculate_outputs_from_inputs(curr_inputs, output_count, element_type);
 
-            submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+            submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
         }
     }
 
@@ -350,13 +361,12 @@ auto Simulation::is_initialized() const -> bool {
     return is_initialized_;
 }
 
-auto Simulation::record_input_history(const SchematicOld::ConstInput input,
-                                      const bool new_value) -> void {
+auto Simulation::record_input_history(input_t input, const bool new_value) -> void {
     // we only record the first input, as we only need a history for wires
-    if (input.input_index() != connection_id_t {0}) {
+    if (input.connection_id != connection_id_t {0}) {
         return;
     }
-    const auto history_length = input.element().history_length();
+    const auto history_length = schematic_.history_length(input.element_id);
 
     if (history_length <= delay_t {0ns}) {
         return;
@@ -364,7 +374,7 @@ auto Simulation::record_input_history(const SchematicOld::ConstInput input,
     if (new_value == input_value(input)) {
         return;
     }
-    auto &history = first_input_histories_.at(input.element_id().value);
+    auto &history = first_input_histories_.at(input.element_id.value);
 
     // remove old values
     clean_history(history, history_length);
@@ -384,13 +394,8 @@ auto Simulation::clean_history(simulation::HistoryBuffer &history, delay_t histo
     }
 }
 
-auto Simulation::input_value(element_id_t element_id, connection_id_t index) const
-    -> bool {
-    return input_values_.at(element_id.value).at(index.value);
-}
-
-auto Simulation::input_value(const SchematicOld::ConstInput input) const -> bool {
-    return input_value(input.element_id(), input.input_index());
+auto Simulation::input_value(input_t input) const -> bool {
+    return input_values_.at(input.element_id.value).at(input.connection_id.value);
 }
 
 auto Simulation::input_values(element_id_t element_id) const
@@ -398,66 +403,42 @@ auto Simulation::input_values(element_id_t element_id) const
     return input_values_.at(element_id.value);
 }
 
-auto Simulation::input_values(SchematicOld::Element element) const
-    -> const logic_small_vector_t & {
-    return input_values(element.element_id());
-}
-
-auto Simulation::input_values(const SchematicOld::ConstElement element) const
-    -> const logic_small_vector_t & {
-    return input_values(element.element_id());
-}
-
-auto Simulation::set_input_internal(const SchematicOld::ConstInput input, bool value)
-    -> void {
+auto Simulation::set_input_internal(input_t input, bool value) -> void {
     record_input_history(input, value);
 
-    input_values_.at(input.element_id().value).at(input.input_index().value) = value;
+    input_values_.at(input.element_id.value).at(input.connection_id.value) = value;
 }
 
-auto Simulation::set_output_value(SchematicOld::ConstOutput output, bool value) -> void {
+auto Simulation::set_output_value(output_t output, bool value) -> void {
     if (is_initialized_) {
         throw_exception("can only set outputs at the start of the simulation");
     }
 
-    const auto input = output.connected_input();
+    const auto input = schematic_.input(output);
 
     auto &input_value =
-        input_values_.at(input.element_id().value).at(input.input_index().value);
-    input_value = value ^ input.is_inverted();
+        input_values_.at(input.element_id.value).at(input.connection_id.value);
+    input_value = value ^ schematic_.is_inverted(input);
 }
 
-auto Simulation::output_value(element_id_t element_id, connection_id_t index) const
-    -> bool {
-    return output_value(schematic_->element(element_id).output(index));
-}
-
-auto Simulation::output_value(const SchematicOld::ConstOutput output) const -> bool {
-    const auto input = output.connected_input();
-    return input_value(input) ^ input.is_inverted();
+auto Simulation::output_value(output_t output) const -> bool {
+    const auto input = schematic_.input(output);
+    assert(input);
+    return input_value(input) ^ schematic_.is_inverted(input);
 }
 
 auto Simulation::output_values(element_id_t element_id) const -> logic_small_vector_t {
-    return output_values(schematic_->element(element_id));
-}
-
-auto Simulation::output_values(SchematicOld::Element element) const
-    -> logic_small_vector_t {
-    return output_values(SchematicOld::ConstElement {element});
-}
-
-auto Simulation::output_values(const SchematicOld::ConstElement element) const
-    -> logic_small_vector_t {
     return transform_to_container<logic_small_vector_t>(
-        element.outputs(), [=, this](auto output) { return output_value(output); });
+        outputs(schematic_, element_id),
+        [&](output_t output) { return output_value(output); });
 }
 
-auto Simulation::set_input_value(SchematicOld::ConstInput input, bool value) -> void {
-    if (input.has_connected_element()) [[unlikely]] {
-        throw_exception("cannot input-value for connected inputs");
+auto Simulation::set_input_value(input_t input, bool value) -> void {
+    if (schematic_.output(input)) [[unlikely]] {
+        throw_exception("cannot set input values for connected inputs");
     }
     auto &input_value =
-        input_values_.at(input.element_id().value).at(input.input_index().value);
+        input_values_.at(input.element_id.value).at(input.connection_id.value);
 
     if (!is_initialized_) {
         input_value = value;
@@ -469,20 +450,23 @@ auto Simulation::set_input_value(SchematicOld::ConstInput input, bool value) -> 
     }
 }
 
-auto Simulation::set_internal_state(SchematicOld::ConstElement element, std::size_t index,
+auto Simulation::set_internal_state(element_id_t element_id, std::size_t index,
                                     bool value) -> void {
-    auto &state = internal_states_.at(element.element_id().value).at(index);
+    auto &state = internal_states_.at(element_id.value).at(index);
 
     if (!is_initialized_) {
         state = value;
     } else {
-        const auto old_outputs = calculate_outputs_from_state(
-            internal_state(element), element.output_count(), element.element_type());
-        state = value;
-        const auto new_outputs = calculate_outputs_from_state(
-            internal_state(element), element.output_count(), element.element_type());
+        const auto output_count = schematic_.output_count(element_id);
+        const auto element_type = schematic_.element_type(element_id);
 
-        submit_events_for_changed_outputs(element, old_outputs, new_outputs);
+        const auto old_outputs = calculate_outputs_from_state(internal_state(element_id),
+                                                              output_count, element_type);
+        state = value;
+        const auto new_outputs = calculate_outputs_from_state(internal_state(element_id),
+                                                              output_count, element_type);
+
+        submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
         run_infinitesimal();
     }
 }
@@ -492,46 +476,26 @@ auto Simulation::internal_state(element_id_t element_id) const
     return internal_states_.at(element_id.value);
 }
 
-auto Simulation::internal_state(SchematicOld::Element element) const
-    -> const logic_small_vector_t & {
-    return internal_state(element.element_id());
-}
-
-auto Simulation::internal_state(SchematicOld::ConstElement element) const
-    -> const logic_small_vector_t & {
-    return internal_state(element.element_id());
-}
-
-auto Simulation::internal_state(SchematicOld::ConstElement element,
-                                std::size_t index) const -> bool {
-    return internal_state(element).at(index);
+auto Simulation::internal_state(element_id_t element_id, std::size_t index) const
+    -> bool {
+    return internal_state(element_id).at(index);
 }
 
 auto Simulation::input_history(element_id_t element_id) const -> simulation::HistoryView {
-    return input_history(schematic_->element(element_id));
-}
-
-auto Simulation::input_history(SchematicOld::Element element) const
-    -> simulation::HistoryView {
-    return input_history(SchematicOld::ConstElement {element});
-}
-
-auto Simulation::input_history(SchematicOld::ConstElement element) const
-    -> simulation::HistoryView {
-    const auto &input_values = this->input_values(element);
+    const auto &input_values = this->input_values(element_id);
 
     if (input_values.empty()) {
         return simulation::HistoryView {};
     }
 
-    const auto last_value =
-        static_cast<bool>(input_values.at(0) ^ element.input_inverters().at(0));
+    const auto last_value = static_cast<bool>(
+        input_values.at(0) ^ schematic_.input_inverters(element_id).at(0));
 
     return simulation::HistoryView {
-        first_input_histories_.at(element.element_id().value),
+        first_input_histories_.at(element_id.value),
         this->time(),
         last_value,
-        element.history_length(),
+        schematic_.history_length(element_id),
     };
 }
 

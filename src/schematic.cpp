@@ -222,6 +222,14 @@ auto Schematic::history_length(element_id_t element_id) const -> delay_t {
     return history_lengths_.at(element_id.value);
 }
 
+auto Schematic::output_delay(output_t output) const -> delay_t {
+    return output_delays_.at(output.element_id.value).at(output.connection_id.value);
+}
+
+auto Schematic::is_inverted(input_t input) const -> bool {
+    return input_inverters_.at(input.element_id.value).at(input.connection_id.value);
+}
+
 auto Schematic::set_input_inverter(input_t input, bool value) -> void {
     input_inverters_.at(input.element_id.value).at(input.connection_id.value) = value;
 }
@@ -252,6 +260,16 @@ auto has_output_connections(const Schematic &data, element_id_t element_id) -> b
 
 auto element_ids(const Schematic &schematic) -> range_extended_t<element_id_t> {
     return range_extended<element_id_t>(schematic.size());
+}
+
+auto input_ids(const Schematic &schematic, element_id_t element_id)
+    -> range_extended_t<connection_id_t> {
+    return range_extended<connection_id_t>(std::size_t {schematic.input_count(element_id)});
+}
+
+auto output_ids(const Schematic &schematic, element_id_t element_id)
+    -> range_extended_t<connection_id_t> {
+    return range_extended<connection_id_t>(std::size_t {schematic.output_count(element_id)});
 }
 
 auto input_inverted(const Schematic &schematic, input_t input) -> bool {

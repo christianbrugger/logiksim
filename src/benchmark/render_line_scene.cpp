@@ -14,6 +14,7 @@
 #include <numeric>
 #include <stdexcept>
 
+/*
 namespace logicsim {
 
 struct RenderBenchmarkConfig {
@@ -296,3 +297,4 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
 }
 
 }  // namespace logicsim
+*/

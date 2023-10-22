@@ -3,7 +3,7 @@
 
 #include "component/simulation/history_buffer.h"
 #include "component/simulation/simulation_queue.h"
-#include "schematic_old.h"
+#include "schematic.h"
 #include "timeout_timer.h"
 #include "vocabulary/print_events.h"
 
@@ -23,6 +23,9 @@
 /// New Features
 
 namespace logicsim {
+
+struct input_t;
+struct output_t;
 
 namespace simulation {
 class HistoryView;
@@ -47,15 +50,16 @@ constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
 
 class Simulation {
    public:
-    [[nodiscard]] explicit Simulation(const SchematicOld &schematic,
+    [[nodiscard]] explicit Simulation(Schematic &&schematic,
                                       PrintEvents print_events = PrintEvents::no);
 
-    [[nodiscard]] auto schematic() const noexcept -> const SchematicOld &;
+    [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto time() const noexcept -> time_t;
+    [[nodiscard]] auto wire_delay_per_distance() const noexcept -> delay_t;
 
     // submit custom events
-    auto submit_event(SchematicOld::ConstInput input, delay_t offset, bool value) -> void;
-    auto submit_events(SchematicOld::ConstElement element, delay_t offset,
+    auto submit_event(input_t input, delay_t offset, bool value) -> void;
+    auto submit_events(element_id_t element_id, delay_t offset,
                        logic_small_vector_t values) -> void;
 
     // Initialize logic elements in the simulation
@@ -84,66 +88,44 @@ class Simulation {
     auto finished() const -> bool;
 
     // input values
-    auto set_input_value(SchematicOld::ConstInput input, bool value) -> void;
-    [[nodiscard]] auto input_value(element_id_t element_id, connection_id_t index) const
-        -> bool;
-    [[nodiscard]] auto input_value(SchematicOld::ConstInput input) const -> bool;
+    auto set_input_value(input_t input, bool value) -> void;
+    [[nodiscard]] auto input_value(input_t input) const -> bool;
     [[nodiscard]] auto input_values(element_id_t element_id) const
-        -> const logic_small_vector_t &;
-    [[nodiscard]] auto input_values(SchematicOld::Element element) const
-        -> const logic_small_vector_t &;
-    [[nodiscard]] auto input_values(SchematicOld::ConstElement element) const
         -> const logic_small_vector_t &;
 
     // infers the output values
-    auto set_output_value(SchematicOld::ConstOutput output, bool value) -> void;
-    [[nodiscard]] auto output_value(element_id_t element_id, connection_id_t index) const
-        -> bool;
-    [[nodiscard]] auto output_value(SchematicOld::ConstOutput output) const -> bool;
+    auto set_output_value(output_t output, bool value) -> void;
+    [[nodiscard]] auto output_value(output_t output) const -> bool;
     [[nodiscard]] auto output_values(element_id_t element_id) const
-        -> logic_small_vector_t;
-    [[nodiscard]] auto output_values(SchematicOld::Element element) const
-        -> logic_small_vector_t;
-    [[nodiscard]] auto output_values(SchematicOld::ConstElement element) const
         -> logic_small_vector_t;
 
     // internal states
-    auto set_internal_state(SchematicOld::ConstElement element, std::size_t index,
-                            bool value) -> void;
+    auto set_internal_state(element_id_t element_id, std::size_t index, bool value)
+        -> void;
     [[nodiscard]] auto internal_state(element_id_t element_id) const
         -> const logic_small_vector_t &;
-    [[nodiscard]] auto internal_state(SchematicOld::Element element) const
-        -> const logic_small_vector_t &;
-    [[nodiscard]] auto internal_state(SchematicOld::ConstElement element) const
-        -> const logic_small_vector_t &;
-    [[nodiscard]] auto internal_state(SchematicOld::ConstElement element,
-                                      std::size_t index) const -> bool;
+    [[nodiscard]] auto internal_state(element_id_t element_id, std::size_t index) const
+        -> bool;
 
     // history
     auto input_history(element_id_t element_id) const -> simulation::HistoryView;
-    auto input_history(SchematicOld::Element element) const -> simulation::HistoryView;
-    auto input_history(SchematicOld::ConstElement element) const
-        -> simulation::HistoryView;
 
    private:
-    auto check_counts_valid() const -> void;
-
-    auto submit_events_for_changed_outputs(const SchematicOld::ConstElement element,
+    auto submit_events_for_changed_outputs(element_id_t element_id,
                                            const logic_small_vector_t &old_outputs,
                                            const logic_small_vector_t &new_outputs)
         -> void;
     auto process_event_group(simulation::SimulationEventGroup &&events) -> void;
-    auto create_event(SchematicOld::ConstOutput output,
-                      const logic_small_vector_t &output_values) -> void;
-    auto apply_events(SchematicOld::ConstElement element,
+    auto create_event(output_t output, const logic_small_vector_t &output_values) -> void;
+    auto apply_events(element_id_t element_id,
                       const simulation::SimulationEventGroup &group) -> void;
-    auto set_input_internal(SchematicOld::ConstInput input, bool value) -> void;
+    auto set_input_internal(input_t input, bool value) -> void;
 
-    auto record_input_history(SchematicOld::ConstInput input, bool new_value) -> void;
+    auto record_input_history(input_t input, bool new_value) -> void;
     auto clean_history(simulation::HistoryBuffer &history, delay_t history_length)
         -> void;
 
-    gsl::not_null<const SchematicOld *> schematic_;
+    Schematic schematic_;
     simulation::SimulationQueue queue_;
     time_t largest_history_event_;
     bool is_initialized_;

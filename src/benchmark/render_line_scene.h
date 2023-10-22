@@ -2,6 +2,7 @@
 #define LOGICSIM_BENCHMARK_RENDER_LINE_SCENE_H
 
 #include "layout.h"
+#include "schematic.h"
 #include "schematic_old.h"
 #include "simulation.h"
 #include "vocabulary/simulation_setting.h"
@@ -14,7 +15,7 @@ struct BenchmarkScene {
    public:
     SchematicOld schematic {default_wire_delay_per_distance()};
     Layout layout {};
-    Simulation simulation {schematic};
+    Simulation simulation {Schematic {}};
 };
 
 auto fill_line_scene(BenchmarkScene& scene, int n_lines = 100) -> int64_t;

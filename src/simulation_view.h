@@ -9,8 +9,7 @@
 
 namespace logicsim {
 
-class SchematicOld;
-class Simulation;
+class InteractiveSimulation;
 
 namespace simulation {
 class HistoryView;
@@ -26,13 +25,16 @@ class SimulationView {
     friend class simulation_view::ConstElement;
 
    public:
-    [[nodiscard]] explicit SimulationView(const Simulation &simulation);
+    [[nodiscard]] explicit SimulationView(const InteractiveSimulation &simulation);
 
+    // TODO rename to size
     [[nodiscard]] auto element_count() const noexcept -> std::size_t;
     [[nodiscard]] auto empty() const noexcept -> bool;
+    // TODO why do we need this?
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
 
+    // TODO re-use element_ids(Schematic ...)
     [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;
     [[nodiscard]] auto element(element_id_t element_id) const
         -> simulation_view::ConstElement;
@@ -42,8 +44,7 @@ class SimulationView {
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
    private:
-    gsl::not_null<const SchematicOld *> schematic_;
-    gsl::not_null<const Simulation *> simulation_;
+    gsl::not_null<const InteractiveSimulation *> simulation_;
 };
 
 namespace simulation_view {

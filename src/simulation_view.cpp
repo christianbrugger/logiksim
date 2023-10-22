@@ -1,7 +1,7 @@
 #include "simulation_view.h"
 
 #include "component/simulation/history_view.h"
-#include "simulation.h"
+#include "interactive_simulation.h"
 
 namespace logicsim {
 
@@ -9,23 +9,24 @@ namespace logicsim {
 // Simulation View
 //
 
-SimulationView::SimulationView(const Simulation& simulation)
-    : schematic_ {&simulation.schematic()}, simulation_ {&simulation} {}
+SimulationView::SimulationView(const InteractiveSimulation& simulation)
+    : simulation_ {&simulation} {}
 
 auto SimulationView::element_count() const noexcept -> std::size_t {
-    return schematic_->element_count();
+    return simulation_->schematic().size();
 }
 
 auto SimulationView::empty() const noexcept -> bool {
-    return schematic_->empty();
+    return simulation_->schematic().empty();
 }
 
 auto SimulationView::is_element_id_valid(element_id_t element_id) const noexcept -> bool {
-    return schematic_->is_element_id_valid(element_id);
+    return element_id_t {0} <= element_id &&
+           static_cast<std::size_t>(element_id.value) < element_count();
 }
 
 auto SimulationView::element_ids() const noexcept -> forward_range_t<element_id_t> {
-    return schematic_->element_ids();
+    return forward_range_t<element_id_t> {element_id_t {element_count()}};
 }
 
 auto SimulationView::element(element_id_t element_id) const
@@ -38,7 +39,7 @@ auto SimulationView::time() const -> time_t {
 }
 
 auto SimulationView::wire_delay_per_distance() const -> delay_t {
-    return schematic_->wire_delay_per_distance();
+    return simulation_->wire_delay_per_distance();
 }
 
 //
@@ -51,32 +52,36 @@ ConstElement::ConstElement(const SimulationView& view, element_id_t element_id) 
     : view_ {&view}, element_id_ {element_id} {}
 
 auto ConstElement::has_connected_input(connection_id_t index) const -> bool {
-    return view_->schematic_->element(element_id_).input(index).has_connected_element();
+    const auto& schematic = view_->simulation_->schematic();
+    return bool {schematic.input(output_t {element_id_, index})};
 }
 
 auto ConstElement::has_connected_output(connection_id_t index) const -> bool {
-    const auto output = view_->schematic_->element(element_id_).output(index);
-    return output.has_connected_element() && !output.connected_element().is_placeholder();
+    const auto& schematic = view_->simulation_->schematic();
+
+    const auto output = schematic.output(input_t {element_id_, index});
+    return output &&
+           !(schematic.element_type(output.element_id) == ElementType::placeholder);
 }
 
 auto ConstElement::input_value(connection_id_t index) const -> bool {
-    return view_->simulation_->input_value(element_id_, index);
+    return view_->simulation_->simulation().input_value(input_t {element_id_, index});
 }
 
 auto ConstElement::input_values() const -> const logic_small_vector_t& {
-    return view_->simulation_->input_values(element_id_);
+    return view_->simulation_->simulation().input_values(element_id_);
 }
 
 auto ConstElement::output_value(connection_id_t index) const -> bool {
-    return view_->simulation_->output_value(element_id_, index);
+    return view_->simulation_->simulation().output_value(output_t {element_id_, index});
 }
 
 auto ConstElement::output_values() const -> logic_small_vector_t {
-    return view_->simulation_->output_values(element_id_);
+    return view_->simulation_->simulation().output_values(element_id_);
 }
 
 auto ConstElement::internal_state() const -> const logic_small_vector_t& {
-    return view_->simulation_->internal_state(element_id_);
+    return view_->simulation_->simulation().internal_state(element_id_);
 }
 
 auto ConstElement::internal_state(std::size_t index) const -> bool {
@@ -84,11 +89,13 @@ auto ConstElement::internal_state(std::size_t index) const -> bool {
 }
 
 auto ConstElement::history_length() const -> delay_t {
-    return view_->schematic_->element(element_id_).history_length();
+    const auto& schematic = view_->simulation_->schematic();
+
+    return schematic.history_length(element_id_);
 }
 
 auto ConstElement::input_history() const -> simulation::HistoryView {
-    return view_->simulation_->input_history(element_id_);
+    return view_->simulation_->simulation().input_history(element_id_);
 }
 
 auto ConstElement::time() const -> time_t {

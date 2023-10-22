@@ -1003,7 +1003,7 @@ auto RendererWidget::on_simulation_timeout_impl() -> void {
         auto t = Timer {"Generate simulation", Timer::Unit::ms, 3};
         simulation_.emplace(editable_circuit_->layout(), simulation_settings_);
 
-        if (simulation_->schematic().element_count() < 30) {
+        if (simulation_->schematic().size() < 30) {
             print(simulation_->schematic());
         }
 
@@ -1015,8 +1015,8 @@ auto RendererWidget::on_simulation_timeout_impl() -> void {
 
     const auto was_finished = simulation_->finished();
 
-    constexpr auto timeout =
-        simulation::realtime_timeout_t {std::chrono::milliseconds {simulation_timer_interval_ms_}};
+    constexpr auto timeout = simulation::realtime_timeout_t {
+        std::chrono::milliseconds {simulation_timer_interval_ms_}};
     simulation_->run(timeout);
 
     if (!was_finished) {
@@ -1193,7 +1193,7 @@ void RendererWidget::paintEvent([[maybe_unused]] QPaintEvent* event) {
 
     if (do_render_circuit_ && simulation_) {
         render_simulation(context_, editable_circuit.layout(),
-                          SimulationView {simulation_->simulation()});
+                          SimulationView {simulation_.value()});
     }
 
     if (do_render_circuit_ && !simulation_) {

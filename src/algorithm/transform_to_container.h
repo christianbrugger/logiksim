@@ -19,7 +19,7 @@ template <class Container, std::input_iterator InputIt, class Function>
 constexpr auto transform_to_container(InputIt first, InputIt last, Function func)
     -> Container {
     Container result {};
-    result.reserve(distance_fast(first, last));
+    result.reserve(static_cast<std::size_t>(distance_fast(first, last)));
 
     std::transform(first, last, std::back_inserter(result), [func](auto&& item) {
         return std::invoke(func, std::forward<decltype(item)>(item));
