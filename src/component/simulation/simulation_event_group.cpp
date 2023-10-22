@@ -1,7 +1,6 @@
 #include "component/simulation/simulation_event_group.h"
 
 #include "algorithm/contains.h"
-#include "algorithm/has_duplicates_quadratic.h"  // TODO remove
 
 #include <stdexcept>
 

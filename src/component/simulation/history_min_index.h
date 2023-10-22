@@ -10,10 +10,10 @@ namespace logicsim {
 namespace simulation {
 
 /**
- * @brief: Lowest index that is valid a history-buffer.
+ * @brief: Lowest index that is valid for the history-buffer.
  *
  * Class invariants:
- *      * value cannot be negative
+ *      * index cannot be negative
  */
 struct history_min_index_t {
     history_index_t index {};

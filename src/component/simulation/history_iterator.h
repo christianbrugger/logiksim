@@ -13,6 +13,9 @@ namespace logicsim {
 
 namespace simulation {
 
+/**
+ * @brief: Iterator over History.
+ */
 class HistoryIterator {
    public:
     using iterator_concept = std::forward_iterator_tag;

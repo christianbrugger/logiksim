@@ -4,6 +4,7 @@
 #include "format/struct.h"
 #include "schematic_old.h"  // TODO remove
 #include "vocabulary/connection.h"
+#include "vocabulary/element_id.h"
 #include "vocabulary/time.h"
 
 #include <compare>
@@ -13,12 +14,12 @@ namespace logicsim {
 namespace simulation {
 
 /**
- * @brief: Simulation event defines a future value at a specific time and input.
+ * @brief: Future logic value transition at a specific time and logic item input.
  */
 struct simulation_event_t {
     time_t time;
     element_id_t element_id;
-    connection_id_t input_id;  // TODO rename input_id
+    connection_id_t input_id;
     bool value;
 
     [[nodiscard]] auto format() const -> std::string;

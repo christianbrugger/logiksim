@@ -1,6 +1,5 @@
-#include "history_buffer.h"
-
 #include "component/simulation/history_buffer.h"
+
 #include "component/simulation/history_index.h"
 
 namespace logicsim {

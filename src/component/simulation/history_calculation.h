@@ -40,6 +40,9 @@ class HistoryBuffer;
                                            history_min_index_t min_index)
     -> history_index_t;
 
+/**
+ * brief: Calculates the minimum valid index for given history length.
+ */
 [[nodiscard]] auto calculate_min_index(const HistoryBuffer *history,
                                        time_t simulation_time, delay_t history_length)
     -> history_min_index_t;
@@ -50,12 +53,28 @@ class HistoryBuffer;
 
 /**
  * @brief: All data used for history calculations.
+ *
+ * Class invariants:
+ *      * simulation_time >= history.last()   (history != nullptr && history.size() > 0)
+ *      * 0 <= min_index <= history.size      (history != nullptr)
+ *      * min_index == 0                      (history == nullptr)
  */
 struct HistoryCalculationData {
+    // to construct with designated initializers
+    struct New {
+        const HistoryBuffer *history;
+        time_t simulation_time;
+        history_min_index_t min_index;
+        bool last_value;
+    };
+
     const HistoryBuffer *history {nullptr};
     time_t simulation_time {time_t::max()};
     history_min_index_t min_index {history_index_t {0}};
     bool last_value {false};
+
+    [[nodiscard]] explicit HistoryCalculationData() = default;
+    [[nodiscard]] explicit HistoryCalculationData(New data);
 };
 
 [[nodiscard]] auto get_time_extrapolated(const HistoryCalculationData &data,

@@ -4,6 +4,8 @@
 #include "component/simulation/history_index.h"
 #include "vocabulary/delay.h"
 
+#include <stdexcept>
+
 namespace logicsim {
 
 namespace simulation {
@@ -72,6 +74,26 @@ auto calculate_min_index(const HistoryBuffer* history, time_t simulation_time,
 //
 // History Calculation Data
 //
+
+[[nodiscard]] HistoryCalculationData::HistoryCalculationData(New data)
+    : history {data.history},
+      simulation_time {data.simulation_time},
+      min_index {data.min_index},
+      last_value {data.last_value} {
+    if (history == nullptr) {
+        if (min_index != history_min_index_t {}) [[unlikely]] {
+            throw std::runtime_error("min index needs to be zero if no history is given");
+        }
+    } else {
+        if (!(history_min_index_t {} <= min_index &&
+              std::ptrdiff_t {min_index} <= history->ssize())) [[unlikely]] {
+            throw std::runtime_error("min index out of history bounds");
+        }
+        if (history->size() > 0 && simulation_time < history->back()) [[unlikely]] {
+            throw std::runtime_error("simulation time in the past");
+        }
+    }
+}
 
 auto get_time_extrapolated(const HistoryCalculationData& data,
                            history_index_t history_index) -> time_t {

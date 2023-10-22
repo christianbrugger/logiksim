@@ -2,13 +2,14 @@
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_VIEW_H
 
 #include "component/simulation/history_calculation.h"
-#include "vocabulary/time.h"
+#include "component/simulation/history_iterator.h"
 
 #include <cstddef>
 #include <ranges>
 
 namespace logicsim {
 
+struct time_t;
 struct delay_t;
 
 namespace simulation {
@@ -17,10 +18,10 @@ class HistoryIterator;
 class HistoryBuffer;
 struct history_entry_t;
 
+/**
+ * @brief: View over History that allows iterating.
+ */
 class HistoryView {
-    // TODO remove circular dependency
-    friend HistoryIterator;
-
    public:
     using iterator_type = HistoryIterator;
 
@@ -49,6 +50,8 @@ class HistoryView {
    private:
     HistoryCalculationData data_;
 };
+
+static_assert(std::ranges::forward_range<HistoryView>);
 
 }  // namespace simulation
 

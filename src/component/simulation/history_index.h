@@ -19,7 +19,7 @@ namespace simulation {
 /**
  * @brief: Identifier to a history-entry in a history-buffer.
  *
- * Note indices can be negative and as values can be extrapolated.
+ * Note indices can be negative as values can be extrapolated.
  */
 struct history_index_t {
     using value_type = std::ptrdiff_t;

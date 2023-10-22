@@ -2,7 +2,6 @@
 
 #include "algorithm/fmt_join.h"
 #include "algorithm/uniform_int_distribution.h"
-#include "component/simulation/history_iterator.h"
 #include "component/simulation/history_view.h"
 #include "logging.h"
 #include "random/bool.h"

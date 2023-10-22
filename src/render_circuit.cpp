@@ -4,7 +4,6 @@
 #include "algorithm/round.h"
 #include "allocated_size/std_vector.h"
 #include "allocated_size/trait.h"
-#include "component/simulation/history_iterator.h"
 #include "component/simulation/history_view.h"
 #include "concept/input_range.h"
 #include "editable_circuit/selection.h"

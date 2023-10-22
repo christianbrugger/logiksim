@@ -1,7 +1,6 @@
 
 #include "simulation.h"
 
-#include "component/simulation/history_iterator.h"
 #include "component/simulation/history_view.h"
 #include "logic_item/schematic_info.h"
 #include "schematic_validation.h"

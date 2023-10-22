@@ -15,12 +15,12 @@ namespace simulation {
 
 HistoryView::HistoryView(const HistoryBuffer &history, time_t simulation_time,
                          bool last_value, delay_t history_length)
-    : data_ {
+    : data_ {{
           .history = &history,
           .simulation_time = simulation_time,
           .min_index = calculate_min_index(&history, simulation_time, history_length),
           .last_value = last_value,
-      } {
+      }} {
     assert(size() >= 1);
 }
 
@@ -59,9 +59,7 @@ auto HistoryView::until(time_t value) const -> HistoryIterator {
         throw std::runtime_error("cannot query times in the future");
     }
 
-    const auto last_time = value > time_t::min()  //
-                               ? value - delay_t::epsilon()
-                               : value;
+    const auto last_time = value > time_t::min() ? value - delay_t::epsilon() : value;
     const auto index = find_index_extrapolated(data_, last_time) + 1;
 
     return HistoryIterator {data_, index};

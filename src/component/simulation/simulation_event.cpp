@@ -15,33 +15,6 @@ auto simulation_event_t::format() const -> std::string {
                        element_id, input_id, value);
 }
 
-// auto simulation_event_t::operator==(const simulation_event_t &other) const -> bool {
-//     return this->element_id == other.element_id && this->time == other.time;
-// }
-//
-// auto simulation_event_t::operator<(const simulation_event_t &other) const -> bool {
-//     if (this->time == other.time) {
-//         return this->element_id < other.element_id;
-//     }
-//     return this->time < other.time;
-// }
-//
-// auto simulation_event_t::operator!=(const simulation_event_t &other) const -> bool {
-//     return !(this->operator==(other));
-// }
-//
-// auto simulation_event_t::operator>(const simulation_event_t &other) const -> bool {
-//     return other.operator<(*this);
-// }
-//
-// auto simulation_event_t::operator<=(const simulation_event_t &other) const -> bool {
-//     return !(this->operator>(other));
-// }
-//
-// auto simulation_event_t::operator>=(const simulation_event_t &other) const -> bool {
-//     return !(this->operator<(other));
-// }
-
 //
 // Public Functions
 //

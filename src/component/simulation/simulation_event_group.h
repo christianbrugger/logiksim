@@ -11,7 +11,7 @@ namespace logicsim {
 namespace simulation {
 
 /**
- * @brief: groups of events for the same element and time from different inputs.
+ * @brief: groups of events for the same element and time but different inputs.
  *
  * Class invariants:
  *     * All events need to have same time

@@ -18,7 +18,7 @@ namespace simulation {
  *     * first_time < last_time
  */
 struct history_entry_t {
-    // so we can construct with designated initializers
+    // to construct with designated initializers
     struct New {
         time_t first_time;
         time_t last_time;
