@@ -427,7 +427,6 @@ auto Simulation::set_output_value(output_t output, bool value) -> void {
 
 auto Simulation::output_value(output_t output) const -> bool {
     const auto input = schematic_.input(output);
-    assert(input);
     return input_value(input) ^ schematic_.is_inverted(input);
 }
 
