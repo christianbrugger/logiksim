@@ -18,11 +18,20 @@ namespace simulation {
  *     * first_time < last_time
  */
 struct history_entry_t {
+    // so we can construct with designated initializers
+    struct New {
+        time_t first_time;
+        time_t last_time;
+        bool value;
+    };
+
     time_t first_time;
     time_t last_time;
     bool value;
 
-    explicit history_entry_t(time_t first_time, time_t last_time, bool value);
+    [[nodiscard]] explicit history_entry_t(New data);
+    [[nodiscard]] explicit history_entry_t(time_t first_time, time_t last_time,
+                                           bool value);
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const history_entry_t &) const -> bool = default;

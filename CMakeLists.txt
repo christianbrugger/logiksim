@@ -40,13 +40,15 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
-    src/component/simulation/event_group.cpp
     src/component/simulation/history_buffer.cpp
+    src/component/simulation/history_calculation.cpp
     src/component/simulation/history_entry.cpp
     src/component/simulation/history_index.cpp
     src/component/simulation/history_iterator.cpp
+    src/component/simulation/history_min_index.cpp
     src/component/simulation/history_view.cpp
     src/component/simulation/simulation_event.cpp
+    src/component/simulation/simulation_event_group.cpp
     src/component/simulation/simulation_queue.cpp
 
     src/concept/explicitly_convertible.cpp

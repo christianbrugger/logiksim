@@ -3,10 +3,10 @@
 
 #include "algorithm/range.h"
 #include "algorithm/transform_to_container.h"
-#include "component/simulation/event_group.h"
 #include "component/simulation/history_entry.h"
 #include "component/simulation/history_view.h"
 #include "component/simulation/simulation_event.h"
+#include "component/simulation/simulation_event_group.h"
 #include "exception.h"
 #include "layout_info.h"
 #include "logging.h"

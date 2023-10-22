@@ -1,7 +1,6 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_SIMULATION_QUEUE_H
 #define LOGICSIM_COMPONENT_SIMULATION_SIMULATION_QUEUE_H
 
-#include "component/simulation/event_group.h"
 #include "component/simulation/simulation_event.h"
 #include "vocabulary/time.h"
 
@@ -10,6 +9,8 @@
 namespace logicsim {
 
 namespace simulation {
+
+class EventGroup;
 
 /**
  * @brief: Stores Simulation Events in order

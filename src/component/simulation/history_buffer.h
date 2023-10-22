@@ -45,7 +45,9 @@ class HistoryBuffer {
     [[nodiscard]] auto begin() const -> const_iterator;
     [[nodiscard]] auto end() const -> const_iterator;
 
-    // TODO remove at and add HistoryView get_time(index, simulation_time)
+    /**
+     * brief: range checked lookup of transition time for index
+     */
     [[nodiscard]] auto at(history_index_t index) const -> const time_t &;
 
    private:

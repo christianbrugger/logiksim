@@ -1,9 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_SIMULATION_HISTORY_VIEW_H
 #define LOGICSIM_COMPONENT_SIMULATION_HISTORY_VIEW_H
 
-#include "component/simulation/history_buffer.h"
-#include "component/simulation/history_entry.h"
-#include "component/simulation/history_index.h"
+#include "component/simulation/history_calculation.h"
 #include "vocabulary/time.h"
 
 #include <cstddef>
@@ -16,6 +14,8 @@ struct delay_t;
 namespace simulation {
 
 class HistoryIterator;
+class HistoryBuffer;
+struct history_entry_t;
 
 class HistoryView {
     // TODO remove circular dependency
@@ -47,15 +47,7 @@ class HistoryView {
     [[nodiscard]] auto last_value() const -> bool;
 
    private:
-    [[nodiscard]] auto get_value(history_index_t history_index) const -> bool;
-    [[nodiscard]] auto find_index(time_t value) const -> history_index_t;
-    [[nodiscard]] auto get_time(history_index_t index) const -> time_t;
-
-   private:
-    const HistoryBuffer *history_ {nullptr};
-    time_t simulation_time_ {time_t::max()};
-    history_index_t min_index_ {};
-    bool last_value_ {};
+    HistoryCalculationData data_;
 };
 
 }  // namespace simulation

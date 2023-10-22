@@ -1,6 +1,7 @@
 #include "component/simulation/simulation_queue.h"
 
 #include "algorithm/pop_while.h"
+#include "component/simulation/simulation_event_group.h"
 
 #include <stdexcept>
 

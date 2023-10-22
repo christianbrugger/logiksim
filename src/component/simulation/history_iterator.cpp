@@ -4,15 +4,16 @@ namespace logicsim {
 
 namespace simulation {
 
-HistoryIterator::HistoryIterator(HistoryView view, history_index_t index) noexcept
-    : view_ {std::move(view)}, index_ {index} {}
+HistoryIterator::HistoryIterator(HistoryCalculationData data,
+                                 history_index_t index) noexcept
+    : data_ {std::move(data)}, index_ {index} {}
 
 auto HistoryIterator::operator*() const -> value_type {
-    return history_entry_t {
-        view_.get_time(index_ - 1),
-        view_.get_time(index_),
-        view_.get_value(index_),
-    };
+    return history_entry_t {{
+        .first_time = get_time_extrapolated(data_, index_ - 1),
+        .last_time = get_time_extrapolated(data_, index_),
+        .value = get_value_extrapolated(data_, index_),
+    }};
 }
 
 auto HistoryIterator::operator++() noexcept -> HistoryIterator & {

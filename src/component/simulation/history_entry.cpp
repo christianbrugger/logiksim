@@ -8,10 +8,13 @@ namespace logicsim {
 
 namespace simulation {
 
+history_entry_t::history_entry_t(New data)
+    : history_entry_t {data.first_time, data.last_time, data.value} {}
+
 history_entry_t::history_entry_t(time_t first_time_, time_t last_time_, bool value_)
     : first_time {first_time_}, last_time {last_time_}, value {value_} {
-    if (!(first_time_ < last_time_)) [[unlikely]] {
-        throw std::runtime_error("first time nees to be smaller then last time");
+    if (!(first_time < last_time)) [[unlikely]] {
+        throw std::runtime_error("first time needs to be smaller then last time");
     }
 }
 
