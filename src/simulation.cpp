@@ -3,7 +3,6 @@
 
 #include "algorithm/range.h"
 #include "algorithm/transform_to_container.h"
-#include "component/simulation/history_entry.h"
 #include "component/simulation/history_view.h"
 #include "component/simulation/simulation_event.h"
 #include "component/simulation/simulation_event_group.h"
@@ -117,7 +116,7 @@ auto Simulation::check_counts_valid() const -> void {
 }
 
 auto Simulation::apply_events(const SchematicOld::ConstElement element,
-                              const simulation::EventGroup &group) -> void {
+                              const simulation::SimulationEventGroup &group) -> void {
     for (const auto &event : group) {
         set_input_internal(element.input(event.input_id), event.value);
     }
@@ -186,7 +185,7 @@ auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &in
     return values;
 }
 
-auto Simulation::process_event_group(simulation::EventGroup &&events) -> void {
+auto Simulation::process_event_group(simulation::SimulationEventGroup &&events) -> void {
     if (print_events_) {
         print_fmt("events: {:n}\n", events);
     }
@@ -235,7 +234,7 @@ auto Simulation::process_event_group(simulation::EventGroup &&events) -> void {
     }
 }
 
-auto Simulation::run(const delay_t simulation_time, const simulation::timeout_t timeout,
+auto Simulation::run(const delay_t simulation_time, const simulation::realtime_timeout_t timeout,
                      const int64_t max_events) -> int64_t {
     if (!is_initialized_) {
         throw_exception("Simulation first needs to be initialized.");
@@ -261,7 +260,7 @@ auto Simulation::run(const delay_t simulation_time, const simulation::timeout_t 
 
     // only check time after this many events
     constexpr int64_t check_interval = 1'000;
-    int64_t next_check = std::min(max_events, timeout == simulation::defaults::no_timeout
+    int64_t next_check = std::min(max_events, timeout == simulation::defaults::no_realtime_timeout
                                                   ? std::numeric_limits<int64_t>::max()
                                                   : check_interval);
 

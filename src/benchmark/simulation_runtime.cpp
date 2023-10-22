@@ -53,7 +53,7 @@ auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
     while (true) {
         simulated_event_count += simulation.run(
             simulation::defaults::infinite_simulation_time,
-            simulation::defaults::no_timeout, n_events - simulated_event_count);
+            simulation::defaults::no_realtime_timeout, n_events - simulated_event_count);
 
         if (simulated_event_count >= n_events) {
             break;
@@ -108,10 +108,10 @@ auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
     while (true) {
         const auto event_count = simulation.run(
             simulation::defaults::infinite_simulation_time,
-            simulation::timeout_t {1000 * 1ms}, n_events - simulated_event_count);
+            simulation::realtime_timeout_t {1000 * 1ms}, n_events - simulated_event_count);
         // const auto event_count = simulation.run(
         //     Simulation::defaults::infinite_simulation_time,
-        //     Simulation::defaults::no_timeout, n_events - simulated_event_count);
+        //     Simulation::defaults::no_realtime_timeout, n_events - simulated_event_count);
         simulated_event_count += event_count;
 
         if (event_count == 0) {

@@ -44,8 +44,8 @@ void SimulationQueue::submit_event(simulation_event_t event) {
     events_.push(event);
 }
 
-auto SimulationQueue::pop_event_group() -> EventGroup {
-    EventGroup group;
+auto SimulationQueue::pop_event_group() -> SimulationEventGroup {
+    SimulationEventGroup group;
     pop_while(
         events_, [&group](const simulation_event_t &event) { group.push_back(event); },
         [&group](const simulation_event_t &event) {

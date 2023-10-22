@@ -26,17 +26,20 @@ namespace logicsim {
 
 namespace simulation {
 class HistoryView;
-}
+class SimulationEventGroup;
+}  // namespace simulation
 
 namespace simulation {
 /**
  * brief:: Realtime simulation timeout
  */
-using timeout_t = TimeoutTimer::timeout_t;
+using realtime_timeout_t = TimeoutTimer::timeout_t;
 
 namespace defaults {
-constexpr static auto no_timeout = TimeoutTimer::defaults::no_timeout;
+constexpr static auto no_realtime_timeout = TimeoutTimer::defaults::no_timeout;
+
 constexpr static auto infinite_simulation_time = delay_t::max();
+
 constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
                                         connection_count_t::max().count()};
 };  // namespace defaults
@@ -64,11 +67,12 @@ class Simulation {
      *
      * @param simulation_time   simulate for this time or, when run_until_steady,
      *                          run until no more new events are generated
-     * @param timeout           return if simulation takes longer than this in realtime
+     * @param realtime_timeout  stop if simulation takes longer than this in real-time
      * @param max_events        return after simulating this many events
      */
     auto run(delay_t simulation_time = simulation::defaults::infinite_simulation_time,
-             simulation::timeout_t timeout = simulation::defaults::no_timeout,
+             simulation::realtime_timeout_t timeout =
+                 simulation::defaults::no_realtime_timeout,
              int64_t max_events = simulation::defaults::no_max_events) -> int64_t;
     /**
      * @brief: Runs simulation for a very short time
@@ -128,11 +132,11 @@ class Simulation {
                                            const logic_small_vector_t &old_outputs,
                                            const logic_small_vector_t &new_outputs)
         -> void;
-    auto process_event_group(simulation::EventGroup &&events) -> void;
+    auto process_event_group(simulation::SimulationEventGroup &&events) -> void;
     auto create_event(SchematicOld::ConstOutput output,
                       const logic_small_vector_t &output_values) -> void;
     auto apply_events(SchematicOld::ConstElement element,
-                      const simulation::EventGroup &group) -> void;
+                      const simulation::SimulationEventGroup &group) -> void;
     auto set_input_internal(SchematicOld::ConstInput input, bool value) -> void;
 
     auto record_input_history(SchematicOld::ConstInput input, bool new_value) -> void;

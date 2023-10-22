@@ -7,7 +7,7 @@ namespace logicsim {
 namespace simulation {
 
 HistoryBuffer::HistoryBuffer(std::initializer_list<value_type> list) : buffer_ {list} {
-    if (!std::ranges::is_sorted(list, std::ranges::less_equal {})) {
+    if (!std::ranges::is_sorted(list, std::ranges::less_equal {})) [[unlikely]] {
         throw std::runtime_error("times need to be sorted strictly ascending");
     }
 }

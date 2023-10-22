@@ -10,7 +10,7 @@ namespace logicsim {
 
 namespace simulation {
 
-class EventGroup;
+class SimulationEventGroup;
 
 /**
  * @brief: Stores Simulation Events in order
@@ -37,7 +37,7 @@ class SimulationQueue {
      *
      * Event group contains all input events at the same time and for the same element id.
      */
-    auto pop_event_group() -> EventGroup;
+    auto pop_event_group() -> SimulationEventGroup;
 
    private:
     time_t time_ {0us};

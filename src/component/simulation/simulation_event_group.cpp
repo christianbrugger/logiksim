@@ -8,15 +8,15 @@ namespace logicsim {
 
 namespace simulation {
 
-auto EventGroup::empty() const -> bool {
+auto SimulationEventGroup::empty() const -> bool {
     return group_.empty();
 }
 
-auto EventGroup::size() const -> std::size_t {
+auto SimulationEventGroup::size() const -> std::size_t {
     return group_.size();
 }
 
-auto EventGroup::push_back(simulation_event_t event) -> void {
+auto SimulationEventGroup::push_back(simulation_event_t event) -> void {
     if (!empty()) {
         if (event.element_id != front().element_id) [[unlikely]] {
             throw std::runtime_error("All events need to have the same element id.");
@@ -33,19 +33,19 @@ auto EventGroup::push_back(simulation_event_t event) -> void {
     group_.push_back(event);
 }
 
-auto EventGroup::front() const -> const simulation_event_t & {
+auto SimulationEventGroup::front() const -> const simulation_event_t & {
     return group_.front();
 }
 
-auto EventGroup::back() const -> const simulation_event_t & {
+auto SimulationEventGroup::back() const -> const simulation_event_t & {
     return group_.back();
 }
 
-auto EventGroup::begin() const -> const_iterator {
+auto SimulationEventGroup::begin() const -> const_iterator {
     return group_.begin();
 }
 
-auto EventGroup::end() const -> const_iterator {
+auto SimulationEventGroup::end() const -> const_iterator {
     return group_.end();
 }
 

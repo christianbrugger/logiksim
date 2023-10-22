@@ -18,7 +18,7 @@ namespace simulation {
  *     * All events need to have same element_id
  *     * No two event.input_id are equal
  */
-class EventGroup {
+class SimulationEventGroup {
    public:
     using value_type = simulation_event_t;
     using container_t = folly::small_vector<value_type, 4>;

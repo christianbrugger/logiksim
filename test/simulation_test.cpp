@@ -82,7 +82,7 @@ TEST(SimulationTest, SimulationProcessAllEventsForTime) {
     const auto max_events = 1;
     const auto event_count =
         simulation.run(simulation::defaults::infinite_simulation_time,
-                       simulation::defaults::no_timeout, max_events);
+                       simulation::defaults::no_realtime_timeout, max_events);
 
     EXPECT_EQ(event_count, 2);
 }
