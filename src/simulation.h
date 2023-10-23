@@ -55,7 +55,6 @@ class Simulation {
 
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto time() const noexcept -> time_t;
-    [[nodiscard]] auto wire_delay_per_distance() const noexcept -> delay_t;
 
     // submit custom events
     auto submit_event(input_t input, delay_t offset, bool value) -> void;

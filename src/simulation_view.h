@@ -9,6 +9,7 @@
 
 namespace logicsim {
 
+class Simulation;
 class InteractiveSimulation;
 
 namespace simulation {
@@ -16,16 +17,16 @@ class HistoryView;
 }
 
 namespace simulation_view {
-
 class ConstElement;
-
-}  // namespace simulation_view
+}
 
 class SimulationView {
     friend class simulation_view::ConstElement;
 
    public:
     [[nodiscard]] explicit SimulationView(const InteractiveSimulation &simulation);
+    [[nodiscard]] explicit SimulationView(const Simulation &simulation,
+                                          delay_t wire_delay_per_distance);
 
     // TODO rename to size
     [[nodiscard]] auto element_count() const noexcept -> std::size_t;
@@ -44,7 +45,8 @@ class SimulationView {
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
    private:
-    gsl::not_null<const InteractiveSimulation *> simulation_;
+    gsl::not_null<const Simulation *> simulation_;
+    delay_t wire_delay_per_distance_;
 };
 
 namespace simulation_view {

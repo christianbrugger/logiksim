@@ -1,11 +1,13 @@
 #include "benchmark/render_line_scene.h"
 
+#include "algorithm/accumulate.h"
 #include "algorithm/range.h"
 #include "algorithm/transform_to_vector.h"
 #include "algorithm/uniform_int_distribution.h"
 #include "geometry/orientation.h"
 #include "random/generator.h"
 #include "render_circuit.h"
+#include "schematic_generation.h"
 #include "simulation_view.h"
 #include "timer.h"
 #include "vocabulary/element_definition.h"
@@ -14,8 +16,9 @@
 #include <numeric>
 #include <stdexcept>
 
-/*
 namespace logicsim {
+
+namespace {
 
 struct RenderBenchmarkConfig {
     grid_t min_grid {1};
@@ -32,8 +35,6 @@ struct RenderBenchmarkConfig {
     int min_event_spacing_us {5};
     int max_event_spacing_us {30};
 };
-
-namespace {
 
 template <std::uniform_random_bit_generator G>
 auto get_udist(grid_t a, grid_t b, G& rng) {
@@ -143,121 +144,81 @@ auto create_random_line_tree(connection_count_t n_outputs,
 }
 
 auto calculate_tree_length(const LineTree& line_tree) -> int {
-    return std::transform_reduce(line_tree.segments().begin(), line_tree.segments().end(),
-                                 0, std::plus {},
-                                 [](line_t line) { return distance(line); });
+    // TODO why do we need begin & end ?
+    return accumulate(line_tree.segments().begin(), line_tree.segments().end(), int {0},
+                      [](line_t line) -> int { return distance(line); });
 }
 
-}  // namespace
+auto total_wire_lengths(const Layout& layout) -> int64_t {
+    // TODO why do we need begin & end ?
+    return accumulate(layout.elements().begin(), layout.elements().end(), int64_t {0},
+                      [](const layout::ConstElement element) {
+                          return calculate_tree_length(element.line_tree());
+                      });
+}
 
-auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
-    auto rng = get_random_number_generator(0);
-    const auto config = RenderBenchmarkConfig();
-    auto tree_length_sum = int64_t {0};
+auto to_segment_tree(const LineTree& line_tree) -> SegmentTree {
+    auto segment_tree = SegmentTree {};
+    auto is_first = bool {true};
 
-    // create initial schematics
-    auto& schematic = scene.schematic;
-    for (auto _ [[maybe_unused]] : range(n_lines)) {
-        const auto output_dist =
-            uint_distribution<int>(config.n_outputs_min, config.n_outputs_max);
-        // TODO can we simplify this?
-        const auto output_count = connection_count_t {
-            gsl::narrow<connection_count_t::value_type>(output_dist(rng))};
+    for (const auto& entry : line_tree.sized_segments()) {
+        auto p0_type = is_first
+                           ? SegmentPointType::input
+                           : (entry.has_cross_point_p0 ? SegmentPointType::cross_point
+                                                       : SegmentPointType::shadow_point);
+        auto p1_type = SegmentPointType::shadow_point;
 
-        schematic.add_element(SchematicOld::ElementData {
-            .element_type = ElementType::wire,
-            .input_count = connection_count_t {1},
-            .output_count = output_count,
-            .output_delays = std::vector<delay_t>(output_count.count(), delay_t {1us}),
+        if (entry.line.p0 > entry.line.p1) {
+            std::swap(p0_type, p1_type);
+        }
+
+        segment_tree.add_segment(segment_info_t {
+            .line = ordered_line_t {entry.line},
+            .p0_type = p0_type,
+            .p1_type = p1_type,
         });
-    }
-    add_output_placeholders(schematic);
 
-    // create layout
-    auto& layout = scene.layout = Layout {};
-    for (auto element : schematic.elements()) {
-        const auto definition = ElementDefinition {
-            .element_type = element.element_type(),
-            .input_count = element.input_count(),
-            .output_count = element.output_count(),
-        };
-        layout.add_element(definition, point_t {}, display_state_t::normal);
+        is_first = false;
     }
 
-    // add line trees
-    auto& simulation = scene.simulation = Simulation {schematic};
-    for (auto element : schematic.elements()) {
-        if (element.element_type() == ElementType::wire) {
-            auto line_tree_gen =
-                create_random_line_tree(element.output_count(), config, rng);
+    return segment_tree;
+}
 
-            // segment tree
-            auto& m_tree = layout.modifyable_segment_tree(element);
-            auto is_first = bool {true};
-
-            for (const auto& entry : line_tree_gen.sized_segments()) {
-                auto p0_type = is_first ? SegmentPointType::input
-                                        : (entry.has_cross_point_p0
-                                               ? SegmentPointType::cross_point
-                                               : SegmentPointType::shadow_point);
-                auto p1_type = SegmentPointType::shadow_point;
-
-                if (entry.line.p0 > entry.line.p1) {
-                    std::swap(p0_type, p1_type);
-                }
-
-                m_tree.add_segment(segment_info_t {.line = ordered_line_t {entry.line},
-                                                   .p0_type = p0_type,
-                                                   .p1_type = p1_type});
-
-                is_first = false;
-            }
-            const auto& line_tree = layout.line_tree(element);
-
-            // delays
-            auto lengths = line_tree.calculate_output_lengths();
-            assert(connection_count_t {lengths.size()} == element.output_count());
-            auto delays =
-                transform_to_vector(lengths, [&](LineTree::length_t length) -> delay_t {
-                    return delay_t {schematic.wire_delay_per_distance() * length};
-                });
-            element.set_output_delays(delays);
-
-            // history
-            auto tree_max_delay = std::ranges::max(delays);
-            element.set_history_length(tree_max_delay);
-
-            // sum
-            tree_length_sum += calculate_tree_length(line_tree);
-        }
-    }
-
-    // init simulation
-    simulation.initialize();
-
-    // calculate simulation time
+auto maximum_output_delay(const auto& schematic) -> delay_t {
     delay_t max_delay {0us};
-    for (auto element : schematic.elements()) {
-        for (auto output : element.outputs()) {
-            max_delay = std::max(max_delay, output.delay());
+
+    for (const auto element_id : element_ids(schematic)) {
+        for (auto output : outputs(schematic, element_id)) {
+            max_delay = std::max(max_delay, schematic.output_delay(output));
         }
     }
-    if (max_delay == delay_t {0ns}) {
-        throw std::runtime_error("delay should not be zero");
-    }
-    auto max_time = max_delay;
 
-    // add events
-    for (auto element : schematic.elements()) {
-        if (element.element_type() == ElementType::wire) {
+    return max_delay;
+}
+
+struct new_event_t {
+    input_t input;
+    delay_t offset;
+    bool value;
+};
+
+auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_time,
+                            const RenderBenchmarkConfig& config) {
+    auto events = std::vector<new_event_t> {};
+
+    for (const auto element_id : element_ids(schematic)) {
+        if (schematic.element_type(element_id) == ElementType::wire) {
             auto spacing_dist_us = uint_distribution<int>(config.min_event_spacing_us,
                                                           config.max_event_spacing_us);
             bool next_value = true;
             auto next_time = delay_t {spacing_dist_us(rng) * 1us};
 
             while (next_time < max_time) {
-                simulation.submit_event(element.input(connection_id_t {0}), next_time,
-                                        next_value);
+                events.push_back(new_event_t {
+                    .input = input_t {element_id, connection_id_t {0}},
+                    .offset = next_time,
+                    .value = next_value,
+                });
 
                 next_value = next_value ^ true;
                 next_time = next_time + delay_t {spacing_dist_us(rng) * 1us};
@@ -265,16 +226,77 @@ auto fill_line_scene(BenchmarkScene& scene, int n_lines) -> int64_t {
         }
     }
 
+    return events;
+}
+
+}  // namespace
+
+auto fill_line_scene(int n_lines) -> SimulatedLineScene {
+    const auto config = RenderBenchmarkConfig();
+    const auto simulation_settings = SimulationSettings {};
+
+    auto rng = get_random_number_generator(0);
+
+    // generate output counts
+    auto output_counts = std::vector<connection_count_t> {};
+    for (auto _ [[maybe_unused]] : range(n_lines)) {
+        const auto output_count_dist =
+            uint_distribution<int>(config.n_outputs_min, config.n_outputs_max);
+        output_counts.push_back(connection_count_t {output_count_dist(rng)});
+    }
+
+    // generate line_trees & layout
+    auto layout = Layout {};
+    for (const auto& output_count : output_counts) {
+        const auto line_tree = create_random_line_tree(output_count, config, rng);
+
+        const auto element = layout.add_element(
+            ElementDefinition {
+                .element_type = ElementType::wire,
+                .input_count = connection_count_t {0},
+                .output_count = output_count,
+                .orientation = orientation_t::undirected,
+            },
+            point_t {}, display_state_t::normal);
+
+        auto& m_tree = layout.modifyable_segment_tree(element);
+        m_tree = to_segment_tree(line_tree);
+    }
+
+    auto simulation = Simulation {
+        generate_schematic(layout, simulation_settings.wire_delay_per_distance())};
+
+    // init simulation
+    simulation.initialize();
+
+    // simulated time
+    const auto max_time = maximum_output_delay(simulation.schematic());
+    if (max_time == delay_t {0ns}) {
+        throw std::runtime_error("simulated time should not be zero");
+    }
+
+    // generate & submit events
+    const auto events =
+        generate_random_events(rng, simulation.schematic(), max_time, config);
+    for (const auto& event_ : events) {
+        simulation.submit_event(event_.input, event_.offset, event_.value);
+    }
+
     // run simulation
     simulation.run(max_time);
 
-    return tree_length_sum;
+    const auto wire_lengths = total_wire_lengths(layout);
+
+    return SimulatedLineScene {
+        .layout = std::move(layout),
+        .simulation = std::move(simulation),
+        .total_wire_length_sum = wire_lengths,
+        .wire_delay_per_distance = simulation_settings.wire_delay_per_distance(),
+    };
 }
 
 auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
-    BenchmarkScene scene;
-
-    auto tree_length_sum = fill_line_scene(scene, n_lines);
+    auto scene = fill_line_scene(n_lines);
 
     // render image
     auto circuit_ctx =
@@ -285,7 +307,9 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     render_background(ctx);
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        render_simulation(circuit_ctx, scene.layout, SimulationView {scene.simulation});
+        render_simulation(
+            circuit_ctx, scene.layout,
+            SimulationView {scene.simulation, scene.wire_delay_per_distance});
     }
     ctx.end();
 
@@ -293,8 +317,7 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
         ctx.bl_image.writeToFile("benchmark_line_renderer.png");
     }
 
-    return tree_length_sum;
+    return scene.total_wire_length_sum;
 }
 
 }  // namespace logicsim
-*/

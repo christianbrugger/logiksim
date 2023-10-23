@@ -15,6 +15,7 @@ struct SimulatedLineScene {
     Layout layout;
     Simulation simulation;
     int64_t total_wire_length_sum;
+    delay_t wire_delay_per_distance;
 };
 
 auto fill_line_scene(int n_lines = 100) -> SimulatedLineScene;

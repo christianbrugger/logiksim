@@ -2,6 +2,7 @@
 
 #include "component/simulation/history_view.h"
 #include "interactive_simulation.h"
+#include "simulation.h"
 
 namespace logicsim {
 
@@ -10,7 +11,12 @@ namespace logicsim {
 //
 
 SimulationView::SimulationView(const InteractiveSimulation& simulation)
-    : simulation_ {&simulation} {}
+    : simulation_ {&simulation.simulation()},
+      wire_delay_per_distance_ {simulation.wire_delay_per_distance()} {}
+
+SimulationView::SimulationView(const Simulation& simulation,
+                               delay_t wire_delay_per_distance)
+    : simulation_ {&simulation}, wire_delay_per_distance_ {wire_delay_per_distance} {}
 
 auto SimulationView::element_count() const noexcept -> std::size_t {
     return simulation_->schematic().size();
@@ -39,7 +45,7 @@ auto SimulationView::time() const -> time_t {
 }
 
 auto SimulationView::wire_delay_per_distance() const -> delay_t {
-    return simulation_->wire_delay_per_distance();
+    return wire_delay_per_distance_;
 }
 
 //
@@ -65,23 +71,23 @@ auto ConstElement::has_connected_output(connection_id_t output_id) const -> bool
 }
 
 auto ConstElement::input_value(connection_id_t index) const -> bool {
-    return view_->simulation_->simulation().input_value(input_t {element_id_, index});
+    return view_->simulation_->input_value(input_t {element_id_, index});
 }
 
 auto ConstElement::input_values() const -> const logic_small_vector_t& {
-    return view_->simulation_->simulation().input_values(element_id_);
+    return view_->simulation_->input_values(element_id_);
 }
 
 auto ConstElement::output_value(connection_id_t index) const -> bool {
-    return view_->simulation_->simulation().output_value(output_t {element_id_, index});
+    return view_->simulation_->output_value(output_t {element_id_, index});
 }
 
 auto ConstElement::output_values() const -> logic_small_vector_t {
-    return view_->simulation_->simulation().output_values(element_id_);
+    return view_->simulation_->output_values(element_id_);
 }
 
 auto ConstElement::internal_state() const -> const logic_small_vector_t& {
-    return view_->simulation_->simulation().internal_state(element_id_);
+    return view_->simulation_->internal_state(element_id_);
 }
 
 auto ConstElement::internal_state(std::size_t index) const -> bool {
@@ -95,7 +101,7 @@ auto ConstElement::history_length() const -> delay_t {
 }
 
 auto ConstElement::input_history() const -> simulation::HistoryView {
-    return view_->simulation_->simulation().input_history(element_id_);
+    return view_->simulation_->input_history(element_id_);
 }
 
 auto ConstElement::time() const -> time_t {

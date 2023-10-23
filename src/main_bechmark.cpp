@@ -257,7 +257,6 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
 
 BENCHMARK(BM_Simulation_Inverter_Loop);  // NOLINT
 
-/*
 static void BM_RenderScene_0(benchmark::State& state) {
     constexpr static auto save_image = false;  // to verify correctness
 
@@ -277,7 +276,9 @@ static void BM_RenderScene_0(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
         count += scene.total_wire_length_sum;
 
-        render_simulation(context, scene.layout, SimulationView {scene.simulation});
+        render_simulation(
+            context, scene.layout,
+            SimulationView {scene.simulation, scene.wire_delay_per_distance});
         context.ctx.sync();
 
         benchmark::DoNotOptimize(context.ctx.bl_image);
@@ -293,7 +294,6 @@ static void BM_RenderScene_0(benchmark::State& state) {
 }
 
 BENCHMARK(BM_RenderScene_0);  // NOLINT
-*/
 
 }  // namespace logicsim
 
