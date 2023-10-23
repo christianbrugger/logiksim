@@ -13,7 +13,9 @@
 #include "logic_item/layout.h"
 #include "random/generator.h"
 #include "random/layout_calculation_data.h"
+#include "random/random_schematic.h"
 #include "render_circuit.h"
+#include "schematic_generation.h"
 #include "schematic_old.h"
 #include "schematic_validation.h"
 #include "simulation.h"
@@ -161,7 +163,7 @@ static void BM_Benchmark_Graph_v2(benchmark::State& state) {
         benchmark::ClobberMemory();
 
         validate(schematic);
-        add_output_placeholders(schematic);
+        add_missing_placeholders(schematic);
         validate(schematic, schematic::validate_all);
 
         benchmark::DoNotOptimize(schematic);
@@ -178,16 +180,29 @@ static void BM_Simulation_0(benchmark::State& state) {
         auto rng = Rng {0};
 
         auto schematic = create_random_schematic(rng, 100);
-        add_output_placeholders(schematic);
+        schematic = with_custom_delays(rng, schematic);
+        add_missing_placeholders(schematic);
         // TODO fix bug and re-enable?
         // schematic.validate(SchematicOld::validate_all);
+
+        // TODO verify schematic is not changing in test
+
+        // print(schematic);
+        // for (auto element_id : element_ids(schematic)) {
+        //     print_fmt(
+        //         "{}, {}, history_length = {}, output_delays = {}, input_inverters =
+        //         {}\n", element_id, schematic.element_type(element_id),
+        //         schematic.history_length(element_id),
+        //         schematic.output_delays(element_id),
+        //         schematic.input_inverters(element_id));
+        // }
 
         benchmark::DoNotOptimize(schematic);
         benchmark::ClobberMemory();
 
         state.ResumeTiming();
 
-        count += benchmark_simulation(rng, schematic, 10'000);
+        count += benchmark_simulation(rng, std::move(schematic), 10'000);
 
         benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();

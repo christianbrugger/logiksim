@@ -31,26 +31,9 @@ void _generate_random_events(Rng &rng, Simulation &simulation) {
 
 }  // namespace
 
-auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
+auto benchmark_simulation(Rng &rng, Schematic &&schematic, const int n_events,
                           const PrintEvents do_print) -> int64_t {
-    Simulation simulation {generate_schematic(SchematicOld {schematic}), do_print};
-
-    // set custom delays
-    for (const auto element : schematic.elements()) {
-        for (const auto output : element.outputs()) {
-            auto delay_dist = uint_distribution<delay_t::rep>(5, 500);
-            output.set_delay(delay_t {1us * delay_dist(rng)});
-        }
-    }
-
-    // set history for wires
-    for (const auto element : schematic.elements()) {
-        if (element.element_type() == ElementType::wire) {
-            const auto delay = element.output(connection_id_t {0}).delay();
-            element.set_history_length(delay * 10);
-        }
-    }
-
+    Simulation simulation {std::move(schematic), do_print};
     simulation.initialize();
 
     int64_t simulated_event_count {0};
@@ -67,17 +50,18 @@ auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
     }
 
     if (do_print == PrintEvents::yes) {
+        // TODO move to simulation.format()
+
         // auto output_values {simulation.output_values()};
 
         print_fmt("events simulated = {}\n", simulated_event_count);
         // print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(),
         // "{:b}")); print_fmt("output_values = {}\n", fmt_join("", output_values,
         // "{:b}"));
-        for (auto element : schematic.elements()) {
-            if (element.element_type() == ElementType::wire) {
-                auto hist =
-                    simulation.input_history(SchematicOld::ConstElement {element});
-                print(element, hist);
+        for (auto element_id : element_ids(schematic)) {
+            if (schematic.element_type(element_id) == ElementType::wire) {
+                const auto history = simulation.input_history(element_id);
+                print(element_id, history);
             }
         }
     }
@@ -91,13 +75,15 @@ auto benchmark_simulation(const int n_elements, const int m_events,
     auto rng = Rng {0};
 
     auto schematic = create_random_schematic(rng, n_elements);
+    schematic = with_custom_delays(rng, schematic);
+
     if (do_print == PrintEvents::yes) {
         print(schematic);
     }
-    add_output_placeholders(schematic);
+    add_missing_placeholders(schematic);
     validate(schematic, schematic::validate_all);
 
-    return benchmark_simulation(rng, schematic, m_events, do_print);
+    return benchmark_simulation(rng, std::move(schematic), m_events, do_print);
 }
 
 auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
@@ -126,6 +112,8 @@ auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
     }
 
     if (do_print == PrintEvents::yes) {
+        // TODO move to simulation.format()
+
         // auto output_values {simulation.output_values()};
 
         print_fmt("events simulated = {}\n", simulated_event_count);

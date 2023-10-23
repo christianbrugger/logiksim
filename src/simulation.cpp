@@ -327,7 +327,7 @@ auto Simulation::initialize() -> void {
             continue;
         }
 
-        // existing outputs without inverters
+        // output values without inverters
         const auto old_outputs = transform_to_container<logic_small_vector_t>(
             outputs(schematic_, element_id), [&](const output_t output) -> bool {
                 return input_value(schematic_.input(output));

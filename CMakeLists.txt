@@ -138,7 +138,7 @@ set(LS_CORE_SOURCES
     src/random/orientation.cpp
     src/random/part.cpp
     src/random/point.cpp
-    src/random/schematic.cpp
+    src/random/random_schematic.cpp
     src/random/segment.cpp
     src/random/wire.cpp
 

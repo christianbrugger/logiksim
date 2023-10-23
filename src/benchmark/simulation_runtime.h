@@ -1,14 +1,12 @@
 #ifndef LOGICSIM_BENCHMARK_SIMULATION_RUNTIME_H
 #define LOGICSIM_BENCHMARK_SIMULATION_RUNTIME_H
 
-#include "benchmark/schematic_creation.h"
 #include "random/generator.h"
-#include "random/schematic.h"
+#include "random/random_schematic.h"
 #include "vocabulary/print_events.h"
 
 namespace logicsim {
 
-class SchematicOld;
 class Schematic;
 
 namespace simulation_benchmark::defaults {
@@ -23,7 +21,7 @@ constexpr inline auto event_count = 10'000;
  *
  * Returns the exact number of simulated events.
  */
-auto benchmark_simulation(Rng &rng, SchematicOld &schematic,
+auto benchmark_simulation(Rng &rng, Schematic &&schematic,
                           int n_events = simulation_benchmark::defaults::event_count,
                           PrintEvents do_print = PrintEvents::no) -> int64_t;
 

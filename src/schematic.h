@@ -74,6 +74,7 @@ class Schematic {
     [[nodiscard]] auto total_output_count() const noexcept -> std::size_t;
 
     auto clear() -> void;
+    auto reserve(std::size_t new_capacity) -> void;
     auto shrink_to_fit() -> void;
     auto add_element(schematic::NewElement &&data) -> element_id_t;
 

@@ -55,6 +55,16 @@ auto Schematic::clear() -> void {
     total_output_count_ = 0;
 }
 
+auto Schematic::reserve(std::size_t new_capacity) -> void {
+    element_types_.reserve(new_capacity);
+    sub_circuit_ids_.reserve(new_capacity);
+    input_connections_.reserve(new_capacity);
+    output_connections_.reserve(new_capacity);
+    input_inverters_.reserve(new_capacity);
+    output_delays_.reserve(new_capacity);
+    history_lengths_.reserve(new_capacity);
+}
+
 auto Schematic::shrink_to_fit() -> void {
     element_types_.shrink_to_fit();
     sub_circuit_ids_.shrink_to_fit();
