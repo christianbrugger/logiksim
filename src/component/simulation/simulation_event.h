@@ -2,7 +2,6 @@
 #define LOGICSIM_COMPONENT_SIMULATION_SIMULATION_EVENT_H
 
 #include "format/struct.h"
-#include "schematic_old.h"  // TODO remove
 #include "vocabulary/connection.h"
 #include "vocabulary/element_id.h"
 #include "vocabulary/time.h"
@@ -42,10 +41,6 @@ struct greater_time_element_id {
     [[nodiscard]] auto operator()(const simulation_event_t &,
                                   const simulation_event_t &) const -> bool;
 };
-
-// TODO remove SchematicOld
-auto make_event(SchematicOld::ConstInput input, time_t time, bool value)
-    -> simulation_event_t;
 
 }  // namespace simulation
 

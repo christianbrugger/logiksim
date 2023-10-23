@@ -8,13 +8,14 @@
 #include "logging.h"
 #include "logic_item/schematic_info.h"
 #include "schematic.h"
-#include "schematic_old.h"
 #include "vocabulary/output_delays.h"
 
 #include <cassert>
 #include <exception>
 
 namespace logicsim {
+
+namespace {
 
 auto calculate_output_delays(const LineTree& line_tree, delay_t wire_delay_per_distance)
     -> output_delays_t {
@@ -25,8 +26,6 @@ auto calculate_output_delays(const LineTree& line_tree, delay_t wire_delay_per_d
             return wire_delay_per_distance * length;
         });
 }
-
-namespace {
 
 //
 // Layout Elements
@@ -326,71 +325,6 @@ auto generate_schematic(const Layout& layout, delay_t wire_delay_per_distance)
     set_output_inverters(schematic, layout);
 
     return schematic;
-}
-
-auto generate_schematic(Schematic&& schematic, delay_t wire_delay_per_distance)
-    -> SchematicOld {
-    auto old_schematic = SchematicOld {wire_delay_per_distance};
-
-    // elements
-    for (element_id_t element_id : element_ids(schematic)) {
-        const auto& delays = schematic.output_delays(element_id);
-
-        old_schematic.add_element(SchematicOld::ElementData {
-            .element_type = schematic.element_type(element_id),
-            .input_count = schematic.input_count(element_id),
-            .output_count = schematic.output_count(element_id),
-
-            .sub_circuit_id = schematic.sub_circuit_id(element_id),
-            .input_inverters = schematic.input_inverters(element_id),
-            .output_delays = std::vector<delay_t>(delays.begin(), delays.end()),
-            .history_length = schematic.history_length(element_id),
-        });
-    }
-    // connections
-    for (element_id_t element_id : element_ids(schematic)) {
-        for (input_t input : inputs(schematic, element_id)) {
-            if (auto output = schematic.output(input)) {
-                old_schematic.input(input).connect(old_schematic.output(output));
-            }
-        }
-    }
-
-    return old_schematic;
-}
-
-auto generate_schematic(SchematicOld&& schematic) -> Schematic {
-    auto new_schematic = Schematic {};
-
-    // elements
-    for (const auto element : schematic.elements()) {
-        const auto& delays = element.output_delays();
-
-        new_schematic.add_element(schematic::NewElement {
-            .element_type = element.element_type(),
-            .input_count = element.input_count(),
-            .output_count = element.output_count(),
-
-            .sub_circuit_id = element.sub_circuit_id(),
-            .input_inverters = element.input_inverters(),
-            .output_delays = output_delays_t(delays.begin(), delays.end()),
-            .history_length = element.history_length(),
-        });
-    }
-    // connections
-    for (const auto element : schematic.elements()) {
-        for (const auto input : element.inputs()) {
-            if (input.has_connected_element()) {
-                const auto input_v = input_t {input.element_id(), input.input_index()};
-                const auto output_v = output_t {input.connected_element_id(),
-                                                input.connected_output_index()};
-
-                new_schematic.connect(input_v, output_v);
-            }
-        }
-    }
-
-    return new_schematic;
 }
 
 }  // namespace logicsim

@@ -3,7 +3,6 @@
 
 #include "layout.h"
 #include "schematic.h"
-#include "schematic_old.h"
 #include "simulation.h"
 #include "vocabulary/simulation_setting.h"
 

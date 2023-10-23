@@ -16,7 +16,6 @@
 #include "render_caches.h"
 #include "render_circuit.h"
 #include "schematic_generation.h"
-#include "schematic_old.h"
 #include "serialize.h"
 #include "simulation.h"
 #include "simulation_view.h"

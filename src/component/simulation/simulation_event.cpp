@@ -27,14 +27,6 @@ auto greater_time_element_id::operator()(const simulation_event_t &left,
     return left.time > right.time;
 }
 
-auto make_event(SchematicOld::ConstInput input, time_t time, bool value)
-    -> simulation_event_t {
-    return {.time = time,
-            .element_id = input.element_id(),
-            .input_id = input.input_index(),
-            .value = value};
-}
-
 }  // namespace simulation
 
 }  // namespace logicsim
