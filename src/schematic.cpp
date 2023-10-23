@@ -3,7 +3,7 @@
 #include "algorithm/fmt_join.h"
 #include "geometry/connection_count.h"
 #include "iterator_adaptor/transform_view.h"
-#include "logging.h"
+#include "layout_info.h"
 
 #include <fmt/core.h>
 
@@ -122,6 +122,20 @@ auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
     if (data.output_delays.size() != std::size_t {data.output_count}) [[unlikely]] {
         throw std::runtime_error("Need as many output_delays as outputs.");
     }
+    // check delay_t not negative
+    const auto delay_negative = [](delay_t delay) { return delay < delay_t::zero(); };
+    if (std::ranges::any_of(data.output_delays, delay_negative)) [[unlikely]] {
+        throw std::runtime_error("delays cannot be negative");
+    }
+    if (data.history_length < delay_t::zero()) [[unlikely]] {
+        throw std::runtime_error("history length cannot be negative");
+    }
+    // TODO enable this
+
+    // if (!is_input_output_count_valid(data.element_type, data.input_count,
+    //                                  data.output_count)) [[unlikely]] {
+    //     throw std::runtime_error("input or output count not valid");
+    // }
 
     // add new data
     element_types_.push_back(data.element_type);

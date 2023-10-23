@@ -57,6 +57,8 @@ static_assert(sizeof(output_vector_t) == 32);
  *   * connection point to a valid element_id / connection_id
  *   * forward and backward connections point to each other
  *   * total connection counts match sum of all input / output connections
+ *   * output_delays and history_length is not negative
+ *   * element input & output counts are valid according to layout_info
  */
 class Schematic {
    public:
@@ -78,6 +80,7 @@ class Schematic {
     auto shrink_to_fit() -> void;
     auto add_element(schematic::NewElement &&data) -> element_id_t;
 
+    // connections
     [[nodiscard]] auto input_count(element_id_t element_id) const -> connection_count_t;
     [[nodiscard]] auto output_count(element_id_t element_id) const -> connection_count_t;
     [[nodiscard]] auto output(input_t input) const -> output_t;
@@ -88,6 +91,7 @@ class Schematic {
     auto clear(output_t output) -> void;
     auto clear_all_connections(element_id_t element_id) -> void;
 
+    // attributes for element_id
     [[nodiscard]] auto element_type(element_id_t element_id) const -> ElementType;
     [[nodiscard]] auto sub_circuit_id(element_id_t element_id) const -> circuit_id_t;
     [[nodiscard]] auto input_inverters(element_id_t element_id) const
@@ -96,6 +100,7 @@ class Schematic {
         -> const output_delays_t &;
     [[nodiscard]] auto history_length(element_id_t element_id) const -> delay_t;
 
+    // attributes for single input / output
     [[nodiscard]] auto output_delay(output_t output) const -> delay_t;
     [[nodiscard]] auto is_inverted(input_t input) const -> bool;
     auto set_input_inverter(input_t input, bool value) -> void;

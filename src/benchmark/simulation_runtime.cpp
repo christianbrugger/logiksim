@@ -7,7 +7,6 @@
 #include "random/bool.h"
 #include "schematic.h"
 #include "schematic_generation.h"
-#include "schematic_validation.h"
 #include "simulation.h"
 
 namespace logicsim {
@@ -81,7 +80,6 @@ auto benchmark_simulation(const int n_elements, const int m_events,
         print(schematic);
     }
     add_missing_placeholders(schematic);
-    validate(schematic, schematic::validate_all);
 
     return benchmark_simulation(rng, std::move(schematic), m_events, do_print);
 }

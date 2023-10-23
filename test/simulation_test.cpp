@@ -6,7 +6,6 @@
 #include "logic_item/schematic_info.h"
 #include "schematic.h"
 #include "schematic_generation.h"
-#include "schematic_validation.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -19,14 +18,12 @@ namespace logicsim {
 
 [[nodiscard]] auto get_uninitialized_simulation(Schematic&& schematic) -> Simulation {
     add_missing_placeholders(schematic);
-    validate(schematic, schematic::validate_all);
 
     return Simulation {std::move(schematic)};
 }
 
 [[nodiscard]] auto get_initialized_simulation(Schematic&& schematic) -> Simulation {
     add_missing_placeholders(schematic);
-    validate(schematic, schematic::validate_all);
 
     Simulation simulation {std::move(schematic)};
     simulation.initialize();

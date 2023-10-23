@@ -66,8 +66,6 @@ class InteractiveSimulation {
 
     [[nodiscard]] auto events_per_second() const -> double;
 
-    auto validate() const -> void;
-
    private:
     [[nodiscard]] auto expected_simulation_time(realtime_t now) const -> time_t;
 

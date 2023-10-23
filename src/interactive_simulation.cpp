@@ -6,7 +6,6 @@
 #include "layout.h"
 #include "schematic.h"
 #include "schematic_generation.h"
-#include "schematic_validation.h"
 #include "vocabulary/simulation_setting.h"
 
 #include <stdexcept>
@@ -134,11 +133,6 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
 
 auto InteractiveSimulation::events_per_second() const -> double {
     return event_counter_.events_per_second();
-}
-
-auto InteractiveSimulation::validate() const -> void {
-    // TODO do we need validation ???
-    // ::logicsim::validate(simulation_.schematic(), schematic::validate_all);
 }
 
 auto InteractiveSimulation::expected_simulation_time(realtime_t now) const -> time_t {
