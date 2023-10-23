@@ -6,7 +6,7 @@ namespace logicsim {
 
 auto connection_t::format() const -> std::string {
     if (*this) {
-        return fmt::format("Elemen_{}-{}", element_id, connection_id);
+        return fmt::format("Element_{}-{}", element_id, connection_id);
     }
     return "---";
 }

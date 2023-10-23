@@ -16,19 +16,20 @@ namespace details {
 
 auto add_random_element(Rng &rng, Schematic &schematic) -> void {
     static constexpr auto max_connections = 8;
-    const auto connection_dist = uint_distribution(1, max_connections);
-    const auto element_dist = uint_distribution<int8_t>(0, 2);
+    auto connection_dist = uint_distribution(1, max_connections);
+    auto element_dist = uint_distribution<int8_t>(0, 2);
 
+    // this is not pretty, but we can't change it as it changes our circuit
     const auto element_type = [&] {
-        switch (element_dist(rng)) {
-            case 0:
-                return ElementType::xor_element;
-            case 1:
+        if (element_dist(rng) == 0) {
+            return ElementType::xor_element;
+        } else {
+            if (element_dist(rng) == 1) {
                 return ElementType::buffer_element;
-            case 2:
+            } else {
                 return ElementType::wire;
-        };
-        std::terminate();
+            }
+        }
     }();
 
     const auto input_count =
