@@ -32,8 +32,8 @@ struct RenderBenchmarkConfig {
     int n_outputs_min {1};
     int n_outputs_max {5};
 
-    int min_event_spacing_us {5};
-    int max_event_spacing_us {30};
+    int min_event_spacing_ns {500};
+    int max_event_spacing_ns {3000};
 };
 
 template <std::uniform_random_bit_generator G>
@@ -208,10 +208,10 @@ auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_ti
 
     for (const auto element_id : element_ids(schematic)) {
         if (schematic.element_type(element_id) == ElementType::wire) {
-            auto spacing_dist_us = uint_distribution<int>(config.min_event_spacing_us,
-                                                          config.max_event_spacing_us);
+            auto spacing_dist_ns = uint_distribution<int>(config.min_event_spacing_ns,
+                                                          config.max_event_spacing_ns);
             bool next_value = true;
-            auto next_time = delay_t {spacing_dist_us(rng) * 1us};
+            auto next_time = delay_t {spacing_dist_ns(rng) * 1ns};
 
             while (next_time < max_time) {
                 events.push_back(new_event_t {
@@ -221,7 +221,7 @@ auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_ti
                 });
 
                 next_value = next_value ^ true;
-                next_time = next_time + delay_t {spacing_dist_us(rng) * 1us};
+                next_time = next_time + delay_t {spacing_dist_ns(rng) * 1ns};
             }
         }
     }
@@ -233,7 +233,10 @@ auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_ti
 
 auto fill_line_scene(int n_lines) -> SimulatedLineScene {
     const auto config = RenderBenchmarkConfig();
-    const auto simulation_settings = SimulationSettings {};
+    const auto simulation_settings = SimulationSettings {.use_wire_delay = true};
+    if (simulation_settings.wire_delay_per_distance() != delay_t {1us}) {
+        throw std::runtime_error("unexpected wire delay");
+    }
 
     auto rng = get_random_number_generator(0);
 
@@ -300,7 +303,9 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
 
     // render image
     auto circuit_ctx =
-        CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32}}};
+        CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32},
+                                 .settings = {.thread_count = 0}}};
+    circuit_ctx.ctx.settings.view_config.set_device_scale(12.);
     auto& ctx = circuit_ctx.ctx;
 
     ctx.begin();
