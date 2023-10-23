@@ -5,6 +5,7 @@
 #include "component/simulation/history_view.h"
 #include "logging.h"
 #include "random/bool.h"
+#include "schematic.h"
 #include "schematic_generation.h"
 #include "schematic_validation.h"
 #include "simulation.h"
@@ -85,7 +86,7 @@ auto benchmark_simulation(Rng &rng, SchematicOld &schematic, const int n_events,
     return simulated_event_count;
 }
 
-auto benchmark_simulation(const int n_elements, const int n_events,
+auto benchmark_simulation(const int n_elements, const int m_events,
                           const PrintEvents do_print) -> int64_t {
     auto rng = Rng {0};
 
@@ -96,12 +97,12 @@ auto benchmark_simulation(const int n_elements, const int n_events,
     add_output_placeholders(schematic);
     validate(schematic, schematic::validate_all);
 
-    return benchmark_simulation(rng, schematic, n_events, do_print);
+    return benchmark_simulation(rng, schematic, m_events, do_print);
 }
 
-auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
-                               const PrintEvents do_print) -> int64_t {
-    Simulation simulation {generate_schematic(SchematicOld {schematic}), do_print};
+auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
+                                     const PrintEvents do_print) -> int64_t {
+    Simulation simulation {std::move(schematic), do_print};
 
     set_default_inputs(simulation);
     set_default_outputs(simulation);
@@ -109,14 +110,11 @@ auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
 
     int64_t simulated_event_count {0};
     while (true) {
+        // we use realtime timeout, to see the impact of its checking
         const auto event_count =
             simulation.run(simulation::defaults::infinite_simulation_time,
                            simulation::realtime_timeout_t {1000 * 1ms},
                            n_events - simulated_event_count);
-        // const auto event_count = simulation.run(
-        //     Simulation::defaults::infinite_simulation_time,
-        //     Simulation::defaults::no_realtime_timeout, n_events -
-        //     simulated_event_count);
         simulated_event_count += event_count;
 
         if (event_count == 0) {
@@ -134,11 +132,10 @@ auto benchmark_simulation_pure(SchematicOld &schematic, const int n_events,
         // print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(),
         // "{:b}")); print_fmt("output_values = {}\n", fmt_join("", output_values,
         // "{:b}"));
-        for (auto element : schematic.elements()) {
-            if (element.element_type() == ElementType::wire) {
-                auto hist =
-                    simulation.input_history(SchematicOld::ConstElement {element});
-                print(element, hist);
+        for (auto element_id : element_ids(schematic)) {
+            if (schematic.element_type(element_id) == ElementType::wire) {
+                const auto history = simulation.input_history(element_id);
+                print(element_id, history);
             }
         }
     }

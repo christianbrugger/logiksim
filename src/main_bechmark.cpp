@@ -203,16 +203,16 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
         state.PauseTiming();
 
-        auto schematic = SchematicOld {};
+        auto schematic = Schematic {};
         for (auto __ [[maybe_unused]] : range(8)) {
-            auto inverter = schematic.add_element(SchematicOld::ElementData {
+            auto inverter = schematic.add_element(schematic::NewElement {
                 .element_type = ElementType::buffer_element,
                 .input_count = connection_count_t {1},
                 .output_count = connection_count_t {1},
                 .input_inverters = {false},
                 .output_delays = {delay_t {3us}},
             });
-            auto wire = schematic.add_element(SchematicOld::ElementData {
+            auto wire = schematic.add_element(schematic::NewElement {
                 .element_type = ElementType::wire,
                 .input_count = connection_count_t {1},
                 .output_count = connection_count_t {1},
@@ -220,8 +220,8 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
                 .output_delays = {delay_t {1ns}},
             });
             const auto id_0 = connection_id_t {0};
-            inverter.output(id_0).connect(wire.input(id_0));
-            wire.output(id_0).connect(inverter.input(id_0));
+            schematic.connect(output_t {inverter, id_0}, input_t {wire, id_0});
+            schematic.connect(output_t {wire, id_0}, input_t {inverter, id_0});
         }
         validate(schematic, schematic::validate_all);
 
@@ -230,7 +230,7 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
 
         state.ResumeTiming();
 
-        count += benchmark_simulation_pure(schematic, 10'000);
+        count += benchmark_simulation_metastable(std::move(schematic), 10'000);
 
         benchmark::DoNotOptimize(count);
         benchmark::ClobberMemory();
@@ -242,11 +242,11 @@ static void BM_Simulation_Inverter_Loop(benchmark::State& state) {
 
 BENCHMARK(BM_Simulation_Inverter_Loop);  // NOLINT
 
+/*
 static void BM_RenderScene_0(benchmark::State& state) {
     constexpr static auto save_image = false;  // to verify correctness
 
-    auto scene = BenchmarkScene {};
-    auto scene_count = fill_line_scene(scene, 100);
+    const auto scene = fill_line_scene(100);
 
     auto context =
         CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32},
@@ -260,7 +260,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
 
     int64_t count = 0;
     for ([[maybe_unused]] auto _ : state) {
-        count += scene_count;
+        count += scene.total_wire_length_sum;
 
         render_simulation(context, scene.layout, SimulationView {scene.simulation});
         context.ctx.sync();
@@ -278,6 +278,7 @@ static void BM_RenderScene_0(benchmark::State& state) {
 }
 
 BENCHMARK(BM_RenderScene_0);  // NOLINT
+*/
 
 }  // namespace logicsim
 
