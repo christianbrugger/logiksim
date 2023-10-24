@@ -1,5 +1,6 @@
 ﻿#include "simulation.h"
 
+#include "algorithm/contains.h"
 #include "algorithm/range.h"
 #include "algorithm/transform_to_container.h"
 #include "component/simulation/history_view.h"
@@ -403,41 +404,38 @@ auto Simulation::output_values(element_id_t element_id) const -> logic_small_vec
 
 auto Simulation::try_set_internal_state(internal_state_t index, bool value) -> bool {
     const auto element_type = schematic_.element_type(index.element_id);
+    const auto input_count = schematic_.input_count(index.element_id);
+    const auto output_count = schematic_.output_count(index.element_id);
 
     if (!is_internal_state_user_writable(element_type)) {
         throw std::runtime_error("internal state cannot be written to");
     }
 
-    // TODO implement and name two methods below
-    //    -> find non modifying time slot
-    //    -> change internal state
-    // TODO algorithm name?
+    // make sure we are the only one changing the internal state at this time-point
+    if (input_count == connection_count_t {0}) {
+        // trivial case
+        run_infinitesimal();
+    } else {
+        // find time-slot where state was not changed
+        constexpr static auto max_tries = 10;
+        const auto tries = std::ranges::views::iota(0, max_tries);
 
-    // find time slot, where internal state is not changed
-    constexpr static auto max_tries = 10;
-    auto tries = 0;
-    auto found = false;
+        if (!contains(tries, true, [&](auto try_ [[maybe_unused]]) {
+                process_all_current_events();
+                queue_.set_time(queue_.time() + delay_t::epsilon());
 
-    while (!found && tries++ < max_tries) {
-        assert(queue_.next_event_time() > queue_.time());  // no current events
+                auto start_state =
+                    logic_small_vector_t {internal_state(index.element_id)};
+                process_all_current_events();
+                auto end_state = logic_small_vector_t {internal_state(index.element_id)};
 
-        process_all_current_events();
-        queue_.set_time(queue_.time() + delay_t::epsilon());
-
-        auto start_state = logic_small_vector_t {internal_state(index.element_id)};
-        process_all_current_events();
-        auto end_state = logic_small_vector_t {internal_state(index.element_id)};
-
-        found = start_state == end_state;
+                return start_state == end_state;
+            })) {
+            return false;
+        }
     }
-    if (!found) {
-        return false;
-    }
-    assert(queue_.next_event_time() > queue_.time());  // no current events
 
     // change state and schedule resulting events
-    const auto output_count = schematic_.output_count(index.element_id);
-
     const auto old_outputs = calculate_outputs_from_state(
         internal_state(index.element_id), output_count, element_type);
     internal_states_.at(index.element_id.value).at(index.internal_state_index.value) =
