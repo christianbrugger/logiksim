@@ -104,6 +104,8 @@ auto Schematic::format() const -> std::string {
 
 auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
     // check enough space for IDs
+    static_assert(decltype(element_types_) {}.max_size() >=
+                  std::size_t {element_id_t::max()});
     if (element_types_.size() >= std::size_t {element_id_t::max()}) [[unlikely]] {
         throw std::runtime_error("Reached maximum number of elements.");
     }
@@ -115,7 +117,7 @@ auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
                                    std::size_t {data.output_count.count()}) [[unlikely]] {
         throw std::runtime_error("Reached maximum number of outputs.");
     }
-    // check that sizes match
+    // check input sizes match
     if (data.input_inverters.size() != std::size_t {data.input_count}) [[unlikely]] {
         throw std::runtime_error("Need as many values for input_inverters as inputs.");
     }
@@ -130,6 +132,7 @@ auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
     if (data.history_length < delay_t::zero()) [[unlikely]] {
         throw std::runtime_error("history length cannot be negative");
     }
+    // check input & output count
     if (!is_input_output_count_valid(data.element_type, data.input_count,
                                      data.output_count)) [[unlikely]] {
         throw std::runtime_error("input or output count not valid");

@@ -53,12 +53,12 @@ static_assert(sizeof(output_vector_t) == 32);
  * brief: Stores the schematic data.
  *
  * Class invariants:
- *   * all vectors have same size
- *   * connection point to a valid element_id / connection_id
- *   * forward and backward connections point to each other
- *   * total connection counts match sum of all input / output connections
- *   * output_delays and history_length is not negative
- *   * element input & output counts are valid according to layout_info
+ *      + all vectors have same size
+ *      + all connections point to a valid element_id / connection_id
+ *      + forward and backward connections point to each other
+ *      + total connection counts match sum of all input / output connections
+ *      + output_delays and history_lengths are never negative
+ *      + element input & output counts are valid according to layout_info
  */
 class Schematic {
    public:

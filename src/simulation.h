@@ -10,15 +10,6 @@
 #include <folly/small_vector.h>
 
 /// Done Features
-// * delays for each output, needed for wires
-// * add timeout to run simulations
-// * use discrete integer type for time, like chrono::sim_time<int64_t>
-// * store transition times for wires, so they can be drawn
-// * flip flops, which requires internal state and access to last input values
-// * negation on input and outputs
-// * store history of events so lines can be drawn
-// * shift registers, requires more internal state
-// * clock generators
 
 /// New Features
 
@@ -48,6 +39,32 @@ constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
 };  // namespace defaults
 }  // namespace simulation
 
+/**
+ * @brief Event driven simulation of schematics.
+ *
+ * Supported Features
+ *      + separate delays for each output, which is needed for wires
+ *      + realtime timeout for run, so it an be integrated in GUI
+ *      + transition history for wires
+ *      + elements have internal state to support sequential logic
+ *      + negation on input are fully simulated
+ *      + complex logic, clock generators, can be modeled by looping connections
+ *        and writing VHDL slide logic
+ *
+ * Class invariants:
+ *      + Schematic is not changed ever.
+ *      + Vectors have same size as given schematic:
+ *           input_values_, internal_states_, first_input_histories_
+ *      + Sub-vectors have size of inputs / internal states.
+ *           input_values_, internal_states_
+ *      + Internal state size is never changed
+ *      + Simulation time is never decreased (promised by SimulationQueue)
+ *
+ *      TODO
+ *      + the event queue never contains two events for the same time and input
+ *        (required by SimulationQueue)
+ *
+ */
 class Simulation {
    public:
     [[nodiscard]] explicit Simulation(Schematic &&schematic,
@@ -57,11 +74,17 @@ class Simulation {
     [[nodiscard]] auto time() const noexcept -> time_t;
 
     // submit custom events
+    /**
+     * TODO remove,
+     * allow initialization with list of events
+     * when initialized, allow submitting events right now + advance infinitessimal
+     */
     auto submit_event(input_t input, delay_t offset, bool value) -> void;
     auto submit_events(element_id_t element_id, delay_t offset,
                        logic_small_vector_t values) -> void;
 
     // Initialize logic elements in the simulation
+    // TODO auto initialize in constructor
     auto initialize() -> void;
     [[nodiscard]] auto is_initialized() const -> bool;
 
@@ -80,6 +103,7 @@ class Simulation {
     /**
      * @brief: Runs simulation for a very short time
      */
+    // TODO make private, we should not need this
     auto run_infinitesimal() -> int64_t;
     /**
      * @brief: Check if simulation is finished.
@@ -87,18 +111,21 @@ class Simulation {
     auto finished() const -> bool;
 
     // input values
+    // TODO remove set functions, only during initialization
     auto set_input_value(input_t input, bool value) -> void;
     [[nodiscard]] auto input_value(input_t input) const -> bool;
     [[nodiscard]] auto input_values(element_id_t element_id) const
         -> const logic_small_vector_t &;
 
     // infers the output values
+    // TODO remove set functions, only during initialization
     auto set_output_value(output_t output, bool value) -> void;
     [[nodiscard]] auto output_value(output_t output) const -> bool;
     [[nodiscard]] auto output_values(element_id_t element_id) const
         -> logic_small_vector_t;
 
     // internal states
+    // TODO check if that is safe, maybe add flag to logic_item/simulation_info
     auto set_internal_state(element_id_t element_id, std::size_t index, bool value)
         -> void;
     [[nodiscard]] auto internal_state(element_id_t element_id) const
@@ -107,7 +134,8 @@ class Simulation {
         -> bool;
 
     // history
-    auto input_history(element_id_t element_id) const -> simulation::HistoryView;
+    [[nodiscard]] auto input_history(element_id_t element_id) const
+        -> simulation::HistoryView;
 
    private:
     auto submit_events_for_changed_outputs(element_id_t element_id,
@@ -135,6 +163,7 @@ class Simulation {
     std::vector<simulation::HistoryBuffer> first_input_histories_ {};
 };
 
+// TODO don't expose this, make part of constructor
 auto set_default_outputs(Simulation &simulation) -> void;
 auto set_default_inputs(Simulation &simulation) -> void;
 

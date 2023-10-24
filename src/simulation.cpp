@@ -310,6 +310,9 @@ auto Simulation::finished() const -> bool {
 }
 
 auto Simulation::initialize() -> void {
+    if (is_initialized()) [[unlikely]] {
+        throw std::runtime_error("simulation is already initialized");
+    }
     if (!queue_.empty()) [[unlikely]] {
         throw_exception("Cannot initialize simulation with scheduled events.");
     }
