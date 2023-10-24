@@ -269,6 +269,7 @@ auto fill_line_scene(int n_lines) -> SimulatedLineScene {
     auto simulation = Simulation {
         generate_schematic(layout, simulation_settings.wire_delay_per_distance())};
 
+    /*
     // init simulation
     simulation.initialize();
 
@@ -287,6 +288,7 @@ auto fill_line_scene(int n_lines) -> SimulatedLineScene {
 
     // run simulation
     simulation.run(max_time);
+    */
 
     const auto wire_lengths = total_wire_lengths(layout);
 

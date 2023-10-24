@@ -170,6 +170,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/connection.cpp
     src/vocabulary/connection_count.cpp
     src/vocabulary/connection_id.cpp
+    src/vocabulary/connection_ids.cpp
     src/vocabulary/connector_info.cpp
     src/vocabulary/delay.cpp
     src/vocabulary/direction_type.cpp
@@ -183,6 +184,8 @@ set(LS_CORE_SOURCES
     src/vocabulary/grid.cpp
     src/vocabulary/grid_fine.cpp
     src/vocabulary/insertion_mode.cpp
+    src/vocabulary/internal_connection.cpp
+    src/vocabulary/internal_connections.cpp
     src/vocabulary/internal_state.cpp
     src/vocabulary/internal_state_index.cpp
     src/vocabulary/layout_calculation_data.cpp

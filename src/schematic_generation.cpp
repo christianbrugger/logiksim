@@ -246,13 +246,10 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
     for (auto element_id : element_ids(schematic)) {
         const auto element_type = schematic.element_type(element_id);
 
-        // connect clock generator internals
-        if (element_type == ElementType::clock_generator) {
-            schematic.connect(input_t {element_id, connection_id_t {1}},
-                              output_t {element_id, connection_id_t {1}});
-            schematic.connect(input_t {element_id, connection_id_t {2}},
-                              output_t {element_id, connection_id_t {2}});
-            continue;
+        // internal connections
+        for (const auto element : element_internal_connections(element_type)) {
+            schematic.connect(input_t {element_id, element.input},
+                              output_t {element_id, element.output});
         }
 
         // connect wires to elements

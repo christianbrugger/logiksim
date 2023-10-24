@@ -61,7 +61,7 @@ class InteractiveSimulation {
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
     auto run(simulation::realtime_timeout_t timeout = defaults::standard_timeout) -> void;
-    auto finished() const -> bool;
+    auto is_finished() const -> bool;
     auto mouse_press(point_t position) -> void;
 
     [[nodiscard]] auto events_per_second() const -> double;

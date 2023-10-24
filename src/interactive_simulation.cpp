@@ -6,6 +6,7 @@
 #include "layout.h"
 #include "schematic.h"
 #include "schematic_generation.h"
+#include "vocabulary/internal_state.h"
 #include "vocabulary/simulation_setting.h"
 
 #include <stdexcept>
@@ -57,11 +58,7 @@ InteractiveSimulation::InteractiveSimulation(const Layout& layout,
       wire_delay_per_distance_ {settings.wire_delay_per_distance()},
 
       simulation_time_reference_ {simulation_.time()},
-      realtime_reference_ {timer_t::now()} {
-    set_default_outputs(simulation_);
-    set_default_inputs(simulation_);
-    simulation_.initialize();
-}
+      realtime_reference_ {timer_t::now()} {}
 
 auto InteractiveSimulation::schematic() const -> const Schematic& {
     return simulation_.schematic();
@@ -116,18 +113,18 @@ auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void 
     }
 }
 
-auto InteractiveSimulation::finished() const -> bool {
-    return simulation_.finished();
+auto InteractiveSimulation::is_finished() const -> bool {
+    return simulation_.is_finished();
 }
 
 auto InteractiveSimulation::mouse_press(point_t position) -> void {
     const auto element_id = interaction_cache_.find(position);
 
     if (element_id) {
-        const auto index = std::size_t {0};
-        const auto value = simulation_.internal_state(*element_id, index);
+        const auto state = internal_state_t {*element_id, internal_state_index_t {0}};
 
-        simulation_.set_internal_state(*element_id, index, !value);
+        const auto value = simulation_.internal_state(state);
+        simulation_.set_internal_state(state, !value);
     }
 }
 

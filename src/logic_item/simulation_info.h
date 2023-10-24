@@ -17,6 +17,12 @@ class Schematic;
 
 [[nodiscard]] auto has_internal_state(const ElementType type) -> bool;
 
+/**
+ * @brief: Customization point that controls if internal state can be written
+ *         from outside of the simulation.
+ */
+[[nodiscard]] auto is_internal_state_user_writable(const ElementType type) -> bool;
+
 //
 // Initialization
 //

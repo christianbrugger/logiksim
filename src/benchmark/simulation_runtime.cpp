@@ -11,8 +11,8 @@
 
 namespace logicsim {
 
+/*
 namespace {
-
 void _generate_random_events(Rng &rng, Simulation &simulation) {
     const auto &schematic = simulation.schematic();
 
@@ -128,5 +128,5 @@ auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
 
     return simulated_event_count;
 }
-
+*/
 }  // namespace logicsim

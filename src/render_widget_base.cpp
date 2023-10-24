@@ -51,7 +51,7 @@ auto to_logic_item_definition(InteractionState state) -> ElementDefinition {
             return default_element_definition(ElementType::xor_element);
 
         case insert_nand_element: {
-            auto definition = default_element_definition(ElementType::xor_element);
+            auto definition = default_element_definition(ElementType::and_element);
             definition.output_inverters = logic_small_vector_t {true};
             return definition;
         }

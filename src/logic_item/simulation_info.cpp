@@ -1,6 +1,7 @@
 #include "logic_item/simulation_info.h"
 
 #include "layout_info.h"
+#include "logic_item/schematic_info.h"
 #include "schematic.h"
 #include "vocabulary/connection.h"
 #include "vocabulary/connection_count.h"
@@ -58,6 +59,10 @@ auto internal_state_size(const ElementType type) -> std::size_t {
 
 auto has_internal_state(const ElementType type) -> bool {
     return internal_state_size(type) != 0;
+}
+
+auto is_internal_state_user_writable(const ElementType type) -> bool {
+    return !has_internal_connections(type);
 }
 
 //
