@@ -28,7 +28,6 @@ auto set_outputs_to_zero(const Schematic &schematic,
                          std::vector<logic_small_vector_t> &input_values) -> void {
     auto set_input = [&](input_t input, bool value) {
         input_values.at(input.element_id.value).at(input.connection_id.value) = value;
-        print(value);
     };
 
     for (const auto element_id : element_ids(schematic)) {
@@ -79,7 +78,8 @@ Simulation::Simulation(Schematic &&schematic__, PrintEvents do_print)
     : schematic_ {std::move(schematic__)},
       queue_ {},
       largest_history_event_ {queue_.time()},
-      print_events_ {do_print == PrintEvents::yes} {
+      print_events_ {do_print == PrintEvents::yes},
+      event_count_ {0} {
     resize_vectors();
 
     initialize_input_values(schematic_, input_values_);
@@ -94,6 +94,10 @@ auto Simulation::schematic() const noexcept -> const Schematic & {
 
 auto Simulation::time() const noexcept -> time_t {
     return queue_.time();
+}
+
+auto Simulation::processed_event_count() const noexcept -> event_count_t {
+    return event_count_;
 }
 
 auto Simulation::apply_events(element_id_t element_id,
@@ -210,18 +214,34 @@ auto Simulation::process_event_group(simulation::SimulationEventGroup &&events) 
     }
 }
 
+/**
+ * @brief: process all events at the current time
+ */
+auto Simulation::process_all_current_events() -> void {
+    while (queue_.next_event_time() == queue_.time()) {
+        auto event_group = queue_.pop_event_group();
+        event_count_ += std::ssize(event_group);
+
+        process_event_group(std::move(event_group));
+    }
+}
+
 auto Simulation::run(const delay_t simulation_time,
                      const simulation::realtime_timeout_t timeout,
-                     const int64_t max_events) -> int64_t {
+                     const int64_t max_events) -> void {
     if (simulation_time < delay_t {0us}) [[unlikely]] {
         throw_exception("simulation_time needs to be positive.");
     }
     if (max_events < 0) [[unlikely]] {
         throw_exception("max events needs to be positive or zero.");
     }
+    if (event_count_ > std::numeric_limits<event_count_t>::max() - max_events)
+        [[unlikely]] {
+        throw_exception("max events to large, overflows.");
+    }
 
     if (simulation_time == delay_t {0us}) {
-        return 0;
+        return;
     }
 
     const auto timer = TimeoutTimer {timeout};
@@ -229,46 +249,45 @@ auto Simulation::run(const delay_t simulation_time,
         simulation_time == simulation::defaults::infinite_simulation_time
             ? time_t::max()
             : queue_.time() + simulation_time;
-    int64_t event_count = 0;
 
+    const auto stop_event_count = max_events == simulation::defaults::no_max_events
+                                      ? std::numeric_limits<int64_t>::max()
+                                      : event_count_ + max_events;
     // only check time after this many events
-    constexpr int64_t check_interval = 1'000;
-    int64_t next_check =
-        std::min(max_events, timeout == simulation::defaults::no_realtime_timeout
-                                 ? std::numeric_limits<int64_t>::max()
-                                 : check_interval);
+    constexpr auto check_interval = event_count_t {1'000};
+    auto next_check =
+        std::min(stop_event_count, timeout == simulation::defaults::no_realtime_timeout
+                                       ? std::numeric_limits<int64_t>::max()
+                                       : event_count_ + check_interval);
 
     while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
-        auto event_group = queue_.pop_event_group();
-        event_count += std::ssize(event_group);
+        queue_.set_time(queue_.next_event_time());
+        process_all_current_events();
 
-        process_event_group(std::move(event_group));
+        if (event_count_ >= next_check) {
+            // we don't want to break with events at the current time point
+            // as this would be an inconsistent state
+            assert(queue_.next_event_time() > queue_.time());
 
-        if (event_count >= next_check) {
-            // process all events at this time-point
-            if (queue_.next_event_time() == queue_.time()) {
-                continue;
+            // we check timeout, after we process at least one group
+            if (timer.reached_timeout() || event_count_ >= stop_event_count) {
+                return;
             }
-
-            // we check timeout after we process at least one group
-            if (timer.reached_timeout() || event_count >= max_events) {
-                return event_count;
-            }
-            next_check = std::min(max_events, next_check + check_interval);
+            next_check = std::min(stop_event_count, next_check + check_interval);
         }
     }
 
     if (simulation_time != simulation::defaults::infinite_simulation_time) {
         queue_.set_time(queue_end_time);
     }
-    return event_count;
+    return;
 }
 
 /**
  * @brief: Runs simulation for a very short time
  */
-auto Simulation::run_infinitesimal() -> int64_t {
-    return run(delay_t::epsilon());
+auto Simulation::run_infinitesimal() -> void {
+    run(delay_t::epsilon());
 }
 
 auto Simulation::is_finished() const -> bool {

@@ -36,8 +36,7 @@ constexpr static auto no_realtime_timeout = TimeoutTimer::defaults::no_timeout;
 
 constexpr static auto infinite_simulation_time = delay_t::max();
 
-constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
-                                        connection_count_t::max().count()};
+constexpr static int64_t no_max_events {0};
 };  // namespace defaults
 
 }  // namespace simulation
@@ -67,6 +66,8 @@ constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
  */
 class Simulation {
    public:
+    using event_count_t = int64_t;
+
     /**
      * @brief: Creates and initializes the simulation from the schematic.
      */
@@ -74,6 +75,7 @@ class Simulation {
                                       PrintEvents do_print = PrintEvents::no);
 
     [[nodiscard]] auto time() const noexcept -> time_t;
+    [[nodiscard]] auto processed_event_count() const noexcept -> event_count_t;
     /**
      * @brief: Check if simulation is finished.
      */
@@ -91,7 +93,7 @@ class Simulation {
     auto run(delay_t simulation_time = simulation::defaults::infinite_simulation_time,
              simulation::realtime_timeout_t timeout =
                  simulation::defaults::no_realtime_timeout,
-             int64_t max_events = simulation::defaults::no_max_events) -> int64_t;
+             int64_t max_events = simulation::defaults::no_max_events) -> void;
 
     // element information
     [[nodiscard]] auto input_values(element_id_t element_id) const
@@ -117,6 +119,7 @@ class Simulation {
                                            const logic_small_vector_t &old_outputs,
                                            const logic_small_vector_t &new_outputs)
         -> void;
+    auto process_all_current_events() -> void;
     auto process_event_group(simulation::SimulationEventGroup &&events) -> void;
     auto submit_event(output_t output, const logic_small_vector_t &output_values) -> void;
     auto apply_events(element_id_t element_id,
@@ -126,12 +129,13 @@ class Simulation {
     auto record_input_history(input_t input, bool new_value) -> void;
     auto clean_history(simulation::HistoryBuffer &history, delay_t history_length)
         -> void;
-    auto run_infinitesimal() -> int64_t;
+    auto run_infinitesimal() -> void;
 
     Schematic schematic_;
     simulation::SimulationQueue queue_;
     time_t largest_history_event_;
     bool print_events_;
+    event_count_t event_count_;
 
     std::vector<logic_small_vector_t> input_values_ {};
     std::vector<logic_small_vector_t> internal_states_ {};

@@ -71,6 +71,7 @@ class InteractiveSimulation {
 
    private:
     Simulation simulation_;
+    Simulation::event_count_t last_event_count_;
     detail::interactive_simulation::InteractionCache interaction_cache_;
     time_rate_t simulation_time_rate_;
     delay_t wire_delay_per_distance_;

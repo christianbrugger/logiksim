@@ -53,6 +53,7 @@ auto InteractionCache::find(point_t position) const -> std::optional<element_id_
 InteractiveSimulation::InteractiveSimulation(const Layout& layout,
                                              const SimulationSettings& settings)
     : simulation_ {generate_schematic(layout, settings.wire_delay_per_distance())},
+      last_event_count_ {simulation_.processed_event_count()},
       interaction_cache_ {layout},
       simulation_time_rate_ {settings.simulation_time_rate},
       wire_delay_per_distance_ {settings.wire_delay_per_distance()},
@@ -103,8 +104,13 @@ auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void 
         return;
     }
 
-    const auto event_count = simulation_.run(time_to_simulate, timeout);
-    event_counter_.count_events(event_count);
+    simulation_.run(time_to_simulate, timeout);
+
+    {
+        const auto event_count = simulation_.processed_event_count();
+        event_counter_.count_events(event_count - last_event_count_);
+        last_event_count_ = event_count;
+    }
 
     // in case simulation is too slow, allow us to catch up
     if (expected_time > simulation_.time()) {

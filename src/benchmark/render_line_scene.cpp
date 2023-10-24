@@ -202,6 +202,7 @@ struct new_event_t {
     bool value;
 };
 
+/*
 auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_time,
                             const RenderBenchmarkConfig& config) {
     auto events = std::vector<new_event_t> {};
@@ -228,6 +229,7 @@ auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_ti
 
     return events;
 }
+*/
 
 }  // namespace
 
