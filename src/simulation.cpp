@@ -411,7 +411,7 @@ auto Simulation::try_set_internal_state(internal_state_t index, bool value) -> b
         throw std::runtime_error("internal state cannot be written to");
     }
 
-    // find time-slot where state was not changed
+    // find time-slot where state is not changed
     constexpr static auto max_tries = 10;
     const auto tries = std::ranges::views::iota(0, max_tries);
     if (!contains(tries, true, [&](auto try_ [[maybe_unused]]) {
@@ -424,6 +424,7 @@ auto Simulation::try_set_internal_state(internal_state_t index, bool value) -> b
 
             return start_state == end_state;
         })) {
+        // give up, inputs are too busy
         return false;
     }
 
@@ -448,7 +449,6 @@ auto Simulation::set_unconnected_input(input_t input, bool value) -> void {
 
     // we increase the time, so we are sure we are the only one
     // submitting an event at this time and input.
-    // Also we know the input is unconnected, so there won't be any other event.
     run_infinitesimal();
 
     queue_.submit_event(simulation::simulation_event_t {
