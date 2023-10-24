@@ -403,47 +403,37 @@ auto Simulation::output_values(element_id_t element_id) const -> logic_small_vec
 }
 
 auto Simulation::try_set_internal_state(internal_state_t index, bool value) -> bool {
-    const auto element_type = schematic_.element_type(index.element_id);
-    const auto input_count = schematic_.input_count(index.element_id);
-    const auto output_count = schematic_.output_count(index.element_id);
+    const auto element_id = index.element_id;
+    const auto element_type = schematic_.element_type(element_id);
+    const auto output_count = schematic_.output_count(element_id);
 
     if (!is_internal_state_user_writable(element_type)) {
         throw std::runtime_error("internal state cannot be written to");
     }
 
-    // make sure we are the only one changing the internal state at this time-point
-    if (input_count == connection_count_t {0}) {
-        // trivial case
-        run_infinitesimal();
-    } else {
-        // find time-slot where state was not changed
-        constexpr static auto max_tries = 10;
-        const auto tries = std::ranges::views::iota(0, max_tries);
+    // find time-slot where state was not changed
+    constexpr static auto max_tries = 10;
+    const auto tries = std::ranges::views::iota(0, max_tries);
+    if (!contains(tries, true, [&](auto try_ [[maybe_unused]]) {
+            process_all_current_events();
+            queue_.set_time(queue_.time() + delay_t::epsilon());
 
-        if (!contains(tries, true, [&](auto try_ [[maybe_unused]]) {
-                process_all_current_events();
-                queue_.set_time(queue_.time() + delay_t::epsilon());
+            auto start_state = logic_small_vector_t {internal_state(element_id)};
+            process_all_current_events();
+            auto end_state = logic_small_vector_t {internal_state(element_id)};
 
-                auto start_state =
-                    logic_small_vector_t {internal_state(index.element_id)};
-                process_all_current_events();
-                auto end_state = logic_small_vector_t {internal_state(index.element_id)};
-
-                return start_state == end_state;
-            })) {
-            return false;
-        }
+            return start_state == end_state;
+        })) {
+        return false;
     }
 
     // change state and schedule resulting events
-    const auto old_outputs = calculate_outputs_from_state(
-        internal_state(index.element_id), output_count, element_type);
-    internal_states_.at(index.element_id.value).at(index.internal_state_index.value) =
-        value;
-    const auto new_outputs = calculate_outputs_from_state(
-        internal_state(index.element_id), output_count, element_type);
-
-    submit_events_for_changed_outputs(index.element_id, old_outputs, new_outputs);
+    const auto old_outputs = calculate_outputs_from_state(internal_state(element_id),
+                                                          output_count, element_type);
+    internal_states_.at(element_id.value).at(index.internal_state_index.value) = value;
+    const auto new_outputs = calculate_outputs_from_state(internal_state(element_id),
+                                                          output_count, element_type);
+    submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
     return true;
 }
 
