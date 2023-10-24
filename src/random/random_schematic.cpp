@@ -15,28 +15,58 @@ namespace logicsim {
 namespace details {
 
 auto add_random_element(Rng &rng, Schematic &schematic) -> void {
-    static constexpr auto max_connections = 8;
-    auto connection_dist = uint_distribution(1, max_connections);
-    auto element_dist = uint_distribution<int8_t>(0, 2);
+    const auto element_dist = uint_distribution<int8_t>(0, 2);
 
-    // this is not pretty, but we can't change it as it changes our circuit
     const auto element_type = [&] {
-        if (element_dist(rng) == 0) {
-            return ElementType::xor_element;
-        } else {
-            if (element_dist(rng) == 1) {
+        switch (element_dist(rng)) {
+            case 0:
+                return ElementType::xor_element;
+            case 1:
                 return ElementType::buffer_element;
-            } else {
+            case 2:
                 return ElementType::wire;
-            }
-        }
+
+            default:
+                std::terminate();
+        };
+        std::terminate();
     }();
 
-    const auto input_count =
-        element_type == ElementType::xor_element ? connection_dist(rng) : 1;
+    constexpr static auto max_connections = 8;
 
-    const auto output_count =
-        element_type == ElementType::wire ? connection_dist(rng) : 1;
+    const auto input_count = [&] {
+        switch (element_type) {
+            using enum ElementType;
+
+            case xor_element:
+                return uint_distribution(2, max_connections)(rng);
+            case buffer_element:
+                return 1;
+            case wire:
+                return 1;
+
+            default:
+                std::terminate();
+        };
+        std::terminate();
+    }();
+
+    const auto output_count = [&] {
+        switch (element_type) {
+            using enum ElementType;
+
+            case xor_element:
+                return 1;
+            case buffer_element:
+                return 1;
+            case wire:
+                return uint_distribution(1, max_connections)(rng);
+
+            default:
+                std::terminate();
+        };
+        std::terminate();
+    }();
 
     schematic.add_element(schematic::NewElement {
         .element_type = element_type,
@@ -142,6 +172,7 @@ auto with_custom_delays(Rng &rng, const Schematic &schematic_orig) -> Schematic 
             .history_length = history_length,
         });
     }
+
     for (const auto element_id : element_ids(schematic_orig)) {
         for (const auto input : inputs(schematic_orig, element_id)) {
             if (const auto output = schematic_orig.output(input)) {

@@ -130,12 +130,10 @@ auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
     if (data.history_length < delay_t::zero()) [[unlikely]] {
         throw std::runtime_error("history length cannot be negative");
     }
-    // TODO enable this
-
-    // if (!is_input_output_count_valid(data.element_type, data.input_count,
-    //                                  data.output_count)) [[unlikely]] {
-    //     throw std::runtime_error("input or output count not valid");
-    // }
+    if (!is_input_output_count_valid(data.element_type, data.input_count,
+                                     data.output_count)) [[unlikely]] {
+        throw std::runtime_error("input or output count not valid");
+    }
 
     // add new data
     element_types_.push_back(data.element_type);
