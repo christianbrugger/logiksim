@@ -130,7 +130,7 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
         const auto state = internal_state_t {*element_id, internal_state_index_t {0}};
 
         const auto value = simulation_.internal_state(state);
-        simulation_.set_internal_state(state, !value);
+        simulation_.try_set_internal_state(state, !value);
     }
 }
 

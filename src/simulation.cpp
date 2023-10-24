@@ -265,8 +265,8 @@ auto Simulation::run(const delay_t simulation_time,
         process_all_current_events();
 
         if (event_count_ >= next_check) {
-            // we don't want to break with events at the current time point
-            // as this would be an inconsistent state
+            // breaking within events in the current time-point would lead to
+            // an inconsistent state
             assert(queue_.next_event_time() > queue_.time());
 
             // we check timeout, after we process at least one group
@@ -401,58 +401,52 @@ auto Simulation::output_values(element_id_t element_id) const -> logic_small_vec
         [&](output_t output) { return output_value(output); });
 }
 
-auto Simulation::set_internal_state(internal_state_t index, bool value) -> void {
+auto Simulation::try_set_internal_state(internal_state_t index, bool value) -> bool {
     const auto element_type = schematic_.element_type(index.element_id);
 
     if (!is_internal_state_user_writable(element_type)) {
         throw std::runtime_error("internal state cannot be written to");
     }
 
-    // TODO implement this methods
-    // * implement function that processes all events at the current time:
-    //    -> process_all_pending_events
-    // * process_all_pending_events()
-    // * implement and name two methods below
+    // TODO implement and name two methods below
     //    -> find non modifying time slot
     //    -> change internal state
-
-    /*
-    process_all_pending_events();
-    // TODO are we creating an infinite loop here.
-    //         Add counter? Return bool if success?
     // TODO algorithm name?
-    bool found = false;
+
     // find time slot, where internal state is not changed
-    while (!found) {
-        assert(queue_.next_event_time() > queue_.time());
-        auto start_state = logic_small_vector_t {internal_state(index.element_id)};
+    constexpr static auto max_tries = 10;
+    auto tries = 0;
+    auto found = false;
+
+    while (!found && tries++ < max_tries) {
+        assert(queue_.next_event_time() > queue_.time());  // no current events
+
+        process_all_current_events();
         queue_.set_time(queue_.time() + delay_t::epsilon());
-        process_all_pending_events();
+
+        auto start_state = logic_small_vector_t {internal_state(index.element_id)};
+        process_all_current_events();
         auto end_state = logic_small_vector_t {internal_state(index.element_id)};
+
         found = start_state == end_state;
     }
-    assert(queue_.next_event_time() > queue_.time());
-    */
+    if (!found) {
+        return false;
+    }
+    assert(queue_.next_event_time() > queue_.time());  // no current events
 
-    throw std::runtime_error("implement");
-
-    /*
-    auto &state =
-        internal_states_.at(index.element_id.value).at(index.internal_state_index.value);
-
+    // change state and schedule resulting events
     const auto output_count = schematic_.output_count(index.element_id);
-    const auto element_type = schematic_.element_type(index.element_id);
 
     const auto old_outputs = calculate_outputs_from_state(
         internal_state(index.element_id), output_count, element_type);
-    state = value;
+    internal_states_.at(index.element_id.value).at(index.internal_state_index.value) =
+        value;
     const auto new_outputs = calculate_outputs_from_state(
         internal_state(index.element_id), output_count, element_type);
 
-    // TODO what if input changes at the same time?
     submit_events_for_changed_outputs(index.element_id, old_outputs, new_outputs);
-    run_infinitesimal();
-    */
+    return true;
 }
 
 auto Simulation::set_unconnected_input(input_t input, bool value) -> void {

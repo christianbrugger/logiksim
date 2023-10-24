@@ -110,7 +110,15 @@ class Simulation {
     [[nodiscard]] auto internal_state(internal_state_t index) const -> bool;
 
     auto set_unconnected_input(input_t input, bool value) -> void;
-    auto set_internal_state(internal_state_t index, bool value) -> void;
+    /**
+     * @brief: tries to set the internal state in the next few time-points
+     *
+     * Note internal state can only be changed if there is no change in inputs in
+     * the same time-points.
+     *
+     * Returns true if state was successfully changed.
+     */
+    auto try_set_internal_state(internal_state_t index, bool value) -> bool;
 
    private:
     auto resize_vectors() -> void;
