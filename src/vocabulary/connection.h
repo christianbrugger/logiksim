@@ -4,6 +4,9 @@
 #include "format/struct.h"
 #include "vocabulary/connection_id.h"
 #include "vocabulary/element_id.h"
+#include "wyhash.h"
+
+#include <ankerl/unordered_dense.h>
 
 #include <compare>
 #include <stdexcept>
@@ -73,10 +76,38 @@ constexpr connection_t::operator bool() const noexcept {
     return bool {element_id};
 }
 
+}  // namespace logicsim
+
 //
-// Implemention
+// Hash function
 //
 
-}  // namespace logicsim
+template <>
+struct ankerl::unordered_dense::hash<logicsim::input_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::input_t &obj) const noexcept
+        -> uint64_t {
+        static_assert(std::is_same_v<int32_t, logicsim::element_id_t::value_type>);
+        static_assert(std::is_same_v<int16_t, logicsim::connection_id_t::value_type>);
+
+        return logicsim::wyhash_64_bit(obj.element_id.value,
+                                       int32_t {obj.connection_id.value});
+    }
+};
+
+template <>
+struct ankerl::unordered_dense::hash<logicsim::output_t> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(const logicsim::output_t &obj) const noexcept
+        -> uint64_t {
+        static_assert(std::is_same_v<int32_t, logicsim::element_id_t::value_type>);
+        static_assert(std::is_same_v<int16_t, logicsim::connection_id_t::value_type>);
+
+        return logicsim::wyhash_64_bit(obj.element_id.value,
+                                       int32_t {obj.connection_id.value});
+    }
+};
 
 #endif

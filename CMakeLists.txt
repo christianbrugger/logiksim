@@ -183,6 +183,8 @@ set(LS_CORE_SOURCES
     src/vocabulary/grid.cpp
     src/vocabulary/grid_fine.cpp
     src/vocabulary/insertion_mode.cpp
+    src/vocabulary/internal_state.cpp
+    src/vocabulary/internal_state_index.cpp
     src/vocabulary/layout_calculation_data.cpp
     src/vocabulary/layout_info_vector.cpp
     src/vocabulary/line.cpp

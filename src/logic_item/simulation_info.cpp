@@ -1,5 +1,8 @@
 #include "logic_item/simulation_info.h"
 
+#include "layout_info.h"
+#include "schematic.h"
+#include "vocabulary/connection.h"
 #include "vocabulary/connection_count.h"
 
 #include <stdexcept>
@@ -55,6 +58,41 @@ auto internal_state_size(const ElementType type) -> std::size_t {
 
 auto has_internal_state(const ElementType type) -> bool {
     return internal_state_size(type) != 0;
+}
+
+//
+// Initialization
+//
+
+auto initialize_input_values(const Schematic &schematic,
+                             std::vector<logic_small_vector_t> &input_values) -> void {
+    auto set_input = [&](input_t input, bool value) {
+        input_values.at(input.element_id.value).at(input.connection_id.value) = value;
+    };
+
+    for (const auto element_id : element_ids(schematic)) {
+        // unconnected enable inputs
+        if (const auto enable_id =
+                element_enable_input_id(schematic.element_type(element_id))) {
+            const auto input = input_t {element_id, *enable_id};
+
+            if (!schematic.output(input) && !schematic.input_inverted(input)) {
+                set_input(input, true);
+            }
+        }
+
+        // unconnected j&k flipflops
+        if (schematic.element_type(element_id) == ElementType::flipflop_jk) {
+            const auto input_1 = input_t {element_id, connection_id_t {1}};
+            const auto input_2 = input_t {element_id, connection_id_t {2}};
+
+            if (!schematic.output(input_1) && !schematic.input_inverted(input_1) &&
+                !schematic.output(input_2) && !schematic.input_inverted(input_2)) {
+                set_input(input_1, true);
+                set_input(input_2, true);
+            }
+        }
+    }
 }
 
 //

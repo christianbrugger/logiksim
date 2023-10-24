@@ -4,15 +4,34 @@
 #include "vocabulary/element_type.h"
 #include "vocabulary/logic_small_vector.h"
 
+#include <vector>
+
 namespace logicsim {
 
 struct connection_count_t;
+class Schematic;
 
 [[nodiscard]] auto has_no_logic(const ElementType type) noexcept -> bool;
 
 [[nodiscard]] auto internal_state_size(const ElementType type) -> std::size_t;
 
 [[nodiscard]] auto has_internal_state(const ElementType type) -> bool;
+
+//
+// Initialization
+//
+
+/**
+ * brief: Initializes the simulation input values for the given schematic.
+ *
+ * Method will not change the sizes of input_values vector.
+ */
+auto initialize_input_values(const Schematic &schematic,
+                             std::vector<logic_small_vector_t> &input_values) -> void;
+
+//
+// Simulation Behavior
+//
 
 auto update_internal_state(const logic_small_vector_t &old_input,
                            const logic_small_vector_t &new_input, const ElementType type,

@@ -3,8 +3,11 @@
 
 #include "component/simulation/history_buffer.h"
 #include "component/simulation/simulation_queue.h"
+#include "format/struct.h"
 #include "schematic.h"
 #include "timeout_timer.h"
+#include "vocabulary/connection.h"
+#include "vocabulary/internal_state.h"
 #include "vocabulary/print_events.h"
 
 #include <folly/small_vector.h>
@@ -37,6 +40,53 @@ constexpr static auto infinite_simulation_time = delay_t::max();
 constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
                                         connection_count_t::max().count()};
 };  // namespace defaults
+
+struct initial_event_t {
+    input_t input;
+    delay_t offset;
+    bool value;
+};
+
+using input_values_map = ankerl::unordered_dense::map<input_t, bool>;
+using internal_states_map = ankerl::unordered_dense::map<internal_state_t, bool>;
+
+struct Initialization {
+    /**
+     * @brief: Controls weather events are logged.
+     */
+    PrintEvents print_events = PrintEvents::no;
+
+    /**
+     * @brief: Initial logic values of all elements.
+     *
+     * All not mentioned inputs are set to zero.
+     *
+     * Outputs can be set by setting the input of the connected elements.
+     * There is no restriction if elements are connected or not.
+     */
+    input_values_map initial_input_values = {};
+
+    /**
+     * @brief: Initial internal state for logic elements.
+     *
+     * All not mentioned elements are set to zero.
+     *
+     * Throws if the internal state is not user writable of the element type.
+     */
+    internal_states_map initial_internal_state = {};
+
+    /**
+     * @brief: Events scheduled at the start of the simulation.
+     *
+     * Note only inputs without connections can have events scheduled.
+     *
+     * Throws if event is for a connected input.
+     * Throws if there are two events for the same input and time.
+     * Throws if any delay_t offset is negative or zero.
+     */
+    std::vector<simulation::initial_event_t> events = {};
+};
+
 }  // namespace simulation
 
 /**
@@ -67,8 +117,19 @@ constexpr static int64_t no_max_events {std::numeric_limits<int64_t>::max() -
  */
 class Simulation {
    public:
+    /**
+     * @brief: Creates and initializes the simulation from the schematic.
+     */
+    [[nodiscard]] explicit Simulation(Schematic &&schematic);
+
+    /**
+     * @brief: Creates and initializes the simulation from the schematic and
+     *         the given initialization.
+     *
+     * Throws if there is an error with the initialization, as documented there.
+     */
     [[nodiscard]] explicit Simulation(Schematic &&schematic,
-                                      PrintEvents print_events = PrintEvents::no);
+                                      simulation::Initialization &&initialization);
 
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
     [[nodiscard]] auto time() const noexcept -> time_t;
@@ -82,11 +143,6 @@ class Simulation {
     auto submit_event(input_t input, delay_t offset, bool value) -> void;
     auto submit_events(element_id_t element_id, delay_t offset,
                        logic_small_vector_t values) -> void;
-
-    // Initialize logic elements in the simulation
-    // TODO auto initialize in constructor
-    auto initialize() -> void;
-    [[nodiscard]] auto is_initialized() const -> bool;
 
     /**
      * @brief: Runs simulation for given times and events
@@ -111,15 +167,11 @@ class Simulation {
     auto finished() const -> bool;
 
     // input values
-    // TODO remove set functions, only during initialization
-    auto set_input_value(input_t input, bool value) -> void;
     [[nodiscard]] auto input_value(input_t input) const -> bool;
     [[nodiscard]] auto input_values(element_id_t element_id) const
         -> const logic_small_vector_t &;
 
     // infers the output values
-    // TODO remove set functions, only during initialization
-    auto set_output_value(output_t output, bool value) -> void;
     [[nodiscard]] auto output_value(output_t output) const -> bool;
     [[nodiscard]] auto output_values(element_id_t element_id) const
         -> logic_small_vector_t;
@@ -138,6 +190,9 @@ class Simulation {
         -> simulation::HistoryView;
 
    private:
+    auto initialize_vector_sizes() -> void;
+    auto initialize_simulation() -> void;
+
     auto submit_events_for_changed_outputs(element_id_t element_id,
                                            const logic_small_vector_t &old_outputs,
                                            const logic_small_vector_t &new_outputs)
@@ -155,17 +210,12 @@ class Simulation {
     Schematic schematic_;
     simulation::SimulationQueue queue_;
     time_t largest_history_event_;
-    bool is_initialized_;
     bool print_events_;
 
     std::vector<logic_small_vector_t> input_values_ {};
     std::vector<logic_small_vector_t> internal_states_ {};
     std::vector<simulation::HistoryBuffer> first_input_histories_ {};
 };
-
-// TODO don't expose this, make part of constructor
-auto set_default_outputs(Simulation &simulation) -> void;
-auto set_default_inputs(Simulation &simulation) -> void;
 
 }  // namespace logicsim
 
