@@ -34,10 +34,10 @@ TEST(IteratorAdaptorPollingIterator, SimpleRange) {
         const auto view = polling_view<int, State>(
             mutator, getter, State {.start = 1, .stop = 2}, polling_status::iterate);
 
-        auto result = std::vector<int> {};
-        std::ranges::copy(view.begin(), view.end(), std::back_inserter(result));
+        auto vector = std::vector<int> {};
+        std::ranges::copy(view.begin(), view.end(), std::back_inserter(vector));
 
-        ASSERT_THAT(result, testing::ElementsAre(1, 2));
+        ASSERT_THAT(vector, testing::ElementsAre(1, 2));
     }
 
     {

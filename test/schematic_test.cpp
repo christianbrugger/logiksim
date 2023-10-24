@@ -1,6 +1,8 @@
 
+#include "schematic.h"
+
+#include "algorithm/to_vector.h"
 #include "logic_item/schematic_info.h"
-#include "schematic_old.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -9,409 +11,438 @@
 #include <ranges>
 
 namespace logicsim {
+TEST(Schematic, EmptySchematic) {
+    const auto schematic = Schematic {};
 
-TEST(SchematicOld, EmptySchematic) {
-    const SchematicOld schematic;
-
-    EXPECT_EQ(schematic.element_count(), 0);
+    EXPECT_EQ(schematic.size(), 0);
+    EXPECT_EQ(schematic.empty(), true);
     EXPECT_EQ(schematic.total_input_count(), 0);
     EXPECT_EQ(schematic.total_output_count(), 0);
-    EXPECT_EQ(std::ranges::distance(schematic.elements()), 0);
+    EXPECT_EQ(std::size(element_ids(schematic)), 0);
 }
 
-TEST(SchematicOld, SchematicSingleElement) {
-    SchematicOld schematic;
+TEST(Schematic, SchematicSingleElement) {
+    auto schematic = Schematic {};
 
-    schematic.add_element(SchematicOld::ElementData {
+    const auto element_id = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {5},
-        .output_delays = std::vector<delay_t>(5, delay_t {1us}),
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
     });
 
-    EXPECT_EQ(schematic.element_count(), 1);
+    EXPECT_EQ(schematic.size(), 1);
+    EXPECT_EQ(schematic.empty(), false);
     EXPECT_EQ(schematic.total_input_count(), 1);
     EXPECT_EQ(schematic.total_output_count(), 5);
-    EXPECT_EQ(std::ranges::distance(schematic.elements()), 1);
+    EXPECT_EQ(std::size(element_ids(schematic)), 1);
+
+    EXPECT_EQ(bool {element_id}, true);
+    EXPECT_EQ(std::size(input_ids(schematic, element_id)), 1);
+    EXPECT_EQ(std::size(output_ids(schematic, element_id)), 5);
+    EXPECT_EQ(std::size(inputs(schematic, element_id)), 1);
+    EXPECT_EQ(std::size(outputs(schematic, element_id)), 5);
 }
 
-TEST(SchematicOld, ElementProperties) {
-    SchematicOld schematic;
-    schematic.add_element(SchematicOld::ElementData {
+TEST(Schematic, ElementProperties) {
+    auto schematic = Schematic {};
+
+    const auto input_inverters = logic_small_vector_t {false, true, false};
+    const auto output_delays = output_delays_t {delay_t {5us}};
+
+    const auto element_id = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+
+        .sub_circuit_id = circuit_id_t {10},
+        .input_inverters = input_inverters,
+        .output_delays = output_delays,
+        .history_length = delay_t {10us},
     });
 
-    const SchematicOld& schematic_const {schematic};
-    const SchematicOld::ConstElement element {schematic_const.element(element_id_t {0})};
+    EXPECT_EQ(schematic.element_type(element_id), ElementType::and_element);
+    EXPECT_EQ(schematic.input_count(element_id), connection_count_t {3});
+    EXPECT_EQ(schematic.output_count(element_id), connection_count_t {1});
 
-    EXPECT_EQ(element.element_id(), element_id_t {0});
-    EXPECT_EQ(element.element_type(), ElementType::and_element);
-    EXPECT_EQ(element.input_count(), connection_count_t {3});
-    EXPECT_EQ(element.output_count(), connection_count_t {1});
+    EXPECT_EQ(schematic.sub_circuit_id(element_id), circuit_id_t {10});
+    EXPECT_EQ(schematic.input_inverters(element_id), input_inverters);
+    EXPECT_EQ(schematic.output_delays(element_id), output_delays);
+    EXPECT_EQ(schematic.history_length(element_id), delay_t {10us});
 
-    EXPECT_EQ(std::ranges::distance(element.inputs()), 3);
-    EXPECT_EQ(std::ranges::distance(element.outputs()), 1);
+    const auto id_0 = connection_id_t {0};
+    const auto id_1 = connection_id_t {1};
+    const auto id_2 = connection_id_t {2};
+
+    EXPECT_EQ(schematic.output_delay(output_t {element_id, id_0}), delay_t {5us});
+    EXPECT_EQ(schematic.input_inverted(input_t {element_id, id_0}), false);
+    EXPECT_EQ(schematic.input_inverted(input_t {element_id, id_1}), true);
+    EXPECT_EQ(schematic.input_inverted(input_t {element_id, id_2}), false);
+
+    EXPECT_EQ(element_id, element_id_t {0});
+    EXPECT_THAT(to_vector(element_ids(schematic)),
+                testing::ElementsAre(element_id_t {0}));
+
+    EXPECT_THAT(to_vector(inputs(schematic, element_id)),
+                testing::ElementsAre(input_t {element_id_t {0}, connection_id_t {0}},
+                                     input_t {element_id_t {0}, connection_id_t {1}},
+                                     input_t {element_id_t {0}, connection_id_t {2}}));
+
+    EXPECT_THAT(to_vector(outputs(schematic, element_id)),
+                testing::ElementsAre(output_t {element_id_t {0}, connection_id_t {0}}));
 }
 
-TEST(SchematicOld, EqualityOperators) {
-    SchematicOld schematic;
-
-    auto wire = schematic.add_element(SchematicOld::ElementData {
+TEST(Schematic, EqualityOperators) {
+    const auto new_element_0 = schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {3},
-        .output_delays = std::vector<delay_t>(3, delay_t {1us}),
-    });
-    auto inverter = schematic.add_element(SchematicOld::ElementData {
+        .input_inverters = {false},
+        .output_delays = output_delays_t(3, delay_t {1us}),
+    };
+    const auto new_element_1 = schematic::NewElement {
         .element_type = ElementType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
+        .input_inverters = {false},
         .output_delays = {element_output_delay(ElementType::buffer_element)},
-    });
+    };
 
-    const SchematicOld& schematic_const {schematic};
+    auto schematic_1 = Schematic {};
+    schematic_1.add_element(schematic::NewElement {new_element_0});
+    schematic_1.add_element(schematic::NewElement {new_element_1});
+    ASSERT_EQ(schematic_1.size(), 2);
 
-    EXPECT_EQ(wire, wire);
-    EXPECT_EQ(wire, schematic_const.element(element_id_t {0}));
-    EXPECT_NE(wire, inverter);
-
-    auto id_0 = connection_id_t {0};
-    auto id_1 = connection_id_t {1};
-
-    EXPECT_EQ(wire.output(id_0), wire.output(id_0));
-    EXPECT_EQ(wire.output(id_0), schematic_const.element(element_id_t {0}).output(id_0));
-    EXPECT_NE(wire.output(id_0), inverter.output(id_0));
-    EXPECT_NE(wire.output(id_0), wire.output(id_1));
-    EXPECT_NE(wire.output(id_0), schematic_const.element(element_id_t {0}).output(id_1));
+    auto schematic_2 = Schematic {};
+    EXPECT_NE(schematic_1, schematic_2);
+    schematic_2.add_element(schematic::NewElement {new_element_0});
+    EXPECT_NE(schematic_1, schematic_2);
+    schematic_2.add_element(schematic::NewElement {new_element_1});
+    EXPECT_EQ(schematic_1, schematic_2);
 }
 
-TEST(SchematicOld, ConnectionProperties) {
-    SchematicOld schematic;
+TEST(Schematic, ConnectionPropertiesNotConnected) {
+    auto schematic = Schematic {};
 
-    auto wire = schematic.add_element(SchematicOld::ElementData {
+    const auto wire = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {3},
-        .output_delays = std::vector<delay_t>(3, delay_t {1us}),
+        .input_inverters = {false},
+        .output_delays = output_delays_t(3, delay_t {1us}),
     });
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
+    const auto and_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
+        .output_delays = {element_output_delay(ElementType::and_element)},
+    });
+
+    const auto id_0 = connection_id_t {0};
+    const auto id_1 = connection_id_t {1};
+    const auto id_2 = connection_id_t {2};
+
+    EXPECT_FALSE(schematic.output(input_t {wire, id_0}));
+    EXPECT_FALSE(schematic.input(output_t {wire, id_0}));
+    EXPECT_FALSE(schematic.input(output_t {wire, id_1}));
+    EXPECT_FALSE(schematic.input(output_t {wire, id_2}));
+
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_0}));
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_1}));
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_2}));
+    EXPECT_FALSE(schematic.input(output_t {and_element, id_0}));
+
+    // wire
+    for (const auto input : inputs(schematic, wire)) {
+        EXPECT_FALSE(schematic.output(input));
+    }
+    for (const auto output : outputs(schematic, wire)) {
+        EXPECT_FALSE(schematic.input(output));
+    }
+
+    // and_element
+    for (const auto input : inputs(schematic, and_element)) {
+        EXPECT_FALSE(schematic.output(input));
+    }
+    for (const auto output : outputs(schematic, and_element)) {
+        EXPECT_FALSE(schematic.input(output));
+    }
+}
+
+TEST(Schematic, ConnectedOutput) {
+    auto schematic = Schematic {};
+
+    auto wire = schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::wire,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
+    });
+    auto and_element = schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::and_element,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
+        .output_delays = {element_output_delay(ElementType::and_element)},
+    });
+
+    const auto id_0 = connection_id_t {0};
+    const auto id_1 = connection_id_t {1};
+    const auto id_2 = connection_id_t {2};
+
+    schematic.connect(output_t {wire, id_1}, input_t {and_element, id_1});
+
+    EXPECT_FALSE(schematic.output(input_t {wire, id_0}));
+    EXPECT_FALSE(schematic.input(output_t {wire, id_0}));
+    EXPECT_EQ(schematic.input(output_t {wire, id_1}), input_t(and_element, id_1));
+    EXPECT_FALSE(schematic.input(output_t {wire, id_2}));
+
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_0}));
+    EXPECT_EQ(schematic.output(input_t {and_element, id_1}), output_t(wire, id_1));
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_2}));
+    EXPECT_FALSE(schematic.input(output_t {and_element, id_0}));
+}
+
+TEST(Schematic, ConnectInput) {
+    auto schematic = Schematic {};
+
+    auto wire = schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::wire,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
+    });
+    auto and_element = schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::and_element,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
+        .output_delays = {element_output_delay(ElementType::and_element)},
+    });
+
+    const auto id_0 = connection_id_t {0};
+    const auto id_1 = connection_id_t {1};
+    const auto id_2 = connection_id_t {2};
+
+    schematic.connect(input_t {and_element, id_1}, output_t {wire, id_1});
+
+    EXPECT_FALSE(schematic.output(input_t {wire, id_0}));
+    EXPECT_FALSE(schematic.input(output_t {wire, id_0}));
+    EXPECT_EQ(schematic.input(output_t {wire, id_1}), input_t(and_element, id_1));
+    EXPECT_FALSE(schematic.input(output_t {wire, id_2}));
+
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_0}));
+    EXPECT_EQ(schematic.output(input_t {and_element, id_1}), output_t(wire, id_1));
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_2}));
+    EXPECT_FALSE(schematic.input(output_t {and_element, id_0}));
+}
+
+TEST(Schematic, ClearedInput) {
+    auto schematic = Schematic {};
+
+    auto wire = schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::wire,
+        .input_count = connection_count_t {1},
+        .output_count = connection_count_t {5},
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
+    });
+    auto and_element = schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::and_element,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
         .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
 
-    EXPECT_EQ(wire.output(id_1).element_id(), wire.element_id());
-    EXPECT_EQ(wire.output(id_1).output_index(), connection_id_t {1});
-    EXPECT_EQ(wire.output(id_1).element(), wire);
-    EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
+    schematic.connect(output_t {wire, id_1}, input_t {and_element, id_1});
 
-    EXPECT_EQ(and_element.input(id_1).element_id(), and_element.element_id());
-    EXPECT_EQ(and_element.input(id_1).input_index(), connection_id_t {1});
-    EXPECT_EQ(and_element.input(id_1).element(), and_element);
-    EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
+    EXPECT_TRUE(schematic.input(output_t {wire, id_1}));
+    EXPECT_TRUE(schematic.output(input_t {and_element, id_1}));
+
+    schematic.clear(input_t {and_element, id_1});
+
+    EXPECT_FALSE(schematic.input(output_t {wire, id_1}));
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_1}));
 }
 
-TEST(SchematicOld, ConnectedOutput) {
-    SchematicOld schematic;
+TEST(Schematic, ClearedOutput) {
+    auto schematic = Schematic {};
 
-    auto wire = schematic.add_element(SchematicOld::ElementData {
+    auto wire = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {5},
-        .output_delays = std::vector<delay_t>(5, delay_t {1us}),
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
     });
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
+    auto and_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
         .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(and_element.input(id_1));
 
-    EXPECT_EQ(wire.output(id_1).has_connected_element(), true);
-    EXPECT_EQ(wire.output(id_1).connected_element_id(), and_element.element_id());
-    EXPECT_EQ(wire.output(id_1).connected_element(), and_element);
-    EXPECT_EQ(wire.output(id_1).connected_input(), and_element.input(id_1));
+    schematic.connect(output_t {wire, id_1}, input_t {and_element, id_1});
 
-    EXPECT_EQ(and_element.input(id_1).has_connected_element(), true);
-    EXPECT_EQ(and_element.input(id_1).connected_element_id(), wire.element_id());
-    EXPECT_EQ(and_element.input(id_1).connected_element(), wire);
-    EXPECT_EQ(and_element.input(id_1).connected_output(), wire.output(id_1));
+    EXPECT_TRUE(schematic.input(output_t {wire, id_1}));
+    EXPECT_TRUE(schematic.output(input_t {and_element, id_1}));
+
+    schematic.clear(output_t {wire, id_1});
+
+    EXPECT_FALSE(schematic.input(output_t {wire, id_1}));
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_1}));
 }
 
-TEST(SchematicOld, ConnectInput) {
-    SchematicOld schematic;
+TEST(Schematic, ClearedAllWire) {
+    auto schematic = Schematic {};
 
-    auto wire = schematic.add_element(SchematicOld::ElementData {
+    auto wire = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {5},
-        .output_delays = std::vector<delay_t>(5, delay_t {1us}),
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
     });
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
+    auto and_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
         .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
-    and_element.input(id_1).connect(wire.output(id_1));
 
-    EXPECT_EQ(wire.output(id_1).has_connected_element(), true);
-    EXPECT_EQ(wire.output(id_1).connected_element_id(), and_element.element_id());
-    EXPECT_EQ(wire.output(id_1).connected_element(), and_element);
-    EXPECT_EQ(wire.output(id_1).connected_input(), and_element.input(id_1));
+    schematic.connect(output_t {wire, id_1}, input_t {and_element, id_1});
 
-    EXPECT_EQ(and_element.input(id_1).has_connected_element(), true);
-    EXPECT_EQ(and_element.input(id_1).connected_element_id(), wire.element_id());
-    EXPECT_EQ(and_element.input(id_1).connected_element(), wire);
-    EXPECT_EQ(and_element.input(id_1).connected_output(), wire.output(id_1));
+    EXPECT_TRUE(schematic.input(output_t {wire, id_1}));
+    EXPECT_TRUE(schematic.output(input_t {and_element, id_1}));
+
+    schematic.clear_all_connections(wire);
+
+    EXPECT_FALSE(schematic.input(output_t {wire, id_1}));
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_1}));
 }
 
-TEST(SchematicOld, ClearedInput) {
-    SchematicOld schematic;
+TEST(Schematic, ClearedAllElement) {
+    auto schematic = Schematic {};
 
-    auto wire = schematic.add_element(SchematicOld::ElementData {
+    auto wire = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {5},
-        .output_delays = std::vector<delay_t>(5, delay_t {1us}),
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
     });
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
+    auto and_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
         .output_delays = {element_output_delay(ElementType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(and_element.input(id_1));
-    and_element.input(id_1).clear_connection();
 
-    EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
-    EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
+    schematic.connect(output_t {wire, id_1}, input_t {and_element, id_1});
+
+    EXPECT_TRUE(schematic.input(output_t {wire, id_1}));
+    EXPECT_TRUE(schematic.output(input_t {and_element, id_1}));
+
+    schematic.clear_all_connections(and_element);
+
+    EXPECT_FALSE(schematic.input(output_t {wire, id_1}));
+    EXPECT_FALSE(schematic.output(input_t {and_element, id_1}));
 }
 
-TEST(SchematicOld, ClearedOutput) {
-    SchematicOld schematic;
+TEST(Schematic, ReconnectInput) {
+    auto schematic = Schematic {};
 
-    auto wire = schematic.add_element(SchematicOld::ElementData {
+    auto wire_1 = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {5},
-        .output_delays = std::vector<delay_t>(5, delay_t {1us}),
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
     });
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
+    auto and_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
         .output_delays = {element_output_delay(ElementType::and_element)},
     });
-
-    auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(and_element.input(id_1));
-    wire.output(id_1).clear_connection();
-
-    EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
-    EXPECT_EQ(wire.output(id_1).has_connected_element(), false);
-}
-
-TEST(SchematicOld, ReconnectInput) {
-    SchematicOld schematic;
-
-    auto wire = schematic.add_element(SchematicOld::ElementData {
+    auto wire_2 = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
-        .output_count = connection_count_t {5},
-        .output_delays = std::vector<delay_t>(5, delay_t {1us}),
-    });
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::and_element,
-        .input_count = connection_count_t {3},
-        .output_count = connection_count_t {1},
-        .output_delays = {element_output_delay(ElementType::and_element)},
-    });
-    auto inverter = schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::buffer_element,
-        .input_count = connection_count_t {1},
-        .output_count = connection_count_t {1},
-        .output_delays = {element_output_delay(ElementType::buffer_element)},
+        .output_count = connection_count_t {2},
+        .input_inverters = {false},
+        .output_delays = output_delays_t(2, delay_t {1us}),
     });
 
     auto id_0 = connection_id_t {0};
-    wire.output(id_0).connect(and_element.input(id_0));
-    and_element.input(id_0).connect(inverter.output(id_0));
 
-    EXPECT_EQ(wire.output(id_0).has_connected_element(), false);
-    EXPECT_EQ(and_element.input(id_0).has_connected_element(), true);
-    EXPECT_EQ(inverter.output(id_0).has_connected_element(), true);
+    schematic.connect(output_t {wire_1, id_0}, input_t {and_element, id_0});
+
+    EXPECT_EQ(bool {schematic.input(output_t {wire_1, id_0})}, true);
+    EXPECT_EQ(bool {schematic.output(input_t {and_element, id_0})}, true);
+    EXPECT_EQ(bool {schematic.input(output_t {wire_2, id_0})}, false);
+
+    schematic.connect(input_t {and_element, id_0}, output_t {wire_2, id_0});
+
+    EXPECT_EQ(bool {schematic.input(output_t {wire_1, id_0})}, false);
+    EXPECT_EQ(bool {schematic.output(input_t {and_element, id_0})}, true);
+    EXPECT_EQ(bool {schematic.input(output_t {wire_2, id_0})}, true);
 }
 
-TEST(SchematicOld, ReconnectOutput) {
-    SchematicOld schematic;
+TEST(Schematic, ReconnectOutput) {
+    auto schematic = Schematic {};
 
-    auto wire = schematic.add_element(SchematicOld::ElementData {
+    auto wire = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {5},
-        .output_delays = std::vector<delay_t>(5, delay_t {1us}),
+        .input_inverters = {false},
+        .output_delays = output_delays_t(5, delay_t {1us}),
     });
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
+    auto and_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::and_element,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
+        .input_inverters = {false, false, false},
         .output_delays = {element_output_delay(ElementType::and_element)},
     });
-    auto or_element = schematic.add_element(SchematicOld::ElementData {
+    auto or_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::or_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
+        .input_inverters = {false, false},
         .output_delays = {element_output_delay(ElementType::or_element)},
     });
 
-    auto id_1 = connection_id_t {1};
-    wire.output(id_1).connect(and_element.input(id_1));
-    wire.output(id_1).connect(or_element.input(id_1));
+    auto id_0 = connection_id_t {0};
 
-    EXPECT_EQ(wire.output(id_1).has_connected_element(), true);
-    EXPECT_EQ(and_element.input(id_1).has_connected_element(), false);
-    EXPECT_EQ(or_element.input(id_1).has_connected_element(), true);
-}
+    schematic.connect(output_t {wire, id_0}, input_t {and_element, id_0});
 
-TEST(SchematicOld, TestPlaceholders) {
-    SchematicOld schematic;
-    auto wire = schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::wire,
-        .input_count = connection_count_t {1},
-        .output_count = connection_count_t {5},
-        .output_delays = std::vector<delay_t>(5, delay_t {1us}),
-    });
-    EXPECT_EQ(schematic.element_count(), 1);
+    EXPECT_EQ(bool {schematic.input(output_t {wire, id_0})}, true);
+    EXPECT_EQ(bool {schematic.output(input_t {and_element, id_0})}, true);
+    EXPECT_EQ(bool {schematic.output(input_t {or_element, id_0})}, false);
 
-    add_output_placeholders(schematic);
-    EXPECT_EQ(schematic.element_count(), 6);
+    schematic.connect(output_t {wire, id_0}, input_t {or_element, id_0});
 
-    EXPECT_EQ(wire.output(connection_id_t {3}).has_connected_element(), true);
-    EXPECT_EQ(wire.output(connection_id_t {3}).connected_element().element_type(),
-              ElementType::placeholder);
-}
-
-//
-// Element View
-//
-
-TEST(SchematicOld, ElementViewEmpty) {
-    SchematicOld schematic;
-
-    auto view = SchematicOld::ElementView {schematic};
-
-    ASSERT_THAT(view, testing::ElementsAre());
-    ASSERT_EQ(std::empty(view), true);
-    ASSERT_EQ(std::size(view), 0);
-}
-
-TEST(SchematicOld, ElementViewFull) {
-    SchematicOld schematic;
-
-    auto wire = schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::wire,
-        .input_count = connection_count_t {1},
-        .output_count = connection_count_t {1},
-        .output_delays = {delay_t {1us}},
-    });
-    auto inverter = schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::buffer_element,
-        .input_count = connection_count_t {1},
-        .output_count = connection_count_t {1},
-        .output_delays = {element_output_delay(ElementType::buffer_element)},
-    });
-
-    auto view = SchematicOld::ElementView {schematic};
-
-    ASSERT_THAT(view, testing::ElementsAre(wire, inverter));
-    ASSERT_EQ(std::empty(view), false);
-    ASSERT_EQ(std::size(view), 2);
-}
-
-TEST(SchematicOld, ElementViewRanges) {
-    SchematicOld schematic;
-    schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::wire,
-        .input_count = connection_count_t {1},
-        .output_count = connection_count_t {1},
-        .output_delays = {delay_t {1us}},
-    });
-    schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::buffer_element,
-        .input_count = connection_count_t {1},
-        .output_count = connection_count_t {1},
-        .output_delays = {element_output_delay(ElementType::buffer_element)},
-    });
-
-    auto view = SchematicOld::ElementView {schematic};
-
-    ASSERT_EQ(std::distance(view.begin(), view.end()), 2);
-    ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
-    ASSERT_EQ(std::ranges::distance(view), 2);
-}
-
-//
-// Element Inputs View
-//
-
-TEST(SchematicOld, InputsViewEmpty) {
-    SchematicOld schematic;
-    auto wire = schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::wire,
-        .input_count = connection_count_t {0},
-        .output_count = connection_count_t {1},
-        .output_delays = {delay_t {1us}},
-    });
-    auto view = SchematicOld::InputView {wire};
-
-    ASSERT_THAT(view, testing::ElementsAre());
-    ASSERT_EQ(std::empty(view), true);
-    ASSERT_EQ(std::size(view), 0);
-}
-
-TEST(SchematicOld, InputsViewFull) {
-    SchematicOld schematic;
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::and_element,
-        .input_count = connection_count_t {2},
-        .output_count = connection_count_t {1},
-        .output_delays = {element_output_delay(ElementType::and_element)},
-    });
-    auto view = SchematicOld::InputView {and_element};
-
-    ASSERT_THAT(view, testing::ElementsAre(and_element.input(connection_id_t {0}),
-                                           and_element.input(connection_id_t {1})));
-    ASSERT_EQ(std::empty(view), false);
-    ASSERT_EQ(std::size(view), 2);
-}
-
-TEST(SchematicOld, InputsViewRanges) {
-    SchematicOld schematic;
-    auto and_element = schematic.add_element(SchematicOld::ElementData {
-        .element_type = ElementType::and_element,
-        .input_count = connection_count_t {2},
-        .output_count = connection_count_t {1},
-        .output_delays = {element_output_delay(ElementType::and_element)},
-    });
-    auto view = SchematicOld::InputView {and_element};
-
-    ASSERT_EQ(std::distance(view.begin(), view.end()), 2);
-    ASSERT_EQ(std::ranges::distance(std::ranges::begin(view), std::ranges::end(view)), 2);
-    ASSERT_EQ(std::ranges::distance(view), 2);
+    EXPECT_EQ(bool {schematic.input(output_t {wire, id_0})}, true);
+    EXPECT_EQ(bool {schematic.output(input_t {and_element, id_0})}, false);
+    EXPECT_EQ(bool {schematic.output(input_t {or_element, id_0})}, true);
 }
 
 }  // namespace logicsim

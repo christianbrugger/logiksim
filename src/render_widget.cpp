@@ -1007,9 +1007,6 @@ auto RendererWidget::on_simulation_timeout_impl() -> void {
         }
 
         this->update();
-#ifndef NDEBUG
-        simulation_->validate();
-#endif
     }
 
     const auto was_finished = simulation_->finished();

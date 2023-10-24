@@ -1,5 +1,7 @@
 #include "geometry/connection_count.h"
 
+#include "algorithm/to_vector.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -15,12 +17,12 @@ TEST(GeometryConnectionCount, FirstLastId) {
 
 TEST(GeometryConnectionCount, IdRange) {
     const auto r = id_range(connection_count_t {8});
-    const auto result = std::vector<connection_id_t> {r.begin(), r.end()};
 
-    ASSERT_THAT(result, testing::ElementsAre(connection_id_t(0), connection_id_t(1),
-                                             connection_id_t(2), connection_id_t(3),
-                                             connection_id_t(4), connection_id_t(5),
-                                             connection_id_t(6), connection_id_t(7)));
+    ASSERT_THAT(
+        to_vector(r),
+        testing::ElementsAre(connection_id_t(0), connection_id_t(1), connection_id_t(2),
+                             connection_id_t(3), connection_id_t(4), connection_id_t(5),
+                             connection_id_t(6), connection_id_t(7)));
 }
 
 }  // namespace logicsim

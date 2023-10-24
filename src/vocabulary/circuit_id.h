@@ -12,7 +12,7 @@
 namespace logicsim {
 
 /**
- * @brief: Identifies a specefic circuit or sub-circuit.
+ * @brief: Identifies a specific circuit or sub-circuit.
  */
 struct circuit_id_t {
     using value_type = int16_t;

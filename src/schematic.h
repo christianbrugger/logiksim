@@ -102,7 +102,7 @@ class Schematic {
 
     // attributes for single input / output
     [[nodiscard]] auto output_delay(output_t output) const -> delay_t;
-    [[nodiscard]] auto is_inverted(input_t input) const -> bool;
+    [[nodiscard]] auto input_inverted(input_t input) const -> bool;
     auto set_input_inverter(input_t input, bool value) -> void;
 
    private:
@@ -151,10 +151,8 @@ auto swap(Schematic &a, Schematic &b) noexcept -> void;
 [[nodiscard]] auto output_ids(const Schematic &schematic, element_id_t element_id)
     -> range_extended_t<connection_id_t>;
 
-[[nodiscard]] auto input_inverted(const Schematic &schematic, input_t input) -> bool;
-
 //
-// formatting
+// Formatting
 //
 
 [[nodiscard]] auto format_element(const Schematic &schematic, element_id_t element)

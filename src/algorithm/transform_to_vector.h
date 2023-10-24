@@ -15,9 +15,9 @@ namespace logicsim {
 /**
  * brief: Stores the transformed values of the range to a new std::vector.
  */
-template <std::input_iterator InputIt, class Function>
-    requires std::sized_sentinel_for<InputIt, InputIt>
-constexpr auto transform_to_vector(InputIt first, InputIt last, Function func) {
+template <std::input_iterator InputIt, std::sized_sentinel_for<InputIt> Sentinel,
+          class Function>
+constexpr auto transform_to_vector(InputIt first, Sentinel last, Function func) {
     using result_type = std::decay_t<decltype(std::invoke(func, *first))>;
     using container_type = std::vector<result_type>;
 

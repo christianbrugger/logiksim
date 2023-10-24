@@ -1,6 +1,7 @@
 
 #include "algorithm/range_extended.h"
 
+#include "algorithm/to_vector.h"
 #include "logging.h"
 #include "type_trait/numeric_limits_template.h"
 
@@ -46,9 +47,7 @@ TEST(AlgorithmRangeExtended, CustomTypeSize) {
 TEST(AlgorithmRangeExtended, CustomTypeValues) {
     const auto r = range_extended<CustomType>(3);
 
-    const auto result = std::vector<CustomType>(r.begin(), r.end());
-
-    ASSERT_THAT(result,
+    ASSERT_THAT(to_vector(r),
                 testing::ElementsAre(CustomType(0), CustomType(1), CustomType(2)));
 }
 
@@ -58,7 +57,7 @@ TEST(AlgorithmRangeExtended, FullRange) {
     constexpr auto count = static_cast<std::size_t>(max_value.value) + 1;
 
     const auto r = range_extended<CustomType>(count);
-    const auto result = std::vector<CustomType>(r.begin(), r.end());
+    const auto result = to_vector(r);
 
     EXPECT_EQ(result.size(), count);
     EXPECT_EQ(result.front(), CustomType {0});

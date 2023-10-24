@@ -1,4 +1,5 @@
 
+#include "algorithm/to_vector.h"
 #include "iterator_adaptor/enumerate.h"
 #include "iterator_adaptor/transform_view.h"
 #include "logging.h"
@@ -19,10 +20,7 @@ TEST(IteratorAdaptorEnumerateTF, TransformViewNonOwning) {
         transform_view(enumerated, [](auto pair) { return pair.first * pair.second; });
 
     ASSERT_THAT(transformed, testing::ElementsAre(0, 3, 8));
-
-    const auto result = std::vector<int>(transformed.begin(), transformed.end());
-
-    ASSERT_THAT(result, testing::ElementsAre(0, 3, 8));
+    ASSERT_THAT(to_vector(transformed), testing::ElementsAre(0, 3, 8));
 }
 
 TEST(IteratorAdaptorEnumerateTF, TransformViewOwning) {
@@ -32,10 +30,7 @@ TEST(IteratorAdaptorEnumerateTF, TransformViewOwning) {
     }();
 
     ASSERT_THAT(transformed, testing::ElementsAre(0, 3, 8));
-
-    const auto result = std::vector<int>(transformed.begin(), transformed.end());
-
-    ASSERT_THAT(result, testing::ElementsAre(0, 3, 8));
+    ASSERT_THAT(to_vector(transformed), testing::ElementsAre(0, 3, 8));
 }
 
 }  // namespace logicsim

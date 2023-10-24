@@ -14,14 +14,14 @@ namespace logicsim {
 /**
  * brief: Stores the transformed values of the range to a new container.
  */
-template <class Container, std::input_iterator InputIt, class Function>
-    requires std::sized_sentinel_for<InputIt, InputIt>
-constexpr auto transform_to_container(InputIt first, InputIt last, Function func)
+template <class Container, std::input_iterator InputIt,
+          std::sized_sentinel_for<InputIt> Sentinel, class Function>
+constexpr auto transform_to_container(InputIt first, Sentinel last, Function func)
     -> Container {
     Container result {};
     result.reserve(static_cast<std::size_t>(distance_fast(first, last)));
 
-    std::transform(first, last, std::back_inserter(result), [func](auto&& item) {
+    std::ranges::transform(first, last, std::back_inserter(result), [func](auto&& item) {
         return std::invoke(func, std::forward<decltype(item)>(item));
     });
     return result;

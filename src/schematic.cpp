@@ -95,10 +95,10 @@ auto Schematic::format() const -> std::string {
         return fmt::format("<Schematic with {} elements>", size());
     }
 
-    const auto proj = [&](element_id_t element_id) -> std::string {
+    const auto format_element = [&](element_id_t element_id) -> std::string {
         return format_element_with_connections(*this, element_id);
     };
-    const auto list = fmt_join(",\n  ", element_ids(*this), "{}", proj);
+    const auto list = fmt_join(",\n  ", element_ids(*this), "{}", format_element);
     return fmt::format("<Schematic with {} elements: [\n  {}\n]>", size(), list);
 }
 
@@ -250,7 +250,7 @@ auto Schematic::output_delay(output_t output) const -> delay_t {
     return output_delays_.at(output.element_id.value).at(output.connection_id.value);
 }
 
-auto Schematic::is_inverted(input_t input) const -> bool {
+auto Schematic::input_inverted(input_t input) const -> bool {
     return input_inverters_.at(input.element_id.value).at(input.connection_id.value);
 }
 

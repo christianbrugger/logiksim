@@ -47,7 +47,7 @@ auto set_default_inputs(Simulation &simulation) -> void {
                 element_enable_input_id(schematic.element_type(element_id))) {
             const auto input = input_t {element_id, *enable_id};
 
-            if (!schematic.output(input) && !schematic.is_inverted(input)) {
+            if (!schematic.output(input) && !schematic.input_inverted(input)) {
                 simulation.set_input_value(input, true);
             }
         }
@@ -57,8 +57,8 @@ auto set_default_inputs(Simulation &simulation) -> void {
             const auto input_1 = input_t {element_id, connection_id_t {1}};
             const auto input_2 = input_t {element_id, connection_id_t {2}};
 
-            if (!schematic.output(input_1) && !schematic.is_inverted(input_1) &&
-                !schematic.output(input_2) && !schematic.is_inverted(input_2)) {
+            if (!schematic.output(input_1) && !schematic.input_inverted(input_1) &&
+                !schematic.output(input_2) && !schematic.input_inverted(input_2)) {
                 simulation.set_input_value(input_1, true);
                 simulation.set_input_value(input_2, true);
             }
@@ -422,12 +422,12 @@ auto Simulation::set_output_value(output_t output, bool value) -> void {
 
     auto &input_value =
         input_values_.at(input.element_id.value).at(input.connection_id.value);
-    input_value = value ^ schematic_.is_inverted(input);
+    input_value = value ^ schematic_.input_inverted(input);
 }
 
 auto Simulation::output_value(output_t output) const -> bool {
     const auto input = schematic_.input(output);
-    return input_value(input) ^ schematic_.is_inverted(input);
+    return input_value(input) ^ schematic_.input_inverted(input);
 }
 
 auto Simulation::output_values(element_id_t element_id) const -> logic_small_vector_t {
