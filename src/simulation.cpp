@@ -257,39 +257,43 @@ auto Simulation::process_all_current_events() -> void {
     }
 }
 
-auto Simulation::run(const delay_t simulation_time,
-                     const simulation::realtime_timeout_t timeout,
-                     const int64_t max_events) -> void {
-    if (simulation_time < delay_t {0us}) [[unlikely]] {
+auto Simulation::run(RunConfig config) -> void {
+    if (config.simulate_for < delay_t {0us}) [[unlikely]] {
         throw std::runtime_error("simulation_time needs to be positive.");
     }
-    if (max_events < 0) [[unlikely]] {
+    if (config.realtime_timeout < simulation::realtime_timeout_t::zero()) [[unlikely]] {
+        throw std::runtime_error("realtime-timeout needs to be positive.");
+    }
+    if (config.max_events < 0) [[unlikely]] {
         throw std::runtime_error("max events needs to be positive or zero.");
     }
-    if (event_count_ > std::numeric_limits<event_count_t>::max() - max_events)
+    if (event_count_ > std::numeric_limits<event_count_t>::max() - config.max_events)
         [[unlikely]] {
         throw std::runtime_error("max events to large, overflows.");
     }
 
-    if (simulation_time == delay_t {0us}) {
+    if (config.simulate_for == delay_t {0us}) {
         return;
     }
 
-    const auto timer = TimeoutTimer {timeout};
+    const auto timer = TimeoutTimer {config.realtime_timeout};
     const auto queue_end_time =
-        simulation_time == simulation::defaults::infinite_simulation_time
+        config.simulate_for == simulation::defaults::infinite_simulation
             ? time_t::max()
-            : queue_.time() + simulation_time;
+            : queue_.time() + config.simulate_for;
 
-    const auto stop_event_count = max_events == simulation::defaults::no_max_events
+    const auto stop_event_count = config.max_events == simulation::defaults::no_max_events
                                       ? std::numeric_limits<int64_t>::max()
-                                      : event_count_ + max_events;
+                                      : event_count_ + config.max_events;
     // only check time after this many events
     constexpr auto check_interval = event_count_t {1'000};
-    auto next_check =
-        std::min(stop_event_count, timeout == simulation::defaults::no_realtime_timeout
-                                       ? std::numeric_limits<int64_t>::max()
-                                       : event_count_ + check_interval);
+    auto next_check = [&] {
+        const auto check_event_count =
+            config.realtime_timeout == simulation::defaults::no_realtime_timeout
+                ? std::numeric_limits<int64_t>::max()
+                : event_count_ + check_interval;
+        return std::min(stop_event_count, check_event_count);
+    }();
 
     while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
         queue_.set_time(queue_.next_event_time());
@@ -308,7 +312,7 @@ auto Simulation::run(const delay_t simulation_time,
         }
     }
 
-    if (simulation_time != simulation::defaults::infinite_simulation_time) {
+    if (config.simulate_for != simulation::defaults::infinite_simulation) {
         queue_.set_time(queue_end_time);
     }
     return;
@@ -475,7 +479,7 @@ auto Simulation::set_unconnected_input(input_t input, bool value) -> void {
 
     // we run the simulation for a very short time
     // this makes sure we are the only one submitting an event at this time and input.
-    run(delay_t::epsilon());
+    run({.simulate_for = delay_t::epsilon()});
 
     queue_.submit_event(simulation::simulation_event_t {
         .time = queue_.time() + delay_t::epsilon(),

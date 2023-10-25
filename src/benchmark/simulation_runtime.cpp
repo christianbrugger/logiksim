@@ -33,9 +33,7 @@ auto benchmark_simulation(Rng &rng, Schematic &&schematic__, const int n_events,
     Simulation simulation {std::move(schematic__), do_print};
 
     while (true) {
-        simulation.run(simulation::defaults::infinite_simulation_time,
-                       simulation::defaults::no_realtime_timeout,
-                       n_events - simulation.processed_event_count());
+        simulation.run({.max_events = n_events - simulation.processed_event_count()});
 
         if (simulation.processed_event_count() >= n_events) {
             break;
@@ -73,9 +71,8 @@ auto benchmark_simulation_metastable(Schematic &&schematic__, const int n_events
 
     while (true) {
         // we use realtime timeout, to see the impact of its checking
-        simulation.run(simulation::defaults::infinite_simulation_time,
-                       simulation::realtime_timeout_t {1000 * 1ms},
-                       n_events - simulation.processed_event_count());
+        simulation.run({.realtime_timeout = simulation::realtime_timeout_t {1000 * 1ms},
+                        .max_events = n_events - simulation.processed_event_count()});
 
         if (simulation.is_finished()) {
             break;

@@ -32,7 +32,7 @@ using realtime_timeout_t = TimeoutTimer::timeout_t;
 namespace defaults {
 constexpr static auto no_realtime_timeout = TimeoutTimer::defaults::no_timeout;
 
-constexpr static auto infinite_simulation_time = delay_t::max();
+constexpr static auto infinite_simulation = delay_t::max();
 
 constexpr static int64_t no_max_events {0};
 };  // namespace defaults
@@ -84,18 +84,40 @@ class Simulation {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_element(element_id_t element_id) const -> std::string;
 
+    struct RunConfig {
+        /**
+         * @brief: Simulate for this time.
+         *
+         * If infinite simulation time is specified, the simulation runs until
+         * the circuit reaches a steady state or other conditions are reached.
+         *
+         * Throws an exception if simulation time is negative.
+         */
+        delay_t simulate_for {simulation::defaults::infinite_simulation};
+
+        /**
+         * @brief: Interrupts the simulation after specified real-time seconds.
+         *
+         * Throws an exception if max_events is negative.
+         */
+        simulation::realtime_timeout_t realtime_timeout {
+            simulation::defaults::no_realtime_timeout};
+
+        /**
+         * @brief: Interrupts the simulation after this many processed events.
+         *
+         * Throws an exception if max_events is negative.
+         */
+        event_count_t max_events {simulation::defaults::no_max_events};
+    };
+
     /**
-     * @brief: Runs simulation for given times and events
+     * @brief: Runs simulation with given config.
      *
-     * @param simulation_time   simulate for this time or, when run_until_steady,
-     *                          run until no more new events are generated
-     * @param realtime_timeout  stop if simulation takes longer than this in real-time
-     * @param max_events        return after simulating this many events
+     * Note that the simulation either fully processes or doesn't process events
+     * for a specific time-point to guarantee valid circuit states.
      */
-    auto run(delay_t simulation_time = simulation::defaults::infinite_simulation_time,
-             simulation::realtime_timeout_t timeout =
-                 simulation::defaults::no_realtime_timeout,
-             int64_t max_events = simulation::defaults::no_max_events) -> void;
+    auto run(RunConfig config = {}) -> void;
 
     // element information
     [[nodiscard]] auto input_values(element_id_t element_id) const

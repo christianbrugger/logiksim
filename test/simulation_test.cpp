@@ -32,21 +32,16 @@ TEST(SimulationTest, InitializeSimulation) {
     EXPECT_EQ(simulation.output_value(output_t {inverter, connection_id_t {0}}), true);
 }
 
-/*
 TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
-    using namespace std::chrono_literals;
-
-    Schematic schematic;
-    auto simulation = get_initialized_simulation(std::move(schematic));
+    auto simulation = Simulation {Schematic {}};
 
     EXPECT_EQ(simulation.time(), time_t {0us});
-    simulation.run(delay_t {3s});
-    EXPECT_EQ(simulation.time(), time_t {3s});
+    simulation.run({.simulate_for = delay_t {3ms}});
+    EXPECT_EQ(simulation.time(), time_t {3ms});
 }
 
-TEST(SimulationTest, SimulationProcessAllEventsForTime) {
-    using namespace std::chrono_literals;
-
+/*
+TEST(SimulationTest, SimulationProcessAllEvents) {
     Schematic schematic;
     auto and_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::and_element,
@@ -62,19 +57,46 @@ TEST(SimulationTest, SimulationProcessAllEventsForTime) {
         .input_inverters = {false, false},
         .output_delays = {element_output_delay(ElementType::xor_element)},
     });
-    auto simulation = get_initialized_simulation(std::move(schematic));
+    auto simulation = Simulation {std::move(schematic)};
 
     const auto id_0 = connection_id_t {0};
 
-    simulation.submit_event(input_t {and_element, id_0}, delay_t {10us}, true);
-    simulation.submit_event(input_t {xor_element, id_0}, delay_t {10us}, true);
+    simulation.set_unconnected_input(input_t {and_element, id_0}, true);
+    simulation.set_unconnected_input(input_t {xor_element, id_0}, true);
 
+    EXPECT_EQ(simulation.processed_event_count(), 0);
+    simulation.run();
+    EXPECT_EQ(simulation.processed_event_count(), 2);
+}
+
+TEST(SimulationTest, SimulationProcessAllEventsForTime) {
+    Schematic schematic;
+    auto and_element = schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::and_element,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
+        .input_inverters = {false, false},
+        .output_delays = {element_output_delay(ElementType::and_element)},
+    });
+    auto xor_element = schematic.add_element(schematic::NewElement {
+        .element_type = ElementType::xor_element,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
+        .input_inverters = {false, false},
+        .output_delays = {element_output_delay(ElementType::xor_element)},
+    });
+    auto simulation = Simulation {std::move(schematic)};
+
+    const auto id_0 = connection_id_t {0};
+
+    simulation.set_unconnected_input(input_t {and_element, id_0}, true);
+    simulation.set_unconnected_input(input_t {xor_element, id_0}, true);
+
+    EXPECT_EQ(simulation.processed_event_count(), 0);
     const auto max_events = 1;
-    const auto event_count =
-        simulation.run(simulation::defaults::infinite_simulation_time,
-                       simulation::defaults::no_realtime_timeout, max_events);
-
-    EXPECT_EQ(event_count, 2);
+    simulation.run(simulation::defaults::infinite_simulation_time,
+                   simulation::defaults::no_realtime_timeout, max_events);
+    EXPECT_EQ(simulation.processed_event_count(), 2);
 }
 
 TEST(SimulationTest, SimulationTimeAdvancingWithoutInfiniteEvents) {
@@ -133,7 +155,7 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
     schematic.connect(output_t {inverter, id_0}, input_t {wire, id_0});
     schematic.connect(output_t {wire, id_0}, input_t {inverter, id_0});
 
-    auto simulation = get_initialized_simulation(std::move(schematic));
+    auto simulation = Simulation {std::move(schematic)};
     // run simulation for 5 ms
     EXPECT_EQ(simulation.time(), time_t {0us});
     const auto start = std::chrono::steady_clock::now();
@@ -164,7 +186,7 @@ TEST(SimulationTest, AdditionalEvents) {
         .output_delays = {element_output_delay(ElementType::xor_element)},
     });
 
-    auto simulation = get_initialized_simulation(std::move(schematic));
+    auto simulation = Simulation {std::move(schematic)};
     simulation.run();
 
     const auto input_0 = input_t {xor_element, connection_id_t {0}};
@@ -206,7 +228,7 @@ TEST(SimulationTest, SimulatanousEvents) {
     const auto input_1 = input_t {xor_element, connection_id_t {1}};
     const auto output_0 = output_t {xor_element, connection_id_t {0}};
 
-    auto simulation = get_initialized_simulation(std::move(schematic));
+    auto simulation = Simulation {std::move(schematic)};
     simulation.submit_event(input_0, delay_t {10us}, true);
     simulation.run();
 
@@ -265,7 +287,7 @@ TEST(SimulationTest, HalfAdder) {
     schematic.connect(output_t {input1, id_0}, input_t {carry, id_1});
     schematic.connect(output_t {input1, id_1}, input_t {output, id_1});
 
-    auto simulation = get_initialized_simulation(std::move(schematic));
+    auto simulation = Simulation {std::move(schematic)};
 
     // 0 + 0 -> 00
     {
@@ -333,7 +355,7 @@ TEST(SimulationTest, OutputDelayTest) {
     schematic.connect(output_t {wire, id_1}, input_t {and_element, id_1});
     schematic.connect(output_t {wire, id_2}, input_t {and_element, id_2});
 
-    auto simulation = get_initialized_simulation(std::move(schematic));
+    auto simulation = Simulation {std::move(schematic)};
 
     simulation.submit_event(input_t {wire, id_0}, delay_t {1us}, true);
     simulation.run(delay_t {1us});
@@ -364,7 +386,7 @@ TEST(SimulationTest, JKFlipFlop) {
         .output_delays = {element_output_delay(ElementType::flipflop_jk),
                           element_output_delay(ElementType::flipflop_jk)},
     });
-    auto simulation = get_initialized_simulation(std::move(schematic));
+    auto simulation = Simulation {std::move(schematic)};
 
     simulation.run();
     ASSERT_THAT(simulation.output_values(flipflop), testing::ElementsAre(0, 1));

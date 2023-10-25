@@ -104,7 +104,10 @@ auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void 
         return;
     }
 
-    simulation_.run(time_to_simulate, timeout);
+    simulation_.run({
+        .simulate_for = time_to_simulate,
+        .realtime_timeout = timeout,
+    });
 
     {
         const auto event_count = simulation_.processed_event_count();

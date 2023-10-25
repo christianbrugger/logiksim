@@ -23,9 +23,9 @@ auto run_with_events(Simulation& simulation,
     }
 
     for (const simulation_event_t& event_ : events) {
-        const auto runtime = event_.time - simulation.time();
-        if (runtime > delay_t::zero()) {
-            simulation.run(runtime);
+        const auto delay = event_.time - simulation.time();
+        if (delay > delay_t::zero()) {
+            simulation.run({.simulate_for = delay});
         }
 
         assert(simulation.time() >= event_.time);

@@ -285,7 +285,7 @@ auto fill_line_scene(int n_lines) -> SimulatedLineScene {
     // run simulation till the end
     const auto final_delay = (time_t::zero() + max_delay) - simulation.time();
     if (final_delay > delay_t::zero()) {
-        simulation.run(final_delay);
+        simulation.run({.simulate_for = final_delay});
     }
 
     const auto wire_lengths = total_wire_lengths(layout);
