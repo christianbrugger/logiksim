@@ -257,7 +257,12 @@ auto Simulation::process_all_current_events() -> void {
     }
 }
 
-auto Simulation::run(RunConfig config) -> void {
+namespace {
+
+using event_count_t = Simulation::event_count_t;
+using RunConfig = Simulation::RunConfig;
+
+auto validate(RunConfig config, event_count_t current_event_count) -> void {
     if (config.simulate_for < delay_t {0us}) [[unlikely]] {
         throw std::runtime_error("simulation_time needs to be positive.");
     }
@@ -267,48 +272,60 @@ auto Simulation::run(RunConfig config) -> void {
     if (config.max_events < 0) [[unlikely]] {
         throw std::runtime_error("max events needs to be positive or zero.");
     }
-    if (event_count_ > std::numeric_limits<event_count_t>::max() - config.max_events)
-        [[unlikely]] {
+    if (current_event_count > std::numeric_limits<Simulation::event_count_t>::max() -
+                                  config.max_events) [[unlikely]] {
         throw std::runtime_error("max events to large, overflows.");
     }
+}
 
+auto simulation_end_time(RunConfig config, time_t current_time) {
+    if (config.simulate_for == simulation::defaults::infinite_simulation) {
+        return time_t::max();
+    }
+    return current_time + config.simulate_for;
+}
+
+auto stop_event_count(RunConfig config, event_count_t current_event_count) {
+    if (config.max_events == simulation::defaults::no_max_events) {
+        return std::numeric_limits<event_count_t>::max();
+    }
+    return current_event_count + config.max_events;
+}
+
+constexpr inline auto timer_check_interval = event_count_t {1'000};
+
+auto first_check_count(RunConfig config, event_count_t current_event_count) {
+    if (config.realtime_timeout == simulation::defaults::no_realtime_timeout) {
+        return std::numeric_limits<int64_t>::max();
+    }
+    return current_event_count + timer_check_interval;
+}
+
+}  // namespace
+
+auto Simulation::run(RunConfig config) -> void {
+    validate(config, event_count_);
     if (config.simulate_for == delay_t {0us}) {
         return;
     }
 
     const auto timer = TimeoutTimer {config.realtime_timeout};
-    const auto queue_end_time =
-        config.simulate_for == simulation::defaults::infinite_simulation
-            ? time_t::max()
-            : queue_.time() + config.simulate_for;
+    const auto queue_end_time = simulation_end_time(config, time());
+    const auto max_count = stop_event_count(config, event_count_);
 
-    const auto stop_event_count = config.max_events == simulation::defaults::no_max_events
-                                      ? std::numeric_limits<int64_t>::max()
-                                      : event_count_ + config.max_events;
     // only check time after this many events
-    constexpr auto check_interval = event_count_t {1'000};
-    auto next_check = [&] {
-        const auto check_event_count =
-            config.realtime_timeout == simulation::defaults::no_realtime_timeout
-                ? std::numeric_limits<int64_t>::max()
-                : event_count_ + check_interval;
-        return std::min(stop_event_count, check_event_count);
-    }();
+    auto next_check = std::min(max_count, first_check_count(config, event_count_));
 
     while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
         queue_.set_time(queue_.next_event_time());
         process_all_current_events();
 
         if (event_count_ >= next_check) {
-            // breaking within events in the current time-point would lead to
-            // an inconsistent state
-            assert(queue_.next_event_time() > queue_.time());
-
             // we check timeout, after we process at least one group
-            if (timer.reached_timeout() || event_count_ >= stop_event_count) {
+            if (timer.reached_timeout() || event_count_ >= max_count) {
                 return;
             }
-            next_check = std::min(stop_event_count, next_check + check_interval);
+            next_check = std::min(max_count, next_check + timer_check_interval);
         }
     }
 
