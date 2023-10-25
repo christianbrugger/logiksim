@@ -40,6 +40,36 @@ constexpr static auto infinite_simulation = delay_t::max();
 constexpr static auto no_max_events = std::numeric_limits<event_count_t>::max();
 };  // namespace defaults
 
+struct RunConfig {
+    /**
+     * @brief: Simulate for this much simulation time.
+     *
+     * If infinite simulation time is specified, the simulation runs until
+     * the circuit reaches a steady state or other conditions are reached.
+     *
+     * Throws an exception if simulation time is negative.
+     */
+    delay_t simulate_for {simulation::defaults::infinite_simulation};
+
+    /**
+     * @brief: Interrupts the simulation after specified real-time seconds.
+     *
+     * Throws an exception if max_events is negative.
+     */
+    simulation::realtime_timeout_t realtime_timeout {
+        simulation::defaults::no_realtime_timeout};
+
+    /**
+     * @brief: Interrupts the simulation after this many processed events.
+     *
+     * Note all events for one time-point are processed together. So the real
+     * count might be bigger.
+     *
+     * Throws an exception if max_events is negative.
+     */
+    event_count_t max_events {simulation::defaults::no_max_events};
+};
+
 }  // namespace simulation
 
 /**
@@ -84,48 +114,13 @@ class Simulation {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_element(element_id_t element_id) const -> std::string;
 
-    struct RunConfig {
-        /**
-         * @brief: Simulate for this much simulation time.
-         *
-         * If infinite simulation time is specified, the simulation runs until
-         * the circuit reaches a steady state or other conditions are reached.
-         *
-         * Throws an exception if simulation time is negative.
-         */
-        delay_t simulate_for {simulation::defaults::infinite_simulation};
-
-        /**
-         * @brief: Interrupts the simulation after specified real-time seconds.
-         *
-         * Throws an exception if max_events is negative.
-         */
-        simulation::realtime_timeout_t realtime_timeout {
-            simulation::defaults::no_realtime_timeout};
-
-        /**
-         * @brief: Interrupts the simulation after this many processed events.
-         *
-         * Note all events for one time-point are processed together. So the real
-         * count might be bigger.
-         *
-         * Throws an exception if max_events is negative.
-         */
-        event_count_t max_events {simulation::defaults::no_max_events};
-    };
-
     /**
      * @brief: Runs simulation with given config.
      *
      * Note that the simulation either fully processes or doesn't process events
      * for a specific time-point to guarantee valid circuit states.
      */
-    auto run(RunConfig config) -> void;
-
-    /**
-     * @brief: Runs simulation until a steady state is reached.
-     */
-    auto run() -> void;
+    auto run(simulation::RunConfig config = {}) -> void;
 
     // element information
     [[nodiscard]] auto input_values(element_id_t element_id) const
@@ -144,11 +139,10 @@ class Simulation {
     /**
      * @brief: sets the value of an unconnected input.
      *
-     * Throws an exception if the input is is connected.
+     * Note that it takes 2ns until the new input is visible.
+     * Note that the simulation is advanced by 1ns every time the function is called.
      *
-     * The simulation advances by 1ns and event is scheduled to change the input.
-     * Note to make the change visible, the simulation needs to be run for at least
-     * another 1ns.
+     * Throws an exception if the input is is connected.
      */
     auto set_unconnected_input(input_t input, bool value) -> void;
     /**
@@ -158,7 +152,7 @@ class Simulation {
      * the internal state is not changed. Note this can fail, if there is
      * constant input activity.
      *
-     * Throws if the elements internal state is not writable, like for clock generators.
+     * Throws if the elements internal state is not writable, e.g. for clock generators.
      *
      * Returns true if state was successfully changed.
      */

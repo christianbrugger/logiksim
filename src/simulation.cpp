@@ -259,8 +259,8 @@ auto Simulation::process_all_current_events() -> void {
 
 namespace {
 
-using event_count_t = Simulation::event_count_t;
-using RunConfig = Simulation::RunConfig;
+using event_count_t = simulation::event_count_t;
+using RunConfig = simulation::RunConfig;
 
 auto validate(RunConfig config, event_count_t current_event_count) -> void {
     if (config.simulate_for < delay_t {0us}) [[unlikely]] {
@@ -310,7 +310,7 @@ auto first_check_count(RunConfig config, event_count_t current_event_count)
 
 }  // namespace
 
-auto Simulation::run(RunConfig config) -> void {
+auto Simulation::run(simulation::RunConfig config) -> void {
     Expects(queue_.next_event_time() > time());
     validate(config, event_count_);
 
@@ -347,10 +347,6 @@ auto Simulation::run(RunConfig config) -> void {
         queue_.set_time(queue_end_time);
     }
     Ensures(queue_.next_event_time() > time());
-}
-
-auto Simulation::run() -> void {
-    run(RunConfig {});
 }
 
 auto Simulation::is_finished() const -> bool {
@@ -513,7 +509,7 @@ auto Simulation::set_unconnected_input(input_t input, bool value) -> void {
     }
 
     // run the simulation for a short time to make sure only one event is submitted
-    // per time-point, in case method is called repeatedly
+    // per time-point, in case this method is called repeatedly
     run({.simulate_for = delay_t::epsilon()});
 
     if (value != input_value(input)) {
