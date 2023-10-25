@@ -335,11 +335,15 @@ auto Simulation::run(RunConfig config) -> void {
     // advance simulation time (when not interrupted)
     if (config.simulate_for == simulation::defaults::infinite_simulation) {
         queue_.set_time(std::max(time(), largest_history_event_));
-        assert(is_finished());
+        Ensures(is_finished());
     } else {
         queue_.set_time(queue_end_time);
     }
     Ensures(queue_.next_event_time() > time());
+}
+
+auto Simulation::run() -> void {
+    run(RunConfig {});
 }
 
 auto Simulation::is_finished() const -> bool {

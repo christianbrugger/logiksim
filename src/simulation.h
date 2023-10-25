@@ -119,7 +119,12 @@ class Simulation {
      * Note that the simulation either fully processes or doesn't process events
      * for a specific time-point to guarantee valid circuit states.
      */
-    auto run(RunConfig config = {}) -> void;
+    auto run(RunConfig config) -> void;
+
+    /**
+     * @brief: Runs simulation until a steady state is reached.
+     */
+    auto run() -> void;
 
     // element information
     [[nodiscard]] auto input_values(element_id_t element_id) const
