@@ -278,25 +278,31 @@ auto validate(RunConfig config, event_count_t current_event_count) -> void {
     }
 }
 
-auto simulation_end_time(RunConfig config, time_t current_time) {
+auto simulation_end_time(RunConfig config, time_t current_time) -> time_t {
     if (config.simulate_for == simulation::defaults::infinite_simulation) {
         return time_t::max();
     }
     return current_time + config.simulate_for;
 }
 
-auto stop_event_count(RunConfig config, event_count_t current_event_count) {
+auto stop_event_count(RunConfig config, event_count_t current_event_count)
+    -> event_count_t {
     if (config.max_events == simulation::defaults::no_max_events) {
         return std::numeric_limits<event_count_t>::max();
     }
     return current_event_count + config.max_events;
 }
 
+/**
+ * @brief: Checking the realtime timeout is expensive, so we only check
+ *         it after processing batches of this many events.
+ */
 constexpr inline auto timer_check_interval = event_count_t {1'000};
 
-auto first_check_count(RunConfig config, event_count_t current_event_count) {
+auto first_check_count(RunConfig config, event_count_t current_event_count)
+    -> event_count_t {
     if (config.realtime_timeout == simulation::defaults::no_realtime_timeout) {
-        return std::numeric_limits<int64_t>::max();
+        return std::numeric_limits<event_count_t>::max();
     }
     return current_event_count + timer_check_interval;
 }
@@ -304,35 +310,36 @@ auto first_check_count(RunConfig config, event_count_t current_event_count) {
 }  // namespace
 
 auto Simulation::run(RunConfig config) -> void {
+    Expects(queue_.next_event_time() > time());
     validate(config, event_count_);
-    if (config.simulate_for == delay_t {0us}) {
-        return;
-    }
 
     const auto timer = TimeoutTimer {config.realtime_timeout};
     const auto queue_end_time = simulation_end_time(config, time());
     const auto max_count = stop_event_count(config, event_count_);
 
-    // only check time after this many events
     auto next_check = std::min(max_count, first_check_count(config, event_count_));
 
-    while (!queue_.empty() && queue_.next_event_time() < queue_end_time) {
+    while (!queue_.empty() && queue_.next_event_time() <= queue_end_time) {
         queue_.set_time(queue_.next_event_time());
         process_all_current_events();
 
         if (event_count_ >= next_check) {
-            // we check timeout, after we process at least one group
             if (timer.reached_timeout() || event_count_ >= max_count) {
+                Ensures(queue_.next_event_time() > time());
                 return;
             }
             next_check = std::min(max_count, next_check + timer_check_interval);
         }
     }
 
-    if (config.simulate_for != simulation::defaults::infinite_simulation) {
+    // advance simulation time (when not interrupted)
+    if (config.simulate_for == simulation::defaults::infinite_simulation) {
+        queue_.set_time(std::max(time(), largest_history_event_));
+        assert(is_finished());
+    } else {
         queue_.set_time(queue_end_time);
     }
-    return;
+    Ensures(queue_.next_event_time() > time());
 }
 
 auto Simulation::is_finished() const -> bool {
@@ -462,13 +469,14 @@ auto Simulation::try_set_internal_state(internal_state_t index, bool value) -> b
     constexpr static auto max_tries = 10;
     const auto tries = std::ranges::views::iota(0, max_tries);
     if (!contains(tries, true, [&](auto try_ [[maybe_unused]]) {
-            process_all_current_events();
+            Expects(queue_.next_event_time() > time());
             queue_.set_time(queue_.time() + delay_t::epsilon());
 
             auto start_state = logic_small_vector_t {internal_state(element_id)};
             process_all_current_events();
             auto end_state = logic_small_vector_t {internal_state(element_id)};
 
+            Ensures(queue_.next_event_time() > time());
             return start_state == end_state;
         })) {
         // give up, inputs are too busy
@@ -498,6 +506,8 @@ auto Simulation::set_unconnected_input(input_t input, bool value) -> void {
     // this makes sure we are the only one submitting an event at this time and input.
     run({.simulate_for = delay_t::epsilon()});
 
+    // we submit an event, so it will become part of the event group, in case
+    // other inputs of the same element are changed.
     queue_.submit_event(simulation::simulation_event_t {
         .time = queue_.time() + delay_t::epsilon(),
         .element_id = input.element_id,

@@ -56,13 +56,13 @@ constexpr static int64_t no_max_events {0};
  *      + Schematic is not changed ever.
  *      + Vectors have same size as given schematic:
  *           input_values_, internal_states_, first_input_histories_
- *      + Sub-vectors have size of inputs / internal states.
+ *      + Sub-vectors have size of inputs / internal states:
  *           input_values_, internal_states_
- *      + Internal state size is never changed
- *      + Simulation time is never decreased (promised by SimulationQueue)
- *      + the event queue never contains two events for the same time and input
- *        (required by SimulationQueue)
+ *      + Internal state sizes never change.
  *      + Event count never decreases.
+ *      + Event queue never contains two events for the same time and input
+ *        (required by SimulationQueue)
+ *      + All current events are simulated, there are no events at time() in the queue.
  */
 class Simulation {
    public:
@@ -86,7 +86,7 @@ class Simulation {
 
     struct RunConfig {
         /**
-         * @brief: Simulate for this time.
+         * @brief: Simulate for this much simulation time.
          *
          * If infinite simulation time is specified, the simulation runs until
          * the circuit reaches a steady state or other conditions are reached.
@@ -105,6 +105,8 @@ class Simulation {
 
         /**
          * @brief: Interrupts the simulation after this many processed events.
+         *
+         * Note events are processed in chunks, so interruption might be a bit later.
          *
          * Throws an exception if max_events is negative.
          */

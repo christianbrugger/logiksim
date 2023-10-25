@@ -124,10 +124,10 @@ auto Schematic::add_element(schematic::NewElement &&data) -> element_id_t {
     if (data.output_delays.size() != std::size_t {data.output_count}) [[unlikely]] {
         throw std::runtime_error("Need as many output_delays as outputs.");
     }
-    // check delay_t not negative
-    const auto delay_negative = [](delay_t delay) { return delay < delay_t::zero(); };
-    if (std::ranges::any_of(data.output_delays, delay_negative)) [[unlikely]] {
-        throw std::runtime_error("delays cannot be negative");
+    // check delay_t positive
+    const auto delay_positive = [](delay_t delay) { return delay > delay_t::zero(); };
+    if (!std::ranges::all_of(data.output_delays, delay_positive)) [[unlikely]] {
+        throw std::runtime_error("delays need to be positive");
     }
     if (data.history_length < delay_t::zero()) [[unlikely]] {
         throw std::runtime_error("history length cannot be negative");
