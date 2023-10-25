@@ -63,6 +63,7 @@ constexpr static int64_t no_max_events {0};
  *      + Simulation time is never decreased (promised by SimulationQueue)
  *      + the event queue never contains two events for the same time and input
  *        (required by SimulationQueue)
+ *      + Event count never decreases.
  */
 class Simulation {
    public:
@@ -109,12 +110,22 @@ class Simulation {
     [[nodiscard]] auto output_value(output_t output) const -> bool;
     [[nodiscard]] auto internal_state(internal_state_t index) const -> bool;
 
+    /**
+     * @brief: sets the value of an unconnected input.
+     *
+     * Throws an exception if the input is is connected.
+     *
+     * Note if the value is different, the simulation advances by 1ns.
+     */
     auto set_unconnected_input(input_t input, bool value) -> void;
     /**
      * @brief: tries to set the internal state in the next few time-points
      *
-     * Note internal state can only be changed if there is no change in inputs in
-     * the same time-points.
+     * The simulation is advanced by 1ns until a time-point is found where
+     * the internal state is not changed. Note this can fail, if there is
+     * constant input activity.
+     *
+     * Throws if the elements internal state is not writable, like for clock generators.
      *
      * Returns true if state was successfully changed.
      */
@@ -137,7 +148,6 @@ class Simulation {
     auto record_input_history(input_t input, bool new_value) -> void;
     auto clean_history(simulation::HistoryBuffer &history, delay_t history_length)
         -> void;
-    auto run_infinitesimal() -> void;
 
     Schematic schematic_;
     simulation::SimulationQueue queue_;

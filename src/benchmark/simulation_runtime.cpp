@@ -11,7 +11,6 @@
 
 namespace logicsim {
 
-/*
 namespace {
 void _generate_random_events(Rng &rng, Simulation &simulation) {
     const auto &schematic = simulation.schematic();
@@ -20,9 +19,8 @@ void _generate_random_events(Rng &rng, Simulation &simulation) {
 
     for (auto element_id : element_ids(schematic)) {
         for (auto input : inputs(schematic, element_id)) {
-            if (trigger_distribution(rng) == 0) {
-                simulation.submit_event(input, delay_t {1us},
-                                        !simulation.input_value(input));
+            if (!schematic.output(input) && trigger_distribution(rng) == 0) {
+                simulation.set_unconnected_input(input, !simulation.input_value(input));
             }
         }
     }
@@ -33,15 +31,13 @@ void _generate_random_events(Rng &rng, Simulation &simulation) {
 auto benchmark_simulation(Rng &rng, Schematic &&schematic, const int n_events,
                           const PrintEvents do_print) -> int64_t {
     Simulation simulation {std::move(schematic), do_print};
-    simulation.initialize();
 
-    int64_t simulated_event_count {0};
     while (true) {
-        simulated_event_count += simulation.run(
-            simulation::defaults::infinite_simulation_time,
-            simulation::defaults::no_realtime_timeout, n_events - simulated_event_count);
+        simulation.run(simulation::defaults::infinite_simulation_time,
+                       simulation::defaults::no_realtime_timeout,
+                       n_events - simulation.processed_event_count());
 
-        if (simulated_event_count >= n_events) {
+        if (simulation.processed_event_count() >= n_events) {
             break;
         }
 
@@ -53,7 +49,7 @@ auto benchmark_simulation(Rng &rng, Schematic &&schematic, const int n_events,
 
         // auto output_values {simulation.output_values()};
 
-        print_fmt("events simulated = {}\n", simulated_event_count);
+        print_fmt("events simulated = {}\n", simulation.processed_event_count());
         // print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(),
         // "{:b}")); print_fmt("output_values = {}\n", fmt_join("", output_values,
         // "{:b}"));
@@ -65,8 +61,8 @@ auto benchmark_simulation(Rng &rng, Schematic &&schematic, const int n_events,
         }
     }
 
-    Ensures(simulated_event_count >= n_events);
-    return simulated_event_count;
+    Ensures(simulation.processed_event_count() >= n_events);
+    return simulation.processed_event_count();
 }
 
 auto benchmark_simulation(const int n_elements, const int m_events,
@@ -88,23 +84,16 @@ auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
                                      const PrintEvents do_print) -> int64_t {
     Simulation simulation {std::move(schematic), do_print};
 
-    set_default_inputs(simulation);
-    set_default_outputs(simulation);
-    simulation.initialize();
-
-    int64_t simulated_event_count {0};
     while (true) {
         // we use realtime timeout, to see the impact of its checking
-        const auto event_count =
-            simulation.run(simulation::defaults::infinite_simulation_time,
-                           simulation::realtime_timeout_t {1000 * 1ms},
-                           n_events - simulated_event_count);
-        simulated_event_count += event_count;
+        simulation.run(simulation::defaults::infinite_simulation_time,
+                       simulation::realtime_timeout_t {1000 * 1ms},
+                       n_events - simulation.processed_event_count());
 
-        if (event_count == 0) {
+        if (simulation.is_finished()) {
             break;
         }
-        if (simulated_event_count >= n_events) {
+        if (simulation.processed_event_count() >= n_events) {
             break;
         }
     }
@@ -114,7 +103,7 @@ auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
 
         // auto output_values {simulation.output_values()};
 
-        print_fmt("events simulated = {}\n", simulated_event_count);
+        print_fmt("events simulated = {}\n", simulation.processed_event_count());
         // print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(),
         // "{:b}")); print_fmt("output_values = {}\n", fmt_join("", output_values,
         // "{:b}"));
@@ -126,7 +115,7 @@ auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
         }
     }
 
-    return simulated_event_count;
+    return simulation.processed_event_count();
 }
-*/
+
 }  // namespace logicsim

@@ -284,13 +284,6 @@ auto Simulation::run(const delay_t simulation_time,
     return;
 }
 
-/**
- * @brief: Runs simulation for a very short time
- */
-auto Simulation::run_infinitesimal() -> void {
-    run(delay_t::epsilon());
-}
-
 auto Simulation::is_finished() const -> bool {
     return queue_.empty() && time() >= largest_history_event_;
 }
@@ -440,16 +433,16 @@ auto Simulation::try_set_internal_state(internal_state_t index, bool value) -> b
 
 auto Simulation::set_unconnected_input(input_t input, bool value) -> void {
     if (schematic_.output(input)) [[unlikely]] {
-        throw_exception("input is connected");
+        throw std::runtime_error("input is connected");
     }
 
     if (value == input_value(input)) {
         return;
     }
 
-    // we increase the time, so we are sure we are the only one
-    // submitting an event at this time and input.
-    run_infinitesimal();
+    // we run the simulation for a very short time
+    // this makes sure we are the only one submitting an event at this time and input.
+    run(delay_t::epsilon());
 
     queue_.submit_event(simulation::simulation_event_t {
         .time = queue_.time() + delay_t::epsilon(),

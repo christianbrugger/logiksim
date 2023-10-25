@@ -8,6 +8,7 @@
 #include "random/generator.h"
 #include "render_circuit.h"
 #include "schematic_generation.h"
+#include "simulation_player.h"
 #include "simulation_view.h"
 #include "timer.h"
 #include "vocabulary/element_definition.h"
@@ -202,34 +203,34 @@ struct new_event_t {
     bool value;
 };
 
-/*
-auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_time,
-                            const RenderBenchmarkConfig& config) {
-    auto events = std::vector<new_event_t> {};
+auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_delay,
+                            const RenderBenchmarkConfig& config)
+    -> std::vector<simulation::simulation_event_t> {
+    auto events = std::vector<simulation::simulation_event_t> {};
 
     for (const auto element_id : element_ids(schematic)) {
         if (schematic.element_type(element_id) == ElementType::wire) {
             auto spacing_dist_ns = uint_distribution<int>(config.min_event_spacing_ns,
                                                           config.max_event_spacing_ns);
             bool next_value = true;
-            auto next_time = delay_t {spacing_dist_ns(rng) * 1ns};
+            auto next_delay = delay_t {spacing_dist_ns(rng) * 1ns};
 
-            while (next_time < max_time) {
-                events.push_back(new_event_t {
-                    .input = input_t {element_id, connection_id_t {0}},
-                    .offset = next_time,
+            while (next_delay < max_delay) {
+                events.push_back({
+                    .time = time_t::zero() + next_delay,
+                    .element_id = element_id,
+                    .input_id = connection_id_t {0},
                     .value = next_value,
                 });
 
                 next_value = next_value ^ true;
-                next_time = next_time + delay_t {spacing_dist_ns(rng) * 1ns};
+                next_delay = next_delay + delay_t {spacing_dist_ns(rng) * 1ns};
             }
         }
     }
 
     return events;
 }
-*/
 
 }  // namespace
 
@@ -271,26 +272,21 @@ auto fill_line_scene(int n_lines) -> SimulatedLineScene {
     auto simulation = Simulation {
         generate_schematic(layout, simulation_settings.wire_delay_per_distance())};
 
-    /*
-    // init simulation
-    simulation.initialize();
-
     // simulated time
-    const auto max_time = maximum_output_delay(simulation.schematic());
-    if (max_time == delay_t {0ns}) {
+    const auto max_delay = maximum_output_delay(simulation.schematic());
+    if (max_delay == delay_t {0ns}) {
         throw std::runtime_error("simulated time should not be zero");
     }
 
     // generate & submit events
-    const auto events =
-        generate_random_events(rng, simulation.schematic(), max_time, config);
-    for (const auto& event_ : events) {
-        simulation.submit_event(event_.input, event_.offset, event_.value);
-    }
+    run_with_events(simulation, generate_random_events(rng, simulation.schematic(),
+                                                       max_delay, config));
 
-    // run simulation
-    simulation.run(max_time);
-    */
+    // run simulation till the end
+    const auto final_delay = (time_t::zero() + max_delay) - simulation.time();
+    if (final_delay > delay_t::zero()) {
+        simulation.run(final_delay);
+    }
 
     const auto wire_lengths = total_wire_lengths(layout);
 
