@@ -40,7 +40,6 @@ TEST(SimulationTest, SimulationTimeAdvancingWithoutEvents) {
     EXPECT_EQ(simulation.time(), time_t {3ms});
 }
 
-/*
 TEST(SimulationTest, SimulationProcessAllEvents) {
     Schematic schematic;
     auto and_element = schematic.add_element(schematic::NewElement {
@@ -61,14 +60,16 @@ TEST(SimulationTest, SimulationProcessAllEvents) {
 
     const auto id_0 = connection_id_t {0};
 
+    EXPECT_EQ(simulation.processed_event_count(), 0);
+
     simulation.set_unconnected_input(input_t {and_element, id_0}, true);
     simulation.set_unconnected_input(input_t {xor_element, id_0}, true);
-
-    EXPECT_EQ(simulation.processed_event_count(), 0);
     simulation.run();
+
     EXPECT_EQ(simulation.processed_event_count(), 2);
 }
 
+/*
 TEST(SimulationTest, SimulationProcessAllEventsForTime) {
     Schematic schematic;
     auto and_element = schematic.add_element(schematic::NewElement {

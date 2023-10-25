@@ -272,10 +272,6 @@ auto validate(RunConfig config, event_count_t current_event_count) -> void {
     if (config.max_events < 0) [[unlikely]] {
         throw std::runtime_error("max events needs to be positive or zero.");
     }
-    if (current_event_count > std::numeric_limits<Simulation::event_count_t>::max() -
-                                  config.max_events) [[unlikely]] {
-        throw std::runtime_error("max events to large, overflows.");
-    }
 }
 
 auto simulation_end_time(RunConfig config, time_t current_time) -> time_t {
@@ -289,6 +285,11 @@ auto stop_event_count(RunConfig config, event_count_t current_event_count)
     -> event_count_t {
     if (config.max_events == simulation::defaults::no_max_events) {
         return std::numeric_limits<event_count_t>::max();
+    }
+
+    if (current_event_count > std::numeric_limits<Simulation::event_count_t>::max() -
+                                  config.max_events) [[unlikely]] {
+        throw std::runtime_error("max events to large, overflows.");
     }
     return current_event_count + config.max_events;
 }
@@ -312,6 +313,12 @@ auto first_check_count(RunConfig config, event_count_t current_event_count)
 auto Simulation::run(RunConfig config) -> void {
     Expects(queue_.next_event_time() > time());
     validate(config, event_count_);
+
+    if (config.max_events == 0 ||
+        config.realtime_timeout == simulation::realtime_timeout_t::zero() ||
+        config.simulate_for == delay_t::zero()) {
+        return;
+    }
 
     const auto timer = TimeoutTimer {config.realtime_timeout};
     const auto queue_end_time = simulation_end_time(config, time());
@@ -369,7 +376,10 @@ auto Simulation::schedule_initial_events() -> void {
         // output values without inverters
         const auto old_outputs = transform_to_container<logic_small_vector_t>(
             outputs(schematic_, element_id), [&](const output_t output) -> bool {
-                return input_value(schematic_.input(output));
+                if (const auto input = schematic_.input(output)) {
+                    return input_value(input);
+                }
+                return false;  // unconnected outputs
             });
 
         if (has_internal_state(element_type)) {
@@ -502,22 +512,20 @@ auto Simulation::set_unconnected_input(input_t input, bool value) -> void {
         throw std::runtime_error("input is connected");
     }
 
-    if (value == input_value(input)) {
-        return;
-    }
-
-    // we run the simulation for a very short time
-    // this makes sure we are the only one submitting an event at this time and input.
+    // run the simulation for a short time to make sure only one event is submitted
+    // per time-point, in case method is called repeatedly
     run({.simulate_for = delay_t::epsilon()});
 
-    // we submit an event, so it will become part of the event group, in case
-    // other inputs of the same element are changed.
-    queue_.submit_event(simulation::simulation_event_t {
-        .time = queue_.time() + delay_t::epsilon(),
-        .element_id = input.element_id,
-        .input_id = input.connection_id,
-        .value = value,
-    });
+    if (value != input_value(input)) {
+        // submit an event, so it will become part of the event group, in case
+        // other inputs of the same element are changed.
+        queue_.submit_event(simulation::simulation_event_t {
+            .time = queue_.time() + delay_t::epsilon(),
+            .element_id = input.element_id,
+            .input_id = input.connection_id,
+            .value = value,
+        });
+    }
 }
 
 auto Simulation::internal_state(element_id_t element_id) const

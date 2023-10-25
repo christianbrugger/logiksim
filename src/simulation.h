@@ -10,6 +10,8 @@
 #include "vocabulary/optional_logic_values.h"
 #include "vocabulary/print_events.h"
 
+#include <cstdint>
+#include <limits>
 #include <string>
 
 namespace logicsim {
@@ -28,13 +30,14 @@ namespace simulation {
  * brief:: Realtime simulation timeout
  */
 using realtime_timeout_t = TimeoutTimer::timeout_t;
+using event_count_t = int64_t;
 
 namespace defaults {
 constexpr static auto no_realtime_timeout = TimeoutTimer::defaults::no_timeout;
 
 constexpr static auto infinite_simulation = delay_t::max();
 
-constexpr static int64_t no_max_events {0};
+constexpr static auto no_max_events = std::numeric_limits<event_count_t>::max();
 };  // namespace defaults
 
 }  // namespace simulation
@@ -43,14 +46,11 @@ constexpr static int64_t no_max_events {0};
  * @brief Event driven simulation of schematics.
  *
  * Supported Features
- *      + separate delays for each output, which is needed for wires
- *      + realtime timeout for run, so it an be integrated in GUI
- *      + transition history for wires
+ *      + simulates any valid schematic, with or without placeholders
+ *      + records transition history for wires
  *      + elements have internal state to support sequential logic
- *      + negation on input are fully simulated
  *      + complex logic, clock generators, can be modeled by looping connections
  *        and writing VHDL slide logic
- *      + simulates any valid schematic, with or without placeholders
  *
  * Class invariants:
  *      + Schematic is not changed ever.
@@ -66,7 +66,7 @@ constexpr static int64_t no_max_events {0};
  */
 class Simulation {
    public:
-    using event_count_t = int64_t;
+    using event_count_t = simulation::event_count_t;
 
     /**
      * @brief: Creates and initializes the simulation from the schematic.
@@ -106,7 +106,8 @@ class Simulation {
         /**
          * @brief: Interrupts the simulation after this many processed events.
          *
-         * Note events are processed in chunks, so interruption might be a bit later.
+         * Note all events for one time-point are processed together. So the real
+         * count might be bigger.
          *
          * Throws an exception if max_events is negative.
          */
@@ -145,7 +146,9 @@ class Simulation {
      *
      * Throws an exception if the input is is connected.
      *
-     * Note if the value is different, the simulation advances by 1ns.
+     * The simulation advances by 1ns and event is scheduled to change the input.
+     * Note to make the change visible, the simulation needs to be run for at least
+     * another 1ns.
      */
     auto set_unconnected_input(input_t input, bool value) -> void;
     /**
