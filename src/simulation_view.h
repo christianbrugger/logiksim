@@ -4,6 +4,8 @@
 #include "algorithm/range.h"
 #include "iterator_adaptor/transform_view.h"
 #include "vocabulary.h"
+#include "vocabulary/optional_logic_value.h"
+#include "vocabulary/optional_logic_values.h"
 
 #include <gsl/gsl>
 
@@ -61,8 +63,8 @@ class ConstElement {
 
     [[nodiscard]] auto input_value(connection_id_t index) const -> bool;
     [[nodiscard]] auto input_values() const -> const logic_small_vector_t &;
-    [[nodiscard]] auto output_value(connection_id_t index) const -> bool;
-    [[nodiscard]] auto output_values() const -> logic_small_vector_t;
+    [[nodiscard]] auto output_value(connection_id_t index) const -> OptionalLogicValue;
+    [[nodiscard]] auto output_values() const -> optional_logic_values_t;
 
     [[nodiscard]] auto internal_state() const -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(std::size_t index) const -> bool;

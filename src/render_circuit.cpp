@@ -231,14 +231,14 @@ auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
         const auto is_inverted = element.output_inverted(info.output_id);
 
         if (is_inverted || !logic_state.has_connected_output(info.output_id)) {
-            draw_connector(ctx,
-                           ConnectorAttributes {
-                               .state = state,
-                               .position = info.position,
-                               .orientation = info.orientation,
-                               .is_inverted = is_inverted,
-                               .is_enabled = logic_state.output_value(info.output_id),
-                           });
+            draw_connector(
+                ctx, ConnectorAttributes {
+                         .state = state,
+                         .position = info.position,
+                         .orientation = info.orientation,
+                         .is_inverted = is_inverted,
+                         .is_enabled = logic_state.output_value(info.output_id).value(),
+                     });
         }
     }
 }

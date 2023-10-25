@@ -92,7 +92,8 @@ Simulation::Simulation(Schematic &&schematic__, PrintEvents do_print)
 
 auto Simulation::format_element(element_id_t element_id) const -> std::string {
     const auto element_type = schematic_.element_type(element_id);
-    if (!is_logic_item(element_type)) {
+
+    if (element_type == ElementType::wire) {
         return fmt::format("{{{}-{}, inputs: {}, history: {}}}", element_id, element_type,
                            input_values(element_id), input_history(element_id));
     }
@@ -413,13 +414,16 @@ auto Simulation::set_input_internal(input_t input, bool value) -> void {
     input_values_.at(input.element_id.value).at(input.connection_id.value) = value;
 }
 
-auto Simulation::output_value(output_t output) const -> bool {
+auto Simulation::output_value(output_t output) const -> OptionalLogicValue {
     const auto input = schematic_.input(output);
+    if (!input) {
+        return std::nullopt;
+    }
     return input_value(input) ^ schematic_.input_inverted(input);
 }
 
-auto Simulation::output_values(element_id_t element_id) const -> logic_small_vector_t {
-    return transform_to_container<logic_small_vector_t>(
+auto Simulation::output_values(element_id_t element_id) const -> optional_logic_values_t {
+    return transform_to_container<optional_logic_values_t>(
         outputs(schematic_, element_id),
         [&](output_t output) { return output_value(output); });
 }

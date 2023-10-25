@@ -78,11 +78,11 @@ auto ConstElement::input_values() const -> const logic_small_vector_t& {
     return view_->simulation_->input_values(element_id_);
 }
 
-auto ConstElement::output_value(connection_id_t index) const -> bool {
+auto ConstElement::output_value(connection_id_t index) const -> OptionalLogicValue {
     return view_->simulation_->output_value(output_t {element_id_, index});
 }
 
-auto ConstElement::output_values() const -> logic_small_vector_t {
+auto ConstElement::output_values() const -> optional_logic_values_t {
     return view_->simulation_->output_values(element_id_);
 }
 

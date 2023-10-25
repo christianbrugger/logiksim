@@ -6,6 +6,8 @@
 #include "format/struct.h"
 #include "schematic.h"
 #include "timeout_timer.h"
+#include "vocabulary/optional_logic_value.h"
+#include "vocabulary/optional_logic_values.h"
 #include "vocabulary/print_events.h"
 
 #include <string>
@@ -48,6 +50,7 @@ constexpr static int64_t no_max_events {0};
  *      + negation on input are fully simulated
  *      + complex logic, clock generators, can be modeled by looping connections
  *        and writing VHDL slide logic
+ *      + simulates any valid schematic, with or without placeholders
  *
  * Class invariants:
  *      + Schematic is not changed ever.
@@ -98,14 +101,14 @@ class Simulation {
     [[nodiscard]] auto input_values(element_id_t element_id) const
         -> const logic_small_vector_t &;
     [[nodiscard]] auto output_values(element_id_t element_id) const
-        -> logic_small_vector_t;
+        -> optional_logic_values_t;
     [[nodiscard]] auto internal_state(element_id_t element_id) const
         -> const logic_small_vector_t &;
     [[nodiscard]] auto input_history(element_id_t element_id) const
         -> simulation::HistoryView;
 
     [[nodiscard]] auto input_value(input_t input) const -> bool;
-    [[nodiscard]] auto output_value(output_t output) const -> bool;
+    [[nodiscard]] auto output_value(output_t output) const -> OptionalLogicValue;
     [[nodiscard]] auto internal_state(internal_state_t index) const -> bool;
 
     /**

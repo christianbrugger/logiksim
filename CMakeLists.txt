@@ -196,6 +196,8 @@ set(LS_CORE_SOURCES
     src/vocabulary/logic_small_vector.cpp
     src/vocabulary/logic_vector.cpp
     src/vocabulary/offset.cpp
+    src/vocabulary/optional_logic_value.cpp
+    src/vocabulary/optional_logic_values.cpp
     src/vocabulary/ordered_line.cpp
     src/vocabulary/orientation.cpp
     src/vocabulary/output_delays.cpp
