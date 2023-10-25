@@ -28,9 +28,9 @@ void _generate_random_events(Rng &rng, Simulation &simulation) {
 
 }  // namespace
 
-auto benchmark_simulation(Rng &rng, Schematic &&schematic, const int n_events,
+auto benchmark_simulation(Rng &rng, Schematic &&schematic__, const int n_events,
                           const PrintEvents do_print) -> int64_t {
-    Simulation simulation {std::move(schematic), do_print};
+    Simulation simulation {std::move(schematic__), do_print};
 
     while (true) {
         simulation.run(simulation::defaults::infinite_simulation_time,
@@ -45,20 +45,7 @@ auto benchmark_simulation(Rng &rng, Schematic &&schematic, const int n_events,
     }
 
     if (do_print == PrintEvents::yes) {
-        // TODO move to simulation.format()
-
-        // auto output_values {simulation.output_values()};
-
-        print_fmt("events simulated = {}\n", simulation.processed_event_count());
-        // print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(),
-        // "{:b}")); print_fmt("output_values = {}\n", fmt_join("", output_values,
-        // "{:b}"));
-        for (auto element_id : element_ids(schematic)) {
-            if (schematic.element_type(element_id) == ElementType::wire) {
-                const auto history = simulation.input_history(element_id);
-                print(element_id, history);
-            }
-        }
+        print(simulation);
     }
 
     Ensures(simulation.processed_event_count() >= n_events);
@@ -80,9 +67,9 @@ auto benchmark_simulation(const int n_elements, const int m_events,
     return benchmark_simulation(rng, std::move(schematic), m_events, do_print);
 }
 
-auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
+auto benchmark_simulation_metastable(Schematic &&schematic__, const int n_events,
                                      const PrintEvents do_print) -> int64_t {
-    Simulation simulation {std::move(schematic), do_print};
+    Simulation simulation {std::move(schematic__), do_print};
 
     while (true) {
         // we use realtime timeout, to see the impact of its checking
@@ -99,20 +86,7 @@ auto benchmark_simulation_metastable(Schematic &&schematic, const int n_events,
     }
 
     if (do_print == PrintEvents::yes) {
-        // TODO move to simulation.format()
-
-        // auto output_values {simulation.output_values()};
-
-        print_fmt("events simulated = {}\n", simulation.processed_event_count());
-        // print_fmt("input_values = {}\n", fmt_join("", simulation.input_values(),
-        // "{:b}")); print_fmt("output_values = {}\n", fmt_join("", output_values,
-        // "{:b}"));
-        for (auto element_id : element_ids(schematic)) {
-            if (schematic.element_type(element_id) == ElementType::wire) {
-                const auto history = simulation.input_history(element_id);
-                print(element_id, history);
-            }
-        }
+        print(simulation);
     }
 
     return simulation.processed_event_count();

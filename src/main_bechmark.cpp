@@ -178,10 +178,6 @@ static void BM_Simulation_0(benchmark::State& state) {
         auto schematic = create_random_schematic(rng, 100);
         schematic = with_custom_delays(rng, schematic);
         add_missing_placeholders(schematic);
-        // TODO fix bug and re-enable?
-        // schematic.validate(SchematicOld::validate_all);
-
-        // TODO verify schematic is not changing in test
 
         // print(schematic);
         // for (auto element_id : element_ids(schematic)) {

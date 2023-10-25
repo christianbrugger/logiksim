@@ -1,23 +1,24 @@
 ﻿#include "simulation.h"
 
 #include "algorithm/contains.h"
+#include "algorithm/fmt_join.h"
 #include "algorithm/range.h"
 #include "algorithm/transform_to_container.h"
 #include "component/simulation/history_view.h"
 #include "component/simulation/simulation_event.h"
 #include "component/simulation/simulation_event_group.h"
-#include "exception.h"
 #include "layout_info.h"
 #include "logging.h"
 #include "logic_item/simulation_info.h"
-#include "simulation.h"
 #include "vocabulary/connection_ids.h"
 #include "vocabulary/internal_state.h"
 
+#include <fmt/core.h>
 #include <gsl/gsl>
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 
 namespace logicsim {
 
@@ -89,12 +90,39 @@ Simulation::Simulation(Schematic &&schematic__, PrintEvents do_print)
     schedule_initial_events();
 }
 
-auto Simulation::schematic() const noexcept -> const Schematic & {
-    return schematic_;
+auto Simulation::format_element(element_id_t element_id) const -> std::string {
+    const auto element_type = schematic_.element_type(element_id);
+    if (!is_logic_item(element_type)) {
+        return fmt::format("{{{}-{}, inputs: {}, history: {}}}", element_id, element_type,
+                           input_values(element_id), input_history(element_id));
+    }
+
+    const auto formatted_state = [&] {
+        if (internal_state(element_id).empty()) {
+            return std::string {};
+        }
+        return fmt::format(", internal_state: {}", internal_state(element_id));
+    }();
+
+    return fmt::format("{{{}-{}, inputs: {}, outputs: {}{}}},", element_id, element_type,
+                       input_values(element_id), output_values(element_id),
+                       formatted_state);
+}
+
+auto Simulation::format() const -> std::string {
+    const auto inner = fmt_join("\n  ", element_ids(schematic()), "{}",
+                                [&](auto id) { return format_element(id); });
+
+    return fmt::format("<Simulation at {} with {} processed events\n  {}\n>", time(),
+                       processed_event_count(), inner);
 }
 
 auto Simulation::time() const noexcept -> time_t {
     return queue_.time();
+}
+
+auto Simulation::schematic() const noexcept -> const Schematic & {
+    return schematic_;
 }
 
 auto Simulation::processed_event_count() const noexcept -> event_count_t {
@@ -114,7 +142,8 @@ namespace {}  // namespace
 auto get_changed_outputs(const logic_small_vector_t &old_outputs,
                          const logic_small_vector_t &new_outputs) -> connection_ids_t {
     if (std::size(old_outputs) != std::size(new_outputs)) [[unlikely]] {
-        throw_exception("old_outputs and new_outputs need to have the same size.");
+        throw std::runtime_error(
+            "old_outputs and new_outputs need to have the same size.");
     }
 
     auto result = connection_ids_t {};
@@ -152,7 +181,7 @@ auto Simulation::submit_events_for_changed_outputs(
 auto invert_inputs(logic_small_vector_t &values, const logic_small_vector_t &inverters)
     -> void {
     if (std::size(values) != std::size(inverters)) [[unlikely]] {
-        throw_exception("Inputs and inverters need to have same size.");
+        throw std::runtime_error("Inputs and inverters need to have same size.");
     }
     for (auto i : range(std::ssize(values))) {
         values[i] ^= inverters[i];
@@ -231,14 +260,14 @@ auto Simulation::run(const delay_t simulation_time,
                      const simulation::realtime_timeout_t timeout,
                      const int64_t max_events) -> void {
     if (simulation_time < delay_t {0us}) [[unlikely]] {
-        throw_exception("simulation_time needs to be positive.");
+        throw std::runtime_error("simulation_time needs to be positive.");
     }
     if (max_events < 0) [[unlikely]] {
-        throw_exception("max events needs to be positive or zero.");
+        throw std::runtime_error("max events needs to be positive or zero.");
     }
     if (event_count_ > std::numeric_limits<event_count_t>::max() - max_events)
         [[unlikely]] {
-        throw_exception("max events to large, overflows.");
+        throw std::runtime_error("max events to large, overflows.");
     }
 
     if (simulation_time == delay_t {0us}) {

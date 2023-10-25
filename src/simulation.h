@@ -8,11 +8,7 @@
 #include "timeout_timer.h"
 #include "vocabulary/print_events.h"
 
-#include <folly/small_vector.h>
-
-/// Done Features
-
-/// New Features
+#include <string>
 
 namespace logicsim {
 
@@ -74,7 +70,6 @@ class Simulation {
      */
     [[nodiscard]] explicit Simulation(Schematic &&schematic,
                                       PrintEvents do_print = PrintEvents::no);
-
     [[nodiscard]] auto time() const noexcept -> time_t;
     [[nodiscard]] auto processed_event_count() const noexcept -> event_count_t;
     /**
@@ -82,6 +77,9 @@ class Simulation {
      */
     [[nodiscard]] auto is_finished() const -> bool;
     [[nodiscard]] auto schematic() const noexcept -> const Schematic &;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto format_element(element_id_t element_id) const -> std::string;
 
     /**
      * @brief: Runs simulation for given times and events
