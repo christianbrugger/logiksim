@@ -140,6 +140,9 @@ auto update_internal_state(const logic_small_vector_t &old_input,
     switch (type) {
         using enum ElementType;
 
+        case button:
+            return;
+
         case clock_generator: {
             // first input is enable signal
             // second input & output are internal signals to loop the enalbe phase

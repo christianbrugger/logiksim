@@ -87,7 +87,7 @@ Simulation::Simulation(Schematic &&schematic__, PrintEvents do_print)
     initialize_input_values(schematic_, input_values_);
     set_outputs_to_zero(schematic_, input_values_);
 
-    schedule_initial_events();
+    initialize_circuit_state();
 }
 
 auto Simulation::format_element(element_id_t element_id) const -> std::string {
@@ -195,6 +195,98 @@ auto inverted_inputs(logic_small_vector_t values, const logic_small_vector_t &in
     return values;
 }
 
+template <Simulation::Outputs OutputFrom>
+auto Simulation::update_element_logic(element_id_t element_id,
+                                      logic_small_vector_t &&old_inputs) -> void {
+    const auto element_type = schematic_.element_type(element_id);
+    auto new_inputs = logic_small_vector_t {input_values(element_id)};
+
+    // invert inputs
+    const auto &inverters = schematic_.input_inverters(element_id);
+    if (std::ranges::any_of(inverters, std::identity {})) {
+        invert_inputs(old_inputs, inverters);
+        invert_inputs(new_inputs, inverters);
+    }
+
+    if (has_internal_state(element_type)) {
+        update_with_internal_state<OutputFrom>(element_id, old_inputs, new_inputs);
+    } else {
+        update_no_internal_state<OutputFrom>(element_id, old_inputs, new_inputs);
+    }
+}
+
+namespace {
+
+/**
+ * @brief: Returns outputs of switched off circuit
+ */
+auto get_outputs_switched_off(const Simulation &simulation, element_id_t element_id)
+    -> logic_small_vector_t {
+    const auto get_output_value = [&](output_t output) -> bool {
+        if (const auto input = simulation.schematic().input(output)) {
+            return simulation.input_value(input);
+        }
+        return false;  // unconnected outputs, doesn't matter
+    };
+
+    return transform_to_container<logic_small_vector_t>(
+        outputs(simulation.schematic(), element_id), get_output_value);
+}
+
+}  // namespace
+
+template <Simulation::Outputs OutputFrom>
+auto Simulation::update_with_internal_state(element_id_t element_id,
+                                            const logic_small_vector_t &old_inputs,
+                                            const logic_small_vector_t &new_inputs)
+    -> void {
+    const auto element_type = schematic_.element_type(element_id);
+    const auto output_count = schematic_.output_count(element_id);
+    auto &internal_state = internal_states_.at(element_id.value);
+
+    const auto old_outputs = [&] {
+        if constexpr (OutputFrom == Outputs::SwitchedOff) {
+            return get_outputs_switched_off(*this, element_id);
+        } else {
+            return calculate_outputs_from_state(internal_state, output_count,
+                                                element_type);
+        }
+    }();
+
+    update_internal_state(old_inputs, new_inputs, element_type, internal_state);
+
+    if (output_count > connection_count_t {0}) {
+        const auto new_outputs =
+            calculate_outputs_from_state(internal_state, output_count, element_type);
+        submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
+    }
+}
+
+template <Simulation::Outputs OutputFrom>
+auto Simulation::update_no_internal_state(element_id_t element_id,
+                                          const logic_small_vector_t &old_inputs,
+                                          const logic_small_vector_t &new_inputs)
+    -> void {
+    const auto element_type = schematic_.element_type(element_id);
+    const auto output_count = schematic_.output_count(element_id);
+
+    if (output_count == connection_count_t {0}) {
+        return;
+    }
+
+    const auto old_outputs = [&] {
+        if constexpr (OutputFrom == Outputs::SwitchedOff) {
+            return get_outputs_switched_off(*this, element_id);
+        } else {
+            return calculate_outputs_from_inputs(old_inputs, output_count, element_type);
+        }
+    }();
+
+    const auto new_outputs =
+        calculate_outputs_from_inputs(new_inputs, output_count, element_type);
+    submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
+}
+
 auto Simulation::process_event_group(simulation::SimulationEventGroup &&events) -> void {
     if (print_events_) {
         print_fmt("events: {:n}\n", events);
@@ -203,45 +295,33 @@ auto Simulation::process_event_group(simulation::SimulationEventGroup &&events) 
         return;
     }
     const auto element_id = events.front().element_id;
-    const auto element_type = schematic_.element_type(element_id);
 
     // short-circuit trivial elements
-    if (has_no_logic(element_type)) {
+    if (has_no_logic(schematic_.element_type(element_id))) {
         apply_events(element_id, events);
         return;
     }
 
-    // update inputs
-    auto old_inputs = input_values(element_id);
+    auto old_inputs = logic_small_vector_t {input_values(element_id)};
     apply_events(element_id, events);
-    auto new_inputs = input_values(element_id);
+    update_element_logic<Outputs::Current>(element_id, std::move(old_inputs));
+}
 
-    const auto &inverters = schematic_.input_inverters(element_id);
-    if (std::ranges::any_of(inverters, std::identity {})) {
-        invert_inputs(old_inputs, inverters);
-        invert_inputs(new_inputs, inverters);
-    }
+auto Simulation::initialize_circuit_state() -> void {
+    assert(queue_.empty());
 
-    const auto output_count = schematic_.output_count(element_id);
+    for (const auto element_id : element_ids(schematic_)) {
+        const auto element_type = schematic_.element_type(element_id);
 
-    if (has_internal_state(element_type)) {
-        auto &internal_state = internal_states_.at(element_id.value);
+        if (element_type == ElementType::wire || has_no_logic(element_type)) {
+            continue;
+        }
 
-        const auto old_outputs =
-            calculate_outputs_from_state(internal_state, output_count, element_type);
-        update_internal_state(old_inputs, new_inputs, element_type, internal_state);
-        const auto new_outputs =
-            calculate_outputs_from_state(internal_state, output_count, element_type);
+        // we assume inputs are switched off, so their start value is effectively
+        // the inversion state
+        auto old_inputs = logic_small_vector_t {schematic_.input_inverters(element_id)};
 
-        submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
-    } else {
-        // find changing outputs
-        const auto old_outputs =
-            calculate_outputs_from_inputs(old_inputs, output_count, element_type);
-        const auto new_outputs =
-            calculate_outputs_from_inputs(new_inputs, output_count, element_type);
-
-        submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
+        update_element_logic<Outputs::SwitchedOff>(element_id, std::move(old_inputs));
     }
 }
 
@@ -351,58 +431,6 @@ auto Simulation::run(simulation::RunConfig config) -> void {
 
 auto Simulation::is_finished() const -> bool {
     return queue_.empty() && time() >= largest_history_event_;
-}
-
-auto Simulation::schedule_initial_events() -> void {
-    assert(queue_.empty());
-
-    for (const auto element_id : element_ids(schematic_)) {
-        const auto element_type = schematic_.element_type(element_id);
-
-        if (element_type == ElementType::wire) {
-            continue;
-        }
-
-        const auto output_count = schematic_.output_count(element_id);
-
-        if (output_count == connection_count_t {0}) {
-            continue;
-        }
-
-        // output values without inverters
-        const auto old_outputs = transform_to_container<logic_small_vector_t>(
-            outputs(schematic_, element_id), [&](const output_t output) -> bool {
-                if (const auto input = schematic_.input(output)) {
-                    return input_value(input);
-                }
-                return false;  // unconnected outputs
-            });
-
-        if (has_internal_state(element_type)) {
-            auto new_inputs = input_values(element_id);
-            invert_inputs(new_inputs, schematic_.input_inverters(element_id));
-
-            if (std::ranges::any_of(new_inputs, std::identity {})) {
-                const auto old_inputs = logic_small_vector_t(new_inputs.size(), false);
-                auto &internal_state = internal_states_.at(element_id.value);
-
-                update_internal_state(old_inputs, new_inputs, element_type,
-                                      internal_state);
-            }
-
-            const auto new_outputs = calculate_outputs_from_state(
-                internal_state(element_id), output_count, element_type);
-            submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
-
-        } else {
-            auto curr_inputs = logic_small_vector_t {input_values(element_id)};
-            invert_inputs(curr_inputs, schematic_.input_inverters(element_id));
-            const auto new_outputs =
-                calculate_outputs_from_inputs(curr_inputs, output_count, element_type);
-
-            submit_events_for_changed_outputs(element_id, old_outputs, new_outputs);
-        }
-    }
 }
 
 auto Simulation::record_input_history(input_t input, const bool new_value) -> void {
