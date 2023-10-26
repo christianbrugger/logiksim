@@ -674,7 +674,7 @@ TEST(SimulationTest, TestClockGeneratorConnectedEnableInput) {
         .element_type = ElementType::clock_generator,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {3},
-        .input_inverters = {true, false, false},  // <= negate enable input
+        .input_inverters = {false, false, false},
         .output_delays = {delay_t {100us}, delay_t {100us}, delay_t {100us}},
     });
     // internal connections
@@ -705,7 +705,6 @@ TEST(SimulationTest, TestClockGeneratorConnectedEnableInput) {
     ASSERT_EQ(simulation.output_value(output_t {clock, id_0}), false);
 }
 
-/*
 TEST(SimulationTest, TestClockGeneratorConnectedNegated) {
     Schematic schematic;
     const auto wire = schematic.add_element(schematic::NewElement {
@@ -749,7 +748,6 @@ TEST(SimulationTest, TestClockGeneratorConnectedNegated) {
     simulation.run({.simulate_for = delay_t {100us}});  // 450 us
     ASSERT_EQ(simulation.output_value(output_t {clock, id_0}), false);
 }
-*/
 
 TEST(SimulationTest, TestClockGeneratorDifferentDelay) {
     Schematic schematic;

@@ -379,7 +379,8 @@ auto Simulation::schedule_initial_events() -> void {
             });
 
         if (has_internal_state(element_type)) {
-            const auto new_inputs = input_values(element_id);
+            auto new_inputs = input_values(element_id);
+            invert_inputs(new_inputs, schematic_.input_inverters(element_id));
 
             if (std::ranges::any_of(new_inputs, std::identity {})) {
                 const auto old_inputs = logic_small_vector_t(new_inputs.size(), false);
