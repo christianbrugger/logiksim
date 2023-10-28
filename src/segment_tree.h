@@ -181,8 +181,7 @@ inline auto calculate_normal_lines(const SegmentTree &tree) {
 auto calculate_connected_segments_mask(const SegmentTree &tree, point_t p0)
     -> boost::container::vector<bool>;
 
-[[nodiscard]] auto to_line_tree(const SegmentTree &segment_tree)
-    -> std::optional<LineTree>;
+[[nodiscard]] auto to_line_tree(const SegmentTree &segment_tree) -> LineTree;
 
 }  // namespace logicsim
 

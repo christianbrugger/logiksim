@@ -12,6 +12,7 @@
 #include "exception.h"
 #include "format/container.h"
 #include "line_tree.h"
+#include "logging.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/map.hpp>
@@ -432,12 +433,12 @@ auto SegmentTree::format() const -> std::string {
 
 auto validate_same_segments(const SegmentTree& tree, const LineTree& line_tree) {
     // line tree
-    if (line_tree.segment_count() != tree.segment_count()) [[unlikely]] {
+    if (line_tree.size() != tree.segment_count()) [[unlikely]] {
         throw_exception("line tree and segment tree have different segment count.");
     }
 
-    auto segments_1 = std::vector<ordered_line_t>(line_tree.segments().begin(),
-                                                  line_tree.segments().end());
+    auto segments_1 =
+        std::vector<ordered_line_t>(line_tree.lines().begin(), line_tree.lines().end());
 
     // segment tree
     auto segments_2 = std::vector<ordered_line_t> {};
@@ -456,9 +457,9 @@ auto validate_same_cross_points(const SegmentTree& tree, const LineTree& line_tr
     // line tree
     auto cross_points_1 = std::vector<point_t> {};
     transform_if(
-        line_tree.sized_segments(), std::back_inserter(cross_points_1),
-        [](LineTree::sized_line_t sized_line) { return sized_line.line.p0; },
-        [](LineTree::sized_line_t sized_line) { return sized_line.has_cross_point_p0; });
+        indices(line_tree), std::back_inserter(cross_points_1),
+        [&](line_index_t index) -> point_t { return line_tree.line(index).p0; },
+        [&](line_index_t index) -> bool { return line_tree.has_cross_point_p0(index); });
 
     std::ranges::sort(cross_points_1);
     const auto duplicates = std::ranges::unique(cross_points_1);
@@ -485,8 +486,10 @@ auto validate_same_cross_points(const SegmentTree& tree, const LineTree& line_tr
 
 auto validate_same_output_positions(const SegmentTree& tree, const LineTree& line_tree) {
     // line tree
-    auto positions_1 = std::vector<point_t> {};
-    std::ranges::copy(line_tree.output_positions(), std::back_inserter(positions_1));
+    auto positions_1 = transform_to_vector(
+        output_ids(line_tree),
+        [&](connection_id_t output) { return line_tree.output_position(output); });
+
     // we take an output at random as input to generate the line tree
     if (!tree.has_input()) {
         positions_1.push_back(line_tree.input_position());
@@ -576,16 +579,20 @@ auto SegmentTree::validate() const -> void {
 
 auto SegmentTree::validate_inserted() const -> void {
     validate();
-    const auto line_tree = to_line_tree(*this);
 
-    if (!line_tree) [[unlikely]] {
-        throw_exception("Could not convert segment tree to line tree.");
+    //
+    // TODO !!! find possible root
+    //
+    if (!has_input()) {
+        return;
     }
 
-    validate_same_segments(*this, *line_tree);
-    validate_same_cross_points(*this, *line_tree);
-    validate_same_output_positions(*this, *line_tree);
-    validate_same_input_position(*this, *line_tree);
+    const auto line_tree = to_line_tree(*this);
+
+    validate_same_segments(*this, line_tree);
+    validate_same_cross_points(*this, line_tree);
+    validate_same_output_positions(*this, line_tree);
+    validate_same_input_position(*this, line_tree);
 }
 
 //
@@ -664,16 +671,17 @@ auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {
     return rect_t {p_min, p_max};
 }
 
-auto to_line_tree(const SegmentTree& segment_tree) -> std::optional<LineTree> {
-    // convert to line_tree
+auto to_line_tree(const SegmentTree& segment_tree) -> LineTree {
+    if (!segment_tree.has_input()) {
+        return LineTree {};
+    }
+
     const auto segments =
         transform_to_vector(segment_tree.segment_infos(),
                             [](const segment_info_t& segment) { return segment.line; });
+    const auto root = segment_tree.input_position();
 
-    const auto root = segment_tree.has_input()
-                          ? std::make_optional(segment_tree.input_position())
-                          : std::nullopt;
-    return LineTree::from_segments(segments, root);
+    return to_line_tree(segments, root);
 }
 
 }  // namespace logicsim

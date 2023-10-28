@@ -475,11 +475,7 @@ auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
     if (line_tree.empty() && element.is_wire() &&
         element.display_state() == display_state_t::normal &&
         element.segment_tree().has_input()) {
-        line_tree = to_line_tree(element.segment_tree()).value();
-
-        if (line_tree.empty()) {
-            throw_exception("generated line tree is empty");
-        }
+        line_tree = to_line_tree(element.segment_tree());
     }
 
     return line_tree;

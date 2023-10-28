@@ -1,6 +1,9 @@
 #include "component/line_tree/line_store.h"
 
 #include "algorithm/contains.h"
+#include "allocated_size/folly_small_vector.h"
+#include "allocated_size/trait.h"
+#include "format/container.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 
@@ -11,28 +14,38 @@
 namespace logicsim {
 
 namespace line_tree {
-auto LineStore::size() const -> std::size_t {
+auto LineStore::size() const noexcept -> std::size_t {
     Expects(lines_.size() == start_lengths_.size());
 
     return lines_.size();
 }
 
-auto LineStore::empty() const -> std::size_t {
+auto LineStore::empty() const noexcept -> std::size_t {
     Expects(lines_.size() == start_lengths_.size());
 
     return lines_.empty();
 }
 
+auto LineStore::allocated_size() const -> std::size_t {
+    return get_allocated_size(lines_) +          //
+           get_allocated_size(start_lengths_) +  //
+           get_allocated_size(leaf_indices_);
+}
+
 auto LineStore::reserve(std::size_t capacity) -> void {
     lines_.reserve(capacity);
     start_lengths_.reserve(capacity);
-    leaf_lines_.reserve(capacity);
+    leaf_indices_.reserve(capacity);
 }
 
 auto LineStore::shrink_to_fit() -> void {
     lines_.shrink_to_fit();
     start_lengths_.shrink_to_fit();
-    leaf_lines_.shrink_to_fit();
+    leaf_indices_.shrink_to_fit();
+}
+
+auto LineStore::format() const -> std::string {
+    return fmt::format("LineStore({}, {}, {})", lines_, start_lengths_, leaf_indices_);
 }
 
 auto logicsim::line_tree::LineStore::add_first_line(line_t new_line) -> line_index_t {
@@ -43,10 +56,10 @@ auto logicsim::line_tree::LineStore::add_first_line(line_t new_line) -> line_ind
 
     lines_.push_back(new_line);
     start_lengths_.push_back(length_t {0});
-    leaf_lines_.push_back(line_index_t {0});
+    leaf_indices_.push_back(line_index_t {0});
 
     Ensures(lines_.size() == start_lengths_.size());
-    Ensures(leaf_lines_.size() <= lines_.size());
+    Ensures(leaf_indices_.size() <= lines_.size());
     return line_index_t {0};
 }
 
@@ -55,7 +68,7 @@ auto LineStore::add_line(line_t new_line, line_index_t previous_index) -> line_i
         throw std::runtime_error("cannot add line to empty line tree");
     }
 
-    Expects(!leaf_lines_.empty());
+    Expects(!leaf_indices_.empty());
     Expects(lines_.size() == start_lengths_.size());
     // TODO check colliding precondition
 
@@ -66,11 +79,12 @@ auto LineStore::add_line(line_t new_line, line_index_t previous_index) -> line_i
     if (new_line.p0 != previous_line.p1) [[unlikely]] {
         throw std::runtime_error("New line must connect to the old line");
     }
-    if ((previous_index == last_index) &&
-        (is_horizontal(new_line) != is_horizontal(previous_line))) [[unlikely]] {
-        throw std::runtime_error("Requires different orientation than old line");
-    }
-    if (previous_index != last_index && contains(leaf_lines_, previous_index))
+    // TODO think about this
+    // if ((previous_index == last_index) &&
+    //     (is_horizontal(new_line) != is_horizontal(previous_line))) [[unlikely]] {
+    //     throw std::runtime_error("Requires different orientation than old line");
+    // }
+    if (previous_index != last_index && contains(leaf_indices_, previous_index))
         [[unlikely]] {
         throw std::runtime_error(
             "Previous index cannot refer to a leaf. "
@@ -81,13 +95,13 @@ auto LineStore::add_line(line_t new_line, line_index_t previous_index) -> line_i
     start_lengths_.push_back(end_length(previous_index));
 
     if (previous_index == last_index) {
-        leaf_lines_.back() = new_index;
+        leaf_indices_.back() = new_index;
     } else {
-        leaf_lines_.push_back(new_index);
+        leaf_indices_.push_back(new_index);
     }
 
     Ensures(lines_.size() == start_lengths_.size());
-    Ensures(leaf_lines_.size() <= lines_.size());
+    Ensures(leaf_indices_.size() <= lines_.size());
     return new_index;
 }
 
@@ -110,6 +124,18 @@ auto LineStore::starts_new_subtree(line_index_t index) const -> bool {
     const auto previous = get_previous(index);
 
     return line(previous).p1 != line(index).p0;
+}
+
+auto LineStore::lines() const -> const line_vector_t& {
+    return lines_;
+}
+
+auto LineStore::start_lengths() const -> const length_vector_t& {
+    return start_lengths_;
+}
+
+auto LineStore::leaf_indices() const -> const index_vector_t& {
+    return leaf_indices_;
 }
 
 auto LineStore::last_index() const -> line_index_t {

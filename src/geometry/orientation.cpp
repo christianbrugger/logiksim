@@ -71,6 +71,14 @@ auto to_orientation_p1(ordered_line_t line) -> orientation_t {
     return to_orientation(line.p0, line.p1);
 }
 
+auto to_orientation_p0(line_t line) -> orientation_t {
+    return to_orientation(line.p1, line.p0);
+}
+
+auto to_orientation_p1(line_t line) -> orientation_t {
+    return to_orientation(line.p0, line.p1);
+}
+
 auto to_angle(orientation_t orientation) -> double {
     switch (orientation) {
         using enum orientation_t;

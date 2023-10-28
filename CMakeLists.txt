@@ -240,6 +240,7 @@ set(LS_CORE_SOURCES
     src/layout.cpp
     src/layout_info.cpp
     src/line_tree.cpp
+    src/line_tree_2.cpp
     src/logging.cpp
     src/render_caches.cpp
     src/render_circuit.cpp

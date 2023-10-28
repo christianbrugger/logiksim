@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_LINE_TREE_LINE_STORE_H
 #define LOGICSIM_COMPONENT_LINE_TREE_LINE_STORE_H
 
+#include "format/struct.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/length.h"
 #include "vocabulary/line.h"
@@ -36,16 +37,20 @@ static_assert(sizeof(length_vector_t) == 12);
  * Class invariants:
  *     + lines_ and start_lengths_ have the same size
  *     + start_lengths_ contains the length from root to p0 of that line.
- *     + leaf_lines_ point to all leaves.
+ *     + leaf_indices_ point to all leaves.
  *     + lines_ are added in depth first order.
  */
 class LineStore {
    public:
-    [[nodiscard]] auto size() const -> std::size_t;
-    [[nodiscard]] auto empty() const -> std::size_t;
+    [[nodiscard]] auto size() const noexcept -> std::size_t;
+    [[nodiscard]] auto empty() const noexcept -> std::size_t;
 
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
     auto reserve(std::size_t capacity) -> void;
     auto shrink_to_fit() -> void;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const LineStore &) const -> bool = default;
 
     /**
      * @brief: Adds the first line to the LineStore.
@@ -76,13 +81,16 @@ class LineStore {
     [[nodiscard]] auto end_length(line_index_t index) const -> length_t;
     [[nodiscard]] auto starts_new_subtree(line_index_t index) const -> bool;
 
-   private:
+    [[nodiscard]] auto lines() const -> const line_vector_t &;
+    [[nodiscard]] auto start_lengths() const -> const length_vector_t &;
+    [[nodiscard]] auto leaf_indices() const -> const index_vector_t &;
+
     [[nodiscard]] auto last_index() const -> line_index_t;
 
    private:
     line_vector_t lines_ {};
     length_vector_t start_lengths_ {};
-    index_vector_t leaf_lines_ {};
+    index_vector_t leaf_indices_ {};
 };
 
 static_assert(sizeof(LineStore) == 36);

@@ -25,6 +25,8 @@ struct ordered_line_t;
 [[nodiscard]] auto to_orientation(point_t p0, point_t p1) -> orientation_t;
 [[nodiscard]] auto to_orientation_p0(ordered_line_t line) -> orientation_t;
 [[nodiscard]] auto to_orientation_p1(ordered_line_t line) -> orientation_t;
+[[nodiscard]] auto to_orientation_p0(line_t line) -> orientation_t;
+[[nodiscard]] auto to_orientation_p1(line_t line) -> orientation_t;
 
 // angle in respect to left orientation
 [[nodiscard]] auto to_angle(orientation_t orientation) -> double;

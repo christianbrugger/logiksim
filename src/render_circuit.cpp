@@ -1120,20 +1120,27 @@ auto _draw_wire_with_history(Context& ctx, layout::ConstElement element,
         throw_exception("requires history view with at least 2 entries");
     }
 
-    const auto to_time =
-        [time = logic_state.time(), delay = logic_state.wire_delay_per_distance()](
-            LineTree::length_t length_) { return time - length_ * delay; };
+    // TODO access length_.value ?
+    const auto to_time = [time = logic_state.time(),
+                          delay = logic_state.wire_delay_per_distance()](
+                             length_t length_) { return time - length_.value * delay; };
+    const auto& line_tree = element.line_tree();
 
-    for (auto&& segment : element.line_tree().sized_segments()) {
-        _draw_line_segment_with_history(ctx, segment.line.p1, segment.line.p0,
-                                        to_time(segment.p1_length),
-                                        to_time(segment.p0_length), history,
-                                        segment.p1_is_corner, segment.p0_is_corner);
+    for (auto&& index : indices(line_tree)) {
+        const auto line = line_tree.line(index);
+        _draw_line_segment_with_history(ctx,                                  //
+                                        line.p1,                              //
+                                        line.p0,                              //
+                                        to_time(line_tree.length_p1(index)),  //
+                                        to_time(line_tree.length_p0(index)),  //
+                                        history,                              //
+                                        line_tree.is_corner_p1(index),        //
+                                        line_tree.is_corner_p0(index)         //
+        );
 
-        if (segment.has_cross_point_p0) {
-            bool wire_enabled = history.value(to_time(segment.p0_length));
-            draw_line_cross_point(ctx, segment.line.p0, wire_enabled,
-                                  ElementDrawState::normal);
+        if (line_tree.has_cross_point_p0(index)) {
+            bool wire_enabled = history.value(to_time(line_tree.length_p0(index)));
+            draw_line_cross_point(ctx, line.p0, wire_enabled, ElementDrawState::normal);
         }
     }
 }
