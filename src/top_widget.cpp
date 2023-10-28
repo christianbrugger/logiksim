@@ -111,6 +111,7 @@ namespace detail::time_slider {
 using namespace std::chrono_literals;
 
 constexpr static int SLIDER_MIN_VALUE = 0;
+constexpr static int SLIDER_MIN_NS = 1000;
 constexpr static int SLIDER_MAX_VALUE = 700'000;
 constexpr static int SLIDER_TICK_INTERVAL = 100'000;
 constexpr static auto SLIDER_START_VALUE = time_rate_t {10us};
@@ -126,7 +127,8 @@ auto from_slider_scale(int value) -> time_rate_t {
         return time_rate_t {0us};
     }
 
-    const double value_ns = std::pow(10.0, value / double {100'000.0}) * 1000.0;
+    const double value_ns =
+        std::pow(10.0, value / double {SLIDER_TICK_INTERVAL}) * double {SLIDER_MIN_NS};
     return time_rate_t {1ns * gsl::narrow<int64_t>(std::round(value_ns))};
 };
 
@@ -135,7 +137,9 @@ auto to_slider_scale(time_rate_t rate) -> int {
         return SLIDER_MIN_VALUE;
     }
 
-    const auto value_log = std::log10(rate.rate_per_second.count_ns() / 1000.0) * 100'000;
+    const auto value_log =
+        std::log10(rate.rate_per_second.count_ns() / double {SLIDER_MIN_NS}) *
+                           double {SLIDER_TICK_INTERVAL};
     return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
                       SLIDER_MAX_VALUE);
 };

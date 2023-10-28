@@ -303,6 +303,8 @@ struct LineTree::sized_line_t {
     length_t p0_length;
     length_t p1_length;
     bool has_cross_point_p0;
+    bool p0_is_corner;
+    bool p1_is_corner;
 
     auto operator==(const sized_line_t &other) const noexcept -> bool = default;
 

@@ -51,16 +51,16 @@ auto set_outputs_to_zero(const Schematic &schematic,
 //
 
 auto Simulation::resize_vectors() -> void {
-    assert(input_values_.empty());
-    assert(internal_states_.empty());
-    assert(first_input_histories_.empty());
+    Expects(input_values_.empty());
+    Expects(internal_states_.empty());
+    Expects(first_input_histories_.empty());
 
     // input_values
     input_values_.reserve(schematic_.size());
     for (auto element_id : element_ids(schematic_)) {
         input_values_.emplace_back(schematic_.input_count(element_id).count(), false);
     }
-
+    
     // internal states
     internal_states_.reserve(schematic_.size());
     for (auto element_id : element_ids(schematic_)) {
@@ -71,9 +71,9 @@ auto Simulation::resize_vectors() -> void {
     // first input histories
     first_input_histories_.resize(schematic_.size());
 
-    assert(schematic_.size() == input_values_.size());
-    assert(schematic_.size() == internal_states_.size());
-    assert(schematic_.size() == first_input_histories_.size());
+    Ensures(schematic_.size() == input_values_.size());
+    Ensures(schematic_.size() == internal_states_.size());
+    Ensures(schematic_.size() == first_input_histories_.size());
 }
 
 Simulation::Simulation(Schematic &&schematic__, PrintEvents do_print)

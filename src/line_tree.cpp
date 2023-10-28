@@ -716,10 +716,22 @@ auto LineTree::SegmentSizeIterator::operator*() const -> value_type {
         throw_exception("line tree cannot be null when dereferencing segment iterator");
     }
 
-    auto line = line_tree_->segment(point_index_);
-    bool has_connector = line_tree_->starts_new_subtree(point_index_);
-    return sized_line_t {line, start_length_, start_length_ + distance(line),
-                         has_connector};
+    const auto line = line_tree_->segment(point_index_);
+    const auto has_connector = line_tree_->starts_new_subtree(point_index_);
+
+    const auto p0_is_corner = point_index_ > index_t {0};
+    const auto p1_is_corner = point_index_ + 1 < std::ssize(line_tree_->indices_)
+                                  ? !line_tree_->starts_new_subtree(point_index_ + 1)
+                                  : false;
+
+    return sized_line_t {
+        .line = line,
+        .p0_length = start_length_,
+        .p1_length = start_length_ + distance(line),
+        .has_cross_point_p0 = has_connector,
+        .p0_is_corner = p0_is_corner,
+        .p1_is_corner = p1_is_corner,
+    };
 }
 
 auto LineTree::SegmentSizeIterator::operator++() noexcept -> SegmentSizeIterator& {

@@ -17,6 +17,7 @@
 #include "geometry/scene.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "logging.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
 #include "setting_handle.h"
@@ -1086,7 +1087,8 @@ auto draw_segment_tree(Context& ctx, layout::ConstElement element, ElementDrawSt
 
 auto _draw_line_segment_with_history(Context& ctx, point_t p_from, point_t p_until,
                                      time_t time_from, time_t time_until,
-                                     const simulation::HistoryView& history) -> void {
+                                     const simulation::HistoryView& history,
+                                     bool p0_is_corner, bool p1_is_corner) -> void {
     assert(time_from < time_until);
 
     const auto it_from = history.from(time_from);
@@ -1099,9 +1101,14 @@ auto _draw_line_segment_with_history(Context& ctx, point_t p_from, point_t p_unt
             interpolate_line_1d(p_from, p_until, time_from, time_until, entry.last_time);
 
         if (p_start != p_end) [[likely]] {
-            // TODO !!! endcaps
-            draw_line_segment(ctx, line_fine_t {p_start, p_end}, {entry.value},
-                              ElementDrawState::normal);
+            draw_line_segment(
+                ctx, line_fine_t {p_start, p_end},
+                {
+                    .is_enabled = entry.value,
+                    .p0_endcap = p0_is_corner && (p_start == point_fine_t {p_from}),
+                    .p1_endcap = p1_is_corner && (p_end == point_fine_t {p_until}),
+                },
+                ElementDrawState::normal);
         }
     }
 }
@@ -1120,7 +1127,8 @@ auto _draw_wire_with_history(Context& ctx, layout::ConstElement element,
     for (auto&& segment : element.line_tree().sized_segments()) {
         _draw_line_segment_with_history(ctx, segment.line.p1, segment.line.p0,
                                         to_time(segment.p1_length),
-                                        to_time(segment.p0_length), history);
+                                        to_time(segment.p0_length), history,
+                                        segment.p1_is_corner, segment.p0_is_corner);
 
         if (segment.has_cross_point_p0) {
             bool wire_enabled = history.value(to_time(segment.p0_length));
@@ -1134,7 +1142,7 @@ auto draw_wire(Context& ctx, layout::ConstElement element,
                simulation_view::ConstElement logic_state) -> void {
     const auto history = logic_state.input_history();
 
-    if (history.size() < 2) {
+    if (history.size() <= 1) {
         draw_segment_tree(ctx, element, history.last_value(), ElementDrawState::normal);
         return;
     }
