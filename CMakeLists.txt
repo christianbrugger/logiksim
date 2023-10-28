@@ -40,6 +40,8 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
+    src/component/line_tree/line_store.cpp
+    src/component/line_tree/tree_builder.cpp
     src/component/simulation/history_buffer.cpp
     src/component/simulation/history_calculation.cpp
     src/component/simulation/history_entry.cpp
@@ -190,8 +192,10 @@ set(LS_CORE_SOURCES
     src/vocabulary/internal_state_index.cpp
     src/vocabulary/layout_calculation_data.cpp
     src/vocabulary/layout_info_vector.cpp
+    src/vocabulary/length.cpp
     src/vocabulary/line.cpp
     src/vocabulary/line_fine.cpp
+    src/vocabulary/line_index.cpp
     src/vocabulary/line_insertion_type.cpp
     src/vocabulary/logic_small_vector.cpp
     src/vocabulary/logic_vector.cpp

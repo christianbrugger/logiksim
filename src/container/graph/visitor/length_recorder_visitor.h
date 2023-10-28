@@ -20,7 +20,7 @@ class LengthRecorderVisitor {
 
     [[nodiscard]] explicit LengthRecorderVisitor(index_t vertex_count);
 
-    auto tree_edge(index_t a, index_t b, AdjacencyGraph<index_t> graph) -> void;
+    auto tree_edge(index_t a, index_t b, const AdjacencyGraph<index_t>& graph) -> void;
 
     [[nodiscard]] auto lengths() const -> const length_vector_t&;
     [[nodiscard]] auto length(index_t vertex_id) const -> length_t;
@@ -38,9 +38,8 @@ LengthRecorderVisitor<index_t, length_t>::LengthRecorderVisitor(index_t vertex_c
     : length_vector_(vertex_count, 0) {}
 
 template <typename index_t, typename length_t>
-auto LengthRecorderVisitor<index_t, length_t>::tree_edge(index_t a, index_t b,
-                                                         AdjacencyGraph<index_t> graph)
-    -> void {
+auto LengthRecorderVisitor<index_t, length_t>::tree_edge(
+    index_t a, index_t b, const AdjacencyGraph<index_t>& graph) -> void {
     auto line = line_t {graph.points().at(a), graph.points().at(b)};
     // TODO overflow check
     length_vector_.at(b) = length_vector_.at(a) + distance(line);

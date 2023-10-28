@@ -29,6 +29,7 @@ namespace logicsim {
 template <typename index_t = int>
 class AdjacencyGraph {
    public:
+    using index_type = index_t;
     using key_type = index_t;
     using mapped_type = point_t;
 
