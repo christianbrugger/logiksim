@@ -193,6 +193,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/layout_calculation_data.cpp
     src/vocabulary/layout_info_vector.cpp
     src/vocabulary/length.cpp
+    src/vocabulary/length_vector.cpp
     src/vocabulary/line.cpp
     src/vocabulary/line_fine.cpp
     src/vocabulary/line_index.cpp
@@ -263,6 +264,7 @@ set(LS_CORE_SOURCES
     src/timeout_timer.cpp
     src/timer.cpp
     src/top_widget.cpp
+    src/tree_validation.cpp
     src/validate_definition.cpp
     src/vocabulary.cpp
     src/wyhash.cpp

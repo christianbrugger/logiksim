@@ -11,6 +11,7 @@
 #include "geometry/point.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "logging.h"
 #include "validate_definition.h"
 #include "vocabulary/layout_calculation_data.h"
 

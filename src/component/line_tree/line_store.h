@@ -2,15 +2,11 @@
 #define LOGICSIM_COMPONENT_LINE_TREE_LINE_STORE_H
 
 #include "format/struct.h"
-#include "vocabulary/grid.h"
 #include "vocabulary/length.h"
 #include "vocabulary/line.h"
 #include "vocabulary/line_index.h"
-#include "vocabulary/point.h"
 
 #include <folly/small_vector.h>
-
-#include <optional>
 
 namespace logicsim {
 
@@ -30,13 +26,13 @@ static_assert(sizeof(length_vector_t) == 12);
 /**
  * @ Stores the line of a tree in depth-first order.
  *
- * Note that the first line is always a leaf by construction.
+ * Note that the first line is always a 'leaf' by construction.
  *
  * Class invariants:
  *     + lines_ and start_lengths_ have the same size
- *     + start_lengths_ contains the length from root to p0 of that line.
+ *     + start_lengths_ contains the length from root to p0 of corresponding line.
  *     + leaf_indices_ point to all leaves.
- *     + lines_ are added in depth first order.
+ *     + lines_ are ordered in depth first order.
  *     + the points p1 of all lines are unique.
  */
 class LineStore {
@@ -84,8 +80,13 @@ class LineStore {
     [[nodiscard]] auto last_index() const -> line_index_t;
 
    private:
+    // contain lines in depth-first order
     line_vector_t lines_ {};
+
+    // contain start length of each line
     length_vector_t start_lengths_ {};
+
+    // contain indices of leaf nodes
     index_vector_t leaf_indices_ {};
 };
 

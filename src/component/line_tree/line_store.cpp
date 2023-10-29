@@ -5,7 +5,6 @@
 #include "allocated_size/trait.h"
 #include "format/container.h"
 #include "geometry/line.h"
-#include "geometry/orientation.h"
 
 #include <gsl/gsl>
 
@@ -45,7 +44,8 @@ auto LineStore::shrink_to_fit() -> void {
 }
 
 auto LineStore::format() const -> std::string {
-    return fmt::format("LineStore({}, {}, {})", lines_, start_lengths_, leaf_indices_);
+    return fmt::format("LineStore(lines: {}, start_lengths: {}, leaf_indices: {})",
+                       lines_, start_lengths_, leaf_indices_);
 }
 
 auto logicsim::line_tree::LineStore::add_first_line(line_t new_line) -> line_index_t {
@@ -94,8 +94,10 @@ auto LineStore::add_line(line_t new_line, line_index_t previous_index) -> line_i
     start_lengths_.push_back(end_length(previous_index));
 
     if (previous_index == last_index) {
+        // convert / move leaf
         leaf_indices_.back() = new_index;
     } else {
+        // create new leaf
         leaf_indices_.push_back(new_index);
     }
 

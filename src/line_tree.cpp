@@ -4,10 +4,7 @@
 #include "allocated_size/trait.h"
 #include "component/line_tree/tree_builder.h"
 #include "geometry/orientation.h"
-#include "line_tree.h"
 #include "vocabulary/connection_count.h"
-
-#include <fmt/format.h>
 
 namespace logicsim {
 
@@ -46,7 +43,7 @@ auto LineTree::is_corner_p0(line_index_t index) const -> bool {
 }
 
 auto LineTree::is_corner_p1(line_index_t index) const -> bool {
-    if (store_.empty() || index == store_.last_index()) {
+    if (index == store_.last_index()) {
         return false;
     }
     return store_.starts_new_subtree(get_next(index));
@@ -86,8 +83,10 @@ auto LineTree::output_orientation(connection_id_t output) const -> orientation_t
     return to_orientation_p1(get_leaf(store_, output));
 }
 
-auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
-    return transform_to_container<std::vector<length_t>>(
+auto LineTree::calculate_output_lengths() const -> length_vector_t {
+    static_assert(length_vector_t::max_size() >= line_tree::index_vector_t::max_size());
+
+    return transform_to_container<length_vector_t>(
         store_.leaf_indices(),
         [&](const line_index_t& index) { return store_.end_length(index); });
 };
@@ -97,7 +96,7 @@ auto LineTree::calculate_output_lengths() const -> std::vector<length_t> {
 //
 
 auto to_line_tree(std::span<const ordered_line_t> segments, point_t root) -> LineTree {
-    return LineTree {line_tree::create_line_store_simplified(segments, root)};
+    return LineTree {line_tree::create_line_store(segments, root)};
 }
 
 auto indices(const LineTree& line_tree) -> range_extended_t<line_index_t> {

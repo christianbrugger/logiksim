@@ -5,11 +5,11 @@
 #include "component/line_tree/line_store.h"
 #include "format/struct.h"
 #include "vocabulary/connection_id.h"
+#include "vocabulary/length_vector.h"
 #include "vocabulary/orientation.h"
 
 #include <span>
 #include <string>
-#include <vector>
 
 namespace logicsim {
 
@@ -42,8 +42,7 @@ class LineTree {
     [[nodiscard]] auto output_count() const -> connection_count_t;
     [[nodiscard]] auto output_position(connection_id_t) const -> point_t;
     [[nodiscard]] auto output_orientation(connection_id_t) const -> orientation_t;
-    // TODO logic small vector type
-    [[nodiscard]] auto calculate_output_lengths() const -> std::vector<length_t>;
+    [[nodiscard]] auto calculate_output_lengths() const -> length_vector_t;
 
     // TODO remove
     auto validate() const -> void {};

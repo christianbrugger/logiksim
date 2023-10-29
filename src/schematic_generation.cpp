@@ -19,11 +19,11 @@ namespace {
 
 auto calculate_output_delays(const LineTree& line_tree, delay_t wire_delay_per_distance)
     -> output_delays_t {
-    auto lengths = line_tree.calculate_output_lengths();
+    const auto lengths = line_tree.calculate_output_lengths();
 
     return transform_to_container<output_delays_t>(
-        lengths, [&](length_t length) -> delay_t {
-            return wire_delay_per_distance * length.value;  // TODO don't use length.value
+        lengths, [&](const length_t& length) -> delay_t {
+            return wire_delay_per_distance * length.value;
         });
 }
 
