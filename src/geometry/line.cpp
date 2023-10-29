@@ -1,7 +1,9 @@
-#include "geometry/line.h"
+#include "line.h"
 
+#include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "geometry/point.h"
+#include "line.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/line.h"
 #include "vocabulary/ordered_line.h"
@@ -78,6 +80,10 @@ auto is_inside(point_t point, ordered_line_t line) noexcept -> bool {
     return line.p0.y < point.y && point.y < line.p1.y;
 }
 
+auto is_inside(point_t point, line_t line) noexcept -> bool {
+    return is_inside(point, ordered_line_t {line});
+}
+
 auto is_colliding(point_t point, ordered_line_t line) noexcept -> bool {
     if (is_horizontal(line)) {
         return point.y == line.p0.y && line.p0.x <= point.x && point.x <= line.p1.x;
@@ -85,9 +91,17 @@ auto is_colliding(point_t point, ordered_line_t line) noexcept -> bool {
     return point.x == line.p0.x && line.p0.y <= point.y && point.y <= line.p1.y;
 }
 
+auto is_colliding(point_t point, line_t line) noexcept -> bool {
+    return is_colliding(point, ordered_line_t {line});
+}
+
 auto line_points_colliding(ordered_line_t line0, ordered_line_t line1) noexcept -> bool {
     return is_colliding(line0.p0, line1) || is_colliding(line0.p1, line1) ||
            is_colliding(line1.p0, line0) || is_colliding(line1.p1, line0);
+}
+
+auto line_points_colliding(line_t line0, line_t line1) noexcept -> bool {
+    return line_points_colliding(ordered_line_t {line0}, ordered_line_t {line1});
 }
 
 }  // namespace logicsim

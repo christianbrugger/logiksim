@@ -70,7 +70,6 @@ auto LineStore::add_line(line_t new_line, line_index_t previous_index) -> line_i
 
     Expects(!leaf_indices_.empty());
     Expects(lines_.size() == start_lengths_.size());
-    // TODO check colliding precondition
 
     const auto previous_line = line(previous_index);
     const auto last_index = this->last_index();
@@ -79,16 +78,16 @@ auto LineStore::add_line(line_t new_line, line_index_t previous_index) -> line_i
     if (new_line.p0 != previous_line.p1) [[unlikely]] {
         throw std::runtime_error("New line must connect to the old line");
     }
-    // TODO think about this
-    // if ((previous_index == last_index) &&
-    //     (is_horizontal(new_line) != is_horizontal(previous_line))) [[unlikely]] {
-    //     throw std::runtime_error("Requires different orientation than old line");
-    // }
     if (previous_index != last_index && contains(leaf_indices_, previous_index))
         [[unlikely]] {
+        // Note this is needed, so we can keep track of leaves.
         throw std::runtime_error(
             "Previous index cannot refer to a leaf. "
             "Lines need to be added in depth first order");
+    }
+    if (contains(lines_, new_line.p1, &line_t::p1)) [[unlikely]] {
+        // Note this is needed for 'starts_new_subtree' to work.
+        throw std::runtime_error("endpoint needs to be unique");
     }
 
     lines_.push_back(new_line);

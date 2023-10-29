@@ -30,8 +30,6 @@ static_assert(sizeof(length_vector_t) == 12);
 /**
  * @ Stores the line of a tree in depth-first order.
  *
- * Pre-condition lines added do not collide with themselves.
- *
  * Note that the first line is always a leaf by construction.
  *
  * Class invariants:
@@ -39,6 +37,7 @@ static_assert(sizeof(length_vector_t) == 12);
  *     + start_lengths_ contains the length from root to p0 of that line.
  *     + leaf_indices_ point to all leaves.
  *     + lines_ are added in depth first order.
+ *     + the points p1 of all lines are unique.
  */
 class LineStore {
    public:
@@ -55,22 +54,19 @@ class LineStore {
     /**
      * @brief: Adds the first line to the LineStore.
      *
-     * Throws an exception if the LineStore is not empty.
+     * Throws if the LineStore is not empty.
      */
     auto add_first_line(line_t new_line) -> line_index_t;
 
     /**
      * @brief: Adds a new line to the LineStore.
      *
-     * Pre-condition line added does collide with previous line.
-     * (checked only in debug mode)
-     *
      * Note lines must be added in depth first order.
      *
      * Throws if the line store is empty.
      * Throws if new line doesn't connect to old line.
      * Throws if previous index refers to a leaf and is not the last index.
-     * Throws if previous index is the last index and orientation is the same.
+     * Throws if added line point p1 is already part of the tree.
      *
      * Returns the index of the new line
      */
