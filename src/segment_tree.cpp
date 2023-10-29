@@ -13,6 +13,7 @@
 #include "format/container.h"
 #include "line_tree.h"
 #include "logging.h"
+#include "tree_validation.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/map.hpp>
@@ -580,15 +581,12 @@ auto SegmentTree::validate() const -> void {
 auto SegmentTree::validate_inserted() const -> void {
     validate();
 
-    //
-    // TODO !!! find possible root
-    //
-    if (!has_input()) {
-        return;
+    if (!segments_are_normalized_tree(
+            transform_to_vector(segment_infos(), &segment_info_t::line))) {
+        throw std::runtime_error("segments are not a normalized tree");
     }
 
     const auto line_tree = to_line_tree(*this);
-
     validate_same_segments(*this, line_tree);
     validate_same_cross_points(*this, line_tree);
     validate_same_output_positions(*this, line_tree);
@@ -672,14 +670,27 @@ auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {
 }
 
 auto to_line_tree(const SegmentTree& segment_tree) -> LineTree {
-    if (!segment_tree.has_input()) {
+    if (segment_tree.empty()) {
         return LineTree {};
     }
 
+    const auto root = [&]() {
+        if (segment_tree.has_input()) {
+            return segment_tree.input_position();
+        }
+        for (const segment_info_t& info : segment_tree.segment_infos()) {
+            if (info.p0_type == SegmentPointType::output) {
+                return info.line.p0;
+            }
+            if (info.p1_type == SegmentPointType::output) {
+                return info.line.p1;
+            }
+        }
+        throw std::runtime_error("line tree needs to have either an input or output");
+    }();
+
     const auto segments =
-        transform_to_vector(segment_tree.segment_infos(),
-                            [](const segment_info_t& segment) { return segment.line; });
-    const auto root = segment_tree.input_position();
+        transform_to_vector(segment_tree.segment_infos(), &segment_info_t::line);
 
     return to_line_tree(segments, root);
 }
