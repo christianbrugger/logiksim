@@ -444,7 +444,7 @@ auto validate_same_segments(const SegmentTree& tree, const LineTree& line_tree) 
     // segment tree
     auto segments_2 = std::vector<ordered_line_t> {};
     std::ranges::transform(tree.segment_infos(), std::back_inserter(segments_2),
-                           [&](segment_info_t info) { return info.line; });
+                           &segment_info_t::line);
 
     // compare
     std::ranges::sort(segments_1);
