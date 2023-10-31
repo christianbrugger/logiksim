@@ -523,7 +523,7 @@ auto validate_segment_tree_display_state(const SegmentTree &tree,
                                          display_state_t display_state) -> void {
     if (!tree.empty()) {
         bool any_valid_parts =
-            std::ranges::any_of(tree.valid_parts(), &SegmentTree::parts_vector_t::size);
+            std::ranges::any_of(tree.valid_parts(), &PartSelection::size);
 
         if (any_valid_parts && !is_inserted(display_state)) [[unlikely]] {
             throw_exception("segment tree is in the wrong display state");

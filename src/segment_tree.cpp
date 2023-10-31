@@ -15,6 +15,7 @@
 #include "logging.h"
 #include "tree_validation.h"
 #include "vocabulary/connection_count.h"
+#include "vocabulary/part_copy_definition.h"
 #include "vocabulary/rect.h"
 
 #include <range/v3/algorithm/sort.hpp>
@@ -94,7 +95,7 @@ auto SegmentTree::sort_segments() -> void {
     const auto vectors = ranges::zip_view(segments_, valid_parts_vector_);
 
     const auto proj =
-        [](const std::tuple<segment_info_t, parts_vector_t>& tuple) -> ordered_line_t {
+        [](const std::tuple<segment_info_t, PartSelection>& tuple) -> ordered_line_t {
         return std::get<segment_info_t>(tuple).line;
     };
     ranges::sort(vectors, {}, proj);
@@ -223,8 +224,9 @@ auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
     // swap
     if (index != last_index) {
         segments_.at(index.value) = segments_.at(last_index.value);
-        valid_parts_vector_.at(index.value)
-            .swap(valid_parts_vector_.at(last_index.value));
+        using std::swap;
+        swap(valid_parts_vector_.at(index.value),
+             valid_parts_vector_.at(last_index.value));
     }
 
     // delete
@@ -305,10 +307,18 @@ auto SegmentTree::swap_and_merge_segment(segment_index_t index,
     auto& entries_orig = valid_parts_vector_.at(index.value);
     auto& entries_delete = valid_parts_vector_.at(index_deleted.value);
 
-    auto new_entries =
-        copy_parts(entries_orig, to_part(info_merged.line, info_orig.line));
-    copy_parts(entries_delete, new_entries, to_part(info_merged.line, info_delete.line));
-    entries_orig.swap(new_entries);
+    auto new_entries = copy_parts(
+        entries_orig, part_copy_definition_t {
+                          .destination = to_part(info_merged.line, info_orig.line),
+                          .source = to_part(info_orig.line),
+                      });
+    new_entries.copy_parts(entries_delete,
+                           part_copy_definition_t {
+                               .destination = to_part(info_merged.line, info_delete.line),
+                               .source = to_part(info_delete.line),
+                           });
+    using std::swap;
+    swap(entries_orig, new_entries);
 
     // first delete, so input count stays in bounds
     swap_and_delete_segment(index_deleted);
@@ -367,20 +377,20 @@ auto SegmentTree::segment_infos() const -> std::span<const segment_info_t> {
 
 auto SegmentTree::mark_valid(segment_index_t segment_index, part_t part) -> void {
     auto& valid_parts = valid_parts_vector_.at(segment_index.value);
-    add_part(valid_parts, part);
+    valid_parts.add_part(part);
 }
 
 auto SegmentTree::unmark_valid(segment_index_t segment_index, part_t part) -> void {
     auto& valid_parts = valid_parts_vector_.at(segment_index.value);
-    remove_part(valid_parts, part);
+    valid_parts.remove_part(part);
 }
 
-auto SegmentTree::valid_parts() const -> std::span<const parts_vector_t> {
+auto SegmentTree::valid_parts() const -> std::span<const PartSelection> {
     return valid_parts_vector_;
 }
 
 auto SegmentTree::valid_parts(segment_index_t segment_index) const
-    -> std::span<const part_t> {
+    -> const PartSelection& {
     return valid_parts_vector_.at(segment_index.value);
 }
 
@@ -564,8 +574,11 @@ auto SegmentTree::validate() const -> void {
     validate_output_count(*this);
 
     // valid parts
-    for (auto index : indices()) {
-        validate_segment_parts(valid_parts(index), segment_line(index));
+    const auto is_part_of_line = [&](segment_index_t index) -> bool {
+        return valid_parts(index).last_end() <= to_part(segment_line(index)).end;
+    };
+    if (!std::ranges::all_of(indices(), is_part_of_line)) {
+        throw std::runtime_error("part is not part of line");
     }
 }
 
@@ -588,28 +601,20 @@ auto SegmentTree::validate_inserted() const -> void {
 // Free functions
 //
 
-auto calculate_normal_parts(const SegmentTree& tree, segment_index_t index,
-                            segment_tree::parts_vector_t& result) -> void {
-    const auto full_part = to_part(tree.segment_line(index));
-    const auto valid_parts_span = tree.valid_parts(index);
-    auto valid_parts = segment_tree::parts_vector_t {valid_parts_span.begin(),
-                                                             valid_parts_span.end()};
-    std::ranges::sort(valid_parts);
+auto calculate_normal_lines(const SegmentTree& tree) -> std::vector<ordered_line_t> {
+    auto result = std::vector<ordered_line_t> {};
 
-    // TODO abstract to algorithm
-    auto begin = full_part.begin;
+    for (const auto index : tree.indices()) {
+        const auto line = tree.segment_line(index);
+        const auto normal_parts =
+            PartSelection::inverted(tree.valid_parts(index), to_part(line));
 
-    auto it = valid_parts.begin();
-    while (it != valid_parts.end()) {
-        if (begin < it->begin) {
-            result.push_back(part_t {begin, it->begin});
-        }
-        begin = it->end;
-        ++it;
+        // convert to lines
+        std::ranges::transform(
+            normal_parts, std::back_inserter(result),
+            [line](part_t part) -> ordered_line_t { return to_line(line, part); });
     }
-    if (begin < full_part.end) {
-        result.push_back(part_t {begin, full_part.end});
-    }
+    return result;
 }
 
 auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)

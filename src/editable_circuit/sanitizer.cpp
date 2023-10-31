@@ -6,6 +6,7 @@
 #include "exception.h"
 #include "layout.h"
 #include "geometry/offset.h"
+#include "geometry/part_list.h"
 
 #include <folly/small_vector.h>
 

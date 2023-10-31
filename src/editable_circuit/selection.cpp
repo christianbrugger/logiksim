@@ -8,6 +8,8 @@
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "geometry/part_list.h"
+#include "geometry/part_list_copying.h"
 
 namespace logicsim {
 

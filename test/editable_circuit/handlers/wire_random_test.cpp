@@ -4,6 +4,7 @@
 #include "editable_circuit/sanitizer.h"
 #include "exception.h"
 #include "line_tree.h"
+#include "line_tree_2.h"
 #include "random/bool.h"
 #include "random/ordered_line.h"
 #include "random/segment.h"

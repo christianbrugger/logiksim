@@ -3,6 +3,7 @@
 #include "algorithm/uniform_int_distribution.h"
 #include "editable_circuit/editable_circuit.h"
 #include "format/container.h"
+#include "line_tree_2.h"
 #include "random/bool.h"
 #include "random/generator.h"
 #include "random/insertion_mode.h"

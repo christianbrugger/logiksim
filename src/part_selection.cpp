@@ -5,7 +5,7 @@
 #include "format/container.h"
 #include "geometry/part.h"
 #include "vocabulary/grid.h"
-#include "vocabulary/part_copy_definition.h"
+#include "allocated_size/folly_small_vector.h"
 
 #include <fmt/core.h>
 
@@ -82,12 +82,40 @@ auto PartSelection::last_end() const -> offset_t {
     return parts_.back().end;
 }
 
+auto PartSelection::inverted(const PartSelection& source, part_t part)
+    -> PartSelection {
+    auto result = PartSelection {};
+
+    // TODO abstract to algorithm
+    auto part_begin = part.begin;
+
+    auto it = source.begin();
+    while (it != source.end()) {
+        if (part_begin < it->begin) {
+            result.parts_.push_back(part_t {part_begin, it->begin});
+        }
+        part_begin = it->end;
+        ++it;
+    }
+    if (part_begin < part.end) {
+        result.parts_.push_back(part_t {part_begin, part.end});
+    }
+
+    assert(std::ranges::is_sorted(result.parts_));
+    assert(part_selection::parts_not_touching(result.parts_));
+    return result;
+}
+
 auto PartSelection::empty() const noexcept -> bool {
     return parts_.empty();
 }
 
 auto PartSelection::size() const noexcept -> std::size_t {
     return parts_.size();
+}
+
+auto PartSelection::allocated_size() const -> std::size_t {
+    return get_allocated_size(parts_);
 }
 
 auto PartSelection::add_part(part_t part) -> void {

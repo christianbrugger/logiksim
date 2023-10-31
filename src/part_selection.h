@@ -3,6 +3,7 @@
 
 #include "format/struct.h"
 #include "vocabulary/part.h"
+#include "vocabulary/part_copy_definition.h"
 
 #include <folly/small_vector.h>
 
@@ -40,11 +41,15 @@ class PartSelection {
     using value_type = part_t;
 
    public:
+    [[nodiscard]] static auto inverted(const PartSelection& source, part_t part)
+    -> PartSelection;
+
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto size() const noexcept -> std::size_t;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
+
     [[nodiscard]] auto begin() const -> iterator;
     [[nodiscard]] auto end() const -> iterator;
-
     [[nodiscard]] auto first_begin() const -> offset_t;
     [[nodiscard]] auto last_end() const -> offset_t;
 
@@ -64,8 +69,7 @@ class PartSelection {
 static_assert(sizeof(PartSelection) == 10);
 
 [[nodiscard]] auto copy_parts(const PartSelection& source,
-                              part_copy_definition_t copy_definition)
-    -> PartSelection;
+                              part_copy_definition_t copy_definition) -> PartSelection;
 
 struct move_definition_t {
     PartSelection& destination;

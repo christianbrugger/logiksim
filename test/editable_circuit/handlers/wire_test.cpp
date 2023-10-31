@@ -1,5 +1,6 @@
 #include "./test_helpers.h"
 #include "editable_circuit/handler.h"
+#include "line_tree_2.h"
 #include "vocabulary/element_definition.h"
 
 #include <gmock/gmock.h>
@@ -368,7 +369,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
 
         ASSERT_EQ(tree.valid_parts(segment_index_t {0}).size(), 1);
-        ASSERT_EQ(tree.valid_parts(segment_index_t {0})[0], part(0, 10));
+        ASSERT_EQ(*tree.valid_parts(segment_index_t {0}).begin(), part(0, 10));
     }
 
     // messages

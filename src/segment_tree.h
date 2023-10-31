@@ -5,14 +5,13 @@
 #include "format/struct.h"
 #include "geometry/line.h"
 #include "geometry/part.h"
-#include "geometry/part_list.h"
-#include "geometry/part_list_copying.h"
 #include "iterator_adaptor/transform_view.h"
 #include "vocabulary/element_id.h"
 #include "vocabulary/part.h"
 #include "vocabulary/segment.h"
 #include "vocabulary/segment_index.h"
 #include "vocabulary/segment_info.h"
+#include "part_selection.h"
 
 #include <boost/container/vector.hpp>
 #include <folly/small_vector.h>
@@ -38,11 +37,6 @@ class SegmentTree;
 
 namespace segment_tree {
 
-// parts_vector
-using parts_vector_policy = folly::small_vector_policy::policy_size_type<uint16_t>;
-using parts_vector_t = folly::small_vector<part_t, 2, parts_vector_policy>;
-static_assert(sizeof(parts_vector_t) == 10);
-
 // size_t
 using vector_size_t = segment_index_t::value_type;
 using vector_policy =
@@ -53,14 +47,13 @@ using segment_vector_t = folly::small_vector<segment_info_t, 2, vector_policy>;
 static_assert(sizeof(segment_vector_t) == 24);
 
 // valid_vector
-using valid_vector_t = folly::small_vector<parts_vector_t, 2, vector_policy>;
+using valid_vector_t = folly::small_vector<PartSelection, 2, vector_policy>;
 static_assert(sizeof(valid_vector_t) == 24);
 
 }  // namespace segment_tree
 
 class SegmentTree {
    public:
-    using parts_vector_t = segment_tree::parts_vector_t;
     using segment_vector_t = segment_tree::segment_vector_t;
     using valid_vector_t = segment_tree::valid_vector_t;
     using vector_size_t = segment_tree::vector_size_t;
@@ -99,9 +92,9 @@ class SegmentTree {
     // valid parts
     auto mark_valid(segment_index_t segment_index, part_t part) -> void;
     auto unmark_valid(segment_index_t segment_index, part_t part) -> void;
-    [[nodiscard]] auto valid_parts() const -> std::span<const parts_vector_t>;
+    [[nodiscard]] auto valid_parts() const -> std::span<const PartSelection>;
     [[nodiscard]] auto valid_parts(segment_index_t segment_index) const
-        -> std::span<const part_t>;
+        -> const PartSelection&;
 
     // indices
     [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
@@ -165,26 +158,8 @@ inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index) {
     });
 }
 
-auto calculate_normal_parts(const SegmentTree &tree, segment_index_t index,
-                            segment_tree::parts_vector_t &result) -> void;
-
-inline auto calculate_normal_lines(const SegmentTree &tree) {
-    auto parts = segment_tree::parts_vector_t {};
-    auto result = std::vector<ordered_line_t> {};
-
-    for (const auto index : tree.indices()) {
-        // get parts
-        parts.clear();
-        calculate_normal_parts(tree, index, parts);
-
-        // convert to lines
-        const auto line = tree.segment_line(index);
-        std::ranges::transform(
-            parts, std::back_inserter(result),
-            [line](part_t part) -> ordered_line_t { return to_line(line, part); });
-    }
-    return result;
-}
+[[nodiscard]] auto calculate_normal_lines(const SegmentTree &tree)
+    -> std::vector<ordered_line_t>;
 
 auto calculate_connected_segments_mask(const SegmentTree &tree, point_t p0)
     -> boost::container::vector<bool>;
