@@ -41,26 +41,29 @@ class PartSelection {
     using value_type = part_t;
 
    public:
+    [[nodiscard]] explicit constexpr PartSelection() = default;
+    [[nodiscard]] explicit PartSelection(part_t part);
+    [[nodiscard]] explicit PartSelection(part_vector_t&& parts);
     [[nodiscard]] static auto inverted(const PartSelection& source, part_t part)
-    -> PartSelection;
+        -> PartSelection;
+
+    [[nodiscard]] auto format() const -> std ::string;
+    [[nodiscard]] auto operator==(const PartSelection&) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const PartSelection&) const = default;
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto size() const noexcept -> std::size_t;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
-
-    [[nodiscard]] auto begin() const -> iterator;
-    [[nodiscard]] auto end() const -> iterator;
-    [[nodiscard]] auto first_begin() const -> offset_t;
-    [[nodiscard]] auto last_end() const -> offset_t;
 
     auto add_part(part_t part) -> void;
     auto remove_part(part_t part) -> void;
     auto copy_parts(const PartSelection& source, part_copy_definition_t copy_definition)
         -> void;
 
-    [[nodiscard]] auto format() const -> std ::string;
-    [[nodiscard]] auto operator==(const PartSelection&) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const PartSelection&) const = default;
+    [[nodiscard]] auto begin() const -> iterator;
+    [[nodiscard]] auto end() const -> iterator;
+    [[nodiscard]] auto first_begin() const -> offset_t;
+    [[nodiscard]] auto last_end() const -> offset_t;
 
    private:
     part_vector_t parts_ {};
@@ -77,7 +80,15 @@ struct move_definition_t {
     part_copy_definition_t copy_definition;
 };
 
+/**
+ * @brief: Moves parts between two different part selections.
+ */
 auto move_parts(move_definition_t attrs) -> void;
+
+/**
+ * @brief: Moves parts within the same part selection.
+ */
+auto move_parts(PartSelection& parts, part_copy_definition_t copy_definition) -> void;
 
 }  // namespace logicsim
 

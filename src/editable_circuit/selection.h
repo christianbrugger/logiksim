@@ -2,6 +2,7 @@
 #define LOGIKSIM_EDITABLE_CIRCUIT_SELECTION_H
 
 #include "editable_circuit/message_forward.h"
+#include "part_selection.h"
 #include "vocabulary.h"
 
 #include <ankerl/unordered_dense.h>
@@ -15,12 +16,12 @@ namespace detail::selection {
 
 using map_key_t = segment_t;
 using policy = folly::small_vector_policy::policy_size_type<uint32_t>;
-using map_value_t = folly::small_vector<part_t, 3, policy>;
+using map_value_t = PartSelection;
 using map_pair_t = std::pair<map_key_t, map_value_t>;
 
 static_assert(sizeof(map_key_t) == 8);
-static_assert(sizeof(map_value_t) == 16);
-static_assert(sizeof(map_pair_t) == 24);
+static_assert(sizeof(map_value_t) == 10);
+static_assert(sizeof(map_pair_t) == 20);
 
 using logicitems_set_t = ankerl::unordered_dense::set<element_id_t>;
 using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
@@ -40,7 +41,6 @@ class Selection;
 class Selection {
    public:
     using segment_pair_t = detail::selection::map_pair_t;
-    using part_vector_t = detail::selection::map_value_t;
 
     auto swap(Selection &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
@@ -55,7 +55,7 @@ class Selection {
 
     auto add_segment(segment_part_t segment_part) -> void;
     auto remove_segment(segment_part_t segment_part) -> void;
-    auto set_selection(segment_t segment, part_vector_t &&parts) -> void;
+    auto set_selection(segment_t segment, PartSelection &&parts) -> void;
 
     [[nodiscard]] auto is_selected(element_id_t element_id) const -> bool;
     [[nodiscard]] auto is_selected(segment_t segment) const -> bool;
@@ -63,7 +63,7 @@ class Selection {
     [[nodiscard]] auto selected_logic_items() const -> std::span<const element_id_t>;
     [[nodiscard]] auto selected_segments() const -> std::span<const segment_pair_t>;
     [[nodiscard]] auto selected_segments(segment_t segment) const
-        -> std::span<const part_t>;
+        -> const PartSelection&;
 
     auto submit(const editable_circuit::InfoMessage &message) -> void;
     auto validate(const Layout &layout) const -> void;
@@ -93,11 +93,10 @@ namespace logicsim {
 
 // [&](part_t part, bool selected){}
 template <typename Func>
-auto iter_parts(part_t full_part, Selection::part_vector_t parts, Func func) {
+auto iter_parts(part_t full_part, const PartSelection& parts, Func func) {
     offset_t pivot = full_part.begin;
-    std::ranges::sort(parts);
 
-    for (auto part : parts) {
+    for (const auto &part : parts) {
         if (pivot != part.begin) {
             func(part_t {pivot, part.begin}, false);
         }
@@ -111,11 +110,11 @@ auto iter_parts(part_t full_part, Selection::part_vector_t parts, Func func) {
 }
 
 // [&](part_t part, bool selected){}
-template <typename Func>
-auto iter_parts(part_t full_part, std::span<const part_t> const_parts, Func func) {
-    iter_parts(full_part,
-               Selection::part_vector_t {const_parts.begin(), const_parts.end()}, func);
-}
+//template <typename Func>
+//auto iter_parts(part_t full_part, std::span<const part_t> const_parts, Func func) {
+//    iter_parts(full_part,
+//               Selection::part_vector_t {const_parts.begin(), const_parts.end()}, func);
+//}
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void;
 auto add_segment_tree(Selection &selection, element_id_t element_id, const Layout &layout)

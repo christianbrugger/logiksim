@@ -8,8 +8,6 @@
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
-#include "geometry/part_list.h"
-#include "geometry/part_list_copying.h"
 
 namespace logicsim {
 
@@ -143,7 +141,7 @@ auto Selection::add_segment(segment_part_t segment_part) -> void {
         throw_exception("found segment selection with zero selection entries");
     }
 
-    add_part(entries, segment_part.part);
+    entries.add_part(segment_part.part);
 }
 
 auto Selection::remove_segment(segment_part_t segment_part) -> void {
@@ -157,7 +155,7 @@ auto Selection::remove_segment(segment_part_t segment_part) -> void {
         throw_exception("found segment selection with zero selection entries");
     }
 
-    remove_part(entries, segment_part.part);
+    entries.remove_part(segment_part.part);
 
     if (entries.empty()) {
         if (!selected_segments_.erase(segment_part.segment)) {
@@ -166,7 +164,7 @@ auto Selection::remove_segment(segment_part_t segment_part) -> void {
     }
 }
 
-auto Selection::set_selection(segment_t segment, part_vector_t &&parts) -> void {
+auto Selection::set_selection(segment_t segment, PartSelection &&parts) -> void {
     const auto it = selected_segments_.find(segment);
 
     if (parts.empty()) {
@@ -177,7 +175,8 @@ auto Selection::set_selection(segment_t segment, part_vector_t &&parts) -> void 
     }
 
     if (it != selected_segments_.end()) {
-        it->second.swap(parts);
+        using std::swap;
+        swap(it->second, parts);
         return;
     }
 
@@ -200,10 +199,15 @@ auto Selection::selected_segments() const -> std::span<const segment_pair_t> {
     return selected_segments_.values();
 }
 
-auto Selection::selected_segments(segment_t segment) const -> std::span<const part_t> {
+auto Selection::selected_segments(segment_t segment) const -> const PartSelection & {
+    // constexpr static auto selection = part_selection::part_vector_t {};
+
+    // TODO !!! make constexpr
+    const static auto empty_selection = PartSelection {};
+
     const auto it = selected_segments_.find(segment);
     if (it == selected_segments_.end()) {
-        return {};
+        return empty_selection;
     }
 
     auto &entries = it->second;
@@ -289,11 +293,15 @@ auto handle_move_different_segment(
     }();
 
     // move
-    const auto parts = part_copy_definition_t {
-        .destination = message.segment_part_destination.part,
-        .source = message.segment_part_source.part,
-    };
-    move_parts(source_entries, destination_entries, parts);
+    move_parts({
+        .destination = destination_entries,
+        .source = source_entries,
+        .copy_definition =
+            part_copy_definition_t {
+                .destination = message.segment_part_destination.part,
+                .source = message.segment_part_source.part,
+            },
+    });
 
     // delete source
     if (source_entries.empty()) {
@@ -322,20 +330,14 @@ auto handle_move_same_segment(detail::selection::segment_map_t &map,
     }
     auto &entries = it->second;
 
-    // move to new copy
-    const auto parts = part_copy_definition_t {
-        .destination = message.segment_part_destination.part,
-        .source = message.segment_part_source.part,
-    };
-    auto result = entries;
-    remove_part(result, parts.source);
-    copy_parts(entries, result, parts);
+    move_parts(entries, part_copy_definition_t {
+                            .destination = message.segment_part_destination.part,
+                            .source = message.segment_part_source.part,
+                        });
 
-    // insert result
-    if (result.empty()) [[unlikely]] {
+    if (entries.empty()) [[unlikely]] {
         throw_exception("result should never be empty");
     }
-    map.insert_or_assign(message.segment_part_destination.segment, std::move(result));
 }
 
 auto Selection::handle(const editable_circuit::info_message::SegmentPartMoved &message)
@@ -397,7 +399,11 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
 
         if (it != segment_map.end()) {
             const auto line = segment_tree.segment_line(segment_index);
-            sort_and_validate_segment_parts(it->second, line);
+
+            if (it->second.last_end() > to_part(line).end) [[unlikely]] {
+                throw_exception("parts are not part of line");
+            }
+
             segment_map.erase(it);
         }
     }
@@ -471,7 +477,7 @@ auto remove_segment_tree(Selection &selection, element_id_t element_id,
 auto add_segment_part(Selection &selection, const Layout &layout, segment_t segment,
                       point_fine_t point) -> void {
     const auto full_line = get_line(layout, segment);
-    const auto parts = selection.selected_segments(segment);
+    const auto &parts = selection.selected_segments(segment);
 
     iter_parts(to_part(full_line), parts, [&](part_t part, bool) {
         const auto line = to_line(full_line, part);
@@ -498,7 +504,7 @@ auto remove_segment_part(Selection &selection, const Layout &layout, segment_t s
 auto toggle_segment_part(Selection &selection, const Layout &layout, segment_t segment,
                          point_fine_t point) -> void {
     const auto full_line = get_line(layout, segment);
-    const auto parts = selection.selected_segments(segment);
+    const auto &parts = selection.selected_segments(segment);
 
     iter_parts(to_part(full_line), parts, [&](part_t part, bool selected) {
         const auto line = to_line(full_line, part);

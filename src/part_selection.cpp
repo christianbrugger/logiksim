@@ -2,10 +2,11 @@
 
 #include "algorithm/range.h"
 #include "algorithm/transform_combine_while.h"
+#include "allocated_size/folly_small_vector.h"
 #include "format/container.h"
 #include "geometry/part.h"
+#include "part_selection.h"
 #include "vocabulary/grid.h"
-#include "allocated_size/folly_small_vector.h"
 
 #include <fmt/core.h>
 
@@ -40,6 +41,7 @@ auto sort_and_merge_parts(part_vector_t& parts) -> void {
     Ensures(!parts.empty());
 }
 
+#ifndef NDEBUG
 /**
  * @brief: Returns false if parts are overlapping or touching.
  */
@@ -51,6 +53,7 @@ auto sort_and_merge_parts(part_vector_t& parts) -> void {
     };
     return std::ranges::adjacent_find(parts, part_overlapping) == parts.end();
 }
+#endif
 
 }  // namespace
 
@@ -82,8 +85,16 @@ auto PartSelection::last_end() const -> offset_t {
     return parts_.back().end;
 }
 
-auto PartSelection::inverted(const PartSelection& source, part_t part)
-    -> PartSelection {
+PartSelection::PartSelection(part_t part) : parts_ {part} {}
+
+PartSelection::PartSelection(part_vector_t&& parts) : parts_ {std::move(parts)} {
+    part_selection::sort_and_merge_parts(parts_);
+
+    assert(std::ranges::is_sorted(parts_));
+    assert(part_selection::parts_not_touching(parts_));
+}
+
+auto PartSelection::inverted(const PartSelection& source, part_t part) -> PartSelection {
     auto result = PartSelection {};
 
     // TODO abstract to algorithm
@@ -252,8 +263,19 @@ auto copy_parts(const PartSelection& source, part_copy_definition_t copy_definit
 }
 
 auto move_parts(move_definition_t attrs) -> void {
+    if (&attrs.source == &attrs.destination) [[unlikely]] {
+        throw std::runtime_error("Source and destination need to be independent.");
+    }
+
     attrs.destination.copy_parts(attrs.source, attrs.copy_definition);
     attrs.source.remove_part(attrs.copy_definition.source);
+}
+
+auto move_parts(PartSelection& parts, part_copy_definition_t copy_definition) -> void {
+    auto result = PartSelection {parts};
+    result.remove_part(copy_definition.source);
+    result.copy_parts(parts, copy_definition);
+    parts = result;
 }
 
 }  // namespace logicsim

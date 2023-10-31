@@ -4,9 +4,9 @@
 #include "editable_circuit/cache/collision_cache.h"
 #include "editable_circuit/selection.h"
 #include "exception.h"
-#include "layout.h"
 #include "geometry/offset.h"
-#include "geometry/part_list.h"
+#include "layout.h"
+#include "part_selection.h"
 
 #include <folly/small_vector.h>
 
@@ -50,8 +50,6 @@ class CrossingCache {
     const CollisionCache &collision_cache_;
     const ordered_line_t full_line_;
 };
-
-using part_vector_t = Selection::part_vector_t;
 
 auto is_colliding(part_t part, const CrossingCache &cache) -> bool {
     return cache.is_colliding(part.begin) || cache.is_colliding(part.end);
@@ -108,18 +106,16 @@ auto find_sanitized_part(const part_t part, const CrossingCache &cache,
 }
 
 auto find_sanitized_parts(std::span<const part_t> parts, const CrossingCache &cache,
-                          const SanitizeMode mode) -> part_vector_t {
-    auto new_parts = part_vector_t {};
+                          const SanitizeMode mode) -> PartSelection {
+    auto new_parts = part_selection::part_vector_t {};
 
     for (const auto &part : parts) {
         if (const auto new_part = find_sanitized_part(part, cache, mode)) {
             new_parts.push_back(new_part.value());
         }
     }
-    if (mode == SanitizeMode::expand) {
-        sort_and_merge_parts(new_parts);
-    }
-    return new_parts;
+
+    return PartSelection {std::move(new_parts)};
 }
 
 }  // namespace
@@ -156,7 +152,7 @@ auto sanitize_selection(Selection &selection, const Layout &layout,
     }
 
     for (auto &segment : to_delete) {
-        selection.set_selection(segment, {});
+        selection.set_selection(segment, PartSelection {});
     }
 }
 
