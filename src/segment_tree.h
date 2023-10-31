@@ -8,7 +8,10 @@
 #include "geometry/part_list.h"
 #include "geometry/part_list_copying.h"
 #include "iterator_adaptor/transform_view.h"
-#include "vocabulary.h"
+#include "vocabulary/element_id.h"
+#include "vocabulary/part.h"
+#include "vocabulary/segment.h"
+#include "vocabulary/segment_index.h"
 #include "vocabulary/segment_info.h"
 
 #include <boost/container/vector.hpp>
@@ -17,13 +20,13 @@
 #include <compare>
 #include <optional>
 #include <span>
+#include <type_traits>
 #include <vector>
-
-// Open issues:
-// - How to deal with segment that connects two outputs: output < ---- > output
 
 namespace logicsim {
 
+struct connection_count_t;
+struct rect_t;
 class LineTree;
 class SegmentTree;
 
@@ -33,22 +36,34 @@ class SegmentTree;
 [[nodiscard]] auto merge_touching(const segment_info_t segment_info_0,
                                   const segment_info_t segment_info_1) -> segment_info_t;
 
-[[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
+namespace segment_tree {
 
-namespace detail::segment_tree {
-using index_t = std::make_unsigned_t<segment_index_t::value_type>;
-static_assert(sizeof(index_t) == sizeof(segment_index_t::value_type));
+// parts_vector
+using parts_vector_policy = folly::small_vector_policy::policy_size_type<uint16_t>;
+using parts_vector_t = folly::small_vector<part_t, 2, parts_vector_policy>;
+static_assert(sizeof(parts_vector_t) == 10);
 
-using policy = folly::small_vector_policy::policy_size_type<uint16_t>;  // index_t
-using parts_vector_t = folly::small_vector<part_t, 2, policy>;
-static_assert(sizeof(parts_vector_t) == 10);  // 2 * 4 + 2
+// size_t
+using vector_size_t = segment_index_t::value_type;
+using vector_policy =
+    folly::small_vector_policy::policy_size_type<std::make_unsigned_t<vector_size_t>>;
 
-}  // namespace detail::segment_tree
+// segment_vector
+using segment_vector_t = folly::small_vector<segment_info_t, 2, vector_policy>;
+static_assert(sizeof(segment_vector_t) == 24);
+
+// valid_vector
+using valid_vector_t = folly::small_vector<parts_vector_t, 2, vector_policy>;
+static_assert(sizeof(valid_vector_t) == 24);
+
+}  // namespace segment_tree
 
 class SegmentTree {
    public:
-    using index_t = detail::segment_tree::index_t;
-    using parts_vector_t = detail::segment_tree::parts_vector_t;
+    using parts_vector_t = segment_tree::parts_vector_t;
+    using segment_vector_t = segment_tree::segment_vector_t;
+    using valid_vector_t = segment_tree::valid_vector_t;
+    using vector_size_t = segment_tree::vector_size_t;
 
    public:
     [[nodiscard]] constexpr SegmentTree() = default;
@@ -117,20 +132,11 @@ class SegmentTree {
     auto sort_point_types() -> void;
 
    private:
-    using policy = folly::small_vector_policy::policy_size_type<index_t>;
-    using segment_vector_t = folly::small_vector<segment_info_t, 2, policy>;
-    static_assert(sizeof(segment_vector_t) == 24);  // 2 * 10 + 4
-
-    using valid_vector_t = folly::small_vector<parts_vector_t, 2, policy>;
-    static_assert(sizeof(valid_vector_t) == 24);  // 2 * 10 + 4
-
     segment_vector_t segments_ {};
     valid_vector_t valid_parts_vector_ {};
 
-    index_t output_count_ {0};
-    // optional has bad memory size, so we do it ourselves
-    point_t input_position_ {};
-    bool has_input_ {false};
+    vector_size_t output_count_ {0};
+    std::optional<point_t> input_position_ {};
 };
 
 static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 4 + 1 (+ 3)
@@ -143,6 +149,8 @@ template <>
 auto std::swap(logicsim::SegmentTree &a, logicsim::SegmentTree &b) noexcept -> void;
 
 namespace logicsim {
+
+[[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
 
 inline auto all_lines(const SegmentTree &tree) {
     return transform_view(tree.segment_infos(),
@@ -158,10 +166,10 @@ inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index) {
 }
 
 auto calculate_normal_parts(const SegmentTree &tree, segment_index_t index,
-                            detail::segment_tree::parts_vector_t &result) -> void;
+                            segment_tree::parts_vector_t &result) -> void;
 
 inline auto calculate_normal_lines(const SegmentTree &tree) {
-    auto parts = detail::segment_tree::parts_vector_t {};
+    auto parts = segment_tree::parts_vector_t {};
     auto result = std::vector<ordered_line_t> {};
 
     for (const auto index : tree.indices()) {

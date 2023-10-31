@@ -14,6 +14,8 @@
 #include "line_tree.h"
 #include "logging.h"
 #include "tree_validation.h"
+#include "vocabulary/connection_count.h"
+#include "vocabulary/rect.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/map.hpp>
@@ -75,7 +77,6 @@ auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
 
     swap(output_count_, other.output_count_);
     swap(input_position_, other.input_position_);
-    swap(has_input_, other.has_input_);
 }
 
 auto SegmentTree::allocated_size() const -> std::size_t {
@@ -153,10 +154,9 @@ auto SegmentTree::register_segment(segment_index_t index) -> void {
             using enum SegmentPointType;
 
             case input: {
-                if (has_input_) [[unlikely]] {
+                if (input_position_) [[unlikely]] {
                     throw_exception("Segment tree already has one input.");
                 }
-                has_input_ = true;
                 input_position_ = point;
                 break;
             }
@@ -187,15 +187,10 @@ auto SegmentTree::unregister_segment(segment_index_t index) -> void {
             using enum SegmentPointType;
 
             case input: {
-                if (!has_input_) [[unlikely]] {
-                    throw_exception("Tree should have input thats not present.");
-                }
                 if (point != input_position_) [[unlikely]] {
-                    throw_exception(
-                        "Removed segment has wrong input position as stored.");
+                    throw_exception("Tree should have input that's not present.");
                 }
-                has_input_ = false;
-                input_position_ = point_t {};
+                input_position_.reset();
                 break;
             }
 
@@ -240,11 +235,10 @@ auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
 auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
     const auto next_index = get_next_index();
 
-    if (tree.has_input_) {
-        if (has_input_) [[unlikely]] {
+    if (tree.input_position_) {
+        if (input_position_) [[unlikely]] {
             throw_exception("Merged tree cannot have two inputs");
         }
-        has_input_ = true;
         input_position_ = tree.input_position_;
     }
 
@@ -261,7 +255,7 @@ auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
     const auto new_index = get_next_index();
 
     segments_.push_back(segment);
-    valid_parts_vector_.push_back(parts_vector_t {});
+    valid_parts_vector_.emplace_back();
     register_segment(new_index);
 
     return new_index;
@@ -409,18 +403,15 @@ auto SegmentTree::indices() const noexcept -> forward_range_t<segment_index_t> {
 }
 
 auto SegmentTree::has_input() const noexcept -> bool {
-    return has_input_;
+    return input_position_.has_value();
 }
 
 auto SegmentTree::input_count() const noexcept -> connection_count_t {
-    return has_input_ ? connection_count_t {1} : connection_count_t {0};
+    return input_position_ ? connection_count_t {1} : connection_count_t {0};
 }
 
 auto SegmentTree::input_position() const -> point_t {
-    if (!has_input_) {
-        throw_exception("Segment tree has no input.");
-    }
-    return input_position_;
+    return input_position_.value();
 }
 
 auto SegmentTree::output_count() const noexcept -> connection_count_t {
@@ -598,10 +589,10 @@ auto SegmentTree::validate_inserted() const -> void {
 //
 
 auto calculate_normal_parts(const SegmentTree& tree, segment_index_t index,
-                            detail::segment_tree::parts_vector_t& result) -> void {
+                            segment_tree::parts_vector_t& result) -> void {
     const auto full_part = to_part(tree.segment_line(index));
     const auto valid_parts_span = tree.valid_parts(index);
-    auto valid_parts = detail::segment_tree::parts_vector_t {valid_parts_span.begin(),
+    auto valid_parts = segment_tree::parts_vector_t {valid_parts_span.begin(),
                                                              valid_parts_span.end()};
     std::ranges::sort(valid_parts);
 
@@ -623,7 +614,7 @@ auto calculate_normal_parts(const SegmentTree& tree, segment_index_t index,
 
 auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
     -> boost::container::vector<bool> {
-    const auto graph = AdjacencyGraph<SegmentTree::index_t> {all_lines(tree)};
+    const auto graph = AdjacencyGraph<SegmentTree::vector_size_t> {all_lines(tree)};
     const auto result =
         depth_first_search_visited(graph, EmptyVisitor {}, graph.to_index(p0).value());
 
@@ -645,7 +636,7 @@ auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
 
 auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {
     if (tree.empty()) [[unlikely]] {
-        throw_exception("empty segment tree has no bounding rect");
+        throw_exception("empty segment tree has no bounding-rect");
     }
 
     auto p_min = point_t {grid_t::max(), grid_t::max()};

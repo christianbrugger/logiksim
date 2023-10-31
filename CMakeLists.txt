@@ -243,6 +243,7 @@ set(LS_CORE_SOURCES
     src/line_tree.cpp
     src/line_tree_2.cpp
     src/logging.cpp
+    src/part_selection.cpp
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
