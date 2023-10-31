@@ -61,12 +61,19 @@ class PartSelection {
     part_vector_t parts_ {};
 };
 
+static_assert(sizeof(PartSelection) == 10);
+
 [[nodiscard]] auto copy_parts(const PartSelection& source,
                               part_copy_definition_t copy_definition)
     -> PartSelection;
 
-auto move_parts(PartSelection& source, PartSelection& destination,
-                part_copy_definition_t copy_definition) -> void;
+struct move_definition_t {
+    PartSelection& destination;
+    PartSelection& source;
+    part_copy_definition_t copy_definition;
+};
+
+auto move_parts(move_definition_t attrs) -> void;
 
 }  // namespace logicsim
 

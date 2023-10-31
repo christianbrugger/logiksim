@@ -1,20 +1,21 @@
 #include "part_selection.h"
 
+#include "algorithm/range.h"
 #include "algorithm/transform_combine_while.h"
 #include "format/container.h"
-#include "vocabulary/grid.h"
-#include "algorithm/range.h"
 #include "geometry/part.h"
+#include "vocabulary/grid.h"
 #include "vocabulary/part_copy_definition.h"
 
 #include <fmt/core.h>
+
 #include <stdexcept>
 
 namespace logicsim {
 
 namespace part_selection {
 
-    namespace {
+namespace {
 
 auto sort_and_merge_parts(part_vector_t& parts) -> void {
     if (parts.empty()) {
@@ -172,8 +173,8 @@ namespace {
     return std::nullopt;
 }
 
-auto copy_parts(part_vector_t &destination, const part_vector_t& source, 
-    part_copy_definition_t def) {
+auto copy_parts(part_vector_t& destination, const part_vector_t& source,
+                part_copy_definition_t def) {
     if (distance(def.destination) != distance(def.source)) {
         throw std::runtime_error("source and destination need to have the same size");
     }
@@ -182,7 +183,7 @@ auto copy_parts(part_vector_t &destination, const part_vector_t& source,
     auto shifted = V {def.destination.begin.value} - V {def.source.begin.value};
     auto max_end = V {def.destination.end.value};
 
-    for (const part_t &part : source) {
+    for (const part_t& part : source) {
         if (const std::optional<part_t> res = intersect(part, def.source)) {
             if (const auto new_part = get_shifted_part(*res, shifted, max_end)) {
                 assert(a_inside_b(*new_part, def.destination));
@@ -196,8 +197,8 @@ auto copy_parts(part_vector_t &destination, const part_vector_t& source,
 
 }  // namespace part_selection
 
-auto PartSelection::copy_parts(const PartSelection& source, part_copy_definition_t copy_definition)
-    -> void {
+auto PartSelection::copy_parts(const PartSelection& source,
+                               part_copy_definition_t copy_definition) -> void {
     assert(std::ranges::is_sorted(parts_));
     assert(part_selection::parts_not_touching(parts_));
 
@@ -222,10 +223,9 @@ auto copy_parts(const PartSelection& source, part_copy_definition_t copy_definit
     return result;
 }
 
-auto move_parts(PartSelection& source, PartSelection& destination,
-                part_copy_definition_t copy_definition) -> void {
-    destination.copy_parts(source, copy_definition);
-    source.remove_part(copy_definition.source);
+auto move_parts(move_definition_t attrs) -> void {
+    attrs.destination.copy_parts(attrs.source, attrs.copy_definition);
+    attrs.source.remove_part(attrs.copy_definition.source);
 }
 
 }  // namespace logicsim
