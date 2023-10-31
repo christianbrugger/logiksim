@@ -10,6 +10,8 @@
 
 namespace logicsim {
 
+struct part_copy_definition_t;
+
 namespace part_selection {
 
 // all parts are part of a line, so at maximum #grids / 2 selections are possible.
@@ -25,30 +27,46 @@ static_assert(sizeof(part_vector_t) == 10);
 }  // namespace part_selection
 
 /**
-* @brief: Selected parts on a line.
-* 
-* Class-invariants:
-*     + parts_ are sorted ascending.
-*     + adjacent parts do not touch (they are merged).
-*/
+ * @brief: Selected parts on a line.
+ *
+ * Class-invariants:
+ *     + parts_ are sorted ascending.
+ *     + adjacent parts do not touch (they are merged).
+ */
 class PartSelection {
    public:
     using part_vector_t = part_selection::part_vector_t;
+    using iterator = part_vector_t::const_iterator;
+    using value_type = part_t;
 
    public:
+    [[nodiscard]] auto empty() const noexcept -> bool;
+    [[nodiscard]] auto size() const noexcept -> std::size_t;
+    [[nodiscard]] auto begin() const -> iterator;
+    [[nodiscard]] auto end() const -> iterator;
+
+    [[nodiscard]] auto first_begin() const -> offset_t;
+    [[nodiscard]] auto last_end() const -> offset_t;
+
+    auto add_part(part_t part) -> void;
+    auto remove_part(part_t part) -> void;
+    auto copy_parts(const PartSelection& source, part_copy_definition_t copy_definition)
+        -> void;
+
     [[nodiscard]] auto format() const -> std ::string;
-
-    [[nodiscard]] auto add_part(part_t part) -> void;
-    [[nodiscard]] auto remove_part(part_t part) -> void;
-
-    // [[nodiscard]] auto copy_selection(part_t) -> void;
-
     [[nodiscard]] auto operator==(const PartSelection&) const -> bool = default;
     [[nodiscard]] auto operator<=>(const PartSelection&) const = default;
 
    private:
-    part_vector_t parts_;
+    part_vector_t parts_ {};
 };
+
+[[nodiscard]] auto copy_parts(const PartSelection& source,
+                              part_copy_definition_t copy_definition)
+    -> PartSelection;
+
+auto move_parts(PartSelection& source, PartSelection& destination,
+                part_copy_definition_t copy_definition) -> void;
 
 }  // namespace logicsim
 

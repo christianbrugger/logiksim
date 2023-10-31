@@ -5,6 +5,7 @@
 #include "vocabulary/grid.h"
 #include "algorithm/range.h"
 #include "geometry/part.h"
+#include "vocabulary/part_copy_definition.h"
 
 #include <fmt/core.h>
 #include <stdexcept>
@@ -12,6 +13,8 @@
 namespace logicsim {
 
 namespace part_selection {
+
+    namespace {
 
 auto sort_and_merge_parts(part_vector_t& parts) -> void {
     if (parts.empty()) {
@@ -48,10 +51,42 @@ auto sort_and_merge_parts(part_vector_t& parts) -> void {
     return std::ranges::adjacent_find(parts, part_overlapping) == parts.end();
 }
 
+}  // namespace
+
 }  // namespace part_selection
 
 auto PartSelection::format() const -> std::string {
     return fmt::format("{}", "<part_selection>");
+}
+
+auto PartSelection::begin() const -> iterator {
+    return parts_.begin();
+}
+
+auto PartSelection::end() const -> iterator {
+    return parts_.end();
+}
+
+auto PartSelection::first_begin() const -> offset_t {
+    if (empty()) {
+        return offset_t {0};
+    }
+    return parts_.front().begin;
+}
+
+auto PartSelection::last_end() const -> offset_t {
+    if (empty()) {
+        return offset_t {0};
+    }
+    return parts_.back().end;
+}
+
+auto PartSelection::empty() const noexcept -> bool {
+    return parts_.empty();
+}
+
+auto PartSelection::size() const noexcept -> std::size_t {
+    return parts_.size();
 }
 
 auto PartSelection::add_part(part_t part) -> void {
@@ -116,6 +151,81 @@ auto PartSelection::remove_part(part_t removing) -> void {
 
     assert(std::ranges::is_sorted(parts_));
     assert(part_selection::parts_not_touching(parts_));
+}
+
+namespace part_selection {
+
+namespace {
+
+[[nodiscard]] auto get_shifted_part(part_t part, offset_t::difference_type shifted,
+                                    offset_t::difference_type max_end)
+    -> std::optional<part_t> {
+    using V = offset_t::difference_type;
+
+    const auto begin = V {part.begin.value} + shifted;
+    const auto end = std::min(V {part.end.value} + shifted, max_end);
+
+    if (begin < end) {
+        return part_t {offset_t {gsl::narrow_cast<offset_t::value_type>(begin)},
+                       offset_t {gsl::narrow_cast<offset_t::value_type>(end)}};
+    }
+    return std::nullopt;
+}
+
+auto copy_parts(part_vector_t &destination, const part_vector_t& source, 
+    part_copy_definition_t def) {
+    if (distance(def.destination) != distance(def.source)) {
+        throw std::runtime_error("source and destination need to have the same size");
+    }
+
+    using V = offset_t::difference_type;
+    auto shifted = V {def.destination.begin.value} - V {def.source.begin.value};
+    auto max_end = V {def.destination.end.value};
+
+    for (const part_t &part : source) {
+        if (const std::optional<part_t> res = intersect(part, def.source)) {
+            if (const auto new_part = get_shifted_part(*res, shifted, max_end)) {
+                assert(a_inside_b(*new_part, def.destination));
+                destination.push_back(*new_part);
+            }
+        }
+    }
+}
+
+}  // namespace
+
+}  // namespace part_selection
+
+auto PartSelection::copy_parts(const PartSelection& source, part_copy_definition_t copy_definition)
+    -> void {
+    assert(std::ranges::is_sorted(parts_));
+    assert(part_selection::parts_not_touching(parts_));
+
+    const bool original_empty = empty();
+    part_selection::copy_parts(parts_, source.parts_, copy_definition);
+    if (!original_empty) {
+        part_selection::sort_and_merge_parts(parts_);
+    }
+
+    assert(std::ranges::is_sorted(parts_));
+    assert(part_selection::parts_not_touching(parts_));
+}
+
+//
+// Free functions
+//
+
+auto copy_parts(const PartSelection& source, part_copy_definition_t copy_definition)
+    -> PartSelection {
+    auto result = PartSelection {};
+    result.copy_parts(source, copy_definition);
+    return result;
+}
+
+auto move_parts(PartSelection& source, PartSelection& destination,
+                part_copy_definition_t copy_definition) -> void {
+    destination.copy_parts(source, copy_definition);
+    source.remove_part(copy_definition.source);
 }
 
 }  // namespace logicsim
