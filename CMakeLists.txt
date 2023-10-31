@@ -22,6 +22,7 @@ set(LS_CORE_SOURCES
     src/algorithm/sort_pair.cpp
     src/algorithm/to_underlying.cpp
     src/algorithm/to_vector.cpp
+    src/algorithm/transform_adjacent.cpp
     src/algorithm/transform_combine_while.cpp
     src/algorithm/transform_if.cpp
     src/algorithm/transform_to_container.cpp

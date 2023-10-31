@@ -400,7 +400,7 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
         if (it != segment_map.end()) {
             const auto line = segment_tree.segment_line(segment_index);
 
-            if (it->second.last_end() > to_part(line).end) [[unlikely]] {
+            if (it->second.max_offset() > to_part(line).end) [[unlikely]] {
                 throw_exception("parts are not part of line");
             }
 

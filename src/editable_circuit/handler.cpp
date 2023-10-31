@@ -2237,7 +2237,7 @@ auto change_insertion_mode(selection_handle_t handle, State state,
     while (handle->selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
             .segment = handle->selected_segments()[0].first,
-            .part = *handle->selected_segments()[0].second.begin(),
+            .part = handle->selected_segments()[0].second.front(),
         };
         handle->remove_segment(segment_part);
 
@@ -2295,7 +2295,7 @@ auto move_or_delete_elements(selection_handle_t handle, Layout& layout,
     while (handle->selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
             .segment = handle->selected_segments()[0].first,
-            .part = *handle->selected_segments()[0].second.begin(),
+            .part = handle->selected_segments()[0].second.front(),
         };
         handle->remove_segment(segment_part);
 
@@ -2326,7 +2326,7 @@ auto move_unchecked(const Selection& selection, Layout& layout, int delta_x, int
             throw_exception("selected wires need to be temporary");
         }
 
-        move_wire_unchecked(layout, segment, *parts.begin(), delta_x, delta_y);
+        move_wire_unchecked(layout, segment, parts.front(), delta_x, delta_y);
     }
 }
 
@@ -2349,7 +2349,7 @@ auto delete_all(selection_handle_t handle, State state) -> void {
     while (handle->selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
             .segment = handle->selected_segments()[0].first,
-            .part = *handle->selected_segments()[0].second.begin(),
+            .part = handle->selected_segments()[0].second.front(),
         };
         handle->remove_segment(segment_part);
 
@@ -2481,7 +2481,7 @@ auto build_endpoint_map(const Layout& layout, const Selection& selection)
         if (layout.display_state(segment.element_id) != display_state_t::temporary) {
             throw_exception("can only merge temporary segments");
         }
-        if (parts.size() != 1 || to_part(full_line) != *parts.begin()) [[unlikely]] {
+        if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
             throw_exception("selection cannot contain partially selected lines");
         }
 
@@ -2569,7 +2569,7 @@ auto split_temporary_segments(Layout& layout, MessageSender& sender,
             if (layout.display_state(segment.element_id) != display_state_t::temporary) {
                 throw_exception("can only split temporary segments");
             }
-            if (parts.size() != 1 || to_part(full_line) != *parts.begin()) [[unlikely]] {
+            if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
                 throw_exception("selection cannot contain partially selected lines");
             }
 
@@ -2613,7 +2613,7 @@ auto capture_new_splitpoints(const Layout& layout, const CacheProvider& cache,
         if (layout.display_state(segment.element_id) != display_state_t::temporary) {
             throw_exception("can only find new splitpoints for temporary segments");
         }
-        if (parts.size() != 1 || to_part(full_line) != *parts.begin()) [[unlikely]] {
+        if (parts.size() != 1 || to_part(full_line) != parts.front()) [[unlikely]] {
             throw_exception("selection cannot contain partially selected lines");
         }
 

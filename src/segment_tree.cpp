@@ -575,7 +575,7 @@ auto SegmentTree::validate() const -> void {
 
     // valid parts
     const auto is_part_of_line = [&](segment_index_t index) -> bool {
-        return valid_parts(index).last_end() <= to_part(segment_line(index)).end;
+        return valid_parts(index).max_offset() <= to_part(segment_line(index)).end;
     };
     if (!std::ranges::all_of(indices(), is_part_of_line)) {
         throw std::runtime_error("part is not part of line");

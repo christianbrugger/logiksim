@@ -62,8 +62,9 @@ class PartSelection {
 
     [[nodiscard]] auto begin() const -> iterator;
     [[nodiscard]] auto end() const -> iterator;
-    [[nodiscard]] auto first_begin() const -> offset_t;
-    [[nodiscard]] auto last_end() const -> offset_t;
+    [[nodiscard]] auto front() const -> part_t;
+    [[nodiscard]] auto back() const -> part_t;
+    [[nodiscard]] auto max_offset() const -> offset_t;
 
    private:
     part_vector_t parts_ {};

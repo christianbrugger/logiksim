@@ -6,6 +6,8 @@
 #include "format/container.h"
 #include "geometry/part.h"
 #include "part_selection.h"
+#include "range/v3/view/drop.hpp"
+#include "range/v3/view/zip.hpp"
 #include "vocabulary/grid.h"
 
 #include <fmt/core.h>
@@ -60,7 +62,7 @@ auto sort_and_merge_parts(part_vector_t& parts) -> void {
 }  // namespace part_selection
 
 auto PartSelection::format() const -> std::string {
-    return fmt::format("{}", "<part_selection>");
+    return fmt::format("<part-selection: {}>", parts_);
 }
 
 auto PartSelection::begin() const -> iterator {
@@ -71,14 +73,15 @@ auto PartSelection::end() const -> iterator {
     return parts_.end();
 }
 
-auto PartSelection::first_begin() const -> offset_t {
-    if (empty()) {
-        return offset_t {0};
-    }
-    return parts_.front().begin;
+auto PartSelection::front() const -> part_t {
+    return parts_.front();
 }
 
-auto PartSelection::last_end() const -> offset_t {
+auto PartSelection::back() const -> part_t {
+    return parts_.back();
+}
+
+auto PartSelection::max_offset() const -> offset_t {
     if (empty()) {
         return offset_t {0};
     }
@@ -95,22 +98,24 @@ PartSelection::PartSelection(part_vector_t&& parts) : parts_ {std::move(parts)} 
 }
 
 auto PartSelection::inverted(const PartSelection& source, part_t part) -> PartSelection {
+    if (source.empty()) {
+        return PartSelection {part};
+    }
+
     auto result = PartSelection {};
-
-    // TODO abstract to algorithm
-    auto part_begin = part.begin;
-
-    auto it = source.begin();
-    while (it != source.end()) {
-        if (part_begin < it->begin) {
-            result.parts_.push_back(part_t {part_begin, it->begin});
+    const auto add_if_positive = [&](offset_t begin, offset_t end) -> void {
+        if (begin < end) {
+            result.parts_.push_back(part_t {begin, end});
         }
-        part_begin = it->end;
-        ++it;
+    };
+
+    add_if_positive(part.begin, source.front().begin);
+    for (const auto& [part1, part2] :
+         ranges::views::zip(source, source | ranges::views::drop(1))) {
+        add_if_positive(std::max(part.begin, part1.end),  //
+                        std::min(part2.end, part.end));
     }
-    if (part_begin < part.end) {
-        result.parts_.push_back(part_t {part_begin, part.end});
-    }
+    add_if_positive(source.back().end, part.end);
 
     assert(std::ranges::is_sorted(result.parts_));
     assert(part_selection::parts_not_touching(result.parts_));
