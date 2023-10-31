@@ -105,8 +105,6 @@ set(LS_CORE_SOURCES
     src/geometry/offset.cpp
     src/geometry/orientation.cpp
     src/geometry/part.cpp
-    src/geometry/part_list.cpp
-    src/geometry/part_list_copying.cpp
     src/geometry/point.cpp
     src/geometry/rect.cpp
     src/geometry/scene.cpp
@@ -305,8 +303,6 @@ set(LS_TEST_SOURCES
 
     test/geometry/connection_count_test.cpp
     test/geometry/line_test.cpp
-    test/geometry/part_list_copying_test.cpp
-    test/geometry/part_list_test.cpp
     test/geometry/part_test.cpp
 
     test/iterator_adaptor/enumerate_test.cpp
@@ -340,6 +336,7 @@ set(LS_TEST_SOURCES
 
     test/layout_test.cpp
     test/line_tree_test.cpp
+    test/part_selection_test.cpp
     test/schematic_test.cpp
     test/segment_tree_test.cpp
     test/simulation_test.cpp

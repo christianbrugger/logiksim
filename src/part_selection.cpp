@@ -6,11 +6,10 @@
 #include "format/container.h"
 #include "geometry/part.h"
 #include "part_selection.h"
-#include "range/v3/view/drop.hpp"
-#include "range/v3/view/zip.hpp"
 #include "vocabulary/grid.h"
 
 #include <fmt/core.h>
+#include <range/v3/view/sliding.hpp>
 
 #include <stdexcept>
 
@@ -104,16 +103,16 @@ auto PartSelection::inverted(const PartSelection& source, part_t part) -> PartSe
 
     auto result = PartSelection {};
     const auto add_if_positive = [&](offset_t begin, offset_t end) -> void {
+        begin = std::max(part.begin, begin);
+        end = std::min(end, part.end);
         if (begin < end) {
             result.parts_.push_back(part_t {begin, end});
         }
     };
 
     add_if_positive(part.begin, source.front().begin);
-    for (const auto& [part1, part2] :
-         ranges::views::zip(source, source | ranges::views::drop(1))) {
-        add_if_positive(std::max(part.begin, part1.end),  //
-                        std::min(part2.begin, part.end));
+    for (const auto&& view : ranges::views::sliding(source, 2)) {
+        add_if_positive(view[0].end, view[1].begin);
     }
     add_if_positive(source.back().end, part.end);
 
