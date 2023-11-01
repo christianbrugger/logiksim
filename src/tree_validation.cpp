@@ -1,15 +1,17 @@
 #include "tree_validation.h"
 
-#include "algorithm/transform_combine_while.h"
-#include "algorithm/transform_if.h"
 #include "container/graph/adjacency_graph.h"
 #include "container/graph/depth_first_search.h"
 #include "container/graph/visitor/empty_visitor.h"
 #include "geometry/line.h"
 #include "geometry/to_points_sorted_unique.h"
 #include "geometry/to_points_with_both_orientation.h"
+#include "logging.h"
 
 #include <folly/small_vector.h>
+#include <range/v3/algorithm/copy.hpp>
+#include <range/v3/view/adjacent_remove_if.hpp>
+#include <range/v3/view/partial_sum.hpp>
 
 namespace logicsim {
 
@@ -60,12 +62,11 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
     // collect lines
     auto parallel_segments = std::vector<ordered_line_t> {};
     parallel_segments.reserve(segments.size());
-    transform_if(
-        segments, std::back_inserter(parallel_segments),
-        [&](ordered_line_t line) -> ordered_line_t { return line; },
-        [&](ordered_line_t line) -> bool {
-            return get_same(line.p0) == get_same(line.p1);
-        });
+
+    std::ranges::copy_if(segments, std::back_inserter(parallel_segments),
+                         [&](ordered_line_t line) -> bool {
+                             return get_same(line.p0) == get_same(line.p1);
+                         });
 
     // sort lists
     std::ranges::sort(parallel_segments, [&](ordered_line_t a, ordered_line_t b) {
@@ -73,22 +74,24 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
                std::tie(get_same(b.p0), get_different(b.p0));
     });
 
-    // extract elements
-    transform_combine_while(
-        parallel_segments, result,
-        // make state
-        [](auto it) -> ordered_line_t { return *it; },
-        // combine while
-        [&](ordered_line_t state, auto it) -> bool {
-            return get_same(state.p0) == get_same(it->p0) &&
-                   get_different(state.p1) >= get_different(it->p0);
-        },
-        // update state
-        [&](ordered_line_t state, auto it) -> ordered_line_t {
-            get_different(state.p1) =
-                std::max(get_different(state.p1), get_different(it->p1));
-            return state;
-        });
+    // merge overlapping segments
+    const auto overlapping_union = [&](ordered_line_t a,
+                                       ordered_line_t b) -> ordered_line_t {
+        if (get_same(a.p0) == get_same(b.p0) &&
+            get_different(a.p1) >= get_different(b.p0)) {
+            auto comb = a;
+            get_different(comb.p1) = std::max(get_different(a.p1), get_different(b.p1));
+            return comb;
+        }
+        return b;
+    };
+    const auto same_beginning = [](const ordered_line_t& a,
+                                   const ordered_line_t& b) -> bool {
+        return a.p0 == b.p0;
+    };
+    ranges::copy(ranges::views::partial_sum(parallel_segments, overlapping_union) |
+                     ranges::views::adjacent_remove_if(same_beginning),
+                 result);
 }
 
 [[nodiscard]] auto merge_lines(std::span<const ordered_line_t> segments)
