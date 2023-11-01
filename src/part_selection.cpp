@@ -25,6 +25,48 @@ auto sort_and_merge_parts(part_vector_t& parts) -> void {
     }
     std::ranges::sort(parts);
 
+    /*
+    const auto overlapping_union = [](const part_t& curr, const part_t& i) -> part_t {
+        if (curr.end >= i.begin) {
+            return part_t {curr.begin, std::max(curr.end, i.end)};
+        }
+        return i;
+    };
+    const auto same_beginning = [](const part_t& a, const part_t& b) {
+        return a.begin == b.begin;
+    };
+    const auto it = ranges::copy(ranges::views::partial_sum(parts, overlapping_union) |
+                                     ranges::views::adjacent_remove_if(same_beginning),
+                                 parts.begin());
+    parts.erase(it.out, parts.end());
+    */
+
+    /*
+    const auto is_overlapping_update = [](const part_t& a, part_t& b) {
+        if (a.end >= b.begin) {
+            b = part_t {a.begin, std::max(a.end, b.end)};
+            return true;
+        }
+        return false;
+    };
+
+    const auto it =
+        ranges::transform(ranges::views::chunk_by(parts, is_overlapping_update),
+                          parts.begin(), [](const auto& view) { return view.back(); });
+    parts.erase(it.out, parts.end());
+    */
+
+    /*
+    const auto it = ranges::adjacent_remove_if(parts, [](const part_t& a, part_t& b) {
+        if (a.end >= b.begin) {
+            b = part_t {a.begin, std::max(a.end, b.end)};
+            return true;
+        }
+        return false;
+    });
+    parts.erase(it, parts.end());
+    */
+
     // merge elements
     using it_t = typename part_vector_t::iterator;
     const auto it = transform_combine_while(

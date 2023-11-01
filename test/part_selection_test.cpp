@@ -34,6 +34,25 @@ TEST(PartSelection, SimpleMembers) {
     }
 }
 
+TEST(PartSelection, Merging) {
+    {
+        auto entries = PartSelection {{part_t(0, 10), part_t(10, 15)}};
+        EXPECT_THAT(entries, testing::ElementsAre(part_t(0, 15)));
+    }
+    {
+        auto entries = PartSelection {{part_t(0, 20), part_t(10, 15)}};
+        EXPECT_THAT(entries, testing::ElementsAre(part_t(0, 20)));
+    }
+    {
+        auto entries = PartSelection {{part_t(0, 30), part_t(10, 15), part_t(20, 25)}};
+        EXPECT_THAT(entries, testing::ElementsAre(part_t(0, 30)));
+    }
+    {
+        auto entries = PartSelection {{part_t(0, 10), part_t(20, 30)}};
+        EXPECT_THAT(entries, testing::ElementsAre(part_t(0, 10), part_t(20, 30)));
+    }
+}
+
 TEST(PartSelection, MaxOffset) {
     {
         auto entries = PartSelection {};
