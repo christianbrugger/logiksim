@@ -56,32 +56,33 @@ using ordered_lines_t = folly::small_vector<ordered_line_t, 16>;
     return result;
 }
 
-template <class OutputIterator, class GetterSame, class GetterDifferent>
-auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator result,
-                    GetterSame get_same, GetterDifferent get_different) -> void {
+enum class Lines { horizontal, vertical };
+
+template <Lines which, class OutputIterator>
+auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator result)
+    -> void {
+    constexpr static auto X = which == Lines::horizontal ? &point_t::x : &point_t::y;
+    constexpr static auto Y = which == Lines::horizontal ? &point_t::y : &point_t::x;
+
     // collect lines
     auto parallel_segments = std::vector<ordered_line_t> {};
     parallel_segments.reserve(segments.size());
 
-    std::ranges::copy_if(segments, std::back_inserter(parallel_segments),
-                         [&](ordered_line_t line) -> bool {
-                             return get_same(line.p0) == get_same(line.p1);
-                         });
+    std::ranges::copy_if(
+        segments, std::back_inserter(parallel_segments),
+        [&](ordered_line_t line) -> bool { return line.p0.*Y == line.p1.*Y; });
 
     // sort lists
     std::ranges::sort(parallel_segments, [&](ordered_line_t a, ordered_line_t b) {
-        return std::tie(get_same(a.p0), get_different(a.p0)) <
-               std::tie(get_same(b.p0), get_different(b.p0));
+        return std::tie(a.p0.*Y, a.p0.*X) < std::tie(b.p0.*Y, b.p0.*X);
     });
 
     // merge overlapping segments
     const auto overlapping_union = [&](ordered_line_t a,
                                        ordered_line_t b) -> ordered_line_t {
-        if (get_same(a.p0) == get_same(b.p0) &&
-            get_different(a.p1) >= get_different(b.p0)) {
-            auto comb = a;
-            get_different(comb.p1) = std::max(get_different(a.p1), get_different(b.p1));
-            return comb;
+        if (a.p0.*Y == b.p0.*Y && a.p1.*X >= b.p0.*X) {
+            a.p1.*X = std::max(a.p1.*X, b.p1.*X);
+            return a;
         }
         return b;
     };
@@ -99,12 +100,8 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
     auto result = std::vector<ordered_line_t> {};
     result.reserve(segments.size());
 
-    auto get_x = [](point_t& point) -> grid_t& { return point.x; };
-    auto get_y = [](point_t& point) -> grid_t& { return point.y; };
-
-    // vertical & horizontal
-    merge_lines_1d(segments, std::back_inserter(result), get_x, get_y);
-    merge_lines_1d(segments, std::back_inserter(result), get_y, get_x);
+    merge_lines_1d<Lines::horizontal>(segments, std::back_inserter(result));
+    merge_lines_1d<Lines::vertical>(segments, std::back_inserter(result));
 
     return result;
 }
