@@ -64,20 +64,20 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
     constexpr static auto X = which == Lines::horizontal ? &point_t::x : &point_t::y;
     constexpr static auto Y = which == Lines::horizontal ? &point_t::y : &point_t::x;
 
-    // collect lines
     auto parallel_segments = std::vector<ordered_line_t> {};
     parallel_segments.reserve(segments.size());
 
+    // copy horizontal lines
     std::ranges::copy_if(
         segments, std::back_inserter(parallel_segments),
         [&](ordered_line_t line) -> bool { return line.p0.*Y == line.p1.*Y; });
 
-    // sort lists
+    // sort in Y then X
     std::ranges::sort(parallel_segments, [&](ordered_line_t a, ordered_line_t b) {
         return std::tie(a.p0.*Y, a.p0.*X) < std::tie(b.p0.*Y, b.p0.*X);
     });
 
-    // merge overlapping segments
+    // merge overlapping lines (with same Y)
     const auto overlapping_union = [&](ordered_line_t a,
                                        ordered_line_t b) -> ordered_line_t {
         if (a.p0.*Y == b.p0.*Y && a.p1.*X >= b.p0.*X) {
