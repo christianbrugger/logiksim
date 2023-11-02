@@ -93,11 +93,11 @@ auto add_random_segment(Rng& rng, SegmentTree& tree) -> segment_index_t {
         .p1_type = type1,
     };
 
-    auto orignal_count = tree.segment_count();
+    auto orignal_count = tree.size();
     const auto new_index = tree.add_segment(info);
 
     // invariant
-    if (tree.segment_count() != orignal_count + 1) {
+    if (tree.size() != orignal_count + 1) {
         throw std::runtime_error("assert failed");
     }
     if (tree.segment_info(new_index) != info) {

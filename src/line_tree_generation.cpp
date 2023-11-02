@@ -20,7 +20,7 @@ auto generate_line_tree_impl(const SegmentTree& segment_tree) -> LineTree {
         if (segment_tree.has_input()) {
             return segment_tree.input_position();
         }
-        for (const segment_info_t& info : segment_tree.segment_infos()) {
+        for (const segment_info_t& info : segment_tree) {
             if (info.p0_type == SegmentPointType::output) {
                 return info.line.p0;
             }
@@ -47,7 +47,7 @@ auto generate_line_tree(const SegmentTree& segment_tree) -> LineTree {
 auto has_same_segments(const SegmentTree& segment_tree, const LineTree& line_tree)
     -> bool {
     // line tree
-    if (line_tree.size() != segment_tree.segment_count()) [[unlikely]] {
+    if (line_tree.size() != segment_tree.size()) [[unlikely]] {
         return false;
     }
 
@@ -60,7 +60,7 @@ auto has_same_segments(const SegmentTree& segment_tree, const LineTree& line_tre
     return segments_1 == segments_2;
 }
 
-auto has_same_cross_points(const SegmentTree& tree, const LineTree& line_tree) -> bool {
+auto has_same_cross_points(const SegmentTree& segment_tree, const LineTree& line_tree) -> bool {
     // line tree
     auto cross_points_1 = std::vector<point_t> {};
     transform_if(
@@ -75,11 +75,11 @@ auto has_same_cross_points(const SegmentTree& tree, const LineTree& line_tree) -
     // segment tree
     auto cross_points_2 = std::vector<point_t> {};
     transform_if(
-        tree.segment_infos(), std::back_inserter(cross_points_2),
+        segment_tree, std::back_inserter(cross_points_2),
         [](segment_info_t info) { return info.line.p0; },
         [](segment_info_t info) { return is_cross_point(info.p0_type); });
     transform_if(
-        tree.segment_infos(), std::back_inserter(cross_points_2),
+        segment_tree, std::back_inserter(cross_points_2),
         [](segment_info_t info) { return info.line.p1; },
         [](segment_info_t info) { return is_cross_point(info.p1_type); });
     std::ranges::sort(cross_points_2);
@@ -87,11 +87,11 @@ auto has_same_cross_points(const SegmentTree& tree, const LineTree& line_tree) -
     return cross_points_1 == cross_points_2;
 }
 
-auto has_same_input_position(const SegmentTree& tree, const LineTree& line_tree) -> bool {
-    return !tree.has_input() || tree.input_position() == line_tree.input_position();
+auto has_same_input_position(const SegmentTree& segment_tree, const LineTree& line_tree) -> bool {
+    return !segment_tree.has_input() || segment_tree.input_position() == line_tree.input_position();
 }
 
-auto has_same_output_positions(const SegmentTree& tree, const LineTree& line_tree)
+auto has_same_output_positions(const SegmentTree& segment_tree, const LineTree& line_tree)
     -> bool {
     // line tree
     auto positions_1 = transform_to_vector(
@@ -99,18 +99,18 @@ auto has_same_output_positions(const SegmentTree& tree, const LineTree& line_tre
         [&](connection_id_t output) { return line_tree.output_position(output); });
 
     // we take an output at random as input to generate the line tree
-    if (!tree.has_input()) {
+    if (!segment_tree.has_input()) {
         positions_1.push_back(line_tree.input_position());
     }
 
     // segment tree
     auto positions_2 = std::vector<point_t> {};
     transform_if(
-        tree.segment_infos(), std::back_inserter(positions_2),
+        segment_tree, std::back_inserter(positions_2),
         [](segment_info_t info) { return info.line.p0; },
         [](segment_info_t info) { return info.p0_type == SegmentPointType::output; });
     transform_if(
-        tree.segment_infos(), std::back_inserter(positions_2),
+        segment_tree, std::back_inserter(positions_2),
         [](segment_info_t info) { return info.line.p1; },
         [](segment_info_t info) { return info.p1_type == SegmentPointType::output; });
 

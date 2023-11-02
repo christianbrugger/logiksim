@@ -39,6 +39,18 @@ auto SegmentTree::allocated_size() const -> std::size_t {
            get_allocated_size(valid_parts_vector_);
 }
 
+auto SegmentTree::begin() const -> iterator {
+    return segments_.begin();
+}
+
+auto SegmentTree::end() const -> iterator {
+    return segments_.end();
+}
+
+auto SegmentTree::data() const -> const segment_info_t* {
+    return segments_.data();
+}
+
 auto SegmentTree::normalize() -> void {
     sort_segments();
     sort_point_types();
@@ -297,7 +309,7 @@ auto SegmentTree::empty() const noexcept -> bool {
     return segments_.empty();
 }
 
-auto SegmentTree::segment_count() const noexcept -> std::size_t {
+auto SegmentTree::size() const noexcept -> std::size_t {
     return segments_.size();
 }
 
@@ -311,10 +323,6 @@ auto SegmentTree::segment_line(segment_index_t index) const -> ordered_line_t {
 
 auto SegmentTree::segment_part(segment_index_t index) const -> part_t {
     return to_part(segment_line(index));
-}
-
-auto SegmentTree::segment_infos() const -> const segment_vector_t& {
-    return segments_;
 }
 
 auto SegmentTree::mark_valid(segment_index_t segment_index, part_t part) -> void {
@@ -344,13 +352,13 @@ auto SegmentTree::last_index() const noexcept -> segment_index_t {
     if (empty()) [[unlikely]] {
         throw_exception("empty segment tree has no last index");
     }
-    const auto result = segment_count() - std::size_t {1};
+    const auto result = size() - std::size_t {1};
     return segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(result)};
 }
 
 auto SegmentTree::indices() const noexcept -> forward_range_t<segment_index_t> {
     const auto count =
-        segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(segment_count())};
+        segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(size())};
     return range(count);
 }
 
@@ -376,7 +384,7 @@ auto SegmentTree::format() const -> std::string {
 }
 
 auto recalculate_first_input_position(const SegmentTree& tree) -> std::optional<point_t> {
-    for (const auto& info : tree.segment_infos()) {
+    for (const auto& info : tree) {
         if (info.p0_type == SegmentPointType::input) {
             return info.line.p0;
         } else if (info.p1_type == SegmentPointType::input) {
@@ -393,7 +401,7 @@ auto count_point_type(const SegmentTree& tree, SegmentPointType type)
         return (info.p0_type == type ? connection_count_t {1} : connection_count_t {0}) +
                (info.p1_type == type ? connection_count_t {1} : connection_count_t {0});
     };
-    return accumulate(transform_view(tree.segment_infos(), proj), connection_count_t {0});
+    return accumulate(transform_view(tree, proj), connection_count_t {0});
 }
 
 auto validate_output_count(const SegmentTree& tree) -> void {
@@ -438,7 +446,7 @@ auto SegmentTree::validate_inserted() const -> void {
     validate();
 
     if (!segments_are_normalized_tree(
-            transform_to_vector(segment_infos(), &segment_info_t::line))) {
+            transform_to_vector(all_lines(*this)))) {
         throw std::runtime_error("segments are not a normalized tree");
     }
 }
@@ -474,7 +482,7 @@ auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
     }
 
     // create segment mask
-    auto mask = boost::container::vector<bool>(tree.segment_count(), false);
+    auto mask = boost::container::vector<bool>(tree.size(), false);
     for (const auto segment_index : tree.indices()) {
         const auto line = tree.segment_line(segment_index);
 

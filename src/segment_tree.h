@@ -56,8 +56,8 @@ class SegmentTree {
     using valid_vector_t = segment_tree::valid_vector_t;
     using vector_size_t = segment_tree::vector_size_t;
 
-    // using value_type = segment_info_t;
-    // using iterator = segment_vector_t::const_iterator;
+    using value_type = segment_info_t;
+    using iterator = segment_vector_t::const_iterator;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
@@ -71,13 +71,13 @@ class SegmentTree {
 
     // size
     [[nodiscard]] auto empty() const noexcept -> bool;
-    [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
+    [[nodiscard]] auto size() const noexcept -> std::size_t;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     // iterators
-    // [[nodiscard]] auto begin() const -> iterator;
-    // [[nodiscard]] auto end() const -> iterator;
-    [[nodiscard]] auto segment_infos() const -> const segment_vector_t &;
+    [[nodiscard]] auto begin() const -> iterator;
+    [[nodiscard]] auto end() const -> iterator;
+    [[nodiscard]] auto data() const -> const segment_info_t *;
 
     // indices
     [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
@@ -160,9 +160,9 @@ inline auto SegmentTree::indices(element_id_t element_id) const {
     });
 };
 
-inline auto all_lines(const SegmentTree &tree) {
+inline auto all_lines(const SegmentTree &segment_tree) {
     return transform_view(
-        tree.segment_infos(),
+        segment_tree,
         [](const segment_info_t &info) -> const ordered_line_t & { return info.line; });
 }
 

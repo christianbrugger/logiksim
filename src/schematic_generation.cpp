@@ -230,7 +230,7 @@ auto connect_segment_tree(Schematic& schematic, element_id_t element_id,
         }
     };
 
-    for (const auto& info : segment_tree.segment_infos()) {
+    for (const auto& info : segment_tree) {
         if (info.p0_type == SegmentPointType::output) {
             try_connect_output(info.line.p0, to_orientation_p0(info.line));
         }

@@ -300,7 +300,7 @@ auto Layout::format_stats() const -> std::string {
     for (auto element : elements()) {
         if (element.is_wire()) {
             const auto &tree = element.segment_tree();
-            segment_count += tree.segment_count();
+            segment_count += tree.size();
         }
 
         else if (element.is_logic_item()) {

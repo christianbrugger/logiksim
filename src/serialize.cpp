@@ -178,7 +178,7 @@ auto add_element(SerializedLayout& data, const layout::ConstElement element) -> 
     }
 
     else if (element.is_wire()) {
-        for (const auto& info : element.segment_tree().segment_infos()) {
+        for (const auto& info : element.segment_tree()) {
             data.wire_segments.push_back(SerializedLine {info.line.p0, info.line.p1});
         }
     }

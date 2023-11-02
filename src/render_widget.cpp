@@ -918,7 +918,7 @@ auto RendererWidget::load_circuit_example(int id) -> void {
         for (auto element : layout.elements()) {
             if (element.is_wire()) {
                 const auto& tree = layout.segment_tree(element.element_id());
-                segment_count += tree.segment_count();
+                segment_count += tree.size();
             }
 
             else if (element.is_logic_item()) {

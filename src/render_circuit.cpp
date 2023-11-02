@@ -1074,7 +1074,7 @@ auto draw_line_segment(Context& ctx, segment_info_t info, bool is_enabled,
 
 auto draw_segment_tree(Context& ctx, layout::ConstElement element, bool is_enabled,
                        ElementDrawState state) -> void {
-    for (const segment_info_t& info : element.segment_tree().segment_infos()) {
+    for (const segment_info_t& info : element.segment_tree()) {
         draw_line_segment(ctx, info, is_enabled, state);
     }
 }
@@ -1833,7 +1833,7 @@ auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
             } else {
                 // fine grained check, as uninserted trees can contain a lot of
                 // segments
-                for (const auto& info : element.segment_tree().segment_infos()) {
+                for (const auto& info : element.segment_tree()) {
                     if (is_colliding(info.line, scene_rect)) {
                         // layers.uninserted_wires.push_back(info);
                         update_uninserted_rect(layers, info.line);
