@@ -218,7 +218,7 @@ auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
 }
 
 auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {
-    if (distance(segment.line) != distance(segment_line(index))) {
+    if (distance(segment.line) != distance(line(index))) {
         throw_exception("line length needs to be the same");
     }
 
@@ -229,7 +229,7 @@ auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) 
 }
 
 auto SegmentTree::shrink_segment(segment_index_t index, part_t part) -> void {
-    const auto new_info = adjust(segment_info(index), part);
+    const auto new_info = adjust(info(index), part);
 
     // update segment
     unregister_segment(index);
@@ -253,8 +253,8 @@ auto SegmentTree::swap_and_merge_segment(segment_index_t index,
             "change after deletionion");
     }
 
-    const auto info_orig = segment_info(index);
-    const auto info_delete = segment_info(index_deleted);
+    const auto info_orig = info(index);
+    const auto info_delete = info(index_deleted);
     const auto info_merged = merge_touching(info_orig, info_delete);
 
     // copy valid parts
@@ -284,14 +284,14 @@ auto SegmentTree::swap_and_merge_segment(segment_index_t index,
 
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
     -> segment_index_t {
-    const auto new_index = add_segment(tree.segment_info(index));
+    const auto new_index = add_segment(tree.info(index));
     valid_parts_vector_.at(new_index.value) = tree.valid_parts_vector_.at(index.value);
     return new_index;
 }
 
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
                                part_t part) -> segment_index_t {
-    const auto new_info = adjust(tree.segment_info(index), part);
+    const auto new_info = adjust(tree.info(index), part);
 
     const auto new_index = add_segment(new_info);
 
@@ -313,16 +313,16 @@ auto SegmentTree::size() const noexcept -> std::size_t {
     return segments_.size();
 }
 
-auto SegmentTree::segment_info(segment_index_t index) const -> segment_info_t {
+auto SegmentTree::info(segment_index_t index) const -> segment_info_t {
     return segments_.at(index.value);
 }
 
-auto SegmentTree::segment_line(segment_index_t index) const -> ordered_line_t {
-    return segment_info(index).line;
+auto SegmentTree::line(segment_index_t index) const -> ordered_line_t {
+    return info(index).line;
 }
 
-auto SegmentTree::segment_part(segment_index_t index) const -> part_t {
-    return to_part(segment_line(index));
+auto SegmentTree::part(segment_index_t index) const -> part_t {
+    return to_part(line(index));
 }
 
 auto SegmentTree::mark_valid(segment_index_t segment_index, part_t part) -> void {
@@ -435,7 +435,7 @@ auto SegmentTree::validate() const -> void {
 
     // valid parts
     const auto is_part_of_line = [&](segment_index_t index) -> bool {
-        return valid_parts(index).max_offset() <= to_part(segment_line(index)).end;
+        return valid_parts(index).max_offset() <= to_part(line(index)).end;
     };
     if (!std::ranges::all_of(indices(), is_part_of_line)) {
         throw std::runtime_error("part is not part of line");
@@ -459,7 +459,7 @@ auto calculate_normal_lines(const SegmentTree& tree) -> std::vector<ordered_line
     auto result = std::vector<ordered_line_t> {};
 
     for (const auto index : tree.indices()) {
-        const auto line = tree.segment_line(index);
+        const auto line = tree.line(index);
         const auto normal_parts =
             tree.valid_parts(index).inverted_selection(to_part(line));
 
@@ -484,7 +484,7 @@ auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
     // create segment mask
     auto mask = boost::container::vector<bool>(tree.size(), false);
     for (const auto segment_index : tree.indices()) {
-        const auto line = tree.segment_line(segment_index);
+        const auto line = tree.line(segment_index);
 
         const auto p0_index = graph.to_index(line.p0).value();
         mask[segment_index.value] = result.visited[p0_index];

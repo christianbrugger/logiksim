@@ -39,9 +39,9 @@ TEST(SegmentTree, NormalizeSegmentOrder) {
 
     tree.normalize();
 
-    EXPECT_EQ(tree.segment_info(segment_index_t {0}), info0);
-    EXPECT_EQ(tree.segment_info(segment_index_t {1}), info1);
-    EXPECT_EQ(tree.segment_info(segment_index_t {2}), info2);
+    EXPECT_EQ(tree.info(segment_index_t {0}), info0);
+    EXPECT_EQ(tree.info(segment_index_t {1}), info1);
+    EXPECT_EQ(tree.info(segment_index_t {2}), info2);
 }
 
 TEST(SegmentTree, NormalizePointTypeOrder) {
@@ -70,19 +70,19 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
     tree.normalize();
 
     // same
-    EXPECT_EQ(tree.segment_info(segment_index_t {0}).line, info0.line);
-    EXPECT_EQ(tree.segment_info(segment_index_t {1}).line, info1.line);
-    EXPECT_EQ(tree.segment_info(segment_index_t {2}).line, info2.line);
+    EXPECT_EQ(tree.info(segment_index_t {0}).line, info0.line);
+    EXPECT_EQ(tree.info(segment_index_t {1}).line, info1.line);
+    EXPECT_EQ(tree.info(segment_index_t {2}).line, info2.line);
 
     // same
-    EXPECT_EQ(tree.segment_info(segment_index_t {0}).p0_type, info0.p0_type);
-    EXPECT_EQ(tree.segment_info(segment_index_t {1}).p0_type, info1.p0_type);
-    EXPECT_EQ(tree.segment_info(segment_index_t {2}).p0_type, info2.p0_type);
+    EXPECT_EQ(tree.info(segment_index_t {0}).p0_type, info0.p0_type);
+    EXPECT_EQ(tree.info(segment_index_t {1}).p0_type, info1.p0_type);
+    EXPECT_EQ(tree.info(segment_index_t {2}).p0_type, info2.p0_type);
 
     // changed
-    EXPECT_EQ(tree.segment_info(segment_index_t {0}).p1_type, info1.p1_type);
-    EXPECT_EQ(tree.segment_info(segment_index_t {1}).p1_type, info0.p1_type);
-    EXPECT_EQ(tree.segment_info(segment_index_t {2}).p1_type, info2.p1_type);
+    EXPECT_EQ(tree.info(segment_index_t {0}).p1_type, info1.p1_type);
+    EXPECT_EQ(tree.info(segment_index_t {1}).p1_type, info0.p1_type);
+    EXPECT_EQ(tree.info(segment_index_t {2}).p1_type, info2.p1_type);
 }
 
 //
@@ -130,7 +130,7 @@ auto add_copy_remove(Rng& rng, SegmentTree& tree) -> void {
 
     const auto new_index = tree.copy_segment(tree, index);
     tree.validate();
-    if (tree.segment_info(new_index) != tree.segment_info(index)) {
+    if (tree.info(new_index) != tree.info(index)) {
         throw std::runtime_error("assertion failed");
     }
 
@@ -140,8 +140,8 @@ auto add_copy_remove(Rng& rng, SegmentTree& tree) -> void {
 
 auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
     const auto index0 = get_random_index(rng, tree);
-    const auto full_part = to_part(tree.segment_line(index0));
-    auto part0 = get_random_part(rng, tree.segment_line(index0));
+    const auto full_part = to_part(tree.line(index0));
+    auto part0 = get_random_part(rng, tree.line(index0));
 
     if (get_random_bool(rng)) {
         if (get_random_bool(rng)) {
@@ -259,7 +259,7 @@ TEST(SegmentTree, MarkInvalid) {
         auto tree = SegmentTree {};
         const auto index = add_random_segment(rng, tree);
 
-        auto part = get_random_part(rng, tree.segment_info(index).line);
+        auto part = get_random_part(rng, tree.info(index).line);
         tree.unmark_valid(index, part);
         const auto tree_1 = SegmentTree {tree};
         tree.unmark_valid(index, part);

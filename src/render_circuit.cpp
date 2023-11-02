@@ -1728,7 +1728,7 @@ auto add_valid_wire_parts(const layout::ConstElement wire,
         }
         const auto index =
             segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(it - begin)};
-        const auto full_line = tree.segment_line(index);
+        const auto full_line = tree.line(index);
 
         for (const auto& part : *it) {
             output.push_back(to_line(full_line, part));
@@ -1750,7 +1750,7 @@ auto add_selected_wire_parts(const layout::ConstElement wire, const Selection& s
             continue;
         }
 
-        const auto full_line = tree.segment_line(segment.segment_index);
+        const auto full_line = tree.line(segment.segment_index);
 
         for (const auto part : parts) {
             output.push_back(to_line(full_line, part));

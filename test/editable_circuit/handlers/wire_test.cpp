@@ -61,7 +61,7 @@ TEST(EditableCircuitHandlerWire, AddTempSegment) {
         ASSERT_EQ(tree_0.size(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
-        ASSERT_EQ(tree_0.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree_0.line(segment_index_t {0}), line);
     }
     {
         const auto id_1 = element_id_t {1};
@@ -123,7 +123,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line);
     }
     {
         const auto element_id = element_id_t {2};
@@ -134,7 +134,7 @@ TEST(EditableCircuitHandlerWire, TempToColliding) {
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, point_t {3, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line);
     }
 
     // messages
@@ -177,7 +177,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line);
     }
     {
         const auto element_id = element_id_t {1};
@@ -188,7 +188,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, point_t {5, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line);
     }
     {
         const auto element_id = element_id_t {2};
@@ -199,7 +199,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, point_t {3, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line);
     }
 
     // messages
@@ -260,8 +260,8 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
 
         const auto line0 = ordered_line_t {point_t {0, 0}, point_t {2, 0}};
         const auto line1 = ordered_line_t {point_t {5, 0}, point_t {10, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line0);
-        ASSERT_EQ(tree.segment_line(segment_index_t {1}), line1);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line0);
+        ASSERT_EQ(tree.line(segment_index_t {1}), line1);
     }
     {
         const auto element_id = element_id_t {1};
@@ -272,7 +272,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {2, 0}, point_t {5, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line);
     }
     {
         const auto element_id = element_id_t {2};
@@ -283,7 +283,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {1, 0}, point_t {3, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line);
     }
 
     // messages
@@ -366,7 +366,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
         ASSERT_EQ(tree.size(), 1);
 
         const auto line = ordered_line_t {point_t {0, 0}, point_t {10, 0}};
-        ASSERT_EQ(tree.segment_line(segment_index_t {0}), line);
+        ASSERT_EQ(tree.line(segment_index_t {0}), line);
 
         ASSERT_EQ(tree.valid_parts(segment_index_t {0}).size(), 1);
         ASSERT_EQ(*tree.valid_parts(segment_index_t {0}).begin(), part(0, 10));
@@ -450,7 +450,7 @@ TEST(EditableCircuitHandlerWire, IsWirePositionRepresentablePart) {
     const auto segment_part = segment_part_t {segment, part(0, 10)};
     const auto segment_full = segment_part_t {
         segment,
-        m_tree.segment_part(segment_index),
+        m_tree.part(segment_index),
     };
 
     layout.validate();
@@ -493,7 +493,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMove) {
 
     const auto &tree = layout.segment_tree(element_id_t {0});
     ASSERT_EQ(tree.size(), 1);
-    ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
 
     // messages
     const auto m0 =
@@ -532,8 +532,8 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
 
     const auto &tree = layout.segment_tree(element_id_t {0});
     ASSERT_EQ(tree.size(), 2);
-    ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
-    ASSERT_EQ(tree.segment_line(segment_index_t {1}), line_1);
+    ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.line(segment_index_t {1}), line_1);
 
     // messages
     const auto m0 = Message {SegmentCreated {segment_part_1.segment}};
@@ -583,8 +583,8 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialEnd) {
 
     const auto &tree = layout.segment_tree(element_id_t {0});
     ASSERT_EQ(tree.size(), 2);
-    ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
-    ASSERT_EQ(tree.segment_line(segment_index_t {1}), line_1);
+    ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.line(segment_index_t {1}), line_1);
 
     // messages
     const auto m0 = Message {SegmentCreated {segment_part_1.segment}};
@@ -634,9 +634,9 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
 
     const auto &tree = layout.segment_tree(element_id_t {0});
     ASSERT_EQ(tree.size(), 3);
-    ASSERT_EQ(tree.segment_line(segment_index_t {0}), line_0);
-    ASSERT_EQ(tree.segment_line(segment_index_t {1}), line_1);
-    ASSERT_EQ(tree.segment_line(segment_index_t {2}), line_2);
+    ASSERT_EQ(tree.line(segment_index_t {0}), line_0);
+    ASSERT_EQ(tree.line(segment_index_t {1}), line_1);
+    ASSERT_EQ(tree.line(segment_index_t {2}), line_2);
 
     // messages
     const auto m0 = Message {SegmentCreated {segment_part_1_to.segment}};

@@ -42,7 +42,7 @@ static_assert(sizeof(valid_vector_t) == 24);
 
 /**
  * @brief: A collection of lines with valid status.
- * 
+ *
  * Class invariants:
  *     + size of `segments_` and `valid_parts_vector_` matches
  *     + for each index max_offset is within the corresponding part_t
@@ -86,9 +86,9 @@ class SegmentTree {
     [[nodiscard]] inline auto indices(element_id_t element_id) const;
 
     // indexing
-    [[nodiscard]] auto segment_info(segment_index_t index) const -> segment_info_t;
-    [[nodiscard]] auto segment_line(segment_index_t index) const -> ordered_line_t;
-    [[nodiscard]] auto segment_part(segment_index_t index) const -> part_t;
+    [[nodiscard]] auto info(segment_index_t index) const -> segment_info_t;
+    [[nodiscard]] auto line(segment_index_t index) const -> ordered_line_t;
+    [[nodiscard]] auto part(segment_index_t index) const -> part_t;
 
     // input & outputs
     [[nodiscard]] auto has_input() const noexcept -> bool;
@@ -155,19 +155,17 @@ static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 4 + 1 (+ 3)
 //
 
 inline auto SegmentTree::indices(element_id_t element_id) const {
-    return transform_view(indices(), [=](segment_index_t index) -> segment_t {
+    return transform_view(indices(), [element_id](segment_index_t index) -> segment_t {
         return segment_t {element_id, index};
     });
 };
 
 inline auto all_lines(const SegmentTree &segment_tree) {
-    return transform_view(
-        segment_tree,
-        [](const segment_info_t &info) -> const ordered_line_t & { return info.line; });
+    return transform_view(segment_tree, &segment_info_t::line);
 }
 
 inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index) {
-    const auto line = tree.segment_line(index);
+    const auto line = tree.line(index);
 
     return transform_view(tree.valid_parts(index), [line](part_t part) -> ordered_line_t {
         return to_line(line, part);

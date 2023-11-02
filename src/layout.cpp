@@ -210,7 +210,7 @@ auto is_inserted(const Layout &layout, element_id_t element_id) -> bool {
 }
 
 auto get_segment_info(const Layout &layout, segment_t segment) -> segment_info_t {
-    return layout.segment_tree(segment.element_id).segment_info(segment.segment_index);
+    return layout.segment_tree(segment.element_id).info(segment.segment_index);
 }
 
 auto get_segment_point_type(const Layout &layout, segment_t segment, point_t position)
@@ -254,7 +254,7 @@ auto moved_layout(Layout layout, int delta_x, int delta_y) -> std::optional<Layo
         } else if (element.is_wire()) {
             auto &tree = element.modifyable_segment_tree();
             for (const auto segment_index : tree.indices()) {
-                auto info = tree.segment_info(segment_index);
+                auto info = tree.info(segment_index);
 
                 if (!is_representable(info.line, delta_x, delta_y)) {
                     return std::nullopt;

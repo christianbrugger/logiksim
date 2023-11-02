@@ -133,7 +133,7 @@ auto convert_from_to(Layout& layout, MessageSender& sender, wire_connection_t ou
     }
 
     auto& m_tree = element.modifyable_segment_tree();
-    const auto old_info = m_tree.segment_info(output.segment.segment_index);
+    const auto old_info = m_tree.info(output.segment.segment_index);
     auto new_info = old_info;
 
     if (new_info.line.p0 == output.position) {
@@ -242,7 +242,7 @@ auto notify_element_id_change(const Layout& layout, MessageSender& sender,
             sender.submit(info_message::InsertedSegmentIdUpdated {
                 .new_segment = segment_t {new_element_id, segment_index},
                 .old_segment = segment_t {old_element_id, segment_index},
-                .segment_info = segment_tree.segment_info(segment_index),
+                .segment_info = segment_tree.info(segment_index),
             });
         }
     }
@@ -785,7 +785,7 @@ auto reset_segment_endpoints(Layout& layout, const segment_t segment) {
     auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
 
     const auto new_info = segment_info_t {
-        .line = m_tree.segment_line(segment.segment_index),
+        .line = m_tree.line(segment.segment_index),
         .p0_type = SegmentPointType::shadow_point,
         .p1_type = SegmentPointType::shadow_point,
     };
@@ -799,7 +799,7 @@ auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t poi
     }
     auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
 
-    auto info = m_tree.segment_info(segment.segment_index);
+    auto info = m_tree.info(segment.segment_index);
 
     if (info.line.p0 == point) {
         info.p0_type = SegmentPointType::cross_point;
@@ -1027,7 +1027,7 @@ auto copy_segment(Layout& layout, MessageSender& sender,
     {
         if (destination_element_id == source_segment_part.segment.element_id) {
             auto info =
-                m_tree_source.segment_info(source_segment_part.segment.segment_index);
+                m_tree_source.info(source_segment_part.segment.segment_index);
             const auto full_part = to_part(info.line);
 
             if (full_part.begin == source_segment_part.part.begin &&
@@ -1053,16 +1053,16 @@ auto copy_segment(Layout& layout, MessageSender& sender,
 
     const auto destination_segment_part =
         segment_part_t {segment_t {destination_element_id, destination_index},
-                        m_tree_destination.segment_part(destination_index)};
+                        m_tree_destination.part(destination_index)};
 
     {
         if (set_input_p0) {
-            auto info = m_tree_destination.segment_info(destination_index);
+            auto info = m_tree_destination.info(destination_index);
             info.p0_type = SegmentPointType::input;
             m_tree_destination.update_segment(destination_index, info);
         }
         if (set_input_p1) {
-            auto info = m_tree_destination.segment_info(destination_index);
+            auto info = m_tree_destination.info(destination_index);
             info.p1_type = SegmentPointType::input;
             m_tree_destination.update_segment(destination_index, info);
         }
@@ -1086,7 +1086,7 @@ auto shrink_segment_begin(Layout& layout, MessageSender& sender, const segment_t
 
     if (is_inserted(layout, segment.element_id)) {
         auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
-        const auto old_info = m_tree.segment_info(segment.segment_index);
+        const auto old_info = m_tree.info(segment.segment_index);
         sender.submit(SegmentUninserted({.segment = segment, .segment_info = old_info}));
     }
 }
@@ -1098,13 +1098,13 @@ auto shrink_segment_end(Layout& layout, MessageSender& sender, const segment_t s
     m_tree.shrink_segment(segment.segment_index, part_kept);
 
     if (is_inserted(layout, segment.element_id)) {
-        const auto new_info = m_tree.segment_info(segment.segment_index);
+        const auto new_info = m_tree.info(segment.segment_index);
         sender.submit(SegmentInserted({.segment = segment, .segment_info = new_info}));
     }
 
     return segment_part_t {
         .segment = segment,
-        .part = m_tree.segment_part(segment.segment_index),
+        .part = m_tree.part(segment.segment_index),
     };
 }
 
@@ -1229,7 +1229,7 @@ auto _remove_touching_segment_from_tree(Layout& layout, MessageSender& sender,
 
     auto& m_tree = layout.modifyable_segment_tree(element_id);
 
-    const auto full_part = m_tree.segment_part(index);
+    const auto full_part = m_tree.part(index);
     const auto part_kept = difference_touching_one_side(full_part, part);
 
     // delete
@@ -1242,7 +1242,7 @@ auto _remove_touching_segment_from_tree(Layout& layout, MessageSender& sender,
         sender.submit(info_message::SegmentPartMoved {
             .segment_part_destination =
                 segment_part_t {.segment = segment_part.segment,
-                                .part = m_tree.segment_part(index)},
+                                .part = m_tree.part(index)},
             .segment_part_source =
                 segment_part_t {.segment = segment_part.segment, .part = part_kept},
         });
@@ -1259,7 +1259,7 @@ auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender& sender,
 
     auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
 
-    const auto full_part = m_tree.segment_part(index);
+    const auto full_part = m_tree.part(index);
     const auto [part0, part1] = difference_not_touching(full_part, part);
 
     // delete
@@ -1268,7 +1268,7 @@ auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender& sender,
 
     // messages
     const auto segment_part_1 =
-        segment_part_t {segment_t {element_id, index1}, m_tree.segment_part(index1)};
+        segment_part_t {segment_t {element_id, index1}, m_tree.part(index1)};
 
     sender.submit(info_message::SegmentCreated {segment_part_1.segment});
 
@@ -1324,7 +1324,7 @@ auto merge_and_delete_tree(Layout& layout, MessageSender& sender,
     auto new_index = m_tree_destination.last_index();
 
     for (auto old_index : m_tree_source.indices()) {
-        const auto segment_info = m_tree_source.segment_info(old_index);
+        const auto segment_info = m_tree_source.info(old_index);
         ++new_index;
 
         const auto old_segment = segment_t {tree_source, old_index};
@@ -1377,7 +1377,7 @@ auto update_segment_point_types(Layout& layout, MessageSender& sender,
 
     const auto run_point_update = [&](bool set_to_shadow) {
         for (auto [segment_index, point_type] : data) {
-            const auto old_info = m_tree.segment_info(segment_index);
+            const auto old_info = m_tree.info(segment_index);
             const auto new_info = updated_segment_info(
                 old_info, position,
                 set_to_shadow ? SegmentPointType::shadow_point : point_type);
@@ -1427,12 +1427,12 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender& sender,
     const auto index_last = m_tree.last_index();
     const auto segment_last = segment_t {element_id, index_last};
 
-    const auto info_0 = m_tree.segment_info(index_0);
-    const auto info_1 = m_tree.segment_info(index_1);
+    const auto info_0 = m_tree.info(index_0);
+    const auto info_1 = m_tree.info(index_1);
 
     // merge
     m_tree.swap_and_merge_segment(index_0, index_1);
-    const auto info_merged = m_tree.segment_info(index_0);
+    const auto info_merged = m_tree.info(index_0);
 
     // messages
     if (is_inserted) {
@@ -1464,7 +1464,7 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender& sender,
             sender.submit(info_message::InsertedSegmentIdUpdated {
                 .new_segment = segment_1,
                 .old_segment = segment_last,
-                .segment_info = m_tree.segment_info(index_1),
+                .segment_info = m_tree.info(index_1),
             });
         }
     }
@@ -1689,7 +1689,7 @@ auto discover_wire_inputs(Layout& layout, const CacheProvider& cache, segment_t 
     if (const auto entry = cache.output_cache().find(line.p0)) {
         if (entry->is_connection()) {
             auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
-            auto info = m_tree.segment_info(segment.segment_index);
+            auto info = m_tree.info(segment.segment_index);
 
             info.p0_type = SegmentPointType::input;
             m_tree.update_segment(segment.segment_index, info);
@@ -1698,7 +1698,7 @@ auto discover_wire_inputs(Layout& layout, const CacheProvider& cache, segment_t 
     if (const auto entry = cache.output_cache().find(line.p1)) {
         if (entry->is_connection()) {
             auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
-            auto info = m_tree.segment_info(segment.segment_index);
+            auto info = m_tree.info(segment.segment_index);
 
             info.p1_type = SegmentPointType::input;
             m_tree.update_segment(segment.segment_index, info);
@@ -1805,7 +1805,7 @@ auto split_broken_tree(State state, point_t p0, point_t p1) -> element_id_t {
     for (const auto segment_index : tree_from.indices().reverse()) {
         if (mask[segment_index.value]) {
             auto segment_part = segment_part_t {segment_t {p0_tree_id, segment_index},
-                                                tree_from.segment_part(segment_index)};
+                                                tree_from.part(segment_index)};
             move_segment_between_trees(state.layout, state.sender, segment_part,
                                        new_tree_id);
         }
@@ -2055,7 +2055,7 @@ auto move_or_delete_wire_private(Layout& layout, MessageSender& sender,
 
     // move
     auto& m_tree = layout.modifyable_segment_tree(segment_part.segment.element_id);
-    auto info = m_tree.segment_info(segment_part.segment.segment_index);
+    auto info = m_tree.info(segment_part.segment.segment_index);
     info.line = add_unchecked(part_line, dx, dy);
     m_tree.update_segment(segment_part.segment.segment_index, info);
 
@@ -2085,7 +2085,7 @@ auto move_wire_unchecked_private(Layout& layout, segment_t segment,
     // move
     auto& m_tree = layout.modifyable_segment_tree(segment.element_id);
 
-    auto info = m_tree.segment_info(segment.segment_index);
+    auto info = m_tree.info(segment.segment_index);
     info.line = add_unchecked(info.line, dx, dy);
 
     if (to_part(info.line) != verify_full_part) {

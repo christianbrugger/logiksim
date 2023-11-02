@@ -17,7 +17,7 @@ auto add_wire_to_cache(auto &&cache, layout::ConstElement element) -> void {
     for (const auto segment_index : segment_tree.indices()) {
         cache.submit(editable_circuit::info_message::SegmentInserted {
             .segment = segment_t {element, segment_index},
-            .segment_info = segment_tree.segment_info(segment_index)});
+            .segment_info = segment_tree.info(segment_index)});
     }
 }
 

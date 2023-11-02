@@ -100,7 +100,7 @@ auto add_random_segment(Rng& rng, SegmentTree& tree) -> segment_index_t {
     if (tree.size() != orignal_count + 1) {
         throw std::runtime_error("assert failed");
     }
-    if (tree.segment_info(new_index) != info) {
+    if (tree.info(new_index) != info) {
         throw std::runtime_error("assert failed");
     }
 
