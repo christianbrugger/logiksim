@@ -33,13 +33,17 @@ namespace {
 auto input_position(const segment_vector_t& segments) -> std::optional<point_t> {
     auto result = std::optional<point_t> {};
 
+    const auto set_result = [&](point_t point) {
+        if (result.has_value()) [[unlikely]] {
+            throw std::runtime_error("found more than one input");
+        }
+        result = point;
+    };
+
     for (const auto& info : segments) {
         for (auto&& [point, type] : to_point_and_type(info)) {
             if (type == SegmentPointType::input) {
-                if (result.has_value()) [[unlikely]] {
-                    throw std::runtime_error("found more than one input");
-                }
-                result = point;
+                set_result(point);
             }
         }
     }
