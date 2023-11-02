@@ -141,7 +141,7 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
 
 }  // namespace
 
-auto segments_are_normalized_tree(std::vector<ordered_line_t>&& segments) -> bool {
+auto segments_are_contiguous_tree(std::vector<ordered_line_t>&& segments) -> bool {
     if (segments.empty()) {
         return true;
     }

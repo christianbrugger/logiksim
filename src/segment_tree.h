@@ -43,12 +43,13 @@ static_assert(sizeof(valid_vector_t) == 24);
 /**
  * @brief: A collection of lines with valid status.
  *
+ * Note that the segment tree can not have more than one input.
+ *
  * Class invariants:
  *     + size of `segments_` and `valid_parts_vector_` matches
  *     + for each index max_offset is within the corresponding part_t
  *     + output_count_ is the number of endpoints with SegmentPointType::output
  *     + input_position_ is the endpoint with SegmentPointType::input
- *     + the tree has either 0 or 1 inputs
  */
 class SegmentTree {
    public:
@@ -78,11 +79,12 @@ class SegmentTree {
     [[nodiscard]] auto begin() const -> iterator;
     [[nodiscard]] auto end() const -> iterator;
     [[nodiscard]] auto data() const -> const segment_info_t *;
+    [[nodiscard]] auto segments() const -> const segment_vector_t &;
 
     // indices
-    [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
-    [[nodiscard]] auto last_index() const noexcept -> segment_index_t;
-    [[nodiscard]] auto indices() const noexcept -> forward_range_t<segment_index_t>;
+    [[nodiscard]] auto first_index() const -> segment_index_t;
+    [[nodiscard]] auto last_index() const -> segment_index_t;
+    [[nodiscard]] auto indices() const -> forward_range_t<segment_index_t>;
     [[nodiscard]] inline auto indices(element_id_t element_id) const;
 
     // indexing
@@ -91,10 +93,10 @@ class SegmentTree {
     [[nodiscard]] auto part(segment_index_t index) const -> part_t;
 
     // input & outputs
-    [[nodiscard]] auto has_input() const noexcept -> bool;
-    [[nodiscard]] auto input_count() const noexcept -> connection_count_t;
+    [[nodiscard]] auto has_input() const -> bool;
+    [[nodiscard]] auto input_count() const -> connection_count_t;
     [[nodiscard]] auto input_position() const -> point_t;
-    [[nodiscard]] auto output_count() const noexcept -> connection_count_t;
+    [[nodiscard]] auto output_count() const -> connection_count_t;
 
     // modifications
     auto clear() -> void;
@@ -130,11 +132,22 @@ class SegmentTree {
     segment_vector_t segments_ {};
     valid_vector_t valid_parts_vector_ {};
 
+    // TODO change to output_count_t && make sure uninserted segments have count 0
     vector_size_t output_count_ {0};
     std::optional<point_t> input_position_ {};
 };
 
 static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 4 + 1 (+ 3)
+
+/**
+ * @brief: Check if segment tree is a contiguous tree.
+ *
+ * Returns false, if segments are overlapping, could be merged or need splitting,
+ * or don't form a loop free, connected tree.
+ *
+ * The algorithm is O(N log N).
+ */
+[[nodiscard]] auto is_contiguous_tree(const SegmentTree &tree) -> bool;
 
 [[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
 

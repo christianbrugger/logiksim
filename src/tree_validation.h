@@ -15,7 +15,7 @@ struct ordered_line_t;
  *
  * The algorithm is O(N log N).
  */
-[[nodiscard]] auto segments_are_normalized_tree(std::vector<ordered_line_t> &&segments)
+[[nodiscard]] auto segments_are_contiguous_tree(std::vector<ordered_line_t> &&segments)
     -> bool;
 
 }  // namespace logicsim
