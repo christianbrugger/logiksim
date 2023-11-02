@@ -63,7 +63,6 @@ auto output_count(const segment_vector_t& segments) -> vector_size_t {
 auto all_valid_parts_within_lines(const segment_vector_t& segments,
                                   const valid_vector_t& valid_parts) -> bool {
     Expects(segments.size() == valid_parts.size());
-
     const auto selection_within_line = [&](std::size_t index) {
         const auto& selection = valid_parts.at(index);
         const auto& line = segments.at(index).line;
@@ -249,7 +248,7 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
 
 auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {
     if (distance(segment.line) != distance(line(index))) {
-        throw std::runtime_error("line length needs to be the same");
+        throw std::runtime_error("line length needs to stay the same");
     }
 
     // update segment
@@ -280,6 +279,10 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
 
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
                                part_t part) -> segment_index_t {
+    if (part.end > tree.part(index).end) [[unlikely]] {
+        throw std::runtime_error("cannot copy part outside of line");
+    }
+
     const auto new_info = adjust(tree.info(index), part);
     const auto new_index = add_segment(new_info);
 
@@ -337,11 +340,11 @@ struct merged_segment_result {
 
 auto merged_segment(const SegmentTree& tree, segment_index_t index,
                     segment_index_t index_deleted) {
-    const auto info_orig = tree.info(index);
-    const auto info_delete = tree.info(index_deleted);
+    const auto& info_orig = tree.info(index);
+    const auto& info_delete = tree.info(index_deleted);
     const auto info_merged = merge_touching(info_orig, info_delete);
 
-    // copy valid parts
+    // valid parts
     auto entries_new = PartSelection {};
     entries_new.copy_parts(tree.valid_parts(index),
                            part_copy_definition_t {
@@ -426,7 +429,7 @@ auto SegmentTree::size() const noexcept -> std::size_t {
     return segments_.size();
 }
 
-auto SegmentTree::info(segment_index_t index) const -> segment_info_t {
+auto SegmentTree::info(segment_index_t index) const -> const segment_info_t& {
     return segments_.at(index.value);
 }
 

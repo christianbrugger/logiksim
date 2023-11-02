@@ -42,13 +42,13 @@ static_assert(sizeof(valid_vector_t) == 24);
 /**
  * @brief: A collection of lines with valid status.
  *
- * Note that the segment tree can not have more than one input.
+ * Note that the segment tree can never have more than one input.
  *
  * Class invariants:
- *     + size of `segments_` and `valid_parts_vector_` matches
- *     + for each index max_offset is within the corresponding part_t
+ *     + size of `segments_` and `valid_parts_vector_` match
+ *     + for each index valid_parts::max_offset is within the corresponding line
  *     + output_count_ is the number of endpoints with SegmentPointType::output
- *     + input_position_ is the endpoint with SegmentPointType::input
+ *     + input_position_ is the position with SegmentPointType::input
  */
 class SegmentTree {
    public:
@@ -87,7 +87,7 @@ class SegmentTree {
     [[nodiscard]] inline auto indices(element_id_t element_id) const;
 
     // indexing
-    [[nodiscard]] auto info(segment_index_t index) const -> segment_info_t;
+    [[nodiscard]] auto info(segment_index_t index) const -> const segment_info_t &;
     [[nodiscard]] auto line(segment_index_t index) const -> ordered_line_t;
     [[nodiscard]] auto part(segment_index_t index) const -> part_t;
 
@@ -136,7 +136,7 @@ class SegmentTree {
     std::optional<point_t> input_position_ {};
 };
 
-static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 4 + 1 (+ 3)
+static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 6 (+ 2)
 
 /**
  * @brief: Check if segment tree is a contiguous tree.

@@ -1026,8 +1026,7 @@ auto copy_segment(Layout& layout, MessageSender& sender,
     // handle inputs being copied within the same tree
     {
         if (destination_element_id == source_segment_part.segment.element_id) {
-            auto info =
-                m_tree_source.info(source_segment_part.segment.segment_index);
+            auto info = m_tree_source.info(source_segment_part.segment.segment_index);
             const auto full_part = to_part(info.line);
 
             if (full_part.begin == source_segment_part.part.begin &&
@@ -1240,9 +1239,8 @@ auto _remove_touching_segment_from_tree(Layout& layout, MessageSender& sender,
 
     if (part_kept.begin != full_part.begin) {
         sender.submit(info_message::SegmentPartMoved {
-            .segment_part_destination =
-                segment_part_t {.segment = segment_part.segment,
-                                .part = m_tree.part(index)},
+            .segment_part_destination = segment_part_t {.segment = segment_part.segment,
+                                                        .part = m_tree.part(index)},
             .segment_part_source =
                 segment_part_t {.segment = segment_part.segment, .part = part_kept},
         });
@@ -1759,8 +1757,7 @@ auto _wire_change_colliding_to_insert(Layout& layout, MessageSender& sender,
 
     // from valid
     if (display_state == normal || display_state == valid) {
-        auto& m_tree = layout.modifyable_segment_tree(element_id);
-        m_tree.unmark_valid(segment_part.segment.segment_index, segment_part.part);
+        unmark_valid(layout, segment_part);
     }
 
     // from colliding
