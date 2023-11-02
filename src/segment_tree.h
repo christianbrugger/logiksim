@@ -119,6 +119,7 @@ class SegmentTree {
     [[nodiscard]] auto valid_parts(segment_index_t segment_index) const
         -> const PartSelection &;
 
+    // TODO remove both validate methods
     auto validate() const -> void;
     auto validate_inserted() const -> void;
 

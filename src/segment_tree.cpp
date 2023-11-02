@@ -49,11 +49,11 @@ auto input_position(const segment_vector_t& segments) -> std::optional<point_t> 
 
 auto count_point_type(const segment_vector_t& segments, SegmentPointType type)
     -> vector_size_t {
-    const auto proj = [&](segment_info_t info) -> vector_size_t {
+    const auto count_type = [type](const segment_info_t& info) -> vector_size_t {
         return (info.p0_type == type ? vector_size_t {1} : vector_size_t {0}) +
                (info.p1_type == type ? vector_size_t {1} : vector_size_t {0});
     };
-    return accumulate(transform_view(segments, proj), vector_size_t {0});
+    return accumulate(segments, vector_size_t {0}, count_type);
 }
 
 auto output_count(const segment_vector_t& segments) -> vector_size_t {
@@ -63,6 +63,7 @@ auto output_count(const segment_vector_t& segments) -> vector_size_t {
 auto all_valid_parts_within_lines(const segment_vector_t& segments,
                                   const valid_vector_t& valid_parts) -> bool {
     Expects(segments.size() == valid_parts.size());
+
     const auto selection_within_line = [&](std::size_t index) {
         const auto& selection = valid_parts.at(index);
         const auto& line = segments.at(index).line;
