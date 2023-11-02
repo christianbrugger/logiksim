@@ -21,7 +21,6 @@ namespace logicsim {
 
 struct connection_count_t;
 struct rect_t;
-class LineTree;
 
 namespace segment_tree {
 
@@ -106,7 +105,7 @@ class SegmentTree {
     auto copy_segment(const SegmentTree &tree, segment_index_t index) -> segment_index_t;
     auto copy_segment(const SegmentTree &tree, segment_index_t index, part_t part)
         -> segment_index_t;
-    auto shrink_segment(segment_index_t index, part_t part) -> void;
+    auto shrink_segment(segment_index_t index, part_t new_part) -> void;
     // swaps the merging segment with last one, merges and deletes it
     auto swap_and_merge_segment(segment_index_t index, segment_index_t index_deleted)
         -> void;
@@ -176,6 +175,7 @@ inline auto all_lines(const SegmentTree &segment_tree) {
 }
 
 inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index) {
+    tree.validate();
     const auto line = tree.line(index);
 
     return transform_view(tree.valid_parts(index), [line](part_t part) -> ordered_line_t {

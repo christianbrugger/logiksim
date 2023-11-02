@@ -1718,20 +1718,9 @@ auto add_valid_wire_parts(const layout::ConstElement wire,
 
     const auto& tree = wire.segment_tree();
 
-    const auto& all_parts = tree.valid_parts();
-    const auto begin = all_parts.begin();
-    const auto end = all_parts.end();
-
-    for (auto it = begin; it != end; ++it) {
-        if (it->empty()) {
-            continue;
-        }
-        const auto index =
-            segment_index_t {gsl::narrow_cast<segment_index_t::value_type>(it - begin)};
-        const auto full_line = tree.line(index);
-
-        for (const auto& part : *it) {
-            output.push_back(to_line(full_line, part));
+    for (const segment_index_t& index : tree.indices()) {
+        for (const ordered_line_t& valid_line : all_valid_lines(tree, index)) {
+            output.push_back(valid_line);
             found = true;
         }
     }

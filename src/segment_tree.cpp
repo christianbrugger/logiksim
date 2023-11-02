@@ -66,7 +66,7 @@ auto all_valid_parts_within_lines(const segment_vector_t& segments,
 
     const auto selection_within_line = [&](std::size_t index) {
         const auto& selection = valid_parts.at(index);
-        const auto& line = segments[index].line;
+        const auto& line = segments.at(index).line;
         return selection.max_offset() <= to_part(line).end;
     };
 
@@ -281,15 +281,14 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
                                part_t part) -> segment_index_t {
     const auto new_info = adjust(tree.info(index), part);
-
     const auto new_index = add_segment(new_info);
 
-    const auto parts = part_copy_definition_t {
+    const auto copy_definition = part_copy_definition_t {
         .destination = to_part(new_info.line),
         .source = part,
     };
     valid_parts_vector_.at(new_index.value) =
-        copy_parts(tree.valid_parts_vector_.at(index.value), parts);
+        copy_parts(tree.valid_parts_vector_.at(index.value), copy_definition);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
@@ -300,8 +299,12 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
     return new_index;
 }
 
-auto SegmentTree::shrink_segment(segment_index_t index, part_t part) -> void {
-    const auto new_info = adjust(info(index), part);
+auto SegmentTree::shrink_segment(segment_index_t index, part_t new_part) -> void {
+    if (new_part.end > part(index).end) [[unlikely]] {
+        throw std::runtime_error("new part cannot be outside of existing line");
+    }
+
+    const auto new_info = adjust(info(index), new_part);
 
     // update segment
     unregister_segment(index);
@@ -309,12 +312,12 @@ auto SegmentTree::shrink_segment(segment_index_t index, part_t part) -> void {
     register_segment(index);
 
     // valid parts
-    const auto parts = part_copy_definition_t {
+    const auto copy_definition = part_copy_definition_t {
         .destination = to_part(new_info.line),
-        .source = part,
+        .source = new_part,
     };
     valid_parts_vector_.at(index.value) =
-        copy_parts(valid_parts_vector_.at(index.value), parts);
+        copy_parts(valid_parts_vector_.at(index.value), copy_definition);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
@@ -322,6 +325,44 @@ auto SegmentTree::shrink_segment(segment_index_t index, part_t part) -> void {
     assert(input_position_ == segment_tree::input_position(segments_));
     assert(output_count_ == segment_tree::output_count(segments_));
 }
+
+namespace segment_tree {
+
+namespace {
+
+struct merged_segment_result {
+    segment_info_t segment_info;
+    PartSelection valid_parts;
+};
+
+auto merged_segment(const SegmentTree& tree, segment_index_t index,
+                    segment_index_t index_deleted) {
+    const auto info_orig = tree.info(index);
+    const auto info_delete = tree.info(index_deleted);
+    const auto info_merged = merge_touching(info_orig, info_delete);
+
+    // copy valid parts
+    auto entries_new = PartSelection {};
+    entries_new.copy_parts(tree.valid_parts(index),
+                           part_copy_definition_t {
+                               .destination = to_part(info_merged.line, info_orig.line),
+                               .source = to_part(info_orig.line),
+                           });
+    entries_new.copy_parts(tree.valid_parts(index_deleted),
+                           part_copy_definition_t {
+                               .destination = to_part(info_merged.line, info_delete.line),
+                               .source = to_part(info_delete.line),
+                           });
+
+    return merged_segment_result {
+        .segment_info = info_merged,
+        .valid_parts = std::move(entries_new),
+    };
+}
+
+}  // namespace
+
+}  // namespace segment_tree
 
 auto SegmentTree::swap_and_merge_segment(segment_index_t index,
                                          segment_index_t index_deleted) -> void {
@@ -331,33 +372,17 @@ auto SegmentTree::swap_and_merge_segment(segment_index_t index,
             "change after deletion");
     }
 
-    const auto info_orig = info(index);
-    const auto info_delete = info(index_deleted);
-    const auto info_merged = merge_touching(info_orig, info_delete);
-
-    // copy valid parts
-    auto& entries_orig = valid_parts_vector_.at(index.value);
-    auto& entries_delete = valid_parts_vector_.at(index_deleted.value);
-
-    auto new_entries = copy_parts(
-        entries_orig, part_copy_definition_t {
-                          .destination = to_part(info_merged.line, info_orig.line),
-                          .source = to_part(info_orig.line),
-                      });
-    new_entries.copy_parts(entries_delete,
-                           part_copy_definition_t {
-                               .destination = to_part(info_merged.line, info_delete.line),
-                               .source = to_part(info_delete.line),
-                           });
-    using std::swap;
-    swap(entries_orig, new_entries);
+    const auto merged = segment_tree::merged_segment(*this, index, index_deleted);
 
     // first delete, so input count stays in bounds
     swap_and_delete_segment(index_deleted);
+
     // update segment
     unregister_segment(index);
-    segments_.at(index.value) = info_merged;
+    segments_.at(index.value) = merged.segment_info;
     register_segment(index);
+    // move after deletion, so class invariant is not broken for delete
+    valid_parts_vector_.at(index.value) = std::move(merged.valid_parts);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
