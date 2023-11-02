@@ -1,21 +1,15 @@
 #include "segment_tree.h"
 
 #include "algorithm/accumulate.h"
-#include "algorithm/range.h"
-#include "algorithm/transform_if.h"
 #include "algorithm/transform_to_vector.h"
 #include "allocated_size/folly_small_vector.h"
-#include "allocated_size/trait.h"
 #include "container/graph/adjacency_graph.h"
 #include "container/graph/depth_first_search.h"
 #include "container/graph/visitor/empty_visitor.h"
-#include "exception.h"
 #include "format/container.h"
 #include "geometry/line.h"
 #include "geometry/segment_info.h"
-#include "line_tree.h"
-#include "logging.h"
-#include "tree_validation.h"
+#include "tree_validation.h"  // TODO remove
 #include "vocabulary/connection_count.h"
 #include "vocabulary/part_copy_definition.h"
 #include "vocabulary/rect.h"
@@ -380,7 +374,7 @@ auto SegmentTree::swap_and_merge_segment(segment_index_t index,
             "change after deletion");
     }
 
-    const auto merged = segment_tree::merged_segment(*this, index, index_deleted);
+    auto merged = segment_tree::merged_segment(*this, index, index_deleted);
 
     // first delete, so input count stays in bounds
     swap_and_delete_segment(index_deleted);
@@ -514,13 +508,6 @@ auto SegmentTree::output_count() const -> connection_count_t {
 auto SegmentTree::format() const -> std::string {
     return fmt::format("SegmentTree({}x{}, {}, valid {})", input_count(), output_count(),
                        segments_, valid_parts_vector_);
-}
-
-auto validate_output_count(const SegmentTree& tree) -> void {
-    const auto count = connection_count_t {segment_tree::output_count(tree.segments())};
-    if (tree.output_count() != count) [[unlikely]] {
-        throw_exception("Tree input output count is wrong");
-    }
 }
 
 auto SegmentTree::validate() const -> void {
