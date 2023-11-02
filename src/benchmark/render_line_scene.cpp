@@ -147,14 +147,12 @@ return line_tree;
 }
 
 auto calculate_tree_length(const LineTree& line_tree) -> int {
-// TODO why do we need begin & end ?
-return accumulate(line_tree.segments().begin(), line_tree.segments().end(), int {0},
+return accumulate(line_tree, int {0},
                   [](line_t line) -> int { return distance(line); });
 }
 
 auto total_wire_lengths(const Layout& layout) -> int64_t {
-// TODO why do we need begin & end ?
-return accumulate(layout.elements().begin(), layout.elements().end(), int64_t {0},
+return accumulate(layout.elements(), int64_t {0},
                   [](const layout::ConstElement element) {
                       return calculate_tree_length(element.line_tree());
                   });
