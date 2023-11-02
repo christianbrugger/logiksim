@@ -6,9 +6,9 @@
 #include "geometry/part.h"
 #include "iterator_adaptor/transform_view.h"
 #include "part_selection.h"
+#include "vocabulary/segment.h"
 #include "vocabulary/segment_index.h"
 #include "vocabulary/segment_info.h"
-#include "vocabulary/segment.h"
 
 #include <boost/container/vector.hpp>
 #include <folly/small_vector.h>
@@ -47,15 +47,49 @@ class SegmentTree {
     using valid_vector_t = segment_tree::valid_vector_t;
     using vector_size_t = segment_tree::vector_size_t;
 
+    // using value_type = segment_info_t;
+    // using iterator = segment_vector_t::const_iterator;
+
    public:
     [[nodiscard]] constexpr SegmentTree() = default;
 
-    // brings the tree into its canonical, so that visual equivalent trees compare equal
+    [[nodiscard]] auto format() const -> std::string;
+    /**
+     * @brief: brings the tree into its canonical,
+     *         so that visual equivalent trees compare equal
+     */
     auto normalize() -> void;
-
     [[nodiscard]] auto operator==(const SegmentTree &) const -> bool = default;
     [[nodiscard]] auto operator<=>(const SegmentTree &) const = default;
 
+    // size
+    [[nodiscard]] auto empty() const noexcept -> bool;
+    [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    // iterators
+    // [[nodiscard]] auto begin() const -> iterator;
+    // [[nodiscard]] auto end() const -> iterator;
+    [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
+
+    // indices
+    [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
+    [[nodiscard]] auto last_index() const noexcept -> segment_index_t;
+    [[nodiscard]] auto indices() const noexcept -> forward_range_t<segment_index_t>;
+    [[nodiscard]] inline auto indices(element_id_t element_id) const;
+
+    // indexing
+    [[nodiscard]] auto segment_info(segment_index_t index) const -> segment_info_t;
+    [[nodiscard]] auto segment_line(segment_index_t index) const -> ordered_line_t;
+    [[nodiscard]] auto segment_part(segment_index_t index) const -> part_t;
+
+    // input & outputs
+    [[nodiscard]] auto has_input() const noexcept -> bool;
+    [[nodiscard]] auto input_count() const noexcept -> connection_count_t;
+    [[nodiscard]] auto input_position() const -> point_t;
+    [[nodiscard]] auto output_count() const noexcept -> connection_count_t;
+
+    // modifying
     auto clear() -> void;
     auto add_segment(segment_info_t segment) -> segment_index_t;
     auto add_tree(const SegmentTree &tree) -> segment_index_t;
@@ -70,40 +104,13 @@ class SegmentTree {
     // swaps the segment with last one and deletes it
     auto swap_and_delete_segment(segment_index_t index) -> void;
 
-    // segments
-    [[nodiscard]] auto empty() const noexcept -> bool;
-    [[nodiscard]] auto segment_count() const noexcept -> std::size_t;
-    [[nodiscard]] auto segment_info(segment_index_t index) const -> segment_info_t;
-    [[nodiscard]] auto segment_line(segment_index_t index) const -> ordered_line_t;
-    [[nodiscard]] auto segment_part(segment_index_t index) const -> part_t;
-    [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
-    [[nodiscard]] auto allocated_size() const -> std::size_t;
-
     // valid parts
     auto mark_valid(segment_index_t segment_index, part_t part) -> void;
     auto unmark_valid(segment_index_t segment_index, part_t part) -> void;
-    [[nodiscard]] auto valid_parts() const -> std::span<const PartSelection>;
+    [[nodiscard]] auto valid_parts() const -> const valid_vector_t &;
     [[nodiscard]] auto valid_parts(segment_index_t segment_index) const
         -> const PartSelection &;
 
-    // indices
-    [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
-    [[nodiscard]] auto last_index() const noexcept -> segment_index_t;
-    [[nodiscard]] auto indices() const noexcept -> forward_range_t<segment_index_t>;
-
-    [[nodiscard]] auto indices(element_id_t element_id) const {
-        return transform_view(indices(), [=](segment_index_t index) -> segment_t {
-            return segment_t {element_id, index};
-        });
-    };
-
-    // input & outputs
-    [[nodiscard]] auto has_input() const noexcept -> bool;
-    [[nodiscard]] auto input_count() const noexcept -> connection_count_t;
-    [[nodiscard]] auto input_position() const -> point_t;
-    [[nodiscard]] auto output_count() const noexcept -> connection_count_t;
-
-    [[nodiscard]] auto format() const -> std::string;
     auto validate() const -> void;
     auto validate_inserted() const -> void;
 
@@ -140,14 +147,19 @@ static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 4 + 1 (+ 3)
 // Implementation
 //
 
+inline auto SegmentTree::indices(element_id_t element_id) const {
+    return transform_view(indices(), [=](segment_index_t index) -> segment_t {
+        return segment_t {element_id, index};
+    });
+};
+
 inline auto all_lines(const SegmentTree &tree) {
     return transform_view(
         tree.segment_infos(),
         [](const segment_info_t &info) -> const ordered_line_t & { return info.line; });
 }
 
-inline auto all_valid_lines(const SegmentTree &tree,
-                                          segment_index_t index) {
+inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index) {
     const auto line = tree.segment_line(index);
 
     return transform_view(tree.valid_parts(index), [line](part_t part) -> ordered_line_t {

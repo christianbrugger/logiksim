@@ -327,7 +327,7 @@ auto SegmentTree::unmark_valid(segment_index_t segment_index, part_t part) -> vo
     valid_parts.remove_part(part);
 }
 
-auto SegmentTree::valid_parts() const -> std::span<const PartSelection> {
+auto SegmentTree::valid_parts() const -> const valid_vector_t& {
     return valid_parts_vector_;
 }
 
