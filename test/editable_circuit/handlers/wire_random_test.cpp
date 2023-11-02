@@ -3,6 +3,7 @@
 #include "editable_circuit/handler.h"
 #include "editable_circuit/sanitizer.h"
 #include "exception.h"
+#include "geometry/line.h"
 #include "line_tree.h"
 #include "line_tree_2.h"
 #include "random/bool.h"

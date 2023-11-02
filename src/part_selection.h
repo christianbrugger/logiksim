@@ -44,8 +44,7 @@ class PartSelection {
     [[nodiscard]] explicit constexpr PartSelection() = default;
     [[nodiscard]] explicit PartSelection(part_t part);
     [[nodiscard]] explicit PartSelection(part_vector_t&& parts);
-    [[nodiscard]] static auto inverted(const PartSelection& source, part_t part)
-        -> PartSelection;
+    [[nodiscard]] auto inverted_selection(part_t part) const -> PartSelection;
 
     [[nodiscard]] auto format() const -> std ::string;
     [[nodiscard]] auto operator==(const PartSelection&) const -> bool = default;

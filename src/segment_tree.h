@@ -3,15 +3,12 @@
 
 #include "algorithm/range.h"
 #include "format/struct.h"
-#include "geometry/line.h"
 #include "geometry/part.h"
 #include "iterator_adaptor/transform_view.h"
-#include "vocabulary/element_id.h"
-#include "vocabulary/part.h"
-#include "vocabulary/segment.h"
+#include "part_selection.h"
 #include "vocabulary/segment_index.h"
 #include "vocabulary/segment_info.h"
-#include "part_selection.h"
+#include "vocabulary/segment.h"
 
 #include <boost/container/vector.hpp>
 #include <folly/small_vector.h>
@@ -19,7 +16,6 @@
 #include <compare>
 #include <optional>
 #include <span>
-#include <type_traits>
 #include <vector>
 
 namespace logicsim {
@@ -27,13 +23,6 @@ namespace logicsim {
 struct connection_count_t;
 struct rect_t;
 class LineTree;
-class SegmentTree;
-
-[[nodiscard]] auto order_points(segment_info_t segment0, segment_info_t segment1)
-    -> std::tuple<segment_info_t, segment_info_t>;
-[[nodiscard]] auto adjust(segment_info_t segment, part_t part) -> segment_info_t;
-[[nodiscard]] auto merge_touching(const segment_info_t segment_info_0,
-                                  const segment_info_t segment_info_1) -> segment_info_t;
 
 namespace segment_tree {
 
@@ -60,8 +49,9 @@ class SegmentTree {
 
    public:
     [[nodiscard]] constexpr SegmentTree() = default;
-    auto swap(SegmentTree &other) noexcept -> void;
-    auto normalize() -> void;  // bring it into a form that can be compared
+
+    // brings the tree into its canonical, so that visual equivalent trees compare equal
+    auto normalize() -> void;
 
     [[nodiscard]] auto operator==(const SegmentTree &) const -> bool = default;
     [[nodiscard]] auto operator<=>(const SegmentTree &) const = default;
@@ -94,7 +84,7 @@ class SegmentTree {
     auto unmark_valid(segment_index_t segment_index, part_t part) -> void;
     [[nodiscard]] auto valid_parts() const -> std::span<const PartSelection>;
     [[nodiscard]] auto valid_parts(segment_index_t segment_index) const
-        -> const PartSelection&;
+        -> const PartSelection &;
 
     // indices
     [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
@@ -134,37 +124,36 @@ class SegmentTree {
 
 static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 4 + 1 (+ 3)
 
-auto swap(SegmentTree &a, SegmentTree &b) noexcept -> void;
-
-}  // namespace logicsim
-
-template <>
-auto std::swap(logicsim::SegmentTree &a, logicsim::SegmentTree &b) noexcept -> void;
-
-namespace logicsim {
-
 [[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
 
+[[nodiscard]] inline auto all_lines(const SegmentTree &tree);
+
+[[nodiscard]] inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index);
+
+[[nodiscard]] auto calculate_normal_lines(const SegmentTree &tree)
+    -> std::vector<ordered_line_t>;
+
+[[nodiscard]] auto calculate_connected_segments_mask(const SegmentTree &tree, point_t p0)
+    -> boost::container::vector<bool>;
+
+//
+// Implementation
+//
+
 inline auto all_lines(const SegmentTree &tree) {
-    return transform_view(tree.segment_infos(),
-                          [](segment_info_t info) { return info.line; });
+    return transform_view(
+        tree.segment_infos(),
+        [](const segment_info_t &info) -> const ordered_line_t & { return info.line; });
 }
 
-inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index) {
+inline auto all_valid_lines(const SegmentTree &tree,
+                                          segment_index_t index) {
     const auto line = tree.segment_line(index);
 
     return transform_view(tree.valid_parts(index), [line](part_t part) -> ordered_line_t {
         return to_line(line, part);
     });
 }
-
-[[nodiscard]] auto calculate_normal_lines(const SegmentTree &tree)
-    -> std::vector<ordered_line_t>;
-
-auto calculate_connected_segments_mask(const SegmentTree &tree, point_t p0)
-    -> boost::container::vector<bool>;
-
-[[nodiscard]] auto to_line_tree(const SegmentTree &segment_tree) -> LineTree;
 
 }  // namespace logicsim
 

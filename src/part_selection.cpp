@@ -106,8 +106,8 @@ PartSelection::PartSelection(part_vector_t&& parts) : parts_ {std::move(parts)} 
     assert(part_selection::parts_not_touching(parts_));
 }
 
-auto PartSelection::inverted(const PartSelection& source, part_t part) -> PartSelection {
-    if (source.empty()) {
+auto PartSelection::inverted_selection(part_t part) const -> PartSelection {
+    if (empty()) {
         return PartSelection {part};
     }
 
@@ -120,11 +120,11 @@ auto PartSelection::inverted(const PartSelection& source, part_t part) -> PartSe
         }
     };
 
-    add_if_positive(part.begin, source.front().begin);
-    for (const auto&& view : ranges::views::sliding(source, 2)) {
+    add_if_positive(part.begin, front().begin);
+    for (const auto&& view : ranges::views::sliding(*this, 2)) {
         add_if_positive(view[0].end, view[1].begin);
     }
-    add_if_positive(source.back().end, part.end);
+    add_if_positive(back().end, part.end);
 
     assert(std::ranges::is_sorted(result.parts_));
     assert(part_selection::parts_not_touching(result.parts_));

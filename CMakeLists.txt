@@ -108,6 +108,7 @@ set(LS_CORE_SOURCES
     src/geometry/point.cpp
     src/geometry/rect.cpp
     src/geometry/scene.cpp
+    src/geometry/segment_info.cpp
     src/geometry/to_points_sorted_unique.cpp
     src/geometry/to_points_with_both_orientation.cpp
 
@@ -241,6 +242,7 @@ set(LS_CORE_SOURCES
     src/layout_info.cpp
     src/line_tree.cpp
     src/line_tree_2.cpp
+    src/line_tree_generation.cpp
     src/logging.cpp
     src/part_selection.cpp
     src/render_caches.cpp

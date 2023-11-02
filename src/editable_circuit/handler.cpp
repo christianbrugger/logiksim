@@ -10,6 +10,7 @@
 #include "exception.h"
 #include "format/container.h"
 #include "format/pointer.h"
+#include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "geometry/point.h"
 #include "layout_info.h"

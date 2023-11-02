@@ -9,6 +9,7 @@
 #include "exception.h"
 #include "format/container.h"
 #include "format/std_type.h"
+#include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "layout_info.h"
 #include "logging.h"

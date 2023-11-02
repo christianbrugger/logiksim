@@ -8,9 +8,11 @@
 #include "allocated_size/trait.h"
 #include "exception.h"
 #include "format/time.h"
+#include "geometry/line.h"
 #include "geometry/point.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "line_tree_generation.h"
 #include "logging.h"
 #include "validate_definition.h"
 #include "vocabulary/layout_calculation_data.h"
@@ -476,7 +478,7 @@ auto Layout::line_tree(element_id_t element_id) const -> const LineTree & {
     if (line_tree.empty() && element.is_wire() &&
         element.display_state() == display_state_t::normal &&
         element.segment_tree().has_input()) {
-        line_tree = to_line_tree(element.segment_tree());
+        line_tree = generate_line_tree(element.segment_tree());
     }
 
     return line_tree;

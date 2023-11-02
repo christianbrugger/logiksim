@@ -11,6 +11,8 @@
 #include "container/graph/visitor/empty_visitor.h"
 #include "exception.h"
 #include "format/container.h"
+#include "geometry/line.h"
+#include "geometry/segment_info.h"
 #include "line_tree.h"
 #include "logging.h"
 #include "tree_validation.h"
@@ -24,60 +26,12 @@
 
 namespace logicsim {
 
-auto order_points(segment_info_t a, segment_info_t b)
-    -> std::tuple<segment_info_t, segment_info_t> {
-    if (a.line <= b.line) {
-        return std::make_tuple(a, b);
-    }
-    return std::make_tuple(b, a);
-}
-
-auto adjust(const segment_info_t segment_info, const part_t part) -> segment_info_t {
-    const auto new_line = to_line(segment_info.line, part);
-
-    const auto p0_changed = new_line.p0 != segment_info.line.p0;
-    const auto p1_changed = new_line.p1 != segment_info.line.p1;
-
-    return segment_info_t {
-        .line = new_line,
-
-        .p0_type = p0_changed ? SegmentPointType::shadow_point : segment_info.p0_type,
-        .p1_type = p1_changed ? SegmentPointType::shadow_point : segment_info.p1_type,
-    };
-}
-
-auto merge_touching(const segment_info_t segment_info_0,
-                    const segment_info_t segment_info_1) -> segment_info_t {
-    const auto [a, b] = order_points(segment_info_0, segment_info_1);
-
-    if (a.line.p1 != b.line.p0) [[unlikely]] {
-        throw_exception("segments need to have common shared point");
-    }
-
-    return segment_info_t {
-        .line = ordered_line_t {a.line.p0, b.line.p1},
-
-        .p0_type = a.p0_type,
-        .p1_type = b.p1_type,
-    };
-}
-
 //
 // Segment Tree
 //
 
 auto SegmentTree::clear() -> void {
     *this = SegmentTree {};
-}
-
-auto SegmentTree::swap(SegmentTree& other) noexcept -> void {
-    using std::swap;
-
-    segments_.swap(other.segments_);
-    valid_parts_vector_.swap(other.valid_parts_vector_);
-
-    swap(output_count_, other.output_count_);
-    swap(input_position_, other.input_position_);
 }
 
 auto SegmentTree::allocated_size() const -> std::size_t {
@@ -128,18 +82,6 @@ auto SegmentTree::sort_point_types() -> void {
     ranges::sort(direct_view);
 }
 
-auto swap(SegmentTree& a, SegmentTree& b) noexcept -> void {
-    a.swap(b);
-}
-
-}  // namespace logicsim
-
-template <>
-auto std::swap(logicsim::SegmentTree& a, logicsim::SegmentTree& b) noexcept -> void {
-    a.swap(b);
-}
-
-namespace logicsim {
 auto SegmentTree::get_next_index() const -> segment_index_t {
     return segment_index_t {gsl::narrow<segment_index_t::value_type>(segments_.size())};
 }
@@ -433,96 +375,6 @@ auto SegmentTree::format() const -> std::string {
                        segments_, valid_parts_vector_);
 }
 
-auto validate_same_segments(const SegmentTree& tree, const LineTree& line_tree) {
-    // line tree
-    if (line_tree.size() != tree.segment_count()) [[unlikely]] {
-        throw_exception("line tree and segment tree have different segment count.");
-    }
-
-    auto segments_1 =
-        std::vector<ordered_line_t>(line_tree.lines().begin(), line_tree.lines().end());
-
-    // segment tree
-    auto segments_2 = std::vector<ordered_line_t> {};
-    std::ranges::transform(tree.segment_infos(), std::back_inserter(segments_2),
-                           &segment_info_t::line);
-
-    // compare
-    std::ranges::sort(segments_1);
-    std::ranges::sort(segments_2);
-    if (segments_1 != segments_2) {
-        throw_exception("line tree and segment tree have different segments.");
-    }
-}
-
-auto validate_same_cross_points(const SegmentTree& tree, const LineTree& line_tree) {
-    // line tree
-    auto cross_points_1 = std::vector<point_t> {};
-    transform_if(
-        indices(line_tree), std::back_inserter(cross_points_1),
-        [&](line_index_t index) -> point_t { return line_tree.line(index).p0; },
-        [&](line_index_t index) -> bool { return line_tree.has_cross_point_p0(index); });
-
-    std::ranges::sort(cross_points_1);
-    const auto duplicates = std::ranges::unique(cross_points_1);
-    cross_points_1.erase(duplicates.begin(), duplicates.end());
-
-    // segment tree
-    auto cross_points_2 = std::vector<point_t> {};
-    transform_if(
-        tree.segment_infos(), std::back_inserter(cross_points_2),
-        [](segment_info_t info) { return info.line.p0; },
-        [](segment_info_t info) { return is_cross_point(info.p0_type); });
-    transform_if(
-        tree.segment_infos(), std::back_inserter(cross_points_2),
-        [](segment_info_t info) { return info.line.p1; },
-        [](segment_info_t info) { return is_cross_point(info.p1_type); });
-
-    std::ranges::sort(cross_points_2);
-
-    // compare
-    if (cross_points_1 != cross_points_2) [[unlikely]] {
-        throw_exception("segment tree and line tree have different cross points");
-    }
-}
-
-auto validate_same_output_positions(const SegmentTree& tree, const LineTree& line_tree) {
-    // line tree
-    auto positions_1 = transform_to_vector(
-        output_ids(line_tree),
-        [&](connection_id_t output) { return line_tree.output_position(output); });
-
-    // we take an output at random as input to generate the line tree
-    if (!tree.has_input()) {
-        positions_1.push_back(line_tree.input_position());
-    }
-
-    // segment tree
-    auto positions_2 = std::vector<point_t> {};
-    transform_if(
-        tree.segment_infos(), std::back_inserter(positions_2),
-        [](segment_info_t info) { return info.line.p0; },
-        [](segment_info_t info) { return info.p0_type == SegmentPointType::output; });
-    transform_if(
-        tree.segment_infos(), std::back_inserter(positions_2),
-        [](segment_info_t info) { return info.line.p1; },
-        [](segment_info_t info) { return info.p1_type == SegmentPointType::output; });
-
-    // compare
-    std::ranges::sort(positions_1);
-    std::ranges::sort(positions_2);
-    if (positions_1 != positions_2) [[unlikely]] {
-        throw_exception("line tree and segment tree have different output positions.");
-    }
-}
-
-auto validate_same_input_position(const SegmentTree& tree, const LineTree& line_tree) {
-    if (tree.has_input() && tree.input_position() != line_tree.input_position())
-        [[unlikely]] {
-        throw_exception("line tree and segment tree have different input positions.");
-    }
-}
-
 auto recalculate_first_input_position(const SegmentTree& tree) -> std::optional<point_t> {
     for (const auto& info : tree.segment_infos()) {
         if (info.p0_type == SegmentPointType::input) {
@@ -589,12 +441,6 @@ auto SegmentTree::validate_inserted() const -> void {
             transform_to_vector(segment_infos(), &segment_info_t::line))) {
         throw std::runtime_error("segments are not a normalized tree");
     }
-
-    const auto line_tree = to_line_tree(*this);
-    validate_same_segments(*this, line_tree);
-    validate_same_cross_points(*this, line_tree);
-    validate_same_output_positions(*this, line_tree);
-    validate_same_input_position(*this, line_tree);
 }
 
 //
@@ -607,7 +453,7 @@ auto calculate_normal_lines(const SegmentTree& tree) -> std::vector<ordered_line
     for (const auto index : tree.indices()) {
         const auto line = tree.segment_line(index);
         const auto normal_parts =
-            PartSelection::inverted(tree.valid_parts(index), to_part(line));
+            tree.valid_parts(index).inverted_selection(to_part(line));
 
         // convert to lines
         std::ranges::transform(
@@ -647,48 +493,14 @@ auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {
     auto p_min = point_t {grid_t::max(), grid_t::max()};
     auto p_max = point_t {grid_t::min(), grid_t::min()};
 
-    for (const auto& info : tree.segment_infos()) {
-        if (info.line.p0.x < p_min.x) {
-            p_min.x = info.line.p0.x;
-        }
-        if (info.line.p0.y < p_min.y) {
-            p_min.y = info.line.p0.y;
-        }
+    for (const auto& line : all_lines(tree)) {
+        p_min.x = std::min(line.p0.x, p_min.x);
+        p_min.y = std::min(line.p0.y, p_min.y);
 
-        if (info.line.p1.x > p_max.x) {
-            p_max.x = info.line.p1.x;
-        }
-        if (info.line.p1.y > p_max.y) {
-            p_max.y = info.line.p1.y;
-        }
+        p_max.x = std::min(line.p1.x, p_max.x);
+        p_max.y = std::min(line.p1.y, p_max.y);
     }
     return rect_t {p_min, p_max};
-}
-
-auto to_line_tree(const SegmentTree& segment_tree) -> LineTree {
-    if (segment_tree.empty()) {
-        return LineTree {};
-    }
-
-    const auto root = [&]() {
-        if (segment_tree.has_input()) {
-            return segment_tree.input_position();
-        }
-        for (const segment_info_t& info : segment_tree.segment_infos()) {
-            if (info.p0_type == SegmentPointType::output) {
-                return info.line.p0;
-            }
-            if (info.p1_type == SegmentPointType::output) {
-                return info.line.p1;
-            }
-        }
-        throw std::runtime_error("line tree needs to have either an input or output");
-    }();
-
-    const auto segments =
-        transform_to_vector(segment_tree.segment_infos(), &segment_info_t::line);
-
-    return to_line_tree(segments, root);
 }
 
 }  // namespace logicsim

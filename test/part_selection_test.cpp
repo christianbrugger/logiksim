@@ -326,51 +326,51 @@ TEST(PartSelection, MoveParts) {
 TEST(PartSelection, Invert) {
     {
         const auto source = PartSelection {};
-        const auto inverted = PartSelection::inverted(source, part_t(0, 10));
+        const auto inverted = source.inverted_selection(part_t(0, 10));
 
         EXPECT_THAT(inverted, testing::ElementsAre(part_t(0, 10)));
     }
     {
         const auto source = PartSelection({part_t(5, 10), part_t(20, 30)});
-        const auto inverted = PartSelection::inverted(source, part_t(0, 10));
+        const auto inverted = source.inverted_selection(part_t(0, 10));
 
         EXPECT_THAT(inverted, testing::ElementsAre(part_t(0, 5)));
     }
     {
         const auto source = PartSelection({part_t(5, 10), part_t(20, 30)});
-        const auto inverted = PartSelection::inverted(source, part_t(0, 40));
+        const auto inverted = source.inverted_selection(part_t(0, 40));
 
         EXPECT_THAT(inverted,
                     testing::ElementsAre(part_t(0, 5), part_t(10, 20), part_t(30, 40)));
     }
     {
         const auto source = PartSelection({part_t(5, 10), part_t(20, 30)});
-        const auto inverted = PartSelection::inverted(source, part_t(40, 50));
+        const auto inverted = source.inverted_selection(part_t(40, 50));
 
         EXPECT_THAT(inverted, testing::ElementsAre(part_t(40, 50)));
     }
     {
         const auto source = PartSelection({part_t(0, 10), part_t(20, 30)});
-        const auto inverted = PartSelection::inverted(source, part_t(0, 10));
+        const auto inverted = source.inverted_selection(part_t(0, 10));
 
         EXPECT_THAT(inverted, testing::ElementsAre());
     }
     {
         const auto source = PartSelection({part_t(0, 10), part_t(20, 30)});
-        const auto inverted = PartSelection::inverted(source, part_t(0, 25));
+        const auto inverted = source.inverted_selection(part_t(0, 25));
 
         EXPECT_THAT(inverted, testing::ElementsAre(part_t(10, 20)));
     }
     {
         const auto source = PartSelection({part_t(20, 30)});
-        const auto inverted = PartSelection::inverted(source, part_t(0, 10));
+        const auto inverted = source.inverted_selection(part_t(0, 10));
 
         EXPECT_THAT(inverted, testing::ElementsAre(part_t(0, 10)));
     }
     {
         const auto source = PartSelection({part_t(0, 5), part_t(10, 15), part_t(20, 25),
                                            part_t(30, 35), part_t(40, 45)});
-        const auto inverted = PartSelection::inverted(source, part_t(0, 45));
+        const auto inverted = source.inverted_selection(part_t(0, 45));
 
         EXPECT_THAT(inverted, testing::ElementsAre(part_t(5, 10), part_t(15, 20),
                                                    part_t(25, 30), part_t(35, 40)));
