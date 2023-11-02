@@ -125,8 +125,6 @@ class SegmentTree {
     auto get_next_index() const -> segment_index_t;
     auto register_segment(segment_index_t index) -> void;
     auto unregister_segment(segment_index_t index) -> void;
-    auto sort_segments() -> void;
-    auto sort_point_types() -> void;
 
    private:
     segment_vector_t segments_ {};

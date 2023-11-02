@@ -51,14 +51,14 @@ auto SegmentTree::data() const -> const segment_info_t* {
     return segments_.data();
 }
 
-auto SegmentTree::normalize() -> void {
-    sort_segments();
-    sort_point_types();
-}
+namespace segment_tree {
 
-auto SegmentTree::sort_segments() -> void {
+namespace {
+
+auto sort_segments(segment_vector_t& segments, valid_vector_t& valid_parts_vector)
+    -> void {
     // we sort by line
-    const auto vectors = ranges::zip_view(segments_, valid_parts_vector_);
+    const auto vectors = ranges::zip_view(segments, valid_parts_vector);
 
     const auto proj =
         [](const std::tuple<segment_info_t, PartSelection>& tuple) -> ordered_line_t {
@@ -67,16 +67,16 @@ auto SegmentTree::sort_segments() -> void {
     ranges::sort(vectors, {}, proj);
 }
 
-auto SegmentTree::sort_point_types() -> void {
+auto sort_point_types(segment_vector_t& segments) -> void {
     // we wrap the data so we can order it without changing the data itself
     using wrapped = std::pair<point_t, std::reference_wrapper<SegmentPointType>>;
     std::vector<wrapped> wrapped_data;
 
-    std::ranges::transform(segments_, std::back_inserter(wrapped_data),
+    std::ranges::transform(segments, std::back_inserter(wrapped_data),
                            [](segment_info_t& info) {
                                return wrapped {info.line.p0, info.p0_type};
                            });
-    std::ranges::transform(segments_, std::back_inserter(wrapped_data),
+    std::ranges::transform(segments, std::back_inserter(wrapped_data),
                            [](segment_info_t& info) {
                                return wrapped {info.line.p1, info.p1_type};
                            });
@@ -94,75 +94,48 @@ auto SegmentTree::sort_point_types() -> void {
     ranges::sort(direct_view);
 }
 
+}  // namespace
+
+}  // namespace segment_tree
+
+auto SegmentTree::normalize() -> void {
+    segment_tree::sort_segments(segments_, valid_parts_vector_);
+    segment_tree::sort_point_types(segments_);
+}
+
 auto SegmentTree::get_next_index() const -> segment_index_t {
     return segment_index_t {gsl::narrow<segment_index_t::value_type>(segments_.size())};
 }
 
 auto SegmentTree::register_segment(segment_index_t index) -> void {
-    const auto& segment = segments_.at(index.value);
-
-    for (auto [type, point] : {
-             std::pair {segment.p0_type, segment.line.p0},
-             std::pair {segment.p1_type, segment.line.p1},
-         }) {
-        switch (type) {
-            using enum SegmentPointType;
-
-            case input: {
-                if (input_position_) [[unlikely]] {
-                    throw_exception("Segment tree already has one input.");
-                }
-                input_position_ = point;
-                break;
+    for (auto&& [point, type] : to_point_and_type(info(index))) {
+        if (type == SegmentPointType::input) {
+            if (input_position_) [[unlikely]] {
+                throw_exception("Segment tree already has one input.");
             }
+            input_position_ = point;
+        }
 
-            case output: {
-                ++output_count_;
-                break;
-            }
-
-            case corner_point:
-            case cross_point:
-            case shadow_point:
-            case new_unknown: {
-                break;
-            }
+        else if (type == SegmentPointType::output) {
+            ++output_count_;
         }
     }
 }
 
 auto SegmentTree::unregister_segment(segment_index_t index) -> void {
-    const auto& segment = segments_.at(index.value);
-
-    for (auto [type, point] : {
-             std::pair {segment.p0_type, segment.line.p0},
-             std::pair {segment.p1_type, segment.line.p1},
-         }) {
-        switch (type) {
-            using enum SegmentPointType;
-
-            case input: {
-                if (point != input_position_) [[unlikely]] {
-                    throw_exception("Tree should have input that's not present.");
-                }
-                input_position_.reset();
-                break;
+    for (auto&& [point, type] : to_point_and_type(info(index))) {
+        if (type == SegmentPointType::input) {
+            if (point != input_position_) [[unlikely]] {
+                throw_exception("Tree should have input that's not present.");
             }
+            input_position_.reset();
+        }
 
-            case output: {
-                if (output_count_ <= 0) [[unlikely]] {
-                    throw_exception("Tree should have output thats not present.");
-                }
-                --output_count_;
-                break;
+        else if (type == SegmentPointType::output) {
+            if (output_count_ <= 0) [[unlikely]] {
+                throw_exception("Tree should have output that's not present.");
             }
-
-            case corner_point:
-            case cross_point:
-            case shadow_point:
-            case new_unknown: {
-                break;
-            }
+            --output_count_;
         }
     }
 }
@@ -445,8 +418,7 @@ auto SegmentTree::validate() const -> void {
 auto SegmentTree::validate_inserted() const -> void {
     validate();
 
-    if (!segments_are_normalized_tree(
-            transform_to_vector(all_lines(*this)))) {
+    if (!segments_are_normalized_tree(transform_to_vector(all_lines(*this)))) {
         throw std::runtime_error("segments are not a normalized tree");
     }
 }
