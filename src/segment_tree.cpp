@@ -313,7 +313,7 @@ auto SegmentTree::segment_part(segment_index_t index) const -> part_t {
     return to_part(segment_line(index));
 }
 
-auto SegmentTree::segment_infos() const -> std::span<const segment_info_t> {
+auto SegmentTree::segment_infos() const -> const segment_vector_t& {
     return segments_;
 }
 

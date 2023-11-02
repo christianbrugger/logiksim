@@ -15,7 +15,6 @@
 
 #include <compare>
 #include <optional>
-#include <span>
 #include <vector>
 
 namespace logicsim {
@@ -41,6 +40,16 @@ static_assert(sizeof(valid_vector_t) == 24);
 
 }  // namespace segment_tree
 
+/**
+ * @brief: A collection of lines with valid status.
+ * 
+ * Class invariants:
+ *     + size of `segments_` and `valid_parts_vector_` matches
+ *     + for each index max_offset is within the corresponding part_t
+ *     + output_count_ is the number of endpoints with SegmentPointType::output
+ *     + input_position_ is the endpoint with SegmentPointType::input
+ *     + the tree has either 0 or 1 inputs
+ */
 class SegmentTree {
    public:
     using segment_vector_t = segment_tree::segment_vector_t;
@@ -51,8 +60,6 @@ class SegmentTree {
     // using iterator = segment_vector_t::const_iterator;
 
    public:
-    [[nodiscard]] constexpr SegmentTree() = default;
-
     [[nodiscard]] auto format() const -> std::string;
     /**
      * @brief: brings the tree into its canonical,
@@ -70,7 +77,7 @@ class SegmentTree {
     // iterators
     // [[nodiscard]] auto begin() const -> iterator;
     // [[nodiscard]] auto end() const -> iterator;
-    [[nodiscard]] auto segment_infos() const -> std::span<const segment_info_t>;
+    [[nodiscard]] auto segment_infos() const -> const segment_vector_t &;
 
     // indices
     [[nodiscard]] auto first_index() const noexcept -> segment_index_t;
@@ -89,7 +96,7 @@ class SegmentTree {
     [[nodiscard]] auto input_position() const -> point_t;
     [[nodiscard]] auto output_count() const noexcept -> connection_count_t;
 
-    // modifying
+    // modifications
     auto clear() -> void;
     auto add_segment(segment_info_t segment) -> segment_index_t;
     auto add_tree(const SegmentTree &tree) -> segment_index_t;
