@@ -323,20 +323,19 @@ struct merged_segment_result {
     PartSelection valid_parts;
 };
 
-auto merged_segment(const SegmentTree& tree, segment_index_t index,
-                    segment_index_t index_deleted) {
-    const auto& info_orig = tree.info(index);
-    const auto& info_delete = tree.info(index_deleted);
+auto merged_segment(const SegmentTree& tree, SegmentTree::merge_definition_t definition) {
+    const auto& info_orig = tree.info(definition.index_merge_to);
+    const auto& info_delete = tree.info(definition.index_deleted);
     const auto info_merged = merge_touching(info_orig, info_delete);
 
     // valid parts
     auto entries_new = PartSelection {};
-    entries_new.copy_parts(tree.valid_parts(index),
+    entries_new.copy_parts(tree.valid_parts(definition.index_merge_to),
                            part_copy_definition_t {
                                .destination = to_part(info_merged.line, info_orig.line),
                                .source = to_part(info_orig.line),
                            });
-    entries_new.copy_parts(tree.valid_parts(index_deleted),
+    entries_new.copy_parts(tree.valid_parts(definition.index_deleted),
                            part_copy_definition_t {
                                .destination = to_part(info_merged.line, info_delete.line),
                                .source = to_part(info_delete.line),
@@ -352,23 +351,23 @@ auto merged_segment(const SegmentTree& tree, segment_index_t index,
 
 }  // namespace segment_tree
 
-auto SegmentTree::swap_and_merge_segment(segment_index_t index,
-                                         segment_index_t index_deleted) -> void {
-    if (index >= index_deleted) [[unlikely]] {
+auto SegmentTree::swap_and_merge_segment(merge_definition_t definition) -> void {
+    if (definition.index_merge_to >= definition.index_deleted) [[unlikely]] {
         throw std::runtime_error("index needs to be smaller then index_deleted");
     }
 
-    auto merged = segment_tree::merged_segment(*this, index, index_deleted);
+    auto merged = segment_tree::merged_segment(*this, definition);
+    const auto index_keep = definition.index_merge_to;
 
     // first delete, so input count stays in bounds
-    swap_and_delete_segment(index_deleted);
+    swap_and_delete_segment(definition.index_deleted);
 
     // update segment
-    unregister_segment(index);
-    segments_.at(index.value) = merged.segment_info;
-    register_segment(index);
+    unregister_segment(index_keep);
+    segments_.at(index_keep.value) = merged.segment_info;
+    register_segment(index_keep);
     // move after deletion, so class invariant is not broken for delete
-    valid_parts_vector_.at(index.value) = std::move(merged.valid_parts);
+    valid_parts_vector_.at(index_keep.value) = std::move(merged.valid_parts);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());

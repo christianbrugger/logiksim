@@ -1430,7 +1430,7 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender& sender,
     const auto info_1 = m_tree.info(index_1);
 
     // merge
-    m_tree.swap_and_merge_segment(index_0, index_1);
+    m_tree.swap_and_merge_segment({.index_merge_to = index_0, .index_deleted = index_1});
     const auto info_merged = m_tree.info(index_0);
 
     // messages

@@ -151,7 +151,7 @@ auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
 
         const auto index1 = tree.copy_segment(tree, index0, part1);
         tree.shrink_segment(index0, part0);
-        tree.swap_and_merge_segment(index0, index1);
+        tree.swap_and_merge_segment({.index_merge_to = index0, .index_deleted = index1});
     }
 
     else {
@@ -163,11 +163,15 @@ auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
         tree.shrink_segment(index0, part0);
 
         if (get_random_bool(rng)) {
-            tree.swap_and_merge_segment(index0, index2);
-            tree.swap_and_merge_segment(index0, index1);
+            tree.swap_and_merge_segment(
+                {.index_merge_to = index0, .index_deleted = index2});
+            tree.swap_and_merge_segment(
+                {.index_merge_to = index0, .index_deleted = index1});
         } else {
-            tree.swap_and_merge_segment(index0, index1);
-            tree.swap_and_merge_segment(index0, index1);
+            tree.swap_and_merge_segment(
+                {.index_merge_to = index0, .index_deleted = index1});
+            tree.swap_and_merge_segment(
+                {.index_merge_to = index0, .index_deleted = index1});
         }
     }
 }

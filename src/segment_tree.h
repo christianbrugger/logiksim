@@ -6,10 +6,10 @@
 #include "geometry/part.h"
 #include "iterator_adaptor/transform_view.h"
 #include "part_selection.h"
+#include "vocabulary/connection_count.h"
 #include "vocabulary/segment.h"
 #include "vocabulary/segment_index.h"
 #include "vocabulary/segment_info.h"
-#include "vocabulary/connection_count.h"
 
 #include <boost/container/vector.hpp>
 #include <folly/small_vector.h>
@@ -158,6 +158,10 @@ class SegmentTree {
      */
     auto shrink_segment(segment_index_t index, part_t new_part) -> void;
 
+    struct merge_definition_t {
+        segment_index_t index_merge_to;
+        segment_index_t index_deleted;
+    };
     /**
      * @brief: Merge two touching segments and delete the second.
      *
@@ -168,8 +172,7 @@ class SegmentTree {
      * Note endpoint types at the merge-point are discarded.
      * Note the deleted segment is swapped with the last element and then merged.
      */
-    auto swap_and_merge_segment(segment_index_t index, segment_index_t index_deleted)
-        -> void;
+    auto swap_and_merge_segment(merge_definition_t definition) -> void;
 
     /**
      * @brief: Delete the given segment.
