@@ -377,6 +377,7 @@ option(LS_ENABLE_TIME_TRACE "Trace compilation times. Only works for Clang." OFF
 option(LS_ENABLE_CCACHE "Enable ccache." ON)
 option(LS_ENABLE_LTO "Enable link time optimization." OFF)
 option(LS_ENABLE_PCH "Enable pre-compiled headers." ON)
+option(LS_ENABLE_COVERAGE "Enable coverage for tests under Clang" OFF)
 
 
 
@@ -509,20 +510,9 @@ set(BOOST_INCLUDE_LIBRARIES
     mpl 
     random 
     safe_numerics
-    stacktrace
     unordered
 )
 add_subdirectory(external/boost EXCLUDE_FROM_ALL SYSTEM)
-if (WIN32)
-    # Boost::stacktrace_windbg
-    add_library(boost_stacktrace ALIAS boost_stacktrace_windbg)
-    target_compile_definitions(boost_stacktrace_windbg PRIVATE 
-        BOOST_STACKTRACE_USE_WINDBG
-    )
-else()
-    # Boost::stacktrace_basic
-    add_library(boost_stacktrace ALIAS boost_stacktrace_basic)   
-endif()
 
 # Qt 6
 set(CMAKE_AUTOMOC FALSE)  # takes too much time, not parallelized
@@ -659,13 +649,12 @@ set(LS_CORE_INCLUDE_DIRS
 )
 set(LS_CORE_LIBRARIES
     Boost::algorithm
-    Boost::container 
+    Boost::container
     Boost::geometry
     Boost::iostreams
     Boost::mpl
     Boost::random
 	Boost::safe_numerics
-    boost_stacktrace 
     Boost::unordered
     
     cppcodec
@@ -706,12 +695,6 @@ FOREACH(LS_RESOURCE_FILE ${LS_RESOURCE_FILES})
   )
 ENDFOREACH()
 list(TRANSFORM LS_RESOURCE_FILES PREPEND ${CMAKE_CURRENT_BINARY_DIR}/)
-
-# target_compile_options(logicsim_core PUBLIC ${MAIN_COMPILE_OPTIONS})
-# target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/format.h)
-# target_precompile_headers(logicsim_core PUBLIC external/fmt/include/fmt/ranges.h)
-# target_precompile_headers(logicsim_core PUBLIC external/range-v3/include/range/v3/all.hpp)
-
 
 # MAIN LIBRARY
 
@@ -763,7 +746,7 @@ add_executable(${MAIN_GUI_TARGET}
 target_link_libraries(${MAIN_GUI_TARGET} PRIVATE 
     ${MAIN_LIBRARY} 
 )
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${MAIN_GUI_TARGET} PRIVATE LS_EXCEPTION_MESSAGE_BOX)
     if (WIN32)
         # set_property(TARGET ${MAIN_GUI_TARGET} PROPERTY WIN32_EXECUTABLE true)
@@ -783,10 +766,21 @@ target_link_libraries(${MAIN_TEST_TARGET} PRIVATE
     GTest::gmock
     GTest::gtest_main
 )
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_BUILD_TYPE MATCHES Debug)
-    message(NOTICE "LOGIKSIM: Enabling Clang Coverage for Tests.")
-    target_compile_options(${MAIN_TEST_TARGET} PRIVATE -fprofile-instr-generate -fcoverage-mapping)
-    target_link_options(${MAIN_TEST_TARGET} PRIVATE -fprofile-instr-generate -fcoverage-mapping)
+
+if (LS_ENABLE_COVERAGE)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")  #  AND CMAKE_BUILD_TYPE MATCHES Debug
+        message(NOTICE "LOGIKSIM: Enabling Clang Coverage for Tests.")
+        target_compile_options(${MAIN_TEST_TARGET} PRIVATE 
+            -fprofile-instr-generate 
+            -fcoverage-mapping
+        )
+        target_link_options(${MAIN_TEST_TARGET} PRIVATE 
+            -fprofile-instr-generate 
+            -fcoverage-mapping
+        )
+    else()
+        message(FATAL_ERROR "Coverage only works for Clang!" )
+    endif()
 endif()
 
 
