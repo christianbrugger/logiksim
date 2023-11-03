@@ -38,8 +38,8 @@ using data_map_t = ankerl::unordered_dense::map<element_id_t, T>;
 
 }  // namespace layout
 
+// TODO move all to the end
 [[nodiscard]] auto is_inserted(const Layout &layout, element_id_t element_id) -> bool;
-
 [[nodiscard]] auto get_segment_info(const Layout &layout, segment_t segment)
     -> segment_info_t;
 [[nodiscard]] auto get_segment_point_type(const Layout &layout, segment_t segment,
@@ -47,23 +47,19 @@ using data_map_t = ankerl::unordered_dense::map<element_id_t, T>;
 [[nodiscard]] auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t;
 [[nodiscard]] auto get_line(const Layout &layout, segment_part_t segment_part)
     -> ordered_line_t;
-
 [[nodiscard]] auto has_segments(const Layout &layout) -> bool;
-
 [[nodiscard]] auto moved_layout(Layout layout, int delta_x, int delta_y)
     -> std::optional<Layout>;
-
 [[nodiscard]] auto to_layout_calculation_data(const Layout &layout,
                                               element_id_t element_id)
     -> layout_calculation_data_t;
-
 [[nodiscard]] auto to_element_definition(const Layout &layout, element_id_t element_id)
     -> ElementDefinition;
-
 [[nodiscard]] auto to_placed_element(const Layout &layout, element_id_t element_id)
     -> PlacedElement;
 
 class Layout {
+    // TODO remove friend, no friends for Layout
     template <bool Const>
     friend class layout::ElementTemplate;
 
@@ -71,16 +67,21 @@ class Layout {
     [[nodiscard]] explicit Layout() = default;
     [[nodiscard]] explicit Layout(circuit_id_t circuit_id);
 
+    // TODO remove
     auto swap(Layout &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
+    // TODO public function
     [[nodiscard]] auto format_stats() const -> std::string;
     auto normalize() -> void;  // bring it into a form that can be compared
 
+    // TODO exclude mutable state
     [[nodiscard]] auto operator==(const Layout &) const -> bool = default;
 
     [[nodiscard]] auto empty() const -> bool;
+    // TODO rename to size
     [[nodiscard]] auto element_count() const -> std::size_t;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+    // TODO can we remove this?
     [[nodiscard]] auto is_element_id_valid(element_id_t element_id) const noexcept
         -> bool;
 
@@ -100,6 +101,7 @@ class Layout {
     [[nodiscard]] auto circuit_id() const noexcept -> circuit_id_t;
     [[nodiscard]] auto element_ids() const noexcept -> forward_range_t<element_id_t>;
 
+    // TODO remove all of these
     [[nodiscard]] auto element(element_id_t element_id) -> layout::Element;
     [[nodiscard]] auto element(element_id_t element_id) const -> layout::ConstElement;
     [[nodiscard]] inline auto elements();
@@ -126,6 +128,8 @@ class Layout {
 
     [[nodiscard]] auto modifyable_segment_tree(element_id_t element_id) -> SegmentTree &;
 
+    // TODO remove - needs to become part of class-invariant,
+    //               checked at each modifying method
     auto validate() const -> void;
 
    private:
@@ -134,35 +138,39 @@ class Layout {
     auto update_bounding_rect(element_id_t element_id) const -> void;
 
    private:
+    // TODO define outside of class
     // if an item is at this position with a zero bounding rect, we recompute it
     constexpr static auto empty_bounding_rect =
         rect_t {point_t {-10'000, -10'000}, point_t {-10'000, -10'000}};
 
+    // all elements
     std::vector<ElementType> element_types_ {};
-    // TODO create two lists for lines and logic items or use a variant
-    std::vector<circuit_id_t> sub_circuit_ids_ {};
-    std::vector<connection_count_t> input_counts_ {};
-    std::vector<connection_count_t> output_counts_ {};
-    std::vector<logic_small_vector_t> input_inverters_ {};
-    std::vector<logic_small_vector_t> output_inverters_ {};
-
-    std::vector<SegmentTree> segment_trees_ {};
-    mutable std::vector<LineTree> line_trees_ {};
-    std::vector<point_t> positions_ {};
-    std::vector<orientation_t> orientations_ {};
     std::vector<display_state_t> display_states_ {};
     mutable std::vector<rect_t> bounding_rects_ {};
 
-    // element type specific data
+    // logic item only
+    std::vector<point_t> positions_ {};
+    std::vector<connection_count_t> input_counts_ {};
+    std::vector<connection_count_t> output_counts_ {};
+    std::vector<orientation_t> orientations_ {};
+    std::vector<circuit_id_t> sub_circuit_ids_ {};
+    std::vector<logic_small_vector_t> input_inverters_ {};
+    std::vector<logic_small_vector_t> output_inverters_ {};
     layout::data_map_t<attributes_clock_generator_t> map_clock_generator_ {};
+
+    // wire only
+    std::vector<SegmentTree> segment_trees_ {};
+    mutable std::vector<LineTree> line_trees_ {};
 
     circuit_id_t circuit_id_ {0};
 };
 
+// TODO remove
 auto swap(Layout &a, Layout &b) noexcept -> void;
 
 }  // namespace logicsim
 
+// TODO remove
 template <>
 auto std::swap(logicsim::Layout &a, logicsim::Layout &b) noexcept -> void;
 
@@ -170,6 +178,8 @@ namespace logicsim {
 
 namespace layout {
 
+// TODO this class needs to go, as it is a proxy class that holds a reference
+//      it is not a value type
 template <bool Const>
 class ElementTemplate {
     using LayoutType = std::conditional_t<Const, const Layout, Layout>;
@@ -243,12 +253,14 @@ class ElementTemplate {
 
 }  // namespace layout
 
+// TODO remove
 inline auto Layout::elements() {
     return transform_view(element_ids(), [&](element_id_t element_id) {
         return this->element(element_id);
     });
 }
 
+// TODO remove
 inline auto Layout::elements() const {
     return transform_view(element_ids(), [&](element_id_t element_id) {
         return this->element(element_id);
