@@ -97,24 +97,88 @@ class SegmentTree {
     [[nodiscard]] auto input_position() const -> point_t;
     [[nodiscard]] auto output_count() const -> connection_count_t;
 
+    //
     // modifications
+    //
     auto clear() -> void;
+
+    /**
+     * @brief: Add a new segment to the tree.
+     *
+     * Throws if number of inputs exceeds one after adding the segment.
+     *
+     * Returns the new segment index.
+     */
     auto add_segment(segment_info_t segment) -> segment_index_t;
+
+    /**
+     * @brief: Add segments of the given tree to this tree including valid parts.
+     *
+     * Throws if both trees have an input.
+     *
+     * Returns the first index of the added segments. Segments added until last_index.
+     */
     auto add_tree(const SegmentTree &tree) -> segment_index_t;
+
+    /**
+     * @brief: Update line position, orientation and endpoints.
+     *
+     * Throws if the line length is different.
+     */
     auto update_segment(segment_index_t index, segment_info_t segment) -> void;
+
+    /**
+     * @brief: Copy the given full segment into this tree including valid parts.
+     *
+     * Throws if number of inputs would exceed one.
+     *
+     * Returns segment index of the added entry.
+     */
     auto copy_segment(const SegmentTree &tree, segment_index_t index) -> segment_index_t;
+
+    /**
+     * @brief: Copy the a sub-part of the given segment to this tree.
+     *
+     * Throws if number of inputs would exceed one.
+     *
+     * Returns segment index of the added entry.
+     */
     auto copy_segment(const SegmentTree &tree, segment_index_t index, part_t part)
         -> segment_index_t;
+
+    /**
+     * @brief: Shrinks the specified segment to the new part.
+     *
+     * Throws if the part is outside the line.
+     *
+     * Note part can have arbitrary start and end offsets,
+     * e.g. part [4, 8] for line [(0, 0), (10, 0)].
+     *
+     * Endpoints are set to `SegmentPointType::shadow_point` if they are not included.
+     */
     auto shrink_segment(segment_index_t index, part_t new_part) -> void;
-    // swaps the merging segment with last one, merges and deletes it
+
+    /**
+     * @brief: Merge two touching segments and delete the second.
+     *
+     * Throws if segments are not touching at an endpoint or are not parallel.
+     *
+     * Note endpoint types at the merge-point are discarded.
+     * Note the deleted segment is swapped with the last element and then merged.
+     */
     auto swap_and_merge_segment(segment_index_t index, segment_index_t index_deleted)
         -> void;
-    // swaps the segment with last one and deletes it
+
+    /**
+     * @brief: Delete the given segment.
+     *
+     * Note the last segment is swapped in place of the deleted segment.
+     */
     auto swap_and_delete_segment(segment_index_t index) -> void;
 
     // valid parts
-    auto mark_valid(segment_index_t segment_index, part_t part) -> void;
-    auto unmark_valid(segment_index_t segment_index, part_t part) -> void;
+    auto mark_valid(segment_index_t segment_index, part_t marked_part) -> void;
+    auto unmark_valid(segment_index_t segment_index, part_t unmarked_part) -> void;
     [[nodiscard]] auto valid_parts() const -> const valid_vector_t &;
     [[nodiscard]] auto valid_parts(segment_index_t segment_index) const
         -> const PartSelection &;

@@ -7,7 +7,6 @@
 #include "container/graph/depth_first_search.h"
 #include "container/graph/visitor/empty_visitor.h"
 #include "format/container.h"
-#include "geometry/line.h"
 #include "geometry/segment_info.h"
 #include "tree_validation.h"  // TODO remove
 #include "vocabulary/connection_count.h"
@@ -246,7 +245,7 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
 }
 
 auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) -> void {
-    if (distance(segment.line) != distance(line(index))) {
+    if (to_part(segment.line) != part(index)) [[unlikely]] {
         throw std::runtime_error("line length needs to stay the same");
     }
 
@@ -394,19 +393,14 @@ auto SegmentTree::swap_and_merge_segment(segment_index_t index,
 }
 
 auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
-    if (segments_.empty()) [[unlikely]] {
-        throw std::runtime_error("Cannot delete from empty segment tree.");
-    }
-
     const auto last_index = this->last_index();
     unregister_segment(index);
 
-    // swap
+    // move
     if (index != last_index) {
         segments_.at(index.value) = segments_.at(last_index.value);
-        using std::swap;
-        swap(valid_parts_vector_.at(index.value),
-             valid_parts_vector_.at(last_index.value));
+        valid_parts_vector_.at(index.value) =
+            std::move(valid_parts_vector_.at(last_index.value));
     }
 
     // delete
@@ -440,9 +434,13 @@ auto SegmentTree::part(segment_index_t index) const -> part_t {
     return to_part(line(index));
 }
 
-auto SegmentTree::mark_valid(segment_index_t segment_index, part_t part) -> void {
+auto SegmentTree::mark_valid(segment_index_t segment_index, part_t marked_part) -> void {
+    if (marked_part.end > part(segment_index).end) [[unlikely]] {
+        throw std::runtime_error("cannot mark outside of line");
+    }
+
     auto& valid_parts = valid_parts_vector_.at(segment_index.value);
-    valid_parts.add_part(part);
+    valid_parts.add_part(marked_part);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
@@ -451,9 +449,14 @@ auto SegmentTree::mark_valid(segment_index_t segment_index, part_t part) -> void
     assert(output_count_ == segment_tree::output_count(segments_));
 }
 
-auto SegmentTree::unmark_valid(segment_index_t segment_index, part_t part) -> void {
+auto SegmentTree::unmark_valid(segment_index_t segment_index, part_t unmarked_part)
+    -> void {
+    if (unmarked_part.end > part(segment_index).end) [[unlikely]] {
+        throw std::runtime_error("cannot unmark outside of line");
+    }
+
     auto& valid_parts = valid_parts_vector_.at(segment_index.value);
-    valid_parts.remove_part(part);
+    valid_parts.remove_part(unmarked_part);
 
     // post-conditions
     Ensures(segments_.size() == valid_parts_vector_.size());
