@@ -1,5 +1,6 @@
 #include "tree_validation.h"
 
+#include "algorithm/transform_to_vector.h"
 #include "container/graph/adjacency_graph.h"
 #include "container/graph/depth_first_search.h"
 #include "container/graph/visitor/empty_visitor.h"
@@ -7,6 +8,7 @@
 #include "geometry/to_points_sorted_unique.h"
 #include "geometry/to_points_with_both_orientation.h"
 #include "logging.h"
+#include "segment_tree.h"
 
 #include <folly/small_vector.h>
 #include <range/v3/algorithm/copy.hpp>
@@ -166,6 +168,10 @@ auto segments_are_contiguous_tree(std::vector<ordered_line_t>&& segments) -> boo
 
     // check if graph is tree (detects loops && disconnected parts)
     return depth_first_search(graph, EmptyVisitor {}, *root_index) == DFSStatus::success;
+}
+
+auto is_contiguous_tree(const SegmentTree& tree) -> bool {
+    return segments_are_contiguous_tree(transform_to_vector(all_lines(tree)));
 }
 
 }  // namespace logicsim

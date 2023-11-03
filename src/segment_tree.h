@@ -9,6 +9,7 @@
 #include "vocabulary/segment.h"
 #include "vocabulary/segment_index.h"
 #include "vocabulary/segment_info.h"
+#include "vocabulary/connection_count.h"
 
 #include <boost/container/vector.hpp>
 #include <folly/small_vector.h>
@@ -19,15 +20,13 @@
 
 namespace logicsim {
 
-struct connection_count_t;
 struct rect_t;
 
 namespace segment_tree {
 
-// size_t
-using vector_size_t = segment_index_t::value_type;
-using vector_policy =
-    folly::small_vector_policy::policy_size_type<std::make_unsigned_t<vector_size_t>>;
+// sizes
+using vector_size_t = std::make_unsigned_t<segment_index_t::value_type>;
+using vector_policy = folly::small_vector_policy::policy_size_type<vector_size_t>;
 
 // segment_vector
 using segment_vector_t = folly::small_vector<segment_info_t, 2, vector_policy>;
@@ -47,8 +46,8 @@ static_assert(sizeof(valid_vector_t) == 24);
  * Class invariants:
  *     + size of `segments_` and `valid_parts_vector_` match
  *     + for each index valid_parts::max_offset is within the corresponding line
- *     + output_count_ is the number of endpoints with SegmentPointType::output
  *     + input_position_ is the position with SegmentPointType::input
+ *     + output_count_ is the number of endpoints with SegmentPointType::output
  */
 class SegmentTree {
    public:
@@ -100,6 +99,7 @@ class SegmentTree {
     //
     // modifications
     //
+
     auto clear() -> void;
 
     /**
@@ -162,6 +162,8 @@ class SegmentTree {
      * @brief: Merge two touching segments and delete the second.
      *
      * Throws if segments are not touching at an endpoint or are not parallel.
+     * Throws if index is larger than index_deleted, as this would change the index
+     *         after deletion.
      *
      * Note endpoint types at the merge-point are discarded.
      * Note the deleted segment is swapped with the last element and then merged.
@@ -183,10 +185,6 @@ class SegmentTree {
     [[nodiscard]] auto valid_parts(segment_index_t segment_index) const
         -> const PartSelection &;
 
-    // TODO remove both validate methods
-    auto validate() const -> void;
-    auto validate_inserted() const -> void;
-
    private:
     auto get_next_index() const -> segment_index_t;
     auto register_segment(segment_index_t index) -> void;
@@ -196,22 +194,11 @@ class SegmentTree {
     segment_vector_t segments_ {};
     valid_vector_t valid_parts_vector_ {};
 
-    // TODO change to output_count_t && make sure uninserted segments have count 0
-    vector_size_t output_count_ {0};
     std::optional<point_t> input_position_ {};
+    connection_count_t output_count_ {0};
 };
 
-static_assert(sizeof(SegmentTree) == 60);  // 24 + 24 + 4 + 6 (+ 2)
-
-/**
- * @brief: Check if segment tree is a contiguous tree.
- *
- * Returns false, if segments are overlapping, could be merged or need splitting,
- * or don't form a loop free, connected tree.
- *
- * The algorithm is O(N log N).
- */
-[[nodiscard]] auto is_contiguous_tree(const SegmentTree &tree) -> bool;
+static_assert(sizeof(SegmentTree) == 56);  // 24 + 24 + 6 + 2
 
 [[nodiscard]] auto calculate_bounding_rect(const SegmentTree &tree) -> rect_t;
 
@@ -240,7 +227,6 @@ inline auto all_lines(const SegmentTree &segment_tree) {
 }
 
 inline auto all_valid_lines(const SegmentTree &tree, segment_index_t index) {
-    tree.validate();
     const auto line = tree.line(index);
 
     return transform_view(tree.valid_parts(index), [line](part_t part) -> ordered_line_t {

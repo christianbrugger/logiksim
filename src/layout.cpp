@@ -16,6 +16,7 @@
 #include "logging.h"
 #include "validate_definition.h"
 #include "vocabulary/layout_calculation_data.h"
+#include "tree_validation.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>
@@ -537,9 +538,9 @@ auto Layout::validate() const -> void {
     // wires
     const auto validate_segment_tree = [&](element_id_t element_id) {
         if (is_inserted(*this, element_id) && !segment_tree(element_id).empty()) {
-            segment_tree(element_id).validate_inserted();
+            Expects(is_contiguous_tree(segment_tree(element_id)));
         } else {
-            segment_tree(element_id).validate();
+            Expects(segment_tree(element_id).output_count() == connection_count_t {0});
         }
     };
     for (const auto element_id : element_ids()) {

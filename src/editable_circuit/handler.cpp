@@ -15,6 +15,7 @@
 #include "geometry/point.h"
 #include "layout_info.h"
 #include "logging.h"
+#include "tree_validation.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>
@@ -1718,9 +1719,7 @@ auto insert_wire(State state, segment_part_t& segment_part) -> void {
     fix_and_merge_segments(state, line.p0, &segment_part);
     fix_and_merge_segments(state, line.p1, &segment_part);
 
-#ifndef NDEBUG
-    state.layout.segment_tree(target_wire_id).validate_inserted();
-#endif
+    assert(is_contiguous_tree(state.layout.segment_tree(target_wire_id)));
 }
 
 auto mark_valid(Layout& layout, const segment_part_t segment_part) {
@@ -1808,10 +1807,8 @@ auto split_broken_tree(State state, point_t p0, point_t p1) -> element_id_t {
         }
     }
 
-#ifndef NDEBUG
-    tree_from.validate_inserted();
-    state.layout.segment_tree(new_tree_id).validate_inserted();
-#endif
+    assert(is_contiguous_tree(tree_from));
+    assert(is_contiguous_tree(state.layout.segment_tree(new_tree_id)));
 
     return new_tree_id;
 }

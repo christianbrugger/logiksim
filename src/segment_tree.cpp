@@ -8,8 +8,6 @@
 #include "container/graph/visitor/empty_visitor.h"
 #include "format/container.h"
 #include "geometry/segment_info.h"
-#include "tree_validation.h"  // TODO remove
-#include "vocabulary/connection_count.h"
 #include "vocabulary/part_copy_definition.h"
 #include "vocabulary/rect.h"
 
@@ -23,20 +21,20 @@ namespace segment_tree {
 
 namespace {
 
+auto set_input(std::optional<point_t>& input, point_t point) {
+    if (input.has_value()) [[unlikely]] {
+        throw std::runtime_error("tree already has one input");
+    }
+    input = point;
+}
+
 auto input_position(const segment_vector_t& segments) -> std::optional<point_t> {
     auto result = std::optional<point_t> {};
-
-    const auto set_result = [&](point_t point) {
-        if (result.has_value()) [[unlikely]] {
-            throw std::runtime_error("found more than one input");
-        }
-        result = point;
-    };
 
     for (const auto& info : segments) {
         for (auto&& [point, type] : to_point_and_type(info)) {
             if (type == SegmentPointType::input) {
-                set_result(point);
+                set_input(result, point);
             }
         }
     }
@@ -53,8 +51,8 @@ auto count_point_type(const segment_vector_t& segments, SegmentPointType type)
     return accumulate(segments, vector_size_t {0}, count_type);
 }
 
-auto output_count(const segment_vector_t& segments) -> vector_size_t {
-    return count_point_type(segments, SegmentPointType::output);
+auto count_outputs(const segment_vector_t& segments) -> connection_count_t {
+    return connection_count_t {count_point_type(segments, SegmentPointType::output)};
 }
 
 auto all_valid_parts_within_lines(const segment_vector_t& segments,
@@ -154,7 +152,7 @@ auto SegmentTree::normalize() -> void {
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
 auto SegmentTree::get_next_index() const -> segment_index_t {
@@ -164,10 +162,7 @@ auto SegmentTree::get_next_index() const -> segment_index_t {
 auto SegmentTree::register_segment(segment_index_t index) -> void {
     for (auto&& [point, type] : to_point_and_type(info(index))) {
         if (type == SegmentPointType::input) {
-            if (input_position_) [[unlikely]] {
-                throw std::runtime_error("Segment tree already has one input.");
-            }
-            input_position_ = point;
+            segment_tree::set_input(input_position_, point);
         }
 
         else if (type == SegmentPointType::output) {
@@ -179,16 +174,11 @@ auto SegmentTree::register_segment(segment_index_t index) -> void {
 auto SegmentTree::unregister_segment(segment_index_t index) -> void {
     for (auto&& [point, type] : to_point_and_type(info(index))) {
         if (type == SegmentPointType::input) {
-            if (point != input_position_) [[unlikely]] {
-                throw std::runtime_error("Tree should have input that's not present.");
-            }
+            Expects(input_position_ == point);
             input_position_.reset();
         }
 
         else if (type == SegmentPointType::output) {
-            if (output_count_ <= 0) [[unlikely]] {
-                throw std::runtime_error("Tree should have output that's not present.");
-            }
             --output_count_;
         }
     }
@@ -199,8 +189,8 @@ auto SegmentTree::clear() -> void {
 
     assert(segments_.size() == 0);
     assert(valid_parts_vector_.size() == 0);
-    assert(output_count_ == 0);
     assert(input_position_ == std::nullopt);
+    assert(output_count_ == connection_count_t {0});
 }
 
 auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
@@ -214,7 +204,7 @@ auto SegmentTree::add_segment(segment_info_t segment) -> segment_index_t {
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 
     return new_index;
 }
@@ -223,10 +213,7 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
     const auto next_index = get_next_index();
 
     if (tree.input_position_) {
-        if (input_position_) [[unlikely]] {
-            throw std::runtime_error("Merged tree cannot have two inputs");
-        }
-        input_position_ = tree.input_position_;
+        segment_tree::set_input(input_position_, tree.input_position());
     }
 
     output_count_ += tree.output_count_;
@@ -239,7 +226,7 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 
     return next_index;
 }
@@ -258,7 +245,7 @@ auto SegmentTree::update_segment(segment_index_t index, segment_info_t segment) 
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
 auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
@@ -270,7 +257,7 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index)
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 
     return new_index;
 }
@@ -295,7 +282,7 @@ auto SegmentTree::copy_segment(const SegmentTree& tree, segment_index_t index,
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 
     return new_index;
 }
@@ -324,7 +311,7 @@ auto SegmentTree::shrink_segment(segment_index_t index, part_t new_part) -> void
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
 namespace segment_tree {
@@ -368,9 +355,7 @@ auto merged_segment(const SegmentTree& tree, segment_index_t index,
 auto SegmentTree::swap_and_merge_segment(segment_index_t index,
                                          segment_index_t index_deleted) -> void {
     if (index >= index_deleted) [[unlikely]] {
-        throw std::runtime_error(
-            "index needs to be smaller then index_deleted, otherwise the index would "
-            "change after deletion");
+        throw std::runtime_error("index needs to be smaller then index_deleted");
     }
 
     auto merged = segment_tree::merged_segment(*this, index, index_deleted);
@@ -389,7 +374,7 @@ auto SegmentTree::swap_and_merge_segment(segment_index_t index,
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
 auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
@@ -411,7 +396,7 @@ auto SegmentTree::swap_and_delete_segment(segment_index_t index) -> void {
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
 auto SegmentTree::empty() const noexcept -> bool {
@@ -446,7 +431,7 @@ auto SegmentTree::mark_valid(segment_index_t segment_index, part_t marked_part) 
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
 auto SegmentTree::unmark_valid(segment_index_t segment_index, part_t unmarked_part)
@@ -462,7 +447,7 @@ auto SegmentTree::unmark_valid(segment_index_t segment_index, part_t unmarked_pa
     Ensures(segments_.size() == valid_parts_vector_.size());
     assert(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
     assert(input_position_ == segment_tree::input_position(segments_));
-    assert(output_count_ == segment_tree::output_count(segments_));
+    assert(output_count_ == segment_tree::count_outputs(segments_));
 }
 
 auto SegmentTree::valid_parts() const -> const valid_vector_t& {
@@ -505,24 +490,12 @@ auto SegmentTree::input_position() const -> point_t {
 }
 
 auto SegmentTree::output_count() const -> connection_count_t {
-    return connection_count_t {output_count_};
+    return output_count_;
 }
 
 auto SegmentTree::format() const -> std::string {
     return fmt::format("SegmentTree({}x{}, {}, valid {})", input_count(), output_count(),
                        segments_, valid_parts_vector_);
-}
-
-auto SegmentTree::validate() const -> void {
-    Expects(segments_.size() == valid_parts_vector_.size());
-    Expects(segment_tree::all_valid_parts_within_lines(segments_, valid_parts_vector_));
-    Expects(input_position_ == segment_tree::input_position(segments_));
-    Expects(output_count_ == segment_tree::output_count(segments_));
-}
-
-auto SegmentTree::validate_inserted() const -> void {
-    validate();
-    Expects(is_contiguous_tree(*this));
 }
 
 //
@@ -552,7 +525,7 @@ auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
         depth_first_search_visited(graph, EmptyVisitor {}, graph.to_index(p0).value());
 
     if (result.status == DFSStatus::unfinished_loop) [[unlikely]] {
-        throw std::runtime_error("found an unexpected loop");
+        throw std::runtime_error("cannot calculate mask with for tree with loops");
     }
 
     // create segment mask
@@ -565,10 +538,6 @@ auto calculate_connected_segments_mask(const SegmentTree& tree, point_t p0)
     }
 
     return mask;
-}
-
-auto is_contiguous_tree(const SegmentTree& tree) -> bool {
-    return segments_are_contiguous_tree(transform_to_vector(all_lines(tree)));
 }
 
 auto calculate_bounding_rect(const SegmentTree& tree) -> rect_t {

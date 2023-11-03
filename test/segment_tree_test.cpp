@@ -90,14 +90,8 @@ TEST(SegmentTree, NormalizePointTypeOrder) {
 //
 
 auto prepare_tree_eq(SegmentTree tree1, SegmentTree tree2, bool expected_equal = true) {
-    tree1.validate();
-    tree2.validate();
-
     tree1.normalize();
     tree2.normalize();
-
-    tree1.validate();
-    tree2.validate();
 
     if ((tree1 == tree2) != expected_equal) {
         print();
@@ -129,13 +123,11 @@ auto add_copy_remove(Rng& rng, SegmentTree& tree) -> void {
     const auto index = get_random_index(rng, tree);
 
     const auto new_index = tree.copy_segment(tree, index);
-    tree.validate();
     if (tree.info(new_index) != tree.info(index)) {
         throw std::runtime_error("assertion failed");
     }
 
     tree.swap_and_delete_segment(index);
-    tree.validate();
 }
 
 auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
@@ -158,34 +150,24 @@ auto copy_shrink_merge(Rng& rng, SegmentTree& tree) -> void {
         const auto part1 = difference_touching_one_side(full_part, part0);
 
         const auto index1 = tree.copy_segment(tree, index0, part1);
-        tree.validate();
         tree.shrink_segment(index0, part0);
-        tree.validate();
         tree.swap_and_merge_segment(index0, index1);
-        tree.validate();
     }
 
     else {
         const auto [part1, part2] = difference_not_touching(full_part, part0);
 
         const auto index1 = tree.copy_segment(tree, index0, part1);
-        tree.validate();
         const auto index2 = tree.copy_segment(tree, index0, part2);
-        tree.validate();
 
         tree.shrink_segment(index0, part0);
-        tree.validate();
 
         if (get_random_bool(rng)) {
             tree.swap_and_merge_segment(index0, index2);
-            tree.validate();
             tree.swap_and_merge_segment(index0, index1);
-            tree.validate();
         } else {
             tree.swap_and_merge_segment(index0, index1);
-            tree.validate();
             tree.swap_and_merge_segment(index0, index1);
-            tree.validate();
         }
     }
 }
