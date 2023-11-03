@@ -21,20 +21,21 @@ namespace segment_tree {
 
 namespace {
 
-auto set_input(std::optional<point_t>& input, point_t point) {
+auto set_input_checked(std::optional<point_t>& input, point_t point) {
     if (input.has_value()) [[unlikely]] {
         throw std::runtime_error("tree already has one input");
     }
     input = point;
 }
 
+#ifndef NDEBUG
 auto input_position(const segment_vector_t& segments) -> std::optional<point_t> {
     auto result = std::optional<point_t> {};
 
     for (const auto& info : segments) {
         for (auto&& [point, type] : to_point_and_type(info)) {
             if (type == SegmentPointType::input) {
-                set_input(result, point);
+                set_input_checked(result, point);
             }
         }
     }
@@ -67,6 +68,7 @@ auto all_valid_parts_within_lines(const segment_vector_t& segments,
 
     return std::ranges::all_of(range(segments.size()), selection_within_line);
 }
+#endif
 
 }  // namespace
 
@@ -162,7 +164,7 @@ auto SegmentTree::get_next_index() const -> segment_index_t {
 auto SegmentTree::register_segment(segment_index_t index) -> void {
     for (auto&& [point, type] : to_point_and_type(info(index))) {
         if (type == SegmentPointType::input) {
-            segment_tree::set_input(input_position_, point);
+            segment_tree::set_input_checked(input_position_, point);
         }
 
         else if (type == SegmentPointType::output) {
@@ -213,7 +215,7 @@ auto SegmentTree::add_tree(const SegmentTree& tree) -> segment_index_t {
     const auto next_index = get_next_index();
 
     if (tree.input_position_) {
-        segment_tree::set_input(input_position_, tree.input_position());
+        segment_tree::set_input_checked(input_position_, tree.input_position());
     }
 
     output_count_ += tree.output_count_;
