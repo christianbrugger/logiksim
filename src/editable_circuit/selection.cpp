@@ -31,19 +31,16 @@ auto get_lines(const Selection &selection, const Layout &layout)
 }
 
 auto anything_colliding(const Selection &selection, const Layout &layout) -> bool {
-    for (const auto element_id : selection.selected_logic_items()) {
-        if (layout.display_state(element_id) == display_state_t::colliding) {
-            return true;
-        }
-    }
+    const auto logicitem_colliding = [&](const logicitem_id_t &logicitem_id) {
+        return layout.logic_items().display_state(logicitem_id) ==
+               display_state_t::colliding;
+    };
+    const auto wire_colliding = [&](const Selection::segment_pair_t &pair) {
+        return pair.first.wire_id == colliding_wire_id;
+    };
 
-    for (const auto &[segment, _] : selection.selected_segments()) {
-        if (layout.display_state(segment.element_id) == display_state_t::colliding) {
-            return true;
-        }
-    }
-
-    return false;
+    return std::ranges::any_of(selection.selected_segments(), wire_colliding) ||
+           std::ranges::any_of(selection.selected_logic_items(), logicitem_colliding);
 }
 
 auto is_selected(const Selection &selection, const Layout &layout, segment_t segment,
@@ -96,31 +93,31 @@ auto Selection::empty() const noexcept -> bool {
     return selected_logicitems_.empty() && selected_segments_.empty();
 }
 
-auto Selection::add_logicitem(element_id_t element_id) -> void {
-    if (!element_id) [[unlikely]] {
+auto Selection::add_logicitem(logicitem_id_t logicitem_id) -> void {
+    if (!logicitem_id) [[unlikely]] {
         throw_exception("added element_id needs to be valid");
     }
 
-    selected_logicitems_.insert(element_id);
+    selected_logicitems_.insert(logicitem_id);
 }
 
-auto Selection::remove_logicitem(element_id_t element_id) -> void {
-    if (!element_id) [[unlikely]] {
-        throw_exception("removed element_id needs to be valid");
+auto Selection::remove_logicitem(logicitem_id_t logicitem_id) -> void {
+    if (!logicitem_id) [[unlikely]] {
+        throw_exception("removed logicitem_id needs to be valid");
     }
 
-    selected_logicitems_.erase(element_id);
+    selected_logicitems_.erase(logicitem_id);
 }
 
-auto Selection::toggle_logicitem(element_id_t element_id) -> void {
-    if (!element_id) [[unlikely]] {
-        throw_exception("toggled element_id needs to be valid");
+auto Selection::toggle_logicitem(logicitem_id_t logicitem_id) -> void {
+    if (!logicitem_id) [[unlikely]] {
+        throw_exception("toggled logicitem_id needs to be valid");
     }
 
-    if (is_selected(element_id)) {
-        remove_logicitem(element_id);
+    if (is_selected(logicitem_id)) {
+        remove_logicitem(logicitem_id);
     } else {
-        add_logicitem(element_id);
+        add_logicitem(logicitem_id);
     }
 }
 
@@ -183,15 +180,15 @@ auto Selection::set_selection(segment_t segment, PartSelection &&parts) -> void 
     selected_segments_.emplace(segment, std::move(parts));
 }
 
-auto Selection::is_selected(element_id_t element_id) const -> bool {
-    return selected_logicitems_.contains(element_id);
+auto Selection::is_selected(logicitem_id_t logicitem_id) const -> bool {
+    return selected_logicitems_.contains(logicitem_id);
 }
 
 auto Selection::is_selected(segment_t segment) const -> bool {
     return selected_segments_.contains(segment);
 }
 
-auto Selection::selected_logic_items() const -> std::span<const element_id_t> {
+auto Selection::selected_logic_items() const -> std::span<const logicitem_id_t> {
     return selected_logicitems_.values();
 }
 
@@ -237,14 +234,15 @@ namespace logicsim {
 
 auto Selection::handle(const editable_circuit::info_message::LogicItemDeleted &message)
     -> void {
-    remove_logicitem(message.element_id);
+    remove_logicitem(message.logicitem_id);
 }
 
 auto Selection::handle(const editable_circuit::info_message::LogicItemIdUpdated &message)
     -> void {
-    const auto found = selected_logicitems_.erase(message.old_element_id);
+    const auto found = selected_logicitems_.erase(message.old_logicitem_id);
     if (found) {
-        const auto inserted = selected_logicitems_.insert(message.new_element_id).second;
+        const auto inserted =
+            selected_logicitems_.insert(message.new_logicitem_id).second;
 
         if (!inserted) [[unlikely]] {
             throw_exception("element already existed");
@@ -391,10 +389,10 @@ namespace {
 using namespace detail::selection;
 
 auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
-                               const element_id_t element_id,
-                               const SegmentTree &segment_tree) -> void {
+                               const wire_id_t wire_id, const SegmentTree &segment_tree)
+    -> void {
     for (const auto segment_index : segment_tree.indices()) {
-        const auto key = segment_t {element_id, segment_index};
+        const auto key = segment_t {wire_id, segment_index};
         const auto it = segment_map.find(key);
 
         if (it != segment_map.end()) {
@@ -416,21 +414,17 @@ auto Selection::validate(const Layout &layout) const -> void {
     auto segment_map = detail::selection::segment_map_t {selected_segments_};
 
     // logic items
-    for (const auto element : layout.elements()) {
-        if (element.is_logic_item()) {
-            logicitems_set.erase(element.element_id());
-        }
+    for (const auto logicitem_id : logicitem_ids(layout)) {
+        logicitems_set.erase(logicitem_id);
     }
     if (!logicitems_set.empty()) [[unlikely]] {
         throw_exception("selection contains elements that don't exist anymore");
     }
 
     // segments
-    for (const auto element : layout.elements()) {
-        if (element.is_wire()) {
-            check_and_remove_segments(segment_map, element.element_id(),
-                                      element.segment_tree());
-        }
+    for (const auto wire_id : wire_ids(layout)) {
+        check_and_remove_segments(segment_map, wire_id,
+                                  layout.wires().segment_tree(wire_id));
     }
     if (!segment_map.empty()) [[unlikely]] {
         throw_exception("selection contains segments that don't exist anymore");
@@ -444,15 +438,11 @@ auto add_segment(Selection &selection, segment_t segment, const Layout &layout) 
     selection.add_segment(segment_part_t {segment, part});
 }
 
-auto add_segment_tree(Selection &selection, element_id_t element_id, const Layout &layout)
-    -> void {
-    if (!layout.element(element_id).is_wire()) {
-        throw_exception("element needs to be wire");
-    }
-
-    const auto &tree = layout.segment_tree(element_id);
+auto add_segment_tree(Selection &selection, wire_id_t wire_id,
+                      const Layout &layout) -> void {
+    const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
-        add_segment(selection, segment_t {element_id, segment_index}, layout);
+        add_segment(selection, segment_t {wire_id, segment_index}, layout);
     }
 }
 
@@ -462,15 +452,11 @@ auto remove_segment(Selection &selection, segment_t segment, const Layout &layou
     selection.remove_segment(segment_part_t {segment, part});
 }
 
-auto remove_segment_tree(Selection &selection, element_id_t element_id,
+auto remove_segment_tree(Selection &selection, wire_id_t wire_id,
                          const Layout &layout) -> void {
-    if (!layout.element(element_id).is_wire()) {
-        throw_exception("element needs to be wire");
-    }
-
-    const auto &tree = layout.segment_tree(element_id);
+    const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
-        remove_segment(selection, segment_t {element_id, segment_index}, layout);
+        remove_segment(selection, segment_t {wire_id, segment_index}, layout);
     }
 }
 

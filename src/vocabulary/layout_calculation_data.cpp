@@ -10,10 +10,10 @@ namespace logicsim {
 auto layout_calculation_data_t::format() const -> std::string {
     return fmt::format(
         "layout_calculation_data_t("
-        "element_type={}, position={}, input_count={}, "
+        "type={}, position={}, input_count={}, "
         "output_count={}, orientation={}, internal_state_count={}"
         ")",
-        element_type, position, input_count, output_count, orientation,
+        logicitem_type, position, input_count, output_count, orientation,
         internal_state_count);
 }
 
@@ -29,7 +29,7 @@ auto to_layout_calculation_data(const ElementDefinition& definition, point_t pos
         .input_count = definition.input_count,
         .output_count = definition.input_count,
         .orientation = definition.orientation,
-        .element_type = definition.element_type,
+        .logicitem_type = definition.logicitem_type,
     };
 }
 

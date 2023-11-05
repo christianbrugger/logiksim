@@ -81,21 +81,21 @@ auto SelectionBuilder::set_selection(Selection selection) -> void {
 
 namespace {
 
-auto add_element_to_selection(element_id_t element_id, SelectionFunction function,
+auto add_element_to_selection(logicitem_id_t logicitem_id, SelectionFunction function,
                               Selection& selection) {
     switch (function) {
         using enum SelectionFunction;
 
         case add: {
-            selection.add_logicitem(element_id);
+            selection.add_logicitem(logicitem_id);
             return;
         }
         case substract: {
-            selection.remove_logicitem(element_id);
+            selection.remove_logicitem(logicitem_id);
             return;
         }
         case toggle: {
-            selection.toggle_logicitem(element_id);
+            selection.toggle_logicitem(logicitem_id);
             return;
         }
     }
