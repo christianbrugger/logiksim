@@ -52,64 +52,64 @@ using collision_points_t = folly::small_vector<collision_point_t, collision_poin
 namespace collision_cache {
 
 auto is_element_body(collision_data_t data) -> bool {
-    return data.element_id_body                           //
-           && data.element_id_horizontal == null_element  //
-           && data.element_id_vertical == null_element;
+    return data.logicitem_id_body                   //
+           && data.wire_id_horizontal == null_wire  //
+           && data.wire_id_vertical == null_wire;
 }
 
 auto is_element_connection(collision_data_t data) -> bool {
-    return data.element_id_body                           //
-           && data.element_id_horizontal == null_element  //
-           && data.element_id_vertical == connection_tag;
+    return data.logicitem_id_body                   //
+           && data.wire_id_horizontal == null_wire  //
+           && data.wire_id_vertical == connection_tag;
 }
 
 auto is_wire_connection(collision_data_t data) -> bool {
-    return data.element_id_body == null_element  //
-           && data.element_id_horizontal         //
-           && data.element_id_vertical == connection_tag;
+    return data.logicitem_id_body == null_logicitem  //
+           && data.wire_id_horizontal                //
+           && data.wire_id_vertical == connection_tag;
 }
 
 auto is_wire_horizontal(collision_data_t data) -> bool {
-    return data.element_id_body == null_element  //
-           && data.element_id_horizontal         //
-           && data.element_id_vertical == null_element;
+    return data.logicitem_id_body == null_logicitem  //
+           && data.wire_id_horizontal                //
+           && data.wire_id_vertical == null_wire;
 }
 
 auto is_wire_vertical(collision_data_t data) -> bool {
-    return data.element_id_body == null_element           //
-           && data.element_id_horizontal == null_element  //
-           && data.element_id_vertical;
+    return data.logicitem_id_body == null_logicitem  //
+           && data.wire_id_horizontal == null_wire   //
+           && data.wire_id_vertical;
 }
 
 auto is_wire_corner_point(collision_data_t data) -> bool {
-    return data.element_id_body == wire_corner_point_tag  //
-           && data.element_id_horizontal                  //
-           && data.element_id_vertical                    //
-           && data.element_id_horizontal == data.element_id_vertical;
+    return data.logicitem_id_body == wire_corner_point_tag  //
+           && data.wire_id_horizontal                       //
+           && data.wire_id_vertical                         //
+           && data.wire_id_horizontal == data.wire_id_vertical;
 }
 
 auto is_wire_cross_point(collision_data_t data) -> bool {
-    return data.element_id_body == wire_cross_point_tag  //
-           && data.element_id_horizontal                 //
-           && data.element_id_vertical                   //
-           && data.element_id_horizontal == data.element_id_vertical;
+    return data.logicitem_id_body == wire_cross_point_tag  //
+           && data.wire_id_horizontal                      //
+           && data.wire_id_vertical                        //
+           && data.wire_id_horizontal == data.wire_id_vertical;
 }
 
 // inferred states -> two elements
 
 auto is_wire_crossing(collision_data_t data) -> bool {
-    return data.element_id_body == null_element  //
-           && data.element_id_horizontal         //
-           && data.element_id_vertical;
+    return data.logicitem_id_body == null_logicitem  //
+           && data.wire_id_horizontal                //
+           && data.wire_id_vertical;
 
-    // && data.element_id_horizontal != data.element_id_vertical
-    // && data.element_id_horizontal == data.element_id_vertical
+    // && data.wire_id_horizontal != data.wire_id_vertical
+    // && data.wire_id_horizontal == data.wire_id_vertical
 }
 
 auto is_element_wire_connection(collision_data_t data) -> bool {
-    return data.element_id_body           //
-           && data.element_id_horizontal  //
-           && data.element_id_vertical == connection_tag;
+    return data.logicitem_id_body      //
+           && data.wire_id_horizontal  //
+           && data.wire_id_vertical == connection_tag;
 }
 
 auto to_state(collision_data_t data) -> CacheState {
@@ -153,8 +153,8 @@ auto collision_point_t::format() const -> std::string {
 }
 
 auto collision_data_t::format() const -> std::string {
-    return fmt::format("<collision_data: {}, {}, {}, {}>", element_id_body,
-                       element_id_horizontal, element_id_vertical, to_state(*this));
+    return fmt::format("<collision_data: {}, {}, {}, {}>", logicitem_id_body,
+                       wire_id_horizontal, wire_id_vertical, to_state(*this));
 }
 
 }  // namespace collision_cache
@@ -322,67 +322,183 @@ auto collision_points(segment_info_t segment) -> collision_points_t {
     return result;
 }
 
-template <typename Apply>
-auto apply_function(CollisionCache::map_type& map, point_t position,
-                    collision_cache::ItemType item_type, Apply apply_func) -> void {
+auto delete_if_empty(CollisionCache::map_type& map, point_t position,
+                     const collision_cache::collision_data_t& data) {
+    if (!data.logicitem_id_body && !data.wire_id_horizontal && !data.wire_id_vertical) {
+        map.erase(position);
+    }
+}
+
+auto set_connection_tag(collision_cache::collision_data_t& data) {
+    if (data.wire_id_vertical) {
+        throw_exception("cannot set connection tag, second element occupied");
+    }
+    data.wire_id_vertical = collision_cache::connection_tag;
+};
+
+auto set_wire_corner_point_tag(collision_cache::collision_data_t& data) {
+    if (data.logicitem_id_body != null_logicitem &&
+        data.logicitem_id_body != collision_cache::wire_corner_point_tag) {
+        throw_exception("cannot set wire_corner_point tag, element body is occupied");
+    }
+    data.logicitem_id_body = collision_cache::wire_corner_point_tag;
+};
+
+auto set_wire_cross_point_tag(collision_cache::collision_data_t& data) {
+    if (data.logicitem_id_body != null_logicitem &&
+        data.logicitem_id_body != collision_cache::wire_cross_point_tag) {
+        throw_exception("cannot set wire_corner_point tag, element body is occupied");
+    }
+    data.logicitem_id_body = collision_cache::wire_cross_point_tag;
+};
+
+auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
+                          collision_cache::ItemType item_type,
+                          logicitem_id_t verify_old_id, logicitem_id_t set_new_id)
+    -> void {
     auto& data = map[position];
 
-    const auto set_connection_tag = [&]() {
-        if (data.element_id_vertical) {
-            throw_exception("cannot set connection tag, second element occupied");
+    const auto check_and_update = [&](logicitem_id_t& obj) {
+        if (obj != verify_old_id) {
+            throw_exception("unexpected collision state");
         }
-        data.element_id_vertical = collision_cache::connection_tag;
-    };
-    const auto set_wire_corner_point_tag = [&]() {
-        if (data.element_id_body != null_element &&
-            data.element_id_body != collision_cache::wire_corner_point_tag) {
-            throw_exception("cannot set wire_corner_point tag, element body is occupied");
-        }
-        data.element_id_body = collision_cache::wire_corner_point_tag;
-    };
-    const auto set_wire_cross_point_tag = [&]() {
-        if (data.element_id_body != null_element &&
-            data.element_id_body != collision_cache::wire_cross_point_tag) {
-            throw_exception("cannot set wire_corner_point tag, element body is occupied");
-        }
-        data.element_id_body = collision_cache::wire_cross_point_tag;
+        obj = set_new_id;
     };
 
     switch (item_type) {
         using enum collision_cache::ItemType;
 
         case element_body: {
-            apply_func(data.element_id_body);
+            check_and_update(data.logicitem_id_body);
+            break;
+        }
+        case element_connection: {
+            set_connection_tag(data);
+            check_and_update(data.logicitem_id_body);
+            break;
+        }
+
+        default: {
+            // TODO can we std::terminate ?
+            throw std::runtime_error("unexpected case");
+        }
+    }
+
+    delete_if_empty(map, position, data);
+}
+
+auto set_wire_state(CollisionCache::map_type& map, point_t position,
+                    collision_cache::ItemType item_type, wire_id_t verify_old_id,
+                    wire_id_t set_new_id) -> void {
+    auto& data = map[position];
+
+    const auto check_and_update = [&](wire_id_t& obj) {
+        if (obj != verify_old_id) {
+            throw_exception("unexpected collision state");
+        }
+        obj = set_new_id;
+    };
+
+    switch (item_type) {
+        using enum collision_cache::ItemType;
+
+        case wire_connection: {
+            set_connection_tag(data);
+            check_and_update(data.wire_id_horizontal);
+            break;
+        }
+        case wire_horizontal: {
+            check_and_update(data.wire_id_horizontal);
+            break;
+        }
+        case wire_vertical: {
+            check_and_update(data.wire_id_vertical);
+            break;
+        }
+        case wire_corner_point: {
+            set_wire_corner_point_tag(data);
+            check_and_update(data.wire_id_horizontal);
+            check_and_update(data.wire_id_vertical);
+            break;
+        }
+        case wire_cross_point: {
+            set_wire_cross_point_tag(data);
+            check_and_update(data.wire_id_horizontal);
+            check_and_update(data.wire_id_vertical);
+            break;
+        }
+
+        default: {
+            // TODO can we std::terminate ?
+            throw std::runtime_error("unexpected case");
+        }
+    }
+
+    delete_if_empty(map, position, data);
+}
+
+/*
+template <typename Apply>
+auto apply_function(CollisionCache::map_type& map, point_t position,
+                    collision_cache::ItemType item_type, Apply apply_func) -> void {
+    auto& data = map[position];
+
+    const auto set_connection_tag = [&]() {
+        if (data.wire_id_vertical) {
+            throw_exception("cannot set connection tag, second element occupied");
+        }
+        data.wire_id_vertical = collision_cache::connection_tag;
+    };
+    const auto set_wire_corner_point_tag = [&]() {
+        if (data.logicitem_id_body != null_element &&
+            data.logicitem_id_body != collision_cache::wire_corner_point_tag) {
+            throw_exception("cannot set wire_corner_point tag, element body is occupied");
+        }
+        data.logicitem_id_body = collision_cache::wire_corner_point_tag;
+    };
+    const auto set_wire_cross_point_tag = [&]() {
+        if (data.logicitem_id_body != null_element &&
+            data.logicitem_id_body != collision_cache::wire_cross_point_tag) {
+            throw_exception("cannot set wire_corner_point tag, element body is occupied");
+        }
+        data.logicitem_id_body = collision_cache::wire_cross_point_tag;
+    };
+
+    switch (item_type) {
+        using enum collision_cache::ItemType;
+
+        case element_body: {
+            apply_func(data.logicitem_id_body);
             break;
         }
         case element_connection: {
             set_connection_tag();
-            apply_func(data.element_id_body);
+            apply_func(data.logicitem_id_body);
             break;
         }
         case wire_connection: {
             set_connection_tag();
-            apply_func(data.element_id_horizontal);
+            apply_func(data.wire_id_horizontal);
             break;
         }
         case wire_horizontal: {
-            apply_func(data.element_id_horizontal);
+            apply_func(data.wire_id_horizontal);
             break;
         }
         case wire_vertical: {
-            apply_func(data.element_id_vertical);
+            apply_func(data.wire_id_vertical);
             break;
         }
         case wire_corner_point: {
             set_wire_corner_point_tag();
-            apply_func(data.element_id_horizontal);
-            apply_func(data.element_id_vertical);
+            apply_func(data.wire_id_horizontal);
+            apply_func(data.wire_id_vertical);
             break;
         }
         case wire_cross_point: {
             set_wire_cross_point_tag();
-            apply_func(data.element_id_horizontal);
-            apply_func(data.element_id_vertical);
+            apply_func(data.wire_id_horizontal);
+            apply_func(data.wire_id_vertical);
             break;
         }
         case wire_new_unknown_point: {
@@ -392,12 +508,13 @@ auto apply_function(CollisionCache::map_type& map, point_t position,
     };
 
     // delete if empty
-    if (!data.element_id_body && !data.element_id_horizontal &&
-        !data.element_id_vertical) {
+    if (!data.logicitem_id_body && !data.wire_id_horizontal && !data.wire_id_vertical) {
         map.erase(position);
     }
 }
+*/
 
+/*
 auto get_check_empty_and_assign(element_id_t element_id) {
     return [element_id](element_id_t& obj) {
         if (obj != null_element) {
@@ -424,6 +541,7 @@ auto get_check_and_update(element_id_t new_element_id, element_id_t old_element_
         obj = new_element_id;
     };
 }
+*/
 
 }  // namespace
 
@@ -446,10 +564,9 @@ auto CollisionCache::handle(
     const editable_circuit::info_message::LogicItemInserted& message) -> void {
     using namespace collision_cache;
 
-    const auto check_empty_and_assign = get_check_empty_and_assign(message.element_id);
-
     for (const auto& item : collision_points(message.data)) {
-        apply_function(map_, item.position, item.type, check_empty_and_assign);
+        set_logic_item_state(map_, item.position, item.type, null_logicitem,
+                             message.logicitem_id);
     }
 }
 
@@ -457,11 +574,9 @@ auto CollisionCache::handle(
     const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
     using namespace collision_cache;
 
-    const auto check_and_update =
-        get_check_and_update(message.new_element_id, message.old_element_id);
-
     for (const auto& item : collision_points(message.data)) {
-        apply_function(map_, item.position, item.type, check_and_update);
+        set_logic_item_state(map_, item.position, item.type, message.new_logicitem_id,
+                             message.old_logicitem_id);
     }
 }
 
@@ -469,10 +584,9 @@ auto CollisionCache::handle(
     const editable_circuit::info_message::LogicItemUninserted& message) -> void {
     using namespace collision_cache;
 
-    const auto check_and_delete = get_check_and_delete(message.element_id);
-
     for (const auto& item : collision_points(message.data)) {
-        apply_function(map_, item.position, item.type, check_and_delete);
+        set_logic_item_state(map_, item.position, item.type, message.logicitem_id,
+                             null_logicitem);
     }
 }
 
@@ -480,11 +594,9 @@ auto CollisionCache::handle(
     const editable_circuit::info_message::SegmentInserted& message) -> void {
     using namespace collision_cache;
 
-    const auto check_empty_and_assign =
-        get_check_empty_and_assign(message.segment.element_id);
-
     for (const auto& item : collision_points(message.segment_info)) {
-        apply_function(map_, item.position, item.type, check_empty_and_assign);
+        set_wire_state(map_, item.position, item.type, null_wire,
+                       message.segment.wire_id);
     }
 }
 
@@ -492,15 +604,13 @@ auto CollisionCache::handle(
     const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
     using namespace collision_cache;
 
-    if (message.new_segment.element_id == message.old_segment.element_id) {
+    if (message.new_segment.wire_id == message.old_segment.wire_id) {
         return;
     }
 
-    const auto check_and_update = get_check_and_update(message.new_segment.element_id,
-                                                       message.old_segment.element_id);
-
     for (const auto& item : collision_points(message.segment_info)) {
-        apply_function(map_, item.position, item.type, check_and_update);
+        set_wire_state(map_, item.position, item.type, message.new_segment.wire_id,
+                       message.old_segment.wire_id);
     }
 }
 
@@ -508,15 +618,13 @@ auto CollisionCache::handle(
     const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
     using namespace collision_cache;
 
-    const auto element_id = message.segment.element_id;
-    const auto check_and_delete = get_check_and_delete(element_id);
-    const auto check_empty_and_assign = get_check_empty_and_assign(element_id);
+    const auto wire_id = message.segment.wire_id;
 
     for (const auto& item : collision_end_points(message.old_segment_info)) {
-        apply_function(map_, item.position, item.type, check_and_delete);
+        set_wire_state(map_, item.position, item.type, wire_id, null_wire);
     }
     for (const auto& item : collision_end_points(message.new_segment_info)) {
-        apply_function(map_, item.position, item.type, check_empty_and_assign);
+        set_wire_state(map_, item.position, item.type, null_wire, wire_id);
     }
 }
 
@@ -524,10 +632,8 @@ auto CollisionCache::handle(
     const editable_circuit::info_message::SegmentUninserted& message) -> void {
     using namespace collision_cache;
 
-    const auto check_and_delete = get_check_and_delete(message.segment.element_id);
-
     for (const auto& item : collision_points(message.segment_info)) {
-        apply_function(map_, item.position, item.type, check_and_delete);
+        set_wire_state(map_, item.position, item.type, message.segment.wire_id, null_wire);
     }
 }
 
@@ -616,18 +722,18 @@ auto CollisionCache::is_colliding(const layout_calculation_data_t& data) const -
     return std::ranges::any_of(collision_points(data), is_colliding);
 }
 
-auto CollisionCache::get_first_wire(point_t position) const -> element_id_t {
+auto CollisionCache::get_first_wire(point_t position) const -> wire_id_t {
     if (const auto it = map_.find(position); it != map_.end()) {
         const auto data = it->second;
 
-        if (data.element_id_horizontal) {
-            return data.element_id_horizontal;
+        if (data.wire_id_horizontal) {
+            return data.wire_id_horizontal;
         }
-        if (data.element_id_vertical) {
-            return data.element_id_vertical;
+        if (data.wire_id_vertical) {
+            return data.wire_id_vertical;
         }
     }
-    return null_element;
+    return null_wire;
 }
 
 auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {

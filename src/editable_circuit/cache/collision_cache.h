@@ -6,6 +6,8 @@
 #include "format/struct.h"
 #include "iterator_adaptor/transform_view.h"
 #include "vocabulary.h"
+#include "vocabulary/logicitem_id.h"
+#include "vocabulary/wire_id.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -22,6 +24,7 @@ namespace collision_cache {
  * Note that some states cannot be inserted into the cache.
  */
 enum class ItemType {
+    // TODO rename logicitem_*
     element_body,
     element_connection,
     wire_connection,
@@ -63,17 +66,17 @@ enum class CacheState {
  */
 struct collision_data_t {
     /**
-     * @brief: element_id || wire_corner_point_tag || wire_cross_point_tag
+     * @brief: logicitem_id || wire_corner_point_tag || wire_cross_point_tag
      */
-    element_id_t element_id_body {null_element};
+    logicitem_id_t logicitem_id_body {null_logicitem};
     /**
      * @brief: horizontal wire
      */
-    element_id_t element_id_horizontal {null_element};
+    wire_id_t wire_id_horizontal {null_wire};
     /**
      * @brief: vertical wire || connection_tag
      */
-    element_id_t element_id_vertical {null_element};
+    wire_id_t wire_id_vertical {null_wire};
 
     auto operator==(const collision_data_t& other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
@@ -95,7 +98,7 @@ using map_type = ankerl::unordered_dense::map<point_t, collision_cache::collisio
  *      SegmentPointType::output
  *      ItemType::wire_connection
  */
-constexpr static inline auto connection_tag = element_id_t {-2};
+constexpr static inline auto connection_tag = wire_id_t {-2};
 /**
  * @brief: Indicates a wire corner is at this position.
  *
@@ -103,7 +106,7 @@ constexpr static inline auto connection_tag = element_id_t {-2};
  *      SegmentPointType::corner_point
  *      ItemType::wire_corner_point
  */
-constexpr static inline auto wire_corner_point_tag = element_id_t {-3};
+constexpr static inline auto wire_corner_point_tag = logicitem_id_t {-3};
 /**
  * @brief: Indicates a wire cross-point is at this position.
  *
@@ -111,14 +114,14 @@ constexpr static inline auto wire_corner_point_tag = element_id_t {-3};
  *      SegmentPointType::cross_point
  *      ItemType::wire_cross_point
  */
-constexpr static inline auto wire_cross_point_tag = element_id_t {-4};
+constexpr static inline auto wire_cross_point_tag = logicitem_id_t {-4};
 
-static_assert(connection_tag != null_element);
-static_assert(connection_tag < element_id_t {0});
-static_assert(wire_corner_point_tag != null_element);
-static_assert(wire_corner_point_tag < element_id_t {0});
-static_assert(wire_cross_point_tag != null_element);
-static_assert(wire_cross_point_tag < element_id_t {0});
+static_assert(connection_tag != null_wire);
+static_assert(connection_tag < wire_id_t {0});
+static_assert(wire_corner_point_tag != null_logicitem);
+static_assert(wire_corner_point_tag < logicitem_id_t {0});
+static_assert(wire_cross_point_tag != null_logicitem);
+static_assert(wire_cross_point_tag < logicitem_id_t {0});
 
 [[nodiscard]] auto is_element_body(collision_data_t data) -> bool;
 [[nodiscard]] auto is_element_connection(collision_data_t data) -> bool;
@@ -159,7 +162,7 @@ class CollisionCache {
 
     [[nodiscard]] auto query(point_t point) const -> collision_cache::collision_data_t;
 
-    [[nodiscard]] auto get_first_wire(point_t position) const -> element_id_t;
+    [[nodiscard]] auto get_first_wire(point_t position) const -> wire_id_t;
 
     // std::tuple<point_t, CollisionState>
     [[nodiscard]] auto states() const {
