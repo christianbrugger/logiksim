@@ -41,6 +41,8 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
+    src/component/layout/logicitem_store.cpp
+    src/component/layout/wire_store.cpp
     src/component/line_tree/line_store.cpp
     src/component/line_tree/tree_builder.cpp
     src/component/simulation/history_buffer.cpp
@@ -200,6 +202,8 @@ set(LS_CORE_SOURCES
     src/vocabulary/line_insertion_type.cpp
     src/vocabulary/logic_small_vector.cpp
     src/vocabulary/logic_vector.cpp
+    src/vocabulary/logicitem_id.cpp
+    src/vocabulary/logicitem_type.cpp
     src/vocabulary/offset.cpp
     src/vocabulary/optional_logic_value.cpp
     src/vocabulary/optional_logic_values.cpp
@@ -228,6 +232,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/time_rate.cpp
     src/vocabulary/view_config.cpp
     src/vocabulary/widget_interaction_state.cpp
+    src/vocabulary/wire_id.cpp
 
     src/base64.cpp
     src/circuit_description.cpp

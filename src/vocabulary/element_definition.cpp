@@ -31,7 +31,7 @@ auto ElementDefinition::format() const -> std::string {
         "{}x{} {}, {}, "
         "sub_circuit_id={}, input_inverters={}, output_inverters={}{}"
         ")",
-        input_count, output_count, element_type, orientation,  //
+        input_count, output_count, logicitem_type, orientation,  //
         sub_circuit_id, input_inverters, output_inverters, attr_str);
 }
 

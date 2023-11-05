@@ -3,7 +3,7 @@
 
 #include "format/struct.h"
 #include "vocabulary/connection_count.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
 
@@ -18,9 +18,7 @@ struct ElementDefinition;
 struct PlacedElement;
 
 /**
- * @brief: Element data required to calculate its layout.
- *
- * Note this is only used for logic items.
+ * @brief: Logic item data required to calculate its layout.
  */
 struct layout_calculation_data_t {
     std::size_t internal_state_count {0};
@@ -28,7 +26,7 @@ struct layout_calculation_data_t {
     connection_count_t input_count {0};
     connection_count_t output_count {0};
     orientation_t orientation {orientation_t::undirected};
-    ElementType element_type {ElementType::placeholder};
+    LogicItemType logicitem_type {LogicItemType::sub_circuit};
 
     [[nodiscard]] auto format() const -> std::string;
 

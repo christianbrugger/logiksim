@@ -2,7 +2,7 @@
 #define LOGICSIM_VOCABULARY_SEGMENT_H
 
 #include "format/struct.h"
-#include "vocabulary/element_id.h"
+#include "vocabulary/wire_id.h"
 #include "vocabulary/segment_index.h"
 #include "wyhash.h"
 
@@ -17,14 +17,14 @@ namespace logicsim {
  * @brief: Identifier line segment in the circuit.
  *
  * Class invariants:
- *     * element_id and connection_id are either both valid or null.
+ *     * wire_id and connection_id are either both valid or null.
  */
 struct segment_t {
-    element_id_t element_id {null_element};
+    wire_id_t wire_id {null_wire};
     segment_index_t segment_index {null_segment_index};
 
     [[nodiscard]] explicit constexpr segment_t() noexcept = default;
-    [[nodiscard]] explicit constexpr segment_t(element_id_t element_id_,
+    [[nodiscard]] explicit constexpr segment_t(wire_id_t wire_id,
                                                segment_index_t segment_index_);
     /**
      * @brief: The bool cast tests if this segment is valid.
@@ -43,18 +43,18 @@ static_assert(std::is_trivially_copy_assignable_v<segment_t>);
 constexpr inline auto null_segment = segment_t {};
 
 //
-// Implemention
+// Implementation
 //
 
-constexpr segment_t::segment_t(element_id_t element_id_, segment_index_t segment_index_)
-    : element_id {element_id_}, segment_index {segment_index_} {
-    if (bool {element_id} != bool {segment_index}) [[unlikely]] {
+constexpr segment_t::segment_t(wire_id_t wire_id_, segment_index_t segment_index_)
+    : wire_id {wire_id_}, segment_index {segment_index_} {
+    if (bool {wire_id} != bool {segment_index}) [[unlikely]] {
         throw std::runtime_error("Segment cannot be partially null.");
     }
 }
 
 constexpr segment_t::operator bool() const noexcept {
-    return bool {element_id};
+    return bool {wire_id};
 }
 
 }  // namespace logicsim
@@ -69,10 +69,10 @@ struct ankerl::unordered_dense::hash<logicsim::segment_t> {
 
     [[nodiscard]] auto operator()(const logicsim::segment_t &obj) const noexcept
         -> uint64_t {
-        static_assert(std::is_same_v<int32_t, logicsim::element_id_t::value_type>);
+        static_assert(std::is_same_v<int32_t, logicsim::wire_id_t::value_type>);
         static_assert(std::is_same_v<int32_t, logicsim::segment_index_t::value_type>);
 
-        return logicsim::wyhash_64_bit(obj.element_id.value, obj.segment_index.value);
+        return logicsim::wyhash_64_bit(obj.wire_id.value, obj.segment_index.value);
     }
 };
 

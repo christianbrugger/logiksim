@@ -1,4 +1,4 @@
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 
 #include <exception>
 #include <string>
@@ -6,13 +6,9 @@
 namespace logicsim {
 
 template <>
-auto format(ElementType type) -> std::string {
+auto format(LogicItemType type) -> std::string {
     switch (type) {
-        using enum ElementType;
-
-        //
-        // LogicItem Values
-        //
+        using enum LogicItemType;
 
         case buffer_element:
             return "Buffer";
@@ -48,24 +44,8 @@ auto format(ElementType type) -> std::string {
 
         case sub_circuit:
             return "SubCircuit";
-
-        //
-        // Additional Values
-        //
-
-        case unused:
-            return "Unused";
-        case placeholder:
-            return "Placeholder";
-        case wire:
-            return "Wire";
     }
     std::terminate();
-}
-
-auto is_logic_item(ElementType element_type) -> bool {
-    using enum ElementType;
-    return element_type != unused && element_type != placeholder && element_type != wire;
 }
 
 }  // namespace logicsim

@@ -3,18 +3,18 @@
 
 #include "format/enum.h"
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
 
 namespace logicsim {
 
 /**
- * @brief: The type an element of the circuit is.
+ * @brief: The type an element of the schematic & simulation is.
  */
 enum class ElementType : uint8_t {
-    unused,       // has no inputs and no logic
-    placeholder,  // output-placeholder - has no logic - only stores output values
-    wire,
+    //
+    // LogicItem Types
+    //
 
     buffer_element,
     and_element,
@@ -34,6 +34,14 @@ enum class ElementType : uint8_t {
     flipflop_ms_d,  // ms = master slave
 
     sub_circuit,
+
+    //
+    // Additional Values for Schematic & Simulation
+    //
+
+    unused,       // has no inputs and no logic
+    placeholder,  // output-placeholder - has no logic - only stores output values
+    wire,
 };
 
 template <>
@@ -42,10 +50,6 @@ auto format(ElementType type) -> std::string;
 [[nodiscard]] auto is_logic_item(ElementType element_type) -> bool;
 
 constexpr inline auto all_element_types = std::array {
-    ElementType::unused,       //
-    ElementType::placeholder,  //
-    ElementType::wire,         //
-
     ElementType::buffer_element,  //
     ElementType::and_element,     //
     ElementType::or_element,      //
@@ -64,6 +68,10 @@ constexpr inline auto all_element_types = std::array {
     ElementType::flipflop_ms_d,    //
 
     ElementType::sub_circuit,  //
+
+    ElementType::unused,       //
+    ElementType::placeholder,  //
+    ElementType::wire,         //
 };
 
 }  // namespace logicsim

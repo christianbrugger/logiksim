@@ -83,7 +83,7 @@ class SegmentTree {
     [[nodiscard]] auto first_index() const -> segment_index_t;
     [[nodiscard]] auto last_index() const -> segment_index_t;
     [[nodiscard]] auto indices() const -> forward_range_t<segment_index_t>;
-    [[nodiscard]] inline auto indices(element_id_t element_id) const;
+    [[nodiscard]] inline auto indices(wire_id_t wire_id) const;
 
     // indexing
     [[nodiscard]] auto info(segment_index_t index) const -> const segment_info_t &;
@@ -219,9 +219,9 @@ static_assert(sizeof(SegmentTree) == 56);  // 24 + 24 + 6 + 2
 // Implementation
 //
 
-inline auto SegmentTree::indices(element_id_t element_id) const {
-    return transform_view(indices(), [element_id](segment_index_t index) -> segment_t {
-        return segment_t {element_id, index};
+inline auto SegmentTree::indices(wire_id_t wire_id) const {
+    return transform_view(indices(), [wire_id](segment_index_t index) -> segment_t {
+        return segment_t {wire_id, index};
     });
 };
 

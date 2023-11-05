@@ -5,7 +5,7 @@
 #include "vocabulary/circuit_id.h"
 #include "vocabulary/connection_count.h"
 #include "vocabulary/delay.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/logic_small_vector.h"
 #include "vocabulary/orientation.h"
 
@@ -45,7 +45,7 @@ static_assert(std::is_aggregate_v<attributes_clock_generator_t>);
  * @brief: Defines all attributes of a circuit element.
  */
 struct ElementDefinition {
-    ElementType element_type {ElementType::unused};
+    LogicItemType logicitem_type {LogicItemType::sub_circuit};
     connection_count_t input_count {0};
     connection_count_t output_count {0};
     orientation_t orientation {orientation_t::undirected};

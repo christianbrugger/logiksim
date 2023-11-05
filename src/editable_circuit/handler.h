@@ -33,6 +33,11 @@ struct State {
 // Deletion Handling
 //
 
+// TODO class-invariants:
+//    + Expects(segment_tree(temporary_wire).output_count() == connection_count_t {0});
+//    + Expects(segment_tree(invalid_wire).output_count() == connection_count_t {0});
+//    + no-valid-parts - std::ranges::any_of(tree.valid_parts(), &PartSelection::size);
+
 using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
 auto swap_and_delete_multiple_elements(Layout& layout, MessageSender& sender,
