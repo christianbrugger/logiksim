@@ -233,10 +233,8 @@ auto fill_line_scene(int n_lines) -> SimulatedLineScene {
     }
 
     // generate & submit events
-    if (false) {
-        run_with_events(simulation, generate_random_events(rng, simulation.schematic(),
-                                                           max_delay, config));
-    }
+    run_with_events(simulation, generate_random_events(rng, simulation.schematic(),
+                                                       max_delay, config));
 
     // run simulation till the end
     const auto final_delay = (time_t::zero() + max_delay) - simulation.time();
