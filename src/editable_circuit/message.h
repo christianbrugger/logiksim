@@ -5,6 +5,7 @@
 #include "vocabulary.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/segment_info.h"
+#include "vocabulary/logicitem_id.h"
 
 #include <gsl/gsl>
 
@@ -25,15 +26,15 @@ namespace info_message {
 // Logic Items
 
 struct LogicItemCreated {
-    element_id_t element_id;
+    logicitem_id_t logicitem_id;
 
     [[nodiscard]] auto operator==(const LogicItemCreated &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
 };
 
 struct LogicItemIdUpdated {
-    element_id_t new_element_id;
-    element_id_t old_element_id;
+    logicitem_id_t new_logicitem_id;
+    logicitem_id_t old_logicitem_id;
 
     [[nodiscard]] auto operator==(const LogicItemIdUpdated &other) const
         -> bool = default;
@@ -41,7 +42,7 @@ struct LogicItemIdUpdated {
 };
 
 struct LogicItemDeleted {
-    element_id_t element_id;
+    logicitem_id_t logicitem_id;
 
     [[nodiscard]] auto operator==(const LogicItemDeleted &other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
@@ -50,7 +51,7 @@ struct LogicItemDeleted {
 // Inserted Logic Items
 
 struct LogicItemInserted {
-    element_id_t element_id;
+    logicitem_id_t logicitem_id;
     layout_calculation_data_t data;
 
     [[nodiscard]] auto operator==(const LogicItemInserted &other) const -> bool = default;
@@ -58,8 +59,8 @@ struct LogicItemInserted {
 };
 
 struct InsertedLogicItemIdUpdated {
-    element_id_t new_element_id;
-    element_id_t old_element_id;
+    logicitem_id_t new_logicitem_id;
+    logicitem_id_t old_logicitem_id;
     layout_calculation_data_t data;
 
     [[nodiscard]] auto operator==(const InsertedLogicItemIdUpdated &other) const
@@ -68,7 +69,7 @@ struct InsertedLogicItemIdUpdated {
 };
 
 struct LogicItemUninserted {
-    element_id_t element_id;
+    logicitem_id_t logicitem_id;
     layout_calculation_data_t data;
 
     [[nodiscard]] auto operator==(const LogicItemUninserted &other) const

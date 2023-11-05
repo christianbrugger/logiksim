@@ -5,24 +5,25 @@
 #include "random/bool.h"
 #include "random/grid.h"
 #include "random/part.h"
-#include "vocabulary/element_id.h"
+#include "vocabulary/wire_id.h"
 #include "vocabulary/segment_index.h"
+#include "vocabulary/segment_part.h"
 
 #include <stdexcept>
 
 namespace logicsim {
 
-auto get_random_segment_tree(Rng& rng, const Layout& layout) -> element_id_t {
+auto get_random_segment_tree(Rng& rng, const Layout& layout) -> wire_id_t {
     if (!has_segments(layout)) {
-        return null_element;
+        return null_wire;
     }
 
     while (true) {
-        const auto element_id = element_id_t {uint_distribution(
-            std::size_t {0}, layout.element_count() - std::size_t {1})(rng)};
+        const auto wire_id = wire_id_t {uint_distribution(
+            std::size_t {0}, layout.wires().size() - std::size_t {1})(rng)};
 
-        if (!layout.segment_tree(element_id).empty()) {
-            return element_id;
+        if (!layout.wires().segment_tree(wire_id).empty()) {
+            return wire_id;
         }
     }
 }
@@ -37,17 +38,17 @@ auto get_random_segment(Rng& rng, const SegmentTree& tree) -> segment_index_t {
 }
 
 auto get_random_segment(Rng& rng, const Layout& layout) -> segment_t {
-    const auto element_id = get_random_segment_tree(rng, layout);
-    if (!element_id) {
+    const auto wire_id = get_random_segment_tree(rng, layout);
+    if (!wire_id) {
         return null_segment;
     }
 
-    const auto segment_index = get_random_segment(rng, layout.segment_tree(element_id));
+    const auto segment_index = get_random_segment(rng, layout.wires().segment_tree(wire_id));
     if (!segment_index) [[unlikely]] {
         throw std::runtime_error("should always return a valid index");
     }
 
-    return segment_t {element_id, segment_index};
+    return segment_t {wire_id, segment_index};
 }
 
 auto get_random_segment_part(Rng& rng, const Layout& layout) -> segment_part_t {

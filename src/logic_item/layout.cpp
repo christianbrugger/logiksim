@@ -11,8 +11,9 @@ namespace logicsim {
 
 namespace {
 
-constexpr auto count_static_body_points(ElementType element_type) -> std::optional<int> {
-    const auto info = get_layout_info(element_type);
+constexpr auto count_static_body_points(LogicItemType logicitem_type)
+    -> std::optional<int> {
+    const auto info = get_layout_info(logicitem_type);
 
     if (!info.fixed_width || !info.fixed_height) {
         return std::nullopt;
@@ -33,7 +34,7 @@ constexpr auto count_static_body_points(ElementType element_type) -> std::option
 constexpr auto max_static_body_point_count() -> int {
     auto result = 0;
 
-    for (auto type : all_element_types) {
+    for (auto type : all_logicitem_types) {
         const auto count = count_static_body_points(type);
         if (count) {
             result = std::max(result, count.value());
@@ -51,9 +52,9 @@ static_assert(body_points_vector_size >= max_static_body_point_count());
 static_assert(inputs_vector_size >= static_inputs_t::capacity());
 static_assert(outputs_vector_size >= static_outputs_t::capacity());
 
-constexpr auto calculate_static_body_points(ElementType element_type)
+constexpr auto calculate_static_body_points(LogicItemType logicitem_type)
     -> std::optional<static_body_points_t> {
-    const auto info = get_layout_info(element_type);
+    const auto info = get_layout_info(logicitem_type);
 
     if (!info.fixed_width || !info.fixed_height) {
         return std::nullopt;
@@ -89,11 +90,12 @@ constexpr auto calculate_static_body_points(ElementType element_type)
 }
 
 constexpr auto calculate_all_static_body_points() {
-    constexpr auto size = all_element_types.size();
+    constexpr auto size = all_logicitem_types.size();
     auto result = std::array<std::optional<static_body_points_t>, size> {};
 
-    for (const auto element_type : all_element_types) {
-        result[to_underlying(element_type)] = calculate_static_body_points(element_type);
+    for (const auto logicitem_type : all_logicitem_types) {
+        result[to_underlying(logicitem_type)] =
+            calculate_static_body_points(logicitem_type);
     }
 
     return result;
@@ -103,14 +105,14 @@ constexpr static inline auto all_static_body_points = calculate_all_static_body_
 
 }  // namespace
 
-auto static_body_points_base(ElementType element_type)
+auto static_body_points_base(LogicItemType logicitem_type)
     -> const std::optional<static_body_points_t>& {
-    return all_static_body_points[to_underlying(element_type)];
+    return all_static_body_points[to_underlying(logicitem_type)];
 }
 
 auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vector {
-    switch (data.element_type) {
-        using enum ElementType;
+    switch (data.logicitem_type) {
+        using enum LogicItemType;
 
         case and_element:
         case or_element:
@@ -121,7 +123,7 @@ auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vecto
             return ::logicsim::display_number::input_locations_base(data);
 
         default: {
-            const auto static_inputs = get_layout_info(data.element_type).static_inputs;
+            const auto static_inputs = get_layout_info(data.logicitem_type).static_inputs;
             return inputs_vector(static_inputs.value().begin(),
                                  static_inputs.value().end());
         }
@@ -130,8 +132,8 @@ auto input_locations_base(const layout_calculation_data_t& data) -> inputs_vecto
 }
 
 auto output_locations_base(const layout_calculation_data_t& data) -> outputs_vector {
-    switch (data.element_type) {
-        using enum ElementType;
+    switch (data.logicitem_type) {
+        using enum LogicItemType;
 
         case and_element:
         case or_element:
@@ -142,7 +144,8 @@ auto output_locations_base(const layout_calculation_data_t& data) -> outputs_vec
             return ::logicsim::display_number::output_locations_base(data);
 
         default: {
-            const auto static_outputs = get_layout_info(data.element_type).static_outputs;
+            const auto static_outputs =
+                get_layout_info(data.logicitem_type).static_outputs;
             return outputs_vector(static_outputs.value().begin(),
                                   static_outputs.value().end());
         }
@@ -152,8 +155,8 @@ auto output_locations_base(const layout_calculation_data_t& data) -> outputs_vec
 
 auto element_body_points_base(const layout_calculation_data_t& data)
     -> body_points_vector {
-    switch (data.element_type) {
-        using enum ElementType;
+    switch (data.logicitem_type) {
+        using enum LogicItemType;
 
         case and_element:
         case or_element:
@@ -166,7 +169,7 @@ auto element_body_points_base(const layout_calculation_data_t& data)
         }
 
         default: {
-            const auto& points = static_body_points_base(data.element_type);
+            const auto& points = static_body_points_base(data.logicitem_type);
             return body_points_vector(points.value().begin(), points.value().end());
         }
     }

@@ -40,16 +40,16 @@ auto button_body_overdraw() -> grid_fine_t {
 // Validation
 //
 
-auto is_input_output_count_valid(ElementType element_type, connection_count_t input_count,
+auto is_input_output_count_valid(LogicItemType logicitem_type, connection_count_t input_count,
                                  connection_count_t output_count) -> bool {
-    const auto info = get_layout_info(element_type);
+    const auto info = get_layout_info(logicitem_type);
 
     return info.input_count_min <= input_count && input_count <= info.input_count_max &&
            info.output_count_min <= output_count && output_count <= info.output_count_max;
 }
 
-auto is_orientation_valid(ElementType element_type, orientation_t orientation) -> bool {
-    const auto info = get_layout_info(element_type);
+auto is_orientation_valid(LogicItemType logicitem_type, orientation_t orientation) -> bool {
+    const auto info = get_layout_info(logicitem_type);
 
     switch (info.direction_type) {
         using enum DirectionType;
@@ -64,10 +64,6 @@ auto is_orientation_valid(ElementType element_type, orientation_t orientation) -
 }
 
 auto is_representable(layout_calculation_data_t data) -> bool {
-    if (!is_logic_item(data.element_type)) {
-        throw std::runtime_error("Only supported for logic items.");
-    }
-
     const auto position = data.position;
     data.position = point_t {0, 0};
     const auto rect = element_bounding_rect(data);
@@ -80,9 +76,9 @@ auto is_representable(layout_calculation_data_t data) -> bool {
 }
 
 auto is_valid(const layout_calculation_data_t &data) -> bool {
-    return is_input_output_count_valid(data.element_type, data.input_count,
+    return is_input_output_count_valid(data.logicitem_type, data.input_count,
                                        data.output_count) &&
-           is_orientation_valid(data.element_type, data.orientation) &&
+           is_orientation_valid(data.logicitem_type, data.orientation) &&
            is_representable(data);
 }
 
@@ -90,40 +86,40 @@ auto is_valid(const layout_calculation_data_t &data) -> bool {
 //
 //
 
-auto element_input_count_min(ElementType element_type) -> connection_count_t {
-    return get_layout_info(element_type).input_count_min;
+auto element_input_count_min(LogicItemType logicitem_type) -> connection_count_t {
+    return get_layout_info(logicitem_type).input_count_min;
 }
 
-auto element_input_count_max(ElementType element_type) -> connection_count_t {
-    return get_layout_info(element_type).input_count_max;
+auto element_input_count_max(LogicItemType logicitem_type) -> connection_count_t {
+    return get_layout_info(logicitem_type).input_count_max;
 }
 
-auto element_input_count_default(ElementType element_type) -> connection_count_t {
-    return get_layout_info(element_type).input_count_default;
+auto element_input_count_default(LogicItemType logicitem_type) -> connection_count_t {
+    return get_layout_info(logicitem_type).input_count_default;
 }
 
-auto element_output_count_min(ElementType element_type) -> connection_count_t {
-    return get_layout_info(element_type).output_count_min;
+auto element_output_count_min(LogicItemType logicitem_type) -> connection_count_t {
+    return get_layout_info(logicitem_type).output_count_min;
 }
 
-auto element_output_count_max(ElementType element_type) -> connection_count_t {
-    return get_layout_info(element_type).output_count_max;
+auto element_output_count_max(LogicItemType logicitem_type) -> connection_count_t {
+    return get_layout_info(logicitem_type).output_count_max;
 }
 
-auto element_output_count_default(ElementType element_type) -> connection_count_t {
-    return get_layout_info(element_type).output_count_default;
+auto element_output_count_default(LogicItemType logicitem_type) -> connection_count_t {
+    return get_layout_info(logicitem_type).output_count_default;
 }
 
-auto element_direction_type(ElementType element_type) -> DirectionType {
-    return get_layout_info(element_type).direction_type;
+auto element_direction_type(LogicItemType logicitem_type) -> DirectionType {
+    return get_layout_info(logicitem_type).direction_type;
 }
 
-auto element_enable_input_id(ElementType element_type) -> std::optional<connection_id_t> {
-    return get_layout_info(element_type).enable_input_id;
+auto element_enable_input_id(LogicItemType logicitem_type) -> std::optional<connection_id_t> {
+    return get_layout_info(logicitem_type).enable_input_id;
 }
 
-auto element_fixed_width(ElementType element_type) -> grid_t {
-    const auto info = get_layout_info(element_type);
+auto element_fixed_width(LogicItemType logicitem_type) -> grid_t {
+    const auto info = get_layout_info(logicitem_type);
 
     if (!info.fixed_width || info.variable_width) [[unlikely]] {
         throw std::runtime_error("element has variable width");
@@ -132,8 +128,8 @@ auto element_fixed_width(ElementType element_type) -> grid_t {
     return info.fixed_width.value();
 }
 
-auto element_fixed_height(ElementType element_type) -> grid_t {
-    const auto info = get_layout_info(element_type);
+auto element_fixed_height(LogicItemType logicitem_type) -> grid_t {
+    const auto info = get_layout_info(logicitem_type);
 
     if (!info.fixed_height || info.variable_height) [[unlikely]] {
         throw std::runtime_error("element has variable height");
@@ -142,18 +138,18 @@ auto element_fixed_height(ElementType element_type) -> grid_t {
     return info.fixed_height.value();
 }
 
-auto element_fixed_size(ElementType element_type) -> point_t {
-    return point_t {element_fixed_width(element_type),
-                    element_fixed_height(element_type)};
+auto element_fixed_size(LogicItemType logicitem_type) -> point_t {
+    return point_t {element_fixed_width(logicitem_type),
+                    element_fixed_height(logicitem_type)};
 }
 
 auto element_width(const layout_calculation_data_t &data) -> grid_t {
-    const auto info = get_layout_info(data.element_type);
+    const auto info = get_layout_info(data.logicitem_type);
     return info.variable_width ? info.variable_width(data) : info.fixed_width.value();
 }
 
 auto element_height(const layout_calculation_data_t &data) -> grid_t {
-    const auto info = get_layout_info(data.element_type);
+    const auto info = get_layout_info(data.logicitem_type);
     return info.variable_height ? info.variable_height(data) : info.fixed_height.value();
 }
 
@@ -165,7 +161,7 @@ auto element_body_draw_rect_untransformed(const layout_calculation_data_t &data)
     -> rect_fine_t {
     const auto size = element_size(data);
 
-    if (data.element_type == ElementType::button) {
+    if (data.logicitem_type == LogicItemType::button) {
         const auto padding = defaults::button_body_overdraw;
         return rect_fine_t {
             point_fine_t {-padding, -padding},

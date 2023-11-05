@@ -23,8 +23,8 @@ auto get_random_directed_orientation(Rng& rng) -> orientation_t {
     return orientation;
 }
 
-auto get_random_orientation(Rng& rng, ElementType element_type) -> orientation_t {
-    const auto type = element_direction_type(element_type);
+auto get_random_orientation(Rng& rng, LogicItemType logicitem_type) -> orientation_t {
+    const auto type = element_direction_type(logicitem_type);
 
     switch (type) {
         using enum DirectionType;

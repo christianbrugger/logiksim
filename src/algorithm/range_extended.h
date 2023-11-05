@@ -14,6 +14,25 @@
 namespace logicsim {
 
 /**
+ * @brief: Range of values from [start, .. end) converted to T via value_type.
+ *
+ * Pre-conditions:
+ *      * value_type & T can hold all number [start, .. end)
+ */
+template <typename T, typename value_type = typename T::value_type>
+    requires explicitly_convertible_to<std::size_t, value_type> &&
+             std::is_constructible_v<T, value_type>
+constexpr auto range_extended(std::size_t start, std::size_t count) {
+    // test pre-condition
+    assert(count == 0 ||
+           count - 1 <= gsl::narrow<std::size_t>(std::numeric_limits<value_type>::max()));
+
+    return std::ranges::views::transform(
+        std::ranges::views::iota(start, count),
+        [](const std::size_t &v) -> T { return T {static_cast<value_type>(v)}; });
+}
+
+/**
  * @brief: Range of values from [0, .. count) converted to T via value_type.
  *
  * Pre-conditions:
@@ -23,13 +42,7 @@ template <typename T, typename value_type = typename T::value_type>
     requires explicitly_convertible_to<std::size_t, value_type> &&
              std::is_constructible_v<T, value_type>
 constexpr auto range_extended(std::size_t count) {
-    // test pre-condition
-    assert(count == 0 ||
-           count - 1 <= gsl::narrow<std::size_t>(std::numeric_limits<value_type>::max()));
-
-    return std::ranges::views::transform(
-        std::ranges::views::iota(std::size_t {0}, count),
-        [](const std::size_t &v) -> T { return T {static_cast<value_type>(v)}; });
+    return range_extended<T>(std::size_t {0}, count);
 }
 
 /**

@@ -4,7 +4,7 @@
 #include "iterator_adaptor/enumerate.h"
 #include "iterator_adaptor/transform_view.h"
 #include "vocabulary/direction_type.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/layout_info_vector.h"
 #include "vocabulary/orientation.h"
 
@@ -36,14 +36,14 @@ struct layout_calculation_data_t;
 /**
  * brief: Checks if the input and output count is valid.
  */
-[[nodiscard]] auto is_input_output_count_valid(ElementType element_type,
+[[nodiscard]] auto is_input_output_count_valid(LogicItemType logicitem_type,
                                                connection_count_t input_count,
                                                connection_count_t output_count) -> bool;
 
 /**
  * brief: Checks if an element can be fully placed on the grid.
  */
-[[nodiscard]] auto is_orientation_valid(ElementType element_type,
+[[nodiscard]] auto is_orientation_valid(LogicItemType logicitem_type,
                                         orientation_t orientation) -> bool;
 
 /**
@@ -68,34 +68,34 @@ struct layout_calculation_data_t;
 /**
  * @brief: Input count information of an element.
  */
-[[nodiscard]] auto element_input_count_min(ElementType element_type)
+[[nodiscard]] auto element_input_count_min(LogicItemType logicitem_type)
     -> connection_count_t;
-[[nodiscard]] auto element_input_count_max(ElementType element_type)
+[[nodiscard]] auto element_input_count_max(LogicItemType logicitem_type)
     -> connection_count_t;
-[[nodiscard]] auto element_input_count_default(ElementType element_type)
+[[nodiscard]] auto element_input_count_default(LogicItemType logicitem_type)
     -> connection_count_t;
 
 /**
  * @brief: Output count information of an element.
  */
-[[nodiscard]] auto element_output_count_min(ElementType element_type)
+[[nodiscard]] auto element_output_count_min(LogicItemType logicitem_type)
     -> connection_count_t;
-[[nodiscard]] auto element_output_count_max(ElementType element_type)
+[[nodiscard]] auto element_output_count_max(LogicItemType logicitem_type)
     -> connection_count_t;
-[[nodiscard]] auto element_output_count_default(ElementType element_type)
+[[nodiscard]] auto element_output_count_default(LogicItemType logicitem_type)
     -> connection_count_t;
 
 //
 // Direction Type
 //
 
-[[nodiscard]] auto element_direction_type(ElementType element_type) -> DirectionType;
+[[nodiscard]] auto element_direction_type(LogicItemType logicitem_type) -> DirectionType;
 
 //
 // Connection Ids
 //
 
-[[nodiscard]] auto element_enable_input_id(ElementType element_type)
+[[nodiscard]] auto element_enable_input_id(LogicItemType logicitem_type)
     -> std::optional<connection_id_t>;
 
 //
@@ -107,9 +107,9 @@ struct layout_calculation_data_t;
  *
  * Throws an exception if the element type has variable width.
  */
-[[nodiscard]] auto element_fixed_width(ElementType element_type) -> grid_t;
-[[nodiscard]] auto element_fixed_height(ElementType element_type) -> grid_t;
-[[nodiscard]] auto element_fixed_size(ElementType element_type) -> point_t;
+[[nodiscard]] auto element_fixed_width(LogicItemType logicitem_type) -> grid_t;
+[[nodiscard]] auto element_fixed_height(LogicItemType logicitem_type) -> grid_t;
+[[nodiscard]] auto element_fixed_size(LogicItemType logicitem_type) -> point_t;
 
 /**
  * @brief: calculates the demensions of an element.

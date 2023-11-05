@@ -3,7 +3,7 @@
 
 #include "format/struct.h"
 #include "vocabulary/connection_id.h"
-#include "vocabulary/wire_id.h"
+#include "vocabulary/element_id.h"
 #include "wyhash.h"
 
 #include <ankerl/unordered_dense.h>

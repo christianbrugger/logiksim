@@ -56,6 +56,8 @@ class Layout {
 
 [[nodiscard]] auto wire_ids(const Layout &layout) -> range_extended_t<wire_id_t>;
 
+[[nodiscard]] auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t>;
+
 [[nodiscard]] auto format_stats(const Layout &layout) -> std::string;
 
 [[nodiscard]] auto format_logic_item(const Layout &layout, logicitem_id_t logicitem_id)

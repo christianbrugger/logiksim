@@ -6,6 +6,7 @@
 #include "geometry/line.h"
 #include "geometry/point.h"
 #include "geometry/segment_info.h"
+#include "layout.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/placed_element.h"
 #include "vocabulary/segment_part.h"
@@ -86,6 +87,11 @@ auto logicitem_ids(const Layout &layout) -> range_extended_t<logicitem_id_t> {
 
 auto wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
     return range_extended<wire_id_t>(layout.wires().size());
+}
+
+auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
+    return range_extended<wire_id_t>(std::size_t {first_inserted_wire_id},
+                                     layout.wires().size());
 }
 
 auto format_stats(const Layout &layout) -> std::string {

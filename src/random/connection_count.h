@@ -2,7 +2,7 @@
 #define LOGICSIM_RANDOM_CONNECTION_COUNT_H
 
 #include "random/generator.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 
 namespace logicsim {
 
@@ -12,9 +12,9 @@ struct connection_count_t;
                                                connection_count_t max)
     -> connection_count_t;
 
-[[nodiscard]] auto get_random_input_count(Rng& rng, ElementType element_type)
+[[nodiscard]] auto get_random_input_count(Rng& rng, LogicItemType logicitem_type)
     -> connection_count_t;
-[[nodiscard]] auto get_random_output_count(Rng& rng, ElementType element_type)
+[[nodiscard]] auto get_random_output_count(Rng& rng, LogicItemType logicitem_type)
     -> connection_count_t;
 
 }  // namespace logicsim

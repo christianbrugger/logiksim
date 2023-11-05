@@ -8,7 +8,7 @@
 #include "vocabulary/connection_count.h"
 #include "vocabulary/connector_info.h"
 #include "vocabulary/direction_type.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/grid.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/layout_info_vector.h"
@@ -61,10 +61,11 @@ struct layout_info_t {
  *
  * Everything else should be defined here.
  */
-constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t {
-    switch (element_type) {
-        using enum ElementType;
+constexpr inline auto get_layout_info(LogicItemType logicitem_type) -> layout_info_t {
+    switch (logicitem_type) {
+        using enum LogicItemType;
 
+        /*
         case unused: {
             return layout_info_t {
                 .input_count_min = connection_count_t {0},
@@ -104,6 +105,7 @@ constexpr inline auto get_layout_info(ElementType element_type) -> layout_info_t
                 .direction_type = DirectionType::any,
             };
         }
+        */
 
         case buffer_element: {
             return layout_info_t {
@@ -465,7 +467,7 @@ using static_body_points_t = static_vector<point_t, static_body_point_count, uin
  *
  * Returns empty array for element types with dynamic body points.
  */
-[[nodiscard]] auto static_body_points_base(ElementType element_type)
+[[nodiscard]] auto static_body_points_base(LogicItemType logicitem_type)
     -> const std::optional<static_body_points_t>&;
 
 /**

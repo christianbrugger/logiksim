@@ -8,7 +8,7 @@
 #include "random/ordered_line.h"
 #include "random/point.h"
 #include "vocabulary/connection_count.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/orientation.h"
 
@@ -32,7 +32,7 @@ auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, grid_t max_l
 auto add_random_button(Rng& rng, State state, grid_t min, grid_t max, bool random_modes)
     -> void {
     const auto definition = ElementDefinition {
-        .element_type = ElementType::button,
+        .logicitem_type = LogicItemType::button,
         .input_count = connection_count_t {0},
         .output_count = connection_count_t {1},
         .orientation = orientation_t::undirected,

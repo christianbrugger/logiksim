@@ -2,7 +2,7 @@
 
 #include "layout_info.h"
 #include "random/connection_count.h"
-#include "random/element_type.h"
+#include "random/logicitem_type.h"
 #include "random/internal_state_count.h"
 #include "random/orientation.h"
 #include "random/point.h"
@@ -24,7 +24,7 @@ auto get_random_layout_calculation_data(Rng& rng, grid_t min, grid_t max)
         .input_count = get_random_input_count(rng, type),
         .output_count = get_random_output_count(rng, type),
         .orientation = get_random_orientation(rng, type),
-        .element_type = type,
+        .logicitem_type = type,
     };
 
     if (!is_valid(data)) {

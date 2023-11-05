@@ -2,7 +2,7 @@
 #define LOGICSIM_RANDOM_ORIENTATION_H
 
 #include "random/generator.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/orientation.h"
 
 namespace logicsim {
@@ -11,7 +11,7 @@ namespace logicsim {
 
 [[nodiscard]] auto get_random_directed_orientation(Rng &rng) -> orientation_t;
 
-[[nodiscard]] auto get_random_orientation(Rng &rng, ElementType element_type)
+[[nodiscard]] auto get_random_orientation(Rng &rng, LogicItemType logicitem_type)
     -> orientation_t;
 
 }  // namespace logicsim

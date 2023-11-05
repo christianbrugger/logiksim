@@ -1,4 +1,4 @@
-#include "random/element_type.h"
+#include "random/logicitem_type.h"
 
 #include "algorithm/random_select.h"
 #include "algorithm/to_underlying.h"
@@ -6,10 +6,10 @@
 
 namespace logicsim {
 
-auto get_random_logic_item_type(Rng& rng) -> ElementType {
-    const auto type = *random_select(all_element_types, rng);
+auto get_random_logic_item_type(Rng& rng) -> LogicItemType {
+    const auto type = *random_select(all_logicitem_types, rng);
 
-    if (is_logic_item(type) && type != ElementType::sub_circuit) {
+    if (type != LogicItemType::sub_circuit) {
         return type;
     }
 

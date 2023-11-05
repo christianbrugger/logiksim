@@ -132,12 +132,12 @@ set(LS_CORE_SOURCES
 
     src/random/bool.cpp
     src/random/connection_count.cpp
-    src/random/element_type.cpp
     src/random/generator.cpp
     src/random/grid.cpp
     src/random/insertion_mode.cpp
     src/random/internal_state_count.cpp
     src/random/layout_calculation_data.cpp
+    src/random/logicitem_type.cpp
     src/random/ordered_line.cpp
     src/random/orientation.cpp
     src/random/part.cpp
