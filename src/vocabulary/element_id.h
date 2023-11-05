@@ -21,6 +21,7 @@ namespace logicsim {
 /**
  * @brief: Identifier to an element in the circuit, schematic or layout.
  */
+
 struct element_id_t {
     using value_type = int32_t;
     // we expose the value, as the type has no invariant

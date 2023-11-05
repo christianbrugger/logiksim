@@ -10,13 +10,14 @@
 #include "format/time.h"
 #include "geometry/line.h"
 #include "geometry/point.h"
+#include "geometry/segment_info.h"
 #include "layout.h"
 #include "layout_info.h"
 #include "line_tree_generation.h"
 #include "logging.h"
+#include "tree_normalization.h"
 #include "validate_definition.h"
 #include "vocabulary/layout_calculation_data.h"
-#include "tree_validation.h"
 
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/view/zip.hpp>
@@ -217,13 +218,7 @@ auto get_segment_info(const Layout &layout, segment_t segment) -> segment_info_t
 auto get_segment_point_type(const Layout &layout, segment_t segment, point_t position)
     -> SegmentPointType {
     const auto info = get_segment_info(layout, segment);
-
-    if (info.line.p0 == position) {
-        return info.p0_type;
-    } else if (info.line.p1 == position) {
-        return info.p1_type;
-    };
-    throw_exception("Position needs to be an endpoint of the segment.");
+    return get_segment_point_type(info, position);
 }
 
 auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t {
@@ -544,7 +539,6 @@ auto Layout::validate() const -> void {
         }
     };
     for (const auto element_id : element_ids()) {
-        line_tree(element_id).validate();
         validate_segment_tree(element_id);
         validate_segment_tree_display_state(segment_tree(element_id),
                                             display_state(element_id));

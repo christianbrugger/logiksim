@@ -17,6 +17,9 @@ struct ordered_line_t;
 struct connection_count_t;
 
 class LineTree {
+    using value_type = line_t;
+    using iterator = line_tree::line_vector_t::const_iterator;
+
    public:
     [[nodiscard]] explicit constexpr LineTree() = default;
     [[nodiscard]] explicit LineTree(line_tree::LineStore &&store);
@@ -27,6 +30,9 @@ class LineTree {
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto size() const noexcept -> std::size_t;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    [[nodiscard]] auto begin() const -> iterator;
+    [[nodiscard]] auto end() const -> iterator;
 
     [[nodiscard]] auto lines() const -> std::span<const line_t>;
     [[nodiscard]] auto line(line_index_t) const -> line_t;
@@ -43,9 +49,6 @@ class LineTree {
     [[nodiscard]] auto output_position(connection_id_t) const -> point_t;
     [[nodiscard]] auto output_orientation(connection_id_t) const -> orientation_t;
     [[nodiscard]] auto calculate_output_lengths() const -> length_vector_t;
-
-    // TODO remove
-    auto validate() const -> void {};
 
    private:
     line_tree::LineStore store_;

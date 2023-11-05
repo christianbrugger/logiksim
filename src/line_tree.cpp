@@ -1,4 +1,6 @@
 #include "line_tree.h"
+#include "line_tree.h"
+#include "line_tree.h"
 
 #include "algorithm/transform_to_container.h"
 #include "allocated_size/trait.h"
@@ -24,6 +26,14 @@ auto LineTree::size() const noexcept -> std::size_t {
 
 auto LineTree::allocated_size() const -> std::size_t {
     return get_allocated_size(store_);
+}
+
+auto LineTree::begin() const -> iterator {
+    return store_.lines().begin();
+}
+
+auto LineTree::end() const -> iterator {
+    return store_.lines().end();
 }
 
 auto LineTree::lines() const -> std::span<const line_t> {

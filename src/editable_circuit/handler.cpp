@@ -15,7 +15,7 @@
 #include "geometry/point.h"
 #include "layout_info.h"
 #include "logging.h"
-#include "tree_validation.h"
+#include "tree_normalization.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>

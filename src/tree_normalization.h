@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_TREE_VALIDATION_H
-#define LOGICSIM_TREE_VALIDATION_H
+#ifndef LOGICSIM_TREE_NORMALIZATION_H
+#define LOGICSIM_TREE_NORMALIZATION_H
 
 #include <vector>
 
@@ -7,6 +7,17 @@ namespace logicsim {
 
 struct ordered_line_t;
 class SegmentTree;
+
+/**
+ * @brief: Splits and merges overlapping segments.
+ *
+ * First Overlapping or connecting & parallel segments are merged.
+ * Then all lines colliding with cross-points are split.
+ *
+ * Returns a flat list of segments, where there are no internal colliding points.
+ */
+[[nodiscard]] auto merge_split_segments(std::span<const ordered_line_t> segments)
+    -> std::vector<ordered_line_t>;
 
 /**
  * @brief: Check if segments form a normalized tree.

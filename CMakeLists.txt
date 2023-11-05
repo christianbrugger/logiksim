@@ -266,7 +266,7 @@ set(LS_CORE_SOURCES
     src/timeout_timer.cpp
     src/timer.cpp
     src/top_widget.cpp
-    src/tree_validation.cpp
+    src/tree_normalization.cpp
     src/validate_definition.cpp
     src/vocabulary.cpp
     src/wyhash.cpp

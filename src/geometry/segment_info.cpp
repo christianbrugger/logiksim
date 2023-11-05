@@ -55,4 +55,24 @@ auto to_point_and_type(const segment_info_t &segment_info)
     };
 }
 
+auto set_segment_point_type(segment_info_t &info, point_t position, SegmentPointType type)
+    -> void {
+    if (info.line.p0 == position) {
+        info.p0_type = type;
+    } else if (info.line.p1 == position) {
+        info.p1_type = type;
+    } else {
+        throw std::runtime_error("Position needs to be an endpoint of the segment.");
+    }
+}
+
+auto get_segment_point_type(const segment_info_t &info, point_t position) -> SegmentPointType {
+    if (info.line.p0 == position) {
+        return info.p0_type;
+    } else if (info.line.p1 == position) {
+        return info.p1_type;
+    };
+    throw std::runtime_error("Position needs to be an endpoint of the segment.");
+}
+
 }  // namespace logicsim

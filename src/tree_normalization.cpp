@@ -1,4 +1,4 @@
-#include "tree_validation.h"
+#include "tree_normalization.h"
 
 #include "algorithm/transform_to_vector.h"
 #include "container/graph/adjacency_graph.h"
@@ -108,26 +108,6 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
     return result;
 }
 
-/**
- * @brief: Finds normalized segments through splitting and merging.
- *
- * Overlapping or connecting & parallel segments are merged.
- * Lines with crossing points are split.
- *
- * Returns a flat list of segments, where there are no internal colliding points.
- */
-[[nodiscard]] auto normalize_segments(std::span<const ordered_line_t> segments)
-    -> std::vector<ordered_line_t> {
-    // merge
-    const auto segments_merged = merge_lines(segments);
-    // split points
-    const auto points1 = to_points_sorted_unique(segments);
-    const auto segments_split = split_lines(segments_merged, points1);
-    const auto points2 = to_points_with_both_orientations(segments_split);
-    // split
-    return split_lines(segments_merged, points2);
-}
-
 [[nodiscard]] auto find_root_index(const ValidationGraph& graph)
     -> std::optional<size_t> {
     auto is_leaf = [&](size_t index) { return graph.neighbors()[index].size() == 1; };
@@ -142,6 +122,18 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
 }
 
 }  // namespace
+
+auto normalize_segments(std::span<const ordered_line_t> segments)
+    -> std::vector<ordered_line_t> {
+    // merge
+    const auto segments_merged = merge_lines(segments);
+    // split points
+    const auto points1 = to_points_sorted_unique(segments);
+    const auto segments_split = split_lines(segments_merged, points1);
+    const auto points2 = to_points_with_both_orientations(segments_split);
+    // split
+    return split_lines(segments_merged, points2);
+}
 
 auto segments_are_contiguous_tree(std::vector<ordered_line_t>&& segments) -> bool {
     if (segments.empty()) {
