@@ -306,6 +306,77 @@ auto swap_and_delete_single_element(Layout& layout, MessageSender& sender,
     swap_and_delete_single_element_private(layout, sender, element_id, preserve_element);
 }
 
+//
+//
+//
+
+auto notify_logic_item_id_change(const Layout& layout, MessageSender& sender,
+                                 const logicitem_id_t new_logicitem_id,
+                                 const logicitem_id_t old_logicitem_id) {
+    sender.submit(info_message::LogicItemIdUpdated {
+        .new_logicitem_id = new_logicitem_id,
+        .old_logicitem_id = old_logicitem_id,
+    });
+
+    if (is_inserted(layout, new_logicitem_id)) {
+        const auto data = to_layout_calculation_data(layout, new_logicitem_id);
+
+        sender.submit(info_message::InsertedLogicItemIdUpdated {
+            .new_logicitem_id = new_logicitem_id,
+            .old_logicitem_id = old_logicitem_id,
+            .data = data,
+        });
+    }
+}
+
+auto swap_and_delete_logic_item_private(Layout& layout, MessageSender& sender,
+                                        logicitem_id_t& logicitem_id,
+                                        logicitem_id_t* preserve_element = nullptr)
+    -> void {
+    if (!logicitem_id) [[unlikely]] {
+        throw_exception("logic item id is invalid");
+    }
+
+    if (layout.logic_items().display_state(logicitem_id) != display_state_t::temporary)
+        [[unlikely]] {
+        throw_exception("can only delete temporary objects");
+    }
+
+    sender.submit(info_message::LogicItemDeleted {logicitem_id});
+
+    // delete in underlying
+    auto last_id = layout.logic_items().swap_and_delete(logicitem_id);
+
+    if (logicitem_id != last_id) {
+        notify_logic_item_id_change(layout, sender, logicitem_id, last_id);
+    }
+
+    if (preserve_element != nullptr) {
+        if (*preserve_element == logicitem_id) {
+            *preserve_element = null_logicitem_id;
+        } else if (*preserve_element == last_id) {
+            *preserve_element = logicitem_id;
+        }
+    }
+
+    logicitem_id = null_logicitem_id;
+}
+
+auto swap_and_delete_logic_item(Layout& layout, MessageSender& sender,
+                                logicitem_id_t& logicitem_id,
+                                logicitem_id_t* preserve_element) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "swap_and_delete_logic_item(logicitem_id = {}, preserve_element = "
+            "{});\n"
+            "==========================================================\n\n",
+            layout, logicitem_id, fmt_ptr(preserve_element));
+    }
+    swap_and_delete_logic_item_private(layout, sender, logicitem_id, preserve_element);
+}
+
+/*
 auto swap_and_delete_multiple_elements_private(Layout& layout, MessageSender& sender,
                                                std::span<const element_id_t> element_ids,
                                                element_id_t* preserve_element) -> void {
@@ -333,6 +404,7 @@ auto swap_and_delete_multiple_elements(Layout& layout, MessageSender& sender,
     swap_and_delete_multiple_elements_private(layout, sender, element_ids,
                                               preserve_element);
 }
+*/
 
 //
 // Logic Item Handling
@@ -382,7 +454,7 @@ auto move_or_delete_logic_item_private(Layout& layout, MessageSender& sender,
     }
 
     if (!is_logic_item_position_representable_private(layout, logicitem_id, dx, dy)) {
-        swap_and_delete_single_element_private(layout, sender, logicitem_id);
+        swap_and_delete_logic_item_private(layout, sender, logicitem_id);
         return;
     }
 
@@ -557,7 +629,7 @@ auto _element_change_colliding_to_insert(Layout& layout, MessageSender& sender,
     if (display_state == display_state_t::colliding) [[likely]] {
         // we can only delete temporary elements
         layout.logic_items().set_display_state(logicitem_id, display_state_t::temporary);
-        swap_and_delete_single_element_private(layout, sender, logicitem_id);
+        swap_and_delete_logic_item_private(layout, sender, logicitem_id);
         return;
     }
 
