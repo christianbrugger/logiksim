@@ -355,8 +355,8 @@ auto draw_input_connector_labels(Context& ctx, const Layout& layout,
 // Logic Items Body
 //
 
-auto draw_logic_item_above(ElementType type) -> bool {
-    using enum ElementType;
+auto draw_logic_item_above(LogicItemType type) -> bool {
+    using enum LogicItemType;
     return type == button || type == led;
 }
 
@@ -1723,11 +1723,11 @@ auto render_simulation_layers(Context& ctx, const Layout& layout,
 // Layers
 //
 
-auto add_valid_wire_parts(const layout::ConstElement wire,
+auto add_valid_wire_parts(const Layout& layout, wire_id_t wire_id,
                           std::vector<ordered_line_t>& output) -> bool {
     auto found = false;
 
-    const auto& tree = wire.segment_tree();
+    const auto& tree = layout.wires().segment_tree(wire_id);
 
     for (const segment_index_t& index : tree.indices()) {
         for (const ordered_line_t& valid_line : all_valid_lines(tree, index)) {
@@ -1739,12 +1739,13 @@ auto add_valid_wire_parts(const layout::ConstElement wire,
     return found;
 }
 
-auto add_selected_wire_parts(const layout::ConstElement wire, const Selection& selection,
+auto add_selected_wire_parts(const Layout& layout, wire_id_t wire_id,
+                             const Selection& selection,
                              std::vector<ordered_line_t>& output) -> void {
-    const auto& tree = wire.segment_tree();
+    const auto& tree = layout.wires().segment_tree(wire_id);
 
-    for (const auto segment : tree.indices(wire.element_id())) {
-        const auto parts = selection.selected_segments(segment);
+    for (const auto segment : tree.indices(wire_id)) {
+        const auto& parts = selection.selected_segments(segment);
 
         if (parts.empty()) {
             continue;
@@ -1758,22 +1759,24 @@ auto add_selected_wire_parts(const layout::ConstElement wire, const Selection& s
     }
 }
 
-auto insert_logic_item(InteractiveLayers& layers, element_id_t element_id,
-                       ElementType element_type, rect_t bounding_rect,
+auto insert_logic_item(InteractiveLayers& layers, const Layout& layout,
+                       logicitem_id_t logicitem_id, rect_t bounding_rect,
                        ElementDrawState state) -> void {
+    const auto logicitem_type = layout.logic_items().type(logicitem_id);
+
     if (is_inserted(state)) {
-        if (draw_logic_item_above(element_type)) {
-            layers.normal_above.push_back({element_id, state});
+        if (draw_logic_item_above(logicitem_type)) {
+            layers.normal_above.push_back({logicitem_id, state});
         } else {
-            layers.normal_below.push_back({element_id, state});
+            layers.normal_below.push_back({logicitem_id, state});
         }
     } else {
         update_uninserted_rect(layers, bounding_rect);
 
-        if (draw_logic_item_above(element_type)) {
-            layers.uninserted_above.push_back({element_id, state});
+        if (draw_logic_item_above(logicitem_type)) {
+            layers.uninserted_above.push_back({logicitem_id, state});
         } else {
-            layers.uninserted_below.push_back({element_id, state});
+            layers.uninserted_below.push_back({logicitem_id, state});
         }
     }
 
@@ -1789,13 +1792,13 @@ auto insert_logic_item(InteractiveLayers& layers, element_id_t element_id,
 
         case normal_selected:
         case temporary_selected:
-            layers.selected_logic_items.push_back(element_id);
+            layers.selected_logic_items.push_back(logicitem_id);
             break;
         case valid:
-            layers.valid_logic_items.push_back(element_id);
+            layers.valid_logic_items.push_back(logicitem_id);
             break;
         case colliding:
-            layers.colliding_logic_items.push_back(element_id);
+            layers.colliding_logic_items.push_back(logicitem_id);
             break;
     }
 }
@@ -1804,45 +1807,47 @@ auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
                               const Selection* selection, rect_t scene_rect) -> void {
     layers.clear();
 
-    for (const auto element : layout.elements()) {
+    for (const auto logicitem_id : logicitem_ids(layout)) {
         // visibility
-        const auto bounding_rect = element.bounding_rect();
+        const auto bounding_rect = layout.logic_items().bounding_rect(logicitem_id);
         if (!is_colliding(bounding_rect, scene_rect)) {
             continue;
         }
-        const auto element_type = element.element_type();
 
-        if (is_logic_item(element_type)) {
-            const auto state = get_logic_item_state(element, selection);
-            insert_logic_item(layers, element, element_type, bounding_rect, state);
+        const auto state = get_logic_item_state(layout, logicitem_id, selection);
+        insert_logic_item(layers, layout, logicitem_id, bounding_rect, state);
+    }
+
+    for (const auto wire_id : wire_ids(layout)) {
+        // visibility
+        const auto bounding_rect = layout.wires().bounding_rect(wire_id);
+        if (!is_colliding(bounding_rect, scene_rect)) {
+            continue;
         }
 
-        else if (element_type == ElementType::wire) {
-            const auto display_state = element.display_state();
+        if (is_inserted(wire_id)) {
+            layers.normal_wires.push_back(wire_id);
 
-            if (is_inserted(display_state)) {
-                layers.normal_wires.push_back(element);
+            // TODO add: tree.has_valid_parts()
+            const auto found_valid =
+                add_valid_wire_parts(layout, wire_id, layers.valid_wires);
 
-                // TODO add: tree.has_valid_parts()
-                const auto found_valid =
-                    add_valid_wire_parts(element, layers.valid_wires);
+            if (!found_valid && selection != nullptr) {
+                add_selected_wire_parts(layout, wire_id, *selection,
+                                        layers.selected_wires);
+            }
+        } else {
+            // fine grained check, as uninserted trees can contain a lot of
+            // segments
+            for (const auto& info : layout.wires().segment_tree(wire_id)) {
+                if (is_colliding(info.line, scene_rect)) {
+                    // layers.uninserted_wires.push_back(info);
+                    update_uninserted_rect(layers, info.line);
 
-                if (!found_valid && selection != nullptr) {
-                    add_selected_wire_parts(element, *selection, layers.selected_wires);
-                }
-            } else {
-                // fine grained check, as uninserted trees can contain a lot of
-                // segments
-                for (const auto& info : element.segment_tree()) {
-                    if (is_colliding(info.line, scene_rect)) {
-                        // layers.uninserted_wires.push_back(info);
-                        update_uninserted_rect(layers, info.line);
-
-                        if (display_state == display_state_t::colliding) {
-                            layers.colliding_wires.push_back(info);
-                        } else if (display_state == display_state_t::temporary) {
-                            layers.temporary_wires.push_back(info);
-                        }
+                    if (is_colliding(wire_id)) {
+                        layers.colliding_wires.push_back(info);
+                    } else if (is_temporary(wire_id)) {
+                        layers.temporary_wires.push_back(info);
                     }
                 }
             }
@@ -1856,27 +1861,32 @@ auto build_simulation_layers(const Layout& layout, SimulationLayers& layers,
                              rect_t scene_rect) -> void {
     layers.clear();
 
-    for (const auto element : layout.elements()) {
+    for (const auto logicitem_id : logicitem_ids(layout)) {
         // visibility
-        if (!is_colliding(element.bounding_rect(), scene_rect)) {
+        const auto bounding_rect = layout.logic_items().bounding_rect(logicitem_id);
+        if (!is_colliding(bounding_rect, scene_rect)) {
             continue;
         }
-        const auto element_type = element.element_type();
 
-        if (is_logic_item(element_type)) {
-            if (element.display_state() == display_state_t::normal) {
-                if (draw_logic_item_above(element_type)) {
-                    layers.items_above.push_back(element);
-                } else {
-                    layers.items_below.push_back(element);
-                }
+        if (layout.logic_items().display_state(logicitem_id) == display_state_t::normal) {
+            const auto type = layout.logic_items().type(logicitem_id);
+            if (draw_logic_item_above(type)) {
+                layers.items_above.push_back(logicitem_id);
+            } else {
+                layers.items_below.push_back(logicitem_id);
             }
         }
+    }
 
-        else if (element_type == ElementType::wire) {
-            if (element.display_state() == display_state_t::normal) {
-                layers.wires.push_back(element);
-            }
+    for (const auto wire_id : wire_ids(layout)) {
+        // visibility
+        const auto bounding_rect = layout.wires().bounding_rect(wire_id);
+        if (!is_colliding(bounding_rect, scene_rect)) {
+            continue;
+        }
+
+        if (is_inserted(wire_id)) {
+            layers.wires.push_back(wire_id);
         }
     }
 }
