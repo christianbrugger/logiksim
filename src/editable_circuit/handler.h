@@ -23,6 +23,11 @@ namespace editable_circuit {
 
 // contains common state for the handlers
 
+// TODO class-invariants:
+//    + Expects(segment_tree(temporary_wire).output_count() == connection_count_t {0});
+//    + Expects(segment_tree(invalid_wire).output_count() == connection_count_t {0});
+//    + no-valid-parts - std::ranges::any_of(tree.valid_parts(), &PartSelection::size);
+
 struct State {
     Layout& layout;
     MessageSender& sender;
@@ -33,21 +38,19 @@ struct State {
 // Deletion Handling
 //
 
-// TODO class-invariants:
-//    + Expects(segment_tree(temporary_wire).output_count() == connection_count_t {0});
-//    + Expects(segment_tree(invalid_wire).output_count() == connection_count_t {0});
-//    + no-valid-parts - std::ranges::any_of(tree.valid_parts(), &PartSelection::size);
-
-using delete_queue_t = folly::small_vector<element_id_t, 6>;
+// using delete_queue_t = folly::small_vector<element_id_t, 6>;
 
 // auto swap_and_delete_multiple_elements(Layout& layout, MessageSender& sender,
 //                                        std::span<const element_id_t> element_ids,
 //                                        element_id_t* preserve_element = nullptr) ->
 //                                        void;
 
-auto swap_and_delete_single_element(Layout& layout, MessageSender& sender,
-                                    element_id_t& element_id,
-                                    element_id_t* preserve_element = nullptr) -> void;
+// auto swap_and_delete_single_element(Layout& layout, MessageSender& sender,
+//                                     element_id_t& element_id,
+//                                     element_id_t* preserve_element = nullptr) -> void;
+
+auto swap_and_delete_empty_wire(Layout& layout, MessageSender& sender, wire_id_t& wire_id,
+                                wire_id_t* preserve_element = nullptr) -> void;
 
 auto swap_and_delete_logic_item(Layout& layout, MessageSender& sender,
                                 logicitem_id_t& logicitem_id,

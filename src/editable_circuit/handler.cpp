@@ -174,10 +174,7 @@ auto convert_to_inputs(Layout& layout, MessageSender& sender,
 // Deletion Handling
 //
 
-auto is_wire_with_segments(const Layout& layout, const wire_id_t wire_id) -> bool {
-    return !layout.wires().segment_tree(wire_id).empty();
-}
-
+/*
 auto notify_element_deleted(const Layout& layout, MessageSender& sender,
                             element_id_t element_id) {
     const auto element = layout.element(element_id);
@@ -238,7 +235,9 @@ auto notify_element_id_change(const Layout& layout, MessageSender& sender,
         }
     }
 }
+*/
 
+/*
 auto swap_elements(Layout& layout, MessageSender& sender, const element_id_t element_id_0,
                    const element_id_t element_id_1) -> void {
     if (element_id_0 == element_id_1) {
@@ -256,7 +255,9 @@ auto swap_elements(Layout& layout, MessageSender& sender, const element_id_t ele
     notify_element_id_change(layout, sender, element_id_0, element_id_1);
     notify_element_id_change(layout, sender, element_id_1, element_id_0);
 }
+*/
 
+/*
 auto swap_and_delete_single_element_private(Layout& layout, MessageSender& sender,
                                             element_id_t& element_id,
                                             element_id_t* preserve_element = nullptr)
@@ -304,6 +305,84 @@ auto swap_and_delete_single_element(Layout& layout, MessageSender& sender,
             layout, element_id, fmt_ptr(preserve_element));
     }
     swap_and_delete_single_element_private(layout, sender, element_id, preserve_element);
+}
+*/
+
+//
+//
+//
+
+auto is_wire_with_segments(const Layout& layout, const wire_id_t wire_id) -> bool {
+    return !layout.wires().segment_tree(wire_id).empty();
+}
+
+auto notify_wire_id_change(const Layout& layout, MessageSender& sender,
+                           const wire_id_t new_wire_id, const wire_id_t old_wire_id) {
+    const bool inserted = new_wire_id >= first_inserted_wire_id;
+
+    const auto& segment_tree = layout.wires().segment_tree(new_wire_id);
+
+    for (auto&& segment_index : segment_tree.indices()) {
+        sender.submit(info_message::SegmentIdUpdated {
+            .new_segment = segment_t {new_wire_id, segment_index},
+            .old_segment = segment_t {old_wire_id, segment_index},
+        });
+    }
+
+    if (inserted) {
+        for (auto&& segment_index : segment_tree.indices()) {
+            sender.submit(info_message::InsertedSegmentIdUpdated {
+                .new_segment = segment_t {new_wire_id, segment_index},
+                .old_segment = segment_t {old_wire_id, segment_index},
+                .segment_info = segment_tree.info(segment_index),
+            });
+        }
+    }
+}
+
+auto swap_and_delete_empty_wire_private(Layout& layout, MessageSender& sender,
+                                        wire_id_t& wire_id,
+                                        wire_id_t* preserve_element = nullptr) -> void {
+    if (!wire_id) [[unlikely]] {
+        throw_exception("element id is invalid");
+    }
+
+    if (wire_id < first_inserted_wire_id) [[unlikely]] {
+        throw_exception("can only delete inserted wires");
+    }
+    if (is_wire_with_segments(layout, wire_id)) [[unlikely]] {
+        throw_exception("can't delete wires with segments");
+    }
+
+    // delete in underlying
+    auto last_id = layout.wires().swap_and_delete(wire_id);
+
+    if (wire_id != last_id) {
+        notify_wire_id_change(layout, sender, wire_id, last_id);
+    }
+
+    if (preserve_element != nullptr) {
+        if (*preserve_element == wire_id) {
+            *preserve_element = null_wire_id;
+        } else if (*preserve_element == last_id) {
+            *preserve_element = wire_id;
+        }
+    }
+
+    wire_id = null_wire_id;
+}
+
+auto swap_and_delete_empty_wire(Layout& layout, MessageSender& sender, wire_id_t& wire_id,
+                                wire_id_t* preserve_element) -> void {
+    if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
+        print_fmt(
+            "\n==========================================================\n{}\n"
+            "swap_and_delete_empty_wire(wire_id = {}, preserve_element = "
+            "{});\n"
+            "==========================================================\n\n",
+            layout, wire_id, fmt_ptr(preserve_element));
+    }
+    swap_and_delete_empty_wire_private(layout, sender, wire_id, preserve_element);
 }
 
 //
@@ -1403,8 +1482,7 @@ auto merge_and_delete_tree(Layout& layout, MessageSender& sender,
 
     m_tree_source.clear();
     layout.set_display_state(tree_source, display_state_t::temporary);
-    swap_and_delete_single_element_private(layout, sender, tree_source,
-                                           &tree_destination);
+    swap_and_delete_empty_wire_private(layout, sender, tree_source, &tree_destination);
 }
 
 auto updated_segment_info(segment_info_t segment_info, const point_t position,
@@ -1835,7 +1913,7 @@ auto delete_empty_tree(Layout& layout, MessageSender& sender, element_id_t eleme
     }
 
     layout.set_display_state(element_id, display_state_t::temporary);
-    swap_and_delete_single_element_private(layout, sender, element_id, preserve_element);
+    swap_and_delete_empty_wire(layout, sender, element_id, preserve_element);
 }
 
 // we assume we get a valid tree where the part between p0 and p1
@@ -2397,7 +2475,7 @@ auto delete_all(selection_handle_t handle, State state) -> void {
         handle->remove_logicitem(element_id);
 
         change_logic_item_insertion_mode(state, element_id, InsertionMode::temporary);
-        swap_and_delete_single_element(state.layout, state.sender, element_id);
+        swap_and_delete_logic_item(state.layout, state.sender, element_id);
     }
 
     while (handle->selected_segments().size() > 0) {
