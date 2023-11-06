@@ -3,7 +3,7 @@
 
 #include "vocabulary/connection_count.h"
 #include "vocabulary/element_definition.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/logic_small_vector.h"
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
@@ -36,7 +36,7 @@ struct SerializedAttributesClockGenerator {
 };
 
 struct SerializedLogicItem {
-    ElementType element_type;
+    LogicItemType logicitem_type;
     connection_count_t::value_type_rep input_count;
     connection_count_t::value_type_rep output_count;
 

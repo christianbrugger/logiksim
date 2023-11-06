@@ -5,14 +5,10 @@
 #include <glaze/glaze.hpp>
 
 template <>
-struct glz::meta<logicsim::ElementType> {
-    using enum logicsim::ElementType;
+struct glz::meta<logicsim::LogicItemType> {
+    using enum logicsim::LogicItemType;
 
     static constexpr auto value = enumerate(  //
-        "unused", unused,                     //
-        "placeholder", placeholder,           //
-        "wire", wire,                         //
-
         "buffer_element", buffer_element,  //
         "and_element", and_element,        //
         "or_element", or_element,          //
@@ -101,7 +97,7 @@ struct glz::meta<SerializedLogicItem> {
     using T = SerializedLogicItem;
 
     static constexpr auto value = glz::object(  //
-        "element_type", &T::element_type,       //
+        "element_type", &T::logicitem_type,       //
         "input_count", &T::input_count,         //
 
         "output_count", &T::output_count,          //

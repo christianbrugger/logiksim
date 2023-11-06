@@ -94,11 +94,6 @@ auto to_connection_count(connection_count_t::value_type_rep value)
 
 auto to_placed_element(const SerializedLogicItem& obj, move_delta_t delta = {})
     -> std::optional<PlacedElement> {
-    // element type
-    if (!is_logic_item(obj.element_type)) {
-        return std::nullopt;
-    }
-
     // definition
     const auto input_count = to_connection_count(obj.input_count);
     const auto output_count = to_connection_count(obj.output_count);
@@ -108,7 +103,7 @@ auto to_placed_element(const SerializedLogicItem& obj, move_delta_t delta = {})
     }
 
     const auto definition = ElementDefinition {
-        .element_type = obj.element_type,
+        .logicitem_type = obj.logicitem_type,
         .input_count = input_count.value(),
         .output_count = output_count.value(),
         .orientation = obj.orientation,
@@ -140,10 +135,10 @@ auto to_placed_element(const SerializedLogicItem& obj, move_delta_t delta = {})
     };
 }
 
-auto serialize_attr_clock_generator(const layout::ConstElement element)
+auto serialize_attr_clock_generator(const Layout& layout, logicitem_id_t logicitem_id)
     -> std::optional<SerializedAttributesClockGenerator> {
-    if (element.element_type() == ElementType::clock_generator) {
-        const auto& attr = element.attrs_clock_generator();
+    if (layout.logic_items().type(logicitem_id) == LogicItemType::clock_generator) {
+        const auto& attr = layout.logic_items().attrs_clock_generator(logicitem_id);
 
         static_assert(std::is_same_v<delay_t::period, std::nano>);
 
@@ -162,25 +157,26 @@ auto serialize_attr_clock_generator(const layout::ConstElement element)
     return std::nullopt;
 }
 
-auto add_element(SerializedLayout& data, const layout::ConstElement element) -> void {
-    if (element.is_logic_item()) {
-        data.logic_items.push_back(SerializedLogicItem {
-            .element_type = element.element_type(),
-            .input_count = element.input_count().count(),
-            .output_count = element.output_count().count(),
-            .input_inverters = element.input_inverters(),
-            .output_inverters = element.output_inverters(),
-            .position = element.position(),
-            .orientation = element.orientation(),
+auto add_element(SerializedLayout& data, const Layout& layout,
+                 logicitem_id_t logicitem_id) -> void {
+    data.logic_items.push_back(SerializedLogicItem {
+        .logicitem_type = layout.logic_items().type(logicitem_id),
+        .input_count = layout.logic_items().input_count(logicitem_id).count(),
+        .output_count = layout.logic_items().output_count(logicitem_id).count(),
+        .input_inverters = layout.logic_items().input_inverters(logicitem_id),
+        .output_inverters = layout.logic_items().output_inverters(logicitem_id),
+        .position = layout.logic_items().position(logicitem_id),
+        .orientation = layout.logic_items().orientation(logicitem_id),
 
-            .attributes_clock_generator = serialize_attr_clock_generator(element),
-        });
-    }
+        .attributes_clock_generator =
+            serialize_attr_clock_generator(layout, logicitem_id),
+    });
+}
 
-    else if (element.is_wire()) {
-        for (const auto& info : element.segment_tree()) {
-            data.wire_segments.push_back(SerializedLine {info.line.p0, info.line.p1});
-        }
+auto add_element(SerializedLayout& data, const Layout& layout, wire_id_t wire_id)
+    -> void {
+    for (const auto& info : layout.wires().segment_tree(wire_id)) {
+        data.wire_segments.push_back(SerializedLine {info.line.p0, info.line.p1});
     }
 }
 
@@ -249,10 +245,13 @@ auto serialize_inserted(const Layout& layout, const ViewConfig* view_config,
             serialize::serialize_simulation_settings(*simulation_settings);
     }
 
-    for (const auto element : layout.elements()) {
-        if (element.is_inserted()) {
-            serialize::add_element(data, element);
+    for (const auto logicitem_id : logicitem_ids(layout)) {
+        if (is_inserted(layout, logicitem_id)) {
+            serialize::add_element(data, layout, logicitem_id);
         }
+    }
+    for (const auto wire_id : inserted_wire_ids(layout)) {
+        serialize::add_element(data, layout, wire_id);
     }
 
     return gzip_compress(json_dumps(data));
@@ -264,14 +263,15 @@ auto serialize_selected(const Layout& layout, const Selection& selection,
         .save_position = save_position,
     };
 
-    for (const auto element_id : selection.selected_logic_items()) {
-        serialize::add_element(data, layout.element(element_id));
+    for (const auto logicitem_id : selection.selected_logic_items()) {
+        serialize::add_element(data, layout, logicitem_id);
     }
 
     for (const auto& [segment, parts] : selection.selected_segments()) {
+        const auto full_line = get_line(layout, segment);
+
         for (const auto& part : parts) {
-            const auto line =
-                get_line(layout, segment_part_t {.segment = segment, .part = part});
+            const auto line = to_line(full_line, part);
             data.wire_segments.push_back(serialize::SerializedLine {line.p0, line.p1});
         }
     }
