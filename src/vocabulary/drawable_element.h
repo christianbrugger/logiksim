@@ -3,7 +3,7 @@
 
 #include "format/struct.h"
 #include "vocabulary/element_draw_state.h"
-#include "vocabulary/element_id.h"
+#include "vocabulary/logicitem_id.h"
 
 #include <string>
 
@@ -13,7 +13,7 @@ namespace logicsim {
  * @brief: All information needed to draw a layout element.
  */
 struct DrawableElement {
-    element_id_t element_id;
+    logicitem_id_t logicitem_id;
     ElementDrawState state;
 
     [[nodiscard]] auto format() const -> std::string;

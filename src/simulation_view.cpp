@@ -2,7 +2,10 @@
 
 #include "component/simulation/history_view.h"
 #include "interactive_simulation.h"
+#include "schematic_generation.h"  // TODO remove
 #include "simulation.h"
+#include "vocabulary/logicitem_id.h"
+#include "vocabulary/wire_id.h"
 
 namespace logicsim {
 
@@ -38,6 +41,16 @@ auto SimulationView::element_ids() const noexcept -> forward_range_t<element_id_
 auto SimulationView::element(element_id_t element_id) const
     -> simulation_view::ConstElement {
     return simulation_view::ConstElement(*this, element_id);
+}
+
+auto SimulationView::element(logicitem_id_t logicitem_id) const
+    -> simulation_view::ConstElement {
+    return element(to_element_id(logicitem_id));
+}
+
+auto SimulationView::element(const Layout& layout, wire_id_t wire_id) const
+    -> simulation_view::ConstElement {
+    return element(to_element_id(layout, wire_id));
 }
 
 auto SimulationView::time() const -> time_t {

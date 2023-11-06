@@ -13,6 +13,9 @@ namespace logicsim {
 
 class Simulation;
 class InteractiveSimulation;
+struct logicitem_id_t;
+struct wire_id_t;
+class Layout;  // TODO remove
 
 namespace simulation {
 class HistoryView;
@@ -42,6 +45,11 @@ class SimulationView {
     [[nodiscard]] auto element(element_id_t element_id) const
         -> simulation_view::ConstElement;
     [[nodiscard]] inline auto elements() const;
+
+    [[nodiscard]] auto element(logicitem_id_t logicitem_id) const
+        -> simulation_view::ConstElement;
+    [[nodiscard]] auto element(const Layout &layout, wire_id_t wire_id) const
+        -> simulation_view::ConstElement;
 
     [[nodiscard]] auto time() const -> time_t;
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;

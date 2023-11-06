@@ -188,14 +188,15 @@ auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
 auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
                                 logicitem_id_t logicitem_id, ElementDrawState state)
     -> void {
-    const auto layout_data = to_layout_calculation_data(element.layout(), element);
+    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {
         draw_connector(ctx, ConnectorAttributes {
                                 .state = state,
                                 .position = info.position,
                                 .orientation = info.orientation,
-                                .is_inverted = element.input_inverted(info.input_id),
+                                .is_inverted = layout.logic_items().input_inverted(
+                                    logicitem_id, info.input_id),
                                 .is_enabled = false,
                             });
     }
@@ -205,7 +206,8 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
                                 .state = state,
                                 .position = info.position,
                                 .orientation = info.orientation,
-                                .is_inverted = element.output_inverted(info.output_id),
+                                .is_inverted = layout.logic_items().output_inverted(
+                                    logicitem_id, info.output_id),
                                 .is_enabled = false,
                             });
     }
@@ -214,10 +216,11 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
 auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
                                 logicitem_id_t logicitem_id, ElementDrawState state,
                                 simulation_view::ConstElement logic_state) -> void {
-    const auto layout_data = to_layout_calculation_data(element.layout(), element);
+    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {
-        const auto is_inverted = element.input_inverted(info.input_id);
+        const auto is_inverted =
+            layout.logic_items().input_inverted(logicitem_id, info.input_id);
 
         if (is_inverted || !logic_state.has_connected_input(info.input_id)) {
             draw_connector(ctx, ConnectorAttributes {
@@ -231,7 +234,8 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
     }
 
     for (auto info : output_locations_and_id(layout_data)) {
-        const auto is_inverted = element.output_inverted(info.output_id);
+        const auto is_inverted =
+            layout.logic_items().output_inverted(logicitem_id, info.output_id);
 
         if (is_inverted || !logic_state.has_connected_output(info.output_id)) {
             draw_connector(
@@ -250,20 +254,19 @@ auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements) -> void {
     if (do_draw_connector(ctx.settings.view_config)) {
         for (const auto entry : elements) {
-            draw_logic_item_connectors(ctx, layout.element(entry.element_id),
-                                       entry.state);
+            draw_logic_item_connectors(ctx, layout, entry.logicitem_id, entry.state);
         }
     }
 }
 
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
-                                 std::span<const element_id_t> elements,
+                                 std::span<const logicitem_id_t> elements,
                                  SimulationView simulation_view) -> void {
     if (do_draw_connector(ctx.settings.view_config)) {
-        for (const auto element_id : elements) {
+        for (const auto logicitem_id : elements) {
             const auto state = ElementDrawState::normal;
-            draw_logic_item_connectors(ctx, layout.element(element_id), state,
-                                       simulation_view.element(element_id));
+            draw_logic_item_connectors(ctx, layout, logicitem_id, state,
+                                       simulation_view.element(logicitem_id));
         }
     }
 }
@@ -282,7 +285,7 @@ auto connector_horizontal_alignment(orientation_t orientation) -> HTextAlignment
             return HTextAlignment::center;
 
         default:
-            throw_exception("orienation has no horizontal alignment");
+            throw_exception("orientation has no horizontal alignment");
     };
 }
 
@@ -323,7 +326,7 @@ auto draw_connector_label(Context& ctx, point_t position, orientation_t orientat
 auto draw_connector_labels(Context& ctx, const Layout& layout,
                            logicitem_id_t logicitem_id, ConnectorLabels labels,
                            ElementDrawState state) -> void {
-    const auto layout_data = to_layout_calculation_data(element.layout(), element);
+    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
 
     for (auto info : input_locations_and_id(layout_data)) {
         draw_connector_label(ctx, info.position, info.orientation,
@@ -337,9 +340,10 @@ auto draw_connector_labels(Context& ctx, const Layout& layout,
 }
 
 template <typename Func>
-auto draw_input_connector_labels(Context& ctx, layout::ConstElement element,
-                                 ElementDrawState state, Func to_input_label) -> void {
-    const auto layout_data = element.to_layout_calculation_data();
+auto draw_input_connector_labels(Context& ctx, const Layout& layout,
+                                 logicitem_id_t logicitem_id, ElementDrawState state,
+                                 Func to_input_label) -> void {
+    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
 
     for (const auto&& info : input_locations_and_id(layout_data)) {
         draw_connector_label(ctx, info.position, info.orientation,
@@ -359,11 +363,10 @@ auto draw_logic_item_above(ElementType type) -> bool {
 auto get_logic_item_state(const Layout& layout, logicitem_id_t logicitem_id,
                           const Selection* selection) -> ElementDrawState {
     const auto is_selected = [&]() {
-        return (selection != nullptr) ? selection->is_selected(element.element_id())
-                                      : false;
+        return (selection != nullptr) ? selection->is_selected(logicitem_id) : false;
     };
 
-    const auto display_state = element.display_state();
+    const auto display_state = layout.logic_items().display_state(logicitem_id);
 
     if (is_inserted(display_state)) {
         if (display_state == display_state_t::valid) {
@@ -416,17 +419,15 @@ auto get_logic_item_text_color(ElementDrawState state) -> color_t {
 auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state, LogicItemRectAttributes attributes)
     -> void {
-    const auto rect = element_body_draw_rect(element.to_layout_calculation_data());
-    draw_logic_item_rect(ctx, rect, element, state, std::move(attributes));
+    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
+    const auto rect = element_body_draw_rect(layout_data);
+    draw_logic_item_rect(ctx, rect, state, std::move(attributes));
 }
 
-auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, const Layout& layout,
-                          logicitem_id_t logicitem_id, ElementDrawState state,
+auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
                           LogicItemRectAttributes attributes)
 
     -> void {
-    // TODO remove elemnt from call signature
-
     const auto fill_color = attributes.custom_fill_color
                                 ? with_alpha_runtime(*attributes.custom_fill_color, state)
                                 : get_logic_item_fill_color(state);
@@ -445,7 +446,8 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, const Layout& layout,
 
 auto get_logic_item_center(const Layout& layout, logicitem_id_t logicitem_id)
     -> point_fine_t {
-    const auto rect = element_body_draw_rect(element.to_layout_calculation_data());
+    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
+    const auto rect = element_body_draw_rect(layout_data);
     return get_center(rect);
 }
 
@@ -453,19 +455,16 @@ auto draw_logic_item_label(Context& ctx, const Layout& layout,
                            logicitem_id_t logicitem_id, std::string_view text,
                            ElementDrawState state, LogicItemTextAttributes attributes)
     -> void {
-    const auto center = get_logic_item_center(element);
-    draw_logic_item_label(ctx, center, text, element, state, std::move(attributes));
+    const auto center = get_logic_item_center(layout, logicitem_id);
+    draw_logic_item_label(ctx, center, text, state, std::move(attributes));
 }
 
-auto draw_logic_item_label(Context& ctx, const Layout& layout,
-                           logicitem_id_t logicitem_id, point_fine_t center,
-                           std::string_view text, ElementDrawState state,
-                           LogicItemTextAttributes attributes) -> void {
+auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view text,
+                           ElementDrawState state, LogicItemTextAttributes attributes)
+    -> void {
     if (text.empty()) {
         return;
     }
-
-    // TODO remove elemnt from call signature
 
     const auto font_size = attributes.custom_font_size
                                ? *attributes.custom_font_size
@@ -486,29 +485,27 @@ auto draw_logic_item_label(Context& ctx, const Layout& layout,
               });
 }
 
-auto draw_binary_value(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                       point_fine_t point, bool is_enabled, ElementDrawState state)
-    -> void {
+auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,
+                       ElementDrawState state) -> void {
     const auto text = is_enabled ? std::string_view {"1"} : std::string_view {"0"};
-    draw_logic_item_label(ctx, point, text, element, state,
+    draw_logic_item_label(ctx, point, text, state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::binary_value_size,
                           });
 }
 
-auto draw_binary_false(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                       point_fine_t point, ElementDrawState state) -> void {
+auto draw_binary_false(Context& ctx, point_fine_t point, ElementDrawState state) -> void {
     const auto is_enabled = false;
-    draw_binary_value(ctx, point, is_enabled, element, state);
+    draw_binary_value(ctx, point, is_enabled, state);
 }
 
 //
 // Individual Elements
 //
 
-constexpr auto standard_element_label(ElementType element_type) -> std::string_view {
+constexpr auto standard_element_label(LogicItemType element_type) -> std::string_view {
     switch (element_type) {
-        using enum ElementType;
+        using enum LogicItemType;
 
         case and_element:
             return "&";
@@ -525,25 +522,27 @@ constexpr auto standard_element_label(ElementType element_type) -> std::string_v
     }
 }
 
-auto draw_standard_element(Context& ctx, layout::ConstElement element,
-                           ElementDrawState state) -> void {
-    draw_logic_item_rect(ctx, element, state);
-    draw_logic_item_label(ctx, standard_element_label(element.element_type()), element,
-                          state);
+auto draw_standard_element(Context& ctx, const Layout& layout,
+                           logicitem_id_t logicitem_id, ElementDrawState state) -> void {
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
+    const auto type = layout.logic_items().type(logicitem_id);
+    draw_logic_item_label(ctx, layout, logicitem_id, standard_element_label(type), state);
 }
 
-auto draw_button(Context& ctx, layout::ConstElement element, ElementDrawState state,
+auto draw_button(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                 ElementDrawState state,
 
                  std::optional<simulation_view::ConstElement> logic_state) -> void {
     const auto logic_value = logic_state ? logic_state->internal_state(0) : false;
-    const auto center = get_logic_item_center(element);
+    const auto center = get_logic_item_center(layout, logicitem_id);
 
-    draw_logic_item_rect(ctx, element, state,
+    draw_logic_item_rect(ctx, layout, logicitem_id, state,
                          {.custom_fill_color = defaults::button_body_color});
-    draw_binary_value(ctx, center, logic_value, element, state);
+    draw_binary_value(ctx, center, logic_value, state);
 }
 
-auto draw_led(Context& ctx, layout::ConstElement element, ElementDrawState state,
+auto draw_led(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+              ElementDrawState state,
 
               std::optional<simulation_view::ConstElement> logic_state) -> void {
     const auto logic_value =
@@ -552,8 +551,9 @@ auto draw_led(Context& ctx, layout::ConstElement element, ElementDrawState state
     const auto base_color =
         logic_value ? defaults::led_color_enabled : defaults::led_color_disabled;
 
-    draw_circle(ctx, point_fine_t {element.position()},
-                grid_fine_t {defaults::led_radius},
+    const auto position = layout.logic_items().position(logicitem_id);
+
+    draw_circle(ctx, point_fine_t {position}, grid_fine_t {defaults::led_radius},
                 CircleAttributes {
                     .fill_color = with_alpha_runtime(base_color, state),
                     .stroke_color = get_logic_item_stroke_color(state),
@@ -577,7 +577,7 @@ static_assert(display_number::max_value_inputs <=
 static_assert(display_ascii::value_inputs <=
               connection_count_t {power_of_two_labels.size()});
 
-auto _is_display_enabled(layout::ConstElement element,
+auto _is_display_enabled(const Layout& layout, logicitem_id_t logicitem_id,
                          std::optional<simulation_view::ConstElement> logic_state)
     -> bool {
     const auto input_id = display::enable_input_id;
@@ -585,27 +585,31 @@ auto _is_display_enabled(layout::ConstElement element,
     if (!logic_state) {
         return true;
     }
-    return logic_state->input_value(input_id) ^ element.input_inverted(input_id);
+
+    const auto inverted = layout.logic_items().input_inverted(logicitem_id, input_id);
+    return logic_state->input_value(input_id) ^ inverted;
 }
 
-auto _is_display_twos_complement(layout::ConstElement element,
+auto _is_display_twos_complement(const Layout& layout, logicitem_id_t logicitem_id,
                                  std::optional<simulation_view::ConstElement> logic_state)
     -> bool {
     const auto input_id = display_number::negative_input_id;
+    const auto inverted = layout.logic_items().input_inverted(logicitem_id, input_id);
 
     if (!logic_state) {
-        return element.input_inverted(input_id);
+        return inverted;
     }
-    return logic_state->input_value(input_id) ^ element.input_inverted(input_id);
+
+    return logic_state->input_value(input_id) ^ inverted;
 }
 
-auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement element,
+auto _draw_number_display_input_labels(Context& ctx, const Layout& layout,
+                                       logicitem_id_t logicitem_id,
                                        ElementDrawState state, bool two_complement) {
-    const auto input_count = element.input_count();
+    const auto input_count = layout.logic_items().input_count(logicitem_id);
     // TODO can we simplify this?
     const auto last_input_id = last_id(input_count);
-    const auto has_space =
-        display_number::input_shift(element.input_count()) > grid_t {0};
+    const auto has_space = display_number::input_shift(input_count) > grid_t {0};
 
     const auto to_label = [last_input_id, two_complement,
                            has_space](connection_id_t input_id) -> std::string_view {
@@ -623,10 +627,11 @@ auto _draw_number_display_input_labels(Context& ctx, layout::ConstElement elemen
                                       std::size_t {display_number::control_inputs});
     };
 
-    draw_input_connector_labels(ctx, element, state, to_label);
+    draw_input_connector_labels(ctx, layout, logicitem_id, state, to_label);
 }
 
-auto _draw_ascii_display_input_labels(Context& ctx, layout::ConstElement element,
+auto _draw_ascii_display_input_labels(Context& ctx, const Layout& layout,
+                                      logicitem_id_t logicitem_id,
                                       ElementDrawState state) {
     const auto to_label = [](connection_id_t input_id) -> std::string_view {
         if (input_id == display::enable_input_id) {
@@ -637,14 +642,14 @@ auto _draw_ascii_display_input_labels(Context& ctx, layout::ConstElement element
                                       std::size_t {display_ascii::control_inputs});
     };
 
-    draw_input_connector_labels(ctx, element, state, to_label);
+    draw_input_connector_labels(ctx, layout, logicitem_id, state, to_label);
 }
 
-auto _inputs_to_number(layout::ConstElement element,
+auto _inputs_to_number(const Layout& layout, logicitem_id_t logicitem_id,
                        simulation_view::ConstElement logic_state,
                        const connection_count_t control_inputs) -> uint64_t {
     const auto& values = logic_state.input_values();
-    const auto& inverters = element.input_inverters();
+    const auto& inverters = layout.logic_items().input_inverters(logicitem_id);
 
     if (values.size() - std::size_t {control_inputs} > std::size_t {64}) {
         throw_exception("input size too large");
@@ -668,7 +673,7 @@ struct styled_display_text_t {
 
 // to_text = [](uint64_t number) -> styled_display_text_t { ... };
 template <typename Func>
-auto _draw_number_display(Context& ctx, layout::ConstElement element,
+auto _draw_number_display(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state, grid_fine_t element_width,
                           grid_fine_t element_height, Func to_text,
                           std::string_view interactive_mode_text,
@@ -694,19 +699,20 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
             text_y + v_padding,        // y
         },
     };
-    const auto position = element.position();
+    const auto position = layout.logic_items().position(logicitem_id);
     const auto text_position = point_fine_t {text_x, text_y} + position;
 
     draw_logic_item_rect(
-        ctx, rect + position, element, state,
+        ctx, rect + position, state,
         LogicItemRectAttributes {.custom_fill_color = defaults::color_white});
 
     // number
     if (logic_state) {
-        if (_is_display_enabled(element, logic_state)) {
-            auto number = _inputs_to_number(element, *logic_state, control_inputs);
+        if (_is_display_enabled(layout, logicitem_id, logic_state)) {
+            auto number =
+                _inputs_to_number(layout, logicitem_id, *logic_state, control_inputs);
             const auto text = styled_display_text_t {to_text(number)};
-            draw_logic_item_label(ctx, text_position, text.text, element, state,
+            draw_logic_item_label(ctx, text_position, text.text, state,
                                   LogicItemTextAttributes {
                                       .custom_font_size = text.font_size,
                                       .custom_text_color = text.color,
@@ -716,7 +722,7 @@ auto _draw_number_display(Context& ctx, layout::ConstElement element,
         }
     } else {
         draw_logic_item_label(
-            ctx, text_position, interactive_mode_text, element, state,
+            ctx, text_position, interactive_mode_text, state,
             LogicItemTextAttributes {
                 .custom_font_size = defaults::font::display_font_size,
                 .custom_text_color = defaults::font::display_normal_color,
@@ -754,26 +760,27 @@ auto _number_value_to_text(bool two_complement, std::size_t digit_count) {
 
 }  // namespace
 
-auto draw_display_number(Context& ctx, layout::ConstElement element,
+auto draw_display_number(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                          ElementDrawState state,
                          std::optional<simulation_view::ConstElement> logic_state)
     -> void {
-    const auto input_count = element.input_count();
+    const auto input_count = layout.logic_items().input_count(logicitem_id);
     // TODO remove
     const auto element_width = grid_fine_t {display_number::width(input_count)};
     const auto element_height = grid_fine_t {display_number::height(input_count)};
 
-    draw_logic_item_rect(ctx, element, state);
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
-    const auto two_complement = _is_display_twos_complement(element, logic_state);
+    const auto two_complement =
+        _is_display_twos_complement(layout, logicitem_id, logic_state);
     const auto edit_mode_text = "0";
     const auto control_inputs = display_number::control_inputs;
     const auto value_inputs = display_number::value_inputs(input_count);
     const auto to_text =
         _number_value_to_text(two_complement, std::size_t {value_inputs});
-    _draw_number_display(ctx, element, state, element_width, element_height, to_text,
-                         edit_mode_text, control_inputs, logic_state);
-    _draw_number_display_input_labels(ctx, element, state, two_complement);
+    _draw_number_display(ctx, layout, logicitem_id, state, element_width, element_height,
+                         to_text, edit_mode_text, control_inputs, logic_state);
+    _draw_number_display_input_labels(ctx, layout, logicitem_id, state, two_complement);
 }
 
 namespace {
@@ -813,7 +820,7 @@ auto _asci_value_to_text(uint64_t number) -> styled_display_text_t {
 }
 }  // namespace
 
-auto draw_display_ascii(Context& ctx, layout::ConstElement element,
+auto draw_display_ascii(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                         ElementDrawState state,
                         std::optional<simulation_view::ConstElement> logic_state)
     -> void {
@@ -821,39 +828,38 @@ auto draw_display_ascii(Context& ctx, layout::ConstElement element,
     const auto element_width = grid_fine_t {display_ascii::width};
     const auto element_height = grid_fine_t {display_ascii::height};
 
-    draw_logic_item_rect(ctx, element, state);
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     const auto edit_mode_text = "A";
     const auto control_inputs = display_ascii::control_inputs;
-    _draw_number_display(ctx, element, state, element_width, element_height,
+    _draw_number_display(ctx, layout, logicitem_id, state, element_width, element_height,
                          _asci_value_to_text, edit_mode_text, control_inputs,
                          logic_state);
-    _draw_ascii_display_input_labels(ctx, element, state);
+    _draw_ascii_display_input_labels(ctx, layout, logicitem_id, state);
 }
 
-auto draw_buffer(Context& ctx, layout::ConstElement element, ElementDrawState state)
-    -> void {
-    draw_logic_item_rect(ctx, element, state);
-    draw_logic_item_label(ctx, "1", element, state,
+auto draw_buffer(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                 ElementDrawState state) -> void {
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
+    draw_logic_item_label(ctx, layout, logicitem_id, "1", state,
                           {.custom_font_size = defaults::font::buffer_label_size});
 }
 
-auto draw_clock_generator(Context& ctx, layout::ConstElement element,
+auto draw_clock_generator(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state) -> void {
-    const auto& attrs = element.attrs_clock_generator();
-    const auto position = element.position();
+    const auto& attrs = layout.logic_items().attrs_clock_generator(logicitem_id);
+    const auto position = layout.logic_items().position(logicitem_id);
 
-    draw_logic_item_rect(ctx, element, state);
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     // labels
     static constexpr auto input_labels = string_array<1> {"En"};
     static constexpr auto output_labels = string_array<1> {"C"};
-    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state);
+    draw_connector_labels(ctx, layout, logicitem_id,
+                          ConnectorLabels {input_labels, output_labels}, state);
 
     // name
-    draw_logic_item_label(ctx, position + point_fine_t {2.5, 0}, attrs.name, element,
-                          state,
+    draw_logic_item_label(ctx, position + point_fine_t {2.5, 0}, attrs.name, state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_name_size,
                               .custom_text_color = defaults::font::clock_name_color,
@@ -864,8 +870,7 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
 
     // generator delay
     const auto duration_text = attrs.format_period();
-    draw_logic_item_label(ctx, position + point_fine_t {2.5, 1}, duration_text, element,
-                          state,
+    draw_logic_item_label(ctx, position + point_fine_t {2.5, 1}, duration_text, state,
                           LogicItemTextAttributes {
                               .custom_font_size = defaults::font::clock_period_size,
                               .custom_text_color = defaults::font::clock_period_color,
@@ -875,71 +880,72 @@ auto draw_clock_generator(Context& ctx, layout::ConstElement element,
                           });
 }
 
-auto draw_flipflop_jk(Context& ctx, layout::ConstElement element, ElementDrawState state)
-    -> void {
-    draw_logic_item_rect(ctx, element, state);
+auto draw_flipflop_jk(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                      ElementDrawState state) -> void {
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     static constexpr auto input_labels = string_array<5> {"> C", "J", "K", "S", "R"};
     static constexpr auto output_labels = string_array<2> {"Q", "Q\u0305"};
-    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state);
+    draw_connector_labels(ctx, layout, logicitem_id,
+                          ConnectorLabels {input_labels, output_labels}, state);
 }
 
-auto draw_shift_register(Context& ctx, layout::ConstElement element,
+auto draw_shift_register(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                          ElementDrawState state,
                          std::optional<simulation_view::ConstElement> logic_state)
     -> void {
-    draw_logic_item_rect(ctx, element, state);
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     // content
-    const auto output_count = std::size_t {element.output_count()};
+    const auto output_count =
+        std::size_t {layout.logic_items().output_count(logicitem_id)};
     const auto state_size = std::size_t {10};
 
-    const auto position = element.position();
+    const auto position = layout.logic_items().position(logicitem_id);
     for (auto n : range(output_count, state_size)) {
         const auto point = point_fine_t {
             -1 + 2.0 * (n / output_count),
             0.25 + 1.5 * (n % output_count),
         };
         const auto logic_value = logic_state ? logic_state->internal_state(n) : false;
-        draw_binary_value(ctx, position + point, logic_value, element, state);
+        draw_binary_value(ctx, position + point, logic_value, state);
     }
 
     // labels
     static constexpr auto input_labels = string_array<3> {">", "", ""};
     static constexpr auto output_labels = string_array<2> {"", ""};
-    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state);
+    draw_connector_labels(ctx, layout, logicitem_id,
+                          ConnectorLabels {input_labels, output_labels}, state);
 }
 
-auto draw_latch_d(Context& ctx, layout::ConstElement element, ElementDrawState state)
-    -> void {
-    draw_logic_item_rect(ctx, element, state);
+auto draw_latch_d(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                  ElementDrawState state) -> void {
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     static constexpr auto input_labels = string_array<2> {"E", "D"};
     static constexpr auto output_labels = string_array<1> {"Q"};
-    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state);
+    draw_connector_labels(ctx, layout, logicitem_id,
+                          ConnectorLabels {input_labels, output_labels}, state);
 }
 
-auto draw_flipflop_d(Context& ctx, layout::ConstElement element, ElementDrawState state)
-    -> void {
-    draw_logic_item_rect(ctx, element, state);
+auto draw_flipflop_d(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                     ElementDrawState state) -> void {
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
     static constexpr auto output_labels = string_array<1> {"Q"};
-    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state);
+    draw_connector_labels(ctx, layout, logicitem_id,
+                          ConnectorLabels {input_labels, output_labels}, state);
 }
 
-auto draw_flipflop_ms_d(Context& ctx, layout::ConstElement element,
+auto draw_flipflop_ms_d(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                         ElementDrawState state) -> void {
-    draw_logic_item_rect(ctx, element, state);
+    draw_logic_item_rect(ctx, layout, logicitem_id, state);
 
     static constexpr auto input_labels = string_array<4> {"> C", "D", "S", "R"};
     static constexpr auto output_labels = string_array<1> {"Q"};
-    draw_connector_labels(ctx, ConnectorLabels {input_labels, output_labels}, element,
-                          state);
+    draw_connector_labels(ctx, layout, logicitem_id,
+                          ConnectorLabels {input_labels, output_labels}, state);
 }
 
 //
@@ -950,65 +956,60 @@ auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t log
                           ElementDrawState state,
                           std::optional<simulation_view::ConstElement> logic_state)
     -> void {
-    switch (element.element_type()) {
-        using enum ElementType;
-
-        case unused:
-        case placeholder:
-        case wire:
-            [[unlikely]] throw_exception("not supported");
+    switch (layout.logic_items().type(logicitem_id)) {
+        using enum LogicItemType;
 
         case buffer_element:
-            return draw_buffer(ctx, element, state);
+            return draw_buffer(ctx, layout, logicitem_id, state);
 
         case and_element:
         case or_element:
         case xor_element:
-            return draw_standard_element(ctx, element, state);
+            return draw_standard_element(ctx, layout, logicitem_id, state);
 
         case button:
-            return draw_button(ctx, element, state, logic_state);
+            return draw_button(ctx, layout, logicitem_id, state, logic_state);
         case led:
-            return draw_led(ctx, element, state, logic_state);
+            return draw_led(ctx, layout, logicitem_id, state, logic_state);
         case display_number:
-            return draw_display_number(ctx, element, state, logic_state);
+            return draw_display_number(ctx, layout, logicitem_id, state, logic_state);
         case display_ascii:
-            return draw_display_ascii(ctx, element, state, logic_state);
+            return draw_display_ascii(ctx, layout, logicitem_id, state, logic_state);
 
         case clock_generator:
-            return draw_clock_generator(ctx, element, state);
+            return draw_clock_generator(ctx, layout, logicitem_id, state);
         case flipflop_jk:
-            return draw_flipflop_jk(ctx, element, state);
+            return draw_flipflop_jk(ctx, layout, logicitem_id, state);
         case shift_register:
-            return draw_shift_register(ctx, element, state, logic_state);
+            return draw_shift_register(ctx, layout, logicitem_id, state, logic_state);
         case latch_d:
-            return draw_latch_d(ctx, element, state);
+            return draw_latch_d(ctx, layout, logicitem_id, state);
         case flipflop_d:
-            return draw_flipflop_d(ctx, element, state);
+            return draw_flipflop_d(ctx, layout, logicitem_id, state);
         case flipflop_ms_d:
-            return draw_flipflop_ms_d(ctx, element, state);
+            return draw_flipflop_ms_d(ctx, layout, logicitem_id, state);
 
         case sub_circuit:
-            return draw_standard_element(ctx, element, state);
+            return draw_standard_element(ctx, layout, logicitem_id, state);
     }
     throw_exception("not supported");
 }
 
 auto draw_logic_items_base(Context& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements) -> void {
-    for (const auto entry : elements) {
-        draw_logic_item_base(ctx, layout.element(entry.element_id), entry.state);
+    for (const auto& entry : elements) {
+        draw_logic_item_base(ctx, layout, entry.logicitem_id, entry.state);
     }
 }
 
 auto draw_logic_items_base(Context& ctx, const Layout& layout,
-                           std::span<const element_id_t> elements,
+                           std::span<const logicitem_id_t> elements,
                            SimulationView simulation_view) -> void {
     const auto state = ElementDrawState::normal;
 
-    for (const auto element_id : elements) {
-        draw_logic_item_base(ctx, layout.element(element_id), state,
-                             simulation_view.element(element_id));
+    for (const auto& logicitem_id : elements) {
+        draw_logic_item_base(ctx, layout, logicitem_id, state,
+                             simulation_view.element(logicitem_id));
     }
 }
 
@@ -1326,8 +1327,8 @@ auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> grid_fine_t {
     return type == ElementType::button ? grid_fine_t {0.} : line_selection_padding();
 }
 
-auto draw_logic_item_shadow(Context& ctx, layout::ConstElement element,
-                            shadow_t shadow_type) -> void {
+auto draw_logic_item_shadow(Context& ctx, const Layout& layout,
+                            logicitem_id_t logicitem_id, shadow_t shadow_type) -> void {
     const auto data = to_layout_calculation_data(element.layout(), element);
     const auto rect = element_shadow_rect(data);
 

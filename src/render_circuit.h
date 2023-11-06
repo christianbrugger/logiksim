@@ -8,7 +8,9 @@
 #include "vocabulary.h"
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/element_draw_state.h"
+#include "vocabulary/logicitem_id.h"
 #include "vocabulary/segment_info.h"
+#include "vocabulary/wire_id.h"
 
 #include <gsl/gsl>
 
@@ -166,7 +168,7 @@ auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements) -> void;
 
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
-                                 std::span<const element_id_t> elements,
+                                 std::span<const logicitem_id_t> elements,
                                  SimulationView simulation_view) -> void;
 
 template <std::size_t size>
@@ -209,8 +211,7 @@ auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t log
                           ElementDrawState state, LogicItemRectAttributes attributes = {})
     -> void;
 
-auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, const Layout& layout,
-                          logicitem_id_t logicitem_id, ElementDrawState state,
+auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, ElementDrawState state,
                           LogicItemRectAttributes attributes = {}) -> void;
 
 struct LogicItemTextAttributes {
@@ -226,16 +227,13 @@ auto draw_logic_item_label(Context& ctx, const Layout& layout,
                            ElementDrawState state,
                            LogicItemTextAttributes attributes = {}) -> void;
 
-auto draw_logic_item_label(Context& ctx, const Layout& layout,
-                           logicitem_id_t logicitem_id, point_fine_t point,
-                           std::string_view text, ElementDrawState state,
+auto draw_logic_item_label(Context& ctx, point_fine_t point, std::string_view text,
+                           ElementDrawState state,
                            LogicItemTextAttributes attributes = {}) -> void;
 
-auto draw_binary_value(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                       point_fine_t point, bool is_enabled, ElementDrawState state)
-    -> void;
-auto draw_binary_false(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
-                       point_fine_t point, ElementDrawState state) -> void;
+auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,
+                       ElementDrawState state) -> void;
+auto draw_binary_false(Context& ctx, point_fine_t point, ElementDrawState state) -> void;
 
 auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state,
@@ -246,7 +244,7 @@ auto draw_logic_items_base(Context& ctx, const Layout& layout,
                            std::span<const DrawableElement> elements) -> void;
 
 auto draw_logic_items_base(Context& ctx, const Layout& layout,
-                           std::span<const element_id_t> elements,
+                           std::span<const logicitem_id_t> elements,
                            SimulationView simulation_view) -> void;
 
 //
@@ -306,7 +304,7 @@ auto shadow_color(shadow_t shadow_type) -> color_t;
 struct InteractiveLayers {
     // inserted
     std::vector<DrawableElement> normal_below;
-    std::vector<element_id_t> normal_wires;
+    std::vector<wire_id_t> normal_wires;
     std::vector<DrawableElement> normal_above;
 
     // uninserted
@@ -314,14 +312,14 @@ struct InteractiveLayers {
     std::vector<DrawableElement> uninserted_above;
 
     // selected & temporary
-    std::vector<element_id_t> selected_logic_items;
+    std::vector<logicitem_id_t> selected_logic_items;
     std::vector<ordered_line_t> selected_wires;
     std::vector<segment_info_t> temporary_wires;
     // valid
-    std::vector<element_id_t> valid_logic_items;
+    std::vector<logicitem_id_t> valid_logic_items;
     std::vector<ordered_line_t> valid_wires;
     // colliding
-    std::vector<element_id_t> colliding_logic_items;
+    std::vector<logicitem_id_t> colliding_logic_items;
     std::vector<segment_info_t> colliding_wires;
 
    public:
@@ -352,9 +350,9 @@ auto update_overlay_rect(InteractiveLayers& layers, ordered_line_t line) -> void
 
 struct SimulationLayers {
     // inserted
-    std::vector<element_id_t> items_below;
-    std::vector<element_id_t> wires;
-    std::vector<element_id_t> items_above;
+    std::vector<logicitem_id_t> items_below;
+    std::vector<wire_id_t> wires;
+    std::vector<logicitem_id_t> items_above;
 
    public:
     auto format() const -> std::string;
