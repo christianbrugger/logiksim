@@ -4,6 +4,7 @@
 #include "editable_circuit/selection_registrar.h"
 #include "resource.h"
 #include "vocabulary.h"
+#include "vocabulary/logicitem_id.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>
@@ -30,6 +31,7 @@ class Selection;
 class EditableCircuit;
 struct ViewConfig;
 struct attributes_clock_generator_t;
+struct logicitem_id_t;
 
 namespace defaults {
 constexpr static inline auto setting_handle_size = grid_fine_t {1.0};
@@ -39,10 +41,10 @@ constexpr static inline auto setting_handle_margin = grid_fine_t {0.1};
 struct setting_handle_t {
     point_fine_t position;
     icon_t icon;
-    element_id_t element_id;
+    logicitem_id_t logicitem_id;
 };
 
-auto setting_handle_position(const Layout& layout, element_id_t element_id)
+auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
     -> std::optional<setting_handle_t>;
 
 auto setting_handle_position(const Layout& layout, const Selection& selection)
@@ -75,7 +77,7 @@ class SettingWidgetRegistry : public QObject {
     auto set_attributes(QWidget* widget, attributes_clock_generator_t attrs) -> void;
 
    private:
-    [[nodiscard]] auto get_element_id(QWidget* dialog) const -> element_id_t;
+    [[nodiscard]] auto get_element_id(QWidget* dialog) const -> logicitem_id_t;
     auto on_dialog_destroyed(QObject* object) -> void;
     auto on_cleanup_timeout() -> void;
 

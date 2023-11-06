@@ -12,6 +12,7 @@
 #include "resource.h"
 #include "validate_definition.h"
 #include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_id.h"
 
 #include <QBoxLayout>
 #include <QCheckBox>
@@ -25,12 +26,10 @@
 #include <cassert>
 
 namespace logicsim {
-auto setting_handle_position(const Layout& layout, element_id_t element_id)
+auto setting_handle_position(const Layout& layout, logicitem_id_t logicitem_id)
     -> std::optional<setting_handle_t> {
-    const auto element = layout.element(element_id);
-
-    switch (layout.element_type(element_id)) {
-        using enum ElementType;
+    switch (layout.logic_items().type(logicitem_id)) {
+        using enum LogicItemType;
 
         case clock_generator: {
             // TODO move to logic_item/layout.h
@@ -42,9 +41,12 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
             const auto width = element_fixed_width(clock_generator);
             const auto height = element_fixed_height(clock_generator);
 
+            const auto position = layout.logic_items().position(logicitem_id);
+            const auto orientation = layout.logic_items().orientation(logicitem_id);
+
             return setting_handle_t {
                 .position =
-                    transform(element.position(), element.orientation(),
+                    transform(position, orientation,
                               point_fine_t {
                                   // width - handle_size / 2.0 - margin,
                                   // margin + handle_size / 2.0,
@@ -53,13 +55,9 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
                                   height / 2.0 + handle_size / 2.0,
                               }),
                 .icon = icon_t::setting_handle_clock_generator,
-                .element_id = element_id,
+                .logicitem_id = logicitem_id,
             };
         }
-
-        case unused:
-        case placeholder:
-        case wire:
 
         case buffer_element:
         case and_element:
@@ -86,10 +84,10 @@ auto setting_handle_position(const Layout& layout, element_id_t element_id)
 
 namespace {
 
-auto get_single_logic_item(const Selection& selection) -> element_id_t {
+auto get_single_logic_item(const Selection& selection) -> logicitem_id_t {
     if (selection.selected_logic_items().size() != 1 ||
         !selection.selected_segments().empty()) {
-        return null_element;
+        return null_logicitem_id;
     }
     return selection.selected_logic_items().front();
 }
@@ -98,15 +96,15 @@ auto get_single_logic_item(const Selection& selection) -> element_id_t {
 
 auto setting_handle_position(const Layout& layout, const Selection& selection)
     -> std::optional<setting_handle_t> {
-    const auto element_id = get_single_logic_item(selection);
-    if (!element_id) {
+    const auto logicitem_id = get_single_logic_item(selection);
+    if (!logicitem_id) {
         return {};
     }
-    if (layout.display_state(element_id) != display_state_t::normal) {
+    if (layout.logic_items().display_state(logicitem_id) != display_state_t::normal) {
         return {};
     }
 
-    return setting_handle_position(layout, element_id);
+    return setting_handle_position(layout, logicitem_id);
 }
 
 auto setting_handle_rect(setting_handle_t handle) -> rect_fine_t {
@@ -150,16 +148,17 @@ SettingWidgetRegistry::~SettingWidgetRegistry() {
 auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle) -> void {
     // activate existing
     for (auto&& [widget, selection_handle] : map_) {
-        if (selection_handle->is_selected(setting_handle.element_id)) {
+        if (selection_handle->is_selected(setting_handle.logicitem_id)) {
             widget->show();
             widget->activateWindow();
             return;
         }
     }
     // create new
-    const auto element = editable_circuit_.layout().element(setting_handle.element_id);
-    auto* widget = new ClockGeneratorDialog {parent_, AttributeSetter {this},
-                                             element.attrs_clock_generator()};
+    auto* widget = new ClockGeneratorDialog {
+        parent_, AttributeSetter {this},
+        editable_circuit_.layout().logic_items().attrs_clock_generator(
+            setting_handle.logicitem_id)};
     widget->setWindowFlags(Qt::Dialog);
     widget->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -169,7 +168,7 @@ auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle)
         if (!inserted) {
             throw_exception("could not insert widget into map");
         }
-        it->second.value().add_logicitem(setting_handle.element_id);
+        it->second.value().add_logicitem(setting_handle.logicitem_id);
 
         connect(widget, &QWidget::destroyed, this,
                 &SettingWidgetRegistry::on_dialog_destroyed);
@@ -188,7 +187,7 @@ auto SettingWidgetRegistry::close_all() -> void {
     map_.clear();
 }
 
-auto SettingWidgetRegistry::get_element_id(QWidget* dialog) const -> element_id_t {
+auto SettingWidgetRegistry::get_element_id(QWidget* dialog) const -> logicitem_id_t {
     if (const auto it = map_.find(dialog); it != map_.end()) {
         const auto& [widget, selection_handle] = *it;
         const auto& selected_items = selection_handle.value().selected_logic_items();
@@ -197,12 +196,12 @@ auto SettingWidgetRegistry::get_element_id(QWidget* dialog) const -> element_id_
             throw_exception("unexpected selected items size in SettingWidgetRegistry");
         }
         if (selected_items.size() == 0) {
-            return null_element;
+            return null_logicitem_id;
         }
 
         return selected_items.front();
     }
-    return null_element;
+    return null_logicitem_id;
 }
 
 auto SettingWidgetRegistry::set_attributes(QWidget* widget,
