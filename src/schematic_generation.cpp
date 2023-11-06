@@ -168,8 +168,8 @@ struct GenerationCache {
         add_logic_items_to_cache(outputs, layout);
     }
 
-    ConnectionCache<true> inputs {};
-    ConnectionCache<false> outputs {};
+    LogicItemInputCache inputs {};
+    LogicItemOutputCache outputs {};
 };
 
 auto connect_line_tree(Schematic& schematic, element_id_t element_id,

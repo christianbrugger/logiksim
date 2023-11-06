@@ -1,7 +1,8 @@
-#include "editable_circuit/cache/spatial_cache.h"
+#include "spatial_cache.h"
 
 #include "allocated_size/tracked_resource.h"
 #include "editable_circuit/cache/helper.h"
+#include "editable_circuit/cache/spatial_cache.h"
 #include "editable_circuit/message.h"
 #include "exception.h"
 #include "iterator_adaptor/output_callable.h"
@@ -77,10 +78,7 @@ struct ankerl::unordered_dense::hash<logicsim::detail::spatial_tree::tree_payloa
     using type = logicsim::detail::spatial_tree::tree_payload_t;
 
     [[nodiscard]] auto operator()(const type& obj) const noexcept -> uint64_t {
-        static_assert(std::is_same_v<int32_t, logicsim::element_id_t::value_type>);
-        static_assert(std::is_same_v<int32_t, logicsim::segment_index_t::value_type>);
-
-        return logicsim::wyhash_64_bit(obj.element_id.value, obj.segment_index.value);
+        return obj.hash();
     }
 };
 
@@ -133,7 +131,61 @@ namespace logicsim {
 namespace detail::spatial_tree {
 
 auto tree_payload_t::format() const -> std::string {
-    return fmt::format("<Element {}, Segment {}>", element_id, segment_index);
+    if (is_logicitem()) {
+        return fmt::format("<LogicItem {}>", logicitem_id());
+    }
+    return fmt::format("<Segment {}>", segment());
+}
+
+auto tree_payload_t::hash() const -> uint64_t {
+    static_assert(std::is_same_v<int32_t, decltype(element_id_)>);
+    static_assert(std::is_same_v<int32_t, decltype(segment_index_.value)>);
+
+    return logicsim::wyhash_64_bit(element_id_, segment_index_.value);
+}
+
+tree_payload_t::tree_payload_t(logicitem_id_t logicitem_id)
+    : element_id_ {logicitem_id.value}, segment_index_ {null_segment_index} {
+    static_assert(std::is_same_v<logicitem_id_t::value_type, decltype(element_id_)>);
+
+    if (!logicitem_id) [[unlikely]] {
+        throw std::runtime_error("logicitem id cannot be null");
+    }
+}
+
+tree_payload_t::tree_payload_t(segment_t segment)
+    : element_id_ {segment.wire_id.value}, segment_index_ {segment.segment_index} {
+    static_assert(std::is_same_v<wire_id_t::value_type, decltype(element_id_)>);
+
+    if (segment_index_ == null_segment_index) [[unlikely]] {
+        throw std::runtime_error("segment cannot be null");
+    }
+}
+
+auto tree_payload_t::is_logicitem() const -> bool {
+    return segment_index_ == null_segment_index;
+}
+
+auto tree_payload_t::logicitem_id() const -> logicitem_id_t {
+    if (!is_logicitem()) [[unlikely]] {
+        throw std::runtime_error("tree payload is not a logic item id");
+    }
+
+    static_assert(std::is_same_v<logicitem_id_t::value_type, decltype(element_id_)>);
+    return logicitem_id_t {element_id_};
+}
+
+auto tree_payload_t::is_segment() const -> bool {
+    return !is_logicitem();
+}
+
+auto tree_payload_t::segment() const -> segment_t {
+    if (!is_segment()) [[unlikely]] {
+        throw std::runtime_error("tree payload is not a segment");
+    }
+
+    static_assert(std::is_same_v<wire_id_t::value_type, decltype(element_id_)>);
+    return segment_t {wire_id_t {element_id_}, segment_index_};
 }
 
 auto get_selection_box(const layout_calculation_data_t& data) -> tree_box_t {
@@ -187,14 +239,13 @@ auto SpatialTree::allocated_size() const -> std::size_t {
 auto SpatialTree::handle(const editable_circuit::info_message::LogicItemInserted& message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.data);
-    tree_->value.insert({box, {message.element_id, null_segment_index}});
+    tree_->value.insert({box, value_t {message.logicitem_id}});
 }
 
 auto SpatialTree::handle(
     const editable_circuit::info_message::LogicItemUninserted& message) -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.data);
-    const auto remove_count =
-        tree_->value.remove({box, {message.element_id, null_segment_index}});
+    const auto remove_count = tree_->value.remove({box, value_t {message.logicitem_id}});
 
     if (remove_count != 1) [[unlikely]] {
         throw_exception("Wasn't able to find element to remove.");
@@ -206,23 +257,21 @@ auto SpatialTree::handle(
     using namespace editable_circuit::info_message;
 
     // r-tree data is immutable
-    handle(LogicItemUninserted {message.old_element_id, message.data});
-    handle(LogicItemInserted {message.new_element_id, message.data});
+    handle(LogicItemUninserted {message.old_logicitem_id, message.data});
+    handle(LogicItemInserted {message.new_logicitem_id, message.data});
 }
 
 auto SpatialTree::handle(const editable_circuit::info_message::SegmentInserted& message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
-    tree_->value.insert(
-        {box, {message.segment.element_id, message.segment.segment_index}});
+    tree_->value.insert({box, value_t {message.segment}});
 }
 
 auto SpatialTree::handle(const editable_circuit::info_message::SegmentUninserted& message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
 
-    const auto remove_count = tree_->value.remove(
-        {box, {message.segment.element_id, message.segment.segment_index}});
+    const auto remove_count = tree_->value.remove({box, value_t {message.segment}});
 
     if (remove_count != 1) [[unlikely]] {
         throw_exception("Wasn't able to find element to remove.");
@@ -270,10 +319,10 @@ auto SpatialTree::submit(const editable_circuit::InfoMessage& message) -> void {
     }
 }
 
-auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<query_result_t> {
+auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<value_t> {
     using namespace detail::spatial_tree;
 
-    auto result = std::vector<query_result_t> {};
+    auto result = std::vector<value_t> {};
 
     const auto inserter = [&result](const tree_value_t& value) {
         result.push_back(value.second);
@@ -301,12 +350,9 @@ auto SpatialTree::query_line_segments(point_t grid_point) const -> queried_segme
 
     const auto inserter = [&result,
                            index = std::size_t {0}](const tree_value_t& value) mutable {
-        if (value.second.segment_index == null_segment_index) {
-            // we only return segments
-            return;
+        if (value.second.is_segment()) {
+            result.at(index++) = value.second.segment();
         }
-        result.at(index++) =
-            segment_t {value.second.element_id, value.second.segment_index};
     };
 
     tree_->value.query(bgi::intersects(tree_point), output_callable(inserter));
@@ -369,18 +415,18 @@ auto SpatialTree::validate(const Layout& layout) const -> void {
 
 auto get_segment_count(SpatialTree::queried_segments_t result) -> int {
     return gsl::narrow_cast<int>(std::ranges::count_if(
-        result, [](segment_t segment) { return bool {segment.element_id}; }));
+        result, [](segment_t segment) { return bool {segment.wire_id}; }));
 }
 
-auto all_same_element_id(SpatialTree::queried_segments_t result) -> bool {
-    const auto first_id = result.at(0).element_id;
+auto all_same_wire_id(SpatialTree::queried_segments_t result) -> bool {
+    const auto first_id = result.at(0).wire_id;
 
     if (!first_id) {
         return true;
     }
 
     return std::all_of(result.begin() + 1, result.end(), [first_id](segment_t value) {
-        return value.element_id == null_element || value.element_id == first_id;
+        return value.wire_id == null_wire_id || value.wire_id == first_id;
     });
 }
 
@@ -395,14 +441,14 @@ auto get_segment_indices(SpatialTree::queried_segments_t result)
     };
 }
 
-auto get_unique_element_id(SpatialTree::queried_segments_t result) -> element_id_t {
-    if (!result.at(0).element_id) {
+auto get_unique_wire_id(SpatialTree::queried_segments_t result) -> wire_id_t {
+    if (!result.at(0).wire_id) {
         throw_exception("result has not segments");
     }
-    if (!all_same_element_id(result)) {
+    if (!all_same_wire_id(result)) {
         throw_exception("result has different ids");
     }
-    return result.at(0).element_id;
+    return result.at(0).wire_id;
 }
 
 }  // namespace logicsim

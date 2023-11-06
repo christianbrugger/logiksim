@@ -16,8 +16,11 @@ class CacheProvider {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    [[nodiscard]] auto input_cache() const -> const ConnectionCache<true>&;
-    [[nodiscard]] auto output_cache() const -> const ConnectionCache<false>&;
+    [[nodiscard]] auto logicitem_input_cache() const -> const LogicItemInputCache&;
+    [[nodiscard]] auto logicitem_output_cache() const -> const LogicItemOutputCache&;
+    [[nodiscard]] auto wire_input_cache() const -> const WireInputCache&;
+    [[nodiscard]] auto wire_output_cache() const -> const WireOutputCache&;
+
     [[nodiscard]] auto collision_cache() const -> const CollisionCache&;
     [[nodiscard]] auto spatial_cache() const -> const SpatialTree&;
 
@@ -26,20 +29,20 @@ class CacheProvider {
 
    public:
     // for rendering
-    [[nodiscard]] auto input_positions() const {
-        return input_connections_.positions();
-    };
-
-    [[nodiscard]] auto input_positions_and_orientations() const {
-        return input_connections_.positions_and_orientations();
-    };
-
-    [[nodiscard]] auto output_positions() const {
-        return output_connections_.positions();
+    [[nodiscard]] auto logicitem_input_positions_and_orientations() const {
+        return logicitems_inputs_.positions_and_orientations();
     };
 
     [[nodiscard]] auto output_positions_and_orientations() const {
-        return output_connections_.positions_and_orientations();
+        return logicitems_outputs_.positions_and_orientations();
+    };
+
+    [[nodiscard]] auto wire_input_positions_and_orientations() const {
+        return wire_inputs_.positions_and_orientations();
+    };
+
+    [[nodiscard]] auto wire_positions_and_orientations() const {
+        return wire_outputs_.positions_and_orientations();
     };
 
     [[nodiscard]] auto collision_states() const {
@@ -51,9 +54,11 @@ class CacheProvider {
     }
 
    private:
-   private:
-    ConnectionCache<true> input_connections_ {};
-    ConnectionCache<false> output_connections_ {};
+    LogicItemInputCache logicitems_inputs_ {};
+    LogicItemOutputCache logicitems_outputs_ {};
+    WireInputCache wire_inputs_ {};
+    WireOutputCache wire_outputs_ {};
+
     CollisionCache collision_cache_ {};
     SpatialTree spatial_cache_ {};
 };
