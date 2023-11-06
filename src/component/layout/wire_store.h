@@ -45,6 +45,11 @@ class WireStore {
 
     // getters
     [[nodiscard]] auto segment_tree(wire_id_t wire_id) const -> const SegmentTree &;
+    /**
+    * @brief: Converts the segment tree to a line tree
+    * 
+    * TODO return std::nullopt, if SegmentTree is not convertible !!!
+    */
     [[nodiscard]] auto line_tree(wire_id_t wire_id) const -> const LineTree &;
     [[nodiscard]] auto bounding_rect(wire_id_t wire_id) const -> rect_t;
 

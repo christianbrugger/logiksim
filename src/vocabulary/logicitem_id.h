@@ -112,7 +112,7 @@ constexpr auto logicitem_id_t::operator++(int) -> logicitem_id_t {
 // Constants
 //
 
-constexpr inline static auto null_logicitem = logicitem_id_t {-1};
+constexpr inline static auto null_logicitem_id = logicitem_id_t {-1};
 
 }  // namespace logicsim
 

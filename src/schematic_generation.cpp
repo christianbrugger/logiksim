@@ -57,14 +57,16 @@ auto add_unused_element(Schematic& schematic) -> void {
     });
 }
 
-auto logic_item_output_delays(layout::ConstElement element) -> output_delays_t {
-    const auto delay = element_output_delay(element.element_type());
+auto logic_item_output_delays(const Layout layout, logicitem_id_t logicitem_id)
+    -> output_delays_t {
+    const auto logicitem_type = layout.logic_items().type(logicitem_id);
+    const auto delay = element_output_delay(logicitem_type);
 
-    switch (element.element_type()) {
-        using enum ElementType;
+    switch (logicitem_type) {
+        using enum LogicItemType;
 
         case clock_generator: {
-            const auto& attrs = element.attrs_clock_generator();
+            const auto& attrs = layout.logic_items().attrs_clock_generator(logicitem_id);
             if (attrs.is_symmetric) {
                 return {delay, attrs.time_symmetric, attrs.time_symmetric};
             }
@@ -72,48 +74,44 @@ auto logic_item_output_delays(layout::ConstElement element) -> output_delays_t {
         }
 
         default: {
-            return output_delays_t(element.output_count().count(), delay);
+            const auto output_count = layout.logic_items().output_count(logicitem_id);
+            return output_delays_t(output_count.count(), delay);
         }
     }
     std::terminate();
 }
 
-auto add_logic_item(Schematic& schematic, layout::ConstElement element) -> void {
+auto add_logic_item(Schematic& schematic, const Layout layout,
+                    logicitem_id_t logicitem_id) -> void {
     schematic.add_element(schematic::NewElement {
-        .element_type = element.element_type(),
-        .input_count = element.input_count(),
-        .output_count = element.output_count(),
+        .element_type = to_element_type(layout.logic_items().type(logicitem_id)),
+        .input_count = layout.logic_items().input_count(logicitem_id),
+        .output_count = layout.logic_items().output_count(logicitem_id),
 
-        .sub_circuit_id = element.sub_circuit_id(),
-        .input_inverters = element.input_inverters(),
-        .output_delays = logic_item_output_delays(element),
+        .sub_circuit_id = layout.logic_items().sub_circuit_id(logicitem_id),
+        .input_inverters = layout.logic_items().input_inverters(logicitem_id),
+        .output_delays = logic_item_output_delays(layout, logicitem_id),
         .history_length = schematic::defaults::no_history,
     });
 }
 
-auto add_wire(Schematic& schematic, layout::ConstElement element,
+auto add_wire(Schematic& schematic, const Layout layout, wire_id_t wire_id,
               delay_t wire_delay_per_distance) -> void {
-    const auto& line_tree = element.line_tree();
+    const auto& line_tree = layout.wires().line_tree(wire_id);
 
     if (line_tree.empty()) {
-        // TODO: temporarily disable wires with to many outputs
-        if (element.output_count() > connection_count_t::max()) {
-            add_unused_element(schematic);
-        } else {
-            const auto output_count = element.segment_tree().output_count();
+        const auto output_count = layout.wires().segment_tree(wire_id).output_count();
 
-            schematic.add_element(schematic::NewElement {
-                .element_type = element.element_type(),
-                .input_count = connection_count_t {0},
-                .output_count = output_count,
+        schematic.add_element(schematic::NewElement {
+            .element_type = ElementType::wire,
+            .input_count = connection_count_t {0},
+            .output_count = output_count,
 
-                .sub_circuit_id = null_circuit,
-                .input_inverters = {},
-                .output_delays =
-                    output_delays_t(output_count.count(), delay_t::epsilon()),
-                .history_length = schematic::defaults::no_history,
-            });
-        }
+            .sub_circuit_id = null_circuit,
+            .input_inverters = {},
+            .output_delays = output_delays_t(output_count.count(), delay_t::epsilon()),
+            .history_length = schematic::defaults::no_history,
+        });
 
     } else {
         auto ignore_delay = wire_delay_per_distance == delay_t {0ns};
@@ -122,43 +120,41 @@ auto add_wire(Schematic& schematic, layout::ConstElement element,
             ignore_delay
                 ? output_delays_t(line_tree.output_count().count(), delay_t::epsilon())
                 : calculate_output_delays(line_tree, wire_delay_per_distance);
+
         const auto tree_max_delay =
             ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
 
-        // TODO: temporarily disable wires with to many outputs
-        if (line_tree.output_count() > connection_count_t::max()) {
-            add_unused_element(schematic);
-        } else {
-            schematic.add_element(schematic::NewElement {
-                .element_type = element.element_type(),
-                .input_count = connection_count_t {1},
-                .output_count = line_tree.output_count(),
+        schematic.add_element(schematic::NewElement {
+            .element_type = ElementType::wire,
+            .input_count = connection_count_t {1},
+            .output_count = line_tree.output_count(),
 
-                .sub_circuit_id = null_circuit,
-                .input_inverters = {false},
-                .output_delays = std::move(delays),
-                .history_length = tree_max_delay,
-            });
-        }
+            .sub_circuit_id = null_circuit,
+            .input_inverters = {false},
+            .output_delays = std::move(delays),
+            .history_length = tree_max_delay,
+        });
     }
 }
 
 auto add_layout_elements(Schematic& schematic, const Layout& layout,
                          delay_t wire_delay_per_distance) -> void {
-    for (const auto element : layout.elements()) {
-        bool inserted = element.is_inserted();
+    // insert unused elements, so the IDs match
 
-        if (inserted && element.is_logic_item()) {
-            add_logic_item(schematic, element);
-        }
-
-        else if (inserted && element.is_wire()) {
-            add_wire(schematic, element, wire_delay_per_distance);
-        }
-
-        else {
+    for (const auto logicitem_id : logicitem_ids(layout)) {
+        if (is_inserted(layout, logicitem_id)) {
+            add_logic_item(schematic, layout, logicitem_id);
+        } else {
             add_unused_element(schematic);
         }
+    }
+
+    for (const auto non_inserted_wire_id : range(first_inserted_wire_id)) {
+        add_unused_element(schematic);
+    }
+
+    for (const auto inserted_wire_id : inserted_wire_ids(layout)) {
+        add_wire(schematic, layout, inserted_wire_id, wire_delay_per_distance);
     }
 }
 

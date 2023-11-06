@@ -20,7 +20,7 @@ namespace logicsim {
  *     * wire_id and connection_id are either both valid or null.
  */
 struct segment_t {
-    wire_id_t wire_id {null_wire};
+    wire_id_t wire_id {null_wire_id};
     segment_index_t segment_index {null_segment_index};
 
     [[nodiscard]] explicit constexpr segment_t() noexcept = default;

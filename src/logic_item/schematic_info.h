@@ -15,8 +15,7 @@ namespace logicsim {
 [[nodiscard]] auto element_enable_input_id(ElementType element_type)
     -> std::optional<connection_id_t>;
 
-[[nodiscard]] auto element_output_delay(ElementType element_type) -> delay_t;
-
+[[nodiscard]] auto element_output_delay(LogicItemType logicitem_type) -> delay_t;
 
 [[nodiscard]] auto element_internal_connections(ElementType element_type)
     -> internal_connections_t;

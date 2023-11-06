@@ -112,7 +112,7 @@ constexpr auto wire_id_t::operator++(int) -> wire_id_t {
 // Constants
 //
 
-constexpr inline static auto null_wire = wire_id_t {-1};
+constexpr inline static auto null_wire_id = wire_id_t {-1};
 constexpr inline static auto temporary_wire_id = wire_id_t {0};
 constexpr inline static auto colliding_wire_id = wire_id_t {1};
 constexpr inline static auto first_inserted_wire_id = wire_id_t {2};

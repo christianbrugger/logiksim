@@ -202,6 +202,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/line_insertion_type.cpp
     src/vocabulary/logic_small_vector.cpp
     src/vocabulary/logic_vector.cpp
+    src/vocabulary/logicitem_connection.cpp
     src/vocabulary/logicitem_id.cpp
     src/vocabulary/logicitem_type.cpp
     src/vocabulary/offset.cpp

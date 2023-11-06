@@ -114,9 +114,9 @@ auto element_enable_input_id(ElementType element_type) -> std::optional<connecti
     return get_layout_info(logicitem_type).enable_input_id;
 }
 
-auto element_output_delay(ElementType element_type) -> delay_t {
-    switch (element_type) {
-        using enum ElementType;
+auto element_output_delay(LogicItemType logicitem_type) -> delay_t {
+    switch (logicitem_type) {
+        using enum LogicItemType;
 
         case button:
             return button_delay;

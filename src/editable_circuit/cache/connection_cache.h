@@ -4,6 +4,7 @@
 #include "editable_circuit/message_forward.h"
 #include "format/struct.h"
 #include "vocabulary.h"
+#include "vocabulary/logicitem_connection.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -14,45 +15,58 @@ namespace logicsim {
 class Layout;
 struct layout_calculation_data_t;
 
-namespace detail::connection_cache {
+namespace connection_cache {
 
-struct connection_data_t {
-    element_id_t element_id;
-    segment_index_t segment_index;
-    connection_id_t connection_id;
+enum class ContentType { LogicItem, Wire };
+enum class DirectionType { Input, Output };
+
+struct wire_value_t {
+    segment_t segment;
     orientation_t orientation;
 
     [[nodiscard]] auto format() const -> std::string;
 
-    [[nodiscard]] auto is_connection() const -> bool;
-    [[nodiscard]] auto is_wire_segment() const -> bool;
-
-    [[nodiscard]] auto connection() const -> connection_t;
-    [[nodiscard]] auto segment() const -> segment_t;
-
-    [[nodiscard]] auto operator==(const connection_data_t& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const connection_data_t& other) const = default;
+    [[nodiscard]] auto operator==(const wire_value_t& other) const -> bool = default;
+    [[nodiscard]] auto operator<=>(const wire_value_t& other) const = default;
 };
 
-static_assert(sizeof(connection_data_t) == 12);
+template <ContentType Content>
+using value_t = std::conditional_t<Content == ContentType::LogicItem,
+                                   logicitem_connection_t, wire_value_t>;
 
-using map_type = ankerl::unordered_dense::map<point_t, connection_data_t>;
+template <ContentType Content>
+using map_type = ankerl::unordered_dense::map<point_t, value_t<Content>>;
 
-}  // namespace detail::connection_cache
 
-template <bool IsInput>
+using logicitem_map_t = map_type<ContentType::LogicItem>;
+using wire_map_t = map_type<ContentType::Wire>;
+
+static_assert(sizeof(value_t<ContentType::LogicItem>) == 8);
+static_assert(sizeof(value_t<ContentType::Wire>) == 12);
+
+}  // namespace connection_cache
+
+namespace detail::connection_cache {}  // namespace detail::connection_cache
+
+template <connection_cache::ContentType Content,
+          connection_cache::DirectionType Direction>
 class ConnectionCache {
    public:
-    using connection_data_t = detail::connection_cache::connection_data_t;
-    using map_type = detail::connection_cache::map_type;
+    using ContentType = connection_cache::ContentType;
+    using DirectionType = connection_cache::DirectionType;
+
+    using value_t = connection_cache::value_t<Content>;
+    using map_type = connection_cache::map_type<Content>;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
-    [[nodiscard]] auto find(point_t position) const -> std::optional<connection_data_t>;
+    [[nodiscard]] auto find(point_t position) const -> std::optional<value_t>;
 
+    // TODO require ContentType == LogicItem
     [[nodiscard]] auto is_colliding(const layout_calculation_data_t& data) const -> bool;
+    // TODO require ContentType == Wire
     [[nodiscard]] auto is_colliding(point_t position, orientation_t orientation) const
         -> bool;
 
@@ -85,6 +99,16 @@ class ConnectionCache {
 
     map_type map_ {};
 };
+
+using LogicItemInputCache = ConnectionCache<connection_cache::ContentType::LogicItem,
+                                            connection_cache::DirectionType::Input>;
+using LogicItemOutputCache = ConnectionCache<connection_cache::ContentType::LogicItem,
+                                             connection_cache::DirectionType::Output>;
+
+using WireInputCache = ConnectionCache<connection_cache::ContentType::Wire,
+                                       connection_cache::DirectionType::Input>;
+using WireOutputCache = ConnectionCache<connection_cache::ContentType::Wire,
+                                        connection_cache::DirectionType::Output>;
 
 }  // namespace logicsim
 

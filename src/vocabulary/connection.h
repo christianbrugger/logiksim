@@ -29,7 +29,7 @@ struct connection_t {
                                                   connection_id_t connection_id_);
 
     /**
-     * @brief: The bool cast tests if this segment is valid.
+     * @brief: The bool cast tests if this connection is valid.
      */
     [[nodiscard]] explicit constexpr operator bool() const noexcept;
 

@@ -15,7 +15,7 @@ namespace logicsim {
 
 auto get_random_segment_tree(Rng& rng, const Layout& layout) -> wire_id_t {
     if (!has_segments(layout)) {
-        return null_wire;
+        return null_wire_id;
     }
 
     while (true) {
