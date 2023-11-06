@@ -1081,17 +1081,17 @@ auto draw_line_segment(Context& ctx, segment_info_t info, bool is_enabled,
     }
 }
 
-auto draw_segment_tree(Context& ctx, layout::ConstElement element, bool is_enabled,
-                       ElementDrawState state) -> void {
-    for (const segment_info_t& info : element.segment_tree()) {
+auto draw_segment_tree(Context& ctx, const Layout& layout, wire_id_t wire_id,
+                       bool is_enabled, ElementDrawState state) -> void {
+    for (const segment_info_t& info : layout.wires().segment_tree(wire_id)) {
         draw_line_segment(ctx, info, is_enabled, state);
     }
 }
 
-auto draw_segment_tree(Context& ctx, layout::ConstElement element, ElementDrawState state)
-    -> void {
+auto draw_segment_tree(Context& ctx, const Layout& layout, wire_id_t wire_id,
+                       ElementDrawState state) -> void {
     bool is_enabled = false;
-    draw_segment_tree(ctx, element, is_enabled, state);
+    draw_segment_tree(ctx, layout, wire_id, is_enabled, state);
 }
 
 auto _draw_line_segment_with_history(Context& ctx, point_t p_from, point_t p_until,
@@ -1122,7 +1122,7 @@ auto _draw_line_segment_with_history(Context& ctx, point_t p_from, point_t p_unt
     }
 }
 
-auto _draw_wire_with_history(Context& ctx, layout::ConstElement element,
+auto _draw_wire_with_history(Context& ctx, const Layout& layout, wire_id_t wire_id,
                              simulation_view::ConstElement logic_state,
                              const simulation::HistoryView& history) -> void {
     if (history.size() < 2) [[unlikely]] {
@@ -1133,7 +1133,7 @@ auto _draw_wire_with_history(Context& ctx, layout::ConstElement element,
     const auto to_time = [time = logic_state.time(),
                           delay = logic_state.wire_delay_per_distance()](
                              length_t length_) { return time - length_.value * delay; };
-    const auto& line_tree = element.line_tree();
+    const auto& line_tree = layout.wires().line_tree(wire_id);
 
     for (auto&& index : indices(line_tree)) {
         const auto line = line_tree.line(index);
@@ -1154,41 +1154,43 @@ auto _draw_wire_with_history(Context& ctx, layout::ConstElement element,
     }
 }
 
-auto draw_wire(Context& ctx, layout::ConstElement element,
+auto draw_wire(Context& ctx, const Layout& layout, wire_id_t wire_id,
                simulation_view::ConstElement logic_state) -> void {
     const auto history = logic_state.input_history();
 
     if (history.size() <= 1) {
-        draw_segment_tree(ctx, element, history.last_value(), ElementDrawState::normal);
+        draw_segment_tree(ctx, layout, wire_id, history.last_value(),
+                          ElementDrawState::normal);
         return;
     }
 
-    _draw_wire_with_history(ctx, element, logic_state, history);
+    _draw_wire_with_history(ctx, layout, wire_id, logic_state, history);
 }
 
 //
 //
 //
 
+/*
 auto draw_wires(Context& ctx, const Layout& layout,
                 std::span<const DrawableElement> elements) -> void {
     for (const auto entry : elements) {
-        draw_segment_tree(ctx, layout.element(entry.element_id), entry.state);
+        draw_segment_tree(ctx, layout, entry.wire, entry.state);
+    }
+}
+*/
+
+auto draw_wires(Context& ctx, const Layout& layout, std::span<const wire_id_t> elements,
+                ElementDrawState state) -> void {
+    for (const auto& wire_id : elements) {
+        draw_segment_tree(ctx, layout, wire_id, state);
     }
 }
 
-auto draw_wires(Context& ctx, const Layout& layout,
-                std::span<const element_id_t> elements, ElementDrawState state) -> void {
-    for (const auto element_id : elements) {
-        draw_segment_tree(ctx, layout.element(element_id), state);
-    }
-}
-
-auto draw_wires(Context& ctx, const Layout& layout,
-                std::span<const element_id_t> elements, SimulationView simulation_view)
-    -> void {
-    for (const auto element_id : elements) {
-        draw_wire(ctx, layout.element(element_id), simulation_view.element(element_id));
+auto draw_wires(Context& ctx, const Layout& layout, std::span<const wire_id_t> elements,
+                SimulationView simulation_view) -> void {
+    for (const auto& wire_id : elements) {
+        draw_wire(ctx, layout, wire_id, simulation_view.element(layout, wire_id));
     }
 }
 
@@ -1323,28 +1325,28 @@ auto shadow_color(shadow_t shadow_type) -> color_t {
     throw_exception("unknown shadow type");
 }
 
-auto element_shadow_rounding(ElementType type [[maybe_unused]]) -> grid_fine_t {
-    return type == ElementType::button ? grid_fine_t {0.} : line_selection_padding();
+auto element_shadow_rounding(LogicItemType type) -> grid_fine_t {
+    return type == LogicItemType::button ? grid_fine_t {0.} : line_selection_padding();
 }
 
 auto draw_logic_item_shadow(Context& ctx, const Layout& layout,
                             logicitem_id_t logicitem_id, shadow_t shadow_type) -> void {
-    const auto data = to_layout_calculation_data(element.layout(), element);
-    const auto rect = element_shadow_rect(data);
+    const auto layout_data = to_layout_calculation_data(layout, logicitem_id);
+    const auto rect = element_shadow_rect(layout_data);
 
     draw_round_rect(ctx, rect,
                     {
                         .draw_type = ShapeDrawType::fill,
-                        .rounding = element_shadow_rounding(data.element_type),
+                        .rounding = element_shadow_rounding(layout_data.logicitem_type),
                         .fill_color = shadow_color(shadow_type),
                     });
 }
 
 auto draw_logic_item_shadows(Context& ctx, const Layout& layout,
-                             std::span<const element_id_t> elements, shadow_t shadow_type)
-    -> void {
-    for (const auto element_id : elements) {
-        draw_logic_item_shadow(ctx, layout.element(element_id), shadow_type);
+                             std::span<const logicitem_id_t> elements,
+                             shadow_t shadow_type) -> void {
+    for (const auto& logicitem_id : elements) {
+        draw_logic_item_shadow(ctx, layout, logicitem_id, shadow_type);
     }
 }
 
