@@ -1,6 +1,5 @@
 #include "logic_item/simulation_info.h"
 
-#include "layout_info.h"
 #include "logic_item/schematic_info.h"
 #include "schematic.h"
 #include "vocabulary/connection.h"
@@ -69,6 +68,7 @@ auto is_internal_state_user_writable(const ElementType type) -> bool {
 // Initialization
 //
 
+// TODO remove Schematic dependency
 auto initialize_input_values(const Schematic &schematic,
                              std::vector<logic_small_vector_t> &input_values) -> void {
     auto set_input = [&](input_t input, bool value) {
@@ -77,6 +77,7 @@ auto initialize_input_values(const Schematic &schematic,
 
     for (const auto element_id : element_ids(schematic)) {
         // unconnected enable inputs
+
         if (const auto enable_id =
                 element_enable_input_id(schematic.element_type(element_id))) {
             const auto input = input_t {element_id, *enable_id};

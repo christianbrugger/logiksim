@@ -42,10 +42,8 @@ auto button_body_overdraw() -> grid_fine_t {
 
 auto is_input_output_count_valid(LogicItemType logicitem_type, connection_count_t input_count,
                                  connection_count_t output_count) -> bool {
-    const auto info = get_layout_info(logicitem_type);
-
-    return info.input_count_min <= input_count && input_count <= info.input_count_max &&
-           info.output_count_min <= output_count && output_count <= info.output_count_max;
+    return layout_info::is_input_output_count_valid(logicitem_type, input_count,
+                                                    output_count);
 }
 
 auto is_orientation_valid(LogicItemType logicitem_type, orientation_t orientation) -> bool {

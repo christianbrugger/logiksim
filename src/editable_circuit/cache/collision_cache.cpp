@@ -379,8 +379,7 @@ auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
         }
 
         default: {
-            // TODO can we std::terminate ?
-            throw std::runtime_error("unexpected case");
+            std::terminate();
         }
     }
 
@@ -429,8 +428,7 @@ auto set_wire_state(CollisionCache::map_type& map, point_t position,
         }
 
         default: {
-            // TODO can we std::terminate ?
-            throw std::runtime_error("unexpected case");
+            std::terminate();
         }
     }
 

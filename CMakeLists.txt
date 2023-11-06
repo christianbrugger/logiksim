@@ -318,6 +318,7 @@ set(LS_TEST_SOURCES
     test/iterator_adaptor/transform_view_test.cpp
 
     test/logic_item/layout_test.cpp
+    test/logic_item/schematic_info_test.cpp
 
     test/random/generator_test.cpp
 

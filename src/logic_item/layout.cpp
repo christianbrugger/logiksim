@@ -176,4 +176,15 @@ auto element_body_points_base(const layout_calculation_data_t& data)
     std::terminate();
 }
 
+namespace layout_info {
+auto is_input_output_count_valid(LogicItemType logicitem_type,
+                                 connection_count_t input_count,
+                                 connection_count_t output_count) -> bool {
+    const auto info = get_layout_info(logicitem_type);
+
+    return info.input_count_min <= input_count && input_count <= info.input_count_max &&
+           info.output_count_min <= output_count && output_count <= info.output_count_max;
+}
+}  // namespace layout_info
+
 }  // namespace logicsim

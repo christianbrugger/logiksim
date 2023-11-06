@@ -25,6 +25,7 @@ namespace collision_cache {
  */
 enum class ItemType {
     // TODO rename logicitem_*
+    // TODO separate enum for logicitem & wire ?
     element_body,
     element_connection,
     wire_connection,
