@@ -16,6 +16,7 @@ class Layout;
 class Selection;
 class EditableCircuit;
 struct ViewConfig;
+struct logicitem_id_t;
 
 namespace defaults {
 constexpr static inline auto size_handle_stroke_width_device = 1;  // device coordinates
@@ -27,7 +28,7 @@ struct size_handle_t {
     point_fine_t point;
 };
 
-auto size_handle_positions(const layout::ConstElement element)
+auto size_handle_positions(const Layout& layout, logicitem_id_t logicitem_id)
     -> std::vector<size_handle_t>;
 
 auto size_handle_positions(const Layout& layout, const Selection& selection)

@@ -68,7 +68,7 @@ class LogicItemStore {
         -> const attributes_clock_generator_t &;
 
     [[nodiscard]] auto input_inverted(logicitem_id_t logicitem_id,
-                                       connection_id_t input_id) const -> bool;
+                                      connection_id_t input_id) const -> bool;
     [[nodiscard]] auto output_inverted(logicitem_id_t logicitem_id,
                                        connection_id_t output_id) const -> bool;
 
@@ -78,6 +78,10 @@ class LogicItemStore {
         -> void;
     auto set_attributes(logicitem_id_t logicitem_id, attributes_clock_generator_t attrs)
         -> void;
+    auto set_input_inverter(logicitem_id_t logicitem_id, connection_id_t connection_id,
+                            bool value) -> void;
+    auto set_output_inverter(logicitem_id_t logicitem_id, connection_id_t connection_id,
+                             bool value) -> void;
 
    private:
     auto delete_last() -> void;
@@ -109,7 +113,7 @@ class LogicItemStore {
     -> layout_calculation_data_t;
 
 [[nodiscard]] auto to_logicitem_definition(const LogicItemStore &store,
-                                            logicitem_id_t logicitem_id)
+                                           logicitem_id_t logicitem_id)
     -> ElementDefinition;
 
 }  // namespace layout

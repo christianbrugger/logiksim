@@ -50,28 +50,22 @@ static_assert(sizeof(wire_connection_t) == 12);
 static_assert(sizeof(wire_connections_t) == 40);
 
 auto has_duplicate_element_ids(wire_connections_t connections) -> bool {
-    auto to_element_id = [](wire_connection_t input) { return input.segment.element_id; };
+    auto to_wire_id = [](wire_connection_t input) { return input.segment.wire_id; };
 
-    std::ranges::sort(connections, std::ranges::less {}, to_element_id);
+    std::ranges::sort(connections, std::ranges::less {}, to_wire_id);
 
     return std::ranges::adjacent_find(connections, std::ranges::equal_to {},
-                                      to_element_id) != connections.end();
+                                      to_wire_id) != connections.end();
 }
 
-auto is_convertible_to_input(const Layout& layout, element_id_t element_id) -> bool {
-    const auto element = layout.element(element_id);
-
-    if (!element.is_wire()) [[unlikely]] {
-        throw_exception("only works for wires");
-    }
-
-    return !element.segment_tree().has_input();
+auto is_convertible_to_input(const Layout& layout, wire_id_t wire_id) -> bool {
+    return !layout.wires().segment_tree(wire_id).has_input();
 }
 
 auto all_convertible_to_input(const Layout& layout, wire_connections_t connections)
     -> bool {
     return std::ranges::all_of(connections, [&](wire_connection_t input) {
-        return is_convertible_to_input(layout, input.segment.element_id);
+        return is_convertible_to_input(layout, input.segment.wire_id);
     });
 }
 
@@ -91,14 +85,13 @@ auto find_convertible_wire_input_candiates(const CacheProvider& cache,
     auto result = convertible_inputs_result_t {};
 
     for (const auto& info : output_locations(data)) {
-        if (const auto entry = cache.output_cache().find(info.position)) {
+        if (const auto entry = cache.wire_output_cache().find(info.position)) {
             // not compatible
-            if (!entry->is_wire_segment() ||
-                !orientations_compatible(info.orientation, entry->orientation)) {
+            if (!orientations_compatible(info.orientation, entry->orientation)) {
                 return {.any_collisions = true};
             }
 
-            result.convertible_inputs.push_back({info.position, entry->segment()});
+            result.convertible_inputs.push_back({info.position, entry->segment});
         }
     }
 
@@ -127,13 +120,11 @@ auto assert_equal_type(SegmentPointType type, SegmentPointType expected) -> void
 
 auto convert_from_to(Layout& layout, MessageSender& sender, wire_connection_t output,
                      SegmentPointType from_type, SegmentPointType to_type) {
-    const auto element = layout.element(output.segment.element_id);
-
-    if (!element.is_wire() || !element.is_inserted()) [[unlikely]] {
+    if (output.segment.wire_id < first_inserted_wire_id) [[unlikely]] {
         throw_exception("can only convert inserted wires");
     }
 
-    auto& m_tree = element.modifyable_segment_tree();
+    auto& m_tree = layout.wires().modifyable_segment_tree(output.segment.wire_id);
     const auto old_info = m_tree.info(output.segment.segment_index);
     auto new_info = old_info;
 
@@ -183,9 +174,8 @@ auto convert_to_inputs(Layout& layout, MessageSender& sender,
 // Deletion Handling
 //
 
-auto is_wire_with_segments(const Layout& layout, const element_id_t element_id) -> bool {
-    const auto element = layout.element(element_id);
-    return element.is_wire() && !element.segment_tree().empty();
+auto is_wire_with_segments(const Layout& layout, const wire_id_t wire_id) -> bool {
+    return !layout.wires().segment_tree(wire_id).empty();
 }
 
 auto notify_element_deleted(const Layout& layout, MessageSender& sender,
@@ -349,112 +339,112 @@ auto swap_and_delete_multiple_elements(Layout& layout, MessageSender& sender,
 //
 
 auto is_logic_item_position_representable_private(const Layout& layout,
-                                                  const element_id_t element_id, int dx,
-                                                  int dy) -> bool {
-    if (!element_id) [[unlikely]] {
+                                                  const logicitem_id_t logicitem_id,
+                                                  int dx, int dy) -> bool {
+    if (!logicitem_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
 
-    const auto position = layout.position(element_id);
+    const auto position = layout.logic_items().position(logicitem_id);
 
     if (!is_representable(position, dx, dy)) {
         return false;
     }
 
-    auto data = to_layout_calculation_data(layout, element_id);
+    auto data = to_layout_calculation_data(layout, logicitem_id);
     data.position = add_unchecked(position, dx, dy);
 
     return is_representable(data);
 }
 
 auto is_logic_item_position_representable(const Layout& layout,
-                                          const element_id_t element_id, int dx, int dy)
-    -> bool {
+                                          const logicitem_id_t logicitem_id, int dx,
+                                          int dy) -> bool {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "is_logic_item_position_representable(element_id = {}, dx = {}, dy = {});\n"
+            "is_logic_item_position_representable(logicitem_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
-            layout, element_id, dx, dy);
+            layout, logicitem_id, dx, dy);
     }
-    return is_logic_item_position_representable_private(layout, element_id, dx, dy);
+    return is_logic_item_position_representable_private(layout, logicitem_id, dx, dy);
 }
 
 auto move_or_delete_logic_item_private(Layout& layout, MessageSender& sender,
-                                       element_id_t& element_id, int dx, int dy) -> void {
-    if (!element_id) [[unlikely]] {
-        throw_exception("element id is invalid");
+                                       logicitem_id_t& logicitem_id, int dx, int dy)
+    -> void {
+    if (!logicitem_id) [[unlikely]] {
+        throw_exception("logicitem id is invalid");
     }
-    if (layout.display_state(element_id) != display_state_t::temporary) [[unlikely]] {
-        throw_exception("Only temporary items can be freely moded.");
+    if (layout.logic_items().display_state(logicitem_id) != display_state_t::temporary)
+        [[unlikely]] {
+        throw_exception("Only temporary items can be freely moved.");
     }
 
-    if (!is_logic_item_position_representable_private(layout, element_id, dx, dy)) {
-        swap_and_delete_single_element_private(layout, sender, element_id);
+    if (!is_logic_item_position_representable_private(layout, logicitem_id, dx, dy)) {
+        swap_and_delete_single_element_private(layout, sender, logicitem_id);
         return;
     }
 
-    const auto position = add_unchecked(layout.position(element_id), dx, dy);
-    layout.set_position(element_id, position);
+    move_logic_item_unchecked_private(layout, logicitem_id, dx, dy);
 }
 
 auto move_or_delete_logic_item(Layout& layout, MessageSender& sender,
-                               element_id_t& element_id, int dx, int dy) -> void {
+                               logicitem_id_t& logicitem_id, int dx, int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_or_delete_logic_item(element_id = {}, dx = {}, dy = {});\n"
+            "move_or_delete_logic_item(logicitem_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
-            layout, element_id, dx, dy);
+            layout, logicitem_id, dx, dy);
     }
-    move_or_delete_logic_item_private(layout, sender, element_id, dx, dy);
+    move_or_delete_logic_item_private(layout, sender, logicitem_id, dx, dy);
 }
 
-auto move_logic_item_unchecked_private(Layout& layout, const element_id_t element_id,
+auto move_logic_item_unchecked_private(Layout& layout, const logicitem_id_t logicitem_id,
                                        int dx, int dy) -> void {
-    const auto position = add_unchecked(layout.position(element_id), dx, dy);
-    layout.set_position(element_id, position);
+    const auto position =
+        add_unchecked(layout.logic_items().position(logicitem_id), dx, dy);
+    layout.logic_items().set_position(logicitem_id, position);
 }
 
-auto move_logic_item_unchecked(Layout& layout, const element_id_t element_id, int dx,
+auto move_logic_item_unchecked(Layout& layout, const logicitem_id_t logicitem_id, int dx,
                                int dy) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "move_logic_item_unchecked(element_id = {}, dx = {}, dy = {});\n"
+            "move_logic_item_unchecked(logicitem_id = {}, dx = {}, dy = {});\n"
             "==========================================================\n\n",
-            layout, element_id, dx, dy);
+            layout, logicitem_id, dx, dy);
     }
-    move_logic_item_unchecked_private(layout, element_id, dx, dy);
+    move_logic_item_unchecked_private(layout, logicitem_id, dx, dy);
 }
 
 auto toggle_inverter_private(Layout& layout, const CacheProvider& cache, point_t point)
     -> void {
-    if (const auto entry = cache.input_cache().find(point);
-        entry.has_value() && entry->is_connection()) {
-        const auto element = layout.element(entry->element_id);
-
-        const auto info = input_locations(element.to_layout_calculation_data())
-                              .at(std::size_t {entry->connection_id});
+    if (const auto entry = cache.logicitem_input_cache().find(point)) {
+        const auto layout_data = to_layout_calculation_data(layout, entry->logicitem_id);
+        const auto info = input_locations(layout_data).at(entry->connection_id.value);
         assert(info.position == point);
 
         if (is_directed(info.orientation)) {
-            element.set_input_inverter(entry->connection_id,
-                                       !element.input_inverted(entry->connection_id));
+            const auto value = layout.logic_items().input_inverted(entry->logicitem_id,
+                                                                   entry->connection_id);
+            layout.logic_items().set_input_inverter(entry->logicitem_id,
+                                                    entry->connection_id, !value);
         }
     }
 
-    if (const auto entry = cache.output_cache().find(point);
-        entry.has_value() && entry->is_connection()) {
-        const auto element = layout.element(entry->element_id);
-
-        const auto info = output_locations(element.to_layout_calculation_data())
-                              .at(std::size_t {entry->connection_id});
+    if (const auto entry = cache.logicitem_output_cache().find(point)) {
+        const auto layout_data = to_layout_calculation_data(layout, entry->logicitem_id);
+        const auto info = output_locations(layout_data).at(entry->connection_id.value);
         assert(info.position == point);
 
         if (is_directed(info.orientation)) {
-            element.set_output_inverter(entry->connection_id,
-                                        !element.output_inverted(entry->connection_id));
+            const auto value = layout.logic_items().output_inverted(entry->logicitem_id,
+                                                                    entry->connection_id);
+            layout.logic_items().set_output_inverter(entry->logicitem_id,
+                                                     entry->connection_id, !value);
         }
     }
 }
@@ -474,12 +464,11 @@ auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) 
 // logic item mode change
 //
 
-auto any_circuit_item_inputs_colliding(const CacheProvider& cache,
-                                       const layout_calculation_data_t& data) -> bool {
+auto any_logic_item_inputs_colliding(const CacheProvider& cache,
+                                     const layout_calculation_data_t& data) -> bool {
     const auto compatible = [&](simple_input_info_t info) -> bool {
-        if (const auto entry = cache.output_cache().find(info.position)) {
-            return entry->is_wire_segment() &&
-                   orientations_compatible(info.orientation, entry->orientation);
+        if (const auto entry = cache.wire_output_cache().find(info.position)) {
+            return orientations_compatible(info.orientation, entry->orientation);
         }
         return true;
     };
@@ -487,23 +476,22 @@ auto any_circuit_item_inputs_colliding(const CacheProvider& cache,
     return !std::ranges::all_of(input_locations(data), compatible);
 }
 
-auto any_circuit_item_outputs_colliding(const Layout& layout, const CacheProvider& cache,
-                                        const layout_calculation_data_t& data) -> bool {
+auto any_logic_item_outputs_colliding(const Layout& layout, const CacheProvider& cache,
+                                      const layout_calculation_data_t& data) -> bool {
     return find_convertible_wire_inputs(layout, cache, data).any_collisions;
 }
 
-auto is_circuit_item_colliding(const Layout& layout, const CacheProvider& cache,
-                               const element_id_t element_id) {
-    const auto data = to_layout_calculation_data(layout, element_id);
+auto is_logic_item_colliding(const Layout& layout, const CacheProvider& cache,
+                             const logicitem_id_t logicitem_id) {
+    const auto data = to_layout_calculation_data(layout, logicitem_id);
 
     return cache.collision_cache().is_colliding(data) ||
-           any_circuit_item_inputs_colliding(cache, data) ||
-           any_circuit_item_outputs_colliding(layout, cache, data);
+           any_logic_item_inputs_colliding(cache, data) ||
+           any_logic_item_outputs_colliding(layout, cache, data);
 }
 
-auto insert_logic_item_wire_conversion(State state, const element_id_t element_id) {
-    const auto element = state.layout.element(element_id);
-    const auto data = element.to_layout_calculation_data();
+auto insert_logic_item_wire_conversion(State state, const logicitem_id_t logicitem_id) {
+    const auto data = to_layout_calculation_data(state.layout, logicitem_id);
 
     auto result = find_convertible_wire_inputs(state.layout, state.cache, data);
 
@@ -515,157 +503,156 @@ auto insert_logic_item_wire_conversion(State state, const element_id_t element_i
     convert_to_inputs(state.layout, state.sender, result.convertible_inputs);
 }
 
-auto uninsert_logic_item_wire_conversion(State state, element_id_t element_id) -> void {
-    const auto data = to_layout_calculation_data(state.layout, element_id);
+auto uninsert_logic_item_wire_conversion(State state, const logicitem_id_t logicitem_id)
+    -> void {
+    const auto data = to_layout_calculation_data(state.layout, logicitem_id);
 
     for (auto info : output_locations(data)) {
-        if (const auto entry = state.cache.input_cache().find(info.position)) {
-            const auto connection = wire_connection_t {info.position, entry->segment()};
+        if (const auto entry = state.cache.wire_input_cache().find(info.position)) {
+            const auto connection = wire_connection_t {info.position, entry->segment};
             convert_to_output(state.layout, state.sender, connection);
         }
     }
 }
 
 auto notify_logic_item_inserted(const Layout& layout, MessageSender& sender,
-                                const element_id_t element_id) {
-    const auto data = to_layout_calculation_data(layout, element_id);
-    sender.submit(info_message::LogicItemInserted {element_id, data});
+                                const logicitem_id_t logicitem_id) {
+    const auto data = to_layout_calculation_data(layout, logicitem_id);
+    sender.submit(info_message::LogicItemInserted {logicitem_id, data});
 }
 
 auto notify_logic_item_uninserted(const Layout& layout, MessageSender& sender,
-                                  const element_id_t element_id) {
-    const auto data = to_layout_calculation_data(layout, element_id);
-    sender.submit(info_message::LogicItemUninserted {element_id, data});
+                                  const logicitem_id_t logicitem_id) {
+    const auto data = to_layout_calculation_data(layout, logicitem_id);
+    sender.submit(info_message::LogicItemUninserted {logicitem_id, data});
 }
 
-auto _element_change_temporary_to_colliding(State state, const element_id_t element_id)
-    -> void {
-    if (state.layout.display_state(element_id) != display_state_t::temporary)
-        [[unlikely]] {
+auto _element_change_temporary_to_colliding(State state,
+                                            const logicitem_id_t logicitem_id) -> void {
+    if (state.layout.logic_items().display_state(logicitem_id) !=
+        display_state_t::temporary) [[unlikely]] {
         throw_exception("element is not in the right state.");
     }
 
-    if (is_circuit_item_colliding(state.layout, state.cache, element_id)) {
-        state.layout.set_display_state(element_id, display_state_t::colliding);
+    if (is_logic_item_colliding(state.layout, state.cache, logicitem_id)) {
+        state.layout.logic_items().set_display_state(logicitem_id,
+                                                     display_state_t::colliding);
     } else {
-        insert_logic_item_wire_conversion(state, element_id);
-        state.layout.set_display_state(element_id, display_state_t::valid);
-        notify_logic_item_inserted(state.layout, state.sender, element_id);
+        insert_logic_item_wire_conversion(state, logicitem_id);
+        state.layout.logic_items().set_display_state(logicitem_id,
+                                                     display_state_t::valid);
+        notify_logic_item_inserted(state.layout, state.sender, logicitem_id);
     }
 };
 
 auto _element_change_colliding_to_insert(Layout& layout, MessageSender& sender,
-                                         element_id_t& element_id) -> void {
-    const auto display_state = layout.display_state(element_id);
+                                         logicitem_id_t& logicitem_id) -> void {
+    const auto display_state = layout.logic_items().display_state(logicitem_id);
 
     if (display_state == display_state_t::valid) {
-        layout.set_display_state(element_id, display_state_t::normal);
+        layout.logic_items().set_display_state(logicitem_id, display_state_t::normal);
         return;
     }
 
     if (display_state == display_state_t::colliding) [[likely]] {
         // we can only delete temporary elements
-        layout.set_display_state(element_id, display_state_t::temporary);
-        swap_and_delete_single_element_private(layout, sender, element_id);
+        layout.logic_items().set_display_state(logicitem_id, display_state_t::temporary);
+        swap_and_delete_single_element_private(layout, sender, logicitem_id);
         return;
     }
 
     throw_exception("element is not in the right state.");
 };
 
-auto _element_change_insert_to_colliding(Layout& layout, const element_id_t element_id)
-    -> void {
-    if (layout.display_state(element_id) != display_state_t::normal) [[unlikely]] {
+auto _element_change_insert_to_colliding(Layout& layout,
+                                         const logicitem_id_t logicitem_id) -> void {
+    if (layout.logic_items().display_state(logicitem_id) != display_state_t::normal)
+        [[unlikely]] {
         throw_exception("element is not in the right state.");
     }
 
-    layout.set_display_state(element_id, display_state_t::valid);
+    layout.logic_items().set_display_state(logicitem_id, display_state_t::valid);
 };
 
-auto _element_change_colliding_to_temporary(State state, const element_id_t element_id)
-    -> void {
-    const auto display_state = state.layout.display_state(element_id);
+auto _element_change_colliding_to_temporary(State state,
+                                            const logicitem_id_t logicitem_id) -> void {
+    const auto display_state = state.layout.logic_items().display_state(logicitem_id);
 
     if (display_state == display_state_t::valid) {
-        notify_logic_item_uninserted(state.layout, state.sender, element_id);
-        state.layout.set_display_state(element_id, display_state_t::temporary);
-        uninsert_logic_item_wire_conversion(state, element_id);
+        notify_logic_item_uninserted(state.layout, state.sender, logicitem_id);
+        state.layout.logic_items().set_display_state(logicitem_id,
+                                                     display_state_t::temporary);
+        uninsert_logic_item_wire_conversion(state, logicitem_id);
         return;
     }
 
     if (display_state == display_state_t::colliding) {
-        state.layout.set_display_state(element_id, display_state_t::temporary);
+        state.layout.logic_items().set_display_state(logicitem_id,
+                                                     display_state_t::temporary);
         return;
     }
 
     throw_exception("element is not in the right state.");
 };
 
-auto change_logic_item_insertion_mode_private(State state, element_id_t& element_id,
+auto change_logic_item_insertion_mode_private(State state, logicitem_id_t& logicitem_id,
                                               InsertionMode new_mode) -> void {
-    if (!element_id) [[unlikely]] {
+    if (!logicitem_id) [[unlikely]] {
         throw_exception("element id is invalid");
     }
-    if (!state.layout.element(element_id).is_logic_item()) [[unlikely]] {
-        throw_exception("only works on logic elements");
-    }
 
-    const auto old_mode = to_insertion_mode(state.layout.display_state(element_id));
+    const auto old_mode =
+        to_insertion_mode(state.layout.logic_items().display_state(logicitem_id));
     if (old_mode == new_mode) {
         return;
     }
 
     if (old_mode == InsertionMode::temporary) {
-        _element_change_temporary_to_colliding(state, element_id);
+        _element_change_temporary_to_colliding(state, logicitem_id);
     }
     if (new_mode == InsertionMode::insert_or_discard) {
-        _element_change_colliding_to_insert(state.layout, state.sender, element_id);
+        _element_change_colliding_to_insert(state.layout, state.sender, logicitem_id);
     }
     if (old_mode == InsertionMode::insert_or_discard) {
-        _element_change_insert_to_colliding(state.layout, element_id);
+        _element_change_insert_to_colliding(state.layout, logicitem_id);
     }
     if (new_mode == InsertionMode::temporary) {
-        _element_change_colliding_to_temporary(state, element_id);
+        _element_change_colliding_to_temporary(state, logicitem_id);
     }
 }
 
-auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
+auto change_logic_item_insertion_mode(State state, logicitem_id_t& logicitem_id,
                                       InsertionMode new_mode) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
             "\n==========================================================\n{}\n"
-            "change_logic_item_insertion_mode(element_id = {}, new_mode = {});\n"
+            "change_logic_item_insertion_mode(logicitem_id = {}, new_mode = {});\n"
             "==========================================================\n\n",
-            state.layout, element_id, new_mode);
+            state.layout, logicitem_id, new_mode);
     }
-    change_logic_item_insertion_mode_private(state, element_id, new_mode);
+    change_logic_item_insertion_mode_private(state, logicitem_id, new_mode);
 }
 
 auto add_logic_item_private(State state, const ElementDefinition& definition,
                             point_t position, InsertionMode insertion_mode)
-    -> element_id_t {
-    if (!is_logic_item(definition.element_type)) [[unlikely]] {
-        throw_exception("Definition is not a logic item");
-    }
-
-    // insert into underlyings
-    auto element_id =
-        state.layout.add_element(definition, point_t {0, 0}, display_state_t::temporary)
-            .element_id();
-    state.sender.submit(info_message::LogicItemCreated {element_id});
+    -> logicitem_id_t {
+    // insert into underlying
+    auto logicitem_id = state.layout.logic_items().add_logicitem(
+        definition, point_t {0, 0}, display_state_t::temporary);
+    state.sender.submit(info_message::LogicItemCreated {logicitem_id});
 
     // validates our position
-    move_or_delete_logic_item_private(state.layout, state.sender, element_id,  //
-                                      int {position.x},                        //
+    move_or_delete_logic_item_private(state.layout, state.sender, logicitem_id,  //
+                                      int {position.x},                          //
                                       int {position.y});
-    if (element_id) {
-        change_logic_item_insertion_mode_private(state, element_id, insertion_mode);
+    if (logicitem_id) {
+        change_logic_item_insertion_mode_private(state, logicitem_id, insertion_mode);
     }
-    return element_id;
+    return logicitem_id;
 }
 
 auto add_logic_item(State state, const ElementDefinition& definition, point_t position,
-                    InsertionMode insertion_mode) -> element_id_t {
+                    InsertionMode insertion_mode) -> logicitem_id_t {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
             "\n==========================================================\n{}\n"

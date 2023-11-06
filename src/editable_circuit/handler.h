@@ -53,21 +53,21 @@ auto swap_and_delete_single_element(Layout& layout, MessageSender& sender,
 //
 
 auto add_logic_item(State state, const ElementDefinition& definition, point_t position,
-                    InsertionMode insertion_mode) -> element_id_t;
+                    InsertionMode insertion_mode) -> logicitem_id_t;
 
-auto change_logic_item_insertion_mode(State state, element_id_t& element_id,
+auto change_logic_item_insertion_mode(State state, logicitem_id_t& logicitem_id,
                                       InsertionMode new_insertion_mode) -> void;
 
 auto is_logic_item_position_representable(const Layout& Layout,
-                                          const element_id_t element_id, int dx, int dy)
-    -> bool;
+                                          const logicitem_id_t logicitem_id, int dx,
+                                          int dy) -> bool;
 
 auto move_or_delete_logic_item(Layout& Layout, MessageSender& sender,
-                               element_id_t& element_id, int dx, int dy) -> void;
+                               logicitem_id_t& logicitem_id, int dx, int dy) -> void;
 
 // Assumptions:
 //   * all new positions are representable
-auto move_logic_item_unchecked(Layout& layout, const element_id_t element_id, int dx,
+auto move_logic_item_unchecked(Layout& layout, const logicitem_id_t logicitem_id, int dx,
                                int dy) -> void;
 
 auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) -> void;

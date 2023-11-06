@@ -1,11 +1,11 @@
 #include "logicitem_store.h"
-#include "logicitem_store.h"
-#include "component/layout/logicitem_store.h"
 
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/std_vector.h"
+#include "component/layout/logicitem_store.h"
 #include "layout_info.h"
+#include "logicitem_store.h"
 #include "validate_definition.h"
 #include "vocabulary/layout_calculation_data.h"
 
@@ -319,6 +319,18 @@ auto LogicItemStore::set_attributes(logicitem_id_t logicitem_id,
     }
 
     it->second = std::move(attrs);
+}
+
+auto LogicItemStore::set_input_inverter(logicitem_id_t logicitem_id,
+                                        connection_id_t connection_id, bool value)
+    -> void {
+    input_inverters_.at(logicitem_id.value).at(connection_id.value) = value;
+}
+
+auto LogicItemStore::set_output_inverter(logicitem_id_t logicitem_id,
+                                         connection_id_t connection_id, bool value)
+    -> void {
+    output_inverters_.at(logicitem_id.value).at(connection_id.value) = value;
 }
 
 auto LogicItemStore::delete_last() -> void {

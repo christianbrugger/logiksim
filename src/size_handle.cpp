@@ -14,31 +14,35 @@
 #include "logic_item/layout_display_number.h"
 #include "safe_numeric.h"
 #include "vocabulary/layout_calculation_data.h"
+#include "vocabulary/logicitem_id.h"
 #include "vocabulary/view_config.h"
 
 #include <blend2d.h>
 
 namespace logicsim {
 
-auto size_handle_positions(const layout::ConstElement element)
+auto size_handle_positions(const Layout& layout, logicitem_id_t logicitem_id)
     -> std::vector<size_handle_t> {
-    switch (element.element_type()) {
-        using enum ElementType;
+    switch (layout.logic_items().type(logicitem_id)) {
+        using enum LogicItemType;
 
         case and_element:
         case or_element:
         case xor_element: {
             // TODO move to logic_item/layout.h
             const auto overdraw = logic_item_body_overdraw();
-            const auto data = element.to_layout_calculation_data();
+            const auto data = to_layout_calculation_data(layout, logicitem_id);
             const auto width = element_width(data);
             const auto height = element_height(data);
 
+            const auto position = layout.logic_items().position(logicitem_id);
+            const auto orientation = layout.logic_items().orientation(logicitem_id);
+
             return {
-                size_handle_t {0, transform(element.position(), element.orientation(),
+                size_handle_t {0, transform(position, orientation,
                                             point_fine_t {width / 2., -overdraw})},
                 size_handle_t {1,
-                               transform(element.position(), element.orientation(),
+                               transform(position, orientation,
                                          point_fine_t {width / 2., height + overdraw})},
             };
         }
@@ -46,25 +50,24 @@ auto size_handle_positions(const layout::ConstElement element)
         case display_number: {
             // TODO move to logic_item/layout.h
             const auto overdraw = logic_item_body_overdraw();
-            const auto input_count = element.input_count();
+            const auto input_count = layout.logic_items().input_count(logicitem_id);
             const auto width = display_number::width(input_count);
 
             static_assert(display_number::min_value_inputs >= connection_count_t {1});
             const auto last_input_y = to_grid(display_number::value_inputs(input_count) -
                                               connection_count_t {1});
 
+            const auto position = layout.logic_items().position(logicitem_id);
+            const auto orientation = layout.logic_items().orientation(logicitem_id);
+
             return {
-                size_handle_t {1, transform(element.position(), element.orientation(),
+                size_handle_t {1, transform(position, orientation,
                                             point_fine_t {
                                                 0.5 * width,
                                                 last_input_y + overdraw,
                                             })},
             };
         }
-
-        case unused:
-        case placeholder:
-        case wire:
 
         case buffer_element:
         case button:
@@ -87,10 +90,10 @@ auto size_handle_positions(const layout::ConstElement element)
 
 namespace {
 
-auto get_single_logic_item(const Selection& selection) -> element_id_t {
+auto get_single_logic_item(const Selection& selection) -> logicitem_id_t {
     if (selection.selected_logic_items().size() != 1 ||
         !selection.selected_segments().empty()) {
-        return null_element;
+        return null_logicitem_id;
     }
     return selection.selected_logic_items().front();
 }
@@ -100,15 +103,15 @@ auto get_single_logic_item(const Selection& selection) -> element_id_t {
 auto size_handle_positions(const Layout& layout, const Selection& selection)
     -> std::vector<size_handle_t> {
     // only show handles when a single item is selected
-    const auto element_id = get_single_logic_item(selection);
-    if (!element_id) {
+    const auto logicitem_id = get_single_logic_item(selection);
+    if (!logicitem_id) {
         return {};
     }
-    if (layout.display_state(element_id) == display_state_t::colliding) {
+    if (layout.logic_items().display_state(logicitem_id) == display_state_t::colliding) {
         return {};
     }
 
-    return size_handle_positions(layout.element(element_id));
+    return size_handle_positions(layout, logicitem_id);
 }
 
 auto size_handle_rect_px(size_handle_t handle, const ViewConfig& config) -> BLRect {
@@ -188,8 +191,8 @@ auto adjust_height(const PlacedElement& original, size_handle_t handle, int delt
 
     auto result = PlacedElement {original};
 
-    const auto min_inputs = element_input_count_min(original.definition.element_type);
-    const auto max_inputs = element_input_count_max(original.definition.element_type);
+    const auto min_inputs = element_input_count_min(original.definition.logicitem_type);
+    const auto max_inputs = element_input_count_max(original.definition.logicitem_type);
 
     // input count
     if (handle.index == 0) {
@@ -220,8 +223,8 @@ auto adjust_height(const PlacedElement& original, size_handle_t handle, int delt
 
 auto transform_item(const PlacedElement& original, size_handle_t handle, int delta)
     -> PlacedElement {
-    switch (original.definition.element_type) {
-        using enum ElementType;
+    switch (original.definition.logicitem_type) {
+        using enum LogicItemType;
 
         case and_element:
         case or_element:
@@ -231,10 +234,6 @@ auto transform_item(const PlacedElement& original, size_handle_t handle, int del
         case display_number: {
             return adjust_height(original, handle, delta);
         }
-
-        case unused:
-        case placeholder:
-        case wire:
 
         case buffer_element:
         case button:
