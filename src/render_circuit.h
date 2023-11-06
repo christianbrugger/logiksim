@@ -18,6 +18,7 @@
 namespace logicsim {
 // forward declarations
 
+struct logicitem_id_t;
 class Layout;
 class Selection;
 class SimulationView;
@@ -153,11 +154,12 @@ struct ConnectorAttributes {
 
 auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void;
 
-auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
-                                ElementDrawState state) -> void;
+auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
+                                logicitem_id_t logicitem_id, ElementDrawState state)
+    -> void;
 
-auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
-                                ElementDrawState state,
+auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
+                                logicitem_id_t logicitem_id, ElementDrawState state,
                                 simulation_view::ConstElement logic_state) -> void;
 
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
@@ -178,8 +180,9 @@ struct ConnectorLabels {
 auto draw_connector_label(Context& ctx, point_t position, orientation_t orientation,
                           std::string_view label, ElementDrawState state) -> void;
 
-auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
-                           layout::ConstElement element, ElementDrawState state) -> void;
+auto draw_connector_labels(Context& ctx, const Layout& layout,
+                           logicitem_id_t logicitem_id, ConnectorLabels labels,
+                           ElementDrawState state) -> void;
 
 //
 // Logic Items
@@ -187,27 +190,28 @@ auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
 
 [[nodiscard]] auto draw_logic_item_above(ElementType type) -> bool;
 
-[[nodiscard]] auto get_logic_item_state(layout::ConstElement element,
+[[nodiscard]] auto get_logic_item_state(const Layout& layout, logicitem_id_t logicitem_id,
                                         const Selection* selection) -> ElementDrawState;
 
 [[nodiscard]] auto get_logic_item_fill_color(ElementDrawState state) -> color_t;
 [[nodiscard]] auto get_logic_item_stroke_color(ElementDrawState state) -> color_t;
 [[nodiscard]] auto get_logic_item_text_color(ElementDrawState state) -> color_t;
 
-[[nodiscard]] auto get_logic_item_center(layout::ConstElement element) -> point_fine_t;
+[[nodiscard]] auto get_logic_item_center(const Layout& layout,
+                                         logicitem_id_t logicitem_id) -> point_fine_t;
 
 struct LogicItemRectAttributes {
     std::optional<color_t> custom_fill_color {};
     std::optional<color_t> custom_stroke_color {};
 };
 
-auto draw_logic_item_rect(Context& ctx, layout::ConstElement element,
+auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state, LogicItemRectAttributes attributes = {})
     -> void;
 
-auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement element,
-                          ElementDrawState state, LogicItemRectAttributes attributes = {})
-    -> void;
+auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, const Layout& layout,
+                          logicitem_id_t logicitem_id, ElementDrawState state,
+                          LogicItemRectAttributes attributes = {}) -> void;
 
 struct LogicItemTextAttributes {
     std::optional<grid_fine_t> custom_font_size {};
@@ -217,20 +221,23 @@ struct LogicItemTextAttributes {
     FontStyle style {FontStyle::regular};
 };
 
-auto draw_logic_item_label(Context& ctx, std::string_view text,
-                           layout::ConstElement element, ElementDrawState state,
+auto draw_logic_item_label(Context& ctx, const Layout& layout,
+                           logicitem_id_t logicitem_id, std::string_view text,
+                           ElementDrawState state,
                            LogicItemTextAttributes attributes = {}) -> void;
 
-auto draw_logic_item_label(Context& ctx, point_fine_t point, std::string_view text,
-                           layout::ConstElement element, ElementDrawState state,
+auto draw_logic_item_label(Context& ctx, const Layout& layout,
+                           logicitem_id_t logicitem_id, point_fine_t point,
+                           std::string_view text, ElementDrawState state,
                            LogicItemTextAttributes attributes = {}) -> void;
 
-auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,
-                       layout::ConstElement element, ElementDrawState state) -> void;
-auto draw_binary_false(Context& ctx, point_fine_t point, layout::ConstElement element,
-                       ElementDrawState state) -> void;
+auto draw_binary_value(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                       point_fine_t point, bool is_enabled, ElementDrawState state)
+    -> void;
+auto draw_binary_false(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                       point_fine_t point, ElementDrawState state) -> void;
 
-auto draw_logic_item_base(Context& ctx, layout::ConstElement element,
+auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state,
                           std::optional<simulation_view::ConstElement> logic_state = {})
     -> void;

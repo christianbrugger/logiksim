@@ -25,6 +25,7 @@
 #include "simulation_view.h"
 #include "size_handle.h"
 #include "vocabulary/layout_calculation_data.h"
+#include "vocabulary/logicitem_id.h"
 
 #include <blend2d.h>
 #include <fmt/format.h>  // TODO why?
@@ -184,8 +185,9 @@ auto draw_connector(Context& ctx, ConnectorAttributes attributes) -> void {
     }
 }
 
-auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
-                                ElementDrawState state) -> void {
+auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
+                                logicitem_id_t logicitem_id, ElementDrawState state)
+    -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
     for (auto info : input_locations_and_id(layout_data)) {
@@ -209,8 +211,8 @@ auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
     }
 }
 
-auto draw_logic_item_connectors(Context& ctx, layout::ConstElement element,
-                                ElementDrawState state,
+auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
+                                logicitem_id_t logicitem_id, ElementDrawState state,
                                 simulation_view::ConstElement logic_state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
@@ -318,8 +320,9 @@ auto draw_connector_label(Context& ctx, point_t position, orientation_t orientat
               });
 }
 
-auto draw_connector_labels(Context& ctx, ConnectorLabels labels,
-                           layout::ConstElement element, ElementDrawState state) -> void {
+auto draw_connector_labels(Context& ctx, const Layout& layout,
+                           logicitem_id_t logicitem_id, ConnectorLabels labels,
+                           ElementDrawState state) -> void {
     const auto layout_data = to_layout_calculation_data(element.layout(), element);
 
     for (auto info : input_locations_and_id(layout_data)) {
@@ -353,8 +356,8 @@ auto draw_logic_item_above(ElementType type) -> bool {
     return type == button || type == led;
 }
 
-auto get_logic_item_state(layout::ConstElement element, const Selection* selection)
-    -> ElementDrawState {
+auto get_logic_item_state(const Layout& layout, logicitem_id_t logicitem_id,
+                          const Selection* selection) -> ElementDrawState {
     const auto is_selected = [&]() {
         return (selection != nullptr) ? selection->is_selected(element.element_id())
                                       : false;
@@ -410,15 +413,16 @@ auto get_logic_item_text_color(ElementDrawState state) -> color_t {
     return with_alpha_runtime(defaults::font::logic_item_text_color, state);
 }
 
-auto draw_logic_item_rect(Context& ctx, layout::ConstElement element,
+auto draw_logic_item_rect(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state, LogicItemRectAttributes attributes)
     -> void {
     const auto rect = element_body_draw_rect(element.to_layout_calculation_data());
     draw_logic_item_rect(ctx, rect, element, state, std::move(attributes));
 }
 
-auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement element,
-                          ElementDrawState state, LogicItemRectAttributes attributes)
+auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, const Layout& layout,
+                          logicitem_id_t logicitem_id, ElementDrawState state,
+                          LogicItemRectAttributes attributes)
 
     -> void {
     // TODO remove elemnt from call signature
@@ -439,20 +443,23 @@ auto draw_logic_item_rect(Context& ctx, rect_fine_t rect, layout::ConstElement e
               });
 }
 
-auto get_logic_item_center(layout::ConstElement element) -> point_fine_t {
+auto get_logic_item_center(const Layout& layout, logicitem_id_t logicitem_id)
+    -> point_fine_t {
     const auto rect = element_body_draw_rect(element.to_layout_calculation_data());
     return get_center(rect);
 }
 
-auto draw_logic_item_label(Context& ctx, std::string_view text,
-                           layout::ConstElement element, ElementDrawState state,
-                           LogicItemTextAttributes attributes) -> void {
+auto draw_logic_item_label(Context& ctx, const Layout& layout,
+                           logicitem_id_t logicitem_id, std::string_view text,
+                           ElementDrawState state, LogicItemTextAttributes attributes)
+    -> void {
     const auto center = get_logic_item_center(element);
     draw_logic_item_label(ctx, center, text, element, state, std::move(attributes));
 }
 
-auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view text,
-                           layout::ConstElement element, ElementDrawState state,
+auto draw_logic_item_label(Context& ctx, const Layout& layout,
+                           logicitem_id_t logicitem_id, point_fine_t center,
+                           std::string_view text, ElementDrawState state,
                            LogicItemTextAttributes attributes) -> void {
     if (text.empty()) {
         return;
@@ -479,8 +486,9 @@ auto draw_logic_item_label(Context& ctx, point_fine_t center, std::string_view t
               });
 }
 
-auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,
-                       layout::ConstElement element, ElementDrawState state) -> void {
+auto draw_binary_value(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                       point_fine_t point, bool is_enabled, ElementDrawState state)
+    -> void {
     const auto text = is_enabled ? std::string_view {"1"} : std::string_view {"0"};
     draw_logic_item_label(ctx, point, text, element, state,
                           LogicItemTextAttributes {
@@ -488,8 +496,8 @@ auto draw_binary_value(Context& ctx, point_fine_t point, bool is_enabled,
                           });
 }
 
-auto draw_binary_false(Context& ctx, point_fine_t point, layout::ConstElement element,
-                       ElementDrawState state) -> void {
+auto draw_binary_false(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
+                       point_fine_t point, ElementDrawState state) -> void {
     const auto is_enabled = false;
     draw_binary_value(ctx, point, is_enabled, element, state);
 }
@@ -938,7 +946,7 @@ auto draw_flipflop_ms_d(Context& ctx, layout::ConstElement element,
 // All Elements
 //
 
-auto draw_logic_item_base(Context& ctx, layout::ConstElement element,
+auto draw_logic_item_base(Context& ctx, const Layout& layout, logicitem_id_t logicitem_id,
                           ElementDrawState state,
                           std::optional<simulation_view::ConstElement> logic_state)
     -> void {

@@ -111,8 +111,8 @@ auto add_random_wire_segment(Rng& rng, EditableCircuit& editable_circuit,
 }
 
 auto set_inputs(Layout& layout) {
-    for (auto element : layout.elements()) {
-        auto& m_tree = element.modifyable_segment_tree();
+    for (const wire_id_t wire_id : wire_ids(layout)) {
+        auto& m_tree = layout.wires().modifyable_segment_tree(wire_id);
 
         if (m_tree.empty()) {
             continue;
@@ -156,10 +156,9 @@ auto calculate_tree_length(const LineTree& line_tree) -> int {
 }
 
 auto total_wire_lengths(const Layout& layout) -> int64_t {
-    return accumulate(layout.elements(), int64_t {0},
-                      [](const layout::ConstElement element) {
-                          return calculate_tree_length(element.line_tree());
-                      });
+    return accumulate(wire_ids(layout), int64_t {0}, [&](const wire_id_t wire_id) {
+        return calculate_tree_length(layout.wires().line_tree(wire_id));
+    });
 }
 
 auto maximum_output_delay(const auto& schematic) -> delay_t {
