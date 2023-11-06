@@ -8,6 +8,7 @@
 #include "format/struct.h"
 #include "layout.h"
 #include "vocabulary/line_insertion_type.h"
+#include "vocabulary/logicitem_id.h"
 
 #include <optional>
 
@@ -67,7 +68,7 @@ class EditableCircuit {
 
     auto toggle_wire_crosspoint(point_t point) -> void;
 
-    auto set_attributes(element_id_t element_id, attributes_clock_generator_t attrs)
+    auto set_attributes(logicitem_id_t logicitem_id, attributes_clock_generator_t attrs)
         -> void;
 
     // Wire Mode Change Helpers

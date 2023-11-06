@@ -12,12 +12,6 @@
 
 namespace logicsim {
 
-namespace layout {
-template <bool Const>
-class ElementTemplate;
-using ConstElement = ElementTemplate<true>;
-}  // namespace layout
-
 class Layout;
 class Selection;
 class EditableCircuit;

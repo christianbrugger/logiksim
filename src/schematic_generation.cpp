@@ -8,6 +8,7 @@
 #include "logging.h"
 #include "logic_item/schematic_info.h"
 #include "schematic.h"
+#include "schematic_generation.h"
 #include "vocabulary/output_delays.h"
 
 #include <cassert>
@@ -139,8 +140,7 @@ auto add_wire(Schematic& schematic, const Layout layout, wire_id_t wire_id,
 
 auto add_layout_elements(Schematic& schematic, const Layout& layout,
                          delay_t wire_delay_per_distance) -> void {
-    // insert unused elements, so the IDs match
-
+    // elements
     for (const auto logicitem_id : logicitem_ids(layout)) {
         if (is_inserted(layout, logicitem_id)) {
             add_logic_item(schematic, layout, logicitem_id);
@@ -149,10 +149,12 @@ auto add_layout_elements(Schematic& schematic, const Layout& layout,
         }
     }
 
-    for (const auto non_inserted_wire_id : range(first_inserted_wire_id)) {
+    // non-inserted wires
+    for (const auto _ [[maybe_unused]] : range(first_inserted_wire_id)) {
         add_unused_element(schematic);
     }
 
+    // inserted wires
     for (const auto inserted_wire_id : inserted_wire_ids(layout)) {
         add_wire(schematic, layout, inserted_wire_id, wire_delay_per_distance);
     }
@@ -181,8 +183,10 @@ auto connect_line_tree(Schematic& schematic, element_id_t element_id,
                                          line_tree.input_orientation())) {
                 throw_exception("input orientation not compatible");
             }
+            const auto connected_element_id = to_element_id(entry->logicitem_id);
+
             const auto input = input_t {element_id, connection_id_t {0}};
-            const auto output = output_t {entry->element_id, entry->connection_id};
+            const auto output = output_t {connected_element_id, entry->connection_id};
             schematic.connect(input, output);
         }
     }
@@ -195,8 +199,9 @@ auto connect_line_tree(Schematic& schematic, element_id_t element_id,
                                                                  output.connection_id))) {
                 throw_exception("input orientation not compatible");
             }
+            const auto connected_element_id = to_element_id(entry->logicitem_id);
 
-            const auto input = input_t {entry->element_id, entry->connection_id};
+            const auto input = input_t {connected_element_id, entry->connection_id};
             schematic.connect(output, input);
         }
     }
@@ -217,9 +222,10 @@ auto connect_segment_tree(Schematic& schematic, element_id_t element_id,
             if (!orientations_compatible(entry->orientation, orientation)) {
                 throw_exception("input orientation not compatible");
             }
+            const auto connected_element_id = to_element_id(entry->logicitem_id);
 
             const auto output = output_t {element_id, output_id};
-            const auto input = input_t {entry->element_id, entry->connection_id};
+            const auto input = input_t {connected_element_id, entry->connection_id};
             schematic.connect(output, input);
 
             ++output_id;
@@ -250,12 +256,14 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
 
         // connect wires to elements
         if (element_type == ElementType::wire) {
-            const auto& line_tree = layout.line_tree(element_id);
+            const auto wire_id = to_wire_id(layout, element_id);
+            const auto& line_tree = layout.wires().line_tree(wire_id);
+
             if (!line_tree.empty()) {
                 connect_line_tree(schematic, element_id, line_tree, cache);
             } else {
                 connect_segment_tree(schematic, element_id,
-                                     layout.segment_tree(element_id), cache);
+                                     layout.wires().segment_tree(wire_id), cache);
             }
         }
     }
@@ -265,9 +273,12 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
 // Output Inverters
 //
 
-auto set_output_inverters(Schematic& schematic, layout::ConstElement element) -> void {
-    for (output_t output : outputs(schematic, element)) {
-        if (element.output_inverted(output.connection_id)) {
+auto set_output_inverters(Schematic& schematic, const Layout& layout,
+                          logicitem_id_t logicitem_id) -> void {
+    const auto element_id = to_element_id(logicitem_id);
+
+    for (output_t output : outputs(schematic, element_id)) {
+        if (layout.logic_items().output_inverted(logicitem_id, output.connection_id)) {
             // logic items are either connected to wires or output placeholders
             const auto input = schematic.input(output);
             assert(input);
@@ -277,9 +288,9 @@ auto set_output_inverters(Schematic& schematic, layout::ConstElement element) ->
 }
 
 auto set_output_inverters(Schematic& schematic, const Layout& layout) -> void {
-    for (const auto element : layout.elements()) {
-        if (element.is_inserted() && element.is_logic_item()) {
-            set_output_inverters(schematic, element);
+    for (const auto logicitem_id : logicitem_ids(layout)) {
+        if (is_inserted(layout, logicitem_id)) {
+            set_output_inverters(schematic, layout, logicitem_id);
         }
     }
 }
@@ -318,6 +329,47 @@ auto generate_schematic(const Layout& layout, delay_t wire_delay_per_distance)
     set_output_inverters(schematic, layout);
 
     return schematic;
+}
+
+auto to_element_id(logicitem_id_t logicitem_id) -> element_id_t {
+    static_assert(std::is_same_v<element_id_t::value_type, logicitem_id_t::value_type>);
+
+    return element_id_t {logicitem_id.value};
+}
+
+auto to_element_id(const Layout& layout, wire_id_t wire_id) -> element_id_t {
+    static_assert(std::is_same_v<element_id_t::value_type, wire_id_t::value_type>);
+    Expects(wire_id);
+
+    const auto value = static_cast<int64_t>(layout.logic_items().size()) +
+                       static_cast<int64_t>(wire_id.value);
+
+    if (value > element_id_t::max().value) [[unlikely]] {
+        throw std::runtime_error("overflow when generating element id");
+    }
+    return element_id_t {static_cast<element_id_t::value_type>(value)};
+}
+
+auto to_logicitem_id(const Layout& layout, element_id_t element_id) -> logicitem_id_t {
+    static_assert(std::is_same_v<element_id_t::value_type, logicitem_id_t::value_type>);
+
+    if (element_id.value >= std::ssize(layout.logic_items())) [[unlikely]] {
+        throw std::runtime_error("not a logicitem id");
+    }
+
+    return logicitem_id_t {element_id.value};
+}
+
+auto to_wire_id(const Layout& layout, element_id_t element_id) -> wire_id_t {
+    static_assert(std::is_same_v<element_id_t::value_type, wire_id_t::value_type>);
+
+    const auto value = static_cast<int64_t>(element_id.value) -
+                       static_cast<int64_t>(layout.logic_items().size());
+
+    if (value < 0) [[unlikely]] {
+        throw std::runtime_error("not a wire id");
+    }
+    return wire_id_t {static_cast<wire_id_t::value_type>(value)};
 }
 
 }  // namespace logicsim

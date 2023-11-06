@@ -24,14 +24,6 @@ class SimulationView;
 struct size_handle_t;
 struct segment_info_t;
 
-namespace layout {
-template <bool Const>
-class ElementTemplate;
-
-using Element = ElementTemplate<false>;
-using ConstElement = ElementTemplate<true>;
-}  // namespace layout
-
 namespace simulation_view {
 class ConstElement;
 }  // namespace simulation_view

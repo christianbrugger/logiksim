@@ -63,7 +63,6 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
 auto EditableCircuit::validate() -> void {
     const auto& layout = layout_.value();
 
-    layout.validate();
     cache_provider_.validate(layout);
     registrar_.validate(layout);
     selection_builder_.validate(layout);
@@ -86,12 +85,12 @@ auto EditableCircuit::add_example() -> void {
 
 auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t position,
                                      InsertionMode insertion_mode) -> selection_handle_t {
-    const auto element_id = editable_circuit::add_logic_item(get_state(), definition,
-                                                             position, insertion_mode);
+    const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
+                                                               position, insertion_mode);
 
     auto handle = registrar_.get_handle();
-    if (element_id) {
-        handle.value().add_logicitem(element_id);
+    if (logicitem_id) {
+        handle.value().add_logicitem(logicitem_id);
     }
     return handle;
 }
@@ -99,11 +98,11 @@ auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t posit
 auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t position,
                                      InsertionMode insertion_mode,
                                      const selection_handle_t& handle) -> void {
-    const auto element_id = editable_circuit::add_logic_item(get_state(), definition,
-                                                             position, insertion_mode);
+    const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
+                                                               position, insertion_mode);
 
-    if (element_id) {
-        handle.value().add_logicitem(element_id);
+    if (logicitem_id) {
+        handle.value().add_logicitem(logicitem_id);
     }
 }
 
@@ -178,9 +177,9 @@ auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
     editable_circuit::toggle_inserted_wire_crosspoint(get_state(), point);
 }
 
-auto EditableCircuit::set_attributes(element_id_t element_id,
+auto EditableCircuit::set_attributes(logicitem_id_t logicitem_id,
                                      attributes_clock_generator_t attrs) -> void {
-    layout_.value().set_attributes(element_id, std::move(attrs));
+    layout_->logic_items().set_attributes(logicitem_id, std::move(attrs));
 }
 
 auto EditableCircuit::regularize_temporary_selection(

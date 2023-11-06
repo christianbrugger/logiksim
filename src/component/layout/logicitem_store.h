@@ -67,6 +67,11 @@ class LogicItemStore {
     [[nodiscard]] auto attrs_clock_generator(logicitem_id_t logicitem_id) const
         -> const attributes_clock_generator_t &;
 
+    [[nodiscard]] auto input_inverted(logicitem_id_t logicitem_id,
+                                       connection_id_t input_id) const -> bool;
+    [[nodiscard]] auto output_inverted(logicitem_id_t logicitem_id,
+                                       connection_id_t output_id) const -> bool;
+
     // setters
     auto set_position(logicitem_id_t logicitem_id, point_t position) -> void;
     auto set_display_state(logicitem_id_t logicitem_id, display_state_t display_state)

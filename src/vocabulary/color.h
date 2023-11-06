@@ -85,6 +85,7 @@ constexpr static inline auto color_gray_90 = ::logicsim::color_t {0xFFE5E5E5};
 
 constexpr static inline auto color_red = ::logicsim::color_t {0xFFFF0000};
 constexpr static inline auto color_green = ::logicsim::color_t {0xFF009900};
+constexpr static inline auto color_dark_green = ::logicsim::color_t {0xFF006400};
 constexpr static inline auto color_lime = ::logicsim::color_t {0xFF00FF00};
 constexpr static inline auto color_yellow = ::logicsim::color_t {0xFFFFFF00};
 constexpr static inline auto color_orange = ::logicsim::color_t {0xFFFF8000};

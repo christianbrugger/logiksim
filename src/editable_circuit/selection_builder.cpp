@@ -138,11 +138,11 @@ auto apply_function(Selection& selection, const SpatialTree& spatial_cache,
     const auto selected_elements = spatial_cache.query_selection(operation.rect);
 
     for (auto&& element : selected_elements) {
-        if (element.segment_index == null_segment_index) {
-            add_element_to_selection(element.element_id, operation.function, selection);
+        if (element.is_logicitem()) {
+            add_element_to_selection(element.logicitem_id(), operation.function,
+                                     selection);
         } else {
-            const auto segment = segment_t {element.element_id, element.segment_index};
-            add_segment_to_selection(segment, operation, selection, layout);
+            add_segment_to_selection(element.segment(), operation, selection, layout);
         }
     }
 }

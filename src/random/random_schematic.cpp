@@ -68,6 +68,8 @@ auto add_random_element(Rng &rng, Schematic &schematic) -> void {
         std::terminate();
     }();
 
+    const auto delay = element_output_delay(to_logicitem_type(element_type));
+
     schematic.add_element(schematic::NewElement {
         .element_type = element_type,
         .input_count = connection_count_t {input_count},
@@ -75,8 +77,7 @@ auto add_random_element(Rng &rng, Schematic &schematic) -> void {
         .input_inverters = element_type == ElementType::buffer_element
                                ? logic_small_vector_t {true}
                                : logic_small_vector_t(input_count, false),
-        .output_delays =
-            output_delays_t(output_count, element_output_delay(element_type)),
+        .output_delays = output_delays_t(output_count, delay),
     });
 }
 

@@ -20,15 +20,15 @@ auto iteraction_data_t::format() const -> std::string {
 }
 
 InteractionCache::InteractionCache(const Layout& layout) {
-    for (auto element : layout.elements()) {
-        if (element.element_type() == ElementType::button) {
-            auto& data = map_[element.position()];
+    for (auto logicitem_id : logicitem_ids(layout)) {
+        if (layout.logic_items().type(logicitem_id) == LogicItemType::button) {
+            auto& data = map_[layout.logic_items().position(logicitem_id)];
 
             if (data.element_id != null_element) [[unlikely]] {
                 throw std::runtime_error("map entry is not empty");
             }
 
-            data.element_id = element;
+            data.element_id = to_element_id(logicitem_id);
         }
     }
 }

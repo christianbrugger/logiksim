@@ -31,12 +31,6 @@ class EditableCircuit;
 struct ViewConfig;
 struct attributes_clock_generator_t;
 
-namespace layout {
-template <bool Const>
-class ElementTemplate;
-using ConstElement = ElementTemplate<true>;
-}  // namespace layout
-
 namespace defaults {
 constexpr static inline auto setting_handle_size = grid_fine_t {1.0};
 constexpr static inline auto setting_handle_margin = grid_fine_t {0.1};

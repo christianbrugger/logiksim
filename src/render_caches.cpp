@@ -64,9 +64,19 @@ auto render_input_marker(Context& ctx, point_t point, color_t color,
     }
 }
 
-auto render_undirected_output(Context& ctx, point_t position, grid_fine_t size) {
-    draw_point(ctx, position, PointShape::cross, defaults::color_green, size / 4);
-    draw_point(ctx, position, PointShape::plus, defaults::color_green, size / 3);
+auto render_undirected_output(Context& ctx, point_t position, grid_fine_t size,
+                              color_t color) {
+    draw_point(ctx, position, PointShape::cross, color, size / 4);
+    draw_point(ctx, position, PointShape::plus, color, size / 3);
+}
+
+auto render_output_marker(Context& ctx, point_t position, color_t color,
+                          orientation_t orientation, grid_fine_t size) -> void {
+    if (orientation == orientation_t::undirected) {
+        render_undirected_output(ctx, position, size, color);
+    } else {
+        draw_arrow(ctx, position, color, orientation, size);
+    }
 }
 
 auto render_editable_circuit_connection_cache(Context& ctx,
@@ -75,26 +85,45 @@ auto render_editable_circuit_connection_cache(Context& ctx,
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
     const auto& caches = editable_circuit.caches();
 
-    for (auto [position, orientation] : caches.input_positions_and_orientations()) {
+    const auto logicitem_color = defaults::color_dark_green;
+    const auto wire_color = defaults::color_green;
+
+    // input
+    for (auto [position, orientation] :
+         caches.logicitem_input_positions_and_orientations()) {
         if (!is_colliding(position, scene_rect)) {
             continue;
         }
 
         const auto size = grid_fine_t {1.0 / 3.0};
-        render_input_marker(ctx, position, defaults::color_green, orientation, size);
+        render_input_marker(ctx, position, logicitem_color, orientation, size);
+    }
+    for (auto [position, orientation] : caches.wire_input_positions_and_orientations()) {
+        if (!is_colliding(position, scene_rect)) {
+            continue;
+        }
+
+        const auto size = grid_fine_t {1.0 / 3.0};
+        render_input_marker(ctx, position, wire_color, orientation, size);
     }
 
-    for (auto [position, orientation] : caches.output_positions_and_orientations()) {
+    // output
+    for (auto [position, orientation] :
+         caches.logicitem_output_positions_and_orientations()) {
         if (!is_colliding(position, scene_rect)) {
             continue;
         }
 
         const auto size = grid_fine_t {0.8};
-        if (orientation == orientation_t::undirected) {
-            render_undirected_output(ctx, position, size);
-        } else {
-            draw_arrow(ctx, position, defaults::color_green, orientation, size);
+        render_output_marker(ctx, position, logicitem_color, orientation, size);
+    }
+    for (auto [position, orientation] : caches.wire_output_positions_and_orientations()) {
+        if (!is_colliding(position, scene_rect)) {
+            continue;
         }
+
+        const auto size = grid_fine_t {0.8};
+        render_output_marker(ctx, position, wire_color, orientation, size);
     }
 }
 

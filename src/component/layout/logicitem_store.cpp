@@ -1,3 +1,5 @@
+#include "logicitem_store.h"
+#include "logicitem_store.h"
 #include "component/layout/logicitem_store.h"
 
 #include "allocated_size/ankerl_unordered_dense.h"
@@ -281,6 +283,16 @@ auto LogicItemStore::attrs_clock_generator(logicitem_id_t logicitem_id) const
     }
 
     return it->second;
+}
+
+auto LogicItemStore::input_inverted(logicitem_id_t logicitem_id,
+                                    connection_id_t input_id) const -> bool {
+    return input_inverters(logicitem_id).at(input_id.value);
+}
+
+auto LogicItemStore::output_inverted(logicitem_id_t logicitem_id,
+                                     connection_id_t output_id) const -> bool {
+    return output_inverters(logicitem_id).at(output_id.value);
 }
 
 auto LogicItemStore::set_position(logicitem_id_t logicitem_id, point_t position) -> void {

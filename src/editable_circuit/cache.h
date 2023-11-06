@@ -33,7 +33,7 @@ class CacheProvider {
         return logicitems_inputs_.positions_and_orientations();
     };
 
-    [[nodiscard]] auto output_positions_and_orientations() const {
+    [[nodiscard]] auto logicitem_output_positions_and_orientations() const {
         return logicitems_outputs_.positions_and_orientations();
     };
 
@@ -41,7 +41,7 @@ class CacheProvider {
         return wire_inputs_.positions_and_orientations();
     };
 
-    [[nodiscard]] auto wire_positions_and_orientations() const {
+    [[nodiscard]] auto wire_output_positions_and_orientations() const {
         return wire_outputs_.positions_and_orientations();
     };
 
