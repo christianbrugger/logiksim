@@ -14,9 +14,9 @@ struct layout_calculation_data_t;
 struct PlacedElement;
 
 /**
-* @brief: The layout is the visual representation of the circuit, consisting of
-*         logic items and wires.
-*/
+ * @brief: The layout is the visual representation of the circuit, consisting of
+ *         logic items and wires.
+ */
 class Layout {
    public:
     [[nodiscard]] explicit Layout() = default;
@@ -89,6 +89,8 @@ class Layout {
     -> ElementDefinition;
 [[nodiscard]] auto to_placed_element(const Layout &layout, logicitem_id_t logicitem_id)
     -> PlacedElement;
+
+[[nodiscard]] auto to_display_state(wire_id_t wire_id) -> display_state_t;
 
 }  // namespace logicsim
 

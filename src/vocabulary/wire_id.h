@@ -64,6 +64,10 @@ static_assert(std::is_trivially_copyable_v<wire_id_t>);
 static_assert(std::is_trivially_copy_assignable_v<wire_id_t>);
 static_assert(explicitly_convertible_to<wire_id_t, wire_id_t::difference_type>);
 
+[[nodiscard]] constexpr auto is_inserted(wire_id_t wire_id) -> bool;
+[[nodiscard]] constexpr auto is_temporary(wire_id_t wire_id) -> bool;
+[[nodiscard]] constexpr auto is_colliding(wire_id_t wire_id) -> bool;
+
 //
 // Implementation
 //
@@ -117,6 +121,21 @@ constexpr inline static auto temporary_wire_id = wire_id_t {0};
 constexpr inline static auto colliding_wire_id = wire_id_t {1};
 constexpr inline static auto first_inserted_wire_id = wire_id_t {2};
 
+//
+// Free Methods
+//
+
+constexpr auto is_inserted(wire_id_t wire_id) -> bool {
+    return wire_id >= first_inserted_wire_id;
+}
+
+constexpr auto is_temporary(wire_id_t wire_id) -> bool {
+    return wire_id == temporary_wire_id;
+}
+
+constexpr auto is_colliding(wire_id_t wire_id) -> bool {
+    return wire_id == colliding_wire_id;
+}
 
 }  // namespace logicsim
 
@@ -133,6 +152,5 @@ struct ankerl::unordered_dense::hash<logicsim::wire_id_t> {
         return logicsim::wyhash(obj.value);
     }
 };
-
 
 #endif

@@ -197,4 +197,17 @@ auto to_placed_element(const Layout &layout, logicitem_id_t logicitem_id)
     };
 }
 
+auto to_display_state(wire_id_t wire_id) -> display_state_t {
+    if (!wire_id) [[unlikely]] {
+        throw std::runtime_error("invalid wire id has no display state");
+    }
+    if (wire_id == temporary_wire_id) {
+        return display_state_t::temporary;
+    }
+    if (wire_id == colliding_wire_id) {
+        return display_state_t::colliding;
+    }
+    return display_state_t::normal;
+}
+
 }  // namespace logicsim

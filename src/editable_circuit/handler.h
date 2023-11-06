@@ -115,14 +115,13 @@ auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void;
 
 auto move_segment_between_trees(Layout& layout, MessageSender& sender,
                                 segment_part_t& segment_part,
-                                const element_id_t destination_element_id) -> void;
+                                const wire_id_t destination_id) -> void;
 
 auto remove_segment_from_tree(Layout& layout, MessageSender& sender,
                               segment_part_t& segment_part) -> void;
 
 auto merge_and_delete_tree(Layout& Layout, MessageSender& sender,
-                           element_id_t& tree_destination, element_id_t& tree_source)
-    -> void;
+                           wire_id_t& tree_destination, wire_id_t& tree_source) -> void;
 
 auto merge_line_segments(Layout& layout, MessageSender& sender, segment_t segment_0,
                          segment_t segment_1, segment_part_t* preserve_segment) -> void;
