@@ -1,5 +1,5 @@
 
-#include "line_tree_2.h"
+#include "line_tree.h"
 #include "logging.h"
 
 #include <gmock/gmock.h>

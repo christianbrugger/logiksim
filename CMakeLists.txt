@@ -180,7 +180,6 @@ set(LS_CORE_SOURCES
     src/vocabulary/direction_type.cpp
     src/vocabulary/display_state.cpp
     src/vocabulary/drawable_element.cpp
-    "src/vocabulary/logicitem_definition.cpp"
     src/vocabulary/element_draw_state.cpp
     src/vocabulary/element_id.cpp
     src/vocabulary/element_type.cpp
@@ -203,6 +202,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/logic_small_vector.cpp
     src/vocabulary/logic_vector.cpp
     src/vocabulary/logicitem_connection.cpp
+    src/vocabulary/logicitem_definition.cpp
     src/vocabulary/logicitem_id.cpp
     src/vocabulary/logicitem_type.cpp
     src/vocabulary/offset.cpp
@@ -247,7 +247,6 @@ set(LS_CORE_SOURCES
     src/layout.cpp
     src/layout_info.cpp
     src/line_tree.cpp
-    src/line_tree_2.cpp
     src/line_tree_generation.cpp
     src/logging.cpp
     src/part_selection.cpp

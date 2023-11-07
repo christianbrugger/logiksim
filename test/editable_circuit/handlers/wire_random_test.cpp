@@ -5,12 +5,12 @@
 #include "exception.h"
 #include "geometry/line.h"
 #include "line_tree.h"
-#include "line_tree_2.h"
 #include "random/bool.h"
 #include "random/ordered_line.h"
 #include "random/segment.h"
 #include "random/wire.h"
 #include "timer.h"
+#include "tree_normalization.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -215,8 +215,8 @@ auto test_add_wire_states_correct(Rng& rng) {
              display_state_t::valid,
              display_state_t::normal,
          }) {
-        const auto expected_lines = merge_lines(get_expected_lines(data, state));
-        const auto result_lines = merge_lines(get_all_lines(layout, state));
+        const auto expected_lines = merge_split_segments(get_expected_lines(data, state));
+        const auto result_lines = merge_split_segments(get_all_lines(layout, state));
 
         if (expected_lines != result_lines) [[unlikely]] {
             throw std::runtime_error("expected different lines with this state");

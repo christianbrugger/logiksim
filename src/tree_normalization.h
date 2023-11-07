@@ -2,6 +2,7 @@
 #define LOGICSIM_TREE_NORMALIZATION_H
 
 #include <vector>
+#include <span>
 
 namespace logicsim {
 

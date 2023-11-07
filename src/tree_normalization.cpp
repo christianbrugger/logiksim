@@ -97,17 +97,6 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
                  result);
 }
 
-[[nodiscard]] auto merge_lines(std::span<const ordered_line_t> segments)
-    -> std::vector<ordered_line_t> {
-    auto result = std::vector<ordered_line_t> {};
-    result.reserve(segments.size());
-
-    merge_lines_1d<Lines::horizontal>(segments, std::back_inserter(result));
-    merge_lines_1d<Lines::vertical>(segments, std::back_inserter(result));
-
-    return result;
-}
-
 [[nodiscard]] auto find_root_index(const ValidationGraph& graph)
     -> std::optional<size_t> {
     auto is_leaf = [&](size_t index) { return graph.neighbors()[index].size() == 1; };
@@ -123,10 +112,21 @@ auto merge_lines_1d(std::span<const ordered_line_t> segments, OutputIterator res
 
 }  // namespace
 
+auto merge_split_segments(std::span<const ordered_line_t> segments)
+    -> std::vector<ordered_line_t> {
+    auto result = std::vector<ordered_line_t> {};
+    result.reserve(segments.size());
+
+    merge_lines_1d<Lines::horizontal>(segments, std::back_inserter(result));
+    merge_lines_1d<Lines::vertical>(segments, std::back_inserter(result));
+
+    return result;
+}
+
 auto normalize_segments(std::span<const ordered_line_t> segments)
     -> std::vector<ordered_line_t> {
     // merge
-    const auto segments_merged = merge_lines(segments);
+    const auto segments_merged = merge_split_segments(segments);
     // split points
     const auto points1 = to_points_sorted_unique(segments);
     const auto segments_split = split_lines(segments_merged, points1);
