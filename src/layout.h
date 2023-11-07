@@ -30,6 +30,7 @@ class Layout {
     [[nodiscard]] auto operator==(const Layout &) const -> bool = default;
 
     [[nodiscard]] auto empty() const -> bool;
+    [[nodiscard]] auto size() const -> std::size_t;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
     [[nodiscard]] auto format() const -> std::string;
 
@@ -57,6 +58,8 @@ class Layout {
 [[nodiscard]] auto wire_ids(const Layout &layout) -> range_extended_t<wire_id_t>;
 
 [[nodiscard]] auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t>;
+
+[[nodiscard]] auto get_segment_count(const Layout &layout) -> std::size_t;
 
 [[nodiscard]] auto format_stats(const Layout &layout) -> std::string;
 

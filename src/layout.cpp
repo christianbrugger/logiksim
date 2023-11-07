@@ -57,6 +57,10 @@ auto Layout::empty() const -> bool {
     return logic_items_.empty() && wires_.empty();
 }
 
+auto Layout::size() const -> std::size_t {
+    return logic_items_.size() + wires_.size();
+}
+
 auto Layout::circuit_id() const -> circuit_id_t {
     return circuit_id_;
 }
@@ -94,11 +98,15 @@ auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
                                      layout.wires().size());
 }
 
+auto get_segment_count(const Layout &layout) -> std::size_t {
+    return accumulate(wire_ids(layout), std::size_t {0}, [&](wire_id_t wire_id) {
+        return layout.wires().segment_tree(wire_id).size();
+    });
+}
+
 auto format_stats(const Layout &layout) -> std::string {
     const auto logic_item_count = layout.logic_items().size();
-    const auto segment_count = accumulate(
-        wire_ids(layout), std::size_t {0},
-        [&](wire_id_t wire_id) { return layout.wires().segment_tree(wire_id).size(); });
+    const auto segment_count = get_segment_count(layout);
 
     return fmt::format("Layout with {} logic items and {} wire segments.\n",
                        logic_item_count, segment_count);

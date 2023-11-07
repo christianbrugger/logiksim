@@ -5,7 +5,7 @@
 namespace logicsim {
 
 auto DrawableElement::format() const -> std::string {
-    return fmt::format("{}-{}", element_id, state);
+    return fmt::format("{}-{}", logicitem_id, state);
 }
 
 }  // namespace logicsim

@@ -196,16 +196,15 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
 namespace {
 
 auto all_selected(const Selection& selection, const Layout& layout,
-                  std::span<const SpatialTree::query_result_t> items, point_fine_t point)
+                  std::span<const SpatialTree::value_t> items, point_fine_t point)
     -> bool {
     for (const auto& item : items) {
-        if (!item.segment_index) {
-            if (!selection.is_selected(item.element_id)) {
+        if (item.is_logicitem()) {
+            if (!selection.is_selected(item.logicitem_id())) {
                 return false;
             }
         } else {
-            const auto segment = segment_t {item.element_id, item.segment_index};
-            if (!is_selected(selection, layout, segment, point)) {
+            if (!is_selected(selection, layout, item.segment(), point)) {
                 return false;
             }
         }
@@ -214,16 +213,15 @@ auto all_selected(const Selection& selection, const Layout& layout,
 }
 
 auto anything_selected(const Selection& selection, const Layout& layout,
-                       std::span<const SpatialTree::query_result_t> items,
-                       point_fine_t point) -> bool {
+                       std::span<const SpatialTree::value_t> items, point_fine_t point)
+    -> bool {
     for (const auto& item : items) {
-        if (!item.segment_index) {
-            if (selection.is_selected(item.element_id)) {
+        if (item.is_logicitem()) {
+            if (selection.is_selected(item.logicitem_id())) {
                 return true;
             }
         } else {
-            const auto segment = segment_t {item.element_id, item.segment_index};
-            if (is_selected(selection, layout, segment, point)) {
+            if (is_selected(selection, layout, item.segment(), point)) {
                 return true;
             }
         }
@@ -232,17 +230,16 @@ auto anything_selected(const Selection& selection, const Layout& layout,
 }
 
 auto add_to_selection(Selection& selection, const Layout& layout,
-                      std::span<const SpatialTree::query_result_t> items, bool whole_tree)
+                      std::span<const SpatialTree::value_t> items, bool whole_tree)
     -> void {
     for (const auto& item : items) {
-        if (!item.segment_index) {
-            selection.add_logicitem(item.element_id);
+        if (item.is_logicitem()) {
+            selection.add_logicitem(item.logicitem_id());
         } else {
             if (whole_tree) {
-                add_segment_tree(selection, item.element_id, layout);
+                add_segment_tree(selection, item.segment().wire_id, layout);
             } else {
-                const auto segment = segment_t {item.element_id, item.segment_index};
-                add_segment(selection, segment, layout);
+                add_segment(selection, item.segment(), layout);
             }
         }
     }
@@ -409,47 +406,43 @@ MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
 namespace {
 
 auto add_selection(Selection& selection, const Layout& layout,
-                   std::span<const SpatialTree::query_result_t> items, point_fine_t point)
+                   std::span<const SpatialTree::value_t> items, point_fine_t point)
     -> void {
     for (const auto& item : items) {
-        if (!item.segment_index) {
-            selection.add_logicitem(item.element_id);
-
+        if (item.is_logicitem()) {
+            selection.add_logicitem(item.logicitem_id());
         } else {
-            const auto segment = segment_t {item.element_id, item.segment_index};
-            add_segment_part(selection, layout, segment, point);
+            add_segment_part(selection, layout, item.segment(), point);
         }
     }
 }
 
 auto remove_selection(Selection& selection, const Layout& layout,
-                      std::span<const SpatialTree::query_result_t> items,
-                      point_fine_t point) -> void {
+                      std::span<const SpatialTree::value_t> items, point_fine_t point)
+    -> void {
     for (const auto& item : items) {
-        if (!item.segment_index) {
-            selection.remove_logicitem(item.element_id);
-
+        if (item.is_logicitem()) {
+            selection.remove_logicitem(item.logicitem_id());
         } else {
-            const auto segment = segment_t {item.element_id, item.segment_index};
-            remove_segment_part(selection, layout, segment, point);
+            remove_segment_part(selection, layout, item.segment(), point);
         }
     }
 }
 
 auto add_whole_trees(Selection& selection, const Layout& layout,
-                     std::span<const SpatialTree::query_result_t> items) -> void {
+                     std::span<const SpatialTree::value_t> items) -> void {
     for (const auto& item : items) {
-        if (item.segment_index) {
-            add_segment_tree(selection, item.element_id, layout);
+        if (item.is_segment()) {
+            add_segment_tree(selection, item.segment().wire_id, layout);
         }
     }
 }
 
 auto remove_whole_trees(Selection& selection, const Layout& layout,
-                        std::span<const SpatialTree::query_result_t> items) -> void {
+                        std::span<const SpatialTree::value_t> items) -> void {
     for (const auto& item : items) {
-        if (item.segment_index) {
-            remove_segment_tree(selection, item.element_id, layout);
+        if (item.is_segment()) {
+            remove_segment_tree(selection, item.segment().wire_id, layout);
         }
     }
 }
@@ -751,8 +744,7 @@ auto RendererWidget::reset_circuit(Layout&& layout) -> void {
     editable_circuit_.emplace(std::move(layout));
     setting_widget_registry_.emplace(this, editable_circuit_.value());
 
-    if (const auto count = editable_circuit_->layout().element_count();
-        0 < count && count < 30) {
+    if (const auto count = editable_circuit_->layout().size(); 0 < count && count < 30) {
         print(editable_circuit_);
     }
 
@@ -844,7 +836,7 @@ auto RendererWidget::load_circuit_example(int id) -> void {
     if (id == 2) {
         constexpr auto max_value = debug_build ? debug_max : release_max;
         const auto definition = ElementDefinition {
-            .element_type = ElementType::or_element,
+            .logicitem_type = LogicItemType::or_element,
             .input_count = connection_count_t {3},
             .output_count = connection_count_t {1},
             .orientation = orientation_t::right,
@@ -873,7 +865,7 @@ auto RendererWidget::load_circuit_example(int id) -> void {
     if (id == 3) {
         constexpr auto max_value = debug_build ? debug_max : release_max;
         const auto definition = ElementDefinition {
-            .element_type = ElementType::or_element,
+            .logicitem_type = LogicItemType::or_element,
             .input_count = connection_count_t {3},
             .output_count = connection_count_t {1},
             .orientation = orientation_t::right,
@@ -912,24 +904,13 @@ auto RendererWidget::load_circuit_example(int id) -> void {
         const auto timer_str = timer.format();
         const auto& layout = editable_circuit.layout();
 
-        auto element_count = std::size_t {0};
-        auto segment_count = std::size_t {0};
+        auto logicitem_count = layout.logic_items().size();
+        auto segment_count = get_segment_count(layout);
 
-        for (auto element : layout.elements()) {
-            if (element.is_wire()) {
-                const auto& tree = layout.segment_tree(element.element_id());
-                segment_count += tree.size();
-            }
-
-            else if (element.is_logic_item()) {
-                ++element_count;
-            }
-        }
-
-        if (layout.element_count() < 10) {
+        if (layout.size() < 10) {
             print(editable_circuit);
         }
-        print_fmt("Added {} elements and {} wire segments in {}.\n", element_count,
+        print_fmt("Added {} elements and {} wire segments in {}.\n", logicitem_count,
                   segment_count, timer_str);
     }
 
