@@ -84,6 +84,8 @@ auto WireStore::normalize() -> void {
     for (auto &tree : segment_trees_) {
         tree.normalize();
     }
+
+    std::ranges::sort(segment_trees_);
 }
 
 auto WireStore::operator==(const WireStore &other) const -> bool {

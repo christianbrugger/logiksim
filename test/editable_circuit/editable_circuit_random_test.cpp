@@ -10,6 +10,7 @@
 #include "random/point.h"
 #include "render_circuit.h"
 #include "timer.h"
+#include "logging.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -278,6 +279,9 @@ auto test_move_wires_back_and_forth(unsigned int seed, Rng &rng, bool do_render 
     final_layout.normalize();
 
     if (final_layout != expected_layout) {
+        print("final_layout:", final_layout);
+        print("expected_layout:", expected_layout);
+
         throw_exception("final layouts are not the same");
     }
 
