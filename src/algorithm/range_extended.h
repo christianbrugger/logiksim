@@ -42,7 +42,7 @@ template <typename T, typename value_type = typename T::value_type>
     requires explicitly_convertible_to<std::size_t, value_type> &&
              std::is_constructible_v<T, value_type>
 constexpr auto range_extended(std::size_t count) {
-    return range_extended<T>(std::size_t {0}, count);
+    return range_extended<T, value_type>(std::size_t {0}, count);
 }
 
 /**

@@ -46,7 +46,7 @@ static void BM_Benchmark_New_Selection(benchmark::State& state) {
 
     for ([[maybe_unused]] auto _ : state) {
         auto handle = registrar.get_handle();
-        handle.value().add_logicitem(logicitem_id);
+        handle.value().add(logicitem_id);
 
         benchmark::ClobberMemory();
         benchmark::DoNotOptimize(handle);
@@ -64,7 +64,7 @@ static void BM_Benchmark_Reuse_Selection(benchmark::State& state) {
     auto handle = registrar.get_handle();
 
     for ([[maybe_unused]] auto _ : state) {
-        handle.value().add_logicitem(logicitem_id);
+        handle.value().add(logicitem_id);
         benchmark::DoNotOptimize(handle);
 
         handle.value().remove_logicitem(logicitem_id);

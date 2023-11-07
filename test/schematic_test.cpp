@@ -106,7 +106,7 @@ TEST(Schematic, EqualityOperators) {
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = {false},
-        .output_delays = {element_output_delay(ElementType::buffer_element)},
+        .output_delays = {element_output_delay(LogicItemType::buffer_element)},
     };
 
     auto schematic_1 = Schematic {};
@@ -137,7 +137,7 @@ TEST(Schematic, ConnectionPropertiesNotConnected) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
 
     const auto id_0 = connection_id_t {0};
@@ -186,7 +186,7 @@ TEST(Schematic, ConnectedOutput) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
 
     const auto id_0 = connection_id_t {0};
@@ -221,7 +221,7 @@ TEST(Schematic, ConnectInput) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
 
     const auto id_0 = connection_id_t {0};
@@ -256,7 +256,7 @@ TEST(Schematic, ClearedInput) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -287,7 +287,7 @@ TEST(Schematic, ClearedOutput) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -318,7 +318,7 @@ TEST(Schematic, ClearedAllWire) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -349,7 +349,7 @@ TEST(Schematic, ClearedAllElement) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
 
     auto id_1 = connection_id_t {1};
@@ -380,7 +380,7 @@ TEST(Schematic, ReconnectInput) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
     auto wire_2 = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
@@ -420,14 +420,14 @@ TEST(Schematic, ReconnectOutput) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
     auto or_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::or_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false},
-        .output_delays = {element_output_delay(ElementType::or_element)},
+        .output_delays = {element_output_delay(LogicItemType::or_element)},
     });
 
     auto id_0 = connection_id_t {0};

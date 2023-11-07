@@ -168,7 +168,7 @@ auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle)
         if (!inserted) {
             throw_exception("could not insert widget into map");
         }
-        it->second.value().add_logicitem(setting_handle.logicitem_id);
+        it->second.value().add(setting_handle.logicitem_id);
 
         connect(widget, &QWidget::destroyed, this,
                 &SettingWidgetRegistry::on_dialog_destroyed);

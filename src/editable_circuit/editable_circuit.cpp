@@ -90,7 +90,7 @@ auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t posit
 
     auto handle = registrar_.get_handle();
     if (logicitem_id) {
-        handle.value().add_logicitem(logicitem_id);
+        handle.value().add(logicitem_id);
     }
     return handle;
 }
@@ -102,7 +102,7 @@ auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t posit
                                                                position, insertion_mode);
 
     if (logicitem_id) {
-        handle.value().add_logicitem(logicitem_id);
+        handle.value().add(logicitem_id);
     }
 }
 

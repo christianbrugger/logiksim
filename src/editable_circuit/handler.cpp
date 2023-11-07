@@ -786,7 +786,7 @@ auto add_logic_item_private(State state, const ElementDefinition& definition,
                             point_t position, InsertionMode insertion_mode)
     -> logicitem_id_t {
     // insert into underlying
-    auto logicitem_id = state.layout.logic_items().add_logicitem(
+    auto logicitem_id = state.layout.logic_items().add(
         definition, point_t {0, 0}, display_state_t::temporary);
     state.sender.submit(info_message::LogicItemCreated {logicitem_id});
 

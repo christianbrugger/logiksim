@@ -67,7 +67,6 @@ struct HandlerSetup {
     }
 
     auto validate() -> void {
-        layout.validate();
         cache.validate(layout);
     }
 };
@@ -81,26 +80,26 @@ struct SenderSetup {
 
 inline auto add_and_element(Layout &layout, display_state_t display_type,
                             connection_count_t input_count = connection_count_t {3},
-                            point_t position = point_t {0, 0}) -> element_id_t {
+                            point_t position = point_t {0, 0}) -> logicitem_id_t {
     const auto definition = ElementDefinition {
-        .element_type = ElementType::and_element,
+        .logicitem_type = LogicItemType::and_element,
 
         .input_count = input_count,
         .output_count = connection_count_t {1},
         .orientation = orientation_t::right,
     };
-    return layout.add_element(definition, position, display_type);
+    return layout.logic_items().add(definition, position, display_type);
 }
 
-inline auto assert_element_count(const Layout &layout, std::size_t count) -> void {
-    ASSERT_EQ(layout.element_count(), count);
+inline auto assert_logicitem_count(const Layout &layout, std::size_t count) -> void {
+    ASSERT_EQ(layout.logic_items().size(), count);
 }
 
-inline auto assert_element_equal(const Layout &layout, element_id_t element_id,
+inline auto assert_logicitem_equal(const Layout &layout, logicitem_id_t logicitem_id,
                                  connection_count_t input_count = connection_count_t {3},
                                  point_t position = point_t {0, 0}) -> void {
-    ASSERT_EQ(layout.element(element_id).input_count(), input_count);
-    ASSERT_EQ(layout.position(element_id), position);
+    ASSERT_EQ(layout.logic_items().input_count(logicitem_id), input_count);
+    ASSERT_EQ(layout.logic_items().position(logicitem_id), position);
 }
 
 }  // namespace logicsim

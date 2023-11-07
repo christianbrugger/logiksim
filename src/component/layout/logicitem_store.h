@@ -36,7 +36,7 @@ class LogicItemStore {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     // add & delete
-    auto add_logicitem(const ElementDefinition &definition, point_t position,
+    auto add(const ElementDefinition &definition, point_t position,
                        display_state_t display_state) -> logicitem_id_t;
     auto swap_and_delete(logicitem_id_t logicitem_id) -> logicitem_id_t;
     auto swap(logicitem_id_t logicitem_id_1, logicitem_id_t logicitem_id_2) -> void;

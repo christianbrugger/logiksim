@@ -16,7 +16,9 @@
 namespace logicsim {
 
 TEST(AlgorithmRangeExtended, SimpleSize) {
-    EXPECT_EQ(std::size(range_extended<int, int>(10)), 10);
+    const auto r = range_extended<int, int>(10);
+
+    EXPECT_EQ(std::size(r), 10);
 }
 
 TEST(AlgorithmRangeExtended, SimpleValues) {
@@ -41,7 +43,9 @@ struct CustomType {
 namespace logicsim {
 
 TEST(AlgorithmRangeExtended, CustomTypeSize) {
-    EXPECT_EQ(std::size(range_extended<CustomType>(10)), 10);
+    const auto r = range_extended<CustomType>(10);
+
+    EXPECT_EQ(std::size(r), 10);
 }
 
 TEST(AlgorithmRangeExtended, CustomTypeValues) {

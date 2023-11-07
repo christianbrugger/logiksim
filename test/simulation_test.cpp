@@ -21,7 +21,7 @@ TEST(SimulationTest, InitializeSimulation) {
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = logic_small_vector_t {true},
-        .output_delays = {element_output_delay(ElementType::buffer_element)},
+        .output_delays = {element_output_delay(LogicItemType::buffer_element)},
     });
     add_missing_placeholders(schematic);
 
@@ -48,14 +48,14 @@ TEST(SimulationTest, SimulationProcessAllEvents) {
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
     const auto xor_element = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false},
-        .output_delays = {element_output_delay(ElementType::xor_element)},
+        .output_delays = {element_output_delay(LogicItemType::xor_element)},
     });
     auto simulation = Simulation {std::move(schematic)};
 
@@ -78,7 +78,7 @@ TEST(SimulationTest, SimulationTimeAdvancingWithNoEvents) {
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = {true},
-        .output_delays = {element_output_delay(ElementType::buffer_element)},
+        .output_delays = {element_output_delay(LogicItemType::buffer_element)},
     });
 
     auto simulation = Simulation {std::move(schematic)};
@@ -98,7 +98,7 @@ TEST(SimulationTest, SimulationTimeAdvancingWithInfiniteEvents) {
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = {true},
-        .output_delays = {element_output_delay(ElementType::buffer_element)},
+        .output_delays = {element_output_delay(LogicItemType::buffer_element)},
     });
     const auto wire = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
@@ -129,7 +129,7 @@ TEST(SimulationTest, SimulationInfiniteEventsTimeout) {
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},
         .input_inverters = {true},
-        .output_delays = {element_output_delay(ElementType::buffer_element)},
+        .output_delays = {element_output_delay(LogicItemType::buffer_element)},
     });
     const auto wire = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::wire,
@@ -172,7 +172,7 @@ TEST(SimulationTest, AdditionalEvents) {
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false},
-        .output_delays = {element_output_delay(ElementType::xor_element)},
+        .output_delays = {element_output_delay(LogicItemType::xor_element)},
     });
     add_missing_placeholders(schematic);
 
@@ -218,7 +218,7 @@ TEST(SimulationTest, SimultaneousEvents) {
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {true, false},
-        .output_delays = {element_output_delay(ElementType::xor_element)},
+        .output_delays = {element_output_delay(LogicItemType::xor_element)},
     });
     const auto id_0 = connection_id_t {0};
     const auto id_1 = connection_id_t {1};
@@ -278,14 +278,14 @@ TEST(SimulationTest, HalfAdder) {
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
     const auto output = schematic.add_element(schematic::NewElement {
         .element_type = ElementType::xor_element,
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false},
-        .output_delays = {element_output_delay(ElementType::xor_element)},
+        .output_delays = {element_output_delay(LogicItemType::xor_element)},
     });
 
     const auto id_0 = connection_id_t {0};
@@ -356,7 +356,7 @@ TEST(SimulationTest, OutputDelayTest) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {1},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
     const auto id_0 = connection_id_t {0};
     const auto id_1 = connection_id_t {1};
@@ -390,7 +390,7 @@ TEST(SimulationTest, AndInputInverters1) {
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {true, true},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
     add_missing_placeholders(schematic);
 
@@ -415,7 +415,7 @@ TEST(SimulationTest, AndInputInverters2) {
         .input_count = connection_count_t {2},
         .output_count = connection_count_t {1},
         .input_inverters = {false, true},
-        .output_delays = {element_output_delay(ElementType::and_element)},
+        .output_delays = {element_output_delay(LogicItemType::and_element)},
     });
     add_missing_placeholders(schematic);
 
@@ -549,8 +549,8 @@ TEST(SimulationTest, JKFlipFlop) {
         .input_count = connection_count_t {5},
         .output_count = connection_count_t {2},
         .input_inverters = {false, false, false, false, false},
-        .output_delays = {element_output_delay(ElementType::flipflop_jk),
-                          element_output_delay(ElementType::flipflop_jk)},
+        .output_delays = {element_output_delay(LogicItemType::flipflop_jk),
+                          element_output_delay(LogicItemType::flipflop_jk)},
     });
     add_missing_placeholders(schematic);
 
@@ -904,8 +904,8 @@ TEST(SimulationTest, TestShiftRegister) {
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {2},
         .input_inverters = {false, false, false},
-        .output_delays = {element_output_delay(ElementType::shift_register),
-                          element_output_delay(ElementType::shift_register)},
+        .output_delays = {element_output_delay(LogicItemType::shift_register),
+                          element_output_delay(LogicItemType::shift_register)},
     });
     add_missing_placeholders(schematic);
 

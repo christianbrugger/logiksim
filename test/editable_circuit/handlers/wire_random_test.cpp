@@ -164,22 +164,21 @@ auto get_all_lines(const Layout& layout, display_state_t state)
     -> std::vector<ordered_line_t> {
     auto result = std::vector<ordered_line_t> {};
 
-    for (const auto element_id : layout.element_ids()) {
-        const auto element_state = layout.display_state(element_id);
-        const auto& tree = layout.segment_tree(element_id);
+    for (const auto wire_id : wire_ids(layout)) {
+        const auto& tree = layout.wires().segment_tree(wire_id);
 
-        if (is_inserted(element_state) && state == display_state_t::valid) {
+        if (is_inserted(wire_id) && state == display_state_t::valid) {
             for (const auto index : tree.indices()) {
                 std::ranges::copy(all_valid_lines(tree, index),
                                   std::back_inserter(result));
             }
         }
 
-        else if (is_inserted(element_state) && state == display_state_t::normal) {
+        else if (is_inserted(wire_id) && state == display_state_t::normal) {
             std::ranges::copy(calculate_normal_lines(tree), std::back_inserter(result));
         }
 
-        else if (element_state == state && !is_inserted(state)) {
+        else if (to_display_state(wire_id) == state && !is_inserted(wire_id)) {
             std::ranges::copy(all_lines(tree), std::back_inserter(result));
         }
     }

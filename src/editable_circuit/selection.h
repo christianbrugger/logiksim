@@ -51,7 +51,7 @@ class Selection {
     [[nodiscard]] auto empty() const noexcept -> bool;
     auto clear() -> void;
 
-    auto add_logicitem(logicitem_id_t logicitem_id) -> void;
+    auto add(logicitem_id_t logicitem_id) -> void;
     auto remove_logicitem(logicitem_id_t logicitem_id) -> void;
     auto toggle_logicitem(logicitem_id_t logicitem_id) -> void;
 

@@ -6,7 +6,7 @@
 #include "logging.h"
 #include "random/generator.h"
 #include "random/layout_calculation_data.h"
-#include "vocabulary/element_type.h"
+#include "vocabulary/logicitem_type.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -17,8 +17,8 @@
 namespace logicsim {
 
 TEST(LogicItemLayout, InputCount) {
-    for (auto element_type : all_element_types) {
-        const auto info = get_layout_info(element_type);
+    for (auto logicitem_type : all_logicitem_types) {
+        const auto info = get_layout_info(logicitem_type);
 
         EXPECT_TRUE(info.input_count_min <= info.input_count_max);
 
@@ -33,8 +33,8 @@ TEST(LogicItemLayout, InputCount) {
 }
 
 TEST(LogicItemLayout, OutputCount) {
-    for (auto element_type : all_element_types) {
-        const auto info = get_layout_info(element_type);
+    for (auto logicitem_type : all_logicitem_types) {
+        const auto info = get_layout_info(logicitem_type);
 
         EXPECT_TRUE(info.output_count_min <= info.output_count_max);
 
@@ -49,8 +49,8 @@ TEST(LogicItemLayout, OutputCount) {
 }
 
 TEST(LogicItemLayout, FixedOrVariableSize) {
-    for (auto element_type : all_element_types) {
-        const auto info = get_layout_info(element_type);
+    for (auto logicitem_type : all_logicitem_types) {
+        const auto info = get_layout_info(logicitem_type);
 
         // never both set
         EXPECT_TRUE(info.fixed_width.has_value() + (info.variable_width != nullptr) <= 1);
@@ -110,8 +110,8 @@ auto all_points_present(grid_t width, grid_t height, std::span<const point_t> bo
 }  // namespace
 
 TEST(LogicItemLayout, StaticSizePositive) {
-    for (auto element_type : all_element_types) {
-        const auto info = get_layout_info(element_type);
+    for (auto logicitem_type : all_logicitem_types) {
+        const auto info = get_layout_info(logicitem_type);
 
         if (info.fixed_width) {
             EXPECT_TRUE(info.fixed_width.value() >= grid_t {0});
@@ -123,14 +123,14 @@ TEST(LogicItemLayout, StaticSizePositive) {
 }
 
 TEST(LogicItemLayout, StaticBodyPoints) {
-    for (auto element_type : all_element_types) {
-        const auto &body_points = static_body_points_base(element_type);
+    for (auto logicitem_type : all_logicitem_types) {
+        const auto &body_points = static_body_points_base(logicitem_type);
 
         if (!body_points) {
             continue;
         }
 
-        const auto info = get_layout_info(element_type);
+        const auto info = get_layout_info(logicitem_type);
 
         EXPECT_TRUE(all_points_present(info.fixed_width.value(),
                                        info.fixed_height.value(), body_points.value(),
@@ -148,8 +148,7 @@ TEST(LogicItemLayout, RandomItems) {
         auto rng = get_random_number_generator(seed);
 
         const auto data = get_random_layout_calculation_data(rng);
-        assert(is_logic_item(data.element_type));
-        const auto info = get_layout_info(data.element_type);
+        const auto info = get_layout_info(data.logicitem_type);
 
         const auto inputs = input_locations_base(data);
         const auto outputs = output_locations_base(data);

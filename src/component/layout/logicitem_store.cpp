@@ -56,7 +56,7 @@ auto LogicItemStore::allocated_size() const -> std::size_t {
            get_allocated_size(map_clock_generator_);
 }
 
-auto LogicItemStore::add_logicitem(const ElementDefinition &definition, point_t position,
+auto LogicItemStore::add(const ElementDefinition &definition, point_t position,
                                    display_state_t display_state) -> logicitem_id_t {
     if (!is_valid(definition)) [[unlikely]] {
         throw std::runtime_error("Invalid element definition.");

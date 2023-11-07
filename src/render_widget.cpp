@@ -234,7 +234,7 @@ auto add_to_selection(Selection& selection, const Layout& layout,
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            selection.add_logicitem(item.logicitem_id());
+            selection.add(item.logicitem_id());
         } else {
             if (whole_tree) {
                 add_segment_tree(selection, item.segment().wire_id, layout);
@@ -410,7 +410,7 @@ auto add_selection(Selection& selection, const Layout& layout,
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            selection.add_logicitem(item.logicitem_id());
+            selection.add(item.logicitem_id());
         } else {
             add_segment_part(selection, layout, item.segment(), point);
         }

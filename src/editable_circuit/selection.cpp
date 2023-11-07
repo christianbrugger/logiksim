@@ -93,7 +93,7 @@ auto Selection::empty() const noexcept -> bool {
     return selected_logicitems_.empty() && selected_segments_.empty();
 }
 
-auto Selection::add_logicitem(logicitem_id_t logicitem_id) -> void {
+auto Selection::add(logicitem_id_t logicitem_id) -> void {
     if (!logicitem_id) [[unlikely]] {
         throw_exception("added element_id needs to be valid");
     }
@@ -117,7 +117,7 @@ auto Selection::toggle_logicitem(logicitem_id_t logicitem_id) -> void {
     if (is_selected(logicitem_id)) {
         remove_logicitem(logicitem_id);
     } else {
-        add_logicitem(logicitem_id);
+        add(logicitem_id);
     }
 }
 
