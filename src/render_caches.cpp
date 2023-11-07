@@ -85,45 +85,39 @@ auto render_editable_circuit_connection_cache(Context& ctx,
     const auto scene_rect = get_scene_rect(ctx.settings.view_config);
     const auto& caches = editable_circuit.caches();
 
-    const auto logicitem_color = defaults::color_dark_green;
+    const auto logicitem_color = defaults::color_dark_blue;
     const auto wire_color = defaults::color_green;
 
+    const auto input_size = grid_fine_t {1.0 / 3.0};
+    const auto output_size = grid_fine_t {0.8};
+
     // input
-    for (auto [position, orientation] :
+    for (const auto [position, orientation] :
          caches.logicitem_input_positions_and_orientations()) {
-        if (!is_colliding(position, scene_rect)) {
-            continue;
+        if (is_colliding(position, scene_rect)) {
+            render_input_marker(ctx, position, logicitem_color, orientation, input_size);
         }
-
-        const auto size = grid_fine_t {1.0 / 3.0};
-        render_input_marker(ctx, position, logicitem_color, orientation, size);
     }
-    for (auto [position, orientation] : caches.wire_input_positions_and_orientations()) {
-        if (!is_colliding(position, scene_rect)) {
-            continue;
+    for (const auto [position, orientation] :
+         caches.wire_input_positions_and_orientations()) {
+        if (is_colliding(position, scene_rect)) {
+            render_input_marker(ctx, position, wire_color, orientation, input_size);
         }
-
-        const auto size = grid_fine_t {1.0 / 3.0};
-        render_input_marker(ctx, position, wire_color, orientation, size);
     }
 
     // output
-    for (auto [position, orientation] :
+    for (const auto [position, orientation] :
          caches.logicitem_output_positions_and_orientations()) {
-        if (!is_colliding(position, scene_rect)) {
-            continue;
+        if (is_colliding(position, scene_rect)) {
+            render_output_marker(ctx, position, logicitem_color, orientation,
+                                 output_size);
         }
-
-        const auto size = grid_fine_t {0.8};
-        render_output_marker(ctx, position, logicitem_color, orientation, size);
     }
-    for (auto [position, orientation] : caches.wire_output_positions_and_orientations()) {
-        if (!is_colliding(position, scene_rect)) {
-            continue;
+    for (const auto [position, orientation] :
+         caches.wire_output_positions_and_orientations()) {
+        if (is_colliding(position, scene_rect)) {
+            render_output_marker(ctx, position, wire_color, orientation, output_size);
         }
-
-        const auto size = grid_fine_t {0.8};
-        render_output_marker(ctx, position, wire_color, orientation, size);
     }
 }
 

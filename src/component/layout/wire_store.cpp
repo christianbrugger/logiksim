@@ -33,8 +33,7 @@ constexpr inline auto invalid_bounding_rect = rect_t {point_t {0, 0}, point_t {0
 WireStore::WireStore()
     : segment_trees_(first_inserted_wire_id.value, SegmentTree {}),
       line_trees_(first_inserted_wire_id.value, LineTree {}),
-      bounding_rects_(first_inserted_wire_id.value, invalid_bounding_rect) {
-}
+      bounding_rects_(first_inserted_wire_id.value, invalid_bounding_rect) {}
 
 auto WireStore::size() const -> std::size_t {
     Expects(segment_trees_.size() >= std::size_t {first_inserted_wire_id});
@@ -166,8 +165,8 @@ auto WireStore::line_tree(wire_id_t wire_id) const -> const LineTree & {
 }
 
 auto WireStore::bounding_rect(wire_id_t wire_id) const -> rect_t {
-    if (wire_id < first_inserted_wire_id) [[unlikely]] {
-        throw std::runtime_error("only inserted wires have a bounding rect");
+    if (!is_inserted(wire_id)) [[unlikely]] {
+        throw std::runtime_error("only inserted wires have a stable bounding rect");
     }
     auto &rect = bounding_rects_.at(wire_id.value);
 

@@ -20,6 +20,7 @@
 #include "simulation_view.h"
 #include "vocabulary.h"
 #include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_id.h"
 
 #include <benchmark/benchmark.h>
 #include <blend2d.h>
@@ -40,12 +41,12 @@ namespace logicsim {
 static void BM_Benchmark_New_Selection(benchmark::State& state) {
     using namespace logicsim;
 
-    const auto element_id = element_id_t {0};
+    const auto logicitem_id = logicitem_id_t {0};
     const auto registrar = SelectionRegistrar {};
 
     for ([[maybe_unused]] auto _ : state) {
         auto handle = registrar.get_handle();
-        handle.value().add_logicitem(element_id);
+        handle.value().add_logicitem(logicitem_id);
 
         benchmark::ClobberMemory();
         benchmark::DoNotOptimize(handle);
@@ -58,15 +59,15 @@ BENCHMARK(BM_Benchmark_New_Selection);  // NOLINT
 static void BM_Benchmark_Reuse_Selection(benchmark::State& state) {
     using namespace logicsim;
 
-    const auto element_id = element_id_t {0};
+    const auto logicitem_id = logicitem_id_t {0};
     const auto registrar = SelectionRegistrar {};
     auto handle = registrar.get_handle();
 
     for ([[maybe_unused]] auto _ : state) {
-        handle.value().add_logicitem(element_id);
+        handle.value().add_logicitem(logicitem_id);
         benchmark::DoNotOptimize(handle);
 
-        handle.value().remove_logicitem(element_id);
+        handle.value().remove_logicitem(logicitem_id);
         benchmark::DoNotOptimize(handle);
     }
 }
@@ -89,7 +90,7 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
         }
 
         const auto definition = ElementDefinition {
-            .element_type = ElementType::and_element,
+            .logicitem_type = LogicItemType::and_element,
             .input_count = connection_count_t {3},
             .output_count = connection_count_t {1},
             .orientation = orientation_t::right,
@@ -109,7 +110,7 @@ static void BM_Benchmark_Input_Output_Valid(benchmark::State& state) {
 
     for ([[maybe_unused]] auto _ : state) {
         auto res = is_input_output_count_valid(
-            ElementType::and_element, connection_count_t {2}, connection_count_t {3});
+            LogicItemType::and_element, connection_count_t {2}, connection_count_t {3});
         benchmark::DoNotOptimize(res);
     }
 }

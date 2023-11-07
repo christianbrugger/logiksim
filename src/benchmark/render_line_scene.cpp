@@ -155,10 +155,11 @@ auto calculate_tree_length(const LineTree& line_tree) -> int {
                       [](line_t line) -> int { return distance(line); });
 }
 
-auto total_wire_lengths(const Layout& layout) -> int64_t {
-    return accumulate(wire_ids(layout), int64_t {0}, [&](const wire_id_t wire_id) {
-        return calculate_tree_length(layout.wires().line_tree(wire_id));
-    });
+auto inserted_wire_lengths(const Layout& layout) -> int64_t {
+    return accumulate(inserted_wire_ids(layout), int64_t {0},
+                      [&](const wire_id_t wire_id) {
+                          return calculate_tree_length(layout.wires().line_tree(wire_id));
+                      });
 }
 
 auto maximum_output_delay(const auto& schematic) -> delay_t {
@@ -241,7 +242,7 @@ auto fill_line_scene(int n_lines) -> SimulatedLineScene {
         simulation.run({.simulate_for = final_delay});
     }
 
-    const auto wire_lengths = total_wire_lengths(layout);
+    const auto wire_lengths = inserted_wire_lengths(layout);
 
     return SimulatedLineScene {
         .layout = std::move(layout),

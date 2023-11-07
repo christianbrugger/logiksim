@@ -68,7 +68,9 @@ auto add_random_element(Rng &rng, Schematic &schematic) -> void {
         std::terminate();
     }();
 
-    const auto delay = element_output_delay(to_logicitem_type(element_type));
+    const auto delay = element_type == ElementType::wire
+                           ? element_output_delay(LogicItemType::and_element)
+                           : element_output_delay(to_logicitem_type(element_type));
 
     schematic.add_element(schematic::NewElement {
         .element_type = element_type,

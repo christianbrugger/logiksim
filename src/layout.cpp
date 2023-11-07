@@ -32,7 +32,7 @@ auto Layout::format() const -> std::string {
         const auto format_single = [&](logicitem_id_t logicitem_id) {
             return format_logic_item(*this, logicitem_id);
         };
-        const auto lines = fmt_join(",\n  ", logicitem_ids(*this), {}, format_single);
+        const auto lines = fmt_join(",\n  ", logicitem_ids(*this), "{}", format_single);
         inner_logic_items = fmt::format(": [\n  {}\n]", lines);
     }
 
@@ -40,12 +40,13 @@ auto Layout::format() const -> std::string {
         const auto format_single = [&](wire_id_t wire_id) {
             return format_wire(*this, wire_id);
         };
-        const auto lines = fmt_join(",\n  ", wire_ids(*this), {}, format_single);
+        const auto lines = fmt_join(",\n  ", wire_ids(*this), "{}", format_single);
         inner_wires = fmt::format(": [\n  {}\n]", lines);
     }
 
-    return fmt::format("<Layout with {} logic items and {} wires{}>", logic_items_.size(),
-                       wires_.size(), inner_logic_items, inner_wires);
+    return fmt::format("<Layout with {} logic items and {} wires{}{}>",
+                       logic_items_.size(), wires_.size(), inner_logic_items,
+                       inner_wires);
 }
 
 auto Layout::normalize() -> void {
@@ -94,8 +95,8 @@ auto wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
 }
 
 auto inserted_wire_ids(const Layout &layout) -> range_extended_t<wire_id_t> {
-    return range_extended<wire_id_t>(std::size_t {first_inserted_wire_id},
-                                     layout.wires().size());
+    constexpr static auto first = std::size_t {first_inserted_wire_id};
+    return range_extended<wire_id_t>(first, std::max(first, layout.wires().size()));
 }
 
 auto get_segment_count(const Layout &layout) -> std::size_t {

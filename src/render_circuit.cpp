@@ -1818,39 +1818,34 @@ auto build_interactive_layers(const Layout& layout, InteractiveLayers& layers,
         insert_logic_item(layers, layout, logicitem_id, bounding_rect, state);
     }
 
-    for (const auto wire_id : wire_ids(layout)) {
+    for (const auto wire_id : inserted_wire_ids(layout)) {
         // visibility
         const auto bounding_rect = layout.wires().bounding_rect(wire_id);
         if (!is_colliding(bounding_rect, scene_rect)) {
             continue;
         }
 
-        if (is_inserted(wire_id)) {
-            layers.normal_wires.push_back(wire_id);
+        layers.normal_wires.push_back(wire_id);
 
-            // TODO add: tree.has_valid_parts()
-            const auto found_valid =
-                add_valid_wire_parts(layout, wire_id, layers.valid_wires);
+        // TODO add: tree.has_valid_parts()
+        const auto found_valid =
+            add_valid_wire_parts(layout, wire_id, layers.valid_wires);
 
-            if (!found_valid && selection != nullptr) {
-                add_selected_wire_parts(layout, wire_id, *selection,
-                                        layers.selected_wires);
-            }
-        } else {
-            // fine grained check, as uninserted trees can contain a lot of
-            // segments
-            for (const auto& info : layout.wires().segment_tree(wire_id)) {
-                if (is_colliding(info.line, scene_rect)) {
-                    // layers.uninserted_wires.push_back(info);
-                    update_uninserted_rect(layers, info.line);
-
-                    if (is_colliding(wire_id)) {
-                        layers.colliding_wires.push_back(info);
-                    } else if (is_temporary(wire_id)) {
-                        layers.temporary_wires.push_back(info);
-                    }
-                }
-            }
+        if (!found_valid && selection != nullptr) {
+            add_selected_wire_parts(layout, wire_id, *selection, layers.selected_wires);
+        }
+    }
+    // fine grained check, as uninserted trees can contain a lot of segments
+    for (const auto& info : layout.wires().segment_tree(temporary_wire_id)) {
+        if (is_colliding(info.line, scene_rect)) {
+            update_uninserted_rect(layers, info.line);
+            layers.temporary_wires.push_back(info);
+        }
+    }
+    for (const auto& info : layout.wires().segment_tree(colliding_wire_id)) {
+        if (is_colliding(info.line, scene_rect)) {
+            update_uninserted_rect(layers, info.line);
+            layers.colliding_wires.push_back(info);
         }
     }
 
@@ -1878,16 +1873,14 @@ auto build_simulation_layers(const Layout& layout, SimulationLayers& layers,
         }
     }
 
-    for (const auto wire_id : wire_ids(layout)) {
+    for (const auto wire_id : inserted_wire_ids(layout)) {
         // visibility
         const auto bounding_rect = layout.wires().bounding_rect(wire_id);
         if (!is_colliding(bounding_rect, scene_rect)) {
             continue;
         }
 
-        if (is_inserted(wire_id)) {
-            layers.wires.push_back(wire_id);
-        }
+        layers.wires.push_back(wire_id);
     }
 }
 

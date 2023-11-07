@@ -9,6 +9,7 @@
 #include "vocabulary/drawable_element.h"
 #include "vocabulary/element_draw_state.h"
 #include "vocabulary/logicitem_id.h"
+#include "vocabulary/logicitem_type.h"
 #include "vocabulary/segment_info.h"
 #include "vocabulary/wire_id.h"
 
@@ -190,7 +191,7 @@ auto draw_connector_labels(Context& ctx, const Layout& layout,
 // Logic Items
 //
 
-[[nodiscard]] auto draw_logic_item_above(ElementType type) -> bool;
+[[nodiscard]] auto draw_logic_item_above(LogicItemType type) -> bool;
 
 [[nodiscard]] auto get_logic_item_state(const Layout& layout, logicitem_id_t logicitem_id,
                                         const Selection* selection) -> ElementDrawState;

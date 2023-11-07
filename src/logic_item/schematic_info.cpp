@@ -110,8 +110,11 @@ auto to_logicitem_type(ElementType logicitem_type) -> LogicItemType {
 }
 
 auto element_enable_input_id(ElementType element_type) -> std::optional<connection_id_t> {
-    const auto logicitem_type = to_logicitem_type(element_type);
-    return get_layout_info(logicitem_type).enable_input_id;
+    if (is_logic_item(element_type)) {
+        const auto logicitem_type = to_logicitem_type(element_type);
+        return get_layout_info(logicitem_type).enable_input_id;
+    }
+    return std::nullopt;
 }
 
 auto element_output_delay(LogicItemType logicitem_type) -> delay_t {

@@ -52,26 +52,26 @@ using collision_points_t = folly::small_vector<collision_point_t, collision_poin
 namespace collision_cache {
 
 auto is_element_body(collision_data_t data) -> bool {
-    return data.logicitem_id_body                   //
+    return data.logicitem_id_body                      //
            && data.wire_id_horizontal == null_wire_id  //
            && data.wire_id_vertical == null_wire_id;
 }
 
 auto is_element_connection(collision_data_t data) -> bool {
-    return data.logicitem_id_body                   //
+    return data.logicitem_id_body                      //
            && data.wire_id_horizontal == null_wire_id  //
            && data.wire_id_vertical == connection_tag;
 }
 
 auto is_wire_connection(collision_data_t data) -> bool {
     return data.logicitem_id_body == null_logicitem_id  //
-           && data.wire_id_horizontal                //
+           && data.wire_id_horizontal                   //
            && data.wire_id_vertical == connection_tag;
 }
 
 auto is_wire_horizontal(collision_data_t data) -> bool {
     return data.logicitem_id_body == null_logicitem_id  //
-           && data.wire_id_horizontal                //
+           && data.wire_id_horizontal                   //
            && data.wire_id_vertical == null_wire_id;
 }
 
@@ -99,7 +99,7 @@ auto is_wire_cross_point(collision_data_t data) -> bool {
 
 auto is_wire_crossing(collision_data_t data) -> bool {
     return data.logicitem_id_body == null_logicitem_id  //
-           && data.wire_id_horizontal                //
+           && data.wire_id_horizontal                   //
            && data.wire_id_vertical;
 
     // && data.wire_id_horizontal != data.wire_id_vertical
@@ -607,8 +607,8 @@ auto CollisionCache::handle(
     }
 
     for (const auto& item : collision_points(message.segment_info)) {
-        set_wire_state(map_, item.position, item.type, message.new_segment.wire_id,
-                       message.old_segment.wire_id);
+        set_wire_state(map_, item.position, item.type, message.old_segment.wire_id,
+                       message.new_segment.wire_id);
     }
 }
 
@@ -631,7 +631,8 @@ auto CollisionCache::handle(
     using namespace collision_cache;
 
     for (const auto& item : collision_points(message.segment_info)) {
-        set_wire_state(map_, item.position, item.type, message.segment.wire_id, null_wire_id);
+        set_wire_state(map_, item.position, item.type, message.segment.wire_id,
+                       null_wire_id);
     }
 }
 
