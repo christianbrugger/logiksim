@@ -1,6 +1,6 @@
 #include "vocabulary/layout_calculation_data.h"
 
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/placed_element.h"
 
 #include <fmt/core.h>
@@ -21,7 +21,7 @@ auto layout_calculation_data_t::format() const -> std::string {
 // Conversion
 //
 
-auto to_layout_calculation_data(const ElementDefinition& definition, point_t position)
+auto to_layout_calculation_data(const LogicItemDefinition& definition, point_t position)
     -> layout_calculation_data_t {
     return layout_calculation_data_t {
         .internal_state_count = std::size_t {0},  // TODO ???

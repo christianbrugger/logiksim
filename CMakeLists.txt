@@ -180,7 +180,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/direction_type.cpp
     src/vocabulary/display_state.cpp
     src/vocabulary/drawable_element.cpp
-    src/vocabulary/element_definition.cpp
+    "src/vocabulary/logicitem_definition.cpp"
     src/vocabulary/element_draw_state.cpp
     src/vocabulary/element_id.cpp
     src/vocabulary/element_type.cpp

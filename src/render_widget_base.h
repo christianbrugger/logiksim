@@ -10,9 +10,9 @@
 
 namespace logicsim {
 
-struct ElementDefinition;
+struct LogicItemDefinition;
 
-[[nodiscard]] auto to_logic_item_definition(InteractionState state) -> ElementDefinition;
+[[nodiscard]] auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition;
 
 class RendererWidgetBase : public QWidget {
     Q_OBJECT

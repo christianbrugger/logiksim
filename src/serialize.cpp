@@ -24,7 +24,7 @@
 #include "layout_info.h"
 #include "serialize_detail.h"
 #include "validate_definition.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/placed_element.h"
 #include "vocabulary/simulation_setting.h"
@@ -102,7 +102,7 @@ auto to_placed_element(const SerializedLogicItem& obj, move_delta_t delta = {})
         return std::nullopt;
     }
 
-    const auto definition = ElementDefinition {
+    const auto definition = LogicItemDefinition {
         .logicitem_type = obj.logicitem_type,
         .input_count = input_count.value(),
         .output_count = output_count.value(),

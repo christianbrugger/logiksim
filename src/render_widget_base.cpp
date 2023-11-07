@@ -3,7 +3,7 @@
 
 #include "exception.h"
 #include "layout_info.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 
 #include <exception>
 #include <stdexcept>
@@ -11,8 +11,8 @@
 namespace logicsim {
 
 namespace {
-auto default_element_definition(LogicItemType logicitem_type) -> ElementDefinition {
-    return ElementDefinition {
+auto default_element_definition(LogicItemType logicitem_type) -> LogicItemDefinition {
+    return LogicItemDefinition {
         .logicitem_type = logicitem_type,
         .input_count = element_input_count_default(logicitem_type),
         .output_count = element_output_count_default(logicitem_type),
@@ -23,7 +23,7 @@ auto default_element_definition(LogicItemType logicitem_type) -> ElementDefiniti
 }
 }  // namespace
 
-auto to_logic_item_definition(InteractionState state) -> ElementDefinition {
+auto to_logic_item_definition(InteractionState state) -> LogicItemDefinition {
     switch (state) {
         using enum InteractionState;
 

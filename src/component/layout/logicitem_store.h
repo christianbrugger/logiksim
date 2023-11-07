@@ -2,7 +2,7 @@
 #define LOGICSIM_COMPONENT_LAYOUT_LOGICITEM_STORE_H
 
 #include "vocabulary/display_state.h"
-#include "vocabulary/element_definition.h"  // TODO rename
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/logicitem_type.h"
 #include "vocabulary/point.h"
@@ -36,7 +36,7 @@ class LogicItemStore {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     // add & delete
-    auto add(const ElementDefinition &definition, point_t position,
+    auto add(const LogicItemDefinition &definition, point_t position,
                        display_state_t display_state) -> logicitem_id_t;
     auto swap_and_delete(logicitem_id_t logicitem_id) -> logicitem_id_t;
     auto swap(logicitem_id_t logicitem_id_1, logicitem_id_t logicitem_id_2) -> void;
@@ -114,7 +114,7 @@ class LogicItemStore {
 
 [[nodiscard]] auto to_logicitem_definition(const LogicItemStore &store,
                                            logicitem_id_t logicitem_id)
-    -> ElementDefinition;
+    -> LogicItemDefinition;
 
 }  // namespace layout
 

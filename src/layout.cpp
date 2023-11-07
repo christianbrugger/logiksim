@@ -194,7 +194,7 @@ auto to_layout_calculation_data(const Layout &layout, logicitem_id_t logicitem_i
 }
 
 auto to_logicitem_definition(const Layout &layout, logicitem_id_t logicitem_id)
-    -> ElementDefinition {
+    -> LogicItemDefinition {
     return layout::to_logicitem_definition(layout.logic_items(), logicitem_id);
 }
 

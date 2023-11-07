@@ -18,7 +18,7 @@
 #include "simulation_view.h"
 #include "timer.h"
 #include "tree_normalization.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 
 #include <range/v3/view/sliding.hpp>
 

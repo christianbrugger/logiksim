@@ -11,7 +11,7 @@
 #include "layout_info.h"
 #include "resource.h"
 #include "validate_definition.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_id.h"
 
 #include <QBoxLayout>

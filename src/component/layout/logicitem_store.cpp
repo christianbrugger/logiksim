@@ -56,7 +56,7 @@ auto LogicItemStore::allocated_size() const -> std::size_t {
            get_allocated_size(map_clock_generator_);
 }
 
-auto LogicItemStore::add(const ElementDefinition &definition, point_t position,
+auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position,
                                    display_state_t display_state) -> logicitem_id_t {
     if (!is_valid(definition)) [[unlikely]] {
         throw std::runtime_error("Invalid element definition.");
@@ -378,8 +378,8 @@ auto to_layout_calculation_data(const LogicItemStore &store, logicitem_id_t logi
 }
 
 auto to_logicitem_definition(const LogicItemStore &store, logicitem_id_t logicitem_id)
-    -> ElementDefinition {
-    return ElementDefinition {
+    -> LogicItemDefinition {
+    return LogicItemDefinition {
         .logicitem_type = store.type(logicitem_id),
         .input_count = store.input_count(logicitem_id),
         .output_count = store.output_count(logicitem_id),

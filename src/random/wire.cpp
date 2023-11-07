@@ -31,7 +31,7 @@ auto add_random_wire(Rng& rng, State state, grid_t min, grid_t max, grid_t max_l
 
 auto add_random_button(Rng& rng, State state, grid_t min, grid_t max, bool random_modes)
     -> void {
-    const auto definition = ElementDefinition {
+    const auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::button,
         .input_count = connection_count_t {0},
         .output_count = connection_count_t {1},

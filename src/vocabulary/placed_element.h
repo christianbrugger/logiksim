@@ -2,7 +2,7 @@
 #define LOGICSIM_VOCABULARY_PLACED_ELEMENT_H
 
 #include "format/struct.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/point.h"
 
 #include <compare>
@@ -10,7 +10,7 @@
 namespace logicsim {
 
 struct PlacedElement {
-    ElementDefinition definition {};
+    LogicItemDefinition definition {};
     point_t position {0, 0};
 
     [[nodiscard]] auto format() const -> std::string;

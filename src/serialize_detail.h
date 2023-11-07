@@ -2,7 +2,7 @@
 #define LOGIKSIM_SERIALIZE_DETAIL_H
 
 #include "vocabulary/connection_count.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_type.h"
 #include "vocabulary/logic_small_vector.h"
 #include "vocabulary/orientation.h"

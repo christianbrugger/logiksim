@@ -139,6 +139,16 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
     }
 }
 
+template <>
+auto ConnectionCache<connection_cache::ContentType::Wire,
+                     connection_cache::DirectionType::Input>::
+    handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {}
+
+template <>
+auto ConnectionCache<connection_cache::ContentType::Wire,
+                     connection_cache::DirectionType::Output>::
+    handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {}
+
 //
 // InsertedLogicItemIdUpdated
 //
@@ -181,6 +191,18 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
     }
 }
 
+template <>
+auto ConnectionCache<connection_cache::ContentType::Wire,
+                     connection_cache::DirectionType::Input>::
+    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
+        -> void {}
+
+template <>
+auto ConnectionCache<connection_cache::ContentType::Wire,
+                     connection_cache::DirectionType::Output>::
+    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
+        -> void {}
+
 //
 // LogicItemUninserted
 //
@@ -221,6 +243,20 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
     }
 }
 
+template <>
+auto ConnectionCache<connection_cache::ContentType::Wire,
+                     connection_cache::DirectionType::Input>::
+    handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {}
+
+template <>
+auto ConnectionCache<connection_cache::ContentType::Wire,
+                     connection_cache::DirectionType::Output>::
+    handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {}
+
+//
+// SegmentInserted
+//
+
 namespace connection_cache {
 namespace {
 
@@ -232,12 +268,8 @@ consteval auto point_type() -> SegmentPointType {
                                              : SegmentPointType::output;
 }
 
-//
-// SegmentInserted
-//
-
-auto handle_wire(wire_map_t& map, SegmentPointType point_type, const SegmentInserted& message)
-    -> void {
+auto handle_wire(wire_map_t& map, SegmentPointType point_type,
+                 const SegmentInserted& message) -> void {
     if (message.segment_info.p0_type == point_type) {
         const auto position = message.segment_info.line.p0;
         verify_cache_empty(map, position);
@@ -259,13 +291,12 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type, const SegmentInse
     }
 }
 
-
 //
 // InsertedSegmentIdUpdated
 //
 
 auto handle_wire(wire_map_t& map, SegmentPointType point_type,
-                 const InsertedSegmentIdUpdated& message) -> void  {
+                 const InsertedSegmentIdUpdated& message) -> void {
     if (message.new_segment == message.old_segment) {
         return;
     }
@@ -297,8 +328,7 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
 // SegmentUninserted
 //
 auto handle_wire(wire_map_t& map, SegmentPointType point_type,
-                 const SegmentUninserted& message)
-    -> void {
+                 const SegmentUninserted& message) -> void {
     if (message.segment_info.p0_type == point_type) {
         const auto position = message.segment_info.line.p0;
         const auto expected_value = wire_value_t {
@@ -354,10 +384,6 @@ auto ConnectionCache<Content, Direction>::handle(
     handle(SegmentUninserted {message.segment, message.old_segment_info});
     handle(SegmentInserted {message.segment, message.new_segment_info});
 }
-
-//
-// SegmentUninserted
-//
 
 template <connection_cache::ContentType Content,
           connection_cache::DirectionType Direction>

@@ -3,7 +3,7 @@
 #include "layout_info.h"
 #include "validate_definition.h"
 #include "vocabulary/delay.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_type.h"
 
 namespace logicsim {
@@ -29,7 +29,7 @@ auto is_valid(const attributes_clock_generator_t& a) -> bool {
            valid_clock_generator_time(a.time_off);
 }
 
-auto is_valid(const ElementDefinition& d) -> bool {
+auto is_valid(const LogicItemDefinition& d) -> bool {
     using enum LogicItemType;
 
     if (!is_input_output_count_valid(d.logicitem_type, d.input_count, d.output_count)) {

@@ -19,7 +19,7 @@
 #include "simulation.h"
 #include "simulation_view.h"
 #include "vocabulary.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_id.h"
 
 #include <benchmark/benchmark.h>
@@ -89,7 +89,7 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
             x = 0;
         }
 
-        const auto definition = ElementDefinition {
+        const auto definition = LogicItemDefinition {
             .logicitem_type = LogicItemType::and_element,
             .input_count = connection_count_t {3},
             .output_count = connection_count_t {1},

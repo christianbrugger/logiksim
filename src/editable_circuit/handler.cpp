@@ -782,7 +782,7 @@ auto change_logic_item_insertion_mode(State state, logicitem_id_t& logicitem_id,
     change_logic_item_insertion_mode_private(state, logicitem_id, new_mode);
 }
 
-auto add_logic_item_private(State state, const ElementDefinition& definition,
+auto add_logic_item_private(State state, const LogicItemDefinition& definition,
                             point_t position, InsertionMode insertion_mode)
     -> logicitem_id_t {
     // insert into underlying
@@ -800,7 +800,7 @@ auto add_logic_item_private(State state, const ElementDefinition& definition,
     return logicitem_id;
 }
 
-auto add_logic_item(State state, const ElementDefinition& definition, point_t position,
+auto add_logic_item(State state, const LogicItemDefinition& definition, point_t position,
                     InsertionMode insertion_mode) -> logicitem_id_t {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
@@ -826,7 +826,7 @@ auto is_wire_aggregate(const Layout& layout, const element_id_t element_id,
 }
 
 auto add_new_wire_element(Layout& layout, display_state_t display_state) -> element_id_t {
-    const auto definition = ElementDefinition {
+    const auto definition = LogicItemDefinition {
         .element_type = ElementType::wire,
 
         .input_count = connection_count_t {0},

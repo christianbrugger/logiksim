@@ -83,7 +83,7 @@ auto EditableCircuit::add_example() -> void {
     //     });
 }
 
-auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t position,
+auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
                                      InsertionMode insertion_mode) -> selection_handle_t {
     const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
                                                                position, insertion_mode);
@@ -95,7 +95,7 @@ auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t posit
     return handle;
 }
 
-auto EditableCircuit::add_logic_item(ElementDefinition definition, point_t position,
+auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
                                      InsertionMode insertion_mode,
                                      const selection_handle_t& handle) -> void {
     const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,

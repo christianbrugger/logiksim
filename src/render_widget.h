@@ -8,7 +8,7 @@
 #include "render_widget_base.h"
 #include "setting_handle.h"
 #include "size_handle.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/simulation_setting.h"
 
 #include <blend2d.h>
@@ -49,7 +49,7 @@ class MouseElementInsertLogic {
    public:
     struct Args {
         EditableCircuit& editable_circuit;
-        ElementDefinition element_definition;
+        LogicItemDefinition element_definition;
     };
 
     MouseElementInsertLogic(Args args) noexcept;
@@ -70,7 +70,7 @@ class MouseElementInsertLogic {
 
    private:
     EditableCircuit& editable_circuit_;
-    ElementDefinition element_definition_;
+    LogicItemDefinition element_definition_;
 
     selection_handle_t temp_element_ {};
 };

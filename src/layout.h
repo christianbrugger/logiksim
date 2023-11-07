@@ -89,7 +89,7 @@ class Layout {
     -> layout_calculation_data_t;
 [[nodiscard]] auto to_logicitem_definition(const Layout &layout,
                                            logicitem_id_t logicitem_id)
-    -> ElementDefinition;
+    -> LogicItemDefinition;
 [[nodiscard]] auto to_placed_element(const Layout &layout, logicitem_id_t logicitem_id)
     -> PlacedElement;
 

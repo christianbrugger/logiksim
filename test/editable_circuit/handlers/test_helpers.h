@@ -5,7 +5,7 @@
 #include "editable_circuit/cache.h"
 #include "editable_circuit/handler.h"
 #include "logging.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -81,7 +81,7 @@ struct SenderSetup {
 inline auto add_and_element(Layout &layout, display_state_t display_type,
                             connection_count_t input_count = connection_count_t {3},
                             point_t position = point_t {0, 0}) -> logicitem_id_t {
-    const auto definition = ElementDefinition {
+    const auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::and_element,
 
         .input_count = input_count,

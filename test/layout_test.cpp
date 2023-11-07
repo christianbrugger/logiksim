@@ -1,7 +1,7 @@
 
 #include "layout.h"
 
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -24,7 +24,7 @@ TEST(Layout, LayoutSingleLogicItem) {
     auto layout = Layout {};
 
     layout.logic_items().add(
-        ElementDefinition {
+        LogicItemDefinition {
             .logicitem_type = LogicItemType::buffer_element,
             .input_count = connection_count_t {1},
             .output_count = connection_count_t {1},
@@ -54,7 +54,7 @@ TEST(Layout, ElementProperties) {
     const auto output_inverters = logic_small_vector_t {true};
 
     layout.logic_items().add(
-        ElementDefinition {
+        LogicItemDefinition {
             .logicitem_type = LogicItemType::and_element,
             .input_count = connection_count_t {3},
             .output_count = connection_count_t {1},
@@ -85,7 +85,7 @@ TEST(Layout, ElementProperties) {
 TEST(Layout, EqualityOperators) {
     auto layout = Layout {};
 
-    const auto definition = ElementDefinition {
+    const auto definition = LogicItemDefinition {
         .logicitem_type = LogicItemType::buffer_element,
         .input_count = connection_count_t {1},
         .output_count = connection_count_t {1},

@@ -60,7 +60,7 @@ auto swap_and_delete_logic_item(Layout& layout, MessageSender& sender,
 // Logic Item Handling
 //
 
-auto add_logic_item(State state, const ElementDefinition& definition, point_t position,
+auto add_logic_item(State state, const LogicItemDefinition& definition, point_t position,
                     InsertionMode insertion_mode) -> logicitem_id_t;
 
 auto change_logic_item_insertion_mode(State state, logicitem_id_t& logicitem_id,

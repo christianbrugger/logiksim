@@ -1,7 +1,6 @@
 #include "./test_helpers.h"
 #include "editable_circuit/handler.h"
-#include "line_tree_2.h"
-#include "vocabulary/element_definition.h"
+#include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

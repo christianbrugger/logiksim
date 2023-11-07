@@ -14,7 +14,7 @@
 
 namespace logicsim {
 
-struct ElementDefinition;
+struct LogicItemDefinition;
 struct PlacedElement;
 
 /**
@@ -38,7 +38,7 @@ struct layout_calculation_data_t {
 
 static_assert(std::is_aggregate_v<layout_calculation_data_t>);
 
-[[nodiscard]] auto to_layout_calculation_data(const ElementDefinition& definition,
+[[nodiscard]] auto to_layout_calculation_data(const LogicItemDefinition& definition,
                                               point_t position)
     -> layout_calculation_data_t;
 
