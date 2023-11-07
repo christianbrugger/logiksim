@@ -58,7 +58,7 @@ auto add_unused_element(Schematic& schematic) -> void {
     });
 }
 
-auto logic_item_output_delays(const Layout layout, logicitem_id_t logicitem_id)
+auto logic_item_output_delays(const Layout &layout, logicitem_id_t logicitem_id)
     -> output_delays_t {
     const auto logicitem_type = layout.logic_items().type(logicitem_id);
     const auto delay = element_output_delay(logicitem_type);
@@ -82,7 +82,7 @@ auto logic_item_output_delays(const Layout layout, logicitem_id_t logicitem_id)
     std::terminate();
 }
 
-auto add_logic_item(Schematic& schematic, const Layout layout,
+auto add_logic_item(Schematic& schematic, const Layout& layout,
                     logicitem_id_t logicitem_id) -> void {
     schematic.add_element(schematic::NewElement {
         .element_type = to_element_type(layout.logic_items().type(logicitem_id)),
@@ -96,7 +96,7 @@ auto add_logic_item(Schematic& schematic, const Layout layout,
     });
 }
 
-auto add_wire(Schematic& schematic, const Layout layout, wire_id_t wire_id,
+auto add_wire(Schematic& schematic, const Layout &layout, wire_id_t wire_id,
               delay_t wire_delay_per_distance) -> void {
     const auto& line_tree = layout.wires().line_tree(wire_id);
 
@@ -322,7 +322,6 @@ auto add_missing_placeholders(Schematic& schematic) -> void {
 auto generate_schematic(const Layout& layout, delay_t wire_delay_per_distance)
     -> Schematic {
     auto schematic = Schematic {};
-
     add_layout_elements(schematic, layout, wire_delay_per_distance);
     create_connections(schematic, layout);
     add_missing_placeholders(schematic);

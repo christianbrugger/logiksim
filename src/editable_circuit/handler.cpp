@@ -124,7 +124,7 @@ auto convert_from_to(Layout& layout, MessageSender& sender, wire_connection_t ou
         throw_exception("can only convert inserted wires");
     }
 
-    auto& m_tree = layout.wires().modifyable_segment_tree(output.segment.wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(output.segment.wire_id);
     const auto old_info = m_tree.info(output.segment.segment_index);
     auto new_info = old_info;
 
@@ -901,7 +901,7 @@ auto add_new_wire_element(Layout& layout) -> wire_id_t {
 auto add_segment_to_tree(Layout& layout, MessageSender& sender, const wire_id_t wire_id,
                          ordered_line_t line) -> segment_part_t {
     // insert new segment
-    auto& m_tree = layout.wires().modifyable_segment_tree(wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(wire_id);
 
     const auto segment_info = segment_info_t {
         .line = line,
@@ -924,7 +924,7 @@ auto reset_segment_endpoints(Layout& layout, const segment_t segment) {
     if (is_inserted(segment.wire_id)) [[unlikely]] {
         throw_exception("cannot reset endpoints of inserted wire segment");
     }
-    auto& m_tree = layout.wires().modifyable_segment_tree(segment.wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
 
     const auto new_info = segment_info_t {
         .line = m_tree.line(segment.segment_index),
@@ -939,7 +939,7 @@ auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t poi
     if (is_inserted(segment.wire_id)) [[unlikely]] {
         throw_exception("cannot set endpoints of inserted wire segment");
     }
-    auto& m_tree = layout.wires().modifyable_segment_tree(segment.wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
 
     auto info = m_tree.info(segment.segment_index);
 
@@ -1133,8 +1133,8 @@ auto _move_full_segment_between_trees(Layout& layout, MessageSender& sender,
     }
     const auto source_index = source_segment.segment_index;
 
-    auto& m_tree_source = layout.wires().modifyable_segment_tree(source_segment.wire_id);
-    auto& m_tree_destination = layout.wires().modifyable_segment_tree(destination_id);
+    auto& m_tree_source = layout.wires().modifiable_segment_tree(source_segment.wire_id);
+    auto& m_tree_destination = layout.wires().modifiable_segment_tree(destination_id);
 
     // copy
     const auto destination_index =
@@ -1159,8 +1159,8 @@ auto copy_segment(Layout& layout, MessageSender& sender,
                   const segment_part_t source_segment_part,
                   const wire_id_t destination_id) -> segment_part_t {
     auto& m_tree_source =
-        layout.wires().modifyable_segment_tree(source_segment_part.segment.wire_id);
-    auto& m_tree_destination = layout.wires().modifyable_segment_tree(destination_id);
+        layout.wires().modifiable_segment_tree(source_segment_part.segment.wire_id);
+    auto& m_tree_destination = layout.wires().modifiable_segment_tree(destination_id);
 
     bool set_input_p0 = false;
     bool set_input_p1 = false;
@@ -1225,7 +1225,7 @@ auto shrink_segment_begin(Layout& layout, MessageSender& sender, const segment_t
     using namespace info_message;
 
     if (is_inserted(segment.wire_id)) {
-        auto& m_tree = layout.wires().modifyable_segment_tree(segment.wire_id);
+        auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
         const auto old_info = m_tree.info(segment.segment_index);
         sender.submit(SegmentUninserted({.segment = segment, .segment_info = old_info}));
     }
@@ -1234,7 +1234,7 @@ auto shrink_segment_begin(Layout& layout, MessageSender& sender, const segment_t
 auto shrink_segment_end(Layout& layout, MessageSender& sender, const segment_t segment,
                         const part_t part_kept) -> segment_part_t {
     using namespace info_message;
-    auto& m_tree = layout.wires().modifyable_segment_tree(segment.wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
     m_tree.shrink_segment(segment.segment_index, part_kept);
 
     if (is_inserted(segment.wire_id)) {
@@ -1342,7 +1342,7 @@ auto _remove_full_segment_from_tree(Layout& layout, MessageSender& sender,
                                     segment_part_t& full_segment_part) {
     const auto wire_id = full_segment_part.segment.wire_id;
     const auto segment_index = full_segment_part.segment.segment_index;
-    auto& m_tree = layout.wires().modifyable_segment_tree(wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(wire_id);
 
     // delete
     const auto last_index = m_tree.last_index();
@@ -1367,7 +1367,7 @@ auto _remove_touching_segment_from_tree(Layout& layout, MessageSender& sender,
     const auto index = segment_part.segment.segment_index;
     const auto part = segment_part.part;
 
-    auto& m_tree = layout.wires().modifyable_segment_tree(wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(wire_id);
 
     const auto full_part = m_tree.part(index);
     const auto part_kept = difference_touching_one_side(full_part, part);
@@ -1396,7 +1396,7 @@ auto _remove_splitting_segment_from_tree(Layout& layout, MessageSender& sender,
     const auto index = segment_part.segment.segment_index;
     const auto part = segment_part.part;
 
-    auto& m_tree = layout.wires().modifyable_segment_tree(wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(wire_id);
 
     const auto full_part = m_tree.part(index);
     const auto [part0, part1] = difference_not_touching(full_part, part);
@@ -1455,8 +1455,8 @@ auto merge_and_delete_tree(Layout& layout, MessageSender& sender,
         throw_exception("only supports merging of inserted trees");
     }
 
-    auto& m_tree_source = layout.wires().modifyable_segment_tree(tree_source);
-    auto& m_tree_destination = layout.wires().modifyable_segment_tree(tree_destination);
+    auto& m_tree_source = layout.wires().modifiable_segment_tree(tree_source);
+    auto& m_tree_destination = layout.wires().modifiable_segment_tree(tree_destination);
 
     auto new_index = m_tree_destination.last_index();
 
@@ -1507,7 +1507,7 @@ auto update_segment_point_types(Layout& layout, MessageSender& sender, wire_id_t
     if (!is_inserted(wire_id)) [[unlikely]] {
         throw_exception("only works for inserted segment trees.");
     }
-    auto& m_tree = layout.wires().modifyable_segment_tree(wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(wire_id);
 
     const auto run_point_update = [&](bool set_to_shadow) {
         for (auto [segment_index, point_type] : data) {
@@ -1557,7 +1557,7 @@ auto _merge_line_segments_ordered(Layout& layout, MessageSender& sender,
     const auto index_1 = segment_1.segment_index;
     const auto wire_id = segment_0.wire_id;
 
-    auto& m_tree = layout.wires().modifyable_segment_tree(wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(wire_id);
     const auto index_last = m_tree.last_index();
     const auto segment_last = segment_t {wire_id, index_last};
 
@@ -1821,14 +1821,14 @@ auto discover_wire_inputs(Layout& layout, const CacheProvider& cache, segment_t 
 
     // find LogicItem outputs
     if (const auto entry = cache.logicitem_output_cache().find(line.p0)) {
-        auto& m_tree = layout.wires().modifyable_segment_tree(segment.wire_id);
+        auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
         auto info = m_tree.info(segment.segment_index);
 
         info.p0_type = SegmentPointType::input;
         m_tree.update_segment(segment.segment_index, info);
     }
     if (const auto entry = cache.logicitem_output_cache().find(line.p1)) {
-        auto& m_tree = layout.wires().modifyable_segment_tree(segment.wire_id);
+        auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
         auto info = m_tree.info(segment.segment_index);
 
         info.p1_type = SegmentPointType::input;
@@ -1854,12 +1854,12 @@ auto insert_wire(State state, segment_part_t& segment_part) -> void {
 }
 
 auto mark_valid(Layout& layout, const segment_part_t segment_part) {
-    auto& m_tree = layout.wires().modifyable_segment_tree(segment_part.segment.wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment_part.segment.wire_id);
     m_tree.mark_valid(segment_part.segment.segment_index, segment_part.part);
 }
 
 auto unmark_valid(Layout& layout, const segment_part_t segment_part) {
-    auto& m_tree = layout.wires().modifyable_segment_tree(segment_part.segment.wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment_part.segment.wire_id);
     m_tree.unmark_valid(segment_part.segment.segment_index, segment_part.part);
 }
 
@@ -1911,7 +1911,7 @@ auto split_broken_tree(State state, point_t p0, point_t p1) -> wire_id_t {
     const auto new_tree_id = add_new_wire_element(state.layout);
 
     // find connected segments
-    const auto& tree_from = state.layout.wires().modifyable_segment_tree(p0_tree_id);
+    const auto& tree_from = state.layout.wires().modifiable_segment_tree(p0_tree_id);
     const auto mask = calculate_connected_segments_mask(tree_from, p1);
 
     // move over segments
@@ -2162,7 +2162,7 @@ auto move_or_delete_wire_private(Layout& layout, MessageSender& sender,
     }
 
     // move
-    auto& m_tree = layout.wires().modifyable_segment_tree(segment_part.segment.wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment_part.segment.wire_id);
     auto info = m_tree.info(segment_part.segment.segment_index);
     info.line = add_unchecked(part_line, dx, dy);
     m_tree.update_segment(segment_part.segment.segment_index, info);
@@ -2191,7 +2191,7 @@ auto move_or_delete_wire(Layout& layout, MessageSender& sender,
 auto move_wire_unchecked_private(Layout& layout, segment_t segment,
                                  part_t verify_full_part, int dx, int dy) -> void {
     // move
-    auto& m_tree = layout.wires().modifyable_segment_tree(segment.wire_id);
+    auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
 
     auto info = m_tree.info(segment.segment_index);
     info.line = add_unchecked(info.line, dx, dy);

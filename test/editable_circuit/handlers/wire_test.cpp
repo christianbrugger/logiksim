@@ -20,7 +20,7 @@ auto add_test_wire(Layout &layout, display_state_t display_state,
                    SegmentPointType point_type, std::span<const ordered_line_t> lines) {
     const auto element_id = add_test_wire(layout, display_state);
 
-    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    auto &m_tree = layout.modifiable_segment_tree(element_id);
     for (const auto line : lines) {
         m_tree.add_segment(segment_info_t {
             .line = line,
@@ -417,7 +417,7 @@ TEST(EditableCircuitHandlerWire, IsWirePositionRepresentable) {
     auto layout = Layout {};
 
     const auto element_id = add_test_wire(layout, display_state_t::temporary);
-    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    auto &m_tree = layout.modifiable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(
         segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
 
@@ -442,7 +442,7 @@ TEST(EditableCircuitHandlerWire, IsWirePositionRepresentablePart) {
     auto p1_x = grid_t::max();
 
     const auto element_id = add_test_wire(layout, display_state_t::temporary);
-    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    auto &m_tree = layout.modifiable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(
         segment_info_t {.line = ordered_line_t {point_t {0, 0}, point_t {p1_x, 0}}});
 
@@ -473,7 +473,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMove) {
     const auto line_0 = ordered_line_t {point_t {100, 200}, point_t {110, 200}};
 
     const auto element_id = add_test_wire(layout, display_state_t::temporary);
-    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    auto &m_tree = layout.modifiable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
     const auto segment_part_0 =
@@ -511,7 +511,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialBegin) {
     const auto line_1 = ordered_line_t {point_t {100, 200}, point_t {105, 200}};
 
     const auto element_id = add_test_wire(layout, display_state_t::temporary);
-    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    auto &m_tree = layout.modifiable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
     const auto segment_part_0 =
@@ -562,7 +562,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialEnd) {
     const auto line_1 = ordered_line_t {point_t {105, 200}, point_t {110, 200}};
 
     const auto element_id = add_test_wire(layout, display_state_t::temporary);
-    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    auto &m_tree = layout.modifiable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
     const auto segment_part_0 =
@@ -607,7 +607,7 @@ TEST(EditableCircuitHandlerWire, MoveOrDeleteWireMovePartialMiddle) {
     const auto line_2 = ordered_line_t {point_t {110, 200}, point_t {115, 200}};
 
     const auto element_id = add_test_wire(layout, display_state_t::temporary);
-    auto &m_tree = layout.modifyable_segment_tree(element_id);
+    auto &m_tree = layout.modifiable_segment_tree(element_id);
     const auto segment_index = m_tree.add_segment(segment_info_t {.line = line});
 
     const auto segment_part_0 =

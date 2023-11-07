@@ -573,8 +573,8 @@ auto CollisionCache::handle(
     using namespace collision_cache;
 
     for (const auto& item : collision_points(message.data)) {
-        set_logic_item_state(map_, item.position, item.type, message.new_logicitem_id,
-                             message.old_logicitem_id);
+        set_logic_item_state(map_, item.position, item.type, message.old_logicitem_id,
+                             message.new_logicitem_id);
     }
 }
 

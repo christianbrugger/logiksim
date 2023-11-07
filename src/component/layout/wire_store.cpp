@@ -114,8 +114,7 @@ auto WireStore::swap_and_delete(wire_id_t wire_id) -> wire_id_t {
 }
 
 auto WireStore::swap(wire_id_t wire_id_1, wire_id_t wire_id_2) -> void {
-    if (wire_id_1 < first_inserted_wire_id || wire_id_2 < first_inserted_wire_id)
-        [[unlikely]] {
+    if (!is_inserted(wire_id_1) || !is_inserted(wire_id_2)) [[unlikely]] {
         throw std::runtime_error("can only swap inserted wires");
     }
     if (wire_id_1 == wire_id_2) {
@@ -136,9 +135,9 @@ auto WireStore::segment_tree(wire_id_t wire_id) const -> const SegmentTree & {
     return segment_trees_.at(wire_id.value);
 }
 
-auto WireStore::modifyable_segment_tree(wire_id_t wire_id) -> SegmentTree & {
+auto WireStore::modifiable_segment_tree(wire_id_t wire_id) -> SegmentTree & {
     // reset caches
-    if (wire_id >= first_inserted_wire_id) {
+    if (is_inserted(wire_id)) {
         line_trees_.at(wire_id.value) = LineTree {};
         bounding_rects_.at(wire_id.value) = invalid_bounding_rect;
     }
@@ -147,8 +146,8 @@ auto WireStore::modifyable_segment_tree(wire_id_t wire_id) -> SegmentTree & {
 }
 
 auto WireStore::line_tree(wire_id_t wire_id) const -> const LineTree & {
-    if (wire_id < first_inserted_wire_id) [[unlikely]] {
-        throw std::runtime_error("only inserted wires have a line_tree");
+    if (!is_inserted(wire_id)) [[unlikely]] {
+        throw std::runtime_error("only inserted wires have a stable line_tree");
     }
     auto &line_tree = line_trees_.at(wire_id.value);
 
@@ -186,7 +185,7 @@ auto WireStore::bounding_rect(wire_id_t wire_id) const -> rect_t {
 
 auto WireStore::delete_last() -> void {
     if (segment_trees_.size() <= std::size_t {first_inserted_wire_id}) [[unlikely]] {
-        throw std::runtime_error("Only inserted wires can be deleted.");
+        throw std::runtime_error("Non-inserted wires cannot be deleted.");
     }
 
     segment_trees_.pop_back();

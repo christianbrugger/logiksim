@@ -171,7 +171,7 @@ auto moved_layout(Layout layout, int delta_x, int delta_y) -> std::optional<Layo
 
     // wires
     for (const auto wire_id : wire_ids(layout)) {
-        auto &tree = layout.wires().modifyable_segment_tree(wire_id);
+        auto &tree = layout.wires().modifiable_segment_tree(wire_id);
 
         for (const auto segment_index : tree.indices()) {
             auto info = segment_info_t {tree.info(segment_index)};

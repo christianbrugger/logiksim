@@ -112,7 +112,7 @@ auto add_random_wire_segment(Rng& rng, EditableCircuit& editable_circuit,
 
 auto set_inputs(Layout& layout) {
     for (const wire_id_t wire_id : wire_ids(layout)) {
-        auto& m_tree = layout.wires().modifyable_segment_tree(wire_id);
+        auto& m_tree = layout.wires().modifiable_segment_tree(wire_id);
 
         if (m_tree.empty()) {
             continue;

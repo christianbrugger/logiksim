@@ -17,7 +17,7 @@ namespace layout {
  *
  * Note the first and second wire have special meaning and are always present.
  * They can be accessed with `temporary_wire_id` and `colliding_wire_id`.
- * 
+ *
  * Class invariants:
  *     + segment_trees_ and line_trees_ have same size
  *     + size is at least 2
@@ -46,16 +46,15 @@ class WireStore {
     // getters
     [[nodiscard]] auto segment_tree(wire_id_t wire_id) const -> const SegmentTree &;
     /**
-    * @brief: Converts the segment tree to a line tree
-    * 
-    * TODO return std::nullopt, if SegmentTree is not convertible !!!
-    */
+     * @brief: Converts the segment tree to a line tree
+     *
+     * TODO return std::nullopt, if SegmentTree is not convertible !!!
+     */
     [[nodiscard]] auto line_tree(wire_id_t wire_id) const -> const LineTree &;
     [[nodiscard]] auto bounding_rect(wire_id_t wire_id) const -> rect_t;
 
     // modifiable access
-    [[nodiscard]] auto modifyable_segment_tree(wire_id_t wire_id) -> SegmentTree &; 
-    //TODO rename above
+    [[nodiscard]] auto modifiable_segment_tree(wire_id_t wire_id) -> SegmentTree &;
 
    private:
     auto delete_last() -> void;
