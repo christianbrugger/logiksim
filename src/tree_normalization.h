@@ -14,6 +14,8 @@ class SegmentTree;
  *
  * First Overlapping or connecting & parallel segments are merged.
  * Then all lines colliding with cross-points are split.
+ * 
+ * The algorithm is O(N log N).
  *
  * Returns a flat list of segments, where there are no internal colliding points.
  */

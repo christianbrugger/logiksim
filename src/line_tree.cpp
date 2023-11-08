@@ -56,7 +56,7 @@ auto LineTree::is_corner_p1(line_index_t index) const -> bool {
     if (index == store_.last_index()) {
         return false;
     }
-    return store_.starts_new_subtree(get_next(index));
+    return !store_.starts_new_subtree(get_next(index));
 }
 
 auto LineTree::length_p0(line_index_t index) const -> length_t {
