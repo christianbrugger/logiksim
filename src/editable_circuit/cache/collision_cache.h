@@ -67,15 +67,15 @@ enum class CacheState {
  */
 struct collision_data_t {
     /**
-     * @brief: logicitem_id || wire_corner_point_tag || wire_cross_point_tag
+     * @brief: logicitem_id || wire_corner_point_tag || wire_cross_point_tag || null
      */
     logicitem_id_t logicitem_id_body {null_logicitem_id};
     /**
-     * @brief: horizontal wire
+     * @brief: horizontal wire || null
      */
     wire_id_t wire_id_horizontal {null_wire_id};
     /**
-     * @brief: vertical wire || connection_tag
+     * @brief: vertical wire || connection_tag || null
      */
     wire_id_t wire_id_vertical {null_wire_id};
 
@@ -107,7 +107,7 @@ constexpr static inline auto connection_tag = wire_id_t {-2};
  *      SegmentPointType::corner_point
  *      ItemType::wire_corner_point
  */
-constexpr static inline auto wire_corner_point_tag = logicitem_id_t {-3};
+constexpr static inline auto wire_corner_point_tag = logicitem_id_t {-2};
 /**
  * @brief: Indicates a wire cross-point is at this position.
  *
@@ -115,7 +115,7 @@ constexpr static inline auto wire_corner_point_tag = logicitem_id_t {-3};
  *      SegmentPointType::cross_point
  *      ItemType::wire_cross_point
  */
-constexpr static inline auto wire_cross_point_tag = logicitem_id_t {-4};
+constexpr static inline auto wire_cross_point_tag = logicitem_id_t {-3};
 
 static_assert(connection_tag != null_wire_id);
 static_assert(connection_tag < wire_id_t {0});
@@ -123,6 +123,7 @@ static_assert(wire_corner_point_tag != null_logicitem_id);
 static_assert(wire_corner_point_tag < logicitem_id_t {0});
 static_assert(wire_cross_point_tag != null_logicitem_id);
 static_assert(wire_cross_point_tag < logicitem_id_t {0});
+static_assert(wire_cross_point_tag != wire_corner_point_tag);
 
 [[nodiscard]] auto is_element_body(collision_data_t data) -> bool;
 [[nodiscard]] auto is_element_connection(collision_data_t data) -> bool;

@@ -139,7 +139,7 @@ auto apply_function(Selection& selection, const SpatialTree& spatial_cache,
 
     for (auto&& element : selected_elements) {
         if (element.is_logicitem()) {
-            add_element_to_selection(element.logicitem_id(), operation.function,
+            add_element_to_selection(element.logicitem(), operation.function,
                                      selection);
         } else {
             add_segment_to_selection(element.segment(), operation, selection, layout);

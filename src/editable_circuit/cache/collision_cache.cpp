@@ -303,7 +303,7 @@ auto collision_end_points(segment_info_t segment) -> collision_points_t {
  */
 auto collision_points(segment_info_t segment) -> collision_points_t {
     auto result = collision_points_t {};
-    result.reserve(distance(segment.line) + 1);
+    result.reserve(distance(segment.line) + std::size_t {1});
 
     const auto line = segment.line;
 
@@ -330,8 +330,9 @@ auto delete_if_empty(CollisionCache::map_type& map, point_t position,
 }
 
 auto set_connection_tag(collision_cache::collision_data_t& data) {
-    if (data.wire_id_vertical) {
-        throw_exception("cannot set connection tag, second element occupied");
+    if (data.wire_id_vertical != null_wire_id &&
+        data.wire_id_vertical != collision_cache::connection_tag) {
+        throw_exception("cannot set connection tag, wire_id_vertical occupied");
     }
     data.wire_id_vertical = collision_cache::connection_tag;
 };
@@ -356,14 +357,14 @@ auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
                           collision_cache::ItemType item_type,
                           logicitem_id_t verify_old_id, logicitem_id_t set_new_id)
     -> void {
-    auto& data = map[position];
-
     const auto check_and_update = [&](logicitem_id_t& obj) {
         if (obj != verify_old_id) {
             throw_exception("unexpected collision state");
         }
         obj = set_new_id;
     };
+
+    auto& data = map[position];
 
     switch (item_type) {
         using enum collision_cache::ItemType;
@@ -389,14 +390,14 @@ auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
 auto set_wire_state(CollisionCache::map_type& map, point_t position,
                     collision_cache::ItemType item_type, wire_id_t verify_old_id,
                     wire_id_t set_new_id) -> void {
-    auto& data = map[position];
-
     const auto check_and_update = [&](wire_id_t& obj) {
         if (obj != verify_old_id) {
             throw_exception("unexpected collision state");
         }
         obj = set_new_id;
     };
+
+    auto& data = map[position];
 
     switch (item_type) {
         using enum collision_cache::ItemType;
@@ -434,112 +435,6 @@ auto set_wire_state(CollisionCache::map_type& map, point_t position,
 
     delete_if_empty(map, position, data);
 }
-
-/*
-template <typename Apply>
-auto apply_function(CollisionCache::map_type& map, point_t position,
-                    collision_cache::ItemType item_type, Apply apply_func) -> void {
-    auto& data = map[position];
-
-    const auto set_connection_tag = [&]() {
-        if (data.wire_id_vertical) {
-            throw_exception("cannot set connection tag, second element occupied");
-        }
-        data.wire_id_vertical = collision_cache::connection_tag;
-    };
-    const auto set_wire_corner_point_tag = [&]() {
-        if (data.logicitem_id_body != null_element &&
-            data.logicitem_id_body != collision_cache::wire_corner_point_tag) {
-            throw_exception("cannot set wire_corner_point tag, element body is occupied");
-        }
-        data.logicitem_id_body = collision_cache::wire_corner_point_tag;
-    };
-    const auto set_wire_cross_point_tag = [&]() {
-        if (data.logicitem_id_body != null_element &&
-            data.logicitem_id_body != collision_cache::wire_cross_point_tag) {
-            throw_exception("cannot set wire_corner_point tag, element body is occupied");
-        }
-        data.logicitem_id_body = collision_cache::wire_cross_point_tag;
-    };
-
-    switch (item_type) {
-        using enum collision_cache::ItemType;
-
-        case element_body: {
-            apply_func(data.logicitem_id_body);
-            break;
-        }
-        case element_connection: {
-            set_connection_tag();
-            apply_func(data.logicitem_id_body);
-            break;
-        }
-        case wire_connection: {
-            set_connection_tag();
-            apply_func(data.wire_id_horizontal);
-            break;
-        }
-        case wire_horizontal: {
-            apply_func(data.wire_id_horizontal);
-            break;
-        }
-        case wire_vertical: {
-            apply_func(data.wire_id_vertical);
-            break;
-        }
-        case wire_corner_point: {
-            set_wire_corner_point_tag();
-            apply_func(data.wire_id_horizontal);
-            apply_func(data.wire_id_vertical);
-            break;
-        }
-        case wire_cross_point: {
-            set_wire_cross_point_tag();
-            apply_func(data.wire_id_horizontal);
-            apply_func(data.wire_id_vertical);
-            break;
-        }
-        case wire_new_unknown_point: {
-            throw_exception("cannot add unknown point type");
-            break;
-        }
-    };
-
-    // delete if empty
-    if (!data.logicitem_id_body && !data.wire_id_horizontal && !data.wire_id_vertical) {
-        map.erase(position);
-    }
-}
-*/
-
-/*
-auto get_check_empty_and_assign(element_id_t element_id) {
-    return [element_id](element_id_t& obj) {
-        if (obj != null_element) {
-            throw_exception("collision state is not empty in insert.");
-        }
-        obj = element_id;
-    };
-}
-
-auto get_check_and_delete(element_id_t element_id) {
-    return [element_id](element_id_t& obj) {
-        if (obj != element_id) {
-            throw_exception("exected collision state presence in remove.");
-        }
-        obj = null_element;
-    };
-}
-
-auto get_check_and_update(element_id_t new_element_id, element_id_t old_element_id) {
-    return [new_element_id, old_element_id](element_id_t& obj) {
-        if (obj != old_element_id) {
-            throw_exception("exected collision state presence in update.");
-        }
-        obj = new_element_id;
-    };
-}
-*/
 
 }  // namespace
 

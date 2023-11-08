@@ -495,8 +495,12 @@ auto SegmentTree::output_count() const -> connection_count_t {
 }
 
 auto SegmentTree::format() const -> std::string {
-    return fmt::format("SegmentTree({}x{}, {}, valid {})", input_count(), output_count(),
-                       segments_, valid_parts_vector_);
+    const auto valid_str = valid_parts_vector_.empty()
+                               ? std::string {}
+                               : fmt::format(", valid {}", valid_parts_vector_);
+
+    return fmt::format("SegmentTree({}x{}, {})", input_count(), output_count(),
+                       segments_, valid_str);
 }
 
 //

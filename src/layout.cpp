@@ -41,7 +41,7 @@ auto Layout::format() const -> std::string {
             return format_wire(*this, wire_id);
         };
         const auto lines = fmt_join(",\n  ", wire_ids(*this), "{}", format_single);
-        inner_wires = fmt::format(": [\n  {}\n]", lines);
+        inner_wires = fmt::format(", [\n  {}\n]", lines);
     }
 
     return fmt::format("<Layout with {} logic items and {} wires{}{}>",
@@ -114,7 +114,7 @@ auto format_stats(const Layout &layout) -> std::string {
 }
 
 auto format_logic_item(const Layout &layout, logicitem_id_t logicitem_id) -> std::string {
-    return fmt::format("<LogicItem {}: {}x{} {}, {}, {}, {}", logicitem_id,
+    return fmt::format("<LogicItem {}: {}x{} {}, {}, {}, {}>", logicitem_id,
                        layout.logic_items().input_count(logicitem_id),
                        layout.logic_items().output_count(logicitem_id),
                        layout.logic_items().type(logicitem_id),

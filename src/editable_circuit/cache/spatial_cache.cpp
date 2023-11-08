@@ -132,7 +132,7 @@ namespace detail::spatial_tree {
 
 auto tree_payload_t::format() const -> std::string {
     if (is_logicitem()) {
-        return fmt::format("<LogicItem {}>", logicitem_id());
+        return fmt::format("<LogicItem {}>", logicitem());
     }
     return fmt::format("<Segment {}>", segment());
 }
@@ -157,7 +157,7 @@ tree_payload_t::tree_payload_t(segment_t segment)
     : element_id_ {segment.wire_id.value}, segment_index_ {segment.segment_index} {
     static_assert(std::is_same_v<wire_id_t::value_type, decltype(element_id_)>);
 
-    if (segment_index_ == null_segment_index) [[unlikely]] {
+    if (!segment_index_) [[unlikely]] {
         throw std::runtime_error("segment cannot be null");
     }
 }
@@ -166,9 +166,9 @@ auto tree_payload_t::is_logicitem() const -> bool {
     return segment_index_ == null_segment_index;
 }
 
-auto tree_payload_t::logicitem_id() const -> logicitem_id_t {
+auto tree_payload_t::logicitem() const -> logicitem_id_t {
     if (!is_logicitem()) [[unlikely]] {
-        throw std::runtime_error("tree payload is not a logic item id");
+        throw std::runtime_error("tree payload is not a logic item");
     }
 
     static_assert(std::is_same_v<logicitem_id_t::value_type, decltype(element_id_)>);
@@ -270,7 +270,6 @@ auto SpatialTree::handle(const editable_circuit::info_message::SegmentInserted& 
 auto SpatialTree::handle(const editable_circuit::info_message::SegmentUninserted& message)
     -> void {
     const auto box = detail::spatial_tree::get_selection_box(message.segment_info.line);
-
     const auto remove_count = tree_->value.remove({box, value_t {message.segment}});
 
     if (remove_count != 1) [[unlikely]] {
@@ -283,8 +282,11 @@ auto SpatialTree::handle(
     using namespace editable_circuit::info_message;
 
     // r-tree data is immutable
-    handle(SegmentUninserted {message.old_segment, message.segment_info});
-    handle(SegmentInserted {message.new_segment, message.segment_info});
+     handle(SegmentUninserted {message.old_segment, message.segment_info});
+     handle(SegmentInserted {message.new_segment, message.segment_info});
+
+    // Note this is not a performance problem: when un-inserting 500k line segments
+    // 1975 ms (this) vs 1927 ms (using query & const_cast) overall performance.
 }
 
 auto SpatialTree::submit(const editable_circuit::InfoMessage& message) -> void {

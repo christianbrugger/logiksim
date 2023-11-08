@@ -200,7 +200,7 @@ auto all_selected(const Selection& selection, const Layout& layout,
     -> bool {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            if (!selection.is_selected(item.logicitem_id())) {
+            if (!selection.is_selected(item.logicitem())) {
                 return false;
             }
         } else {
@@ -217,7 +217,7 @@ auto anything_selected(const Selection& selection, const Layout& layout,
     -> bool {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            if (selection.is_selected(item.logicitem_id())) {
+            if (selection.is_selected(item.logicitem())) {
                 return true;
             }
         } else {
@@ -234,7 +234,7 @@ auto add_to_selection(Selection& selection, const Layout& layout,
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            selection.add(item.logicitem_id());
+            selection.add(item.logicitem());
         } else {
             if (whole_tree) {
                 add_segment_tree(selection, item.segment().wire_id, layout);
@@ -410,7 +410,7 @@ auto add_selection(Selection& selection, const Layout& layout,
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            selection.add(item.logicitem_id());
+            selection.add(item.logicitem());
         } else {
             add_segment_part(selection, layout, item.segment(), point);
         }
@@ -422,7 +422,7 @@ auto remove_selection(Selection& selection, const Layout& layout,
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
-            selection.remove_logicitem(item.logicitem_id());
+            selection.remove_logicitem(item.logicitem());
         } else {
             remove_segment_part(selection, layout, item.segment(), point);
         }

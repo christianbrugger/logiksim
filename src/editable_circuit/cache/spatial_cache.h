@@ -30,7 +30,7 @@ struct tree_payload_t {
     [[nodiscard]] auto hash() const -> uint64_t;
 
     [[nodiscard]] auto is_logicitem() const -> bool;
-    [[nodiscard]] auto logicitem_id() const -> logicitem_id_t;
+    [[nodiscard]] auto logicitem() const -> logicitem_id_t;
 
     [[nodiscard]] auto is_segment() const -> bool;
     [[nodiscard]] auto segment() const -> segment_t;

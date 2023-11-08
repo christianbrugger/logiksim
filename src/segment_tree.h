@@ -42,6 +42,10 @@ static_assert(sizeof(valid_vector_t) == 24);
  * @brief: A collection of lines with valid status.
  *
  * Note that the segment tree can never have more than one input.
+ * 
+ * Note that segments can overlap and be disjointed. Any set of ordered-lines is valid.
+ * This later quality is used specifically to collect all temporary and colliding 
+ * segments in one tree.
  *
  * Class invariants:
  *     + size of `segments_` and `valid_parts_vector_` match
