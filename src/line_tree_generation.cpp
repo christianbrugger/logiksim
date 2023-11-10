@@ -4,6 +4,7 @@
 #include "algorithm/transform_to_vector.h"
 #include "line_tree.h"
 #include "segment_tree.h"
+#include "layout.h"
 
 #include <stdexcept>
 
@@ -46,6 +47,21 @@ auto generate_line_tree(const SegmentTree& segment_tree) -> std::optional<LineTr
     const auto line_tree = generate_line_tree_impl(segment_tree);
     assert(line_tree.has_value() && is_equivalent(segment_tree, line_tree.value()));
     return line_tree;
+}
+
+auto generate_line_trees(const Layout& layout) -> std::vector<std::optional<LineTree>> {
+    auto line_trees =
+        std::vector<std::optional<LineTree>>(layout.wires().size(), std::nullopt);
+
+    for (auto wire_id : inserted_wire_ids(layout)) {
+        const auto& segment_tree = layout.wires().segment_tree(wire_id);
+
+        if (segment_tree.has_input()) {
+            line_trees.at(wire_id.value) = generate_line_tree(segment_tree);
+        }
+    }
+
+    return line_trees;
 }
 
 auto has_same_segments(const SegmentTree& segment_tree, const LineTree& line_tree)

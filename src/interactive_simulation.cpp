@@ -13,60 +13,43 @@
 
 namespace logicsim {
 
-namespace detail::interactive_simulation {
-
-auto iteraction_data_t::format() const -> std::string {
-    return fmt::format("{}", element_id);
-}
-
-InteractionCache::InteractionCache(const Layout& layout) {
-    for (auto logicitem_id : logicitem_ids(layout)) {
-        if (layout.logic_items().type(logicitem_id) == LogicItemType::button) {
-            auto& data = map_[layout.logic_items().position(logicitem_id)];
-
-            if (data.element_id != null_element) [[unlikely]] {
-                throw std::runtime_error("map entry is not empty");
-            }
-
-            data.element_id = to_element_id(logicitem_id);
-        }
-    }
-}
-
-auto InteractionCache::format() const -> std::string {
-    return fmt::format("<InteractionCache: {}>", map_);
-}
-
-auto InteractionCache::find(point_t position) const -> std::optional<element_id_t> {
-    if (const auto it = map_.find(position); it != map_.end()) {
-        return it->second.element_id;
-    }
-    return std::nullopt;
-}
-
-}  // namespace detail::interactive_simulation
-
 //
 // Interactive Simulation
 //
 
-InteractiveSimulation::InteractiveSimulation(const Layout& layout,
-                                             const SimulationSettings& settings)
-    : simulation_ {generate_schematic(layout, settings.wire_delay_per_distance())},
-      last_event_count_ {simulation_.processed_event_count()},
-      interaction_cache_ {layout},
-      simulation_time_rate_ {settings.simulation_time_rate},
-      wire_delay_per_distance_ {settings.wire_delay_per_distance()},
+InteractiveSimulation::InteractiveSimulation(SpatialSimulation&& spatial_simulation__,
+                                             time_rate_t simulation_time_rate)
+    : spatial_simulation_ {spatial_simulation__},
+      interaction_cache_ {spatial_simulation_.layout()},
 
-      simulation_time_reference_ {simulation_.time()},
-      realtime_reference_ {timer_t::now()} {}
+      simulation_time_rate_ {simulation_time_rate},
+      simulation_time_reference_ {spatial_simulation_.simulation().time()},
+      realtime_reference_ {timer_t::now()},
+
+      last_event_count_ {spatial_simulation_.simulation().processed_event_count()} {}
+
+InteractiveSimulation::InteractiveSimulation(Layout&& layout__,
+                                             delay_t wire_delay_per_distance,
+                                             time_rate_t simulation_time_rate)
+    : InteractiveSimulation {
+          SpatialSimulation {std::move(layout__), wire_delay_per_distance},
+          simulation_time_rate,
+      } {}
+
+auto InteractiveSimulation::spatial_simulation() const -> const SpatialSimulation& {
+    return spatial_simulation_;
+}
+
+auto InteractiveSimulation::layout() const -> const Layout& {
+    return spatial_simulation_.layout();
+}
 
 auto InteractiveSimulation::schematic() const -> const Schematic& {
-    return simulation_.schematic();
+    return spatial_simulation_.schematic();
 }
 
 auto InteractiveSimulation::simulation() const -> const Simulation& {
-    return simulation_;
+    return spatial_simulation_.simulation();
 }
 
 auto InteractiveSimulation::set_simulation_time_rate(time_rate_t time_rate) -> void {
@@ -86,16 +69,16 @@ auto InteractiveSimulation::time_rate() const -> time_rate_t {
 }
 
 auto InteractiveSimulation::time() const -> time_t {
-    return simulation_.time();
+    return simulation().time();
 }
 
 auto InteractiveSimulation::wire_delay_per_distance() const -> delay_t {
-    return wire_delay_per_distance_;
+    return spatial_simulation_.wire_delay_per_distance();
 }
 
 auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void {
     const auto start_realtime = timer_t::now();
-    const auto start_simulation_time = simulation_.time();
+    const auto start_simulation_time = time();
 
     const auto expected_time = expected_simulation_time(start_realtime);
     const auto time_to_simulate = expected_time - start_simulation_time;
@@ -104,26 +87,26 @@ auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void 
         return;
     }
 
-    simulation_.run({
+    spatial_simulation_.simulation().run({
         .simulate_for = time_to_simulate,
         .realtime_timeout = timeout,
     });
 
     {
-        const auto event_count = simulation_.processed_event_count();
+        const auto event_count = simulation().processed_event_count();
         event_counter_.count_events(event_count - last_event_count_);
         last_event_count_ = event_count;
     }
 
     // in case simulation is too slow, allow us to catch up
-    if (expected_time > simulation_.time()) {
+    if (expected_time > time()) {
         realtime_reference_ = start_realtime;
         simulation_time_reference_ = start_simulation_time;
     }
 }
 
 auto InteractiveSimulation::is_finished() const -> bool {
-    return simulation_.is_finished();
+    return simulation().is_finished();
 }
 
 auto InteractiveSimulation::mouse_press(point_t position) -> void {
@@ -132,8 +115,8 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
     if (element_id) {
         const auto state = internal_state_t {*element_id, internal_state_index_t {0}};
 
-        const auto value = simulation_.internal_state(state);
-        simulation_.try_set_internal_state(state, !value);
+        const auto value = simulation().internal_state(state);
+        spatial_simulation_.simulation().try_set_internal_state(state, !value);
     }
 }
 

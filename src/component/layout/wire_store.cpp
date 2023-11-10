@@ -2,7 +2,6 @@
 
 #include "allocated_size/std_optional.h"
 #include "allocated_size/std_vector.h"
-#include "line_tree_generation.h"
 #include "vocabulary/rect.h"
 #include "vocabulary/wire_id.h"
 
@@ -33,8 +32,6 @@ constexpr inline auto invalid_bounding_rect = rect_t {point_t {0, 0}, point_t {0
 
 WireStore::WireStore()
     : segment_trees_(first_inserted_wire_id.value, SegmentTree {}),
-      line_tree_outdated_(first_inserted_wire_id.value, true),
-      line_trees_(first_inserted_wire_id.value, std::nullopt),
       bounding_rects_(first_inserted_wire_id.value, invalid_bounding_rect) {}
 
 auto WireStore::size() const -> std::size_t {
@@ -73,15 +70,11 @@ auto WireStore::empty() const -> bool {
 
 auto WireStore::allocated_size() const -> std::size_t {
     return get_allocated_size(segment_trees_) +       //
-           get_allocated_size(line_tree_outdated_) +  //
-           get_allocated_size(line_trees_) +          //
            get_allocated_size(bounding_rects_);
 }
 
 auto WireStore::normalize() -> void {
     // clear caches
-    std::fill(line_tree_outdated_.begin(), line_tree_outdated_.end(), true);
-    std::ranges::fill(line_trees_, std::nullopt);
     std::ranges::fill(bounding_rects_, invalid_bounding_rect);
 
     // normalize trees
@@ -104,8 +97,6 @@ auto WireStore::add_wire() -> wire_id_t {
     }
 
     segment_trees_.emplace_back();
-    line_tree_outdated_.emplace_back(true);
-    line_trees_.emplace_back();
     bounding_rects_.emplace_back(empty_bounding_rect);
 
     return last_wire_id();
@@ -134,8 +125,6 @@ auto WireStore::swap(wire_id_t wire_id_1, wire_id_t wire_id_2) -> void {
     };
 
     swap_ids(segment_trees_);
-    swap_ids(line_tree_outdated_);
-    swap_ids(line_trees_);
     swap_ids(bounding_rects_);
 }
 
@@ -146,33 +135,10 @@ auto WireStore::segment_tree(wire_id_t wire_id) const -> const SegmentTree & {
 auto WireStore::modifiable_segment_tree(wire_id_t wire_id) -> SegmentTree & {
     // reset caches
     if (is_inserted(wire_id)) {
-        line_tree_outdated_.at(wire_id.value) = true;
         bounding_rects_.at(wire_id.value) = invalid_bounding_rect;
     }
 
     return segment_trees_.at(wire_id.value);
-}
-
-auto WireStore::line_tree(wire_id_t wire_id) const -> const std::optional<LineTree> & {
-    if (!is_inserted(wire_id)) [[unlikely]] {
-        throw std::runtime_error("only inserted wires have a stable line_tree");
-    }
-    auto &line_tree = line_trees_.at(wire_id.value);
-
-    if (line_tree_outdated_.at(wire_id.value)) {
-        // update line tree
-        const auto &segment_tree = this->segment_tree(wire_id);
-
-        if (segment_tree.has_input()) {
-            line_tree = generate_line_tree(segment_tree);
-        } else {
-            line_tree = std::nullopt;
-        }
-
-        line_tree_outdated_.at(wire_id.value) = false;
-    }
-
-    return line_tree;
 }
 
 auto WireStore::bounding_rect(wire_id_t wire_id) const -> rect_t {
@@ -201,8 +167,6 @@ auto WireStore::delete_last() -> void {
     }
 
     segment_trees_.pop_back();
-    line_tree_outdated_.pop_back();
-    line_trees_.pop_back();
     bounding_rects_.pop_back();
 }
 

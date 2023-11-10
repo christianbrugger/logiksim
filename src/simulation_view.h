@@ -11,11 +11,11 @@
 
 namespace logicsim {
 
-class Simulation;
+class SpatialSimulation;
 class InteractiveSimulation;
 struct logicitem_id_t;
 struct wire_id_t;
-class Layout;  // TODO remove
+class LineTree;
 
 namespace simulation {
 class HistoryView;
@@ -30,8 +30,7 @@ class SimulationView {
 
    public:
     [[nodiscard]] explicit SimulationView(const InteractiveSimulation &simulation);
-    [[nodiscard]] explicit SimulationView(const Simulation &simulation,
-                                          delay_t wire_delay_per_distance);
+    [[nodiscard]] explicit SimulationView(const SpatialSimulation &simulation);
 
     // TODO rename to size
     [[nodiscard]] auto element_count() const noexcept -> std::size_t;
@@ -48,15 +47,13 @@ class SimulationView {
 
     [[nodiscard]] auto element(logicitem_id_t logicitem_id) const
         -> simulation_view::ConstElement;
-    [[nodiscard]] auto element(const Layout &layout, wire_id_t wire_id) const
-        -> simulation_view::ConstElement;
+    [[nodiscard]] auto element(wire_id_t wire_id) const -> simulation_view::ConstElement;
 
     [[nodiscard]] auto time() const -> time_t;
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
    private:
-    gsl::not_null<const Simulation *> simulation_;
-    delay_t wire_delay_per_distance_;
+    gsl::not_null<const SpatialSimulation *> spatial_simulation_;
 };
 
 namespace simulation_view {
@@ -76,6 +73,8 @@ class ConstElement {
 
     [[nodiscard]] auto internal_state() const -> const logic_small_vector_t &;
     [[nodiscard]] auto internal_state(std::size_t index) const -> bool;
+
+    [[nodiscard]] auto line_tree() const -> const std::optional<LineTree> &;
 
     // TODO add inverted
 

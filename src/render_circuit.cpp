@@ -17,6 +17,7 @@
 #include "geometry/scene.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "line_tree.h"
 #include "logging.h"
 #include "logic_item/layout_display_ascii.h"
 #include "logic_item/layout_display_number.h"
@@ -25,6 +26,7 @@
 #include "simulation_view.h"
 #include "size_handle.h"
 #include "vocabulary/layout_calculation_data.h"
+#include "vocabulary/length.h"
 #include "vocabulary/logicitem_id.h"
 
 #include <blend2d.h>
@@ -1133,7 +1135,7 @@ auto _draw_wire_with_history(Context& ctx, const Layout& layout, wire_id_t wire_
     const auto to_time = [time = logic_state.time(),
                           delay = logic_state.wire_delay_per_distance()](
                              length_t length_) { return time - length_.value * delay; };
-    const auto& line_tree = layout.wires().line_tree(wire_id).value();
+    const auto& line_tree = logic_state.line_tree().value();
 
     for (auto&& index : indices(line_tree)) {
         const auto line = line_tree.line(index);
@@ -1190,7 +1192,7 @@ auto draw_wires(Context& ctx, const Layout& layout, std::span<const wire_id_t> e
 auto draw_wires(Context& ctx, const Layout& layout, std::span<const wire_id_t> elements,
                 SimulationView simulation_view) -> void {
     for (const auto& wire_id : elements) {
-        draw_wire(ctx, layout, wire_id, simulation_view.element(layout, wire_id));
+        draw_wire(ctx, layout, wire_id, simulation_view.element(wire_id));
     }
 }
 

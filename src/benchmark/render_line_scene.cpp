@@ -8,6 +8,7 @@
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "geometry/segment_info.h"
+#include "line_tree.h"
 #include "line_tree_generation.h"
 #include "logging.h"
 #include "random/generator.h"
@@ -16,6 +17,7 @@
 #include "schematic_generation.h"
 #include "simulation_player.h"
 #include "simulation_view.h"
+#include "spatial_simulation.h"
 #include "timer.h"
 #include "tree_normalization.h"
 #include "vocabulary/logicitem_definition.h"
@@ -155,11 +157,13 @@ auto calculate_tree_length(const LineTree& line_tree) -> int {
                       [](line_t line) -> int { return distance(line); });
 }
 
-auto inserted_wire_lengths(const Layout& layout) -> int64_t {
-    return accumulate(
-        inserted_wire_ids(layout), int64_t {0}, [&](const wire_id_t wire_id) {
-            return calculate_tree_length(layout.wires().line_tree(wire_id).value());
-        });
+auto inserted_wire_lengths(const SpatialSimulation& spatial_simulation) -> int64_t {
+    const auto tree_length = [&](const wire_id_t wire_id) {
+        return calculate_tree_length(spatial_simulation.line_tree(wire_id).value());
+    };
+
+    return accumulate(inserted_wire_ids(spatial_simulation.layout()), int64_t {0},
+                      tree_length);
 }
 
 auto maximum_output_delay(const auto& schematic) -> delay_t {
@@ -221,34 +225,32 @@ auto fill_line_scene(int n_lines) -> SimulatedLineScene {
     auto rng = get_random_number_generator(0);
 
     // generate line_trees & layout
-    const auto layout = get_random_wires(rng, config);
-
-    auto simulation = Simulation {
-        generate_schematic(layout, simulation_settings.wire_delay_per_distance())};
+    auto spatial_simulation = SpatialSimulation {
+        get_random_wires(rng, config), simulation_settings.wire_delay_per_distance()};
 
     // simulated time
-    const auto max_delay = maximum_output_delay(simulation.schematic());
+    const auto max_delay = maximum_output_delay(spatial_simulation.schematic());
     if (max_delay == delay_t {0ns}) {
         throw std::runtime_error("simulated time should not be zero");
     }
 
     // generate & submit events
-    run_with_events(simulation, generate_random_events(rng, simulation.schematic(),
-                                                       max_delay, config));
+    run_with_events(
+        spatial_simulation.simulation(),
+        generate_random_events(rng, spatial_simulation.schematic(), max_delay, config));
 
     // run simulation till the end
-    const auto final_delay = (time_t::zero() + max_delay) - simulation.time();
+    const auto final_delay =
+        (time_t::zero() + max_delay) - spatial_simulation.simulation().time();
     if (final_delay > delay_t::zero()) {
-        simulation.run({.simulate_for = final_delay});
+        spatial_simulation.simulation().run({.simulate_for = final_delay});
     }
 
-    const auto wire_lengths = inserted_wire_lengths(layout);
+    const auto wire_lengths = inserted_wire_lengths(spatial_simulation);
 
     return SimulatedLineScene {
-        .layout = std::move(layout),
-        .simulation = std::move(simulation),
+        .spatial_simulation = std::move(spatial_simulation),
         .total_wire_length_sum = wire_lengths,
-        .wire_delay_per_distance = simulation_settings.wire_delay_per_distance(),
     };
 }
 
@@ -267,8 +269,8 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
         render_simulation(
-            circuit_ctx, scene.layout,
-            SimulationView {scene.simulation, scene.wire_delay_per_distance});
+            circuit_ctx, scene.spatial_simulation.layout(),
+            SimulationView {scene.spatial_simulation});
     }
     ctx.end();
 

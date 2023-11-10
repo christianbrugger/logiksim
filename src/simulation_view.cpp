@@ -4,6 +4,7 @@
 #include "interactive_simulation.h"
 #include "schematic_generation.h"  // TODO remove
 #include "simulation.h"
+#include "simulation_view.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/wire_id.h"
 
@@ -14,19 +15,17 @@ namespace logicsim {
 //
 
 SimulationView::SimulationView(const InteractiveSimulation& simulation)
-    : simulation_ {&simulation.simulation()},
-      wire_delay_per_distance_ {simulation.wire_delay_per_distance()} {}
+    : spatial_simulation_ {&simulation.spatial_simulation()} {}
 
-SimulationView::SimulationView(const Simulation& simulation,
-                               delay_t wire_delay_per_distance)
-    : simulation_ {&simulation}, wire_delay_per_distance_ {wire_delay_per_distance} {}
+SimulationView::SimulationView(const SpatialSimulation& simulation)
+    : spatial_simulation_ {&simulation} {}
 
 auto SimulationView::element_count() const noexcept -> std::size_t {
-    return simulation_->schematic().size();
+    return spatial_simulation_->schematic().size();
 }
 
 auto SimulationView::empty() const noexcept -> bool {
-    return simulation_->schematic().empty();
+    return spatial_simulation_->schematic().empty();
 }
 
 auto SimulationView::is_element_id_valid(element_id_t element_id) const noexcept -> bool {
@@ -45,20 +44,19 @@ auto SimulationView::element(element_id_t element_id) const
 
 auto SimulationView::element(logicitem_id_t logicitem_id) const
     -> simulation_view::ConstElement {
-    return element(to_element_id(logicitem_id));
+    return element(to_element_id(spatial_simulation_->layout(), logicitem_id));
 }
 
-auto SimulationView::element(const Layout& layout, wire_id_t wire_id) const
-    -> simulation_view::ConstElement {
-    return element(to_element_id(layout, wire_id));
+auto SimulationView::element(wire_id_t wire_id) const -> simulation_view::ConstElement {
+    return element(to_element_id(spatial_simulation_->layout(), wire_id));
 }
 
 auto SimulationView::time() const -> time_t {
-    return simulation_->time();
+    return spatial_simulation_->simulation().time();
 }
 
 auto SimulationView::wire_delay_per_distance() const -> delay_t {
-    return wire_delay_per_distance_;
+    return spatial_simulation_->wire_delay_per_distance();
 }
 
 //
@@ -71,12 +69,12 @@ ConstElement::ConstElement(const SimulationView& view, element_id_t element_id) 
     : view_ {&view}, element_id_ {element_id} {}
 
 auto ConstElement::has_connected_input(connection_id_t input_id) const -> bool {
-    const auto& schematic = view_->simulation_->schematic();
+    const auto& schematic = view_->spatial_simulation_->schematic();
     return bool {schematic.output(input_t {element_id_, input_id})};
 }
 
 auto ConstElement::has_connected_output(connection_id_t output_id) const -> bool {
-    const auto& schematic = view_->simulation_->schematic();
+    const auto& schematic = view_->spatial_simulation_->schematic();
 
     const auto input = schematic.input(output_t {element_id_, output_id});
     return input &&
@@ -84,37 +82,44 @@ auto ConstElement::has_connected_output(connection_id_t output_id) const -> bool
 }
 
 auto ConstElement::input_value(connection_id_t index) const -> bool {
-    return view_->simulation_->input_value(input_t {element_id_, index});
+    return view_->spatial_simulation_->simulation().input_value(
+        input_t {element_id_, index});
 }
 
 auto ConstElement::input_values() const -> const logic_small_vector_t& {
-    return view_->simulation_->input_values(element_id_);
+    return view_->spatial_simulation_->simulation().input_values(element_id_);
 }
 
 auto ConstElement::output_value(connection_id_t index) const -> OptionalLogicValue {
-    return view_->simulation_->output_value(output_t {element_id_, index});
+    return view_->spatial_simulation_->simulation().output_value(
+        output_t {element_id_, index});
 }
 
 auto ConstElement::output_values() const -> optional_logic_values_t {
-    return view_->simulation_->output_values(element_id_);
+    return view_->spatial_simulation_->simulation().output_values(element_id_);
 }
 
 auto ConstElement::internal_state() const -> const logic_small_vector_t& {
-    return view_->simulation_->internal_state(element_id_);
+    return view_->spatial_simulation_->simulation().internal_state(element_id_);
 }
 
 auto ConstElement::internal_state(std::size_t index) const -> bool {
     return internal_state().at(index);
 }
 
+auto ConstElement::line_tree() const -> const std::optional<LineTree>& {
+    const auto wire_id = to_wire_id(view_->spatial_simulation_->layout(), element_id_);
+    return view_->spatial_simulation_->line_tree(wire_id);
+}
+
 auto ConstElement::history_length() const -> delay_t {
-    const auto& schematic = view_->simulation_->schematic();
+    const auto& schematic = view_->spatial_simulation_->schematic();
 
     return schematic.history_length(element_id_);
 }
 
 auto ConstElement::input_history() const -> simulation::HistoryView {
-    return view_->simulation_->input_history(element_id_);
+    return view_->spatial_simulation_->simulation().input_history(element_id_);
 }
 
 auto ConstElement::time() const -> time_t {

@@ -1,7 +1,6 @@
 #ifndef LOGICSIM_COMPONENT_LAYOUT_WIRE_STORE_H
 #define LOGICSIM_COMPONENT_LAYOUT_WIRE_STORE_H
 
-#include "line_tree.h"
 #include "segment_tree.h"
 
 #include <vector>
@@ -19,9 +18,9 @@ namespace layout {
  * They can be accessed with `temporary_wire_id` and `colliding_wire_id`.
  *
  * Class invariants:
- *     + segment_trees_ and line_trees_ have same size
+ *     + segment_trees_ and bounding_rects_ have same size
  *     + invalid and temporary wires are always present
- *     + Bounding rect either stores `invalid_bounding_rect` or the correct bounding rect.
+ *     + bounding_rects_ either stores `invalid_bounding_rect` or the correct rect.
  */
 class WireStore {
    public:
@@ -45,13 +44,6 @@ class WireStore {
 
     // getters
     [[nodiscard]] auto segment_tree(wire_id_t wire_id) const -> const SegmentTree &;
-    /**
-     * @brief: Converts the segment tree to a line tree.
-     *
-     * Returns std::nullopt, if the tree has loops, overlaps or is disjointed.
-     */
-    [[nodiscard]] auto line_tree(wire_id_t wire_id) const
-        -> const std::optional<LineTree> &;
     [[nodiscard]] auto bounding_rect(wire_id_t wire_id) const -> rect_t;
 
     // modifiable access
@@ -63,14 +55,8 @@ class WireStore {
 
    private:
     std::vector<SegmentTree> segment_trees_ {};
-
-    mutable std::vector<bool> line_tree_outdated_ {};
-    mutable std::vector<std::optional<LineTree>> line_trees_ {};
-    mutable std::vector<rect_t> bounding_rects_ {};  // TODO where is rect_t coming from?
+    mutable std::vector<rect_t> bounding_rects_ {};
 };
-
-const auto sa = sizeof(std::optional<LineTree>);
-const auto sb = sizeof(LineTree);
 
 }  // namespace layout
 

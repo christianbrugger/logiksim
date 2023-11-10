@@ -42,6 +42,7 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
+    src/component/interactive_simulation/interaction_cache.cpp
     src/component/layout/logicitem_store.cpp
     src/component/layout/wire_store.cpp
     src/component/line_tree/line_store.cpp
@@ -268,6 +269,7 @@ set(LS_CORE_SOURCES
     src/simulation_player.cpp
     src/simulation_view.cpp
     src/size_handle.cpp
+    src/spatial_simulation.cpp
     src/text_shaping.cpp
     src/timeout_timer.cpp
     src/timer.cpp

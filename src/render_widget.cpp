@@ -981,7 +981,9 @@ auto RendererWidget::on_simulation_timeout_impl() -> void {
     }
     if (!simulation_) {
         auto t = Timer {"Generate simulation", Timer::Unit::ms, 3};
-        simulation_.emplace(editable_circuit_->layout(), simulation_settings_);
+        simulation_.emplace(Layout {editable_circuit_->layout()},
+                            simulation_settings_.wire_delay_per_distance(),
+                            simulation_settings_.simulation_time_rate);
 
         if (simulation_->schematic().size() < 30) {
             print(simulation_->schematic());

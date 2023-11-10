@@ -1,45 +1,21 @@
 #ifndef LOGIKSIM_INTERACTIVE_SIMULATION_H
 #define LOGIKSIM_INTERACTIVE_SIMULATION_H
 
+#include "component/interactive_simulation/interaction_cache.h"
 #include "event_counter_multi.h"
-#include "simulation.h"
+#include "spatial_simulation.h"
 #include "timer.h"
-#include "vocabulary.h"
+#include "vocabulary/time.h"
+#include "vocabulary/time_rate.h"
 
-#include <ankerl/unordered_dense.h>
+#include <chrono>
 
 namespace logicsim {
 
-class Layout;
-class Schematic;
-struct SimulationSettings;
-
-namespace detail::interactive_simulation {
-
-struct iteraction_data_t {
-    element_id_t element_id {null_element};
-
-    auto operator==(const iteraction_data_t& other) const -> bool = default;
-    [[nodiscard]] auto format() const -> std::string;
-};
-
-class InteractionCache {
-   public:
-    using map_type = ankerl::unordered_dense::map<point_t, iteraction_data_t>;
-
-   public:
-    InteractionCache(const Layout& layout);
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto find(point_t position) const -> std::optional<element_id_t>;
-
-   private:
-    map_type map_ {};
-};
-
-}  // namespace detail::interactive_simulation
-
+/**
+ * @brief: Simulation that support mouse based interaction and can be run at
+ *         a constant pace.
+ */
 class InteractiveSimulation {
     using timer_t = std::chrono::steady_clock;
     using realtime_t = timer_t::time_point;
@@ -50,8 +26,14 @@ class InteractiveSimulation {
     };
 
    public:
-    InteractiveSimulation(const Layout& layout, const SimulationSettings& settings);
+    InteractiveSimulation(SpatialSimulation&& spatial_simulation,
+                          time_rate_t simulation_time_rate);
 
+    InteractiveSimulation(Layout&& layout, delay_t wire_delay_per_distance,
+                          time_rate_t simulation_time_rate);
+
+    [[nodiscard]] auto spatial_simulation() const -> const SpatialSimulation&;
+    [[nodiscard]] auto layout() const -> const Layout&;
     [[nodiscard]] auto schematic() const -> const Schematic&;
     [[nodiscard]] auto simulation() const -> const Simulation&;
 
@@ -70,14 +52,14 @@ class InteractiveSimulation {
     [[nodiscard]] auto expected_simulation_time(realtime_t now) const -> time_t;
 
    private:
-    Simulation simulation_;
-    Simulation::event_count_t last_event_count_;
-    detail::interactive_simulation::InteractionCache interaction_cache_;
-    time_rate_t simulation_time_rate_;
-    delay_t wire_delay_per_distance_;
+    SpatialSimulation spatial_simulation_;
+    interactive_simulation::InteractionCache interaction_cache_;
 
-    time_t simulation_time_reference_ {};
-    realtime_t realtime_reference_ {};
+    time_rate_t simulation_time_rate_;
+    time_t simulation_time_reference_;
+    realtime_t realtime_reference_;
+
+    Simulation::event_count_t last_event_count_;
     MultiEventCounter event_counter_ {std::chrono::seconds {2}};
 };
 
