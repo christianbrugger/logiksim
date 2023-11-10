@@ -19,19 +19,6 @@ namespace logicsim {
 
 namespace layout {
 
-namespace {
-
-/**
- * @brief: The value of the bounding rect, when it is not computed
- *
- * Note if an item is at this position with a zero bounding rect, we re-compute it
- * every frame. However this is very rare and even if it happens not a problem.
- */
-constexpr inline auto invalid_bounding_rect =
-    rect_t {point_t {-10'000, -10'000}, point_t {-10'000, -10'000}};
-
-}  // namespace
-
 auto LogicItemStore::size() const -> std::size_t {
     return logicitem_types_.size();
 }
@@ -65,6 +52,19 @@ auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position
     if (size() >= std::size_t {logicitem_id_t::max()} - std::size_t {1}) [[unlikely]] {
         throw std::runtime_error("Reached maximum number of logic items.");
     }
+    if (!definition.input_inverters.empty() &&
+        definition.input_inverters.size() != std::size_t {definition.input_count})
+        [[unlikely]] {
+        throw std::runtime_error("number of input inverters need to match input count");
+    }
+    if (!definition.output_inverters.empty() &&
+        definition.output_inverters.size() != std::size_t {definition.output_count})
+        [[unlikely]] {
+        throw std::runtime_error("number of output inverters need to match output count");
+    }
+    // throws if its not representable
+    const auto bounding_rect =
+        element_bounding_rect(to_layout_calculation_data(definition, position));
 
     const auto logicitem_id =
         logicitem_id_t {gsl::narrow_cast<logicitem_id_t::value_type>(size())};
@@ -79,33 +79,22 @@ auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position
     if (definition.input_inverters.empty()) {
         input_inverters_.emplace_back(definition.input_count.count(), false);
     } else {
-        if (definition.input_inverters.size() != std::size_t {definition.input_count})
-            [[unlikely]] {
-            throw std::runtime_error(
-                "number of input inverters need to match input count");
-        }
         input_inverters_.emplace_back(definition.input_inverters);
     }
-
     if (definition.output_inverters.empty()) {
         output_inverters_.emplace_back(definition.output_count.count(), false);
     } else {
-        if (definition.output_inverters.size() != std::size_t {definition.output_count})
-            [[unlikely]] {
-            throw std::runtime_error(
-                "number of output inverters need to match output count");
-        }
         output_inverters_.emplace_back(definition.output_inverters);
     }
 
     positions_.push_back(position);
     display_states_.push_back(display_state);
-    bounding_rects_.push_back(invalid_bounding_rect);
+    bounding_rects_.push_back(bounding_rect);
 
     // attributes
     const auto add_map_entry = [&](auto &map, const auto &optional) {
         if (optional && !map.emplace(logicitem_id, *optional).second) {
-            throw std::runtime_error("logicitem id already exists in map");
+            std::terminate(); // value already esists
         }
     };
 
@@ -214,9 +203,6 @@ auto move_from_vector(std::vector<std::optional<attributes_clock_generator_t>> &
 }  // namespace
 
 auto LogicItemStore::normalize() -> void {
-    // clear caches
-    std::ranges::fill(bounding_rects_, invalid_bounding_rect);
-
     auto vector_clock_generator = move_to_vector(map_clock_generator_, size());
 
     // sort
@@ -232,28 +218,12 @@ auto LogicItemStore::normalize() -> void {
                                             //
         positions_,                         //
         display_states_,                    //
+        bounding_rects_,                    //
         vector_clock_generator              //
     );
     ranges::sort(vectors);
 
     map_clock_generator_ = move_from_vector(std::move(vector_clock_generator));
-}
-
-auto LogicItemStore::operator==(const LogicItemStore &other) const -> bool {
-    // caches are not part of our value
-    return logicitem_types_ == other.logicitem_types_ &&
-           input_counts_ == other.input_counts_ &&
-           output_counts_ == other.output_counts_ &&
-           orientations_ == other.orientations_ &&
-
-           sub_circuit_ids_ == other.sub_circuit_ids_ &&
-           input_inverters_ == other.input_inverters_ &&
-           output_inverters_ == other.output_inverters_ &&
-
-           positions_ == other.positions_ &&  //
-           display_states_ == other.display_states_ &&
-
-           map_clock_generator_ == other.map_clock_generator_;
 }
 
 auto LogicItemStore::type(logicitem_id_t logicitem_id) const -> LogicItemType {
@@ -297,15 +267,7 @@ auto LogicItemStore::display_state(logicitem_id_t logicitem_id) const -> display
 }
 
 auto LogicItemStore::bounding_rect(logicitem_id_t logicitem_id) const -> rect_t {
-    auto &rect = bounding_rects_.at(logicitem_id.value);
-
-    if (rect == invalid_bounding_rect) {
-        // update bounding rect
-        const auto data = to_layout_calculation_data(*this, logicitem_id);
-        rect = element_bounding_rect(data);
-    }
-
-    return rect;
+    return bounding_rects_.at(logicitem_id.value);
 }
 
 auto LogicItemStore::attrs_clock_generator(logicitem_id_t logicitem_id) const
@@ -330,10 +292,13 @@ auto LogicItemStore::output_inverted(logicitem_id_t logicitem_id,
 }
 
 auto LogicItemStore::set_position(logicitem_id_t logicitem_id, point_t position) -> void {
-    // reset caches
-    positions_.at(logicitem_id.value) = position;
+    // throws if it is not representable
+    const auto bounding_rect =
+        element_bounding_rect(to_layout_calculation_data(*this, logicitem_id, position));
 
-    bounding_rects_.at(logicitem_id.value) = invalid_bounding_rect;
+    // set new position
+    positions_.at(logicitem_id.value) = position;
+    bounding_rects_.at(logicitem_id.value) = bounding_rect;
 }
 
 auto LogicItemStore::set_display_state(logicitem_id_t logicitem_id,
@@ -401,9 +366,14 @@ auto LogicItemStore::last_logicitem_id() -> logicitem_id_t {
 
 auto to_layout_calculation_data(const LogicItemStore &store, logicitem_id_t logicitem_id)
     -> layout_calculation_data_t {
+    return to_layout_calculation_data(store, logicitem_id, store.position(logicitem_id));
+}
+
+auto to_layout_calculation_data(const LogicItemStore &store, logicitem_id_t logicitem_id,
+                                point_t position) -> layout_calculation_data_t {
     return layout_calculation_data_t {
         .internal_state_count = 0,  // TODO get count when implemented
-        .position = store.position(logicitem_id),
+        .position = position,
         .input_count = store.input_count(logicitem_id),
         .output_count = store.output_count(logicitem_id),
         .orientation = store.orientation(logicitem_id),

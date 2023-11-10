@@ -121,7 +121,7 @@ TEST(Layout, TestNormalization) {
         .logicitem_type = LogicItemType::clock_generator,
         .input_count = connection_count_t {3},
         .output_count = connection_count_t {3},
-        .orientation = orientation_t::left,
+        .orientation = orientation_t::right,
 
         .sub_circuit_id = null_circuit,
         .input_inverters = {true, false, false},

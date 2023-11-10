@@ -6,6 +6,7 @@
 
 #include <stdexcept>
 #include <type_traits>
+#include <compare>
 
 namespace logicsim {
 
@@ -27,6 +28,7 @@ struct rect_t {
     [[nodiscard]] auto format() const -> std::string;
 
     [[nodiscard]] constexpr auto operator==(const rect_t &other) const -> bool = default;
+    [[nodiscard]] constexpr auto operator<=>(const rect_t &other) const = default;
 };
 
 static_assert(std::is_trivial_v<rect_t>);

@@ -65,48 +65,6 @@ constexpr inline auto get_layout_info(LogicItemType logicitem_type) -> layout_in
     switch (logicitem_type) {
         using enum LogicItemType;
 
-        /*
-        case unused: {
-            return layout_info_t {
-                .input_count_min = connection_count_t {0},
-                .input_count_max = connection_count_t {0},
-                .input_count_default = connection_count_t {0},
-
-                .output_count_min = connection_count_t {0},
-                .output_count_max = connection_count_t {0},
-                .output_count_default = connection_count_t {0},
-
-                .direction_type = DirectionType::any,
-            };
-        }
-        case placeholder: {
-            return layout_info_t {
-                .input_count_min = connection_count_t {1},
-                .input_count_max = connection_count_t {1},
-                .input_count_default = connection_count_t {1},
-
-                .output_count_min = connection_count_t {0},
-                .output_count_max = connection_count_t {0},
-                .output_count_default = connection_count_t {0},
-
-                .direction_type = DirectionType::any,
-            };
-        }
-        case wire: {
-            return layout_info_t {
-                .input_count_min = connection_count_t {0},
-                .input_count_max = connection_count_t {1},
-                .input_count_default = connection_count_t {0},
-
-                .output_count_min = connection_count_t {0},
-                .output_count_max = connection_count_t::max(),
-                .output_count_default = connection_count_t {0},
-
-                .direction_type = DirectionType::any,
-            };
-        }
-        */
-
         case buffer_element: {
             return layout_info_t {
                 .input_count_min = connection_count_t {1},

@@ -25,9 +25,10 @@ using attr_map_t = ankerl::unordered_dense::map<logicitem_id_t, T>;
  * @brief: Stores the logicitem data of the layout.
  *
  * Class invariants:
+ *     + Only valid logic-item definitions are added and remain valid.
+ *     + All bounding rects are fully representable, as well as inputs and outputs.
  *     + All data vectors have the same size.
- *     + All logic-item definitions are valid.
- *     + Bounding rect either stores `empty_bounding_rect` or the correct bounding rect.
+ *     + Input & output inverters vectors have size of input & output count.
  */
 class LogicItemStore {
    public:
@@ -46,7 +47,7 @@ class LogicItemStore {
      *         so that visual equivalent layouts compare equal
      */
     auto normalize() -> void;
-    [[nodiscard]] auto operator==(const LogicItemStore &) const -> bool;
+    [[nodiscard]] auto operator==(const LogicItemStore &) const -> bool = default;
 
     // getters
     [[nodiscard]] auto type(logicitem_id_t logicitem_id) const -> LogicItemType;
@@ -99,7 +100,7 @@ class LogicItemStore {
 
     std::vector<point_t> positions_ {};
     std::vector<display_state_t> display_states_ {};
-    mutable std::vector<rect_t> bounding_rects_ {};
+    std::vector<rect_t> bounding_rects_ {};
 
     layout::attr_map_t<attributes_clock_generator_t> map_clock_generator_ {};
 };
@@ -111,6 +112,10 @@ class LogicItemStore {
 [[nodiscard]] auto to_layout_calculation_data(const LogicItemStore &store,
                                               logicitem_id_t logicitem_id)
     -> layout_calculation_data_t;
+
+[[nodiscard]] auto to_layout_calculation_data(const LogicItemStore &store,
+                                              logicitem_id_t logicitem_id,
+                                point_t position) -> layout_calculation_data_t;
 
 [[nodiscard]] auto to_logicitem_definition(const LogicItemStore &store,
                                            logicitem_id_t logicitem_id)
