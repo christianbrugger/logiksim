@@ -1,11 +1,10 @@
 #include "line_tree.h"
-#include "line_tree.h"
-#include "line_tree.h"
 
 #include "algorithm/transform_to_container.h"
 #include "allocated_size/trait.h"
 #include "component/line_tree/tree_builder.h"
 #include "geometry/orientation.h"
+#include "line_tree.h"
 #include "vocabulary/connection_count.h"
 
 namespace logicsim {
@@ -105,8 +104,13 @@ auto LineTree::calculate_output_lengths() const -> length_vector_t {
 // Public Functions
 //
 
-auto to_line_tree(std::span<const ordered_line_t> segments, point_t root) -> LineTree {
-    return LineTree {line_tree::create_line_store(segments, root)};
+auto to_line_tree(std::span<const ordered_line_t> segments, point_t root)
+    -> std::optional<LineTree> {
+    if (auto store = line_tree::create_line_store(segments, root)) {
+        return LineTree {std::move(*store)};
+    }
+
+    return std::nullopt;
 }
 
 auto indices(const LineTree& line_tree) -> range_extended_t<line_index_t> {

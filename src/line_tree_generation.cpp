@@ -11,36 +11,40 @@ namespace logicsim {
 
 namespace {
 
-auto generate_line_tree_impl(const SegmentTree& segment_tree) -> LineTree {
+auto find_root(const SegmentTree& segment_tree) -> std::optional<point_t> {
+    if (segment_tree.has_input()) {
+        return segment_tree.input_position();
+    }
+
+    for (const segment_info_t& info : segment_tree) {
+        if (info.p0_type == SegmentPointType::output) {
+            return info.line.p0;
+        }
+        if (info.p1_type == SegmentPointType::output) {
+            return info.line.p1;
+        }
+    }
+    return std::nullopt;
+}
+
+auto generate_line_tree_impl(const SegmentTree& segment_tree) -> std::optional<LineTree> {
     if (segment_tree.empty()) {
         return LineTree {};
     }
 
-    const auto root = [&]() {
-        if (segment_tree.has_input()) {
-            return segment_tree.input_position();
-        }
-        for (const segment_info_t& info : segment_tree) {
-            if (info.p0_type == SegmentPointType::output) {
-                return info.line.p0;
-            }
-            if (info.p1_type == SegmentPointType::output) {
-                return info.line.p1;
-            }
-        }
-        throw std::runtime_error("line tree needs to have either an input or output");
-    }();
+    if (const auto root = find_root(segment_tree)) {
+        const auto segments = transform_to_vector(all_lines(segment_tree));
+        return to_line_tree(segments, *root);
+    }
 
-    const auto segments = transform_to_vector(all_lines(segment_tree));
-
-    return to_line_tree(segments, root);
+    return std::nullopt;
 }
 
 }  // namespace
 
-auto generate_line_tree(const SegmentTree& segment_tree) -> LineTree {
+auto generate_line_tree(const SegmentTree& segment_tree) -> std::optional<LineTree> {
     const auto line_tree = generate_line_tree_impl(segment_tree);
-    assert(is_equivalent(segment_tree, line_tree));
+    assert(line_tree.has_value() && is_equivalent(segment_tree, line_tree.value()));
     return line_tree;
 }
 

@@ -100,7 +100,7 @@ auto add_wire(Schematic& schematic, const Layout &layout, wire_id_t wire_id,
               delay_t wire_delay_per_distance) -> void {
     const auto& line_tree = layout.wires().line_tree(wire_id);
 
-    if (line_tree.empty()) {
+    if (!line_tree) {
         const auto output_count = layout.wires().segment_tree(wire_id).output_count();
 
         schematic.add_element(schematic::NewElement {
@@ -119,8 +119,8 @@ auto add_wire(Schematic& schematic, const Layout &layout, wire_id_t wire_id,
 
         auto delays =
             ignore_delay
-                ? output_delays_t(line_tree.output_count().count(), delay_t::epsilon())
-                : calculate_output_delays(line_tree, wire_delay_per_distance);
+                ? output_delays_t(line_tree->output_count().count(), delay_t::epsilon())
+                : calculate_output_delays(*line_tree, wire_delay_per_distance);
 
         const auto tree_max_delay =
             ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
@@ -128,7 +128,7 @@ auto add_wire(Schematic& schematic, const Layout &layout, wire_id_t wire_id,
         schematic.add_element(schematic::NewElement {
             .element_type = ElementType::wire,
             .input_count = connection_count_t {1},
-            .output_count = line_tree.output_count(),
+            .output_count = line_tree->output_count(),
 
             .sub_circuit_id = null_circuit,
             .input_inverters = {false},
@@ -259,8 +259,8 @@ auto create_connections(Schematic& schematic, const Layout& layout) -> void {
             const auto wire_id = to_wire_id(layout, element_id);
             const auto& line_tree = layout.wires().line_tree(wire_id);
 
-            if (!line_tree.empty()) {
-                connect_line_tree(schematic, element_id, line_tree, cache);
+            if (line_tree) {
+                connect_line_tree(schematic, element_id, *line_tree, cache);
             } else {
                 connect_segment_tree(schematic, element_id,
                                      layout.wires().segment_tree(wire_id), cache);

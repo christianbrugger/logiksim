@@ -20,7 +20,7 @@ namespace layout {
  *
  * Class invariants:
  *     + segment_trees_ and line_trees_ have same size
- *     + size is at least 2
+ *     + invalid and temporary wires are always present
  *     + Bounding rect either stores `invalid_bounding_rect` or the correct bounding rect.
  */
 class WireStore {
@@ -46,11 +46,12 @@ class WireStore {
     // getters
     [[nodiscard]] auto segment_tree(wire_id_t wire_id) const -> const SegmentTree &;
     /**
-     * @brief: Converts the segment tree to a line tree
+     * @brief: Converts the segment tree to a line tree.
      *
-     * TODO return std::nullopt, if SegmentTree is not convertible !!!
+     * Returns std::nullopt, if the tree has loops, overlaps or is disjointed.
      */
-    [[nodiscard]] auto line_tree(wire_id_t wire_id) const -> const LineTree &;
+    [[nodiscard]] auto line_tree(wire_id_t wire_id) const
+        -> const std::optional<LineTree> &;
     [[nodiscard]] auto bounding_rect(wire_id_t wire_id) const -> rect_t;
 
     // modifiable access
@@ -63,9 +64,13 @@ class WireStore {
    private:
     std::vector<SegmentTree> segment_trees_ {};
 
-    mutable std::vector<LineTree> line_trees_ {};
+    mutable std::vector<bool> line_tree_outdated_ {};
+    mutable std::vector<std::optional<LineTree>> line_trees_ {};
     mutable std::vector<rect_t> bounding_rects_ {};  // TODO where is rect_t coming from?
 };
+
+const auto sa = sizeof(std::optional<LineTree>);
+const auto sb = sizeof(LineTree);
 
 }  // namespace layout
 

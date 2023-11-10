@@ -31,6 +31,7 @@ set(LS_CORE_SOURCES
 
     src/allocated_size/ankerl_unordered_dense.cpp
     src/allocated_size/folly_small_vector.cpp
+    src/allocated_size/std_optional.cpp
     src/allocated_size/std_pair.cpp
     src/allocated_size/std_string.cpp
     src/allocated_size/std_vector.cpp

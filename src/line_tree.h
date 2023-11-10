@@ -10,6 +10,7 @@
 
 #include <span>
 #include <string>
+#include <optional>
 
 namespace logicsim {
 
@@ -55,7 +56,7 @@ class LineTree {
 };
 
 [[nodiscard]] auto to_line_tree(std::span<const ordered_line_t> segments, point_t root)
-    -> LineTree;
+    -> std::optional<LineTree>;
 
 [[nodiscard]] auto indices(const LineTree &line_tree) -> range_extended_t<line_index_t>;
 

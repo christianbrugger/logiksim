@@ -2,6 +2,7 @@
 #define LOGICSIM_COMPONENT_LINE_TREE_TREE_BUILDER_H
 
 #include <span>
+#include <optional>
 
 namespace logicsim {
 
@@ -18,7 +19,7 @@ class LineStore;
  * The segments need to form a tree or an exception is thrown.
  */
 [[nodiscard]] auto create_line_store(std::span<const ordered_line_t> segments,
-                                     point_t new_root) -> LineStore;
+                                     point_t new_root) -> std::optional<LineStore>;
 
 }  // namespace line_tree
 
