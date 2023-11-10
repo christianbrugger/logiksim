@@ -104,13 +104,8 @@ auto LineTree::calculate_output_lengths() const -> length_vector_t {
 // Public Functions
 //
 
-auto to_line_tree(std::span<const ordered_line_t> segments, point_t root)
-    -> std::optional<LineTree> {
-    if (auto store = line_tree::create_line_store(segments, root)) {
-        return LineTree {std::move(*store)};
-    }
-
-    return std::nullopt;
+auto to_line_tree(std::span<const ordered_line_t> segments, point_t root) -> LineTree {
+    return LineTree {line_tree::create_line_store(segments, root)};
 }
 
 auto indices(const LineTree& line_tree) -> range_extended_t<line_index_t> {

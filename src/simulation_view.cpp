@@ -107,7 +107,7 @@ auto ConstElement::internal_state(std::size_t index) const -> bool {
     return internal_state().at(index);
 }
 
-auto ConstElement::line_tree() const -> const std::optional<LineTree>& {
+auto ConstElement::line_tree() const -> const LineTree& {
     const auto wire_id = to_wire_id(view_->spatial_simulation_->layout(), element_id_);
     return view_->spatial_simulation_->line_tree(wire_id);
 }

@@ -159,7 +159,7 @@ auto calculate_tree_length(const LineTree& line_tree) -> int {
 
 auto inserted_wire_lengths(const SpatialSimulation& spatial_simulation) -> int64_t {
     const auto tree_length = [&](const wire_id_t wire_id) {
-        return calculate_tree_length(spatial_simulation.line_tree(wire_id).value());
+        return calculate_tree_length(spatial_simulation.line_tree(wire_id));
     };
 
     return accumulate(inserted_wire_ids(spatial_simulation.layout()), int64_t {0},
@@ -268,9 +268,8 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     render_background(ctx);
     {
         auto timer = Timer {"Render", Timer::Unit::ms, 3};
-        render_simulation(
-            circuit_ctx, scene.spatial_simulation.layout(),
-            SimulationView {scene.spatial_simulation});
+        render_simulation(circuit_ctx, scene.spatial_simulation.layout(),
+                          SimulationView {scene.spatial_simulation});
     }
     ctx.end();
 

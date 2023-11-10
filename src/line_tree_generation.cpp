@@ -2,9 +2,9 @@
 
 #include "algorithm/transform_if.h"
 #include "algorithm/transform_to_vector.h"
+#include "layout.h"
 #include "line_tree.h"
 #include "segment_tree.h"
-#include "layout.h"
 
 #include <stdexcept>
 
@@ -28,7 +28,7 @@ auto find_root(const SegmentTree& segment_tree) -> std::optional<point_t> {
     return std::nullopt;
 }
 
-auto generate_line_tree_impl(const SegmentTree& segment_tree) -> std::optional<LineTree> {
+auto generate_line_tree_impl(const SegmentTree& segment_tree) -> LineTree {
     if (segment_tree.empty()) {
         return LineTree {};
     }
@@ -38,30 +38,28 @@ auto generate_line_tree_impl(const SegmentTree& segment_tree) -> std::optional<L
         return to_line_tree(segments, *root);
     }
 
-    return std::nullopt;
+    throw std::runtime_error("tree has no input or output");
 }
 
 }  // namespace
 
-auto generate_line_tree(const SegmentTree& segment_tree) -> std::optional<LineTree> {
+auto generate_line_tree(const SegmentTree& segment_tree) -> LineTree {
     const auto line_tree = generate_line_tree_impl(segment_tree);
-    assert(line_tree.has_value() && is_equivalent(segment_tree, line_tree.value()));
+
+    assert(is_equivalent(segment_tree, line_tree));
+
     return line_tree;
 }
 
-auto generate_line_trees(const Layout& layout) -> std::vector<std::optional<LineTree>> {
-    auto line_trees =
-        std::vector<std::optional<LineTree>>(layout.wires().size(), std::nullopt);
-
-    for (auto wire_id : inserted_wire_ids(layout)) {
-        const auto& segment_tree = layout.wires().segment_tree(wire_id);
-
-        if (segment_tree.has_input()) {
-            line_trees.at(wire_id.value) = generate_line_tree(segment_tree);
+auto generate_line_trees(const Layout& layout) -> std::vector<LineTree> {
+    const auto gen_line_tree = [&](wire_id_t wire_id) {
+        if (is_inserted(wire_id)) {
+            return generate_line_tree(layout.wires().segment_tree(wire_id));
         }
-    }
+        return LineTree {};
+    };
 
-    return line_trees;
+    return transform_to_vector(wire_ids(layout), gen_line_tree);
 }
 
 auto has_same_segments(const SegmentTree& segment_tree, const LineTree& line_tree)
@@ -149,6 +147,24 @@ auto has_same_output_positions(const SegmentTree& segment_tree, const LineTree& 
            has_same_cross_points(segment_tree, line_tree) &&
            has_same_input_position(segment_tree, line_tree) &&
            has_same_output_positions(segment_tree, line_tree);
+}
+
+auto all_wires_equivalent(const Layout& layout, const std::vector<LineTree>& line_trees)
+    -> bool {
+    if (layout.wires().size() != line_trees.size()) {
+        return false;
+    }
+
+    const auto is_wire_equivalent = [&](wire_id_t wire_id) {
+        const auto& line_tree = line_trees.at(wire_id.value);
+
+        if (is_inserted(wire_id)) {
+            return is_equivalent(layout.wires().segment_tree(wire_id), line_tree);
+        }
+        return line_tree == LineTree {};
+    };
+
+    return std::ranges::all_of(wire_ids(layout), is_wire_equivalent);
 }
 
 }  // namespace logicsim

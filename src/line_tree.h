@@ -8,9 +8,9 @@
 #include "vocabulary/length_vector.h"
 #include "vocabulary/orientation.h"
 
+#include <optional>
 #include <span>
 #include <string>
-#include <optional>
 
 namespace logicsim {
 
@@ -55,8 +55,13 @@ class LineTree {
     line_tree::LineStore store_;
 };
 
+/**
+ * @brief: Generates a line tree from list of segments.
+ *
+ * Pre-condition: segments are expected to form a contiguous tree.
+ */
 [[nodiscard]] auto to_line_tree(std::span<const ordered_line_t> segments, point_t root)
-    -> std::optional<LineTree>;
+    -> LineTree;
 
 [[nodiscard]] auto indices(const LineTree &line_tree) -> range_extended_t<line_index_t>;
 

@@ -1135,7 +1135,7 @@ auto _draw_wire_with_history(Context& ctx, const Layout& layout, wire_id_t wire_
     const auto to_time = [time = logic_state.time(),
                           delay = logic_state.wire_delay_per_distance()](
                              length_t length_) { return time - length_.value * delay; };
-    const auto& line_tree = logic_state.line_tree().value();
+    const auto& line_tree = logic_state.line_tree();
 
     for (auto&& index : indices(line_tree)) {
         const auto line = line_tree.line(index);

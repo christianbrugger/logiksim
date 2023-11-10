@@ -18,10 +18,20 @@ namespace logicsim {
  *
  * Class-invariants:
  *     + The layout does never change.
- *     + The simulation matches the given layout.
+ *     + The simulation is generated from the given layout.
+ *     + The line trees are equivalent to the segment trees in the layout
+ *     + The segment trees in the layout form contiguous trees.
+ *     + Segment trees in the layout have all cross-points set.
+ *     + Schematic is created with wire_delay_per_distance_ and it never changes.
  */
 class SpatialSimulation {
    public:
+    /**
+     * @brief: Create a new spatial simulation.
+     *
+     * Pre-condition: All inserted segment-trees are expected to form contiguous trees.
+     * Pre-condition: All inserted segment-trees have all cross-points set.
+     */
     [[nodiscard]] explicit SpatialSimulation(Layout &&layout,
                                              delay_t wire_delay_per_distance);
 
@@ -30,14 +40,13 @@ class SpatialSimulation {
     [[nodiscard]] auto simulation() const -> const Simulation &;
     [[nodiscard]] auto simulation() -> Simulation &;
 
-    [[nodiscard]] auto line_tree(wire_id_t wire_id) const
-        -> const std::optional<LineTree> &;
+    [[nodiscard]] auto line_tree(wire_id_t wire_id) const -> const LineTree &;
 
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 
    private:
     Layout layout_;
-    std::vector<std::optional<LineTree>> line_trees_;
+    std::vector<LineTree> line_trees_;
 
     delay_t wire_delay_per_distance_;
     Simulation simulation_;

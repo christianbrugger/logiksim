@@ -3,19 +3,16 @@
 #include "algorithm/transform_to_container.h"
 #include "editable_circuit/cache/connection_cache.h"
 #include "editable_circuit/cache/helper.h"
-#include "exception.h"
 #include "geometry/orientation.h"
 #include "line_tree.h"
 #include "line_tree_generation.h"
-#include "logging.h"
 #include "logic_item/schematic_info.h"
 #include "schematic.h"
-#include "schematic_generation.h"
-#include "timer.h"
 #include "vocabulary/output_delays.h"
 
 #include <cassert>
 #include <exception>
+#include <stdexcept>
 
 namespace logicsim {
 
@@ -100,9 +97,8 @@ auto add_logic_item(Schematic& schematic, const Layout& layout,
 }
 
 auto add_wire(Schematic& schematic, const Layout& layout, wire_id_t wire_id,
-              const std::optional<LineTree>& line_tree, delay_t wire_delay_per_distance)
-    -> void {
-    if (!line_tree) {
+              const LineTree& line_tree, delay_t wire_delay_per_distance) -> void {
+    if (line_tree.empty()) {
         const auto output_count = layout.wires().segment_tree(wire_id).output_count();
 
         schematic.add_element(schematic::NewElement {
@@ -121,8 +117,8 @@ auto add_wire(Schematic& schematic, const Layout& layout, wire_id_t wire_id,
 
         auto delays =
             ignore_delay
-                ? output_delays_t(line_tree->output_count().count(), delay_t::epsilon())
-                : calculate_output_delays(*line_tree, wire_delay_per_distance);
+                ? output_delays_t(line_tree.output_count().count(), delay_t::epsilon())
+                : calculate_output_delays(line_tree, wire_delay_per_distance);
 
         const auto tree_max_delay =
             ignore_delay ? delay_t {0ns} : std::ranges::max(delays);
@@ -130,7 +126,7 @@ auto add_wire(Schematic& schematic, const Layout& layout, wire_id_t wire_id,
         schematic.add_element(schematic::NewElement {
             .element_type = ElementType::wire,
             .input_count = connection_count_t {1},
-            .output_count = line_tree->output_count(),
+            .output_count = line_tree.output_count(),
 
             .sub_circuit_id = null_circuit,
             .input_inverters = {false},
@@ -141,7 +137,7 @@ auto add_wire(Schematic& schematic, const Layout& layout, wire_id_t wire_id,
 }
 
 auto add_layout_elements(Schematic& schematic, const Layout& layout,
-                         const std::vector<std::optional<LineTree>>& line_trees,
+                         const std::vector<LineTree>& line_trees,
                          delay_t wire_delay_per_distance) -> void {
     // elements
     for (const auto logicitem_id : logicitem_ids(layout)) {
@@ -182,12 +178,14 @@ struct GenerationCache {
 auto connect_line_tree(Schematic& schematic, const Layout& layout,
                        const GenerationCache& cache, element_id_t element_id,
                        const LineTree& line_tree) -> void {
+    Expects(!line_tree.empty());
+
     // connect input
     {
         if (const auto entry = cache.outputs.find(line_tree.input_position())) {
             if (!orientations_compatible(entry->orientation,
                                          line_tree.input_orientation())) {
-                throw_exception("input orientation not compatible");
+                throw std::runtime_error("input orientation not compatible");
             }
             const auto connected_element_id = to_element_id(layout, entry->logicitem_id);
 
@@ -203,7 +201,7 @@ auto connect_line_tree(Schematic& schematic, const Layout& layout,
         if (const auto entry = cache.inputs.find(position)) {
             if (!orientations_compatible(entry->orientation, line_tree.output_orientation(
                                                                  output.connection_id))) {
-                throw_exception("input orientation not compatible");
+                throw std::runtime_error("input orientation not compatible");
             }
             const auto connected_element_id = to_element_id(layout, entry->logicitem_id);
 
@@ -216,16 +214,14 @@ auto connect_line_tree(Schematic& schematic, const Layout& layout,
 // wires without inputs have no LineTree
 auto connect_segment_tree(Schematic& schematic, const Layout& layout,
                           const GenerationCache& cache, element_id_t element_id) -> void {
-    if (schematic.input_count(element_id) != connection_count_t {0}) [[unlikely]] {
-        throw_exception("wires with inputs should have a line tree");
-    }
+    Expects(schematic.input_count(element_id) != connection_count_t {0});
 
     // connect outputs
     auto output_id = connection_id_t {0};
     const auto try_connect_output = [&](point_t position, orientation_t orientation) {
         if (const auto entry = cache.inputs.find(position)) {
             if (!orientations_compatible(entry->orientation, orientation)) {
-                throw_exception("input orientation not compatible");
+                throw std::runtime_error("input orientation not compatible");
             }
             const auto connected_element_id = to_element_id(layout, entry->logicitem_id);
 
@@ -248,7 +244,7 @@ auto connect_segment_tree(Schematic& schematic, const Layout& layout,
 }
 
 auto create_connections(Schematic& schematic, const Layout& layout,
-                        const std::vector<std::optional<LineTree>>& line_trees) -> void {
+                        const std::vector<LineTree>& line_trees) -> void {
     const auto cache = GenerationCache {layout};
 
     for (auto element_id : element_ids(schematic)) {
@@ -264,10 +260,10 @@ auto create_connections(Schematic& schematic, const Layout& layout,
         if (element_type == ElementType::wire) {
             const auto& line_tree = line_trees.at(to_wire_id(layout, element_id).value);
 
-            if (line_tree) {
-                connect_line_tree(schematic, layout, cache, element_id, *line_tree);
-            } else {
+            if (line_tree.empty()) {
                 connect_segment_tree(schematic, layout, cache, element_id);
+            } else {
+                connect_line_tree(schematic, layout, cache, element_id, line_tree);
             }
         }
     }
@@ -323,10 +319,12 @@ auto add_missing_placeholders(Schematic& schematic) -> void {
 // Generate Schematic
 //
 
-auto generate_schematic(const Layout& layout,
-                        const std::vector<std::optional<LineTree>>& line_trees,
+auto generate_schematic(const Layout& layout, const std::vector<LineTree>& line_trees,
                         delay_t wire_delay_per_distance) -> Schematic {
+    assert(all_wires_equivalent(layout, line_trees));
+
     auto schematic = Schematic {};
+
     add_layout_elements(schematic, layout, line_trees, wire_delay_per_distance);
     create_connections(schematic, layout, line_trees);
     add_missing_placeholders(schematic);
