@@ -1,6 +1,7 @@
 
 #include "layout.h"
 
+#include "logging.h"
 #include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
@@ -102,6 +103,54 @@ TEST(Layout, EqualityOperators) {
     EXPECT_EQ(element_1, logicitem_id_t {1});
 
     EXPECT_EQ(layout.size(), 2);
+}
+
+TEST(Layout, TestNormalization) {
+    const auto definition_1 = LogicItemDefinition {
+        .logicitem_type = LogicItemType::xor_element,
+        .input_count = connection_count_t {2},
+        .output_count = connection_count_t {1},
+        .orientation = orientation_t::right,
+
+        .sub_circuit_id = null_circuit,
+        .input_inverters = {false, true},
+        .output_inverters = {false},
+    };
+
+    const auto definition_2 = LogicItemDefinition {
+        .logicitem_type = LogicItemType::clock_generator,
+        .input_count = connection_count_t {3},
+        .output_count = connection_count_t {3},
+        .orientation = orientation_t::left,
+
+        .sub_circuit_id = null_circuit,
+        .input_inverters = {true, false, false},
+        .output_inverters = {true, false, false},
+        .attrs_clock_generator =
+            attributes_clock_generator_t {
+                .name = "test",
+                .time_symmetric = delay_t {100us},
+                .is_symmetric = true,
+            },
+    };
+
+    auto layout_1 = Layout {};
+    layout_1.logic_items().add(definition_1, point_t {1, 2}, display_state_t::temporary);
+    layout_1.logic_items().add(definition_2, point_t {3, 4}, display_state_t::colliding);
+
+    auto layout_2 = Layout {};
+    layout_2.logic_items().add(definition_2, point_t {3, 4}, display_state_t::colliding);
+    layout_2.logic_items().add(definition_1, point_t {1, 2}, display_state_t::temporary);
+
+    EXPECT_NE(layout_1, layout_2);
+
+    layout_1.normalize();
+    layout_2.normalize();
+
+    print(layout_1);
+    print(layout_2);
+
+    EXPECT_EQ(layout_1, layout_2);
 }
 
 }  // namespace logicsim

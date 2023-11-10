@@ -1,5 +1,6 @@
 #include "logicitem_store.h"
 
+#include "algorithm/range_extended.h"
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/folly_small_vector.h"
 #include "allocated_size/std_vector.h"
@@ -57,7 +58,7 @@ auto LogicItemStore::allocated_size() const -> std::size_t {
 }
 
 auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position,
-                                   display_state_t display_state) -> logicitem_id_t {
+                         display_state_t display_state) -> logicitem_id_t {
     if (!is_valid(definition)) [[unlikely]] {
         throw std::runtime_error("Invalid element definition.");
     }
@@ -181,9 +182,42 @@ auto LogicItemStore::swap(logicitem_id_t logicitem_id_1, logicitem_id_t logicite
     swap_map_ids(map_clock_generator_);
 }
 
+namespace {
+
+auto move_to_vector(layout::attr_map_t<attributes_clock_generator_t> &map,
+                    std::size_t size) {
+    auto result =
+        std::vector<std::optional<attributes_clock_generator_t>>(size, std::nullopt);
+
+    for (auto &&[logicitem_id, attr] : map) {
+        result.at(logicitem_id.value) = std::move(attr);
+    }
+
+    map.clear();
+    return result;
+}
+
+auto move_from_vector(std::vector<std::optional<attributes_clock_generator_t>> &&vector) {
+    auto map = layout::attr_map_t<attributes_clock_generator_t> {};
+
+    for (logicitem_id_t logicitem_id : range_extended<logicitem_id_t>(vector.size())) {
+        const auto &entry = vector[logicitem_id.value];
+
+        if (entry.has_value()) {
+            map[logicitem_id] = std::move(entry.value());
+        }
+    }
+
+    return map;
+}
+
+}  // namespace
+
 auto LogicItemStore::normalize() -> void {
     // clear caches
     std::ranges::fill(bounding_rects_, invalid_bounding_rect);
+
+    auto vector_clock_generator = move_to_vector(map_clock_generator_, size());
 
     // sort
     const auto vectors = ranges::zip_view(  //
@@ -197,12 +231,12 @@ auto LogicItemStore::normalize() -> void {
         output_inverters_,                  //
                                             //
         positions_,                         //
-        display_states_                     //
+        display_states_,                    //
+        vector_clock_generator              //
     );
-
-    // TODO !!! clock attributes !!!
-
     ranges::sort(vectors);
+
+    map_clock_generator_ = move_from_vector(std::move(vector_clock_generator));
 }
 
 auto LogicItemStore::operator==(const LogicItemStore &other) const -> bool {
