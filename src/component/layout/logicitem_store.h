@@ -25,10 +25,10 @@ using attr_map_t = ankerl::unordered_dense::map<logicitem_id_t, T>;
  * @brief: Stores the logicitem data of the layout.
  *
  * Class invariants:
- *     + Only valid logic-item definitions are added and remain valid.
- *     + All bounding rects are fully representable, as well as inputs and outputs.
+ *     + All stored logic-item form valid definitions.
  *     + All data vectors have the same size.
  *     + Input & output inverters vectors have size of input & output count.
+ *     + All bounding rects are fully representable on the grid.
  */
 class LogicItemStore {
    public:
@@ -38,7 +38,7 @@ class LogicItemStore {
 
     // add & delete
     auto add(const LogicItemDefinition &definition, point_t position,
-                       display_state_t display_state) -> logicitem_id_t;
+             display_state_t display_state) -> logicitem_id_t;
     auto swap_and_delete(logicitem_id_t logicitem_id) -> logicitem_id_t;
     auto swap(logicitem_id_t logicitem_id_1, logicitem_id_t logicitem_id_2) -> void;
 
@@ -115,7 +115,8 @@ class LogicItemStore {
 
 [[nodiscard]] auto to_layout_calculation_data(const LogicItemStore &store,
                                               logicitem_id_t logicitem_id,
-                                point_t position) -> layout_calculation_data_t;
+                                              point_t position)
+    -> layout_calculation_data_t;
 
 [[nodiscard]] auto to_logicitem_definition(const LogicItemStore &store,
                                            logicitem_id_t logicitem_id)

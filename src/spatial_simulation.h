@@ -31,6 +31,8 @@ class SpatialSimulation {
      *
      * Pre-condition: All inserted segment-trees are expected to form contiguous trees.
      * Pre-condition: All inserted segment-trees have all cross-points set.
+     *
+     * Note this can be achieved through methods in `tree_normalization.h`.
      */
     [[nodiscard]] explicit SpatialSimulation(Layout &&layout,
                                              delay_t wire_delay_per_distance);

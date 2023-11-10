@@ -16,6 +16,9 @@ struct PlacedElement;
 /**
  * @brief: The layout is the visual representation of the circuit, consisting of
  *         logic items and wires.
+ *
+ * Class-invariants:
+ *     + See those of `LogicItemStore` and `WireStore`
  */
 class Layout {
    public:

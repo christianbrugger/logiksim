@@ -17,6 +17,9 @@ namespace layout {
  * Note the first and second wire have special meaning and are always present.
  * They can be accessed with `temporary_wire_id` and `colliding_wire_id`.
  *
+ * Note segments in the segment tree can be any set of valid line segments,
+ * only subject to the class-invariants of SegmentTree.
+ *
  * Class invariants:
  *     + segment_trees_ and bounding_rects_ have same size
  *     + invalid and temporary wires are always present
