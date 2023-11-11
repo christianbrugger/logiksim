@@ -5,6 +5,8 @@
 #include "algorithm/transform_to_vector.h"
 #include "container/spatial_point_index.h"
 #include "editable_circuit/cache.h"
+#include "editable_circuit/message.h"
+#include "editable_circuit/message_sender.h"
 #include "editable_circuit/selection.h"
 #include "editable_circuit/selection_registrar.h"
 #include "exception.h"
@@ -13,9 +15,12 @@
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "geometry/point.h"
+#include "layout.h"
 #include "layout_info.h"
 #include "logging.h"
 #include "tree_normalization.h"
+#include "vocabulary/point.h"
+#include "vocabulary/segment.h"
 
 #include <ankerl/unordered_dense.h>
 #include <fmt/core.h>

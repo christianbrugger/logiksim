@@ -22,7 +22,6 @@ struct SegmentPartMoved;
 struct SegmentPartDeleted;
 
 struct SegmentInserted;
-struct SegmentInsertedstruct;
 struct InsertedSegmentIdUpdated;
 struct InsertedEndPointsUpdated;
 struct SegmentUninserted;

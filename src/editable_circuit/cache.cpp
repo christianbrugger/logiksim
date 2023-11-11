@@ -1,4 +1,3 @@
-
 #include "editable_circuit/cache.h"
 
 #include "editable_circuit/cache/helper.h"
@@ -35,7 +34,7 @@ auto CacheProvider::allocated_size() const -> std::size_t {
            wire_inputs_.allocated_size() +         //
            wire_outputs_.allocated_size() +        //
 
-           collision_cache_.allocated_size() +     //
+           collision_cache_.allocated_size() +  //
            spatial_cache_.allocated_size();
 }
 

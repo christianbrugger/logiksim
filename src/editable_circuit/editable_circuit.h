@@ -8,13 +8,12 @@
 #include "format/struct.h"
 #include "layout.h"
 #include "vocabulary/line_insertion_type.h"
-#include "vocabulary/logicitem_id.h"
 
 #include <optional>
 
 namespace logicsim {
 
-class SelectionRegistrar;
+struct logicitem_id_t;
 
 namespace editable_circuit {
 class MessageSender;

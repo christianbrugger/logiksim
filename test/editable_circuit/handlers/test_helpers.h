@@ -4,6 +4,9 @@
 #include "algorithm/fmt_join.h"
 #include "editable_circuit/cache.h"
 #include "editable_circuit/handler.h"
+#include "editable_circuit/message.h"
+#include "editable_circuit/message_sender.h"
+#include "layout.h"
 #include "logging.h"
 #include "vocabulary/logicitem_definition.h"
 
@@ -95,9 +98,10 @@ inline auto assert_logicitem_count(const Layout &layout, std::size_t count) -> v
     ASSERT_EQ(layout.logic_items().size(), count);
 }
 
-inline auto assert_logicitem_equal(const Layout &layout, logicitem_id_t logicitem_id,
-                                 connection_count_t input_count = connection_count_t {3},
-                                 point_t position = point_t {0, 0}) -> void {
+inline auto assert_logicitem_equal(
+    const Layout &layout, logicitem_id_t logicitem_id,
+    connection_count_t input_count = connection_count_t {3},
+    point_t position = point_t {0, 0}) -> void {
     ASSERT_EQ(layout.logic_items().input_count(logicitem_id), input_count);
     ASSERT_EQ(layout.logic_items().position(logicitem_id), position);
 }

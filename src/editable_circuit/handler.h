@@ -1,23 +1,36 @@
 #ifndef LOGIKSIM_EDITABLE_CIRCUIT_HANDLER_H
 #define LOGIKSIM_EDITABLE_CIRCUIT_HANDLER_H
 
-#include "editable_circuit/message.h"
-#include "editable_circuit/message_sender.h"
-#include "layout.h"
-#include "vocabulary.h"
+#include "editable_circuit/message_forward.h"
+#include "vocabulary/insertion_mode.h"
 #include "vocabulary/line_insertion_type.h"
 
 #include <span>
 
 namespace logicsim {
 
+struct wire_id_t;
+struct logicitem_id_t;
+
+struct point_t;
+struct line_t;
+struct ordered_line_t;
+struct part_t;
+struct segment_t;
+struct segment_part_t;
+struct LogicItemDefinition;
+struct PlacedElement;
+
+class Layout;
 class Selection;
 class selection_handle_t;
 class element_handle_t;
 class SelectionRegistrar;
 class CacheProvider;
-class SpatialPointIndex;
-struct PlacedElement;
+
+namespace editable_circuit {
+class MessageSender;
+}
 
 namespace editable_circuit {
 

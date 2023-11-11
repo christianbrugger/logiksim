@@ -1,11 +1,12 @@
 #include "editable_circuit.h"
 
-#include "editable_circuit/cache.h"
 #include "editable_circuit/handler.h"
-#include "exception.h"
+#include "editable_circuit/message.h"
 #include "format/std_type.h"
 #include "geometry/point.h"
 #include "random/wire.h"
+
+#include <exception>
 
 namespace logicsim {
 
@@ -56,7 +57,7 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
         case temporary:
             return display_state_t::temporary;
     };
-    throw_exception("unknown insertion mode");
+    std::terminate();
 }
 
 auto EditableCircuit::validate() -> void {

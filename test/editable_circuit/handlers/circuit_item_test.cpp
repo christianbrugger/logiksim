@@ -1,6 +1,9 @@
 
 #include "./test_helpers.h"
 #include "editable_circuit/handler.h"
+#include "editable_circuit/message.h"
+#include "editable_circuit/message_sender.h"
+#include "layout.h"
 #include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
@@ -26,8 +29,10 @@ TEST(EditableCircuitHandler, VerificationSetup) {
 //
 
 TEST(EditableCircuitHandler, DeleteTemporaryElement) {
+    using namespace editable_circuit;
     using namespace editable_circuit::info_message;
     using enum display_state_t;
+
     auto layout = Layout {};
     auto logicitem_id = add_and_element(layout, temporary);
 
@@ -54,7 +59,9 @@ TEST(EditableCircuitHandler, DeleteTemporaryElement) {
 
 TEST(EditableCircuitHandler, DeletePreserving1) {
     using namespace editable_circuit::info_message;
+    using namespace editable_circuit;
     using enum display_state_t;
+
     auto layout = Layout {};
 
     auto logicitem_id_0 =
@@ -91,7 +98,9 @@ TEST(EditableCircuitHandler, DeletePreserving1) {
 
 TEST(EditableCircuitHandler, DeletePreserving2) {
     using namespace editable_circuit::info_message;
+    using namespace editable_circuit;
     using enum display_state_t;
+
     auto layout = Layout {};
 
     auto logicitem_id_0 =
@@ -208,7 +217,8 @@ TEST(EditableCircuitHandler, IsRepresentableAndElement) {
 
     // true
     ASSERT_EQ(is_logic_item_position_representable(layout, logicitem_id_0, 10, 10), true);
-    ASSERT_EQ(is_logic_item_position_representable(layout, logicitem_id_0, -10, -10), true);
+    ASSERT_EQ(is_logic_item_position_representable(layout, logicitem_id_0, -10, -10),
+              true);
 
     // false
     ASSERT_EQ(is_logic_item_position_representable(layout, logicitem_id_0, overflow, 10),
@@ -227,7 +237,9 @@ TEST(EditableCircuitHandler, IsRepresentableAndElement) {
 
 TEST(EditableCircuitHandler, MoveLogicItemSuccess) {
     using namespace editable_circuit::info_message;
+    using namespace editable_circuit;
     using enum display_state_t;
+
     auto layout = Layout {};
 
     auto logicitem_id_0 =
@@ -277,7 +289,9 @@ TEST(EditableCircuitHandler, MoveLogicItemUnchecked) {
 
 TEST(EditableCircuitHandler, MoveLogicItemDeleted) {
     using namespace editable_circuit::info_message;
+    using namespace editable_circuit;
     using enum display_state_t;
+
     auto layout = Layout {};
 
     auto logicitem_id_0 =
@@ -479,7 +493,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporary) {
     ASSERT_EQ(logicitem_id_0, logicitem_id_t {0});
 
     auto setup = HandlerSetup {layout};
-    change_logic_item_insertion_mode(setup.state, logicitem_id_0, InsertionMode::temporary);
+    change_logic_item_insertion_mode(setup.state, logicitem_id_0,
+                                     InsertionMode::temporary);
 
     setup.validate();
     //  logicitem_ids
@@ -512,7 +527,8 @@ TEST(EditableCircuitHandler, LogicItemChangeModeBToTemporaryPreserving) {
     const auto data0 = to_layout_calculation_data(layout, logicitem_id_t {0});
 
     auto setup = HandlerSetup {layout};
-    change_logic_item_insertion_mode(setup.state, logicitem_id_0, InsertionMode::temporary);
+    change_logic_item_insertion_mode(setup.state, logicitem_id_0,
+                                     InsertionMode::temporary);
 
     setup.validate();
     //  logicitem_ids
@@ -552,7 +568,7 @@ TEST(EditableCircuitHandler, LogicItemAddElement) {
         .orientation = orientation_t::right,
     };
     const auto logicitem_id = add_logic_item(setup.state, definition, point_t {2, 3},
-                                           InsertionMode::insert_or_discard);
+                                             InsertionMode::insert_or_discard);
 
     setup.validate();
     //  logicitem_ids

@@ -3,14 +3,19 @@
 #include "algorithm/range.h"
 #include "algorithm/uniform_int_distribution.h"
 #include "editable_circuit/handler.h"
+#include "geometry/part.h"
 #include "random/bool.h"
 #include "random/insertion_mode.h"
 #include "random/ordered_line.h"
 #include "random/point.h"
 #include "vocabulary/connection_count.h"
-#include "vocabulary/logicitem_type.h"
 #include "vocabulary/insertion_mode.h"
+#include "vocabulary/logicitem_definition.h"
+#include "vocabulary/logicitem_id.h"
+#include "vocabulary/logicitem_type.h"
+#include "vocabulary/ordered_line.h"
 #include "vocabulary/orientation.h"
+#include "vocabulary/segment_part.h"
 
 #include <exception>
 
