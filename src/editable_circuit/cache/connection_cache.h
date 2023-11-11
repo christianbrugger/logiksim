@@ -3,11 +3,14 @@
 
 #include "editable_circuit/message_forward.h"
 #include "format/struct.h"
-#include "vocabulary.h"
 #include "vocabulary/logicitem_connection.h"
+#include "vocabulary/orientation.h"
+#include "vocabulary/point.h"
+#include "vocabulary/segment.h"
 
 #include <ankerl/unordered_dense.h>
 
+#include <optional>
 #include <ranges>
 
 namespace logicsim {
@@ -37,7 +40,6 @@ using value_t = std::conditional_t<Content == ContentType::LogicItem,
 template <ContentType Content>
 using map_type = ankerl::unordered_dense::map<point_t, value_t<Content>>;
 
-
 using logicitem_map_t = map_type<ContentType::LogicItem>;
 using wire_map_t = map_type<ContentType::Wire>;
 
@@ -45,8 +47,6 @@ static_assert(sizeof(value_t<ContentType::LogicItem>) == 8);
 static_assert(sizeof(value_t<ContentType::Wire>) == 12);
 
 }  // namespace connection_cache
-
-namespace detail::connection_cache {}  // namespace detail::connection_cache
 
 template <connection_cache::ContentType Content,
           connection_cache::DirectionType Direction>
@@ -63,12 +63,8 @@ class ConnectionCache {
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto find(point_t position) const -> std::optional<value_t>;
-
-    // TODO require ContentType == LogicItem
-    [[nodiscard]] auto is_colliding(const layout_calculation_data_t& data) const -> bool;
-    // TODO require ContentType == Wire
-    [[nodiscard]] auto is_colliding(point_t position, orientation_t orientation) const
-        -> bool;
+    [[nodiscard]] auto is_colliding(const layout_calculation_data_t& data) const -> bool
+        requires(Content == ContentType::LogicItem);
 
     [[nodiscard]] auto positions() const {
         return std::ranges::views::keys(map_);

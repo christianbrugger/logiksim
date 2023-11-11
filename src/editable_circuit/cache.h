@@ -27,32 +27,6 @@ class CacheProvider {
     auto submit(const editable_circuit::InfoMessage& message) -> void;
     auto validate(const Layout& layout) -> void;
 
-   public:
-    // for rendering
-    [[nodiscard]] auto logicitem_input_positions_and_orientations() const {
-        return logicitems_inputs_.positions_and_orientations();
-    };
-
-    [[nodiscard]] auto logicitem_output_positions_and_orientations() const {
-        return logicitems_outputs_.positions_and_orientations();
-    };
-
-    [[nodiscard]] auto wire_input_positions_and_orientations() const {
-        return wire_inputs_.positions_and_orientations();
-    };
-
-    [[nodiscard]] auto wire_output_positions_and_orientations() const {
-        return wire_outputs_.positions_and_orientations();
-    };
-
-    [[nodiscard]] auto collision_states() const {
-        return collision_cache_.states();
-    };
-
-    [[nodiscard]] auto selection_rects() const {
-        return spatial_cache_.rects();
-    }
-
    private:
     LogicItemInputCache logicitems_inputs_ {};
     LogicItemOutputCache logicitems_outputs_ {};

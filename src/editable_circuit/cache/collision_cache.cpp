@@ -6,17 +6,16 @@
 #include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
-#include "exception.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "layout_info.h"
-#include "logging.h"
 
 #include <folly/small_vector.h>
 
 #include <exception>
+#include <stdexcept>
 
 //
 // Local Definitions
@@ -116,10 +115,10 @@ auto to_state(collision_data_t data) -> CacheState {
     using enum CacheState;
 
     if (is_element_body(data)) {
-        return element_body;
+        return logicitem_body;
     }
     if (is_element_connection(data)) {
-        return element_connection;
+        return logicitem_connection;
     }
     if (is_wire_connection(data)) {
         return wire_connection;
@@ -164,10 +163,10 @@ auto format(collision_cache::ItemType type) -> std::string {
     switch (type) {
         using enum collision_cache::ItemType;
 
-        case element_body:
-            return "element_body";
-        case element_connection:
-            return "element_connection";
+        case logicitem_body:
+            return "logicitem_body";
+        case logicitem_connection:
+            return "logicitem_connection";
         case wire_connection:
             return "wire_connection";
         case wire_horizontal:
@@ -190,10 +189,10 @@ auto format(collision_cache::CacheState state) -> std::string {
     switch (state) {
         using enum collision_cache::CacheState;
 
-        case element_body:
-            return "element_body";
-        case element_connection:
-            return "element_connection";
+        case logicitem_body:
+            return "logicitem_body";
+        case logicitem_connection:
+            return "logicitem_connection";
         case wire_connection:
             return "wire_connection";
         case wire_horizontal:
@@ -236,13 +235,13 @@ auto collision_points(const layout_calculation_data_t& data) -> collision_points
     result.reserve(inputs.size() + outputs.size() + body_points.size());
 
     for (const auto& info : inputs) {
-        result.push_back({info.position, ItemType::element_connection});
+        result.push_back({info.position, ItemType::logicitem_connection});
     }
     for (const auto& info : outputs) {
-        result.push_back({info.position, ItemType::element_connection});
+        result.push_back({info.position, ItemType::logicitem_connection});
     }
     for (const point_t& position : body_points) {
-        result.push_back({position, ItemType::element_body});
+        result.push_back({position, ItemType::logicitem_body});
     }
 
     return result;
@@ -332,7 +331,7 @@ auto delete_if_empty(CollisionCache::map_type& map, point_t position,
 auto set_connection_tag(collision_cache::collision_data_t& data) {
     if (data.wire_id_vertical != null_wire_id &&
         data.wire_id_vertical != collision_cache::connection_tag) {
-        throw_exception("cannot set connection tag, wire_id_vertical occupied");
+        throw std::runtime_error("cannot set connection tag, wire_id_vertical occupied");
     }
     data.wire_id_vertical = collision_cache::connection_tag;
 };
@@ -340,7 +339,8 @@ auto set_connection_tag(collision_cache::collision_data_t& data) {
 auto set_wire_corner_point_tag(collision_cache::collision_data_t& data) {
     if (data.logicitem_id_body != null_logicitem_id &&
         data.logicitem_id_body != collision_cache::wire_corner_point_tag) {
-        throw_exception("cannot set wire_corner_point tag, element body is occupied");
+        throw std::runtime_error(
+            "cannot set wire_corner_point tag, element body is occupied");
     }
     data.logicitem_id_body = collision_cache::wire_corner_point_tag;
 };
@@ -348,7 +348,8 @@ auto set_wire_corner_point_tag(collision_cache::collision_data_t& data) {
 auto set_wire_cross_point_tag(collision_cache::collision_data_t& data) {
     if (data.logicitem_id_body != null_logicitem_id &&
         data.logicitem_id_body != collision_cache::wire_cross_point_tag) {
-        throw_exception("cannot set wire_corner_point tag, element body is occupied");
+        throw std::runtime_error(
+            "cannot set wire_corner_point tag, element body is occupied");
     }
     data.logicitem_id_body = collision_cache::wire_cross_point_tag;
 };
@@ -359,7 +360,7 @@ auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
     -> void {
     const auto check_and_update = [&](logicitem_id_t& obj) {
         if (obj != verify_old_id) {
-            throw_exception("unexpected collision state");
+            throw std::runtime_error("unexpected collision state");
         }
         obj = set_new_id;
     };
@@ -369,11 +370,11 @@ auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
     switch (item_type) {
         using enum collision_cache::ItemType;
 
-        case element_body: {
+        case logicitem_body: {
             check_and_update(data.logicitem_id_body);
             break;
         }
-        case element_connection: {
+        case logicitem_connection: {
             set_connection_tag(data);
             check_and_update(data.logicitem_id_body);
             break;
@@ -392,7 +393,7 @@ auto set_wire_state(CollisionCache::map_type& map, point_t position,
                     wire_id_t set_new_id) -> void {
     const auto check_and_update = [&](wire_id_t& obj) {
         if (obj != verify_old_id) {
-            throw_exception("unexpected collision state");
+            throw std::runtime_error("unexpected collision state");
         }
         obj = set_new_id;
     };
@@ -576,10 +577,10 @@ auto CollisionCache::state_colliding(point_t position,
             using namespace collision_cache;
             using enum collision_cache::ItemType;
 
-            case element_body: {
+            case logicitem_body: {
                 return true;
             }
-            case element_connection: {
+            case logicitem_connection: {
                 return !is_wire_connection(data);
             }
             case wire_connection: {
@@ -681,7 +682,7 @@ auto CollisionCache::validate(const Layout& layout) const -> void {
     add_layout_to_cache(cache, layout);
 
     if (cache.map_ != this->map_) [[unlikely]] {
-        throw_exception("current cache state doesn't match circuit");
+        throw std::runtime_error("current cache state doesn't match circuit");
     }
 }
 

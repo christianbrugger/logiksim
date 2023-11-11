@@ -3,22 +3,25 @@
 
 #include "editable_circuit/message_forward.h"
 #include "format/struct.h"
-#include "vocabulary.h"
-#include "vocabulary/logicitem_id.h"
+#include "vocabulary/segment_index.h"
 
-#include <gsl/gsl>
-
-namespace boost::geometry::model::d2 {
-template <typename CoordinateType, typename CoordinateSystem>
-class point_xy;
-}
-
-namespace boost::geometry::index {}
+#include <array>
+#include <cstdint>
+#include <vector>
 
 namespace logicsim {
 
-class Layout;
+struct point_t;
+struct point_fine_t;
+struct rect_fine_t;
+
+struct logicitem_id_t;
+struct wire_id_t;
+struct segment_index_t;
+struct segment_t;
+
 struct layout_calculation_data_t;
+class Layout;
 
 namespace detail::spatial_tree {
 

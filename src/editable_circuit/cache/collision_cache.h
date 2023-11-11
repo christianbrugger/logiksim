@@ -5,16 +5,17 @@
 #include "format/enum.h"
 #include "format/struct.h"
 #include "iterator_adaptor/transform_view.h"
-#include "vocabulary.h"
 #include "vocabulary/logicitem_id.h"
+#include "vocabulary/point.h"
 #include "vocabulary/wire_id.h"
 
 #include <ankerl/unordered_dense.h>
 
 namespace logicsim {
 
-class Layout;
+struct ordered_line_t;
 struct layout_calculation_data_t;
+class Layout;
 
 namespace collision_cache {
 
@@ -24,10 +25,8 @@ namespace collision_cache {
  * Note that some states cannot be inserted into the cache.
  */
 enum class ItemType {
-    // TODO rename logicitem_*
-    // TODO separate enum for logicitem & wire ?
-    element_body,
-    element_connection,
+    logicitem_body,
+    logicitem_connection,
     wire_connection,
     wire_horizontal,
     wire_vertical,
@@ -44,8 +43,8 @@ enum class ItemType {
  * Note that some states are a combination of multiple items inserted at this positions.
  */
 enum class CacheState {
-    element_body,
-    element_connection,
+    logicitem_body,
+    logicitem_connection,
     wire_connection,
     wire_horizontal,
     wire_vertical,
@@ -93,7 +92,7 @@ using map_type = ankerl::unordered_dense::map<point_t, collision_cache::collisio
  *
  * Set for:
  *      input_location() / output_location() at this position
- *      ItemType::element_connection
+ *      ItemType::logicitem_connection
  *
  *      SegmentPointType::input
  *      SegmentPointType::output

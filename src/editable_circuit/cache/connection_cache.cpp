@@ -4,7 +4,6 @@
 #include "allocated_size/trait.h"
 #include "editable_circuit/cache/helper.h"
 #include "editable_circuit/message.h"
-#include "exception.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/orientation.h"
@@ -70,7 +69,7 @@ auto get_and_verify_cache_entry(map_type<ContentType::LogicItem>& map, point_t p
     -> map_type<ContentType::LogicItem>::iterator {
     const auto it = map.find(position);
     if (it == map.end() || it->second != value) [[unlikely]] {
-        throw_exception("unable to find cached data that should be present.");
+        throw std::runtime_error("unable to find cached data that should be present.");
     }
     return it;
 }
@@ -80,20 +79,20 @@ auto get_and_verify_cache_entry(map_type<ContentType::Wire>& map, point_t positi
     -> map_type<ContentType::Wire>::iterator {
     const auto it = map.find(position);
     if (it == map.end() || it->second != value) [[unlikely]] {
-        throw_exception("unable to find cached data that should be present.");
+        throw std::runtime_error("unable to find cached data that should be present.");
     }
     return it;
 }
 
 auto verify_cache_empty(map_type<ContentType::LogicItem>& map, point_t position) -> void {
     if (map.contains(position)) [[unlikely]] {
-        throw_exception("cache already has an entry at this position");
+        throw std::runtime_error("cache already has an entry at this position");
     }
 }
 
 auto verify_cache_empty(map_type<ContentType::Wire>& map, point_t position) -> void {
     if (map.contains(position)) [[unlikely]] {
-        throw_exception("cache already has an entry at this position");
+        throw std::runtime_error("cache already has an entry at this position");
     }
 }
 
@@ -455,7 +454,9 @@ auto ConnectionCache<Content, Direction>::find(point_t position) const
 template <connection_cache::ContentType Content,
           connection_cache::DirectionType Direction>
 auto ConnectionCache<Content, Direction>::is_colliding(
-    const layout_calculation_data_t& data) const -> bool {
+    const layout_calculation_data_t& data) const -> bool
+    requires(Content == ContentType::LogicItem)
+{
     const auto same_type_not_colliding = [&](const auto& info) -> bool {
         return !map_.contains(info.position);
     };
@@ -480,23 +481,12 @@ auto ConnectionCache<Content, Direction>::is_colliding(
 
 template <connection_cache::ContentType Content,
           connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::is_colliding(point_t position,
-                                                       orientation_t orientation) const
-    -> bool {
-    if (const auto it = map_.find(position); it != map_.end()) {
-        return !orientations_compatible(orientation, it->second.orientation);
-    }
-    return false;
-}
-
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
 auto ConnectionCache<Content, Direction>::validate(const Layout& layout) const -> void {
     auto cache = ConnectionCache<Content, Direction> {};
     add_layout_to_cache(cache, layout);
 
     if (cache.map_ != this->map_) [[unlikely]] {
-        throw_exception("current cache state doesn't match circuit");
+        throw std::runtime_error("current cache state doesn't match circuit");
     }
 }
 

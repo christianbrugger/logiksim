@@ -129,7 +129,7 @@ auto has_same_corner_points(const SegmentTree& segment_tree, const LineTree& lin
     std::ranges::sort(corners_1);
     corners_1.erase(std::ranges::unique(corners_1).begin(), corners_1.end());
 
-    // remove cross-points
+    // remove cross-points (false-positives)
     auto cross_points_1 = get_cross_points(line_tree);
     auto corners_1_filtered = std::vector<point_t> {};
     std::ranges::set_difference(corners_1, cross_points_1,

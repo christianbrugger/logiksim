@@ -1,14 +1,15 @@
-#include "spatial_cache.h"
+#include "editable_circuit/cache/spatial_cache.h"
 
 #include "allocated_size/tracked_resource.h"
 #include "editable_circuit/cache/helper.h"
-#include "editable_circuit/cache/spatial_cache.h"
 #include "editable_circuit/message.h"
-#include "exception.h"
 #include "iterator_adaptor/output_callable.h"
 #include "layout.h"
 #include "layout_info.h"
-#include "logging.h"
+#include "vocabulary/grid_fine.h"
+#include "vocabulary/point.h"
+#include "vocabulary/point_fine.h"
+#include "vocabulary/rect_fine.h"
 #include "wyhash.h"
 
 #include <boost/geometry.hpp>
@@ -248,7 +249,7 @@ auto SpatialTree::handle(
     const auto remove_count = tree_->value.remove({box, value_t {message.logicitem_id}});
 
     if (remove_count != 1) [[unlikely]] {
-        throw_exception("Wasn't able to find element to remove.");
+        throw std::runtime_error("Not able to find element to remove.");
     }
 }
 
@@ -273,7 +274,7 @@ auto SpatialTree::handle(const editable_circuit::info_message::SegmentUninserted
     const auto remove_count = tree_->value.remove({box, value_t {message.segment}});
 
     if (remove_count != 1) [[unlikely]] {
-        throw_exception("Wasn't able to find element to remove.");
+        throw std::runtime_error("Not able to find element to remove.");
     }
 }
 
@@ -282,8 +283,8 @@ auto SpatialTree::handle(
     using namespace editable_circuit::info_message;
 
     // r-tree data is immutable
-     handle(SegmentUninserted {message.old_segment, message.segment_info});
-     handle(SegmentInserted {message.new_segment, message.segment_info});
+    handle(SegmentUninserted {message.old_segment, message.segment_info});
+    handle(SegmentInserted {message.new_segment, message.segment_info});
 
     // Note this is not a performance problem: when un-inserting 500k line segments
     // 1975 ms (this) vs 1927 ms (using query & const_cast) overall performance.
@@ -323,16 +324,11 @@ auto SpatialTree::submit(const editable_circuit::InfoMessage& message) -> void {
 
 auto SpatialTree::query_selection(rect_fine_t rect) const -> std::vector<value_t> {
     using namespace detail::spatial_tree;
-
     auto result = std::vector<value_t> {};
 
-    const auto inserter = [&result](const tree_value_t& value) {
-        result.push_back(value.second);
-    };
-
-    // intersects or covered_by
-    tree_->value.query(bgi::intersects(to_box(rect)), output_callable(inserter));
-
+    std::ranges::transform(tree_->value.qbegin(bgi::intersects(to_box(rect))),
+                           tree_->value.qend(), std::back_inserter(result),
+                           &tree_value_t::second);
     return result;
 }
 
@@ -382,7 +378,7 @@ auto to_reverse_index(const tree_t& tree) -> index_map_t {
     for (auto&& item : tree) {
         const auto inserted = index.try_emplace(item.second, item.first).second;
         if (!inserted) [[unlikely]] {
-            throw_exception("found duplicate item in cache");
+            throw std::runtime_error("found duplicate item in cache");
         }
     }
 
@@ -408,10 +404,7 @@ auto SpatialTree::validate(const Layout& layout) const -> void {
     add_layout_to_cache(cache, layout);
 
     if (cache.tree_->value != this->tree_->value) [[unlikely]] {
-        print(layout);
-        print("expected state =", cache);
-        print("actual state   =", *this);
-        throw_exception("current cache state doesn't match circuit");
+        throw std::runtime_error("current cache state doesn't match circuit");
     }
 }
 
@@ -445,10 +438,10 @@ auto get_segment_indices(SpatialTree::queried_segments_t result)
 
 auto get_unique_wire_id(SpatialTree::queried_segments_t result) -> wire_id_t {
     if (!result.at(0).wire_id) {
-        throw_exception("result has not segments");
+        throw std::runtime_error("result has not segments");
     }
     if (!all_same_wire_id(result)) {
-        throw_exception("result has different ids");
+        throw std::runtime_error("result has different ids");
     }
     return result.at(0).wire_id;
 }
