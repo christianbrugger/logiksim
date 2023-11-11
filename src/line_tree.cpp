@@ -48,7 +48,7 @@ auto LineTree::has_cross_point_p0(line_index_t index) const -> bool {
 }
 
 auto LineTree::is_corner_p0(line_index_t index) const -> bool {
-    return index > line_index_t {0};
+    return index > line_index_t {0} && !store_.starts_new_subtree(index);
 }
 
 auto LineTree::is_corner_p1(line_index_t index) const -> bool {
@@ -114,6 +114,17 @@ auto indices(const LineTree& line_tree) -> range_extended_t<line_index_t> {
 
 auto output_ids(const LineTree& line_tree) -> range_extended_t<connection_id_t> {
     return range_extended<connection_id_t>(std::size_t {line_tree.output_count()});
+}
+
+auto format_entry(const LineTree& line_tree, line_index_t index) -> std::string {
+    const auto cross_p0 = line_tree.has_cross_point_p0(index);
+    const auto corner_p0 = line_tree.is_corner_p0(index);
+    const auto corner_p1 = line_tree.is_corner_p1(index);
+    const auto line = line_tree.line(index);
+
+    return fmt::format("({}{} {} - {} {})", cross_p0 ? "cross-point" : "",
+                       corner_p0 ? "corner" : "", line.p0, line.p1,
+                       corner_p1 ? "corner" : "");
 }
 
 }  // namespace logicsim

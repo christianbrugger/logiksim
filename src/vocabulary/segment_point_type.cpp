@@ -1,3 +1,5 @@
+#include "segment_point_type.h"
+
 #include "vocabulary/segment_point_type.h"
 
 namespace logicsim {
@@ -24,9 +26,12 @@ auto format(SegmentPointType type) -> std::string {
     std::terminate();
 }
 
+auto is_corner_point(SegmentPointType point_type) -> bool {
+    return point_type == SegmentPointType::corner_point;
+}
+
 auto is_cross_point(SegmentPointType point_type) -> bool {
-    using enum SegmentPointType;
-    return point_type == cross_point;
+    return point_type == SegmentPointType::cross_point;
 }
 
 auto is_connection(SegmentPointType point_type) -> bool {

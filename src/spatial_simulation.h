@@ -21,7 +21,7 @@ namespace logicsim {
  *     + The simulation is generated from the given layout.
  *     + The line trees are equivalent to the segment trees in the layout
  *     + The segment trees in the layout form contiguous trees.
- *     + Segment trees in the layout have all cross-points set.
+ *     + Segment trees in the layout have all cross-points & corners set.
  *     + Schematic is created with wire_delay_per_distance_ and it never changes.
  */
 class SpatialSimulation {
@@ -30,7 +30,7 @@ class SpatialSimulation {
      * @brief: Create a new spatial simulation.
      *
      * Pre-condition: All inserted segment-trees are expected to form contiguous trees.
-     * Pre-condition: All inserted segment-trees have all cross-points set.
+     * Pre-condition: All inserted segment-trees have all cross-points & corners set.
      *
      * Note this can be achieved through methods in `tree_normalization.h`.
      */

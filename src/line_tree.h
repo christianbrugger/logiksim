@@ -37,7 +37,15 @@ class LineTree {
 
     [[nodiscard]] auto lines() const -> std::span<const line_t>;
     [[nodiscard]] auto line(line_index_t) const -> line_t;
+    /**
+     * @brief: Indicates if there is a cross-point at p0.
+     */
     [[nodiscard]] auto has_cross_point_p0(line_index_t) const -> bool;
+    /**
+     * @brief: Indicates if there is a corner at the point.
+     *
+     * Note that currently also cross-points are flagged as corners for some lines.
+     */
     [[nodiscard]] auto is_corner_p0(line_index_t) const -> bool;
     [[nodiscard]] auto is_corner_p1(line_index_t) const -> bool;
     [[nodiscard]] auto length_p0(line_index_t) const -> length_t;
@@ -67,6 +75,9 @@ class LineTree {
 
 [[nodiscard]] auto output_ids(const LineTree &line_tree)
     -> range_extended_t<connection_id_t>;
+
+[[nodiscard]] auto format_entry(const LineTree &line_tree, line_index_t index)
+    -> std::string;
 
 }  // namespace logicsim
 

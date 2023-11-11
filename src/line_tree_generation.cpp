@@ -4,6 +4,7 @@
 #include "algorithm/transform_to_vector.h"
 #include "layout.h"
 #include "line_tree.h"
+#include "logging.h"
 #include "segment_tree.h"
 
 #include <stdexcept>
@@ -78,18 +79,23 @@ auto has_same_segments(const SegmentTree& segment_tree, const LineTree& line_tre
     return segments_1 == segments_2;
 }
 
-auto has_same_cross_points(const SegmentTree& segment_tree, const LineTree& line_tree)
-    -> bool {
-    // line tree
-    auto cross_points_1 = std::vector<point_t> {};
+auto get_cross_points(const LineTree& line_tree) -> std::vector<point_t> {
+    auto cross_points = std::vector<point_t> {};
     transform_if(
-        indices(line_tree), std::back_inserter(cross_points_1),
+        indices(line_tree), std::back_inserter(cross_points),
         [&](line_index_t index) -> point_t { return line_tree.line(index).p0; },
         [&](line_index_t index) -> bool { return line_tree.has_cross_point_p0(index); });
 
-    std::ranges::sort(cross_points_1);
-    const auto duplicates = std::ranges::unique(cross_points_1);
-    cross_points_1.erase(duplicates.begin(), duplicates.end());
+    std::ranges::sort(cross_points);
+    cross_points.erase(std::ranges::unique(cross_points).begin(), cross_points.end());
+
+    return cross_points;
+}
+
+auto has_same_cross_points(const SegmentTree& segment_tree, const LineTree& line_tree)
+    -> bool {
+    // line tree
+    auto cross_points_1 = get_cross_points(line_tree);
 
     // segment tree
     auto cross_points_2 = std::vector<point_t> {};
@@ -104,6 +110,47 @@ auto has_same_cross_points(const SegmentTree& segment_tree, const LineTree& line
     std::ranges::sort(cross_points_2);
 
     return cross_points_1 == cross_points_2;
+}
+
+auto has_same_corner_points(const SegmentTree& segment_tree, const LineTree& line_tree)
+    -> bool {
+    // line tree
+    auto corners_1 = std::vector<point_t> {};
+
+    transform_if(
+        indices(line_tree), std::back_inserter(corners_1),
+        [&](line_index_t index) -> point_t { return line_tree.line(index).p0; },
+        [&](line_index_t index) -> bool { return line_tree.is_corner_p0(index); });
+    transform_if(
+        indices(line_tree), std::back_inserter(corners_1),
+        [&](line_index_t index) -> point_t { return line_tree.line(index).p1; },
+        [&](line_index_t index) -> bool { return line_tree.is_corner_p1(index); });
+
+    std::ranges::sort(corners_1);
+    corners_1.erase(std::ranges::unique(corners_1).begin(), corners_1.end());
+
+    // remove cross-points
+    auto cross_points_1 = get_cross_points(line_tree);
+    auto corners_1_filtered = std::vector<point_t> {};
+    std::ranges::set_difference(corners_1, cross_points_1,
+                                std::back_inserter(corners_1_filtered));
+
+    // segment tree
+    auto corners_2 = std::vector<point_t> {};
+
+    transform_if(
+        segment_tree, std::back_inserter(corners_2),
+        [](segment_info_t info) { return info.line.p0; },
+        [](segment_info_t info) { return is_corner_point(info.p0_type); });
+    transform_if(
+        segment_tree, std::back_inserter(corners_2),
+        [](segment_info_t info) { return info.line.p1; },
+        [](segment_info_t info) { return is_corner_point(info.p1_type); });
+
+    std::ranges::sort(corners_2);
+    corners_2.erase(std::ranges::unique(corners_2).begin(), corners_2.end());
+
+    return corners_1_filtered == corners_2;
 }
 
 auto has_same_input_position(const SegmentTree& segment_tree, const LineTree& line_tree)
@@ -145,6 +192,7 @@ auto has_same_output_positions(const SegmentTree& segment_tree, const LineTree& 
                                  const LineTree& line_tree) -> bool {
     return has_same_segments(segment_tree, line_tree) &&
            has_same_cross_points(segment_tree, line_tree) &&
+           has_same_corner_points(segment_tree, line_tree) &&
            has_same_input_position(segment_tree, line_tree) &&
            has_same_output_positions(segment_tree, line_tree);
 }

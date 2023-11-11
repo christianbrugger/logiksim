@@ -269,9 +269,8 @@ static void BM_RenderScene_0(benchmark::State& state) {
     for ([[maybe_unused]] auto _ : state) {
         count += scene.total_wire_length_sum;
 
-        render_simulation(
-            context, scene.layout,
-            SimulationView {scene.simulation, scene.wire_delay_per_distance});
+        render_simulation(context, scene.spatial_simulation.layout(),
+                          SimulationView {scene.spatial_simulation});
         context.ctx.sync();
 
         benchmark::DoNotOptimize(context.ctx.bl_image);

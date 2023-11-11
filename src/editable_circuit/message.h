@@ -3,14 +3,14 @@
 
 #include "editable_circuit/message_forward.h"
 #include "format/struct.h"
-#include "vocabulary.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_id.h"
+#include "vocabulary/segment.h"
 #include "vocabulary/segment_info.h"
+#include "vocabulary/segment_part.h"
 
-#include <gsl/gsl>
+#include <fmt/core.h>
 
-#include <functional>
 #include <string>
 #include <variant>
 
