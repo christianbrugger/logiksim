@@ -16,7 +16,7 @@ class selection_handle_t;
 class element_handle_t;
 class SelectionRegistrar;
 class CacheProvider;
-class SplitPointCache;
+class SpatialPointIndex;
 struct PlacedElement;
 
 namespace editable_circuit {

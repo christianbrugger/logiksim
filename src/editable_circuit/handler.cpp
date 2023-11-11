@@ -3,8 +3,8 @@
 #include "algorithm/range.h"
 #include "algorithm/sort_pair.h"
 #include "algorithm/transform_to_vector.h"
+#include "container/spatial_point_index.h"
 #include "editable_circuit/cache.h"
-#include "editable_circuit/cache/split_point_cache.h"
 #include "editable_circuit/selection.h"
 #include "editable_circuit/selection_registrar.h"
 #include "exception.h"
@@ -786,8 +786,8 @@ auto add_logic_item_private(State state, const LogicItemDefinition& definition,
                             point_t position, InsertionMode insertion_mode)
     -> logicitem_id_t {
     // insert into underlying
-    auto logicitem_id = state.layout.logic_items().add(
-        definition, point_t {0, 0}, display_state_t::temporary);
+    auto logicitem_id = state.layout.logic_items().add(definition, point_t {0, 0},
+                                                       display_state_t::temporary);
     state.sender.submit(info_message::LogicItemCreated {logicitem_id});
 
     // validates our position
@@ -2666,8 +2666,7 @@ auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& ca
 auto split_temporary_segments(Layout& layout, MessageSender& sender,
                               std::span<const point_t> split_points,
                               const Selection& selection) -> void {
-    const auto cache = SplitPointCache {split_points};
-    auto query_result = std::vector<point_t> {};
+    const auto cache = SpatialPointIndex {split_points};
 
     const auto segments = transform_to_vector(
         selection.selected_segments(), [&](Selection::segment_pair_t value) {
@@ -2688,7 +2687,7 @@ auto split_temporary_segments(Layout& layout, MessageSender& sender,
     for (const auto& segment : segments) {
         const auto full_line = get_line(layout, segment);
 
-        cache.query_intersects(full_line, query_result);
+        auto query_result = cache.query_intersects(full_line);
         std::ranges::sort(query_result, std::greater<point_t>());
         query_result.erase(std::ranges::unique(query_result).begin(), query_result.end());
 

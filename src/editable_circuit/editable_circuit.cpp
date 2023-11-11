@@ -1,7 +1,6 @@
 #include "editable_circuit.h"
 
 #include "editable_circuit/cache.h"
-#include "editable_circuit/cache/split_point_cache.h"
 #include "editable_circuit/handler.h"
 #include "exception.h"
 #include "format/std_type.h"

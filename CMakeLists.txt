@@ -74,12 +74,12 @@ set(LS_CORE_SOURCES
     src/container/graph/depth_first_search.cpp
     src/container/graph/visitor_concept.cpp
     src/container/circular_buffer.cpp
+    src/container/spatial_point_index.cpp
     src/container/static_vector.cpp
 
     src/editable_circuit/cache/collision_cache.cpp
     src/editable_circuit/cache/connection_cache.cpp
     src/editable_circuit/cache/spatial_cache.cpp
-    src/editable_circuit/cache/split_point_cache.cpp
     src/editable_circuit/cache.cpp
     src/editable_circuit/editable_circuit.cpp
     src/editable_circuit/handler.cpp
