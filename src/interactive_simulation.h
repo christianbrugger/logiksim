@@ -14,7 +14,12 @@ namespace logicsim {
 
 /**
  * @brief: Simulation that support mouse based interaction and can be run at
- *         a constant pace.
+ *         a defined pace.
+ *
+ * Class-invariants:
+ *     + realtime_reference_ <= timer_t::now()
+ *     + last_event_count_ <= simulation.processed_event_count()
+ *     + simulation_time_rate_ >= time_rate_t {0us}
  */
 class InteractiveSimulation {
     using timer_t = std::chrono::steady_clock;
@@ -41,12 +46,11 @@ class InteractiveSimulation {
     [[nodiscard]] auto time_rate() const -> time_rate_t;
     [[nodiscard]] auto time() const -> time_t;
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
+    [[nodiscard]] auto events_per_second() const -> double;
 
     auto run(simulation::realtime_timeout_t timeout = defaults::standard_timeout) -> void;
-    auto is_finished() const -> bool;
+    [[nodiscard]] auto is_finished() const -> bool;
     auto mouse_press(point_t position) -> void;
-
-    [[nodiscard]] auto events_per_second() const -> double;
 
    private:
     [[nodiscard]] auto expected_simulation_time(realtime_t now) const -> time_t;
@@ -56,8 +60,8 @@ class InteractiveSimulation {
     interactive_simulation::InteractionCache interaction_cache_;
 
     time_rate_t simulation_time_rate_;
-    time_t simulation_time_reference_;
     realtime_t realtime_reference_;
+    time_t simulation_time_reference_;
 
     Simulation::event_count_t last_event_count_;
     MultiEventCounter event_counter_ {std::chrono::seconds {2}};

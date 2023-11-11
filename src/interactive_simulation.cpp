@@ -23,10 +23,18 @@ InteractiveSimulation::InteractiveSimulation(SpatialSimulation&& spatial_simulat
       interaction_cache_ {spatial_simulation_.layout()},
 
       simulation_time_rate_ {simulation_time_rate},
-      simulation_time_reference_ {spatial_simulation_.simulation().time()},
       realtime_reference_ {timer_t::now()},
+      simulation_time_reference_ {spatial_simulation_.simulation().time()},
 
-      last_event_count_ {spatial_simulation_.simulation().processed_event_count()} {}
+      last_event_count_ {spatial_simulation_.simulation().processed_event_count()} {
+    if (simulation_time_rate < time_rate_t {0us}) [[unlikely]] {
+        throw std::runtime_error("time rate cannot be negative");
+    }
+
+    Ensures(realtime_reference_ <= timer_t::now());
+    Ensures(last_event_count_ <= simulation().processed_event_count());
+    Ensures(simulation_time_rate_ >= time_rate_t {0us});
+}
 
 InteractiveSimulation::InteractiveSimulation(Layout&& layout__,
                                              delay_t wire_delay_per_distance,
@@ -34,7 +42,11 @@ InteractiveSimulation::InteractiveSimulation(Layout&& layout__,
     : InteractiveSimulation {
           SpatialSimulation {std::move(layout__), wire_delay_per_distance},
           simulation_time_rate,
-      } {}
+      } {
+    Ensures(realtime_reference_ <= timer_t::now());
+    Ensures(last_event_count_ <= simulation().processed_event_count());
+    Ensures(simulation_time_rate_ >= time_rate_t {0us});
+}
 
 auto InteractiveSimulation::spatial_simulation() const -> const SpatialSimulation& {
     return spatial_simulation_;
@@ -53,6 +65,10 @@ auto InteractiveSimulation::simulation() const -> const Simulation& {
 }
 
 auto InteractiveSimulation::set_simulation_time_rate(time_rate_t time_rate) -> void {
+    Expects(realtime_reference_ <= timer_t::now());
+    Expects(last_event_count_ <= simulation().processed_event_count());
+    Expects(simulation_time_rate_ >= time_rate_t {0us});
+
     if (time_rate < time_rate_t {0us}) [[unlikely]] {
         throw std::runtime_error("time rate cannot be negative");
     }
@@ -60,8 +76,11 @@ auto InteractiveSimulation::set_simulation_time_rate(time_rate_t time_rate) -> v
     const auto realtime_now = timer_t::now();
     simulation_time_reference_ = expected_simulation_time(realtime_now);
     realtime_reference_ = realtime_now;
-
     simulation_time_rate_ = time_rate;
+
+    Ensures(realtime_reference_ <= timer_t::now());
+    Ensures(last_event_count_ <= simulation().processed_event_count());
+    Ensures(simulation_time_rate_ >= time_rate_t {0us});
 }
 
 auto InteractiveSimulation::time_rate() const -> time_rate_t {
@@ -77,6 +96,10 @@ auto InteractiveSimulation::wire_delay_per_distance() const -> delay_t {
 }
 
 auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void {
+    Expects(realtime_reference_ <= timer_t::now());
+    Expects(last_event_count_ <= simulation().processed_event_count());
+    Expects(simulation_time_rate_ >= time_rate_t {0us});
+
     const auto start_realtime = timer_t::now();
     const auto start_simulation_time = time();
 
@@ -103,6 +126,10 @@ auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void 
         realtime_reference_ = start_realtime;
         simulation_time_reference_ = start_simulation_time;
     }
+
+    Ensures(realtime_reference_ <= timer_t::now());
+    Ensures(last_event_count_ <= simulation().processed_event_count());
+    Ensures(simulation_time_rate_ >= time_rate_t {0us});
 }
 
 auto InteractiveSimulation::is_finished() const -> bool {
@@ -110,6 +137,10 @@ auto InteractiveSimulation::is_finished() const -> bool {
 }
 
 auto InteractiveSimulation::mouse_press(point_t position) -> void {
+    Expects(realtime_reference_ <= timer_t::now());
+    Expects(last_event_count_ <= simulation().processed_event_count());
+    Expects(simulation_time_rate_ >= time_rate_t {0us});
+
     const auto element_id = interaction_cache_.find(position);
 
     if (element_id) {
@@ -118,6 +149,10 @@ auto InteractiveSimulation::mouse_press(point_t position) -> void {
         const auto value = simulation().internal_state(state);
         spatial_simulation_.simulation().try_set_internal_state(state, !value);
     }
+
+    Ensures(realtime_reference_ <= timer_t::now());
+    Ensures(last_event_count_ <= simulation().processed_event_count());
+    Ensures(simulation_time_rate_ >= time_rate_t {0us});
 }
 
 auto InteractiveSimulation::events_per_second() const -> double {
@@ -125,12 +160,18 @@ auto InteractiveSimulation::events_per_second() const -> double {
 }
 
 auto InteractiveSimulation::expected_simulation_time(realtime_t now) const -> time_t {
+    Expects(realtime_reference_ <= now);
+    Expects(simulation_time_rate_ >= time_rate_t {0us});
+
     const auto realtime_delta = std::chrono::duration<double> {now - realtime_reference_};
     const auto time_delta_ns = realtime_delta / std::chrono::seconds {1} *
                                simulation_time_rate_.rate_per_second.count_ns();
 
     const auto time_delta = delay_t {round_to<delay_t::rep>(time_delta_ns) * 1ns};
-    return time_t {simulation_time_reference_ + time_delta};
+    const auto expected_time = time_t {simulation_time_reference_ + time_delta};
+
+    Ensures(expected_time >= simulation_time_reference_);
+    return expected_time;
 }
 
 }  // namespace logicsim
