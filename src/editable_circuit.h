@@ -11,6 +11,7 @@
 #include "vocabulary/line_insertion_type.h"
 
 #include <optional>
+#include <span>
 
 namespace logicsim {
 
@@ -25,8 +26,7 @@ struct State;
 
 class EditableCircuit {
    public:
-    // TODO add default constructor
-    // [[nodiscard]] explicit EditableCircuit() = default;
+    [[nodiscard]] explicit EditableCircuit();
     [[nodiscard]] explicit EditableCircuit(Layout&& layout);
 
     [[nodiscard]] auto format() const -> std::string;
@@ -42,15 +42,14 @@ class EditableCircuit {
 
     // TODO remove duplicate methods, always require handle ?
     auto add_logic_item(LogicItemDefinition definition, point_t position,
-                        InsertionMode insertion_mode, selection_id_t selection_id)
-        -> void;
-
+                        InsertionMode insertion_mode,
+                        selection_id_t selection_id = null_selection_id) -> void;
     auto add_line_segment(line_t line, InsertionMode insertion_mode,
-                          selection_id_t selection_id) -> void;
+                          selection_id_t selection_id = null_selection_id) -> void;
 
     auto add_line_segments(point_t p0, point_t p1, LineInsertionType segment_type,
-                           InsertionMode insertion_mode, selection_id_t selection_id)
-        -> void;
+                           InsertionMode insertion_mode,
+                           selection_id_t selection_id = null_selection_id) -> void;
 
     // changing
     auto change_insertion_mode(selection_id_t selection_id,
@@ -75,21 +74,28 @@ class EditableCircuit {
 
     // adds crosspoints, merges wire segments and returns splitpoints
     auto regularize_temporary_selection(
-        const Selection& selection,
+        selection_id_t selection_id,
         std::optional<std::vector<point_t>> true_cross_points = {})
         -> std::vector<point_t>;
+    // free method ?
     auto capture_inserted_cross_points(const Selection& selection) const
         -> std::vector<point_t>;
     // TODO find better name
-    auto split_before_insert(const Selection& selection) -> void;
+    auto split_before_insert(selection_id_t selection_id) -> void;
 
     // selections
+    [[nodiscard]] auto selection(selection_id_t selection_id) -> Selection&;
+    [[nodiscard]] auto selection(selection_id_t selection_id) const -> const Selection&;
     [[nodiscard]] auto create_selection() -> selection_id_t;
     [[nodiscard]] auto destroy_selection(selection_id_t selection_id);
 
-    // TODO don't give read or write access to builder
-    [[nodiscard]] auto selection_builder() const noexcept -> const SelectionBuilder&;
-    [[nodiscard]] auto selection_builder() noexcept -> SelectionBuilder&;
+    // visible selection
+    [[nodiscard]] auto initial_visible_selection_id() const -> selection_id_t;
+    [[nodiscard]] auto visible_selection_id() const -> selection_id_t;
+    auto clear_visible_selection() -> void;
+    auto add_visible_selection_rect(SelectionFunction function, rect_fine_t rect) -> void;
+    auto update_last_visible_selection_rect(rect_fine_t rect) -> void;
+    auto update_visible_selection() -> void;
 
     // TODO don't give read access to cache
     [[nodiscard]] auto caches() const -> const LayoutIndex&;
@@ -99,13 +105,14 @@ class EditableCircuit {
     auto get_sender() -> editable_circuit::MessageSender&;
     auto get_state() -> editable_circuit::State;
 
-    Layout layout_ {};
-
+    Layout layout_;
     LayoutIndex layout_index_;
-    editable_circuit::SelectionStore selection_store_ {};
-
-    SelectionBuilder selection_builder_;
     editable_circuit::MessageSender sender_;
+    editable_circuit::SelectionStore selection_store_;
+    SelectionBuilder selection_builder_;
+
+    selection_id_t initial_visible_selection_id_;
+    selection_id_t visible_selection_id_;
 };
 
 auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)

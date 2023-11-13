@@ -149,13 +149,15 @@ auto add_wire_segment(State state, ordered_line_t line, InsertionMode insertion_
 // Handle Methods
 //
 
-auto change_insertion_mode(selection_old_handle_t handle, State state,
+// TODO needs to be tracked selection
+auto change_insertion_mode(Selection& selection, State state,
                            InsertionMode new_insertion_mode) -> void;
 
 auto new_positions_representable(const Selection& selection, const Layout& Layout,
                                  int delta_x, int delta_y) -> bool;
 
-auto move_or_delete_elements(selection_old_handle_t handle, Layout& Layout,
+// TODO needs to be tracked selection
+auto move_or_delete_elements(Selection &selection, Layout& Layout,
                              MessageSender& sender, int delta_x, int delta_y) -> void;
 
 // Assumptions:
@@ -163,7 +165,8 @@ auto move_or_delete_elements(selection_old_handle_t handle, Layout& Layout,
 auto move_unchecked(const Selection& selection, Layout& layout, int delta_x, int delta_y)
     -> void;
 
-auto delete_all(selection_old_handle_t handle, State state) -> void;
+// TODO needs to be tracked selection
+auto delete_all(Selection& selection, State state) -> void;
 
 //
 // Wire Mode Change Helpers

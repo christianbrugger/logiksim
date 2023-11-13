@@ -1,9 +1,9 @@
 #include "editable_circuit.h"
 
 #include "component/editable_circuit/handler.h"
-#include "layout_message.h"
 #include "format/std_type.h"
 #include "geometry/point.h"
+#include "layout_message.h"
 #include "random/wire.h"
 
 #include <exception>
@@ -14,58 +14,63 @@ namespace logicsim {
 // Editable Circuit
 //
 
+EditableCircuit::EditableCircuit() : EditableCircuit {Layout {}} {}
+
 EditableCircuit::EditableCircuit(Layout&& layout)
     : layout_ {std::move(layout)},
-      layout_index_ {layout_.value()},
-      selection_builder_ {layout_.value(), layout_index_},
-      sender_ {[this](const auto& message) { this->submit(message); }} {}
+      layout_index_ {layout_},
+      sender_ {[this](const auto& message) { this->submit(message); }},
+
+      selection_store_ {},
+      selection_builder_ {},
+
+      initial_visible_selection_id_ {selection_store_.create()},
+      visible_selection_id_ {selection_store_.create()} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", layout_);
 }
 
 auto EditableCircuit::layout() const -> const Layout& {
-    return layout_.value();
+    return layout_;
 }
 
 auto EditableCircuit::extract_layout() -> Layout {
-    auto temp = Layout {std::move(layout_.value())};
-
-    // we don't reset the registrar, as allocations might still be out there
-    layout_ = std::nullopt;
-    layout_index_ = LayoutIndex {};
-    selection_builder_ = SelectionBuilder {Layout {}, layout_index_};
-
+    auto temp = Layout {std::move(layout_)};
+    *this = EditableCircuit {};
     return temp;
 }
 
-auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
-    -> display_state_t {
-    switch (insertion_mode) {
-        using enum InsertionMode;
-
-        case insert_or_discard:
-            return display_state_t::normal;
-
-        case collisions:
-            if (is_colliding) {
-                return display_state_t::colliding;
-            } else {
-                return display_state_t::valid;
-            }
-
-        case temporary:
-            return display_state_t::temporary;
-    };
-    std::terminate();
-}
+// auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
+//     -> display_state_t {
+//     switch (insertion_mode) {
+//         using enum InsertionMode;
+//
+//         case insert_or_discard:
+//             return display_state_t::normal;
+//
+//         case collisions:
+//             if (is_colliding) {
+//                 return display_state_t::colliding;
+//             } else {
+//                 return display_state_t::valid;
+//             }
+//
+//         case temporary:
+//             return display_state_t::temporary;
+//     };
+//     std::terminate();
+// }
 
 auto EditableCircuit::validate() -> void {
-    const auto& layout = layout_.value();
+    const auto& layout = layout_;
 
     layout_index_.validate(layout);
-    registrar_.validate(layout);
     selection_builder_.validate(layout);
+
+    for (const auto& item : selection_store_) {
+        item.second.validate(layout);
+    }
 }
 
 auto EditableCircuit::add_example() -> void {
@@ -84,94 +89,63 @@ auto EditableCircuit::add_example() -> void {
 }
 
 auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
-                                     InsertionMode insertion_mode)
-    -> selection_old_handle_t {
-    const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
-                                                               position, insertion_mode);
-
-    auto handle = registrar_.get_handle();
-    if (logicitem_id) {
-        handle.value().add(logicitem_id);
-    }
-    return handle;
-}
-
-auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
                                      InsertionMode insertion_mode,
-                                     const selection_old_handle_t& handle) -> void {
+                                     selection_id_t selection_id) -> void {
     const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
                                                                position, insertion_mode);
 
-    if (logicitem_id) {
-        handle.value().add(logicitem_id);
+    if (logicitem_id && selection_id) {
+        selection(selection_id).add(logicitem_id);
     }
-}
-
-auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
-    -> selection_old_handle_t {
-    auto handle = registrar_.get_handle();
-
-    add_wire_segment(get_state(), handle.get(), line, insertion_mode);
-
-    return handle;
 }
 
 auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode,
-                                       const selection_old_handle_t& handle) -> void {
-    add_wire_segment(get_state(), handle.get(), line, insertion_mode);
-}
-
-auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
-                                        LineInsertionType segment_type,
-                                        InsertionMode insertion_mode)
-    -> selection_old_handle_t {
-    auto handle = registrar_.get_handle();
-
-    editable_circuit::add_wire(get_state(), p0, p1, segment_type, insertion_mode,
-                               handle.get());
-
-    return handle;
+                                       selection_id_t selection_id) -> void {
+    auto* selection_ptr = selection_id ? &selection(selection_id) : nullptr;
+    add_wire_segment(get_state(), selection_ptr, line, insertion_mode);
 }
 
 auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
                                         LineInsertionType segment_type,
                                         InsertionMode insertion_mode,
-                                        const selection_old_handle_t& handle) -> void {
+                                        selection_id_t selection_id) -> void {
+    auto* selection_ptr = selection_id ? &selection(selection_id) : nullptr;
     editable_circuit::add_wire(get_state(), p0, p1, segment_type, insertion_mode,
-                               handle.get());
+                               selection_ptr);
 }
 
 namespace {}  // namespace
 
-auto EditableCircuit::new_positions_representable(const Selection& selection, int delta_x,
-                                                  int delta_y) const -> bool {
-    return editable_circuit::new_positions_representable(selection, layout_.value(),
+auto EditableCircuit::new_positions_representable(selection_id_t selection_id,
+                                                  int delta_x, int delta_y) const
+    -> bool {
+    return editable_circuit::new_positions_representable(selection(selection_id), layout_,
                                                          delta_x, delta_y);
 }
 
-auto EditableCircuit::move_or_delete(selection_old_handle_t handle, int delta_x,
+auto EditableCircuit::move_or_delete(selection_id_t selection_id, int delta_x,
                                      int delta_y) -> void {
-    editable_circuit::move_or_delete_elements(std::move(handle), layout_.value(),
+    editable_circuit::move_or_delete_elements(selection(selection_id), layout_,
                                               get_sender(), delta_x, delta_y);
 }
 
-auto EditableCircuit::change_insertion_mode(selection_old_handle_t handle,
+auto EditableCircuit::change_insertion_mode(selection_id_t selection_id,
                                             InsertionMode new_insertion_mode) -> void {
-    editable_circuit::change_insertion_mode(std::move(handle), get_state(),
+    editable_circuit::change_insertion_mode(selection(selection_id), get_state(),
                                             new_insertion_mode);
 }
 
-auto EditableCircuit::move_unchecked(const Selection& selection, int delta_x, int delta_y)
-    -> void {
-    editable_circuit::move_unchecked(selection, layout_.value(), delta_x, delta_y);
+auto EditableCircuit::move_unchecked(selection_id_t selection_id, int delta_x,
+                                     int delta_y) -> void {
+    editable_circuit::move_unchecked(selection(selection_id), layout_, delta_x, delta_y);
 }
 
-auto EditableCircuit::delete_all(selection_old_handle_t handle) -> void {
-    editable_circuit::delete_all(std::move(handle), get_state());
+auto EditableCircuit::delete_all(selection_id_t selection_id) -> void {
+    editable_circuit::delete_all(selection(selection_id), get_state());
 }
 
 auto EditableCircuit::toggle_inverter(point_t point) -> void {
-    editable_circuit::toggle_inverter(layout_.value(), layout_index_, point);
+    editable_circuit::toggle_inverter(layout_, layout_index_, point);
 }
 
 auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
@@ -180,45 +154,69 @@ auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
 
 auto EditableCircuit::set_attributes(logicitem_id_t logicitem_id,
                                      attributes_clock_generator_t attrs) -> void {
-    layout_->logic_items().set_attributes(logicitem_id, std::move(attrs));
+    layout_.logic_items().set_attributes(logicitem_id, std::move(attrs));
 }
 
 auto EditableCircuit::regularize_temporary_selection(
-    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
+    selection_id_t selection_id, std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t> {
-    return editable_circuit::regularize_temporary_selection(layout_.value(), get_sender(),
-                                                            selection, true_cross_points);
+    return editable_circuit::regularize_temporary_selection(
+        layout_, get_sender(), selection(selection_id), true_cross_points);
 }
 
 auto EditableCircuit::capture_inserted_cross_points(const Selection& selection) const
     -> std::vector<point_t> {
-    return editable_circuit::capture_inserted_cross_points(layout_.value(),
-                                                           layout_index_, selection);
+    return editable_circuit::capture_inserted_cross_points(layout_, layout_index_,
+                                                           selection);
 }
 
-auto EditableCircuit::split_before_insert(const Selection& selection) -> void {
+auto EditableCircuit::split_before_insert(selection_id_t selection_id) -> void {
     const auto split_points = editable_circuit::capture_new_splitpoints(
-        layout_.value(), layout_index_, selection);
+        layout_, layout_index_, selection(selection_id));
 
-    editable_circuit::split_temporary_segments(layout_.value(), get_sender(),
-                                               std::move(split_points), selection);
+    editable_circuit::split_temporary_segments(
+        layout_, get_sender(), std::move(split_points), selection(selection_id));
 }
 
-auto EditableCircuit::get_handle() const -> selection_old_handle_t {
-    return registrar_.get_handle();
+auto EditableCircuit::selection(selection_id_t selection_id) -> Selection& {
+    return selection_store_.at(selection_id);
 }
 
-auto EditableCircuit::get_handle(const Selection& selection) const
-    -> selection_old_handle_t {
-    return registrar_.get_handle(selection);
+auto EditableCircuit::selection(selection_id_t selection_id) const -> const Selection& {
+    return selection_store_.at(selection_id);
 }
 
-auto EditableCircuit::selection_builder() const noexcept -> const SelectionBuilder& {
-    return selection_builder_;
+auto EditableCircuit::create_selection() -> selection_id_t {
+    return selection_store_.create();
 }
 
-auto EditableCircuit::selection_builder() noexcept -> SelectionBuilder& {
-    return selection_builder_;
+auto EditableCircuit::destroy_selection(selection_id_t selection_id) {
+    selection_store_.destroy(selection_id);
+}
+
+auto EditableCircuit::initial_visible_selection_id() const -> selection_id_t {
+    return initial_visible_selection_id_;
+}
+
+auto EditableCircuit::visible_selection_id() const -> selection_id_t {
+    return visible_selection_id_;
+}
+
+auto EditableCircuit::clear_visible_selection() -> void {
+    selection_builder_.clear();
+}
+
+auto EditableCircuit::add_visible_selection_rect(SelectionFunction function,
+                                                 rect_fine_t rect) -> void {
+    selection_builder_.add(function, rect);
+}
+
+auto EditableCircuit::update_last_visible_selection_rect(rect_fine_t rect) -> void {
+    selection_builder_.update_last(rect);
+}
+
+auto EditableCircuit::update_visible_selection() -> void {
+    // TODO
 }
 
 auto EditableCircuit::caches() const -> const LayoutIndex& {
@@ -227,8 +225,11 @@ auto EditableCircuit::caches() const -> const LayoutIndex& {
 
 auto EditableCircuit::submit(const editable_circuit::InfoMessage& message) -> void {
     layout_index_.submit(message);
-    registrar_.submit(message);
     selection_builder_.submit(message);
+
+    for (auto& item : selection_store_) {
+        item.second.submit(message);
+    }
 }
 
 auto EditableCircuit::get_sender() -> editable_circuit::MessageSender& {
@@ -236,7 +237,7 @@ auto EditableCircuit::get_sender() -> editable_circuit::MessageSender& {
 }
 
 auto EditableCircuit::get_state() -> editable_circuit::State {
-    return editable_circuit::State {layout_.value(), get_sender(), layout_index_};
+    return editable_circuit::State {layout_, get_sender(), layout_index_};
 }
 
 auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)

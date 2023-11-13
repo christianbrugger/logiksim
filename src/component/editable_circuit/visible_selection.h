@@ -4,6 +4,7 @@
 #include "layout_message.h"
 #include "selection.h"
 #include "format/enum.h"
+#include "format/struct.h"
 #include "vocabulary/rect_fine.h"
 
 #include <gsl/gsl>
@@ -15,7 +16,7 @@ class SelectionIndex;
 class LayoutIndex;
 
 enum class SelectionFunction {
-    toggle,
+//    toggle,
     add,
     substract,
 };
@@ -32,20 +33,20 @@ struct operation_t {
 
 }  // namespace selection_builder
 
-// TODO rename to Selection
+// TODO rename to VisibleSelection
 class SelectionBuilder {
    public:
     using operation_t = selection_builder::operation_t;
 
    public:
-    [[nodiscard]] explicit SelectionBuilder(const Layout &layout,
-                                            const LayoutIndex &cache_provider);
-
     [[nodiscard]] auto empty() const noexcept -> bool;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    [[nodiscard]] auto format() const -> std ::string;
+    [[nodiscard]] auto operator==(const SelectionBuilder &) const -> bool = default;
 
     auto clear() -> void;
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
-    // TODO remove
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
     auto set_selection(Selection selection) -> void;
@@ -63,13 +64,10 @@ class SelectionBuilder {
     auto calculate_selection() const -> Selection;
     auto clear_cache() const -> void;
 
-    gsl::not_null<const Layout *> layout_;
-    gsl::not_null<const LayoutIndex *> layout_index_;
-
-    Selection initial_selection_ {};
     std::vector<operation_t> operations_ {};
-    mutable std::optional<Selection> cached_selection_ {};
 };
+
+static_assert(std::regular<SelectionBuilder>);
 
 }  // namespace logicsim
 

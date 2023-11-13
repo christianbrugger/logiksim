@@ -73,7 +73,7 @@ auto SelectionStore::create() -> selection_id_t {
     return selection_id;
 }
 
-auto SelectionStore::remove(selection_id_t selection_id) -> void {
+auto SelectionStore::destroy(selection_id_t selection_id) -> void {
     if (const auto it = selections_.find(selection_id); it != selections_.end()) {
         selections_.erase(it);
     }

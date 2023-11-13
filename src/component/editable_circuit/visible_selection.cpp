@@ -1,6 +1,8 @@
 #include "component/editable_circuit/visible_selection.h"
 
+#include "allocated_size/std_vector.h"
 #include "component/editable_circuit/layout_index.h"
+#include "format/container.h"
 #include "layout.h"
 #include "layout_message.h"
 #include "layout_message_generation.h"
@@ -16,8 +18,8 @@ auto format(SelectionFunction selection_function) -> std::string {
     switch (selection_function) {
         using enum SelectionFunction;
 
-        case toggle:
-            return "toggle";
+        //case toggle:
+        //    return "toggle";
         case add:
             return "add";
         case substract:
@@ -29,10 +31,6 @@ auto format(SelectionFunction selection_function) -> std::string {
 //
 // Selection Builder
 //
-
-SelectionBuilder::SelectionBuilder(const Layout& layout,
-                                   const LayoutIndex& cache_provider)
-    : layout_ {&layout}, layout_index_ {&cache_provider} {}
 
 auto SelectionBuilder::submit(const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
@@ -57,6 +55,14 @@ auto SelectionBuilder::submit(const editable_circuit::InfoMessage& message) -> v
 
 auto SelectionBuilder::empty() const noexcept -> bool {
     return initial_selection_.empty() && operations_.empty();
+}
+
+auto SelectionBuilder::allocated_size() const -> std::size_t {
+    return get_allocated_size(operations_);
+}
+
+auto SelectionBuilder::format() const -> std::string {
+    return fmt::format("{}", operations_);
 }
 
 auto SelectionBuilder::clear() -> void {

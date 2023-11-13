@@ -2333,28 +2333,25 @@ auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void {
 // Handle Methods
 //
 
-auto change_insertion_mode(selection_old_handle_t handle, State state,
+auto change_insertion_mode(Selection &selection, State state,
                            InsertionMode new_insertion_mode) -> void {
-    if (!handle) {
-        return;
-    }
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print("\n\n========= change_insertion_mode ==========\n", handle);
+        print("\n\n========= change_insertion_mode ==========\n", selection);
     }
 
-    while (handle->selected_logic_items().size() > 0) {
-        auto logicitem_id = handle->selected_logic_items()[0];
-        handle->remove_logicitem(logicitem_id);
+    while (selection.selected_logic_items().size() > 0) {
+        auto logicitem_id = selection.selected_logic_items()[0];
+        selection.remove_logicitem(logicitem_id);
 
         change_logic_item_insertion_mode(state, logicitem_id, new_insertion_mode);
     }
 
-    while (handle->selected_segments().size() > 0) {
+    while (selection.selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
-            .segment = handle->selected_segments()[0].first,
-            .part = handle->selected_segments()[0].second.front(),
+            .segment = selection.selected_segments()[0].first,
+            .part = selection.selected_segments()[0].second.front(),
         };
-        handle->remove_segment(segment_part);
+        selection.remove_segment(segment_part);
 
         change_wire_insertion_mode(state, segment_part, new_insertion_mode);
     }
@@ -2392,28 +2389,25 @@ auto new_positions_representable(const Selection& selection, const Layout& layou
            new_wire_positions_representable(selection, layout, delta_x, delta_y);
 }
 
-auto move_or_delete_elements(selection_old_handle_t handle, Layout& layout,
+auto move_or_delete_elements(Selection &selection, Layout& layout,
                              MessageSender& sender, int delta_x, int delta_y) -> void {
-    if (!handle) {
-        return;
-    }
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print("\n\n========= move_or_delete_elements ==========\n", handle);
+        print("\n\n========= move_or_delete_elements ==========\n", selection);
     }
 
-    while (handle->selected_logic_items().size() > 0) {
-        auto logicitem_id = handle->selected_logic_items()[0];
-        handle->remove_logicitem(logicitem_id);
+    while (selection.selected_logic_items().size() > 0) {
+        auto logicitem_id = selection.selected_logic_items()[0];
+        selection.remove_logicitem(logicitem_id);
 
         move_or_delete_logic_item(layout, sender, logicitem_id, delta_x, delta_y);
     }
 
-    while (handle->selected_segments().size() > 0) {
+    while (selection.selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
-            .segment = handle->selected_segments()[0].first,
-            .part = handle->selected_segments()[0].second.front(),
+            .segment = selection.selected_segments()[0].first,
+            .part = selection.selected_segments()[0].second.front(),
         };
-        handle->remove_segment(segment_part);
+        selection.remove_segment(segment_part);
 
         move_or_delete_wire(layout, sender, segment_part, delta_x, delta_y);
     }
@@ -2446,28 +2440,25 @@ auto move_unchecked(const Selection& selection, Layout& layout, int delta_x, int
     }
 }
 
-auto delete_all(selection_old_handle_t handle, State state) -> void {
-    if (!handle) {
-        return;
-    }
+auto delete_all(Selection& selection, State state) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
-        print("\n\n========= delete_all ==========\n", handle);
+        print("\n\n========= delete_all ==========\n", selection);
     }
 
-    while (handle->selected_logic_items().size() > 0) {
-        auto logicitem_id = handle->selected_logic_items()[0];
-        handle->remove_logicitem(logicitem_id);
+    while (selection.selected_logic_items().size() > 0) {
+        auto logicitem_id = selection.selected_logic_items()[0];
+        selection.remove_logicitem(logicitem_id);
 
         change_logic_item_insertion_mode(state, logicitem_id, InsertionMode::temporary);
         swap_and_delete_logic_item(state.layout, state.sender, logicitem_id);
     }
 
-    while (handle->selected_segments().size() > 0) {
+    while (selection.selected_segments().size() > 0) {
         auto segment_part = segment_part_t {
-            .segment = handle->selected_segments()[0].first,
-            .part = handle->selected_segments()[0].second.front(),
+            .segment = selection.selected_segments()[0].first,
+            .part = selection.selected_segments()[0].second.front(),
         };
-        handle->remove_segment(segment_part);
+        selection.remove_segment(segment_part);
 
         change_wire_insertion_mode(state, segment_part, InsertionMode::temporary);
         delete_wire_segment(state.layout, state.sender, segment_part);

@@ -24,7 +24,7 @@ class SelectionStore {
    public:
     using map_t = selection_store::map_t;
 
-    using value_type = Selection;
+    using value_type = map_t::value_type;
     using iterator = map_t::iterator;
     using const_iterator = map_t::const_iterator;
 
@@ -46,7 +46,7 @@ class SelectionStore {
     [[nodiscard]] auto at(selection_id_t selection_id) const -> const Selection&;
 
     [[nodiscard]] auto create() -> selection_id_t;
-    auto remove(selection_id_t selection_id) -> void;
+    auto destroy(selection_id_t selection_id) -> void;
 
    private:
     map_t selections_ {};
