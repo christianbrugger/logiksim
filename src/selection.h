@@ -54,6 +54,8 @@ class Selection {
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto format_info() const -> std::string;
 
+    [[nodiscard]] auto operator==(const Selection &) const -> bool = default;
+
     [[nodiscard]] auto empty() const noexcept -> bool;
     auto clear() -> void;
     [[nodiscard]] auto allocated_size() const -> std::size_t;

@@ -1,13 +1,13 @@
 #ifndef LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_VISIBLE_SELECTION_H
 #define LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_VISIBLE_SELECTION_H
 
-#include "layout_message.h"
-#include "selection.h"
 #include "format/enum.h"
 #include "format/struct.h"
+#include "layout_message.h"
+#include "selection.h"
 #include "vocabulary/rect_fine.h"
 
-#include <gsl/gsl>
+#include <optional>
 
 namespace logicsim {
 
@@ -16,7 +16,7 @@ class SelectionIndex;
 class LayoutIndex;
 
 enum class SelectionFunction {
-//    toggle,
+    //    toggle,
     add,
     substract,
 };
@@ -24,26 +24,29 @@ enum class SelectionFunction {
 template <>
 auto format(SelectionFunction selection_function) -> std::string;
 
-namespace selection_builder {
+namespace visible_selection {
 
 struct operation_t {
     SelectionFunction function;
     rect_fine_t rect;
+
+    [[nodiscard]] auto format() const -> std ::string;
+    [[nodiscard]] auto operator==(const operation_t &) const -> bool = default;
 };
 
-}  // namespace selection_builder
+}  // namespace visible_selection
 
 // TODO rename to VisibleSelection
-class SelectionBuilder {
+class VisibleSelection {
    public:
-    using operation_t = selection_builder::operation_t;
+    using operation_t = visible_selection::operation_t;
 
    public:
     [[nodiscard]] auto empty() const noexcept -> bool;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     [[nodiscard]] auto format() const -> std ::string;
-    [[nodiscard]] auto operator==(const SelectionBuilder &) const -> bool = default;
+    [[nodiscard]] auto operator==(const VisibleSelection &) const -> bool;
 
     auto clear() -> void;
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
@@ -51,23 +54,29 @@ class SelectionBuilder {
     auto pop_last() -> void;
     auto set_selection(Selection selection) -> void;
 
-    [[nodiscard]] auto selection() const -> const Selection &;
-
-    // TODO remove
-    [[nodiscard]] auto all_operations_applied() const -> bool;
-    auto apply_all_operations() -> void;
+    auto apply_all_operations(const Layout &layout, const LayoutIndex &layout_index)
+        -> void;
+    [[nodiscard]] auto selection(const Layout &layout,
+                                 const LayoutIndex &layout_index) const
+        -> const Selection &;
 
     auto submit(const editable_circuit::InfoMessage &message) -> void;
-    auto validate(const Layout &layout) const -> void;
+
+    // TODO remove
+    auto validate(const Layout &layout, const LayoutIndex &layout_index) const -> void;
 
    private:
-    auto calculate_selection() const -> Selection;
+    auto calculate_selection(const Layout &layout, const LayoutIndex &layout_index) const
+        -> Selection;
     auto clear_cache() const -> void;
 
+    Selection initial_selection_ {};
+
     std::vector<operation_t> operations_ {};
+    mutable std::optional<Selection> cached_selection_ {};
 };
 
-static_assert(std::regular<SelectionBuilder>);
+static_assert(std::regular<VisibleSelection>);
 
 }  // namespace logicsim
 

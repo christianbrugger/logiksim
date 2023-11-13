@@ -90,12 +90,12 @@ class EditableCircuit {
     [[nodiscard]] auto destroy_selection(selection_id_t selection_id);
 
     // visible selection
-    [[nodiscard]] auto initial_visible_selection_id() const -> selection_id_t;
-    [[nodiscard]] auto visible_selection_id() const -> selection_id_t;
+    auto set_visible_selection(Selection selection) -> void;
     auto clear_visible_selection() -> void;
     auto add_visible_selection_rect(SelectionFunction function, rect_fine_t rect) -> void;
     auto update_last_visible_selection_rect(rect_fine_t rect) -> void;
-    auto update_visible_selection() -> void;
+    auto apply_all_visible_selection_operations() -> void;
+    [[nodiscard]] auto visible_selection() const -> const Selection&;
 
     // TODO don't give read access to cache
     [[nodiscard]] auto caches() const -> const LayoutIndex&;
@@ -108,11 +108,9 @@ class EditableCircuit {
     Layout layout_;
     LayoutIndex layout_index_;
     editable_circuit::MessageSender sender_;
-    editable_circuit::SelectionStore selection_store_;
-    SelectionBuilder selection_builder_;
 
-    selection_id_t initial_visible_selection_id_;
-    selection_id_t visible_selection_id_;
+    editable_circuit::SelectionStore selection_store_;
+    VisibleSelection selection_builder_;
 };
 
 auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)

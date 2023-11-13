@@ -22,10 +22,7 @@ EditableCircuit::EditableCircuit(Layout&& layout)
       sender_ {[this](const auto& message) { this->submit(message); }},
 
       selection_store_ {},
-      selection_builder_ {},
-
-      initial_visible_selection_id_ {selection_store_.create()},
-      visible_selection_id_ {selection_store_.create()} {}
+      selection_builder_ {} {}
 
 auto EditableCircuit::format() const -> std::string {
     return fmt::format("EditableCircuit{{\n{}}}", layout_);
@@ -41,35 +38,12 @@ auto EditableCircuit::extract_layout() -> Layout {
     return temp;
 }
 
-// auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
-//     -> display_state_t {
-//     switch (insertion_mode) {
-//         using enum InsertionMode;
-//
-//         case insert_or_discard:
-//             return display_state_t::normal;
-//
-//         case collisions:
-//             if (is_colliding) {
-//                 return display_state_t::colliding;
-//             } else {
-//                 return display_state_t::valid;
-//             }
-//
-//         case temporary:
-//             return display_state_t::temporary;
-//     };
-//     std::terminate();
-// }
-
 auto EditableCircuit::validate() -> void {
-    const auto& layout = layout_;
-
-    layout_index_.validate(layout);
-    selection_builder_.validate(layout);
+    layout_index_.validate(layout_);
+    selection_builder_.validate(layout_, layout_index_);
 
     for (const auto& item : selection_store_) {
-        item.second.validate(layout);
+        item.second.validate(layout_);
     }
 }
 
@@ -194,12 +168,8 @@ auto EditableCircuit::destroy_selection(selection_id_t selection_id) {
     selection_store_.destroy(selection_id);
 }
 
-auto EditableCircuit::initial_visible_selection_id() const -> selection_id_t {
-    return initial_visible_selection_id_;
-}
-
-auto EditableCircuit::visible_selection_id() const -> selection_id_t {
-    return visible_selection_id_;
+auto EditableCircuit::set_visible_selection(Selection selection) -> void {
+    selection_builder_.set_selection(std::move(selection));
 }
 
 auto EditableCircuit::clear_visible_selection() -> void {
@@ -215,8 +185,12 @@ auto EditableCircuit::update_last_visible_selection_rect(rect_fine_t rect) -> vo
     selection_builder_.update_last(rect);
 }
 
-auto EditableCircuit::update_visible_selection() -> void {
-    // TODO
+auto EditableCircuit::apply_all_visible_selection_operations() -> void {
+    selection_builder_.apply_all_operations(layout_, layout_index_);
+}
+
+auto EditableCircuit::visible_selection() const -> const Selection& {
+    return selection_builder_.selection(layout_, layout_index_);
 }
 
 auto EditableCircuit::caches() const -> const LayoutIndex& {

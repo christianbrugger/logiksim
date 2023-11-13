@@ -107,7 +107,7 @@ class MouseLineInsertLogic {
 class MouseMoveSelectionLogic {
    public:
     struct Args {
-        SelectionBuilder& builder;
+        VisibleSelection& builder;
         EditableCircuit& editable_circuit;
         bool has_colliding {false};
         bool delete_on_cancel {false};
@@ -148,7 +148,7 @@ class MouseMoveSelectionLogic {
     [[nodiscard]] auto calculate_any_element_colliding() -> bool;
     auto delete_selection() -> void;
 
-    SelectionBuilder& builder_;
+    VisibleSelection& builder_;
     EditableCircuit& editable_circuit_;
     bool delete_on_cancel_;
 
@@ -163,7 +163,7 @@ class MouseMoveSelectionLogic {
 class MouseSingleSelectionLogic {
    public:
     struct Args {
-        SelectionBuilder& builder;
+        VisibleSelection& builder;
         EditableCircuit& editable_circuit;
     };
 
@@ -174,7 +174,7 @@ class MouseSingleSelectionLogic {
     auto mouse_release(point_fine_t point) -> void;
 
    private:
-    SelectionBuilder& builder_;
+    VisibleSelection& builder_;
     EditableCircuit& editable_circuit_;
 };
 
@@ -182,7 +182,7 @@ class MouseAreaSelectionLogic {
    public:
     struct Args {
         QWidget* parent;
-        SelectionBuilder& builder;
+        VisibleSelection& builder;
         const ViewConfig& view_config;
     };
 
@@ -201,7 +201,7 @@ class MouseAreaSelectionLogic {
    private:
     auto update_mouse_position(QPointF position) -> void;
 
-    SelectionBuilder& builder_;
+    VisibleSelection& builder_;
     const ViewConfig& view_config_;
     QRubberBand band_;
 
