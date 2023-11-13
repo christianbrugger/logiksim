@@ -74,6 +74,7 @@ auto RegistryStore::operator=(RegistryStore&& other) noexcept -> RegistryStore& 
 auto RegistryStore::swap(RegistryStore& other) noexcept -> void {
     using std::swap;
     swap(selections_, other.selections_);
+    // TODO update all references
 }
 
 auto RegistryStore::format() const -> std::string {
