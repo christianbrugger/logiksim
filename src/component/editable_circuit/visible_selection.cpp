@@ -177,10 +177,10 @@ auto add_segment_to_selection(segment_t segment, VisibleSelection::operation_t o
     std::terminate();
 }
 
-auto apply_function(Selection& selection, const SelectionIndex& spatial_cache,
+auto apply_function(Selection& selection, const SelectionIndex& selection_index,
                     const Layout& layout, VisibleSelection::operation_t operation)
     -> void {
-    const auto selected_elements = spatial_cache.query_selection(operation.rect);
+    const auto selected_elements = selection_index.query_selection(operation.rect);
 
     for (auto&& element : selected_elements) {
         if (element.is_logicitem()) {
@@ -199,7 +199,7 @@ auto VisibleSelection::calculate_selection(const Layout& layout,
     auto selection = Selection {initial_selection_};
 
     for (auto&& operation : operations_) {
-        apply_function(selection, layout_index.spatial_cache(), layout, operation);
+        apply_function(selection, layout_index.selection_index(), layout, operation);
 
         if (operation.function == SelectionFunction::add) {
             sanitize_selection(selection, layout, layout_index.collision_index(),

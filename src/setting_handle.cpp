@@ -2,14 +2,15 @@
 
 #include "algorithm/range.h"
 #include "algorithm/round.h"
-#include "editable_circuit/editable_circuit.h"
-#include "editable_circuit/selection.h"
+#include "editable_circuit.h"
 #include "exception.h"
 #include "geometry/layout_calculation.h"
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "logging.h"
 #include "resource.h"
+#include "selection.h"
 #include "validate_definition.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_id.h"
@@ -133,7 +134,7 @@ auto get_colliding_setting_handle(point_fine_t position, const Layout& layout,
 
 SettingWidgetRegistry::SettingWidgetRegistry(QWidget* parent,
                                              EditableCircuit& editable_circuit)
-    : parent_ {parent}, editable_circuit_ {editable_circuit} {
+    : parent_ {parent} {
     connect(&cleanup_timer_, &QTimer::timeout, this,
             &SettingWidgetRegistry::on_cleanup_timeout);
 
@@ -145,10 +146,13 @@ SettingWidgetRegistry::~SettingWidgetRegistry() {
     close_all();
 }
 
-auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle) -> void {
+auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle,
+                                                EditableCircuit& editable_circuit)
+    -> void {
     // activate existing
-    for (auto&& [widget, selection_handle] : map_) {
-        if (selection_handle->is_selected(setting_handle.logicitem_id)) {
+    for (auto&& [widget, selection_id] : map_) {
+        if (editable_circuit.selection(selection_id)
+                .is_selected(setting_handle.logicitem_id)) {
             widget->show();
             widget->activateWindow();
             return;
@@ -157,18 +161,19 @@ auto SettingWidgetRegistry::show_setting_dialog(setting_handle_t setting_handle)
     // create new
     auto* widget = new ClockGeneratorDialog {
         parent_, AttributeSetter {this},
-        editable_circuit_.layout().logic_items().attrs_clock_generator(
+        editable_circuit.layout().logic_items().attrs_clock_generator(
             setting_handle.logicitem_id)};
     widget->setWindowFlags(Qt::Dialog);
     widget->setAttribute(Qt::WA_DeleteOnClose);
 
     // add to map
     try {
-        const auto [it, inserted] = map_.emplace(widget, editable_circuit_.get_handle());
-        if (!inserted) {
-            throw_exception("could not insert widget into map");
-        }
-        it->second.value().add(setting_handle.logicitem_id);
+        // TODO EXCEPTION SAFETY  !!!
+        const auto selection_id = editable_circuit.create_selection();
+        const auto [it, inserted] = map_.emplace(widget, selection_id);
+        Expects(inserted);
+
+        editable_circuit.selection(selection_id).add(setting_handle.logicitem_id);
 
         connect(widget, &QWidget::destroyed, this,
                 &SettingWidgetRegistry::on_dialog_destroyed);
@@ -189,8 +194,11 @@ auto SettingWidgetRegistry::close_all() -> void {
 
 auto SettingWidgetRegistry::get_element_id(QWidget* dialog) const -> logicitem_id_t {
     if (const auto it = map_.find(dialog); it != map_.end()) {
-        const auto& [widget, selection_handle] = *it;
-        const auto& selected_items = selection_handle.value().selected_logic_items();
+        // const auto& [widget, selection_handle] = *it;
+
+        print("TODO get_element_id");
+        // const auto& selected_items = selection_handle.value().selected_logic_items();
+        const auto selected_items = std::vector {logicitem_id_t {23}};
 
         if (selected_items.size() > 1) {
             throw_exception("unexpected selected items size in SettingWidgetRegistry");
@@ -216,7 +224,8 @@ auto SettingWidgetRegistry::set_attributes(QWidget* widget,
         return;
     }
 
-    editable_circuit_.set_attributes(element_id, std::move(attrs));
+    // editable_circuit_.set_attributes(element_id, std::move(attrs));
+    print("TODO editable_circuit_.set_attributes({}, {})", element_id, attrs);
     if (parent_) {
         parent_->update();
     }
@@ -231,11 +240,14 @@ auto SettingWidgetRegistry::on_dialog_destroyed(QObject* object) -> void {
 }
 
 auto SettingWidgetRegistry::on_cleanup_timeout() -> void {
-    for (auto&& [widget, selection_handle] : map_) {
-        if (selection_handle && selection_handle->selected_logic_items().empty()) {
-            widget->deleteLater();
-        }
+    if (!map_.empty()) {
+        print("TODO on_cleanup_timeout");
     }
+    // for (auto&& [widget, selection_handle] : map_) {
+    //  if (selection_handle && selection_handle->selected_logic_items().empty()) {
+    //      widget->deleteLater();
+    //  }
+    //}
 }
 
 AttributeSetter::AttributeSetter(SettingWidgetRegistry* receiver)
@@ -463,11 +475,12 @@ auto MouseSettingHandleLogic::mouse_press(point_fine_t position) -> void {
     first_position_ = position;
 }
 
-auto MouseSettingHandleLogic::mouse_release(point_fine_t position) -> void {
+auto MouseSettingHandleLogic::mouse_release(point_fine_t position,
+                                            EditableCircuit& editable_circuit) -> void {
     if (first_position_ &&  //
         is_colliding(setting_handle_, first_position_.value()) &&
         is_colliding(setting_handle_, position)) {
-        widget_registry_.show_setting_dialog(setting_handle_);
+        widget_registry_.show_setting_dialog(setting_handle_, editable_circuit);
     }
 }
 }  // namespace logicsim

@@ -5,12 +5,12 @@
 #include "algorithm/round.h"
 #include "algorithm/sort_pair.h"
 #include "base64.h"
-#include "editable_circuit/cache.h"
-#include "editable_circuit/cache/spatial_cache.h"
+#include "component/editable_circuit/layout_index.h"
 #include "exception.h"
 #include "file.h"
 #include "geometry/orientation.h"
 #include "geometry/scene.h"
+#include "index/selection_index.h"
 #include "layout.h"
 #include "logging.h"
 #include "render_caches.h"
@@ -249,7 +249,7 @@ auto add_to_selection(Selection& selection, const Layout& layout,
 
 auto MouseMoveSelectionLogic::mouse_press(point_fine_t point, bool double_click) -> void {
     if (state_ == State::waiting_for_first_click) {
-        const auto items = editable_circuit_.caches().spatial_cache().query_selection(
+        const auto items = editable_circuit_.caches().selection_index().query_selection(
             rect_fine_t {point, point});
 
         if (items.empty()) {
@@ -454,7 +454,7 @@ auto MouseSingleSelectionLogic::mouse_press(point_fine_t point, bool double_clic
     // builder_.add(SelectionFunction::toggle, rect_fine_t {point, point});
     const auto& layout = editable_circuit_.layout();
 
-    const auto items = editable_circuit_.caches().spatial_cache().query_selection(
+    const auto items = editable_circuit_.caches().selection_index().query_selection(
         rect_fine_t {point, point});
 
     if (items.empty()) {
@@ -1416,7 +1416,7 @@ auto RendererWidget::set_new_mouse_logic(QMouseEvent* event) -> void {
                 return;
             }
 
-            else if (editable_circuit_->caches().spatial_cache().has_element(point)) {
+            else if (editable_circuit_->caches().selection_index().has_element(point)) {
                 if (event->modifiers() == Qt::NoModifier) {
                     mouse_logic_.emplace(MouseMoveSelectionLogic::Args {
                         .builder = selection_builder,

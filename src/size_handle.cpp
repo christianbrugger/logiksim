@@ -1,8 +1,7 @@
 #include "size_handle.h"
 
 #include "algorithm/round.h"
-#include "editable_circuit/editable_circuit.h"
-#include "editable_circuit/selection.h"
+#include "editable_circuit.h"
 #include "exception.h"
 #include "geometry/connection_count.h"
 #include "geometry/layout_calculation.h"
@@ -13,6 +12,7 @@
 #include "layout_info.h"
 #include "logic_item/layout_display_number.h"
 #include "safe_numeric.h"
+#include "selection.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/view_config.h"

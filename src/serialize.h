@@ -2,6 +2,7 @@
 #define LOGIKSIM_SERIALIZE_H
 
 #include "vocabulary.h"
+#include "vocabulary/selection_id.h"
 
 #include <gsl/gsl>
 
@@ -30,6 +31,12 @@ using binary_t = std::vector<uint8_t>;
 namespace serialize {
 struct SerializedLayout;
 
+struct AddParameters {
+    InsertionMode insertion_mode {InsertionMode::insert_or_discard};
+    selection_id_t selection_id {null_selection_id};
+    std::optional<point_t> load_position {};
+};
+
 class LoadLayoutResult {
    public:
     LoadLayoutResult(SerializedLayout&& layout);
@@ -41,8 +48,7 @@ class LoadLayoutResult {
     ~LoadLayoutResult();
 
    public:
-    auto add(EditableCircuit& editable_circuit, InsertionMode insertion_mode,
-             std::optional<point_t> load_position = {}) const -> selection_old_handle_t;
+    auto add(EditableCircuit& editable_circuit, AddParameters parameters) const -> void;
 
     auto apply(ViewConfig& view_config) const -> void;
 
@@ -51,6 +57,7 @@ class LoadLayoutResult {
    private:
     std::unique_ptr<SerializedLayout> data_;
 };
+
 }  // namespace serialize
 
 auto load_layout(const std::string& binary) -> std::optional<serialize::LoadLayoutResult>;

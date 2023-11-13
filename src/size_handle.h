@@ -1,7 +1,6 @@
 #ifndef LOGIKSIM_SIZE_HANDLE_H
 #define LOGIKSIM_SIZE_HANDLE_H
 
-#include "editable_circuit/selection_registrar.h"
 #include "vocabulary.h"
 #include "vocabulary/placed_element.h"
 

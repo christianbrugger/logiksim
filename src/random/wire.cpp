@@ -2,7 +2,7 @@
 
 #include "algorithm/range.h"
 #include "algorithm/uniform_int_distribution.h"
-#include "editable_circuit/handler.h"
+#include "component/editable_circuit/handler.h"
 #include "geometry/part.h"
 #include "random/bool.h"
 #include "random/insertion_mode.h"

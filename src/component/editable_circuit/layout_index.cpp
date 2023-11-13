@@ -11,14 +11,14 @@ namespace logicsim {
 //
 
 LayoutIndex::LayoutIndex(const Layout& layout) {
-    // TODO consider bulk insertion, especially for spatial_cache_
+    // TODO consider bulk insertion, especially for spatial_index_
     add_layout_to_cache(logicitems_inputs_, layout);
     add_layout_to_cache(logicitems_outputs_, layout);
     add_layout_to_cache(wire_inputs_, layout);
     add_layout_to_cache(wire_outputs_, layout);
 
-    add_layout_to_cache(collision_cache_, layout);
-    add_layout_to_cache(spatial_cache_, layout);
+    add_layout_to_cache(collision_index_, layout);
+    add_layout_to_cache(spatial_index_, layout);
 }
 
 auto LayoutIndex::format() const -> std::string {
@@ -27,7 +27,7 @@ auto LayoutIndex::format() const -> std::string {
         "{}\n{}\n{}\n{}\n{}\n{}\n"
         "}}\n",
         logicitems_inputs_, logicitems_outputs_, wire_inputs_, wire_outputs_,
-        collision_cache_, spatial_cache_);
+        collision_index_, spatial_index_);
 }
 
 auto LayoutIndex::allocated_size() const -> std::size_t {
@@ -36,8 +36,8 @@ auto LayoutIndex::allocated_size() const -> std::size_t {
            wire_inputs_.allocated_size() +         //
            wire_outputs_.allocated_size() +        //
 
-           collision_cache_.allocated_size() +  //
-           spatial_cache_.allocated_size();
+           collision_index_.allocated_size() +  //
+           spatial_index_.allocated_size();
 }
 
 auto LayoutIndex::validate(const Layout& layout) -> void {
@@ -46,8 +46,8 @@ auto LayoutIndex::validate(const Layout& layout) -> void {
     wire_inputs_.validate(layout);
     wire_outputs_.validate(layout);
 
-    spatial_cache_.validate(layout);
-    collision_cache_.validate(layout);
+    spatial_index_.validate(layout);
+    collision_index_.validate(layout);
 }
 
 auto LayoutIndex::submit(const editable_circuit::InfoMessage& message) -> void {
@@ -56,32 +56,32 @@ auto LayoutIndex::submit(const editable_circuit::InfoMessage& message) -> void {
     wire_inputs_.submit(message);
     wire_outputs_.submit(message);
 
-    collision_cache_.submit(message);
-    spatial_cache_.submit(message);
+    collision_index_.submit(message);
+    spatial_index_.submit(message);
 }
 
-auto LayoutIndex::logicitem_input_cache() const -> const LogicItemInputIndex& {
+auto LayoutIndex::logicitem_input_index() const -> const LogicItemInputIndex& {
     return logicitems_inputs_;
 }
 
-auto LayoutIndex::logicitem_output_cache() const -> const LogicItemOutputIndex& {
+auto LayoutIndex::logicitem_output_index() const -> const LogicItemOutputIndex& {
     return logicitems_outputs_;
 }
 
-auto LayoutIndex::wire_input_cache() const -> const WireInputIndex& {
+auto LayoutIndex::wire_input_index() const -> const WireInputIndex& {
     return wire_inputs_;
 }
 
-auto LayoutIndex::wire_output_cache() const -> const WireOutputIndex& {
+auto LayoutIndex::wire_output_index() const -> const WireOutputIndex& {
     return wire_outputs_;
 }
 
 auto LayoutIndex::collision_index() const -> const CollisionIndex& {
-    return collision_cache_;
+    return collision_index_;
 }
 
-auto LayoutIndex::spatial_cache() const -> const SelectionIndex& {
-    return spatial_cache_;
+auto LayoutIndex::selection_index() const -> const SelectionIndex& {
+    return spatial_index_;
 }
 
 }  // namespace logicsim

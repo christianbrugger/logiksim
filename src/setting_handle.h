@@ -1,10 +1,10 @@
 #ifndef LOGIKSIM_SETTING_HANDLE
 #define LOGIKSIM_SETTING_HANDLE
 
-#include "editable_circuit/selection_registrar.h"
 #include "resource.h"
 #include "vocabulary.h"
 #include "vocabulary/logicitem_id.h"
+#include "vocabulary/selection_id.h"
 
 #include <ankerl/unordered_dense.h>
 #include <blend2d.h>
@@ -72,7 +72,8 @@ class SettingWidgetRegistry : public QObject {
     auto operator=(SettingWidgetRegistry&&) -> SettingWidgetRegistry& = delete;
     auto operator=(const SettingWidgetRegistry&) -> SettingWidgetRegistry& = delete;
 
-    auto show_setting_dialog(setting_handle_t setting_handle) -> void;
+    auto show_setting_dialog(setting_handle_t setting_handle,
+                             EditableCircuit& editable_circuit) -> void;
     auto close_all() -> void;
     auto set_attributes(QWidget* widget, attributes_clock_generator_t attrs) -> void;
 
@@ -83,10 +84,9 @@ class SettingWidgetRegistry : public QObject {
 
    private:
     QWidget* parent_;
-    EditableCircuit& editable_circuit_;
     QTimer cleanup_timer_;
 
-    ankerl::unordered_dense::map<QWidget*, selection_old_handle_t> map_;
+    ankerl::unordered_dense::map<QWidget*, selection_id_t> map_;
 };
 
 class AttributeSetter {
@@ -159,7 +159,7 @@ class MouseSettingHandleLogic {
     MouseSettingHandleLogic(Args args) noexcept;
 
     auto mouse_press(point_fine_t position) -> void;
-    auto mouse_release(point_fine_t position) -> void;
+    auto mouse_release(point_fine_t position, EditableCircuit& editable_circuit) -> void;
 
    private:
     SettingWidgetRegistry& widget_registry_;

@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_RENDER_WIDGET_H
 #define LOGIKSIM_RENDER_WIDGET_H
 
-#include "editable_circuit/editable_circuit.h"
+#include "editable_circuit.h"
 #include "event_counter.h"
 #include "interactive_simulation.h"
 #include "render_circuit.h"
@@ -346,7 +346,7 @@ class RendererWidget : public RendererWidgetBase {
     std::optional<MouseLogic> mouse_logic_ {};
 
     // setting widgets
-    std::optional<SettingWidgetRegistry> setting_widget_registry_ {};
+    SettingWidgetRegistry setting_widget_registry_ {};
 
     // states
     bool do_benchmark_ {false};

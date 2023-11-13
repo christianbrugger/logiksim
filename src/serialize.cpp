@@ -14,18 +14,18 @@
 
 #include "serialize.h"
 
-#include "editable_circuit/editable_circuit.h"
-#include "editable_circuit/selection.h"
+#include "editable_circuit.h"
 #include "file.h"
 #include "geometry/line.h"
 #include "geometry/point.h"
 #include "gzip.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "selection.h"
 #include "serialize_detail.h"
 #include "validate_definition.h"
-#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/layout_calculation_data.h"
+#include "vocabulary/logicitem_definition.h"
 #include "vocabulary/placed_element.h"
 #include "vocabulary/simulation_setting.h"
 #include "vocabulary/view_config.h"
@@ -310,32 +310,30 @@ auto LoadLayoutResult::operator=(LoadLayoutResult&&) -> LoadLayoutResult& = defa
 LoadLayoutResult::~LoadLayoutResult() = default;
 
 auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
-                           InsertionMode insertion_mode,
-                           std::optional<point_t> load_position) const
-    -> selection_old_handle_t {
+                           AddParameters parameters) const -> void {
     if (!data_) {
         throw std::runtime_error("no layout data");
     }
 
-    auto handle = editable_circuit.get_handle();
-    const auto delta = calculate_move_delta(data_->save_position, load_position);
+    const auto delta =
+        calculate_move_delta(data_->save_position, parameters.load_position);
 
     // logic items
     for (const auto& item : data_->logic_items) {
         if (const auto data = to_placed_element(item, delta)) {
             editable_circuit.add_logic_item(data->definition, data->position,
-                                            insertion_mode, handle);
+                                            parameters.insertion_mode,
+                                            parameters.selection_id);
         }
     }
 
     // wire segments
     for (const auto& entry : data_->wire_segments) {
         if (const auto line = to_line(entry, delta)) {
-            editable_circuit.add_line_segment(line.value(), insertion_mode, handle);
+            editable_circuit.add_line_segment(line.value(), parameters.insertion_mode,
+                                              parameters.selection_id);
         }
     }
-
-    return handle;
 }
 
 auto LoadLayoutResult::apply(ViewConfig& view_config) const -> void {

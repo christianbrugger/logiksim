@@ -4,7 +4,7 @@
 #include "algorithm/range.h"
 #include "algorithm/transform_to_vector.h"
 #include "algorithm/uniform_int_distribution.h"
-#include "editable_circuit/editable_circuit.h"
+#include "editable_circuit.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "geometry/segment_info.h"

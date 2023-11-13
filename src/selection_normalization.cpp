@@ -1,7 +1,7 @@
 #include "selection_normalization.h"
 
-#include "index/collision_index.h"
 #include "geometry/offset.h"
+#include "index/collision_index.h"
 #include "layout.h"
 #include "part_selection.h"
 #include "selection.h"
@@ -30,10 +30,10 @@ namespace {
 class CrossingCache {
    public:
     CrossingCache(const CollisionIndex &cache, ordered_line_t full_line)
-        : collision_cache_ {cache}, full_line_ {full_line} {}
+        : collision_index_ {cache}, full_line_ {full_line} {}
 
     auto is_colliding(point_t point) const -> bool {
-        return collision_cache_.is_wires_crossing(point);
+        return collision_index_.is_wires_crossing(point);
     }
 
     auto is_colliding(offset_t offset) const -> bool {
@@ -46,7 +46,7 @@ class CrossingCache {
     }
 
    private:
-    const CollisionIndex &collision_cache_;
+    const CollisionIndex &collision_index_;
     const ordered_line_t full_line_;
 };
 

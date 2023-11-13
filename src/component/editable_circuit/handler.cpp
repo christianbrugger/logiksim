@@ -3,20 +3,20 @@
 #include "algorithm/range.h"
 #include "algorithm/sort_pair.h"
 #include "algorithm/transform_to_vector.h"
-#include "index/spatial_point_index.h"
 #include "component/editable_circuit/layout_index.h"
-#include "layout_message.h"
 #include "component/editable_circuit/message_sender.h"
-#include "selection.h"
 #include "exception.h"
 #include "format/container.h"
 #include "format/pointer.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "geometry/point.h"
+#include "index/spatial_point_index.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "layout_message.h"
 #include "logging.h"
+#include "selection.h"
 #include "tree_normalization.h"
 #include "vocabulary/point.h"
 #include "vocabulary/segment.h"
@@ -89,7 +89,7 @@ auto find_convertible_wire_input_candiates(const LayoutIndex& cache,
     auto result = convertible_inputs_result_t {};
 
     for (const auto& info : output_locations(data)) {
-        if (const auto entry = cache.wire_output_cache().find(info.position)) {
+        if (const auto entry = cache.wire_output_index().find(info.position)) {
             // not compatible
             if (!orientations_compatible(info.orientation, entry->orientation)) {
                 return {.any_collisions = true};
@@ -573,9 +573,9 @@ auto move_or_delete_logic_item(Layout& layout, MessageSender& sender,
     move_or_delete_logic_item_private(layout, sender, logicitem_id, dx, dy);
 }
 
-auto toggle_inverter_private(Layout& layout, const LayoutIndex& cache,
-                             point_t point) -> void {
-    if (const auto entry = cache.logicitem_input_cache().find(point)) {
+auto toggle_inverter_private(Layout& layout, const LayoutIndex& cache, point_t point)
+    -> void {
+    if (const auto entry = cache.logicitem_input_index().find(point)) {
         const auto layout_data = to_layout_calculation_data(layout, entry->logicitem_id);
         const auto info = input_locations(layout_data).at(entry->connection_id.value);
         assert(info.position == point);
@@ -588,7 +588,7 @@ auto toggle_inverter_private(Layout& layout, const LayoutIndex& cache,
         }
     }
 
-    if (const auto entry = cache.logicitem_output_cache().find(point)) {
+    if (const auto entry = cache.logicitem_output_index().find(point)) {
         const auto layout_data = to_layout_calculation_data(layout, entry->logicitem_id);
         const auto info = output_locations(layout_data).at(entry->connection_id.value);
         assert(info.position == point);
@@ -602,8 +602,7 @@ auto toggle_inverter_private(Layout& layout, const LayoutIndex& cache,
     }
 }
 
-auto toggle_inverter(Layout& layout, const LayoutIndex& cache, point_t point)
-    -> void {
+auto toggle_inverter(Layout& layout, const LayoutIndex& cache, point_t point) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
             "\n==========================================================\n{}\n"
@@ -621,7 +620,7 @@ auto toggle_inverter(Layout& layout, const LayoutIndex& cache, point_t point)
 auto any_logic_item_inputs_colliding(const LayoutIndex& cache,
                                      const layout_calculation_data_t& data) -> bool {
     const auto compatible = [&](simple_input_info_t info) -> bool {
-        if (const auto entry = cache.wire_output_cache().find(info.position)) {
+        if (const auto entry = cache.wire_output_index().find(info.position)) {
             return orientations_compatible(info.orientation, entry->orientation);
         }
         return true;
@@ -630,8 +629,7 @@ auto any_logic_item_inputs_colliding(const LayoutIndex& cache,
     return !std::ranges::all_of(input_locations(data), compatible);
 }
 
-auto any_logic_item_outputs_colliding(const Layout& layout,
-                                      const LayoutIndex& cache,
+auto any_logic_item_outputs_colliding(const Layout& layout, const LayoutIndex& cache,
                                       const layout_calculation_data_t& data) -> bool {
     return find_convertible_wire_inputs(layout, cache, data).any_collisions;
 }
@@ -663,7 +661,7 @@ auto uninsert_logic_item_wire_conversion(State state, const logicitem_id_t logic
     const auto data = to_layout_calculation_data(state.layout, logicitem_id);
 
     for (auto info : output_locations(data)) {
-        if (const auto entry = state.cache.wire_input_cache().find(info.position)) {
+        if (const auto entry = state.cache.wire_input_index().find(info.position)) {
             const auto connection = wire_connection_t {info.position, entry->segment};
             convert_to_output(state.layout, state.sender, connection);
         }
@@ -995,7 +993,7 @@ auto wire_endpoints_colliding(const Layout& layout, const LayoutIndex& cache,
 
     // check for LogicItem Outputs  (requires additional inputs)
     if (!wire_id_0) {
-        if (const auto entry = cache.logicitem_output_cache().find(line.p0)) {
+        if (const auto entry = cache.logicitem_output_index().find(line.p0)) {
             if (!orientations_compatible(entry->orientation, to_orientation_p0(line))) {
                 return true;
             }
@@ -1003,7 +1001,7 @@ auto wire_endpoints_colliding(const Layout& layout, const LayoutIndex& cache,
         }
     }
     if (!wire_id_1) {
-        if (const auto entry = cache.logicitem_output_cache().find(line.p1)) {
+        if (const auto entry = cache.logicitem_output_index().find(line.p1)) {
             if (!orientations_compatible(entry->orientation, to_orientation_p1(line))) {
                 return true;
             }
@@ -1016,14 +1014,14 @@ auto wire_endpoints_colliding(const Layout& layout, const LayoutIndex& cache,
 
     // check for LogicItem Inputs
     if (!wire_id_0) {
-        if (const auto entry = cache.logicitem_input_cache().find(line.p0)) {
+        if (const auto entry = cache.logicitem_input_index().find(line.p0)) {
             if (!orientations_compatible(entry->orientation, to_orientation_p0(line))) {
                 return true;
             }
         }
     }
     if (!wire_id_1) {
-        if (const auto entry = cache.logicitem_input_cache().find(line.p1)) {
+        if (const auto entry = cache.logicitem_input_index().find(line.p1)) {
             if (!orientations_compatible(entry->orientation, to_orientation_p1(line))) {
                 return true;
             }
@@ -1688,7 +1686,7 @@ auto fix_and_merge_segments(State state, const point_t position,
                             segment_part_t* preserve_segment = nullptr) -> void {
     auto& layout = state.layout;
 
-    const auto segments = state.cache.spatial_cache().query_line_segments(position);
+    const auto segments = state.cache.selection_index().query_line_segments(position);
     const auto segment_count = get_segment_count(segments);
 
     if (segment_count == 0) [[unlikely]] {
@@ -1822,19 +1820,18 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
     return add_new_wire_element(state.layout);
 }
 
-auto discover_wire_inputs(Layout& layout, const LayoutIndex& cache,
-                          segment_t segment) {
+auto discover_wire_inputs(Layout& layout, const LayoutIndex& cache, segment_t segment) {
     const auto line = get_line(layout, segment);
 
     // find LogicItem outputs
-    if (const auto entry = cache.logicitem_output_cache().find(line.p0)) {
+    if (const auto entry = cache.logicitem_output_index().find(line.p0)) {
         auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
         auto info = m_tree.info(segment.segment_index);
 
         info.p0_type = SegmentPointType::input;
         m_tree.update_segment(segment.segment_index, info);
     }
-    if (const auto entry = cache.logicitem_output_cache().find(line.p1)) {
+    if (const auto entry = cache.logicitem_output_index().find(line.p1)) {
         auto& m_tree = layout.wires().modifiable_segment_tree(segment.wire_id);
         auto info = m_tree.info(segment.segment_index);
 
@@ -2226,7 +2223,7 @@ auto move_wire_unchecked(Layout& layout, segment_t segment, part_t verify_full_p
 auto delete_all_inserted_wires(State state, point_t point) -> void {
     // segment ids change during deletion, so we need to query after each deletion
     while (true) {
-        const auto segments = state.cache.spatial_cache().query_line_segments(point);
+        const auto segments = state.cache.selection_index().query_line_segments(point);
 
         if (!segments.at(0)) {
             return;
@@ -2246,7 +2243,7 @@ auto delete_all_inserted_wires(State state, point_t point) -> void {
 auto remove_wire_crosspoint(State state, point_t point) -> void {
     auto& layout = state.layout;
 
-    const auto segments = state.cache.spatial_cache().query_line_segments(point);
+    const auto segments = state.cache.selection_index().query_line_segments(point);
     const auto segment_count = get_segment_count(segments);
 
     if (segment_count != 4) {
@@ -2274,7 +2271,7 @@ auto remove_wire_crosspoint(State state, point_t point) -> void {
 auto add_wire_crosspoint(State state, point_t point) -> void {
     auto& layout = state.layout;
 
-    const auto segments = state.cache.spatial_cache().query_line_segments(point);
+    const auto segments = state.cache.selection_index().query_line_segments(point);
     const auto segment_count = get_segment_count(segments);
 
     if (segment_count != 2) {
@@ -2333,7 +2330,7 @@ auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void {
 // Handle Methods
 //
 
-auto change_insertion_mode(Selection &selection, State state,
+auto change_insertion_mode(Selection& selection, State state,
                            InsertionMode new_insertion_mode) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print("\n\n========= change_insertion_mode ==========\n", selection);
@@ -2389,8 +2386,8 @@ auto new_positions_representable(const Selection& selection, const Layout& layou
            new_wire_positions_representable(selection, layout, delta_x, delta_y);
 }
 
-auto move_or_delete_elements(Selection &selection, Layout& layout,
-                             MessageSender& sender, int delta_x, int delta_y) -> void {
+auto move_or_delete_elements(Selection& selection, Layout& layout, MessageSender& sender,
+                             int delta_x, int delta_y) -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print("\n\n========= move_or_delete_elements ==========\n", selection);
     }
@@ -2638,8 +2635,7 @@ auto regularize_temporary_selection(Layout& layout, MessageSender& sender,
     return cross_points;
 }
 
-auto capture_inserted_cross_points(const Layout& layout,
-                                   const LayoutIndex& cache,
+auto capture_inserted_cross_points(const Layout& layout, const LayoutIndex& cache,
                                    const Selection& selection) -> std::vector<point_t> {
     auto cross_points = std::vector<point_t> {};
 

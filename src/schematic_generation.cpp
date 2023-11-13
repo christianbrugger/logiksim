@@ -1,9 +1,9 @@
 #include "schematic_generation.h"
 
 #include "algorithm/transform_to_container.h"
-#include "editable_circuit/cache/connection_cache.h"
-#include "editable_circuit/cache/helper.h"
 #include "geometry/orientation.h"
+#include "index/connection_index.h"
+#include "layout_message_generation.h"
 #include "line_tree.h"
 #include "line_tree_generation.h"
 #include "logic_item/schematic_info.h"
