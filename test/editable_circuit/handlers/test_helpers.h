@@ -22,12 +22,12 @@ class MessageRecorder {
    public:
     MessageRecorder() = default;
 
-    MessageRecorder(CacheProvider &cache_provider) : cache_provider_ {&cache_provider} {}
+    MessageRecorder(CacheProvider &cache_provider) : layout_index_ {&cache_provider} {}
 
     inline auto submit(const editable_circuit::InfoMessage &message) -> void {
         messages_.push_back(message);
-        if (cache_provider_) {
-            cache_provider_->submit(message);
+        if (layout_index_) {
+            layout_index_->submit(message);
         }
     }
 
@@ -42,7 +42,7 @@ class MessageRecorder {
     }
 
    private:
-    CacheProvider *cache_provider_ {nullptr};
+    CacheProvider *layout_index_ {nullptr};
     std::vector<editable_circuit::InfoMessage> messages_ {};
 };
 

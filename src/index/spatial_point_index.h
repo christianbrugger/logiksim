@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_CONTAINER_SPATIAL_POINT_INDEX_H
-#define LOGICSIM_CONTAINER_SPATIAL_POINT_INDEX_H
+#ifndef LOGICSIM_INDEX_SPATIAL_POINT_INDEX_H
+#define LOGICSIM_INDEX_SPATIAL_POINT_INDEX_H
 
 #include "format/container.h"
 #include "format/struct.h"
@@ -26,10 +26,13 @@ class SpatialPointIndex {
     [[nodiscard]] explicit SpatialPointIndex();
     [[nodiscard]] explicit SpatialPointIndex(std::span<const point_t> points);
     ~SpatialPointIndex();
+    SpatialPointIndex(const SpatialPointIndex &);
+    auto operator=(const SpatialPointIndex &) -> SpatialPointIndex &;
     SpatialPointIndex(SpatialPointIndex &&);
     auto operator=(SpatialPointIndex &&) -> SpatialPointIndex &;
 
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SpatialPointIndex &) const -> bool = default;
 
     auto add_split_point(point_t point) -> void;
 
@@ -39,6 +42,8 @@ class SpatialPointIndex {
    private:
     std::unique_ptr<spatial_point_index::tree_container> tree_;
 };
+
+static_assert(std::regular<SpatialPointIndex>);
 
 }  // namespace logicsim
 

@@ -1,8 +1,8 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHE_CONNECTION_CACHE_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_CONNECTION_CACHE_H
+#ifndef LOGIKSIM_INDEX_CONNECTION_INDEX_H
+#define LOGIKSIM_INDEX_CONNECTION_INDEX_H
 
-#include "editable_circuit/message_forward.h"
 #include "format/struct.h"
+#include "layout_message_forward.h"
 #include "vocabulary/logicitem_connection.h"
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
@@ -18,7 +18,7 @@ namespace logicsim {
 class Layout;
 struct layout_calculation_data_t;
 
-namespace connection_cache {
+namespace connection_index {
 
 enum class ContentType { LogicItem, Wire };
 enum class DirectionType { Input, Output };
@@ -46,21 +46,23 @@ using wire_map_t = map_type<ContentType::Wire>;
 static_assert(sizeof(value_t<ContentType::LogicItem>) == 8);
 static_assert(sizeof(value_t<ContentType::Wire>) == 12);
 
-}  // namespace connection_cache
+}  // namespace connection_index
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-class ConnectionCache {
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+class ConnectionIndex {
    public:
-    using ContentType = connection_cache::ContentType;
-    using DirectionType = connection_cache::DirectionType;
+    using ContentType = connection_index::ContentType;
+    using DirectionType = connection_index::DirectionType;
 
-    using value_t = connection_cache::value_t<Content>;
-    using map_type = connection_cache::map_type<Content>;
+    using value_t = connection_index::value_t<Content>;
+    using map_type = connection_index::map_type<Content>;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    [[nodiscard]] auto operator==(const ConnectionIndex&) const -> bool = default;
 
     [[nodiscard]] auto find(point_t position) const -> std::optional<value_t>;
     [[nodiscard]] auto is_colliding(const layout_calculation_data_t& data) const -> bool
@@ -96,15 +98,21 @@ class ConnectionCache {
     map_type map_ {};
 };
 
-using LogicItemInputCache = ConnectionCache<connection_cache::ContentType::LogicItem,
-                                            connection_cache::DirectionType::Input>;
-using LogicItemOutputCache = ConnectionCache<connection_cache::ContentType::LogicItem,
-                                             connection_cache::DirectionType::Output>;
+using LogicItemInputIndex = ConnectionIndex<connection_index::ContentType::LogicItem,
+                                            connection_index::DirectionType::Input>;
+using LogicItemOutputIndex = ConnectionIndex<connection_index::ContentType::LogicItem,
+                                             connection_index::DirectionType::Output>;
 
-using WireInputCache = ConnectionCache<connection_cache::ContentType::Wire,
-                                       connection_cache::DirectionType::Input>;
-using WireOutputCache = ConnectionCache<connection_cache::ContentType::Wire,
-                                        connection_cache::DirectionType::Output>;
+using WireInputIndex = ConnectionIndex<connection_index::ContentType::Wire,
+                                       connection_index::DirectionType::Input>;
+using WireOutputIndex = ConnectionIndex<connection_index::ContentType::Wire,
+                                        connection_index::DirectionType::Output>;
+
+
+static_assert(std::regular<LogicItemInputIndex>);
+static_assert(std::regular<LogicItemOutputIndex>);
+static_assert(std::regular<WireInputIndex>);
+static_assert(std::regular<WireOutputIndex>);
 
 }  // namespace logicsim
 

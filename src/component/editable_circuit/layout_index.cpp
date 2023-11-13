@@ -1,14 +1,16 @@
-#include "editable_circuit/cache.h"
+#include "component/editable_circuit/layout_index.h"
 
-#include "editable_circuit/cache/helper.h"
+#include "layout_message_generation.h"
+
+#include <fmt/core.h>
 
 namespace logicsim {
 
 //
-// CacheProvider
+// LayoutIndex
 //
 
-CacheProvider::CacheProvider(const Layout& layout) {
+LayoutIndex::LayoutIndex(const Layout& layout) {
     // TODO consider bulk insertion, especially for spatial_cache_
     add_layout_to_cache(logicitems_inputs_, layout);
     add_layout_to_cache(logicitems_outputs_, layout);
@@ -19,16 +21,16 @@ CacheProvider::CacheProvider(const Layout& layout) {
     add_layout_to_cache(spatial_cache_, layout);
 }
 
-auto CacheProvider::format() const -> std::string {
+auto LayoutIndex::format() const -> std::string {
     return fmt::format(
-        "EditableCircuit::CacheProvider{{\n"
+        "EditableCircuit::LayoutIndex{{\n"
         "{}\n{}\n{}\n{}\n{}\n{}\n"
         "}}\n",
         logicitems_inputs_, logicitems_outputs_, wire_inputs_, wire_outputs_,
         collision_cache_, spatial_cache_);
 }
 
-auto CacheProvider::allocated_size() const -> std::size_t {
+auto LayoutIndex::allocated_size() const -> std::size_t {
     return logicitems_inputs_.allocated_size() +   //
            logicitems_outputs_.allocated_size() +  //
            wire_inputs_.allocated_size() +         //
@@ -38,7 +40,7 @@ auto CacheProvider::allocated_size() const -> std::size_t {
            spatial_cache_.allocated_size();
 }
 
-auto CacheProvider::validate(const Layout& layout) -> void {
+auto LayoutIndex::validate(const Layout& layout) -> void {
     logicitems_inputs_.validate(layout);
     logicitems_outputs_.validate(layout);
     wire_inputs_.validate(layout);
@@ -48,7 +50,7 @@ auto CacheProvider::validate(const Layout& layout) -> void {
     collision_cache_.validate(layout);
 }
 
-auto CacheProvider::submit(const editable_circuit::InfoMessage& message) -> void {
+auto LayoutIndex::submit(const editable_circuit::InfoMessage& message) -> void {
     logicitems_inputs_.submit(message);
     logicitems_outputs_.submit(message);
     wire_inputs_.submit(message);
@@ -58,27 +60,27 @@ auto CacheProvider::submit(const editable_circuit::InfoMessage& message) -> void
     spatial_cache_.submit(message);
 }
 
-auto CacheProvider::logicitem_input_cache() const -> const LogicItemInputCache& {
+auto LayoutIndex::logicitem_input_cache() const -> const LogicItemInputIndex& {
     return logicitems_inputs_;
 }
 
-auto CacheProvider::logicitem_output_cache() const -> const LogicItemOutputCache& {
+auto LayoutIndex::logicitem_output_cache() const -> const LogicItemOutputIndex& {
     return logicitems_outputs_;
 }
 
-auto CacheProvider::wire_input_cache() const -> const WireInputCache& {
+auto LayoutIndex::wire_input_cache() const -> const WireInputIndex& {
     return wire_inputs_;
 }
 
-auto CacheProvider::wire_output_cache() const -> const WireOutputCache& {
+auto LayoutIndex::wire_output_cache() const -> const WireOutputIndex& {
     return wire_outputs_;
 }
 
-auto CacheProvider::collision_cache() const -> const CollisionCache& {
+auto LayoutIndex::collision_index() const -> const CollisionIndex& {
     return collision_cache_;
 }
 
-auto CacheProvider::spatial_cache() const -> const SpatialTree& {
+auto LayoutIndex::spatial_cache() const -> const SelectionIndex& {
     return spatial_cache_;
 }
 

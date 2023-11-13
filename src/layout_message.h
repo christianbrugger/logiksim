@@ -1,8 +1,8 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_MESSAGE_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_MESSAGE_H
+#ifndef LOGIKSIM_LAYOUT_MESSAGE_H
+#define LOGIKSIM_LAYOUT_MESSAGE_H
 
-#include "editable_circuit/message_forward.h"
 #include "format/struct.h"
+#include "layout_message_forward.h"
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/segment.h"

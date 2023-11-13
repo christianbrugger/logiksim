@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_STORE_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_STORE_H
 
-#include "editable_circuit/selection.h"
+#include "selection.h"
 #include "format/struct.h"
 #include "vocabulary/selection_id.h"
 
@@ -28,8 +28,9 @@ class SelectionStore {
     using iterator = map_t::iterator;
     using const_iterator = map_t::const_iterator;
 
-   private:
+   public:
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
     [[nodiscard]] auto operator==(const SelectionStore& other) const -> bool = default;
 
     auto clear() -> void;
@@ -51,6 +52,8 @@ class SelectionStore {
     map_t selections_ {};
     selection_id_t next_selection_key_ {0};
 };
+
+static_assert(std::regular<SelectionStore>);
 
 }  // namespace editable_circuit
 

@@ -1,7 +1,7 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_SELECTION_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_SELECTION_H
+#ifndef LOGICSIM_SELECTION_H
+#define LOGICSIM_SELECTION_H
 
-#include "editable_circuit/message_forward.h"
+#include "layout_message_forward.h"
 #include "part_selection.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/segment.h"
@@ -56,6 +56,7 @@ class Selection {
 
     [[nodiscard]] auto empty() const noexcept -> bool;
     auto clear() -> void;
+    [[nodiscard]] auto allocated_size() const -> std::size_t;
 
     auto add(logicitem_id_t logicitem_id) -> void;
     auto remove_logicitem(logicitem_id_t logicitem_id) -> void;

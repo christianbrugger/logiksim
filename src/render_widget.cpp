@@ -196,7 +196,7 @@ MouseMoveSelectionLogic::~MouseMoveSelectionLogic() {
 namespace {
 
 auto all_selected(const Selection& selection, const Layout& layout,
-                  std::span<const SpatialTree::value_t> items, point_fine_t point)
+                  std::span<const SelectionIndex::value_t> items, point_fine_t point)
     -> bool {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -213,7 +213,7 @@ auto all_selected(const Selection& selection, const Layout& layout,
 }
 
 auto anything_selected(const Selection& selection, const Layout& layout,
-                       std::span<const SpatialTree::value_t> items, point_fine_t point)
+                       std::span<const SelectionIndex::value_t> items, point_fine_t point)
     -> bool {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -230,7 +230,7 @@ auto anything_selected(const Selection& selection, const Layout& layout,
 }
 
 auto add_to_selection(Selection& selection, const Layout& layout,
-                      std::span<const SpatialTree::value_t> items, bool whole_tree)
+                      std::span<const SelectionIndex::value_t> items, bool whole_tree)
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -406,7 +406,7 @@ MouseSingleSelectionLogic::MouseSingleSelectionLogic(Args args)
 namespace {
 
 auto add_selection(Selection& selection, const Layout& layout,
-                   std::span<const SpatialTree::value_t> items, point_fine_t point)
+                   std::span<const SelectionIndex::value_t> items, point_fine_t point)
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -418,7 +418,7 @@ auto add_selection(Selection& selection, const Layout& layout,
 }
 
 auto remove_selection(Selection& selection, const Layout& layout,
-                      std::span<const SpatialTree::value_t> items, point_fine_t point)
+                      std::span<const SelectionIndex::value_t> items, point_fine_t point)
     -> void {
     for (const auto& item : items) {
         if (item.is_logicitem()) {
@@ -430,7 +430,7 @@ auto remove_selection(Selection& selection, const Layout& layout,
 }
 
 auto add_whole_trees(Selection& selection, const Layout& layout,
-                     std::span<const SpatialTree::value_t> items) -> void {
+                     std::span<const SelectionIndex::value_t> items) -> void {
     for (const auto& item : items) {
         if (item.is_segment()) {
             add_segment_tree(selection, item.segment().wire_id, layout);
@@ -439,7 +439,7 @@ auto add_whole_trees(Selection& selection, const Layout& layout,
 }
 
 auto remove_whole_trees(Selection& selection, const Layout& layout,
-                        std::span<const SpatialTree::value_t> items) -> void {
+                        std::span<const SelectionIndex::value_t> items) -> void {
     for (const auto& item : items) {
         if (item.is_segment()) {
             remove_segment_tree(selection, item.segment().wire_id, layout);

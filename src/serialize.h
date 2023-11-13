@@ -14,7 +14,6 @@ namespace logicsim {
 class Layout;
 class Selection;
 class EditableCircuit;
-class selection_old_handle_t;
 struct ViewConfig;
 struct SimulationSettings;
 

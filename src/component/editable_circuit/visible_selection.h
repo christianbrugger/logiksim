@@ -1,8 +1,8 @@
-#ifndef LOGIKSIM_SELECTION_MANAGER_H
-#define LOGIKSIM_SELECTION_MANAGER_H
+#ifndef LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_VISIBLE_SELECTION_H
+#define LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_VISIBLE_SELECTION_H
 
-#include "editable_circuit/message_forward.h"
-#include "editable_circuit/selection.h"
+#include "layout_message.h"
+#include "selection.h"
 #include "format/enum.h"
 #include "vocabulary/rect_fine.h"
 
@@ -11,8 +11,8 @@
 namespace logicsim {
 
 class Layout;
-class SpatialTree;
-class CacheProvider;
+class SelectionIndex;
+class LayoutIndex;
 
 enum class SelectionFunction {
     toggle,
@@ -39,7 +39,7 @@ class SelectionBuilder {
 
    public:
     [[nodiscard]] explicit SelectionBuilder(const Layout &layout,
-                                            const CacheProvider &cache_provider);
+                                            const LayoutIndex &cache_provider);
 
     [[nodiscard]] auto empty() const noexcept -> bool;
 
@@ -64,7 +64,7 @@ class SelectionBuilder {
     auto clear_cache() const -> void;
 
     gsl::not_null<const Layout *> layout_;
-    gsl::not_null<const CacheProvider *> cache_provider_;
+    gsl::not_null<const LayoutIndex *> layout_index_;
 
     Selection initial_selection_ {};
     std::vector<operation_t> operations_ {};

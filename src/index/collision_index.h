@@ -1,15 +1,17 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHE_COLLISION_CACHE_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_COLLISION_CACHE_H
+#ifndef LOGIKSIM_INDEX_COLLISION_INDEX_H
+#define LOGIKSIM_INDEX_COLLISION_INDEX_H
 
-#include "editable_circuit/message_forward.h"
 #include "format/enum.h"
 #include "format/struct.h"
 #include "iterator_adaptor/transform_view.h"
+#include "layout_message_forward.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/point.h"
 #include "vocabulary/wire_id.h"
 
 #include <ankerl/unordered_dense.h>
+
+#include <concepts>
 
 namespace logicsim {
 
@@ -17,7 +19,7 @@ struct ordered_line_t;
 struct layout_calculation_data_t;
 class Layout;
 
-namespace collision_cache {
+namespace collision_index {
 
 /**
  * @brief: The type of item when adding a new item at a specific position.
@@ -84,7 +86,7 @@ struct collision_data_t {
 
 static_assert(std::is_aggregate_v<collision_data_t>);
 
-using map_type = ankerl::unordered_dense::map<point_t, collision_cache::collision_data_t>;
+using map_type = ankerl::unordered_dense::map<point_t, collision_index::collision_data_t>;
 
 /**
  * @brief: Indicates element input / output || wire input / output
@@ -140,28 +142,30 @@ static_assert(wire_cross_point_tag != wire_corner_point_tag);
  */
 [[nodiscard]] auto to_state(collision_data_t data) -> CacheState;
 
-}  // namespace collision_cache
+}  // namespace collision_index
 
 template <>
-auto format(collision_cache::ItemType type) -> std::string;
+auto format(collision_index::ItemType type) -> std::string;
 
 template <>
-auto format(collision_cache::CacheState state) -> std::string;
+auto format(collision_index::CacheState state) -> std::string;
 
-class CollisionCache {
+class CollisionIndex {
    public:
-    using map_type = collision_cache::map_type;
+    using map_type = collision_index::map_type;
 
    public:
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
+
+    [[nodiscard]] auto operator==(const CollisionIndex&) const -> bool = default;
 
     [[nodiscard]] auto is_colliding(const layout_calculation_data_t& data) const -> bool;
     [[nodiscard]] auto is_colliding(ordered_line_t line) const -> bool;
     [[nodiscard]] auto is_wires_crossing(point_t point) const -> bool;
     [[nodiscard]] auto is_wire_cross_point(point_t point) const -> bool;
 
-    [[nodiscard]] auto query(point_t point) const -> collision_cache::collision_data_t;
+    [[nodiscard]] auto query(point_t point) const -> collision_index::collision_data_t;
 
     [[nodiscard]] auto get_first_wire(point_t position) const -> wire_id_t;
 
@@ -190,10 +194,12 @@ class CollisionCache {
     auto handle(const editable_circuit::info_message::SegmentUninserted& message) -> void;
 
     [[nodiscard]] auto state_colliding(point_t position,
-                                       collision_cache::ItemType item_type) const -> bool;
+                                       collision_index::ItemType item_type) const -> bool;
 
     map_type map_ {};
 };
+
+static_assert(std::regular<CollisionIndex>);
 
 }  // namespace logicsim
 

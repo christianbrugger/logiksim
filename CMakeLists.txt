@@ -42,7 +42,11 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
+    src/component/editable_circuit/handler.cpp
+    src/component/editable_circuit/layout_index.cpp
+    src/component/editable_circuit/message_sender.cpp
     src/component/editable_circuit/selection_store.cpp
+    src/component/editable_circuit/visible_selection.cpp
     src/component/interactive_simulation/interaction_cache.cpp
     src/component/layout/logicitem_store.cpp
     src/component/layout/wire_store.cpp
@@ -75,21 +79,7 @@ set(LS_CORE_SOURCES
     src/container/graph/depth_first_search.cpp
     src/container/graph/visitor_concept.cpp
     src/container/circular_buffer.cpp
-    src/container/spatial_point_index.cpp
     src/container/static_vector.cpp
-
-    src/editable_circuit/cache/collision_cache.cpp
-    src/editable_circuit/cache/connection_cache.cpp
-    src/editable_circuit/cache/spatial_cache.cpp
-    src/editable_circuit/cache.cpp
-    src/editable_circuit/editable_circuit.cpp
-    src/editable_circuit/handler.cpp
-    src/editable_circuit/message.cpp
-    src/editable_circuit/message_sender.cpp
-    src/editable_circuit/sanitizer.cpp
-    src/editable_circuit/selection.cpp
-    src/editable_circuit/selection_builder.cpp
-    src/editable_circuit/selection_registrar.cpp
 
     src/format/container.cpp
     src/format/enum.cpp
@@ -116,6 +106,11 @@ set(LS_CORE_SOURCES
     src/geometry/segment_info.cpp
     src/geometry/to_points_sorted_unique.cpp
     src/geometry/to_points_with_both_orientation.cpp
+
+    src/index/collision_index.cpp
+    src/index/connection_index.cpp
+    src/index/selection_index.cpp
+    src/index/spatial_point_index.cpp
 
     src/iterator_adaptor/enumerate.cpp
     src/iterator_adaptor/filter_output_iterator.cpp
@@ -241,6 +236,7 @@ set(LS_CORE_SOURCES
 
     src/base64.cpp
     src/circuit_description.cpp
+    src/editable_circuit.cpp
     src/event_counter.cpp
     src/event_counter_multi.cpp
     src/exception.cpp
@@ -250,6 +246,9 @@ set(LS_CORE_SOURCES
     src/interactive_simulation.cpp
     src/layout.cpp
     src/layout_info.cpp
+    src/layout_message.cpp
+    src/layout_message_forward.cpp
+    src/layout_message_generation.cpp
     src/line_tree.cpp
     src/line_tree_generation.cpp
     src/logging.cpp
@@ -264,6 +263,8 @@ set(LS_CORE_SOURCES
     src/schematic.cpp
     src/schematic_generation.cpp
     src/segment_tree.cpp
+    src/selection.cpp
+    src/selection_normalization.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
     src/setting_handle.cpp

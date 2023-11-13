@@ -1,4 +1,4 @@
-#include "editable_circuit/message.h"
+#include "layout_message.h"
 
 #include <fmt/core.h>
 

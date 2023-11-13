@@ -1,8 +1,8 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_CACHE_HELPER_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_CACHE_HELPER_H
+#ifndef LOGICSIM_LAYOUT_MESSAGE_GENERATION_H
+#define LOGICSIM_LAYOUT_MESSAGE_GENERATION_H
 
-#include "editable_circuit/message.h"
 #include "layout.h"
+#include "layout_message.h"
 
 namespace logicsim {
 
@@ -12,8 +12,7 @@ auto add_logic_item_to_cache(auto &&cache, const Layout &layout,
     cache.submit(editable_circuit::info_message::LogicItemInserted {logicitem_id, data});
 }
 
-auto add_wire_to_cache(auto &&cache, const Layout &layout, wire_id_t wire_id)
-    -> void {
+auto add_wire_to_cache(auto &&cache, const Layout &layout, wire_id_t wire_id) -> void {
     const auto &segment_tree = layout.wires().segment_tree(wire_id);
 
     for (const auto segment_index : segment_tree.indices()) {

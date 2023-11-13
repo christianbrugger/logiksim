@@ -1,4 +1,4 @@
-#include "container/spatial_point_index.h"
+#include "index/spatial_point_index.h"
 
 #include "vocabulary/ordered_line.h"
 
@@ -23,6 +23,8 @@ using tree_t = bgi::rtree<tree_point_t, bgi::rstar<tree_max_node_elements>>;
 
 struct tree_container {
     tree_t value;
+
+    // [[nodiscard]] auto operator==(const tree_container& other) const -> bool = default;
 };
 }  // namespace logicsim::spatial_point_index
 
@@ -72,6 +74,16 @@ SpatialPointIndex::SpatialPointIndex(std::span<const point_t> points)
     : tree_ {make_tree(points)} {}
 
 SpatialPointIndex::~SpatialPointIndex() = default;
+
+SpatialPointIndex::SpatialPointIndex(const SpatialPointIndex& other)
+    : tree_ {std::make_unique<spatial_point_index::tree_container>(*other.tree_)} {}
+
+auto SpatialPointIndex::operator=(const SpatialPointIndex& other) -> SpatialPointIndex& {
+    auto tmp = SpatialPointIndex {other};
+    using std::swap;
+    swap(*this, tmp);
+    return *this;
+}
 
 SpatialPointIndex::SpatialPointIndex(SpatialPointIndex&&) = default;
 

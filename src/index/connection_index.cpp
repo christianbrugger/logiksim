@@ -1,66 +1,66 @@
-#include "editable_circuit/cache/connection_cache.h"
+#include "index/connection_index.h"
 
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "allocated_size/trait.h"
-#include "editable_circuit/cache/helper.h"
-#include "editable_circuit/message.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/orientation.h"
 #include "layout_info.h"
+#include "layout_message.h"
+#include "layout_message_generation.h"
 
 #include <fmt/core.h>
 
 namespace logicsim {
 
-namespace connection_cache {
+namespace connection_index {
 
 auto wire_value_t::format() const -> std::string {
     return fmt::format("Wire_{}-{}-{}", segment.wire_id, segment.segment_index,
                        orientation);
 }
 
-}  // namespace connection_cache
+}  // namespace connection_index
 
 //
-// ConnectionCache
+// ConnectionIndex
 //
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::LogicItem,
-                     connection_cache::DirectionType::Input>::format() const
+auto ConnectionIndex<connection_index::ContentType::LogicItem,
+                     connection_index::DirectionType::Input>::format() const
     -> std::string {
-    return fmt::format("LogicItemInputCache = {}", map_);
+    return fmt::format("LogicItemInputIndex = {}", map_);
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::LogicItem,
-                     connection_cache::DirectionType::Output>::format() const
+auto ConnectionIndex<connection_index::ContentType::LogicItem,
+                     connection_index::DirectionType::Output>::format() const
     -> std::string {
-    return fmt::format("LogicItemOutputCache = {}", map_);
+    return fmt::format("LogicItemOutputIndex = {}", map_);
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::Wire,
-                     connection_cache::DirectionType::Input>::format() const
+auto ConnectionIndex<connection_index::ContentType::Wire,
+                     connection_index::DirectionType::Input>::format() const
     -> std::string {
-    return fmt::format("WireInputCache = {}", map_);
+    return fmt::format("WireInputIndex = {}", map_);
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::Wire,
-                     connection_cache::DirectionType::Output>::format() const
+auto ConnectionIndex<connection_index::ContentType::Wire,
+                     connection_index::DirectionType::Output>::format() const
     -> std::string {
-    return fmt::format("WireOutputCache = {}", map_);
+    return fmt::format("WireOutputIndex = {}", map_);
 }
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::allocated_size() const -> std::size_t {
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::allocated_size() const -> std::size_t {
     return get_allocated_size(map_);
 }
 
-namespace connection_cache {
+namespace connection_index {
 
 namespace {
 
@@ -98,17 +98,17 @@ auto verify_cache_empty(map_type<ContentType::Wire>& map, point_t position) -> v
 
 }  // namespace
 
-}  // namespace connection_cache
+}  // namespace connection_index
 
 //
 // LogicItemInserted
 //
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::LogicItem,
-                     connection_cache::DirectionType::Input>::
+auto ConnectionIndex<connection_index::ContentType::LogicItem,
+                     connection_index::DirectionType::Input>::
     handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {
-    using namespace connection_cache;
+    using namespace connection_index;
 
     for (auto info : input_locations_and_id(message.data)) {
         verify_cache_empty(map_, info.position);
@@ -122,10 +122,10 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::LogicItem,
-                     connection_cache::DirectionType::Output>::
+auto ConnectionIndex<connection_index::ContentType::LogicItem,
+                     connection_index::DirectionType::Output>::
     handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {
-    using namespace connection_cache;
+    using namespace connection_index;
 
     for (auto info : output_locations_and_id(message.data)) {
         verify_cache_empty(map_, info.position);
@@ -139,13 +139,13 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::Wire,
-                     connection_cache::DirectionType::Input>::
+auto ConnectionIndex<connection_index::ContentType::Wire,
+                     connection_index::DirectionType::Input>::
     handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {}
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::Wire,
-                     connection_cache::DirectionType::Output>::
+auto ConnectionIndex<connection_index::ContentType::Wire,
+                     connection_index::DirectionType::Output>::
     handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {}
 
 //
@@ -153,11 +153,11 @@ auto ConnectionCache<connection_cache::ContentType::Wire,
 //
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::LogicItem,
-                     connection_cache::DirectionType::Input>::
+auto ConnectionIndex<connection_index::ContentType::LogicItem,
+                     connection_index::DirectionType::Input>::
     handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
         -> void {
-    using namespace connection_cache;
+    using namespace connection_index;
 
     for (auto info : input_locations_and_id(message.data)) {
         const auto expected_value = logicitem_connection_t {
@@ -172,11 +172,11 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::LogicItem,
-                     connection_cache::DirectionType::Output>::
+auto ConnectionIndex<connection_index::ContentType::LogicItem,
+                     connection_index::DirectionType::Output>::
     handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
         -> void {
-    using namespace connection_cache;
+    using namespace connection_index;
 
     for (auto info : output_locations_and_id(message.data)) {
         const auto expected_value = logicitem_connection_t {
@@ -191,14 +191,14 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::Wire,
-                     connection_cache::DirectionType::Input>::
+auto ConnectionIndex<connection_index::ContentType::Wire,
+                     connection_index::DirectionType::Input>::
     handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
         -> void {}
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::Wire,
-                     connection_cache::DirectionType::Output>::
+auto ConnectionIndex<connection_index::ContentType::Wire,
+                     connection_index::DirectionType::Output>::
     handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
         -> void {}
 
@@ -207,10 +207,10 @@ auto ConnectionCache<connection_cache::ContentType::Wire,
 //
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::LogicItem,
-                     connection_cache::DirectionType::Input>::
+auto ConnectionIndex<connection_index::ContentType::LogicItem,
+                     connection_index::DirectionType::Input>::
     handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {
-    using namespace connection_cache;
+    using namespace connection_index;
 
     for (auto info : input_locations_and_id(message.data)) {
         const auto expected_value = logicitem_connection_t {
@@ -225,10 +225,10 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::LogicItem,
-                     connection_cache::DirectionType::Output>::
+auto ConnectionIndex<connection_index::ContentType::LogicItem,
+                     connection_index::DirectionType::Output>::
     handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {
-    using namespace connection_cache;
+    using namespace connection_index;
 
     for (auto info : output_locations_and_id(message.data)) {
         const auto expected_value = logicitem_connection_t {
@@ -243,25 +243,25 @@ auto ConnectionCache<connection_cache::ContentType::LogicItem,
 }
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::Wire,
-                     connection_cache::DirectionType::Input>::
+auto ConnectionIndex<connection_index::ContentType::Wire,
+                     connection_index::DirectionType::Input>::
     handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {}
 
 template <>
-auto ConnectionCache<connection_cache::ContentType::Wire,
-                     connection_cache::DirectionType::Output>::
+auto ConnectionIndex<connection_index::ContentType::Wire,
+                     connection_index::DirectionType::Output>::
     handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {}
 
 //
 // SegmentInserted
 //
 
-namespace connection_cache {
+namespace connection_index {
 namespace {
 
 using namespace editable_circuit::info_message;
 
-template <connection_cache::DirectionType Direction>
+template <connection_index::DirectionType Direction>
 consteval auto point_type() -> SegmentPointType {
     return Direction == DirectionType::Input ? SegmentPointType::input
                                              : SegmentPointType::output;
@@ -352,31 +352,31 @@ auto handle_wire(wire_map_t& map, SegmentPointType point_type,
 }
 
 }  // namespace
-}  // namespace connection_cache
+}  // namespace connection_index
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::handle(
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::handle(
     const editable_circuit::info_message::SegmentInserted& message) -> void {
     if constexpr (Content == ContentType::Wire) {
-        using namespace connection_cache;
+        using namespace connection_index;
         handle_wire(map_, point_type<Direction>(), message);
     }
 }
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::handle(
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::handle(
     const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
     if constexpr (Content == ContentType::Wire) {
-        using namespace connection_cache;
+        using namespace connection_index;
         handle_wire(map_, point_type<Direction>(), message);
     }
 }
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::handle(
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::handle(
     const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
     using namespace editable_circuit::info_message;
 
@@ -384,12 +384,12 @@ auto ConnectionCache<Content, Direction>::handle(
     handle(SegmentInserted {message.segment, message.new_segment_info});
 }
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::handle(
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::handle(
     const editable_circuit::info_message::SegmentUninserted& message) -> void {
     if constexpr (Content == ContentType::Wire) {
-        using namespace connection_cache;
+        using namespace connection_index;
         handle_wire(map_, point_type<Direction>(), message);
     }
 }
@@ -398,9 +398,9 @@ auto ConnectionCache<Content, Direction>::handle(
 // submit
 //
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::submit(
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::submit(
     const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
 
@@ -441,9 +441,9 @@ auto ConnectionCache<Content, Direction>::submit(
     }
 }
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::find(point_t position) const
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::find(point_t position) const
     -> std::optional<value_t> {
     if (const auto it = map_.find(position); it != map_.end()) {
         return it->second;
@@ -451,9 +451,9 @@ auto ConnectionCache<Content, Direction>::find(point_t position) const
     return std::nullopt;
 }
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::is_colliding(
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::is_colliding(
     const layout_calculation_data_t& data) const -> bool
     requires(Content == ContentType::LogicItem)
 {
@@ -479,10 +479,10 @@ auto ConnectionCache<Content, Direction>::is_colliding(
     }
 }
 
-template <connection_cache::ContentType Content,
-          connection_cache::DirectionType Direction>
-auto ConnectionCache<Content, Direction>::validate(const Layout& layout) const -> void {
-    auto cache = ConnectionCache<Content, Direction> {};
+template <connection_index::ContentType Content,
+          connection_index::DirectionType Direction>
+auto ConnectionIndex<Content, Direction>::validate(const Layout& layout) const -> void {
+    auto cache = ConnectionIndex<Content, Direction> {};
     add_layout_to_cache(cache, layout);
 
     if (cache.map_ != this->map_) [[unlikely]] {
@@ -490,14 +490,14 @@ auto ConnectionCache<Content, Direction>::validate(const Layout& layout) const -
     }
 }
 
-template class ConnectionCache<connection_cache::ContentType::LogicItem,
-                               connection_cache::DirectionType::Input>;
-template class ConnectionCache<connection_cache::ContentType::LogicItem,
-                               connection_cache::DirectionType::Output>;
+template class ConnectionIndex<connection_index::ContentType::LogicItem,
+                               connection_index::DirectionType::Input>;
+template class ConnectionIndex<connection_index::ContentType::LogicItem,
+                               connection_index::DirectionType::Output>;
 
-template class ConnectionCache<connection_cache::ContentType::Wire,
-                               connection_cache::DirectionType::Input>;
-template class ConnectionCache<connection_cache::ContentType::Wire,
-                               connection_cache::DirectionType::Output>;
+template class ConnectionIndex<connection_index::ContentType::Wire,
+                               connection_index::DirectionType::Input>;
+template class ConnectionIndex<connection_index::ContentType::Wire,
+                               connection_index::DirectionType::Output>;
 
 }  // namespace logicsim

@@ -1,7 +1,7 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_MESSAGE_SENDER_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_MESSAGE_SENDER_H
+#ifndef LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_MESSAGE_SENDER_H
+#define LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_MESSAGE_SENDER_H
 
-#include "message_forward.h"
+#include "layout_message_forward.h"
 
 #include <functional>
 

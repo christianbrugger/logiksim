@@ -171,8 +171,8 @@ struct GenerationCache {
         add_logic_items_to_cache(outputs, layout);
     }
 
-    LogicItemInputCache inputs {};
-    LogicItemOutputCache outputs {};
+    LogicItemInputIndex inputs {};
+    LogicItemOutputIndex outputs {};
 };
 
 auto connect_line_tree(Schematic& schematic, const Layout& layout,

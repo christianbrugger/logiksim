@@ -1,14 +1,13 @@
-#include "editable_circuit/handler.h"
+#include "component/editable_circuit/handler.h"
 
 #include "algorithm/range.h"
 #include "algorithm/sort_pair.h"
 #include "algorithm/transform_to_vector.h"
-#include "container/spatial_point_index.h"
-#include "editable_circuit/cache.h"
-#include "editable_circuit/message.h"
-#include "editable_circuit/message_sender.h"
-#include "editable_circuit/selection.h"
-#include "editable_circuit/selection_registrar.h"
+#include "index/spatial_point_index.h"
+#include "component/editable_circuit/layout_index.h"
+#include "layout_message.h"
+#include "component/editable_circuit/message_sender.h"
+#include "selection.h"
 #include "exception.h"
 #include "format/container.h"
 #include "format/pointer.h"
@@ -84,7 +83,7 @@ struct convertible_inputs_result_t {
     }
 };
 
-auto find_convertible_wire_input_candiates(const CacheProvider& cache,
+auto find_convertible_wire_input_candiates(const LayoutIndex& cache,
                                            const layout_calculation_data_t& data)
     -> convertible_inputs_result_t {
     auto result = convertible_inputs_result_t {};
@@ -103,7 +102,7 @@ auto find_convertible_wire_input_candiates(const CacheProvider& cache,
     return result;
 }
 
-auto find_convertible_wire_inputs(const Layout& layout, const CacheProvider& cache,
+auto find_convertible_wire_inputs(const Layout& layout, const LayoutIndex& cache,
                                   const layout_calculation_data_t& data)
     -> convertible_inputs_result_t {
     auto candidates = find_convertible_wire_input_candiates(cache, data);
@@ -574,8 +573,8 @@ auto move_or_delete_logic_item(Layout& layout, MessageSender& sender,
     move_or_delete_logic_item_private(layout, sender, logicitem_id, dx, dy);
 }
 
-auto toggle_inverter_private(Layout& layout, const CacheProvider& cache, point_t point)
-    -> void {
+auto toggle_inverter_private(Layout& layout, const LayoutIndex& cache,
+                             point_t point) -> void {
     if (const auto entry = cache.logicitem_input_cache().find(point)) {
         const auto layout_data = to_layout_calculation_data(layout, entry->logicitem_id);
         const auto info = input_locations(layout_data).at(entry->connection_id.value);
@@ -603,7 +602,8 @@ auto toggle_inverter_private(Layout& layout, const CacheProvider& cache, point_t
     }
 }
 
-auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) -> void {
+auto toggle_inverter(Layout& layout, const LayoutIndex& cache, point_t point)
+    -> void {
     if constexpr (DEBUG_PRINT_HANDLER_INPUTS) {
         print_fmt(
             "\n==========================================================\n{}\n"
@@ -618,7 +618,7 @@ auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) 
 // logic item mode change
 //
 
-auto any_logic_item_inputs_colliding(const CacheProvider& cache,
+auto any_logic_item_inputs_colliding(const LayoutIndex& cache,
                                      const layout_calculation_data_t& data) -> bool {
     const auto compatible = [&](simple_input_info_t info) -> bool {
         if (const auto entry = cache.wire_output_cache().find(info.position)) {
@@ -630,16 +630,17 @@ auto any_logic_item_inputs_colliding(const CacheProvider& cache,
     return !std::ranges::all_of(input_locations(data), compatible);
 }
 
-auto any_logic_item_outputs_colliding(const Layout& layout, const CacheProvider& cache,
+auto any_logic_item_outputs_colliding(const Layout& layout,
+                                      const LayoutIndex& cache,
                                       const layout_calculation_data_t& data) -> bool {
     return find_convertible_wire_inputs(layout, cache, data).any_collisions;
 }
 
-auto is_logic_item_colliding(const Layout& layout, const CacheProvider& cache,
+auto is_logic_item_colliding(const Layout& layout, const LayoutIndex& cache,
                              const logicitem_id_t logicitem_id) {
     const auto data = to_layout_calculation_data(layout, logicitem_id);
 
-    return cache.collision_cache().is_colliding(data) ||
+    return cache.collision_index().is_colliding(data) ||
            any_logic_item_inputs_colliding(cache, data) ||
            any_logic_item_outputs_colliding(layout, cache, data);
 }
@@ -970,10 +971,10 @@ auto set_segment_crosspoint(Layout& layout, const segment_t segment, point_t poi
 // wire insertion mode changing
 //
 
-auto wire_endpoints_colliding(const Layout& layout, const CacheProvider& cache,
+auto wire_endpoints_colliding(const Layout& layout, const LayoutIndex& cache,
                               ordered_line_t line) -> bool {
-    const auto wire_id_0 = cache.collision_cache().get_first_wire(line.p0);
-    const auto wire_id_1 = cache.collision_cache().get_first_wire(line.p1);
+    const auto wire_id_0 = cache.collision_index().get_first_wire(line.p0);
+    const auto wire_id_1 = cache.collision_index().get_first_wire(line.p1);
 
     // loop check
     if (wire_id_0 && wire_id_0 == wire_id_1) {
@@ -1032,10 +1033,10 @@ auto wire_endpoints_colliding(const Layout& layout, const CacheProvider& cache,
     return false;
 }
 
-auto is_wire_colliding(const Layout& layout, const CacheProvider& cache,
+auto is_wire_colliding(const Layout& layout, const LayoutIndex& cache,
                        const ordered_line_t line) -> bool {
     return wire_endpoints_colliding(layout, cache, line) ||
-           cache.collision_cache().is_colliding(line);
+           cache.collision_index().is_colliding(line);
 }
 
 auto get_display_states(const Layout& layout, const segment_part_t segment_part)
@@ -1792,8 +1793,8 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
     -> wire_id_t {
     const auto line = get_line(state.layout, segment_part);
 
-    auto candidate_0 = state.cache.collision_cache().get_first_wire(line.p0);
-    auto candidate_1 = state.cache.collision_cache().get_first_wire(line.p1);
+    auto candidate_0 = state.cache.collision_index().get_first_wire(line.p0);
+    auto candidate_1 = state.cache.collision_index().get_first_wire(line.p1);
 
     // 1 wire
     if (bool {candidate_0} ^ bool {candidate_1}) {
@@ -1821,7 +1822,8 @@ auto find_wire_for_inserting_segment(State state, const segment_part_t segment_p
     return add_new_wire_element(state.layout);
 }
 
-auto discover_wire_inputs(Layout& layout, const CacheProvider& cache, segment_t segment) {
+auto discover_wire_inputs(Layout& layout, const LayoutIndex& cache,
+                          segment_t segment) {
     const auto line = get_line(layout, segment);
 
     // find LogicItem outputs
@@ -1905,8 +1907,8 @@ auto _wire_change_colliding_to_insert(Layout& layout, MessageSender& sender,
 // we assume we get a valid tree where the part between p0 and p1
 // has been removed this method puts the segments at p1 into a new tree
 auto split_broken_tree(State state, point_t p0, point_t p1) -> wire_id_t {
-    const auto p0_tree_id = state.cache.collision_cache().get_first_wire(p0);
-    const auto p1_tree_id = state.cache.collision_cache().get_first_wire(p1);
+    const auto p0_tree_id = state.cache.collision_index().get_first_wire(p0);
+    const auto p1_tree_id = state.cache.collision_index().get_first_wire(p1);
 
     if (!p0_tree_id || !p1_tree_id || p0_tree_id != p1_tree_id) {
         return null_wire_id;
@@ -2308,10 +2310,10 @@ auto add_wire_crosspoint(State state, point_t point) -> void {
 }
 
 auto toggle_inserted_wire_crosspoint_private(State state, point_t point) -> void {
-    if (state.cache.collision_cache().is_wires_crossing(point)) {
+    if (state.cache.collision_index().is_wires_crossing(point)) {
         return add_wire_crosspoint(state, point);
     }
-    if (state.cache.collision_cache().is_wire_cross_point(point)) {
+    if (state.cache.collision_index().is_wire_cross_point(point)) {
         return remove_wire_crosspoint(state, point);
     }
 }
@@ -2645,7 +2647,8 @@ auto regularize_temporary_selection(Layout& layout, MessageSender& sender,
     return cross_points;
 }
 
-auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& cache,
+auto capture_inserted_cross_points(const Layout& layout,
+                                   const LayoutIndex& cache,
                                    const Selection& selection) -> std::vector<point_t> {
     auto cross_points = std::vector<point_t> {};
 
@@ -2653,10 +2656,10 @@ auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& ca
         for (const auto& part : parts) {
             const auto line = get_line(layout, segment_part_t {segment, part});
 
-            if (cache.collision_cache().is_wire_cross_point(line.p0)) {
+            if (cache.collision_index().is_wire_cross_point(line.p0)) {
                 cross_points.push_back(line.p0);
             }
-            if (cache.collision_cache().is_wire_cross_point(line.p1)) {
+            if (cache.collision_index().is_wire_cross_point(line.p1)) {
                 cross_points.push_back(line.p1);
             }
         }
@@ -2707,15 +2710,15 @@ auto split_temporary_segments(Layout& layout, MessageSender& sender,
     }
 }
 
-auto capture_new_splitpoints(const Layout& layout, const CacheProvider& cache,
+auto capture_new_splitpoints(const Layout& layout, const LayoutIndex& cache,
                              const Selection& selection) -> std::vector<point_t> {
     auto result = std::vector<point_t> {};
 
     const auto add_candidate = [&](point_t point) {
-        const auto state = cache.collision_cache().query(point);
-        if (collision_cache::is_wire_corner_point(state) ||
-            collision_cache::is_wire_connection(state) ||
-            collision_cache::is_wire_cross_point(state)) {
+        const auto state = cache.collision_index().query(point);
+        if (collision_index::is_wire_corner_point(state) ||
+            collision_index::is_wire_connection(state) ||
+            collision_index::is_wire_cross_point(state)) {
             result.push_back(point);
         }
     };

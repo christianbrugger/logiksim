@@ -1,7 +1,7 @@
 #include "editable_circuit.h"
 
-#include "editable_circuit/handler.h"
-#include "editable_circuit/message.h"
+#include "component/editable_circuit/handler.h"
+#include "layout_message.h"
 #include "format/std_type.h"
 #include "geometry/point.h"
 #include "random/wire.h"
@@ -16,8 +16,8 @@ namespace logicsim {
 
 EditableCircuit::EditableCircuit(Layout&& layout)
     : layout_ {std::move(layout)},
-      cache_provider_ {layout_.value()},
-      selection_builder_ {layout_.value(), cache_provider_},
+      layout_index_ {layout_.value()},
+      selection_builder_ {layout_.value(), layout_index_},
       sender_ {[this](const auto& message) { this->submit(message); }} {}
 
 auto EditableCircuit::format() const -> std::string {
@@ -33,8 +33,8 @@ auto EditableCircuit::extract_layout() -> Layout {
 
     // we don't reset the registrar, as allocations might still be out there
     layout_ = std::nullopt;
-    cache_provider_ = CacheProvider {};
-    selection_builder_ = SelectionBuilder {Layout {}, cache_provider_};
+    layout_index_ = LayoutIndex {};
+    selection_builder_ = SelectionBuilder {Layout {}, layout_index_};
 
     return temp;
 }
@@ -63,7 +63,7 @@ auto to_display_state(InsertionMode insertion_mode, bool is_colliding)
 auto EditableCircuit::validate() -> void {
     const auto& layout = layout_.value();
 
-    cache_provider_.validate(layout);
+    layout_index_.validate(layout);
     registrar_.validate(layout);
     selection_builder_.validate(layout);
 }
@@ -84,7 +84,8 @@ auto EditableCircuit::add_example() -> void {
 }
 
 auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
-                                     InsertionMode insertion_mode) -> selection_old_handle_t {
+                                     InsertionMode insertion_mode)
+    -> selection_old_handle_t {
     const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
                                                                position, insertion_mode);
 
@@ -148,8 +149,8 @@ auto EditableCircuit::new_positions_representable(const Selection& selection, in
                                                          delta_x, delta_y);
 }
 
-auto EditableCircuit::move_or_delete(selection_old_handle_t handle, int delta_x, int delta_y)
-    -> void {
+auto EditableCircuit::move_or_delete(selection_old_handle_t handle, int delta_x,
+                                     int delta_y) -> void {
     editable_circuit::move_or_delete_elements(std::move(handle), layout_.value(),
                                               get_sender(), delta_x, delta_y);
 }
@@ -170,7 +171,7 @@ auto EditableCircuit::delete_all(selection_old_handle_t handle) -> void {
 }
 
 auto EditableCircuit::toggle_inverter(point_t point) -> void {
-    editable_circuit::toggle_inverter(layout_.value(), cache_provider_, point);
+    editable_circuit::toggle_inverter(layout_.value(), layout_index_, point);
 }
 
 auto EditableCircuit::toggle_wire_crosspoint(point_t point) -> void {
@@ -192,12 +193,12 @@ auto EditableCircuit::regularize_temporary_selection(
 auto EditableCircuit::capture_inserted_cross_points(const Selection& selection) const
     -> std::vector<point_t> {
     return editable_circuit::capture_inserted_cross_points(layout_.value(),
-                                                           cache_provider_, selection);
+                                                           layout_index_, selection);
 }
 
 auto EditableCircuit::split_before_insert(const Selection& selection) -> void {
     const auto split_points = editable_circuit::capture_new_splitpoints(
-        layout_.value(), cache_provider_, selection);
+        layout_.value(), layout_index_, selection);
 
     editable_circuit::split_temporary_segments(layout_.value(), get_sender(),
                                                std::move(split_points), selection);
@@ -207,7 +208,8 @@ auto EditableCircuit::get_handle() const -> selection_old_handle_t {
     return registrar_.get_handle();
 }
 
-auto EditableCircuit::get_handle(const Selection& selection) const -> selection_old_handle_t {
+auto EditableCircuit::get_handle(const Selection& selection) const
+    -> selection_old_handle_t {
     return registrar_.get_handle(selection);
 }
 
@@ -219,12 +221,12 @@ auto EditableCircuit::selection_builder() noexcept -> SelectionBuilder& {
     return selection_builder_;
 }
 
-auto EditableCircuit::caches() const -> const CacheProvider& {
-    return cache_provider_;
+auto EditableCircuit::caches() const -> const LayoutIndex& {
+    return layout_index_;
 }
 
 auto EditableCircuit::submit(const editable_circuit::InfoMessage& message) -> void {
-    cache_provider_.submit(message);
+    layout_index_.submit(message);
     registrar_.submit(message);
     selection_builder_.submit(message);
 }
@@ -234,7 +236,7 @@ auto EditableCircuit::get_sender() -> editable_circuit::MessageSender& {
 }
 
 auto EditableCircuit::get_state() -> editable_circuit::State {
-    return editable_circuit::State {layout_.value(), get_sender(), cache_provider_};
+    return editable_circuit::State {layout_.value(), get_sender(), layout_index_};
 }
 
 auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)

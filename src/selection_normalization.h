@@ -1,11 +1,11 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_SANITIZER_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_SANITIZER_H
+#ifndef LOGICSIM_SELECTION_NORMALIZATION_H
+#define LOGICSIM_SELECTION_NORMALIZATION_H
 
 #include "format/enum.h"
 
 namespace logicsim {
 
-class CollisionCache;
+class CollisionIndex;
 class Selection;
 class Layout;
 struct segment_part_t;
@@ -19,10 +19,10 @@ template <>
 auto format(SanitizeMode mode) -> std::string;
 
 auto sanitize_part(segment_part_t segment_part, const Layout &layout,
-                   const CollisionCache &cache, SanitizeMode mode) -> segment_part_t;
+                   const CollisionIndex &cache, SanitizeMode mode) -> segment_part_t;
 
 auto sanitize_selection(Selection &selection, const Layout &layout,
-                        const CollisionCache &cache, SanitizeMode mode) -> void;
+                        const CollisionIndex &cache, SanitizeMode mode) -> void;
 
 }  // namespace logicsim
 

@@ -1,12 +1,13 @@
-#ifndef LOGIKSIM_EDITABLE_CIRCUIT_HANDLER_H
-#define LOGIKSIM_EDITABLE_CIRCUIT_HANDLER_H
+#ifndef LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_HANDLER_H
+#define LOGIKSIM_COMPONENT_EDITABLE_CIRCUIT_HANDLER_H
 
-#include "editable_circuit/message_forward.h"
+#include "layout_message_forward.h"
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/line_insertion_type.h"
 
 #include <span>
 #include <vector>
+#include <optional>
 
 namespace logicsim {
 
@@ -24,10 +25,7 @@ struct PlacedElement;
 
 class Layout;
 class Selection;
-class selection_old_handle_t;
-class element_handle_t;
-class SelectionRegistrar;
-class CacheProvider;
+class LayoutIndex;
 
 namespace editable_circuit {
 class MessageSender;
@@ -45,7 +43,7 @@ namespace editable_circuit {
 struct State {
     Layout& layout;
     MessageSender& sender;
-    const CacheProvider& cache;
+    const LayoutIndex& cache;
 };
 
 //
@@ -92,7 +90,8 @@ auto move_or_delete_logic_item(Layout& Layout, MessageSender& sender,
 auto move_logic_item_unchecked(Layout& layout, const logicitem_id_t logicitem_id, int dx,
                                int dy) -> void;
 
-auto toggle_inverter(Layout& layout, const CacheProvider& cache, point_t point) -> void;
+auto toggle_inverter(Layout& layout, const LayoutIndex& cache, point_t point)
+    -> void;
 
 //
 // Wire - High level Methods
@@ -175,14 +174,15 @@ auto regularize_temporary_selection(Layout& layout, MessageSender& sender,
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t>;
 
-auto capture_inserted_cross_points(const Layout& layout, const CacheProvider& cache,
+auto capture_inserted_cross_points(const Layout& layout,
+                                   const LayoutIndex& cache,
                                    const Selection& selection) -> std::vector<point_t>;
 
 auto split_temporary_segments(Layout& layout, MessageSender& sender,
                               std::span<const point_t> split_points,
                               const Selection& selection) -> void;
 
-auto capture_new_splitpoints(const Layout& layout, const CacheProvider& cache,
+auto capture_new_splitpoints(const Layout& layout, const LayoutIndex& cache,
                              const Selection& selection) -> std::vector<point_t>;
 
 }  // namespace editable_circuit

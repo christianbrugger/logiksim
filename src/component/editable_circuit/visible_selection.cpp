@@ -1,9 +1,11 @@
-#include "editable_circuit/selection_builder.h"
+#include "component/editable_circuit/visible_selection.h"
 
-#include "editable_circuit/cache.h"
-#include "editable_circuit/message.h"
-#include "editable_circuit/sanitizer.h"
+#include "component/editable_circuit/layout_index.h"
 #include "layout.h"
+#include "layout_message.h"
+#include "layout_message_generation.h"
+#include "selection.h"
+#include "selection_normalization.h"
 
 #include <exception>
 
@@ -29,8 +31,8 @@ auto format(SelectionFunction selection_function) -> std::string {
 //
 
 SelectionBuilder::SelectionBuilder(const Layout& layout,
-                                   const CacheProvider& cache_provider)
-    : layout_ {&layout}, cache_provider_ {&cache_provider} {}
+                                   const LayoutIndex& cache_provider)
+    : layout_ {&layout}, layout_index_ {&cache_provider} {}
 
 auto SelectionBuilder::submit(const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
@@ -145,7 +147,7 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
     std::terminate();
 }
 
-auto apply_function(Selection& selection, const SpatialTree& spatial_cache,
+auto apply_function(Selection& selection, const SelectionIndex& spatial_cache,
                     const Layout& layout, SelectionBuilder::operation_t operation)
     -> void {
     const auto selected_elements = spatial_cache.query_selection(operation.rect);
@@ -165,14 +167,14 @@ auto SelectionBuilder::calculate_selection() const -> Selection {
     auto selection = Selection {initial_selection_};
 
     for (auto&& operation : operations_) {
-        apply_function(selection, cache_provider_->spatial_cache(), *layout_, operation);
+        apply_function(selection, layout_index_->spatial_cache(), *layout_, operation);
 
         if (operation.function == SelectionFunction::add) {
-            sanitize_selection(selection, *layout_, cache_provider_->collision_cache(),
+            sanitize_selection(selection, *layout_, layout_index_->collision_index(),
                                SanitizeMode::expand);
         }
         if (operation.function == SelectionFunction::substract) {
-            sanitize_selection(selection, *layout_, cache_provider_->collision_cache(),
+            sanitize_selection(selection, *layout_, layout_index_->collision_index(),
                                SanitizeMode::shrink);
         }
     }

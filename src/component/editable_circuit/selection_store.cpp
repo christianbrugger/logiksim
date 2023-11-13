@@ -1,6 +1,7 @@
 #include "component/editable_circuit/selection_store.h"
 
 #include "algorithm/fmt_join.h"
+#include "allocated_size/ankerl_unordered_dense.h"
 #include "format/container.h"
 #include "format/std_type.h"
 
@@ -13,6 +14,10 @@ namespace editable_circuit {
 auto SelectionStore::format() const -> std::string {
     const auto item_str = fmt_join(",\n", selections_.values());
     return fmt::format("SelectionStore({})", item_str);
+}
+
+auto SelectionStore::allocated_size() const -> std::size_t {
+    return get_allocated_size(selections_);
 }
 
 auto SelectionStore::clear() -> void {

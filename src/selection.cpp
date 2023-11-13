@@ -1,14 +1,15 @@
-#include "editable_circuit/selection.h"
+#include "selection.h"
 
-#include "editable_circuit/message.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "layout_message.h"
+#include "vocabulary/ordered_line.h"
 #include "vocabulary/point_fine.h"
 #include "vocabulary/rect_fine.h"
-#include "vocabulary/ordered_line.h"
+#include "allocated_size/ankerl_unordered_dense.h"
 
 namespace logicsim {
 
@@ -74,6 +75,11 @@ auto Selection::swap(Selection &other) noexcept -> void {
 auto Selection::clear() -> void {
     selected_logicitems_.clear();
     selected_segments_.clear();
+}
+
+auto Selection::allocated_size() const -> std::size_t {
+    return get_allocated_size(selected_logicitems_) +
+           get_allocated_size(selected_segments_);
 }
 
 auto Selection::format() const -> std::string {
@@ -439,8 +445,8 @@ auto add_segment(Selection &selection, segment_t segment, const Layout &layout) 
     selection.add_segment(segment_part_t {segment, part});
 }
 
-auto add_segment_tree(Selection &selection, wire_id_t wire_id,
-                      const Layout &layout) -> void {
+auto add_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
+    -> void {
     const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
         add_segment(selection, segment_t {wire_id, segment_index}, layout);
@@ -453,8 +459,8 @@ auto remove_segment(Selection &selection, segment_t segment, const Layout &layou
     selection.remove_segment(segment_part_t {segment, part});
 }
 
-auto remove_segment_tree(Selection &selection, wire_id_t wire_id,
-                         const Layout &layout) -> void {
+auto remove_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
+    -> void {
     const auto &tree = layout.wires().segment_tree(wire_id);
     for (const auto &segment_index : tree.indices()) {
         remove_segment(selection, segment_t {wire_id, segment_index}, layout);

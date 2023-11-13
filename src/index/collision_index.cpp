@@ -1,16 +1,15 @@
-#include "editable_circuit/cache/collision_cache.h"
+#include "index/collision_index.h"
 
 #include "algorithm/fmt_join.h"
 #include "algorithm/range.h"
 #include "allocated_size/ankerl_unordered_dense.h"
-#include "allocated_size/trait.h"
-#include "editable_circuit/cache/helper.h"
-#include "editable_circuit/message.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/line.h"
 #include "geometry/orientation.h"
 #include "layout_info.h"
+#include "layout_message.h"
+#include "layout_message_generation.h"
 
 #include <folly/small_vector.h>
 
@@ -23,7 +22,7 @@
 
 namespace logicsim {
 
-namespace collision_cache {
+namespace collision_index {
 
 namespace {
 
@@ -42,13 +41,13 @@ constexpr inline auto collision_points_size =
 using collision_points_t = folly::small_vector<collision_point_t, collision_points_size>;
 
 }  // namespace
-}  // namespace collision_cache
+}  // namespace collision_index
 
 //
 // Implementation
 //
 
-namespace collision_cache {
+namespace collision_index {
 
 auto is_element_body(collision_data_t data) -> bool {
     return data.logicitem_id_body                      //
@@ -156,12 +155,12 @@ auto collision_data_t::format() const -> std::string {
                        wire_id_horizontal, wire_id_vertical, to_state(*this));
 }
 
-}  // namespace collision_cache
+}  // namespace collision_index
 
 template <>
-auto format(collision_cache::ItemType type) -> std::string {
+auto format(collision_index::ItemType type) -> std::string {
     switch (type) {
-        using enum collision_cache::ItemType;
+        using enum collision_index::ItemType;
 
         case logicitem_body:
             return "logicitem_body";
@@ -185,9 +184,9 @@ auto format(collision_cache::ItemType type) -> std::string {
 }
 
 template <>
-auto format(collision_cache::CacheState state) -> std::string {
+auto format(collision_index::CacheState state) -> std::string {
     switch (state) {
-        using enum collision_cache::CacheState;
+        using enum collision_index::CacheState;
 
         case logicitem_body:
             return "logicitem_body";
@@ -219,7 +218,7 @@ auto format(collision_cache::CacheState state) -> std::string {
 //
 //
 
-namespace collision_cache {
+namespace collision_index {
 
 namespace {
 
@@ -321,41 +320,41 @@ auto collision_points(segment_info_t segment) -> collision_points_t {
     return result;
 }
 
-auto delete_if_empty(CollisionCache::map_type& map, point_t position,
-                     const collision_cache::collision_data_t& data) {
+auto delete_if_empty(CollisionIndex::map_type& map, point_t position,
+                     const collision_index::collision_data_t& data) {
     if (!data.logicitem_id_body && !data.wire_id_horizontal && !data.wire_id_vertical) {
         map.erase(position);
     }
 }
 
-auto set_connection_tag(collision_cache::collision_data_t& data) {
+auto set_connection_tag(collision_index::collision_data_t& data) {
     if (data.wire_id_vertical != null_wire_id &&
-        data.wire_id_vertical != collision_cache::connection_tag) {
+        data.wire_id_vertical != collision_index::connection_tag) {
         throw std::runtime_error("cannot set connection tag, wire_id_vertical occupied");
     }
-    data.wire_id_vertical = collision_cache::connection_tag;
+    data.wire_id_vertical = collision_index::connection_tag;
 };
 
-auto set_wire_corner_point_tag(collision_cache::collision_data_t& data) {
+auto set_wire_corner_point_tag(collision_index::collision_data_t& data) {
     if (data.logicitem_id_body != null_logicitem_id &&
-        data.logicitem_id_body != collision_cache::wire_corner_point_tag) {
+        data.logicitem_id_body != collision_index::wire_corner_point_tag) {
         throw std::runtime_error(
             "cannot set wire_corner_point tag, element body is occupied");
     }
-    data.logicitem_id_body = collision_cache::wire_corner_point_tag;
+    data.logicitem_id_body = collision_index::wire_corner_point_tag;
 };
 
-auto set_wire_cross_point_tag(collision_cache::collision_data_t& data) {
+auto set_wire_cross_point_tag(collision_index::collision_data_t& data) {
     if (data.logicitem_id_body != null_logicitem_id &&
-        data.logicitem_id_body != collision_cache::wire_cross_point_tag) {
+        data.logicitem_id_body != collision_index::wire_cross_point_tag) {
         throw std::runtime_error(
             "cannot set wire_corner_point tag, element body is occupied");
     }
-    data.logicitem_id_body = collision_cache::wire_cross_point_tag;
+    data.logicitem_id_body = collision_index::wire_cross_point_tag;
 };
 
-auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
-                          collision_cache::ItemType item_type,
+auto set_logic_item_state(CollisionIndex::map_type& map, point_t position,
+                          collision_index::ItemType item_type,
                           logicitem_id_t verify_old_id, logicitem_id_t set_new_id)
     -> void {
     const auto check_and_update = [&](logicitem_id_t& obj) {
@@ -368,7 +367,7 @@ auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
     auto& data = map[position];
 
     switch (item_type) {
-        using enum collision_cache::ItemType;
+        using enum collision_index::ItemType;
 
         case logicitem_body: {
             check_and_update(data.logicitem_id_body);
@@ -388,8 +387,8 @@ auto set_logic_item_state(CollisionCache::map_type& map, point_t position,
     delete_if_empty(map, position, data);
 }
 
-auto set_wire_state(CollisionCache::map_type& map, point_t position,
-                    collision_cache::ItemType item_type, wire_id_t verify_old_id,
+auto set_wire_state(CollisionIndex::map_type& map, point_t position,
+                    collision_index::ItemType item_type, wire_id_t verify_old_id,
                     wire_id_t set_new_id) -> void {
     const auto check_and_update = [&](wire_id_t& obj) {
         if (obj != verify_old_id) {
@@ -401,7 +400,7 @@ auto set_wire_state(CollisionCache::map_type& map, point_t position,
     auto& data = map[position];
 
     switch (item_type) {
-        using enum collision_cache::ItemType;
+        using enum collision_index::ItemType;
 
         case wire_connection: {
             set_connection_tag(data);
@@ -439,24 +438,24 @@ auto set_wire_state(CollisionCache::map_type& map, point_t position,
 
 }  // namespace
 
-}  // namespace collision_cache
+}  // namespace collision_index
 
-auto CollisionCache::format() const -> std::string {
+auto CollisionIndex::format() const -> std::string {
     if (map_.empty()) {
-        return std::string("CollisionCache = []\n");
+        return std::string("CollisionIndex = []\n");
     }
 
-    return fmt::format("CollisionCache ({} elements) = [\n  {}\n]\n", map_.size(),
+    return fmt::format("CollisionIndex ({} elements) = [\n  {}\n]\n", map_.size(),
                        fmt_join(",\n  ", map_));
 }
 
-auto CollisionCache::allocated_size() const -> std::size_t {
+auto CollisionIndex::allocated_size() const -> std::size_t {
     return get_allocated_size(map_);
 }
 
-auto CollisionCache::handle(
+auto CollisionIndex::handle(
     const editable_circuit::info_message::LogicItemInserted& message) -> void {
-    using namespace collision_cache;
+    using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
         set_logic_item_state(map_, item.position, item.type, null_logicitem_id,
@@ -464,9 +463,9 @@ auto CollisionCache::handle(
     }
 }
 
-auto CollisionCache::handle(
+auto CollisionIndex::handle(
     const editable_circuit::info_message::InsertedLogicItemIdUpdated& message) -> void {
-    using namespace collision_cache;
+    using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
         set_logic_item_state(map_, item.position, item.type, message.old_logicitem_id,
@@ -474,9 +473,9 @@ auto CollisionCache::handle(
     }
 }
 
-auto CollisionCache::handle(
+auto CollisionIndex::handle(
     const editable_circuit::info_message::LogicItemUninserted& message) -> void {
-    using namespace collision_cache;
+    using namespace collision_index;
 
     for (const auto& item : collision_points(message.data)) {
         set_logic_item_state(map_, item.position, item.type, message.logicitem_id,
@@ -484,9 +483,9 @@ auto CollisionCache::handle(
     }
 }
 
-auto CollisionCache::handle(
+auto CollisionIndex::handle(
     const editable_circuit::info_message::SegmentInserted& message) -> void {
-    using namespace collision_cache;
+    using namespace collision_index;
 
     for (const auto& item : collision_points(message.segment_info)) {
         set_wire_state(map_, item.position, item.type, null_wire_id,
@@ -494,9 +493,9 @@ auto CollisionCache::handle(
     }
 }
 
-auto CollisionCache::handle(
+auto CollisionIndex::handle(
     const editable_circuit::info_message::InsertedSegmentIdUpdated& message) -> void {
-    using namespace collision_cache;
+    using namespace collision_index;
 
     if (message.new_segment.wire_id == message.old_segment.wire_id) {
         return;
@@ -508,9 +507,9 @@ auto CollisionCache::handle(
     }
 }
 
-auto CollisionCache::handle(
+auto CollisionIndex::handle(
     const editable_circuit::info_message::InsertedEndPointsUpdated& message) -> void {
-    using namespace collision_cache;
+    using namespace collision_index;
 
     const auto wire_id = message.segment.wire_id;
 
@@ -522,9 +521,9 @@ auto CollisionCache::handle(
     }
 }
 
-auto CollisionCache::handle(
+auto CollisionIndex::handle(
     const editable_circuit::info_message::SegmentUninserted& message) -> void {
-    using namespace collision_cache;
+    using namespace collision_index;
 
     for (const auto& item : collision_points(message.segment_info)) {
         set_wire_state(map_, item.position, item.type, message.segment.wire_id,
@@ -532,7 +531,7 @@ auto CollisionCache::handle(
     }
 }
 
-auto CollisionCache::submit(const editable_circuit::InfoMessage& message) -> void {
+auto CollisionIndex::submit(const editable_circuit::InfoMessage& message) -> void {
     using namespace editable_circuit::info_message;
 
     // logic items
@@ -568,14 +567,14 @@ auto CollisionCache::submit(const editable_circuit::InfoMessage& message) -> voi
     }
 }
 
-auto CollisionCache::state_colliding(point_t position,
-                                     collision_cache::ItemType item_type) const -> bool {
+auto CollisionIndex::state_colliding(point_t position,
+                                     collision_index::ItemType item_type) const -> bool {
     if (const auto it = map_.find(position); it != map_.end()) {
         const auto data = it->second;
 
         switch (item_type) {
-            using namespace collision_cache;
-            using enum collision_cache::ItemType;
+            using namespace collision_index;
+            using enum collision_index::ItemType;
 
             case logicitem_body: {
                 return true;
@@ -607,8 +606,8 @@ auto CollisionCache::state_colliding(point_t position,
     return false;
 };
 
-auto CollisionCache::is_colliding(const layout_calculation_data_t& data) const -> bool {
-    using namespace collision_cache;
+auto CollisionIndex::is_colliding(const layout_calculation_data_t& data) const -> bool {
+    using namespace collision_index;
 
     const auto is_colliding = [&](const collision_point_t& item) {
         return state_colliding(item.position, item.type);
@@ -617,7 +616,7 @@ auto CollisionCache::is_colliding(const layout_calculation_data_t& data) const -
     return std::ranges::any_of(collision_points(data), is_colliding);
 }
 
-auto CollisionCache::get_first_wire(point_t position) const -> wire_id_t {
+auto CollisionIndex::get_first_wire(point_t position) const -> wire_id_t {
     if (const auto it = map_.find(position); it != map_.end()) {
         const auto data = it->second;
 
@@ -631,8 +630,8 @@ auto CollisionCache::get_first_wire(point_t position) const -> wire_id_t {
     return null_wire_id;
 }
 
-auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
-    using namespace collision_cache;
+auto CollisionIndex::is_colliding(ordered_line_t line) const -> bool {
+    using namespace collision_index;
 
     const auto segment = segment_info_t {
         .line = line,
@@ -647,38 +646,38 @@ auto CollisionCache::is_colliding(ordered_line_t line) const -> bool {
     return std::ranges::any_of(collision_points(segment), is_colliding);
 }
 
-auto CollisionCache::is_wires_crossing(point_t point) const -> bool {
+auto CollisionIndex::is_wires_crossing(point_t point) const -> bool {
     const auto it = map_.find(point);
 
     if (it == map_.end()) {
         return false;
     }
 
-    return collision_cache::is_wire_crossing(it->second);
+    return collision_index::is_wire_crossing(it->second);
 }
 
-auto CollisionCache::is_wire_cross_point(point_t point) const -> bool {
+auto CollisionIndex::is_wire_cross_point(point_t point) const -> bool {
     const auto it = map_.find(point);
 
     if (it == map_.end()) {
         return false;
     }
 
-    return collision_cache::is_wire_cross_point(it->second);
+    return collision_index::is_wire_cross_point(it->second);
 }
 
-auto CollisionCache::query(point_t point) const -> collision_cache::collision_data_t {
+auto CollisionIndex::query(point_t point) const -> collision_index::collision_data_t {
     const auto it = map_.find(point);
 
     if (it == map_.end()) {
-        return collision_cache::collision_data_t {};
+        return collision_index::collision_data_t {};
     }
 
     return it->second;
 }
 
-auto CollisionCache::validate(const Layout& layout) const -> void {
-    auto cache = CollisionCache {};
+auto CollisionIndex::validate(const Layout& layout) const -> void {
+    auto cache = CollisionIndex {};
     add_layout_to_cache(cache, layout);
 
     if (cache.map_ != this->map_) [[unlikely]] {

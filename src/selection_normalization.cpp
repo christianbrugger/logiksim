@@ -1,10 +1,10 @@
-#include "editable_circuit/sanitizer.h"
+#include "selection_normalization.h"
 
-#include "editable_circuit/cache/collision_cache.h"
-#include "editable_circuit/selection.h"
+#include "index/collision_index.h"
 #include "geometry/offset.h"
 #include "layout.h"
 #include "part_selection.h"
+#include "selection.h"
 #include "vocabulary/segment_part.h"
 
 #include <folly/small_vector.h>
@@ -29,7 +29,7 @@ namespace {
 
 class CrossingCache {
    public:
-    CrossingCache(const CollisionCache &cache, ordered_line_t full_line)
+    CrossingCache(const CollisionIndex &cache, ordered_line_t full_line)
         : collision_cache_ {cache}, full_line_ {full_line} {}
 
     auto is_colliding(point_t point) const -> bool {
@@ -46,7 +46,7 @@ class CrossingCache {
     }
 
    private:
-    const CollisionCache &collision_cache_;
+    const CollisionIndex &collision_cache_;
     const ordered_line_t full_line_;
 };
 
@@ -120,7 +120,7 @@ auto find_sanitized_parts(std::span<const part_t> parts, const CrossingCache &ca
 }  // namespace
 
 auto sanitize_part(segment_part_t segment_part, const Layout &layout,
-                   const CollisionCache &cache, SanitizeMode mode) -> segment_part_t {
+                   const CollisionIndex &cache, SanitizeMode mode) -> segment_part_t {
     const auto full_line = get_line(layout, segment_part.segment);
     const auto crossing_cache = CrossingCache {cache, full_line};
 
@@ -132,7 +132,7 @@ auto sanitize_part(segment_part_t segment_part, const Layout &layout,
 }
 
 auto sanitize_selection(Selection &selection, const Layout &layout,
-                        const CollisionCache &cache, SanitizeMode mode) -> void {
+                        const CollisionIndex &cache, SanitizeMode mode) -> void {
     std::vector<segment_t> to_delete {};
 
     for (const auto &entry : selection.selected_segments()) {
