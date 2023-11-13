@@ -84,7 +84,7 @@ auto EditableCircuit::add_example() -> void {
 }
 
 auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
-                                     InsertionMode insertion_mode) -> selection_handle_t {
+                                     InsertionMode insertion_mode) -> selection_old_handle_t {
     const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
                                                                position, insertion_mode);
 
@@ -97,7 +97,7 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
 
 auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t position,
                                      InsertionMode insertion_mode,
-                                     const selection_handle_t& handle) -> void {
+                                     const selection_old_handle_t& handle) -> void {
     const auto logicitem_id = editable_circuit::add_logic_item(get_state(), definition,
                                                                position, insertion_mode);
 
@@ -107,7 +107,7 @@ auto EditableCircuit::add_logic_item(LogicItemDefinition definition, point_t pos
 }
 
 auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode)
-    -> selection_handle_t {
+    -> selection_old_handle_t {
     auto handle = registrar_.get_handle();
 
     add_wire_segment(get_state(), handle.get(), line, insertion_mode);
@@ -116,14 +116,14 @@ auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode
 }
 
 auto EditableCircuit::add_line_segment(line_t line, InsertionMode insertion_mode,
-                                       const selection_handle_t& handle) -> void {
+                                       const selection_old_handle_t& handle) -> void {
     add_wire_segment(get_state(), handle.get(), line, insertion_mode);
 }
 
 auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
                                         LineInsertionType segment_type,
                                         InsertionMode insertion_mode)
-    -> selection_handle_t {
+    -> selection_old_handle_t {
     auto handle = registrar_.get_handle();
 
     editable_circuit::add_wire(get_state(), p0, p1, segment_type, insertion_mode,
@@ -135,7 +135,7 @@ auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
 auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
                                         LineInsertionType segment_type,
                                         InsertionMode insertion_mode,
-                                        const selection_handle_t& handle) -> void {
+                                        const selection_old_handle_t& handle) -> void {
     editable_circuit::add_wire(get_state(), p0, p1, segment_type, insertion_mode,
                                handle.get());
 }
@@ -148,13 +148,13 @@ auto EditableCircuit::new_positions_representable(const Selection& selection, in
                                                          delta_x, delta_y);
 }
 
-auto EditableCircuit::move_or_delete(selection_handle_t handle, int delta_x, int delta_y)
+auto EditableCircuit::move_or_delete(selection_old_handle_t handle, int delta_x, int delta_y)
     -> void {
     editable_circuit::move_or_delete_elements(std::move(handle), layout_.value(),
                                               get_sender(), delta_x, delta_y);
 }
 
-auto EditableCircuit::change_insertion_mode(selection_handle_t handle,
+auto EditableCircuit::change_insertion_mode(selection_old_handle_t handle,
                                             InsertionMode new_insertion_mode) -> void {
     editable_circuit::change_insertion_mode(std::move(handle), get_state(),
                                             new_insertion_mode);
@@ -165,7 +165,7 @@ auto EditableCircuit::move_unchecked(const Selection& selection, int delta_x, in
     editable_circuit::move_unchecked(selection, layout_.value(), delta_x, delta_y);
 }
 
-auto EditableCircuit::delete_all(selection_handle_t handle) -> void {
+auto EditableCircuit::delete_all(selection_old_handle_t handle) -> void {
     editable_circuit::delete_all(std::move(handle), get_state());
 }
 
@@ -203,11 +203,11 @@ auto EditableCircuit::split_before_insert(const Selection& selection) -> void {
                                                std::move(split_points), selection);
 }
 
-auto EditableCircuit::get_handle() const -> selection_handle_t {
+auto EditableCircuit::get_handle() const -> selection_old_handle_t {
     return registrar_.get_handle();
 }
 
-auto EditableCircuit::get_handle(const Selection& selection) const -> selection_handle_t {
+auto EditableCircuit::get_handle(const Selection& selection) const -> selection_old_handle_t {
     return registrar_.get_handle(selection);
 }
 

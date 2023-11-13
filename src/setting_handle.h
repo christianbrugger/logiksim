@@ -86,7 +86,7 @@ class SettingWidgetRegistry : public QObject {
     EditableCircuit& editable_circuit_;
     QTimer cleanup_timer_;
 
-    ankerl::unordered_dense::map<QWidget*, selection_handle_t> map_;
+    ankerl::unordered_dense::map<QWidget*, selection_old_handle_t> map_;
 };
 
 class AttributeSetter {

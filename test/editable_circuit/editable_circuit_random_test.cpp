@@ -26,7 +26,7 @@ struct AddResult {
     point_t p1;
     LineInsertionType line_segment_type;
     InsertionMode insertion_mode;
-    selection_handle_t handle;
+    selection_old_handle_t handle;
     std::vector<ordered_line_t> sorted_inserted_lines;
 
     auto format() const -> std::string {
@@ -186,7 +186,7 @@ TEST(EditableCircuitRandom, AddRandomWiresRandomMode) {
 
 class TrackedSelection {
    public:
-    TrackedSelection(EditableCircuit &editable_circuit, selection_handle_t handle,
+    TrackedSelection(EditableCircuit &editable_circuit, selection_old_handle_t handle,
                      InsertionMode starting_mode,
                      std::optional<std::vector<point_t>> cross_points = {})
         : editable_circuit_(editable_circuit),
@@ -224,7 +224,7 @@ class TrackedSelection {
 
    private:
     EditableCircuit &editable_circuit_;
-    selection_handle_t handle_;
+    selection_old_handle_t handle_;
     InsertionMode insertion_mode_;
     std::optional<std::vector<point_t>> cross_points_;
 };

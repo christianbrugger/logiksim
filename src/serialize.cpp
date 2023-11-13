@@ -312,7 +312,7 @@ LoadLayoutResult::~LoadLayoutResult() = default;
 auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
                            InsertionMode insertion_mode,
                            std::optional<point_t> load_position) const
-    -> selection_handle_t {
+    -> selection_old_handle_t {
     if (!data_) {
         throw std::runtime_error("no layout data");
     }

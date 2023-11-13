@@ -72,7 +72,7 @@ class MouseElementInsertLogic {
     EditableCircuit& editable_circuit_;
     LogicItemDefinition element_definition_;
 
-    selection_handle_t temp_element_ {};
+    selection_old_handle_t temp_element_ {};
 };
 
 class MouseLineInsertLogic {
@@ -100,7 +100,7 @@ class MouseLineInsertLogic {
    private:
     EditableCircuit& editable_circuit_;
     std::optional<point_t> first_position_ {};
-    selection_handle_t temp_element_ {};
+    selection_old_handle_t temp_element_ {};
     std::optional<LineInsertionType> insertion_type_ {};
 };
 
@@ -141,7 +141,7 @@ class MouseMoveSelectionLogic {
     };
 
     auto get_selection() -> const Selection&;
-    auto copy_selection() -> selection_handle_t;
+    auto copy_selection() -> selection_old_handle_t;
 
     auto convert_to(InsertionMode mode) -> void;
     auto restore_original_positions() -> void;

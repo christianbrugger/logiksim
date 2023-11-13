@@ -32,6 +32,7 @@ struct operation_t {
 
 }  // namespace selection_builder
 
+// TODO rename to Selection
 class SelectionBuilder {
    public:
     using operation_t = selection_builder::operation_t;
@@ -44,12 +45,14 @@ class SelectionBuilder {
 
     auto clear() -> void;
     auto add(SelectionFunction function, rect_fine_t rect) -> void;
+    // TODO remove
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
     auto set_selection(Selection selection) -> void;
 
     [[nodiscard]] auto selection() const -> const Selection &;
 
+    // TODO remove
     [[nodiscard]] auto all_operations_applied() const -> bool;
     auto apply_all_operations() -> void;
 

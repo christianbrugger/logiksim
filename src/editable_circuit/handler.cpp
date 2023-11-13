@@ -2331,7 +2331,7 @@ auto toggle_inserted_wire_crosspoint(State state, point_t point) -> void {
 // Handle Methods
 //
 
-auto change_insertion_mode(selection_handle_t handle, State state,
+auto change_insertion_mode(selection_old_handle_t handle, State state,
                            InsertionMode new_insertion_mode) -> void {
     if (!handle) {
         return;
@@ -2390,7 +2390,7 @@ auto new_positions_representable(const Selection& selection, const Layout& layou
            new_wire_positions_representable(selection, layout, delta_x, delta_y);
 }
 
-auto move_or_delete_elements(selection_handle_t handle, Layout& layout,
+auto move_or_delete_elements(selection_old_handle_t handle, Layout& layout,
                              MessageSender& sender, int delta_x, int delta_y) -> void {
     if (!handle) {
         return;
@@ -2444,7 +2444,7 @@ auto move_unchecked(const Selection& selection, Layout& layout, int delta_x, int
     }
 }
 
-auto delete_all(selection_handle_t handle, State state) -> void {
+auto delete_all(selection_old_handle_t handle, State state) -> void {
     if (!handle) {
         return;
     }

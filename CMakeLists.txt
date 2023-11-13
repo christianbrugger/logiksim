@@ -47,6 +47,7 @@ set(LS_CORE_SOURCES
     src/component/layout/wire_store.cpp
     src/component/line_tree/line_store.cpp
     src/component/line_tree/tree_builder.cpp
+    src/component/selection_registry/registry_store.cpp
     src/component/simulation/history_buffer.cpp
     src/component/simulation/history_calculation.cpp
     src/component/simulation/history_entry.cpp
@@ -227,6 +228,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/segment_info.cpp
     src/vocabulary/segment_part.cpp
     src/vocabulary/segment_point_type.cpp
+    src/vocabulary/selection_id.cpp
     src/vocabulary/shape_draw_type.cpp
     src/vocabulary/simulation_setting.cpp
     src/vocabulary/text_alignment.cpp
@@ -262,6 +264,7 @@ set(LS_CORE_SOURCES
     src/schematic.cpp
     src/schematic_generation.cpp
     src/segment_tree.cpp
+    src/selection_resource.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
     src/setting_handle.cpp

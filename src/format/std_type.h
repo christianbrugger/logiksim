@@ -91,4 +91,40 @@ struct fmt::formatter<std::unique_ptr<T>, Char> {
     }
 };
 
+//
+// std::shared_ptr
+//
+
+template <typename T, typename Char>
+struct fmt::formatter<std::shared_ptr<T>, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const std::shared_ptr<T> &obj, fmt::format_context &ctx) {
+        if (obj) {
+            return fmt::format_to(ctx.out(), "{}", *obj);
+        }
+        return fmt::format_to(ctx.out(), "nullptr");
+    }
+};
+
+//
+// std::weak_ptr
+//
+
+template <typename T, typename Char>
+struct fmt::formatter<std::weak_ptr<T>, Char> {
+    static constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    static auto format(const std::weak_ptr<T> &obj, fmt::format_context &ctx) {
+        if (auto ptr = obj.lock()) {
+            return fmt::format_to(ctx.out(), "{}", *ptr);
+        }
+        return fmt::format_to(ctx.out(), "nullptr");
+    }
+};
+
 #endif

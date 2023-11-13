@@ -4,61 +4,33 @@
 #include "editable_circuit/message_forward.h"
 #include "format/struct.h"
 #include "iterator_adaptor/transform_view.h"
+#include "vocabulary/selection_id.h"
 
 #include <ankerl/unordered_dense.h>
 
+#include <memory>
 #include <type_traits>
 #include <utility>
 
 namespace logicsim {
 
 class Layout;
-class selection_handle_t;
+class selection_old_handle_t;
 class Selection;
 
-struct selection_key_t {
-    using value_type = int64_t;
-    value_type value;
-
-    [[nodiscard]] auto format() const -> std::string;
-
-    [[nodiscard]] auto operator==(const selection_key_t& other) const -> bool = default;
-    [[nodiscard]] auto operator<=>(const selection_key_t& other) const = default;
-
-    auto operator++() noexcept -> selection_key_t&;
-    auto operator++(int) noexcept -> selection_key_t;
-};
-
-static_assert(std::is_trivial_v<selection_key_t>);
-
-inline constexpr auto null_selection_key = selection_key_t {-1};
-
-}  // namespace logicsim
-
-template <>
-struct ankerl::unordered_dense::hash<logicsim::selection_key_t> {
-    using is_avalanching = void;
-
-    [[nodiscard]] auto operator()(const logicsim::selection_key_t& obj) const noexcept
-        -> uint64_t {
-        return detail::wyhash::hash(static_cast<uint64_t>(obj.value));
-    }
-};
-
-//
-// Registrar
-//
-namespace logicsim {
-
+// TODO remove detail namespace
 namespace detail::selection_registrar {
 
+// TODO don't store unique ptr
 using selection_map_t =
-    ankerl::unordered_dense::map<selection_key_t, std::unique_ptr<Selection>>;
+    ankerl::unordered_dense::map<selection_id_t, std::unique_ptr<Selection>>;
 
+// TODO remove
 auto unpack_selection(const selection_map_t::value_type& value) -> Selection&;
 
 }  // namespace detail::selection_registrar
 
+// TODO rename to SelectionRegistry
 class SelectionRegistrar {
    public:
     [[nodiscard]] auto format() const -> std::string;
@@ -66,8 +38,8 @@ class SelectionRegistrar {
     auto submit(const editable_circuit::InfoMessage& message) -> void;
     auto validate(const Layout& layout) const -> void;
 
-    [[nodiscard]] auto get_handle() const -> selection_handle_t;
-    [[nodiscard]] auto get_handle(const Selection& selection) const -> selection_handle_t;
+    [[nodiscard]] auto get_handle() const -> selection_old_handle_t;
+    [[nodiscard]] auto get_handle(const Selection& selection) const -> selection_old_handle_t;
 
     [[nodiscard]] auto selections() const {
         return transform_view(allocated_selections_,
@@ -75,13 +47,13 @@ class SelectionRegistrar {
     }
 
    private:
-    friend selection_handle_t;
-    auto unregister_selection(selection_key_t selection_key) const -> void;
+    friend selection_old_handle_t;
+    auto unregister_selection(selection_id_t selection_key) const -> void;
 
     using selection_map_t = detail::selection_registrar::selection_map_t;
 
     // we want our state to be mutable, as we are like an allocator
-    mutable selection_key_t next_selection_key_ {0};
+    mutable selection_id_t next_selection_key_ {0};
     mutable selection_map_t allocated_selections_ {};
 };
 
@@ -90,26 +62,26 @@ class SelectionRegistrar {
 //
 
 // TODO make Selection part of the handle, so we don't introduce allocations
-class selection_handle_t {
+class selection_old_handle_t {
    public:
     using type = Selection;
     using reference = Selection&;
     using pointer = Selection*;
 
-    selection_handle_t() = default;
-    [[nodiscard]] explicit selection_handle_t(Selection& selection,
+    selection_old_handle_t() = default;
+    [[nodiscard]] explicit selection_old_handle_t(Selection& selection,
                                               const SelectionRegistrar& registrar,
-                                              selection_key_t selection_key);
-    ~selection_handle_t();
+                                              selection_id_t selection_key);
+    ~selection_old_handle_t();
     // disallow copying
-    selection_handle_t(const selection_handle_t& other) = delete;
-    auto operator=(const selection_handle_t& other) = delete;
+    selection_old_handle_t(const selection_old_handle_t& other) = delete;
+    auto operator=(const selection_old_handle_t& other) = delete;
     // allow move
-    selection_handle_t(selection_handle_t&& other) noexcept;
-    auto operator=(selection_handle_t&& other) noexcept -> selection_handle_t&;
+    selection_old_handle_t(selection_old_handle_t&& other) noexcept;
+    auto operator=(selection_old_handle_t&& other) noexcept -> selection_old_handle_t&;
 
     // we allow explicit copy, as it is expensive
-    auto copy() const -> selection_handle_t;
+    auto copy() const -> selection_old_handle_t;
 
     [[nodiscard]] auto format() const -> std::string;
 
@@ -122,30 +94,30 @@ class selection_handle_t {
     [[nodiscard]] auto operator->() const noexcept -> pointer;
 
     auto reset() noexcept -> void;
-    auto swap(selection_handle_t& other) noexcept -> void;
+    auto swap(selection_old_handle_t& other) noexcept -> void;
 
     auto operator==(std::nullptr_t) const noexcept -> bool;
 
    private:
     Selection* selection_ {nullptr};
     const SelectionRegistrar* registrar_ {nullptr};
-    selection_key_t selection_key_ {null_selection_key};
+    selection_id_t selection_key_ {null_selection_id};
 };
 
-auto swap(selection_handle_t& a, selection_handle_t& b) noexcept -> void;
+auto swap(selection_old_handle_t& a, selection_old_handle_t& b) noexcept -> void;
 
 }  // namespace logicsim
 
 template <>
-auto std::swap(logicsim::selection_handle_t& a, logicsim::selection_handle_t& b) noexcept
+auto std::swap(logicsim::selection_old_handle_t& a, logicsim::selection_old_handle_t& b) noexcept
     -> void;
 
 namespace logicsim {
 
-static_assert(!std::is_copy_constructible_v<selection_handle_t>);
-static_assert(!std::is_copy_assignable_v<selection_handle_t>);
-static_assert(std::is_move_constructible_v<selection_handle_t>);
-static_assert(std::is_move_assignable_v<selection_handle_t>);
+static_assert(!std::is_copy_constructible_v<selection_old_handle_t>);
+static_assert(!std::is_copy_assignable_v<selection_old_handle_t>);
+static_assert(std::is_move_constructible_v<selection_old_handle_t>);
+static_assert(std::is_move_assignable_v<selection_old_handle_t>);
 
 }  // namespace logicsim
 

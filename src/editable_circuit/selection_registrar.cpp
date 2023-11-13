@@ -10,21 +10,6 @@
 
 namespace logicsim {
 
-auto selection_key_t::format() const -> std::string {
-    return fmt::format("{}", value);
-}
-
-auto selection_key_t::operator++() noexcept -> selection_key_t& {
-    ++value;
-    return *this;
-}
-
-auto selection_key_t::operator++(int) noexcept -> selection_key_t {
-    auto tmp = *this;
-    operator++();
-    return tmp;
-}
-
 //
 // Selection Registrar
 //
@@ -57,7 +42,7 @@ auto SelectionRegistrar::submit(const editable_circuit::InfoMessage& message) ->
     }
 }
 
-auto SelectionRegistrar::get_handle() const -> selection_handle_t {
+auto SelectionRegistrar::get_handle() const -> selection_old_handle_t {
     const auto key = next_selection_key_++;
 
     auto&& [it, inserted] =
@@ -68,17 +53,17 @@ auto SelectionRegistrar::get_handle() const -> selection_handle_t {
     }
 
     Selection& selection = *(it->second.get());
-    return selection_handle_t {selection, *this, key};
+    return selection_old_handle_t {selection, *this, key};
 }
 
 auto SelectionRegistrar::get_handle(const Selection& selection) const
-    -> selection_handle_t {
+    -> selection_old_handle_t {
     auto handle = get_handle();
     handle.value() = selection;
     return handle;
 }
 
-auto SelectionRegistrar::unregister_selection(selection_key_t selection_key) const
+auto SelectionRegistrar::unregister_selection(selection_id_t selection_key) const
     -> void {
     const auto deleted = allocated_selections_.erase(selection_key);
 
@@ -91,12 +76,12 @@ auto SelectionRegistrar::unregister_selection(selection_key_t selection_key) con
 // Selection Handle
 //
 
-selection_handle_t::selection_handle_t(Selection& selection,
+selection_old_handle_t::selection_old_handle_t(Selection& selection,
                                        const SelectionRegistrar& registrar,
-                                       selection_key_t selection_key)
+                                       selection_id_t selection_key)
     : selection_ {&selection}, registrar_ {&registrar}, selection_key_ {selection_key} {}
 
-auto selection_handle_t::swap(selection_handle_t& other) noexcept -> void {
+auto selection_old_handle_t::swap(selection_old_handle_t& other) noexcept -> void {
     using std::swap;
 
     swap(selection_, other.selection_);
@@ -104,81 +89,81 @@ auto selection_handle_t::swap(selection_handle_t& other) noexcept -> void {
     swap(selection_key_, other.selection_key_);
 }
 
-selection_handle_t::~selection_handle_t() {
+selection_old_handle_t::~selection_old_handle_t() {
     if (registrar_ != nullptr) {
         registrar_->unregister_selection(selection_key_);
     }
 }
 
-selection_handle_t::selection_handle_t(selection_handle_t&& other) noexcept {
+selection_old_handle_t::selection_old_handle_t(selection_old_handle_t&& other) noexcept {
     swap(other);
 }
 
-auto selection_handle_t::operator=(selection_handle_t&& other) noexcept
-    -> selection_handle_t& {
+auto selection_old_handle_t::operator=(selection_old_handle_t&& other) noexcept
+    -> selection_old_handle_t& {
     // we add a 'copy' so our state is destroyed other at the end of this scope
-    auto temp = selection_handle_t {std::move(other)};
+    auto temp = selection_old_handle_t {std::move(other)};
     swap(temp);
     return *this;
 }
 
-auto selection_handle_t::copy() const -> selection_handle_t {
+auto selection_old_handle_t::copy() const -> selection_old_handle_t {
     if (registrar_ == nullptr || selection_ == nullptr) {
-        return selection_handle_t {};
+        return selection_old_handle_t {};
     }
     return registrar_->get_handle(*selection_);
 }
 
-auto selection_handle_t::format() const -> std::string {
+auto selection_old_handle_t::format() const -> std::string {
     if (has_value()) {
-        return fmt::format("selection_handle_t(selection_key = {}, {})", selection_key_,
+        return fmt::format("selection_old_handle_t(selection_key = {}, {})", selection_key_,
                            value());
     }
-    return fmt::format("selection_handle_t(nullptr)", value());
+    return fmt::format("selection_old_handle_t(nullptr)", value());
 }
 
-auto selection_handle_t::reset() noexcept -> void {
-    *this = selection_handle_t {};
+auto selection_old_handle_t::reset() noexcept -> void {
+    *this = selection_old_handle_t {};
 }
 
-auto selection_handle_t::value() const -> reference {
+auto selection_old_handle_t::value() const -> reference {
     if (!has_value()) [[unlikely]] {
         throw std::runtime_error("selection is not set");
     }
     return *selection_;
 }
 
-auto selection_handle_t::operator*() const noexcept -> reference {
+auto selection_old_handle_t::operator*() const noexcept -> reference {
     return *selection_;
 }
 
-auto selection_handle_t::get() const -> pointer {
+auto selection_old_handle_t::get() const -> pointer {
     return selection_;
 }
 
-auto selection_handle_t::operator->() const noexcept -> pointer {
+auto selection_old_handle_t::operator->() const noexcept -> pointer {
     return selection_;
 }
 
-auto selection_handle_t::operator==(std::nullptr_t) const noexcept -> bool {
+auto selection_old_handle_t::operator==(std::nullptr_t) const noexcept -> bool {
     return selection_ == nullptr;
 }
 
-selection_handle_t::operator bool() const noexcept {
+selection_old_handle_t::operator bool() const noexcept {
     return has_value();
 }
 
-auto selection_handle_t::has_value() const noexcept -> bool {
+auto selection_old_handle_t::has_value() const noexcept -> bool {
     return selection_ != nullptr;
 }
 
-auto swap(selection_handle_t& a, selection_handle_t& b) noexcept -> void {
+auto swap(selection_old_handle_t& a, selection_old_handle_t& b) noexcept -> void {
     a.swap(b);
 }
 }  // namespace logicsim
 
 template <>
-auto std::swap(logicsim::selection_handle_t& a, logicsim::selection_handle_t& b) noexcept
+auto std::swap(logicsim::selection_old_handle_t& a, logicsim::selection_old_handle_t& b) noexcept
     -> void {
     a.swap(b);
 }

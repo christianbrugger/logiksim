@@ -14,7 +14,7 @@ namespace logicsim {
 class Layout;
 class Selection;
 class EditableCircuit;
-class selection_handle_t;
+class selection_old_handle_t;
 struct ViewConfig;
 struct SimulationSettings;
 
@@ -43,7 +43,7 @@ class LoadLayoutResult {
 
    public:
     auto add(EditableCircuit& editable_circuit, InsertionMode insertion_mode,
-             std::optional<point_t> load_position = {}) const -> selection_handle_t;
+             std::optional<point_t> load_position = {}) const -> selection_old_handle_t;
 
     auto apply(ViewConfig& view_config) const -> void;
 

@@ -34,6 +34,7 @@ using segment_map_t = ankerl::unordered_dense::map<map_key_t, map_value_t>;
 
 }  // namespace detail::selection
 
+// TODO rename to TrackedElements
 class Selection;
 
 [[nodiscard]] auto has_logic_items(const Selection &selection) -> bool;

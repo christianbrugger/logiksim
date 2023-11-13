@@ -352,7 +352,7 @@ auto MouseMoveSelectionLogic::get_selection() -> const Selection& {
     return builder_.selection();
 }
 
-auto MouseMoveSelectionLogic::copy_selection() -> selection_handle_t {
+auto MouseMoveSelectionLogic::copy_selection() -> selection_old_handle_t {
     return editable_circuit_.get_handle(get_selection());
 }
 
