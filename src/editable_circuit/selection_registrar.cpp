@@ -1,10 +1,8 @@
-
 #include "editable_circuit/selection_registrar.h"
 
 #include "algorithm/fmt_join.h"
 #include "editable_circuit/message.h"
 #include "editable_circuit/selection.h"
-#include "exception.h"
 #include "format/std_type.h"
 #include "layout.h"
 
@@ -35,7 +33,7 @@ namespace detail::selection_registrar {
 
 auto unpack_selection(const selection_map_t::value_type& value) -> Selection& {
     if (value.second == nullptr) [[unlikely]] {
-        throw_exception("selection cannot be null");
+        throw std::runtime_error("selection cannot be null");
     }
     return *value.second;
 }
@@ -66,7 +64,7 @@ auto SelectionRegistrar::get_handle() const -> selection_handle_t {
         allocated_selections_.emplace(key, std::make_unique<Selection>());
 
     if (!inserted) {
-        throw_exception("unable to create new selection.");
+        throw std::runtime_error("unable to create new selection.");
     }
 
     Selection& selection = *(it->second.get());
@@ -82,10 +80,10 @@ auto SelectionRegistrar::get_handle(const Selection& selection) const
 
 auto SelectionRegistrar::unregister_selection(selection_key_t selection_key) const
     -> void {
-    const auto delted = allocated_selections_.erase(selection_key);
+    const auto deleted = allocated_selections_.erase(selection_key);
 
-    if (!delted) {
-        throw_exception("unable to delete selection that should be present.");
+    if (!deleted) {
+        throw std::runtime_error("unable to delete selection that should be present.");
     }
 }
 
@@ -145,7 +143,7 @@ auto selection_handle_t::reset() noexcept -> void {
 
 auto selection_handle_t::value() const -> reference {
     if (!has_value()) [[unlikely]] {
-        throw_exception("selection is not set");
+        throw std::runtime_error("selection is not set");
     }
     return *selection_;
 }

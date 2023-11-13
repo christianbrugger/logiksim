@@ -1,13 +1,28 @@
-
 #include "editable_circuit/selection_builder.h"
 
 #include "editable_circuit/cache.h"
 #include "editable_circuit/message.h"
 #include "editable_circuit/sanitizer.h"
 #include "layout.h"
-#include "exception.h"
+
+#include <exception>
 
 namespace logicsim {
+
+template <>
+auto format(SelectionFunction selection_function) -> std::string {
+    switch (selection_function) {
+        using enum SelectionFunction;
+
+        case toggle:
+            return "toggle";
+        case add:
+            return "add";
+        case substract:
+            return "substract";
+    }
+    std::terminate();
+}
 
 //
 // Selection Builder
@@ -55,7 +70,7 @@ auto SelectionBuilder::add(SelectionFunction function, rect_fine_t rect) -> void
 
 auto SelectionBuilder::update_last(rect_fine_t rect) -> void {
     if (operations_.empty()) [[unlikely]] {
-        throw_exception("Cannot update last with no operations.");
+        throw std::runtime_error("Cannot update last with no operations.");
     }
     if (operations_.back().rect == rect) {
         return;
@@ -67,7 +82,7 @@ auto SelectionBuilder::update_last(rect_fine_t rect) -> void {
 
 auto SelectionBuilder::pop_last() -> void {
     if (operations_.empty()) [[unlikely]] {
-        throw_exception("Cannot remove last with no operations.");
+        throw std::runtime_error("Cannot remove last with no operations.");
     }
 
     operations_.pop_back();
@@ -99,8 +114,7 @@ auto add_element_to_selection(logicitem_id_t logicitem_id, SelectionFunction fun
             return;
         }
     }
-
-    throw_exception("Unknown function");
+    std::terminate();
 }
 
 auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t operation,
@@ -125,11 +139,10 @@ auto add_segment_to_selection(segment_t segment, SelectionBuilder::operation_t o
             return;
         }
         case toggle: {
-            throw_exception("not implemented");
+            throw std::runtime_error("not implemented");
         }
     }
-
-    throw_exception("Unknown function");
+    std::terminate();
 }
 
 auto apply_function(Selection& selection, const SpatialTree& spatial_cache,
@@ -139,8 +152,7 @@ auto apply_function(Selection& selection, const SpatialTree& spatial_cache,
 
     for (auto&& element : selected_elements) {
         if (element.is_logicitem()) {
-            add_element_to_selection(element.logicitem(), operation.function,
-                                     selection);
+            add_element_to_selection(element.logicitem(), operation.function, selection);
         } else {
             add_segment_to_selection(element.segment(), operation, selection, layout);
         }

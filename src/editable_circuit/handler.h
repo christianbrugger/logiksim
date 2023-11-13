@@ -6,6 +6,7 @@
 #include "vocabulary/line_insertion_type.h"
 
 #include <span>
+#include <vector>
 
 namespace logicsim {
 

@@ -3,14 +3,19 @@
 
 #include "editable_circuit/message_forward.h"
 #include "part_selection.h"
-#include "vocabulary.h"
 #include "vocabulary/logicitem_id.h"
+#include "vocabulary/segment.h"
 
 #include <ankerl/unordered_dense.h>
-#include <folly/small_vector.h>
+
+#include <utility>  // std::pair
+#include <vector>
 
 namespace logicsim {
 
+struct point_fine_t;
+struct ordered_line_t;
+struct segment_part_t;
 class Layout;
 
 namespace detail::selection {
@@ -119,13 +124,13 @@ auto iter_parts(part_t full_part, const PartSelection &parts, Func func) {
 //}
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void;
-auto add_segment_tree(Selection &selection, wire_id_t wire_id,
-                      const Layout &layout) -> void;
+auto add_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
+    -> void;
 
 auto remove_segment(Selection &selection, segment_t segment, const Layout &layout)
     -> void;
-auto remove_segment_tree(Selection &selection, wire_id_t wire_id,
-                         const Layout &layout) -> void;
+auto remove_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)
+    -> void;
 
 auto add_segment_part(Selection &selection, const Layout &layout, segment_t segment,
                       point_fine_t point) -> void;

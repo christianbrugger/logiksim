@@ -1,17 +1,16 @@
-
 #include "editable_circuit/sanitizer.h"
 
 #include "editable_circuit/cache/collision_cache.h"
 #include "editable_circuit/selection.h"
-#include "exception.h"
 #include "geometry/offset.h"
 #include "layout.h"
 #include "part_selection.h"
+#include "vocabulary/segment_part.h"
 
 #include <folly/small_vector.h>
 
-#include <queue>
-#include <utility>
+#include <exception>
+#include <vector>
 
 namespace logicsim {
 
@@ -23,7 +22,7 @@ auto format(SanitizeMode mode) -> std::string {
         case SanitizeMode::expand:
             return "expand";
     }
-    throw_exception("unknown SanitizeMode");
+    std::terminate();
 }
 
 namespace {

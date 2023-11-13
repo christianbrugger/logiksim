@@ -1,7 +1,5 @@
 #include "editable_circuit/message.h"
 
-#include "exception.h"
-
 #include <fmt/core.h>
 
 namespace logicsim::editable_circuit {

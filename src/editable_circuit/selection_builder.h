@@ -3,11 +3,16 @@
 
 #include "editable_circuit/message_forward.h"
 #include "editable_circuit/selection.h"
+#include "format/enum.h"
+#include "vocabulary/rect_fine.h"
 
-#include <boost/container/vector.hpp>
 #include <gsl/gsl>
 
 namespace logicsim {
+
+class Layout;
+class SpatialTree;
+class CacheProvider;
 
 enum class SelectionFunction {
     toggle,
@@ -15,16 +20,21 @@ enum class SelectionFunction {
     substract,
 };
 
-class Layout;
-class SpatialTree;
-class CacheProvider;
+template <>
+auto format(SelectionFunction selection_function) -> std::string;
+
+namespace selection_builder {
+
+struct operation_t {
+    SelectionFunction function;
+    rect_fine_t rect;
+};
+
+}  // namespace selection_builder
 
 class SelectionBuilder {
    public:
-    struct operation_t {
-        SelectionFunction function;
-        rect_fine_t rect;
-    };
+    using operation_t = selection_builder::operation_t;
 
    public:
     [[nodiscard]] explicit SelectionBuilder(const Layout &layout,

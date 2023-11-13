@@ -1,13 +1,14 @@
-
 #include "editable_circuit/selection.h"
 
 #include "editable_circuit/message.h"
-#include "exception.h"
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
+#include "vocabulary/point_fine.h"
+#include "vocabulary/rect_fine.h"
+#include "vocabulary/ordered_line.h"
 
 namespace logicsim {
 
@@ -95,7 +96,7 @@ auto Selection::empty() const noexcept -> bool {
 
 auto Selection::add(logicitem_id_t logicitem_id) -> void {
     if (!logicitem_id) [[unlikely]] {
-        throw_exception("added element_id needs to be valid");
+        throw std::runtime_error("added element_id needs to be valid");
     }
 
     selected_logicitems_.insert(logicitem_id);
@@ -103,7 +104,7 @@ auto Selection::add(logicitem_id_t logicitem_id) -> void {
 
 auto Selection::remove_logicitem(logicitem_id_t logicitem_id) -> void {
     if (!logicitem_id) [[unlikely]] {
-        throw_exception("removed logicitem_id needs to be valid");
+        throw std::runtime_error("removed logicitem_id needs to be valid");
     }
 
     selected_logicitems_.erase(logicitem_id);
@@ -111,7 +112,7 @@ auto Selection::remove_logicitem(logicitem_id_t logicitem_id) -> void {
 
 auto Selection::toggle_logicitem(logicitem_id_t logicitem_id) -> void {
     if (!logicitem_id) [[unlikely]] {
-        throw_exception("toggled logicitem_id needs to be valid");
+        throw std::runtime_error("toggled logicitem_id needs to be valid");
     }
 
     if (is_selected(logicitem_id)) {
@@ -128,14 +129,14 @@ auto Selection::add_segment(segment_part_t segment_part) -> void {
         const auto value = detail::selection::map_value_t {segment_part.part};
         bool inserted = selected_segments_.emplace(segment_part.segment, value).second;
         if (!inserted) [[unlikely]] {
-            throw_exception("unable to insert value");
+            throw std::runtime_error("unable to insert value");
         }
         return;
     }
 
     auto &entries = it->second;
     if (entries.size() == 0) [[unlikely]] {
-        throw_exception("found segment selection with zero selection entries");
+        throw std::runtime_error("found segment selection with zero selection entries");
     }
 
     entries.add_part(segment_part.part);
@@ -149,14 +150,14 @@ auto Selection::remove_segment(segment_part_t segment_part) -> void {
 
     auto &entries = it->second;
     if (entries.size() == 0) [[unlikely]] {
-        throw_exception("found segment selection with zero selection entries");
+        throw std::runtime_error("found segment selection with zero selection entries");
     }
 
     entries.remove_part(segment_part.part);
 
     if (entries.empty()) {
         if (!selected_segments_.erase(segment_part.segment)) {
-            throw_exception("unable to delete key");
+            throw std::runtime_error("unable to delete key");
         }
     }
 }
@@ -209,7 +210,7 @@ auto Selection::selected_segments(segment_t segment) const -> const PartSelectio
 
     auto &entries = it->second;
     if (entries.size() == 0) [[unlikely]] {
-        throw_exception("found segment selection with zero selection entries");
+        throw std::runtime_error("found segment selection with zero selection entries");
     }
 
     return it->second;
@@ -245,7 +246,7 @@ auto Selection::handle(const editable_circuit::info_message::LogicItemIdUpdated 
             selected_logicitems_.insert(message.new_logicitem_id).second;
 
         if (!inserted) [[unlikely]] {
-            throw_exception("element already existed");
+            throw std::runtime_error("element already existed");
         }
     }
 }
@@ -262,7 +263,7 @@ auto Selection::handle(const editable_circuit::info_message::SegmentIdUpdated &m
             selected_segments_.emplace(message.new_segment, std::move(parts)).second;
 
         if (!inserted) [[unlikely]] {
-            throw_exception("line segment already existed");
+            throw std::runtime_error("line segment already existed");
         }
     }
 }
@@ -273,7 +274,7 @@ auto handle_move_different_segment(
     using namespace detail::selection;
     if (message.segment_part_source.segment == message.segment_part_destination.segment)
         [[unlikely]] {
-        throw_exception("source and destination need to be different");
+        throw std::runtime_error("source and destination need to be different");
     }
 
     // find source entries
@@ -317,7 +318,7 @@ auto handle_move_same_segment(detail::selection::segment_map_t &map,
                               editable_circuit::info_message::SegmentPartMoved message) {
     if (message.segment_part_source.segment != message.segment_part_destination.segment)
         [[unlikely]] {
-        throw_exception("source and destination need to the same");
+        throw std::runtime_error("source and destination need to the same");
     }
 
     // find entries
@@ -334,7 +335,7 @@ auto handle_move_same_segment(detail::selection::segment_map_t &map,
                         });
 
     if (entries.empty()) [[unlikely]] {
-        throw_exception("result should never be empty");
+        throw std::runtime_error("result should never be empty");
     }
 }
 
@@ -399,7 +400,7 @@ auto check_and_remove_segments(detail::selection::segment_map_t &segment_map,
             const auto line = segment_tree.line(segment_index);
 
             if (it->second.max_offset() > to_part(line).end) [[unlikely]] {
-                throw_exception("parts are not part of line");
+                throw std::runtime_error("parts are not part of line");
             }
 
             segment_map.erase(it);
@@ -418,7 +419,7 @@ auto Selection::validate(const Layout &layout) const -> void {
         logicitems_set.erase(logicitem_id);
     }
     if (!logicitems_set.empty()) [[unlikely]] {
-        throw_exception("selection contains elements that don't exist anymore");
+        throw std::runtime_error("selection contains elements that don't exist anymore");
     }
 
     // segments
@@ -427,7 +428,7 @@ auto Selection::validate(const Layout &layout) const -> void {
                                   layout.wires().segment_tree(wire_id));
     }
     if (!segment_map.empty()) [[unlikely]] {
-        throw_exception("selection contains segments that don't exist anymore");
+        throw std::runtime_error("selection contains segments that don't exist anymore");
     }
 }
 
