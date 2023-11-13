@@ -42,12 +42,12 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
+    src/component/editable_circuit/selection_store.cpp
     src/component/interactive_simulation/interaction_cache.cpp
     src/component/layout/logicitem_store.cpp
     src/component/layout/wire_store.cpp
     src/component/line_tree/line_store.cpp
     src/component/line_tree/tree_builder.cpp
-    src/component/selection_registry/registry_store.cpp
     src/component/simulation/history_buffer.cpp
     src/component/simulation/history_calculation.cpp
     src/component/simulation/history_entry.cpp
@@ -264,7 +264,6 @@ set(LS_CORE_SOURCES
     src/schematic.cpp
     src/schematic_generation.cpp
     src/segment_tree.cpp
-    src/selection_resource.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
     src/setting_handle.cpp
