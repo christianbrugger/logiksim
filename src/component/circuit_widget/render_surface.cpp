@@ -15,6 +15,16 @@ namespace logicsim {
 
 namespace circuit_widget {
 
+auto SurfaceStatistics::format() const -> std::string {
+    return fmt::format(
+        "SurfaceStatistics{{\n"
+        "  frames_per_second = {},\n"
+        "  pixel_scale = {},\n"
+        "  image_size = {}x{}px\n"
+        "}}",
+        frames_per_second, pixel_scale, image_size.w, image_size.h);
+}
+
 namespace {
 
 auto round_logical_to_device(QPointF p, double pixel_ratio,
@@ -80,6 +90,18 @@ auto RenderSurface::view_config() const -> const ViewConfig& {
 
 auto RenderSurface::set_view_config_offset(point_fine_t offset) -> void {
     context_.ctx.settings.view_config.set_offset(offset);
+}
+
+auto RenderSurface::set_view_config_device_scale(double scale) -> void {
+    context_.ctx.settings.view_config.set_device_scale(scale);
+}
+
+auto RenderSurface::statistics() const -> SurfaceStatistics {
+    return SurfaceStatistics {
+        .frames_per_second = fps_counter_.events_per_second(),
+        .pixel_scale = context_.ctx.settings.view_config.pixel_scale(),
+        .image_size = context_.ctx.bl_ctx.targetSize(),
+    };
 }
 
 auto RenderSurface::resizeEvent(QWidget& widget, QResizeEvent* event_) -> void {

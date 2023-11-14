@@ -128,13 +128,52 @@ auto CircuitWidget::reload_circuit() -> void {
 }
 
 auto CircuitWidget::statistics() const -> Statistics {
-    // TODO implement
-    return Statistics {};
+    const auto surface_statistics = render_surface_.statistics();
+
+    return Statistics {
+        .simulation_events_per_second = {},  // TODO implement
+        .frames_per_second = surface_statistics.frames_per_second,
+        .pixel_scale = surface_statistics.pixel_scale,
+        .image_size = surface_statistics.image_size,
+    };
 }
 
 auto CircuitWidget::submit_user_action(UserAction action) -> void {
-    print(action);
-    // TODO implement
+    switch (action) {
+        using enum UserAction;
+
+        case select_all: {
+            return;
+        }
+        case copy_selected: {
+            return;
+        }
+        case paste_from_clipboard: {
+            return;
+        }
+        case cut_selected: {
+            return;
+        }
+        case delete_selected: {
+            return;
+        }
+
+        case zoom_in: {
+            return;
+        }
+        case zoom_out: {
+            return;
+        }
+        case reset_view: {
+            const auto config = ViewConfig {};
+            render_surface_.set_view_config_offset(config.offset());
+            render_surface_.set_view_config_device_scale(config.device_scale());
+            update();
+            return;
+        }
+    }
+
+    std::terminate();
 }
 
 auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {

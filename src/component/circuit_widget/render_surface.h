@@ -19,6 +19,20 @@ class SpatialSimulation;
 
 namespace circuit_widget {
 
+/**
+ * @brief: Statistics of the Render Surface
+ */
+struct SurfaceStatistics {
+    double frames_per_second;
+    double pixel_scale;
+    BLSize image_size;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const SurfaceStatistics&) const -> bool = default;
+};
+
+static_assert(std::regular<SurfaceStatistics>);
+
 class RenderSurface {
    public:
     auto set_render_config(WidgetRenderConfig new_config) -> void;
@@ -27,6 +41,9 @@ class RenderSurface {
     // view config
     [[nodiscard]] auto view_config() const -> const ViewConfig&;
     auto set_view_config_offset(point_fine_t offset) -> void;
+    auto set_view_config_device_scale(double scale) -> void;
+
+    [[nodiscard]] auto statistics() const -> SurfaceStatistics;
 
 
    public:
