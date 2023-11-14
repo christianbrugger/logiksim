@@ -9,13 +9,24 @@ namespace logicsim {
 
 namespace circuit_widget {
 
+/**
+ * @brief: Statistics of the Circuit Widget
+ */
 struct Statistics {
     std::optional<double> simulation_events_per_second;
     double frames_per_second;
     double pixel_scale;
     BLSize image_size;
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const Statistics&) const -> bool = default;
 };
 
+static_assert(std::regular<Statistics>);
+
+/**
+ * @brief: Actions from Buttons or Hotkeys
+ */
 enum class UserAction {
     select_all,
     copy_selected,
@@ -30,6 +41,13 @@ enum class UserAction {
 
 }  // namespace circuit_widget
 
+template <>
+auto format(circuit_widget::UserAction action) -> std::string;
+
+/**
+ * @brief: Widget that hold the circuit and is responsible for managing rendering,
+ *         simulation and user interactions.
+ */
 class CircuitWidget : public CircuitWidgetBase {
     // TODO can we use Q_OBJECT directly here ?
 

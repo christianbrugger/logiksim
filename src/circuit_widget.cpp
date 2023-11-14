@@ -4,7 +4,52 @@
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
 
+#include <exception>
+
 namespace logicsim {
+
+namespace circuit_widget {
+
+auto Statistics::format() const -> std::string {
+    return fmt::format(
+        "Statistics{{\n"
+        "  simulation_events_per_second = {},\n"
+        "  frames_per_second = {},\n"
+        "  pixel_scale = {},\n"
+        "  image_size = {}x{}px\n"
+        "}}",
+        simulation_events_per_second, frames_per_second, pixel_scale, image_size.w,
+        image_size.h);
+}
+
+}  // namespace circuit_widget
+
+template <>
+auto format(circuit_widget::UserAction action) -> std::string {
+    switch (action) {
+        using enum circuit_widget::UserAction;
+
+        case select_all:
+            return "select_all";
+        case copy_selected:
+            return "copy_selected";
+        case paste_from_clipboard:
+            return "paste_from_clipboard";
+        case cut_selected:
+            return "cut_selected";
+        case delete_selected:
+            return "delete_selected";
+
+        case zoom_in:
+            return "zoom_in";
+        case zoom_out:
+            return "zoom_out";
+        case reset_view:
+            return "reset_view";
+    };
+
+    std::terminate();
+}
 
 CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {}
 
@@ -83,6 +128,7 @@ auto CircuitWidget::statistics() const -> Statistics {
 }
 
 auto CircuitWidget::submit_user_action(UserAction action) -> void {
+    print(action);
     // TODO implement
 }
 
