@@ -95,12 +95,12 @@ class MainWidget : public QMainWindow {
     Q_SLOT void on_timer_update_title();
     Q_SLOT void on_timer_process_app_arguments_once();
 
-    // complex actions
-    auto show_about_dialog() -> void;
-    auto new_circuit() -> void;
-
     // complex setters
     auto set_time_rate_slider(time_rate_t time_rate) -> void;
+
+    // complex actions
+    auto new_circuit() -> void;
+    auto show_about_dialog() -> void;
 
     // load & safe
     auto filename_filter() const -> QString;

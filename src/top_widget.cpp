@@ -74,8 +74,6 @@ MainWidget::MainWidget(QWidget* parent)
     // create_statusbar();
 
     const auto layout = new QVBoxLayout();
-    // layout->addWidget(build_delay_slider());
-    // layout->addWidget(build_time_rate_slider());
 
     const auto hlayout = new QHBoxLayout();
     layout->addLayout(hlayout, 1);
@@ -91,17 +89,20 @@ MainWidget::MainWidget(QWidget* parent)
     frame->setLayout(layout);
     this->setCentralWidget(frame);
 
+    // timer title update
     connect(&timer_update_title_, &QTimer::timeout, this,
             &MainWidget::on_timer_update_title);
     timer_update_title_.setInterval(100);
     timer_update_title_.start();
 
+    // timer app arguments
     connect(&timer_process_app_arguments_once_, &QTimer::timeout, this,
             &MainWidget::on_timer_process_app_arguments_once);
     timer_process_app_arguments_once_.setInterval(0);
     timer_process_app_arguments_once_.setSingleShot(true);
     timer_process_app_arguments_once_.start();
 
+    // circuit widget signals
     connect(circuit_widget_, &CircuitWidgetBase::circuit_state_changed, this,
             &MainWidget::on_circuit_state_changed);
     connect(circuit_widget_, &CircuitWidgetBase::simulation_config_changed, this,
@@ -111,7 +112,6 @@ MainWidget::MainWidget(QWidget* parent)
 
     new_circuit();
     resize(914, 500);
-
     restore_gui_state();
 }
 
@@ -565,7 +565,6 @@ auto MainWidget::create_toolbar() -> void {
 
             slider->setMinimum(SLIDER_MIN_VALUE);
             slider->setMaximum(SLIDER_MAX_VALUE);
-            //  slider->setValue(to_slider_scale(SLIDER_START_VALUE));  // TODO remove
 
             slider->setTickInterval(SLIDER_TICK_INTERVAL);
             slider->setTickPosition(QSlider::TickPosition::TicksBothSides);
