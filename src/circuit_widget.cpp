@@ -2,8 +2,8 @@
 
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "component/circuit_widget/zoom.h"
-#include "mouse_position.h"
 #include "logging.h"
+#include "mouse_position.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
 
@@ -54,7 +54,17 @@ auto format(circuit_widget::UserAction action) -> std::string {
     std::terminate();
 }
 
-CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {}
+CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {
+    // initialize render surface
+    render_surface_.set_render_config(render_config_);
+
+    // timer benchmark rendering
+    connect(&timer_benchmark_render_, &QTimer::timeout, this,
+            &CircuitWidget::on_timer_benchmark_render);
+    if (render_config_.do_benchmark) {
+        timer_benchmark_render_.start();
+    }
+}
 
 auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
     if (render_config_ == new_config) {
@@ -62,6 +72,12 @@ auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
     }
 
     render_surface_.set_render_config(new_config);
+
+    if (new_config.do_benchmark) {
+        timer_benchmark_render_.start();
+    } else {
+        timer_benchmark_render_.stop();
+    }
 
     // update & notify
     render_config_ = new_config;
@@ -183,6 +199,10 @@ auto CircuitWidget::submit_user_action(UserAction action) -> void {
     std::terminate();
 }
 
+void CircuitWidget::on_timer_benchmark_render() {
+    update();
+}
+
 auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
     render_surface_.resizeEvent(*this, event_);
     update();
@@ -205,9 +225,8 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
 
     if (event_->buttons() & Qt::MiddleButton) {
-        const auto new_offset =
-            mouse_drag_logic_.mouse_move(position, render_surface_.view_config());
-        render_surface_.set_view_config_offset(new_offset);
+        render_surface_.set_view_config_offset(
+            mouse_drag_logic_.mouse_move(position, render_surface_.view_config()));
         update();
     }
 }
@@ -216,9 +235,9 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
 
     if (event_->button() == Qt::MiddleButton) {
-        const auto new_offset =
-            mouse_drag_logic_.mouse_release(position, render_surface_.view_config());
-        render_surface_.set_view_config_offset(new_offset);
+        render_surface_.set_view_config_offset(
+            mouse_drag_logic_.mouse_release(position, render_surface_.view_config()));
+
         update();
     }
 }

@@ -13,8 +13,6 @@ struct WidgetRenderConfig {
     bool show_connection_cache {false};
     bool show_selection_cache {false};
 
-    double zoom_level {1};
-
     int thread_count {4};
     bool direct_rendering {true};
 

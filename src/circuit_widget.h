@@ -2,10 +2,12 @@
 #define LOGICSIM_CIRCUIT_WIDGET_H
 
 #include "circuit_widget_base.h"
-#include "component/circuit_widget/render_surface.h"
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
+#include "component/circuit_widget/render_surface.h"
 
 #include <blend2d.h>
+
+#include <QTimer>
 
 namespace logicsim {
 
@@ -79,9 +81,11 @@ class CircuitWidget : public CircuitWidgetBase {
 
     // statistics
     auto statistics() const -> Statistics;
-
     // actions
     auto submit_user_action(UserAction action) -> void;
+
+    // timer slots
+    Q_SLOT void on_timer_benchmark_render();
 
    protected:
     auto resizeEvent(QResizeEvent* event_) -> void override;
@@ -102,6 +106,8 @@ class CircuitWidget : public CircuitWidgetBase {
 
     circuit_widget::RenderSurface render_surface_ {};
     circuit_widget::MouseDragLogic mouse_drag_logic_ {};
+
+    QTimer timer_benchmark_render_ {};
 };
 
 //

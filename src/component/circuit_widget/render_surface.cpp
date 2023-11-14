@@ -72,7 +72,6 @@ auto RenderSurface::set_render_config(WidgetRenderConfig new_config) -> void {
         return;
     }
 
-    context_.ctx.settings.thread_count = new_config.thread_count;
     is_initialized_ = false;
 
     // update
@@ -208,6 +207,7 @@ auto RenderSurface::init_surface(QWidget& widget) -> void {
     }
 
     // configs
+    context_.ctx.settings.thread_count = render_config_.thread_count;
     context_.ctx.settings.view_config.set_device_pixel_ratio(widget.devicePixelRatioF());
 
     // start context
