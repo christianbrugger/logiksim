@@ -123,7 +123,6 @@ constexpr static int SLIDER_MIN_VALUE = 0;
 constexpr static int SLIDER_MIN_NS = 1000;
 constexpr static int SLIDER_MAX_VALUE = 700'000;
 constexpr static int SLIDER_TICK_INTERVAL = 100'000;
-// constexpr static auto SLIDER_START_VALUE = time_rate_t {10us};  // TODO remove
 
 constexpr static auto TIME_RATE_MENU_ITEMS = std::array {
     time_rate_t {0ns},   time_rate_t {1001ns}, time_rate_t {10us},
@@ -193,25 +192,16 @@ auto add_action(QMenu* menu, const QString& text, ActionAttributes attributes,
     return add_action_impl(menu, text, attributes, callable);
 }
 
-struct CheckableAttributes {
-    bool start_state {false};  // TODO remove
-};
-
 auto add_action_checkable(QMenu* menu, const QString& text,
                           ActionAttributes action_attributes,
-                          CheckableAttributes checkable_attributes,
                           std::invocable<bool> auto callable) -> QAction* {
     auto* action = add_action_impl(menu, text, action_attributes, callable);
     action->setCheckable(true);
-
-    //    action->setChecked(checkable_attributes.start_state);
-    //    std::invoke(callable, checkable_attributes.start_state);
 
     return action;
 }
 
 struct GroupAttributes {
-    bool active {false};  // TODO remove
     QActionGroup* group {nullptr};
 };
 
@@ -225,11 +215,6 @@ auto add_action_group(QMenu* menu, const QString& text,
     if (group_attributes.group) {
         action->setActionGroup(group_attributes.group);
     }
-
-    //    action->setChecked(group_attributes.active);
-    //    if (group_attributes.active) {
-    //        std::invoke(callable);
-    //    }
 
     return action;
 }
@@ -346,8 +331,7 @@ auto MainWidget::create_menu() -> void {
 
         menu->addSeparator();
         actions_.wire_delay = add_action_checkable(
-            menu, tr("Wire &Delay"), ActionAttributes {},
-            CheckableAttributes {.start_state = true}, [this](bool checked) {
+            menu, tr("Wire &Delay"), ActionAttributes {}, [this](bool checked) {
                 if (circuit_widget_->simulation_config().use_wire_delay != checked) {
                     set_use_wire_delay(*circuit_widget_, checked);
                 }
@@ -385,7 +369,7 @@ auto MainWidget::create_menu() -> void {
         // Benchmark
         actions_.do_benchmark = add_action_checkable(
             menu, tr("&Benchmark"), ActionAttributes {.icon = icon_t::benchmark},
-            CheckableAttributes {.start_state = false},
+
             [this](bool checked) { set_do_benchmark(*circuit_widget_, checked); });
 
         menu->addSeparator();
@@ -393,24 +377,24 @@ auto MainWidget::create_menu() -> void {
             actions_.show_circuit = add_action_checkable(
                 menu, tr("Show C&ircuit"),
                 ActionAttributes {.icon = icon_t::show_circuit},
-                CheckableAttributes {.start_state = true},
+
                 [this](bool checked) { set_show_circuit(*circuit_widget_, checked); });
             actions_.show_collision_cache = add_action_checkable(
                 menu, tr("Show C&ollision Cache"),
                 ActionAttributes {.icon = icon_t::show_collision_cache},
-                CheckableAttributes {.start_state = false}, [this](bool checked) {
+                [this](bool checked) {
                     set_show_collision_cache(*circuit_widget_, checked);
                 });
             actions_.show_connection_cache = add_action_checkable(
                 menu, tr("Show Co&nnection Cache"),
                 ActionAttributes {.icon = icon_t::show_connection_cache},
-                CheckableAttributes {.start_state = false}, [this](bool checked) {
+                [this](bool checked) {
                     set_show_connection_cache(*circuit_widget_, checked);
                 });
             actions_.show_selection_cache = add_action_checkable(
                 menu, tr("Show &Selection Cache"),
                 ActionAttributes {.icon = icon_t::show_selection_cache},
-                CheckableAttributes {.start_state = false}, [this](bool checked) {
+                [this](bool checked) {
                     set_show_selection_cache(*circuit_widget_, checked);
                 });
         }
@@ -442,7 +426,6 @@ auto MainWidget::create_menu() -> void {
         actions_.direct_rendering = add_action_checkable(
             menu, tr("&Direct Rendering"),
             ActionAttributes {.icon = icon_t::direct_rendering},
-            CheckableAttributes {.start_state = true},
             [this](bool checked) { set_direct_rendering(*circuit_widget_, checked); });
 
         menu->addSeparator();
@@ -451,22 +434,22 @@ auto MainWidget::create_menu() -> void {
 
             actions_.thread_count_0 =
                 add_action_group(menu, tr("S&ynchronous Rendering"), ActionAttributes {},
-                                 GroupAttributes {.active = false, .group = group},
+                                 GroupAttributes {.group = group},
                                  [this]() { set_thread_count(*circuit_widget_, 0); });
 
             actions_.thread_count_2 =
                 add_action_group(menu, tr("&2 Render Threads"), ActionAttributes {},
-                                 GroupAttributes {.active = false, .group = group},
+                                 GroupAttributes {.group = group},
                                  [this]() { set_thread_count(*circuit_widget_, 2); });
 
             actions_.thread_count_4 =
                 add_action_group(menu, tr("&4 Render Threads"), ActionAttributes {},
-                                 GroupAttributes {.active = true, .group = group},
+                                 GroupAttributes {.group = group},
                                  [this]() { set_thread_count(*circuit_widget_, 4); });
 
             actions_.thread_count_8 =
                 add_action_group(menu, tr("&8 Render Threads"), ActionAttributes {},
-                                 GroupAttributes {.active = false, .group = group},
+                                 GroupAttributes {.group = group},
                                  [this]() { set_thread_count(*circuit_widget_, 8); });
         }
     }
