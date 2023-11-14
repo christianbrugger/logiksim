@@ -70,7 +70,6 @@ class MouseSizeHandleLogic {
 
     std::optional<point_fine_t> first_position_ {};
     std::optional<int> last_delta_ {};
-    selection_old_handle_t temp_item_ {};
 };
 
 }  // namespace logicsim

@@ -17,6 +17,14 @@ constexpr inline auto wyhash_secret = std::array {
 };
 
 //
+// Empty Type
+//
+
+[[nodiscard]] constexpr auto wyhash() noexcept -> uint64_t {
+    return wyhash_secret[0];
+}
+
+//
 // string
 //
 

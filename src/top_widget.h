@@ -1,7 +1,7 @@
 #ifndef LOGIKSIM_TOP_WIDGET_H
 #define LOGIKSIM_TOP_WIDGET_H
 
-#include "render_widget_base.h"
+#include "circuit_widget_base.h"
 
 #include <ankerl/unordered_dense.h>
 #include <gsl/gsl>
@@ -25,7 +25,7 @@ constexpr static auto inline LS_APP_AUTHOR = "Christian Brugger";
 constexpr static auto inline LS_APP_EMAIL = "brugger.chr@gmail.com";
 constexpr static auto inline LS_APP_YEAR_STR = " 2023 ";
 
-class RendererWidget;
+class CircuitWidget;
 struct time_rate_t;
 
 class ElementButton : public QPushButton {
@@ -58,6 +58,11 @@ class MainWidget : public QMainWindow {
     Q_OBJECT
 
    public:
+    using CircuitState = circuit_widget::CircuitState;
+    using RenderConfig = circuit_widget::RenderConfig;
+    using SimulationConfig = circuit_widget::SimulationConfig;
+
+   public:
     MainWidget(QWidget* parent = nullptr);
 
    private:
@@ -67,10 +72,12 @@ class MainWidget : public QMainWindow {
 
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
 
-    [[nodiscard]] auto element_button(QString label, InteractionState state) -> QWidget*;
+    [[nodiscard]] auto element_button(QString label, CircuitState state) -> QWidget*;
 
     Q_SLOT void update_title();
-    Q_SLOT void on_interaction_state_changed(InteractionState new_state);
+    Q_SLOT void on_circuit_state_changed(CircuitState new_state);
+    Q_SLOT void on_simulation_config_changed(SimulationConfig new_config);
+    Q_SLOT void on_render_config_changed(RenderConfig new_config);
 
     auto process_arguments() -> void;
 
@@ -81,7 +88,6 @@ class MainWidget : public QMainWindow {
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
     auto open_circuit(std::optional<std::string> filename = {}) -> void;
     auto ensure_circuit_saved() -> save_result_t;
-    auto update_simulation_settings() -> void;
     auto set_time_rate_slider(time_rate_t time_rate) -> void;
     auto show_about_dialog() -> void;
 
@@ -94,13 +100,12 @@ class MainWidget : public QMainWindow {
     auto dropEvent(QDropEvent* event) -> void;
 
    private:
-    gsl::not_null<RendererWidget*> render_widget_;
+    gsl::not_null<CircuitWidget*> circuit_widget_;
 
     QTimer timer_ {};
     QTimer timer_process_arguments_ {};
 
-    using button_map_type =
-        ankerl::unordered_dense::map<InteractionState, QAbstractButton*>;
+    using button_map_type = ankerl::unordered_dense::map<CircuitState, QAbstractButton*>;
     button_map_type button_map_ {};
 
     QWidget* delay_panel_ {};

@@ -236,6 +236,8 @@ set(LS_CORE_SOURCES
 
     src/base64.cpp
     src/circuit_description.cpp
+    src/circuit_widget.cpp
+    src/circuit_widget_base.cpp
     src/editable_circuit.cpp
     src/event_counter.cpp
     src/event_counter_multi.cpp
@@ -256,7 +258,6 @@ set(LS_CORE_SOURCES
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
-    src/render_widget.cpp
     src/render_widget_base.cpp
     src/resource.cpp
     src/safe_numeric.cpp
@@ -271,7 +272,6 @@ set(LS_CORE_SOURCES
     src/simulation.cpp
     src/simulation_player.cpp
     src/simulation_view.cpp
-    src/size_handle.cpp
     src/spatial_simulation.cpp
     src/text_shaping.cpp
     src/timeout_timer.cpp
@@ -286,6 +286,7 @@ set(LS_CORE_SOURCES
 # any file that contains Q_OBJECT
 # list them manually to speedup compilation
 set(MOC_FILES
+    src/circuit_widget_base.h
     src/top_widget.h 
     src/render_widget_base.h
 )

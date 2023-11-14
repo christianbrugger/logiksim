@@ -1,12 +1,14 @@
 ﻿#include "top_widget.h"
 
 #include "algorithm/round.h"
+#include "circuit_widget.h"
 #include "file.h"
 #include "format/std_type.h"
 #include "logging.h"
-#include "render_widget.h"
 #include "resource.h"
 #include "serialize.h"
+#include "timer.h"
+#include "top_widget.h"
 #include "vocabulary/simulation_setting.h"
 
 #include <QActionGroup>
@@ -21,12 +23,14 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSlider>
 #include <QSpinBox>
 #include <QStatusBar>
 #include <QString>
+#include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -60,8 +64,8 @@ auto ElementButton::minimumSizeHint() const -> QSize {
 
 MainWidget::MainWidget(QWidget* parent)
     : QMainWindow(parent),
-      render_widget_ {new RendererWidget(this)},
-      last_saved_data_ {render_widget_->serialize_circuit()} {
+      circuit_widget_ {new CircuitWidget(this)},
+      last_saved_data_ {circuit_widget_->serialized_circuit()} {
     setWindowIcon(QIcon(get_icon_path(icon_t::app_icon)));
     setAcceptDrops(true);
 
@@ -76,7 +80,7 @@ MainWidget::MainWidget(QWidget* parent)
     const auto hlayout = new QHBoxLayout();
     layout->addLayout(hlayout, 1);
     hlayout->addWidget(build_element_buttons(), 0);
-    hlayout->addWidget(render_widget_, 1);
+    hlayout->addWidget(circuit_widget_, 1);
 
     hlayout->setContentsMargins(0, 0, 0, 0);
     hlayout->setSpacing(0);
@@ -97,8 +101,12 @@ MainWidget::MainWidget(QWidget* parent)
     timer_process_arguments_.setSingleShot(true);
     timer_process_arguments_.start();
 
-    connect(render_widget_, &RendererWidgetBase::interaction_state_changed, this,
-            &MainWidget::on_interaction_state_changed);
+    connect(circuit_widget_, &CircuitWidgetBase::circuit_state_changed, this,
+            &MainWidget::on_circuit_state_changed);
+    connect(circuit_widget_, &CircuitWidgetBase::simulation_config_changed, this,
+            &MainWidget::on_simulation_config_changed);
+    connect(circuit_widget_, &CircuitWidgetBase::render_config_changed, this,
+            &MainWidget::on_render_config_changed);
 
     new_circuit();
     resize(914, 500);
@@ -139,7 +147,7 @@ auto to_slider_scale(time_rate_t rate) -> int {
 
     const auto value_log =
         std::log10(rate.rate_per_second.count_ns() / double {SLIDER_MIN_NS}) *
-                           double {SLIDER_TICK_INTERVAL};
+        double {SLIDER_TICK_INTERVAL};
     return std::clamp(gsl::narrow<int>(std::round(value_log)), SLIDER_MIN_VALUE,
                       SLIDER_MAX_VALUE);
 };
@@ -228,6 +236,8 @@ auto add_action_group(QMenu* menu, const QString& text,
 }  // namespace
 
 auto MainWidget::create_menu() -> void {
+    using UserAction = circuit_widget::UserAction;
+
     {
         // File
         auto* menu = menuBar()->addMenu(tr("&File"));
@@ -262,23 +272,27 @@ auto MainWidget::create_menu() -> void {
         actions_.cut = add_action(
             menu, tr("Cu&t"),
             ActionAttributes {.shortcut = QKeySequence::Cut, .icon = icon_t::cut},
-            [this] { render_widget_->cut_selected_items(); });
+            [this] { circuit_widget_->submit_user_action(UserAction::cut_selected); });
         actions_.copy = add_action(
             menu, tr("&Copy"),
             ActionAttributes {.shortcut = QKeySequence::Copy, .icon = icon_t::copy},
-            [this] { render_widget_->copy_selected_items(); });
+            [this] { circuit_widget_->submit_user_action(UserAction::copy_selected); });
         actions_.paste = add_action(
             menu, tr("&Paste"),
             ActionAttributes {.shortcut = QKeySequence::Paste, .icon = icon_t::paste},
-            [this] { render_widget_->paste_clipboard_items(); });
-        add_action(menu, tr("&Delete"),
-                   ActionAttributes {.shortcut = QKeySequence::Delete,
-                                     .icon = icon_t::delete_selected},
-                   [this] { render_widget_->delete_selected_items(); });
-        add_action(menu, tr("Select &All"),
-                   ActionAttributes {.shortcut = QKeySequence::SelectAll,
-                                     .icon = icon_t::select_all},
-                   [this] { render_widget_->select_all_items(); });
+            [this] {
+                circuit_widget_->submit_user_action(UserAction::paste_from_clipboard);
+            });
+        add_action(
+            menu, tr("&Delete"),
+            ActionAttributes {.shortcut = QKeySequence::Delete,
+                              .icon = icon_t::delete_selected},
+            [this] { circuit_widget_->submit_user_action(UserAction::delete_selected); });
+        add_action(
+            menu, tr("Select &All"),
+            ActionAttributes {.shortcut = QKeySequence::SelectAll,
+                              .icon = icon_t::select_all},
+            [this] { circuit_widget_->submit_user_action(UserAction::select_all); });
     }
 
     {
@@ -289,14 +303,15 @@ auto MainWidget::create_menu() -> void {
                    ActionAttributes {.shortcut = QKeySequence::ZoomIn,
                                      .shortcut_auto_repeat = true,
                                      .icon = icon_t::zoom_in},
-                   [this] { render_widget_->zoom(+1); });
+                   [this] { circuit_widget_->submit_user_action(UserAction::zoom_in); });
         add_action(menu, tr("Zoom &Out"),
                    ActionAttributes {.shortcut = QKeySequence::ZoomOut,
                                      .shortcut_auto_repeat = true,
                                      .icon = icon_t::zoom_out},
-                   [this] { render_widget_->zoom(-1); });
-        add_action(menu, tr("&Reset Zoom"), ActionAttributes {.icon = icon_t::reset_zoom},
-                   [this] { render_widget_->reset_view_config(); });
+                   [this] { circuit_widget_->submit_user_action(UserAction::zoom_out); });
+        add_action(
+            menu, tr("&Reset Zoom"), ActionAttributes {.icon = icon_t::reset_zoom},
+            [this] { circuit_widget_->submit_user_action(UserAction::reset_view); });
 
         menu->addSeparator();
 
@@ -307,30 +322,31 @@ auto MainWidget::create_menu() -> void {
         // Simulation
         auto* menu = menuBar()->addMenu(tr("&Simulation"));
 
-        actions_.simulation_start = add_action(
-            menu, tr("Start &Simulation"),
-            ActionAttributes {.shortcut = QKeySequence {Qt::Key_F5},
-                              .icon = icon_t::simulation_start},
-            [this]() {
-                render_widget_->set_interaction_state(InteractionState::simulation);
-            });
+        const auto start_simulation = [this]() {
+            circuit_widget_->set_circuit_state(circuit_widget::SimulationState {});
+        };
+        actions_.simulation_start =
+            add_action(menu, tr("Start &Simulation"),
+                       ActionAttributes {.shortcut = QKeySequence {Qt::Key_F5},
+                                         .icon = icon_t::simulation_start},
+                       start_simulation);
 
-        actions_.simulation_stop = add_action(
-            menu, tr("Stop &Simulation"),
-            ActionAttributes {.shortcut = QKeySequence {Qt::Key_F6},
-                              .icon = icon_t::simulation_stop},
-            [this]() {
-                using enum InteractionState;
-                if (render_widget_->interaction_state() == InteractionState::simulation) {
-                    render_widget_->set_interaction_state(InteractionState::selection);
-                };
-            });
+        const auto stop_simulation = [this]() {
+            if (is_simulation(circuit_widget_->circuit_state())) {
+                circuit_widget_->set_circuit_state(circuit_widget::SimulationState {});
+            };
+        };
+        actions_.simulation_stop =
+            add_action(menu, tr("Stop &Simulation"),
+                       ActionAttributes {.shortcut = QKeySequence {Qt::Key_F6},
+                                         .icon = icon_t::simulation_stop},
+                       stop_simulation);
 
         menu->addSeparator();
         actions_.wire_delay = add_action_checkable(
             menu, tr("Wire &Delay"), ActionAttributes {},
             CheckableAttributes {.start_state = true},
-            [this](bool checked) { render_widget_->set_use_wire_delay(checked); });
+            [this](bool checked) { set_use_wire_delay(*circuit_widget_, checked); });
 
         const auto tooltip_fmt =
             tr("When enabled wires have visible delay of {}/unit.\n"
@@ -365,55 +381,56 @@ auto MainWidget::create_menu() -> void {
         add_action_checkable(
             menu, tr("&Benchmark"), ActionAttributes {.icon = icon_t::benchmark},
             CheckableAttributes {.start_state = false},
-            [this](bool checked) { render_widget_->set_do_benchmark(checked); });
+            [this](bool checked) { set_do_benchmark(*circuit_widget_, checked); });
 
         menu->addSeparator();
         {
-            add_action_checkable(
-                menu, tr("Show C&ircuit"),
-                ActionAttributes {.icon = icon_t::show_circuit},
-                CheckableAttributes {.start_state = true},
-                [this](bool checked) { render_widget_->set_do_render_circuit(checked); });
+            add_action_checkable(menu, tr("Show C&ircuit"),
+                                 ActionAttributes {.icon = icon_t::show_circuit},
+                                 CheckableAttributes {.start_state = true},
+                                 [this](bool checked) {
+                                     set_do_render_circuit(*circuit_widget_, checked);
+                                 });
             add_action_checkable(
                 menu, tr("Show C&ollision Cache"),
                 ActionAttributes {.icon = icon_t::show_collision_cache},
                 CheckableAttributes {.start_state = false}, [this](bool checked) {
-                    render_widget_->set_do_render_collision_cache(checked);
+                    set_do_render_collision_cache(*circuit_widget_, checked);
                 });
             add_action_checkable(
                 menu, tr("Show Co&nnection Cache"),
                 ActionAttributes {.icon = icon_t::show_connection_cache},
                 CheckableAttributes {.start_state = false}, [this](bool checked) {
-                    render_widget_->set_do_render_connection_cache(checked);
+                    set_do_render_connection_cache(*circuit_widget_, checked);
                 });
             add_action_checkable(
                 menu, tr("Show &Selection Cache"),
                 ActionAttributes {.icon = icon_t::show_selection_cache},
                 CheckableAttributes {.start_state = false}, [this](bool checked) {
-                    render_widget_->set_do_render_selection_cache(checked);
+                    set_do_render_selection_cache(*circuit_widget_, checked);
                 });
         }
 
         // Examples
         menu->addSeparator();
         add_action(menu, tr("&Reload"), ActionAttributes {.icon = icon_t::reload_circuit},
-                   [this]() { render_widget_->reload_circuit(); });
+                   [this]() { circuit_widget_->reload_circuit(); });
         {
             add_action(menu, tr("Load \"Si&mple\" Example"),
                        ActionAttributes {.icon = icon_t::load_simple_example},
-                       [this]() { render_widget_->load_circuit_example(1); });
+                       [this]() { circuit_widget_->load_circuit_example(1); });
 
             add_action(menu, tr("Load \"&Wires\" Example"),
                        ActionAttributes {.icon = icon_t::load_wire_example},
-                       [this]() { render_widget_->load_circuit_example(4); });
+                       [this]() { circuit_widget_->load_circuit_example(4); });
 
             add_action(menu, tr("Load \"&Elements\" Example"),
                        ActionAttributes {.icon = icon_t::load_element_example},
-                       [this]() { render_widget_->load_circuit_example(3); });
+                       [this]() { circuit_widget_->load_circuit_example(3); });
 
             add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
                        ActionAttributes {.icon = icon_t::load_elements_and_wires_example},
-                       [this]() { render_widget_->load_circuit_example(2); });
+                       [this]() { circuit_widget_->load_circuit_example(2); });
         }
 
         // Thread Count
@@ -422,23 +439,23 @@ auto MainWidget::create_menu() -> void {
             menu, tr("&Direct Rendering"),
             ActionAttributes {.icon = icon_t::direct_rendering},
             CheckableAttributes {.start_state = true},
-            [this](bool checked) { render_widget_->set_use_backing_store(checked); });
+            [this](bool checked) { set_use_backing_store(*circuit_widget_, checked); });
 
         menu->addSeparator();
         {
             auto* group = new QActionGroup(menu);
             add_action_group(menu, tr("S&ynchronous Rendering"), ActionAttributes {},
                              GroupAttributes {.active = false, .group = group},
-                             [this]() { render_widget_->set_thread_count(0); });
+                             [this]() { set_thread_count(*circuit_widget_, 2); });
             add_action_group(menu, tr("&2 Render Threads"), ActionAttributes {},
                              GroupAttributes {.active = false, .group = group},
-                             [this]() { render_widget_->set_thread_count(2); });
+                             [this]() { set_thread_count(*circuit_widget_, 2); });
             add_action_group(menu, tr("&4 Render Threads"), ActionAttributes {},
                              GroupAttributes {.active = true, .group = group},
-                             [this]() { render_widget_->set_thread_count(4); });
+                             [this]() { set_thread_count(*circuit_widget_, 4); });
             add_action_group(menu, tr("&8 Render Threads"), ActionAttributes {},
                              GroupAttributes {.active = false, .group = group},
-                             [this]() { render_widget_->set_thread_count(8); });
+                             [this]() { set_thread_count(*circuit_widget_, 8); });
         }
     }
     {
@@ -545,8 +562,7 @@ auto MainWidget::create_toolbar() -> void {
 
             connect(slider, &QSlider::valueChanged, this, [this, label](int value) {
                 const auto rate = from_slider_scale(value);
-                render_widget_->set_simulation_time_rate(rate);
-
+                set_simulation_time_rate(*circuit_widget_, rate);
                 label->setText(QString::fromStdString(fmt::format("{}", rate)));
             });
 
@@ -581,13 +597,13 @@ auto MainWidget::create_statusbar() -> void {
     this->setStatusBar(statusbar);
 }
 
-auto MainWidget::element_button(QString label, InteractionState state) -> QWidget* {
+auto MainWidget::element_button(QString label, CircuitState state) -> QWidget* {
     const auto button = new ElementButton(label);
     button->setCheckable(true);
     button_map_[state] = button;
 
     connect(button, &QPushButton::clicked, this,
-            [this, state]() { render_widget_->set_interaction_state(state); });
+            [this, state]() { circuit_widget_->set_circuit_state(state); });
 
     return button;
 }
@@ -604,31 +620,36 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     int row = -1;
 
     {
-        using enum InteractionState;
-        layout->addWidget(element_button("BTN", insert_button), ++row, 0);
-        layout->addWidget(element_button("Wire", insert_wire), row, 1);
-        layout->addWidget(element_button("LED", insert_led), ++row, 0);
-        layout->addWidget(element_button("NUM", insert_display_number), ++row, 0);
-        layout->addWidget(element_button("ASCII", insert_display_ascii), row, 1);
+        const auto ES = [](circuit_widget::DefaultMouseAction action) {
+            return circuit_widget::CircuitState {
+                circuit_widget::EditingState {.default_mouse_action = action}};
+        };
+        using enum circuit_widget::DefaultMouseAction;
+
+        layout->addWidget(element_button("BTN", ES(insert_button)), ++row, 0);
+        layout->addWidget(element_button("Wire", ES(insert_wire)), row, 1);
+        layout->addWidget(element_button("LED", ES(insert_led)), ++row, 0);
+        layout->addWidget(element_button("NUM", ES(insert_display_number)), ++row, 0);
+        layout->addWidget(element_button("ASCII", ES(insert_display_ascii)), row, 1);
         layout->addWidget(line_separator(), ++row, 0, 1, 2);
 
-        layout->addWidget(element_button("AND", insert_and_element), ++row, 0);
-        layout->addWidget(element_button("NAND", insert_nand_element), row, 1);
-        layout->addWidget(element_button("OR", insert_or_element), ++row, 0);
-        layout->addWidget(element_button("NOR", insert_nor_element), row, 1);
-        layout->addWidget(element_button("BUF", insert_buffer_element), ++row, 0);
-        layout->addWidget(element_button("INV", insert_inverter_element), row, 1);
-        layout->addWidget(element_button("XOR", insert_xor_element), ++row, 0);
+        layout->addWidget(element_button("AND", ES(insert_and_element)), ++row, 0);
+        layout->addWidget(element_button("NAND", ES(insert_nand_element)), row, 1);
+        layout->addWidget(element_button("OR", ES(insert_or_element)), ++row, 0);
+        layout->addWidget(element_button("NOR", ES(insert_nor_element)), row, 1);
+        layout->addWidget(element_button("BUF", ES(insert_buffer_element)), ++row, 0);
+        layout->addWidget(element_button("INV", ES(insert_inverter_element)), row, 1);
+        layout->addWidget(element_button("XOR", ES(insert_xor_element)), ++row, 0);
         layout->addWidget(line_separator(), ++row, 0, 1, 2);
 
-        layout->addWidget(element_button("Latch", insert_latch_d), ++row, 0);
-        layout->addWidget(element_button("FF", insert_flipflop_d), row, 1);
-        layout->addWidget(element_button("MS-FF", insert_flipflop_ms_d), ++row, 0);
-        layout->addWidget(element_button("JK-FF", insert_flipflop_jk), row, 1);
+        layout->addWidget(element_button("Latch", ES(insert_latch_d)), ++row, 0);
+        layout->addWidget(element_button("FF", ES(insert_flipflop_d)), row, 1);
+        layout->addWidget(element_button("MS-FF", ES(insert_flipflop_ms_d)), ++row, 0);
+        layout->addWidget(element_button("JK-FF", ES(insert_flipflop_jk)), row, 1);
         layout->addWidget(line_separator(), ++row, 0, 1, 2);
 
-        layout->addWidget(element_button("CLK", insert_clock_generator), ++row, 0);
-        layout->addWidget(element_button("REG", insert_shift_register), row, 1);
+        layout->addWidget(element_button("CLK", ES(insert_clock_generator)), ++row, 0);
+        layout->addWidget(element_button("REG", ES(insert_shift_register)), row, 1);
     }
 
     layout->setRowStretch(++row, 1);
@@ -639,16 +660,15 @@ auto MainWidget::build_element_buttons() -> QWidget* {
 }
 
 void MainWidget::update_title() {
-    const auto fps = render_widget_->fps();
-    const auto eps = render_widget_->simulation_events_per_second();
-    const auto scale = render_widget_->pixel_scale();
-    const auto size = render_widget_->size_device();
+    const auto statistics = circuit_widget_->statistics();
 
-    auto text = fmt::format("[{}x{}] {:.1f} FPS {:.1f} pixel scale", size.width(),
-                            size.height(), fps, scale);
+    auto text = fmt::format("[{}x{}] {:.1f} FPS {:.1f} pixel scale",
+                            statistics.image_size.w, statistics.image_size.h,
+                            statistics.frames_per_second, statistics.pixel_scale);
 
-    if (eps.has_value()) {
-        text = fmt::format("{} {:.3g} EPS", text, round_fast(eps.value()));
+    if (statistics.simulation_events_per_second.has_value()) {
+        const auto eps = statistics.simulation_events_per_second.value();
+        text = fmt::format("{} {:.3g} EPS", text, round_fast(eps));
     }
 
     if (!last_saved_filename_.empty()) {
@@ -661,7 +681,9 @@ void MainWidget::update_title() {
     }
 }
 
-void MainWidget::on_interaction_state_changed(InteractionState new_state) {
+void MainWidget::on_circuit_state_changed(CircuitState new_state) {
+    bool simulation_active = is_simulation(new_state);
+
     // buttons
     for (auto&& [state, button] : button_map_) {
         if (button != nullptr) {
@@ -671,12 +693,10 @@ void MainWidget::on_interaction_state_changed(InteractionState new_state) {
 
     // delay slider
     if (delay_panel_ != nullptr) {
-        delay_panel_->setEnabled(new_state != InteractionState::simulation);
+        delay_panel_->setEnabled(!simulation_active);
     }
 
-    // simulation active
-    bool simulation_active = new_state == InteractionState::simulation;
-
+    // simulation panel
     if (actions_.simulation_start) {
         actions_.simulation_start->setEnabled(!simulation_active);
     }
@@ -707,13 +727,11 @@ auto MainWidget::filename_filter() const -> QString {
 
 auto MainWidget::new_circuit() -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
-        render_widget_->reset_circuit();
-        render_widget_->set_interaction_state(InteractionState::selection);
+        circuit_widget_->load_new_circuit();
+        circuit_widget_->set_circuit_state(circuit_widget::SimulationState {});
 
         last_saved_filename_.clear();
-        last_saved_data_ = render_widget_->serialize_circuit();
-
-        update_simulation_settings();  // TODO use signal & slots
+        last_saved_data_ = circuit_widget_->serialized_circuit();
     }
 }
 
@@ -736,7 +754,7 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
 
     const auto _ [[maybe_unused]] = Timer("Save");
 
-    if (!render_widget_->save_circuit(filename)) {
+    if (!circuit_widget_->save_circuit(filename)) {
         const auto message = fmt::format("Failed to save \"{}\".", filename);
         QMessageBox::warning(this,                            //
                              QString::fromUtf8(LS_APP_NAME),  //
@@ -746,7 +764,7 @@ auto MainWidget::save_circuit(filename_choice_t filename_choice) -> save_result_
     }
 
     last_saved_filename_ = filename;
-    last_saved_data_ = render_widget_->serialize_circuit();
+    last_saved_data_ = circuit_widget_->serialized_circuit();
 
     return save_result_t::success;
 }
@@ -771,7 +789,7 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
 
     const auto _ [[maybe_unused]] = Timer("Open");
 
-    if (!render_widget_->load_circuit(*filename)) {
+    if (!circuit_widget_->load_circuit(*filename)) {
         const auto message = fmt::format("Failed to load \"{}\".", filename);
         QMessageBox::warning(this,                            //
                              QString::fromUtf8(LS_APP_NAME),  //
@@ -779,13 +797,11 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
         );
     }
     last_saved_filename_ = *filename;
-    last_saved_data_ = render_widget_->serialize_circuit();
-
-    update_simulation_settings();  // TODO use signal & slots
+    last_saved_data_ = circuit_widget_->serialized_circuit();
 }
 
 auto MainWidget::ensure_circuit_saved() -> save_result_t {
-    if (last_saved_data_ == render_widget_->serialize_circuit()) {
+    if (last_saved_data_ == circuit_widget_->serialized_circuit()) {
         return save_result_t::success;
     }
 
@@ -810,11 +826,15 @@ auto MainWidget::ensure_circuit_saved() -> save_result_t {
     return save_result_t::canceled;
 }
 
-auto MainWidget::update_simulation_settings() -> void {
-    set_time_rate_slider(render_widget_->simulation_time_rate());
+void MainWidget::on_simulation_config_changed(SimulationConfig new_config) {
+    set_time_rate_slider(new_config.simulation_time_rate);
     if (actions_.wire_delay) {
-        actions_.wire_delay->setChecked(render_widget_->use_wire_delay());
+        actions_.wire_delay->setChecked(new_config.use_wire_delay);
     }
+}
+
+Q_SLOT void MainWidget::on_render_config_changed(RenderConfig new_config) {
+    // TODO
 }
 
 auto MainWidget::set_time_rate_slider(time_rate_t time_rate) -> void {
