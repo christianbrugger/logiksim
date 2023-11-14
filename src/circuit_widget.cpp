@@ -20,9 +20,10 @@ auto Statistics::format() const -> std::string {
         "  frames_per_second = {},\n"
         "  pixel_scale = {},\n"
         "  image_size = {}x{}px\n"
+        "  uses_direct_rendering = {},\n"
         "}}",
         simulation_events_per_second, frames_per_second, pixel_scale, image_size.w,
-        image_size.h);
+        image_size.h, uses_direct_rendering);
 }
 
 }  // namespace circuit_widget
@@ -154,6 +155,7 @@ auto CircuitWidget::statistics() const -> Statistics {
         .frames_per_second = surface_statistics.frames_per_second,
         .pixel_scale = surface_statistics.pixel_scale,
         .image_size = surface_statistics.image_size,
+        .uses_direct_rendering = surface_statistics.uses_direct_rendering,
     };
 }
 

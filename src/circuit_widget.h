@@ -21,6 +21,7 @@ struct Statistics {
     double frames_per_second;
     double pixel_scale;
     BLSize image_size;
+    bool uses_direct_rendering;
 
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const Statistics&) const -> bool = default;

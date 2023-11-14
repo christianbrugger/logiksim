@@ -21,8 +21,10 @@ auto SurfaceStatistics::format() const -> std::string {
         "  frames_per_second = {},\n"
         "  pixel_scale = {},\n"
         "  image_size = {}x{}px\n"
+        "  uses_direct_rendering = {}\n"
         "}}",
-        frames_per_second, pixel_scale, image_size.w, image_size.h);
+        frames_per_second, pixel_scale, image_size.w, image_size.h,
+        uses_direct_rendering);
 }
 
 namespace {
@@ -104,6 +106,9 @@ auto RenderSurface::statistics() const -> SurfaceStatistics {
         .frames_per_second = fps_counter_.events_per_second(),
         .pixel_scale = context_.ctx.settings.view_config.pixel_scale(),
         .image_size = context_.ctx.bl_ctx.targetSize(),
+        .uses_direct_rendering = qt_image_.width() == 0 && qt_image_.height() == 0 &&
+                                 context_.ctx.bl_image.width() != 0 &&
+                                 context_.ctx.bl_image.height() != 0,
     };
 }
 
