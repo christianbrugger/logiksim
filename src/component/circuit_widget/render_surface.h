@@ -33,6 +33,11 @@ struct SurfaceStatistics {
 
 static_assert(std::regular<SurfaceStatistics>);
 
+/**
+ * @brief: Maintains the render buffers of the Circuit Widget for render tasks.
+ * 
+ * Note this component also holds the view config.
+ */
 class RenderSurface {
    public:
     auto set_render_config(WidgetRenderConfig new_config) -> void;

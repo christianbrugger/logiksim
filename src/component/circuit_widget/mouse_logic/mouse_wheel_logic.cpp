@@ -43,6 +43,14 @@ auto wheel_scroll_surface(QPoint pixel_delta, const ViewConfig& view_config)
     return view_config.offset() + moved;
 }
 
+auto wheel_scroll_surface_view_point(QPoint pixel_delta, const ViewConfig& view_config)
+    -> ViewPoint {
+    return ViewPoint {
+        .offset = wheel_scroll_surface(pixel_delta, view_config),
+        .device_scale = view_config.device_scale(),
+    };
+}
+
 auto wheel_scroll_vertical(QPoint angle_delta, const ViewConfig& view_config)
     -> point_fine_t {
     const auto standard_scroll_grid = get_standard_scroll(view_config);
@@ -51,6 +59,14 @@ auto wheel_scroll_vertical(QPoint angle_delta, const ViewConfig& view_config)
         standard_scroll_grid * angle_delta.y() / standard_delta,
     };
     return view_config.offset() + moved;
+}
+
+auto wheel_scroll_vertical_view_point(QPoint angle_delta, const ViewConfig& view_config)
+    -> ViewPoint {
+    return ViewPoint {
+        .offset = wheel_scroll_vertical(angle_delta, view_config),
+        .device_scale = view_config.device_scale(),
+    };
 }
 
 auto wheel_scroll_horizontal(QPoint angle_delta, const ViewConfig& view_config)
@@ -63,6 +79,14 @@ auto wheel_scroll_horizontal(QPoint angle_delta, const ViewConfig& view_config)
     return view_config.offset() + moved;
 }
 
+auto wheel_scroll_horizontal_view_point(QPoint angle_delta, const ViewConfig& view_config)
+-> ViewPoint {
+    return ViewPoint {
+        .offset = wheel_scroll_horizontal(angle_delta, view_config),
+        .device_scale = view_config.device_scale(),
+    };
+}
+
 auto wheel_scroll_zoom(QPointF position, Qt::KeyboardModifiers modifiers,
                        QPoint angle_delta, std::optional<QPoint> pixel_delta,
                        const ViewConfig& view_config) -> std::optional<ViewPoint> {
@@ -72,22 +96,13 @@ auto wheel_scroll_zoom(QPointF position, Qt::KeyboardModifiers modifiers,
 
     else if (modifiers == Qt::NoModifier) {
         if (pixel_delta) {
-            return ViewPoint {
-                .offset = wheel_scroll_surface(*pixel_delta, view_config),
-                .device_scale = view_config.device_scale(),
-            };
-        }
-        return ViewPoint {
-            .offset = wheel_scroll_vertical(angle_delta, view_config),
-            .device_scale = view_config.device_scale(),
-        };
+            return wheel_scroll_surface_view_point(*pixel_delta, view_config);
+            }
+            return wheel_scroll_vertical_view_point(angle_delta, view_config);
     }
 
     else if (modifiers == Qt::ShiftModifier) {
-        return ViewPoint {
-            .offset = wheel_scroll_horizontal(angle_delta, view_config),
-            .device_scale = view_config.device_scale(),
-        };
+        return wheel_scroll_horizontal_view_point(angle_delta, view_config);
     }
 
     return std::nullopt;

@@ -11,12 +11,23 @@ namespace logicsim {
 
 namespace circuit_widget {
 
+/**
+ * @brief: Calculates updated view-config offsets for mouse drags.
+ *
+ * Note the returned offsets need to be applied after each call for this to work.
+ */
 class MouseDragLogic {
    public:
     auto mouse_press(QPointF position) -> void;
-    // returns new view-config offset
+
+    /**
+     * @brief: Updates the drag position and returns the updated view-config offset.
+     */
     auto mouse_move(QPointF position, const ViewConfig& config) -> point_fine_t;
-    // returns new view-config offset
+
+    /**
+     * @brief: Finalizes the drag position and returns the updated view-config offset.
+     */
     auto mouse_release(QPointF position, const ViewConfig& config) -> point_fine_t;
 
    private:
