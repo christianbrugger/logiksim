@@ -21,7 +21,7 @@ constexpr inline auto wyhash_secret = std::array {
 //
 
 [[nodiscard]] constexpr auto wyhash() noexcept -> uint64_t {
-    return wyhash_secret[0];
+    return wyhash_secret[2];
 }
 
 //

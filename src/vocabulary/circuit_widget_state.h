@@ -67,7 +67,7 @@ struct ankerl::unordered_dense::hash<logicsim::SimulationState> {
 
     [[nodiscard]] auto operator()(const logicsim::SimulationState &obj) const noexcept
         -> uint64_t {
-        return logicsim::wyhash();
+         return logicsim::wyhash();
     }
 };
 

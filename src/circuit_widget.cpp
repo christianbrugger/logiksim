@@ -164,6 +164,7 @@ auto CircuitWidget::submit_user_action(UserAction action) -> void {
         using enum UserAction;
 
         case select_all: {
+            set_circuit_state(NonInteractiveState {});
             return;
         }
         case copy_selected: {
