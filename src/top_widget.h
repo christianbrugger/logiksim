@@ -52,6 +52,20 @@ struct MainActions {
     QAction* simulation_stop;
     QAction* wire_delay;
     QCheckBox* wire_delay_checkbox;
+
+    // debug
+    QAction* do_benchmark;
+    QAction* show_circuit;
+    QAction* show_collision_cache;
+    QAction* show_connection_cache;
+    QAction* show_selection_cache;
+
+    QAction* thread_count_0;
+    QAction* thread_count_2;
+    QAction* thread_count_4;
+    QAction* thread_count_8;
+
+    QAction* direct_rendering;
 };
 
 class MainWidget : public QMainWindow {
@@ -71,26 +85,32 @@ class MainWidget : public QMainWindow {
     auto create_statusbar() -> void;
 
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
+    [[nodiscard]] auto new_button(QString label, CircuitState state) -> QWidget*;
 
-    [[nodiscard]] auto element_button(QString label, CircuitState state) -> QWidget*;
-
-    Q_SLOT void update_title();
+    // circuit_widget slots
     Q_SLOT void on_circuit_state_changed(CircuitState new_state);
     Q_SLOT void on_simulation_config_changed(SimulationConfig new_config);
     Q_SLOT void on_render_config_changed(RenderConfig new_config);
+    // timer slots
+    Q_SLOT void on_timer_update_title();
+    Q_SLOT void on_timer_process_app_arguments_once();
 
-    auto process_arguments() -> void;
-
-    auto filename_filter() const -> QString;
+    // complex actions
+    auto show_about_dialog() -> void;
     auto new_circuit() -> void;
+
+    // complex setters
+    auto set_time_rate_slider(time_rate_t time_rate) -> void;
+
+    // load & safe
+    auto filename_filter() const -> QString;
     enum class filename_choice_t { ask_new, same_as_last };
     enum class save_result_t { success, canceled };
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
     auto open_circuit(std::optional<std::string> filename = {}) -> void;
     auto ensure_circuit_saved() -> save_result_t;
-    auto set_time_rate_slider(time_rate_t time_rate) -> void;
-    auto show_about_dialog() -> void;
 
+    // gui state
     auto save_gui_state() -> void;
     auto restore_gui_state() -> void;
 
@@ -102,8 +122,8 @@ class MainWidget : public QMainWindow {
    private:
     gsl::not_null<CircuitWidget*> circuit_widget_;
 
-    QTimer timer_ {};
-    QTimer timer_process_arguments_ {};
+    QTimer timer_update_title_ {};
+    QTimer timer_process_app_arguments_once_ {};
 
     using button_map_type = ankerl::unordered_dense::map<CircuitState, QAbstractButton*>;
     button_map_type button_map_ {};

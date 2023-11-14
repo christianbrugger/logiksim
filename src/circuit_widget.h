@@ -76,13 +76,13 @@ class CircuitWidget : public CircuitWidgetBase {
 //
 
 auto set_do_benchmark(CircuitWidget& circuit_widget, bool value) -> void;
-auto set_do_render_circuit(CircuitWidget& circuit_widget, bool value) -> void;
-auto set_do_render_collision_cache(CircuitWidget& circuit_widget, bool value) -> void;
-auto set_do_render_connection_cache(CircuitWidget& circuit_widget, bool value) -> void;
-auto set_do_render_selection_cache(CircuitWidget& circuit_widget, bool value) -> void;
+auto set_show_circuit(CircuitWidget& circuit_widget, bool value) -> void;
+auto set_show_collision_cache(CircuitWidget& circuit_widget, bool value) -> void;
+auto set_show_connection_cache(CircuitWidget& circuit_widget, bool value) -> void;
+auto set_show_selection_cache(CircuitWidget& circuit_widget, bool value) -> void;
 
 auto set_thread_count(CircuitWidget& circuit_widget, int new_count) -> void;
-auto set_use_backing_store(CircuitWidget& circuit_widget, bool use_store) -> void;
+auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void;
 
 //
 // SimulationConfig

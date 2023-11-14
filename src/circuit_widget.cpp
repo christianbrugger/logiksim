@@ -7,24 +7,33 @@ namespace logicsim {
 CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {}
 
 auto CircuitWidget::set_render_config(RenderConfig new_config) -> void {
-    if (render_config_ != new_config) {
-        render_config_ = new_config;
-        emit_render_config_changed(new_config);
+    if (render_config_ == new_config) {
+        return;
     }
+
+    render_config_ = new_config;
+    emit_render_config_changed(new_config);
+    print(render_config_);
 }
 
 auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
-    if (simulation_config_ != new_config) {
-        simulation_config_ = new_config;
-        emit_simulation_config_changed(new_config);
+    if (simulation_config_ == new_config) {
+        return;
     }
+
+    simulation_config_ = new_config;
+    emit_simulation_config_changed(new_config);
+    print(simulation_config_);
 }
 
 auto CircuitWidget::set_circuit_state(CircuitState new_state) -> void {
-    if (circuit_state_ != new_state) {
-        circuit_state_ = new_state;
-        emit_circuit_state_changed(new_state);
+    if (circuit_state_ == new_state) {
+        return;
     }
+
+    circuit_state_ = new_state;
+    emit_circuit_state_changed(new_state);
+    print(circuit_state_);
 }
 
 auto CircuitWidget::render_config() const -> RenderConfig {
@@ -85,27 +94,27 @@ auto set_do_benchmark(CircuitWidget& circuit_widget, bool value) -> void {
     circuit_widget.set_render_config(config);
 }
 
-auto set_do_render_circuit(CircuitWidget& circuit_widget, bool value) -> void {
+auto set_show_circuit(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
-    config.do_render_circuit = value;
+    config.show_circuit = value;
     circuit_widget.set_render_config(config);
 }
 
-auto set_do_render_collision_cache(CircuitWidget& circuit_widget, bool value) -> void {
+auto set_show_collision_cache(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
-    config.do_render_collision_cache = value;
+    config.show_collision_cache = value;
     circuit_widget.set_render_config(config);
 }
 
-auto set_do_render_connection_cache(CircuitWidget& circuit_widget, bool value) -> void {
+auto set_show_connection_cache(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
-    config.do_render_connection_cache = value;
+    config.show_connection_cache = value;
     circuit_widget.set_render_config(config);
 }
 
-auto set_do_render_selection_cache(CircuitWidget& circuit_widget, bool value) -> void {
+auto set_show_selection_cache(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.render_config();
-    config.do_render_selection_cache = value;
+    config.show_selection_cache = value;
     circuit_widget.set_render_config(config);
 }
 
@@ -115,9 +124,9 @@ auto set_thread_count(CircuitWidget& circuit_widget, int new_count) -> void {
     circuit_widget.set_render_config(config);
 }
 
-auto set_use_backing_store(CircuitWidget& circuit_widget, bool use_store) -> void {
+auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void {
     auto config = circuit_widget.render_config();
-    config.use_backing_store = use_store;
+    config.direct_rendering = use_store;
     circuit_widget.set_render_config(config);
 }
 

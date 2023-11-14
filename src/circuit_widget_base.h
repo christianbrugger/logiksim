@@ -2,10 +2,13 @@
 #define LOGICSIM_CIRCUIT_WIDGET_BASE_H
 
 #include "algorithm/to_underlying.h"
+#include "format/enum.h"
+#include "format/struct.h"
 #include "vocabulary/time_rate.h"
 #include "wyhash.h"
 
 #include <ankerl/unordered_dense.h>
+#include <fmt/core.h>
 
 #include <QWidget>
 
@@ -20,10 +23,12 @@ namespace circuit_widget {
 //
 
 struct SimulationState {
+    [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SimulationState &) const -> bool = default;
 };
 
 struct NonInteractiveState {
+    [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const NonInteractiveState &) const -> bool = default;
 };
 
@@ -56,6 +61,7 @@ enum class DefaultMouseAction {
 struct EditingState {
     DefaultMouseAction default_mouse_action;
 
+    [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const EditingState &) const -> bool = default;
 };
 
@@ -68,22 +74,30 @@ static_assert(std::regular<CircuitState>);
 
 [[nodiscard]] auto is_simulation(const CircuitState &state) -> bool;
 
+}  // namespace circuit_widget
+
+template <>
+auto format(circuit_widget::DefaultMouseAction action) -> std::string;
+
 //
 // Configs
 //
 
+namespace circuit_widget {
+
 struct RenderConfig {
     bool do_benchmark {false};
-    bool do_render_circuit {false};
-    bool do_render_collision_cache {false};
-    bool do_render_connection_cache {false};
-    bool do_render_selection_cache {false};
+    bool show_circuit {true};
+    bool show_collision_cache {false};
+    bool show_connection_cache {false};
+    bool show_selection_cache {false};
 
     double zoom_level {1};
 
     int thread_count {4};
-    bool use_backing_store {true};
+    bool direct_rendering {true};
 
+    [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const RenderConfig &) const -> bool = default;
 };
 
@@ -91,6 +105,7 @@ struct SimulationConfig {
     time_rate_t simulation_time_rate {10us};
     bool use_wire_delay {true};
 
+    [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto operator==(const SimulationConfig &) const -> bool = default;
 };
 
@@ -118,6 +133,27 @@ class CircuitWidgetBase : public QWidget {
 };
 
 }  // namespace logicsim
+
+//
+// Formatter
+//
+
+template <>
+struct fmt::formatter<logicsim::circuit_widget::CircuitState> {
+    constexpr auto parse(fmt::format_parse_context &ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const logicsim::circuit_widget::CircuitState &obj,
+                fmt::format_context &ctx) const {
+        const auto str = std::visit([](auto &&v) { return v.format(); }, obj);
+        return fmt::format_to(ctx.out(), "{}", str);
+    }
+};
+
+//
+// Hashes
+//
 
 template <>
 struct ankerl::unordered_dense::hash<logicsim::circuit_widget::SimulationState> {
