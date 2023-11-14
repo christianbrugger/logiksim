@@ -137,13 +137,63 @@ auto CircuitWidget::submit_user_action(UserAction action) -> void {
     // TODO implement
 }
 
-void CircuitWidget::resizeEvent(QResizeEvent* event_) {
+auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
     render_surface_.resizeEvent(*this, event_);
     update();
 }
 
-void CircuitWidget::paintEvent(QPaintEvent* event_) {
+auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
     render_surface_.paintEvent(*this, event_, nullptr, nullptr, false);
+}
+
+namespace {
+
+auto get_mouse_position(QWidget* widget, QSinglePointEvent* event_) -> QPointF {
+    Expects(widget);
+    Expects(event_);
+
+    return widget->mapFromGlobal(event_->globalPosition());
+}
+
+}  // namespace
+
+auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
+    const auto position = get_mouse_position(this, event_);
+
+    if (event_->button() == Qt::MiddleButton) {
+        mouse_drag_logic_.mouse_press(position);
+        update();
+    }
+}
+
+auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
+    const auto position = get_mouse_position(this, event_);
+
+    if (event_->buttons() & Qt::MiddleButton) {
+        const auto new_offset =
+            mouse_drag_logic_.mouse_move(position, render_surface_.view_config());
+        render_surface_.set_view_config_offset(new_offset);
+        update();
+    }
+}
+
+auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
+    const auto position = get_mouse_position(this, event_);
+
+    if (event_->button() == Qt::MiddleButton) {
+        const auto new_offset =
+            mouse_drag_logic_.mouse_release(position, render_surface_.view_config());
+        render_surface_.set_view_config_offset(new_offset);
+        update();
+    }
+}
+
+auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
+    return;
+}
+
+auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
+    return;
 }
 
 //

@@ -13,6 +13,7 @@ class QWidget;
 
 namespace logicsim {
 
+struct ViewConfig;
 class EditableCircuit;
 class SpatialSimulation;
 
@@ -23,11 +24,18 @@ class RenderSurface {
     auto set_render_config(WidgetRenderConfig new_config) -> void;
     auto clear_caches() -> void;
 
+    // view config
+    [[nodiscard]] auto view_config() const -> const ViewConfig&;
+    auto set_view_config_offset(point_fine_t offset) -> void;
+
+
+   public:
     // events we depend on to be called
     auto resizeEvent(QWidget& widget, QResizeEvent* event_) -> void;
     auto paintEvent(QWidget& widget, QPaintEvent* event_,
-                    EditableCircuit* editable_circuit, SpatialSimulation* spatial_simulation,
-                    bool show_size_handles) -> void;
+                    EditableCircuit* editable_circuit,
+                    SpatialSimulation* spatial_simulation, bool show_size_handles)
+        -> void;
 
    private:
     // Can only be called inside of paintEvent

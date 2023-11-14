@@ -74,6 +74,14 @@ auto RenderSurface::clear_caches() -> void {
     context_.shrink_to_fit();
 }
 
+auto RenderSurface::view_config() const -> const ViewConfig& {
+    return context_.ctx.settings.view_config;
+}
+
+auto RenderSurface::set_view_config_offset(point_fine_t offset) -> void {
+    context_.ctx.settings.view_config.set_offset(offset);
+}
+
 auto RenderSurface::resizeEvent(QWidget& widget, QResizeEvent* event_) -> void {
     Expects(event_);
     is_initialized_ = false;
@@ -161,6 +169,11 @@ auto RenderSurface::paintEvent(QWidget& widget, QPaintEvent* event_,
 
 auto RenderSurface::init_surface(QWidget& widget) -> void {
     context_.ctx.end();
+
+    // widget attributes
+    widget.setAutoFillBackground(false);
+    widget.setAttribute(Qt::WA_OpaquePaintEvent, true);
+    widget.setAttribute(Qt::WA_NoSystemBackground, true);
 
     // sets qt_image_
     // sets context_.ctx.bl_image

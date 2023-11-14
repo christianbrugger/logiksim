@@ -3,6 +3,7 @@
 
 #include "circuit_widget_base.h"
 #include "component/circuit_widget/render_surface.h"
+#include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
 
 #include <blend2d.h>
 
@@ -83,8 +84,15 @@ class CircuitWidget : public CircuitWidgetBase {
     auto submit_user_action(UserAction action) -> void;
 
    protected:
-    void resizeEvent(QResizeEvent* event_) override;
-    void paintEvent(QPaintEvent* event_) override;
+    auto resizeEvent(QResizeEvent* event_) -> void override;
+    auto paintEvent(QPaintEvent* event_) -> void override;
+
+    auto mousePressEvent(QMouseEvent* event_) -> void override;
+    auto mouseMoveEvent(QMouseEvent* event_) -> void override;
+    auto mouseReleaseEvent(QMouseEvent* event_) -> void override;
+
+    auto wheelEvent(QWheelEvent* event_) -> void override;
+    auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
     // never modify these directly, always call set_*, also for internal changes
@@ -93,6 +101,7 @@ class CircuitWidget : public CircuitWidgetBase {
     CircuitWidgetState circuit_state_ {};
 
     circuit_widget::RenderSurface render_surface_ {};
+    circuit_widget::MouseDragLogic mouse_drag_logic_ {};
 };
 
 //

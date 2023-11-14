@@ -42,6 +42,7 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
+    src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
     src/component/circuit_widget/render_surface.cpp
     src/component/editable_circuit/handler.cpp
     src/component/editable_circuit/layout_index.cpp
