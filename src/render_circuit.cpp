@@ -90,8 +90,8 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
     const auto p0 = to_context(g0, ctx);
     const auto p1 = to_context(g1, ctx);
 
-    const auto offset = ctx.config.view_config.offset();
-    const auto scale = ctx.config.view_config.pixel_scale();
+    const auto offset = ctx.settings.view_config.offset();
+    const auto scale = ctx.settings.view_config.pixel_scale();
 
     // vertical
     for (int x = int {g0.x}; x <= int {g1.x}; x += delta) {
@@ -106,7 +106,7 @@ auto draw_background_pattern_checker(Context& ctx, rect_fine_t scene_rect, int d
 }
 
 auto draw_background_patterns(Context& ctx) {
-    auto scene_rect = get_scene_rect_fine(ctx.config.view_config);
+    auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
 
     constexpr static auto grid_definition = {
         std::tuple {1, monochrome(0xF0), 1},    //
@@ -117,10 +117,10 @@ auto draw_background_patterns(Context& ctx) {
     };
 
     for (auto&& [delta, color, width] : grid_definition) {
-        if (delta * ctx.config.view_config.device_scale() >=
-            ctx.config.background_grid_min_distance_device) {
+        if (delta * ctx.settings.view_config.device_scale() >=
+            ctx.settings.background_grid_min_distance_device) {
             const auto draw_width_f =
-                width * ctx.config.view_config.device_pixel_ratio();
+                width * ctx.settings.view_config.device_pixel_ratio();
             // we substract a little, as we want 150% scaling to round down
             const auto epsilon = 0.01;
             const auto draw_width = std::max(1, round_to<int>(draw_width_f - epsilon));
@@ -148,7 +148,7 @@ auto do_draw_connector(const ViewConfig& view_config) {
 
 auto _draw_connector_inverted(Context& ctx, ConnectorAttributes attributes) {
     const auto radius = defaults::inverted_circle_radius;
-    const auto width = ctx.config.view_config.stroke_width();
+    const auto width = ctx.settings.view_config.stroke_width();
     const auto offset = stroke_offset(width);
 
     const auto r = to_context_unrounded(radius, ctx);
@@ -254,7 +254,7 @@ auto draw_logic_item_connectors(Context& ctx, const Layout& layout,
 
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
                                  std::span<const DrawableElement> elements) -> void {
-    if (do_draw_connector(ctx.config.view_config)) {
+    if (do_draw_connector(ctx.settings.view_config)) {
         for (const auto entry : elements) {
             draw_logic_item_connectors(ctx, layout, entry.logicitem_id, entry.state);
         }
@@ -264,7 +264,7 @@ auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
 auto draw_logic_items_connectors(Context& ctx, const Layout& layout,
                                  std::span<const logicitem_id_t> elements,
                                  SimulationView simulation_view) -> void {
-    if (do_draw_connector(ctx.config.view_config)) {
+    if (do_draw_connector(ctx.settings.view_config)) {
         for (const auto logicitem_id : elements) {
             const auto state = ElementDrawState::normal;
             draw_logic_item_connectors(ctx, layout, logicitem_id, state,
@@ -1032,12 +1032,12 @@ auto wire_color(bool is_enabled, ElementDrawState state) -> color_t {
 
 auto draw_line_cross_point(Context& ctx, const point_t point, bool is_enabled,
                            ElementDrawState state) -> void {
-    int lc_width = ctx.config.view_config.line_cross_width();
+    int lc_width = ctx.settings.view_config.line_cross_width();
     if (lc_width <= 0) {
         return;
     }
 
-    const int wire_width = ctx.config.view_config.stroke_width();
+    const int wire_width = ctx.settings.view_config.stroke_width();
     const int wire_offset = (wire_width - 1) / 2;
 
     const int size = 2 * lc_width + wire_width;
@@ -1208,6 +1208,7 @@ auto draw_wires(Context& ctx, std::span<const segment_info_t> segment_infos,
 // Size Handles
 //
 
+/*
 namespace {
 
 struct OutlinedRectAttributes {
@@ -1255,6 +1256,7 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
     draw_size_handles(ctx, size_handle_positions(layout, selection));
 }
+*/
 
 //
 // Setting Handle
@@ -1689,7 +1691,7 @@ auto render_interactive_layers(Context& ctx, const Layout& layout,
 
     if (layers.uninserted_bounding_rect.has_value()) {
         const auto rect = get_dirty_rect(layers.uninserted_bounding_rect.value(),
-                                         ctx.config.view_config);
+                                         ctx.settings.view_config);
 
         render_to_layer(ctx, surfaces.layer_surface_uninserted, rect,
                         [&](Context& layer_ctx, bool layer_enabled) {
@@ -1699,7 +1701,7 @@ auto render_interactive_layers(Context& ctx, const Layout& layout,
 
     if (layers.overlay_bounding_rect.has_value()) {
         const auto rect = get_dirty_rect(layers.overlay_bounding_rect.value(),
-                                         ctx.config.view_config);
+                                         ctx.settings.view_config);
 
         render_to_layer(ctx, surfaces.layer_surface_overlay, rect,
                         [&](Context& layer_ctx, bool layer_enabled) {
@@ -1898,7 +1900,7 @@ auto render_circuit_to_file(int width, int height, std::string filename,
                             const ViewConfig& view_config, Func render_function) {
     auto circuit_ctx = CircuitContext {Context {
         .bl_image = BLImage {width, height, BL_FORMAT_PRGB32},
-        .config = ContextRenderConfig {.view_config = view_config},
+        .settings = ContextRenderSettings {.view_config = view_config},
     }};
     auto& ctx = circuit_ctx.ctx;
 
@@ -1921,7 +1923,7 @@ auto render_circuit_to_file(int width, int height, std::string filename,
 
 auto _render_layout(CircuitContext& circuit_ctx, const Layout& layout,
                     const Selection* selection) -> void {
-    const auto scene_rect = get_scene_rect(circuit_ctx.ctx.config.view_config);
+    const auto scene_rect = get_scene_rect(circuit_ctx.ctx.settings.view_config);
     auto& layers = circuit_ctx.layers.interactive_layers;
 
     build_interactive_layers(layout, layers, selection, scene_rect);
@@ -1961,7 +1963,7 @@ auto render_layout_to_file(const Layout& layout, const Selection& selection, int
 
 auto render_simulation(CircuitContext& circuit_ctx, const Layout& layout,
                        SimulationView simulation_view) -> void {
-    const auto scene_rect = get_scene_rect(circuit_ctx.ctx.config.view_config);
+    const auto scene_rect = get_scene_rect(circuit_ctx.ctx.settings.view_config);
     auto& layers = circuit_ctx.layers.simulation_layers;
 
     build_simulation_layers(layout, layers, scene_rect);

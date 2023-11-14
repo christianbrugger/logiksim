@@ -12,7 +12,7 @@ auto resolve_stroke_width(int attribute, const ViewConfig& view_config) -> int {
 }
 
 auto resolve_stroke_width(int attribute, const Context& ctx) -> int {
-    return resolve_stroke_width(attribute, ctx.config.view_config);
+    return resolve_stroke_width(attribute, ctx.settings.view_config);
 }
 
 auto stroke_offset(int stroke_width) -> double {

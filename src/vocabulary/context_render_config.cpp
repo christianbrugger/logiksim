@@ -2,9 +2,9 @@
 
 namespace logicsim {
 
-auto ContextRenderConfig::format() const -> std::string {
+auto ContextRenderSettings::format() const -> std::string {
     return fmt::format(
-        "ContextRenderConfig{{\n"
+        "ContextRenderSettings{{\n"
         "  view_config = {},\n"
         "  background_grid_min_distance_device = {},\n"
         "  thread_count = {},\n"

@@ -58,9 +58,12 @@ auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
         return;
     }
 
+    render_surface_.set_render_config(new_config);
+
+    // update & notify
     render_config_ = new_config;
     emit_render_config_changed(new_config);
-    print(render_config_);
+    update();
 }
 
 auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
@@ -68,9 +71,10 @@ auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
         return;
     }
 
+    // update & notify
     simulation_config_ = new_config;
     emit_simulation_config_changed(new_config);
-    print(simulation_config_);
+    update();
 }
 
 auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
@@ -78,9 +82,10 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
         return;
     }
 
+    // update & notify
     circuit_state_ = new_state;
     emit_circuit_state_changed(new_state);
-    print(circuit_state_);
+    update();
 }
 
 auto CircuitWidget::render_config() const -> WidgetRenderConfig {
@@ -130,6 +135,15 @@ auto CircuitWidget::statistics() const -> Statistics {
 auto CircuitWidget::submit_user_action(UserAction action) -> void {
     print(action);
     // TODO implement
+}
+
+void CircuitWidget::resizeEvent(QResizeEvent* event_) {
+    render_surface_.resizeEvent(*this, event_);
+    update();
+}
+
+void CircuitWidget::paintEvent(QPaintEvent* event_) {
+    render_surface_.paintEvent(*this, event_, nullptr, nullptr, false);
 }
 
 //

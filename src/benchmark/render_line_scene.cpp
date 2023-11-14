@@ -260,8 +260,8 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     // render image
     auto circuit_ctx =
         CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32},
-                                 .config = {.thread_count = 0}}};
-    circuit_ctx.ctx.config.view_config.set_device_scale(12.);
+                                 .settings = {.thread_count = 0}}};
+    circuit_ctx.ctx.settings.view_config.set_device_scale(12.);
     auto& ctx = circuit_ctx.ctx;
 
     ctx.begin();

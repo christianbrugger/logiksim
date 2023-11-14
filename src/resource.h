@@ -24,7 +24,7 @@ enum class setting_t {
     logfile,
 };
 
-[[nodiscard]] auto get_writable_setting_path(setting_t config) -> QString;
+[[nodiscard]] auto get_writable_setting_path(setting_t settings) -> QString;
 
 enum class icon_t {
     app_icon,

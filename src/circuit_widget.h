@@ -2,6 +2,7 @@
 #define LOGICSIM_CIRCUIT_WIDGET_H
 
 #include "circuit_widget_base.h"
+#include "component/circuit_widget/render_surface.h"
 
 #include <blend2d.h>
 
@@ -81,11 +82,17 @@ class CircuitWidget : public CircuitWidgetBase {
     // actions
     auto submit_user_action(UserAction action) -> void;
 
+   protected:
+    void resizeEvent(QResizeEvent* event_) override;
+    void paintEvent(QPaintEvent* event_) override;
+
    private:
     // never modify these directly, always call set_*, also for internal changes
-    WidgetRenderConfig render_config_;
-    SimulationConfig simulation_config_;
-    CircuitWidgetState circuit_state_;
+    WidgetRenderConfig render_config_ {};
+    SimulationConfig simulation_config_ {};
+    CircuitWidgetState circuit_state_ {};
+
+    circuit_widget::RenderSurface render_surface_ {};
 };
 
 //

@@ -9,7 +9,7 @@ struct BLRectI;
 
 namespace logicsim {
 
-struct ContextRenderConfig;
+struct ContextRenderSettings;
 class ContextGuard;
 
 /**
@@ -19,7 +19,7 @@ struct LayerSurface {
     bool enabled {true};
     Context ctx {};
 
-    auto initialize(const ContextRenderConfig& config) -> void;
+    auto initialize(const ContextRenderSettings& settings) -> void;
 
     auto clear() -> void;
     auto shrink_to_fit() -> void;

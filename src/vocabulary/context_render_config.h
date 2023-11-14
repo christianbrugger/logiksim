@@ -8,7 +8,7 @@
 
 namespace logicsim {
 
-struct ContextRenderConfig {
+struct ContextRenderSettings {
     ViewConfig view_config {};
 
     /**

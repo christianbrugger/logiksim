@@ -577,7 +577,7 @@ auto SimulationInteractionLogic::mouse_press(std::optional<point_t> point) -> vo
 RendererWidget::RendererWidget(QWidget* parent)
     : RendererWidgetBase(parent),
       last_pixel_ratio_ {devicePixelRatioF()},
-      mouse_drag_logic_ {MouseDragLogic::Args {context_.ctx.config.view_config}} {
+      mouse_drag_logic_ {MouseDragLogic::Args {context_.ctx.settings.view_config}} {
     setAutoFillBackground(false);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     setAttribute(Qt::WA_NoSystemBackground, true);
@@ -627,15 +627,15 @@ auto RendererWidget::set_do_render_selection_cache(bool value) -> void {
 }
 
 auto RendererWidget::set_thread_count(int count) -> void {
-    if (count != context_.ctx.config.thread_count) {
-        context_.ctx.config.thread_count = count;
+    if (count != context_.ctx.settings.thread_count) {
+        context_.ctx.settings.thread_count = count;
         is_initialized_ = false;
     }
     update();
 }
 
 auto RendererWidget::thread_count() const -> int {
-    return context_.ctx.config.thread_count;
+    return context_.ctx.settings.thread_count;
 }
 
 auto RendererWidget::set_use_backing_store(bool value) -> void {
@@ -713,7 +713,7 @@ auto RendererWidget::reset_context() -> void {
     context_.clear();
     context_.shrink_to_fit();
 
-    context_.ctx.config.view_config = ViewConfig {};
+    context_.ctx.settings.view_config = ViewConfig {};
     is_initialized_ = false;
 };
 
@@ -802,7 +802,7 @@ auto RendererWidget::load_circuit(std::string filename) -> bool {
     }
 
     // view config
-    loaded.value().apply(context_.ctx.config.view_config);
+    loaded.value().apply(context_.ctx.settings.view_config);
 
     // simulation settings
     simulation_settings_ = loaded.value().simulation_settings();
@@ -919,7 +919,7 @@ auto RendererWidget::load_circuit_example(int id) -> void {
 }
 
 auto RendererWidget::reset_view_config() -> void {
-    context_.ctx.config.view_config = ViewConfig {};
+    context_.ctx.settings.view_config = ViewConfig {};
     is_initialized_ = false;
     update();
 }
@@ -942,7 +942,7 @@ auto RendererWidget::zoom(double steps, std::optional<QPointF> center) -> void {
 
     const auto factor = std::exp(steps * std::log(standard_zoom_factor));
 
-    auto& view_config = context_.ctx.config.view_config;
+    auto& view_config = context_.ctx.settings.view_config;
 
     const auto old_grid_point = to_grid_fine(position, view_config);
     view_config.set_device_scale(view_config.device_scale() * factor);
@@ -1039,7 +1039,7 @@ auto RendererWidget::size_device() const -> QSize {
 }
 
 auto RendererWidget::view_config() const noexcept -> const ViewConfig& {
-    return context_.ctx.config.view_config;
+    return context_.ctx.settings.view_config;
 }
 
 // Use the Qt backend store image directly for best performance
@@ -1125,7 +1125,7 @@ void RendererWidget::init_surface() {
     }
 
     // configs
-    context_.ctx.config.view_config.set_device_pixel_ratio(devicePixelRatioF());
+    context_.ctx.settings.view_config.set_device_pixel_ratio(devicePixelRatioF());
 
     // start context
     context_.ctx.begin();
@@ -1615,7 +1615,7 @@ auto RendererWidget::wheelEvent(QWheelEvent* event) -> void {
         return;
     }
     const auto position = get_mouse_position(event);
-    auto& view_config = context_.ctx.config.view_config;
+    auto& view_config = context_.ctx.settings.view_config;
 
     constexpr auto standard_scroll_pixel = 45;  // device pixels to scroll for one scroll
     constexpr auto standard_delta = 120.0;      // degree delta for one scroll

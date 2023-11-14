@@ -17,7 +17,7 @@ class ContextGuard;
 struct Context {
     BLImage bl_image {};
     BLContext bl_ctx {};
-    ContextRenderConfig config {};
+    ContextRenderSettings settings {};
     GlyphCache text_cache {};
     SVGCache svg_cache {};
 

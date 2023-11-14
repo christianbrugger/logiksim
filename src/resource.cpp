@@ -50,8 +50,8 @@ auto get_font_path(font_t font) -> QString {
     return to_absolute_resource_path(get_font_path_relative(font));
 }
 
-auto get_writable_setting_path(setting_t config) -> QString {
-    switch (config) {
+auto get_writable_setting_path(setting_t settings) -> QString {
+    switch (settings) {
         using enum setting_t;
 
         case gui_geometry: {
