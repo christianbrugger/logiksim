@@ -42,9 +42,9 @@ class RenderSurface {
     [[nodiscard]] auto view_config() const -> const ViewConfig&;
     auto set_view_config_offset(point_fine_t offset) -> void;
     auto set_view_config_device_scale(double scale) -> void;
+    auto set_view_point(ViewPoint view_point) -> void;
 
     [[nodiscard]] auto statistics() const -> SurfaceStatistics;
-
 
    public:
     // events we depend on to be called

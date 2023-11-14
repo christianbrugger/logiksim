@@ -43,7 +43,9 @@ set(LS_CORE_SOURCES
     src/benchmark/simulation_runtime.cpp
 
     src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
+    src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
     src/component/circuit_widget/render_surface.cpp
+    src/component/circuit_widget/zoom.cpp
     src/component/editable_circuit/handler.cpp
     src/component/editable_circuit/layout_index.cpp
     src/component/editable_circuit/message_sender.cpp
@@ -258,6 +260,7 @@ set(LS_CORE_SOURCES
     src/line_tree.cpp
     src/line_tree_generation.cpp
     src/logging.cpp
+    src/mouse_position.cpp
     src/part_selection.cpp
     src/render_caches.cpp
     src/render_circuit.cpp

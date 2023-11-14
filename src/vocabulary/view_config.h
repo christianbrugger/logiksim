@@ -12,6 +12,17 @@
 namespace logicsim {
 
 /**
+ * @brief: Device independent view definition.
+ */
+struct ViewPoint {
+    point_fine_t offset;
+    double device_scale;  // distance of grid in device coordinates
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const ViewPoint& other) const -> bool = default;
+};
+
+/**
  * brief: Defines the rendered area of the grid and how it relates to
  *        device coordinates and real pixels.
  *
@@ -57,6 +68,11 @@ struct ViewConfig {
     auto set_size(BLSizeI size) -> void;
 
     /**
+     * brief: Load the Device Independent View Point
+     */
+    auto set_view_point(ViewPoint view_point) -> void;
+
+    /**
      * brief: The offset of the viewed area in grid coordinates.
      */
     [[nodiscard]] auto offset() const noexcept -> point_fine_t;
@@ -90,6 +106,11 @@ struct ViewConfig {
      * brief: Width of line cross point in pixels.
      */
     [[nodiscard]] auto line_cross_width() const noexcept -> int;
+
+    /**
+     * brief: Return Device Independent View Point
+     */
+    [[nodiscard]] auto view_point() const noexcept -> ViewPoint;
 
     [[nodiscard]] auto operator==(const ViewConfig& other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;

@@ -1,5 +1,8 @@
 #include "circuit_widget.h"
 
+#include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
+#include "component/circuit_widget/zoom.h"
+#include "mouse_position.h"
 #include "logging.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
@@ -159,15 +162,19 @@ auto CircuitWidget::submit_user_action(UserAction action) -> void {
         }
 
         case zoom_in: {
+            render_surface_.set_view_point(
+                circuit_widget::zoom(*this, render_surface_.view_config(), +1));
+            update();
             return;
         }
         case zoom_out: {
+            render_surface_.set_view_point(
+                circuit_widget::zoom(*this, render_surface_.view_config(), -1));
+            update();
             return;
         }
         case reset_view: {
-            const auto config = ViewConfig {};
-            render_surface_.set_view_config_offset(config.offset());
-            render_surface_.set_view_config_device_scale(config.device_scale());
+            render_surface_.set_view_point(ViewConfig {}.view_point());
             update();
             return;
         }
@@ -184,17 +191,6 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
 auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
     render_surface_.paintEvent(*this, event_, nullptr, nullptr, false);
 }
-
-namespace {
-
-auto get_mouse_position(QWidget* widget, QSinglePointEvent* event_) -> QPointF {
-    Expects(widget);
-    Expects(event_);
-
-    return widget->mapFromGlobal(event_->globalPosition());
-}
-
-}  // namespace
 
 auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
@@ -228,7 +224,11 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
 }
 
 auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
-    return;
+    if (const auto view_point = circuit_widget::wheel_scroll_zoom(
+            *this, *event_, render_surface_.view_config())) {
+        render_surface_.set_view_point(*view_point);
+        update();
+    }
 }
 
 auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {

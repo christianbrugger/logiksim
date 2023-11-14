@@ -96,6 +96,10 @@ auto RenderSurface::set_view_config_device_scale(double scale) -> void {
     context_.ctx.settings.view_config.set_device_scale(scale);
 }
 
+auto RenderSurface::set_view_point(ViewPoint view_point) -> void {
+    context_.ctx.settings.view_config.set_view_point(view_point);
+}
+
 auto RenderSurface::statistics() const -> SurfaceStatistics {
     return SurfaceStatistics {
         .frames_per_second = fps_counter_.events_per_second(),
@@ -182,7 +186,7 @@ auto RenderSurface::paintEvent(QWidget& widget, QPaintEvent* event_,
 
     // we use QPainter only if we are directly drawing
     if (qt_image_.width() != 0) {
-        QPainter painter(&widget);
+        auto painter = QPainter {&widget};
         painter.drawImage(QPoint(0, 0), qt_image_);
     }
 

@@ -4,13 +4,26 @@
 
 namespace logicsim {
 
+auto ViewPoint::format() const -> std::string {
+    return fmt::format(
+        "ViewPoint(\n"
+        "  offset = {} grid,\n"
+        "  device_scale = {} coord,\n"
+        ")",
+        offset, device_scale);
+}
+
+//
+// View Config
+//
+
 ViewConfig::ViewConfig() {
     update();
 }
 
 auto ViewConfig::format() const -> std::string {
     return fmt::format(
-        "OldRenderSettings(\n"
+        "ViewConfig(\n"
         "  offset = {} grid,\n"
         "  size = {} x {} px,\n"
         "  pixel_scale = {} px,\n"
@@ -73,6 +86,18 @@ auto ViewConfig::stroke_width() const noexcept -> int {
 
 auto ViewConfig::line_cross_width() const noexcept -> int {
     return line_cross_width_px_;
+}
+
+auto ViewConfig::view_point() const noexcept -> ViewPoint {
+    return ViewPoint {
+        .offset = offset(),
+        .device_scale = device_scale(),
+    };
+}
+
+auto ViewConfig::set_view_point(ViewPoint view_point) -> void {
+    set_device_scale(view_point.device_scale);
+    set_offset(view_point.offset);
 }
 
 auto ViewConfig::update() -> void {
