@@ -5,27 +5,27 @@
 
 namespace logicsim {
 
-auto LayerSurface::initialize(const RenderSettings& new_settings) -> void {
+auto LayerSurface::initialize(const ContextRenderConfig& new_settings) -> void {
     const auto new_size = new_settings.view_config.size();
 
     // image size changed
     if (ctx.bl_image.size() != new_size) {
         ctx.end();
-        ctx.settings = new_settings;
+        ctx.config = new_settings;
         ctx.bl_image = BLImage {new_size.w, new_size.h, BL_FORMAT_PRGB32};
         ctx.begin();
     }
 
     // context info changed
-    else if (!equals(context_info(ctx.settings), context_info(new_settings))) {
+    else if (!equals(context_info(ctx.config), context_info(new_settings))) {
         ctx.end();
-        ctx.settings = new_settings;
+        ctx.config = new_settings;
         ctx.begin();
     }
 
     // only settings update
     else {
-        ctx.settings = new_settings;
+        ctx.config = new_settings;
     }
 }
 
@@ -42,7 +42,7 @@ auto render_to_layer(Context& target_ctx, LayerSurface& surface, BLRectI dirty_r
     auto _ [[maybe_unused]] = make_context_guard(target_ctx);
 
     if (surface.enabled) {
-        surface.initialize(target_ctx.settings);
+        surface.initialize(target_ctx.config);
         surface.ctx.bl_ctx.clearRect(dirty_rect);
 
         {

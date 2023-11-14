@@ -11,7 +11,6 @@ namespace circuit_widget {
 
 struct Statistics {
     std::optional<double> simulation_events_per_second;
-
     double frames_per_second;
     double pixel_scale;
     BLSize image_size;
@@ -42,13 +41,13 @@ class CircuitWidget : public CircuitWidgetBase {
     CircuitWidget(QWidget* parent = nullptr);
 
     // setter & getters
-    auto set_render_config(RenderConfig new_config) -> void;
+    auto set_render_config(WidgetRenderConfig new_config) -> void;
     auto set_simulation_config(SimulationConfig new_config) -> void;
-    auto set_circuit_state(CircuitState new_state) -> void;
+    auto set_circuit_state(CircuitWidgetState new_state) -> void;
 
-    auto render_config() const -> RenderConfig;
+    auto render_config() const -> WidgetRenderConfig;
     auto simulation_config() const -> SimulationConfig;
-    auto circuit_state() const -> CircuitState;
+    auto circuit_state() const -> CircuitWidgetState;
 
     // load & save
     auto serialized_circuit() const -> std::string;
@@ -66,9 +65,9 @@ class CircuitWidget : public CircuitWidgetBase {
 
    private:
     // never modify these directly, always call set_*, also for internal changes
-    RenderConfig render_config_;
+    WidgetRenderConfig render_config_;
     SimulationConfig simulation_config_;
-    CircuitState circuit_state_;
+    CircuitWidgetState circuit_state_;
 };
 
 //

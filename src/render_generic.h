@@ -14,7 +14,7 @@
 #include "render/primitive/stroke.h"
 #include "render/primitive/text.h"
 #include "vocabulary/font_style.h"
-#include "vocabulary/render_setting.h"
+#include "vocabulary/context_render_config.h"
 #include "vocabulary/shape_draw_type.h"
 #include "vocabulary/text_alignment.h"
 #include "vocabulary/view_config.h"

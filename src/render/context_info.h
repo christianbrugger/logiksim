@@ -5,9 +5,9 @@ struct BLContextCreateInfo;
 
 namespace logicsim {
 
-struct RenderSettings;
+struct ContextRenderConfig;
 
-auto context_info(const RenderSettings& settings) -> BLContextCreateInfo;
+auto context_info(const ContextRenderConfig& config) -> BLContextCreateInfo;
 
 auto equals(const BLContextCreateInfo& a, const BLContextCreateInfo& b) -> bool;
 

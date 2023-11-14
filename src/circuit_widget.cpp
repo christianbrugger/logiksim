@@ -1,12 +1,14 @@
 #include "circuit_widget.h"
 
 #include "logging.h"
+#include "vocabulary/simulation_config.h"
+#include "vocabulary/widget_render_config.h"
 
 namespace logicsim {
 
 CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {}
 
-auto CircuitWidget::set_render_config(RenderConfig new_config) -> void {
+auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
     if (render_config_ == new_config) {
         return;
     }
@@ -26,7 +28,7 @@ auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
     print(simulation_config_);
 }
 
-auto CircuitWidget::set_circuit_state(CircuitState new_state) -> void {
+auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     if (circuit_state_ == new_state) {
         return;
     }
@@ -36,7 +38,7 @@ auto CircuitWidget::set_circuit_state(CircuitState new_state) -> void {
     print(circuit_state_);
 }
 
-auto CircuitWidget::render_config() const -> RenderConfig {
+auto CircuitWidget::render_config() const -> WidgetRenderConfig {
     return render_config_;
 }
 
@@ -44,7 +46,7 @@ auto CircuitWidget::simulation_config() const -> SimulationConfig {
     return simulation_config_;
 }
 
-auto CircuitWidget::circuit_state() const -> CircuitState {
+auto CircuitWidget::circuit_state() const -> CircuitWidgetState {
     return circuit_state_;
 }
 

@@ -7,7 +7,7 @@
 #include "schematic.h"
 #include "schematic_generation.h"
 #include "vocabulary/internal_state.h"
-#include "vocabulary/simulation_setting.h"
+#include "vocabulary/simulation_config.h"
 
 #include <stdexcept>
 

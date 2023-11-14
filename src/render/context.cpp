@@ -8,8 +8,8 @@
 namespace logicsim {
 
 auto Context::begin() -> void {
-    settings.view_config.set_size(bl_image.size());
-    bl_ctx.begin(bl_image, context_info(settings));
+    config.view_config.set_size(bl_image.size());
+    bl_ctx.begin(bl_image, context_info(config));
 }
 
 auto Context::sync() -> void {
@@ -40,23 +40,23 @@ auto make_context_guard(Context& ctx) -> ContextGuard {
 }
 
 auto to_context(point_t position, const Context& context) -> BLPoint {
-    return to_context(position, context.settings.view_config);
+    return to_context(position, context.config.view_config);
 }
 
 auto to_context(point_fine_t position, const Context& context) -> BLPoint {
-    return to_context(position, context.settings.view_config);
+    return to_context(position, context.config.view_config);
 }
 
 auto to_context(grid_t length, const Context& context) -> double {
-    return to_context(length, context.settings.view_config);
+    return to_context(length, context.config.view_config);
 }
 
 auto to_context(grid_fine_t length, const Context& context) -> double {
-    return to_context(length, context.settings.view_config);
+    return to_context(length, context.config.view_config);
 }
 
 auto to_context_unrounded(grid_fine_t length, const Context& context) -> double {
-    return to_context_unrounded(length, context.settings.view_config);
+    return to_context_unrounded(length, context.config.view_config);
 }
 
 }  // namespace logicsim

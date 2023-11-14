@@ -27,7 +27,7 @@
 #include "vocabulary/layout_calculation_data.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/placed_element.h"
-#include "vocabulary/simulation_setting.h"
+#include "vocabulary/simulation_config.h"
 #include "vocabulary/view_config.h"
 
 #include <optional>
@@ -202,30 +202,30 @@ auto apply_view_config(const SerializedViewConfig& serialized, ViewConfig& view_
     });
 }
 
-auto serialize_simulation_settings(const SimulationSettings settings)
+auto serialize_simulation_settings(const SimulationConfig config)
     -> SerializedSimulationSettings {
-    const auto rate = settings.simulation_time_rate.rate_per_second;
+    const auto rate = config.simulation_time_rate.rate_per_second;
 
     return SerializedSimulationSettings {
         .simulation_time_rate_ns = rate.count_ns(),
-        .use_wire_delay = settings.use_wire_delay,
+        .use_wire_delay = config.use_wire_delay,
     };
 };
 
-auto unserialize_simulation_settings(const SerializedSimulationSettings& settings)
-    -> SimulationSettings {
+auto unserialize_simulation_settings(const SerializedSimulationSettings& config)
+    -> SimulationConfig {
     using namespace std::chrono_literals;
 
-    const auto rate_stored = time_rate_t {settings.simulation_time_rate_ns * 1ns};
+    const auto rate_stored = time_rate_t {config.simulation_time_rate_ns * 1ns};
 
     static_assert(std::is_same_v<decltype(rate_stored.rate_per_second)::rep,
-                                 decltype(settings.simulation_time_rate_ns)>);
+                                 decltype(config.simulation_time_rate_ns)>);
 
     // const auto rate = std::clamp(rate_stored, time_rate_t {1us}, time_rate_t {10s});
 
-    return SimulationSettings {
+    return SimulationConfig {
         .simulation_time_rate = rate_stored,
-        .use_wire_delay = settings.use_wire_delay,
+        .use_wire_delay = config.use_wire_delay,
     };
 }
 
@@ -234,7 +234,7 @@ auto unserialize_simulation_settings(const SerializedSimulationSettings& setting
 namespace logicsim {
 
 auto serialize_inserted(const Layout& layout, const ViewConfig* view_config,
-                        const SimulationSettings* simulation_settings) -> std::string {
+                        const SimulationConfig* simulation_settings) -> std::string {
     auto data = serialize::SerializedLayout {};
 
     if (view_config != nullptr) {
@@ -343,7 +343,7 @@ auto LoadLayoutResult::apply(ViewConfig& view_config) const -> void {
     apply_view_config(data_->view_config, view_config);
 }
 
-auto LoadLayoutResult::simulation_settings() const -> SimulationSettings {
+auto LoadLayoutResult::simulation_settings() const -> SimulationConfig {
     if (!data_) {
         throw std::runtime_error("no layout data");
     }

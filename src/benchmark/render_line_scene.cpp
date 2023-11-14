@@ -217,7 +217,7 @@ auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_de
 
 auto fill_line_scene(int n_lines) -> SimulatedLineScene {
     const auto config = RenderBenchmarkConfig();
-    const auto simulation_settings = SimulationSettings {.use_wire_delay = true};
+    const auto simulation_settings = SimulationConfig {.use_wire_delay = true};
     if (simulation_settings.wire_delay_per_distance() != delay_t {1us}) {
         throw std::runtime_error("we depend on 1us for consistency");
     }
@@ -260,8 +260,8 @@ auto benchmark_line_renderer(int n_lines, bool save_image) -> int64_t {
     // render image
     auto circuit_ctx =
         CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32},
-                                 .settings = {.thread_count = 0}}};
-    circuit_ctx.ctx.settings.view_config.set_device_scale(12.);
+                                 .config = {.thread_count = 0}}};
+    circuit_ctx.ctx.config.view_config.set_device_scale(12.);
     auto& ctx = circuit_ctx.ctx;
 
     ctx.begin();

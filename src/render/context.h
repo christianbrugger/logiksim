@@ -3,7 +3,7 @@
 
 #include "render/glyph_cache.h"
 #include "render/svg_cache.h"
-#include "vocabulary/render_setting.h"
+#include "vocabulary/context_render_config.h"
 
 #include <blend2d.h>
 
@@ -17,7 +17,7 @@ class ContextGuard;
 struct Context {
     BLImage bl_image {};
     BLContext bl_ctx {};
-    RenderSettings settings {};
+    ContextRenderConfig config {};
     GlyphCache text_cache {};
     SVGCache svg_cache {};
 
@@ -31,7 +31,7 @@ struct Context {
 
 [[nodiscard]] auto make_context_guard(Context& ctx) -> ContextGuard;
 
-// short-hand scene geometry that forwards settings.view_config
+// short-hand scene geometry that forwards config.view_config
 [[nodiscard]] auto to_context(point_t position, const Context& context) -> BLPoint;
 [[nodiscard]] auto to_context(point_fine_t position, const Context& context) -> BLPoint;
 [[nodiscard]] auto to_context(grid_t length, const Context& context) -> double;

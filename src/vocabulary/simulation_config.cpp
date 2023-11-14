@@ -1,15 +1,19 @@
-#include "vocabulary/simulation_setting.h"
+#include "vocabulary/simulation_config.h"
 
 #include <fmt/core.h>
 
 namespace logicsim {
 
-auto SimulationSettings::format() const -> std::string {
-    return fmt::format("<SimulationSetting: simulation_time_rate={}, use_wire_delay={}>",
-                       simulation_time_rate, use_wire_delay);
+auto SimulationConfig::format() const -> std::string {
+    return fmt::format(
+        "SimulationConfig{{\n"
+        "  simulation_time_rate = {},\n"
+        "  use_wire_delay = {},\n"
+        "}}",
+        simulation_time_rate, use_wire_delay);
 }
 
-auto SimulationSettings::wire_delay_per_distance() const -> delay_t {
+auto SimulationConfig::wire_delay_per_distance() const -> delay_t {
     return use_wire_delay ? default_wire_delay_per_distance() : delay_t {0ns};
 }
 

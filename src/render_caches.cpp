@@ -82,7 +82,7 @@ auto render_output_marker(Context& ctx, point_t position, color_t color,
 auto render_editable_circuit_connection_cache(Context& ctx,
                                               const EditableCircuit& editable_circuit)
     -> void {
-    const auto scene_rect = get_scene_rect(ctx.settings.view_config);
+    const auto scene_rect = get_scene_rect(ctx.config.view_config);
     const auto& caches = editable_circuit.caches();
 
     const auto logicitem_color = defaults::color_dark_blue;
@@ -127,7 +127,7 @@ auto render_editable_circuit_collision_cache(Context& ctx,
     constexpr static auto color = defaults::color_orange;
     constexpr static auto size = grid_fine_t {0.25};
 
-    const auto scene_rect = get_scene_rect(ctx.settings.view_config);
+    const auto scene_rect = get_scene_rect(ctx.config.view_config);
 
     for (auto [point, state] : editable_circuit.caches().collision_index().states()) {
         if (!is_colliding(point, scene_rect)) {
@@ -184,7 +184,7 @@ auto render_editable_circuit_collision_cache(Context& ctx,
 auto render_editable_circuit_selection_cache(Context& ctx,
                                              const EditableCircuit& editable_circuit)
     -> void {
-    const auto scene_rect = get_scene_rect_fine(ctx.settings.view_config);
+    const auto scene_rect = get_scene_rect_fine(ctx.config.view_config);
     for (const rect_fine_t& rect : editable_circuit.caches().selection_index().rects()) {
         // TODO introduce is_visible
         if (!is_colliding(rect, scene_rect)) {

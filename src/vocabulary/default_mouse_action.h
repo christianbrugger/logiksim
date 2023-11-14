@@ -1,18 +1,14 @@
-#ifndef LOGICSIM_VOCABULARY_WIDGET_INTERACTION_STATE_H
-#define LOGICSIM_VOCABULARY_WIDGET_INTERACTION_STATE_H
+#ifndef LOGICSIM_VOCABULARY_DEFAULT_MOUSE_ACTION_H
+#define LOGICSIM_VOCABULARY_DEFAULT_MOUSE_ACTION_H
 
 #include "format/enum.h"
 
-#include <string>
-
 namespace logicsim {
 
-enum class InteractionState {
-    not_interactive,
+enum class DefaultMouseAction {
     selection,
-    simulation,
-
     insert_wire,
+
     insert_button,
     insert_led,
     insert_display_number,
@@ -36,9 +32,9 @@ enum class InteractionState {
 };
 
 template <>
-auto format(InteractionState type) -> std::string;
+auto format(DefaultMouseAction action) -> std::string;
 
-[[nodiscard]] auto is_inserting_state(InteractionState state) -> bool;
+[[nodiscard]] auto is_inserting_state(DefaultMouseAction action) -> bool;
 
 }  // namespace logicsim
 

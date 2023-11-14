@@ -16,13 +16,13 @@ class Layout;
 class Selection;
 class EditableCircuit;
 struct ViewConfig;
-struct SimulationSettings;
+struct SimulationConfig;
 
 using binary_t = std::vector<uint8_t>;
 
 [[nodiscard]] auto serialize_inserted(
     const Layout& layout, const ViewConfig* view_config = nullptr,
-    const SimulationSettings* simulation_settings = nullptr) -> std::string;
+    const SimulationConfig* simulation_settings = nullptr) -> std::string;
 
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
                                       point_t save_position = point_t {0, 0})
@@ -52,7 +52,7 @@ class LoadLayoutResult {
 
     auto apply(ViewConfig& view_config) const -> void;
 
-    auto simulation_settings() const -> SimulationSettings;
+    auto simulation_settings() const -> SimulationConfig;
 
    private:
     std::unique_ptr<SerializedLayout> data_;

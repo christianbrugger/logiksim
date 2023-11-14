@@ -1,23 +1,19 @@
-#include "vocabulary/widget_interaction_state.h"
+#include "vocabulary/default_mouse_action.h"
 
 #include <exception>
 
 namespace logicsim {
 
 template <>
-auto format(InteractionState state) -> std::string {
-    switch (state) {
-        using enum InteractionState;
+auto format(DefaultMouseAction action) -> std::string {
+    switch (action) {
+        using enum DefaultMouseAction;
 
-        case not_interactive:
-            return "not_interactive";
         case selection:
             return "selection";
-        case simulation:
-            return "simulation";
-
         case insert_wire:
             return "insert_wire";
+
         case insert_button:
             return "insert_button";
         case insert_led:
@@ -55,13 +51,14 @@ auto format(InteractionState state) -> std::string {
             return "insert_clock_generator";
         case insert_shift_register:
             return "insert_shift_register";
-    }
+    };
+
     std::terminate();
 }
 
-auto is_inserting_state(InteractionState state) -> bool {
-    using enum InteractionState;
-    return state != not_interactive && state != selection && state != simulation;
+auto is_inserting_state(DefaultMouseAction action) -> bool {
+    using enum DefaultMouseAction;
+    return action != selection;
 }
 
 }  // namespace logicsim

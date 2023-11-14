@@ -338,7 +338,7 @@ class RendererWidget : public RendererWidgetBase {
     std::optional<EditableCircuit> editable_circuit_ {};
 
     // simulation
-    SimulationSettings simulation_settings_ {};
+    SimulationConfig simulation_settings_ {};
     std::optional<InteractiveSimulation> simulation_ {};
 
     // mouse logic

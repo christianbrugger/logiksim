@@ -1,15 +1,15 @@
 #include "render/context_info.h"
 
-#include "vocabulary/render_setting.h"
+#include "vocabulary/context_render_config.h"
 
 #include <blend2d.h>
 
 namespace logicsim {
 
-auto context_info(const RenderSettings& settings) -> BLContextCreateInfo {
+auto context_info(const ContextRenderConfig& config) -> BLContextCreateInfo {
     auto info = BLContextCreateInfo {};
     info.commandQueueLimit = 2048;
-    info.threadCount = gsl::narrow<decltype(info.threadCount)>(settings.thread_count);
+    info.threadCount = gsl::narrow<decltype(info.threadCount)>(config.thread_count);
     return info;
 }
 

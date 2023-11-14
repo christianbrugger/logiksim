@@ -4,7 +4,7 @@
 #include "layout.h"
 #include "line_tree.h"
 #include "simulation.h"
-#include "vocabulary/simulation_setting.h"
+#include "vocabulary/simulation_config.h"
 
 #include <optional>
 #include <vector>

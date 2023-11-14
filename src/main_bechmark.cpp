@@ -256,8 +256,8 @@ static void BM_RenderScene_0(benchmark::State& state) {
 
     auto context =
         CircuitContext {Context {.bl_image = BLImage {1200, 1200, BL_FORMAT_PRGB32},
-                                 .settings = {.thread_count = 0}}};
-    context.ctx.settings.view_config.set_device_scale(12.);
+                                 .config = {.thread_count = 0}}};
+    context.ctx.config.view_config.set_device_scale(12.);
     context.ctx.begin();
 
     {

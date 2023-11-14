@@ -168,12 +168,15 @@ set(LS_CORE_SOURCES
 
     src/vocabulary/alignment.cpp
     src/vocabulary/circuit_id.cpp
+    src/vocabulary/circuit_widget_state.cpp
     src/vocabulary/color.cpp
     src/vocabulary/connection.cpp
     src/vocabulary/connection_count.cpp
     src/vocabulary/connection_id.cpp
     src/vocabulary/connection_ids.cpp
     src/vocabulary/connector_info.cpp
+    src/vocabulary/context_render_config.cpp
+    src/vocabulary/default_mouse_action.cpp
     src/vocabulary/delay.cpp
     src/vocabulary/direction_type.cpp
     src/vocabulary/display_state.cpp
@@ -217,7 +220,6 @@ set(LS_CORE_SOURCES
     src/vocabulary/print_events.cpp
     src/vocabulary/rect.cpp
     src/vocabulary/rect_fine.cpp
-    src/vocabulary/render_setting.cpp
     src/vocabulary/segment.cpp
     src/vocabulary/segment_index.cpp
     src/vocabulary/segment_info.cpp
@@ -225,13 +227,13 @@ set(LS_CORE_SOURCES
     src/vocabulary/segment_point_type.cpp
     src/vocabulary/selection_id.cpp
     src/vocabulary/shape_draw_type.cpp
-    src/vocabulary/simulation_setting.cpp
+    src/vocabulary/simulation_config.cpp
     src/vocabulary/text_alignment.cpp
     src/vocabulary/time.cpp
     src/vocabulary/time_literal.cpp
     src/vocabulary/time_rate.cpp
     src/vocabulary/view_config.cpp
-    src/vocabulary/widget_interaction_state.cpp
+    src/vocabulary/widget_render_config.cpp
     src/vocabulary/wire_id.cpp
 
     src/base64.cpp
@@ -258,7 +260,6 @@ set(LS_CORE_SOURCES
     src/render_caches.cpp
     src/render_circuit.cpp
     src/render_generic.cpp
-    src/render_widget_base.cpp
     src/resource.cpp
     src/safe_numeric.cpp
     src/schematic.cpp
@@ -288,7 +289,6 @@ set(LS_CORE_SOURCES
 set(MOC_FILES
     src/circuit_widget_base.h
     src/top_widget.h 
-    src/render_widget_base.h
 )
 
 set(LS_TEST_SOURCES

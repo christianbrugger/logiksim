@@ -72,11 +72,6 @@ class MainWidget : public QMainWindow {
     Q_OBJECT
 
    public:
-    using CircuitState = circuit_widget::CircuitState;
-    using RenderConfig = circuit_widget::RenderConfig;
-    using SimulationConfig = circuit_widget::SimulationConfig;
-
-   public:
     MainWidget(QWidget* parent = nullptr);
 
    private:
@@ -85,12 +80,12 @@ class MainWidget : public QMainWindow {
     auto create_statusbar() -> void;
 
     [[nodiscard]] auto build_element_buttons() -> QWidget*;
-    [[nodiscard]] auto new_button(QString label, CircuitState state) -> QWidget*;
+    [[nodiscard]] auto new_button(QString label, CircuitWidgetState state) -> QWidget*;
 
     // circuit_widget slots
-    Q_SLOT void on_circuit_state_changed(CircuitState new_state);
+    Q_SLOT void on_circuit_state_changed(CircuitWidgetState new_state);
     Q_SLOT void on_simulation_config_changed(SimulationConfig new_config);
-    Q_SLOT void on_render_config_changed(RenderConfig new_config);
+    Q_SLOT void on_render_config_changed(WidgetRenderConfig new_config);
     // timer slots
     Q_SLOT void on_timer_update_title();
     Q_SLOT void on_timer_process_app_arguments_once();
@@ -125,7 +120,8 @@ class MainWidget : public QMainWindow {
     QTimer timer_update_title_ {};
     QTimer timer_process_app_arguments_once_ {};
 
-    using button_map_type = ankerl::unordered_dense::map<CircuitState, QAbstractButton*>;
+    using button_map_type =
+        ankerl::unordered_dense::map<CircuitWidgetState, QAbstractButton*>;
     button_map_type button_map_ {};
 
     QWidget* delay_panel_ {};

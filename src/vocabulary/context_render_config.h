@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_VOCABULARY_RENDER_SETTING_H
-#define LOGICSIM_VOCABULARY_RENDER_SETTING_H
+#ifndef LOGICSIM_VOCABULARY_CONTEXT_RENDER_CONFIG_H
+#define LOGICSIM_VOCABULARY_CONTEXT_RENDER_CONFIG_H
 
 #include "format/struct.h"
 #include "vocabulary/view_config.h"
@@ -8,7 +8,7 @@
 
 namespace logicsim {
 
-struct RenderSettings {
+struct ContextRenderConfig {
     ViewConfig view_config {};
 
     /**

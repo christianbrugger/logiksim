@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_VOCABULARY_SIMULATION_SETTING_H
-#define LOGICSIM_VOCABULARY_SIMULATION_SETTING_H
+#ifndef LOGICSIM_VOCABULARY_SIMULATION_CONFIG_H
+#define LOGICSIM_VOCABULARY_SIMULATION_CONFIG_H
 
 #include "format/struct.h"
 #include "vocabulary/delay.h"
@@ -10,14 +10,14 @@
 
 namespace logicsim {
 
-struct SimulationSettings {
+struct SimulationConfig {
     time_rate_t simulation_time_rate {10us};
     bool use_wire_delay {true};
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const SimulationSettings &other) const
+    [[nodiscard]] auto operator==(const SimulationConfig &other) const
         -> bool = default;
-    [[nodiscard]] auto operator<=>(const SimulationSettings &other) const = default;
+    [[nodiscard]] auto operator<=>(const SimulationConfig &other) const = default;
 
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
 };

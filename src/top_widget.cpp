@@ -9,7 +9,7 @@
 #include "serialize.h"
 #include "timer.h"
 #include "top_widget.h"
-#include "vocabulary/simulation_setting.h"
+#include "vocabulary/simulation_config.h"
 
 #include <QActionGroup>
 #include <QCheckBox>
@@ -309,7 +309,7 @@ auto MainWidget::create_menu() -> void {
         auto* menu = menuBar()->addMenu(tr("&Simulation"));
 
         const auto start_simulation = [this]() {
-            circuit_widget_->set_circuit_state(circuit_widget::SimulationState {});
+            circuit_widget_->set_circuit_state(SimulationState {});
         };
         actions_.simulation_start =
             add_action(menu, tr("Start &Simulation"),
@@ -319,8 +319,8 @@ auto MainWidget::create_menu() -> void {
 
         const auto stop_simulation = [this]() {
             if (is_simulation(circuit_widget_->circuit_state())) {
-                circuit_widget_->set_circuit_state(circuit_widget::EditingState {
-                    circuit_widget::DefaultMouseAction::selection});
+                circuit_widget_->set_circuit_state(
+                    EditingState {DefaultMouseAction::selection});
             };
         };
         actions_.simulation_stop =
@@ -586,7 +586,7 @@ auto MainWidget::create_statusbar() -> void {
     this->setStatusBar(statusbar);
 }
 
-auto MainWidget::new_button(QString label, CircuitState state) -> QWidget* {
+auto MainWidget::new_button(QString label, CircuitWidgetState state) -> QWidget* {
     const auto button = new ElementButton(label);
     button->setCheckable(true);
     button_map_[state] = button;
@@ -609,11 +609,10 @@ auto MainWidget::build_element_buttons() -> QWidget* {
     int row = -1;
 
     {
-        const auto ES = [](circuit_widget::DefaultMouseAction action) {
-            return circuit_widget::CircuitState {
-                circuit_widget::EditingState {.default_mouse_action = action}};
+        const auto ES = [](DefaultMouseAction action) {
+            return CircuitWidgetState {EditingState {.default_mouse_action = action}};
         };
-        using enum circuit_widget::DefaultMouseAction;
+        using enum DefaultMouseAction;
 
         layout->addWidget(new_button("BTN", ES(insert_button)), ++row, 0);
         layout->addWidget(new_button("Wire", ES(insert_wire)), row, 1);
@@ -670,7 +669,7 @@ void MainWidget::on_timer_update_title() {
     }
 }
 
-void MainWidget::on_circuit_state_changed(CircuitState new_state) {
+void MainWidget::on_circuit_state_changed(CircuitWidgetState new_state) {
     bool simulation_active = is_simulation(new_state);
 
     // buttons
@@ -718,8 +717,7 @@ auto MainWidget::new_circuit() -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
         circuit_widget_->load_new_circuit();
 
-        circuit_widget_->set_circuit_state(
-            circuit_widget::EditingState {circuit_widget::DefaultMouseAction::selection});
+        circuit_widget_->set_circuit_state(EditingState {DefaultMouseAction::selection});
         circuit_widget_->set_render_config({});
         circuit_widget_->set_simulation_config({});
 
@@ -833,7 +831,7 @@ void MainWidget::on_simulation_config_changed(SimulationConfig new_config) {
     }
 }
 
-Q_SLOT void MainWidget::on_render_config_changed(RenderConfig new_config) {
+Q_SLOT void MainWidget::on_render_config_changed(WidgetRenderConfig new_config) {
     if (actions_.do_benchmark) {
         actions_.do_benchmark->setChecked(new_config.do_benchmark);
     }
