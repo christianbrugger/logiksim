@@ -258,24 +258,23 @@ auto MainWidget::create_menu() -> void {
         actions_.cut = add_action(
             menu, tr("Cu&t"),
             ActionAttributes {.shortcut = QKeySequence::Cut, .icon = icon_t::cut},
-            [this] { circuit_widget_->submit_action(UserAction::cut_selected); });
+            [this] { circuit_widget_->do_action(UserAction::cut_selected); });
         actions_.copy = add_action(
             menu, tr("&Copy"),
             ActionAttributes {.shortcut = QKeySequence::Copy, .icon = icon_t::copy},
-            [this] { circuit_widget_->submit_action(UserAction::copy_selected); });
+            [this] { circuit_widget_->do_action(UserAction::copy_selected); });
         actions_.paste = add_action(
             menu, tr("&Paste"),
             ActionAttributes {.shortcut = QKeySequence::Paste, .icon = icon_t::paste},
-            [this] { circuit_widget_->submit_action(UserAction::paste_from_clipboard); });
-        add_action(
-            menu, tr("&Delete"),
-            ActionAttributes {.shortcut = QKeySequence::Delete,
-                              .icon = icon_t::delete_selected},
-            [this] { circuit_widget_->submit_action(UserAction::delete_selected); });
+            [this] { circuit_widget_->do_action(UserAction::paste_from_clipboard); });
+        add_action(menu, tr("&Delete"),
+                   ActionAttributes {.shortcut = QKeySequence::Delete,
+                                     .icon = icon_t::delete_selected},
+                   [this] { circuit_widget_->do_action(UserAction::delete_selected); });
         add_action(menu, tr("Select &All"),
                    ActionAttributes {.shortcut = QKeySequence::SelectAll,
                                      .icon = icon_t::select_all},
-                   [this] { circuit_widget_->submit_action(UserAction::select_all); });
+                   [this] { circuit_widget_->do_action(UserAction::select_all); });
     }
 
     {
@@ -286,14 +285,14 @@ auto MainWidget::create_menu() -> void {
                    ActionAttributes {.shortcut = QKeySequence::ZoomIn,
                                      .shortcut_auto_repeat = true,
                                      .icon = icon_t::zoom_in},
-                   [this] { circuit_widget_->submit_action(UserAction::zoom_in); });
+                   [this] { circuit_widget_->do_action(UserAction::zoom_in); });
         add_action(menu, tr("Zoom &Out"),
                    ActionAttributes {.shortcut = QKeySequence::ZoomOut,
                                      .shortcut_auto_repeat = true,
                                      .icon = icon_t::zoom_out},
-                   [this] { circuit_widget_->submit_action(UserAction::zoom_out); });
+                   [this] { circuit_widget_->do_action(UserAction::zoom_out); });
         add_action(menu, tr("&Reset Zoom"), ActionAttributes {.icon = icon_t::reset_zoom},
-                   [this] { circuit_widget_->submit_action(UserAction::reset_view); });
+                   [this] { circuit_widget_->do_action(UserAction::reset_view); });
 
         menu->addSeparator();
 
@@ -397,9 +396,8 @@ auto MainWidget::create_menu() -> void {
 
         // Examples
         menu->addSeparator();
-        add_action(
-            menu, tr("&Reload"), ActionAttributes {.icon = icon_t::reload_circuit},
-            [this]() { circuit_widget_->submit_action(UserAction::reload_circuit); });
+        add_action(menu, tr("&Reload"), ActionAttributes {.icon = icon_t::reload_circuit},
+                   [this]() { circuit_widget_->do_action(UserAction::reload_circuit); });
         {
             add_action(menu, tr("Load \"Si&mple\" Example"),
                        ActionAttributes {.icon = icon_t::load_simple_example},
@@ -714,7 +712,7 @@ auto MainWidget::filename_filter() const -> QString {
 
 auto MainWidget::new_circuit() -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
-        circuit_widget_->submit_action(circuit_widget::UserAction::load_new_circuit);
+        circuit_widget_->do_action(circuit_widget::UserAction::load_new_circuit);
 
         circuit_widget_->set_circuit_state(EditingState {DefaultMouseAction::selection});
         circuit_widget_->set_render_config({});

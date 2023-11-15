@@ -952,11 +952,11 @@ auto RendererWidget::zoom(double steps, std::optional<QPointF> center) -> void {
     update();
 }
 
-Q_SLOT void RendererWidget::on_benchmark_timeout() {
+void RendererWidget::on_benchmark_timeout() {
     this->update();
 }
 
-Q_SLOT void RendererWidget::on_simulation_timeout() {
+void RendererWidget::on_simulation_timeout() {
     // make sure the image is updated, before we run the simulation again
     if (simulation_image_update_requested_) {
         update();

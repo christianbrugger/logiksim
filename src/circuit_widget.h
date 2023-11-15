@@ -79,8 +79,6 @@ auto format(circuit_widget::UserAction action) -> std::string;
  *    + code to generates needed follow up events (timer timeouts, render updates)
  */
 class CircuitWidget : public CircuitWidgetBase {
-    // TODO can we use Q_OBJECT directly here ?
-
    public:
     using Statistics = circuit_widget::Statistics;
     using UserAction = circuit_widget::UserAction;
@@ -97,6 +95,8 @@ class CircuitWidget : public CircuitWidgetBase {
     auto simulation_config() const -> SimulationConfig;
     auto circuit_state() const -> CircuitWidgetState;
 
+    // actions without arguments
+    auto do_action(UserAction action) -> void;
     // load & save
     auto serialized_circuit() const -> std::string;
     auto load_circuit_example(int) -> void;
@@ -105,11 +105,8 @@ class CircuitWidget : public CircuitWidgetBase {
 
     // statistics
     auto statistics() const -> Statistics;
-    // actions
-    auto submit_action(UserAction action) -> void;
 
-   private:
-    // timer slots
+   protected:
     Q_SLOT void on_timer_benchmark_render();
     Q_SLOT void on_timer_run_simulation();
 

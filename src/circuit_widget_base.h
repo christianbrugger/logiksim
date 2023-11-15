@@ -15,9 +15,9 @@ class CircuitWidgetBase : public QWidget {
    public:
     using QWidget::QWidget;
 
-    Q_SIGNAL void render_config_changed(WidgetRenderConfig new_config);
-    Q_SIGNAL void simulation_config_changed(SimulationConfig new_config);
-    Q_SIGNAL void circuit_state_changed(CircuitWidgetState new_state);
+    Q_SIGNAL void render_config_changed(logicsim::WidgetRenderConfig new_config);
+    Q_SIGNAL void simulation_config_changed(logicsim::SimulationConfig new_config);
+    Q_SIGNAL void circuit_state_changed(logicsim::CircuitWidgetState new_state);
 
    protected:
     auto emit_render_config_changed(WidgetRenderConfig new_config) -> void;

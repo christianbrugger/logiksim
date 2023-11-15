@@ -184,7 +184,7 @@ auto CircuitWidget::statistics() const -> Statistics {
     };
 }
 
-auto CircuitWidget::submit_action(UserAction action) -> void {
+auto CircuitWidget::do_action(UserAction action) -> void {
     update();
 
     switch (action) {
@@ -237,7 +237,7 @@ void CircuitWidget::on_timer_benchmark_render() {
     update();
 }
 
-Q_SLOT void CircuitWidget::on_timer_run_simulation() {
+void CircuitWidget::on_timer_run_simulation() {
     Expects(is_simulation(circuit_state_));
 
     // force at least one render update between each simulation step
