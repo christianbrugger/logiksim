@@ -208,31 +208,35 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         using enum UserAction;
 
         case clear_circuit: {
-            circuit_store_.set_layout(Layout {}, simulation_config_);
+            circuit_store_.set_layout(Layout {});
             render_surface_.reset();
             return;
         }
         case reload_circuit: {
-            auto layout = Layout {circuit_store_.layout()};
-            circuit_store_.set_layout(std::move(layout), simulation_config_);
+            circuit_store_.set_layout(Layout {circuit_store_.layout()});
             render_surface_.reset();
             return;
         }
 
         case select_all: {
             set_circuit_state(NonInteractiveState {});
+            // TODO implement
             return;
         }
         case copy_selected: {
+            // TODO implement
             return;
         }
         case paste_from_clipboard: {
+            // TODO implement
             return;
         }
         case cut_selected: {
+            // TODO implement
             return;
         }
         case delete_selected: {
+            // TODO implement
             return;
         }
 

@@ -42,11 +42,13 @@ class CircuitStore {
     auto set_simulation_config(SimulationConfig new_config) -> void;
 
     // load circuits
-    auto set_editable_circuit(EditableCircuit &&editable_circuit,
-                              SimulationConfig simulation_config) -> void;
-    auto set_layout(Layout &&layout, SimulationConfig simulation_config) -> void;
+    auto set_layout(Layout &&layout, std::optional<SimulationConfig> new_config = {})
+        -> void;
     auto load_from_file(std::string filename) -> LoadFileResult;
-    auto load_circuit_example(int number, SimulationConfig simulation_config) -> void;
+    auto load_circuit_example(int number, std::optional<SimulationConfig> new_config = {})
+        -> void;
+    auto set_editable_circuit(EditableCircuit &&editable_circuit,
+                              std::optional<SimulationConfig> new_config = {}) -> void;
 
     // save circuit
     auto save_circuit(std::string filename, ViewPoint view_point) const -> bool;

@@ -3,8 +3,6 @@
 
 #include "vocabulary.h"
 #include "vocabulary/selection_id.h"
-#include "vocabulary/simulation_config.h"
-#include "vocabulary/view_config.h"
 
 #include <gsl/gsl>
 
@@ -24,9 +22,10 @@ struct SimulationConfig;
 
 using binary_t = std::vector<uint8_t>;
 
-[[nodiscard]] auto serialize_inserted(
-    const Layout& layout, std::optional<ViewPoint> view_point = {},
-    std::optional<SimulationConfig> simulation_config = {}) -> std::string;
+[[nodiscard]] auto serialize_inserted(const Layout& layout,
+                                      std::optional<ViewPoint> view_point,
+                                      std::optional<SimulationConfig> simulation_config)
+    -> std::string;
 
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
                                       point_t save_position = point_t {0, 0})
