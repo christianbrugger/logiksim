@@ -176,7 +176,7 @@ auto CircuitWidget::statistics() const -> Statistics {
     const auto surface_statistics = render_surface_.statistics();
 
     return Statistics {
-        .simulation_events_per_second = {},  // TODO implement
+        .simulation_events_per_second = circuit_store_.simulation_events_per_second(),
         .frames_per_second = surface_statistics.frames_per_second,
         .pixel_scale = surface_statistics.pixel_scale,
         .image_size = surface_statistics.image_size,

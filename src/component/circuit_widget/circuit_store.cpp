@@ -109,6 +109,15 @@ auto CircuitStore::spatial_simulation() const -> const SpatialSimulation* {
     return nullptr;
 }
 
+auto CircuitStore::simulation_events_per_second() const -> std::optional<double> {
+    Expects(is_simulation(circuit_state_) || interactive_simulation_.layout().empty());
+
+    if (is_simulation(circuit_state_)) {
+        return interactive_simulation_.events_per_second();
+    }
+    return std::nullopt;
+}
+
 }  // namespace circuit_widget
 
 }  // namespace logicsim

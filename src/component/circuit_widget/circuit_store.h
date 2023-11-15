@@ -43,6 +43,11 @@ class CircuitStore {
     [[nodiscard]] auto interactive_simulation() const -> const InteractiveSimulation *;
     [[nodiscard]] auto spatial_simulation() const -> const SpatialSimulation *;
 
+    /**
+     * @brief: Returns statistics if in the simulations state, otherwise nullopt.
+     */
+    [[nodiscard]] auto simulation_events_per_second() const -> std::optional<double>;
+
    private:
     CircuitWidgetState circuit_state_ {NonInteractiveState {}};
     SimulationConfig simulation_config_ {};
