@@ -49,7 +49,7 @@ struct SerializedLogicItem {
     std::optional<SerializedAttributesClockGenerator> attributes_clock_generator;
 };
 
-struct SerializedViewConfig {
+struct SerializedViewPoint {
     double device_scale {};
     grid_fine_t grid_offset_x {};
     grid_fine_t grid_offset_y {};
@@ -64,8 +64,8 @@ struct SerializedLayout {
     int version {CURRENT_VERSION};
     // used for copy & paste
     point_t save_position {0, 0};
-    // view config
-    SerializedViewConfig view_config {};
+    // used for file loading
+    SerializedViewPoint view_point {};
     SerializedSimulationConfig simulation_config {};
 
     std::vector<SerializedLogicItem> logic_items {};

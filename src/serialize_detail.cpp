@@ -111,11 +111,11 @@ struct glz::meta<SerializedLogicItem> {
     );
 };
 
-using logicsim::serialize::SerializedViewConfig;
+using logicsim::serialize::SerializedViewPoint;
 
 template <>
-struct glz::meta<SerializedViewConfig> {
-    using T = SerializedViewConfig;
+struct glz::meta<SerializedViewPoint> {
+    using T = SerializedViewPoint;
 
     static constexpr auto value = glz::object(  //
         "device_scale", &T::device_scale,       //
@@ -145,7 +145,7 @@ struct glz::meta<SerializedLayout> {
     static constexpr auto value = glz::object(         //
         "version", &T::version,                        //
         "save_position", &T::save_position,            //
-        "view_config", &T::view_config,                //
+        "view_config", &T::view_point,                 //
         "simulation_settings", &T::simulation_config,  //
 
         "logic_items", &T::logic_items,     //

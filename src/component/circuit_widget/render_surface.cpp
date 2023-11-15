@@ -80,9 +80,7 @@ auto RenderSurface::set_render_config(WidgetRenderConfig new_config) -> void {
     render_config_ = new_config;
 }
 
-auto RenderSurface::clear_caches() -> void {
-    context_.clear();
-    context_.shrink_to_fit();
+auto RenderSurface::reset() -> void {
     is_initialized_ = false;
 }
 
@@ -205,6 +203,10 @@ auto RenderSurface::init_surface(QWidget& widget) -> void {
     widget.setAutoFillBackground(false);
     widget.setAttribute(Qt::WA_OpaquePaintEvent, true);
     widget.setAttribute(Qt::WA_NoSystemBackground, true);
+
+    // clear caches
+    context_.clear();
+    context_.shrink_to_fit();
 
     // sets qt_image_
     // sets context_.ctx.bl_image

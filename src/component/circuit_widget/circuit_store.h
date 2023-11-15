@@ -31,6 +31,7 @@ struct LoadFileResult {
  *
  * Class invariant:
  *     + InteractiveSimulation is only non-empty for SimulationState
+ *     + Layout is the same for Simulation and EditableCircuit in SimulationState
  */
 class CircuitStore {
    public:
@@ -40,11 +41,17 @@ class CircuitStore {
     auto set_circuit_state(CircuitWidgetState new_state) -> void;
     auto set_simulation_config(SimulationConfig new_config) -> void;
 
+    // load circuits
     auto set_editable_circuit(EditableCircuit &&editable_circuit,
                               SimulationConfig simulation_config) -> void;
     auto set_layout(Layout &&layout, SimulationConfig simulation_config) -> void;
     auto load_from_file(std::string filename) -> LoadFileResult;
     auto load_circuit_example(int number, SimulationConfig simulation_config) -> void;
+
+    // save circuit
+    auto save_circuit(std::string filename, ViewPoint view_point) const -> bool;
+    // TODO remove once we have history
+    [[nodiscard]] auto serialize_circuit() const -> std::string;
 
     /**
      * @brief: Gives access to the stored layout.

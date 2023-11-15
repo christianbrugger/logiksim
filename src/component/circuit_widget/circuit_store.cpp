@@ -86,19 +86,14 @@ auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__,
                                         SimulationConfig simulation_config) -> void {
     Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 
-    // load into editable_circuit
     editable_circuit_ = std::move(editable_circuit__);
-
-    // load simulation config
     simulation_config_ = simulation_config;
 
-    // generate simulation
     if (is_simulation(circuit_state_)) {
         interactive_simulation_ =
             generate_simulation(editable_circuit_, simulation_config_);
     }
 
-    // logging
     if (const auto count = layout().size(); 0 < count && count < 30) {
         print(layout());
     }
@@ -108,11 +103,7 @@ auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__,
 
 auto CircuitStore::set_layout(Layout&& layout__, SimulationConfig simulation_config)
     -> void {
-    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-
     set_editable_circuit(EditableCircuit {std::move(layout__)}, simulation_config);
-
-    Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 }
 
 auto CircuitStore::load_from_file(std::string filename) -> LoadFileResult {
@@ -148,12 +139,21 @@ auto CircuitStore::load_circuit_example(int number, SimulationConfig simulation_
     Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 }
 
+auto circuit_widget::CircuitStore::save_circuit(std::string filename,
+                                                ViewPoint view_point) const -> bool {
+    const auto binary = serialize_inserted(layout(), view_point, simulation_config_);
+    return save_file(filename, binary);
+}
+
+auto circuit_widget::CircuitStore::serialize_circuit() const -> std::string {
+    auto relevant_settings = SimulationConfig {
+        .use_wire_delay = simulation_config_.use_wire_delay,
+    };
+    return serialize_inserted(layout(), {}, relevant_settings);
+}
+
 auto CircuitStore::layout() const -> const Layout& {
     Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-
-    if (is_simulation(circuit_state_)) {
-        return interactive_simulation_.value().layout();
-    }
     return editable_circuit_.layout();
 }
 

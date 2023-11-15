@@ -180,15 +180,15 @@ auto add_element(SerializedLayout& data, const Layout& layout, wire_id_t wire_id
     }
 }
 
-auto serialize_view_config(const ViewConfig& view_config) -> SerializedViewConfig {
-    return SerializedViewConfig {
-        .device_scale = view_config.device_scale(),
-        .grid_offset_x = view_config.offset().x,
-        .grid_offset_y = view_config.offset().y,
+auto serialize_view_point(const ViewPoint& view_point) -> SerializedViewPoint {
+    return SerializedViewPoint {
+        .device_scale = view_point.device_scale,
+        .grid_offset_x = view_point.offset.x,
+        .grid_offset_y = view_point.offset.y,
     };
 }
 
-auto parse_view_point(const SerializedViewConfig& serialized) -> ViewPoint {
+auto parse_view_point(const SerializedViewPoint& serialized) -> ViewPoint {
     return ViewPoint {
         .offset = point_fine_t {serialized.grid_offset_x, serialized.grid_offset_y},
         .device_scale = serialized.device_scale > 0 ? serialized.device_scale
@@ -196,7 +196,7 @@ auto parse_view_point(const SerializedViewConfig& serialized) -> ViewPoint {
     };
 }
 
-auto serialize_simulation_settings(const SimulationConfig config)
+auto serialize_simulation_config(const SimulationConfig config)
     -> SerializedSimulationConfig {
     const auto rate = config.simulation_time_rate.rate_per_second;
 
@@ -227,16 +227,17 @@ auto parse_simulation_config(const SerializedSimulationConfig& config)
 
 namespace logicsim {
 
-auto serialize_inserted(const Layout& layout, const ViewConfig* view_config,
-                        const SimulationConfig* simulation_config) -> std::string {
+auto serialize_inserted(const Layout& layout, std::optional<ViewPoint> view_point,
+                        std::optional<SimulationConfig> simulation_config)
+    -> std::string {
     auto data = serialize::SerializedLayout {};
 
-    if (view_config != nullptr) {
-        data.view_config = serialize::serialize_view_config(*view_config);
+    if (view_point) {
+        data.view_point = serialize::serialize_view_point(*view_point);
     }
-    if (simulation_config != nullptr) {
+    if (simulation_config) {
         data.simulation_config =
-            serialize::serialize_simulation_settings(*simulation_config);
+            serialize::serialize_simulation_config(*simulation_config);
     }
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
@@ -334,7 +335,7 @@ auto LoadLayoutResult::view_point() const -> ViewPoint {
     if (!data_) {
         throw std::runtime_error("no layout data");
     }
-    return parse_view_point(data_->view_config);
+    return parse_view_point(data_->view_point);
 }
 
 auto LoadLayoutResult::simulation_config() const -> SimulationConfig {

@@ -42,11 +42,13 @@ static_assert(std::regular<SurfaceStatistics>);
 class RenderSurface {
    public:
     auto set_render_config(WidgetRenderConfig new_config) -> void;
-    auto clear_caches() -> void;
+    auto reset() -> void;
 
     // view config
     [[nodiscard]] auto view_config() const -> const ViewConfig&;
+    // TODO make free function
     auto set_view_config_offset(point_fine_t offset) -> void;
+    // TODO make free function
     auto set_view_config_device_scale(double scale) -> void;
     auto set_view_point(ViewPoint view_point) -> void;
 
