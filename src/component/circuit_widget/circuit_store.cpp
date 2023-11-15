@@ -82,6 +82,14 @@ auto CircuitStore::set_simulation_config(SimulationConfig new_config) -> void {
     Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 }
 
+auto CircuitStore::circuit_state() const -> CircuitWidgetState {
+    return circuit_state_;
+}
+
+auto CircuitStore::simulation_config() const -> SimulationConfig {
+    return simulation_config_;
+}
+
 auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__,
                                         std::optional<SimulationConfig> new_config)
     -> void {
@@ -104,79 +112,9 @@ auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__,
     Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 }
 
-auto CircuitStore::set_layout(Layout&& layout__,
-                              std::optional<SimulationConfig> new_config) -> void {
-    // clear to free memory
-    set_editable_circuit(EditableCircuit {});
-    // load new
-    set_editable_circuit(EditableCircuit {std::move(layout__)}, new_config);
-}
-
-auto CircuitStore::load_from_file(std::string filename) -> LoadFileResult {
-    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-
-    const auto load_result = load_layout(load_file(filename));
-    if (!load_result) {
-        return LoadFileResult {};
-    }
-
-    // clear to free memory
-    set_editable_circuit(EditableCircuit {});
-    // load new
-    auto editable_circuit = EditableCircuit {Layout {}};
-    load_result->add(editable_circuit, {InsertionMode::insert_or_discard});
-    set_editable_circuit(EditableCircuit {std::move(editable_circuit)},
-                         load_result->simulation_config());
-
-    Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-    return LoadFileResult {
-        .success = true,
-        .view_point = load_result->view_point(),
-        .simulation_config = load_result->simulation_config(),
-    };
-}
-
-auto CircuitStore::load_circuit_example(int number,
-                                        std::optional<SimulationConfig> new_config)
-    -> void {
-    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-
-    // clear to free memory
-    set_editable_circuit(EditableCircuit {});
-    // load new
-    auto editable_circuit = EditableCircuit {Layout {}};
-    load_example_with_logging(editable_circuit, number);
-    set_editable_circuit(EditableCircuit {std::move(editable_circuit)}, new_config);
-
-    Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-}
-
-auto circuit_widget::CircuitStore::save_circuit(std::string filename,
-                                                ViewPoint view_point) const -> bool {
-    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-    const auto binary = serialize_inserted(layout(), view_point, simulation_config_);
-    return save_file(filename, binary);
-}
-
-auto circuit_widget::CircuitStore::serialize_circuit() const -> std::string {
-    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-    auto relevant_config = SimulationConfig {
-        .use_wire_delay = simulation_config_.use_wire_delay,
-    };
-    return serialize_inserted(layout(), {}, relevant_config);
-}
-
 auto CircuitStore::layout() const -> const Layout& {
     Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
     return editable_circuit_.layout();
-}
-
-auto CircuitStore::editable_circuit_pointer() const -> const EditableCircuit* {
-    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-    if (!is_editing_state(circuit_state_)) {
-        return nullptr;
-    }
-    return &editable_circuit_;
 }
 
 auto CircuitStore::editable_circuit() -> EditableCircuit& {
@@ -213,15 +151,6 @@ auto CircuitStore::interactive_simulation() const -> const InteractiveSimulation
     return interactive_simulation_.value();
 }
 
-auto CircuitStore::spatial_simulation_pointer() const -> const SpatialSimulation* {
-    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
-
-    if (is_simulation(circuit_state_)) {
-        return &interactive_simulation_.value().spatial_simulation();
-    }
-    return nullptr;
-}
-
 auto CircuitStore::simulation_events_per_second() const -> std::optional<double> {
     Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 
@@ -229,6 +158,78 @@ auto CircuitStore::simulation_events_per_second() const -> std::optional<double>
         return interactive_simulation_.value().events_per_second();
     }
     return std::nullopt;
+}
+
+//
+// Free Function
+//
+
+auto editable_circuit_pointer(const CircuitStore& store) -> const EditableCircuit* {
+    if (!is_editing_state(store.circuit_state())) {
+        return nullptr;
+    }
+    return &store.editable_circuit();
+}
+
+auto spatial_simulation_pointer(const CircuitStore& store) -> const SpatialSimulation* {
+    if (is_simulation(store.circuit_state())) {
+        return &store.interactive_simulation().spatial_simulation();
+    }
+    return nullptr;
+}
+
+auto set_layout(CircuitStore& store, Layout&& layout__,
+                std::optional<SimulationConfig> new_config) -> void {
+    // clear to free memory
+    store.set_editable_circuit(EditableCircuit {});
+    // load new
+    store.set_editable_circuit(EditableCircuit {std::move(layout__)}, new_config);
+}
+
+auto load_from_file(CircuitStore& store, std::string filename)
+    -> circuit_store::LoadFileResult {
+    const auto load_result = load_layout(load_file(filename));
+    if (!load_result) {
+        return circuit_store::LoadFileResult {};
+    }
+
+    // clear to free memory
+    store.set_editable_circuit(EditableCircuit {});
+    // load new
+    auto editable_circuit = EditableCircuit {Layout {}};
+    load_result->add(editable_circuit, {InsertionMode::insert_or_discard});
+    store.set_editable_circuit(EditableCircuit {std::move(editable_circuit)},
+                               load_result->simulation_config());
+
+    return circuit_store::LoadFileResult {
+        .success = true,
+        .view_point = load_result->view_point(),
+        .simulation_config = load_result->simulation_config(),
+    };
+}
+
+auto load_circuit_example(CircuitStore& store, int number,
+                          std::optional<SimulationConfig> new_config) -> void {
+    // clear to free memory
+    store.set_editable_circuit(EditableCircuit {});
+    // load new
+    auto editable_circuit = EditableCircuit {Layout {}};
+    load_example_with_logging(editable_circuit, number);
+    store.set_editable_circuit(EditableCircuit {std::move(editable_circuit)}, new_config);
+}
+
+auto save_circuit(const CircuitStore& store, std::string filename, ViewPoint view_point)
+    -> bool {
+    const auto binary =
+        serialize_inserted(store.layout(), view_point, store.simulation_config());
+    return save_file(filename, binary);
+}
+
+auto serialize_circuit(const CircuitStore& store) -> std::string {
+    auto relevant_config = SimulationConfig {
+        .use_wire_delay = store.simulation_config().use_wire_delay,
+    };
+    return serialize_inserted(store.layout(), {}, relevant_config);
 }
 
 }  // namespace circuit_widget

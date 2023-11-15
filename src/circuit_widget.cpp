@@ -154,12 +154,12 @@ auto CircuitWidget::circuit_state() const -> CircuitWidgetState {
 }
 
 auto CircuitWidget::serialized_circuit() const -> std::string {
-    return circuit_store_.serialize_circuit();
+    return circuit_widget::serialize_circuit(circuit_store_);
 }
 
 auto CircuitWidget::load_circuit_example(int number) -> void {
     const auto default_config = SimulationConfig {};
-    circuit_store_.load_circuit_example(number, default_config);
+    circuit_widget::load_circuit_example(circuit_store_, number, default_config);
 
     render_surface_.reset();
     render_surface_.set_view_point(ViewConfig {}.view_point());
@@ -169,7 +169,7 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
-    const auto result = circuit_store_.load_from_file(filename);
+    const auto result = circuit_widget::load_from_file(circuit_store_, filename);
 
     if (!result.success) {
         return false;
@@ -185,8 +185,8 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
 
 auto CircuitWidget::save_circuit(std::string filename) -> bool {
     // TODO reset mouse logic
-    return circuit_store_.save_circuit(filename,
-                                       render_surface_.view_config().view_point());
+    return circuit_widget::save_circuit(circuit_store_, filename,
+                                        render_surface_.view_config().view_point());
 }
 
 auto CircuitWidget::statistics() const -> Statistics {
@@ -208,12 +208,12 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         using enum UserAction;
 
         case clear_circuit: {
-            circuit_store_.set_layout(Layout {});
+            circuit_widget::set_layout(circuit_store_, Layout {});
             render_surface_.reset();
             return;
         }
         case reload_circuit: {
-            circuit_store_.set_layout(Layout {circuit_store_.layout()});
+            circuit_widget::set_layout(circuit_store_, Layout {circuit_store_.layout()});
             render_surface_.reset();
             return;
         }
@@ -291,8 +291,9 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
 auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
     bool show_size_handles = false;
 
-    render_surface_.paintEvent(*this, circuit_store_.editable_circuit_pointer(),
-                               circuit_store_.spatial_simulation_pointer(),
+    render_surface_.paintEvent(*this,
+                               circuit_widget::editable_circuit_pointer(circuit_store_),
+                               circuit_widget::spatial_simulation_pointer(circuit_store_),
                                &circuit_store_.layout(), show_size_handles);
 
     simulation_image_update_pending_ = false;
