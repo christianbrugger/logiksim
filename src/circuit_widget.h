@@ -31,9 +31,19 @@ struct Statistics {
 static_assert(std::regular<Statistics>);
 
 /**
- * @brief: Actions from Buttons or Hotkeys
+ * @brief: Any outside actions that does not require arguments or return values.
  */
 enum class UserAction {
+    /**
+     * @brief: Loads an empty circuit.
+     */
+    load_new_circuit,
+
+    /**
+     * @brief: Reloads the circuit and frees caches. Mostly for debugging purposes.
+     */
+    reload_circuit,
+
     select_all,
     copy_selected,
     paste_from_clipboard,
@@ -53,6 +63,20 @@ auto format(circuit_widget::UserAction action) -> std::string;
 /**
  * @brief: Widget that hold the circuit and is responsible for managing rendering,
  *         simulation and user interactions.
+ *
+ * This is a complex class, as it is both an object and called from many
+ * different entry points mouse events, top level widgets, and timers.
+ * Furthermore it contains several state machines for doing the job
+ * over several methods.
+ *
+ * To tackle this complexity, state machines are separated out to other classes,
+ * e.g. mouse logic, render initialization, simulation generation, as much as possible.
+ * Those sub components are simple classes and not allowed to generate new Qt events
+ * for this widget or themselves. They are only called by use.
+ *
+ * The remaining complexity of this class is:
+ *    + code delegating the work to the components
+ *    + code to generates needed follow up events (timer timeouts, render updates)
  */
 class CircuitWidget : public CircuitWidgetBase {
     // TODO can we use Q_OBJECT directly here ?
@@ -75,22 +99,20 @@ class CircuitWidget : public CircuitWidgetBase {
 
     // load & save
     auto serialized_circuit() const -> std::string;
-    auto load_new_circuit() -> void;
     auto load_circuit_example(int) -> void;
     auto load_circuit(std::string filename) -> bool;
     auto save_circuit(std::string filename) -> bool;
-    auto reload_circuit() -> void;
 
     // statistics
     auto statistics() const -> Statistics;
     // actions
-    auto submit_user_action(UserAction action) -> void;
+    auto submit_action(UserAction action) -> void;
 
+   private:
     // timer slots
     Q_SLOT void on_timer_benchmark_render();
     Q_SLOT void on_timer_run_simulation();
 
-   protected:
     auto resizeEvent(QResizeEvent* event_) -> void override;
     auto paintEvent(QPaintEvent* event_) -> void override;
 

@@ -41,6 +41,11 @@ auto format(circuit_widget::UserAction action) -> std::string {
     switch (action) {
         using enum circuit_widget::UserAction;
 
+        case load_new_circuit:
+            return "load_new_circuit";
+        case reload_circuit:
+            return "reload_circuit";
+
         case select_all:
             return "select_all";
         case copy_selected:
@@ -153,10 +158,6 @@ auto CircuitWidget::serialized_circuit() const -> std::string {
     return std::string();
 }
 
-auto CircuitWidget::load_new_circuit() -> void {
-    // TODO implement
-}
-
 auto CircuitWidget::load_circuit_example(int) -> void {
     // TODO implement
 }
@@ -171,10 +172,6 @@ auto CircuitWidget::save_circuit(std::string filename) -> bool {
     return true;
 }
 
-auto CircuitWidget::reload_circuit() -> void {
-    // TODO implement
-}
-
 auto CircuitWidget::statistics() const -> Statistics {
     const auto surface_statistics = render_surface_.statistics();
 
@@ -187,9 +184,18 @@ auto CircuitWidget::statistics() const -> Statistics {
     };
 }
 
-auto CircuitWidget::submit_user_action(UserAction action) -> void {
+auto CircuitWidget::submit_action(UserAction action) -> void {
+    update();
+
     switch (action) {
         using enum UserAction;
+
+        case load_new_circuit: {
+            return;
+        }
+        case reload_circuit: {
+            return;
+        }
 
         case select_all: {
             set_circuit_state(NonInteractiveState {});
@@ -211,18 +217,15 @@ auto CircuitWidget::submit_user_action(UserAction action) -> void {
         case zoom_in: {
             render_surface_.set_view_point(
                 circuit_widget::zoom(*this, render_surface_.view_config(), +1));
-            update();
             return;
         }
         case zoom_out: {
             render_surface_.set_view_point(
                 circuit_widget::zoom(*this, render_surface_.view_config(), -1));
-            update();
             return;
         }
         case reset_view: {
             render_surface_.set_view_point(ViewConfig {}.view_point());
-            update();
             return;
         }
     }
