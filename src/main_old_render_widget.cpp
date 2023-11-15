@@ -805,7 +805,7 @@ auto RendererWidget::load_circuit(std::string filename) -> bool {
     loaded.value().apply(context_.ctx.settings.view_config);
 
     // simulation settings
-    simulation_settings_ = loaded.value().simulation_settings();
+    simulation_settings_ = loaded.value().simulation_config();
     // TODO emit signal settings changed
 
     return true;

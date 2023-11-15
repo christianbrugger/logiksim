@@ -15,14 +15,16 @@ namespace logicsim {
 class Layout;
 class Selection;
 class EditableCircuit;
+struct ViewPoint;
 struct ViewConfig;
 struct SimulationConfig;
 
 using binary_t = std::vector<uint8_t>;
 
-[[nodiscard]] auto serialize_inserted(
-    const Layout& layout, const ViewConfig* view_config = nullptr,
-    const SimulationConfig* simulation_settings = nullptr) -> std::string;
+[[nodiscard]] auto serialize_inserted(const Layout& layout,
+                                      const ViewConfig* view_config = nullptr,
+                                      const SimulationConfig* simulation_config = nullptr)
+    -> std::string;
 
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
                                       point_t save_position = point_t {0, 0})
@@ -49,10 +51,8 @@ class LoadLayoutResult {
 
    public:
     auto add(EditableCircuit& editable_circuit, AddParameters parameters) const -> void;
-
-    auto apply(ViewConfig& view_config) const -> void;
-
-    auto simulation_settings() const -> SimulationConfig;
+    [[nodiscard]] auto view_point() const -> ViewPoint;
+    [[nodiscard]] auto simulation_config() const -> SimulationConfig;
 
    private:
     std::unique_ptr<SerializedLayout> data_;

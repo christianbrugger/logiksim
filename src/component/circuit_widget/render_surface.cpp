@@ -83,6 +83,7 @@ auto RenderSurface::set_render_config(WidgetRenderConfig new_config) -> void {
 auto RenderSurface::clear_caches() -> void {
     context_.clear();
     context_.shrink_to_fit();
+    is_initialized_ = false;
 }
 
 auto RenderSurface::view_config() const -> const ViewConfig& {
@@ -167,9 +168,6 @@ auto RenderSurface::paintEvent(QWidget& widget, const EditableCircuit* editable_
         else if (layout) {
             render_layout(context_, *layout);
         }
-    }
-
-    if (render_config_.show_circuit && editable_circuit) {
     }
 
     if (render_config_.show_collision_cache && editable_circuit) {

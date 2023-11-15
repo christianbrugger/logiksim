@@ -188,31 +188,25 @@ auto serialize_view_config(const ViewConfig& view_config) -> SerializedViewConfi
     };
 }
 
-auto apply_view_config(const SerializedViewConfig& serialized, ViewConfig& view_config)
-    -> void {
-    // device scale
-    view_config.set_device_scale(serialized.device_scale > 0
-                                     ? serialized.device_scale
-                                     : ViewConfig().device_scale());
-
-    // offsets
-    view_config.set_offset(point_fine_t {
-        serialized.grid_offset_x,
-        serialized.grid_offset_y,
-    });
+auto parse_view_point(const SerializedViewConfig& serialized) -> ViewPoint {
+    return ViewPoint {
+        .offset = point_fine_t {serialized.grid_offset_x, serialized.grid_offset_y},
+        .device_scale = serialized.device_scale > 0 ? serialized.device_scale
+                                                    : ViewConfig().device_scale(),
+    };
 }
 
 auto serialize_simulation_settings(const SimulationConfig config)
-    -> SerializedSimulationSettings {
+    -> SerializedSimulationConfig {
     const auto rate = config.simulation_time_rate.rate_per_second;
 
-    return SerializedSimulationSettings {
+    return SerializedSimulationConfig {
         .simulation_time_rate_ns = rate.count_ns(),
         .use_wire_delay = config.use_wire_delay,
     };
 };
 
-auto unserialize_simulation_settings(const SerializedSimulationSettings& config)
+auto parse_simulation_config(const SerializedSimulationConfig& config)
     -> SimulationConfig {
     using namespace std::chrono_literals;
 
@@ -234,15 +228,15 @@ auto unserialize_simulation_settings(const SerializedSimulationSettings& config)
 namespace logicsim {
 
 auto serialize_inserted(const Layout& layout, const ViewConfig* view_config,
-                        const SimulationConfig* simulation_settings) -> std::string {
+                        const SimulationConfig* simulation_config) -> std::string {
     auto data = serialize::SerializedLayout {};
 
     if (view_config != nullptr) {
         data.view_config = serialize::serialize_view_config(*view_config);
     }
-    if (simulation_settings != nullptr) {
-        data.simulation_settings =
-            serialize::serialize_simulation_settings(*simulation_settings);
+    if (simulation_config != nullptr) {
+        data.simulation_config =
+            serialize::serialize_simulation_settings(*simulation_config);
     }
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
@@ -336,18 +330,18 @@ auto LoadLayoutResult::add(EditableCircuit& editable_circuit,
     }
 }
 
-auto LoadLayoutResult::apply(ViewConfig& view_config) const -> void {
+auto LoadLayoutResult::view_point() const -> ViewPoint {
     if (!data_) {
         throw std::runtime_error("no layout data");
     }
-    apply_view_config(data_->view_config, view_config);
+    return parse_view_point(data_->view_config);
 }
 
-auto LoadLayoutResult::simulation_settings() const -> SimulationConfig {
+auto LoadLayoutResult::simulation_config() const -> SimulationConfig {
     if (!data_) {
         throw std::runtime_error("no layout data");
     }
-    return unserialize_simulation_settings(data_->simulation_settings);
+    return parse_simulation_config(data_->simulation_config);
 }
 
 }  // namespace serialize

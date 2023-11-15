@@ -2,12 +2,29 @@
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_CIRCUIT_STORE_H
 
 #include "editable_circuit.h"
+#include "format/struct.h"
 #include "interactive_simulation.h"
 #include "vocabulary/circuit_widget_state.h"
+#include "vocabulary/view_config.h"
+
+#include <optional>
 
 namespace logicsim {
 
 namespace circuit_widget {
+
+namespace circuit_store {
+
+struct LoadFileResult {
+    bool success {false};
+    ViewPoint view_point {};
+    SimulationConfig simulation_config {};
+
+    [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const LoadFileResult &) const -> bool = default;
+};
+
+}  // namespace circuit_store
 
 /**
  * @brief: Manages the circuit and their access.
@@ -17,9 +34,14 @@ namespace circuit_widget {
  */
 class CircuitStore {
    public:
+    using LoadFileResult = circuit_store::LoadFileResult;
+
+   public:
     auto set_circuit_state(CircuitWidgetState new_state) -> void;
     auto set_simulation_config(SimulationConfig new_config) -> void;
+
     auto set_layout(Layout &&layout) -> void;
+    auto load_from_file(std::string filename) -> LoadFileResult;
 
     /**
      * @brief: Gives access to the stored layout.
@@ -50,7 +72,7 @@ class CircuitStore {
     SimulationConfig simulation_config_ {};
 
     EditableCircuit editable_circuit_ {};
-    InteractiveSimulation interactive_simulation_ {};
+    std::optional<InteractiveSimulation> interactive_simulation_ {};
 };
 
 }  // namespace circuit_widget

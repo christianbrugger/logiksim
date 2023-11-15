@@ -2,9 +2,9 @@
 #define LOGIKSIM_SERIALIZE_DETAIL_H
 
 #include "vocabulary/connection_count.h"
+#include "vocabulary/logic_small_vector.h"
 #include "vocabulary/logicitem_definition.h"
 #include "vocabulary/logicitem_type.h"
-#include "vocabulary/logic_small_vector.h"
 #include "vocabulary/orientation.h"
 #include "vocabulary/point.h"
 #include "vocabulary/point_fine.h"
@@ -55,7 +55,7 @@ struct SerializedViewConfig {
     grid_fine_t grid_offset_y {};
 };
 
-struct SerializedSimulationSettings {
+struct SerializedSimulationConfig {
     int64_t simulation_time_rate_ns {10'000};
     bool use_wire_delay {true};
 };
@@ -66,7 +66,7 @@ struct SerializedLayout {
     point_t save_position {0, 0};
     // view config
     SerializedViewConfig view_config {};
-    SerializedSimulationSettings simulation_settings {};
+    SerializedSimulationConfig simulation_config {};
 
     std::vector<SerializedLogicItem> logic_items {};
     std::vector<SerializedLine> wire_segments {};

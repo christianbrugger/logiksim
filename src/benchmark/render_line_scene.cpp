@@ -217,8 +217,8 @@ auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_de
 
 auto fill_line_scene(int n_lines) -> SimulatedLineScene {
     const auto config = RenderBenchmarkConfig();
-    const auto simulation_settings = SimulationConfig {.use_wire_delay = true};
-    if (simulation_settings.wire_delay_per_distance() != delay_t {1us}) {
+    const auto simulation_config = SimulationConfig {.use_wire_delay = true};
+    if (simulation_config.wire_delay_per_distance() != delay_t {1us}) {
         throw std::runtime_error("we depend on 1us for consistency");
     }
 
@@ -226,7 +226,7 @@ auto fill_line_scene(int n_lines) -> SimulatedLineScene {
 
     // generate line_trees & layout
     auto spatial_simulation = SpatialSimulation {
-        get_random_wires(rng, config), simulation_settings.wire_delay_per_distance()};
+        get_random_wires(rng, config), simulation_config.wire_delay_per_distance()};
 
     // simulated time
     const auto max_delay = maximum_output_delay(spatial_simulation.schematic());

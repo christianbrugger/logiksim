@@ -9,10 +9,10 @@ struct glz::meta<logicsim::LogicItemType> {
     using enum logicsim::LogicItemType;
 
     static constexpr auto value = enumerate(  //
-        "buffer_element", buffer_element,  //
-        "and_element", and_element,        //
-        "or_element", or_element,          //
-        "xor_element", xor_element,        //
+        "buffer_element", buffer_element,     //
+        "and_element", and_element,           //
+        "or_element", or_element,             //
+        "xor_element", xor_element,           //
 
         "button", button,                  //
         "led", led,                        //
@@ -97,7 +97,7 @@ struct glz::meta<SerializedLogicItem> {
     using T = SerializedLogicItem;
 
     static constexpr auto value = glz::object(  //
-        "element_type", &T::logicitem_type,       //
+        "element_type", &T::logicitem_type,     //
         "input_count", &T::input_count,         //
 
         "output_count", &T::output_count,          //
@@ -124,11 +124,11 @@ struct glz::meta<SerializedViewConfig> {
     );
 };
 
-using logicsim::serialize::SerializedSimulationSettings;
+using logicsim::serialize::SerializedSimulationConfig;
 
 template <>
-struct glz::meta<SerializedSimulationSettings> {
-    using T = SerializedSimulationSettings;
+struct glz::meta<SerializedSimulationConfig> {
+    using T = SerializedSimulationConfig;
 
     static constexpr auto value = glz::object(                   //
         "simulation_time_rate_ns", &T::simulation_time_rate_ns,  //
@@ -142,11 +142,11 @@ template <>
 struct glz::meta<SerializedLayout> {
     using T = SerializedLayout;
 
-    static constexpr auto value = glz::object(           //
-        "version", &T::version,                          //
-        "save_position", &T::save_position,              //
-        "view_config", &T::view_config,                  //
-        "simulation_settings", &T::simulation_settings,  //
+    static constexpr auto value = glz::object(         //
+        "version", &T::version,                        //
+        "save_position", &T::save_position,            //
+        "view_config", &T::view_config,                //
+        "simulation_settings", &T::simulation_config,  //
 
         "logic_items", &T::logic_items,     //
         "wire_segments", &T::wire_segments  //

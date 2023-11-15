@@ -15,11 +15,11 @@ namespace logicsim {
  * @brief: Device independent view definition.
  */
 struct ViewPoint {
-    point_fine_t offset;
-    double device_scale;  // distance of grid in device coordinates
+    point_fine_t offset {};
+    double device_scale {};  // distance of grid in device coordinates
 
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const ViewPoint& other) const -> bool = default;
+    [[nodiscard]] auto operator==(const ViewPoint&) const -> bool = default;
 };
 
 /**
@@ -112,8 +112,8 @@ struct ViewConfig {
      */
     [[nodiscard]] auto view_point() const noexcept -> ViewPoint;
 
-    [[nodiscard]] auto operator==(const ViewConfig& other) const -> bool = default;
     [[nodiscard]] auto format() const -> std::string;
+    [[nodiscard]] auto operator==(const ViewConfig&) const -> bool = default;
 
    private:
     auto update() -> void;

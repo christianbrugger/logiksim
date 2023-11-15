@@ -84,18 +84,6 @@ auto get_and_verify_cache_entry(map_type<ContentType::Wire>& map, point_t positi
     return it;
 }
 
-auto verify_cache_empty(map_type<ContentType::LogicItem>& map, point_t position) -> void {
-    if (map.contains(position)) [[unlikely]] {
-        throw std::runtime_error("cache already has an entry at this position");
-    }
-}
-
-auto verify_cache_empty(map_type<ContentType::Wire>& map, point_t position) -> void {
-    if (map.contains(position)) [[unlikely]] {
-        throw std::runtime_error("cache already has an entry at this position");
-    }
-}
-
 }  // namespace
 
 }  // namespace connection_index
@@ -110,14 +98,17 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
     handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {
     using namespace connection_index;
 
-    for (auto info : input_locations_and_id(message.data)) {
-        verify_cache_empty(map_, info.position);
+    for (const auto info : input_locations_and_id(message.data)) {
+        const auto [it, inserted] =
+            map_.try_emplace(info.position, logicitem_connection_t {
+                                                message.logicitem_id,
+                                                info.input_id,
+                                                info.orientation,
+                                            });
 
-        map_[info.position] = logicitem_connection_t {
-            message.logicitem_id,
-            info.input_id,
-            info.orientation,
-        };
+        if (!inserted) [[unlikely]] {
+            throw std::runtime_error("cache already has an entry at this position");
+        }
     }
 }
 
@@ -128,13 +119,15 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
     using namespace connection_index;
 
     for (auto info : output_locations_and_id(message.data)) {
-        verify_cache_empty(map_, info.position);
-
-        map_[info.position] = logicitem_connection_t {
-            message.logicitem_id,
-            info.output_id,
-            info.orientation,
-        };
+        const auto [it, inserted] =
+            map_.try_emplace(info.position, logicitem_connection_t {
+                                                message.logicitem_id,
+                                                info.output_id,
+                                                info.orientation,
+                                            });
+        if (!inserted) [[unlikely]] {
+            throw std::runtime_error("cache already has an entry at this position");
+        }
     }
 }
 
@@ -270,23 +263,29 @@ consteval auto point_type() -> SegmentPointType {
 auto handle_wire(wire_map_t& map, SegmentPointType point_type,
                  const SegmentInserted& message) -> void {
     if (message.segment_info.p0_type == point_type) {
-        const auto position = message.segment_info.line.p0;
-        verify_cache_empty(map, position);
+        const auto [it, inserted] = map.try_emplace(
+            message.segment_info.line.p0,
+            wire_value_t {
+                .segment = message.segment,
+                .orientation = to_orientation_p0(message.segment_info.line),
+            });
 
-        map[position] = wire_value_t {
-            .segment = message.segment,
-            .orientation = to_orientation_p0(message.segment_info.line),
-        };
+        if (!inserted) [[unlikely]] {
+            throw std::runtime_error("cache already has an entry at this position");
+        }
     }
 
     if (message.segment_info.p1_type == point_type) {
-        const auto position = message.segment_info.line.p1;
-        verify_cache_empty(map, position);
+        const auto [it, inserted] = map.try_emplace(
+            message.segment_info.line.p1,
+            wire_value_t {
+                .segment = message.segment,
+                .orientation = to_orientation_p1(message.segment_info.line),
+            });
 
-        map[position] = wire_value_t {
-            .segment = message.segment,
-            .orientation = to_orientation_p1(message.segment_info.line),
-        };
+        if (!inserted) [[unlikely]] {
+            throw std::runtime_error("cache already has an entry at this position");
+        }
     }
 }
 

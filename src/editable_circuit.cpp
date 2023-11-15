@@ -19,7 +19,7 @@ EditableCircuit::EditableCircuit() : EditableCircuit {Layout {}} {}
 EditableCircuit::EditableCircuit(Layout&& layout)
     : layout_ {std::move(layout)},
       layout_index_ {layout_},
-      sender_ {[this](const auto& message) { this->submit(message); }},
+      sender_ {[](const auto&) {}},
 
       selection_store_ {},
       selection_builder_ {} {}
@@ -207,6 +207,9 @@ auto EditableCircuit::submit(const editable_circuit::InfoMessage& message) -> vo
 }
 
 auto EditableCircuit::get_sender() -> editable_circuit::MessageSender& {
+    // lambda contains the wrong 'this' pointer after copy or move
+    sender_ = editable_circuit::MessageSender {
+        [this](const editable_circuit::InfoMessage& message) { this->submit(message); }};
     return sender_;
 }
 

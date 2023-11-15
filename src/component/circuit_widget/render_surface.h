@@ -66,6 +66,8 @@ class RenderSurface {
      *
      * Note that handles are only rendered when editable_circuit is provided,
      * as it requires a selection.
+     *
+     * Note that caches are only rendered if editable_circuit is provided.
      */
     auto paintEvent(QWidget& widget, const EditableCircuit* editable_circuit,
                     const SpatialSimulation* spatial_simulation, const Layout* layout,

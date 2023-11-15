@@ -163,7 +163,15 @@ auto CircuitWidget::load_circuit_example(int) -> void {
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
-    // TODO implement
+    const auto result = circuit_store_.load_from_file(filename);
+
+    if (!result.success) {
+        return false;
+    }
+
+    render_surface_.set_view_point(result.view_point);
+    set_simulation_config(result.simulation_config);
+
     return true;
 }
 
