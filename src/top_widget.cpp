@@ -303,26 +303,17 @@ auto MainWidget::create_menu() -> void {
         // Simulation
         auto* menu = menuBar()->addMenu(tr("&Simulation"));
 
-        const auto start_simulation = [this]() {
-            circuit_widget_->set_circuit_state(SimulationState {});
-        };
-        actions_.simulation_start =
-            add_action(menu, tr("Start &Simulation"),
-                       ActionAttributes {.shortcut = QKeySequence {Qt::Key_F5},
-                                         .icon = icon_t::simulation_start},
-                       start_simulation);
+        actions_.simulation_start = add_action(
+            menu, tr("Start &Simulation"),
+            ActionAttributes {.shortcut = QKeySequence {Qt::Key_F5},
+                              .icon = icon_t::simulation_start},
+            [this]() { circuit_widget_->set_circuit_state(SimulationState {}); });
 
-        const auto stop_simulation = [this]() {
-            if (is_simulation(circuit_widget_->circuit_state())) {
-                circuit_widget_->set_circuit_state(
-                    EditingState {DefaultMouseAction::selection});
-            };
-        };
         actions_.simulation_stop =
             add_action(menu, tr("Stop &Simulation"),
                        ActionAttributes {.shortcut = QKeySequence {Qt::Key_F6},
                                          .icon = icon_t::simulation_stop},
-                       stop_simulation);
+                       [this]() { stop_simulation(*circuit_widget_); });
 
         menu->addSeparator();
         actions_.wire_delay = add_action_checkable(
@@ -714,7 +705,7 @@ auto MainWidget::new_circuit() -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
         circuit_widget_->do_action(circuit_widget::UserAction::load_new_circuit);
 
-        circuit_widget_->set_circuit_state(EditingState {DefaultMouseAction::selection});
+        circuit_widget_->set_circuit_state(defaults::selection_state);
         circuit_widget_->set_render_config({});
         circuit_widget_->set_simulation_config({});
 

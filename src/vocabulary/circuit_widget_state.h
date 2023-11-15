@@ -41,6 +41,11 @@ static_assert(std::regular<CircuitWidgetState>);
 [[nodiscard]] auto is_non_interactive(const CircuitWidgetState &state) -> bool;
 [[nodiscard]] auto is_editing_state(const CircuitWidgetState &state) -> bool;
 
+namespace defaults {
+constexpr inline auto selection_state =
+    CircuitWidgetState {EditingState {DefaultMouseAction::selection}};
+}
+
 }  // namespace logicsim
 
 //
@@ -69,7 +74,7 @@ struct ankerl::unordered_dense::hash<logicsim::SimulationState> {
 
     [[nodiscard]] auto operator()(const logicsim::SimulationState &obj) const noexcept
         -> uint64_t {
-         return logicsim::wyhash();
+        return logicsim::wyhash();
     }
 };
 

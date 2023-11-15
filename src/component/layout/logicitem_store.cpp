@@ -94,7 +94,7 @@ auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position
     // attributes
     const auto add_map_entry = [&](auto &map, const auto &optional) {
         if (optional && !map.emplace(logicitem_id, *optional).second) {
-            std::terminate(); // value already esists
+            std::terminate();  // value already esists
         }
     };
 
@@ -106,14 +106,14 @@ auto LogicItemStore::add(const LogicItemDefinition &definition, point_t position
 auto LogicItemStore::swap_and_delete(logicitem_id_t logicitem_id) -> logicitem_id_t {
     const auto last_id = last_logicitem_id();
 
-    swap(logicitem_id, last_id);
+    swap_items(logicitem_id, last_id);
     delete_last();
 
     return last_id;
 }
 
-auto LogicItemStore::swap(logicitem_id_t logicitem_id_1, logicitem_id_t logicitem_id_2)
-    -> void {
+auto LogicItemStore::swap_items(logicitem_id_t logicitem_id_1,
+                                logicitem_id_t logicitem_id_2) -> void {
     if (logicitem_id_1 == logicitem_id_2) {
         return;
     }

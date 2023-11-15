@@ -191,6 +191,7 @@ class Simulation {
                                   const logic_small_vector_t &old_inputs,
                                   const logic_small_vector_t &new_inputs) -> void;
 
+   private:
     Schematic schematic_;
     simulation::SimulationQueue queue_;
     time_t largest_history_event_;

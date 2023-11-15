@@ -59,7 +59,7 @@ class RenderSurface {
     /**
      * @brief: Renders the circuit or simulation.
      *
-     * Note only one object is rendered with the following priority:
+     * Only one object is rendered with the following priority:
      *     1) editable_circuit
      *     2) spatial_simulation
      *     3) layout

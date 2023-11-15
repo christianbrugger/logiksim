@@ -40,7 +40,7 @@ class LogicItemStore {
     auto add(const LogicItemDefinition &definition, point_t position,
              display_state_t display_state) -> logicitem_id_t;
     auto swap_and_delete(logicitem_id_t logicitem_id) -> logicitem_id_t;
-    auto swap(logicitem_id_t logicitem_id_1, logicitem_id_t logicitem_id_2) -> void;
+    auto swap_items(logicitem_id_t logicitem_id_1, logicitem_id_t logicitem_id_2) -> void;
 
     /**
      * @brief: brings the store in canonical form,

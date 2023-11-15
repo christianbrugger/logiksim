@@ -14,12 +14,12 @@ namespace circuit_widget {
  *
  * Class invariant:
  *     + InteractiveSimulation is only non-empty for SimulationState
- *     + EditableCircuit is only changed for EditingState
  */
 class CircuitStore {
    public:
     auto set_circuit_state(CircuitWidgetState new_state) -> void;
     auto set_simulation_config(SimulationConfig new_config) -> void;
+    auto set_layout(Layout &&layout) -> void;
 
     /**
      * @brief: Gives access to the stored layout.
@@ -27,21 +27,18 @@ class CircuitStore {
     [[nodiscard]] auto layout() const -> const Layout &;
 
     /**
-     * @brief: Gives possible editing access depending on state.
-     *
-     * Returns nullptr if state is not EditingState.
+     * @brief: Gives possible access to editable_circuit depending on state.
      */
-    [[nodiscard]] auto editable_circuit() -> EditableCircuit *;
-    [[nodiscard]] auto editable_circuit() const -> const EditableCircuit *;
+    [[nodiscard]] auto editable_circuit_pointer() const -> const EditableCircuit *;
+    [[nodiscard]] auto editable_circuit() -> EditableCircuit &;
+    [[nodiscard]] auto editable_circuit() const -> const EditableCircuit &;
 
     /**
-     * @brief: Gives possible simulation access depending on state.
-     *
-     * Returns nullptr if state is not SimulationState.
+     * @brief: Gives possible access depending on state.
      */
-    [[nodiscard]] auto interactive_simulation() -> InteractiveSimulation *;
-    [[nodiscard]] auto interactive_simulation() const -> const InteractiveSimulation *;
-    [[nodiscard]] auto spatial_simulation() const -> const SpatialSimulation *;
+    [[nodiscard]] auto spatial_simulation_pointer() const -> const SpatialSimulation *;
+    [[nodiscard]] auto interactive_simulation() -> InteractiveSimulation &;
+    [[nodiscard]] auto interactive_simulation() const -> const InteractiveSimulation &;
 
     /**
      * @brief: Returns statistics if in the simulations state, otherwise nullopt.

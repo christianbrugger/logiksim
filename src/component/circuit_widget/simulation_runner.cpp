@@ -16,11 +16,6 @@ auto run_simulation(InteractiveSimulation& interactive_simulation,
     return !was_finished;
 }
 
-auto run_simulation(InteractiveSimulation* interactive_simulation,
-                    realtime_timeout_t simulation_timeout) -> bool {
-    return run_simulation(checked_deref(interactive_simulation), simulation_timeout);
-}
-
 }  // namespace circuit_widget
 
 }  // namespace logicsim

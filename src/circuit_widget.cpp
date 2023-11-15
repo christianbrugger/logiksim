@@ -191,9 +191,14 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         using enum UserAction;
 
         case load_new_circuit: {
+            circuit_store_.set_layout(Layout {});
+            render_surface_.clear_caches();
             return;
         }
         case reload_circuit: {
+            auto layout = Layout {circuit_store_.layout()};
+            circuit_store_.set_layout(std::move(layout));
+            render_surface_.clear_caches();
             return;
         }
 
@@ -265,8 +270,8 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
 auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
     bool show_size_handles = false;
 
-    render_surface_.paintEvent(*this, circuit_store_.editable_circuit(),
-                               circuit_store_.spatial_simulation(),
+    render_surface_.paintEvent(*this, circuit_store_.editable_circuit_pointer(),
+                               circuit_store_.spatial_simulation_pointer(),
                                &circuit_store_.layout(), show_size_handles);
 
     simulation_image_update_pending_ = false;
@@ -371,6 +376,12 @@ auto set_use_wire_delay(CircuitWidget& circuit_widget, bool value) -> void {
     auto config = circuit_widget.simulation_config();
     config.use_wire_delay = value;
     circuit_widget.set_simulation_config(config);
+}
+
+auto stop_simulation(CircuitWidget& circuit_widget) -> void {
+    if (is_simulation(circuit_widget.circuit_state())) {
+        circuit_widget.set_circuit_state(defaults::selection_state);
+    }
 }
 
 }  // namespace logicsim

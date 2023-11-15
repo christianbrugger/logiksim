@@ -15,9 +15,6 @@ namespace circuit_widget {
 [[nodiscard]] auto run_simulation(InteractiveSimulation& interactive_simulation,
                                   realtime_timeout_t simulation_timeout) -> bool;
 
-[[nodiscard]] auto run_simulation(InteractiveSimulation* interactive_simulation,
-                                  realtime_timeout_t simulation_timeout) -> bool;
-
 }  // namespace circuit_widget
 
 }  // namespace logicsim

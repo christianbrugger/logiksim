@@ -76,7 +76,7 @@ auto format(circuit_widget::UserAction action) -> std::string;
  *
  * The remaining complexity of this class is:
  *    + code delegating the work to the components
- *    + code to generates needed follow up events (timer timeouts, render updates)
+ *    + code generating follow up events (timer timeouts, render updates)
  */
 class CircuitWidget : public CircuitWidgetBase {
    public:
@@ -84,27 +84,27 @@ class CircuitWidget : public CircuitWidgetBase {
     using UserAction = circuit_widget::UserAction;
 
    public:
-    CircuitWidget(QWidget* parent = nullptr);
+    [[nodiscard]] explicit CircuitWidget(QWidget* parent = nullptr);
 
     // setter & getters
     auto set_render_config(WidgetRenderConfig new_config) -> void;
     auto set_simulation_config(SimulationConfig new_config) -> void;
     auto set_circuit_state(CircuitWidgetState new_state) -> void;
 
-    auto render_config() const -> WidgetRenderConfig;
-    auto simulation_config() const -> SimulationConfig;
-    auto circuit_state() const -> CircuitWidgetState;
+    [[nodiscard]] auto render_config() const -> WidgetRenderConfig;
+    [[nodiscard]] auto simulation_config() const -> SimulationConfig;
+    [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
 
     // actions without arguments
     auto do_action(UserAction action) -> void;
     // load & save
-    auto serialized_circuit() const -> std::string;
+    [[nodiscard]] auto serialized_circuit() const -> std::string;
     auto load_circuit_example(int) -> void;
     auto load_circuit(std::string filename) -> bool;
     auto save_circuit(std::string filename) -> bool;
 
     // statistics
-    auto statistics() const -> Statistics;
+    [[nodiscard]] auto statistics() const -> Statistics;
 
    protected:
     Q_SLOT void on_timer_benchmark_render();
@@ -155,6 +155,12 @@ auto set_direct_rendering(CircuitWidget& circuit_widget, bool use_store) -> void
 auto set_simulation_time_rate(CircuitWidget& circuit_widget, time_rate_t new_rate)
     -> void;
 auto set_use_wire_delay(CircuitWidget& circuit_widget, bool value) -> void;
+
+//
+// CircuitWidgetState
+//
+
+auto stop_simulation(CircuitWidget& circuit_widget) -> void;
 
 }  // namespace logicsim
 

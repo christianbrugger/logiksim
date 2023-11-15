@@ -36,7 +36,6 @@ struct operation_t {
 
 }  // namespace visible_selection
 
-// TODO rename to VisibleSelection
 class VisibleSelection {
    public:
     using operation_t = visible_selection::operation_t;
