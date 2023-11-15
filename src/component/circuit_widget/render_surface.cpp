@@ -112,25 +112,18 @@ auto RenderSurface::statistics() const -> SurfaceStatistics {
     };
 }
 
-auto RenderSurface::resizeEvent(QWidget& widget, QResizeEvent* event_) -> void {
-    Expects(event_);
+auto RenderSurface::resizeEvent(QWidget& widget) -> void {
     is_initialized_ = false;
 }
 
-auto RenderSurface::paintEvent(QWidget& widget, QPaintEvent* event_,
-                               EditableCircuit* editable_circuit,
-                               SpatialSimulation* spatial_simulation,
-                               bool show_size_handles) -> void {
-    Expects(event_);
-    // if ((editable_circuit == nullptr) == (spatial_simulation == nullptr)) [[unlikely]]
-    // {
-    //     throw std::runtime_error(
-    //         "Requires exactly one of editable_circuit & spatial_simulation.");
-    // }
-
+auto RenderSurface::paintEvent(QWidget& widget, const EditableCircuit* editable_circuit,
+                               const SpatialSimulation* spatial_simulation,
+                               const Layout* layout, bool show_size_handles) -> void {
     if (!widget.isVisible()) {
         return;
     }
+
+    // initialize if needed
     if (!is_initialized_ || last_pixel_ratio_ != widget.devicePixelRatioF()) {
         init_surface(widget);
 
@@ -146,27 +139,37 @@ auto RenderSurface::paintEvent(QWidget& widget, QPaintEvent* event_,
 
     render_background(context_.ctx);
 
-    if (render_config_.show_circuit && spatial_simulation) {
-        render_simulation(context_, spatial_simulation->layout(),
-                          SimulationView {*spatial_simulation});
+    if (render_config_.show_circuit) {
+        if (editable_circuit) {
+            const auto& target_layout = editable_circuit->layout();
+            const auto& selection = editable_circuit->visible_selection();
+
+            render_layout(context_, target_layout, selection);
+
+            render_setting_handle(context_.ctx, target_layout, selection);
+
+            // if (show_size_handles) {
+            //     render_size_handles(context_.ctx, target_layout, selection);
+            // }
+
+            // if (!(mouse_logic_ &&
+            //       std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value())))
+            //       {
+            //     render_size_handles(context_.ctx, layout, selection);
+            // }
+        }
+
+        else if (spatial_simulation) {
+            render_simulation(context_, spatial_simulation->layout(),
+                              SimulationView {*spatial_simulation});
+        }
+
+        else if (layout) {
+            render_layout(context_, *layout);
+        }
     }
 
     if (render_config_.show_circuit && editable_circuit) {
-        const auto& layout = editable_circuit->layout();
-        const auto& selection = editable_circuit->visible_selection();
-
-        render_layout(context_, layout, selection);
-
-        // if (show_size_handles) {
-        //     render_size_handles(context_.ctx, layout, selection);
-        // }
-
-        // if (!(mouse_logic_ &&
-        //       std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value()))) {
-        //     render_size_handles(context_.ctx, layout, selection);
-        // }
-
-        render_setting_handle(context_.ctx, layout, selection);
     }
 
     if (render_config_.show_collision_cache && editable_circuit) {

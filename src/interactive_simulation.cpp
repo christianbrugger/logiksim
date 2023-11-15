@@ -17,6 +17,9 @@ namespace logicsim {
 // Interactive Simulation
 //
 
+InteractiveSimulation::InteractiveSimulation()
+    : InteractiveSimulation {Layout {}, delay_t {0us}, time_rate_t {0us}} {}
+
 InteractiveSimulation::InteractiveSimulation(SpatialSimulation&& spatial_simulation__,
                                              time_rate_t simulation_time_rate)
     : spatial_simulation_ {spatial_simulation__},
@@ -95,7 +98,7 @@ auto InteractiveSimulation::wire_delay_per_distance() const -> delay_t {
     return spatial_simulation_.wire_delay_per_distance();
 }
 
-auto InteractiveSimulation::run(simulation::realtime_timeout_t timeout) -> void {
+auto InteractiveSimulation::run(realtime_timeout_t timeout) -> void {
     Expects(realtime_reference_ <= timer_t::now());
     Expects(last_event_count_ <= simulation().processed_event_count());
     Expects(simulation_time_rate_ >= time_rate_t {0us});

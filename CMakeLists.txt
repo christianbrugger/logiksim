@@ -4,6 +4,7 @@ set(LS_CORE_SOURCES
     src/algorithm/accumulate.cpp
     src/algorithm/adjacent_count_if.cpp
     src/algorithm/all_equal.cpp
+    src/algorithm/checked_deref.cpp
     src/algorithm/contains.cpp
     src/algorithm/copy_adjacent_if.cpp
     src/algorithm/depth_first_visitor.cpp
@@ -44,7 +45,9 @@ set(LS_CORE_SOURCES
 
     src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
     src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
+    src/component/circuit_widget/circuit_store.cpp
     src/component/circuit_widget/render_surface.cpp
+    src/component/circuit_widget/simulation_runner.cpp
     src/component/circuit_widget/zoom.cpp
     src/component/editable_circuit/handler.cpp
     src/component/editable_circuit/layout_index.cpp
@@ -222,6 +225,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/point.cpp
     src/vocabulary/point_fine.cpp
     src/vocabulary/print_events.cpp
+    src/vocabulary/realtime_timeout.cpp
     src/vocabulary/rect.cpp
     src/vocabulary/rect_fine.cpp
     src/vocabulary/segment.cpp

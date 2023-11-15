@@ -9,6 +9,7 @@
 #include "vocabulary/optional_logic_value.h"
 #include "vocabulary/optional_logic_values.h"
 #include "vocabulary/print_events.h"
+#include "vocabulary/realtime_timeout.h"
 
 #include <cstdint>
 #include <limits>
@@ -27,15 +28,12 @@ class SimulationEventGroup;
 }  // namespace simulation
 
 namespace simulation {
-/**
- * brief:: Realtime simulation timeout
- */
-using realtime_timeout_t = TimeoutTimer::timeout_t;
+static_assert(std::same_as<realtime_timeout_t, TimeoutTimer::timeout_t>);
+static_assert(no_realtime_timeout == TimeoutTimer::defaults::no_timeout);
+
 using event_count_t = int64_t;
 
 namespace defaults {
-constexpr static auto no_realtime_timeout = TimeoutTimer::defaults::no_timeout;
-
 constexpr static auto infinite_simulation = delay_t::max();
 
 constexpr static auto no_max_events = std::numeric_limits<event_count_t>::max();
@@ -57,8 +55,7 @@ struct RunConfig {
      *
      * Throws an exception if max_events is negative.
      */
-    simulation::realtime_timeout_t realtime_timeout {
-        simulation::defaults::no_realtime_timeout};
+    realtime_timeout_t realtime_timeout {no_realtime_timeout};
 
     /**
      * @brief: Interrupts the simulation after this many processed events.

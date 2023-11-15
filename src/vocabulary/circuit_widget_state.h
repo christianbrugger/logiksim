@@ -38,6 +38,8 @@ static_assert(std::regular<EditingState>);
 static_assert(std::regular<CircuitWidgetState>);
 
 [[nodiscard]] auto is_simulation(const CircuitWidgetState &state) -> bool;
+[[nodiscard]] auto is_non_interactive(const CircuitWidgetState &state) -> bool;
+[[nodiscard]] auto is_editing_state(const CircuitWidgetState &state) -> bool;
 
 }  // namespace logicsim
 

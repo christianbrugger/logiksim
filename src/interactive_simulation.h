@@ -27,14 +27,15 @@ class InteractiveSimulation {
 
    public:
     struct defaults {
-        constexpr static auto standard_timeout = simulation::realtime_timeout_t {1ms};
+        constexpr static auto standard_timeout = realtime_timeout_t {1ms};
     };
 
    public:
-    InteractiveSimulation(SpatialSimulation&& spatial_simulation,
+    [[nodiscard]] explicit InteractiveSimulation();
+    [[nodiscard]] explicit InteractiveSimulation(SpatialSimulation&& spatial_simulation,
                           time_rate_t simulation_time_rate);
-
-    InteractiveSimulation(Layout&& layout, delay_t wire_delay_per_distance,
+    [[nodiscard]] explicit InteractiveSimulation(Layout&& layout,
+                                                 delay_t wire_delay_per_distance,
                           time_rate_t simulation_time_rate);
 
     [[nodiscard]] auto spatial_simulation() const -> const SpatialSimulation&;
@@ -48,7 +49,7 @@ class InteractiveSimulation {
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
     [[nodiscard]] auto events_per_second() const -> double;
 
-    auto run(simulation::realtime_timeout_t timeout = defaults::standard_timeout) -> void;
+    auto run(realtime_timeout_t timeout = defaults::standard_timeout) -> void;
     [[nodiscard]] auto is_finished() const -> bool;
     auto mouse_press(point_t position) -> void;
 

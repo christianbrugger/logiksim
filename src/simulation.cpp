@@ -346,7 +346,7 @@ auto validate(RunConfig config, event_count_t current_event_count) -> void {
     if (config.simulate_for < delay_t {0us}) [[unlikely]] {
         throw std::runtime_error("simulation_time needs to be positive.");
     }
-    if (config.realtime_timeout < simulation::realtime_timeout_t::zero()) [[unlikely]] {
+    if (config.realtime_timeout < realtime_timeout_t::zero()) [[unlikely]] {
         throw std::runtime_error("realtime-timeout needs to be positive.");
     }
     if (config.max_events < 0) [[unlikely]] {
@@ -382,7 +382,7 @@ constexpr inline auto timer_check_interval = event_count_t {1'000};
 
 auto first_check_count(RunConfig config, event_count_t current_event_count)
     -> event_count_t {
-    if (config.realtime_timeout == simulation::defaults::no_realtime_timeout) {
+    if (config.realtime_timeout == no_realtime_timeout) {
         return std::numeric_limits<event_count_t>::max();
     }
     return current_event_count + timer_check_interval;
@@ -395,7 +395,7 @@ auto Simulation::run(simulation::RunConfig config) -> void {
     validate(config, event_count_);
 
     if (config.max_events == 0 ||
-        config.realtime_timeout == simulation::realtime_timeout_t::zero() ||
+        config.realtime_timeout == realtime_timeout_t::zero() ||
         config.simulate_for == delay_t::zero()) {
         return;
     }

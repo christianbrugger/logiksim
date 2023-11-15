@@ -36,7 +36,7 @@ static_assert(std::regular<SurfaceStatistics>);
 
 /**
  * @brief: Maintains the render buffers of the Circuit Widget for render tasks.
- * 
+ *
  * Note this component also holds the view config.
  */
 class RenderSurface {
@@ -54,11 +54,22 @@ class RenderSurface {
 
    public:
     // events we depend on to be called
-    auto resizeEvent(QWidget& widget, QResizeEvent* event_) -> void;
-    auto paintEvent(QWidget& widget, QPaintEvent* event_,
-                    EditableCircuit* editable_circuit,
-                    SpatialSimulation* spatial_simulation, bool show_size_handles)
-        -> void;
+    auto resizeEvent(QWidget& widget) -> void;
+
+    /**
+     * @brief: Renders the circuit or simulation.
+     *
+     * Note only one object is rendered with the following priority:
+     *     1) editable_circuit
+     *     2) spatial_simulation
+     *     3) layout
+     *
+     * Note that handles are only rendered when editable_circuit is provided,
+     * as it requires a selection.
+     */
+    auto paintEvent(QWidget& widget, const EditableCircuit* editable_circuit,
+                    const SpatialSimulation* spatial_simulation, const Layout* layout,
+                    bool show_size_handles) -> void;
 
    private:
     // Can only be called inside of paintEvent

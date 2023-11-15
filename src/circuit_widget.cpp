@@ -1,6 +1,8 @@
 #include "circuit_widget.h"
 
+#include "algorithm/checked_deref.h"
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
+#include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
 #include "logging.h"
 #include "mouse_position.h"
@@ -10,6 +12,12 @@
 #include <exception>
 
 namespace logicsim {
+
+namespace {
+
+constexpr auto inline simulation_interval = 20ms;
+
+}
 
 namespace circuit_widget {
 
@@ -56,13 +64,22 @@ auto format(circuit_widget::UserAction action) -> std::string {
 }
 
 CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {
-    // initialize render surface
+    // initialize components
     render_surface_.set_render_config(render_config_);
+    circuit_store_.set_simulation_config(simulation_config_);
+    circuit_store_.set_circuit_state(circuit_state_);
 
     // timer benchmark rendering
     connect(&timer_benchmark_render_, &QTimer::timeout, this,
             &CircuitWidget::on_timer_benchmark_render);
     if (render_config_.do_benchmark) {
+        timer_benchmark_render_.start();
+    }
+
+    // timer run simulation
+    connect(&timer_run_simulation_, &QTimer::timeout, this,
+            &CircuitWidget::on_timer_run_simulation);
+    if (is_simulation(circuit_state_)) {
         timer_benchmark_render_.start();
     }
 }
@@ -91,6 +108,8 @@ auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
         return;
     }
 
+    circuit_store_.set_simulation_config(new_config);
+
     // update & notify
     simulation_config_ = new_config;
     emit_simulation_config_changed(new_config);
@@ -100,6 +119,15 @@ auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
 auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     if (circuit_state_ == new_state) {
         return;
+    }
+
+    circuit_store_.set_circuit_state(new_state);
+
+    if (is_simulation(new_state)) {
+        timer_run_simulation_.setInterval(0);
+        timer_run_simulation_.start();
+    } else {
+        timer_run_simulation_.stop();
     }
 
     // update & notify
@@ -206,13 +234,39 @@ void CircuitWidget::on_timer_benchmark_render() {
     update();
 }
 
+Q_SLOT void CircuitWidget::on_timer_run_simulation() {
+    Expects(is_simulation(circuit_state_));
+
+    // force at least one render update between each simulation step
+    if (simulation_image_update_pending_) {
+        update();
+        timer_run_simulation_.setInterval(0);
+        return;
+    }
+    // otherwise call again at a regular interval
+    timer_run_simulation_.setInterval(simulation_interval);
+
+    // run simulation with timeout
+    if (circuit_widget::run_simulation(circuit_store_.interactive_simulation(),
+                                       realtime_timeout_t {simulation_interval})) {
+        simulation_image_update_pending_ = true;
+        update();
+    }
+}
+
 auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
-    render_surface_.resizeEvent(*this, event_);
+    render_surface_.resizeEvent(*this);
     update();
 }
 
 auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
-    render_surface_.paintEvent(*this, event_, nullptr, nullptr, false);
+    bool show_size_handles = false;
+
+    render_surface_.paintEvent(*this, circuit_store_.editable_circuit(),
+                               circuit_store_.spatial_simulation(),
+                               &circuit_store_.layout(), show_size_handles);
+
+    simulation_image_update_pending_ = false;
 }
 
 auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {

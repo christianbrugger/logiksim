@@ -2,6 +2,7 @@
 #define LOGICSIM_CIRCUIT_WIDGET_H
 
 #include "circuit_widget_base.h"
+#include "component/circuit_widget/circuit_store.h"
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
 #include "component/circuit_widget/render_surface.h"
 
@@ -87,6 +88,7 @@ class CircuitWidget : public CircuitWidgetBase {
 
     // timer slots
     Q_SLOT void on_timer_benchmark_render();
+    Q_SLOT void on_timer_run_simulation();
 
    protected:
     auto resizeEvent(QResizeEvent* event_) -> void override;
@@ -100,15 +102,18 @@ class CircuitWidget : public CircuitWidgetBase {
     auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
-    // never modify these directly, always call set_*, also for internal changes
+    // never modify these directly, always call set_* so signals are emmitted
     WidgetRenderConfig render_config_ {};
     SimulationConfig simulation_config_ {};
     CircuitWidgetState circuit_state_ {};
 
     circuit_widget::RenderSurface render_surface_ {};
     circuit_widget::MouseDragLogic mouse_drag_logic_ {};
+    circuit_widget::CircuitStore circuit_store_ {};
 
     QTimer timer_benchmark_render_ {};
+    QTimer timer_run_simulation_ {};
+    bool simulation_image_update_pending_ {false};
 };
 
 //

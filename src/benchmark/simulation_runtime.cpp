@@ -71,7 +71,7 @@ auto benchmark_simulation_metastable(Schematic &&schematic__, const int n_events
 
     while (true) {
         // we use realtime timeout, to see the impact of its checking
-        simulation.run({.realtime_timeout = simulation::realtime_timeout_t {1000 * 1ms},
+        simulation.run({.realtime_timeout = realtime_timeout_t {1000ms},
                         .max_events = n_events - simulation.processed_event_count()});
 
         if (simulation.is_finished()) {

@@ -18,4 +18,12 @@ auto is_simulation(const CircuitWidgetState& state) -> bool {
     return std::holds_alternative<SimulationState>(state);
 }
 
+auto is_non_interactive(const CircuitWidgetState &state) -> bool {
+    return std::holds_alternative<NonInteractiveState>(state);
+}
+
+auto is_editing_state(const CircuitWidgetState &state) -> bool {
+    return std::holds_alternative<EditingState>(state);
+}
+
 }  // namespace logicsim
