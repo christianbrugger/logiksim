@@ -45,6 +45,7 @@ set(LS_CORE_SOURCES
 
     src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
     src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
+    src/component/circuit_widget/circuit_example.cpp
     src/component/circuit_widget/circuit_store.cpp
     src/component/circuit_widget/render_surface.cpp
     src/component/circuit_widget/simulation_runner.cpp

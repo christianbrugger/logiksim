@@ -35,9 +35,9 @@ static_assert(std::regular<Statistics>);
  */
 enum class UserAction {
     /**
-     * @brief: Loads an empty circuit.
+     * @brief: Clears the circuit.
      */
-    load_new_circuit,
+    clear_circuit,
 
     /**
      * @brief: Reloads the circuit and frees caches. Mostly for debugging purposes.
@@ -75,8 +75,13 @@ auto format(circuit_widget::UserAction action) -> std::string;
  * for this widget or themselves. They are only called by use.
  *
  * The remaining complexity of this class is:
- *    + code delegating the work to the components
- *    + code generating follow up events (timer timeouts, render updates)
+ *     + code delegating the work to the components
+ *     + code generating follow up events (timer timeouts, render updates)
+ *
+ * Class Invariants:
+ *     + configs are the same as for CircuitWidget as all its sub-components
+ *     + timer_benchmark_render_ is only active for WidgetRenderConfig::do_benchmark
+ *     + timer_run_simulation_ is only active when in simulation state
  */
 class CircuitWidget : public CircuitWidgetBase {
    public:
@@ -99,7 +104,7 @@ class CircuitWidget : public CircuitWidgetBase {
     auto do_action(UserAction action) -> void;
     // load & save
     [[nodiscard]] auto serialized_circuit() const -> std::string;
-    auto load_circuit_example(int) -> void;
+    auto load_circuit_example(int number) -> void;
     auto load_circuit(std::string filename) -> bool;
     auto save_circuit(std::string filename) -> bool;
 

@@ -41,8 +41,8 @@ auto format(circuit_widget::UserAction action) -> std::string {
     switch (action) {
         using enum circuit_widget::UserAction;
 
-        case load_new_circuit:
-            return "load_new_circuit";
+        case clear_circuit:
+            return "clear_circuit";
         case reload_circuit:
             return "reload_circuit";
 
@@ -158,8 +158,15 @@ auto CircuitWidget::serialized_circuit() const -> std::string {
     return std::string();
 }
 
-auto CircuitWidget::load_circuit_example(int) -> void {
-    // TODO implement
+auto CircuitWidget::load_circuit_example(int number) -> void {
+    const auto new_config = SimulationConfig {};
+
+    circuit_store_.load_circuit_example(number, new_config);
+    render_surface_.set_view_point(ViewConfig {}.view_point());
+    render_surface_.clear_caches();
+    set_simulation_config(new_config);
+
+    update();
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
@@ -170,8 +177,10 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
     }
 
     render_surface_.set_view_point(result.view_point);
+    render_surface_.clear_caches();
     set_simulation_config(result.simulation_config);
 
+    update();
     return true;
 }
 
@@ -198,14 +207,14 @@ auto CircuitWidget::do_action(UserAction action) -> void {
     switch (action) {
         using enum UserAction;
 
-        case load_new_circuit: {
-            circuit_store_.set_layout(Layout {});
+        case clear_circuit: {
+            circuit_store_.set_layout(Layout {}, simulation_config_);
             render_surface_.clear_caches();
             return;
         }
         case reload_circuit: {
             auto layout = Layout {circuit_store_.layout()};
-            circuit_store_.set_layout(std::move(layout));
+            circuit_store_.set_layout(std::move(layout), simulation_config_);
             render_surface_.clear_caches();
             return;
         }

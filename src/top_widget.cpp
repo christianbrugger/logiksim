@@ -703,7 +703,8 @@ auto MainWidget::filename_filter() const -> QString {
 
 auto MainWidget::new_circuit() -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
-        circuit_widget_->do_action(circuit_widget::UserAction::load_new_circuit);
+        circuit_widget_->do_action(circuit_widget::UserAction::clear_circuit);
+        circuit_widget_->do_action(circuit_widget::UserAction::reset_view);
 
         circuit_widget_->set_circuit_state(defaults::selection_state);
         circuit_widget_->set_render_config({});

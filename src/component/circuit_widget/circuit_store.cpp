@@ -1,5 +1,6 @@
 #include "component/circuit_widget/circuit_store.h"
 
+#include "component/circuit_widget/circuit_example.h"
 #include "file.h"
 #include "logging.h"
 #include "serialize.h"
@@ -81,15 +82,35 @@ auto CircuitStore::set_simulation_config(SimulationConfig new_config) -> void {
     Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 }
 
-auto CircuitStore::set_layout(Layout&& layout) -> void {
+auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__,
+                                        SimulationConfig simulation_config) -> void {
     Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 
-    editable_circuit_ = EditableCircuit {Layout {}};
+    // load into editable_circuit
+    editable_circuit_ = std::move(editable_circuit__);
 
+    // load simulation config
+    simulation_config_ = simulation_config;
+
+    // generate simulation
     if (is_simulation(circuit_state_)) {
         interactive_simulation_ =
             generate_simulation(editable_circuit_, simulation_config_);
     }
+
+    // logging
+    if (const auto count = layout().size(); 0 < count && count < 30) {
+        print(layout());
+    }
+
+    Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
+}
+
+auto CircuitStore::set_layout(Layout&& layout__, SimulationConfig simulation_config)
+    -> void {
+    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
+
+    set_editable_circuit(EditableCircuit {std::move(layout__)}, simulation_config);
 
     Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 }
@@ -98,29 +119,31 @@ auto CircuitStore::load_from_file(std::string filename) -> LoadFileResult {
     Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 
     const auto load_result = load_layout(load_file(filename));
-
     if (!load_result) {
         return LoadFileResult {};
     }
 
-    // load into editable_circuit
-    editable_circuit_ = EditableCircuit {Layout {}};
-    load_result->add(editable_circuit_, {InsertionMode::insert_or_discard});
+    auto editable_circuit = EditableCircuit {Layout {}};
+    load_result->add(editable_circuit, {InsertionMode::insert_or_discard});
+    set_editable_circuit(EditableCircuit {std::move(editable_circuit)},
+                         load_result->simulation_config());
 
-    // load simulation config
-    simulation_config_ = load_result->simulation_config();
-
-    // generate simulation
-    if (is_simulation(circuit_state_)) {
-        interactive_simulation_ =
-            generate_simulation(editable_circuit_, simulation_config_);
-    }
-
+    Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
     return LoadFileResult {
         .success = true,
         .view_point = load_result->view_point(),
         .simulation_config = load_result->simulation_config(),
     };
+}
+
+auto CircuitStore::load_circuit_example(int number, SimulationConfig simulation_config)
+    -> void {
+    Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
+
+    auto editable_circuit = EditableCircuit {Layout {}};
+    load_example_with_logging(editable_circuit, number);
+    set_editable_circuit(EditableCircuit {std::move(editable_circuit)},
+                         simulation_config);
 
     Ensures(is_simulation(circuit_state_) == interactive_simulation_.has_value());
 }

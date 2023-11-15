@@ -40,8 +40,11 @@ class CircuitStore {
     auto set_circuit_state(CircuitWidgetState new_state) -> void;
     auto set_simulation_config(SimulationConfig new_config) -> void;
 
-    auto set_layout(Layout &&layout) -> void;
+    auto set_editable_circuit(EditableCircuit &&editable_circuit,
+                              SimulationConfig simulation_config) -> void;
+    auto set_layout(Layout &&layout, SimulationConfig simulation_config) -> void;
     auto load_from_file(std::string filename) -> LoadFileResult;
+    auto load_circuit_example(int number, SimulationConfig simulation_config) -> void;
 
     /**
      * @brief: Gives access to the stored layout.
