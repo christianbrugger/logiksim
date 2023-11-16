@@ -44,7 +44,7 @@ class InteractiveSimulation {
     [[nodiscard]] auto simulation() const -> const Simulation&;
 
     auto set_simulation_time_rate(time_rate_t time_rate) -> void;
-    [[nodiscard]] auto time_rate() const -> time_rate_t;
+    [[nodiscard]] auto simulation_time_rate() const -> time_rate_t;
     [[nodiscard]] auto time() const -> time_t;
     [[nodiscard]] auto wire_delay_per_distance() const -> delay_t;
     [[nodiscard]] auto events_per_second() const -> double;

@@ -56,7 +56,7 @@ class RenderSurface {
 
    public:
     // events we depend on to be called
-    auto resizeEvent(QWidget& widget) -> void;
+    auto resizeEvent() -> void;
 
     /**
      * @brief: Renders the circuit or simulation.

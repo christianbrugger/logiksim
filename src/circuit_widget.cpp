@@ -1,6 +1,5 @@
 #include "circuit_widget.h"
 
-#include "algorithm/checked_deref.h"
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
@@ -9,7 +8,6 @@
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
 
-#include <exception>
 
 namespace logicsim {
 
@@ -284,7 +282,7 @@ void CircuitWidget::on_timer_run_simulation() {
 }
 
 auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
-    render_surface_.resizeEvent(*this);
+    render_surface_.resizeEvent();
     update();
 }
 

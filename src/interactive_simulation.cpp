@@ -86,7 +86,7 @@ auto InteractiveSimulation::set_simulation_time_rate(time_rate_t time_rate) -> v
     Ensures(simulation_time_rate_ >= time_rate_t {0us});
 }
 
-auto InteractiveSimulation::time_rate() const -> time_rate_t {
+auto InteractiveSimulation::simulation_time_rate() const -> time_rate_t {
     return simulation_time_rate_;
 }
 

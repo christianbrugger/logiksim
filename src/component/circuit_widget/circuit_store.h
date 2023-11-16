@@ -30,8 +30,9 @@ struct LoadFileResult {
  * @brief: Manages the circuit and their access.
  *
  * Class invariant:
- *     + InteractiveSimulation is only non-empty for SimulationState
- *     + Layout is the same for Simulation and EditableCircuit in SimulationState
+ *     + InteractiveSimulation is only set for simulation state
+ *     + Layout is the same for Simulation and EditableCircuit in simulation state
+ *     + InteractiveSimulation delay is the same as simulation config
  */
 class CircuitStore {
    public:
@@ -76,6 +77,9 @@ class CircuitStore {
      * @brief: Returns statistics if in the simulations state, otherwise nullopt.
      */
     [[nodiscard]] auto simulation_events_per_second() const -> std::optional<double>;
+
+   private:
+    [[nodiscard]] auto class_invariant_holds() const -> bool;
 
    private:
     CircuitWidgetState circuit_state_ {NonInteractiveState {}};

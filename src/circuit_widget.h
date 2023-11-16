@@ -6,8 +6,6 @@
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
 #include "component/circuit_widget/render_surface.h"
 
-#include <blend2d.h>
-
 #include <QTimer>
 
 namespace logicsim {

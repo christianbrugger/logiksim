@@ -111,7 +111,7 @@ auto RenderSurface::statistics() const -> SurfaceStatistics {
     };
 }
 
-auto RenderSurface::resizeEvent(QWidget& widget) -> void {
+auto RenderSurface::resizeEvent() -> void {
     is_initialized_ = false;
 }
 
