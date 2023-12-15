@@ -52,12 +52,11 @@ class RenderSurface {
     auto set_view_config_device_scale(double scale) -> void;
     auto set_view_point(ViewPoint view_point) -> void;
 
+    auto set_device_pixel_ratio(double device_pixel_ratio) -> void;
+
     [[nodiscard]] auto statistics() const -> SurfaceStatistics;
 
    public:
-    // events we depend on to be called
-    auto resizeEvent() -> void;
-
     /**
      * @brief: Renders the circuit or simulation.
      *
@@ -76,21 +75,19 @@ class RenderSurface {
                     bool show_size_handles) -> void;
 
    private:
-    // Can only be called inside of paintEvent
-    auto init_surface(QWidget& widget) -> void;
-    auto _init_direct_rendering(QWidget& widget) -> bool;
-    auto _init_buffered_rendering(QWidget& widget) -> void;
-
-   private:
-    qreal last_pixel_ratio_ {-1};
     QImage qt_image_ {};
     CircuitContext context_ {};
-    bool is_initialized_ {false};
 
     // setting is only written from external setter, no internal writes
     WidgetRenderConfig render_config_ {};
     EventCounter fps_counter_ {};
 };
+
+//
+// Free Functions
+//
+
+auto set_optimal_render_attributes(QWidget& widget) -> void;
 
 }  // namespace circuit_widget
 

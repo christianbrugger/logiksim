@@ -91,3 +91,8 @@
 	path = external/cppcoro
 	url = https://github.com/andreasbuhr/cppcoro.git
 	ignore = dirty
+
+[submodule "external/expected"]
+	path = external/expected
+	url = https://github.com/TartanLlama/expected.git
+	ignore = dirty

@@ -22,6 +22,7 @@ struct Context {
     SVGCache svg_cache {};
 
     auto begin() -> void;
+    auto begin(BLImage &bl_image) -> void;
     auto sync() -> void;
     auto end() -> void;
 

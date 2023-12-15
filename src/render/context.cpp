@@ -12,6 +12,11 @@ auto Context::begin() -> void {
     bl_ctx.begin(bl_image, context_info(settings));
 }
 
+auto Context::begin(BLImage &image) -> void {
+    settings.view_config.set_size(image.size());
+    bl_ctx.begin(image, context_info(settings));
+}
+
 auto Context::sync() -> void {
     checked_sync(bl_ctx);
 }

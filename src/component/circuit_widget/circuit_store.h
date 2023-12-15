@@ -47,7 +47,7 @@ class CircuitStore {
     /**
      * @brief: Set a new editable circuit in any state.
      *
-     * Sets the new simulations config if provided.
+     * Also sets the new simulations config if provided.
      */
     auto set_editable_circuit(EditableCircuit &&editable_circuit,
                               std::optional<SimulationConfig> new_config = {}) -> void;

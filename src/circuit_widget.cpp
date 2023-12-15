@@ -282,12 +282,14 @@ void CircuitWidget::on_timer_run_simulation() {
 }
 
 auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
-    render_surface_.resizeEvent();
+    render_surface_.set_device_pixel_ratio(devicePixelRatioF());
     update();
 }
 
 auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
     bool show_size_handles = false;
+
+    render_surface_.set_device_pixel_ratio(devicePixelRatioF());
 
     render_surface_.paintEvent(*this,
                                circuit_widget::editable_circuit_pointer(circuit_store_),
@@ -299,6 +301,7 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
 
 auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
+    print("Mouse press");
 
     if (event_->button() == Qt::MiddleButton) {
         mouse_drag_logic_.mouse_press(position);
@@ -318,6 +321,7 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
 
 auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
+    print("Mouse release");
 
     if (event_->button() == Qt::MiddleButton) {
         render_surface_.set_view_config_offset(
