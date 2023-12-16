@@ -5,6 +5,7 @@
 #include "component/circuit_widget/zoom.h"
 #include "logging.h"
 #include "qt/mouse_position.h"
+#include "qt/widget_geometry.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
 
@@ -286,15 +287,23 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
 }
 
 auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
+    // print(event_->rect().x(), event_->rect().y(), event_->rect().width(),
+    //       event_->rect().height());
+    // TODO consider event_.rect() ?
+
+    circuit_widget::set_optimal_render_attributes(*this);
+
+    auto& context =
+        render_surface_.begin_paint(*backingStore(), get_geometry_info(*this));
+
     bool show_size_handles = false;
+    circuit_widget::render_to_context(
+        context, render_surface_.render_config(),
+        circuit_widget::editable_circuit_pointer(circuit_store_),
+        circuit_widget::spatial_simulation_pointer(circuit_store_),
+        &circuit_store_.layout(), show_size_handles);
 
-    render_surface_.set_device_pixel_ratio(devicePixelRatioF());
-
-    render_surface_.paintEvent(*this,
-                               circuit_widget::editable_circuit_pointer(circuit_store_),
-                               circuit_widget::spatial_simulation_pointer(circuit_store_),
-                               &circuit_store_.layout(), show_size_handles);
-
+    render_surface_.end_paint(*this);
     simulation_image_update_pending_ = false;
 }
 

@@ -13,6 +13,7 @@ class QWidget;
 
 namespace logicsim {
 
+struct GeometryInfo;
 struct ViewConfig;
 class EditableCircuit;
 class SpatialSimulation;
@@ -38,14 +39,13 @@ static_assert(std::regular<SurfaceStatistics>);
  * @brief: Maintains the render buffers of the Circuit Widget for render tasks.
  *
  * Class-invariants:
- *   + thread count in context matches render config
- *   + pixel ratio in view config is same as in qt_image
- *   + frame counter is increased for each frame rendered
+ *  ???
  */
 class RenderSurface {
    public:
     auto reset() -> void;
 
+    // render config
     [[nodiscard]] auto render_config() const -> const WidgetRenderConfig&;
     auto set_render_config(WidgetRenderConfig new_config) -> void;
 
@@ -58,35 +58,27 @@ class RenderSurface {
 
    public:
     /**
-     * @brief: Renders the circuit or simulation.
-     *
-     * Only one object is rendered with the following priority:
-     *     1) editable_circuit
-     *     2) spatial_simulation
-     *     3) layout
-     *
-     * Note that handles are only rendered when editable_circuit is provided,
-     * as it requires a selection.
-     *
-     * Note that caches are only rendered if editable_circuit is provided.
-     */
-    auto paintEvent(QWidget& widget, const EditableCircuit* editable_circuit,
-                    const SpatialSimulation* spatial_simulation, const Layout* layout,
-                    bool show_size_handles) -> void;
-
-    /**
-     * @brief:
+     * @brief: Sets up the painting for the given backing store and size.
      *
      * Note begin_paint() can only be used inside a paintEvent() function.
+     *
+     * If the backend store supports direct rendering it is used,
+     * otherwise a QImage buffer is setup for rendering.
      */
-    // auto begin_paint() -> CircuitContext&;
+    auto begin_paint(QBackingStore& backing_store, GeometryInfo geometry_info)
+        -> CircuitContext&;
 
     /**
-     * @brief:
+     * @brief: Finalizes the painting of the context for the given paint device.
      *
-     * Note begin_paint() can only be used inside a paintEvent() function.
+     * The paint_device is only used if direct rendering was not possible.
+     *
+     * Note end_paint() can only be used inside a paintEvent() function.
+     *
+     * If an exception occurs it is okay to not call this function. However
+     * the frame might not be painted and frames are not counted.
      */
-    // auto end_paint() -> void;
+    auto end_paint(QPaintDevice& paint_device) -> void;
 
    private:
     QImage qt_image_ {};
@@ -107,6 +99,24 @@ auto set_view_config_device_scale(RenderSurface& render_surface, double device_s
     -> void;
 
 auto set_optimal_render_attributes(QWidget& widget) -> void;
+
+/**
+ * @brief: Renders the circuit or simulation.
+ *
+ * Only one object is rendered with the following priority:
+ *     1) editable_circuit
+ *     2) spatial_simulation
+ *     3) layout
+ *
+ * Note that handles are only rendered when editable_circuit is provided,
+ * as it requires a selection.
+ *
+ * Note that caches are only rendered if editable_circuit is provided.
+ */
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
+                       const EditableCircuit* editable_circuit,
+                       const SpatialSimulation* spatial_simulation, const Layout* layout,
+                       bool show_size_handles) -> void;
 
 }  // namespace circuit_widget
 

@@ -60,7 +60,6 @@ auto RenderSurface::set_view_point(ViewPoint view_point) -> void {
 
 auto RenderSurface::set_device_pixel_ratio(double device_pixel_ratio) -> void {
     context_.ctx.settings.view_config.set_device_pixel_ratio(device_pixel_ratio);
-    qt_image_.setDevicePixelRatio(device_pixel_ratio);
 }
 
 auto RenderSurface::statistics() const -> SurfaceStatistics {
@@ -76,7 +75,13 @@ namespace {
 
 auto bl_image_from_backing_store(QBackingStore& backing_store, GeometryInfo geometry_info)
     -> tl::expected<BLImage, std::string> {
-    const auto image = dynamic_cast<QImage*>(backing_store.paintDevice());
+    auto painting_device = backing_store.paintDevice();
+
+    if (painting_device->paintingActive()) {
+        return tl::unexpected("Someone else is painting on this device.");
+    }
+
+    const auto image = dynamic_cast<QImage*>(painting_device);
 
     if (image == nullptr) {
         return tl::unexpected("Widget paintDevice is not a QImage.");
@@ -146,10 +151,61 @@ auto get_bl_image(QBackingStore& backing_store, QImage& qt_image,
     return bl_image_from_qt_image(qt_image);
 }
 
+}  // namespace
+
+auto RenderSurface::begin_paint(QBackingStore& backing_store, GeometryInfo geometry_info)
+    -> CircuitContext& {
+    set_device_pixel_ratio(geometry_info.device_pixel_ratio);
+
+    context_.ctx.bl_image = get_bl_image(backing_store, qt_image_, geometry_info,
+                                         render_config_.direct_rendering);
+    context_.ctx.begin();
+
+    return context_;
+}
+
+auto RenderSurface::end_paint(QPaintDevice& paint_device) -> void {
+    context_.ctx.end();
+    context_.ctx.bl_image = BLImage {};
+
+    // we need to use QPainter if we are not directly drawing to the backend store
+    // this mostly acceptable, but slow with display scaling
+    if (qt_image_.width() != 0) {
+        qt_image_.setDevicePixelRatio(view_config().device_pixel_ratio());
+        auto painter = QPainter {&paint_device};
+        painter.drawImage(QPoint(0, 0), qt_image_);
+    }
+
+    fps_counter_.count_event();
+}
+
+//
+// Free Functions
+//
+
+auto set_view_config_offset(RenderSurface& render_surface, point_fine_t offset) -> void {
+    auto view_point = render_surface.view_config().view_point();
+    view_point.offset = offset;
+    render_surface.set_view_point(view_point);
+}
+
+auto set_view_config_device_scale(RenderSurface& render_surface, double device_scale)
+    -> void {
+    auto view_point = render_surface.view_config().view_point();
+    view_point.device_scale = device_scale;
+    render_surface.set_view_point(view_point);
+}
+
+auto set_optimal_render_attributes(QWidget& widget) -> void {
+    widget.setAutoFillBackground(false);
+    widget.setAttribute(Qt::WA_OpaquePaintEvent, true);
+    widget.setAttribute(Qt::WA_NoSystemBackground, true);
+}
+
 auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
                        const EditableCircuit* editable_circuit,
                        const SpatialSimulation* spatial_simulation, const Layout* layout,
-                       bool show_size_handles) {
+                       bool show_size_handles) -> void {
     // print_fmt("Layers: {:.3f} MB\n", context_.layers.allocated_size() / 1024. / 1024.);
     // print_fmt("Layout: {:.3f} MB\n",
     //           editable_circuit_.value().layout().allocated_size() / 1024. / 1024.);
@@ -204,68 +260,6 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_
     // 100}); context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 100, 1});
     // context_.ctx.bl_ctx.fillRect(
     //     BLRect {0, context_.ctx.bl_image.height() - 1.0, 100, 1});
-}
-
-}  // namespace
-
-auto RenderSurface::paintEvent(QWidget& widget, const EditableCircuit* editable_circuit,
-                               const SpatialSimulation* spatial_simulation,
-                               const Layout* layout, bool show_size_handles) -> void {
-    if (!widget.isVisible()) {
-        return;
-    }
-
-    set_optimal_render_attributes(widget);
-
-    // TODO parameters
-    const auto geometry_info = get_geometry_info(widget);
-    auto& backing_store = *(widget.backingStore());
-
-    auto bl_image = get_bl_image(backing_store, qt_image_, geometry_info,
-                                 render_config_.direct_rendering);
-    context_.ctx.begin(bl_image);
-
-    render_to_context(context_, render_config_, editable_circuit, spatial_simulation,
-                      layout, show_size_handles);
-
-    context_.ctx.end();
-
-    // we use QPainter only if we are directly drawing
-    if (qt_image_.width() != 0) {
-        auto painter = QPainter {backing_store.paintDevice()};
-        painter.drawImage(QPoint(0, 0), qt_image_);
-    }
-
-    fps_counter_.count_event();
-}
-
-// auto RenderSurface::begin_paint() -> CircuitContext& {
-//     return context_;
-// }
-//
-// auto RenderSurface::end_paint() -> void {}
-
-//
-// Free Functions
-//
-
-auto set_view_config_offset(RenderSurface& render_surface, point_fine_t offset) -> void {
-    auto view_point = render_surface.view_config().view_point();
-    view_point.offset = offset;
-    render_surface.set_view_point(view_point);
-}
-
-auto set_view_config_device_scale(RenderSurface& render_surface, double device_scale)
-    -> void {
-    auto view_point = render_surface.view_config().view_point();
-    view_point.device_scale = device_scale;
-    render_surface.set_view_point(view_point);
-}
-
-auto set_optimal_render_attributes(QWidget& widget) -> void {
-    widget.setAutoFillBackground(false);
-    widget.setAttribute(Qt::WA_OpaquePaintEvent, true);
-    widget.setAttribute(Qt::WA_NoSystemBackground, true);
 }
 
 }  // namespace circuit_widget
