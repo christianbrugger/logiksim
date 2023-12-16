@@ -137,7 +137,7 @@ set(LS_CORE_SOURCES
     src/logic_item/simulation_info.cpp
 
     src/qt/mouse_position.cpp
-    src/qt/widget_size.cpp
+    src/qt/widget_geometry.cpp
 
     src/random/bool.cpp
     src/random/connection_count.cpp
