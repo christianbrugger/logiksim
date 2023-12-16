@@ -66,19 +66,23 @@ auto RenderSurface::statistics() const -> SurfaceStatistics {
     return SurfaceStatistics {
         .frames_per_second = fps_counter_.events_per_second(),
         .pixel_scale = context_.ctx.settings.view_config.pixel_scale(),
-        .image_size = context_.ctx.bl_ctx.targetSize(),
+        .image_size = last_render_size_,
         .uses_direct_rendering = qt_image_.width() == 0 && qt_image_.height() == 0,
     };
 }
 
 namespace {
 
-auto bl_image_from_backing_store(QBackingStore& backing_store, GeometryInfo geometry_info)
+auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geometry_info)
     -> tl::expected<BLImage, std::string> {
-    auto painting_device = backing_store.paintDevice();
+    if (backing_store == nullptr) {
+        return tl::unexpected("BackingStore is null.");
+    }
+
+    auto painting_device = backing_store->paintDevice();
 
     if (painting_device->paintingActive()) {
-        return tl::unexpected("Someone else is painting on this device.");
+        return tl::unexpected("PaintingDevice is already used.");
     }
 
     const auto image = dynamic_cast<QImage*>(painting_device);
@@ -136,7 +140,7 @@ auto bl_image_from_qt_image(QImage& qt_image) -> BLImage {
     return bl_image;
 }
 
-auto get_bl_image(QBackingStore& backing_store, QImage& qt_image,
+auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
                   GeometryInfo geometry_info, bool direct_rendering) -> BLImage {
     if (direct_rendering) {
         if (auto result = bl_image_from_backing_store(backing_store, geometry_info)) {
@@ -153,13 +157,14 @@ auto get_bl_image(QBackingStore& backing_store, QImage& qt_image,
 
 }  // namespace
 
-auto RenderSurface::begin_paint(QBackingStore& backing_store, GeometryInfo geometry_info)
+auto RenderSurface::begin_paint(QBackingStore* backing_store, GeometryInfo geometry_info)
     -> CircuitContext& {
     set_device_pixel_ratio(geometry_info.device_pixel_ratio);
 
     context_.ctx.bl_image = get_bl_image(backing_store, qt_image_, geometry_info,
                                          render_config_.direct_rendering);
     context_.ctx.begin();
+    last_render_size_ = context_.ctx.bl_image.size();
 
     return context_;
 }

@@ -10,6 +10,7 @@
 #include <QResizeEvent>
 
 class QWidget;
+class QBackingStore;
 
 namespace logicsim {
 
@@ -65,7 +66,7 @@ class RenderSurface {
      * If the backend store supports direct rendering it is used,
      * otherwise a QImage buffer is setup for rendering.
      */
-    auto begin_paint(QBackingStore& backing_store, GeometryInfo geometry_info)
+    auto begin_paint(QBackingStore* backing_store, GeometryInfo geometry_info)
         -> CircuitContext&;
 
     /**
@@ -87,6 +88,7 @@ class RenderSurface {
     // setting is only written from external setter, no internal writes
     WidgetRenderConfig render_config_ {};
     EventCounter fps_counter_ {};
+    BLSize last_render_size_ {};
 };
 
 //

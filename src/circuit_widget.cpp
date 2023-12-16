@@ -287,14 +287,9 @@ auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
 }
 
 auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
-    // print(event_->rect().x(), event_->rect().y(), event_->rect().width(),
-    //       event_->rect().height());
-    // TODO consider event_.rect() ?
-
     circuit_widget::set_optimal_render_attributes(*this);
 
-    auto& context =
-        render_surface_.begin_paint(*backingStore(), get_geometry_info(*this));
+    auto& context = render_surface_.begin_paint(backingStore(), get_geometry_info(*this));
 
     bool show_size_handles = false;
     circuit_widget::render_to_context(
@@ -309,7 +304,6 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
 
 auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
-    print("Mouse press");
 
     if (event_->button() == Qt::MiddleButton) {
         mouse_drag_logic_.mouse_press(position);
@@ -330,7 +324,6 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
 
 auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
-    print("Mouse release");
 
     if (event_->button() == Qt::MiddleButton) {
         set_view_config_offset(
