@@ -4,10 +4,9 @@
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
 #include "logging.h"
-#include "mouse_position.h"
+#include "qt/mouse_position.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
-
 
 namespace logicsim {
 
@@ -313,7 +312,8 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
 
     if (event_->buttons() & Qt::MiddleButton) {
-        render_surface_.set_view_config_offset(
+        set_view_config_offset(
+            render_surface_,
             mouse_drag_logic_.mouse_move(position, render_surface_.view_config()));
         update();
     }
@@ -324,7 +324,8 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     print("Mouse release");
 
     if (event_->button() == Qt::MiddleButton) {
-        render_surface_.set_view_config_offset(
+        set_view_config_offset(
+            render_surface_,
             mouse_drag_logic_.mouse_release(position, render_surface_.view_config()));
 
         update();

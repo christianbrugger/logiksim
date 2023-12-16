@@ -82,6 +82,10 @@ auto RenderSurface::set_render_config(WidgetRenderConfig new_config) -> void {
     render_config_ = new_config;
 }
 
+auto RenderSurface::render_config() const -> const WidgetRenderConfig& {
+    return render_config_;
+}
+
 auto RenderSurface::reset() -> void {
     context_.clear();
     context_.shrink_to_fit();
@@ -89,14 +93,6 @@ auto RenderSurface::reset() -> void {
 
 auto RenderSurface::view_config() const -> const ViewConfig& {
     return context_.ctx.settings.view_config;
-}
-
-auto RenderSurface::set_view_config_offset(point_fine_t offset) -> void {
-    context_.ctx.settings.view_config.set_offset(offset);
-}
-
-auto RenderSurface::set_view_config_device_scale(double scale) -> void {
-    context_.ctx.settings.view_config.set_device_scale(scale);
 }
 
 auto RenderSurface::set_view_point(ViewPoint view_point) -> void {
@@ -113,9 +109,7 @@ auto RenderSurface::statistics() const -> SurfaceStatistics {
         .frames_per_second = fps_counter_.events_per_second(),
         .pixel_scale = context_.ctx.settings.view_config.pixel_scale(),
         .image_size = context_.ctx.bl_ctx.targetSize(),
-        .uses_direct_rendering = qt_image_.width() == 0 && qt_image_.height() == 0 &&
-                                 context_.ctx.bl_image.width() != 0 &&
-                                 context_.ctx.bl_image.height() != 0,
+        .uses_direct_rendering = qt_image_.width() == 0 && qt_image_.height() == 0,
     };
 }
 
@@ -193,11 +187,14 @@ auto bl_image_from_qt_image(QImage& qt_image) -> BLImage {
 auto get_bl_image(bool direct_rendering, QWidget& widget, QImage& qt_image) -> BLImage {
     if (direct_rendering) {
         if (auto result = bl_image_from_backing_store(widget)) {
+            qt_image = QImage {};
             return std::move(*result);
         } else {
             print("WARNING: Cannot use direct rendering:", result.error());
         }
     }
+
+    resize_qt_image(qt_image, size_device(widget));
     return bl_image_from_qt_image(qt_image);
 }
 
@@ -271,7 +268,6 @@ auto RenderSurface::paintEvent(QWidget& widget, const EditableCircuit* editable_
     }
 
     set_optimal_render_attributes(widget);
-    resize_qt_image(qt_image_, size_device(widget));
 
     auto bl_image = get_bl_image(render_config_.direct_rendering, widget, qt_image_);
     context_.ctx.begin(bl_image);
@@ -288,6 +284,23 @@ auto RenderSurface::paintEvent(QWidget& widget, const EditableCircuit* editable_
     }
 
     fps_counter_.count_event();
+}
+
+//
+// Free Functions
+//
+
+auto set_view_config_offset(RenderSurface& render_surface, point_fine_t offset) -> void {
+    auto view_point = render_surface.view_config().view_point();
+    view_point.offset = offset;
+    render_surface.set_view_point(view_point);
+}
+
+auto set_view_config_device_scale(RenderSurface& render_surface, double device_scale)
+    -> void {
+    auto view_point = render_surface.view_config().view_point();
+    view_point.device_scale = device_scale;
+    render_surface.set_view_point(view_point);
 }
 
 auto set_optimal_render_attributes(QWidget& widget) -> void {

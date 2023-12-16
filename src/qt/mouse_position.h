@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_MOUSE_POSITION_H
-#define LOGICSIM_MOUSE_POSITION_H
+#ifndef LOGICSIM_QT_MOUSE_POSITION_H
+#define LOGICSIM_QT_MOUSE_POSITION_H
 
 #include <QSinglePointEvent>
 #include <QWidget>

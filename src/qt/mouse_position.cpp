@@ -1,4 +1,4 @@
-#include "mouse_position.h"
+#include "qt/mouse_position.h"
 
 #include <gsl/gsl>
 

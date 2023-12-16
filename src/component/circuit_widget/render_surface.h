@@ -37,21 +37,21 @@ static_assert(std::regular<SurfaceStatistics>);
 /**
  * @brief: Maintains the render buffers of the Circuit Widget for render tasks.
  *
- * Note this component also holds the view config.
+ * Class-invariants:
+ *   + thread count in context matches render config
+ *   + pixel ratio in view config is same as in qt_image
+ *   + frame counter is increased for each frame rendered
  */
 class RenderSurface {
    public:
-    auto set_render_config(WidgetRenderConfig new_config) -> void;
     auto reset() -> void;
+
+    [[nodiscard]] auto render_config() const -> const WidgetRenderConfig&;
+    auto set_render_config(WidgetRenderConfig new_config) -> void;
 
     // view config
     [[nodiscard]] auto view_config() const -> const ViewConfig&;
-    // TODO make free function
-    auto set_view_config_offset(point_fine_t offset) -> void;
-    // TODO make free function
-    auto set_view_config_device_scale(double scale) -> void;
     auto set_view_point(ViewPoint view_point) -> void;
-
     auto set_device_pixel_ratio(double device_pixel_ratio) -> void;
 
     [[nodiscard]] auto statistics() const -> SurfaceStatistics;
@@ -86,6 +86,11 @@ class RenderSurface {
 //
 // Free Functions
 //
+
+auto set_view_config_offset(RenderSurface& render_surface, point_fine_t offset) -> void;
+
+auto set_view_config_device_scale(RenderSurface& render_surface, double device_scale)
+    -> void;
 
 auto set_optimal_render_attributes(QWidget& widget) -> void;
 

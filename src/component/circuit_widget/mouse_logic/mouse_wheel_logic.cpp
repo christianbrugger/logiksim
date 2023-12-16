@@ -2,7 +2,7 @@
 
 #include "component/circuit_widget/zoom.h"
 #include "geometry/scene.h"
-#include "mouse_position.h"
+#include "qt/mouse_position.h"
 #include "vocabulary/view_config.h"
 
 #include <QCursor>
@@ -80,7 +80,7 @@ auto wheel_scroll_horizontal(QPoint angle_delta, const ViewConfig& view_config)
 }
 
 auto wheel_scroll_horizontal_view_point(QPoint angle_delta, const ViewConfig& view_config)
--> ViewPoint {
+    -> ViewPoint {
     return ViewPoint {
         .offset = wheel_scroll_horizontal(angle_delta, view_config),
         .device_scale = view_config.device_scale(),
@@ -97,8 +97,8 @@ auto wheel_scroll_zoom(QPointF position, Qt::KeyboardModifiers modifiers,
     else if (modifiers == Qt::NoModifier) {
         if (pixel_delta) {
             return wheel_scroll_surface_view_point(*pixel_delta, view_config);
-            }
-            return wheel_scroll_vertical_view_point(angle_delta, view_config);
+        }
+        return wheel_scroll_vertical_view_point(angle_delta, view_config);
     }
 
     else if (modifiers == Qt::ShiftModifier) {

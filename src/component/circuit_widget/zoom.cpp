@@ -1,7 +1,7 @@
 #include "component/circuit_widget/zoom.h"
 
 #include "geometry/scene.h"
-#include "mouse_position.h"
+#include "qt/mouse_position.h"
 #include "vocabulary/view_config.h"
 
 namespace logicsim {

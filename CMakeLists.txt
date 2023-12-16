@@ -136,6 +136,9 @@ set(LS_CORE_SOURCES
     src/logic_item/schematic_info.cpp
     src/logic_item/simulation_info.cpp
 
+    src/qt/mouse_position.cpp
+    src/qt/widget_size.cpp
+
     src/random/bool.cpp
     src/random/connection_count.cpp
     src/random/generator.cpp
@@ -265,7 +268,6 @@ set(LS_CORE_SOURCES
     src/line_tree.cpp
     src/line_tree_generation.cpp
     src/logging.cpp
-    src/mouse_position.cpp
     src/part_selection.cpp
     src/render_caches.cpp
     src/render_circuit.cpp
