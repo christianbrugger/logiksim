@@ -2,6 +2,7 @@
 
 #include "editable_circuit.h"
 #include "logging.h"
+#include "qt/widget_geometry.h"
 #include "render_caches.h"
 #include "render_circuit.h"
 #include "simulation_view.h"
@@ -28,48 +29,6 @@ auto SurfaceStatistics::format() const -> std::string {
         frames_per_second, pixel_scale, image_size.w, image_size.h,
         uses_direct_rendering);
 }
-
-namespace {
-
-auto round_logical_to_device(QPointF p, double pixel_ratio,
-                             std::optional<QRect> clip = {}) -> QPoint {
-    auto dx = gsl::narrow<int>(std::floor(p.x() * pixel_ratio + 0.5));
-    auto dy = gsl::narrow<int>(std::floor(p.y() * pixel_ratio + 0.5));
-
-    if (clip && false) {
-        dx = std::clamp(dx, clip->x(), clip->x() + clip->width());
-        dy = std::clamp(dy, clip->y(), clip->y() + clip->height());
-    }
-
-    return QPoint {dx, dy};
-}
-
-auto round_logical_to_device(QRectF rect, double pixel_ratio,
-                             std::optional<QRect> clip = {}) -> QRect {
-    const auto p0_logic = QPoint(rect.x(), rect.y());
-    const auto p1_logic = QPoint(rect.x() + rect.width(), rect.y() + rect.height());
-
-    const auto p0 = round_logical_to_device(p0_logic, pixel_ratio, clip);
-    const auto p1 = round_logical_to_device(p1_logic, pixel_ratio, clip);
-
-    return QRect(p0.x(), p0.y(), p1.x() - p0.x(), p1.y() - p0.y());
-}
-
-auto geometry_top_level(const QWidget& widget) -> QRect {
-    const auto geometry = widget.geometry();
-    const auto top_left = widget.mapTo(widget.topLevelWidget(), QPoint {0, 0});
-
-    return QRect {top_left.x(), top_left.y(), geometry.width(), geometry.height()};
-}
-
-auto size_device(const QWidget& widget) -> QSize {
-    const auto geometry = geometry_top_level(widget);
-    const auto pixel_ratio = widget.devicePixelRatioF();
-
-    return round_logical_to_device(geometry, pixel_ratio).size();
-}
-
-}  // namespace
 
 auto RenderSurface::set_render_config(WidgetRenderConfig new_config) -> void {
     if (new_config == render_config_) {
@@ -115,14 +74,9 @@ auto RenderSurface::statistics() const -> SurfaceStatistics {
 
 namespace {
 
-auto bl_image_from_backing_store(QWidget& widget) -> tl::expected<BLImage, std::string> {
-    const auto backing_store = widget.backingStore();
-
-    if (backing_store == nullptr) {
-        return tl::unexpected("Widget backing_store pointer is null.");
-    }
-
-    const auto image = dynamic_cast<QImage*>(backing_store->paintDevice());
+auto bl_image_from_backing_store(QBackingStore& backing_store, GeometryInfo geometry_info)
+    -> tl::expected<BLImage, std::string> {
+    const auto image = dynamic_cast<QImage*>(backing_store.paintDevice());
 
     if (image == nullptr) {
         return tl::unexpected("Widget paintDevice is not a QImage.");
@@ -134,14 +88,7 @@ auto bl_image_from_backing_store(QWidget& widget) -> tl::expected<BLImage, std::
         return tl::unexpected("Widget paintDevice has an unexpected depth.");
     }
 
-    const auto rect = round_logical_to_device(geometry_top_level(widget),
-                                              image->devicePixelRatioF(), image->rect());
-
-    // print(geometry().x() * image->devicePixelRatioF(),                         //
-    //       geometry().y() * image->devicePixelRatioF(),                         //
-    //       (geometry().x() + geometry().width()) * image->devicePixelRatioF(),  //
-    //       (geometry().y() + geometry().height()) * image->devicePixelRatioF()  //
-    //);
+    const auto rect = to_device_rounded(geometry_info, image->rect());
 
     // get pointer
     auto pixels_direct = image->constScanLine(rect.y());
@@ -184,9 +131,10 @@ auto bl_image_from_qt_image(QImage& qt_image) -> BLImage {
     return bl_image;
 }
 
-auto get_bl_image(bool direct_rendering, QWidget& widget, QImage& qt_image) -> BLImage {
+auto get_bl_image(QBackingStore& backing_store, QImage& qt_image,
+                  GeometryInfo geometry_info, bool direct_rendering) -> BLImage {
     if (direct_rendering) {
-        if (auto result = bl_image_from_backing_store(widget)) {
+        if (auto result = bl_image_from_backing_store(backing_store, geometry_info)) {
             qt_image = QImage {};
             return std::move(*result);
         } else {
@@ -194,7 +142,7 @@ auto get_bl_image(bool direct_rendering, QWidget& widget, QImage& qt_image) -> B
         }
     }
 
-    resize_qt_image(qt_image, size_device(widget));
+    resize_qt_image(qt_image, to_size_device(geometry_info));
     return bl_image_from_qt_image(qt_image);
 }
 
@@ -269,7 +217,12 @@ auto RenderSurface::paintEvent(QWidget& widget, const EditableCircuit* editable_
 
     set_optimal_render_attributes(widget);
 
-    auto bl_image = get_bl_image(render_config_.direct_rendering, widget, qt_image_);
+    // TODO parameters
+    const auto geometry_info = get_geometry_info(widget);
+    auto& backing_store = *(widget.backingStore());
+
+    auto bl_image = get_bl_image(backing_store, qt_image_, geometry_info,
+                                 render_config_.direct_rendering);
     context_.ctx.begin(bl_image);
 
     render_to_context(context_, render_config_, editable_circuit, spatial_simulation,
@@ -279,12 +232,18 @@ auto RenderSurface::paintEvent(QWidget& widget, const EditableCircuit* editable_
 
     // we use QPainter only if we are directly drawing
     if (qt_image_.width() != 0) {
-        auto painter = QPainter {&widget};
+        auto painter = QPainter {backing_store.paintDevice()};
         painter.drawImage(QPoint(0, 0), qt_image_);
     }
 
     fps_counter_.count_event();
 }
+
+// auto RenderSurface::begin_paint() -> CircuitContext& {
+//     return context_;
+// }
+//
+// auto RenderSurface::end_paint() -> void {}
 
 //
 // Free Functions

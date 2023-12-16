@@ -6,6 +6,14 @@
 
 namespace logicsim {
 
+auto GeometryInfo::format() const -> std::string {
+    const auto& geometry = geometry_top_level_logical;
+
+    return fmt::format("<GeometryInfo: rect = ({}, {}, {}, {}), scale = {}>",
+                       geometry.x(), geometry.y(), geometry.x() + geometry.width(),
+                       geometry.y() + geometry.height(), device_pixel_ratio);
+}
+
 auto get_geometry_top_level_logical(const QWidget& widget) -> QRect {
     const auto geometry = widget.geometry();
     const auto top_left = widget.mapTo(widget.topLevelWidget(), QPoint {0, 0});
@@ -48,18 +56,18 @@ auto round_logical_to_device(QRectF rect, double pixel_ratio,
 
 }  // namespace
 
-auto to_device(GeometryInfo geometry_info) -> QRect {
+auto to_device_rounded(GeometryInfo geometry_info) -> QRect {
     return round_logical_to_device(geometry_info.geometry_top_level_logical,
                                    geometry_info.device_pixel_ratio);
 }
 
-auto to_device(GeometryInfo geometry_info, QRect clip) -> QRect {
+auto to_device_rounded(GeometryInfo geometry_info, QRect clip) -> QRect {
     return round_logical_to_device(geometry_info.geometry_top_level_logical,
                                    geometry_info.device_pixel_ratio, clip);
 }
 
-auto get_size_device(GeometryInfo geometry_info) -> QSize {
-    return to_device(geometry_info).size();
+auto to_size_device(GeometryInfo geometry_info) -> QSize {
+    return to_device_rounded(geometry_info).size();
 }
 
 }  // namespace logicsim

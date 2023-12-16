@@ -74,6 +74,20 @@ class RenderSurface {
                     const SpatialSimulation* spatial_simulation, const Layout* layout,
                     bool show_size_handles) -> void;
 
+    /**
+     * @brief:
+     *
+     * Note begin_paint() can only be used inside a paintEvent() function.
+     */
+    // auto begin_paint() -> CircuitContext&;
+
+    /**
+     * @brief:
+     *
+     * Note begin_paint() can only be used inside a paintEvent() function.
+     */
+    // auto end_paint() -> void;
+
    private:
     QImage qt_image_ {};
     CircuitContext context_ {};
