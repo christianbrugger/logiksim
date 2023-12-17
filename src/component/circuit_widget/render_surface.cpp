@@ -228,6 +228,10 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_
 
             render_setting_handle(context.ctx, target_layout, selection);
 
+            if (show_size_handles) {
+                print("not implemented");
+            }
+
             // if (show_size_handles) {
             //     render_size_handles(context_.ctx, target_layout, selection);
             // }

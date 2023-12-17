@@ -215,7 +215,8 @@ auto generate_random_events(Rng& rng, const Schematic& schematic, delay_t max_de
 
 }  // namespace
 
-auto fill_line_scene(int n_lines) -> SimulatedLineScene {
+// TODO refactor n_lines being unused
+auto fill_line_scene(int n_lines [[maybe_unused]]) -> SimulatedLineScene {
     const auto config = RenderBenchmarkConfig();
     const auto simulation_config = SimulationConfig {.use_wire_delay = true};
     if (simulation_config.wire_delay_per_distance() != delay_t {1us}) {

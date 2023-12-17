@@ -60,7 +60,7 @@ auto Simulation::resize_vectors() -> void {
     for (auto element_id : element_ids(schematic_)) {
         input_values_.emplace_back(schematic_.input_count(element_id).count(), false);
     }
-    
+
     // internal states
     internal_states_.reserve(schematic_.size());
     for (auto element_id : element_ids(schematic_)) {
@@ -342,7 +342,9 @@ namespace {
 using event_count_t = simulation::event_count_t;
 using RunConfig = simulation::RunConfig;
 
-auto validate(RunConfig config, event_count_t current_event_count) -> void {
+// TODO remove current_event_count ???
+auto validate(RunConfig config, event_count_t current_event_count [[maybe_unused]])
+    -> void {
     if (config.simulate_for < delay_t {0us}) [[unlikely]] {
         throw std::runtime_error("simulation_time needs to be positive.");
     }
@@ -394,8 +396,7 @@ auto Simulation::run(simulation::RunConfig config) -> void {
     Expects(queue_.next_event_time() > time());
     validate(config, event_count_);
 
-    if (config.max_events == 0 ||
-        config.realtime_timeout == realtime_timeout_t::zero() ||
+    if (config.max_events == 0 || config.realtime_timeout == realtime_timeout_t::zero() ||
         config.simulate_for == delay_t::zero()) {
         return;
     }

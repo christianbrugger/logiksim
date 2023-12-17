@@ -72,8 +72,9 @@ template <>
 struct ankerl::unordered_dense::hash<logicsim::SimulationState> {
     using is_avalanching = void;
 
-    [[nodiscard]] auto operator()(const logicsim::SimulationState &obj) const noexcept
-        -> uint64_t {
+    [[nodiscard]] auto operator()(const logicsim::SimulationState &obj
+                                  [[maybe_unused]]) const noexcept -> uint64_t {
+        assert(obj == logicsim::SimulationState {});
         return logicsim::wyhash();
     }
 };
@@ -82,8 +83,9 @@ template <>
 struct ankerl::unordered_dense::hash<logicsim::NonInteractiveState> {
     using is_avalanching = void;
 
-    [[nodiscard]] auto operator()(const logicsim::NonInteractiveState &obj) const noexcept
-        -> uint64_t {
+    [[nodiscard]] auto operator()(const logicsim::NonInteractiveState &obj
+                                  [[maybe_unused]]) const noexcept -> uint64_t {
+        assert(obj == logicsim::NonInteractiveState {});
         return logicsim::wyhash();
     }
 };

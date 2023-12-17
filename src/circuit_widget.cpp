@@ -281,12 +281,12 @@ void CircuitWidget::on_timer_run_simulation() {
     }
 }
 
-auto CircuitWidget::resizeEvent(QResizeEvent* event_) -> void {
+auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
     render_surface_.set_device_pixel_ratio(devicePixelRatioF());
     update();
 }
 
-auto CircuitWidget::paintEvent(QPaintEvent* event_) -> void {
+auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
     circuit_widget::set_optimal_render_attributes(*this);
 
     auto& context = render_surface_.begin_paint(backingStore(), get_geometry_info(*this));
@@ -342,7 +342,7 @@ auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
     }
 }
 
-auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
+auto CircuitWidget::keyPressEvent(QKeyEvent* event_ [[maybe_unused]]) -> void {
     return;
 }
 

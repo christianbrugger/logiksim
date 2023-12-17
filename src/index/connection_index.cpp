@@ -134,12 +134,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {}
+    handle(const editable_circuit::info_message::LogicItemInserted&) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::LogicItemInserted& message) -> void {}
+    handle(const editable_circuit::info_message::LogicItemInserted&) -> void {}
 
 //
 // InsertedLogicItemIdUpdated
@@ -186,14 +186,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
-        -> void {}
+    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated&) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated& message)
-        -> void {}
+    handle(const editable_circuit::info_message::InsertedLogicItemIdUpdated&) -> void {}
 
 //
 // LogicItemUninserted
@@ -238,12 +236,12 @@ auto ConnectionIndex<connection_index::ContentType::LogicItem,
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Input>::
-    handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {}
+    handle(const editable_circuit::info_message::LogicItemUninserted&) -> void {}
 
 template <>
 auto ConnectionIndex<connection_index::ContentType::Wire,
                      connection_index::DirectionType::Output>::
-    handle(const editable_circuit::info_message::LogicItemUninserted& message) -> void {}
+    handle(const editable_circuit::info_message::LogicItemUninserted&) -> void {}
 
 //
 // SegmentInserted

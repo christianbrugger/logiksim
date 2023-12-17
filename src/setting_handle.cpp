@@ -133,7 +133,8 @@ auto get_colliding_setting_handle(point_fine_t position, const Layout& layout,
 //
 
 SettingWidgetRegistry::SettingWidgetRegistry(QWidget* parent,
-                                             EditableCircuit& editable_circuit)
+                                             EditableCircuit& editable_circuit
+                                             [[maybe_unused]])
     : parent_ {parent} {
     connect(&cleanup_timer_, &QTimer::timeout, this,
             &SettingWidgetRegistry::on_cleanup_timeout);
@@ -457,9 +458,13 @@ auto ClockGeneratorDialog::value_changed() -> void {
 auto ClockGeneratorDialog::update_row_visibility() -> void {
     const auto is_symmetric = is_symmetric_->isChecked();
 
+    print("setting_handle/ClockGeneratorDialog::update_row_visibility TODO", is_symmetric);
+
+    /*
     layout_->setRowVisible(time_symmetric_->label, is_symmetric);
     layout_->setRowVisible(time_on_->label, !is_symmetric);
     layout_->setRowVisible(time_off_->label, !is_symmetric);
+    */
 
     this->adjustSize();
 }

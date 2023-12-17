@@ -83,10 +83,8 @@ auto VisibleSelection::format() const -> std::string {
 
 auto VisibleSelection::operator==(const VisibleSelection& other) const -> bool {
     // cache is not part of value type
-    // return initial_selection_ == other.initial_selection_ &&
-    //       operations_ == other.operations_;
-
-    return false;  // TODO !!!
+    return initial_selection_ == other.initial_selection_ &&
+           operations_ == other.operations_;
 }
 
 auto VisibleSelection::clear() -> void {

@@ -190,7 +190,7 @@ auto calculate_offset(const BLBox& bounding_box,
     };
 }
 
-auto calculate_baseline_offset(FontStyle style, const FontFace& face) -> BaselineOffset {
+auto calculate_baseline_offset(FontStyle style [[maybe_unused]], const FontFace& face) -> BaselineOffset {
     const auto text =
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

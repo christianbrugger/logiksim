@@ -2,7 +2,7 @@
 
 namespace logicsim {
 
-auto get_random_internal_state_count(Rng &rng, LogicItemType logicitem_type)
+auto get_random_internal_state_count(Rng &rng [[maybe_unused]], LogicItemType logicitem_type [[maybe_unused]])
     -> std::size_t {
     return 0;
 }

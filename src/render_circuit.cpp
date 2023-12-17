@@ -1124,7 +1124,7 @@ auto _draw_line_segment_with_history(Context& ctx, point_t p_from, point_t p_unt
     }
 }
 
-auto _draw_wire_with_history(Context& ctx, const Layout& layout, wire_id_t wire_id,
+auto _draw_wire_with_history(Context& ctx, const Layout& layout [[maybe_unused]], wire_id_t wire_id [[maybe_unused]],
                              simulation_view::ConstElement logic_state,
                              const simulation::HistoryView& history) -> void {
     if (history.size() < 2) [[unlikely]] {
