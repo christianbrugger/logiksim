@@ -6,8 +6,8 @@
 #include "benchmark/render_line_scene.h"
 #include "benchmark/schematic_creation.h"
 #include "benchmark/simulation_runtime.h"
-#include "editable_circuit/editable_circuit.h"
-#include "editable_circuit/selection_registrar.h"
+#include "component/editable_circuit/selection_store.h"
+#include "editable_circuit.h"
 #include "layout_info.h"
 #include "logging.h"
 #include "logic_item/layout.h"
@@ -38,6 +38,7 @@
 
 namespace logicsim {
 
+/*
 static void BM_Benchmark_New_Selection(benchmark::State& state) {
     using namespace logicsim;
 
@@ -73,6 +74,7 @@ static void BM_Benchmark_Reuse_Selection(benchmark::State& state) {
 }
 
 BENCHMARK(BM_Benchmark_Reuse_Selection);  // NOLINT
+*/
 
 static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
     using namespace logicsim;
@@ -96,10 +98,10 @@ static void BM_Benchmark_Add_Element_Delete(benchmark::State& state) {
             .orientation = orientation_t::right,
         };
 
-        auto handle = ec.add_logic_item(definition, point_t {grid_t {x}, grid_t {y}},
-                                        InsertionMode::insert_or_discard);
+        ec.add_logic_item(definition, point_t {grid_t {x}, grid_t {y}},
+                          InsertionMode::insert_or_discard);
         // ec.delete_all(std::move(handle));
-        benchmark::DoNotOptimize(handle);
+        benchmark::DoNotOptimize(ec);
     }
 }
 
