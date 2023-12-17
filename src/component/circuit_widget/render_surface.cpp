@@ -207,6 +207,7 @@ auto set_optimal_render_attributes(QWidget& widget) -> void {
     widget.setAttribute(Qt::WA_NoSystemBackground, true);
 }
 
+// TODO move to render folder
 auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
                        const EditableCircuit* editable_circuit,
                        const SpatialSimulation* spatial_simulation, const Layout* layout,

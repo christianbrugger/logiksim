@@ -282,7 +282,6 @@ void CircuitWidget::on_timer_run_simulation() {
 }
 
 auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
-    render_surface_.set_device_pixel_ratio(devicePixelRatioF());
     update();
 }
 
