@@ -88,7 +88,8 @@ class EditableCircuit {
     [[nodiscard]] auto selection(selection_id_t selection_id) -> Selection&;
     [[nodiscard]] auto selection(selection_id_t selection_id) const -> const Selection&;
     [[nodiscard]] auto create_selection() -> selection_id_t;
-    [[nodiscard]] auto destroy_selection(selection_id_t selection_id);
+    auto destroy_selection(selection_id_t selection_id) -> void;
+    [[nodiscard]] auto selection_exists(selection_id_t selection_id) const -> bool;
 
     // visible selection
     auto set_visible_selection(Selection selection) -> void;
@@ -115,8 +116,18 @@ class EditableCircuit {
     VisibleSelection selection_builder_;
 };
 
+//
+// Free functions
+//
+
 auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)
     -> std::vector<point_t>;
+
+auto save_delete_all(EditableCircuit& editable_circuit, selection_id_t selection_id)
+    -> void;
+
+auto save_destroy_selection(EditableCircuit& editable_circuit,
+                            selection_id_t selection_id) -> void;
 
 }  // namespace logicsim
 

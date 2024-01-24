@@ -1,5 +1,7 @@
 #include "component/circuit_widget/checked_editable_circuit.h"
 
+#include "logging.h"
+
 #include <gsl/gsl>
 
 #include <stdexcept>
@@ -22,6 +24,7 @@ auto CheckedEditableCircuit::set_circuit_state(CircuitWidgetState new_state) -> 
     Expects(selection_valid(editable_circuit_, circuit_state_));
 
     circuit_state_ = new_state;
+    print("new_state", new_state);
 
     Ensures(selection_valid(editable_circuit_, new_state));
 }

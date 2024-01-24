@@ -1,8 +1,8 @@
 #ifndef LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_STORE_H
 #define LOGICSIM_COMPONENT_EDITABLE_CIRCUIT_SELECTION_STORE_H
 
-#include "selection.h"
 #include "format/struct.h"
+#include "selection.h"
 #include "vocabulary/selection_id.h"
 
 #include <ankerl/unordered_dense.h>
@@ -44,6 +44,8 @@ class SelectionStore {
 
     [[nodiscard]] auto at(selection_id_t selection_id) -> Selection&;
     [[nodiscard]] auto at(selection_id_t selection_id) const -> const Selection&;
+
+    [[nodiscard]] auto contains(selection_id_t selection_id) const -> bool;
 
     [[nodiscard]] auto create() -> selection_id_t;
     auto destroy(selection_id_t selection_id) -> void;

@@ -29,9 +29,10 @@ struct LoadFileResult {
 
 /**
  * @brief: Manages the circuit and creates the simulation as needed.
- * 
+ *
  * Pre-condition:
- *   + No reference to editable circuit is stored outside across multiple calls.
+ *   + No reference to layout, editable-circuit, or interactive-simulation
+ *     are stored outside across multiple calls.
  *
  * Class invariant:
  *     + InteractiveSimulation is not-null in simulation state and null otherwise.
@@ -63,6 +64,9 @@ class CircuitStore {
      * @brief: Gives access to the stored layout. This is always available.
      *
      * Useful especially for non-interactive states.
+     *
+     * Pre-condition:
+     *   + No reference to layout is stored outside across multiple calls.
      */
     [[nodiscard]] auto layout() const -> const Layout &;
 
@@ -70,6 +74,9 @@ class CircuitStore {
      * @brief: Gives access to editable_circuit in editing state.
      *
      * Throws exception if not in editing state.
+     *
+     * Pre-condition:
+     *   + No reference to editable circuit is stored outside across multiple calls.
      */
     [[nodiscard]] auto editable_circuit() -> EditableCircuit &;
     [[nodiscard]] auto editable_circuit() const -> const EditableCircuit &;
@@ -78,6 +85,9 @@ class CircuitStore {
      * @brief: Gives access to simulation in simulation.
      *
      * Throws exception if not in simulation state.
+     *
+     * Pre-condition:
+     *   + No reference to interactive simulation is stored outside across multiple calls.
      */
     [[nodiscard]] auto interactive_simulation() -> InteractiveSimulation &;
     [[nodiscard]] auto interactive_simulation() const -> const InteractiveSimulation &;

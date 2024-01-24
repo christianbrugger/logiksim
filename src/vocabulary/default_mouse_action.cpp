@@ -1,3 +1,5 @@
+#include "default_mouse_action.h"
+
 #include "vocabulary/default_mouse_action.h"
 
 #include <exception>
@@ -59,6 +61,11 @@ auto format(DefaultMouseAction action) -> std::string {
 auto is_inserting_state(DefaultMouseAction action) -> bool {
     using enum DefaultMouseAction;
     return action != selection;
+}
+
+auto is_insert_logic_item_state(DefaultMouseAction action) -> bool {
+    using enum DefaultMouseAction;
+    return action != selection && action != insert_wire;
 }
 
 }  // namespace logicsim

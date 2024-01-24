@@ -41,6 +41,14 @@ static_assert(std::regular<CircuitWidgetState>);
 [[nodiscard]] auto is_non_interactive(const CircuitWidgetState &state) -> bool;
 [[nodiscard]] auto is_editing_state(const CircuitWidgetState &state) -> bool;
 
+[[nodiscard]] auto is_insert_logic_item_state(const EditingState &state) -> bool;
+[[nodiscard]] auto is_insert_wire_state(const EditingState &state) -> bool;
+[[nodiscard]] auto is_selection_state(const EditingState &state) -> bool;
+
+[[nodiscard]] auto is_insert_logic_item_state(const CircuitWidgetState &state) -> bool;
+[[nodiscard]] auto is_insert_wire_state(const CircuitWidgetState &state) -> bool;
+[[nodiscard]] auto is_selection_state(const CircuitWidgetState &state) -> bool;
+
 namespace defaults {
 constexpr inline auto selection_state =
     CircuitWidgetState {EditingState {DefaultMouseAction::selection}};

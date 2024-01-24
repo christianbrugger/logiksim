@@ -64,6 +64,10 @@ auto SelectionStore::at(selection_id_t selection_id) const -> const Selection& {
     throw std::runtime_error("Selection not found in selection store.");
 }
 
+auto SelectionStore::contains(selection_id_t selection_id) const -> bool {
+    return bool {selection_id} && selections_.contains(selection_id);
+}
+
 auto SelectionStore::create() -> selection_id_t {
     const auto selection_id = next_selection_key_++;
 
@@ -76,6 +80,7 @@ auto SelectionStore::create() -> selection_id_t {
 auto SelectionStore::destroy(selection_id_t selection_id) -> void {
     if (const auto it = selections_.find(selection_id); it != selections_.end()) {
         selections_.erase(it);
+        return;
     }
     throw std::runtime_error("Selection not found in selection store remove.");
 }

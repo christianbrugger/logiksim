@@ -168,8 +168,12 @@ auto EditableCircuit::create_selection() -> selection_id_t {
     return selection_store_.create();
 }
 
-auto EditableCircuit::destroy_selection(selection_id_t selection_id) {
+auto EditableCircuit::destroy_selection(selection_id_t selection_id) -> void {
     selection_store_.destroy(selection_id);
+}
+
+auto EditableCircuit::selection_exists(selection_id_t selection_id) const -> bool {
+    return selection_store_.contains(selection_id);
 }
 
 auto EditableCircuit::set_visible_selection(Selection selection) -> void {
@@ -225,6 +229,10 @@ auto EditableCircuit::get_state() -> editable_circuit::State {
     return editable_circuit::State {layout_, get_sender(), layout_index_};
 }
 
+//
+// Free functions
+//
+
 auto move_or_delete_points(std::span<const point_t> points, int delta_x, int delta_y)
     -> std::vector<point_t> {
     auto result = std::vector<point_t> {};
@@ -237,6 +245,20 @@ auto move_or_delete_points(std::span<const point_t> points, int delta_x, int del
     }
 
     return result;
+}
+
+auto save_delete_all(EditableCircuit& editable_circuit, selection_id_t selection_id)
+    -> void {
+    if (editable_circuit.selection_exists(selection_id)) {
+        editable_circuit.delete_all(selection_id);
+    }
+}
+
+auto save_destroy_selection(EditableCircuit& editable_circuit,
+                            selection_id_t selection_id) -> void {
+    if (editable_circuit.selection_exists(selection_id)) {
+        editable_circuit.destroy_selection(selection_id);
+    }
 }
 
 }  // namespace logicsim

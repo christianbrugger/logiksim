@@ -43,6 +43,9 @@ set(LS_CORE_SOURCES
     src/benchmark/schematic_creation.cpp
     src/benchmark/simulation_runtime.cpp
 
+    src/component/circuit_widget/mouse_logic/editing_logic_interface.cpp
+    src/component/circuit_widget/mouse_logic/editing_logic_manager.cpp
+    src/component/circuit_widget/mouse_logic/editing_logic_variant.cpp
     src/component/circuit_widget/mouse_logic/insert_logic_item.cpp
     src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
     src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
@@ -254,6 +257,7 @@ set(LS_CORE_SOURCES
     src/circuit_description.cpp
     src/circuit_widget.cpp
     src/circuit_widget_base.cpp
+    src/default_element_definition.cpp
     src/editable_circuit.cpp
     src/event_counter.cpp
     src/event_counter_multi.cpp
