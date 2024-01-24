@@ -4,8 +4,6 @@
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
-#include "default_element_definition.h"
-#include "geometry/scene.h"
 #include "logging.h"
 #include "qt/mouse_position.h"
 #include "qt/widget_geometry.h"
@@ -128,6 +126,7 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     }
 
     circuit_store_.set_circuit_state(new_state);
+    editing_logic_manager_.set_circuit_state(new_state);
 
     if (is_simulation(new_state)) {
         timer_run_simulation_.setInterval(0);
@@ -317,65 +316,25 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
     simulation_image_update_pending_ = false;
 }
 
-namespace {
-
-auto get_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
-                             EditingState editing_state)
-    -> std::optional<circuit_widget::EditingMouseLogic> {
-    // insert logic items
-    if (is_insert_logic_item_state(editing_state)) {
-        return circuit_widget::InsertLogicItemLogic {
-            to_logic_item_definition(editing_state.default_mouse_action),
-        };
-    }
-
-    // insert wires
-    if (is_insert_wire_state(editing_state)) {
-        print("TODO insert wire mouse logic");
-        return std::nullopt;
-    }
-
-    // selection
-    if (is_selection_state(editing_state)) {
-        print("TODO selection mouse logic");
-        return std::nullopt;
-    }
-
-    return std::nullopt;
-}
-
-}  // namespace
-
 auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
-    const auto grid_position = to_grid(position, render_surface_.view_config());
 
     if (event_->button() == Qt::MiddleButton) {
         mouse_drag_logic_.mouse_press(position);
         update();
     }
 
-    else if (event_->button() == Qt::LeftButton) {
-        if (!editing_mouse_logic_ && is_editing_state(circuit_state_)) {
-            editing_mouse_logic_ =
-                get_editing_mouse_logic(position, render_surface_.view_config(),
-                                        std::get<EditingState>(circuit_state_));
-        }
-
-        if (editing_mouse_logic_) {
-            std::visit(overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
-                           arg.mouse_press(circuit_store_.editable_circuit(),
-                                           grid_position);
-                       }},
-                       editing_mouse_logic_.value());
-            update();
-        }
+    if (is_editing_state(circuit_state_) &&
+        editing_logic_manager_.mouse_press(position, render_surface_.view_config(),
+                                           event_->button(),
+                                           circuit_store_.editable_circuit()) ==
+            circuit_widget::ManagerResult::require_update) {
+        update();
     }
 }
 
 auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     const auto position = get_mouse_position(this, event_);
-    const auto grid_position = to_grid(position, render_surface_.view_config());
 
     if (event_->buttons() & Qt::MiddleButton) {
         set_view_config_offset(
@@ -384,11 +343,10 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
         update();
     }
 
-    if (editing_mouse_logic_) {
-        std::visit(overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
-                       arg.mouse_move(circuit_store_.editable_circuit(), grid_position);
-                   }},
-                   editing_mouse_logic_.value());
+    if (is_editing_state(circuit_state_) &&
+        editing_logic_manager_.mouse_move(position, render_surface_.view_config(),
+                                          circuit_store_.editable_circuit()) ==
+            circuit_widget::ManagerResult::require_update) {
         update();
     }
 }
@@ -404,22 +362,10 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
         update();
     }
 
-    if (editing_mouse_logic_) {
-        const auto grid_position = to_grid(position, render_surface_.view_config());
-
-        std::visit(overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
-                       arg.mouse_release(circuit_store_.editable_circuit(),
-                                         grid_position);
-                   }},
-                   editing_mouse_logic_.value());
-
-        std::visit(
-            [&](circuit_widget::EditingLogicInterface& arg) {
-                arg.finalize(circuit_store_.editable_circuit());
-            },
-            editing_mouse_logic_.value());
-        editing_mouse_logic_.reset();
-
+    if (is_editing_state(circuit_state_) &&
+        editing_logic_manager_.mouse_release(position, render_surface_.view_config(),
+                                             circuit_store_.editable_circuit()) ==
+            circuit_widget::ManagerResult::require_update) {
         update();
     }
 }

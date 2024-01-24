@@ -3,7 +3,7 @@
 
 #include "circuit_widget_base.h"
 #include "component/circuit_widget/circuit_store.h"
-#include "component/circuit_widget/mouse_logic/editing_logic_variant.h"
+#include "component/circuit_widget/mouse_logic/editing_logic_manager.h"
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
 #include "component/circuit_widget/render_surface.h"
 
@@ -133,7 +133,7 @@ class CircuitWidget : public CircuitWidgetBase {
     circuit_widget::CircuitStore circuit_store_ {};
     circuit_widget::RenderSurface render_surface_ {};
     circuit_widget::MouseDragLogic mouse_drag_logic_ {};
-    std::optional<circuit_widget::EditingMouseLogic> editing_mouse_logic_ {};
+    circuit_widget::EditingLogicManager editing_logic_manager_ {};
 
     QTimer timer_benchmark_render_ {};
     QTimer timer_run_simulation_ {};
