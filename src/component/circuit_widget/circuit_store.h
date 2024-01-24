@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_CIRCUIT_STORE_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_CIRCUIT_STORE_H
 
+#include "component/circuit_widget/checked_editable_circuit.h"
 #include "editable_circuit.h"
 #include "format/struct.h"
 #include "interactive_simulation.h"
@@ -27,12 +28,16 @@ struct LoadFileResult {
 }  // namespace circuit_store
 
 /**
- * @brief: Manages the circuit and their access.
+ * @brief: Manages the circuit and creates the simulation as needed.
+ * 
+ * Pre-condition:
+ *   + No reference to editable circuit is stored outside across multiple calls.
  *
  * Class invariant:
- *     + InteractiveSimulation is only set for simulation state
- *     + Layout is the same for Simulation and EditableCircuit in simulation state
- *     + InteractiveSimulation delay is the same as simulation config
+ *     + InteractiveSimulation is not-null in simulation state and null otherwise.
+ *     + Layout is the same for Simulation and EditableCircuit in simulation state.
+ *     + InteractiveSimulation delay is the same as simulation config.
+ *     + Circuit state is the same as in checked_editable_circuit.
  */
 class CircuitStore {
    public:
@@ -48,12 +53,16 @@ class CircuitStore {
      * @brief: Set a new editable circuit in any state.
      *
      * Also sets the new simulations config if provided.
+     *
+     * Note, This methods regenerates the active simulation if present.
      */
     auto set_editable_circuit(EditableCircuit &&editable_circuit,
                               std::optional<SimulationConfig> new_config = {}) -> void;
 
     /**
      * @brief: Gives access to the stored layout. This is always available.
+     *
+     * Useful especially for non-interactive states.
      */
     [[nodiscard]] auto layout() const -> const Layout &;
 
@@ -85,7 +94,7 @@ class CircuitStore {
     CircuitWidgetState circuit_state_ {NonInteractiveState {}};
     SimulationConfig simulation_config_ {};
 
-    EditableCircuit editable_circuit_ {};
+    CheckedEditableCircuit checked_editable_circuit_ {};
     std::optional<InteractiveSimulation> interactive_simulation_ {};
 };
 

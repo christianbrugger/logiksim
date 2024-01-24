@@ -1,5 +1,6 @@
 #include "circuit_widget.h"
 
+#include "algorithm/overload.h"
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
@@ -290,12 +291,25 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
 
     auto& context = render_surface_.begin_paint(backingStore(), get_geometry_info(*this));
 
-    bool show_size_handles = false;
-    circuit_widget::render_to_context(
-        context, render_surface_.render_config(),
-        circuit_widget::editable_circuit_pointer(circuit_store_),
-        circuit_widget::spatial_simulation_pointer(circuit_store_),
-        &circuit_store_.layout(), show_size_handles);
+    std::visit(overload(
+                   [&](const NonInteractiveState& _) {
+                       circuit_widget::render_to_context(context,
+                                                         render_surface_.render_config(),
+                                                         circuit_store_.layout());
+                   },
+                   [&](const EditingState& _) {
+                       bool show_size_handles = false;
+
+                       circuit_widget::render_to_context(
+                           context, render_surface_.render_config(),
+                           circuit_store_.editable_circuit(), show_size_handles);
+                   },
+                   [&](const SimulationState& _) {
+                       circuit_widget::render_to_context(
+                           context, render_surface_.render_config(),
+                           circuit_store_.interactive_simulation().spatial_simulation());
+                   }),
+               circuit_state());
 
     render_surface_.end_paint(*this);
     simulation_image_update_pending_ = false;

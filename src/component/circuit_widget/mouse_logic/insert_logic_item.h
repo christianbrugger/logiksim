@@ -1,0 +1,14 @@
+#ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_INSERT_LOGIC_ITEM_H
+#define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_INSERT_LOGIC_ITEM_H
+
+namespace logicsim {
+
+namespace circuit_widget {
+
+//
+
+}
+
+}
+
+#endif

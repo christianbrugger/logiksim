@@ -152,6 +152,10 @@ auto EditableCircuit::split_before_insert(selection_id_t selection_id) -> void {
         layout_, get_sender(), std::move(split_points), selection(selection_id));
 }
 
+auto EditableCircuit::selection_count() const -> std::size_t {
+    return selection_store_.size();
+}
+
 auto EditableCircuit::selection(selection_id_t selection_id) -> Selection& {
     return selection_store_.at(selection_id);
 }
@@ -191,6 +195,10 @@ auto EditableCircuit::apply_all_visible_selection_operations() -> void {
 
 auto EditableCircuit::visible_selection() const -> const Selection& {
     return selection_builder_.selection(layout_, layout_index_);
+}
+
+auto EditableCircuit::visible_selection_empty() const -> bool {
+    return selection_builder_.empty();
 }
 
 auto EditableCircuit::caches() const -> const LayoutIndex& {

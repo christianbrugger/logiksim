@@ -102,23 +102,29 @@ auto set_view_config_device_scale(RenderSurface& render_surface, double device_s
 
 auto set_optimal_render_attributes(QWidget& widget) -> void;
 
+
+
 /**
- * @brief: Renders the circuit or simulation.
- *
- * Only one object is rendered with the following priority:
- *     1) editable_circuit
- *     2) spatial_simulation
- *     3) layout
- *
- * Note that handles are only rendered when editable_circuit is provided,
- * as it requires a selection.
- *
- * Note that caches are only rendered if editable_circuit is provided.
+ * @brief: Renders the given layout.
  */
+// TODO move to renderer folder
 auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
-                       const EditableCircuit* editable_circuit,
-                       const SpatialSimulation* spatial_simulation, const Layout* layout,
-                       bool show_size_handles) -> void;
+                       const Layout layout) -> void;
+
+/**
+ * @brief: Renders the editable circuit.
+ */
+// TODO move to renderer folder
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
+                       const EditableCircuit editable_circuit, bool show_size_handles)
+    -> void;
+
+/**
+ * @brief: Renders the spatial simulation.
+ */
+// TODO move to renderer folder
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
+                       const SpatialSimulation spatial_simulation) -> void;
 
 }  // namespace circuit_widget
 

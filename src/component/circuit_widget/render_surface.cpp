@@ -207,69 +207,95 @@ auto set_optimal_render_attributes(QWidget& widget) -> void {
     widget.setAttribute(Qt::WA_NoSystemBackground, true);
 }
 
-// TODO move to render folder
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
-                       const EditableCircuit* editable_circuit,
-                       const SpatialSimulation* spatial_simulation, const Layout* layout,
-                       bool show_size_handles) -> void {
+namespace {
+
+auto render_circuit_background(CircuitContext& context) {
     // print_fmt("Layers: {:.3f} MB\n", context_.layers.allocated_size() / 1024. / 1024.);
-    // print_fmt("Layout: {:.3f} MB\n",
-    //           editable_circuit_.value().layout().allocated_size() / 1024. / 1024.);
-    // print_fmt("Caches: {:.3f} MB\n",
-    //           editable_circuit_.value().caches().allocated_size() / 1024. / 1024.);
 
     render_background(context.ctx);
+}
 
-    if (render_config.show_circuit) {
-        if (editable_circuit) {
-            const auto& target_layout = editable_circuit->layout();
-            const auto& selection = editable_circuit->visible_selection();
-
-            render_layout(context, target_layout, selection);
-
-            render_setting_handle(context.ctx, target_layout, selection);
-
-            if (show_size_handles) {
-                print("not implemented");
-            }
-
-            // if (show_size_handles) {
-            //     render_size_handles(context_.ctx, target_layout, selection);
-            // }
-
-            // if (!(mouse_logic_ &&
-            //       std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value())))
-            //       {
-            //     render_size_handles(context_.ctx, layout, selection);
-            // }
-        }
-
-        else if (spatial_simulation) {
-            render_simulation(context, spatial_simulation->layout(),
-                              SimulationView {*spatial_simulation});
-        }
-
-        else if (layout) {
-            render_layout(context, *layout);
-        }
-    }
-
-    if (render_config.show_collision_cache && editable_circuit) {
-        render_editable_circuit_collision_cache(context.ctx, *editable_circuit);
-    }
-    if (render_config.show_connection_cache && editable_circuit) {
-        render_editable_circuit_connection_cache(context.ctx, *editable_circuit);
-    }
-    if (render_config.show_selection_cache && editable_circuit) {
-        render_editable_circuit_selection_cache(context.ctx, *editable_circuit);
-    }
-
+auto render_circuit_overlay(CircuitContext& context) {
     // context_.ctx.bl_ctx.setFillStyle(BLRgba32(defaults::color_black.value));
     // context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 1, 100});
     // context_.ctx.bl_ctx.fillRect(BLRect {context_.ctx.bl_image.width() - 1.0, 0, 1,
     // 100}); context_.ctx.bl_ctx.fillRect(BLRect {0, 0, 100, 1});
     // context_.ctx.bl_ctx.fillRect(
     //     BLRect {0, context_.ctx.bl_image.height() - 1.0, 100, 1});
+}
+
+}  // namespace
+
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
+                       const Layout layout) -> void {
+    render_circuit_background(context);
+
+    if (render_config.show_circuit) {
+        render_layout(context, layout);
+    }
+
+    render_circuit_overlay(context);
+}
+
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
+                       const EditableCircuit editable_circuit, bool show_size_handles)
+    -> void {
+    render_circuit_background(context);
+
+    // print_fmt("Layout: {:.3f} MB\n",
+    //           editable_circuit_.value().layout().allocated_size() / 1024. / 1024.);
+    // print_fmt("Circuit Caches: {:.3f} MB\n",
+    //           editable_circuit_.value().caches().allocated_size() / 1024. / 1024.);
+
+    if (render_config.show_circuit) {
+        // TODO don't pull out references
+        const auto& target_layout = editable_circuit.layout();
+        const auto& selection = editable_circuit.visible_selection();
+
+        render_layout(context, target_layout, selection);
+
+        render_setting_handle(context.ctx, target_layout, selection);
+
+        if (show_size_handles) {
+            print("not implemented");
+        }
+
+        // if (show_size_handles) {
+        //     render_size_handles(context_.ctx, target_layout, selection);
+        // }
+
+        // if (!(mouse_logic_ &&
+        //       std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value())))
+        //       {
+        //     render_size_handles(context_.ctx, layout, selection);
+        // }
+    }
+
+    
+    if (render_config.show_collision_cache) {
+        render_editable_circuit_collision_cache(context.ctx, editable_circuit);
+    }
+    if (render_config.show_connection_cache) {
+        render_editable_circuit_connection_cache(context.ctx, editable_circuit);
+    }
+    if (render_config.show_selection_cache) {
+        render_editable_circuit_selection_cache(context.ctx, editable_circuit);
+    }
+
+    render_circuit_overlay(context);
+}
+
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
+                       const SpatialSimulation spatial_simulation) -> void {
+    render_circuit_background(context);
+
+    if (render_config.show_circuit) {
+        // TODO Simulation view should contain layout, remove double reference
+        render_simulation(context, spatial_simulation.layout(),
+                          SimulationView {spatial_simulation});
+    }
+
+    render_circuit_overlay(context);
 }
 
 }  // namespace circuit_widget

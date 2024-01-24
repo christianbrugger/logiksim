@@ -37,8 +37,15 @@ auto generate_simulation(const EditableCircuit& editable_circuit,
     };
 }
 
+auto generate_simulation(const CheckedEditableCircuit& checked_editable_circuit,
+                         const SimulationConfig& simulation_config)
+    -> InteractiveSimulation {
+    return generate_simulation(checked_editable_circuit.editable_circuit(),
+                               simulation_config);
+}
+
 auto has_same_config(const InteractiveSimulation& interactive_simulation,
-                 const SimulationConfig& simulation_config) -> bool {
+                     const SimulationConfig& simulation_config) -> bool {
     return interactive_simulation.wire_delay_per_distance() ==
                simulation_config.wire_delay_per_distance() &&
            interactive_simulation.simulation_time_rate() ==
@@ -60,10 +67,11 @@ auto CircuitStore::set_circuit_state(CircuitWidgetState new_state) -> void {
 
     if (is_simulation(new_state)) {
         interactive_simulation_ =
-            generate_simulation(editable_circuit_, simulation_config_);
+            generate_simulation(checked_editable_circuit_, simulation_config_);
     }
 
     // update
+    checked_editable_circuit_.set_circuit_state(new_state);
     circuit_state_ = new_state;
 
     Expects(class_invariant_holds());
@@ -98,14 +106,14 @@ auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__,
     -> void {
     Expects(class_invariant_holds());
 
-    editable_circuit_ = std::move(editable_circuit__);
+    checked_editable_circuit_.set_editable_circuit(std::move(editable_circuit__));
     if (new_config) {
         simulation_config_ = *new_config;
     }
 
     if (is_simulation(circuit_state_)) {
         interactive_simulation_ =
-            generate_simulation(editable_circuit_, simulation_config_);
+            generate_simulation(checked_editable_circuit_, simulation_config_);
     }
 
     if (const auto count = layout().size(); 0 < count && count < 30) {
@@ -130,7 +138,7 @@ auto CircuitStore::simulation_config() const -> SimulationConfig {
 auto CircuitStore::layout() const -> const Layout& {
     Expects(class_invariant_holds());
 
-    return editable_circuit_.layout();
+    return checked_editable_circuit_.editable_circuit().layout();
 }
 
 auto CircuitStore::editable_circuit() -> EditableCircuit& {
@@ -139,7 +147,7 @@ auto CircuitStore::editable_circuit() -> EditableCircuit& {
     if (!is_editing_state(circuit_state_)) {
         throw std::runtime_error("Editable Circuit is only available in editing state");
     }
-    return editable_circuit_;
+    return checked_editable_circuit_.editable_circuit();
 }
 
 auto CircuitStore::editable_circuit() const -> const EditableCircuit& {
@@ -148,7 +156,7 @@ auto CircuitStore::editable_circuit() const -> const EditableCircuit& {
     if (!is_editing_state(circuit_state_)) {
         throw std::runtime_error("Editable Circuit is only available in editing state");
     }
-    return editable_circuit_;
+    return checked_editable_circuit_.editable_circuit();
 }
 
 auto CircuitStore::interactive_simulation() -> InteractiveSimulation& {
@@ -180,10 +188,16 @@ auto CircuitStore::simulation_events_per_second() const -> std::optional<double>
 
 auto circuit_widget::CircuitStore::class_invariant_holds() const -> bool {
     Expects(is_simulation(circuit_state_) == interactive_simulation_.has_value());
+
+    // this is expensive, so we only check in Debug
     assert(!is_simulation(circuit_state_) ||
-           interactive_simulation_.value().layout() == editable_circuit_.layout());
+           interactive_simulation_.value().layout() ==
+               checked_editable_circuit_.editable_circuit().layout());
+
     Expects(!is_simulation(circuit_state_) ||
             has_same_config(interactive_simulation_.value(), simulation_config_));
+
+    Expects(circuit_state_ == checked_editable_circuit_.circuit_state());
 
     return true;
 }

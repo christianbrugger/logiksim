@@ -84,6 +84,7 @@ class EditableCircuit {
     auto split_before_insert(selection_id_t selection_id) -> void;
 
     // selections
+    [[nodiscard]] auto selection_count() const -> std::size_t;
     [[nodiscard]] auto selection(selection_id_t selection_id) -> Selection&;
     [[nodiscard]] auto selection(selection_id_t selection_id) const -> const Selection&;
     [[nodiscard]] auto create_selection() -> selection_id_t;
@@ -96,6 +97,7 @@ class EditableCircuit {
     auto update_last_visible_selection_rect(rect_fine_t rect) -> void;
     auto apply_all_visible_selection_operations() -> void;
     [[nodiscard]] auto visible_selection() const -> const Selection&;
+    [[nodiscard]] auto visible_selection_empty() const -> bool;
 
     // TODO don't give read access to cache
     [[nodiscard]] auto caches() const -> const LayoutIndex&;
