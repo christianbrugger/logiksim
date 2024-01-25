@@ -21,7 +21,7 @@ auto empty_or_in_editing(const std::optional<EditingMouseLogic>& mouse_logic,
 
 auto editing_circuit_valid(const EditableCircuit* editable_circuit,
                            const CircuitWidgetState& circuit_state) {
-   return is_editing_state(circuit_state) == (editable_circuit != nullptr);
+    return is_editing_state(circuit_state) == (editable_circuit != nullptr);
 }
 
 }  // namespace
@@ -45,8 +45,7 @@ auto EditingLogicManager::set_circuit_state(CircuitWidgetState new_state,
     Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
 }
 
-auto EditingLogicManager::circuit_state() const
-    -> CircuitWidgetState {
+auto EditingLogicManager::circuit_state() const -> CircuitWidgetState {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
     return circuit_state_;
 }
@@ -90,7 +89,7 @@ auto EditingLogicManager::is_editing_active() const -> bool {
 namespace {
 
 auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
-                             EditingState editing_state)
+                                EditingState editing_state)
     -> std::optional<circuit_widget::EditingMouseLogic> {
     // insert logic items
     if (is_insert_logic_item_state(editing_state)) {
@@ -101,8 +100,7 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
 
     // insert wires
     if (is_insert_wire_state(editing_state)) {
-        print("TODO insert wire mouse logic");
-        return std::nullopt;
+        return circuit_widget::InsertWireLogic {};
     }
 
     // selection
@@ -116,9 +114,10 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
 
 }  // namespace
 
-auto EditingLogicManager::mouse_press(
-    QPointF position, const ViewConfig& view_config, Qt::MouseButton button,
-    EditableCircuit* editable_circuit_) -> ManagerResult {
+auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_config,
+                                      Qt::MouseButton button,
+                                      EditableCircuit* editable_circuit_)
+    -> ManagerResult {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
 
@@ -137,8 +136,11 @@ auto EditingLogicManager::mouse_press(
             const auto grid_position = to_grid(position, view_config);
 
             std::visit(overload {[&](InsertLogicItemLogic& arg) {
-                           arg.mouse_press(editable_circuit, grid_position);
-                       }},
+                                     arg.mouse_press(editable_circuit, grid_position);
+                                 },
+                                 [&](InsertWireLogic& arg) {
+                                     arg.mouse_press(editable_circuit, grid_position);
+                                 }},
                        mouse_logic_.value());
 
             Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
@@ -150,8 +152,8 @@ auto EditingLogicManager::mouse_press(
     return ManagerResult::done;
 }
 
-auto EditingLogicManager::mouse_move(
-    QPointF position, const ViewConfig& view_config, EditableCircuit* editable_circuit_)
+auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_config,
+                                     EditableCircuit* editable_circuit_)
     -> ManagerResult {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
@@ -165,8 +167,11 @@ auto EditingLogicManager::mouse_move(
         const auto grid_position = to_grid(position, view_config);
 
         std::visit(overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
-                       arg.mouse_move(editable_circuit, grid_position);
-                   }},
+                                 arg.mouse_move(editable_circuit, grid_position);
+                             },
+                             [&](circuit_widget::InsertWireLogic& arg) {
+                                 arg.mouse_move(editable_circuit, grid_position);
+                             }},
                    mouse_logic_.value());
 
         Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
@@ -177,8 +182,8 @@ auto EditingLogicManager::mouse_move(
     return ManagerResult::done;
 }
 
-auto EditingLogicManager::mouse_release(
-    QPointF position, const ViewConfig& view_config, EditableCircuit* editable_circuit_)
+auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view_config,
+                                        EditableCircuit* editable_circuit_)
     -> ManagerResult {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
@@ -186,14 +191,17 @@ auto EditingLogicManager::mouse_release(
     if (!editable_circuit_) {
         return ManagerResult::done;
     }
-    auto &editable_circuit = *editable_circuit_;
+    auto& editable_circuit = *editable_circuit_;
 
     if (mouse_logic_) {
         const auto grid_position = to_grid(position, view_config);
 
         std::visit(overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
-                       arg.mouse_release(editable_circuit, grid_position);
-                   }},
+                                 arg.mouse_release(editable_circuit, grid_position);
+                             },
+                             [&](circuit_widget::InsertWireLogic& arg) {
+                                 arg.mouse_release(editable_circuit, grid_position);
+                             }},
                    mouse_logic_.value());
 
         finalize_editing(editable_circuit_);

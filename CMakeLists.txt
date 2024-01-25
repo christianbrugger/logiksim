@@ -47,6 +47,7 @@ set(LS_CORE_SOURCES
     src/component/circuit_widget/mouse_logic/editing_logic_manager.cpp
     src/component/circuit_widget/mouse_logic/editing_logic_variant.cpp
     src/component/circuit_widget/mouse_logic/insert_logic_item.cpp
+    src/component/circuit_widget/mouse_logic/insert_wire.cpp
     src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
     src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
     src/component/circuit_widget/checked_editable_circuit.cpp

@@ -105,8 +105,15 @@ auto EditableCircuit::move_or_delete(selection_id_t selection_id, int delta_x,
 
 auto EditableCircuit::change_insertion_mode(selection_id_t selection_id,
                                             InsertionMode new_insertion_mode) -> void {
-    editable_circuit::change_insertion_mode(selection(selection_id), get_state(),
+    // TODO exception safety && tracked-selection
+    const auto temp_id = create_selection();
+    auto& temp_selection = selection(temp_id);
+    temp_selection = selection(selection_id);
+
+    editable_circuit::change_insertion_mode(temp_selection, get_state(),
                                             new_insertion_mode);
+
+    destroy_selection(temp_id);
 }
 
 auto EditableCircuit::move_unchecked(selection_id_t selection_id, int delta_x,
