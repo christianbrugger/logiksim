@@ -26,19 +26,28 @@ enum class ManagerResult {
  *
  * Class-invariants:
  *   + editing_mouse_logic_ is empty when not in editing state
+ *
+ * Note functions require valid editable_circuit in editing-mode and nullptr otherwise.
  */
 class EditingLogicManager {
    public:
-    auto set_circuit_state(CircuitWidgetState new_state) -> void;
+    auto set_circuit_state(CircuitWidgetState new_state,
+                           EditableCircuit* editable_circuit) -> void;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
 
-    auto mouse_press(QPointF position, const ViewConfig& view_config,
-                     Qt::MouseButton button, EditableCircuit& editable_circuit)
+    auto finalize_editing(EditableCircuit* editable_circuit_)
         -> ManagerResult;
-    auto mouse_move(QPointF position, const ViewConfig& view_config,
-                    EditableCircuit& editable_circuit) -> ManagerResult;
-    auto mouse_release(QPointF position, const ViewConfig& view_config,
-                       EditableCircuit& editable_circuit) -> ManagerResult;
+
+    [[nodiscard]] auto is_editing_active() const -> bool;
+
+   public:
+    [[nodiscard]] auto mouse_press(QPointF position, const ViewConfig& view_config,
+                                   Qt::MouseButton button,
+                                   EditableCircuit* editable_circuit) -> ManagerResult;
+    [[nodiscard]] auto mouse_move(QPointF position, const ViewConfig& view_config,
+                                  EditableCircuit* editable_circuit) -> ManagerResult;
+    [[nodiscard]] auto mouse_release(QPointF position, const ViewConfig& view_config,
+                                     EditableCircuit* editable_circuit) -> ManagerResult;
 
    private:
     CircuitWidgetState circuit_state_ {};

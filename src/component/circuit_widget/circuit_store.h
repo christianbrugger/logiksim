@@ -112,6 +112,9 @@ class CircuitStore {
 // Free functions
 //
 
+[[nodiscard]] auto editable_circuit_pointer(CircuitStore &store)
+    -> EditableCircuit *;
+
 [[nodiscard]] auto editable_circuit_pointer(const CircuitStore &store)
     -> const EditableCircuit *;
 

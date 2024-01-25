@@ -19,13 +19,24 @@ auto empty_or_in_editing(const std::optional<EditingMouseLogic>& mouse_logic,
     return !mouse_logic.has_value() || is_editing_state(circuit_state);
 }
 
+auto editing_circuit_valid(const EditableCircuit* editable_circuit,
+                           const CircuitWidgetState& circuit_state) {
+   return is_editing_state(circuit_state) == (editable_circuit != nullptr);
+}
+
 }  // namespace
 
-auto EditingLogicManager::set_circuit_state(CircuitWidgetState new_state) -> void {
+auto EditingLogicManager::set_circuit_state(CircuitWidgetState new_state,
+                                            EditableCircuit* editable_circuit_) -> void {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
 
     if (new_state == circuit_state_) {
         return;
+    }
+
+    if (!is_editing_state(new_state)) {
+        finalize_editing(editable_circuit_);
     }
 
     // update
@@ -34,15 +45,51 @@ auto EditingLogicManager::set_circuit_state(CircuitWidgetState new_state) -> voi
     Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
 }
 
-auto logicsim::circuit_widget::EditingLogicManager::circuit_state() const
+auto EditingLogicManager::circuit_state() const
     -> CircuitWidgetState {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
     return circuit_state_;
 }
 
+auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
+    -> ManagerResult {
+    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
+
+    if (!editable_circuit_) {
+        Ensures(!mouse_logic_);
+        Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+        return ManagerResult::done;
+    }
+    auto& editable_circuit = *editable_circuit_;
+
+    if (mouse_logic_) {
+        std::visit(
+            [&](circuit_widget::EditingLogicInterface& arg) {
+                arg.finalize(editable_circuit);
+            },
+            mouse_logic_.value());
+        mouse_logic_.reset();
+
+        Ensures(!mouse_logic_);
+        Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+        return ManagerResult::require_update;
+    }
+
+    Ensures(!mouse_logic_);
+    Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+    return ManagerResult::done;
+}
+
+auto EditingLogicManager::is_editing_active() const -> bool {
+    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+
+    return mouse_logic_.has_value();
+}
+
 namespace {
 
-auto get_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
+auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
                              EditingState editing_state)
     -> std::optional<circuit_widget::EditingMouseLogic> {
     // insert logic items
@@ -69,14 +116,20 @@ auto get_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
 
 }  // namespace
 
-auto logicsim::circuit_widget::EditingLogicManager::mouse_press(
+auto EditingLogicManager::mouse_press(
     QPointF position, const ViewConfig& view_config, Qt::MouseButton button,
-    EditableCircuit& editable_circuit) -> ManagerResult {
+    EditableCircuit* editable_circuit_) -> ManagerResult {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
+
+    if (!editable_circuit_) {
+        return ManagerResult::done;
+    }
+    auto& editable_circuit = *editable_circuit_;
 
     if (button == Qt::LeftButton) {
-        if (!mouse_logic_ && is_editing_state(circuit_state_)) {
-            mouse_logic_ = get_editing_mouse_logic(
+        if (!mouse_logic_) {
+            mouse_logic_ = create_editing_mouse_logic(
                 position, view_config, std::get<EditingState>(circuit_state_));
         }
 
@@ -97,10 +150,16 @@ auto logicsim::circuit_widget::EditingLogicManager::mouse_press(
     return ManagerResult::done;
 }
 
-auto logicsim::circuit_widget::EditingLogicManager::mouse_move(
-    QPointF position, const ViewConfig& view_config, EditableCircuit& editable_circuit)
+auto EditingLogicManager::mouse_move(
+    QPointF position, const ViewConfig& view_config, EditableCircuit* editable_circuit_)
     -> ManagerResult {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
+
+    if (!editable_circuit_) {
+        return ManagerResult::done;
+    }
+    auto& editable_circuit = *editable_circuit_;
 
     if (mouse_logic_) {
         const auto grid_position = to_grid(position, view_config);
@@ -118,10 +177,16 @@ auto logicsim::circuit_widget::EditingLogicManager::mouse_move(
     return ManagerResult::done;
 }
 
-auto logicsim::circuit_widget::EditingLogicManager::mouse_release(
-    QPointF position, const ViewConfig& view_config, EditableCircuit& editable_circuit)
+auto EditingLogicManager::mouse_release(
+    QPointF position, const ViewConfig& view_config, EditableCircuit* editable_circuit_)
     -> ManagerResult {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
+
+    if (!editable_circuit_) {
+        return ManagerResult::done;
+    }
+    auto &editable_circuit = *editable_circuit_;
 
     if (mouse_logic_) {
         const auto grid_position = to_grid(position, view_config);
@@ -131,12 +196,7 @@ auto logicsim::circuit_widget::EditingLogicManager::mouse_release(
                    }},
                    mouse_logic_.value());
 
-        std::visit(
-            [&](circuit_widget::EditingLogicInterface& arg) {
-                arg.finalize(editable_circuit);
-            },
-            mouse_logic_.value());
-        mouse_logic_.reset();
+        finalize_editing(editable_circuit_);
 
         Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
         return ManagerResult::require_update;

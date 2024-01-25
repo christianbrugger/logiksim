@@ -206,6 +206,14 @@ auto circuit_widget::CircuitStore::class_invariant_holds() const -> bool {
 // Free Function
 //
 
+
+auto editable_circuit_pointer(CircuitStore& store) -> EditableCircuit* {
+    if (!is_editing_state(store.circuit_state())) {
+        return nullptr;
+    }
+    return &store.editable_circuit();
+}
+
 auto editable_circuit_pointer(const CircuitStore& store) -> const EditableCircuit* {
     if (!is_editing_state(store.circuit_state())) {
         return nullptr;

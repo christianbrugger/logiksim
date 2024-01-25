@@ -125,8 +125,9 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
         return;
     }
 
+    editing_logic_manager_.set_circuit_state(
+        new_state, circuit_widget::editable_circuit_pointer(circuit_store_));
     circuit_store_.set_circuit_state(new_state);
-    editing_logic_manager_.set_circuit_state(new_state);
 
     if (is_simulation(new_state)) {
         timer_run_simulation_.setInterval(0);
@@ -324,11 +325,23 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
         update();
     }
 
-    if (is_editing_state(circuit_state_) &&
-        editing_logic_manager_.mouse_press(position, render_surface_.view_config(),
-                                           event_->button(),
-                                           circuit_store_.editable_circuit()) ==
-            circuit_widget::ManagerResult::require_update) {
+    if (editing_logic_manager_.mouse_press(
+            position, render_surface_.view_config(), event_->button(),
+            circuit_widget::editable_circuit_pointer(circuit_store_)) ==
+        circuit_widget::ManagerResult::require_update) {
+        update();
+    }
+
+    if (event_->button() == Qt::RightButton && is_editing_state(circuit_state_)) {
+        if (editing_logic_manager_.is_editing_active()) {
+            editing_logic_manager_.finalize_editing(
+                circuit_widget::editable_circuit_pointer(circuit_store_));
+        } else {
+                circuit_store_.editable_circuit().clear_visible_selection();
+            if (is_inserting_state(circuit_state_)) {
+                    set_circuit_state(defaults::selection_state);
+            }
+        }
         update();
     }
 }
@@ -343,10 +356,10 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
         update();
     }
 
-    if (is_editing_state(circuit_state_) &&
-        editing_logic_manager_.mouse_move(position, render_surface_.view_config(),
-                                          circuit_store_.editable_circuit()) ==
-            circuit_widget::ManagerResult::require_update) {
+    if (editing_logic_manager_.mouse_move(
+            position, render_surface_.view_config(),
+            circuit_widget::editable_circuit_pointer(circuit_store_)) ==
+        circuit_widget::ManagerResult::require_update) {
         update();
     }
 }
@@ -362,10 +375,10 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
         update();
     }
 
-    if (is_editing_state(circuit_state_) &&
-        editing_logic_manager_.mouse_release(position, render_surface_.view_config(),
-                                             circuit_store_.editable_circuit()) ==
-            circuit_widget::ManagerResult::require_update) {
+    if (editing_logic_manager_.mouse_release(
+            position, render_surface_.view_config(),
+            circuit_widget::editable_circuit_pointer(circuit_store_)) ==
+        circuit_widget::ManagerResult::require_update) {
         update();
     }
 }
