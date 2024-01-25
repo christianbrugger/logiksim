@@ -42,7 +42,7 @@ class EditingLogicManager {
 
    public:
     [[nodiscard]] auto mouse_press(QPointF position, const ViewConfig& view_config,
-                                   Qt::KeyboardModifiers modifiers,
+                                   Qt::KeyboardModifiers modifiers, bool double_click,
                                    EditableCircuit* editable_circuit, QWidget& parent)
         -> ManagerResult;
     [[nodiscard]] auto mouse_move(QPointF position, const ViewConfig& view_config,

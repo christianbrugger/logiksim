@@ -2,6 +2,7 @@
 
 #include "algorithm/overload.h"
 #include "default_element_definition.h"
+#include "editable_circuit.h"
 #include "geometry/scene.h"
 #include "logging.h"
 #include "vocabulary/point.h"
@@ -89,8 +90,12 @@ auto EditingLogicManager::is_editing_active() const -> bool {
 namespace {
 
 auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
-                                EditingState editing_state, QWidget& parent)
+                                Qt::KeyboardModifiers modifiers,
+                                EditableCircuit& editable_circuit, QWidget& parent,
+                                EditingState editing_state)
     -> std::optional<circuit_widget::EditingMouseLogic> {
+    const auto grid_fine_position = to_grid_fine(position, view_config);
+
     // insert logic items
     if (is_insert_logic_item_state(editing_state)) {
         return circuit_widget::InsertLogicItemLogic {
@@ -105,6 +110,14 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
 
     // selection
     if (is_selection_state(editing_state)) {
+        if (editable_circuit.caches().selection_index().has_element(grid_fine_position)) {
+            if (modifiers == Qt::NoModifier) {
+                print("MouseMoveSelectionLogic");
+                return std::nullopt;
+            }
+
+            return circuit_widget::SelectionSingleLogic {};
+        }
         return circuit_widget::SelectionAreaLogic {parent};
     }
 
@@ -114,7 +127,7 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
 }  // namespace
 
 auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_config,
-                                      Qt::KeyboardModifiers modifiers,
+                                      Qt::KeyboardModifiers modifiers, bool double_click,
                                       EditableCircuit* editable_circuit_, QWidget& parent)
     -> ManagerResult {
     Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
@@ -126,12 +139,14 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
     auto& editable_circuit = *editable_circuit_;
 
     if (!mouse_logic_) {
-        mouse_logic_ = create_editing_mouse_logic(
-            position, view_config, std::get<EditingState>(circuit_state_), parent);
+        mouse_logic_ =
+            create_editing_mouse_logic(position, view_config, modifiers, editable_circuit,
+                                       parent, std::get<EditingState>(circuit_state_));
     }
 
     if (mouse_logic_) {
         const auto grid_position = to_grid(position, view_config);
+        const auto grid_fine_position = to_grid_fine(position, view_config);
 
         std::visit(overload {[&](InsertLogicItemLogic& arg) {
                                  arg.mouse_press(editable_circuit, grid_position);
@@ -142,6 +157,10 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
                              [&](SelectionAreaLogic& arg) {
                                  arg.mouse_press(editable_circuit, position, view_config,
                                                  modifiers);
+                             },
+                             [&](SelectionSingleLogic& arg) {
+                                 arg.mouse_press(editable_circuit, grid_fine_position,
+                                                 double_click);
                              }},
                    mouse_logic_.value());
 
@@ -166,6 +185,7 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
 
     if (mouse_logic_) {
         const auto grid_position = to_grid(position, view_config);
+        // const auto grid_fine_position = to_grid_fine(position, view_config);
 
         std::visit(overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
                                  arg.mouse_move(editable_circuit, grid_position);
@@ -175,7 +195,8 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
                              },
                              [&](circuit_widget::SelectionAreaLogic& arg) {
                                  arg.mouse_move(editable_circuit, position, view_config);
-                             }},
+                             },
+                             [&](circuit_widget::SelectionSingleLogic&) {}},
                    mouse_logic_.value());
 
         Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
@@ -199,6 +220,7 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
 
     if (mouse_logic_) {
         const auto grid_position = to_grid(position, view_config);
+        // const auto grid_fine_position = to_grid_fine(position, view_config);
 
         std::visit(overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
                                  arg.mouse_release(editable_circuit, grid_position);
@@ -209,7 +231,8 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
                              [&](circuit_widget::SelectionAreaLogic& arg) {
                                  arg.mouse_release(editable_circuit, position,
                                                    view_config);
-                             }},
+                             },
+                             [&](circuit_widget::SelectionSingleLogic&) {}},
                    mouse_logic_.value());
 
         finalize_editing(editable_circuit_);

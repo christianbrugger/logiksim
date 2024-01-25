@@ -72,9 +72,10 @@ CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {
     setFocusPolicy(Qt::StrongFocus);
 
     // initialize components
-    render_surface_.set_render_config(render_config_);
     circuit_store_.set_simulation_config(simulation_config_);
     circuit_store_.set_circuit_state(circuit_state_);
+    render_surface_.set_render_config(render_config_);
+    // editing_logic_manager_.set_circuit_state(circuit_state_);
 
     // timer benchmark rendering
     connect(&timer_benchmark_render_, &QTimer::timeout, this,
@@ -336,9 +337,11 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
     }
 
     if (event_->button() == Qt::LeftButton) {
+        const auto double_click = event_->type() == QEvent::MouseButtonDblClick;
+
         if (editing_logic_manager_.mouse_press(
                 position, render_surface_.view_config(), event_->modifiers(),
-                circuit_widget::editable_circuit_pointer(circuit_store_),
+                double_click, circuit_widget::editable_circuit_pointer(circuit_store_),
                 *this) == circuit_widget::ManagerResult::require_update) {
             update();
         }
