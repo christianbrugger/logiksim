@@ -136,7 +136,7 @@ class CircuitWidget : public CircuitWidgetBase {
     circuit_widget::CircuitStore circuit_store_ {};
     circuit_widget::RenderSurface render_surface_ {};
     circuit_widget::MouseDragLogic mouse_drag_logic_ {};
-    circuit_widget::EditingLogicManager editing_logic_manager_ {};
+    circuit_widget::EditingLogicManager editing_logic_manager_;
 
     QTimer timer_benchmark_render_ {};
     QTimer timer_run_simulation_ {};

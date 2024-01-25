@@ -36,9 +36,6 @@ auto to_rect_fine(QRect qrect, const ViewConfig& view_config) -> rect_fine_t {
 
 }  // namespace
 
-SelectionAreaLogic::SelectionAreaLogic(QWidget& parent)
-    : rubber_band_ {new QRubberBand {QRubberBand::Rectangle, &parent}} {}
-
 auto SelectionAreaLogic::mouse_press(EditableCircuit& editable_circuit, QPointF position,
                                      const ViewConfig& view_config,
                                      Qt::KeyboardModifiers modifiers) -> void {
@@ -61,18 +58,20 @@ auto SelectionAreaLogic::mouse_press(EditableCircuit& editable_circuit, QPointF 
 }
 
 auto SelectionAreaLogic::mouse_move(EditableCircuit& editable_circuit, QPointF position,
-                                    const ViewConfig& view_config) -> void {
-    update_mouse_position(editable_circuit, position, view_config);
+                                    const ViewConfig& view_config,
+                                    QRubberBand& rubber_band) -> void {
+    update_mouse_position(editable_circuit, position, view_config, rubber_band);
 }
 
 auto SelectionAreaLogic::mouse_release(EditableCircuit& editable_circuit,
-                                       QPointF position, const ViewConfig& view_config)
-    -> void {
-    update_mouse_position(editable_circuit, position, view_config);
+                                       QPointF position, const ViewConfig& view_config,
+                                       QRubberBand& rubber_band) -> void {
+    update_mouse_position(editable_circuit, position, view_config, rubber_band);
     keep_last_selection_ = true;
 }
 
-auto SelectionAreaLogic::finalize(EditableCircuit& editable_circuit) -> void {
+auto SelectionAreaLogic::finalize(EditableCircuit& editable_circuit,
+                                  QRubberBand& rubber_band) -> void {
     if (!keep_last_selection_) {
         editable_circuit.try_pop_last_visible_selection_rect();
     }
@@ -80,16 +79,17 @@ auto SelectionAreaLogic::finalize(EditableCircuit& editable_circuit) -> void {
     // reset
     first_position_.reset();
     keep_last_selection_ = false;
-    rubber_band_->hide();
+    rubber_band.hide();
 }
 
 auto SelectionAreaLogic::update_mouse_position(EditableCircuit& editable_circuit,
                                                QPointF position,
-                                               const ViewConfig& view_config) -> void {
+                                               const ViewConfig& view_config,
+                                               QRubberBand& rubber_band) -> void {
     const auto q_rect = calculate_q_rect(first_position_, position, view_config);
 
-    rubber_band_->setGeometry(q_rect);
-    rubber_band_->show();
+    rubber_band.setGeometry(q_rect);
+    rubber_band.show();
 
     editable_circuit.try_update_last_visible_selection_rect(
         to_rect_fine(q_rect, view_config));

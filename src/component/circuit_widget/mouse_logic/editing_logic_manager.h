@@ -5,8 +5,8 @@
 #include "vocabulary/circuit_widget_state.h"
 
 #include <QPointF>
+#include <QRubberBand>
 #include <QWidget>
-#include <Qt>
 
 #include <optional>
 
@@ -32,6 +32,8 @@ enum class ManagerResult {
  */
 class EditingLogicManager {
    public:
+    EditingLogicManager(QWidget* parent);
+
     auto set_circuit_state(CircuitWidgetState new_state,
                            EditableCircuit* editable_circuit) -> void;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
@@ -51,6 +53,7 @@ class EditingLogicManager {
                                      EditableCircuit* editable_circuit) -> ManagerResult;
 
    private:
+    QRubberBand rubber_band_;
     CircuitWidgetState circuit_state_ {};
 
     std::optional<EditingMouseLogic> mouse_logic_ {};

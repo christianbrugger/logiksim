@@ -67,7 +67,8 @@ auto format(circuit_widget::UserAction action) -> std::string {
     std::terminate();
 }
 
-CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {
+CircuitWidget::CircuitWidget(QWidget* parent)
+    : CircuitWidgetBase(parent), editing_logic_manager_ {this} {
     // accept focus so key presses are forwarded to us
     setFocusPolicy(Qt::StrongFocus);
 
