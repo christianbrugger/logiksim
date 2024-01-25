@@ -29,6 +29,8 @@ class SelectionStore {
     using const_iterator = map_t::const_iterator;
 
    public:
+    SelectionStore();
+
     [[nodiscard]] auto format() const -> std::string;
     [[nodiscard]] auto allocated_size() const -> std::size_t;
     [[nodiscard]] auto operator==(const SelectionStore& other) const -> bool = default;
@@ -51,8 +53,9 @@ class SelectionStore {
     auto destroy(selection_id_t selection_id) -> void;
 
    private:
+    selection_id_t next_selection_key_;
+
     map_t selections_ {};
-    selection_id_t next_selection_key_ {0};
 };
 
 static_assert(std::regular<SelectionStore>);

@@ -1,15 +1,41 @@
 #include "component/editable_circuit/selection_store.h"
 
 #include "algorithm/fmt_join.h"
+#include "algorithm/uniform_int_distribution.h"
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "format/container.h"
 #include "format/std_type.h"
 
 #include <fmt/core.h>
 
+#include <limits>
+#include <random>
+
 namespace logicsim {
 
 namespace editable_circuit {
+
+namespace {
+
+/**
+ * @brief: Return random start value for selection ids.
+ *
+ * By setting a random start value for selection ids, it is very unlikely
+ * that two selection ids for two different editable-circuit with different
+ * selection stores are the same.
+ */
+auto get_random_start_id() -> selection_id_t {
+    constexpr auto max_value = std::numeric_limits<int32_t>::max();
+
+    auto rd = std::random_device {};
+    auto dist = uint_distribution(int64_t {0}, int64_t {max_value});
+
+    return selection_id_t {dist(rd)};
+}
+
+}  // namespace
+
+SelectionStore::SelectionStore() : next_selection_key_ {get_random_start_id()} {}
 
 auto SelectionStore::format() const -> std::string {
     const auto item_str = fmt_join(",\n", selections_.values());
