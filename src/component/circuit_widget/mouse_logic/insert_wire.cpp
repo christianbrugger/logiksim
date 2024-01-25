@@ -2,7 +2,6 @@
 
 #include "editable_circuit.h"
 #include "geometry/orientation.h"
-#include "logging.h"
 #include "vocabulary/insertion_mode.h"
 
 namespace logicsim {
@@ -16,7 +15,6 @@ auto remove_and_insert(EditableCircuit& editable_circuit, selection_id_t selecti
                        std::optional<LineInsertionType> direction,
                        std::optional<point_t> position, InsertionMode mode)
     -> selection_id_t {
-    print(selection_id);
     save_delete_all(editable_circuit, selection_id);
 
     if (!editable_circuit.selection_exists(selection_id)) {

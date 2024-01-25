@@ -95,7 +95,8 @@ class EditableCircuit {
     auto set_visible_selection(Selection selection) -> void;
     auto clear_visible_selection() -> void;
     auto add_visible_selection_rect(SelectionFunction function, rect_fine_t rect) -> void;
-    auto update_last_visible_selection_rect(rect_fine_t rect) -> void;
+    auto try_pop_last_visible_selection_rect() -> bool;
+    auto try_update_last_visible_selection_rect(rect_fine_t rect) -> bool;
     auto apply_all_visible_selection_operations() -> void;
     [[nodiscard]] auto visible_selection() const -> const Selection&;
     [[nodiscard]] auto visible_selection_empty() const -> bool;

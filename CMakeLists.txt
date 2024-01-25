@@ -50,6 +50,7 @@ set(LS_CORE_SOURCES
     src/component/circuit_widget/mouse_logic/insert_wire.cpp
     src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
     src/component/circuit_widget/mouse_logic/mouse_wheel_logic.cpp
+    src/component/circuit_widget/mouse_logic/selection_area.cpp
     src/component/circuit_widget/checked_editable_circuit.cpp
     src/component/circuit_widget/circuit_example.cpp
     src/component/circuit_widget/circuit_store.cpp

@@ -68,6 +68,9 @@ auto format(circuit_widget::UserAction action) -> std::string {
 }
 
 CircuitWidget::CircuitWidget(QWidget* parent) : CircuitWidgetBase(parent) {
+    // accept focus so key presses are forwarded to us
+    setFocusPolicy(Qt::StrongFocus);
+
     // initialize components
     render_surface_.set_render_config(render_config_);
     circuit_store_.set_simulation_config(simulation_config_);
@@ -125,10 +128,17 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
         return;
     }
 
+    // clear visible selection
+    if (is_selection_state(circuit_state_)) {
+        circuit_store_.editable_circuit().clear_visible_selection();
+    }
+
+    // sub components
     editing_logic_manager_.set_circuit_state(
         new_state, circuit_widget::editable_circuit_pointer(circuit_store_));
     circuit_store_.set_circuit_state(new_state);
 
+    // simulation
     if (is_simulation(new_state)) {
         timer_run_simulation_.setInterval(0);
         timer_run_simulation_.start();
@@ -325,23 +335,17 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
         update();
     }
 
-    if (editing_logic_manager_.mouse_press(
-            position, render_surface_.view_config(), event_->button(),
-            circuit_widget::editable_circuit_pointer(circuit_store_)) ==
-        circuit_widget::ManagerResult::require_update) {
-        update();
+    if (event_->button() == Qt::LeftButton) {
+        if (editing_logic_manager_.mouse_press(
+                position, render_surface_.view_config(), event_->modifiers(),
+                circuit_widget::editable_circuit_pointer(circuit_store_),
+                *this) == circuit_widget::ManagerResult::require_update) {
+            update();
+        }
     }
 
-    if (event_->button() == Qt::RightButton && is_editing_state(circuit_state_)) {
-        if (editing_logic_manager_.is_editing_active()) {
-            editing_logic_manager_.finalize_editing(
-                circuit_widget::editable_circuit_pointer(circuit_store_));
-        } else {
-                circuit_store_.editable_circuit().clear_visible_selection();
-            if (is_inserting_state(circuit_state_)) {
-                    set_circuit_state(defaults::selection_state);
-            }
-        }
+    if (event_->button() == Qt::RightButton) {
+        abort_current_action();
         update();
     }
 }
@@ -356,11 +360,13 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
         update();
     }
 
-    if (editing_logic_manager_.mouse_move(
-            position, render_surface_.view_config(),
-            circuit_widget::editable_circuit_pointer(circuit_store_)) ==
-        circuit_widget::ManagerResult::require_update) {
-        update();
+    if (event_->buttons() & Qt::LeftButton) {
+        if (editing_logic_manager_.mouse_move(
+                position, render_surface_.view_config(),
+                circuit_widget::editable_circuit_pointer(circuit_store_)) ==
+            circuit_widget::ManagerResult::require_update) {
+            update();
+        }
     }
 }
 
@@ -375,11 +381,13 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
         update();
     }
 
-    if (editing_logic_manager_.mouse_release(
-            position, render_surface_.view_config(),
-            circuit_widget::editable_circuit_pointer(circuit_store_)) ==
-        circuit_widget::ManagerResult::require_update) {
-        update();
+    if (event_->button() == Qt::LeftButton) {
+        if (editing_logic_manager_.mouse_release(
+                position, render_surface_.view_config(),
+                circuit_widget::editable_circuit_pointer(circuit_store_)) ==
+            circuit_widget::ManagerResult::require_update) {
+            update();
+        }
     }
 }
 
@@ -391,8 +399,42 @@ auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
     }
 }
 
-auto CircuitWidget::keyPressEvent(QKeyEvent* event_ [[maybe_unused]]) -> void {
-    return;
+auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
+    if (event_->isAutoRepeat()) {
+        QWidget::keyPressEvent(event_);
+    }
+
+    // Escape
+    else if (event_->key() == Qt::Key_Escape) {
+        abort_current_action();
+        update();
+    }
+
+    else {
+        QWidget::keyPressEvent(event_);
+    }
+}
+
+auto CircuitWidget::abort_current_action() -> void {
+    if (is_editing_state(circuit_state_)) {
+        // 1) cancel current editing
+        if (editing_logic_manager_.is_editing_active()) {
+            editing_logic_manager_.finalize_editing(
+                circuit_widget::editable_circuit_pointer(circuit_store_));
+        }
+
+        else {
+            // 2) cancel active selection
+            if (is_selection_state(circuit_state_)) {
+                circuit_store_.editable_circuit().clear_visible_selection();
+            }
+
+            // 3) switch to selection editing mode
+            if (is_inserting_state(circuit_state_)) {
+                set_circuit_state(defaults::selection_state);
+            }
+        }
+    }
 }
 
 //

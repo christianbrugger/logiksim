@@ -196,8 +196,20 @@ auto EditableCircuit::add_visible_selection_rect(SelectionFunction function,
     selection_builder_.add(function, rect);
 }
 
-auto EditableCircuit::update_last_visible_selection_rect(rect_fine_t rect) -> void {
+auto EditableCircuit::try_pop_last_visible_selection_rect() -> bool {
+    if (selection_builder_.operation_count() == size_t {0}) {
+        return false;
+    }
+    selection_builder_.pop_last();
+    return true;
+}
+
+auto EditableCircuit::try_update_last_visible_selection_rect(rect_fine_t rect) -> bool {
+    if (selection_builder_.operation_count() == size_t {0}) {
+        return false;
+    }
     selection_builder_.update_last(rect);
+    return true;
 }
 
 auto EditableCircuit::apply_all_visible_selection_operations() -> void {

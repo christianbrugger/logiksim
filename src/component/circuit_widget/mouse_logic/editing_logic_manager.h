@@ -5,6 +5,7 @@
 #include "vocabulary/circuit_widget_state.h"
 
 #include <QPointF>
+#include <QWidget>
 #include <Qt>
 
 #include <optional>
@@ -35,15 +36,15 @@ class EditingLogicManager {
                            EditableCircuit* editable_circuit) -> void;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
 
-    auto finalize_editing(EditableCircuit* editable_circuit_)
-        -> ManagerResult;
+    auto finalize_editing(EditableCircuit* editable_circuit_) -> ManagerResult;
 
     [[nodiscard]] auto is_editing_active() const -> bool;
 
    public:
     [[nodiscard]] auto mouse_press(QPointF position, const ViewConfig& view_config,
-                                   Qt::MouseButton button,
-                                   EditableCircuit* editable_circuit) -> ManagerResult;
+                                   Qt::KeyboardModifiers modifiers,
+                                   EditableCircuit* editable_circuit, QWidget& parent)
+        -> ManagerResult;
     [[nodiscard]] auto mouse_move(QPointF position, const ViewConfig& view_config,
                                   EditableCircuit* editable_circuit) -> ManagerResult;
     [[nodiscard]] auto mouse_release(QPointF position, const ViewConfig& view_config,

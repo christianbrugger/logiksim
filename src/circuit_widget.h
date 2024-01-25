@@ -125,6 +125,9 @@ class CircuitWidget : public CircuitWidgetBase {
     auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
+    auto abort_current_action() -> void;
+
+   private:
     // never modify these directly, always call set_* so signals are emmitted
     WidgetRenderConfig render_config_ {};
     SimulationConfig simulation_config_ {};

@@ -124,6 +124,10 @@ auto VisibleSelection::set_selection(Selection selection) -> void {
     initial_selection_.swap(selection);
 }
 
+auto VisibleSelection::operation_count() const -> size_t {
+    return operations_.size();
+}
+
 namespace {
 
 auto add_element_to_selection(logicitem_id_t logicitem_id, SelectionFunction function,

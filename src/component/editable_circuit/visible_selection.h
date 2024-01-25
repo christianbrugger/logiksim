@@ -52,6 +52,7 @@ class VisibleSelection {
     auto update_last(rect_fine_t rect) -> void;
     auto pop_last() -> void;
     auto set_selection(Selection selection) -> void;
+    [[nodiscard]] auto operation_count() const -> size_t;
 
     auto apply_all_operations(const Layout &layout, const LayoutIndex &layout_index)
         -> void;
