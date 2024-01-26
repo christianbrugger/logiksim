@@ -15,7 +15,11 @@ namespace circuit_widget {
 using EditingMouseLogic = std::variant<InsertLogicItemLogic, InsertWireLogic,
                                        SelectionAreaLogic, SelectionSingleLogic>;
 
-}
+[[nodiscard]] auto is_insert_logic_item_logic(const EditingMouseLogic& logic) -> bool;
+[[nodiscard]] auto is_insert_wire_logic(const EditingMouseLogic& logic) -> bool;
+[[nodiscard]] auto is_selecting_logic(const EditingMouseLogic& logic) -> bool;
+
+}  // namespace circuit_widget
 
 }  // namespace logicsim
 

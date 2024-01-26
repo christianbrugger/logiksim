@@ -15,9 +15,28 @@ namespace circuit_widget {
 
 namespace {
 
-auto empty_or_in_editing(const std::optional<EditingMouseLogic>& mouse_logic,
-                         const CircuitWidgetState& circuit_state) {
-    return !mouse_logic.has_value() || is_editing_state(circuit_state);
+auto mouse_logic_valid(const std::optional<EditingMouseLogic>& mouse_logic,
+                       const CircuitWidgetState& circuit_state) {
+    // return !mouse_logic.has_value() || is_editing_state(circuit_state);
+    if (!mouse_logic) {
+        return true;
+    }
+
+    if (!is_editing_state(circuit_state)) {
+        return false;
+    }
+    if (is_insert_logic_item_logic(*mouse_logic) !=
+        is_insert_logic_item_state(circuit_state)) {
+        return false;
+    }
+    if (is_insert_wire_logic(*mouse_logic) != is_insert_wire_state(circuit_state)) {
+        return false;
+    }
+    if (is_selecting_logic(*mouse_logic) != is_selection_state(circuit_state)) {
+        return false;
+    }
+
+    return true;
 }
 
 auto editing_circuit_valid(const EditableCircuit* editable_circuit,
@@ -34,13 +53,13 @@ auto rubber_band_valid(const QRubberBand& rubber_band,
 
 EditingLogicManager::EditingLogicManager(QWidget* parent)
     : rubber_band_ {QRubberBand::Rectangle, parent} {
-    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 }
 
 auto EditingLogicManager::set_circuit_state(CircuitWidgetState new_state,
                                             EditableCircuit* editable_circuit_) -> void {
-    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
@@ -55,12 +74,12 @@ auto EditingLogicManager::set_circuit_state(CircuitWidgetState new_state,
     // update
     circuit_state_ = new_state;
 
-    Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
     Ensures(rubber_band_valid(rubber_band_, circuit_state_));
 }
 
 auto EditingLogicManager::circuit_state() const -> CircuitWidgetState {
-    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
     return circuit_state_;
@@ -68,7 +87,7 @@ auto EditingLogicManager::circuit_state() const -> CircuitWidgetState {
 
 auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
     -> ManagerResult {
-    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
@@ -90,19 +109,19 @@ auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
         mouse_logic_.reset();
 
         Ensures(!mouse_logic_);
-        Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+        Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
         Ensures(rubber_band_valid(rubber_band_, circuit_state_));
         return ManagerResult::require_update;
     }
 
     Ensures(!mouse_logic_);
-    Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
     Ensures(rubber_band_valid(rubber_band_, circuit_state_));
     return ManagerResult::done;
 }
 
 auto EditingLogicManager::is_editing_active() const -> bool {
-    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
     return mouse_logic_.has_value();
@@ -151,7 +170,7 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
                                       Qt::KeyboardModifiers modifiers, bool double_click,
                                       EditableCircuit* editable_circuit_, QWidget& parent)
     -> ManagerResult {
-    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
@@ -186,12 +205,12 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
                              }},
                    mouse_logic_.value());
 
-        Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+        Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
         Ensures(rubber_band_valid(rubber_band_, circuit_state_));
         return ManagerResult::require_update;
     }
 
-    Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
     Ensures(rubber_band_valid(rubber_band_, circuit_state_));
     return ManagerResult::done;
 }
@@ -199,7 +218,7 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
 auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_config,
                                      EditableCircuit* editable_circuit_)
     -> ManagerResult {
-    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
@@ -225,12 +244,12 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
                              [&](circuit_widget::SelectionSingleLogic&) {}},
                    mouse_logic_.value());
 
-        Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+        Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
         Ensures(rubber_band_valid(rubber_band_, circuit_state_));
         return ManagerResult::require_update;
     }
 
-    Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
     Ensures(rubber_band_valid(rubber_band_, circuit_state_));
     return ManagerResult::done;
 }
@@ -238,7 +257,7 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
 auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view_config,
                                         EditableCircuit* editable_circuit_)
     -> ManagerResult {
-    Expects(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
@@ -266,12 +285,12 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
 
         finalize_editing(editable_circuit_);
 
-        Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+        Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
         Ensures(rubber_band_valid(rubber_band_, circuit_state_));
         return ManagerResult::require_update;
     }
 
-    Ensures(empty_or_in_editing(mouse_logic_, circuit_state_));
+    Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
     Ensures(rubber_band_valid(rubber_band_, circuit_state_));
     return ManagerResult::done;
 }
