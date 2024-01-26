@@ -4,7 +4,12 @@
 
 namespace logicsim {
 
-auto found_states_matches_insertion_mode(DisplayStateMap found_states,
+auto count_values(const DisplayStateMap& states) -> std::size_t {
+    return std::ranges::count_if(all_display_states,
+                                 [&](display_state_t state) { return states.at(state); });
+}
+
+auto found_states_matches_insertion_mode(const DisplayStateMap& found_states,
                                          InsertionMode insertion_mode) -> bool {
     return std::ranges::none_of(all_display_states, [&](const auto display_state) {
         return found_states.at(display_state) &&

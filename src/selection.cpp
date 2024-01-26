@@ -5,6 +5,7 @@
 #include "format/container.h"
 #include "format/std_type.h"
 #include "geometry/part_selections.h"
+#include "geometry/display_state_map.h"
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
@@ -116,6 +117,7 @@ auto display_states(const Selection &selection, const Layout &layout) -> Display
         }
     }
 
+    Ensures(selection.empty() == (count_values(result) == 0));
     return result;
 }
 

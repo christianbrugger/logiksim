@@ -232,11 +232,11 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         }
 
         case select_all: {
-            set_circuit_state(NonInteractiveState {});
             // TODO implement
             return;
         }
         case copy_selected: {
+            set_circuit_state(NonInteractiveState {});
             // TODO implement
             return;
         }
@@ -304,7 +304,7 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
     circuit_widget::set_optimal_render_attributes(*this);
 
     auto& context = render_surface_.begin_paint(backingStore(), get_geometry_info(*this));
-
+    
     std::visit(overload(
                    [&](const NonInteractiveState& _) {
                        circuit_widget::render_to_context(context,
@@ -324,6 +324,7 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
                            circuit_store_.interactive_simulation().spatial_simulation());
                    }),
                circuit_state());
+    
 
     render_surface_.end_paint(*this);
     simulation_image_update_pending_ = false;

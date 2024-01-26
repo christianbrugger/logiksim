@@ -6,10 +6,11 @@
 
 namespace logicsim {
 
-[[nodiscard]] auto found_states_matches_insertion_mode(DisplayStateMap found_states,
-                                                       InsertionMode insertion_mode)
-    -> bool;
+[[nodiscard]] auto count_values(const DisplayStateMap &states) -> std::size_t;
 
-}
+[[nodiscard]] auto found_states_matches_insertion_mode(
+    const DisplayStateMap &found_states, InsertionMode insertion_mode) -> bool;
+
+}  // namespace logicsim
 
 #endif

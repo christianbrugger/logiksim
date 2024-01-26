@@ -226,8 +226,8 @@ auto render_circuit_overlay(CircuitContext& context) {
 
 }  // namespace
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
-                       const Layout layout) -> void {
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render_config,
+                       const Layout &layout) -> void {
     render_circuit_background(context);
 
     if (render_config.show_circuit) {
@@ -237,8 +237,8 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_
     render_circuit_overlay(context);
 }
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
-                       const EditableCircuit editable_circuit, bool show_size_handles)
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render_config,
+                       const EditableCircuit &editable_circuit, bool show_size_handles)
     -> void {
     render_circuit_background(context);
 
@@ -285,8 +285,8 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_
     render_circuit_overlay(context);
 }
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
-                       const SpatialSimulation spatial_simulation) -> void {
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render_config,
+                       const SpatialSimulation &spatial_simulation) -> void {
     render_circuit_background(context);
 
     if (render_config.show_circuit) {

@@ -108,23 +108,23 @@ auto set_optimal_render_attributes(QWidget& widget) -> void;
  * @brief: Renders the given layout.
  */
 // TODO move to renderer folder
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
-                       const Layout layout) -> void;
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
+                       const Layout &layout) -> void;
 
 /**
  * @brief: Renders the editable circuit.
  */
 // TODO move to renderer folder
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
-                       const EditableCircuit editable_circuit, bool show_size_handles)
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
+                       const EditableCircuit &editable_circuit, bool show_size_handles)
     -> void;
 
 /**
  * @brief: Renders the spatial simulation.
  */
 // TODO move to renderer folder
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig render_config,
-                       const SpatialSimulation spatial_simulation) -> void;
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
+                       const SpatialSimulation &spatial_simulation) -> void;
 
 }  // namespace circuit_widget
 

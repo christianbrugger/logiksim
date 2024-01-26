@@ -57,7 +57,7 @@ SelectionMoveLogic::SelectionMoveLogic(const EditableCircuit& editable_circuit, 
     Expects(args.has_colliding == args.cross_points.has_value());
 
     // pre-conditions
-    assert(found_states_matches_insertion_mode(
+    Expects(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         insertion_mode_));
 }
@@ -184,8 +184,7 @@ auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,
 
 auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
                                               InsertionMode new_mode) -> void {
-    // Requires
-    assert(found_states_matches_insertion_mode(
+    Expects(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         insertion_mode_));
 
@@ -210,8 +209,7 @@ auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
             editable_circuit.visible_selection(), cross_points_);
     }
 
-    // Ensures
-    assert(found_states_matches_insertion_mode(
+    Ensures(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         insertion_mode_));
 }
