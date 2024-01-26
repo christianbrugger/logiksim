@@ -209,6 +209,8 @@ auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
             editable_circuit.visible_selection(), cross_points_);
     }
 
+    print(display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
+          insertion_mode_);
     Ensures(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         insertion_mode_));

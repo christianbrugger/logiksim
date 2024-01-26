@@ -3,9 +3,9 @@
 
 #include "layout_message_forward.h"
 #include "part_selection.h"
+#include "vocabulary/display_state_map.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/segment.h"
-#include "vocabulary/display_state_map.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -108,31 +108,6 @@ template <>
 auto std::swap(logicsim::Selection &a, logicsim::Selection &b) noexcept -> void;
 
 namespace logicsim {
-
-// [&](part_t part, bool selected){}
-template <typename Func>
-auto iter_parts(part_t full_part, const PartSelection &parts, Func func) {
-    offset_t pivot = full_part.begin;
-
-    for (const auto &part : parts) {
-        if (pivot != part.begin) {
-            func(part_t {pivot, part.begin}, false);
-        }
-        func(part, true);
-        pivot = part.end;
-    }
-
-    if (pivot != full_part.end) {
-        func(part_t {pivot, full_part.end}, false);
-    }
-}
-
-// [&](part_t part, bool selected){}
-// template <typename Func>
-// auto iter_parts(part_t full_part, std::span<const part_t> const_parts, Func func) {
-//    iter_parts(full_part,
-//               Selection::part_vector_t {const_parts.begin(), const_parts.end()}, func);
-//}
 
 auto add_segment(Selection &selection, segment_t segment, const Layout &layout) -> void;
 auto add_segment_tree(Selection &selection, wire_id_t wire_id, const Layout &layout)

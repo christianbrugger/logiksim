@@ -4,8 +4,8 @@
 #include "allocated_size/ankerl_unordered_dense.h"
 #include "format/container.h"
 #include "format/std_type.h"
-#include "geometry/part_selections.h"
 #include "geometry/display_state_map.h"
+#include "geometry/part_selections.h"
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
@@ -97,23 +97,23 @@ auto display_states(const Selection &selection, const Layout &layout) -> Display
 
         else if (!result.at(display_state_t::valid) ||
                  !result.at(display_state_t::normal)) {
-            const auto &valid_parts = layout.wires()
-                                          .segment_tree(pair.first.wire_id)
-                                          .valid_parts(pair.first.segment_index);
+            const auto &segment_tree = layout.wires().segment_tree(pair.first.wire_id);
+            const auto full_part = segment_tree.part(pair.first.segment_index);
 
-            merged_for_each(pair.second, valid_parts,
-                            [&](const part_t &a, const part_t &b) {
-                                if (a_overlaps_any_of_b(a, b)) {
-                                    result.at(display_state_t::valid) = true;
-                                }
-                                if (!a_inside_b(a, b)) {
-                                    result.at(display_state_t::normal) = true;
-                                }
-                            });
+            const auto &valid_parts = segment_tree.valid_parts(pair.first.segment_index);
+            const auto &selected_parts = pair.second;
 
-            if (!pair.second.empty() && valid_parts.empty()) {
-                result.at(display_state_t::normal) = true;
-            }
+            iter_overlapping_parts(
+                full_part, selected_parts, valid_parts,
+                [&](part_t selected_part, part_t valid_part, bool valid) {
+                    if (a_overlaps_any_of_b(selected_part, valid_part)) {
+                        if (valid) {
+                            result.at(display_state_t::valid) = true;
+                        } else {
+                            result.at(display_state_t::normal) = true;
+                        }
+                    }
+                });
         }
     }
 
