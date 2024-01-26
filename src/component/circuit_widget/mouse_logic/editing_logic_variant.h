@@ -4,6 +4,7 @@
 #include "component/circuit_widget/mouse_logic/insert_logic_item.h"
 #include "component/circuit_widget/mouse_logic/insert_wire.h"
 #include "component/circuit_widget/mouse_logic/selection_area.h"
+#include "component/circuit_widget/mouse_logic/selection_move.h"
 #include "component/circuit_widget/mouse_logic/selection_single.h"
 
 #include <variant>
@@ -12,8 +13,9 @@ namespace logicsim {
 
 namespace circuit_widget {
 
-using EditingMouseLogic = std::variant<InsertLogicItemLogic, InsertWireLogic,
-                                       SelectionAreaLogic, SelectionSingleLogic>;
+using EditingMouseLogic =
+    std::variant<InsertLogicItemLogic, InsertWireLogic, SelectionAreaLogic,
+                 SelectionSingleLogic, SelectionMoveLogic>;
 
 [[nodiscard]] auto is_insert_logic_item_logic(const EditingMouseLogic& logic) -> bool;
 [[nodiscard]] auto is_insert_wire_logic(const EditingMouseLogic& logic) -> bool;

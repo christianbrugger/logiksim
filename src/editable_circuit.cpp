@@ -90,39 +90,57 @@ auto EditableCircuit::add_line_segments(point_t p0, point_t p1,
 
 namespace {}  // namespace
 
-auto EditableCircuit::new_positions_representable(selection_id_t selection_id,
-                                                  int delta_x, int delta_y) const
-    -> bool {
-    return editable_circuit::new_positions_representable(selection(selection_id), layout_,
-                                                         delta_x, delta_y);
+auto EditableCircuit::new_positions_representable(const Selection& selection, int delta_x,
+                                                  int delta_y) const -> bool {
+    return editable_circuit::new_positions_representable(selection, layout_, delta_x,
+                                                         delta_y);
 }
 
 auto EditableCircuit::move_or_delete(selection_id_t selection_id, int delta_x,
                                      int delta_y) -> void {
-    editable_circuit::move_or_delete_elements(selection(selection_id), layout_,
-                                              get_sender(), delta_x, delta_y);
+    move_or_delete(selection(selection_id), delta_x, delta_y);
+}
+
+auto EditableCircuit::move_or_delete(const Selection& selection, int delta_x, int delta_y)
+    -> void {
+    const auto tracked_selection = ScopedSelection {*this};
+    auto& temp_selection = this->selection(tracked_selection.selection_id());
+    temp_selection = selection;
+
+    editable_circuit::move_or_delete_elements(temp_selection, layout_, get_sender(),
+                                              delta_x, delta_y);
+}
+
+auto EditableCircuit::change_insertion_mode(const Selection& selection,
+                                            InsertionMode new_insertion_mode) -> void {
+    const auto tracked_selection = ScopedSelection {*this};
+    auto& temp_selection = this->selection(tracked_selection.selection_id());
+    temp_selection = selection;
+
+    editable_circuit::change_insertion_mode(temp_selection, get_state(),
+                                            new_insertion_mode);
 }
 
 auto EditableCircuit::change_insertion_mode(selection_id_t selection_id,
                                             InsertionMode new_insertion_mode) -> void {
-    // TODO exception safety && tracked-selection
-    const auto temp_id = create_selection();
-    auto& temp_selection = selection(temp_id);
-    temp_selection = selection(selection_id);
-
-    editable_circuit::change_insertion_mode(temp_selection, get_state(),
-                                            new_insertion_mode);
-
-    destroy_selection(temp_id);
+    change_insertion_mode(selection(selection_id), new_insertion_mode);
 }
 
-auto EditableCircuit::move_unchecked(selection_id_t selection_id, int delta_x,
-                                     int delta_y) -> void {
-    editable_circuit::move_unchecked(selection(selection_id), layout_, delta_x, delta_y);
+auto EditableCircuit::move_unchecked(const Selection& selection, int delta_x, int delta_y)
+    -> void {
+    editable_circuit::move_unchecked(selection, layout_, delta_x, delta_y);
 }
 
 auto EditableCircuit::delete_all(selection_id_t selection_id) -> void {
     editable_circuit::delete_all(selection(selection_id), get_state());
+}
+
+auto EditableCircuit::delete_all(const Selection& selection) -> void {
+    const auto tracked_selection = ScopedSelection {*this};
+    auto& temp_selection = this->selection(tracked_selection.selection_id());
+    temp_selection = selection;
+
+    editable_circuit::delete_all(temp_selection, get_state());
 }
 
 auto EditableCircuit::toggle_inverter(point_t point) -> void {
@@ -139,10 +157,10 @@ auto EditableCircuit::set_attributes(logicitem_id_t logicitem_id,
 }
 
 auto EditableCircuit::regularize_temporary_selection(
-    selection_id_t selection_id, std::optional<std::vector<point_t>> true_cross_points)
+    const Selection& selection, std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t> {
-    return editable_circuit::regularize_temporary_selection(
-        layout_, get_sender(), selection(selection_id), true_cross_points);
+    return editable_circuit::regularize_temporary_selection(layout_, get_sender(),
+                                                            selection, true_cross_points);
 }
 
 auto EditableCircuit::capture_inserted_cross_points(const Selection& selection) const
@@ -152,11 +170,15 @@ auto EditableCircuit::capture_inserted_cross_points(const Selection& selection) 
 }
 
 auto EditableCircuit::split_before_insert(selection_id_t selection_id) -> void {
-    const auto split_points = editable_circuit::capture_new_splitpoints(
-        layout_, layout_index_, selection(selection_id));
+    split_before_insert(selection(selection_id));
+}
 
-    editable_circuit::split_temporary_segments(
-        layout_, get_sender(), std::move(split_points), selection(selection_id));
+auto EditableCircuit::split_before_insert(const Selection& selection) -> void {
+    const auto split_points =
+        editable_circuit::capture_new_splitpoints(layout_, layout_index_, selection);
+
+    editable_circuit::split_temporary_segments(layout_, get_sender(),
+                                               std::move(split_points), selection);
 }
 
 auto EditableCircuit::selection_count() const -> std::size_t {
@@ -246,6 +268,26 @@ auto EditableCircuit::get_sender() -> editable_circuit::MessageSender& {
 
 auto EditableCircuit::get_state() -> editable_circuit::State {
     return editable_circuit::State {layout_, get_sender(), layout_index_};
+}
+
+//
+// Scoped Selection
+//
+
+ScopedSelection::ScopedSelection(EditableCircuit& editable_circuit)
+    : editable_circuit_ {&editable_circuit},
+      selection_id_ {editable_circuit.create_selection()} {
+    Ensures(selection_id_);
+}
+
+ScopedSelection::~ScopedSelection() {
+    Expects(selection_id_);
+    editable_circuit_->destroy_selection(selection_id_);
+}
+
+auto ScopedSelection::selection_id() const -> selection_id_t {
+    Expects(selection_id_);
+    return selection_id_;
 }
 
 //

@@ -26,7 +26,8 @@ enum class ManagerResult {
  * @brief: Manages the mouse interactions in the editing state
  *
  * Class-invariants:
- *   + editing_mouse_logic_ is empty when not in editing state
+ *   + mouse_logic_ is empty when not in editing-state
+ *   + rubber_band is only shown in selection-state
  *
  * Note functions require valid editable_circuit in editing-mode and nullptr otherwise.
  */

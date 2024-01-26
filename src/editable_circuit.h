@@ -54,16 +54,24 @@ class EditableCircuit {
     // changing
     auto change_insertion_mode(selection_id_t selection_id,
                                InsertionMode new_insertion_mode) -> void;
-    [[nodiscard]] auto new_positions_representable(selection_id_t selection_id,
+    auto change_insertion_mode(const Selection& selection,
+                               InsertionMode new_insertion_mode) -> void;
+    [[nodiscard]] auto new_positions_representable(const Selection& selection,
                                                    int delta_x, int delta_y) const
         -> bool;
     auto move_or_delete(selection_id_t selection_id, int delta_x, int delta_y) -> void;
-    // Assumptions:
-    //   * all selected items are temporary
-    //   * all new positions are representable
-    //   * segment lines are all fully selected, not partial
-    auto move_unchecked(selection_id_t selection_id, int delta_x, int delta_y) -> void;
+    auto move_or_delete(const Selection& selection, int delta_x, int delta_y) -> void;
+    /**
+     * @brief: Efficiently moves all items in the selection.
+     *
+     * Pre-conditions:
+     *   + all selected items are temporary
+     *   + all new positions are representable
+     *   + segment lines are all fully selected, not partial
+     */
+    auto move_unchecked(const Selection& selection, int delta_x, int delta_y) -> void;
     auto delete_all(selection_id_t selection_id) -> void;
+    auto delete_all(const Selection& selection) -> void;
 
     auto toggle_inverter(point_t point) -> void;
     auto toggle_wire_crosspoint(point_t point) -> void;
@@ -74,7 +82,7 @@ class EditableCircuit {
 
     // adds crosspoints, merges wire segments and returns splitpoints
     auto regularize_temporary_selection(
-        selection_id_t selection_id,
+        const Selection& selection,
         std::optional<std::vector<point_t>> true_cross_points = {})
         -> std::vector<point_t>;
     // free method ?
@@ -82,6 +90,7 @@ class EditableCircuit {
         -> std::vector<point_t>;
     // TODO find better name
     auto split_before_insert(selection_id_t selection_id) -> void;
+    auto split_before_insert(const Selection& selection) -> void;
 
     // selections
     [[nodiscard]] auto selection_count() const -> std::size_t;
@@ -115,6 +124,22 @@ class EditableCircuit {
 
     editable_circuit::SelectionStore selection_store_;
     VisibleSelection selection_builder_;
+};
+
+//
+// Scoped Selection
+//
+
+class ScopedSelection {
+   public:
+    explicit ScopedSelection(EditableCircuit& editable_circuit);
+    ~ScopedSelection();
+
+    [[nodiscard]] auto selection_id() const -> selection_id_t;
+
+   private:
+    gsl::not_null<EditableCircuit*> editable_circuit_;
+    selection_id_t selection_id_;
 };
 
 //

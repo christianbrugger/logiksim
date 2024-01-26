@@ -5,9 +5,9 @@
 #include "vocabulary/insertion_mode.h"
 #include "vocabulary/line_insertion_type.h"
 
+#include <optional>
 #include <span>
 #include <vector>
-#include <optional>
 
 namespace logicsim {
 
@@ -90,8 +90,7 @@ auto move_or_delete_logic_item(Layout& Layout, MessageSender& sender,
 auto move_logic_item_unchecked(Layout& layout, const logicitem_id_t logicitem_id, int dx,
                                int dy) -> void;
 
-auto toggle_inverter(Layout& layout, const LayoutIndex& cache, point_t point)
-    -> void;
+auto toggle_inverter(Layout& layout, const LayoutIndex& cache, point_t point) -> void;
 
 //
 // Wire - High level Methods
@@ -157,8 +156,8 @@ auto new_positions_representable(const Selection& selection, const Layout& Layou
                                  int delta_x, int delta_y) -> bool;
 
 // TODO needs to be tracked selection
-auto move_or_delete_elements(Selection &selection, Layout& Layout,
-                             MessageSender& sender, int delta_x, int delta_y) -> void;
+auto move_or_delete_elements(Selection& selection, Layout& Layout, MessageSender& sender,
+                             int delta_x, int delta_y) -> void;
 
 // Assumptions:
 //   * all new positions are representable
@@ -172,15 +171,16 @@ auto delete_all(Selection& selection, State state) -> void;
 // Wire Mode Change Helpers
 //
 
+// TODO does not need tracked selection
 auto regularize_temporary_selection(Layout& layout, MessageSender& sender,
                                     const Selection& selection,
                                     std::optional<std::vector<point_t>> true_cross_points)
     -> std::vector<point_t>;
 
-auto capture_inserted_cross_points(const Layout& layout,
-                                   const LayoutIndex& cache,
+auto capture_inserted_cross_points(const Layout& layout, const LayoutIndex& cache,
                                    const Selection& selection) -> std::vector<point_t>;
 
+// TODO does not need tracked selection
 auto split_temporary_segments(Layout& layout, MessageSender& sender,
                               std::span<const point_t> split_points,
                               const Selection& selection) -> void;

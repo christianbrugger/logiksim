@@ -14,7 +14,8 @@ auto is_insert_wire_logic(const EditingMouseLogic& logic) -> bool {
 
 auto is_selecting_logic(const EditingMouseLogic& logic) -> bool {
     return std::holds_alternative<SelectionAreaLogic>(logic) ||
-           std::holds_alternative<SelectionSingleLogic>(logic);
+           std::holds_alternative<SelectionSingleLogic>(logic) ||
+           std::holds_alternative<SelectionMoveLogic>(logic);
 }
 
 }  // namespace circuit_widget

@@ -1,7 +1,6 @@
 #ifndef LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_AREA_H
 #define LOGICSIM_COMPONENT_CIRCUIT_WIDGET_MOUSE_LOGIC_SELECTION_AREA_H
 
-#include "component/circuit_widget/mouse_logic/editing_logic_interface.h"
 #include "vocabulary/point_fine.h"
 
 #include <QPointF>
