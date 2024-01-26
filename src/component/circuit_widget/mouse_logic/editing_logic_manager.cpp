@@ -64,9 +64,7 @@ auto EditingLogicManager::set_circuit_state(CircuitWidgetState new_state,
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
     if (new_state != circuit_state_) {
-        if (!is_editing_state(new_state)) {
-            finalize_editing(editable_circuit_);
-        }
+        finalize_editing(editable_circuit_);
 
         // update
         circuit_state_ = new_state;

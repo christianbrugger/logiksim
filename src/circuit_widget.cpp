@@ -130,14 +130,16 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
         return;
     }
 
+    // finalize editing
+    editing_logic_manager_.set_circuit_state(
+        new_state, circuit_widget::editable_circuit_pointer(circuit_store_));
+
     // clear visible selection
     if (is_selection_state(circuit_state_)) {
         circuit_store_.editable_circuit().clear_visible_selection();
     }
 
-    // sub components
-    editing_logic_manager_.set_circuit_state(
-        new_state, circuit_widget::editable_circuit_pointer(circuit_store_));
+    // circuit store
     circuit_store_.set_circuit_state(new_state);
 
     // simulation
@@ -304,7 +306,7 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
     circuit_widget::set_optimal_render_attributes(*this);
 
     auto& context = render_surface_.begin_paint(backingStore(), get_geometry_info(*this));
-    
+
     std::visit(overload(
                    [&](const NonInteractiveState& _) {
                        circuit_widget::render_to_context(context,
@@ -324,7 +326,6 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
                            circuit_store_.interactive_simulation().spatial_simulation());
                    }),
                circuit_state());
-    
 
     render_surface_.end_paint(*this);
     simulation_image_update_pending_ = false;

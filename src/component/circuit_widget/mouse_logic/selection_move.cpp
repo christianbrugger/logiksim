@@ -3,7 +3,6 @@
 #include "algorithm/round.h"
 #include "editable_circuit.h"
 #include "geometry/display_state_map.h"
-#include "logging.h"
 #include "timer.h"
 
 namespace logicsim {
@@ -170,7 +169,6 @@ auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,
     }
 
     convert_selection_to(editable_circuit, InsertionMode::temporary);
-    editable_circuit.apply_all_visible_selection_operations();
     editable_circuit.move_unchecked(editable_circuit.visible_selection(), delta_x,
                                     delta_y);
     if (cross_points_) {
@@ -209,8 +207,6 @@ auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
             editable_circuit.visible_selection(), cross_points_);
     }
 
-    print(display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
-          insertion_mode_);
     Ensures(found_states_matches_insertion_mode(
         display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
         insertion_mode_));
@@ -223,7 +219,6 @@ auto SelectionMoveLogic::restore_original_positions(EditableCircuit& editable_ci
     }
 
     convert_selection_to(editable_circuit, InsertionMode::temporary);
-    editable_circuit.apply_all_visible_selection_operations();
     editable_circuit.move_unchecked(editable_circuit.visible_selection(),
                                     -total_offsets_.first, -total_offsets_.second);
 }
