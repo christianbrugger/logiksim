@@ -41,16 +41,16 @@ auto a_equal_b(part_t a, part_t b) -> bool {
     return a == b;
 }
 
-auto a_overlapps_any_of_b(part_t a, part_t b) -> bool {
+auto a_overlaps_any_of_b(part_t a, part_t b) -> bool {
     return (a.end > b.begin && a.end <= b.end)  //
            || (b.end > a.begin && b.end <= a.end);
 }
 
-auto a_overlapps_b_begin(part_t a, part_t b) -> bool {
+auto a_overlaps_b_begin(part_t a, part_t b) -> bool {
     return a.begin <= b.begin && a.end > b.begin && a.end < b.end;
 }
 
-auto a_overlapps_b_end(part_t a, part_t b) -> bool {
+auto a_overlaps_b_end(part_t a, part_t b) -> bool {
     return a.begin > b.begin && a.begin < b.end && a.end >= b.end;
 }
 

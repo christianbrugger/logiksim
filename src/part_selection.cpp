@@ -5,6 +5,7 @@
 #include "format/container.h"
 #include "geometry/part.h"
 #include "logging.h"
+#include "part_selection.h"
 #include "vocabulary/grid.h"
 
 #include <fmt/core.h>
@@ -185,11 +186,11 @@ auto PartSelection::remove_part(part_t removing) -> void {
         }
 
         // begin overlap -> shrink begin
-        else if (a_overlapps_b_begin(removing, part)) {
+        else if (a_overlaps_b_begin(removing, part)) {
             parts_[i] = part_t {removing.end, part.end};
         }
         // end overlap -> shrink end
-        else if (a_overlapps_b_end(removing, part)) {
+        else if (a_overlaps_b_end(removing, part)) {
             parts_[i] = part_t {part.begin, removing.begin};
         }
 

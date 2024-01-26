@@ -1,7 +1,10 @@
 #include "selection.h"
 
+#include "algorithm/merged_for_each.h"
+#include "allocated_size/ankerl_unordered_dense.h"
 #include "format/container.h"
 #include "format/std_type.h"
+#include "geometry/part_selections.h"
 #include "geometry/rect.h"
 #include "layout.h"
 #include "layout_info.h"
@@ -9,7 +12,6 @@
 #include "vocabulary/ordered_line.h"
 #include "vocabulary/point_fine.h"
 #include "vocabulary/rect_fine.h"
-#include "allocated_size/ankerl_unordered_dense.h"
 
 namespace logicsim {
 
@@ -43,6 +45,78 @@ auto anything_colliding(const Selection &selection, const Layout &layout) -> boo
 
     return std::ranges::any_of(selection.selected_segments(), wire_colliding) ||
            std::ranges::any_of(selection.selected_logic_items(), logicitem_colliding);
+}
+
+auto anything_temporary(const Selection &selection, const Layout &layout) -> bool {
+    const auto logicitem_temporary = [&](const logicitem_id_t &logicitem_id) {
+        return layout.logic_items().display_state(logicitem_id) ==
+               display_state_t::temporary;
+    };
+    const auto wire_temporary = [&](const Selection::segment_pair_t &pair) {
+        return pair.first.wire_id == temporary_wire_id;
+    };
+
+    return std::ranges::any_of(selection.selected_segments(), wire_temporary) ||
+           std::ranges::any_of(selection.selected_logic_items(), logicitem_temporary);
+}
+
+auto anything_valid(const Selection &selection, const Layout &layout) -> bool {
+    const auto logicitem_valid = [&](const logicitem_id_t &logicitem_id) {
+        return layout.logic_items().display_state(logicitem_id) == display_state_t::valid;
+    };
+    const auto wire_valid = [&](const Selection::segment_pair_t &pair) {
+        const auto &valid_parts = layout.wires()
+                                      .segment_tree(pair.first.wire_id)
+                                      .valid_parts(pair.first.segment_index);
+
+        return a_overlaps_any_of_b(pair.second, valid_parts);
+    };
+
+    return std::ranges::any_of(selection.selected_segments(), wire_valid) ||
+           std::ranges::any_of(selection.selected_logic_items(), logicitem_valid);
+}
+
+auto display_states(const Selection &selection, const Layout &layout) -> DisplayStateMap {
+    auto result = DisplayStateMap {};
+
+    // logic items
+    for (const auto &logicitem_id : selection.selected_logic_items()) {
+        result.at(layout.logic_items().display_state(logicitem_id)) = true;
+    }
+
+    // wires
+    for (const Selection::segment_pair_t &pair : selection.selected_segments()) {
+        if (pair.first.wire_id == temporary_wire_id) {
+            result.at(display_state_t::temporary) = true;
+        }
+
+        else if (pair.first.wire_id == colliding_wire_id) {
+            result.at(display_state_t::colliding) = true;
+        }
+
+        else if (!result.at(display_state_t::valid) ||
+                 !result.at(display_state_t::normal)) {
+            const auto &valid_parts = layout.wires()
+                                          .segment_tree(pair.first.wire_id)
+                                          .valid_parts(pair.first.segment_index);
+
+            merged_for_each(pair.second, valid_parts,
+                            [&](const part_t &a, const part_t &b) {
+                                if (a_overlaps_any_of_b(a, b)) {
+                                    result.at(display_state_t::valid) = true;
+                                }
+                                if (!a_inside_b(a, b)) {
+                                    result.at(display_state_t::normal) = true;
+                                }
+                            });
+
+            if (!pair.second.empty() && valid_parts.empty()) {
+                result.at(display_state_t::normal) = true;
+            }
+        }
+    }
+
+    return result;
 }
 
 auto is_selected(const Selection &selection, const Layout &layout, segment_t segment,

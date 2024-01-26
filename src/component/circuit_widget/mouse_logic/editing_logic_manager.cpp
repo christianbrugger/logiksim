@@ -122,7 +122,7 @@ namespace {
 
 auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
                                 Qt::KeyboardModifiers modifiers,
-                                EditableCircuit& editable_circuit, QWidget& parent,
+                                const EditableCircuit& editable_circuit, QWidget& parent,
                                 EditingState editing_state)
     -> std::optional<circuit_widget::EditingMouseLogic> {
     const auto grid_fine_position = to_grid_fine(position, view_config);
@@ -144,7 +144,7 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
         if (editable_circuit.caches().selection_index().has_element(grid_fine_position)) {
             if (modifiers == Qt::NoModifier) {
                 print("MouseMoveSelectionLogic");
-                return circuit_widget::SelectionMoveLogic {};
+                return circuit_widget::SelectionMoveLogic {editable_circuit};
             }
 
             return circuit_widget::SelectionSingleLogic {};

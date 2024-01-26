@@ -19,9 +19,9 @@ struct segment_part_t;
 [[nodiscard]] auto a_inside_b_touching_end(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_disjoint_b(part_t a, part_t b) -> bool;
 [[nodiscard]] auto a_equal_b(part_t a, part_t b) -> bool;
-[[nodiscard]] auto a_overlapps_any_of_b(part_t a, part_t b) -> bool;
-[[nodiscard]] auto a_overlapps_b_begin(part_t a, part_t b) -> bool;
-[[nodiscard]] auto a_overlapps_b_end(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_overlaps_any_of_b(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_overlaps_b_begin(part_t a, part_t b) -> bool;
+[[nodiscard]] auto a_overlaps_b_end(part_t a, part_t b) -> bool;
 
 [[nodiscard]] auto intersect(part_t a, part_t b) -> std::optional<part_t>;
 [[nodiscard]] auto difference_touching_one_side(part_t full_part, part_t b) -> part_t;

@@ -11,6 +11,9 @@ set(LS_CORE_SOURCES
     src/algorithm/distance_fast.cpp
     src/algorithm/fmt_join.cpp
     src/algorithm/has_duplicates_quadratic.cpp
+    src/algorithm/merged_any_of.cpp
+    src/algorithm/merged_for_each.cpp
+    src/algorithm/merged_none_of.cpp
     src/algorithm/narrow_integral.cpp
     src/algorithm/overload.cpp
     src/algorithm/pop_while.cpp
@@ -96,6 +99,7 @@ set(LS_CORE_SOURCES
     src/container/graph/depth_first_search.cpp
     src/container/graph/visitor_concept.cpp
     src/container/circular_buffer.cpp
+    src/container/enum_map.cpp
     src/container/static_vector.cpp
 
     src/format/container.cpp
@@ -110,6 +114,7 @@ set(LS_CORE_SOURCES
 
     src/geometry/connection.cpp
     src/geometry/connection_count.cpp
+    src/geometry/display_state_map.cpp
     src/geometry/grid.cpp
     src/geometry/interpolation.cpp
     src/geometry/layout_calculation.cpp
@@ -117,6 +122,7 @@ set(LS_CORE_SOURCES
     src/geometry/offset.cpp
     src/geometry/orientation.cpp
     src/geometry/part.cpp
+    src/geometry/part_selections.cpp
     src/geometry/point.cpp
     src/geometry/rect.cpp
     src/geometry/scene.cpp
@@ -200,6 +206,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/delay.cpp
     src/vocabulary/direction_type.cpp
     src/vocabulary/display_state.cpp
+    src/vocabulary/display_state_map.cpp
     src/vocabulary/drawable_element.cpp
     src/vocabulary/element_draw_state.cpp
     src/vocabulary/element_id.cpp

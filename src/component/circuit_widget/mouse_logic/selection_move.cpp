@@ -2,6 +2,8 @@
 
 #include "algorithm/round.h"
 #include "editable_circuit.h"
+#include "geometry/display_state_map.h"
+#include "logging.h"
 #include "timer.h"
 
 namespace logicsim {
@@ -45,18 +47,19 @@ auto add_to_selection(Selection& selection, const Layout& layout,
 
 }  // namespace
 
-SelectionMoveLogic::SelectionMoveLogic() : SelectionMoveLogic {Args {}} {}
-
-SelectionMoveLogic::SelectionMoveLogic(Args args)
+SelectionMoveLogic::SelectionMoveLogic(const EditableCircuit& editable_circuit, Args args)
     : delete_on_cancel_ {args.delete_on_cancel},
       state_ {args.has_colliding ? State::waiting_for_confirmation
                                  : State::waiting_for_first_click},
       insertion_mode_ {args.has_colliding ? InsertionMode::collisions
-                                          : InsertionMode::insert_or_discard} {
-    // TODO check pre-conditions
+                                          : InsertionMode::insert_or_discard},
+      cross_points_ {std::move(args.cross_points)} {
+    Expects(args.has_colliding == args.cross_points.has_value());
 
-    //  const auto collisions = anything_colliding(editable_circuit.visible_selection(),
-    //                                             editable_circuit.layout());
+    // pre-conditions
+    assert(found_states_matches_insertion_mode(
+        display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
+        insertion_mode_));
 }
 
 auto SelectionMoveLogic::mouse_press(EditableCircuit& editable_circuit,
@@ -181,6 +184,11 @@ auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,
 
 auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
                                               InsertionMode new_mode) -> void {
+    // Requires
+    assert(found_states_matches_insertion_mode(
+        display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
+        insertion_mode_));
+
     if (insertion_mode_ == new_mode) {
         return;
     }
@@ -201,6 +209,11 @@ auto SelectionMoveLogic::convert_selection_to(EditableCircuit& editable_circuit,
         editable_circuit.regularize_temporary_selection(
             editable_circuit.visible_selection(), cross_points_);
     }
+
+    // Ensures
+    assert(found_states_matches_insertion_mode(
+        display_states(editable_circuit.visible_selection(), editable_circuit.layout()),
+        insertion_mode_));
 }
 
 auto SelectionMoveLogic::restore_original_positions(EditableCircuit& editable_circuit)

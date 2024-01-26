@@ -27,21 +27,38 @@ enum class State {
     finished_confirmed,
 };
 
-}
+struct Args {
+    /**
+     * @brief: Needs to be set if visible selection contains any colliding / valid items.
+     */
+    bool has_colliding {false};
+    /**
+     * @brief: If set deletes
+     */
+    bool delete_on_cancel {false};
+    /**
+     * @brief: When has_colliding is set to true this method requires a list of
+     *         true cross-points, so they can be restored on insert / un-insert.
+     *
+     * Needs to be set, potentially empty for has_colliding. And nullopt otherwise.
+     */
+    std::optional<std::vector<point_t>> cross_points {};
+};
 
+}  // namespace selection_move_logic
+
+/**
+ * @ brief: Logic to handle selection moving via mouse clicks.
+ *
+ *
+ */
 class SelectionMoveLogic : public EditingLogicInterface {
    public:
     using State = selection_move_logic::State;
+    using Args = selection_move_logic::Args;
 
    public:
-    struct Args {
-        bool has_colliding {false};
-        bool delete_on_cancel {false};
-        std::optional<std::vector<point_t>> cross_points {};
-    };
-
-    explicit SelectionMoveLogic();
-    explicit SelectionMoveLogic(Args args);
+    explicit SelectionMoveLogic(const EditableCircuit& editable_circuit, Args args = {});
 
     auto mouse_press(EditableCircuit& editable_circuit, point_fine_t point,
                      bool double_click) -> void;

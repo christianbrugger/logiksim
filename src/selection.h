@@ -5,6 +5,7 @@
 #include "part_selection.h"
 #include "vocabulary/logicitem_id.h"
 #include "vocabulary/segment.h"
+#include "vocabulary/display_state_map.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -42,6 +43,12 @@ class Selection;
     -> std::vector<ordered_line_t>;
 [[nodiscard]] auto anything_colliding(const Selection &selection, const Layout &layout)
     -> bool;
+[[nodiscard]] auto anything_temporary(const Selection &selection, const Layout &layout)
+    -> bool;
+[[nodiscard]] auto anything_valid(const Selection &selection, const Layout &layout)
+    -> bool;
+[[nodiscard]] auto display_states(const Selection &selection, const Layout &layout)
+    -> DisplayStateMap;
 
 [[nodiscard]] auto is_selected(const Selection &selection, const Layout &layout,
                                segment_t segment, point_fine_t point) -> bool;

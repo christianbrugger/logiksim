@@ -3,6 +3,7 @@
 
 #include "format/enum.h"
 
+#include <array>
 #include <cstdint>
 
 namespace logicsim {
@@ -24,6 +25,13 @@ auto format(display_state_t state) -> std::string;
 
 [[nodiscard]] auto is_inserted(display_state_t display_state) -> bool;
 
-}
+constexpr inline auto all_display_states = std::array {
+    display_state_t::normal,     //
+    display_state_t::valid,      //
+    display_state_t::colliding,  //
+    display_state_t::temporary,  //
+};
+
+}  // namespace logicsim
 
 #endif

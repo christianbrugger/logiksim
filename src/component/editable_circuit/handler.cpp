@@ -1055,7 +1055,7 @@ auto get_display_states(const Layout& layout, const segment_part_t segment_part)
         if (a_inside_b(segment_part.part, valid_part)) {
             return std::make_pair(valid, valid);
         }
-        if (a_overlapps_any_of_b(segment_part.part, valid_part)) {
+        if (a_overlaps_any_of_b(segment_part.part, valid_part)) {
             return std::make_pair(valid, normal);
         }
     }
