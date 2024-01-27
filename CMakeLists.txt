@@ -346,6 +346,7 @@ set(LS_TEST_SOURCES
 
     test/geometry/connection_count_test.cpp
     test/geometry/line_test.cpp
+    test/geometry/part_selections.cpp
     test/geometry/part_test.cpp
 
     test/iterator_adaptor/enumerate_test.cpp

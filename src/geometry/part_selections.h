@@ -4,6 +4,8 @@
 #include "part_selection.h"
 #include "vocabulary/part.h"
 
+#include "geometry/part.h"
+
 namespace logicsim {
 
 [[nodiscard]] auto a_overlaps_any_of_b(part_t a, const PartSelection& b) -> bool;
@@ -20,6 +22,8 @@ namespace logicsim {
  */
 template <typename Func>
 auto iter_parts(part_t full_part, const PartSelection& parts, Func func) {
+    Expects(full_part.begin == offset_t {0});
+
     offset_t pivot = full_part.begin;
 
     for (const auto& part : parts) {
@@ -33,6 +37,8 @@ auto iter_parts(part_t full_part, const PartSelection& parts, Func func) {
     if (pivot != full_part.end) {
         func(part_t {pivot, full_part.end}, false);
     }
+
+    Ensures(pivot <= full_part.end);
 }
 
 /**

@@ -1,7 +1,11 @@
 
 #include "geometry/part.h"
 
-#include "vocabulary.h"
+#include "vocabulary/part.h"
+#include "vocabulary/ordered_line.h"
+#include "vocabulary/point.h"
+#include "vocabulary/point_fine.h"
+#include "vocabulary/rect_fine.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
