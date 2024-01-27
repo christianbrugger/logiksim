@@ -509,6 +509,31 @@ TEST(GeometryPartSelections, IterOverlappingParts2) {
 
         ASSERT_EQ(result, expected);
     }
+
+    {
+        const auto result =
+            iter_overlapping_result(part_t {0, 100}, {part_t {10, 20}, part_t {30, 40}},
+                                    {part_t {10, 20}, part_t {30, 40}});
+        const auto expected = IterOverlappingResult {
+            {part_t {10, 20}, part_t {10, 20}, true},
+            {part_t {30, 40}, part_t {30, 40}, true},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
+
+    {
+        const auto result = iter_overlapping_result(
+            part_t {0, 100}, {part_t {0, 10}, part_t {20, 30}, part_t {40, 100}},
+            {part_t {10, 20}, part_t {30, 40}});
+        const auto expected = IterOverlappingResult {
+            {part_t {0, 10}, part_t {0, 10}, false},
+            {part_t {20, 30}, part_t {20, 30}, false},
+            {part_t {40, 100}, part_t {40, 100}, false},
+        };
+
+        ASSERT_EQ(result, expected);
+    }
 }
 
 }  // namespace logicsim

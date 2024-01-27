@@ -1,10 +1,9 @@
 #ifndef LOGICSIM_GEOMETRY_PART_SELECTIONS_H
 #define LOGICSIM_GEOMETRY_PART_SELECTIONS_H
 
+#include "geometry/part.h"
 #include "part_selection.h"
 #include "vocabulary/part.h"
-
-#include "geometry/part.h"
 
 namespace logicsim {
 
@@ -59,9 +58,8 @@ auto iter_overlapping_parts(part_t full_part, const PartSelection& query,
     }
 
     iter_parts(full_part, target, [&](part_t target_part, bool target_selected) {
-        while (pivot != end && pivot->end <= target_part.begin) {
-            ++pivot;
-        }
+        Expects(pivot != end && pivot->end > target_part.begin);
+
         while (pivot != end && pivot->end <= target_part.end) {
             Expects(a_overlaps_any_of_b(*pivot, target_part));
             func(*pivot, target_part, target_selected);
