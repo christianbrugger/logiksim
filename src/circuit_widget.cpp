@@ -251,7 +251,7 @@ auto CircuitWidget::do_action(UserAction action) -> void {
             return;
         }
         case delete_selected: {
-            // TODO implement
+            this->delete_selected();
             return;
         }
 
@@ -457,6 +457,25 @@ auto CircuitWidget::select_all() -> void {
     circuit_store_.editable_circuit().clear_visible_selection();
     circuit_store_.editable_circuit().add_visible_selection_rect(SelectionFunction::add,
                                                                  rect);
+
+    update();
+}
+
+auto CircuitWidget::delete_selected() -> void {
+    if (!is_selection_state(circuit_state_)) {
+        return;
+    }
+
+    auto& editable_circuit = circuit_store_.editable_circuit();
+
+    const auto t = Timer {
+        fmt::format("Deleted {}:", editable_circuit.visible_selection().format_info())};
+
+    // We clear the visible selection before deleting for optimization.
+    // So it is not tracked during deletion. (10% speedup)
+    auto selection__ = Selection {editable_circuit.visible_selection()};
+    editable_circuit.clear_visible_selection();
+    editable_circuit.delete_all(std::move(selection__));
 
     update();
 }
