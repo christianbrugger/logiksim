@@ -1,9 +1,11 @@
 #include "editable_circuit.h"
 
 #include "component/editable_circuit/handler.h"
+#include "editable_circuit.h"
 #include "format/std_type.h"
 #include "geometry/point.h"
 #include "layout_message.h"
+#include "logging.h"
 #include "random/wire.h"
 
 #include <exception>
@@ -101,21 +103,19 @@ auto EditableCircuit::move_or_delete(selection_id_t selection_id, int delta_x,
     move_or_delete(selection(selection_id), delta_x, delta_y);
 }
 
-auto EditableCircuit::move_or_delete(const Selection& selection, int delta_x, int delta_y)
+auto EditableCircuit::move_or_delete(Selection selection__, int delta_x, int delta_y)
     -> void {
-    const auto tracked_selection = ScopedSelection {*this};
+    const auto tracked_selection = ScopedSelection {*this, std::move(selection__)};
     auto& temp_selection = this->selection(tracked_selection.selection_id());
-    temp_selection = selection;
 
     editable_circuit::move_or_delete_elements(temp_selection, layout_, get_sender(),
                                               delta_x, delta_y);
 }
 
-auto EditableCircuit::change_insertion_mode(const Selection& selection,
+auto EditableCircuit::change_insertion_mode(Selection selection__,
                                             InsertionMode new_insertion_mode) -> void {
-    const auto tracked_selection = ScopedSelection {*this};
+    const auto tracked_selection = ScopedSelection {*this, std::move(selection__)};
     auto& temp_selection = this->selection(tracked_selection.selection_id());
-    temp_selection = selection;
 
     editable_circuit::change_insertion_mode(temp_selection, get_state(),
                                             new_insertion_mode);
@@ -135,10 +135,9 @@ auto EditableCircuit::delete_all(selection_id_t selection_id) -> void {
     editable_circuit::delete_all(selection(selection_id), get_state());
 }
 
-auto EditableCircuit::delete_all(const Selection& selection) -> void {
-    const auto tracked_selection = ScopedSelection {*this};
+auto EditableCircuit::delete_all(Selection selection__) -> void {
+    const auto tracked_selection = ScopedSelection {*this, std::move(selection__)};
     auto& temp_selection = this->selection(tracked_selection.selection_id());
-    temp_selection = selection;
 
     editable_circuit::delete_all(temp_selection, get_state());
 }
@@ -195,6 +194,12 @@ auto EditableCircuit::selection(selection_id_t selection_id) const -> const Sele
 
 auto EditableCircuit::create_selection() -> selection_id_t {
     return selection_store_.create();
+}
+
+auto EditableCircuit::create_selection(Selection selection__) -> selection_id_t {
+    const auto selection_id = create_selection();
+    this->selection(selection_id) = std::move(selection__);
+    return selection_id;
 }
 
 auto EditableCircuit::destroy_selection(selection_id_t selection_id) -> void {
@@ -277,6 +282,12 @@ auto EditableCircuit::get_state() -> editable_circuit::State {
 ScopedSelection::ScopedSelection(EditableCircuit& editable_circuit)
     : editable_circuit_ {&editable_circuit},
       selection_id_ {editable_circuit.create_selection()} {
+    Ensures(selection_id_);
+}
+
+ScopedSelection::ScopedSelection(EditableCircuit& editable_circuit, Selection selection__)
+    : editable_circuit_ {&editable_circuit},
+      selection_id_ {editable_circuit.create_selection(std::move(selection__))} {
     Ensures(selection_id_);
 }
 

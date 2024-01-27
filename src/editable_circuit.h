@@ -54,13 +54,13 @@ class EditableCircuit {
     // changing
     auto change_insertion_mode(selection_id_t selection_id,
                                InsertionMode new_insertion_mode) -> void;
-    auto change_insertion_mode(const Selection& selection,
-                               InsertionMode new_insertion_mode) -> void;
+    auto change_insertion_mode(Selection selection, InsertionMode new_insertion_mode)
+        -> void;
     [[nodiscard]] auto new_positions_representable(const Selection& selection,
                                                    int delta_x, int delta_y) const
         -> bool;
     auto move_or_delete(selection_id_t selection_id, int delta_x, int delta_y) -> void;
-    auto move_or_delete(const Selection& selection, int delta_x, int delta_y) -> void;
+    auto move_or_delete(Selection selection, int delta_x, int delta_y) -> void;
     /**
      * @brief: Efficiently moves all items in the selection.
      *
@@ -71,7 +71,7 @@ class EditableCircuit {
      */
     auto move_unchecked(const Selection& selection, int delta_x, int delta_y) -> void;
     auto delete_all(selection_id_t selection_id) -> void;
-    auto delete_all(const Selection& selection) -> void;
+    auto delete_all(Selection selection) -> void;
 
     auto toggle_inverter(point_t point) -> void;
     auto toggle_wire_crosspoint(point_t point) -> void;
@@ -94,9 +94,15 @@ class EditableCircuit {
 
     // selections
     [[nodiscard]] auto selection_count() const -> std::size_t;
+    /**
+     * @brief: Return reference to tracked selection.
+     *
+     * Warning, references are invalidated on creation or deletion of other selection.
+     */
     [[nodiscard]] auto selection(selection_id_t selection_id) -> Selection&;
     [[nodiscard]] auto selection(selection_id_t selection_id) const -> const Selection&;
     [[nodiscard]] auto create_selection() -> selection_id_t;
+    [[nodiscard]] auto create_selection(Selection selection) -> selection_id_t;
     auto destroy_selection(selection_id_t selection_id) -> void;
     [[nodiscard]] auto selection_exists(selection_id_t selection_id) const -> bool;
 
@@ -133,6 +139,7 @@ class EditableCircuit {
 class ScopedSelection {
    public:
     explicit ScopedSelection(EditableCircuit& editable_circuit);
+    explicit ScopedSelection(EditableCircuit& editable_circuit, Selection selection);
     ~ScopedSelection();
 
     [[nodiscard]] auto selection_id() const -> selection_id_t;

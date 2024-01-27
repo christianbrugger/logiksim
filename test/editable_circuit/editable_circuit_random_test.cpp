@@ -199,6 +199,14 @@ auto copy_selection(EditableCircuit &editable_circuit, const Selection &selectio
     return selection_id;
 }
 
+auto state_matches(const EditableCircuit &editable_circuit, selection_id_t selection_id,
+                   InsertionMode insertion_mode) -> bool {
+    return found_states_matches_insertion_mode(
+        display_states(editable_circuit.selection(selection_id),
+                       editable_circuit.layout()),
+        insertion_mode);
+}
+
 }  // namespace
 
 class TrackedSelection {
@@ -218,10 +226,7 @@ class TrackedSelection {
                            starting_mode, cross_points) {}
 
     auto convert_to(InsertionMode new_mode) -> void {
-        Ensures(found_states_matches_insertion_mode(
-            display_states(editable_circuit_.selection(selection_id_),
-                           editable_circuit_.layout()),
-            insertion_mode_));
+        Ensures(state_matches(editable_circuit_, selection_id_, insertion_mode_));
 
         if (insertion_mode_ == new_mode) {
             return;
@@ -235,28 +240,19 @@ class TrackedSelection {
                 editable_circuit_.selection(selection_id_));
         }
 
-        Ensures(found_states_matches_insertion_mode(
-            display_states(editable_circuit_.selection(selection_id_),
-                           editable_circuit_.layout()),
-            insertion_mode_));
+        Ensures(state_matches(editable_circuit_, selection_id_, insertion_mode_));
 
         insertion_mode_ = new_mode;
         editable_circuit_.change_insertion_mode(selection_id_, new_mode);
 
-        Ensures(found_states_matches_insertion_mode(
-            display_states(editable_circuit_.selection(selection_id_),
-                           editable_circuit_.layout()),
-            insertion_mode_));
+        Ensures(state_matches(editable_circuit_, selection_id_, insertion_mode_));
 
         if (new_mode == InsertionMode::temporary) {
             editable_circuit_.regularize_temporary_selection(
                 editable_circuit_.selection(selection_id_), cross_points_);
         }
 
-        Ensures(found_states_matches_insertion_mode(
-            display_states(editable_circuit_.selection(selection_id_),
-                           editable_circuit_.layout()),
-            insertion_mode_));
+        Ensures(state_matches(editable_circuit_, selection_id_, insertion_mode_));
     }
 
     auto move_or_delete(int delta_x, int delta_y) -> void {
