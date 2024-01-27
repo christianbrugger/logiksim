@@ -2,11 +2,11 @@
 #define LOGIKSIM_TEST_EDITABLE_CIRCUIT_HANDLERS_TEST_HELPERS_H
 
 #include "algorithm/fmt_join.h"
-#include "editable_circuit/cache.h"
-#include "editable_circuit/handler.h"
-#include "editable_circuit/message.h"
-#include "editable_circuit/message_sender.h"
+#include "component/editable_circuit/handler.h"
+#include "component/editable_circuit/layout_index.h"
+#include "component/editable_circuit/message_sender.h"
 #include "layout.h"
+#include "layout_message.h"
 #include "logging.h"
 #include "vocabulary/logicitem_definition.h"
 
@@ -22,7 +22,7 @@ class MessageRecorder {
    public:
     MessageRecorder() = default;
 
-    MessageRecorder(CacheProvider &cache_provider) : layout_index_ {&cache_provider} {}
+    MessageRecorder(LayoutIndex &layout_index) : layout_index_ {&layout_index} {}
 
     inline auto submit(const editable_circuit::InfoMessage &message) -> void {
         messages_.push_back(message);
@@ -42,7 +42,7 @@ class MessageRecorder {
     }
 
    private:
-    CacheProvider *layout_index_ {nullptr};
+    LayoutIndex *layout_index_ {nullptr};
     std::vector<editable_circuit::InfoMessage> messages_ {};
 };
 
@@ -55,7 +55,7 @@ inline auto make_sender(MessageRecorder &recorder) -> editable_circuit::MessageS
 
 struct HandlerSetup {
     Layout &layout;
-    CacheProvider cache;
+    LayoutIndex cache;
     MessageRecorder recorder;
     editable_circuit::MessageSender sender;
     editable_circuit::State state;

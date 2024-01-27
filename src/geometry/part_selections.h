@@ -36,24 +36,38 @@ auto iter_parts(part_t full_part, const PartSelection& parts, Func func) {
 }
 
 /**
- * @brief:
+ * @brief: Iterates over query and selected part and calls function for each
+ *         overlapping query part with corresponding selected & unselected
+ *         target parts.
  *
  * [&](part_t query_part, part_t target_part, bool target_selected){}
  */
 template <typename Func>
 auto iter_overlapping_parts(part_t full_part, const PartSelection& query,
                             const PartSelection& target, Func func) {
-    auto it = query.begin();
+    auto pivot = query.begin();
     const auto end = query.end();
 
+    if (pivot == end) {
+        return;
+    }
+
     iter_parts(full_part, target, [&](part_t target_part, bool target_selected) {
-        while (it != end && it->end <= target_part.begin) {
-            ++it;
+        while (pivot != end && pivot->end <= target_part.begin) {
+            ++pivot;
         }
-        if (it != end) {
-            func(*it, target_part, target_selected);
+        while (pivot != end && pivot->end <= target_part.end) {
+            Expects(a_overlaps_any_of_b(*pivot, target_part));
+            func(*pivot, target_part, target_selected);
+            ++pivot;
+        }
+        if (pivot != end && pivot->begin < target_part.end) {
+            Expects(a_overlaps_any_of_b(*pivot, target_part));
+            func(*pivot, target_part, target_selected);
         }
     });
+
+    Ensures(pivot == end);
 }
 
 }  // namespace logicsim

@@ -1,7 +1,6 @@
 #include "./test_helpers.h"
 #include "algorithm/uniform_int_distribution.h"
-#include "editable_circuit/handler.h"
-#include "editable_circuit/sanitizer.h"
+#include "component/editable_circuit/handler.h"
 #include "exception.h"
 #include "geometry/line.h"
 #include "line_tree.h"
@@ -9,8 +8,10 @@
 #include "random/ordered_line.h"
 #include "random/segment.h"
 #include "random/wire.h"
+#include "selection_normalization.h"
 #include "timer.h"
 #include "tree_normalization.h"
+#include "vocabulary/segment_part.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -305,7 +306,7 @@ auto test_remove_partial_wires(Rng& rng, bool random_modes) {
         if (!segment_part) {
             break;
         }
-        segment_part = sanitize_part(segment_part, layout, setup.cache.collision_cache(),
+        segment_part = sanitize_part(segment_part, layout, setup.cache.collision_index(),
                                      SanitizeMode::expand);
         if (!segment_part) {
             throw_exception("invalid segment part");

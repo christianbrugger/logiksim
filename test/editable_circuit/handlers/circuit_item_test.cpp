@@ -1,9 +1,9 @@
 
 #include "./test_helpers.h"
-#include "editable_circuit/handler.h"
-#include "editable_circuit/message.h"
-#include "editable_circuit/message_sender.h"
+#include "component/editable_circuit/handler.h"
+#include "component/editable_circuit/message_sender.h"
 #include "layout.h"
+#include "layout_message.h"
 #include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>

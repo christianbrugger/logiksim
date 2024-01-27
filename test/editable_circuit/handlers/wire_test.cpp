@@ -1,5 +1,5 @@
 #include "./test_helpers.h"
-#include "editable_circuit/handler.h"
+#include "layout_message.h"
 #include "vocabulary/logicitem_definition.h"
 
 #include <gmock/gmock.h>
@@ -144,7 +144,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialOneSide) {
     auto layout = Layout {};
 
     add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
-                  std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+                std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
     add_to_wire(layout, colliding_wire_id, SegmentPointType::shadow_point, {});
     add_test_wire(layout, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
@@ -217,7 +217,7 @@ TEST(EditableCircuitHandlerWire, TempToCollidingPartialMiddle) {
     auto layout = Layout {};
 
     add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
-                  std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+                std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
     add_to_wire(layout, colliding_wire_id, SegmentPointType::shadow_point, {});
     add_test_wire(layout, SegmentPointType::output,
                   std::array {ordered_line_t {point_t {1, 0}, point_t {3, 0}}});
@@ -306,7 +306,7 @@ TEST(EditableCircuitHandlerWire, TempToValid) {
     auto layout = Layout {};
 
     add_to_wire(layout, temporary_wire_id, SegmentPointType::shadow_point,
-                  std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
+                std::array {ordered_line_t {point_t {0, 0}, point_t {10, 0}}});
     add_to_wire(layout, colliding_wire_id, SegmentPointType::shadow_point, {});
 
     auto segment_part = segment_part_t {

@@ -106,12 +106,10 @@ auto display_states(const Selection &selection, const Layout &layout) -> Display
             iter_overlapping_parts(
                 full_part, selected_parts, valid_parts,
                 [&](part_t selected_part, part_t valid_part, bool valid) {
-                    if (a_overlaps_any_of_b(selected_part, valid_part)) {
-                        if (valid) {
-                            result.at(display_state_t::valid) = true;
-                        } else {
-                            result.at(display_state_t::normal) = true;
-                        }
+                    if (valid) {
+                        result.at(display_state_t::valid) = true;
+                    } else {
+                        result.at(display_state_t::normal) = true;
                     }
                 });
         }
