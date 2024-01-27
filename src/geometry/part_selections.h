@@ -58,7 +58,7 @@ auto iter_overlapping_parts(part_t full_part, const PartSelection& query,
     }
 
     iter_parts(full_part, target, [&](part_t target_part, bool target_selected) {
-        Expects(pivot != end && pivot->end > target_part.begin);
+        Expects(pivot == end || pivot->end > target_part.begin);
 
         while (pivot != end && pivot->end <= target_part.end) {
             Expects(a_overlaps_any_of_b(*pivot, target_part));
