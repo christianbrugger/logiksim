@@ -234,7 +234,7 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         }
 
         case select_all: {
-            // TODO implement
+            this->select_all();
             return;
         }
         case copy_selected: {
@@ -441,6 +441,24 @@ auto CircuitWidget::abort_current_action() -> void {
             }
         }
     }
+}
+
+auto CircuitWidget::select_all() -> void {
+    if (!is_editing_state(circuit_state_)) {
+        return;
+    }
+
+    set_circuit_state(defaults::selection_state);
+    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+
+    const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
+                                   point_fine_t {grid_t::max(), grid_t::max()}};
+
+    circuit_store_.editable_circuit().clear_visible_selection();
+    circuit_store_.editable_circuit().add_visible_selection_rect(SelectionFunction::add,
+                                                                 rect);
+
+    update();
 }
 
 //

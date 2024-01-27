@@ -126,6 +126,7 @@ class CircuitWidget : public CircuitWidgetBase {
 
    private:
     auto abort_current_action() -> void;
+    auto select_all() -> void;
 
    private:
     // never modify these directly, always call set_* so signals are emmitted
