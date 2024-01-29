@@ -43,6 +43,7 @@ class EditingLogicManager {
     auto confirm_editing(EditableCircuit* editable_circuit_) -> ManagerResult;
 
     [[nodiscard]] auto is_editing_active() const -> bool;
+    [[nodiscard]] auto is_area_selection_active() const -> bool;
 
     /**
      * @brief: Setup a move for a colliding visible selection.

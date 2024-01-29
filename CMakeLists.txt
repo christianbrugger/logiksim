@@ -49,6 +49,8 @@ set(LS_CORE_SOURCES
     src/component/circuit_widget/mouse_logic/editing_logic_interface.cpp
     src/component/circuit_widget/mouse_logic/editing_logic_manager.cpp
     src/component/circuit_widget/mouse_logic/editing_logic_variant.cpp
+    src/component/circuit_widget/mouse_logic/handle_resize.cpp
+    src/component/circuit_widget/mouse_logic/handle_setting.cpp
     src/component/circuit_widget/mouse_logic/insert_logic_item.cpp
     src/component/circuit_widget/mouse_logic/insert_wire.cpp
     src/component/circuit_widget/mouse_logic/mouse_drag_logic.cpp
@@ -302,6 +304,7 @@ set(LS_CORE_SOURCES
     src/simulation.cpp
     src/simulation_player.cpp
     src/simulation_view.cpp
+    src/size_handle.cpp
     src/spatial_simulation.cpp
     src/text_shaping.cpp
     src/timeout_timer.cpp

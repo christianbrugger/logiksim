@@ -320,7 +320,8 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
                                                          circuit_store_.layout());
                    },
                    [&](const EditingState& _) {
-                       bool show_size_handles = false;
+                       const bool show_size_handles =
+                           !editing_logic_manager_.is_area_selection_active();
 
                        circuit_widget::render_to_context(
                            context, render_surface_.render_config(),

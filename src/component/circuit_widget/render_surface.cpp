@@ -226,8 +226,8 @@ auto render_circuit_overlay(CircuitContext& context) {
 
 }  // namespace
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render_config,
-                       const Layout &layout) -> void {
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
+                       const Layout& layout) -> void {
     render_circuit_background(context);
 
     if (render_config.show_circuit) {
@@ -237,8 +237,8 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render
     render_circuit_overlay(context);
 }
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render_config,
-                       const EditableCircuit &editable_circuit, bool show_size_handles)
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
+                       const EditableCircuit& editable_circuit, bool show_size_handles)
     -> void {
     render_circuit_background(context);
 
@@ -257,12 +257,8 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render
         render_setting_handle(context.ctx, target_layout, selection);
 
         if (show_size_handles) {
-            print("not implemented");
+            render_size_handles(context.ctx, target_layout, selection);
         }
-
-        // if (show_size_handles) {
-        //     render_size_handles(context_.ctx, target_layout, selection);
-        // }
 
         // if (!(mouse_logic_ &&
         //       std::holds_alternative<MouseAreaSelectionLogic>(mouse_logic_.value())))
@@ -271,7 +267,6 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render
         // }
     }
 
-    
     if (render_config.show_collision_cache) {
         render_editable_circuit_collision_cache(context.ctx, editable_circuit);
     }
@@ -285,8 +280,8 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render
     render_circuit_overlay(context);
 }
 
-auto render_to_context(CircuitContext& context, const WidgetRenderConfig &render_config,
-                       const SpatialSimulation &spatial_simulation) -> void {
+auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
+                       const SpatialSimulation& spatial_simulation) -> void {
     render_circuit_background(context);
 
     if (render_config.show_circuit) {

@@ -1124,7 +1124,8 @@ auto _draw_line_segment_with_history(Context& ctx, point_t p_from, point_t p_unt
     }
 }
 
-auto _draw_wire_with_history(Context& ctx, const Layout& layout [[maybe_unused]], wire_id_t wire_id [[maybe_unused]],
+auto _draw_wire_with_history(Context& ctx, const Layout& layout [[maybe_unused]],
+                             wire_id_t wire_id [[maybe_unused]],
                              simulation_view::ConstElement logic_state,
                              const simulation::HistoryView& history) -> void {
     if (history.size() < 2) [[unlikely]] {
@@ -1208,7 +1209,6 @@ auto draw_wires(Context& ctx, std::span<const segment_info_t> segment_infos,
 // Size Handles
 //
 
-/*
 namespace {
 
 struct OutlinedRectAttributes {
@@ -1220,7 +1220,7 @@ struct OutlinedRectAttributes {
 auto draw_outlined_rect_px(Context& ctx, BLRect rect, OutlinedRectAttributes attributes) {
     auto stroke_width =
         std::max(1., round_fast(attributes.stroke_width_device *
-                                ctx.config.view_config.device_pixel_ratio()));
+                                ctx.settings.view_config.device_pixel_ratio()));
 
     // draw square
     ctx.bl_ctx.fillRect(rect, attributes.stroke_color);
@@ -1233,7 +1233,7 @@ auto draw_outlined_rect_px(Context& ctx, BLRect rect, OutlinedRectAttributes att
 }  // namespace
 
 auto draw_size_handle(Context& ctx, const size_handle_t& position) -> void {
-    auto rect = size_handle_rect_px(position, ctx.config.view_config);
+    auto rect = size_handle_rect_px(position, ctx.settings.view_config);
 
     draw_outlined_rect_px(
         ctx, rect,
@@ -1256,7 +1256,6 @@ auto render_size_handles(Context& ctx, const Layout& layout, const Selection& se
     ctx.bl_ctx.setCompOp(BL_COMP_OP_SRC_COPY);
     draw_size_handles(ctx, size_handle_positions(layout, selection));
 }
-*/
 
 //
 // Setting Handle

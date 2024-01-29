@@ -5,6 +5,7 @@
 #include "editable_circuit.h"
 #include "geometry/scene.h"
 #include "logging.h"
+#include "size_handle.h"
 #include "vocabulary/point.h"
 
 #include <gsl/gsl>
@@ -142,6 +143,14 @@ auto EditingLogicManager::is_editing_active() const -> bool {
     return mouse_logic_.has_value();
 }
 
+auto EditingLogicManager::is_area_selection_active() const -> bool {
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
+    Expects(rubber_band_valid(rubber_band_, circuit_state_));
+
+    return mouse_logic_.has_value() &&
+           std::holds_alternative<SelectionAreaLogic>(*mouse_logic_);
+}
+
 auto EditingLogicManager::setup_colliding_move(const EditableCircuit& editable_circuit,
                                                std::vector<point_t> cross_points__)
     -> void {
@@ -182,6 +191,21 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
 
     // selection
     if (is_selection_state(editing_state)) {
+        if (const auto size_handle = get_colliding_size_handle(
+                grid_fine_position, editable_circuit.layout(),
+                editable_circuit.visible_selection(), view_config)) {
+            return HandleResizeLogic {editable_circuit, *size_handle};
+        }
+
+        // if (const auto setting_handle =
+        //         get_colliding_setting_handle(point, layout, selection)) {
+        //     mouse_logic_.emplace(MouseSettingHandleLogic::Args {
+        //         .widget_registry = setting_widget_registry_.value(),
+        //         .setting_handle = setting_handle.value(),
+        //     });
+        //     return;
+        // }
+
         if (editable_circuit.caches().selection_index().has_element(grid_fine_position)) {
             if (modifiers == Qt::NoModifier) {
                 print("MouseMoveSelectionLogic");
@@ -233,6 +257,9 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
                 },
                 [&](SelectionMoveLogic& arg) {
                     arg.mouse_press(editable_circuit, grid_fine_position, double_click);
+                },
+                [&](HandleResizeLogic& arg) {
+                    arg.mouse_press(editable_circuit, grid_fine_position);
                 }},
             mouse_logic_.value());
     }
@@ -266,6 +293,9 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
                              },
                              [&](SelectionSingleLogic&) {},
                              [&](SelectionMoveLogic& arg) {
+                                 arg.mouse_move(editable_circuit, grid_fine_position);
+                             },
+                             [&](HandleResizeLogic& arg) {
                                  arg.mouse_move(editable_circuit, grid_fine_position);
                              }},
                    mouse_logic_.value());
@@ -308,6 +338,10 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
                       [&](SelectionMoveLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_fine_position);
                           return arg.is_finished();
+                      },
+                      [&](HandleResizeLogic& arg) {
+                          arg.mouse_release(editable_circuit, grid_fine_position);
+                          return true;
                       }},
             mouse_logic_.value());
 
