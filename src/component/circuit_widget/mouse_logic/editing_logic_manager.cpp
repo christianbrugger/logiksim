@@ -118,7 +118,9 @@ auto EditingLogicManager::confirm_editing(EditableCircuit* editable_circuit_)
     if (editable_circuit_ && mouse_logic_) {
         if (const auto arg = std::get_if<SelectionMoveLogic>(&mouse_logic_.value())) {
             arg->confirm();
-            finalize_editing(editable_circuit_);
+            if (arg->is_finished()) {
+                finalize_editing(editable_circuit_);
+            }
             res = ManagerResult::require_update;
         }
     }
