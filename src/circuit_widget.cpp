@@ -356,6 +356,13 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
         }
     }
 
+    if (event_->button() == Qt::LeftButton && is_simulation(circuit_state_)) {
+        if (const auto point = to_grid(position, render_surface_.view_config())) {
+            circuit_store_.interactive_simulation().mouse_press(*point);
+            update();
+        }
+    }
+
     if (event_->button() == Qt::RightButton) {
         abort_current_action();
         update();
