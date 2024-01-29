@@ -113,15 +113,20 @@ auto EditingLogicManager::confirm_editing(EditableCircuit* editable_circuit_)
     Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
     Expects(rubber_band_valid(rubber_band_, circuit_state_));
 
-    auto res = ManagerResult::done;
+    const auto res = mouse_logic_ ? ManagerResult::require_update : ManagerResult::done;
 
     if (editable_circuit_ && mouse_logic_) {
-        if (const auto arg = std::get_if<SelectionMoveLogic>(&mouse_logic_.value())) {
-            arg->confirm();
-            if (arg->is_finished()) {
-                finalize_editing(editable_circuit_);
-            }
-            res = ManagerResult::require_update;
+        bool finished = std::visit(overload {
+                                       [&](SelectionMoveLogic& arg) {
+                                           arg.confirm();
+                                           return arg.is_finished();
+                                       },
+                                       [&](auto&) { return false; },
+                                   },
+                                   *mouse_logic_);
+
+        if (finished) {
+            finalize_editing(editable_circuit_);
         }
     }
 
