@@ -92,20 +92,39 @@ auto EditingLogicManager::finalize_editing(EditableCircuit* editable_circuit_)
     if (editable_circuit_ && mouse_logic_) {
         auto& editable_circuit = *editable_circuit_;
 
-        std::visit(overload(
-                       [&](circuit_widget::EditingLogicInterface& arg) {
-                           arg.finalize(editable_circuit);
-                       },
-                       [&](circuit_widget::SelectionAreaLogic& arg) {
-                           arg.finalize(editable_circuit, rubber_band_);
-                       }),
-                   mouse_logic_.value());
+        std::visit(
+            overload([&](EditingLogicInterface& arg) { arg.finalize(editable_circuit); },
+                     [&](SelectionAreaLogic& arg) {
+                         arg.finalize(editable_circuit, rubber_band_);
+                     }),
+            mouse_logic_.value());
         mouse_logic_.reset();
     }
 
     Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
     Ensures(rubber_band_valid(rubber_band_, circuit_state_));
     Ensures(!mouse_logic_);
+    return res;
+}
+
+auto EditingLogicManager::confirm_editing(EditableCircuit* editable_circuit_)
+    -> ManagerResult {
+    Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
+    Expects(rubber_band_valid(rubber_band_, circuit_state_));
+
+    auto res = ManagerResult::done;
+
+    if (editable_circuit_ && mouse_logic_) {
+        if (const auto arg = std::get_if<SelectionMoveLogic>(&mouse_logic_.value())) {
+            arg->confirm();
+            finalize_editing(editable_circuit_);
+            res = ManagerResult::require_update;
+        }
+    }
+
+    Ensures(mouse_logic_valid(mouse_logic_, circuit_state_));
+    Ensures(rubber_band_valid(rubber_band_, circuit_state_));
     return res;
 }
 
@@ -116,25 +135,42 @@ auto EditingLogicManager::is_editing_active() const -> bool {
     return mouse_logic_.has_value();
 }
 
+auto EditingLogicManager::setup_colliding_move(const EditableCircuit& editable_circuit,
+                                               std::vector<point_t> cross_points__)
+    -> void {
+    Expects(is_selection_state(circuit_state_));
+    Expects(!mouse_logic_);
+
+    Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
+    Expects(rubber_band_valid(rubber_band_, circuit_state_));
+
+    mouse_logic_.emplace(SelectionMoveLogic {
+        editable_circuit, SelectionMoveLogic::Args {
+                              .has_colliding = true,
+                              .delete_on_cancel = true,
+                              .cross_points = std::move(cross_points__),
+                          }});
+}
+
 namespace {
 
 auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
                                 Qt::KeyboardModifiers modifiers,
                                 const EditableCircuit& editable_circuit, QWidget& parent,
                                 EditingState editing_state)
-    -> std::optional<circuit_widget::EditingMouseLogic> {
+    -> std::optional<EditingMouseLogic> {
     const auto grid_fine_position = to_grid_fine(position, view_config);
 
     // insert logic items
     if (is_insert_logic_item_state(editing_state)) {
-        return circuit_widget::InsertLogicItemLogic {
+        return InsertLogicItemLogic {
             to_logic_item_definition(editing_state.default_mouse_action),
         };
     }
 
     // insert wires
     if (is_insert_wire_state(editing_state)) {
-        return circuit_widget::InsertWireLogic {};
+        return InsertWireLogic {};
     }
 
     // selection
@@ -142,12 +178,12 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
         if (editable_circuit.caches().selection_index().has_element(grid_fine_position)) {
             if (modifiers == Qt::NoModifier) {
                 print("MouseMoveSelectionLogic");
-                return circuit_widget::SelectionMoveLogic {editable_circuit};
+                return SelectionMoveLogic {editable_circuit};
             }
 
-            return circuit_widget::SelectionSingleLogic {};
+            return SelectionSingleLogic {};
         }
-        return circuit_widget::SelectionAreaLogic {};
+        return SelectionAreaLogic {};
     }
 
     return std::nullopt;
@@ -211,18 +247,18 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
         const auto grid_position = to_grid(position, view_config);
         const auto grid_fine_position = to_grid_fine(position, view_config);
 
-        std::visit(overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
+        std::visit(overload {[&](InsertLogicItemLogic& arg) {
                                  arg.mouse_move(editable_circuit, grid_position);
                              },
-                             [&](circuit_widget::InsertWireLogic& arg) {
+                             [&](InsertWireLogic& arg) {
                                  arg.mouse_move(editable_circuit, grid_position);
                              },
-                             [&](circuit_widget::SelectionAreaLogic& arg) {
+                             [&](SelectionAreaLogic& arg) {
                                  arg.mouse_move(editable_circuit, position, view_config,
                                                 rubber_band_);
                              },
-                             [&](circuit_widget::SelectionSingleLogic&) {},
-                             [&](circuit_widget::SelectionMoveLogic& arg) {
+                             [&](SelectionSingleLogic&) {},
+                             [&](SelectionMoveLogic& arg) {
                                  arg.mouse_move(editable_circuit, grid_fine_position);
                              }},
                    mouse_logic_.value());
@@ -248,21 +284,21 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
         const auto grid_fine_position = to_grid_fine(position, view_config);
 
         const auto finished = std::visit(
-            overload {[&](circuit_widget::InsertLogicItemLogic& arg) {
+            overload {[&](InsertLogicItemLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_position);
                           return true;
                       },
-                      [&](circuit_widget::InsertWireLogic& arg) {
+                      [&](InsertWireLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_position);
                           return true;
                       },
-                      [&](circuit_widget::SelectionAreaLogic& arg) {
+                      [&](SelectionAreaLogic& arg) {
                           arg.mouse_release(editable_circuit, position, view_config,
                                             rubber_band_);
                           return true;
                       },
-                      [&](circuit_widget::SelectionSingleLogic&) { return true; },
-                      [&](circuit_widget::SelectionMoveLogic& arg) {
+                      [&](SelectionSingleLogic&) { return true; },
+                      [&](SelectionMoveLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_fine_position);
                           return arg.is_finished();
                       }},

@@ -4,6 +4,7 @@
 #include <blend2d.h>
 
 #include <QPoint>
+#include <QSize>
 
 #include <optional>
 
@@ -39,6 +40,9 @@ struct rect_t;
     -> std::optional<point_t>;
 [[nodiscard]] auto to_grid(QPoint position, const ViewConfig& config)
     -> std::optional<point_t>;
+
+[[nodiscard]] auto to_closest_grid_position(QPointF position, QSize widget_size,
+                                            const ViewConfig& config) -> point_t;
 
 // to Qt widget / device coordinates
 [[nodiscard]] auto to_widget(point_fine_t position, const ViewConfig& config) -> QPoint;

@@ -92,6 +92,28 @@ auto to_grid(QPoint position, const ViewConfig &config) -> std::optional<point_t
     return to_grid(QPointF {position}, config);
 }
 
+auto to_closest_grid_position(QPointF position, QSize widget_size,
+                              const ViewConfig &config) -> point_t {
+    if (const auto grid = to_grid(position, config)) {
+        return grid.value();
+    }
+
+    const auto w = widget_size.width();
+    const auto h = widget_size.height();
+
+    if (const auto grid = to_grid(QPoint(w / 2, h / 2), config)) {
+        return grid.value();
+    }
+    if (const auto grid = to_grid(QPoint(0, 0), config)) {
+        return grid.value();
+    }
+    if (const auto grid = to_grid(QPoint(w, h), config)) {
+        return grid.value();
+    }
+
+    return point_t {0, 0};
+}
+
 // to Qt widget / device coordinates
 
 auto to_widget(point_fine_t position, const ViewConfig &config) -> QPoint {

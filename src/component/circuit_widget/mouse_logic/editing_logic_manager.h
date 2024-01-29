@@ -40,8 +40,20 @@ class EditingLogicManager {
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
 
     auto finalize_editing(EditableCircuit* editable_circuit_) -> ManagerResult;
+    auto confirm_editing(EditableCircuit* editable_circuit_) -> ManagerResult;
 
     [[nodiscard]] auto is_editing_active() const -> bool;
+
+    /**
+     * @brief: Setup a move for a colliding visible selection.
+     *
+     * Pre-condition:
+     *   + Visible selection is in InsertionMode::collisions
+     *   + circuit_state() == selection mode
+     *   + is_editing_active() is false
+     */
+    auto setup_colliding_move(const EditableCircuit& editable_circuit_,
+                              std::vector<point_t> cross_points) -> void;
 
    public:
     [[nodiscard]] auto mouse_press(QPointF position, const ViewConfig& view_config,

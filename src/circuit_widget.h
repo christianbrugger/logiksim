@@ -126,8 +126,13 @@ class CircuitWidget : public CircuitWidgetBase {
 
    private:
     auto abort_current_action() -> void;
+
     auto select_all() -> void;
     auto delete_selected() -> void;
+
+    [[nodiscard]] auto copy_paste_position() -> point_t;
+    auto copy_selected() -> void;
+    auto paste_clipboard() -> void;
 
    private:
     // never modify these directly, always call set_* so signals are emmitted

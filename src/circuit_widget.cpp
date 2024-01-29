@@ -1,14 +1,20 @@
 #include "circuit_widget.h"
 
 #include "algorithm/overload.h"
+#include "base64.h"
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
+#include "geometry/scene.h"
 #include "logging.h"
 #include "qt/mouse_position.h"
 #include "qt/widget_geometry.h"
+#include "serialize.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
+
+#include <QApplication>
+#include <QClipboard>
 
 namespace logicsim {
 
@@ -238,16 +244,16 @@ auto CircuitWidget::do_action(UserAction action) -> void {
             return;
         }
         case copy_selected: {
-            set_circuit_state(NonInteractiveState {});
-            // TODO implement
+            this->copy_selected();
             return;
         }
         case paste_from_clipboard: {
-            // TODO implement
+            this->paste_clipboard();
             return;
         }
         case cut_selected: {
-            // TODO implement
+            this->copy_selected();
+            this->delete_selected();
             return;
         }
         case delete_selected: {
@@ -416,6 +422,16 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
         update();
     }
 
+    // Enter
+    else if (event_->key() == Qt::Key_Enter || event_->key() == Qt::Key_Return) {
+        if (editing_logic_manager_.confirm_editing(
+                circuit_widget::editable_circuit_pointer(circuit_store_)) ==
+            circuit_widget::ManagerResult::require_update) {
+            update();
+        }
+
+    }
+
     else {
         QWidget::keyPressEvent(event_);
     }
@@ -467,9 +483,8 @@ auto CircuitWidget::delete_selected() -> void {
     }
 
     auto& editable_circuit = circuit_store_.editable_circuit();
-
-    const auto t = Timer {
-        fmt::format("Deleted {}:", editable_circuit.visible_selection().format_info())};
+    const auto t = Timer {std::format(
+        "Deleted {}", editable_circuit.visible_selection().format_info(false))};
 
     // We clear the visible selection before deleting for optimization.
     // So it is not tracked during deletion. (10% speedup)
@@ -477,6 +492,94 @@ auto CircuitWidget::delete_selected() -> void {
     editable_circuit.clear_visible_selection();
     editable_circuit.delete_all(std::move(selection__));
 
+    update();
+}
+
+auto CircuitWidget::copy_paste_position() -> point_t {
+    return to_closest_grid_position(get_mouse_position(*this), get_size_device(*this),
+                                    render_surface_.view_config());
+}
+
+auto CircuitWidget::copy_selected() -> void {
+    if (!is_selection_state(circuit_state_)) {
+        return;
+    }
+
+    const auto t = Timer {"", Timer::Unit::ms, 3};
+    const auto& editable_circuit = circuit_store_.editable_circuit();
+
+    if (!circuit_store_.editable_circuit().visible_selection_empty()) {
+        const auto value = base64_encode(serialize_selected(
+            editable_circuit.layout(), editable_circuit.visible_selection(),
+            copy_paste_position()));
+        QApplication::clipboard()->setText(QString::fromStdString(value));
+    }
+
+    print("Copied", editable_circuit.visible_selection().format_info(false), "in", t);
+}
+
+namespace {
+
+auto parse_clipboard_data() -> std::optional<serialize::LoadLayoutResult> {
+    const auto text = QApplication::clipboard()->text().toStdString();
+    const auto binary = base64_decode(text);
+    if (binary.empty()) {
+        return std::nullopt;
+    }
+    return load_layout(binary);
+}
+
+}  // namespace
+
+auto CircuitWidget::paste_clipboard() -> void {
+    if (!is_editing_state(circuit_state_)) {
+        return;
+    }
+
+    const auto t = Timer {"", Timer::Unit::ms, 3};
+    auto& editable_circuit = circuit_store_.editable_circuit();
+
+    {
+        // load data
+        const auto load_result = parse_clipboard_data();
+        if (!load_result) {
+            return;
+        }
+
+        // change mode
+        set_circuit_state(defaults::selection_state);
+        editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+
+        // insert to circuit as temporary
+        const auto sel_handle = ScopedSelection(editable_circuit);
+        load_result->add(editable_circuit, serialize::AddParameters {
+                                               .insertion_mode = InsertionMode::temporary,
+                                               .selection_id = sel_handle.selection_id(),
+                                               .load_position = copy_paste_position(),
+                                           });
+        editable_circuit.set_visible_selection(
+            editable_circuit.selection(sel_handle.selection_id()));
+    }
+
+    // insert as collisions
+    auto cross_points__ = editable_circuit.regularize_temporary_selection(
+        editable_circuit.visible_selection());
+    editable_circuit.split_before_insert(editable_circuit.visible_selection());
+    editable_circuit.change_insertion_mode(editable_circuit.visible_selection(),
+                                           InsertionMode::collisions);
+
+    if (anything_colliding(editable_circuit.visible_selection(),
+                           editable_circuit.layout())) {
+        // setup move logic
+        editing_logic_manager_.setup_colliding_move(editable_circuit,
+                                                    std::move(cross_points__));
+    } else {
+        // insert
+        editable_circuit.change_insertion_mode(editable_circuit.visible_selection(),
+                                               InsertionMode::insert_or_discard);
+    }
+
+    print("Pasted", editable_circuit.visible_selection().format_info(false), "in", t);
     update();
 }
 

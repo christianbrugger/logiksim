@@ -165,9 +165,13 @@ auto Selection::format() const -> std::string {
         selected_logicitems_.values(), selected_segments_.values());
 }
 
-auto Selection::format_info() const -> std::string {
-    return fmt::format("Slection({} logic items, {} segments)",
-                       selected_logicitems_.size(), selected_segments_.size());
+auto Selection::format_info(bool as_selection) const -> std::string {
+    if (as_selection) {
+        return fmt::format("Slection({} logic items, {} segments)",
+                           selected_logicitems_.size(), selected_segments_.size());
+    }
+    return fmt::format("{} logic items and {} segments", selected_logicitems_.size(),
+                       selected_segments_.size());
 }
 
 auto Selection::empty() const noexcept -> bool {

@@ -59,7 +59,7 @@ class Selection {
 
     auto swap(Selection &other) noexcept -> void;
     [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto format_info() const -> std::string;
+    [[nodiscard]] auto format_info(bool as_selection = true) const -> std::string;
 
     [[nodiscard]] auto operator==(const Selection &) const -> bool = default;
 
