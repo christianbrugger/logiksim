@@ -16,7 +16,8 @@ auto is_selecting_logic(const EditingMouseLogic& logic) -> bool {
     return std::holds_alternative<SelectionAreaLogic>(logic) ||
            std::holds_alternative<SelectionSingleLogic>(logic) ||
            std::holds_alternative<SelectionMoveLogic>(logic) ||
-           std::holds_alternative<HandleResizeLogic>(logic);
+           std::holds_alternative<HandleResizeLogic>(logic) ||
+           std::holds_alternative<HandleSettingLogic>(logic);
 }
 
 }  // namespace circuit_widget

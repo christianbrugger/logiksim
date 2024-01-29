@@ -458,7 +458,8 @@ auto ClockGeneratorDialog::value_changed() -> void {
 auto ClockGeneratorDialog::update_row_visibility() -> void {
     const auto is_symmetric = is_symmetric_->isChecked();
 
-    print("setting_handle/ClockGeneratorDialog::update_row_visibility TODO", is_symmetric);
+    print("setting_handle/ClockGeneratorDialog::update_row_visibility TODO",
+          is_symmetric);
 
     /*
     layout_->setRowVisible(time_symmetric_->label, is_symmetric);
@@ -469,6 +470,7 @@ auto ClockGeneratorDialog::update_row_visibility() -> void {
     this->adjustSize();
 }
 
+/*
 //
 // Mouse Setting Handle Logic
 //
@@ -488,4 +490,6 @@ auto MouseSettingHandleLogic::mouse_release(point_fine_t position,
         widget_registry_.show_setting_dialog(setting_handle_, editable_circuit);
     }
 }
+*/
+
 }  // namespace logicsim

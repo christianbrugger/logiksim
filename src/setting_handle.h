@@ -145,6 +145,7 @@ class ClockGeneratorDialog : public QWidget {
     QCheckBox* simulation_controls_;
 };
 
+/*
 //
 // Mouse Setting Handle Logic
 //
@@ -167,6 +168,7 @@ class MouseSettingHandleLogic {
 
     std::optional<point_fine_t> first_position_ {};
 };
+*/
 
 }  // namespace logicsim
 

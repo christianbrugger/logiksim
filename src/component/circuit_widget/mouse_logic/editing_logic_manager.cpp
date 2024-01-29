@@ -5,6 +5,7 @@
 #include "editable_circuit.h"
 #include "geometry/scene.h"
 #include "logging.h"
+#include "setting_handle.h"
 #include "size_handle.h"
 #include "vocabulary/point.h"
 
@@ -197,18 +198,14 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
             return HandleResizeLogic {editable_circuit, *size_handle};
         }
 
-        // if (const auto setting_handle =
-        //         get_colliding_setting_handle(point, layout, selection)) {
-        //     mouse_logic_.emplace(MouseSettingHandleLogic::Args {
-        //         .widget_registry = setting_widget_registry_.value(),
-        //         .setting_handle = setting_handle.value(),
-        //     });
-        //     return;
-        // }
+        if (const auto setting_handle = get_colliding_setting_handle(
+                grid_fine_position, editable_circuit.layout(),
+                editable_circuit.visible_selection())) {
+            return HandleSettingLogic {*setting_handle};
+        }
 
         if (editable_circuit.caches().selection_index().has_element(grid_fine_position)) {
             if (modifiers == Qt::NoModifier) {
-                print("MouseMoveSelectionLogic");
                 return SelectionMoveLogic {editable_circuit};
             }
 
@@ -260,6 +257,9 @@ auto EditingLogicManager::mouse_press(QPointF position, const ViewConfig& view_c
                 },
                 [&](HandleResizeLogic& arg) {
                     arg.mouse_press(editable_circuit, grid_fine_position);
+                },
+                [&](HandleSettingLogic& arg) {
+                    arg.mouse_press(editable_circuit, grid_fine_position);
                 }},
             mouse_logic_.value());
     }
@@ -297,7 +297,8 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
                              },
                              [&](HandleResizeLogic& arg) {
                                  arg.mouse_move(editable_circuit, grid_fine_position);
-                             }},
+                             },
+                             [&](HandleSettingLogic&) {}},
                    mouse_logic_.value());
     }
 
@@ -340,6 +341,10 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
                           return arg.is_finished();
                       },
                       [&](HandleResizeLogic& arg) {
+                          arg.mouse_release(editable_circuit, grid_fine_position);
+                          return true;
+                      },
+                      [&](HandleSettingLogic& arg) {
                           arg.mouse_release(editable_circuit, grid_fine_position);
                           return true;
                       }},
