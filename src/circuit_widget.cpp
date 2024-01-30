@@ -155,9 +155,7 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
                                              editable_circuit_pointer(circuit_store_));
 
     // close dialogs
-    if (is_editing_state(circuit_state_) && !is_editing_state(new_state)) {
-        setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
-    }
+    close_all_setting_dialogs();
 
     // clear visible selection
     if (is_selection_state(circuit_state_)) {
@@ -182,13 +180,8 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
 }
 
 auto CircuitWidget::clear_circuit() -> void {
-    // finalize editing
-    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
-
-    // close dialogs
-    if (is_editing_state(circuit_state_)) {
-        setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
-    }
+    finalize_editing();
+    close_all_setting_dialogs();
 
     circuit_widget::set_layout(circuit_store_, Layout {});
     render_surface_.reset();
@@ -224,7 +217,7 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
-    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+    finalize_editing();
     auto layout__ = circuit_store_.layout();
     this->clear_circuit();
 
@@ -241,8 +234,7 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
 }
 
 auto CircuitWidget::save_circuit(std::string filename) -> bool {
-    // finalize editing
-    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+    finalize_editing();
     update();
 
     return circuit_widget::save_circuit(circuit_store_, filename,
@@ -272,8 +264,7 @@ auto CircuitWidget::do_action(UserAction action) -> void {
             return;
         }
         case reload_circuit: {
-            editing_logic_manager_.finalize_editing(
-                editable_circuit_pointer(circuit_store_));
+            finalize_editing();
             auto layout__ = Layout {circuit_store_.layout()};
             this->clear_circuit();
             circuit_widget::set_layout(circuit_store_, std::move(layout__));
@@ -516,8 +507,7 @@ auto CircuitWidget::abort_current_action() -> void {
     if (is_editing_state(circuit_state_)) {
         // 1) cancel current editing
         if (editing_logic_manager_.is_editing_active()) {
-            editing_logic_manager_.finalize_editing(
-                editable_circuit_pointer(circuit_store_));
+            finalize_editing();
         }
 
         else {
@@ -534,13 +524,23 @@ auto CircuitWidget::abort_current_action() -> void {
     }
 }
 
+auto CircuitWidget::finalize_editing() -> void {
+    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+}
+
+auto CircuitWidget::close_all_setting_dialogs() -> void {
+    if (is_editing_state(circuit_state_)) {
+        setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
+    }
+}
+
 auto CircuitWidget::select_all() -> void {
     if (!is_editing_state(circuit_state_)) {
         return;
     }
 
+    finalize_editing();
     set_circuit_state(defaults::selection_state);
-    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
 
     const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
                                    point_fine_t {grid_t::max(), grid_t::max()}};
@@ -556,8 +556,7 @@ auto CircuitWidget::delete_selected() -> void {
     if (!is_selection_state(circuit_state_)) {
         return;
     }
-    // finalize editing
-    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+    finalize_editing();
 
     auto& editable_circuit = circuit_store_.editable_circuit();
     const auto t = Timer {std::format(
@@ -624,8 +623,8 @@ auto CircuitWidget::paste_clipboard() -> void {
         }
 
         // change mode
-        set_circuit_state(defaults::selection_state);
         editing_logic_manager_.finalize_editing(&editable_circuit);
+        set_circuit_state(defaults::selection_state);
 
         // insert to circuit as temporary
         const auto sel_handle = ScopedSelection(editable_circuit);

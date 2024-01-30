@@ -137,6 +137,8 @@ class CircuitWidget : public CircuitWidgetBase {
    private:
     auto clear_circuit() -> void;
     auto abort_current_action() -> void;
+    auto finalize_editing() -> void;
+    auto close_all_setting_dialogs() -> void;
 
     auto select_all() -> void;
     auto delete_selected() -> void;
