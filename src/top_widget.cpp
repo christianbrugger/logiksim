@@ -110,6 +110,10 @@ MainWidget::MainWidget(QWidget* parent)
     connect(circuit_widget_, &CircuitWidgetBase::render_config_changed, this,
             &MainWidget::on_render_config_changed);
 
+    on_circuit_state_changed(circuit_widget_->circuit_state());
+    on_simulation_config_changed(circuit_widget_->simulation_config());
+    on_render_config_changed(circuit_widget_->render_config());
+
     new_circuit();
     resize(914, 500);
     restore_gui_state();
@@ -363,7 +367,6 @@ auto MainWidget::create_menu() -> void {
             actions_.show_circuit = add_action_checkable(
                 menu, tr("Show C&ircuit"),
                 ActionAttributes {.icon = icon_t::show_circuit},
-
                 [this](bool checked) { set_show_circuit(*circuit_widget_, checked); });
             actions_.show_collision_cache = add_action_checkable(
                 menu, tr("Show C&ollision Cache"),
@@ -710,10 +713,6 @@ auto MainWidget::new_circuit() -> void {
         circuit_widget_->set_render_config({});
         circuit_widget_->set_simulation_config({});
 
-        on_circuit_state_changed(circuit_widget_->circuit_state());
-        on_render_config_changed(circuit_widget_->render_config());
-        on_simulation_config_changed(circuit_widget_->simulation_config());
-
         last_saved_filename_.clear();
         last_saved_data_ = circuit_widget_->serialized_circuit();
     }
@@ -789,7 +788,7 @@ auto MainWidget::load_circuit_example(int number) -> void {
     if (ensure_circuit_saved() == save_result_t::success) {
         circuit_widget_->load_circuit_example(number);
 
-        last_saved_filename_ = {};
+        last_saved_filename_.clear();
         last_saved_data_ = circuit_widget_->serialized_circuit();
     }
 }
