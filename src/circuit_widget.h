@@ -7,9 +7,15 @@
 #include "component/circuit_widget/mouse_logic/mouse_drag_logic.h"
 #include "component/circuit_widget/render_surface.h"
 
+#include <gsl/gsl>
+
 #include <QTimer>
 
 namespace logicsim {
+
+class SettingDialogManager;
+struct SettingAttributes;
+struct selection_id_t;
 
 namespace circuit_widget {
 
@@ -113,6 +119,10 @@ class CircuitWidget : public CircuitWidgetBase {
    protected:
     Q_SLOT void on_timer_benchmark_render();
     Q_SLOT void on_timer_run_simulation();
+    Q_SLOT void on_timer_setting_dialog_cleanup();
+    Q_SLOT void on_setting_dialog_cleanup_request();
+    Q_SLOT void on_setting_dialog_attributes_changed(selection_id_t selection_id,
+                                                     SettingAttributes attributes);
 
     auto resizeEvent(QResizeEvent* event_) -> void override;
     auto paintEvent(QPaintEvent* event_) -> void override;
@@ -148,6 +158,9 @@ class CircuitWidget : public CircuitWidgetBase {
     QTimer timer_benchmark_render_ {};
     QTimer timer_run_simulation_ {};
     bool simulation_image_update_pending_ {false};
+
+    gsl::not_null<SettingDialogManager*> setting_dialog_manager_;
+    QTimer timer_setting_dialog_cleanup_ {};
 };
 
 //

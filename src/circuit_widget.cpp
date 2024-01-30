@@ -10,6 +10,7 @@
 #include "qt/mouse_position.h"
 #include "qt/widget_geometry.h"
 #include "serialize.h"
+#include "setting_dialog_manager.h"
 #include "vocabulary/simulation_config.h"
 #include "vocabulary/widget_render_config.h"
 
@@ -74,7 +75,9 @@ auto format(circuit_widget::UserAction action) -> std::string {
 }
 
 CircuitWidget::CircuitWidget(QWidget* parent)
-    : CircuitWidgetBase(parent), editing_logic_manager_ {this} {
+    : CircuitWidgetBase(parent),
+      editing_logic_manager_ {this},
+      setting_dialog_manager_ {new SettingDialogManager {this}} {
     // accept focus so key presses are forwarded to us
     setFocusPolicy(Qt::StrongFocus);
 
@@ -82,7 +85,8 @@ CircuitWidget::CircuitWidget(QWidget* parent)
     circuit_store_.set_simulation_config(simulation_config_);
     circuit_store_.set_circuit_state(circuit_state_);
     render_surface_.set_render_config(render_config_);
-    // editing_logic_manager_.set_circuit_state(circuit_state_);
+    editing_logic_manager_.set_circuit_state(
+        circuit_state_, circuit_widget::editable_circuit_pointer(circuit_store_));
 
     // timer benchmark rendering
     connect(&timer_benchmark_render_, &QTimer::timeout, this,
@@ -97,6 +101,16 @@ CircuitWidget::CircuitWidget(QWidget* parent)
     if (is_simulation(circuit_state_)) {
         timer_benchmark_render_.start();
     }
+
+    // setting dialog signals
+    connect(setting_dialog_manager_, &SettingDialogManager::request_cleanup, this,
+            &CircuitWidget::on_setting_dialog_cleanup_request);
+    connect(setting_dialog_manager_, &SettingDialogManager::attributes_changed, this,
+            &CircuitWidget::on_setting_dialog_attributes_changed);
+    connect(&timer_setting_dialog_cleanup_, &QTimer::timeout, this,
+            &CircuitWidget::on_timer_setting_dialog_cleanup);
+    timer_setting_dialog_cleanup_.setInterval(250);
+    timer_setting_dialog_cleanup_.start();
 }
 
 auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
@@ -139,6 +153,11 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     // finalize editing
     editing_logic_manager_.set_circuit_state(
         new_state, circuit_widget::editable_circuit_pointer(circuit_store_));
+
+    // close dialogs
+    if (is_editing_state(circuit_state_) && !is_editing_state(new_state)) {
+        setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
+    }
 
     // clear visible selection
     if (is_selection_state(circuit_state_)) {
@@ -304,6 +323,27 @@ void CircuitWidget::on_timer_run_simulation() {
     }
 }
 
+Q_SLOT void CircuitWidget::on_timer_setting_dialog_cleanup() {
+    if (is_editing_state(circuit_state_)) {
+        setting_dialog_manager_->run_cleanup(circuit_store_.editable_circuit());
+    }
+}
+
+Q_SLOT void CircuitWidget::on_setting_dialog_cleanup_request() {
+    if (is_editing_state(circuit_state_)) {
+        setting_dialog_manager_->run_cleanup(circuit_store_.editable_circuit());
+    }
+}
+
+Q_SLOT void CircuitWidget::on_setting_dialog_attributes_changed(
+    selection_id_t selection_id, SettingAttributes attributes) {
+    if (is_editing_state(circuit_state_)) {
+        change_setting_attributes(circuit_store_.editable_circuit(), selection_id,
+                                  attributes);
+        update();
+    }
+}
+
 auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
     update();
 }
@@ -402,10 +442,17 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
     }
 
     if (event_->button() == Qt::LeftButton) {
+        const auto show_setting_dialog = [&](EditableCircuit& editable_circuit,
+                                             setting_handle_t setting_handle) {
+            Expects(setting_dialog_manager_);
+            setting_dialog_manager_->show_setting_dialog(editable_circuit,
+                                                         setting_handle);
+        };
+
         if (editing_logic_manager_.mouse_release(
                 position, render_surface_.view_config(),
-                circuit_widget::editable_circuit_pointer(circuit_store_)) ==
-            circuit_widget::ManagerResult::require_update) {
+                circuit_widget::editable_circuit_pointer(circuit_store_),
+                show_setting_dialog) == circuit_widget::ManagerResult::require_update) {
             update();
         }
     }

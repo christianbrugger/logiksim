@@ -64,7 +64,9 @@ class EditingLogicManager {
     [[nodiscard]] auto mouse_move(QPointF position, const ViewConfig& view_config,
                                   EditableCircuit* editable_circuit) -> ManagerResult;
     [[nodiscard]] auto mouse_release(QPointF position, const ViewConfig& view_config,
-                                     EditableCircuit* editable_circuit) -> ManagerResult;
+                                     EditableCircuit* editable_circuit,
+                                     const OpenSettingDialog& show_setting_dialog)
+        -> ManagerResult;
 
    private:
     QRubberBand rubber_band_;

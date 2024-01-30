@@ -256,6 +256,7 @@ set(LS_CORE_SOURCES
     src/vocabulary/segment_part.cpp
     src/vocabulary/segment_point_type.cpp
     src/vocabulary/selection_id.cpp
+    src/vocabulary/setting_attribute.cpp
     src/vocabulary/shape_draw_type.cpp
     src/vocabulary/simulation_config.cpp
     src/vocabulary/text_alignment.cpp
@@ -300,6 +301,8 @@ set(LS_CORE_SOURCES
     src/selection_normalization.cpp
     src/serialize.cpp
     src/serialize_detail.cpp
+    src/setting_dialog.cpp
+    src/setting_dialog_manager.cpp
     src/setting_handle.cpp
     src/simulation.cpp
     src/simulation_player.cpp
@@ -320,7 +323,9 @@ set(LS_CORE_SOURCES
 # list them manually to speedup compilation
 set(MOC_FILES
     src/circuit_widget_base.h
-    src/top_widget.h 
+    src/top_widget.h
+    src/setting_dialog.h
+    src/setting_dialog_manager.h
 )
 
 set(LS_TEST_SOURCES

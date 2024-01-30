@@ -16,12 +16,13 @@ auto HandleSettingLogic::mouse_press(EditableCircuit& editable_circuit,
 }
 
 auto HandleSettingLogic::mouse_release(EditableCircuit& editable_circuit,
-                                       point_fine_t position) -> void {
+                                       point_fine_t position,
+                                       const OpenSettingDialog& show_setting_dialog)
+    -> void {
     if (first_position_ &&  //
         is_colliding(setting_handle_, first_position_.value()) &&
         is_colliding(setting_handle_, position)) {
-        // widget_registry_.show_setting_dialog(setting_handle_, editable_circuit);
-        print("setting handle at", setting_handle_.position);
+        show_setting_dialog(editable_circuit, setting_handle_);
     }
 }
 

@@ -5,6 +5,7 @@
 #include "setting_handle.h"
 #include "vocabulary/point_fine.h"
 
+#include <functional>
 #include <optional>
 
 namespace logicsim {
@@ -13,12 +14,15 @@ class EditableCircuit;
 
 namespace circuit_widget {
 
+using OpenSettingDialog = std::function<void(EditableCircuit&, setting_handle_t)>;
+
 class HandleSettingLogic : public EditingLogicInterface {
    public:
     explicit HandleSettingLogic(setting_handle_t setting_handle);
 
     auto mouse_press(EditableCircuit& editable_circuit, point_fine_t position) -> void;
-    auto mouse_release(EditableCircuit& editable_circuit, point_fine_t position) -> void;
+    auto mouse_release(EditableCircuit& editable_circuit, point_fine_t position,
+                       const OpenSettingDialog& show_setting_dialog) -> void;
 
     auto finalize(EditableCircuit& editable_circuit) -> void override;
 

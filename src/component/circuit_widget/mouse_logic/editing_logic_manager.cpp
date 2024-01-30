@@ -208,7 +208,6 @@ auto create_editing_mouse_logic(QPointF position, const ViewConfig& view_config,
             if (modifiers == Qt::NoModifier) {
                 return SelectionMoveLogic {editable_circuit};
             }
-
             return SelectionSingleLogic {};
         }
         return SelectionAreaLogic {};
@@ -308,7 +307,8 @@ auto EditingLogicManager::mouse_move(QPointF position, const ViewConfig& view_co
 }
 
 auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view_config,
-                                        EditableCircuit* editable_circuit_)
+                                        EditableCircuit* editable_circuit_,
+                                        const OpenSettingDialog& show_setting_dialog)
     -> ManagerResult {
     Expects(editing_circuit_valid(editable_circuit_, circuit_state_));
     Expects(mouse_logic_valid(mouse_logic_, circuit_state_));
@@ -345,7 +345,8 @@ auto EditingLogicManager::mouse_release(QPointF position, const ViewConfig& view
                           return true;
                       },
                       [&](HandleSettingLogic& arg) {
-                          arg.mouse_release(editable_circuit, grid_fine_position);
+                          arg.mouse_release(editable_circuit, grid_fine_position,
+                                            show_setting_dialog);
                           return true;
                       }},
             mouse_logic_.value());
