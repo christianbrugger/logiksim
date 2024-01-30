@@ -584,6 +584,7 @@ auto CircuitWidget::copy_selected() -> void {
     if (!is_selection_state(circuit_state_)) {
         return;
     }
+    finalize_editing();
 
     const auto t = Timer {"", Timer::Unit::ms, 3};
     const auto& editable_circuit = circuit_store_.editable_circuit();
