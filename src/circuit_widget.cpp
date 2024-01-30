@@ -85,8 +85,8 @@ CircuitWidget::CircuitWidget(QWidget* parent)
     circuit_store_.set_simulation_config(simulation_config_);
     circuit_store_.set_circuit_state(circuit_state_);
     render_surface_.set_render_config(render_config_);
-    editing_logic_manager_.set_circuit_state(
-        circuit_state_, circuit_widget::editable_circuit_pointer(circuit_store_));
+    editing_logic_manager_.set_circuit_state(circuit_state_,
+                                             editable_circuit_pointer(circuit_store_));
 
     // timer benchmark rendering
     connect(&timer_benchmark_render_, &QTimer::timeout, this,
@@ -150,9 +150,9 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
         return;
     }
 
-    // finalize editing
-    editing_logic_manager_.set_circuit_state(
-        new_state, circuit_widget::editable_circuit_pointer(circuit_store_));
+    // finalize editing if needed
+    editing_logic_manager_.set_circuit_state(new_state,
+                                             editable_circuit_pointer(circuit_store_));
 
     // close dialogs
     if (is_editing_state(circuit_state_) && !is_editing_state(new_state)) {
@@ -178,6 +178,21 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     // update & notify
     circuit_state_ = new_state;
     emit_circuit_state_changed(new_state);
+    update();
+}
+
+auto CircuitWidget::clear_circuit() -> void {
+    // finalize editing
+    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+
+    // close dialogs
+    if (is_editing_state(circuit_state_)) {
+        setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
+    }
+
+    circuit_widget::set_layout(circuit_store_, Layout {});
+    render_surface_.reset();
+
     update();
 }
 
@@ -209,12 +224,15 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
+    auto layout__ = circuit_store_.layout();
     this->clear_circuit();
 
     const auto result = circuit_widget::load_from_file(circuit_store_, filename);
     if (result.success) {
         render_surface_.set_view_point(result.view_point);
         set_simulation_config(result.simulation_config);
+    } else {
+        circuit_widget::set_layout(circuit_store_, std::move(layout__));
     }
 
     update();
@@ -222,7 +240,10 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
 }
 
 auto CircuitWidget::save_circuit(std::string filename) -> bool {
-    // TODO reset mouse logic
+    // finalize editing
+    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+    update();
+
     return circuit_widget::save_circuit(circuit_store_, filename,
                                         render_surface_.view_config().view_point());
 }
@@ -389,7 +410,7 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
 
         if (editing_logic_manager_.mouse_press(
                 position, render_surface_.view_config(), event_->modifiers(),
-                double_click, circuit_widget::editable_circuit_pointer(circuit_store_),
+                double_click, editable_circuit_pointer(circuit_store_),
                 *this) == circuit_widget::ManagerResult::require_update) {
             update();
         }
@@ -419,9 +440,8 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
     }
 
     if (event_->buttons() & Qt::LeftButton) {
-        if (editing_logic_manager_.mouse_move(
-                position, render_surface_.view_config(),
-                circuit_widget::editable_circuit_pointer(circuit_store_)) ==
+        if (editing_logic_manager_.mouse_move(position, render_surface_.view_config(),
+                                              editable_circuit_pointer(circuit_store_)) ==
             circuit_widget::ManagerResult::require_update) {
             update();
         }
@@ -447,10 +467,10 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
                                                          setting_handle);
         };
 
-        if (editing_logic_manager_.mouse_release(
-                position, render_surface_.view_config(),
-                circuit_widget::editable_circuit_pointer(circuit_store_),
-                show_setting_dialog) == circuit_widget::ManagerResult::require_update) {
+        if (editing_logic_manager_.mouse_release(position, render_surface_.view_config(),
+                                                 editable_circuit_pointer(circuit_store_),
+                                                 show_setting_dialog) ==
+            circuit_widget::ManagerResult::require_update) {
             update();
         }
     }
@@ -477,9 +497,8 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
 
     // Enter
     else if (event_->key() == Qt::Key_Enter || event_->key() == Qt::Key_Return) {
-        if (editing_logic_manager_.confirm_editing(
-                circuit_widget::editable_circuit_pointer(circuit_store_)) ==
-            circuit_widget::ManagerResult::require_update) {
+        if (editing_logic_manager_.confirm_editing(editable_circuit_pointer(
+                circuit_store_)) == circuit_widget::ManagerResult::require_update) {
             update();
         }
 
@@ -490,28 +509,12 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
     }
 }
 
-auto CircuitWidget::clear_circuit() -> void {
-    // finalize editing
-    editing_logic_manager_.finalize_editing(
-        circuit_widget::editable_circuit_pointer(circuit_store_));
-
-    // close dialogs
-    if (is_editing_state(circuit_state_)) {
-        setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
-    }
-
-    circuit_widget::set_layout(circuit_store_, Layout {});
-    render_surface_.reset();
-
-    update();
-}
-
 auto CircuitWidget::abort_current_action() -> void {
     if (is_editing_state(circuit_state_)) {
         // 1) cancel current editing
         if (editing_logic_manager_.is_editing_active()) {
             editing_logic_manager_.finalize_editing(
-                circuit_widget::editable_circuit_pointer(circuit_store_));
+                editable_circuit_pointer(circuit_store_));
         }
 
         else {
@@ -550,6 +553,8 @@ auto CircuitWidget::delete_selected() -> void {
     if (!is_selection_state(circuit_state_)) {
         return;
     }
+    // finalize editing
+    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
 
     auto& editable_circuit = circuit_store_.editable_circuit();
     const auto t = Timer {std::format(
@@ -617,7 +622,7 @@ auto CircuitWidget::paste_clipboard() -> void {
 
         // change mode
         set_circuit_state(defaults::selection_state);
-        editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+        editing_logic_manager_.finalize_editing(&editable_circuit);
 
         // insert to circuit as temporary
         const auto sel_handle = ScopedSelection(editable_circuit);

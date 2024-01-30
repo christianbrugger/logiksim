@@ -773,15 +773,16 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
 
     const auto _ [[maybe_unused]] = Timer("Open");
 
-    if (!circuit_widget_->load_circuit(*filename)) {
+    if (circuit_widget_->load_circuit(*filename)) {
+        last_saved_filename_ = *filename;
+        last_saved_data_ = circuit_widget_->serialized_circuit();
+    } else {
         const auto message = fmt::format("Failed to load \"{}\".", filename);
         QMessageBox::warning(this,                            //
                              QString::fromUtf8(LS_APP_NAME),  //
                              QString::fromUtf8(message)       //
         );
     }
-    last_saved_filename_ = *filename;
-    last_saved_data_ = circuit_widget_->serialized_circuit();
 }
 
 auto MainWidget::load_circuit_example(int number) -> void {
