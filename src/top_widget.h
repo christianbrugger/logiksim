@@ -103,6 +103,7 @@ class MainWidget : public QMainWindow {
     enum class save_result_t { success, canceled };
     auto save_circuit(filename_choice_t filename_choice) -> save_result_t;
     auto open_circuit(std::optional<std::string> filename = {}) -> void;
+    auto load_circuit_example(int number) -> void;
     auto ensure_circuit_saved() -> save_result_t;
 
     // gui state

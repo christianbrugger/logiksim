@@ -392,19 +392,19 @@ auto MainWidget::create_menu() -> void {
         {
             add_action(menu, tr("Load \"Si&mple\" Example"),
                        ActionAttributes {.icon = icon_t::load_simple_example},
-                       [this]() { circuit_widget_->load_circuit_example(1); });
+                       [this]() { load_circuit_example(1); });
 
             add_action(menu, tr("Load \"&Wires\" Example"),
                        ActionAttributes {.icon = icon_t::load_wire_example},
-                       [this]() { circuit_widget_->load_circuit_example(4); });
+                       [this]() { load_circuit_example(4); });
 
             add_action(menu, tr("Load \"&Elements\" Example"),
                        ActionAttributes {.icon = icon_t::load_element_example},
-                       [this]() { circuit_widget_->load_circuit_example(3); });
+                       [this]() { load_circuit_example(3); });
 
             add_action(menu, tr("Load \"Elements + Wi&res\" Example"),
                        ActionAttributes {.icon = icon_t::load_elements_and_wires_example},
-                       [this]() { circuit_widget_->load_circuit_example(2); });
+                       [this]() { load_circuit_example(2); });
         }
 
         // Thread Count
@@ -782,6 +782,15 @@ auto MainWidget::open_circuit(std::optional<std::string> filename) -> void {
     }
     last_saved_filename_ = *filename;
     last_saved_data_ = circuit_widget_->serialized_circuit();
+}
+
+auto MainWidget::load_circuit_example(int number) -> void {
+    if (ensure_circuit_saved() == save_result_t::success) {
+        circuit_widget_->load_circuit_example(number);
+
+        last_saved_filename_ = {};
+        last_saved_data_ = circuit_widget_->serialized_circuit();
+    }
 }
 
 auto MainWidget::ensure_circuit_saved() -> save_result_t {
