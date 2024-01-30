@@ -218,7 +218,7 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
     finalize_editing();
-    auto layout__ = circuit_store_.layout();
+    auto layout__ = Layout {circuit_store_.layout()};
     this->clear_circuit();
 
     const auto result = circuit_widget::load_from_file(circuit_store_, filename);
