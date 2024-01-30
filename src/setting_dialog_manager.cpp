@@ -35,16 +35,18 @@ auto get_selected_logic_item(const EditableCircuit& editable_circuit,
 }
 
 auto create_setting_dialog(const EditableCircuit& editable_circuit,
-                           setting_handle_t setting_handle, QWidget* parent,
-                           selection_id_t selection_id) -> SettingDialog* {
+                           selection_id_t selection_id, QWidget* parent)
+    -> SettingDialog* {
+    const auto logicitem_id = get_selected_logic_item(editable_circuit, selection_id);
+    Expects(logicitem_id);
+
     const auto logicitem_type =
-        editable_circuit.layout().logic_items().type(setting_handle.logicitem_id);
+        editable_circuit.layout().logic_items().type(logicitem_id);
 
     if (logicitem_type == LogicItemType::clock_generator) {
         return new ClockGeneratorDialog {
             parent, selection_id,
-            editable_circuit.layout().logic_items().attrs_clock_generator(
-                setting_handle.logicitem_id)};
+            editable_circuit.layout().logic_items().attrs_clock_generator(logicitem_id)};
     }
 
     throw std::runtime_error("type doesn't have dialog");
@@ -79,15 +81,14 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
     }
 
     // create dialog
-    auto* widget =
-        create_setting_dialog(editable_circuit, setting_handle, parent_, selection_id);
+    auto* widget = create_setting_dialog(editable_circuit, selection_id, parent_);
     Expects(widget);
 
     try {
         connect(widget, &QWidget::destroyed, this,
                 &SettingDialogManager::on_dialog_destroyed);
         connect(widget, &SettingDialog::attributes_changed, this,
-                &SettingDialogManager::on_attributes_changed);
+                &SettingDialogManager::on_dialog_attributes_changed);
         map_.at(selection_id) = widget;
     } catch (std::exception&) {
         widget->deleteLater();
@@ -108,8 +109,6 @@ auto SettingDialogManager::close_all(EditableCircuit& editable_circuit) -> void 
 }
 
 auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> void {
-    print("TODO close all dialogs & finalize editing when loading new circuit");
-
     // close dialogs with deleted logic-items
     for (auto&& [selection_id, widget] : map_) {
         if (widget) {
@@ -136,18 +135,17 @@ auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> voi
 }
 
 Q_SLOT void SettingDialogManager::on_dialog_destroyed(QObject* object) {
-    // unregister dialog
-    const auto values = std::ranges::views::values(map_);
-    const auto it = std::ranges::find(values, object);
+    const auto dialogs = std::ranges::views::values(map_);
+    const auto it = std::ranges::find(dialogs, object);
 
-    if (it != values.end()) {
+    if (it != dialogs.end()) {
         *it = nullptr;
         Q_EMIT request_cleanup();
     }
 }
 
-Q_SLOT void SettingDialogManager::on_attributes_changed(selection_id_t selection_id,
-                                                        SettingAttributes attributes) {
+Q_SLOT void SettingDialogManager::on_dialog_attributes_changed(
+    selection_id_t selection_id, SettingAttributes attributes) {
     Q_EMIT attributes_changed(selection_id, attributes);
 }
 

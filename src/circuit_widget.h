@@ -135,6 +135,7 @@ class CircuitWidget : public CircuitWidgetBase {
     auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
+    auto clear_circuit() -> void;
     auto abort_current_action() -> void;
 
     auto select_all() -> void;

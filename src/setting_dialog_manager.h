@@ -41,8 +41,8 @@ class SettingDialogManager : public QObject {
 
    private:
     Q_SLOT void on_dialog_destroyed(QObject* object);
-    Q_SLOT void on_attributes_changed(selection_id_t selection_id,
-                                      SettingAttributes attributes);
+    Q_SLOT void on_dialog_attributes_changed(selection_id_t selection_id,
+                                             SettingAttributes attributes);
 
    private:
     QWidget* parent_;

@@ -198,10 +198,10 @@ auto CircuitWidget::serialized_circuit() const -> std::string {
 }
 
 auto CircuitWidget::load_circuit_example(int number) -> void {
+    this->clear_circuit();
+
     const auto default_config = SimulationConfig {};
     circuit_widget::load_circuit_example(circuit_store_, number, default_config);
-
-    render_surface_.reset();
     render_surface_.set_view_point(ViewConfig {}.view_point());
     set_simulation_config(default_config);
 
@@ -209,18 +209,16 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
-    const auto result = circuit_widget::load_from_file(circuit_store_, filename);
+    this->clear_circuit();
 
-    if (!result.success) {
-        return false;
+    const auto result = circuit_widget::load_from_file(circuit_store_, filename);
+    if (result.success) {
+        render_surface_.set_view_point(result.view_point);
+        set_simulation_config(result.simulation_config);
     }
 
-    render_surface_.reset();
-    render_surface_.set_view_point(result.view_point);
-    set_simulation_config(result.simulation_config);
-
     update();
-    return true;
+    return result.success;
 }
 
 auto CircuitWidget::save_circuit(std::string filename) -> bool {
@@ -248,13 +246,13 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         using enum UserAction;
 
         case clear_circuit: {
-            circuit_widget::set_layout(circuit_store_, Layout {});
-            render_surface_.reset();
+            this->clear_circuit();
             return;
         }
         case reload_circuit: {
-            circuit_widget::set_layout(circuit_store_, Layout {circuit_store_.layout()});
-            render_surface_.reset();
+            auto layout__ = Layout {circuit_store_.layout()};
+            this->clear_circuit();
+            circuit_widget::set_layout(circuit_store_, std::move(layout__));
             return;
         }
 
@@ -490,6 +488,22 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
     else {
         QWidget::keyPressEvent(event_);
     }
+}
+
+auto CircuitWidget::clear_circuit() -> void {
+    // finalize editing
+    editing_logic_manager_.finalize_editing(
+        circuit_widget::editable_circuit_pointer(circuit_store_));
+
+    // close dialogs
+    if (is_editing_state(circuit_state_)) {
+        setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
+    }
+
+    circuit_widget::set_layout(circuit_store_, Layout {});
+    render_surface_.reset();
+
+    update();
 }
 
 auto CircuitWidget::abort_current_action() -> void {
