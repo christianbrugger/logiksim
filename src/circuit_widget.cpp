@@ -155,7 +155,9 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
                                              editable_circuit_pointer(circuit_store_));
 
     // close dialogs
-    close_all_setting_dialogs();
+    if (!is_editing_state(new_state)) {
+        close_all_setting_dialogs();
+    }
 
     // clear visible selection
     if (is_selection_state(circuit_state_)) {
@@ -493,6 +495,7 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
     else if (event_->key() == Qt::Key_Enter || event_->key() == Qt::Key_Return) {
         if (editing_logic_manager_.confirm_editing(editable_circuit_pointer(
                 circuit_store_)) == circuit_widget::ManagerResult::require_update) {
+            on_setting_dialog_cleanup_request();
             update();
         }
 
@@ -568,6 +571,7 @@ auto CircuitWidget::delete_selected() -> void {
     editable_circuit.clear_visible_selection();
     editable_circuit.delete_all(std::move(selection__));
 
+    on_setting_dialog_cleanup_request();
     update();
 }
 
