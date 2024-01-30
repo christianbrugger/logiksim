@@ -224,6 +224,7 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
+    editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
     auto layout__ = circuit_store_.layout();
     this->clear_circuit();
 
@@ -271,6 +272,8 @@ auto CircuitWidget::do_action(UserAction action) -> void {
             return;
         }
         case reload_circuit: {
+            editing_logic_manager_.finalize_editing(
+                editable_circuit_pointer(circuit_store_));
             auto layout__ = Layout {circuit_store_.layout()};
             this->clear_circuit();
             circuit_widget::set_layout(circuit_store_, std::move(layout__));
