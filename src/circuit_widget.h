@@ -163,7 +163,6 @@ class CircuitWidget : public CircuitWidgetBase {
     bool simulation_image_update_pending_ {false};
 
     gsl::not_null<SettingDialogManager*> setting_dialog_manager_;
-    QTimer timer_setting_dialog_cleanup_ {};
 };
 
 //

@@ -7,6 +7,7 @@
 #include <ankerl/unordered_dense.h>
 
 #include <QObject>
+#include <QTimer>
 
 class QWidget;
 
@@ -19,10 +20,12 @@ struct LogicItemDefinition;
 class EditableCircuit;
 class SettingDialog;
 
-//
-// Setting Dialog Manager
-//
-
+/**
+ * @brief: Coordinates multiple settings dialogs for an editable circuit.
+ *
+ * Class invariants:
+ *   + cleanup timer is only running if the map has entries
+ */
 class SettingDialogManager : public QObject {
     Q_OBJECT
 
@@ -43,11 +46,13 @@ class SettingDialogManager : public QObject {
     Q_SLOT void on_dialog_destroyed(QObject* object);
     Q_SLOT void on_dialog_attributes_changed(selection_id_t selection_id,
                                              SettingAttributes attributes);
+    Q_SLOT void on_timer_request_cleanup();
 
    private:
-    QWidget* parent_;
+    QWidget* parent_ {};
+    ankerl::unordered_dense::map<selection_id_t, SettingDialog*> map_ {};
 
-    ankerl::unordered_dense::map<selection_id_t, SettingDialog*> map_;
+    QTimer timer_request_cleanup_ {};
 };
 
 //

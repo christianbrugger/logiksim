@@ -107,10 +107,6 @@ CircuitWidget::CircuitWidget(QWidget* parent)
             &CircuitWidget::on_setting_dialog_cleanup_request);
     connect(setting_dialog_manager_, &SettingDialogManager::attributes_changed, this,
             &CircuitWidget::on_setting_dialog_attributes_changed);
-    connect(&timer_setting_dialog_cleanup_, &QTimer::timeout, this,
-            &CircuitWidget::on_timer_setting_dialog_cleanup);
-    timer_setting_dialog_cleanup_.setInterval(250);
-    timer_setting_dialog_cleanup_.start();
 }
 
 auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
@@ -541,7 +537,6 @@ auto CircuitWidget::select_all() -> void {
     if (!is_editing_state(circuit_state_)) {
         return;
     }
-
     finalize_editing();
     set_circuit_state(defaults::selection_state);
 
