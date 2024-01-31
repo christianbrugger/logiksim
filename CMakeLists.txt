@@ -271,6 +271,7 @@ set(LS_CORE_SOURCES
     src/circuit_description.cpp
     src/circuit_widget.cpp
     src/circuit_widget_base.cpp
+    src/copy_paste_clipboard.cpp
     src/default_element_definition.cpp
     src/editable_circuit.cpp
     src/event_counter.cpp

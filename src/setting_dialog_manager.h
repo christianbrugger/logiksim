@@ -25,6 +25,13 @@ class SettingDialog;
  *
  * Class invariants:
  *   + cleanup timer is only running if the map has entries
+ *
+ * Note that each dialog has a corresponding tracked-selection on the editable-circuit
+ * in order to keep tracking the same element when its id changes.
+ *
+ * A consequence of this is that when a dialog is closed, a cleanup step is necessary
+ * where this tracked-selection is destroyed. As the manager doesn't hold the editable
+ * circuit, this is done by emitting a signal and an external call to cleanup.
  */
 class SettingDialogManager : public QObject {
     Q_OBJECT

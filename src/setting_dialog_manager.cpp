@@ -16,12 +16,12 @@ namespace logicsim {
 
 SettingDialogManager::SettingDialogManager(QWidget* parent)
     : QObject {parent}, parent_ {parent} {
-    // We setup a timer, so dialogs with deleted logicitems are closed periodically.
-    // It is advised to call manual cleanup whenever things might have been from outsize.
-    // This is a fallback reliable method, that catches those other cases.
+    // Run timer, so dialogs with deleted logicitems are closed periodically.
+    // It is advised to call cleanup whenever items might have been deleted.
+    // This is a reliable fallback method, that catches any other case.
     connect(&timer_request_cleanup_, &QTimer::timeout, this,
             &SettingDialogManager::on_timer_request_cleanup);
-    timer_request_cleanup_.setInterval(250);
+    timer_request_cleanup_.setInterval(250);  // ms
 
     Ensures(timer_request_cleanup_.isActive() == !map_.empty());
 }
@@ -98,10 +98,13 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
     Expects(widget);
 
     try {
-        connect(widget, &QWidget::destroyed, this,
-                &SettingDialogManager::on_dialog_destroyed);
-        connect(widget, &SettingDialog::attributes_changed, this,
-                &SettingDialogManager::on_dialog_attributes_changed);
+        if (!connect(widget, &QWidget::destroyed, this,
+                     &SettingDialogManager::on_dialog_destroyed) ||
+            !connect(widget, &SettingDialog::attributes_changed, this,
+                     &SettingDialogManager::on_dialog_attributes_changed)) {
+            throw std::runtime_error("unable to setup dialog connection");
+        };
+
         map_.at(selection_id) = widget;
     } catch (std::exception&) {
         widget->deleteLater();
@@ -112,6 +115,7 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
 
     // start timer, as we have now at least one active dialog
     timer_request_cleanup_.start();
+
     Ensures(timer_request_cleanup_.isActive() == !map_.empty());
 }
 
@@ -150,7 +154,7 @@ auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> voi
         }
     }
 
-    // free selections
+    // free tracked-selections
     for (const auto& selection_id : delete_list) {
         save_destroy_selection(editable_circuit, selection_id);
         Expects(map_.erase(selection_id) == 1);
@@ -187,7 +191,6 @@ Q_SLOT void SettingDialogManager::on_dialog_attributes_changed(
 
 Q_SLOT void SettingDialogManager::on_timer_request_cleanup() {
     Expects(timer_request_cleanup_.isActive() == !map_.empty());
-    print("TIMER");
 
     Q_EMIT request_cleanup();
 }
@@ -200,7 +203,6 @@ auto change_setting_attributes(EditableCircuit& editable_circuit,
                                selection_id_t selection_id, SettingAttributes attributes)
     -> void {
     const auto element_id = get_selected_logic_item(editable_circuit, selection_id);
-
     if (!element_id) {
         return;
     }

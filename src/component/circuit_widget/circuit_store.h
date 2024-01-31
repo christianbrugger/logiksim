@@ -136,6 +136,8 @@ auto save_circuit(const CircuitStore &store, std::string filename, ViewPoint vie
 // TODO remove once we have history
 [[nodiscard]] auto serialize_circuit(const CircuitStore &store) -> std::string;
 
+[[nodiscard]] auto visible_selection_format(const CircuitStore &store) -> std::string;
+
 }  // namespace circuit_widget
 
 }  // namespace logicsim

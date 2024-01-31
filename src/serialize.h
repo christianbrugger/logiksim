@@ -1,7 +1,8 @@
 #ifndef LOGIKSIM_SERIALIZE_H
 #define LOGIKSIM_SERIALIZE_H
 
-#include "vocabulary.h"
+#include "vocabulary/insertion_mode.h"
+#include "vocabulary/point.h"
 #include "vocabulary/selection_id.h"
 
 #include <gsl/gsl>
@@ -17,10 +18,7 @@ class Layout;
 class Selection;
 class EditableCircuit;
 struct ViewPoint;
-struct ViewConfig;
 struct SimulationConfig;
-
-using binary_t = std::vector<uint8_t>;
 
 [[nodiscard]] auto serialize_inserted(const Layout& layout,
                                       std::optional<ViewPoint> view_point,

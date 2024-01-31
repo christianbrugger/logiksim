@@ -108,7 +108,8 @@ auto SelectionMoveLogic::mouse_release(EditableCircuit& editable_circuit,
     if (state_ != State::move_selection) {
         return;
     }
-    const auto t [[maybe_unused]] = Timer {"insert moved selection"};
+    const auto t [[maybe_unused]] = Timer {
+        insertion_mode_ != InsertionMode::collisions ? "insert moved selection" : ""};
 
     move_selection(editable_circuit, point);
     convert_selection_to(editable_circuit, InsertionMode::collisions);
@@ -161,7 +162,7 @@ auto SelectionMoveLogic::move_selection(EditableCircuit& editable_circuit,
         return;
     }
     const auto t [[maybe_unused]] =
-        Timer {insertion_mode_ == InsertionMode::temporary ? "" : "uninsert selection"};
+        Timer {insertion_mode_ != InsertionMode::temporary ? "uninsert selection" : ""};
 
     if (!editable_circuit.new_positions_representable(
             editable_circuit.visible_selection(), delta_x, delta_y)) {

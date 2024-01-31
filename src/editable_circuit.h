@@ -162,6 +162,10 @@ auto save_delete_all(EditableCircuit& editable_circuit, selection_id_t selection
 auto save_destroy_selection(EditableCircuit& editable_circuit,
                             selection_id_t selection_id) -> void;
 
+auto visible_selection_select_all(EditableCircuit& editable_circuit) -> void;
+
+auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void;
+
 }  // namespace logicsim
 
 #endif

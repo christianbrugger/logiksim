@@ -282,6 +282,10 @@ auto serialize_circuit(const CircuitStore& store) -> std::string {
     return serialize_inserted(store.layout(), {}, relevant_config);
 }
 
+auto visible_selection_format(const CircuitStore& store) -> std::string {
+    return store.editable_circuit().visible_selection().format_info(false);
+}
+
 }  // namespace circuit_widget
 
 }  // namespace logicsim

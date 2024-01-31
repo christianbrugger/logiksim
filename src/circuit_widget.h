@@ -72,16 +72,17 @@ auto format(circuit_widget::UserAction action) -> std::string;
  * This is a complex class, as it is both an object and called from many
  * different entry points mouse events, top level widgets, and timers.
  * Furthermore it contains several state machines for doing the job
- * over several methods.
+ * across multiple method calls.
  *
  * To tackle this complexity, state machines are separated out to other classes,
  * e.g. mouse logic, render initialization, simulation generation, as much as possible.
  * Those sub components are simple classes and not allowed to generate new Qt events
- * for this widget or themselves. They are only called by use.
+ * for this widget or themselves. This simplifies the control flow.
  *
  * The remaining complexity of this class is:
- *     + code delegating the work to the components
- *     + code generating follow up events (timer timeouts, render updates)
+ *     + delegating the work to the components
+ *     + generating follow up events (timer timeouts, render updates)
+ *     + emit signals when internal state change
  *
  * Class Invariants:
  *     + configs are the same as for CircuitWidget as all its sub-components
@@ -119,7 +120,6 @@ class CircuitWidget : public CircuitWidgetBase {
    protected:
     Q_SLOT void on_timer_benchmark_render();
     Q_SLOT void on_timer_run_simulation();
-    Q_SLOT void on_timer_setting_dialog_cleanup();
     Q_SLOT void on_setting_dialog_cleanup_request();
     Q_SLOT void on_setting_dialog_attributes_changed(selection_id_t selection_id,
                                                      SettingAttributes attributes);

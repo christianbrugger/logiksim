@@ -333,4 +333,21 @@ auto save_destroy_selection(EditableCircuit& editable_circuit,
     }
 }
 
+auto visible_selection_select_all(EditableCircuit& editable_circuit) -> void {
+    const auto rect = rect_fine_t {point_fine_t {grid_t::min(), grid_t::min()},
+                                   point_fine_t {grid_t::max(), grid_t::max()}};
+
+    editable_circuit.clear_visible_selection();
+    editable_circuit.add_visible_selection_rect(SelectionFunction::add, rect);
+}
+
+auto visible_selection_delete_all(EditableCircuit& editable_circuit) -> void {
+    // Clear the visible selection before deleting for optimization.
+    // So it is not tracked during deletion. (10% speedup)
+
+    auto selection__ = Selection {editable_circuit.visible_selection()};
+    editable_circuit.clear_visible_selection();
+    editable_circuit.delete_all(std::move(selection__));
+}
+
 }  // namespace logicsim
