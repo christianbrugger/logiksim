@@ -168,6 +168,10 @@ auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> voi
     Ensures(timer_request_cleanup_.isActive() == !map_.empty());
 }
 
+auto SettingDialogManager::open_dialog_count() const -> std::size_t {
+    return map_.size();
+}
+
 Q_SLOT void SettingDialogManager::on_dialog_destroyed(QObject* object) {
     Expects(timer_request_cleanup_.isActive() == !map_.empty());
 

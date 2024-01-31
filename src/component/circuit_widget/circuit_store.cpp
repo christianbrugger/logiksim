@@ -30,6 +30,8 @@ auto generate_simulation(const EditableCircuit& editable_circuit,
     -> InteractiveSimulation {
     const auto _ [[maybe_unused]] = Timer {"Generate simulation", Timer::Unit::ms, 3};
 
+    Expects(all_normal_display_state(editable_circuit.layout()));
+
     return InteractiveSimulation {
         Layout {editable_circuit.layout()},
         simulation_config.wire_delay_per_distance(),

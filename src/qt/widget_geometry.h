@@ -35,7 +35,7 @@ auto to_device_rounded(GeometryInfo geometry_info) -> QRect;
 auto to_device_rounded(GeometryInfo geometry_info, QRect clip) -> QRect;
 auto to_size_device(GeometryInfo geometry_info) -> QSize;
 
-auto get_size_device(QWidget& widget) -> QSize;
+auto get_size_device(const QWidget& widget) -> QSize;
 
 }  // namespace logicsim
 

@@ -70,7 +70,7 @@ auto to_size_device(GeometryInfo geometry_info) -> QSize {
     return to_device_rounded(geometry_info).size();
 }
 
-auto get_size_device(QWidget& widget) -> QSize {
+auto get_size_device(const QWidget& widget) -> QSize {
     return to_size_device(get_geometry_info(widget));
 }
 

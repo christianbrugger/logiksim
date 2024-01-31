@@ -86,8 +86,10 @@ auto format(circuit_widget::UserAction action) -> std::string;
  *
  * Class Invariants:
  *     + configs are the same as for CircuitWidget as all its sub-components
- *     + timer_benchmark_render_ is only active for WidgetRenderConfig::do_benchmark
+ *     + timer_benchmark_render_ is only active for render_config_.do_benchmark
  *     + timer_run_simulation_ is only active when in simulation state
+ *     + setting dialog count is zero if not in editing state
+ *     + layout contains only normal display state items if no editing is active
  */
 class CircuitWidget : public CircuitWidgetBase {
    public:
@@ -142,10 +144,11 @@ class CircuitWidget : public CircuitWidgetBase {
 
     auto select_all() -> void;
     auto delete_selected() -> void;
-
-    [[nodiscard]] auto copy_paste_position() -> point_t;
+    [[nodiscard]] auto copy_paste_position() const -> point_t;
     auto copy_selected() -> void;
     auto paste_clipboard() -> void;
+
+    [[nodiscard]] auto class_invariant_holds() const -> bool;
 
    private:
     // never modify these directly, always call set_* so signals are emmitted

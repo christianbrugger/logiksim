@@ -1,7 +1,10 @@
 #include "spatial_simulation.h"
 
+#include "layout.h"
 #include "line_tree_generation.h"
 #include "schematic_generation.h"
+
+#include <gsl/gsl>
 
 namespace logicsim {
 

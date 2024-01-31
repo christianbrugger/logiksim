@@ -44,6 +44,8 @@ class SettingDialogManager : public QObject {
     auto close_all(EditableCircuit& editable_circuit) -> void;
     auto run_cleanup(EditableCircuit& editable_circuit) -> void;
 
+    [[nodiscard]] auto open_dialog_count() const -> std::size_t;
+
    public:
     Q_SIGNAL void attributes_changed(selection_id_t selection_id,
                                      SettingAttributes attributes);

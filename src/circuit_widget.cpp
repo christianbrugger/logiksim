@@ -103,9 +103,13 @@ CircuitWidget::CircuitWidget(QWidget* parent)
             &CircuitWidget::on_setting_dialog_cleanup_request);
     connect(setting_dialog_manager_, &SettingDialogManager::attributes_changed, this,
             &CircuitWidget::on_setting_dialog_attributes_changed);
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
+    Expects(class_invariant_holds());
+
     if (render_config_ == new_config) {
         return;
     }
@@ -122,9 +126,13 @@ auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
     render_config_ = new_config;
     emit_render_config_changed(new_config);
     update();
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
+    Expects(class_invariant_holds());
+
     if (simulation_config_ == new_config) {
         return;
     }
@@ -135,21 +143,25 @@ auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
     simulation_config_ = new_config;
     emit_simulation_config_changed(new_config);
     update();
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
+    Expects(class_invariant_holds());
+
     if (circuit_state_ == new_state) {
         return;
     }
-
-    // finalize editing if needed
-    editing_logic_manager_.set_circuit_state(new_state,
-                                             editable_circuit_pointer(circuit_store_));
 
     // close dialogs
     if (!is_editing_state(new_state)) {
         close_all_setting_dialogs();
     }
+
+    // finalize editing if needed
+    editing_logic_manager_.set_circuit_state(new_state,
+                                             editable_circuit_pointer(circuit_store_));
 
     // clear visible selection
     if (is_selection_state(circuit_state_)) {
@@ -171,9 +183,13 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     circuit_state_ = new_state;
     emit_circuit_state_changed(new_state);
     update();
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::clear_circuit() -> void {
+    Expects(class_invariant_holds());
+
     finalize_editing();
     close_all_setting_dialogs();
 
@@ -181,27 +197,41 @@ auto CircuitWidget::clear_circuit() -> void {
     render_surface_.reset();
 
     update();
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::render_config() const -> WidgetRenderConfig {
+    Expects(class_invariant_holds());
+
     return render_config_;
 }
 
 auto CircuitWidget::simulation_config() const -> SimulationConfig {
+    Expects(class_invariant_holds());
+
     return simulation_config_;
 }
 
 auto CircuitWidget::circuit_state() const -> CircuitWidgetState {
+    Expects(class_invariant_holds());
+
     return circuit_state_;
 }
 
 auto CircuitWidget::serialized_circuit() -> std::string {
+    Expects(class_invariant_holds());
     finalize_editing();
 
-    return circuit_widget::serialize_circuit(circuit_store_);
+    const auto result = circuit_widget::serialize_circuit(circuit_store_);
+
+    Ensures(class_invariant_holds());
+    return result;
 }
 
 auto CircuitWidget::load_circuit_example(int number) -> void {
+    Expects(class_invariant_holds());
+
     this->clear_circuit();
 
     const auto default_config = SimulationConfig {};
@@ -210,9 +240,13 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
     set_simulation_config(default_config);
 
     update();
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
+    Expects(class_invariant_holds());
+
     finalize_editing();
     auto layout__ = Layout {circuit_store_.layout()};
     this->clear_circuit();
@@ -226,99 +260,118 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
     }
 
     update();
+
+    Ensures(class_invariant_holds());
     return result.success;
 }
 
 auto CircuitWidget::save_circuit(std::string filename) -> bool {
+    Expects(class_invariant_holds());
+
     finalize_editing();
+
+    const auto success = circuit_widget::save_circuit(
+        circuit_store_, filename, render_surface_.view_config().view_point());
+
     update();
 
-    return circuit_widget::save_circuit(circuit_store_, filename,
-                                        render_surface_.view_config().view_point());
+    Ensures(class_invariant_holds());
+    return success;
 }
 
 auto CircuitWidget::statistics() const -> Statistics {
-    const auto surface_statistics = render_surface_.statistics();
+    Expects(class_invariant_holds());
 
-    return Statistics {
+    const auto surface_statistics = render_surface_.statistics();
+    const auto result = Statistics {
         .simulation_events_per_second = circuit_store_.simulation_events_per_second(),
         .frames_per_second = surface_statistics.frames_per_second,
         .pixel_scale = surface_statistics.pixel_scale,
         .image_size = surface_statistics.image_size,
         .uses_direct_rendering = surface_statistics.uses_direct_rendering,
     };
+
+    Ensures(class_invariant_holds());
+    return result;
 }
 
 auto CircuitWidget::do_action(UserAction action) -> void {
-    update();
+    Expects(class_invariant_holds());
 
     switch (action) {
         using enum UserAction;
 
         case clear_circuit: {
             this->clear_circuit();
-            return;
+            break;
         }
         case reload_circuit: {
             finalize_editing();
             auto layout__ = Layout {circuit_store_.layout()};
             this->clear_circuit();
             circuit_widget::set_layout(circuit_store_, std::move(layout__));
-            return;
+            break;
         }
 
         case select_all: {
             this->select_all();
-            return;
+            break;
         }
         case copy_selected: {
             this->copy_selected();
-            return;
+            break;
         }
         case paste_from_clipboard: {
             this->paste_clipboard();
-            return;
+            break;
         }
         case cut_selected: {
             this->copy_selected();
             this->delete_selected();
-            return;
+            break;
         }
         case delete_selected: {
             this->delete_selected();
-            return;
+            break;
         }
 
         case zoom_in: {
             render_surface_.set_view_point(
                 circuit_widget::zoom(*this, render_surface_.view_config(), +1));
-            return;
+            break;
         }
         case zoom_out: {
             render_surface_.set_view_point(
                 circuit_widget::zoom(*this, render_surface_.view_config(), -1));
-            return;
+            break;
         }
         case reset_view: {
             render_surface_.set_view_point(ViewConfig {}.view_point());
-            return;
+            break;
         }
     }
 
-    std::terminate();
+    update();
+
+    Ensures(class_invariant_holds());
 }
 
 void CircuitWidget::on_timer_benchmark_render() {
+    Expects(class_invariant_holds());
+
     update();
 }
 
 void CircuitWidget::on_timer_run_simulation() {
+    Expects(class_invariant_holds());
     Expects(is_simulation(circuit_state_));
 
     // force at least one render update between each simulation step
     if (simulation_image_update_pending_) {
         update();
         timer_run_simulation_.setInterval(0);
+
+        Ensures(class_invariant_holds());
         return;
     }
     // otherwise call again at a regular interval
@@ -330,28 +383,44 @@ void CircuitWidget::on_timer_run_simulation() {
         simulation_image_update_pending_ = true;
         update();
     }
+
+    Ensures(class_invariant_holds());
 }
 
 Q_SLOT void CircuitWidget::on_setting_dialog_cleanup_request() {
+    Expects(class_invariant_holds());
+
     if (is_editing_state(circuit_state_)) {
         setting_dialog_manager_->run_cleanup(circuit_store_.editable_circuit());
     }
+
+    Ensures(class_invariant_holds());
 }
 
 Q_SLOT void CircuitWidget::on_setting_dialog_attributes_changed(
     selection_id_t selection_id, SettingAttributes attributes) {
+    Expects(class_invariant_holds());
+
     if (is_editing_state(circuit_state_)) {
         change_setting_attributes(circuit_store_.editable_circuit(), selection_id,
                                   attributes);
         update();
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::resizeEvent(QResizeEvent* event_ [[maybe_unused]]) -> void {
+    Expects(class_invariant_holds());
+
     update();
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
+    Expects(class_invariant_holds());
+
     circuit_widget::set_optimal_render_attributes(*this);
 
     auto& context = render_surface_.begin_paint(backingStore(), get_geometry_info(*this));
@@ -379,9 +448,13 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
 
     render_surface_.end_paint(*this);
     simulation_image_update_pending_ = false;
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
+    Expects(class_invariant_holds());
+
     const auto position = get_mouse_position(this, event_);
 
     if (event_->button() == Qt::MiddleButton) {
@@ -411,9 +484,13 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
         abort_current_action();
         update();
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
+    Expects(class_invariant_holds());
+
     const auto position = get_mouse_position(this, event_);
 
     if (event_->buttons() & Qt::MiddleButton) {
@@ -430,9 +507,13 @@ auto CircuitWidget::mouseMoveEvent(QMouseEvent* event_) -> void {
             update();
         }
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
+    Expects(class_invariant_holds());
+
     const auto position = get_mouse_position(this, event_);
 
     if (event_->button() == Qt::MiddleButton) {
@@ -458,17 +539,25 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
             update();
         }
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::wheelEvent(QWheelEvent* event_) -> void {
+    Expects(class_invariant_holds());
+
     if (const auto view_point = circuit_widget::wheel_scroll_zoom(
             *this, *event_, render_surface_.view_config())) {
         render_surface_.set_view_point(*view_point);
         update();
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
+    Expects(class_invariant_holds());
+
     if (event_->isAutoRepeat()) {
         QWidget::keyPressEvent(event_);
     }
@@ -493,9 +582,13 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
     else {
         QWidget::keyPressEvent(event_);
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::abort_current_action() -> void {
+    Expects(class_invariant_holds());
+
     if (is_editing_state(circuit_state_)) {
         // 1) cancel current editing
         if (editing_logic_manager_.is_editing_active()) {
@@ -514,19 +607,31 @@ auto CircuitWidget::abort_current_action() -> void {
             }
         }
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::finalize_editing() -> void {
+    Expects(class_invariant_holds());
+
     editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::close_all_setting_dialogs() -> void {
+    Expects(class_invariant_holds());
+
     if (is_editing_state(circuit_state_)) {
         setting_dialog_manager_->close_all(circuit_store_.editable_circuit());
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::select_all() -> void {
+    Expects(class_invariant_holds());
+
     if (!is_editing_state(circuit_state_)) {
         return;
     }
@@ -535,9 +640,13 @@ auto CircuitWidget::select_all() -> void {
 
     visible_selection_select_all(circuit_store_.editable_circuit());
     update();
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::delete_selected() -> void {
+    Expects(class_invariant_holds());
+
     if (!is_selection_state(circuit_state_)) {
         return;
     }
@@ -552,14 +661,23 @@ auto CircuitWidget::delete_selected() -> void {
     // items with open settings dialogs might have been deleted
     on_setting_dialog_cleanup_request();
     update();
+
+    Ensures(class_invariant_holds());
 }
 
-auto CircuitWidget::copy_paste_position() -> point_t {
-    return to_closest_grid_position(get_mouse_position(*this), get_size_device(*this),
-                                    render_surface_.view_config());
+auto CircuitWidget::copy_paste_position() const -> point_t {
+    Expects(class_invariant_holds());
+
+    const auto result = to_closest_grid_position(
+        get_mouse_position(*this), get_size_device(*this), render_surface_.view_config());
+
+    Ensures(class_invariant_holds());
+    return result;
 }
 
 auto CircuitWidget::copy_selected() -> void {
+    Expects(class_invariant_holds());
+
     if (!is_selection_state(circuit_state_)) {
         return;
     }
@@ -572,9 +690,13 @@ auto CircuitWidget::copy_selected() -> void {
                                          copy_position)) {
         print("Copied", visible_selection_format(circuit_store_), "in", t);
     }
+
+    Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::paste_clipboard() -> void {
+    Expects(class_invariant_holds());
+
     if (!is_editing_state(circuit_state_)) {
         return;
     }
@@ -583,6 +705,7 @@ auto CircuitWidget::paste_clipboard() -> void {
 
     auto load_result__ = parse_clipboard_data();
     if (!load_result__) {
+        Ensures(class_invariant_holds());
         return;
     }
 
@@ -600,6 +723,30 @@ auto CircuitWidget::paste_clipboard() -> void {
 
     print("Pasted", visible_selection_format(circuit_store_), "in", t);
     update();
+
+    Ensures(class_invariant_holds());
+}
+
+auto CircuitWidget::class_invariant_holds() const -> bool {
+    // Configs
+    Expects(render_surface_.render_config() == render_config_);
+    Expects(circuit_store_.simulation_config() == simulation_config_);
+    Expects(circuit_store_.circuit_state() == circuit_state_);
+    Expects(editing_logic_manager_.circuit_state() == circuit_state_);
+
+    // Timer
+    Expects(timer_benchmark_render_.isActive() == render_config_.do_benchmark);
+    Expects(timer_run_simulation_.isActive() == is_simulation(circuit_state_));
+
+    // Setting Dialogs
+    Expects(is_editing_state(circuit_state_) ||
+            setting_dialog_manager_->open_dialog_count() == 0);
+
+    // insertion state (expensive so only assert)
+    assert(editing_logic_manager_.is_editing_active() ||
+           all_normal_display_state(circuit_store_.layout()));
+
+    return true;
 }
 
 //
