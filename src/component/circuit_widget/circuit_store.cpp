@@ -206,7 +206,6 @@ auto circuit_widget::CircuitStore::class_invariant_holds() const -> bool {
 // Free Function
 //
 
-
 auto editable_circuit_pointer(CircuitStore& store) -> EditableCircuit* {
     if (!is_editing_state(store.circuit_state())) {
         return nullptr;
@@ -271,7 +270,7 @@ auto load_circuit_example(CircuitStore& store, int number,
 auto save_circuit(const CircuitStore& store, std::string filename, ViewPoint view_point)
     -> bool {
     const auto binary =
-        serialize_inserted(store.layout(), view_point, store.simulation_config());
+        serialize_all(store.layout(), view_point, store.simulation_config());
     return save_file(filename, binary);
 }
 
@@ -279,7 +278,7 @@ auto serialize_circuit(const CircuitStore& store) -> std::string {
     auto relevant_config = SimulationConfig {
         .use_wire_delay = store.simulation_config().use_wire_delay,
     };
-    return serialize_inserted(store.layout(), {}, relevant_config);
+    return serialize_all(store.layout(), {}, relevant_config);
 }
 
 auto visible_selection_format(const CircuitStore& store) -> std::string {

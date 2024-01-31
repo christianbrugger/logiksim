@@ -41,6 +41,8 @@ class Selection;
 [[nodiscard]] auto has_logic_items(const Selection &selection) -> bool;
 [[nodiscard]] auto get_lines(const Selection &selection, const Layout &layout)
     -> std::vector<ordered_line_t>;
+[[nodiscard]] auto all_normal_display_state(const Selection &selection,
+                                            const Layout &layout) -> bool;
 [[nodiscard]] auto anything_colliding(const Selection &selection, const Layout &layout)
     -> bool;
 [[nodiscard]] auto anything_temporary(const Selection &selection, const Layout &layout)

@@ -195,7 +195,9 @@ auto CircuitWidget::circuit_state() const -> CircuitWidgetState {
     return circuit_state_;
 }
 
-auto CircuitWidget::serialized_circuit() const -> std::string {
+auto CircuitWidget::serialized_circuit() -> std::string {
+    finalize_editing();
+
     return circuit_widget::serialize_circuit(circuit_store_);
 }
 

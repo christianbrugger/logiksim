@@ -9,19 +9,23 @@
 #include <QClipboard>
 
 namespace logicsim {
-
-auto copy_clipboard_visible_selection(const EditableCircuit& editable_circuit,
-                                      point_t copy_position) -> bool {
-    if (!editable_circuit.visible_selection_empty()) {
-        const auto value = base64_encode(
-            serialize_selected(editable_circuit.layout(),
-                               editable_circuit.visible_selection(), copy_position));
+auto copy_clipboard_selection(const Layout& layout, const Selection& selection,
+                              point_t copy_position) -> bool {
+    if (!selection.empty()) {
+        const auto value =
+            base64_encode(serialize_selected(layout, selection, copy_position));
 
         QApplication::clipboard()->setText(QString::fromStdString(value));
         return true;
     }
 
     return false;
+}
+
+auto copy_clipboard_visible_selection(const EditableCircuit& editable_circuit,
+                                      point_t copy_position) -> bool {
+    return copy_clipboard_selection(editable_circuit.layout(),
+                                    editable_circuit.visible_selection(), copy_position);
 }
 
 auto parse_clipboard_data() -> std::optional<serialize::LoadLayoutResult> {

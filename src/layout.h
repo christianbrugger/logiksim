@@ -78,6 +78,9 @@ class Layout {
 [[nodiscard]] auto get_segment_point_type(const Layout &layout, segment_t segment,
                                           point_t position) -> SegmentPointType;
 
+[[nodiscard]] auto get_segment_valid_parts(const Layout &layout, segment_t segment)
+    -> const PartSelection &;
+
 [[nodiscard]] auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t;
 [[nodiscard]] auto get_line(const Layout &layout, segment_part_t segment_part)
     -> ordered_line_t;
@@ -97,6 +100,8 @@ class Layout {
     -> PlacedElement;
 
 [[nodiscard]] auto to_display_state(wire_id_t wire_id) -> display_state_t;
+
+[[nodiscard]] auto all_normal_display_state(const Layout &layout) -> bool;
 
 }  // namespace logicsim
 

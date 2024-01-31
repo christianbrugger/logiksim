@@ -10,6 +10,7 @@
 #include "layout.h"
 #include "layout_info.h"
 #include "layout_message.h"
+#include "selection.h"
 #include "vocabulary/ordered_line.h"
 #include "vocabulary/point_fine.h"
 #include "vocabulary/rect_fine.h"
@@ -33,6 +34,20 @@ auto get_lines(const Selection &selection, const Layout &layout)
     }
 
     return result;
+}
+
+auto all_normal_display_state(const Selection &selection, const Layout &layout) -> bool {
+    const auto logicitem_normal = [&](const logicitem_id_t &logicitem_id) {
+        return layout.logic_items().display_state(logicitem_id) ==
+               display_state_t::normal;
+    };
+    const auto wire_normal = [&](const Selection::segment_pair_t &pair) {
+        return is_inserted(pair.first.wire_id) &&
+               a_disjoint_b(pair.second, get_segment_valid_parts(layout, pair.first));
+    };
+
+    return std::ranges::all_of(selection.selected_logic_items(), logicitem_normal) &&
+           std::ranges::all_of(selection.selected_segments(), wire_normal);
 }
 
 auto anything_colliding(const Selection &selection, const Layout &layout) -> bool {

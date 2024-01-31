@@ -141,6 +141,13 @@ auto get_segment_point_type(const Layout &layout, segment_t segment, point_t pos
     return get_segment_point_type(info, position);
 }
 
+auto get_segment_valid_parts(const Layout &layout, segment_t segment)
+    -> const PartSelection & {
+    return layout.wires()
+        .segment_tree(segment.wire_id)
+        .valid_parts(segment.segment_index);
+}
+
 auto get_line(const Layout &layout, segment_t segment) -> ordered_line_t {
     return get_segment_info(layout, segment).line;
 }
@@ -217,6 +224,22 @@ auto to_display_state(wire_id_t wire_id) -> display_state_t {
         return display_state_t::colliding;
     }
     return display_state_t::normal;
+}
+
+auto all_normal_display_state(const Layout &layout) -> bool {
+    const auto logicitem_normal = [&](const logicitem_id_t &logicitem_id) {
+        return layout.logic_items().display_state(logicitem_id) ==
+               display_state_t::normal;
+    };
+    const auto wire_normal = [&](const wire_id_t &wire_id) {
+        return std::ranges::all_of(layout.wires().segment_tree(wire_id).valid_parts(),
+                                   &PartSelection::empty);
+    };
+
+    return layout.wires().segment_tree(temporary_wire_id).empty() &&
+           layout.wires().segment_tree(colliding_wire_id).empty() &&
+           std::ranges::all_of(logicitem_ids(layout), logicitem_normal) &&
+           std::ranges::all_of(inserted_wire_ids(layout), wire_normal);
 }
 
 }  // namespace logicsim

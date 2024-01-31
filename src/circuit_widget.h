@@ -109,7 +109,7 @@ class CircuitWidget : public CircuitWidgetBase {
     // actions without arguments
     auto do_action(UserAction action) -> void;
     // load & save
-    [[nodiscard]] auto serialized_circuit() const -> std::string;
+    [[nodiscard]] auto serialized_circuit() -> std::string;
     auto load_circuit_example(int number) -> void;
     auto load_circuit(std::string filename) -> bool;
     auto save_circuit(std::string filename) -> bool;

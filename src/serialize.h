@@ -20,11 +20,23 @@ class EditableCircuit;
 struct ViewPoint;
 struct SimulationConfig;
 
-[[nodiscard]] auto serialize_inserted(const Layout& layout,
-                                      std::optional<ViewPoint> view_point,
-                                      std::optional<SimulationConfig> simulation_config)
+/**
+ * @brief: Serialize the given layout, view_point and simulation_config.
+ *
+ * Throws an exception if any element is not display state normal.
+ */
+[[nodiscard]] auto serialize_all(const Layout& layout,
+                                 std::optional<ViewPoint> view_point,
+                                 std::optional<SimulationConfig> simulation_config)
     -> std::string;
 
+/**
+ * @brief: Serialize the selected elements.
+ *
+ * Note save position is used for copy & paste to offset the saved positions.
+ *
+ * Throws an exception if any selected element is not display state normal.
+ */
 [[nodiscard]] auto serialize_selected(const Layout& layout, const Selection& selection,
                                       point_t save_position = point_t {0, 0})
     -> std::string;

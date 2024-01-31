@@ -227,9 +227,12 @@ auto parse_simulation_config(const SerializedSimulationConfig& config)
 
 namespace logicsim {
 
-auto serialize_inserted(const Layout& layout, std::optional<ViewPoint> view_point,
-                        std::optional<SimulationConfig> simulation_config)
-    -> std::string {
+auto serialize_all(const Layout& layout, std::optional<ViewPoint> view_point,
+                   std::optional<SimulationConfig> simulation_config) -> std::string {
+    if (!all_normal_display_state(layout)) {
+        throw std::runtime_error("all items must have display state normal");
+    }
+
     auto data = serialize::SerializedLayout {};
 
     if (view_point) {
@@ -241,9 +244,7 @@ auto serialize_inserted(const Layout& layout, std::optional<ViewPoint> view_poin
     }
 
     for (const auto logicitem_id : logicitem_ids(layout)) {
-        if (is_inserted(layout, logicitem_id)) {
-            serialize::add_element(data, layout, logicitem_id);
-        }
+        serialize::add_element(data, layout, logicitem_id);
     }
     for (const auto wire_id : inserted_wire_ids(layout)) {
         serialize::add_element(data, layout, wire_id);
@@ -254,6 +255,10 @@ auto serialize_inserted(const Layout& layout, std::optional<ViewPoint> view_poin
 
 auto serialize_selected(const Layout& layout, const Selection& selection,
                         point_t save_position) -> std::string {
+    if (!all_normal_display_state(selection, layout)) {
+        throw std::runtime_error("all selected items must have display state normal");
+    }
+
     auto data = serialize::SerializedLayout {
         .save_position = save_position,
     };

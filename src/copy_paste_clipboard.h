@@ -8,11 +8,21 @@
 namespace logicsim {
 
 struct point_t;
+class Layout;
+class Selection;
 class EditableCircuit;
 
 namespace serialize {
 class LoadLayoutResult;
 }
+
+/**
+ * @brief: Copies the selected elements to the clipboard.
+ *
+ * Returns true if anything was copied, otherwise the clipboard remains unchanged.
+ */
+auto copy_clipboard_selection(const Layout& layout, const Selection& selection,
+                              point_t copy_position) -> bool;
 
 /**
  * @brief: Copies the visible selected elements to the clipboard.

@@ -24,7 +24,7 @@ auto a_overlaps_any_of_b(const PartSelection& a, const PartSelection& b) -> bool
     });
 }
 
-auto a_disjoint_of_b(const PartSelection& a, const PartSelection& b) -> bool {
+auto a_disjoint_b(const PartSelection& a, const PartSelection& b) -> bool {
     return merged_none_of(a, b, {}, [](const part_t& a_, const part_t& b_) {
         return a_overlaps_any_of_b(a_, b_);
     });

@@ -180,91 +180,88 @@ TEST(GeometryPartSelections, SelectionOverlapsAnyOfSelection3) {
 //
 
 TEST(GeometryPartSelections, SelectionDisjointOfSelection0) {
-    ASSERT_EQ(a_disjoint_of_b(to_selection({}), to_selection({part_t {5, 10}})), true);
-    ASSERT_EQ(a_disjoint_of_b(to_selection({part_t {10, 20}}), to_selection({})), true);
-    ASSERT_EQ(a_disjoint_of_b(to_selection({}), to_selection({})), true);
+    ASSERT_EQ(a_disjoint_b(to_selection({}), to_selection({part_t {5, 10}})), true);
+    ASSERT_EQ(a_disjoint_b(to_selection({part_t {10, 20}}), to_selection({})), true);
+    ASSERT_EQ(a_disjoint_b(to_selection({}), to_selection({})), true);
 }
 
 TEST(GeometryPartSelections, SelectionDisjointOfSelection1) {
+    ASSERT_EQ(a_disjoint_b(to_selection({part_t {3, 6}}), to_selection({part_t {5, 10}})),
+              false);
+    ASSERT_EQ(a_disjoint_b(to_selection({part_t {6, 9}}), to_selection({part_t {5, 10}})),
+              false);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {3, 6}}), to_selection({part_t {5, 10}})),
-        false);
-    ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {6, 9}}), to_selection({part_t {5, 10}})),
-        false);
-    ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {5, 10}}), to_selection({part_t {5, 10}})),
+        a_disjoint_b(to_selection({part_t {5, 10}}), to_selection({part_t {5, 10}})),
         false);
 
+    ASSERT_EQ(a_disjoint_b(to_selection({part_t {0, 5}}), to_selection({part_t {5, 10}})),
+              true);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {0, 5}}), to_selection({part_t {5, 10}})),
-        true);
-    ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {10, 20}}), to_selection({part_t {5, 10}})),
+        a_disjoint_b(to_selection({part_t {10, 20}}), to_selection({part_t {5, 10}})),
         true);
 }
 
 TEST(GeometryPartSelections, SelectionDisjointOfSelection2) {
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {3, 6}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {3, 6}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         false);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {15, 16}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {15, 16}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         false);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {29, 30}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {29, 30}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         false);
 
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {0, 3}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {0, 3}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         true);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {20, 25}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {20, 25}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         true);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {35, 40}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {35, 40}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         true);
 }
 
 TEST(GeometryPartSelections, SelectionDisjointOfSelection3) {
     ASSERT_EQ(
-        a_disjoint_of_b(
+        a_disjoint_b(
             to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}, part_t {15, 16}}),
             to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         false);
     ASSERT_EQ(
-        a_disjoint_of_b(
+        a_disjoint_b(
             to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}, part_t {6, 7}}),
             to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         false);
     ASSERT_EQ(
-        a_disjoint_of_b(
+        a_disjoint_b(
             to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}, part_t {29, 30}}),
             to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         false);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {24, 26}, part_t {40, 41}, part_t {43, 44},
-                                      part_t {50, 51}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {24, 26}, part_t {40, 41}, part_t {43, 44},
+                                   part_t {50, 51}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         false);
 
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         true);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         true);
     ASSERT_EQ(
-        a_disjoint_of_b(to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}}),
-                        to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
+        a_disjoint_b(to_selection({part_t {0, 1}, part_t {2, 3}, part_t {4, 5}}),
+                     to_selection({part_t {5, 10}, part_t {15, 20}, part_t {25, 30}})),
         true);
 }
 
@@ -536,9 +533,8 @@ TEST(GeometryPartSelections, IterOverlappingParts2) {
     }
 
     {
-        const auto result = iter_overlapping_result(
-            part_t {0, 100}, {part_t {0, 10}},
-            {part_t {10, 20}, part_t {30, 40}});
+        const auto result = iter_overlapping_result(part_t {0, 100}, {part_t {0, 10}},
+                                                    {part_t {10, 20}, part_t {30, 40}});
         const auto expected = IterOverlappingResult {
             {part_t {0, 10}, part_t {0, 10}, false},
         };

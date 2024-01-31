@@ -11,8 +11,7 @@ namespace logicsim {
 
 [[nodiscard]] auto a_overlaps_any_of_b(const PartSelection& a, const PartSelection& b)
     -> bool;
-[[nodiscard]] auto a_disjoint_of_b(const PartSelection& a, const PartSelection& b)
-    -> bool;
+[[nodiscard]] auto a_disjoint_b(const PartSelection& a, const PartSelection& b) -> bool;
 
 /**
  * @brief: Iterator over selected and unselected parts.
