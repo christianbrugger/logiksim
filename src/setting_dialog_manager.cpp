@@ -23,7 +23,7 @@ SettingDialogManager::SettingDialogManager(QWidget* parent)
             &SettingDialogManager::on_timer_request_cleanup);
     timer_request_cleanup_.setInterval(250);  // ms
 
-    Ensures(timer_request_cleanup_.isActive() == !map_.empty());
+    Ensures(class_invariant_holds());
 }
 
 namespace {
@@ -65,7 +65,7 @@ auto create_setting_dialog(const EditableCircuit& editable_circuit,
 
 auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit,
                                                setting_handle_t setting_handle) -> void {
-    Expects(timer_request_cleanup_.isActive() == !map_.empty());
+    Expects(class_invariant_holds());
 
     // find existing dialog
     for (auto&& [selection_id, widget] : map_) {
@@ -74,7 +74,7 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
             widget->show();
             widget->activateWindow();
 
-            Ensures(timer_request_cleanup_.isActive() == !map_.empty());
+            Ensures(class_invariant_holds());
             return;
         }
     }
@@ -116,11 +116,11 @@ auto SettingDialogManager::show_setting_dialog(EditableCircuit& editable_circuit
     // start timer, as we have now at least one active dialog
     timer_request_cleanup_.start();
 
-    Ensures(timer_request_cleanup_.isActive() == !map_.empty());
+    Ensures(class_invariant_holds());
 }
 
 auto SettingDialogManager::close_all(EditableCircuit& editable_circuit) -> void {
-    Expects(timer_request_cleanup_.isActive() == !map_.empty());
+    Expects(class_invariant_holds());
 
     for (auto&& [_, widget] : map_) {
         if (widget) {
@@ -130,11 +130,11 @@ auto SettingDialogManager::close_all(EditableCircuit& editable_circuit) -> void 
     }
     run_cleanup(editable_circuit);
 
-    Ensures(timer_request_cleanup_.isActive() == !map_.empty());
+    Ensures(class_invariant_holds());
 }
 
 auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> void {
-    Expects(timer_request_cleanup_.isActive() == !map_.empty());
+    Expects(class_invariant_holds());
 
     // close dialogs with deleted logic-items
     for (auto&& [selection_id, widget] : map_) {
@@ -165,15 +165,17 @@ auto SettingDialogManager::run_cleanup(EditableCircuit& editable_circuit) -> voi
         timer_request_cleanup_.stop();
     }
 
-    Ensures(timer_request_cleanup_.isActive() == !map_.empty());
+    Ensures(class_invariant_holds());
 }
 
 auto SettingDialogManager::open_dialog_count() const -> std::size_t {
+    Expects(class_invariant_holds());
+
     return map_.size();
 }
 
 Q_SLOT void SettingDialogManager::on_dialog_destroyed(QObject* object) {
-    Expects(timer_request_cleanup_.isActive() == !map_.empty());
+    Expects(class_invariant_holds());
 
     const auto dialogs = std::ranges::views::values(map_);
     const auto it = std::ranges::find(dialogs, object);
@@ -183,20 +185,26 @@ Q_SLOT void SettingDialogManager::on_dialog_destroyed(QObject* object) {
         Q_EMIT request_cleanup();
     }
 
-    Ensures(timer_request_cleanup_.isActive() == !map_.empty());
+    Ensures(class_invariant_holds());
 }
 
 Q_SLOT void SettingDialogManager::on_dialog_attributes_changed(
     selection_id_t selection_id, SettingAttributes attributes) {
-    Expects(timer_request_cleanup_.isActive() == !map_.empty());
+    Expects(class_invariant_holds());
 
     Q_EMIT attributes_changed(selection_id, attributes);
 }
 
 Q_SLOT void SettingDialogManager::on_timer_request_cleanup() {
-    Expects(timer_request_cleanup_.isActive() == !map_.empty());
+    Expects(class_invariant_holds());
 
     Q_EMIT request_cleanup();
+}
+
+auto SettingDialogManager::class_invariant_holds() const -> bool {
+    Expects(timer_request_cleanup_.isActive() == !map_.empty());
+
+    return true;
 }
 
 //

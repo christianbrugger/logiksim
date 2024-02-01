@@ -27,7 +27,7 @@ enum class ManagerResult {
  *
  * Class-invariants:
  *   + mouse_logic_ is empty when not in editing-state
- *   + rubber_band is only shown in selection-state
+ *   + rubber_band is only shown if SelectionAreaLogic is active
  *
  * Note functions require valid editable_circuit in editing-mode and nullptr otherwise.
  */
@@ -67,6 +67,9 @@ class EditingLogicManager {
                                      EditableCircuit* editable_circuit,
                                      const OpenSettingDialog& show_setting_dialog)
         -> ManagerResult;
+
+   private:
+    [[nodiscard]] auto class_invariant_holds() const -> bool;
 
    private:
     QRubberBand rubber_band_;

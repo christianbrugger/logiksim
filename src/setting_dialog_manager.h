@@ -23,15 +23,15 @@ class SettingDialog;
 /**
  * @brief: Coordinates multiple settings dialogs for an editable circuit.
  *
- * Class invariants:
- *   + cleanup timer is only running if the map has entries
- *
  * Note that each dialog has a corresponding tracked-selection on the editable-circuit
  * in order to keep tracking the same element when its id changes.
  *
  * A consequence of this is that when a dialog is closed, a cleanup step is necessary
  * where this tracked-selection is destroyed. As the manager doesn't hold the editable
  * circuit, this is done by emitting a signal and an external call to cleanup.
+ *
+ * Class invariants:
+ *   + cleanup timer is only running if the map has entries
  */
 class SettingDialogManager : public QObject {
     Q_OBJECT
@@ -56,6 +56,9 @@ class SettingDialogManager : public QObject {
     Q_SLOT void on_dialog_attributes_changed(selection_id_t selection_id,
                                              SettingAttributes attributes);
     Q_SLOT void on_timer_request_cleanup();
+
+   private:
+    [[nodiscard]] auto class_invariant_holds() const -> bool;
 
    private:
     QWidget* parent_ {};

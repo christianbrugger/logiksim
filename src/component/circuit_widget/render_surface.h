@@ -106,6 +106,8 @@ class RenderSurface {
     BLSize last_render_size_ {};
 };
 
+// TODO revisit this class, once rendering is redesigned.
+// TODO How can we avoid storing so many references?
 class RenderSurface::ScopedContext {
    public:
     explicit ScopedContext(RenderSurface& render_surface, QPaintDevice& paint_device,
