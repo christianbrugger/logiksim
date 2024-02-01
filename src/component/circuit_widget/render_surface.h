@@ -39,11 +39,17 @@ static_assert(std::regular<SurfaceStatistics>);
 /**
  * @brief: Maintains the render buffers of the Circuit Widget for render tasks.
  *
+ * Pre-conditions:
+ *   +
+ *
  * Class-invariants:
  *  ???
  */
 class RenderSurface {
    public:
+    /**
+     * @brief: Free temporary memory for layers and fonts.
+     */
     auto reset() -> void;
 
     // render config
@@ -58,15 +64,25 @@ class RenderSurface {
     [[nodiscard]] auto statistics() const -> SurfaceStatistics;
 
    public:
+    class ScopedContext;
+
     /**
-     * @brief: Sets up the painting for the given backing store and size.
+     * @brief: Sets up the painting for the given paint device and size.
      *
-     * Note begin_paint() can only be used inside a paintEvent() function.
+     * Note paintEvent can only be called within paint-event.
      *
      * If the backend store supports direct rendering it is used,
      * otherwise a QImage buffer is setup for rendering.
      */
-    auto begin_paint(QBackingStore* backing_store, GeometryInfo geometry_info)
+    auto paintEvent(QWidget& widget) -> ScopedContext;
+
+   private:
+    /**
+     * @brief: Sets up the painting for the given backing store and size.
+     *
+     * Note begin_paint() can only be used inside a paintEvent() function.
+     */
+    auto begin_paint(GeometryInfo geometry_info, QBackingStore* backing_store = nullptr)
         -> CircuitContext&;
 
     /**
@@ -76,8 +92,7 @@ class RenderSurface {
      *
      * Note end_paint() can only be used inside a paintEvent() function.
      *
-     * If an exception occurs it is okay to not call this function. However
-     * the frame might not be painted and frames are not counted.
+     * This function needs to be called at all times, even if an exception occurs.
      */
     auto end_paint(QPaintDevice& paint_device) -> void;
 
@@ -91,6 +106,21 @@ class RenderSurface {
     BLSize last_render_size_ {};
 };
 
+class RenderSurface::ScopedContext {
+   public:
+    explicit ScopedContext(RenderSurface& render_surface, QPaintDevice& paint_device,
+                           GeometryInfo geometry_info,
+                           QBackingStore* backing_store = nullptr);
+    ~ScopedContext();
+
+    [[nodiscard]] auto context() -> CircuitContext&;
+
+   private:
+    RenderSurface& render_surface_;
+    QPaintDevice& paint_device_;
+    CircuitContext& context_;
+};
+
 //
 // Free Functions
 //
@@ -102,21 +132,19 @@ auto set_view_config_device_scale(RenderSurface& render_surface, double device_s
 
 auto set_optimal_render_attributes(QWidget& widget) -> void;
 
-
-
 /**
  * @brief: Renders the given layout.
  */
 // TODO move to renderer folder
 auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
-                       const Layout &layout) -> void;
+                       const Layout& layout) -> void;
 
 /**
  * @brief: Renders the editable circuit.
  */
 // TODO move to renderer folder
 auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
-                       const EditableCircuit &editable_circuit, bool show_size_handles)
+                       const EditableCircuit& editable_circuit, bool show_size_handles)
     -> void;
 
 /**
@@ -124,7 +152,7 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render
  */
 // TODO move to renderer folder
 auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render_config,
-                       const SpatialSimulation &spatial_simulation) -> void;
+                       const SpatialSimulation& spatial_simulation) -> void;
 
 }  // namespace circuit_widget
 

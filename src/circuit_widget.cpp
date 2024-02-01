@@ -423,30 +423,32 @@ auto CircuitWidget::paintEvent(QPaintEvent* event_ [[maybe_unused]]) -> void {
 
     circuit_widget::set_optimal_render_attributes(*this);
 
-    auto& context = render_surface_.begin_paint(backingStore(), get_geometry_info(*this));
+    {
+        auto context_guard = render_surface_.paintEvent(*this);
 
-    std::visit(overload(
-                   [&](const NonInteractiveState& _) {
-                       circuit_widget::render_to_context(context,
-                                                         render_surface_.render_config(),
-                                                         circuit_store_.layout());
-                   },
-                   [&](const EditingState& _) {
-                       const bool show_size_handles =
-                           !editing_logic_manager_.is_area_selection_active();
+        std::visit(
+            overload(
+                [&](const NonInteractiveState& _) {
+                    circuit_widget::render_to_context(context_guard.context(),
+                                                      render_surface_.render_config(),
+                                                      circuit_store_.layout());
+                },
+                [&](const EditingState& _) {
+                    const bool show_size_handles =
+                        !editing_logic_manager_.is_area_selection_active();
 
-                       circuit_widget::render_to_context(
-                           context, render_surface_.render_config(),
-                           circuit_store_.editable_circuit(), show_size_handles);
-                   },
-                   [&](const SimulationState& _) {
-                       circuit_widget::render_to_context(
-                           context, render_surface_.render_config(),
-                           circuit_store_.interactive_simulation().spatial_simulation());
-                   }),
-               circuit_state());
+                    circuit_widget::render_to_context(
+                        context_guard.context(), render_surface_.render_config(),
+                        circuit_store_.editable_circuit(), show_size_handles);
+                },
+                [&](const SimulationState& _) {
+                    circuit_widget::render_to_context(
+                        context_guard.context(), render_surface_.render_config(),
+                        circuit_store_.interactive_simulation().spatial_simulation());
+                }),
+            circuit_state());
+    }
 
-    render_surface_.end_paint(*this);
     simulation_image_update_pending_ = false;
 
     Ensures(class_invariant_holds());

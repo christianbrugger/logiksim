@@ -63,17 +63,16 @@ auto CircuitStore::set_circuit_state(CircuitWidgetState new_state) -> void {
         return;
     }
 
-    if (is_simulation(circuit_state_)) {
-        interactive_simulation_ = std::nullopt;
-    }
+    checked_editable_circuit_.set_circuit_state(new_state);
 
     if (is_simulation(new_state)) {
         interactive_simulation_ =
             generate_simulation(checked_editable_circuit_, simulation_config_);
+    } else {
+        interactive_simulation_ = std::nullopt;
     }
 
     // update
-    checked_editable_circuit_.set_circuit_state(new_state);
     circuit_state_ = new_state;
 
     Expects(class_invariant_holds());

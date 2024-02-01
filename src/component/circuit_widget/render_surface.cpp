@@ -71,6 +71,11 @@ auto RenderSurface::statistics() const -> SurfaceStatistics {
     };
 }
 
+auto RenderSurface::paintEvent(QWidget& widget) -> ScopedContext {
+    return ScopedContext {*this, widget, get_geometry_info(widget),
+                          widget.backingStore()};
+}
+
 namespace {
 
 auto bl_image_from_backing_store(QBackingStore* backing_store, GeometryInfo geometry_info)
@@ -157,7 +162,7 @@ auto get_bl_image(QBackingStore* backing_store, QImage& qt_image,
 
 }  // namespace
 
-auto RenderSurface::begin_paint(QBackingStore* backing_store, GeometryInfo geometry_info)
+auto RenderSurface::begin_paint(GeometryInfo geometry_info, QBackingStore* backing_store)
     -> CircuitContext& {
     set_device_pixel_ratio(geometry_info.device_pixel_ratio);
 
@@ -291,6 +296,22 @@ auto render_to_context(CircuitContext& context, const WidgetRenderConfig& render
     }
 
     render_circuit_overlay(context);
+}
+
+RenderSurface::ScopedContext::ScopedContext(RenderSurface& render_surface,
+                                            QPaintDevice& paint_device,
+                                            GeometryInfo geometry_info,
+                                            QBackingStore* backing_store)
+    : render_surface_ {render_surface},
+      paint_device_ {paint_device},
+      context_ {render_surface.begin_paint(geometry_info, backing_store)} {}
+
+RenderSurface::ScopedContext::~ScopedContext() {
+    render_surface_.end_paint(paint_device_);
+}
+
+auto RenderSurface::ScopedContext::context() -> CircuitContext& {
+    return context_;
 }
 
 }  // namespace circuit_widget

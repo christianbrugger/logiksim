@@ -31,8 +31,8 @@ struct LoadFileResult {
  * @brief: Manages the circuit and creates the simulation as needed.
  *
  * Pre-condition:
- *   + No reference to layout, editable-circuit, or interactive-simulation
- *     are stored outside across multiple calls.
+ *    + No reference to layout, editable-circuit, or interactive-simulation
+ *      are stored outside across multiple calls.
  *
  * Class invariant:
  *     + InteractiveSimulation is not-null in simulation state and null otherwise.
@@ -112,8 +112,7 @@ class CircuitStore {
 // Free functions
 //
 
-[[nodiscard]] auto editable_circuit_pointer(CircuitStore &store)
-    -> EditableCircuit *;
+[[nodiscard]] auto editable_circuit_pointer(CircuitStore &store) -> EditableCircuit *;
 
 [[nodiscard]] auto editable_circuit_pointer(const CircuitStore &store)
     -> const EditableCircuit *;
