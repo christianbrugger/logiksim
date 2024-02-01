@@ -14,19 +14,6 @@ namespace logicsim {
 
 namespace circuit_widget {
 
-namespace circuit_store {
-
-struct LoadFileResult {
-    bool success {false};
-    ViewPoint view_point {};
-    SimulationConfig simulation_config {};
-
-    [[nodiscard]] auto format() const -> std::string;
-    [[nodiscard]] auto operator==(const LoadFileResult &) const -> bool = default;
-};
-
-}  // namespace circuit_store
-
 /**
  * @brief: Manages the circuit and creates the simulation as needed.
  *
@@ -42,9 +29,6 @@ struct LoadFileResult {
  */
 class CircuitStore {
    public:
-    using LoadFileResult = circuit_store::LoadFileResult;
-
-   public:
     auto set_circuit_state(CircuitWidgetState new_state) -> void;
     auto set_simulation_config(SimulationConfig new_config) -> void;
     [[nodiscard]] auto circuit_state() const -> CircuitWidgetState;
@@ -57,8 +41,7 @@ class CircuitStore {
      *
      * Note, This methods regenerates the active simulation if present.
      */
-    auto set_editable_circuit(EditableCircuit &&editable_circuit,
-                              std::optional<SimulationConfig> new_config = {}) -> void;
+    auto set_editable_circuit(EditableCircuit &&editable_circuit) -> void;
 
     /**
      * @brief: Gives access to the stored layout. This is always available.
@@ -119,21 +102,6 @@ class CircuitStore {
 
 [[nodiscard]] auto spatial_simulation_pointer(const CircuitStore &store)
     -> const SpatialSimulation *;
-
-auto set_layout(CircuitStore &store, Layout &&layout,
-                std::optional<SimulationConfig> new_config = {}) -> void;
-
-auto load_from_file(CircuitStore &store, std::string filename)
-    -> circuit_store::LoadFileResult;
-
-auto load_circuit_example(CircuitStore &store, int number,
-                          std::optional<SimulationConfig> new_config = {}) -> void;
-
-auto save_circuit(const CircuitStore &store, std::string filename, ViewPoint view_point)
-    -> bool;
-
-// TODO remove once we have history
-[[nodiscard]] auto serialize_circuit(const CircuitStore &store) -> std::string;
 
 [[nodiscard]] auto visible_selection_format(const CircuitStore &store) -> std::string;
 

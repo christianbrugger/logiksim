@@ -710,7 +710,6 @@ auto MainWidget::new_circuit() -> void {
         circuit_widget_->do_action(circuit_widget::UserAction::reset_view);
 
         circuit_widget_->set_circuit_state(defaults::selection_state);
-        circuit_widget_->set_render_config({});
         circuit_widget_->set_simulation_config({});
 
         last_saved_filename_.clear();

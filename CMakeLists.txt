@@ -59,7 +59,6 @@ set(LS_CORE_SOURCES
     src/component/circuit_widget/mouse_logic/selection_move.cpp
     src/component/circuit_widget/mouse_logic/selection_single.cpp
     src/component/circuit_widget/checked_editable_circuit.cpp
-    src/component/circuit_widget/circuit_example.cpp
     src/component/circuit_widget/circuit_store.cpp
     src/component/circuit_widget/render_surface.cpp
     src/component/circuit_widget/simulation_runner.cpp
@@ -269,6 +268,7 @@ set(LS_CORE_SOURCES
 
     src/base64.cpp
     src/circuit_description.cpp
+    src/circuit_example.cpp
     src/circuit_widget.cpp
     src/circuit_widget_base.cpp
     src/copy_paste_clipboard.cpp
@@ -288,6 +288,7 @@ set(LS_CORE_SOURCES
     src/layout_message_generation.cpp
     src/line_tree.cpp
     src/line_tree_generation.cpp
+    src/load_save_file.cpp
     src/logging.cpp
     src/part_selection.cpp
     src/render_caches.cpp

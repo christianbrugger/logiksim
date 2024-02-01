@@ -137,7 +137,10 @@ class CircuitWidget : public CircuitWidgetBase {
     auto keyPressEvent(QKeyEvent* event_) -> void override;
 
    private:
-    auto clear_circuit() -> void;
+    auto set_editable_circuit(EditableCircuit&& editable_circuit,
+                              std::optional<ViewPoint> view_point = {},
+                              std::optional<SimulationConfig> simulation_config = {})
+        -> void;
     auto abort_current_action() -> void;
     auto finalize_editing() -> void;
     auto close_all_setting_dialogs() -> void;

@@ -1,4 +1,4 @@
-#include "component/circuit_widget/circuit_example.h"
+#include "circuit_example.h"
 
 #include "algorithm/range_step.h"
 #include "editable_circuit.h"
@@ -11,10 +11,6 @@
 #include <stdexcept>
 
 namespace logicsim {
-
-namespace circuit_widget {
-
-namespace circuit_example {
 
 namespace {
 
@@ -113,12 +109,11 @@ auto load_circuit_example(EditableCircuit& editable_circuit, int number) -> void
 
 }  // namespace
 
-}  // namespace circuit_example
-
-auto load_example_with_logging(EditableCircuit& editable_circuit, int number) -> void {
+auto load_example_with_logging(int number) -> EditableCircuit {
     auto timer = Timer {"", Timer::Unit::ms, 1};
 
-    circuit_example::load_circuit_example(editable_circuit, number);
+    auto editable_circuit = EditableCircuit {};
+    load_circuit_example(editable_circuit, number);
 
     // count & print
     {
@@ -134,8 +129,8 @@ auto load_example_with_logging(EditableCircuit& editable_circuit, int number) ->
         print_fmt("Added {} elements and {} wire segments in {}.\n", logicitem_count,
                   segment_count, timer_str);
     }
-}
 
-}  // namespace circuit_widget
+    return editable_circuit;
+}
 
 }  // namespace logicsim

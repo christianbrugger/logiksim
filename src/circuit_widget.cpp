@@ -1,11 +1,13 @@
 #include "circuit_widget.h"
 
 #include "algorithm/overload.h"
+#include "circuit_example.h"
 #include "component/circuit_widget/mouse_logic/mouse_wheel_logic.h"
 #include "component/circuit_widget/simulation_runner.h"
 #include "component/circuit_widget/zoom.h"
 #include "copy_paste_clipboard.h"
 #include "geometry/scene.h"
+#include "load_save_file.h"
 #include "logging.h"
 #include "qt/mouse_position.h"
 #include "qt/widget_geometry.h"
@@ -131,8 +133,7 @@ auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
 }
 
 auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
-    // Expects(class_invariant_holds());
-    // TODO reactivate !!!
+    Expects(class_invariant_holds());
 
     if (simulation_config_ == new_config) {
         return;
@@ -188,14 +189,34 @@ auto CircuitWidget::set_circuit_state(CircuitWidgetState new_state) -> void {
     Ensures(class_invariant_holds());
 }
 
-auto CircuitWidget::clear_circuit() -> void {
+auto CircuitWidget::set_editable_circuit(
+    EditableCircuit&& editable_circuit__, std::optional<ViewPoint> view_point,
+    std::optional<SimulationConfig> simulation_config) -> void {
     Expects(class_invariant_holds());
 
     finalize_editing();
     close_all_setting_dialogs();
-
-    circuit_widget::set_layout(circuit_store_, Layout {});
     render_surface_.reset();
+
+    // disable simulation
+    const auto was_simulation = is_simulation(circuit_state_);
+    if (was_simulation) {
+        set_circuit_state(NonInteractiveState {});
+    }
+
+    // set new circuit
+    circuit_store_.set_editable_circuit(std::move(editable_circuit__));
+    if (view_point) {
+        render_surface_.set_view_point(view_point.value());
+    }
+    if (simulation_config) {
+        set_simulation_config(simulation_config.value());
+    }
+
+    // re-enable simulation
+    if (was_simulation) {
+        set_circuit_state(SimulationState {});
+    }
 
     update();
 
@@ -224,7 +245,7 @@ auto CircuitWidget::serialized_circuit() -> std::string {
     Expects(class_invariant_holds());
     finalize_editing();
 
-    const auto result = circuit_widget::serialize_circuit(circuit_store_);
+    const auto result = serialize_circuit(circuit_store_.layout(), simulation_config_);
 
     Ensures(class_invariant_holds());
     return result;
@@ -233,12 +254,13 @@ auto CircuitWidget::serialized_circuit() -> std::string {
 auto CircuitWidget::load_circuit_example(int number) -> void {
     Expects(class_invariant_holds());
 
-    this->clear_circuit();
+    const auto default_view_point = ViewConfig {}.view_point();
+    const auto default_simulation_config = SimulationConfig {};
 
-    const auto default_config = SimulationConfig {};
-    circuit_widget::load_circuit_example(circuit_store_, number, default_config);
-    render_surface_.set_view_point(ViewConfig {}.view_point());
-    set_simulation_config(default_config);
+    // clear circuit to free memory
+    do_action(UserAction::clear_circuit);
+    set_editable_circuit(load_example_with_logging(number), default_view_point,
+                         default_simulation_config);
 
     update();
 
@@ -247,37 +269,36 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
     Expects(class_invariant_holds());
-    print("LOAD START");
 
     finalize_editing();
-    auto layout__ = Layout {circuit_store_.layout()};
-    this->clear_circuit();
-
-    print("LOAD ACTION");
-    const auto result = circuit_widget::load_from_file(circuit_store_, filename);
-    if (result.success) {
-        render_surface_.set_view_point(result.view_point);
-        set_simulation_config(result.simulation_config);
-    } else {
-        circuit_widget::set_layout(circuit_store_, std::move(layout__));
-    }
-
     update();
 
+    // store original layout in case of corrupt load
+    auto orig_layout__ = Layout {circuit_store_.layout()};
+    // clear circuit to free memory
+    do_action(UserAction::clear_circuit);
+
+    auto load_result__ = load_circit_from_file(filename);
+    if (load_result__.success) {
+        set_editable_circuit(std::move(load_result__.editable_circuit),
+                             load_result__.view_point, load_result__.simulation_config);
+    } else {
+        set_editable_circuit(EditableCircuit {std::move(orig_layout__)});
+    }
+
     Ensures(class_invariant_holds());
-    print("LOAD DONE");
-    return result.success;
+    return load_result__.success;
 }
 
 auto CircuitWidget::save_circuit(std::string filename) -> bool {
     Expects(class_invariant_holds());
 
     finalize_editing();
-
-    const auto success = circuit_widget::save_circuit(
-        circuit_store_, filename, render_surface_.view_config().view_point());
-
     update();
+
+    const auto success = save_circuit_to_file(circuit_store_.layout(), filename,
+                                              render_surface_.view_config().view_point(),
+                                              simulation_config_);
 
     Ensures(class_invariant_holds());
     return success;
@@ -306,14 +327,15 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         using enum UserAction;
 
         case clear_circuit: {
-            this->clear_circuit();
+            set_editable_circuit(EditableCircuit {});
             break;
         }
         case reload_circuit: {
             finalize_editing();
             auto layout__ = Layout {circuit_store_.layout()};
-            this->clear_circuit();
-            circuit_widget::set_layout(circuit_store_, std::move(layout__));
+            // clear circuit to free memory
+            do_action(UserAction::clear_circuit);
+            set_editable_circuit(EditableCircuit {std::move(layout__)});
             break;
         }
 

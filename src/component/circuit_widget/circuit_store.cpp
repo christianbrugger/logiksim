@@ -1,6 +1,5 @@
 #include "component/circuit_widget/circuit_store.h"
 
-#include "component/circuit_widget/circuit_example.h"
 #include "file.h"
 #include "logging.h"
 #include "serialize.h"
@@ -12,16 +11,6 @@
 namespace logicsim {
 
 namespace circuit_widget {
-
-namespace circuit_store {
-
-auto LoadFileResult::format() const -> std::string {
-    return fmt::format(
-        "LoadFileResult(success = {}, view_point = {}, simulation_config = {})", success,
-        view_point, simulation_config);
-}
-
-}  // namespace circuit_store
 
 namespace {
 
@@ -102,20 +91,14 @@ auto CircuitStore::set_simulation_config(SimulationConfig new_config) -> void {
     Ensures(class_invariant_holds());
 }
 
-auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__,
-                                        std::optional<SimulationConfig> new_config)
-    -> void {
+auto CircuitStore::set_editable_circuit(EditableCircuit&& editable_circuit__) -> void {
     Expects(class_invariant_holds());
 
-    checked_editable_circuit_.set_editable_circuit(std::move(editable_circuit__));
-    if (new_config) {
-        simulation_config_ = *new_config;
+    if (is_simulation(circuit_state_)) {
+        throw std::runtime_error("cannot set new editable circuit when in simulation");
     }
 
-    if (is_simulation(circuit_state_)) {
-        interactive_simulation_ =
-            generate_simulation(checked_editable_circuit_, simulation_config_);
-    }
+    checked_editable_circuit_.set_editable_circuit(std::move(editable_circuit__));
 
     if (const auto count = layout().size(); 0 < count && count < 30) {
         print(layout());
@@ -226,60 +209,6 @@ auto spatial_simulation_pointer(const CircuitStore& store) -> const SpatialSimul
         return &store.interactive_simulation().spatial_simulation();
     }
     return nullptr;
-}
-
-auto set_layout(CircuitStore& store, Layout&& layout__,
-                std::optional<SimulationConfig> new_config) -> void {
-    // clear to free memory
-    store.set_editable_circuit(EditableCircuit {});
-    // load new
-    store.set_editable_circuit(EditableCircuit {std::move(layout__)}, new_config);
-}
-
-auto load_from_file(CircuitStore& store, std::string filename)
-    -> circuit_store::LoadFileResult {
-    const auto load_result = load_layout(load_file(filename));
-    if (!load_result) {
-        return circuit_store::LoadFileResult {};
-    }
-
-    // clear to free memory
-    store.set_editable_circuit(EditableCircuit {});
-    // load new
-    auto editable_circuit = EditableCircuit {Layout {}};
-    load_result->add(editable_circuit, {InsertionMode::insert_or_discard});
-    store.set_editable_circuit(EditableCircuit {std::move(editable_circuit)},
-                               load_result->simulation_config());
-
-    return circuit_store::LoadFileResult {
-        .success = true,
-        .view_point = load_result->view_point(),
-        .simulation_config = load_result->simulation_config(),
-    };
-}
-
-auto load_circuit_example(CircuitStore& store, int number,
-                          std::optional<SimulationConfig> new_config) -> void {
-    // clear to free memory
-    store.set_editable_circuit(EditableCircuit {});
-    // load new
-    auto editable_circuit = EditableCircuit {Layout {}};
-    load_example_with_logging(editable_circuit, number);
-    store.set_editable_circuit(EditableCircuit {std::move(editable_circuit)}, new_config);
-}
-
-auto save_circuit(const CircuitStore& store, std::string filename, ViewPoint view_point)
-    -> bool {
-    const auto binary =
-        serialize_all(store.layout(), view_point, store.simulation_config());
-    return save_file(filename, binary);
-}
-
-auto serialize_circuit(const CircuitStore& store) -> std::string {
-    auto relevant_config = SimulationConfig {
-        .use_wire_delay = store.simulation_config().use_wire_delay,
-    };
-    return serialize_all(store.layout(), {}, relevant_config);
 }
 
 auto visible_selection_format(const CircuitStore& store) -> std::string {
