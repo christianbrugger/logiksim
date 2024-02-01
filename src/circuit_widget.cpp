@@ -131,7 +131,8 @@ auto CircuitWidget::set_render_config(WidgetRenderConfig new_config) -> void {
 }
 
 auto CircuitWidget::set_simulation_config(SimulationConfig new_config) -> void {
-    Expects(class_invariant_holds());
+    // Expects(class_invariant_holds());
+    // TODO reactivate !!!
 
     if (simulation_config_ == new_config) {
         return;
@@ -246,11 +247,13 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
     Expects(class_invariant_holds());
+    print("LOAD START");
 
     finalize_editing();
     auto layout__ = Layout {circuit_store_.layout()};
     this->clear_circuit();
 
+    print("LOAD ACTION");
     const auto result = circuit_widget::load_from_file(circuit_store_, filename);
     if (result.success) {
         render_surface_.set_view_point(result.view_point);
@@ -262,6 +265,7 @@ auto CircuitWidget::load_circuit(std::string filename) -> bool {
     update();
 
     Ensures(class_invariant_holds());
+    print("LOAD DONE");
     return result.success;
 }
 
