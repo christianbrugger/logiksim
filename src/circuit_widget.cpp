@@ -243,8 +243,8 @@ auto CircuitWidget::circuit_state() const -> CircuitWidgetState {
 
 auto CircuitWidget::serialized_circuit() -> std::string {
     Expects(class_invariant_holds());
-    finalize_editing();
 
+    finalize_editing();
     const auto result = serialize_circuit(circuit_store_.layout(), simulation_config_);
 
     Ensures(class_invariant_holds());
@@ -262,18 +262,14 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
     set_editable_circuit(load_example_with_logging(number), default_view_point,
                          default_simulation_config);
 
-    update();
-
     Ensures(class_invariant_holds());
 }
 
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
     Expects(class_invariant_holds());
 
-    finalize_editing();
-    update();
-
     // store original layout in case of corrupt load
+    finalize_editing();
     auto orig_layout__ = Layout {circuit_store_.layout()};
     // clear circuit to free memory
     do_action(UserAction::clear_circuit);
@@ -294,8 +290,6 @@ auto CircuitWidget::save_circuit(std::string filename) -> bool {
     Expects(class_invariant_holds());
 
     finalize_editing();
-    update();
-
     const auto success = save_circuit_to_file(circuit_store_.layout(), filename,
                                               render_surface_.view_config().view_point(),
                                               simulation_config_);
@@ -364,20 +358,21 @@ auto CircuitWidget::do_action(UserAction action) -> void {
         case zoom_in: {
             render_surface_.set_view_point(
                 circuit_widget::zoom(*this, render_surface_.view_config(), +1));
+            update();
             break;
         }
         case zoom_out: {
             render_surface_.set_view_point(
                 circuit_widget::zoom(*this, render_surface_.view_config(), -1));
+            update();
             break;
         }
         case reset_view: {
             render_surface_.set_view_point(ViewConfig {}.view_point());
+            update();
             break;
         }
     }
-
-    update();
 
     Ensures(class_invariant_holds());
 }
@@ -510,7 +505,6 @@ auto CircuitWidget::mousePressEvent(QMouseEvent* event_) -> void {
 
     if (event_->button() == Qt::RightButton) {
         abort_current_action();
-        update();
     }
 
     Ensures(class_invariant_holds());
@@ -593,7 +587,6 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
     // Escape
     else if (event_->key() == Qt::Key_Escape) {
         abort_current_action();
-        update();
     }
 
     // Enter
@@ -627,6 +620,7 @@ auto CircuitWidget::abort_current_action() -> void {
             // 2) cancel active selection
             if (is_selection_state(circuit_state_)) {
                 circuit_store_.editable_circuit().clear_visible_selection();
+                update();
             }
 
             // 3) switch to selection editing mode
@@ -643,6 +637,7 @@ auto CircuitWidget::finalize_editing() -> void {
     Expects(class_invariant_holds());
 
     editing_logic_manager_.finalize_editing(editable_circuit_pointer(circuit_store_));
+    update();
 
     Ensures(class_invariant_holds());
 }
