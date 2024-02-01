@@ -268,7 +268,7 @@ auto CircuitWidget::load_circuit_example(int number) -> void {
 auto CircuitWidget::load_circuit(std::string filename) -> bool {
     Expects(class_invariant_holds());
 
-    // store original layout in case of corrupt load
+    // store original layout in case load fails
     finalize_editing();
     auto orig_layout__ = Layout {circuit_store_.layout()};
     // clear circuit to free memory
@@ -542,7 +542,6 @@ auto CircuitWidget::mouseReleaseEvent(QMouseEvent* event_) -> void {
         set_view_config_offset(
             render_surface_,
             mouse_drag_logic_.mouse_release(position, render_surface_.view_config()));
-
         update();
     }
 
@@ -593,9 +592,9 @@ auto CircuitWidget::keyPressEvent(QKeyEvent* event_) -> void {
     else if (event_->key() == Qt::Key_Enter || event_->key() == Qt::Key_Return) {
         if (editing_logic_manager_.confirm_editing(editable_circuit_pointer(
                 circuit_store_)) == circuit_widget::ManagerResult::require_update) {
-            // some elements might have been deleted (move-selection confirmation)
-            on_setting_dialog_cleanup_request();
             update();
+            // some elements might have been deleted (e.g. move-selection confirmation)
+            on_setting_dialog_cleanup_request();
         }
 
     }
@@ -681,9 +680,9 @@ auto CircuitWidget::delete_selected() -> void {
         print("Deleted", visible_selection_format(circuit_store_), "in", t);
     }
 
+    update();
     // items with open settings dialogs might have been deleted
     on_setting_dialog_cleanup_request();
-    update();
 
     Ensures(class_invariant_holds());
 }
@@ -744,8 +743,8 @@ auto CircuitWidget::paste_clipboard() -> void {
             circuit_store_.editable_circuit(), std::move(paste_result__.cross_points));
     }
 
-    print("Pasted", visible_selection_format(circuit_store_), "in", t);
     update();
+    print("Pasted", visible_selection_format(circuit_store_), "in", t);
 
     Ensures(class_invariant_holds());
 }

@@ -23,7 +23,7 @@ namespace logicsim {
 
 constexpr static auto inline LS_APP_AUTHOR = "Christian Brugger";
 constexpr static auto inline LS_APP_EMAIL = "brugger.chr@gmail.com";
-constexpr static auto inline LS_APP_YEAR_STR = " 2023 ";
+constexpr static auto inline LS_APP_YEAR_STR = " 2024 ";
 
 class CircuitWidget;
 struct time_rate_t;

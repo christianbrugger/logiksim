@@ -1,5 +1,6 @@
 #include "render/layer_surface.h"
 
+#include "logging.h"
 #include "render/context_guard.h"
 #include "render/context_info.h"
 
@@ -31,6 +32,10 @@ auto LayerSurface::initialize(const ContextRenderSettings& new_settings) -> void
 
 auto LayerSurface::clear() -> void {
     ctx.clear();
+
+    ctx.end();
+    ctx.bl_image = BLImage {};
+    ctx.begin();
 }
 
 auto LayerSurface::shrink_to_fit() -> void {
